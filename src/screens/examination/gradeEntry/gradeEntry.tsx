@@ -16,6 +16,7 @@ import CancelButton from 'src/components/cancel-button';
 import SubmitButton from 'src/components/submit-button';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { EmptyContent } from 'src/components/empty-content';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { academicPermissions } from 'src/constants/academic-menu';
@@ -1095,28 +1096,11 @@ const GradeEntry = (props: TabComponentType) => {
               boxShadow: 'var(--shadows-2)',
             }}
           >
-            <Stack spacing={1} alignItems="center" sx={{ px: 3, maxWidth: 460 }}>
-              <Box
-                sx={{
-                  width: 72,
-                  height: 72,
-                  borderRadius: '50%',
-                  display: 'grid',
-                  placeItems: 'center',
-                  color: 'primary.main',
-                  bgcolor: (theme) => `rgba(${theme.palette.primary.mainChannel} / 0.12)`,
-                }}
-              >
-                <Iconify icon="solar:clipboard-list-bold" width={36} />
-              </Box>
-              <Stack spacing={1}>
-                <Typography variant="h6">Please select an exam</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Choose an exam title from the filters above to view students and start entering
-                  marks.
-                </Typography>
-              </Stack>
-            </Stack>
+            <EmptyContent
+              title="Please select an exam"
+              description="Choose an exam title from the filters above to view students and start entering marks."
+              sx={{ maxWidth: 460, py: 3 }}
+            />
           </Card>
         )}
 

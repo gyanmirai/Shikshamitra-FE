@@ -367,6 +367,7 @@ const FinanceReceiptBookSetting = () => {
         totalCount={receiptBookData?.totalCount}
         onServerPagination={handleServerPagination}
         onServerSearch={handleServerSearch}
+        searchFieldProps={{ placeholder: 'Search' }}
       />
 
       {receiptBookDialog.value && (

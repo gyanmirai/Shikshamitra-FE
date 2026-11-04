@@ -3,7 +3,7 @@ module: hr
 domain: workflows
 content_type: Reference
 status: canonical
-updated_on: 2026-11-02
+updated_on: 2026-11-04
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -71,6 +71,9 @@ Failed refreshes retain the draft and selection, disable Submit, and offer inlin
 Cancelling a changed selection offers Keep editing or Discard changes without discarding the parent template.
 Missing creation access directs the operator to an HR administrator.
 Required deduction and statutory dependencies appear inside the salary step when needed; the salary draft remains mounted while a dependency is configured.
+PF Coverage is a separate required check in the Salary Template step, including when the template itself is already usable.
+Its setup action embeds the shared coverage editor, using the wizard's single Save and next footer and unsaved-change guard.
+Saving refreshes server readiness; missing current-month coverage prevents completion, while either saved coverage decision can satisfy the check.
 Role repair remains an explicitly authorized Role Management task in another tab.
 Each step saves independently through existing APIs, and the final action rechecks server readiness.
 Failed background catalogue reads keep earning and salary-template editors mounted with their entries and an explicit retry action. The earning selector loads the complete paginated catalogue; embedded template loading uses only the wizard's navigation footer.
@@ -301,6 +304,7 @@ The server persists an ESIC-on baseline for new schools with unknown legal regis
 Changes apply from the selected effective payroll month without rewriting locked payroll or issued payslips.
 Save is direct, without a separate confirmation step.
 Errors and background refreshes preserve the draft and original concurrency token.
+Older-month setup uses the same save command and server concurrency checks. Protected payroll failures explain the restriction and retain the month and entries. Rate/staff preview failures distinguish an unavailable effective policy from access or temporary request failures; retrying alone does not repair missing policy dates or assignments.
 Calculation help uses the ESIC section information control; Change History is an outlined section-header action.
 A compact staff status row provides one Review Staff action, initially filtering to attention items when present.
 Save and Cancel use compact shared button styling in the stationary bottom-right footer.
@@ -314,6 +318,7 @@ Authorized users can add dated, reasoned ESI exceptions from an employee impact 
 PwD enrollment review can record a government-funded employer-share relief period only after the PwD category, start date, and disability evidence are supplied.
 The impact preview distinguishes employee, employer, and government ESI funding.
 Payslips show earned gross, employee deductions, and net pay.
+Payroll document settings offer **Open School Identity** only after permissions load and the caller has both `ShikshaMitra.Module.InstituteSetup` (required by the settings layout) and `InstituteSetup.SchoolIdentity.View`. The destination manages school assets such as the logo; institute name/address corrections require the school administrator's institute setup workflow. Payroll access does not grant School Identity access.
 Employer contributions remain in school cost reporting and audit evidence.
 Off mode omits ESI amounts and presentation, including empty ESI payslip rows.
 Users select a template, choose Monthly salary or Monthly cost to school (CTC), select the effective month, enter the quoted monthly amount, select PF applicability and rule, preview, and review earnings, employee deductions, employer contributions, ESI, target variance, and the formula trace.
@@ -543,11 +548,14 @@ Dirty navigation is confirmed, navigation and duplicate actions are blocked whil
 
 ## Recurring salary editor
 
-Payroll Structure and Staff Directory share the recurring Edit Salary sub-page.
+Staff Salaries and Staff Directory share the Set Up Staff Salary page.
 The staff payroll salary link and return link use client-side navigation to preserve the application shell.
 Hovering or focusing the salary link preloads the editor's independent reads through RTK Query, reusing data fetched within the last 30 seconds.
 Salary deep links start reads from the employee ID immediately; employee details still gate form initialization, and failed staff reads offer a retry.
-The footer owns Preview salary and Save salary; saving keeps the page open, refreshes history, and clears the draft baseline.
+The standalone editor guides Salary Details, Statutory Setup, and Review & Save while keeping salary and statutory drafts mounted across stage changes.
+Forward navigation validates the preceding requirements; correction links reveal the owning stage before focusing it.
+Preview salary belongs to the review stage, and the persistent footer offers stage navigation and Save salary.
+Saving requires a current server preview, keeps the page open, refreshes history, and clears the draft baseline.
 Footer feedback explains calculation readiness, active operations, and completed saves without changing action permissions or enabled states.
 The compact employee header includes ESIC access, and the quoted monthly amount uses the shared currency input without rounding its numeric request value.
 Invalid amounts show inline errors after blur; saving with a missing customization reason focuses the reason field and preserves the draft.
@@ -569,7 +577,7 @@ See the [backend calculation release and PF remediation workflow](https://github
 Payroll Structure and Staff Directory open the dedicated Edit Salary page for the selected staff member.
 Staff-profile and staff-edit links return to their original payroll context through a validated same-origin `returnTo` URL.
 Existing `/hr/payroll/structure?employeeId={employeeId}&setup=salary` bookmarks redirect to the page with history replacement, including the previous `from=staff-profile` or `from=staff-edit` context.
-The editor keeps Preview salary and Save salary in its persistent footer and preserves current compensation behavior.
+The editor keeps stage navigation and Save salary in its persistent footer, with Preview salary in Review & Save.
 ESIC details open in the existing drawer over the page, with an independent enrollment draft guard.
 Closing the drawer preserves salary inputs, and saving enrollment invalidates the salary preview through the existing callback.
 One-time adjustments remain in monthly payroll.
@@ -587,6 +595,14 @@ Existing membership remains visibly Required, and the backend owns coverage and 
 The salary calculation returns the enrollment decision and blocks saving when required evidence or enrollment is missing.
 The PF settings page records school establishment coverage with an effective month and evidence reference.
 Its write requires the exact PF Add capability and backend-confirmed school-wide scope.
+The page shows a compact coverage summary and opens a focused configuration dialog on request.
+Loading and failed reads never claim that coverage is missing; failed reads offer Retry.
+Confirmed missing current-month coverage offers Set up PF coverage, while read-only users are directed to an authorized school-wide HR administrator.
+The HR setup wizard checks school PF coverage separately from PF contribution rules and embeds the same coverage form.
+Coverage entry remains an explicit school decision, with the existing effective-date, evidence, concurrency, and idempotency contracts.
+The PF rule workspace uses the shared table, status labels, and permission-filtered row actions.
+Create and edit share Rule Details, Contribution Rules, and Effective Dates sections with numeric controls that preserve decimal drafts and zero rates.
+Saving locks fields and close controls; failed saves retain the draft and show an inline error.
 
 ESIC school settings use automatic statutory calculation, an effective payroll month, and an optional registration number.
 The settings panel owns one scrollable content region and a separate bottom action footer.
@@ -623,7 +639,15 @@ PDF/Excel use existing export jobs, ownership checks, status, download and expir
 Salary documents use the shared soft status chips and download actions in the compact toolbar, with one standard success toast when an active export completes.
 The report-notes information control beside Preview exposes all coverage and truncation notes in the shared popover; failures retain an announced error and a relevant recovery action.
 Payroll Management > Settings > Payslip & statement settings owns Compact/Detailed layouts, optional fields, saved column presets and automatic email.
-The settings workspace places shared section cards beside a live A4 sample PDF on wide screens and stacks them on mobile. Appearance edits debounce a read-only sample request; the viewer and Download sample PDF use the same returned bytes from the backend issuance renderer. Samples contain explicitly synthetic staff/payroll data and current Institute Setup branding. Statement columns and delivery do not change this payslip preview. Reset defaults changes the draft only; Save persists it, and Cancel/navigation use the existing unsaved-change guard. Saving locks controls and navigation, errors retain the draft, and obsolete sample responses cannot replace the current preview.
+The settings workspace places shared section cards beside a live A4 sample PDF on wide screens and stacks them on mobile.
+The sample starts at Fit page inside a bounded, keyboard-accessible PDF viewport, with Fit width, 25%-200% presets and Zoom in / Zoom out buttons outside the scrolling pages.
+Zooming reuses the rendered pages without requesting another PDF; appearance changes generate a new sample and return it to Fit page.
+The compact preview header holds Download sample PDF, with optional guidance in its information tooltip and one visible sample-data notice.
+Appearance edits debounce a read-only sample request; the viewer and Download sample PDF use the same returned bytes from the backend issuance renderer.
+Samples contain explicitly synthetic staff/payroll data and current Institute Setup branding.
+Statement columns and delivery do not change this payslip preview.
+Reset defaults changes the draft only; Save persists it, and Cancel/navigation use the existing unsaved-change guard.
+Saving locks controls and navigation, errors retain the draft, and obsolete sample responses cannot replace the current preview.
 The Payslips workspace retains a Payslip & statement settings link and no longer embeds the settings form below its preview.
 School name, address and logo use Institute Setup; the settings page displays the returned name and address without editable duplicates.
 The existing save, retry, concurrency and dirty-navigation safeguards remain in the dedicated settings form.
@@ -766,3 +790,10 @@ Choose today or a future effective date and review current and upcoming assignme
 Future assignments can be changed or cancelled; the server protects recorded attendance and locked payroll.
 Assigned shift times remain fixed; create a new definition for changed working hours.
 Inactive definitions retain history but disappear from new-assignment options.
+
+## Payroll settings tasks
+
+Payroll Settings opens `/hr/payroll/setting` with permission-filtered tasks for Salary Templates, Statutory Settings, Component Library, and Payslip & Statement Settings.
+The component library links to the existing earning and deduction screens; statutory settings links to the existing PF, ESIC, and Professional Tax destinations.
+Template editing stays on one continuous page, with the default Monthly salary or Monthly cost to school (CTC) choice in Basic Information.
+The sample preview identifies its basis and does not assign an amount to staff.

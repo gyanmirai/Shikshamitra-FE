@@ -410,15 +410,23 @@ export function usePaymentTermForm(
   const handleSubmit = useCallback(
     async (confirmed = false) => {
       if (isSubmitting || isLoadingDetail || calendarMissing) return;
+
+      // Normalise whitespace before any validation or conflict guard so that
+      // a name like "9th PT One " is treated identically to "9th PT One".
+      const trimmedName = formik.values.paymentTermName.trim();
+      if (trimmedName !== formik.values.paymentTermName) {
+        formik.setFieldValue('paymentTermName', trimmedName, false);
+      }
+
       if (
         formik.status?.nameConflict &&
         normalizePaymentTermName(formik.status.nameConflict.name) ===
-          normalizePaymentTermName(formik.values.paymentTermName)
+          normalizePaymentTermName(trimmedName)
       )
         return;
       const errors = await formik.validateForm({
         ...formik.values,
-        paymentTermName: formik.values.paymentTermName.trim(),
+        paymentTermName: trimmedName,
       });
       const hasErrors = Object.keys(errors).length > 0;
       if (hasErrors) {
@@ -467,7 +475,7 @@ export function usePaymentTermForm(
         ) {
           formik.setStatus({
             nameConflict: {
-              name: formik.values.paymentTermName,
+              name: formik.values.paymentTermName.trim(),
               message:
                 problem.errorCode === 'Finance:PaymentTerm:000042'
                   ? `A payment term named “${formik.values.paymentTermName.trim()}” already exists in this academic year. Use a different name.`
@@ -541,10 +549,21 @@ export function usePaymentTermForm(
    */
   const removeInstallment = useCallback(
     (index: number) => {
-      const updated = formik.values.installments
+      const filtered = formik.values.installments
         .filter((_, i) => i !== index)
         .map((inst, i) => ({ ...inst, sequence: i + 1 }));
-      formik.setFieldValue('installments', updated);
+      // Evenly redistribute percentages across the remaining installments,
+      // matching the same rounding logic used in addInstallment.
+      if (filtered.length > 0) {
+        const base = Math.floor(10000 / filtered.length) / 100;
+        let remainder = Math.round((100 - base * filtered.length) * 100) / 100;
+        filtered.forEach((inst, idx) => {
+          const extra = remainder > 0 ? 0.01 : 0;
+          remainder = Math.round((remainder - extra) * 100) / 100;
+          filtered[idx] = { ...inst, allocationPercentage: Math.round((base + extra) * 100) / 100 };
+        });
+      }
+      formik.setFieldValue('installments', filtered);
     },
     [formik]
   );

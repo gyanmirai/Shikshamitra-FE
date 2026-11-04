@@ -31,15 +31,15 @@ it('keeps public links and link creation without intake setup tabs or actions', 
   render(<AdmissionPublicInquiryLinksScreen />);
   expect(screen.getByRole('heading', { name: 'Public Inquiry Links' })).toBeInTheDocument();
   expect(
-    screen.queryByText(/Create intake setup|Admission intake setups|Counsellor routing/)
+    screen.queryByText(/Create intake setup|Admission intake setups|Counsellor Routing/)
   ).not.toBeInTheDocument();
-  fireEvent.click(screen.getByRole('button', { name: 'Create inquiry link' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Create Inquiry Link' }));
   fireEvent.click(screen.getByRole('button', { name: 'Close link creation' }));
   expect(screen.queryByRole('button', { name: 'Close link creation' })).not.toBeInTheDocument();
 });
 it('keeps link mutation controls unavailable without the existing Add permission', () => {
   state.permissions = [];
   render(<AdmissionPublicInquiryLinksScreen />);
-  expect(screen.queryByRole('button', { name: 'Create inquiry link' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Create Inquiry Link' })).not.toBeInTheDocument();
   expect(screen.getByText('Public links table')).toBeInTheDocument();
 });

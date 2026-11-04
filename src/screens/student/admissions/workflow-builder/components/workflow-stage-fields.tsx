@@ -64,7 +64,7 @@ export function WorkflowStageFields(props: Props) {
       )}
       <>
         <FormSectionCard
-          title="Stage details"
+          title="Stage Details"
           icon="mdi:file-document-outline"
           descriptionTooltip={metadata?.description ?? 'Choose the stage type and name.'}
         >

@@ -102,15 +102,15 @@ export default function AdmissionWorkflowsScreen() {
       }}
     >
       <CustomBreadcrumbs
-        heading="Admission stage"
+        heading="Admission Stage"
         isBack={actions.createDialog.value}
         onBack={() => actions.createCloseRef.current?.()}
-        description="Design, validate, version, and publish the admission journey used by offerings."
+        description="Design, Validate, Version, and Publish the Admission Journey Used by Offerings."
         links={[
           { name: 'Student', href: studentPaths.dashboard },
           { name: 'Admissions', href: studentPaths.enrollment.root },
           { name: 'Settings', href: studentPaths.enrollment.settings.root },
-          { name: 'Admission stage' },
+          { name: 'Admission Stage' },
         ]}
         slotProps={{
           action: { alignSelf: { xs: 'flex-end', md: 'center' }, maxWidth: '100%' },
@@ -130,13 +130,14 @@ export default function AdmissionWorkflowsScreen() {
             >
               <WorkflowListFilters filters={filters} onUpdate={filterState.update} />
               <Button
+                aria-label="Add Workflow"
                 size="small"
                 variant="contained"
                 disabled={!actions.allowed.canCreate}
                 startIcon={<Iconify icon="mdi:plus" />}
                 onClick={actions.createDialog.onTrue}
               >
-                Add workflow
+                Workflow
               </Button>
             </Stack>
           ) : undefined
@@ -149,7 +150,7 @@ export default function AdmissionWorkflowsScreen() {
         <Box sx={{ flex: 1, minHeight: 0, minWidth: 0, overflow: 'hidden' }}>
           <CustomizableTable
             tableId="admission-workflows"
-            tableTitle="Admission stage workflows"
+            tableTitle="Admission Stage Workflows"
             wrapperProps={{ sx: { flex: 1, height: 1, minHeight: 0, minWidth: 0 } }}
             tableContainerProps={{ sx: { height: 1 } }}
             columns={columns}
@@ -237,11 +238,11 @@ export default function AdmissionWorkflowsScreen() {
                     No admission workflows match the selected filters.
                   </Typography>
                   <Button size="small" color="inherit" onClick={filterState.clear}>
-                    Clear filters
+                    Clear Filters
                   </Button>
                 </Stack>
               ) : (
-                'No admission workflows configured yet. Create a draft to begin.'
+                'No Admission Workflows Configured Yet. Create a Draft to Begin.'
               )
             }
           />

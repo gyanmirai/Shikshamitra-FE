@@ -47,14 +47,14 @@ describe('Bulk offering preview', () => {
   it('uses the existing section card with clear class identity and inactive creation outcome', () => {
     renderPreview(preview([item]));
     expect(
-      screen.getByRole('heading', { name: 'Preview offerings' }).closest('section')
+      screen.getByRole('heading', { name: 'Preview Offerings' }).closest('section')
     ).not.toBeNull();
     expect(screen.getByText('1 offering ready to create')).toBeVisible();
     expect(screen.getByText('Class 1')).toBeVisible();
-    expect(screen.getByRole('columnheader', { name: 'Class / offering code' })).toBeVisible();
+    expect(screen.getByRole('columnheader', { name: 'Class / Offering Code' })).toBeVisible();
     expect(screen.getByText('ADM-CLASS-1')).toBeVisible();
-    expect(screen.getByText(/saved as Inactive/)).toBeVisible();
-    expect(screen.queryByText('After creation')).not.toBeInTheDocument();
+    expect(screen.getByText(/Saved as Inactive/)).toBeVisible();
+    expect(screen.queryByText('After Creation')).not.toBeInTheDocument();
     expect(screen.queryByRole('radio')).not.toBeInTheDocument();
   });
 
@@ -76,8 +76,8 @@ describe('Bulk offering preview', () => {
     expect(screen.getByText('1 of 2 classes need changes')).toBeVisible();
     const row = screen.getByText('Class 1').closest('tr')!;
     expect(within(row).getAllByText(duplicate.message)).toHaveLength(1);
-    expect(within(row).getByText('Cannot create')).toBeVisible();
-    expect(screen.getByText(/Nothing will be created until all class issues/)).toBeVisible();
+    expect(within(row).getByText('Cannot Create')).toBeVisible();
+    expect(screen.getByText(/Nothing Will Be Created Until All Class Issues/)).toBeVisible();
   });
 
   it('does not block inactive preparation for activation-only issues', () => {
@@ -92,7 +92,7 @@ describe('Bulk offering preview', () => {
         },
       ])
     );
-    expect(screen.getByText('Ready to create')).toBeVisible();
+    expect(screen.getByText('Ready to Create')).toBeVisible();
     expect(screen.getByText(/configuration needs attention before activation/)).toBeVisible();
     expect(screen.getByText(/Select a published workflow before activation\./)).toBeVisible();
   });
@@ -113,15 +113,15 @@ describe('Bulk offering preview', () => {
       false
     );
     expect(screen.getAllByText(/Choose a published workflow\./)).toHaveLength(1);
-    expect(screen.getByText('Configuration checks')).toBeVisible();
-    expect(screen.getByText('Published workflow')).toBeVisible();
+    expect(screen.getByText('Configuration Checks')).toBeVisible();
+    expect(screen.getByText('Published Workflow')).toBeVisible();
     expect(screen.getAllByText('An offering already exists for this class.')).toHaveLength(2);
   });
 
   it('explains missing preview and provides a correction path', () => {
     renderPreview(null, false);
     expect(
-      screen.getByText('Go Back and select at least one class', { exact: false })
+      screen.getByText('Go Back and select at least one Class', { exact: false })
     ).toBeVisible();
   });
 
@@ -133,7 +133,7 @@ describe('Bulk offering preview', () => {
       ),
       false
     );
-    expect(screen.getByText('Selected class')).toBeVisible();
+    expect(screen.getByText('Selected Class')).toBeVisible();
     expect(screen.queryByText('unknown-private-id')).not.toBeInTheDocument();
     expect(screen.getByText(/could not be validated/)).toBeVisible();
   });
@@ -156,9 +156,9 @@ describe('Bulk offering preview', () => {
       ),
       false
     );
-    const inquiry = screen.getByText('Inquiry form').parentElement!;
+    const inquiry = screen.getByText('Inquiry Form').parentElement!;
     expect(
-      within(inquiry).getByText('Before activation: Published Inquiry Form is required.')
+      within(inquiry).getByText('Before Activation: Published Inquiry Form is required.')
     ).toBeVisible();
     const row = screen.getByText('Class 1').closest('tr')!;
     expect(within(row).queryByText(/Published Inquiry Form/)).not.toBeInTheDocument();
@@ -178,17 +178,17 @@ describe('Bulk offering preview', () => {
       false
     );
     expect(screen.getAllByText('Review this new server rule.')).toHaveLength(1);
-    expect(screen.getByText('Other checks')).toBeVisible();
+    expect(screen.getByText('Other Checks')).toBeVisible();
   });
 
   it('provides an edit action and disables it during a request', async () => {
     const onEdit = vi.fn();
     const props = { preview: preview([item]), canCreate: true, standardNameById: {}, onEdit };
     const view = render(<BulkAdmissionOfferingPreview {...props} />);
-    await userEvent.setup().click(screen.getByRole('button', { name: 'Edit selection' }));
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Edit Selection' }));
     expect(onEdit).toHaveBeenCalledOnce();
     view.rerender(themed(<BulkAdmissionOfferingPreview {...props} busy />));
-    expect(screen.getByRole('button', { name: 'Edit selection' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Edit Selection' })).toBeDisabled();
   });
 
   it('keeps the whole batch visible in a compact review table without pagination or utilities', () => {
@@ -201,10 +201,10 @@ describe('Bulk offering preview', () => {
         }))
       )
     );
-    const table = screen.getByRole('table', { name: 'Offerings to create table' });
+    const table = screen.getByRole('table', { name: 'Offerings to Create table' });
     expect(within(table).getAllByRole('row')).toHaveLength(16);
     expect(within(table).getByText('ADM-CLASS-15')).toBeVisible();
-    expect(screen.queryByRole('textbox', { name: /search/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: /Search/i })).not.toBeInTheDocument();
     expect(screen.queryByText('Rows per page:')).not.toBeInTheDocument();
   });
 });

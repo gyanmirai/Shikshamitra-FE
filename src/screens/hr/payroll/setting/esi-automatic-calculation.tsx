@@ -2,20 +2,29 @@ import type { EsiRule } from 'src/redux/hr/statutory-scheme-api';
 
 import { Alert, Stack, Button, Skeleton, Typography } from '@mui/material';
 
+import { esiRequestError } from './esi-request-error';
 import { formatEsiCurrency } from './esi-statutory-utils';
 
 type Props = {
-  rules: { data?: EsiRule; isError: boolean; refetch: () => unknown };
+  rules: { data?: EsiRule; isError: boolean; error?: unknown; refetch: () => unknown };
 };
 
 export function EsiAutomaticCalculation({ rules }: Props) {
   if (rules.isError)
     return (
       <Alert severity="error" action={<Button onClick={() => rules.refetch()}>Retry</Button>}>
-        Statutory rates could not be loaded.
+        {esiRequestError(rules.error, 'Statutory rates could not be loaded. Retry to check again.')}
       </Alert>
     );
-  if (!rules.data) return <Skeleton aria-label="Loading statutory rates" />;
+  if (!rules.data)
+    return (
+      <Skeleton
+        variant="text"
+        width={280}
+        sx={{ maxWidth: '100%' }}
+        aria-label="Loading statutory rates"
+      />
+    );
   const rule = rules.data;
   return (
     <Stack spacing={1}>

@@ -199,7 +199,7 @@ describe('Applications decision workspace', () => {
   it('opens special registration only with the existing Start/Add permission and current academic year', () => {
     state.canStart = true;
     render(<AdmissionApplicationsScreen />);
-    fireEvent.click(screen.getByRole('button', { name: 'Start special registration' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Start Special Registration' }));
     expect(screen.getByLabelText('Special registration')).toHaveAttribute('data-year', 'year-1');
     fireEvent.click(screen.getByRole('button', { name: 'Close registration' }));
     expect(screen.queryByLabelText('Special registration')).not.toBeInTheDocument();
@@ -207,14 +207,14 @@ describe('Applications decision workspace', () => {
   it('does not expose special-registration entry without Start/Add permission', () => {
     render(<AdmissionApplicationsScreen />);
     expect(
-      screen.queryByRole('button', { name: 'Start special registration' })
+      screen.queryByRole('button', { name: 'Start Special Registration' })
     ).not.toBeInTheDocument();
   });
   it('disables special-registration entry when the academic year is missing', () => {
     state.canStart = true;
     state.academicYearId = undefined;
     render(<AdmissionApplicationsScreen />);
-    expect(screen.getByRole('button', { name: 'Start special registration' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Start Special Registration' })).toBeDisabled();
   });
   it('requests only the decision phase with correct server paging and counts', () => {
     render(<AdmissionApplicationsScreen />);
@@ -233,7 +233,7 @@ describe('Applications decision workspace', () => {
     });
     expect(screen.getByRole('heading', { name: 'Applications' })).toBeInTheDocument();
     expect(screen.getByText('Class 6')).toBeInTheDocument();
-    expect(screen.getByText('In review')).toBeInTheDocument();
+    expect(screen.getByText('In Review')).toBeInTheDocument();
   });
   it('combines identity and preserves phase-aware full-page links and return context', () => {
     render(<AdmissionApplicationsScreen />);
@@ -349,7 +349,7 @@ describe('Applications decision workspace', () => {
     state.queryResult.isError = true;
     render(<AdmissionApplicationsScreen />);
     expect(screen.getByText('Unable to load applications')).toBeInTheDocument();
-    expect(screen.queryByText(/No applications have reached/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/No Applications Have Reached/)).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
     expect(state.refetch).toHaveBeenCalledOnce();
   });
@@ -380,7 +380,7 @@ describe('Applications decision workspace', () => {
   it('shows the correct prerequisite instead of cached rows without an academic year', () => {
     state.academicYearId = undefined;
     render(<AdmissionApplicationsScreen />);
-    expect(screen.getByText('Select an academic year to view Applications')).toBeInTheDocument();
+    expect(screen.getByText('Select an Academic Year to View Applications')).toBeInTheDocument();
     expect(screen.queryByText('Parth Patel')).not.toBeInTheDocument();
     expect(state.tableProps?.totalCount).toBe(0);
     expect(state.tableProps?.isLoading).toBe(false);
@@ -390,9 +390,9 @@ describe('Applications decision workspace', () => {
     state.queryResult.currentData = { items: [], totalCount: 0 };
     render(<AdmissionApplicationsScreen />);
     expect(
-      screen.getByText('No applications match the selected search or filters')
+      screen.getByText('No Applications Match the Selected Search or Filters')
     ).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Clear search' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Clear Search' }));
     expect(state.replace).toHaveBeenLastCalledWith(
       '/student/admissions/applications?board=board-1&medium=medium-1',
       { scroll: false }
@@ -441,7 +441,7 @@ it('suppresses successful empty and skeleton states for an initial failed reques
   render(<AdmissionApplicationsScreen />);
   expect(state.tableProps?.errorContent).toBeTruthy();
   expect(state.tableProps?.isLoading).toBe(false);
-  expect(screen.queryByText(/No applications have reached/)).not.toBeInTheDocument();
+  expect(screen.queryByText(/No Applications Have Reached/)).not.toBeInTheDocument();
 });
 
 it('withholds old cached argument data while the current scope has no response', () => {

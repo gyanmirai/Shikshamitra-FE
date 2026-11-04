@@ -114,7 +114,7 @@ describe('Admission cycle details dialog', () => {
 
     renderDialog();
 
-    expect(screen.getByRole('dialog', { name: 'Admission period details' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Admission Period Details' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Regular Admission' })).toBeInTheDocument();
     expect(screen.getByText('28 Sep 2026')).toBeInTheDocument();
     expect(screen.getByText('30 Sep 2026')).toBeInTheDocument();
@@ -130,7 +130,7 @@ describe('Admission cycle details dialog', () => {
 
     const view = renderDialog(onClose);
     expect(screen.getByLabelText('Loading linked offerings')).toBeInTheDocument();
-    expect(screen.getByLabelText('Loading activity history')).toBeInTheDocument();
+    expect(screen.getByLabelText('Loading Activity History')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Close' })).toBeEnabled();
     expect(
       screen.queryByText('No activity has been recorded for this period yet.')
@@ -154,7 +154,7 @@ describe('Admission cycle details dialog', () => {
       })
     );
     expect(toast.warning).not.toHaveBeenCalled();
-    expect(screen.queryByText(/Current usage could not be refreshed/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Current Usage could not be refreshed/)).not.toBeInTheDocument();
     expect(screen.queryByText('Activity history could not be loaded.')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /retry|reload/i })).not.toBeInTheDocument();
     expect(
@@ -217,7 +217,7 @@ describe('Admission cycle details dialog', () => {
     expect(useGetAdmissionCycleHistoryQuery).toHaveBeenLastCalledWith('', { skip: true });
     view.rerenderCycle(cycle);
 
-    expect(screen.getByRole('dialog', { name: 'Admission period details' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Admission Period Details' })).toBeInTheDocument();
     expect(toast.error).toHaveBeenCalledTimes(2);
     expect(useGetAdmissionCycleHistoryQuery).toHaveBeenLastCalledWith(cycle.id, { skip: false });
   });

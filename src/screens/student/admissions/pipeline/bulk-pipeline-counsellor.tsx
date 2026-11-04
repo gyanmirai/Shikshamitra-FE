@@ -36,7 +36,7 @@ export function BulkPipelineCounsellor({ assignment, disabled }: Props) {
   const closeGuard = useUnsavedNavigation(assignment.dialogOpen && formik.dirty, {
     push: router.push,
     blockNavigation: assignment.busy,
-    title: 'Discard counsellor change?',
+    title: 'Discard Counsellor Change?',
     description: 'The selected counsellor and reason have not been submitted.',
   });
   const close = () => closeGuard.requestNavigation(assignment.closeDialog);
@@ -57,9 +57,9 @@ export function BulkPipelineCounsellor({ assignment, disabled }: Props) {
                 {assignment.assigning && assignment.progress
                   ? `Assigning ${assignment.progress.completed} of ${assignment.progress.total} admissions…`
                   : assignment.loadingOptions
-                    ? 'Loading eligible counsellors…'
+                    ? 'Loading Eligible Counsellors…'
                     : !count && assignment.outcome
-                      ? 'Counsellor assignment complete'
+                      ? 'Counsellor Assignment Complete'
                       : `${count} ${count === 1 ? 'admission' : 'admissions'} selected on this page`}
               </Typography>
               <Button
@@ -80,7 +80,7 @@ export function BulkPipelineCounsellor({ assignment, disabled }: Props) {
                   loading={assignment.loadingOptions}
                   onClick={assignment.requestAssignment}
                 >
-                  Assign / change counsellor
+                  Assign / Change Counsellor
                 </LoadingButton>
               )}
             </Stack>
@@ -109,8 +109,8 @@ export function BulkPipelineCounsellor({ assignment, disabled }: Props) {
       ) : null}
       <CustomDialog
         open={assignment.dialogOpen}
-        title="Assign / change counsellor"
-        titleInfo="Choose one counsellor who has access to every selected admission offering."
+        title="Assign / Change Counsellor"
+        titleInfo="Choose One Counsellor Who Has Access to Every Selected Admission Offering."
         maxWidth="sm"
         hasForm={false}
         guardUnsavedChanges={false}
@@ -122,7 +122,7 @@ export function BulkPipelineCounsellor({ assignment, disabled }: Props) {
           <DialogScrollContent>
             <Stack spacing={2}>
               <Typography variant="body2">
-                {count} selected {count === 1 ? 'admission' : 'admissions'} will use this
+                {count} Selected {count === 1 ? 'Admission' : 'Admissions'} will use this
                 counsellor. If an inquiry is linked, it and its scheduled follow-ups will also move
                 to this counsellor. Admission steps and status stay the same.
               </Typography>
@@ -168,7 +168,7 @@ export function BulkPipelineCounsellor({ assignment, disabled }: Props) {
               <TextField
                 fullWidth
                 size="small"
-                label="Reason for change (optional)"
+                label="Reason for Change (Optional)"
                 name="reason"
                 value={formik.values.reason}
                 onChange={formik.handleChange}
@@ -180,8 +180,8 @@ export function BulkPipelineCounsellor({ assignment, disabled }: Props) {
               />
               {assignment.assigning && assignment.progress && (
                 <Typography variant="body2" role="status" aria-live="polite">
-                  Assigning {assignment.progress.completed} of {assignment.progress.total}{' '}
-                  admissions…
+                  Assigning {assignment.progress.completed} Of {assignment.progress.total}{' '}
+                  Admissions…
                 </Typography>
               )}
             </Stack>

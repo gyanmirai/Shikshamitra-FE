@@ -25,7 +25,8 @@ export interface ByFeeHeadViewProps {
     itemYear?: number,
     dueFeeId?: string,
     installmentLabel?: string,
-    lateFeeAmount?: number
+    lateFeeAmount?: number,
+    adjustmentCreditAmount?: number
   ) => void;
   onToggleGroup: (group: FeeHeadWiseGroup) => void;
 }
@@ -43,7 +44,8 @@ interface FeeHeadGroupProps {
     itemYear?: number,
     dueFeeId?: string,
     installmentLabel?: string,
-    lateFeeAmount?: number
+    lateFeeAmount?: number,
+    adjustmentCreditAmount?: number
   ) => void;
   onToggleGroup: (group: FeeHeadWiseGroup) => void;
 }
@@ -196,7 +198,8 @@ const FeeHeadGroup = ({
                           item.year,
                           item.dueFeeId,
                           item.installmentLabel,
-                          item.lateFeeAmount
+                          item.lateFeeAmount,
+                          item.adjustmentCreditAmount
                         )
                     : undefined
                 }
@@ -212,7 +215,8 @@ const FeeHeadGroup = ({
                     item.year,
                     item.dueFeeId,
                     item.installmentLabel,
-                    item.lateFeeAmount
+                    item.lateFeeAmount,
+                    item.adjustmentCreditAmount
                   )
                 }
               />

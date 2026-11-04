@@ -119,5 +119,6 @@ export interface IScheduledExamTableProps {
 
 export interface INewExamFormProps {
   onClose: () => void;
+  onBusyChange?: (busy: boolean) => void;
   editData?: IScheduledExam | null;
 }

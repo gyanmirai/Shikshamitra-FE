@@ -97,7 +97,7 @@ export default function AdmissionAssessmentsScreen() {
               type: 'equals',
               value: state.status,
               valueType: 'enum',
-              label: 'Assessment progress',
+              label: 'Assessment Progress',
               displayValue: { pending: 'Pending', ongoing: 'Ongoing', complete: 'Complete' }[
                 state.status
               ],
@@ -285,7 +285,7 @@ export default function AdmissionAssessmentsScreen() {
     >
       <CustomBreadcrumbs
         heading="Assessments"
-        description="Schedule shared sessions, assess applicants and continue their admission journeys."
+        description="Schedule Shared Sessions, Assess Applicants and Continue Their Admission Journeys."
         links={[
           { name: 'Student', href: studentPaths.dashboard },
           { name: 'Admissions', href: studentPaths.enrollment.root },
@@ -316,7 +316,7 @@ export default function AdmissionAssessmentsScreen() {
           >
             <CustomTabs
               value={state.tab}
-              aria-label="Assessment workspace"
+              aria-label="Assessment Workspace"
               sx={{ minWidth: 0 }}
               slotProps={{ flexContainer: { gap: 1 } }}
             >
@@ -345,6 +345,7 @@ export default function AdmissionAssessmentsScreen() {
               {sessionPanel
                 ? permissions.manageSessions && (
                     <Button
+                      aria-label="Create Session"
                       size="small"
                       variant="contained"
                       color="inherit"
@@ -359,7 +360,7 @@ export default function AdmissionAssessmentsScreen() {
                       }
                       onClick={() => openSetup(null, 'create')}
                     >
-                      Create session
+                      Session
                     </Button>
                   )
                 : permissions.book && (
@@ -377,7 +378,7 @@ export default function AdmissionAssessmentsScreen() {
                       }
                       onClick={() => openStudentBooking(selection)}
                     >
-                      Book session ({selection.length})
+                      Book Session ({selection.length})
                     </Button>
                   )}
             </Stack>
@@ -473,7 +474,7 @@ export default function AdmissionAssessmentsScreen() {
                   spacing={1}
                   sx={{ px: 1, flexShrink: 0 }}
                 >
-                  <Typography variant="body2">{selection.length} selected</Typography>
+                  <Typography variant="body2">{selection.length} Selected</Typography>
                   {permissions.attendance && (
                     <Button
                       size="small"
@@ -483,7 +484,7 @@ export default function AdmissionAssessmentsScreen() {
                         setBatch({ action: 'attendance', rows: batchRows('attendance') })
                       }
                     >
-                      Record attendance ({batchRows('attendance').length})
+                      Record Attendance ({batchRows('attendance').length})
                     </Button>
                   )}
                   {permissions.results && (
@@ -493,7 +494,7 @@ export default function AdmissionAssessmentsScreen() {
                       disabled={!batchRows('result').length}
                       onClick={() => setBatch({ action: 'result', rows: batchRows('result') })}
                     >
-                      Record results ({batchRows('result').length})
+                      Record Results ({batchRows('result').length})
                     </Button>
                   )}
                   {canAdvance && (
@@ -507,7 +508,7 @@ export default function AdmissionAssessmentsScreen() {
                     </Button>
                   )}
                   <Button size="small" onClick={() => setSelection([])}>
-                    Clear selection
+                    Clear Selection
                   </Button>
                 </Stack>
               )}
@@ -593,22 +594,22 @@ export default function AdmissionAssessmentsScreen() {
                     <Stack component="span" alignItems="center" spacing={1}>
                       <Typography component="span" variant="inherit" color="text.secondary">
                         {!academic.academicYearId
-                          ? 'Choose an academic year to view assessments.'
+                          ? 'Choose an Academic Year to View Assessments.'
                           : workbench.invalidSession
-                            ? 'Clear the unavailable session filter to view applicants.'
+                            ? 'Clear the Unavailable Session Filter to View Applicants.'
                             : workbench.invalidScope
-                              ? 'Clear the unavailable offering filter to view applicants.'
+                              ? 'Clear the Unavailable Offering Filter to View Applicants.'
                               : !academic.boardId || !academic.mediumId
-                                ? 'Choose a Board and Medium to view assessments.'
+                                ? 'Choose a Board and Medium to View Assessments.'
                                 : !workbench.visibleScopes.length
-                                  ? 'No assessment stages are configured for this academic context.'
+                                  ? 'No Assessment Stages Are Configured for This Academic Context.'
                                   : filtered
-                                    ? 'No applicants match these filters.'
-                                    : 'No applicants have reached an assessment stage yet.'}
+                                    ? 'No Applicants Match These Filters.'
+                                    : 'No Applicants Have Reached an Assessment Stage Yet.'}
                       </Typography>
                       {!!filtered && (
                         <Button size="small" variant="outlined" onClick={clearFilters}>
-                          Clear filters
+                          Clear Filters
                         </Button>
                       )}
                     </Stack>

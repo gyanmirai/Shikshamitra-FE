@@ -16,7 +16,8 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import RoomAvailabilityScreen from './RoomAvailabilityScreen';
 
 vi.hoisted(() => { process.env.NEXT_PUBLIC_API_URL = 'http://localhost:5000'; });
-vi.mock('@iconify/react', () => ({ Icon: () => <span aria-hidden="true" />, disableCache: () => {} }));
+vi.mock('@iconify/react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@iconify/react')>()), Icon: () => <span aria-hidden="true" />, disableCache: () => {} }));
 
 it('loads room filters with timetable access without calling Building management', async () => {
   const requests: URL[] = [];

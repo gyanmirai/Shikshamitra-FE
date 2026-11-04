@@ -31,11 +31,11 @@ type Props = {
 };
 
 const TITLES: Record<WorkflowGovernanceActionMode, string> = {
-  submit: 'Submit workflow for approval',
-  approve: 'Approve workflow',
-  reject: 'Request workflow changes',
-  publish: 'Publish workflow',
-  rollback: 'Create rollback draft',
+  submit: 'Submit Workflow for Approval',
+  approve: 'Approve Workflow',
+  reject: 'Request Workflow Changes',
+  publish: 'Publish Workflow',
+  rollback: 'Create Rollback Draft',
 };
 
 export function WorkflowGovernanceActionDialog({
@@ -145,7 +145,7 @@ export function WorkflowGovernanceActionDialog({
                   'The selected user must have workflow approval access.'
                 }
                 formControlProps={{ required: true }}
-                noOptionsMessage="No active users found"
+                noOptionsMessage="No Active Users Found"
               />
             </ShakingTextField>
           )}
@@ -154,7 +154,7 @@ export function WorkflowGovernanceActionDialog({
               error={Boolean(formik.touched.effectiveAt && formik.errors.effectiveAt)}
             >
               <DateTimePicker
-                label="Effective time (optional)"
+                label="Effective Time (Optional)"
                 format={ADMISSION_DATE_TIME_FORMAT}
                 value={formik.values.effectiveAt}
                 minDateTime={dayjs()}
@@ -184,10 +184,10 @@ export function WorkflowGovernanceActionDialog({
               name="reason"
               label={
                 mode === 'reject'
-                  ? 'Changes required'
+                  ? 'Changes Required'
                   : mode === 'approve'
-                    ? 'Approval note (optional)'
-                    : 'Change reason'
+                    ? 'Approval Note (Optional)'
+                    : 'Change Reason'
               }
               value={formik.values.reason}
               onChange={formik.handleChange}
@@ -222,16 +222,16 @@ export function WorkflowGovernanceActionDialog({
           onClick={() => formik.handleSubmit()}
         >
           {mode === 'submit'
-            ? 'Submit for approval'
+            ? 'Submit for Approval'
             : mode === 'approve'
               ? 'Approve'
               : mode === 'reject'
-                ? 'Return to draft'
+                ? 'Return to Draft'
                 : mode === 'rollback'
-                  ? 'Create rollback draft'
+                  ? 'Create Rollback Draft'
                   : formik.values.effectiveAt
-                    ? 'Schedule publication'
-                    : 'Publish now'}
+                    ? 'Schedule Publication'
+                    : 'Publish Now'}
         </LoadingButton>
       </DialogActions>
     </CustomDialog>

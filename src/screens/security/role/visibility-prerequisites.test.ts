@@ -1,4 +1,5 @@
 import { it, expect, describe } from 'vitest';
+import financeModule, { financePaths, financePermissions } from 'src/constants/finance-menu';
 import studentModule, {
   studentPermissions,
   studentVisibilityPermissions,
@@ -47,6 +48,21 @@ const catalogue = (inherited = false): PermissionCatalogue => ({
 });
 
 describe('visibility prerequisites', () => {
+  it('exposes fee adjustments under Fees with the exact View permission and Finance visibility prerequisites', () => {
+    const items = Object.values(financeModule).flatMap((sections) =>
+      sections.flatMap((section) => section.items)
+    );
+    const fees = items.find((item) => item.title === 'Fees');
+    expect(fees?.children?.find((item) => item.path === financePaths.fees.adjustments))
+      .toMatchObject({ title: 'Adjustments', permissionName: 'Finance.Fees.Adjustment.View' });
+    const prerequisites = buildVisibilityPrerequisites([
+      { title: 'Finance', permissionName: financePermissions.root, submodule: items },
+    ]);
+    expect(prerequisites['Finance.Fees.Adjustment']).toEqual([
+      ['ShikshaMitra.Module.Finance', 'ShikshaMitra.Module.Finance.Fees'],
+    ]);
+  });
+
   it('maps House Management actions through the existing Student and Records visibility flags', () => {
     const items = Object.values(studentModule()).flatMap((sections) =>
       sections.flatMap((section) => section.items)

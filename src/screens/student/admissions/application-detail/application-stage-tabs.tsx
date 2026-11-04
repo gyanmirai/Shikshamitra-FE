@@ -28,7 +28,7 @@ export function ApplicationStageTabs({
       scrollButtons="auto"
       allowScrollButtonsMobile
       guardUnsavedChanges={false}
-      aria-label="Admission journey"
+      aria-label="Admission Journey"
       onChange={(_, stageId: string) => onChange(stageId)}
       sx={{ borderBottom: 1, borderColor: 'divider' }}
       slotProps={{

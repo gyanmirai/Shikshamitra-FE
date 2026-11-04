@@ -48,17 +48,17 @@ export function WorkflowStageBehavior({ formik, metadata, stages = [], readOnly 
   );
 
   return (
-    <FormSectionCard title="Stage behavior" icon="mdi:cog-outline">
+    <FormSectionCard title="Stage Behavior" icon="mdi:cog-outline">
       <Stack spacing={1}>
         {setting(
           'isRequired',
-          'Required stage',
+          'Required Stage',
           'Applicants must complete this stage. Ordinary skip is unavailable; a separately authorized emergency override requires a reason.'
         )}
         {!formik.values.isRequired &&
           setting(
             'allowManualSkip',
-            'Allow authorized skip',
+            'Allow Authorized Skip',
             managed
               ? 'This configured process must meet its completion requirements and cannot use ordinary manual skip.'
               : 'Authorized staff can skip this optional stage using the existing workflow action.',
@@ -67,13 +67,13 @@ export function WorkflowStageBehavior({ formik, metadata, stages = [], readOnly 
         {showEntryStage &&
           setting(
             'isEntryStage',
-            'Entry stage',
+            'Entry Stage',
             'Applicants begin at this stage. The journey must have exactly one starting stage.',
             !metadata?.canBeEntryStage
           )}
         {setting(
           'isTerminalStage',
-          'End of journey',
+          'End Of Journey',
           'Completing this stage ends the configured journey. Admission finalization and Student Onboarding remain separate actions.'
         )}
       </Stack>

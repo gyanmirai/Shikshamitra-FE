@@ -53,7 +53,7 @@ export default function AdmissionInquiryEditPage() {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: 1, minHeight: 0 }}>
       <CustomBreadcrumbs
-        heading="Edit inquiry"
+        heading="Edit Inquiry"
         description={
           inquiry.data
             ? `${formatAdmissionReference(inquiry.data.inquiryNumber)} · ${inquiry.data.applicantName}`
@@ -65,7 +65,7 @@ export default function AdmissionInquiryEditPage() {
           { name: 'Student', href: studentPaths.dashboard },
           { name: 'Admissions', href: studentPaths.enrollment.root },
           { name: originLabel, href: originHref },
-          { name: 'Edit inquiry' },
+          { name: 'Edit Inquiry' },
         ]}
       />
       <Paper
@@ -81,7 +81,7 @@ export default function AdmissionInquiryEditPage() {
         }}
       >
         {(inquiry.isLoading || management.isLoading) && (
-          <Stack spacing={2} sx={{ p: 2 }} aria-label="Loading inquiry details" aria-busy="true">
+          <Stack spacing={2} sx={{ p: 2 }} aria-label="Loading Inquiry Details" aria-busy="true">
             <Skeleton variant="rounded" height={84} />
             <Skeleton variant="rounded" height={280} />
           </Stack>
@@ -127,7 +127,7 @@ export default function AdmissionInquiryEditPage() {
               }
               onCancel={returnToList}
               onDraftChange={setDraft}
-              title="Admission interest"
+              title="Admission Interest"
               fullHeight
             />
           </>
@@ -137,7 +137,7 @@ export default function AdmissionInquiryEditPage() {
         open={discard.value}
         onClose={discard.onFalse}
         icon="warning"
-        title="Discard changes?"
+        title="Discard Changes?"
         content="Your unsaved inquiry form changes will be lost."
         action={
           <Button

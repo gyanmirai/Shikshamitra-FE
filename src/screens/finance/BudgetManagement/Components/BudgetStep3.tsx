@@ -108,6 +108,7 @@ const BudgetInfoCard = (formik: FormikProps<IBudgetFormValues>) => {
                 align: 'left',
               },
               {
+                cellSx: { textAlign: 'right' as const },
                 id: 'amount',
                 label: 'Amount',
                 align: 'left',

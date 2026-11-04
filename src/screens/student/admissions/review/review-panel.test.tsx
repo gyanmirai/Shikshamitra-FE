@@ -3,6 +3,7 @@ import { http, HttpResponse } from 'msw';
 import { mswServer } from 'src/test/mswServer';
 import userEvent from '@testing-library/user-event';
 import { screen, waitFor } from '@testing-library/react';
+import { expectStudentErrorToast } from 'src/test/student-toast-test-fixture';
 import {
   reviewPath,
   reviewRecord,
@@ -39,9 +40,9 @@ it('shows stale evidence, overdue ownership and server blockers without permitti
   expect(await screen.findByText('Overdue')).toBeInTheDocument();
   expect(screen.getByText('Reviewer: Admissions Reviewer')).toBeInTheDocument();
   expect(screen.getByText('Recheck the changed eligibility result.')).toBeInTheDocument();
-  expect(screen.getByText('Changed · recheck needed')).toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: 'Review and recommend' })).not.toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Continue admission' })).toBeDisabled();
+  expect(screen.getByText('Changed · Recheck Needed')).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Review and Recommend' })).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Continue Admission' })).toBeDisabled();
 });
 
 it('requires view permission before querying review evidence', async () => {
@@ -87,15 +88,15 @@ it('queries completed Review only when expanded, supports authorized stale re-re
     />
   );
   expect(reads).not.toHaveBeenCalled();
-  await user.click(screen.getByRole('button', { name: 'Admission review · Review records' }));
-  expect(await screen.findByRole('button', { name: 'Review and recommend' })).toBeEnabled();
-  expect(screen.queryByRole('button', { name: 'Continue admission' })).not.toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Admission review · Review Records' }));
+  expect(await screen.findByRole('button', { name: 'Review and Recommend' })).toBeEnabled();
+  expect(screen.queryByRole('button', { name: 'Continue Admission' })).not.toBeInTheDocument();
   expect(historyReads).not.toHaveBeenCalled();
-  await user.click(screen.getByRole('button', { name: 'Review history' }));
+  await user.click(screen.getByRole('button', { name: 'Review History' }));
   await waitFor(() => expect(historyReads).toHaveBeenCalledOnce());
 });
 
-it('offers retry for a failed read and renders the current server response', async () => {
+it('announces a failed read and uses the existing Refresh action to recover', async () => {
   let failed = true;
   mswServer.use(
     http.get(reviewPath, () =>
@@ -104,8 +105,10 @@ it('offers retry for a failed read and renders the current server response', asy
   );
   const user = userEvent.setup();
   renderReviewUi(<ApplicationReviewPanel applicationId="application-1" stage={reviewStage} />);
-  const retry = await screen.findByRole('button', { name: 'Retry' });
+  await expectStudentErrorToast('Unable to load this enrollment data.');
+  expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+  const refresh = screen.getByRole('button', { name: 'Refresh' });
   failed = false;
-  await user.click(retry);
+  await user.click(refresh);
   expect(await screen.findByText('All eligibility criteria passed.')).toBeInTheDocument();
 });

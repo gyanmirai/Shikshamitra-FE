@@ -25,6 +25,7 @@ const OutstandingFee = ({ student }: { student: IStudentFee | null }) => {
             Array.isArray(value) ? <Box>{value.join(', ')}</Box> : <Box>{value}</Box>,
         },
         {
+          cellSx: { textAlign: 'right' as const },
           id: 'amount',
           label: 'Amount',
           align: 'left',
@@ -34,6 +35,7 @@ const OutstandingFee = ({ student }: { student: IStudentFee | null }) => {
         { id: 'dueDate', label: 'Due Date', align: 'left', filterType: 'date' },
       ]}
       data={outstandingFeeData || []}
+      searchFieldProps={{ placeholder: 'Search' }}
     />
   );
 };

@@ -50,6 +50,93 @@ const deferred = () => {
 
 describe('Offering edit detail loading', () => {
   beforeEach(() => vi.clearAllMocks());
+  it('routes unused active setup changes through the existing deactivation confirmation', async () => {
+    mocks.granted = [{ name: 'Students.Admissions.Offerings.Add', isGranted: true }];
+    const unusedActive = {
+      ...detail,
+      isActive: true,
+      inquiryCount: 0,
+      applicationCount: 0,
+      hasConfigurationUsage: false,
+      canEditConfiguration: false,
+    };
+    mocks.load.mockReturnValue({ unwrap: async () => unusedActive });
+    const { result } = renderHook(() => useAdmissionOfferingActions(cycle));
+    await act(async () => result.current.openDetailed('edit', row));
+    act(() => {
+      result.current.closeDialog();
+      result.current.deactivateFromEditor();
+    });
+    expect(result.current.dialogMode).toBeNull();
+    expect(result.current.pendingAction).toEqual({ type: 'deactivate', row: unusedActive });
+    expect(mocks.other).not.toHaveBeenCalled();
+  });
+
+  it.each([false, true])(
+    'does not offer setup deactivation for used or unauthorized offerings (used=%s)',
+    async (used) => {
+      mocks.granted = used ? [{ name: 'Students.Admissions.Offerings.Add', isGranted: true }] : [];
+      mocks.load.mockReturnValue({
+        unwrap: async () => ({
+          ...detail,
+          isActive: true,
+          applicationCount: 0,
+          inquiryCount: used ? 1 : 0,
+          hasConfigurationUsage: used,
+          canEditConfiguration: false,
+        }),
+      });
+      const { result } = renderHook(() => useAdmissionOfferingActions(cycle));
+      await act(async () => result.current.openDetailed('edit', row));
+      act(() => result.current.deactivateFromEditor());
+      expect(result.current.pendingAction).toBeNull();
+      expect(mocks.other).not.toHaveBeenCalled();
+    }
+  );
+  it('loads actionable blockers when resolving an already-invalid row without attempting activation', async () => {
+    const errors = [
+      { code: 'FormNotPublished', message: 'The form is archived.', formDefinitionId: 'form-1' },
+    ];
+    mocks.load.mockReturnValue({
+      unwrap: async () => ({ ...detail, configuration: { isValid: false, errors } }),
+    });
+    const { result } = renderHook(() => useAdmissionOfferingActions(cycle));
+    await act(async () =>
+      result.current.requestAction({
+        ...row,
+        isActive: false,
+        configurationStatus: 0,
+        canActivate: false,
+      })
+    );
+    expect(result.current.activationErrors).toEqual(errors);
+    expect(mocks.other).not.toHaveBeenCalled();
+  });
+  it('keeps the activation dialog open with exact configuration errors and an edit recovery action', async () => {
+    mocks.granted = [{ name: 'Students.Admissions.Offerings.Add', isGranted: true }];
+    const errors = [
+      {
+        code: 'InquiryFormNotPublished',
+        message: 'Inquiry 2026 is archived. Restore it or select a published form.',
+        formDefinitionId: 'form-1',
+        formName: 'Inquiry 2026',
+        formPurpose: 0,
+      },
+    ];
+    mocks.load.mockReturnValue({
+      unwrap: async () => ({ ...detail, configuration: { isValid: false, errors } }),
+    });
+    const { result } = renderHook(() => useAdmissionOfferingActions(cycle));
+    act(() => result.current.requestAction({ ...row, isActive: false }));
+    await act(async () => result.current.confirmAction());
+    expect(mocks.other).not.toHaveBeenCalled();
+    expect(result.current.activationErrors).toEqual(errors);
+    expect(result.current.pendingAction).not.toBeNull();
+    await act(async () => result.current.editBlockedOffering());
+    expect(result.current.pendingAction).toBeNull();
+    expect(result.current.dialogMode).toBe('edit');
+    mocks.granted = [];
+  });
   it.each(['clone', 'edit'] as const)(
     'reveals the authoritative saved scope after %s moves an offering to another class or cycle',
     async (mode) => {

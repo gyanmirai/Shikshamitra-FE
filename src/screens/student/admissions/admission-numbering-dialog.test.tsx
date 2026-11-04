@@ -74,14 +74,14 @@ function setup(overrides: Partial<React.ComponentProps<typeof AdmissionNumbering
 }
 describe('application numbering dialog', () => {
   it.each([
-    ['Academic year wise', 2],
-    ['Calendar year wise', 1],
-    ['Continuous numbering', 0],
+    ['Academic Year Wise', 2],
+    ['Calendar Year Wise', 1],
+    ['Continuous Numbering', 0],
   ] as const)('sets a valid year/reset pair together for %s', async (label, cycle) => {
     const { user, onSave, onPreview } = setup({
       settings: { ...settings, yearFormat: 1, resetPolicy: 1 },
     });
-    await user.click(screen.getByRole('combobox', { name: 'Numbering cycle' }));
+    await user.click(screen.getByRole('combobox', { name: 'Numbering Cycle' }));
     await user.click(screen.getByRole('option', { name: label }));
     expect(screen.queryByRole('combobox', { name: 'Reset counter' })).not.toBeInTheDocument();
     expect(screen.queryByRole('combobox', { name: 'Year format' })).not.toBeInTheDocument();
@@ -106,11 +106,11 @@ describe('application numbering dialog', () => {
     const { user, onSave, onPreview } = setup({
       settings: { ...settings, resetPolicy: 0, yearFormat: 2, sequenceLocked: true },
     });
-    expect(screen.getByRole('combobox', { name: 'Numbering cycle' })).toHaveTextContent(
-      'Continuous numbering'
+    expect(screen.getByRole('combobox', { name: 'Numbering Cycle' })).toHaveTextContent(
+      'Continuous Numbering'
     );
-    expect(screen.getByRole('combobox', { name: 'Year in number' })).toHaveTextContent(
-      'Academic year'
+    expect(screen.getByRole('combobox', { name: 'Year in Number' })).toHaveTextContent(
+      'Academic Year'
     );
     await waitFor(() =>
       expect(onPreview).toHaveBeenLastCalledWith(
@@ -118,8 +118,8 @@ describe('application numbering dialog', () => {
       )
     );
     expect(onSave).not.toHaveBeenCalled();
-    await user.click(screen.getByRole('combobox', { name: 'Year in number' }));
-    await user.click(screen.getByRole('option', { name: 'No year' }));
+    await user.click(screen.getByRole('combobox', { name: 'Year in Number' }));
+    await user.click(screen.getByRole('option', { name: 'No Year' }));
     await user.click(screen.getByRole('button', { name: 'Submit' }));
     await waitFor(() =>
       expect(onSave).toHaveBeenCalledWith(
@@ -130,12 +130,12 @@ describe('application numbering dialog', () => {
 
   it('locks the used cycle while retaining editable future format and the real next-number preview', async () => {
     const { user, onSave } = setup({ settings: { ...settings, sequenceLocked: true } });
-    expect(screen.getByRole('combobox', { name: 'Numbering cycle' })).toHaveAttribute(
+    expect(screen.getByRole('combobox', { name: 'Numbering Cycle' })).toHaveAttribute(
       'aria-disabled',
       'true'
     );
     expect(screen.getByText(/Numbering cycle is locked because application numbers/)).toBeVisible();
-    expect(screen.getByLabelText('Starting number *')).toBeDisabled();
+    expect(screen.getByLabelText('Starting Number *')).toBeDisabled();
     expect(screen.getByLabelText('Prefix *')).toBeEnabled();
     await user.type(screen.getByLabelText('Prefix *'), 'X');
     await user.click(screen.getByRole('button', { name: 'Submit' }));
@@ -156,7 +156,7 @@ describe('application numbering dialog', () => {
       settings: { ...settings, resetPolicy: 0, yearFormat: 0, isConfigured: true },
     });
     await user.click(screen.getByRole('button', { name: 'Advanced Settings' }));
-    expect(screen.getByRole('combobox', { name: 'Year in number' })).toHaveTextContent('No year');
+    expect(screen.getByRole('combobox', { name: 'Year in Number' })).toHaveTextContent('No Year');
     expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
     expect(onSave).not.toHaveBeenCalled();
   });
@@ -168,8 +168,8 @@ describe('application numbering dialog', () => {
     expect(onPreview).toHaveBeenCalledWith(
       expect.objectContaining({ academicYearId: year.id, startingNumber: 1, prefix: 'DDVS' })
     );
-    expect(screen.getByText('All admission offerings')).toBeVisible();
-    expect(screen.queryByLabelText('Application number')).not.toBeInTheDocument();
+    expect(screen.getByText('All Admission Offerings')).toBeVisible();
+    expect(screen.queryByLabelText('Application Number')).not.toBeInTheDocument();
   });
   it(
     'validates before saving and retains values after a server failure for retry',
@@ -180,16 +180,16 @@ describe('application numbering dialog', () => {
         .mockRejectedValueOnce({ data: { detail: 'Settings changed in another session' } })
         .mockResolvedValue(settings);
       const { user, onClose } = setup({ onSave });
-      await user.clear(screen.getByLabelText('Starting number *'));
+      await user.clear(screen.getByLabelText('Starting Number *'));
       await user.click(screen.getByRole('button', { name: 'Submit' }));
       expect(await screen.findByText('Starting number is required')).toBeVisible();
-      await waitFor(() => expect(screen.getByLabelText('Starting number *')).toHaveFocus());
+      await waitFor(() => expect(screen.getByLabelText('Starting Number *')).toHaveFocus());
       expect(onSave).not.toHaveBeenCalled();
-      fireEvent.change(screen.getByLabelText('Starting number *'), { target: { value: '12' } });
+      fireEvent.change(screen.getByLabelText('Starting Number *'), { target: { value: '12' } });
       fireEvent.change(screen.getByLabelText('Prefix *'), { target: { value: ' school ' } });
       await user.click(screen.getByRole('button', { name: 'Submit' }));
       expect(await screen.findByText('Settings changed in another session')).toBeVisible();
-      expect(screen.getByLabelText('Starting number *')).toHaveValue('12');
+      expect(screen.getByLabelText('Starting Number *')).toHaveValue('12');
       await user.click(screen.getByRole('button', { name: 'Submit' }));
       await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
       expect(onSave).toHaveBeenLastCalledWith(
@@ -213,7 +213,7 @@ describe('application numbering dialog', () => {
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'close' })).toBeDisabled();
     expect(screen.getByLabelText('Prefix *')).toBeDisabled();
-    expect(screen.getByRole('combobox', { name: 'Numbering cycle' })).toHaveAttribute(
+    expect(screen.getByRole('combobox', { name: 'Numbering Cycle' })).toHaveAttribute(
       'aria-disabled',
       'true'
     );
@@ -222,7 +222,7 @@ describe('application numbering dialog', () => {
   });
   it('preserves existing permission and issued-counter restrictions', () => {
     setup({ canEdit: false, settings: { ...settings, sequenceLocked: true } });
-    expect(screen.getByLabelText('Starting number *')).toBeDisabled();
+    expect(screen.getByLabelText('Starting Number *')).toBeDisabled();
     expect(screen.getByLabelText('Prefix *')).toBeDisabled();
     expect(screen.queryByRole('button', { name: 'Submit' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Number Format information' })).toBeEnabled();
@@ -238,9 +238,9 @@ describe('application numbering dialog', () => {
     const { user, onClose } = setup();
     await user.type(screen.getByLabelText('Prefix *'), 'X');
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
-    expect(screen.getByText('Discard unsaved changes?')).toBeVisible();
+    expect(screen.getByText('Discard Unsaved Changes?')).toBeVisible();
     expect(onClose).not.toHaveBeenCalled();
-    await user.click(screen.getByRole('button', { name: 'Discard changes' }));
+    await user.click(screen.getByRole('button', { name: 'Discard Changes' }));
     expect(onClose).toHaveBeenCalledOnce();
   });
   it('offers retry after load failure and does not enable submission', async () => {

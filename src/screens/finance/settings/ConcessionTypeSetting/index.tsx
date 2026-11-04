@@ -17,10 +17,10 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { financePermissions } from 'src/constants/finance-menu';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useFinanceFormClose } from 'src/hooks/use-finance-form-close';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { serializeFinanceTableFilters } from 'src/screens/finance/components/financeTableQuery';
+import { FinanceSetupManagerHeader } from 'src/screens/finance/setup/embedding/FinanceSetupManagerHeader';
 import {
   concessionTypeApi,
   useGetConcessionTypesQuery,
@@ -120,7 +120,8 @@ const ConcessionType = () => {
       sx={{ height: '100%', minHeight: 0, minWidth: 0, display: 'flex', flexDirection: 'column' }}
     >
       {confirmation}
-      <CustomBreadcrumbs
+      <FinanceSetupManagerHeader
+        editorOpen={addConcessionTypeDialog.value || isFormBusy || isLoadingDelete}
         description={
           addConcessionTypeDialog.value
             ? 'Access detailed information on the selected concession type such as discount rules and applicable conditions.'

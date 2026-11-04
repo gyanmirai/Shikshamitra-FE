@@ -35,6 +35,8 @@ export function useCatalog(query: any, params: Record<string, unknown>, enabled:
     type: 'query',
     currentQueryAndMutation: query,
     params: { ...params, page, pageSize: 100, skipCount: (page - 1) * 100, maxResultCount: 100 },
+    // Each traversal must refresh every page, including an explicit retry that
+    // returns to page 1. RTK still shares in-flight requests between editors.
     options: { ...queryOptions, refetchOnMountOrArgChange: true, skip: !enabled },
     popupConfig: { error: false },
   });
@@ -49,7 +51,7 @@ export function useCatalog(query: any, params: Record<string, unknown>, enabled:
   useEffect(() => {
     if (!data || !enabled || result.isFetching) return;
     if (page * 100 >= data.totalCount) completed.current = true;
-    setPages((old) => ({ ...old, [page]: data.items }));
+    setPages((old) => (old[page] === data.items ? old : { ...old, [page]: data.items }));
     if (data.items.length && page * 100 < data.totalCount) setPage((old) => old + 1);
   }, [data, enabled, page, result.isFetching]);
   const items = useMemo(
@@ -95,7 +97,8 @@ export default function useFeeStructureLookups(
   scope: { feeStructureMetadataId: string; standardId: string },
   policiesEnabled: boolean,
   scheduleLine?: StructureLine,
-  published = false
+  published = false,
+  active = true
 ) {
   const context = useQueryAndMutation({
     type: 'query',
@@ -106,42 +109,55 @@ export default function useFeeStructureLookups(
   const data = context.currentData;
   const academicYearId = data?.academicYearId ?? '';
   const permissions = data?.permissions ?? {};
+  const catalogScope = JSON.stringify({ ...scope, academicYearId });
+  const activatedScope = useRef<string | undefined>(undefined);
+  // Load an editor's catalogs on first activation, then keep its shared cache
+  // subscription warm. Re-subscribing a completed multipage traversal would
+  // reset its options and invalidate an unchanged publication review.
+  if (active) activatedScope.current = catalogScope;
+  const catalogsEnabled = active || activatedScope.current === catalogScope;
   const policyParams = { academicYearId, status: 'Active' };
   const collection = useCatalog(
     useGetCollectionPoliciesQuery,
     policyParams,
-    !!academicYearId && policiesEnabled && !!permissions.collectionRead
+    catalogsEnabled && !!academicYearId && policiesEnabled && !!permissions.collectionRead
   );
   const refund = useCatalog(
     useGetRefundPoliciesQuery,
     policyParams,
-    !!academicYearId && policiesEnabled && !!permissions.refundRead
+    catalogsEnabled && !!academicYearId && policiesEnabled && !!permissions.refundRead
   );
   const terms = useCatalog(
     useGetPaymentTermsQuery,
     { academicYearId, boardId: data?.boardId ?? '', status: 'Active' },
-    !!academicYearId && !!permissions.termsRead
+    catalogsEnabled && !!academicYearId && !!permissions.termsRead
   );
   const heads = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetActiveFeeHeadsQuery,
     params: academicYearId,
+    // Keep this shared year catalog subscribed across card switches. Dropping
+    // currentData during a skip would invalidate a ready publication preview.
     options: { ...queryOptions, skip: !academicYearId || !permissions.headsRead },
   });
   const termDetail = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetPaymentTermByIdQuery,
     params: scheduleLine?.paymentTermId ?? '',
-    options: { ...queryOptions, skip: !scheduleLine?.paymentTermId || !permissions.termsRead },
+    options: {
+      ...queryOptions,
+      skip: !active || !scheduleLine?.paymentTermId || !permissions.termsRead,
+    },
   });
   const refreshPrerequisites = () => {
+    if (!active) return;
     context.refetch?.();
     if (academicYearId && permissions.headsRead && !heads.isUninitialized) heads.refetch?.();
     if (academicYearId && permissions.termsRead) terms.retry();
     if (academicYearId && policiesEnabled && permissions.collectionRead) collection.retry();
     if (academicYearId && policiesEnabled && permissions.refundRead) refund.retry();
   };
-  useRefreshFinancePrerequisites(refreshPrerequisites);
+  useRefreshFinancePrerequisites(refreshPrerequisites, active);
   const settings: StructureSettings | undefined = useMemo(
     () =>
       data

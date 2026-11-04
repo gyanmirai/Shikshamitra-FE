@@ -9,10 +9,10 @@ import CustomSelect from 'src/components/custom-select';
 import { StudentFeedback } from 'src/components/student-feedback';
 
 export const ELIGIBILITY_KIND_OPTIONS = [
-  { value: 'age', label: 'Age on a cutoff date' },
-  { value: 'application', label: 'Application answers or previous marks' },
-  { value: 'assessment', label: 'Entrance assessment result' },
-  { value: 'documents', label: 'Verified documents' },
+  { value: 'age', label: 'Age on a Cutoff Date' },
+  { value: 'application', label: 'Application Answers or Previous Marks' },
+  { value: 'assessment', label: 'Entrance Assessment Result' },
+  { value: 'documents', label: 'Verified Documents' },
 ];
 
 function changeKind(
@@ -45,7 +45,7 @@ export function EligibilityCriterionBasics({
       <TextField
         fullWidth
         size="small"
-        label="Criterion name *"
+        label="Criterion Name *"
         name="name"
         value={formik.values.name}
         onChange={formik.handleChange}
@@ -55,7 +55,7 @@ export function EligibilityCriterionBasics({
       <TextField
         fullWidth
         size="small"
-        label="Criterion code *"
+        label="Criterion Code *"
         name="code"
         value={formik.values.code}
         onChange={(event) => formik.setFieldValue('code', event.target.value.toUpperCase())}
@@ -66,7 +66,7 @@ export function EligibilityCriterionBasics({
       <CustomSelect
         fullWidth
         size="small"
-        label="What should be checked?"
+        label="What Should Be Checked?"
         value={formik.values.kind === 'inquiry' ? '' : formik.values.kind}
         options={ELIGIBILITY_KIND_OPTIONS}
         disabled={readOnly}
@@ -85,7 +85,7 @@ export function EligibilityCriterionBasics({
         multiline
         minRows={2}
         size="small"
-        label="Explanation when this check fails (optional)"
+        label="Explanation When This Check Fails (Optional)"
         name="failureMessage"
         value={formik.values.failureMessage ?? ''}
         onChange={formik.handleChange}

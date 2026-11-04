@@ -8,7 +8,6 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { boardApi, useGetBoardsQuery, useDeleteBoardMutation } from 'src/redux/board/boardApi';
 
 import { BoardForm } from '../board-form';
-import { MediumForm } from '../medium-form';
 import { AcademicFormDialog } from '../academic-form-dialog';
 import { AcademicActionButtons } from './academic-action-buttons';
 
@@ -21,7 +20,6 @@ export const BoardActions = ({
   board: Board;
   parents: AcademicSetupParents;
 }) => {
-  const addDialog = useBoolean();
   const editDialog = useBoolean();
   const deleteDialog = useBoolean();
   const dispatch = useDispatch();
@@ -46,14 +44,6 @@ export const BoardActions = ({
 
   return (
     <>
-      <AcademicFormDialog
-        kind="medium"
-        title={`Add Medium to ${board.name}`}
-        handleClose={addDialog.onFalse}
-        open={addDialog.value}
-      >
-        <MediumForm handleClose={addDialog.onFalse} editData={null} boardId={board.id} />
-      </AcademicFormDialog>
       <AcademicFormDialog
         kind="board"
         title={`Edit Board ${board.name}`}
@@ -94,8 +84,6 @@ export const BoardActions = ({
       <AcademicActionButtons
         recordName={board.name}
         recordType="board"
-        addLabel="Add medium"
-        onAdd={addDialog.onTrue}
         onEdit={editDialog.onTrue}
         onDelete={deleteDialog.onTrue}
       />

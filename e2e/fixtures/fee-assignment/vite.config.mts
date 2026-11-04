@@ -29,5 +29,14 @@ export default defineConfig({
   },
   define: { 'process.env': '{"BUILD_STATIC_EXPORT":"false"}' },
   esbuild: { jsx: 'automatic' },
-  server: { host: '127.0.0.1', port: 4179, strictPort: true, fs: { allow: [repo] } },
+  server: {
+    host: '127.0.0.1',
+    port: 4179,
+    strictPort: true,
+    fs: { allow: [repo] },
+    proxy: {
+      '/api': 'http://127.0.0.1:4188',
+      '/__fee-assignment-e2e': 'http://127.0.0.1:4188',
+    },
+  },
 });

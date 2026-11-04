@@ -3,12 +3,15 @@ import { http, HttpResponse } from 'msw';
 import { mswServer } from 'src/test/mswServer';
 import { configureStore } from '@reduxjs/toolkit';
 import { it, vi, expect, describe, afterEach } from 'vitest';
-import { act, waitFor, renderHook } from '@testing-library/react';
+import { act, render, waitFor, renderHook } from '@testing-library/react';
 import { academicInsightsApi as api } from 'src/redux/academicAPI/academicInsightsApi';
 
 import { useAcademicInsights } from './use-academic-insights';
+import AcademicImageDashboard from '../academic-image-dashboard';
 
 vi.hoisted(() => { process.env.NEXT_PUBLIC_API_URL = 'http://localhost:5000'; });
+vi.mock('next/dynamic', () => ({ default: (_loader: unknown, options: { loading: () => React.ReactNode }) => options.loading }));
+vi.mock('src/components/custom-breadcrumbs', () => ({ CustomBreadcrumbs: () => <h1>Academic Dashboard</h1> }));
 vi.mock('src/redux/session-cache', () => ({
   getCachedAuthSession: async () => ({ accessToken: 'synthetic-test-token' }),
   getAuthSessionCacheRevision: () => 1, isAuthSessionCacheCurrent: () => true,
@@ -32,10 +35,57 @@ function createStore(initial = { auth, globalState }) {
   }, middleware: (defaults) => defaults().concat(api.middleware) });
 }
 let store: ReturnType<typeof createStore>;
-afterEach(() => { store?.dispatch(api.util.resetApiState()); });
+afterEach(() => { store?.dispatch(api.util.resetApiState()); vi.useRealTimers(); });
 const wrapper = ({ children }: { children: React.ReactNode }) => <Provider store={store}>{children}</Provider>;
 
 describe('Academic Insights context ownership', () => {
+  it('starts the insights request while the dashboard code is still loading', async () => {
+    let requests = 0;
+    mswServer.use(http.get(endpoint, () => { requests += 1; return HttpResponse.json(payload); }));
+    store = createStore();
+    render(<AcademicImageDashboard />, { wrapper });
+    await waitFor(() => expect(requests).toBe(1));
+  });
+
+  it('retains the same-scope snapshot beyond a minute away and revalidates it on return', async () => {
+    let requests = 0;
+    let release!: () => void;
+    const waiting = new Promise<void>((resolve) => { release = resolve; });
+    mswServer.use(http.get(endpoint, async () => {
+      requests += 1;
+      if (requests > 1) await waiting;
+      return HttpResponse.json({ ...payload, scopeLabel: requests > 1 ? 'Updated scope' : 'Original scope' });
+    }));
+    store = createStore();
+    const first = renderHook(useAcademicInsights, { wrapper });
+    await waitFor(() => expect(first.result.current.data?.scopeLabel).toBe('Original scope'));
+    vi.useFakeTimers();
+    first.unmount();
+    await act(async () => { await vi.advanceTimersByTimeAsync(61_000); });
+    const returned = renderHook(useAcademicInsights, { wrapper });
+    expect(returned.result.current.data?.scopeLabel).toBe('Original scope');
+    expect(returned.result.current.isFetching).toBe(true);
+    vi.useRealTimers();
+    await waitFor(() => expect(requests).toBe(2));
+    await act(async () => { release(); });
+    await waitFor(() => expect(returned.result.current.data?.scopeLabel).toBe('Updated scope'));
+  });
+
+  it('uses a fresh cached return without another request and keeps manual refresh available', async () => {
+    let requests = 0;
+    mswServer.use(http.get(endpoint, () => { requests += 1; return HttpResponse.json(payload); }));
+    store = createStore();
+    const first = renderHook(useAcademicInsights, { wrapper });
+    await waitFor(() => expect(first.result.current.data).toEqual(payload));
+    first.unmount();
+    const returned = renderHook(useAcademicInsights, { wrapper });
+    expect(returned.result.current.data).toEqual(payload);
+    expect(returned.result.current.isFetching).toBe(false);
+    expect(requests).toBe(1);
+    await act(async () => { await returned.result.current.refetch(); });
+    expect(requests).toBe(2);
+  });
+
   it('skips requests until context and both dashboard grants are available', async () => {
     let requests = 0;
     mswServer.use(http.get(endpoint, () => { requests += 1; return HttpResponse.json(payload); }));

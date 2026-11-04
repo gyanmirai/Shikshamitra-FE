@@ -1,11 +1,12 @@
 import Stack from '@mui/material/Stack';
 import { Logo } from 'src/components/logo';
 import Tooltip from '@mui/material/Tooltip';
-import { Iconify } from 'src/components/iconify';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import { useColorScheme } from '@mui/material/styles';
 import { useSettingsContext } from 'src/components/settings';
+import DarkModeOutlined from '@mui/icons-material/DarkModeOutlined';
+import LightModeOutlined from '@mui/icons-material/LightModeOutlined';
 
 export function LoginHeader() {
   const { mode, systemMode, setMode } = useColorScheme();
@@ -40,20 +41,26 @@ export function LoginHeader() {
           GyanMirai
         </Typography>
       </Stack>
-      <Tooltip title={isDark ? 'Use light theme' : 'Use dark theme'}>
-        <IconButton
-          onClick={toggleTheme}
-          aria-label={isDark ? 'Use light theme' : 'Use dark theme'}
-          sx={{
-            color: 'inherit',
-            width: 44,
-            height: 44,
-            '&:focus-visible': { outline: '2px solid currentColor', outlineOffset: 2 },
-          }}
-        >
-          <Iconify icon={isDark ? 'mdi:weather-sunny' : 'mdi:weather-night'} />
-        </IconButton>
-      </Tooltip>
+      <Stack direction="row" alignItems="center">
+        <Tooltip title={isDark ? 'Use light theme' : 'Use dark theme'}>
+          <IconButton
+            onClick={toggleTheme}
+            aria-label={isDark ? 'Use light theme' : 'Use dark theme'}
+            sx={{
+              color: 'inherit',
+              width: 44,
+              height: 44,
+              '&:focus-visible': { outline: '2px solid currentColor', outlineOffset: 2 },
+            }}
+          >
+            {isDark ? (
+              <LightModeOutlined fontSize="small" />
+            ) : (
+              <DarkModeOutlined fontSize="small" />
+            )}
+          </IconButton>
+        </Tooltip>
+      </Stack>
     </Stack>
   );
 }

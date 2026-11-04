@@ -285,6 +285,7 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
         noDataText="No payment terms found."
         wrapperProps={{ sx: { flex: 1, minHeight: 0 } }}
         tableContainerProps={{ sx: { height: '100%' } }}
+        searchFieldProps={{ placeholder: 'Search' }}
       />
       <Drawer
         open={Boolean(usageTerm)}

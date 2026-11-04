@@ -3,6 +3,7 @@
 import type {
   AdmissionOffering,
   AdmissionOfferingListItem,
+  AdmissionOfferingValidationError,
 } from 'src/redux/student/admissions/admission-offerings-api';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -14,8 +15,14 @@ import {
 } from 'src/redux/student/admissions/admission-offerings-api';
 
 import { getAdmissionApiError } from './admission-offering-model';
+import { readOfferingConfigurationErrors } from './admission-offering-recovery';
 
-export type BulkOfferingActivationFailure = { id: string; name: string; message: string };
+export type BulkOfferingActivationFailure = {
+  id: string;
+  name: string;
+  message: string;
+  configurationErrors?: AdmissionOfferingValidationError[];
+};
 export type BulkOfferingActivationProgress = { completed: number; total: number };
 
 type BulkOfferingActivationOptions = {
@@ -65,6 +72,14 @@ export function useBulkAdmissionOfferingActivation({
     () => rows.filter((row) => selectedIds.includes(row.id)),
     [rows, selectedIds]
   );
+  const retryableRows = useMemo(
+    () =>
+      selectedRows.filter(
+        (row) =>
+          isEligible(row) || (!row.isActive && failures.some((failure) => failure.id === row.id))
+      ),
+    [selectedRows, failures]
+  );
 
   useEffect(() => {
     mounted.current = true;
@@ -84,15 +99,20 @@ export function useBulkAdmissionOfferingActivation({
 
   useEffect(() => {
     if (busy) return;
-    const eligibleIds = new Set(eligibleRows.map((row) => row.id));
+    const eligibleIds = new Set([
+      ...eligibleRows.map((row) => row.id),
+      ...rows
+        .filter((row) => !row.isActive && failures.some((failure) => failure.id === row.id))
+        .map((row) => row.id),
+    ]);
     setSelectedIds((ids) =>
       ids.every((id) => eligibleIds.has(id)) ? ids : ids.filter((id) => eligibleIds.has(id))
     );
-  }, [eligibleRows, busy]);
+  }, [eligibleRows, rows, failures, busy]);
 
   useEffect(() => {
-    if (!busy && !selectedRows.some(isEligible)) closeConfirmation();
-  }, [selectedRows, busy, closeConfirmation]);
+    if (!busy && !failures.length && !selectedRows.some(isEligible)) closeConfirmation();
+  }, [selectedRows, failures.length, busy, closeConfirmation]);
 
   const toggleSelection = useCallback(
     (row: AdmissionOfferingListItem, checked: boolean) => {
@@ -124,9 +144,9 @@ export function useBulkAdmissionOfferingActivation({
   }, [closeConfirmation]);
 
   const requestActivation = useCallback(() => {
-    if (batchRef.current || disabled || !canActivate || !selectedRows.some(isEligible)) return;
+    if (batchRef.current || disabled || !canActivate || !retryableRows.length) return;
     openConfirmation();
-  }, [disabled, canActivate, selectedRows, openConfirmation]);
+  }, [disabled, canActivate, retryableRows, openConfirmation]);
 
   const cancelActivation = useCallback(() => {
     if (!batchRef.current) closeConfirmation();
@@ -134,7 +154,7 @@ export function useBulkAdmissionOfferingActivation({
 
   const confirmActivation = useCallback(async () => {
     if (batchRef.current || disabled || !canActivate || !confirmationOpen) return;
-    const snapshot = selectedRows.filter(isEligible);
+    const snapshot = retryableRows;
     if (!snapshot.length) return;
     const batch: ActivationBatch = { cancelled: false, abortRead: null };
     batchRef.current = batch;
@@ -164,17 +184,27 @@ export function useBulkAdmissionOfferingActivation({
             request.unsubscribe();
           }
           if (!isCurrent()) break;
-          if (!detail.isActive) {
-            // eslint-disable-next-line no-await-in-loop -- Complete each write before starting the next.
-            await activateOffering({
-              id: detail.id,
-              concurrencyStamp: detail.concurrencyStamp,
-            }).unwrap();
+          if (!detail.isActive && detail.configuration?.isValid === false) {
+            failed.push({
+              id: row.id,
+              name: row.name,
+              message: 'Resolve the configuration requirements before activation.',
+              configurationErrors: detail.configuration.errors,
+            });
+          } else {
+            if (!detail.isActive) {
+              // eslint-disable-next-line no-await-in-loop -- Complete each write before starting the next.
+              await activateOffering({
+                id: detail.id,
+                concurrencyStamp: detail.concurrencyStamp,
+              }).unwrap();
+            }
+            if (!isCurrent()) break;
+            activeCount += 1;
           }
-          if (!isCurrent()) break;
-          activeCount += 1;
         } catch (error) {
           if (!isCurrent()) break;
+          const configurationErrors = readOfferingConfigurationErrors(error);
           failed.push({
             id: row.id,
             name: row.name,
@@ -182,6 +212,7 @@ export function useBulkAdmissionOfferingActivation({
               error,
               'Unable to activate this offering. Please try again.'
             ),
+            ...(configurationErrors.length ? { configurationErrors } : {}),
           });
         }
         if (isCurrent()) {
@@ -192,7 +223,7 @@ export function useBulkAdmissionOfferingActivation({
       if (!isCurrent()) return;
       setSelectedIds(failed.map((item) => item.id));
       setFailures(failed);
-      closeConfirmation();
+      if (!failed.length) closeConfirmation();
       if (!failed.length) {
         shikshaMitraToast.success({
           message: `${activeCount} selected offering${activeCount === 1 ? ' is' : 's are'} active.`,
@@ -219,7 +250,7 @@ export function useBulkAdmissionOfferingActivation({
     disabled,
     canActivate,
     confirmationOpen,
-    selectedRows,
+    retryableRows,
     context,
     startBusy,
     stopBusy,

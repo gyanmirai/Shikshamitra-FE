@@ -67,7 +67,7 @@ export function AdmissionFormDialog({
             </StudentFeedback>
           ) : (
             <Stack direction="row" spacing={1.5} alignItems="center" role="status">
-              <CircularProgress size={24} aria-label={`Loading ${formType.toLowerCase()} form`} />
+              <CircularProgress size={24} aria-label={`Loading ${formType.toLowerCase()} Form`} />
               <Typography variant="body2">Loading {formType.toLowerCase()} form...</Typography>
             </Stack>
           )}
@@ -132,8 +132,8 @@ function AdmissionFormEditor({
           <Stack component="span" direction="row" spacing={1.25} alignItems="center">
             <AdmissionDialogTitle
               title={`${editing ? 'Edit' : 'Create'} ${formType} Form`}
-              helpText="Build the reusable fields, validation, and review structure used by admission applicants and staff."
-              helpLabel={`${formType} form information`}
+              helpText="Build the Reusable Fields, Validation, and Review Structure Used by Admission Applicants and Staff."
+              helpLabel={`${formType} Form Information`}
             />
             <Label color="default" variant="soft">
               Draft
@@ -195,9 +195,9 @@ function AdmissionFormEditor({
             validateOnChange
             scrollbarHeight="auto"
             showSaveButton
-            saveButtonLabel="Save draft"
+            saveButtonLabel="Save Draft"
             nextButtonLabel="Continue"
-            finalButtonLabel="Publish now"
+            finalButtonLabel="Publish Now"
             backButtonProps={{ size: 'small' }}
             saveAndNextButtonProps={{
               loading: busy,
@@ -219,7 +219,7 @@ function AdmissionFormEditor({
             }}
             saveButtonProps={{
               loading: busy,
-              title: 'Save this draft and close the form builder',
+              title: 'Save This Draft and Close the Form Builder',
               startIcon: <Iconify icon="mdi:content-save-outline" width={18} />,
               size: 'small',
             }}

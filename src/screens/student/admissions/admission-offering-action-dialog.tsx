@@ -1,9 +1,12 @@
-import { Box, Button } from '@mui/material';
+import type { AdmissionOfferingValidationError } from 'src/redux/student/admissions/admission-offerings-api';
+
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { Box, Stack, Button, Typography } from '@mui/material';
 
 import { AdmissionOfferingActionImpact } from './admission-offering-action-impact';
+import { AdmissionOfferingConfigurationIssues } from './admission-offering-configuration-issues';
 
 import type { PendingOfferingAction } from './use-admission-offering-actions';
 
@@ -12,6 +15,11 @@ type Props = {
   commanding: boolean;
   onClose: () => void;
   onConfirm: () => void;
+  activationErrors?: AdmissionOfferingValidationError[];
+  canReviewForms?: boolean;
+  canRestoreForms?: boolean;
+  canReviewWorkflows?: boolean;
+  onEdit?: () => void;
 };
 
 export function AdmissionOfferingActionDialog({
@@ -19,18 +27,26 @@ export function AdmissionOfferingActionDialog({
   commanding,
   onClose,
   onConfirm,
+  activationErrors = [],
+  canReviewForms = false,
+  canRestoreForms = false,
+  canReviewWorkflows = false,
+  onEdit,
 }: Props) {
   const action = pendingAction?.type;
   const activating = action === 'activate';
   const actionLabel = action === 'delete' ? 'Delete' : activating ? 'Activate' : 'Deactivate';
-  const title = `${actionLabel} Admission Offering?`;
+  const blocked = activating && activationErrors.length > 0;
+  const title = blocked ? 'Cannot Activate Offering' : `${actionLabel} Admission Offering?`;
 
   return (
     <ConfirmDialog
       open={Boolean(pendingAction)}
       onClose={onClose}
       icon={
-        activating ? (
+        blocked ? (
+          'error'
+        ) : activating ? (
           <Iconify
             icon={GlobalIcons.tick}
             width={24}
@@ -46,16 +62,34 @@ export function AdmissionOfferingActionDialog({
       aria-label={title}
       aria-describedby="offering-action-description"
       showCloseButton={activating}
+      cancelText={blocked ? 'Close' : 'Cancel'}
       slotProps={activating ? { backdrop: { sx: { backdropFilter: 'blur(4px)' } } } : undefined}
       disableBackdropClick
       disableCancel={commanding}
       disableEscapeKeyDown={commanding}
       bodyBusy={activating ? commanding : undefined}
-      busyLabel="Activating offering…"
+      busyLabel="Activating Offering…"
       content={
         action && pendingAction ? (
           <Box id="offering-action-description">
-            <AdmissionOfferingActionImpact action={action} offering={pendingAction.row} />
+            {blocked ? (
+              <Stack spacing={1.5}>
+                <Typography variant="subtitle2">
+                  {pendingAction.row.name || pendingAction.row.code}
+                </Typography>
+                <AdmissionOfferingConfigurationIssues
+                  errors={activationErrors}
+                  canReviewForms={canReviewForms}
+                  canRestoreForms={canRestoreForms}
+                  canReviewWorkflows={canReviewWorkflows}
+                />
+                <Typography variant="body2">
+                  Resolve the listed requirements, then activate this offering again.
+                </Typography>
+              </Stack>
+            ) : (
+              <AdmissionOfferingActionImpact action={action} offering={pendingAction.row} />
+            )}
           </Box>
         ) : null
       }
@@ -64,7 +98,7 @@ export function AdmissionOfferingActionDialog({
           type="button"
           variant="contained"
           size="small"
-          color={action === 'delete' ? 'error' : 'primary'}
+          color={action === 'delete' ? 'error' : blocked ? 'inherit' : 'primary'}
           loading={!activating && commanding}
           disabled={commanding}
           startIcon={
@@ -72,16 +106,18 @@ export function AdmissionOfferingActionDialog({
               icon={
                 action === 'delete'
                   ? 'mdi:delete-outline'
-                  : activating
-                    ? GlobalIcons.tick
-                    : 'mdi:check-circle-outline'
+                  : blocked
+                    ? GlobalIcons.edit
+                    : activating
+                      ? GlobalIcons.tick
+                      : 'mdi:check-circle-outline'
               }
               width={activating ? 18 : undefined}
             />
           }
-          onClick={onConfirm}
+          onClick={blocked ? onEdit : onConfirm}
         >
-          {actionLabel}
+          {blocked ? 'Edit offering' : actionLabel}
         </Button>
       }
     />

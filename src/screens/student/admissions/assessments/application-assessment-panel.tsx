@@ -91,8 +91,8 @@ export function ApplicationAssessmentPanel({
         <Stack direction="row" alignItems="center" justifyContent="space-between">
           <Stack direction="row" spacing={0.5} alignItems="center">
             <Typography variant={compact ? 'subtitle1' : 'h6'}>{stage.name}</Typography>
-            <CustomTooltip title="Record the entrance assessment or an authorized waiver. The configured assessment rules decide when this stage is ready to continue.">
-              <IconButton size="small" color="info" aria-label="Assessment information">
+            <CustomTooltip title="Record the Entrance Assessment or an Authorized Waiver. The Configured Assessment Rules Decide When This Stage Is Ready to Continue.">
+              <IconButton size="small" color="info" aria-label="Assessment Information">
                 <Iconify icon="mdi:information-outline" width={16} />
               </IconButton>
             </CustomTooltip>
@@ -125,7 +125,7 @@ export function ApplicationAssessmentPanel({
           </StudentFeedback>
         ) : (
           <>
-            {query.isFetching && <LinearProgress aria-label="Refreshing assessment" />}
+            {query.isFetching && <LinearProgress aria-label="Refreshing Assessment" />}
             {query.isError && <AdmissionQueryError onRetry={query.refetch} />}
             <Box
               component="dl"
@@ -223,7 +223,7 @@ export function ApplicationAssessmentPanel({
             )}
             <Box
               component="section"
-              aria-label="Assessment attempts"
+              aria-label="Assessment Attempts"
               sx={
                 compact
                   ? { minWidth: 0 }
@@ -255,7 +255,7 @@ export function ApplicationAssessmentPanel({
                       }
                       onClick={() => onComplete()}
                     >
-                      Complete assessment step
+                      Complete Assessment Step
                     </Button>
                   )}
                 </>
@@ -265,13 +265,13 @@ export function ApplicationAssessmentPanel({
                     variant="subtitle2"
                     sx={{ pb: 1, mb: 1.5, borderBottom: 1, borderColor: 'divider' }}
                   >
-                    Assessment attempts
+                    Assessment Attempts
                   </Typography>
                   {assessment.attempts.length ? (
                     <AssessmentAttemptHistory attempts={assessment.attempts} />
                   ) : (
                     <EmptyContent
-                      title="No assessment attempt yet"
+                      title="No Assessment Attempt Yet"
                       description="Assessment attempts and results will appear here."
                       sx={{ py: 3, height: 'auto' }}
                       slotProps={{ img: { maxWidth: 80 } }}

@@ -51,7 +51,7 @@ export default function RefundAmountSection({ formik }: RefundAmountSectionProps
               onBlur={handleBlur}
             >
               <MenuItem value="RemainingPaidAmount">Entire Remaining Paid Amount (100%)</MenuItem>
-              <MenuItem value="ManualUpToEligible" disabled={!values.allowPartialRefund}>
+              <MenuItem value="ManualUpToEligible">
                 Manual (Entered in request up to eligible)
               </MenuItem>
               <MenuItem value="Percentage">Percentage of Eligible Amount (%)</MenuItem>

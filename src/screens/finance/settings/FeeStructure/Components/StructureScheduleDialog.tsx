@@ -323,9 +323,9 @@ export default function StructureScheduleDialog({
                             )}
                             helperText={
                               (error &&
-                              (!row.allocationPercentage ||
-                                row.allocationPercentage > 100 ||
-                                row.allocationPercentage < 0)
+                                (!row.allocationPercentage ||
+                                  row.allocationPercentage > 100 ||
+                                  row.allocationPercentage < 0)
                                 ? 'Enter a percentage greater than 0 and up to 100'
                                 : undefined) || undefined
                             }
@@ -365,7 +365,7 @@ export default function StructureScheduleDialog({
                     align: 'left',
                     isSort: false,
                     isFilter: false,
-                    cellSx: { fontVariantNumeric: 'tabular-nums' },
+                    cellSx: { textAlign: 'right' as const, fontVariantNumeric: 'tabular-nums' },
                     render: (_value, row) =>
                       line.isVariable ? (
                         <Typography variant="caption" color="text.secondary">

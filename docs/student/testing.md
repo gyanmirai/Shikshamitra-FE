@@ -3,12 +3,67 @@ module: student
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-11-02
+updated_on: 2026-11-04
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Validate Student Enrollment Admissions changes
+
+## Form history recovery and permissions
+
+Run the focused `admission-form-history-dialog.test.tsx` and `student-feedback.test.tsx` suites. Check that history/version read failures use the standard toast with its opt-in Retry control, no separate error row appears, comparison remains available to View-only staff, and Restore as New Draft requires the existing Forms Add permission. Retain loading, comparison-result scoping, duplicate-restore locks and error-retry assertions. Browser acceptance requires an authenticated local session; backend version/data retention checks belong to the [backend Student tests](../../../Shikshamitra-BE/docs/modules/student/testing.md).
+
+## Offering setup lifecycle lock
+
+Run the Offering suite with `node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run offering --pool=threads --maxWorkers=1 --testTimeout=30000`.
+
+Cover inactive/unused editing; active/unused setup locks and permission-gated deactivation; used active/inactive setup locks; zero current counts with historical usage; absent backend metadata; preserved workflow/form payloads on operational saves; discard cancellation; and unchanged create/clone behavior. Backend rules and first-use transaction coverage belong to the [Student backend tests](../../../Shikshamitra-BE/docs/modules/student/testing.md).
+
+Local verification: the full Offering selection passes **215 tests in 30 files** (`.artifacts/offering-lock-suite-verified.log`); the focused drawer passes **13 tests**. TypeScript, scoped ESLint, Prettier and the Student docs validator pass. Existing React `act` and select-fixture warnings remain non-blocking; no tests are skipped and no persistent timeout is raised.
+
+Browser QA uses production editor/theme/confirmation components with synthetic local data under ignored `.artifacts/offering-lock-ui/`. Verified active-unused deactivation/unlock, used-inactive lock, editable name through Preview/Save, custom information tooltip, and reachable footer. Light desktop (1440×900), tablet (768×1024), and dark mobile (390×844) checks retain viewport-width layout. Proof: `final-used-desktop.png` and `final-used-mobile-dark.png` in that directory. This is component browser evidence; authenticated application/staging mutations are unverified.
+
+TL;DR: run the focused screen/client checks, local type/lint/docs validation and in-app-browser acceptance appropriate to the changed Student flow.
+
+## Admission Interface Copy
+
+Check Admission-owned navigation, breadcrumbs, headings, field labels, actions, tooltips and empty states for Title Case. Plus-icon creation buttons show Inquiry, Cycle, Form, Workflow or Offering while their accessible names retain the action. Keep authored names, configured form questions, translations, API values and routes unchanged; shared component copy is outside this change.
+
+Authenticated localhost checks in the Codex in-app browser verified the Forms, Periods, Admission Stage, Public Inquiry Links, Offerings, Inquiries, Applications, Assessments and Pipeline headings/actions. Form Type remains outside the customizable table. The checks were read-only and do not certify staging or production.
+
+Run `application-experience-parent-communication.persistence.test.tsx` to verify lookup/update of all nine existing lifecycle-message identities and the original default subject. Keep the document-editor payload/value assertions in `workflow-document-editor.test.tsx` and `workflow-document-requirement-editor.test.tsx`: selecting a Title Case preset must retain its original saved default name.
+
+Request-error tests use `src/test/student-toast-test-fixture.ts` to observe the real StudentFeedback toast handoff. Assert the notification and blocked writes without recreating a retired inline Retry row. Exercise existing Refresh or close/reopen actions where available; distinguish those interactions from recovery through fresh query data. Keep real Redux/RTK providers for skipped queries, and provide router and academic scope for queue tests. Mock decorative icon downloads locally. Tooltip tests must allow the shared 150 ms leave delay and 800 ms fade to complete separately; retain content and removal assertions without racing a 1-second real-time wait.
+
+Follow-up retesting on 4 November 2026 repairs all 41 reproduced failures through test fixtures and expectations, preserving production behavior and shared components. The full Admission screen, Student navigation and StudentFeedback run passes all 2,775 tests in 372 files, with no failures, skips or unhandled runner errors and exit code 0. The 20 previously failing files pass all 183 cases. Full TypeScript, scoped lint/formatting, Student docs validation and whitespace checks pass; evidence is saved under `.artifacts/admissions-test-repair/`. The earlier wider Admission lint scan retains one pre-existing unused `source` prop error in `admission-condition-form-picker.tsx`; 30 files already failed formatting before the copy update. Browser acceptance remains localhost-only.
+
+## Admissions table controls
+
+Run `admission-offering-filters.test.tsx`, `admission-offering-filter-chips.test.tsx`, `admission-offering-column-filters.test.ts` and the shared CustomSelect suites for compact count/all display, Select All, label placement, dismissal, URL/API IDs and criterion removal without losing academic context.
+This focused run passes 33 cases across nine files; scoped lint, formatting and diff hygiene pass.
+`admission-forms.test.tsx`, `form-list-query.test.ts` and `assessment-session-pagination.test.tsx` pass 33 cases covering the external Form Type filter, type-query/page resets, retained list criteria, read-only Session row click/keyboard selection and isolated Edit actions.
+Full `npm run ts`, focused lint and formatting pass. Authenticated localhost checks in the Codex in-app browser verify Inquiry (14), Registration (11) and All Types (25), matching pagination, the compact 15-class checklist/summary and clear behavior, and Session row click/Enter/Space opening the selected session's Student worklist. Desktop 1440×900, tablet 768×1024 and phone 390×844 checks show no document horizontal overflow; both themes were inspected and the original theme was restored. Screenshots are retained in the session visualization directory. These read-only UI checks use the existing API host; backend name validation has separate integration coverage and is not yet loaded into that host or deployed.
+
+## Public sibling controls and automatic parent details
+
+Local in-app-browser acceptance on 3 November 2026 verified two different public children with the same contact remain separate pending inquiries, followed by explicit staff source-child/Father confirmation. Public capture retained Single-parent child and omitted the sibling controls. Both already-started-draft and source-before-new-draft ordering filled available parent fields automatically, with no parent-details review/copy action. Normal Save and reload retained the values; an occupation override and deliberate qualification clear survived subsequent source changes without changing the source parent profile or copying child DOB/Gender. The existing staff Add sibling flow also completed. Registration was inspected at 390, 768 and 1440px with no horizontal document overflow. Evidence and synthetic fixture identifiers are under `.artifacts/sibling-family-autofill/live/`; these are localhost checks, not physical-device, staging, production or live portal-account acceptance.
+
+Run public Inquiry schema, parent-fields, existing public flow and academic-selector suites together. Verify sibling-only controls and required rules are omitted, Single-parent child remains, public capture makes no authenticated sibling lookup, and unchanged retries retain their optional request ID even when UUID support is unavailable. Run `use-application-detail.test.tsx`, `application-runtime-form.test.tsx`, `application-family-prefill.test.tsx` and `admission-application-form-values-api.test.ts` for normal persistence, edited/cleared projection hints, source changes, stale GET responses, saved-clear protection, application switching and duplicate-save locks.
+
+Follow with full TypeScript, scoped lint/format and docs validation. Local in-app-browser acceptance must separately exercise mobile public capture, staff family confirmation and both early/late source-registration ordering against a freshly built backend. Component checks do not prove local persistence, deployed acceptance or account access. See [backend integrity checks](../../../Shikshamitra-BE/docs/modules/student/testing.md#confirmed-sibling-registration-and-public-capture).
+
+Staff confirmation coverage includes `inquiry-family-confirmation-model.test.ts`, `inquiry-family-confirmation.test.tsx`, `admission-inquiry-family-confirmation-api.test.ts` and the real editor tests in `admission-inquiry-edit-page.test.tsx`. Verify explicit child/parent/legacy-role selection, self filtering, no background lookup, dirty/busy/permission/stamp guards, late-response protection, retry, first-invalid focus, shared close/discard behavior, duplicate-submit prevention and no underlying Inquiry PUT. Run the existing Add sibling suites alongside these checks.
+
+## Admission form archive and restore
+
+Run `form-lifecycle-dialog.test.tsx`, `use-form-lifecycle-actions.test.tsx`, form row/column action suites, `admission-forms.test.tsx`, `use-admission-offering-actions.test.tsx`, `admission-offering-action-dialog.test.tsx` and `admission-form-lifecycle-cache.test.ts`. Cover dependency-loading guards, both form purposes, retained record information, latest concurrency, duplicate/close locks, refused restores, permission-aware recovery and form status invalidation of offering/catalogue/capture readiness. Browser acceptance must separately verify persisted archive/restore, current offering replacement, workflow blockers, and saved inquiry preservation against a freshly built local backend. Automated component/cache results do not prove deployed acceptance.
+
+The cache suite also compares two versions, closes History, saves the draft and reopens the same comparison. It must return the saved changes rather than the earlier cached result.
+
+`admission-form-history-dialog.test.tsx` verifies repeated readable change descriptions render as separate entries without duplicate React keys when fields share a label. Browser checks should show actual labels and section names, including old/new labels for a rename, within the existing responsive History dialog.
+
+Local administrator browser acceptance on 2026-11-04 verified form v1/v2/v3 publication and comparison, existing-draft guidance, History restore as a new draft, Inquiry and Registration archive dependency notices, same-version restoration, offering activation repair links, frozen pre-archive Inquiry read-back, replacement-form intake and public-link archive/Retry recovery against the rebuilt Host. Two synthetic Inquiries were added; all 15 pre-existing Inquiry rows and the pre-archive synthetic row retained identical full-row fingerprints. The only changed pre-existing admission rows were the normal Inquiry and Family numbering counters. The QA period was closed, its two offerings deactivated and its public link revoked afterward; acknowledgement campaigns remained unpublished drafts. This is local administrator acceptance, not a deployed or view-only-role browser sign-off.
 
 ## Gender and form publication recovery
 
@@ -34,14 +89,22 @@ Run the Inquiry create/edit page, Resume dialog, decision recovery, Applications
 
 Run `inquiry-primary-contact.test.ts`, `use-inquiry-primary-contact.test.tsx`, `admission-inquiry-model.test.ts`, the Inquiry create/edit/public suites, `admission-inquiry-duplicate-matches.test.tsx`, `admission-direct-registration-dialog.test.tsx`, builder defaults/binding-validation tests and `student-parents-contact-dialog.test.tsx` with its owning model tests. Cover Guardian Cancel/Confirm without an API write, role/context reset, safe clearing, required generic contact ownership, hidden/own-role email precedence, pending public capture, disabled Guardian parent-link, optional additional guardians, retained saved Guardian and approved family changes. Follow with `npm run ts`, scoped lint/format checks and in-app-browser desktop/mobile review. A production-component fixture checks UI/serialization only; report actual API persistence, mailbox delivery and deployed acceptance separately.
 
-## Inquiry builder default identity (30 October 2026)
+## Admission core fields and academic selectors
 
-- Focused tests cover three required defaults, builder locks after a serialized round trip, unchanged authored legacy fields and Registration behaviour, guarded field/section/step deletion and drag, indirect properties selection, profile-pack name conflicts, and preservation of edited rules/IDs across type switches. Preview tests enter all three answers and switch Gujarati/Hindi without changing the builder definition.
-- The defaults use existing System bindings with `readOnly=false`. This is a builder interaction policy; backend publication validation remains authoritative. No backend, shared component, schema migration or actual applicant data is changed by this task.
-- All 325 tests across the 48 affected form-dialog/wizard/binding suites pass. Scoped ESLint passes. The review's split-name conflict and authored-rule reset cases have dedicated regressions and pass after correction.
-- Full `npm run ts` was executed. Its final run reports nine unrelated RTL `exact` option errors in `assessments/assessment-session-setup-drawer.test.tsx`; it reports no errors in the changed Inquiry files. Formatting, scoped diff checks and Student documentation validation pass.
-- Codex in-app synthetic component QA verifies the real field cards, keyboard lock guidance, protected settings and section/step actions, editable preview answers, Gujarati/Hindi answer retention, and unchanged blank Registration/custom-field actions. Phone width and document width are both 390 px. Evidence: `.artifacts/inquiry-default-locks-ui/builder-desktop.png`, `builder-phone.png` and `evidence.json`. The isolated QA server rejects live API requests and was stopped after verification.
-- Actual application create/save/reopen could not be completed: the shared local Next app displayed unrelated Assessment compile errors, first in the booking drawer and then a missing manage-sessions drawer module, and localhost later became unavailable. No synthetic form was saved or published in the real API. Component evidence and serialization tests do not establish backend persistence, staging or production acceptance.
+Include `src/screens/student/admissions/admission-form-preview.test.tsx`, `src/redux/student/admissions/admission-saved-inheritance-preview-api.test.ts` and `src/screens/student/admissions/inquiry-context-presentation.test.ts` for saved composition and context layout.
+Cover View-only GET composition, exact approved source selection, multi-source prompts, URL reload, loading/failure Retry without base fallback, source-first context/grid, immutable captured values and disabled Relationship to student.
+
+Run the core/default/model, template, locked-field UI, reorder, builder-details, inheritance, Inquiry model, direct Registration and dynamic-validation suites.
+Include `src/screens/student/admissions/form-dialog/academic-class-selector.test.ts`, `src/screens/student/admissions/form-dialog/form-builder-palette.test.tsx`, `src/screens/student/admissions/admission-master-data-runtime-field.test.tsx`, `src/screens/student/admissions/admission-runtime-field.test.tsx` and `src/screens/student/admissions/application-detail/application-runtime-options.test.ts` for the academic flow.
+Use bounded workers, for example `npx vitest run src/screens/student/admissions/form-dialog/admission-core-policy.test.ts src/screens/student/admissions/form-dialog/inquiry-locked-fields.ui.test.tsx src/screens/student/admissions/form-dialog/academic-class-selector.test.ts --maxWorkers=2`.
+
+Cover all six Inquiry core fields, optional Last name, editable labels/translations, version-and-binding locks after save/reopen, protected ancestor deletion, safe cross-section moves, and preservation of extra questions and partial drafts.
+Verify Registration defaults, source-owned fields/layout/requiredness, historical full-name reuse, duplicate suppression, and conditional direct-entry Parent email without changing existing parent/guardian selection semantics.
+Check Board/Medium/Class creation and reuse, stable IDs, prerequisite resets, unavailable saved choices, failed-load retention, source/type locks and searchable scrolling.
+Run `npm run ts`, scoped ESLint, `npm run docs:check` and `git diff --check`; backend integrity results remain in the [backend testing guide](../../../Shikshamitra-BE/docs/modules/student/testing.md).
+
+In-app-browser acceptance must separately save/reopen a synthetic definition, edit a core label, exercise desktop/mobile dragging and source reuse, and submit invalid/valid Inquiry and Registration answers against a freshly built API.
+Component serialization and local automated tests do not establish server persistence, staging or production acceptance.
 
 ## House Management checks
 

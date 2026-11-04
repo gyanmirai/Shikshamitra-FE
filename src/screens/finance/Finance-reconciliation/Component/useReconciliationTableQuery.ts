@@ -43,7 +43,7 @@ export function useReconciliationTableQuery(queryParams?: GetReconciliationListP
       searchTerm: state.search,
       maxServerRowsPerPage: 100,
       exportLabel: 'Export current page',
-      searchFieldProps: { placeholder: 'Receipt number, student name or GR number' },
+      searchFieldProps: { placeholder: 'Search' },
       onServerPagination: (nextPage: number, pageSize: number) =>
         setState((previous) => ({ ...previous, scope, page: nextPage - 1, pageSize })),
       onClearCriteria: () =>

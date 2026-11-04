@@ -47,13 +47,13 @@ export function FormBuilderField({
   reorderEnabled = true,
 }: Props) {
   const field = formik.values.sections[sectionIndex].fields[fieldIndex];
-  const locked = isLockedInquiryField(formik.values.purpose, field);
+  const locked = isLockedInquiryField(formik.values.purpose, field, formik.values.coreFieldPolicyVersion);
   const fieldType = FIELD_TYPES.find(([, value]) => value === field.fieldType)?.[0] ?? 'Field';
   const name = field.label || `Field ${fieldIndex + 1}`;
   const compactFourColumnCard = formik.values.fieldsPerRow === 4;
   const sortable = useSortable({
     id: `field:${formik.values.sections[sectionIndex].id}:${field.id}`,
-    disabled: locked || !reorderEnabled,
+    disabled: !reorderEnabled,
   });
   return (
     <Box
@@ -84,8 +84,8 @@ export function FormBuilderField({
         alignItems="flex-start"
         sx={{ p: 0.5, position: 'relative' }}
       >
-        {reorderEnabled && !locked && (
-          <CustomTooltip title="Drag to reorder. With a keyboard, press Space, then arrow keys.">
+        {reorderEnabled && (
+          <CustomTooltip title="Drag to Reorder. With a Keyboard, Press Space, Then Arrow Keys.">
             <IconButton
               size="small"
               className="admission-field-reorder"
@@ -111,9 +111,8 @@ export function FormBuilderField({
         )}
         <ButtonBase
           id={`field-select-${field.id}`}
-          disabled={locked}
-          onClick={locked ? undefined : onSelect}
-          aria-label={locked ? `${name} field (locked)` : `Edit ${name} field`}
+          onClick={onSelect}
+          aria-label={`Edit ${name} Field`}
           aria-pressed={selected}
           sx={{
             flex: 1,
@@ -132,7 +131,7 @@ export function FormBuilderField({
             <Typography variant="subtitle2" component="span" sx={{ overflowWrap: 'anywhere' }}>
               {name}
               {field.required && (
-                <Box component="span" sx={{ color: 'error.main', ml: 0.5 }} aria-label="required">
+                <Box component="span" sx={{ color: 'error.main', ml: 0.5 }} aria-label="Required">
                   *
                 </Box>
               )}
@@ -194,7 +193,7 @@ export function FormBuilderField({
             <CustomTooltip title={INQUIRY_FIELD_LOCK_HELP}>
               <IconButton
                 size="small"
-                aria-label={`Locked ${name} field`}
+                aria-label={`Locked ${name} Field`}
                 sx={{ width: 44, height: 44 }}
               >
                 <Iconify icon="mdi:lock-outline" width={18} />

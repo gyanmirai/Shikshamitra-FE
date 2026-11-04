@@ -1,17 +1,17 @@
 'use client';
 
 import dayjs from 'dayjs';
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
 import {
   Box,
   Stack,
   Paper,
-  Button,
   Avatar,
   Tooltip,
   Accordion,
+  ButtonBase,
   Typography,
   AccordionSummary,
   AccordionDetails,
@@ -95,7 +95,6 @@ const AuditTimelineView = ({
 
   return (
     <Stack spacing={1.5} sx={{ py: 1 }}>
-
       {groups.map((group) => {
         const isExpanded = !collapsedDates.has(group.date);
 
@@ -198,10 +197,17 @@ const AuditTimelineView = ({
 
                       {/* Card */}
                       <Paper
+                        component={ButtonBase}
+                        aria-label={`View details for ${log.entityName || log.actionLabel}`}
+                        disabled={!onLogClick}
                         onClick={() => onLogClick?.(log)}
                         variant="outlined"
                         sx={{
                           flex: 1,
+                          display: 'block',
+                          minWidth: 0,
+                          textAlign: 'left',
+                          '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main' },
                           p: 1.75,
                           mb: 0,
                           borderRadius: 2,

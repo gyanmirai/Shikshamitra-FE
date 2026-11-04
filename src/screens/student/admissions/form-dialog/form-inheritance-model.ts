@@ -7,6 +7,8 @@ import type {
 
 import { getAdmissionFormStepGroups } from './form-step-groups';
 import { isClassInterestQuestion } from '../admission-class-question';
+import { mergeInquiryContextSections } from '../inquiry-context-presentation';
+import { parseRuntimeOptionsSource } from '../application-detail/application-runtime-options';
 
 type FormSections = Pick<CreateUpdateAdmissionForm, 'sections'>;
 type ComposedForm = FormSections &
@@ -148,7 +150,8 @@ export function setInheritedFieldMapping(
 
 export function getInheritancePreviewValues(
   form: CreateUpdateAdmissionForm,
-  effective?: ComposedForm | null
+  effective?: ComposedForm | null,
+  contextSections: CreateUpdateAdmissionForm['sections'] = []
 ): CreateUpdateAdmissionForm {
   // The composition preserves Inquiry steps and section columns. Keep live
   // Registration grid changes, and immediately reflect a newly added base step.
@@ -159,7 +162,7 @@ export function getInheritancePreviewValues(
         supportedLanguages: [
           ...new Set([...form.supportedLanguages, ...(effective.supportedLanguages ?? [])]),
         ],
-        sections: effective.sections,
+        sections: mergeInquiryContextSections(effective.sections, contextSections),
       }
     : form;
 }
@@ -168,11 +171,17 @@ export function getInheritancePreviewValues(
 export function getInheritanceBuilderValues(
   form: CreateUpdateAdmissionForm,
   effective?: ComposedForm | null,
-  previewBaseSectionIds: readonly string[] = form.sections.map((section) => section.id)
+  previewBaseSectionIds: readonly string[] = form.sections.map((section) => section.id),
+  contextSections: CreateUpdateAdmissionForm['sections'] = []
 ): CreateUpdateAdmissionForm {
   if (!effective) return form;
+  effective = {
+    ...effective,
+    sections: mergeInquiryContextSections(effective.sections, contextSections),
+  };
   const snapshotBaseIds = new Set(previewBaseSectionIds);
   const inherited = getInheritedFields(effective);
+  const suppressedAcademicParents = getSuppressedAcademicParents(form, effective, inherited);
   const sourceSections = effective.sections
     .filter((section) => !snapshotBaseIds.has(section.id))
     .sort((left, right) => left.displayOrder - right.displayOrder);
@@ -182,6 +191,7 @@ export function getInheritanceBuilderValues(
       const section = effective.sections.find((item) => item.id === base.id);
       const editableFields = base.fields.filter(
         (field) =>
+          !suppressedAcademicParents.has(field.id) &&
           !inherited.some(
             (source) =>
               source.id === field.id ||
@@ -261,6 +271,97 @@ export function getInheritanceBuilderValues(
     ...effective,
     sections: viewSections,
   });
+}
+
+/** Keep server-suppressed companions hidden without losing new shared dependents during preview refresh. */
+function getSuppressedAcademicParents(
+  form: CreateUpdateAdmissionForm,
+  effective: FormSections,
+  inherited: AdmissionFormField[]
+) {
+  const local = form.sections.flatMap((section) => section.fields);
+  const effectiveIds = new Set(
+    effective.sections.flatMap((section) => section.fields.map((field) => field.id))
+  );
+  const candidates = new Map<string, AdmissionFormField>();
+  const replacedClasses = new Set<string>();
+  local.forEach((standard) => {
+    const source = parseRuntimeOptionsSource(standard.optionsJson);
+    if (
+      standard.fieldType !== 6 ||
+      source?.source !== 'StandardsByMedium' ||
+      !inherited.some(
+        (field) =>
+          field.id === standard.id &&
+          parseRuntimeOptionsSource(field.optionsJson)?.source === 'Standards'
+      )
+    )
+      return;
+    const medium = local.find(
+      (field) =>
+        field.code === source.parentField &&
+        field.fieldType === 6 &&
+        parseRuntimeOptionsSource(field.optionsJson)?.source === 'EducationMediums'
+    );
+    const mediumSource = parseRuntimeOptionsSource(medium?.optionsJson);
+    const board = local.find(
+      (field) =>
+        field.code === mediumSource?.parentField &&
+        field.fieldType === 6 &&
+        parseRuntimeOptionsSource(field.optionsJson)?.source === 'EducationBoards'
+    );
+    if (!medium || !board || parseRuntimeOptionsSource(board.optionsJson)?.parentField) return;
+    replacedClasses.add(standard.id);
+    [medium, board]
+      .filter((field) => !effectiveIds.has(field.id))
+      .forEach((field) => candidates.set(field.id, field));
+  });
+  const suppressed = new Set<string>();
+  [...candidates.values()]
+    .sort(
+      (left, right) =>
+        Number(parseRuntimeOptionsSource(left.optionsJson)?.source === 'EducationBoards') -
+        Number(parseRuntimeOptionsSource(right.optionsJson)?.source === 'EducationBoards')
+    )
+    .forEach((parent) => {
+      const referenced =
+        local.some(
+          (field) =>
+            field.id !== parent.id &&
+            !replacedClasses.has(field.id) &&
+            !suppressed.has(field.id) &&
+            [
+              field.optionsJson,
+              field.validationJson,
+              field.visibilityRuleJson,
+              field.requiredRuleJson,
+            ].some((json) => referencesField(json, parent.code))
+        ) ||
+        form.sections.some((section) =>
+          [
+            section.visibilityRuleJson,
+            section.requiredRuleJson,
+            section.stepVisibilityRuleJson,
+          ].some((json) => referencesField(json, parent.code))
+        );
+      if (!referenced) suppressed.add(parent.id);
+    });
+  return suppressed;
+}
+
+function referencesField(json: string | null | undefined, code: string): boolean {
+  if (!json?.trim()) return false;
+  const containsCode = (value: unknown): boolean =>
+    typeof value === 'string'
+      ? value.toLowerCase() === code.toLowerCase()
+      : Array.isArray(value)
+        ? value.some(containsCode)
+        : Boolean(value && typeof value === 'object' && Object.values(value).some(containsCode));
+  try {
+    return containsCode(JSON.parse(json));
+  } catch {
+    return false;
+  }
 }
 
 function sameIdentity(field: AdmissionFormField, inherited: AdmissionFormField) {

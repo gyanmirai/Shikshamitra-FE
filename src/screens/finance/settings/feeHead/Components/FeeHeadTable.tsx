@@ -238,6 +238,7 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
         totalCount={totalCount}
         onServerPagination={onServerPagination}
         onServerSearch={onServerSearch}
+        searchFieldProps={{ placeholder: 'Search' }}
       />
       <ConfirmDialog
         open={statusConfirm.value}

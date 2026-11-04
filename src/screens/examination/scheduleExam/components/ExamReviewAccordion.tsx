@@ -54,7 +54,7 @@ export function ExamReviewAccordion({
           display: 'flex',
           alignItems: 'center',
           gap: 1,
-          px: { xs: 1.5, sm: 2.5 },
+          px: { xs: 1.5, sm: 2 },
           py: 0.5,
           bgcolor: 'background.neutral',
           borderRadius: 'inherit',
@@ -82,8 +82,8 @@ export function ExamReviewAccordion({
           >
             <Box
               sx={{
-                width: 32,
-                height: 32,
+                width: 36,
+                height: 36,
                 borderRadius: 1,
                 bgcolor: 'action.hover',
                 color: 'text.secondary',
@@ -92,9 +92,14 @@ export function ExamReviewAccordion({
                 flexShrink: 0,
               }}
             >
-              <Iconify icon={icon} width={18} />
+              <Iconify icon={icon} width={20} />
             </Box>
-            <Typography variant="subtitle1" fontWeight={600} sx={{ overflowWrap: 'anywhere' }}>
+            <Typography
+              component="h2"
+              variant="subtitle1"
+              fontWeight={600}
+              sx={{ overflowWrap: 'anywhere' }}
+            >
               {title}
             </Typography>
             {status}
@@ -105,7 +110,7 @@ export function ExamReviewAccordion({
             label={`${title} information`}
             title={`Review the saved ${title.toLowerCase()} before completing the exam setup.`}
           >
-            <Iconify icon="lucide:info" width={16} />
+            <Iconify icon={GlobalIcons.info} width={16} />
           </HelpTooltip>
           {onEdit && (
             <Tooltip title={`Edit ${title}`}>
@@ -136,7 +141,7 @@ export function ExamReviewAccordion({
         </Box>
       </Box>
 
-      <AccordionDetails sx={{ p: { xs: 1.5, sm: 2.5 } }}>{children}</AccordionDetails>
+      <AccordionDetails sx={{ p: { xs: 1.5, sm: 2 } }}>{children}</AccordionDetails>
     </Accordion>
   );
 }

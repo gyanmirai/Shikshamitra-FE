@@ -71,7 +71,7 @@ export function ApplicationFinalizedSummary({
   return (
     <Stack id="admission-decision" spacing={1.5} sx={{ p: 1.5, minWidth: 0 }}>
       <Typography variant="h6" component="h2">
-        Admission finalized
+        Admission Finalized
       </Typography>
       <Box
         sx={{
@@ -82,7 +82,7 @@ export function ApplicationFinalizedSummary({
       >
         <Paper variant="outlined" sx={{ p: 1.5, minWidth: 0, boxShadow: 'none' }}>
           <Typography variant="subtitle1" component="h3">
-            Admission summary
+            Admission Summary
           </Typography>
           <Divider sx={{ mt: 1 }} />
           <Box component="dl" sx={{ m: 0 }}>
@@ -165,7 +165,7 @@ export function ApplicationFinalizedSummary({
       />
       <Box sx={{ border: 1, borderColor: 'divider', borderRadius: 1, overflow: 'hidden' }}>
         <CustomAccordion
-          title="Decision & finalization history"
+          title="Decision & Finalization History"
           expanded={expanded.value}
           onChange={expanded.onToggle}
           content={
@@ -233,13 +233,13 @@ export function ApplicationFinalizedActions({
           disabled={disabled}
           endIcon={<Iconify icon="mdi:arrow-right" />}
         >
-          Continue onboarding
+          Continue Onboarding
         </Button>
       ) : (
         <Label color="default">
           {application.onboardingCaseId
-            ? 'Onboarding access required'
-            : 'Onboarding case unavailable'}
+            ? 'Onboarding Access Required'
+            : 'Onboarding Case Unavailable'}
         </Label>
       )}
     </Stack>

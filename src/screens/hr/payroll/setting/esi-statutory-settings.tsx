@@ -41,6 +41,7 @@ import {
 } from '@mui/material';
 
 import EsiOverrideDialog from './esi-override-dialog';
+import { esiRequestError } from './esi-request-error';
 import { EsiEnrollmentDrawer } from './esi-enrollment-drawer';
 import { useEsiUnsavedNavigation } from './esi-unsaved-navigation';
 import { EsiConfigurationEmployees } from './esi-configuration-employees';
@@ -54,7 +55,7 @@ import {
 
 // One contained workspace owns the scroll body and its stable action footer.
 const settingsWorkspaceSx = {
-  flex: '0 1 auto',
+  flex: '1 1 0%',
   maxHeight: '100%',
   minHeight: 0,
   minWidth: 0,
@@ -101,7 +102,12 @@ export default function EsiStatutorySettings() {
     hrPermissions.payroll.settings.statutorySchemes
   );
   const query = useGetEsiConfigurationQuery(undefined, { skip: !canView });
-  if (!canView) return <HrNotice role="alert" severity="info">You do not have access to ESIC settings.</HrNotice>;
+  if (!canView)
+    return (
+      <HrNotice role="alert" severity="info">
+        You do not have access to ESIC settings.
+      </HrNotice>
+    );
   if (query.data?.current) return <ConfigurationForm settings={query.data} />;
   if (query.isError || query.data)
     return (
@@ -198,7 +204,10 @@ function ConfigurationForm({ settings }: { settings: EsiConfigurationSettings })
         setError(
           isStalePreviewError(failure)
             ? 'Settings changed. Cancel your edits to load the latest settings before saving.'
-            : 'ESIC settings could not be saved. Your changes are preserved. Try again.'
+            : esiRequestError(
+                failure,
+                'ESIC settings could not be saved. Your changes are preserved. Try again.'
+              )
         );
       } finally {
         requestPending.current = false;
@@ -288,7 +297,6 @@ function ConfigurationForm({ settings }: { settings: EsiConfigurationSettings })
                 sx={{ minWidth: 0, flexShrink: 0 }}
                 titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
                 descriptionTooltip={esiCalculationHelp(rules.data)}
-                actionFullWidthOnMobile
                 action={
                   settings.history.length > 0 && (
                     <Button
@@ -335,10 +343,11 @@ function ConfigurationForm({ settings }: { settings: EsiConfigurationSettings })
                         </Typography>
                       </Box>
                       <Stack
-                        direction={{ xs: 'column', sm: 'row' }}
+                        direction="row"
+                        useFlexGap
                         spacing={0.5}
                         alignItems="center"
-                        sx={{ flexShrink: 0, alignSelf: 'center' }}
+                        sx={{ flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: '45%' }}
                       >
                         <Switch
                           name="enabled"
@@ -383,9 +392,11 @@ function ConfigurationForm({ settings }: { settings: EsiConfigurationSettings })
                       onChange={(event) => {
                         const effectiveMonth = event.target.value;
                         const version =
-                          settings.history.find(
-                            (item) => !item.isCancelled && item.effectiveMonth <= effectiveMonth
-                          ) ?? settings.current;
+                          [...settings.history]
+                            .sort((a, b) => b.effectiveMonth.localeCompare(a.effectiveMonth))
+                            .find(
+                              (item) => !item.isCancelled && item.effectiveMonth <= effectiveMonth
+                            ) ?? settings.current;
                         form.setFieldValue('effectiveMonth', effectiveMonth);
                         if (version)
                           form.setFieldValue('concurrencyStamp', version.concurrencyStamp);
@@ -412,6 +423,13 @@ function ConfigurationForm({ settings }: { settings: EsiConfigurationSettings })
                           disabled={busy}
                           aria-expanded={registrationOpen}
                           aria-controls="esi-coverage-details"
+                          startIcon={
+                            <Iconify
+                              icon={GlobalIcons.expandMore}
+                              width={18}
+                              sx={{ transform: registrationOpen ? 'rotate(180deg)' : undefined }}
+                            />
+                          }
                           onClick={() => setRegistrationOpen(!registrationOpen)}
                         >
                           {registrationOpen ? 'Hide registration details' : 'Registration details'}
@@ -558,7 +576,10 @@ function ConfigurationForm({ settings }: { settings: EsiConfigurationSettings })
                         </Button>
                       }
                     >
-                      Staff details could not be loaded.
+                      {esiRequestError(
+                        attention.error,
+                        'Staff details could not be loaded. Retry to check again.'
+                      )}
                     </Alert>
                   )}
                   {employees && (

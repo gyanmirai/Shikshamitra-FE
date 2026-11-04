@@ -19,7 +19,7 @@ it('round-trips exact outcome statuses independently of the broad progress tabs'
   const filters = readAssessmentColumnFilters(raw);
   expect(filters).toHaveLength(2);
   expect(filters[0]).toMatchObject({ label: 'Status', displayValue: 'Waived' });
-  expect(filters[1]).toMatchObject({ label: 'Attendance', displayValue: 'Not required' });
+  expect(filters[1]).toMatchObject({ label: 'Attendance', displayValue: 'Not Required' });
   expect(serializeAssessmentColumnFilters(filters)).toBe(raw);
 });
 

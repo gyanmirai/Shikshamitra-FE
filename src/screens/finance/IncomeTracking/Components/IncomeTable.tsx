@@ -61,6 +61,7 @@ const IncomeTable: React.FC<IIncomeTableProps> = ({
       }
       columns={columns}
       data={data || []}
+      searchFieldProps={{ placeholder: 'Search' }}
     />
   );
 };

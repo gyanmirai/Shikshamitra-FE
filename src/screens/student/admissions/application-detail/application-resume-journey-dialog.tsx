@@ -79,7 +79,7 @@ export function ApplicationResumeJourneyDialog({
       <CustomDialog
         open
         title="Resume Admission"
-        titleInfo="Continue the same application from its last unfinished stage. Completed work, payments and withdrawal history are retained."
+        titleInfo="Continue the Same Application From Its Last Unfinished Stage. Completed Work, Payments and Withdrawal History Are Retained."
         handleClose={requestClose}
         disableClose={busy}
         guardUnsavedChanges={false}
@@ -97,7 +97,7 @@ export function ApplicationResumeJourneyDialog({
           <FormSectionCard
             title="Resume Details"
             icon={GlobalIcons.admissionDetails}
-            descriptionTooltip={`The resume stage is determined from the saved withdrawal history. ${preview?.warnings.includes(RETENTION_GUIDANCE) ? RETENTION_GUIDANCE : 'Released bookings are not automatically restored.'}`}
+            descriptionTooltip={`The Resume Stage Is Determined From the Saved Withdrawal History. ${preview?.warnings.includes(RETENTION_GUIDANCE) ? RETENTION_GUIDANCE : 'Released bookings are not automatically restored.'}`}
           >
             <Stack spacing={1.5}>
               <Stack component="dl" spacing={0.5} sx={{ m: 0 }}>
@@ -118,7 +118,7 @@ export function ApplicationResumeJourneyDialog({
                   {applicationNumber}
                 </Typography>
                 <Typography component="dt" variant="caption" color="text.secondary">
-                  Resume at
+                  Resume At
                 </Typography>
                 <Typography component="dd" sx={{ m: 0 }}>
                   {loading ? <Skeleton width="65%" /> : preview?.targetStageName || 'Unavailable'}
@@ -193,7 +193,7 @@ export function ApplicationResumeJourneyDialog({
             loading={busy}
             disabled={loading || Boolean(error) || !preview?.canResume}
           >
-            Resume admission
+            Resume Admission
           </LoadingButton>
         </DialogActions>
       </CustomDialog>
@@ -202,7 +202,7 @@ export function ApplicationResumeJourneyDialog({
         onClose={() => setDiscardOpen(false)}
         title="Discard Changes"
         content="Discard the resume reason?"
-        cancelText="Keep editing"
+        cancelText="Keep Editing"
         action={
           <Button
             size="small"
@@ -211,7 +211,7 @@ export function ApplicationResumeJourneyDialog({
             startIcon={<Iconify icon={GlobalIcons.cancel} />}
             onClick={onClose}
           >
-            Discard changes
+            Discard Changes
           </Button>
         }
       />

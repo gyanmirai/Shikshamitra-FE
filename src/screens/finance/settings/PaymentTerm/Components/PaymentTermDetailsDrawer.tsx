@@ -220,6 +220,7 @@ function InstallmentSchedule({
             },
           ]}
           wrapperProps={{ sx: { minWidth: 0, boxShadow: 'none', borderRadius: 1 } }}
+          searchFieldProps={{ placeholder: 'Search' }}
         />
       ) : (
         <Box>No installments are available for this version.</Box>

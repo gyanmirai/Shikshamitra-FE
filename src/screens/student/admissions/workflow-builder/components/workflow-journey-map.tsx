@@ -31,11 +31,11 @@ export function WorkflowJourneyMap({ stages, transitions, readOnly, onEditStage 
     <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto', p: 2 }}>
       <Stack spacing={0.5} sx={{ mb: 2 }}>
         <Typography variant="subtitle1" fontWeight={700}>
-          Applicant journey map
+          Applicant Journey Map
         </Typography>
         <Typography variant="caption" color="text.secondary">
           Columns follow the entry stage and configured routes. Select a stage to{' '}
-          {readOnly ? 'view' : 'edit'} it.
+          {readOnly ? 'View' : 'Edit'} it.
         </Typography>
       </Stack>
       <Stack direction="row" spacing={2} alignItems="flex-start" sx={{ minWidth: 'max-content' }}>
@@ -47,9 +47,9 @@ export function WorkflowJourneyMap({ stages, transitions, readOnly, onEditStage 
                 color={level.depth === null ? 'warning.main' : 'text.secondary'}
               >
                 {level.depth === null
-                  ? 'Not connected'
+                  ? 'Not Connected'
                   : level.depth === 0
-                    ? 'Journey starts'
+                    ? 'Journey Starts'
                     : `Route level ${level.depth}`}
               </Typography>
               {level.stages.map((stage) => {
@@ -96,16 +96,16 @@ export function WorkflowJourneyMap({ stages, transitions, readOnly, onEditStage 
                           >
                             <Iconify icon="mdi:source-branch" width={16} color="text.secondary" />
                             <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
-                              {transition.isDefault ? 'Otherwise' : 'When condition matches'}
+                              {transition.isDefault ? 'Otherwise' : 'When Condition Matches'}
                             </Typography>
                             <Typography variant="caption" fontWeight={600}>
-                              {stageById.get(transition.toStageId)?.name ?? 'Missing stage'}
+                              {stageById.get(transition.toStageId)?.name ?? 'Missing Stage'}
                             </Typography>
                           </Stack>
                         ))}
                         {!stage.isTerminalStage && outgoing.length === 0 && (
                           <Typography variant="caption" color="warning.main">
-                            No onward route
+                            No Onward Route
                           </Typography>
                         )}
                       </Stack>

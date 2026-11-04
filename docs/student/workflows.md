@@ -3,10 +3,18 @@ module: student
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-11-02
+updated_on: 2026-11-04
 owner: frontend-team
 audience: humans-and-agents
 ---
+
+TL;DR: follow these Student screen flows for Admissions setup, applicant progression, Onboarding and Records; backend rules remain authoritative.
+
+## Admission Interface Copy
+
+Admission-owned navigation, headings, breadcrumbs, fixed field labels, actions, tooltips and empty states use Title Case. This module-specific requirement overrides general sentence-case copy guidance for these surfaces. Standard plus-icon creation actions show the noun only: **Inquiry**, **Cycle**, **Form**, **Workflow** and **Offering**; their accessible names retain the creation action. **Open Applications**, **Book Session**, **Start Special Registration**, **Numbering Settings** and **Create Inquiry Link** retain meaningful wording. Preserve entered names, configured applicant questions, translations, routes, identifiers and API values exactly as supplied. Common components keep their existing contracts.
+
+Document presets keep their original saved default names separately from display labels. Parent-message event labels likewise keep their original template identities and default subjects, so existing Communication templates remain editable without creating differently named copies.
 
 ## Admission Gender choices and publish recovery
 
@@ -18,7 +26,7 @@ If Save and publish saves the draft but publication fails, the editor retains th
 
 ## Correct an application before finalization
 
-Use **Edit application form** from Student record details in the finalization workspace, or from the Application record header when the server permits correction. The existing pinned registration form opens in a contextual drawer. Its read-only fields and Finance joining-date restrictions remain enforced. Complete the highlighted fields, choose **Save corrections**, and supply an audit reason. This saves a correction without normal Submit/Reopen or replaying admission stages.
+Use **Edit application form** from the Registration/Form stage, Student record details in the finalization workspace, or the Application record header when the server permits correction. A completed Registration stage remains a read-only review; its Edit action opens the existing pinned registration form in a contextual correction drawer, without moving the current journey stage backwards. Its read-only fields and Finance joining-date restrictions remain enforced. Complete the highlighted fields, choose **Save corrections**, and supply an audit reason. This saves a correction without normal Submit/Reopen or replaying admission stages.
 
 After a confirmed save, finalization checks reload and staff must review identity/profile choices and guardian verification again. Approval and the application number remain visible. Form history shows the correction reason and field labels alongside prior entries. Cancel retains previous confirmations; unsaved answers use the existing discard confirmation. An unconfirmed network response permits exact-command retry, and closing refreshes the application without claiming success. Stale data requires reopening the latest form.
 
@@ -61,6 +69,19 @@ View opens a full-width protected preview with compact file/version/status conte
 
 ## Admission form preview and section actions
 
+Use **Form Type** above the Admission Forms table to choose All Types, Inquiry or Registration.
+Changing type returns to the first page while retaining search and other filters; opening a preview and returning restores the same list context, including type.
+
+Archive opens the shared consequence confirmation and loads current usage before enabling the action. It identifies linked offerings, workflow stages, public links and dependent registration forms, explains which new submissions will stop, and keeps saved answers/history and existing links. Usage outside staff scope is explicitly identified without exposing record names. Archived inquiry and registration forms offer **Restore** to staff with Forms Add/Update access; restoration reuses the same immutable version and does not activate an offering or rewrite saved responses.
+
+**History & Versions** remains available with View access; **Restore as New Draft** requires the existing Forms Add/Update access and does not replace historical responses. Failed history/version reads offer Retry inside the standard error toast through the shared feedback component's opt-in `toastAction`; other feedback callers retain their existing presentation. Comparison failures retain the visible Compare action for retry.
+
+Version comparisons share the form cache tag, so saving a draft invalidates an earlier comparison for the same two versions. Reopening History and comparing again uses the saved definition without requiring a page reload.
+
+Comparison descriptions use the actual field label and section name, such as **Field changed: Parent email (Contact details)**. Renamed fields show both labels. Identical readable descriptions remain separate list entries when several fields share a label.
+
+Offering activation retains its confirmation when configuration is blocked, names the actual form/workflow problem, and offers **Edit offering**, plus permitted form review, archived-form restoration and workflow review links. Published replacements must satisfy existing registration inheritance approvals. Public links retain their independently selected form; replacing the offering's inquiry form does not change them automatically.
+
 Inquiry and Registration previews keep the shared header Back arrow and outlined Back to Forms action available while loading, after a read failure and when ready. Both return to the unified Forms list with its search, column filters, page and page size. Direct preview links use that list as a fallback; external return targets are rejected. The embedded builder preview continues to return to its mounted builder draft.
 
 Section headers expose Edit and Delete directly through the existing adaptive action component. Edit opens the existing section settings; Delete still requires confirmation. Cancelling keeps the draft, and deleting the last section still leaves an incomplete draft rather than bypassing form validation.
@@ -71,7 +92,7 @@ Create workflow offers only Standard admission and Blank workflow. The template 
 
 ## Parents and contact selection
 
-1. New Inquiry forms keep the three required Student name and primary adult name/mobile controls, plus a configured required **Primary contact** selector for Father, Mother or Guardian. The runtime renders the published definition without injecting questions. Draft saves remain available; publication validates mappings and reachable contact paths. Older published forms retain their saved definition and safe legacy mappings.
+1. New Inquiry forms include First name, optional Last name, Parent name, Parent contact number, Parent email and Relationship to student, whose choices are Father, Mother or Guardian. The runtime renders the published definition without injecting questions. Draft saves remain available; publication validates mappings and reachable contact paths. Older published forms retain their saved definition and safe legacy mappings.
 2. Selecting Guardian in staff intake or a new family main-contact transition opens the shared confirmation dialog: neither parent handles school-contact responsibility. There is no parents-unavailable checkbox. Cancel preserves the prior selection; confirmation does not submit the form. Role changes clear the previous generic adult details rather than relabeling that adult. Public Guardian capture remains pending school confirmation and cannot advance until staff confirms it. Optional other-parent/guardian profiles and existing saved Guardian selections remain separate from this new-transition guard.
 3. Student Profile uses **Parents & Contact**. **Manage contacts** opens the shared compact dialog, reads the current family snapshot and submits an audited Records change with a reason. Applied and awaiting-approval outcomes are shown separately; restricted fields and stale drafts remain guarded.
 4. App Login suggests the exact existing linked adult, then the recorded contact/default parent. Staff explicitly confirms adult app access before Send Credentials. Choosing the main school contact does not grant access or change an existing account. A guardian can be chosen instead of a new sibling-parent handoff only through the explicit case authorisation.
@@ -161,6 +182,10 @@ Admissions Inquiries, Pipeline, Applications, and Admission Offering use one Boa
 
 Offering Board/Medium selections are compulsory context, not removable table chips. Clear and individual chip removal affect Class and other optional criteria without resetting that context. Inquiry tables show Phone without an Email column; email remains part of the existing contact capture contract.
 
+Offering Class stays at the neighboring controls' height and shows All classes or the selected count.
+Open its checklist to select classes or use Select All; the menu uses two columns where space allows and stacks on narrow screens.
+Multiple selected classes use one compact count/all filter chip, whose removal clears that criterion while preserving Board/Medium and the remaining URL-backed filters.
+
 ## Certificate workspace
 
 Certificates uses the compact icon tabs from Student Setup, with the Generated month picker on the right of the same bar (stacked within that bar on narrow screens). The page header offers a small Create certificate action; Configure template is not shown here. Certificate creation defaults to the first school level, class and division under the selected Board/Medium. Changing a parent selects the first available descendants and clears selected students. Creation, preview, batch review and certificate-action dialogs use the shared dialog shell, Title Case headings, title information tooltips and small footer buttons with leading icons.
@@ -232,6 +257,8 @@ instead of limiting large schools to an initial client-side option list.
 Inquiry and application selectors are purpose-safe: Inquiry selectors request only published Inquiry forms, while Application selectors request only published Registration forms. Document requirements use explicit Required or Optional settings; saved conditional requirements require an explicit replacement before applying changes. Parent messages remain Communication templates so Communication continues to own approval, consent, providers, delivery attempts, retries, and usage.
 Archived cycles are excluded from the setup selector.
 Edit opens the Offering drawer immediately while fresh detail loads inside its shell; table rows stay visible. Detail failures stay in the drawer with Retry rather than opening a creation form. Its two steps are **Configure** and **Preview**, sharing a full-height background card and the module's section cards. The admission cycle context appears below the stepper. Configure combines academic identity and operational configuration; Campus, Offering code and admission-window controls are absent. Both academic and configuration fields use equal two-column rows on desktop/tablet and stack on mobile. Configuration pairs Offering name with Published workflow, then Published inquiry form with Intake & assignment setup; direct-registration Offerings retain their existing rule of omitting the inquiry form. Existing code and campus assignments remain unchanged in form values and writes. New, bulk and edited Offerings inherit the selected cycle's dates rather than saving a date snapshot; existing custom-date Offerings are not migrated until edited and saved. Heading guidance is available through info icons, with no informational/warning banners or redundant field hints. Required-field, option-load, empty-hierarchy and server readiness errors remain actionable. Continue validates the complete form and requests readiness before Preview; an invalid active Offering cannot be saved. Preview shows readable academic values, the Offering name (without its code), its retained admission path and readiness. Back and Continue/Save changes are grouped on the right with shared icons. Configuration selectors retain their visible choices when returning from Preview. Unsaved-change protection, permissions, frozen application versions, concurrency and the existing active/inactive state are unchanged.
+Offering setup editing follows the backend lifecycle lock. Published workflow and Inquiry form selectors are read-only with lock icons whenever the Offering is active or has previously had an Inquiry/Application. The section's custom information tooltip explains the reason; deactivating a used Offering never unlocks it. An unused active Offering exposes **Deactivate offering** only with the existing deactivation permission, protects unsaved edits, and opens the existing confirmation. Reopen its editor after deactivation to select published replacements and validate before activation. Offering name remains editable and current Registration form is shown read-only; a changed editable workflow displays **From selected workflow** until saved. Missing usage metadata fails closed. Current counts can be zero while historical usage still locks the setup. Create/clone behavior and pinned applications remain unchanged.
+
 Clone can target any non-archived admission cycle. It copies the source code, workflow, and
 form versions, inherits the target cycle's dates, then clears and revalidates the academic hierarchy against that cycle;
 applications are never copied.
@@ -249,6 +276,8 @@ Offering details let authorized staff assign rooms to a class for an academic ye
 Selecting a special Admission type in Offering configuration switches new entry to Registration and clears Inquiry configuration. RTE's published workflow must omit Inquiry and Assessment stages. Historical Management/Staff Inquiry-or-direct offerings remain usable through their permitted entry routes; the setup UI does not expose a separate entry-mode selector.
 
 ## Inquiry capture and handoff
+
+The public parent form omits Single child, Sibling at school and Sibling students controls, including configured StudentSiblings lookups. Single-parent child remains when configured. A different child's same-contact submission is retained for staff review; contact matching does not confirm a family. Staff capture retains its existing family-matching flow. Public answers never establish sibling account access.
 
 New Inquiry forms start with required Student name, Parent/Guardian name, Parent/Guardian mobile and Primary contact controls in both the Blank and Inquiry starter paths. Primary contact selects Father, Mother or Guardian; the required generic adult name/mobile pair belongs to that selection. The builder shows a focusable lock tooltip and prevents changing/removing these generated controls, including deletion through their section/step. Applicants still enter answers normally; the controls are not runtime read-only. Profile packs skip incompatible separate name controls when the generated full-name control exists. Saved legacy definitions retain their existing configured questions and publication checks.
 
@@ -284,6 +313,8 @@ Inquiry create and edit apply the attached form's default language and show **Fo
    Inquiry details and qualification remain locked; permitted follow-ups continue through the application workspace using their original inquiry records.
    Entering **Admission Decision** removes the same case from Pipeline and shows it in **Applications** before any decision is recorded.
    Once transferred, correction work stays in Applications. A journey ended before Decision appears as Withdrawn in Applications history, while its decision-entry flag and timestamp remain unchanged.
+
+Public Inquiry explicit Class selector groups remain separate from the outer admission context. The common searchable Board, Medium and Class controls use only the selected offering's supplied options: Medium/Class wait for their parents, changing or clearing Board clears Medium/Class, and changing Medium clears Class. Nonblank child answers require their configured parent before submission. Validation focuses the first editable invalid question; no protected metadata queries run anonymously. Legacy single-Class questions retain their existing presentation and answer contract.
 
 Inquiry rows expose separate Edit, Follow-up, and Move to next stage actions. Follow-up is a focused notes dialog; Edit contains no contact, status, assignment, or follow-up panels. Move remains gated on Interested. Existing exceptional reassignment contracts retain manager capability, transfer reason, pool eligibility, and capacity enforcement. New bulk operations remain backlog.
 
@@ -384,7 +415,9 @@ Single-score and qualitative result entry remain available for existing workflow
    Selected students with an existing booking show Already booked and View booking instead of silently disabling the entry action. Booking remains blocked until unavailable students are explicitly removed; opening details never cancels or reassigns a booking.
 4. Targeted preview checks only the selected students, retaining exact application/stage identities and fresh stamps. Incompatible, unavailable or duplicate-pupil selections must be explicitly removed; insufficient capacity blocks the entire selection. No global suggestions or new arrivals are implicitly booked. Individual interviews display distinct proposed appointment times for review before confirmation.
    Room approval holds remain visible. Uncertain create/booking responses retain the exact command and idempotency key for retry; fields/session changes stay locked until resolution. Definitive rejection requires fresh availability. Dirty Close uses the existing discard confirmation.
-5. The **Session** table shows classes, schedule, room, booked/capacity, status and permitted actions. View opens Student filtered to that session; Edit changes future arrangements and Cancel releases the reservation and cancels pending bookings with the existing reason confirmation.
+5. The **Session** table shows classes, schedule, room, booked/capacity, status and permitted actions.
+   Click a Session row, or focus it and press Enter/Space, to open Student filtered to that session. The redundant View icon is removed; Edit and More retain their existing management behavior.
+   Edit changes future arrangements and Cancel releases the reservation and cancels pending bookings with the existing reason confirmation.
    Per-session capability and action permissions guard writes, including sessions shared with Offerings outside the actor's full access. Legacy sessions without an Institute room must adopt one through Edit before shared booking; booked individual-interview arrangements remain locked. Existing session type and Offering/stage links remain fixed. Ongoing individual interviews may book remaining future slots until the session ends; school exam/group booking still requires a future start.
 6. The table shows Student Name, Class, session name only, Attendance, Status, then the rightmost Action column. Result is merged into Status: Not booked, Scheduled, Attendance pending, Result pending, Review pending, In progress, Pass, Failed, Absent, Waived or Retake required. Marks remain in result entry and details. Waived/unrequired pending attendance displays Not required; actual recorded Present/Absent evidence remains visible. Unbooked attendance is neutral and a future booked session shows Not marked. The four progress tabs remain separate from the precise Status column; pending review stays Ongoing, and finalized outcomes/waivers belong to Complete.
    Action uses equal-width small contextual buttons or View details, matching Student Setup. Click a row (or focus it and press Enter/Space) for history and permitted contextual actions. The Export control on both tables exports the loaded page; student exports use the displayed Attendance/Status labels and omit Action.
@@ -428,9 +461,38 @@ Eligibility, Review, and Offer are retired Admission Stage types. New drafts can
 
 ## Dynamic form builder
 
+The standalone saved Registration preview composes its approved Inquiry source instead of showing only the base Registration sections.
+One approved source opens automatically; multiple approvals require an explicit choice, retained in the preview URL for reload.
+Unresolved, loading and failed composition keep the base hidden and expose selection or Retry.
+Inquiry-only context, including Relationship to student, appears once in its original source section/grid across builder, Review, live preview and Registration runtime; its answer is disabled and comes from frozen Inquiry values at runtime.
+
+Fresh definitions use core-field policy version 1, including blank/recommended starters and new copies or versions.
+Historical definitions and captured answers retain their saved schema when read.
+
+| Builder context | Initial core controls | Editing and reuse |
+| --- | --- | --- |
+| Inquiry | Required First name, Parent name, Parent contact number, Parent email and Relationship to student; permanently optional Last name | Labels/translations are editable; type, binding, requiredness and removal are protected. |
+| Registration without Inquiry reuse | Required First name, Parent name, Parent contact number, Parent email, Date of birth and Gender; permanently optional Last name | Existing direct-entry parent/guardian responsibility selection remains separate from configured form fields. |
+| Registration with Inquiry reuse | Source Inquiry controls first, with Registration Date of birth/Gender when not supplied by the source | Source labels, rules, sections, grid and order stay locked; equivalent local controls are suppressed. |
+
+Core controls remain editable for applicants and can be reordered or moved into always-visible, nonrepeatable sections in their owning builder.
+They cannot be deleted directly or through a parent section/step; other questions can be added to the same sections.
+Edited labels and translations survive save/reopen and participate in draft replacement protection.
+Required runtime feedback uses the displayed field label, while optional Last name remains optional.
+Direct Registration requires Parent email for a version-1 offering and retains the historical optional-email behavior otherwise.
+
+**Class selector** in Custom fields adds the linked Board → Medium → Class group using Institute Setup choices.
+Adding it again reuses an existing compatible group or source Inquiry class question instead of duplicating it.
+Labels can be edited; the Select types, source connections and dependent choices remain protected.
+Changing Board or Medium clears only the now-invalid dependent selections; loading/error states preserve entered answers and retain the existing searchable controls and shared scrollbar.
+
 Class-interest questions use one semantic identity for the reserved starter code and the **Class interested in / Interested Class** aliases. Adding either alias reuses an existing base or inherited question, including across sections. New questions use the existing searchable class renderer with live Institute Setup IDs; their type stays Select and their choices cannot be replaced with manual labels. A legacy manual class question has an explicit **Use Institute Setup classes** repair action. Renaming another question into a duplicate is reported by builder/schema validation. Class applying for, previous class and static information remain separate. Saved question codes and historical answers are not rewritten on read.
 
-Standalone Institute Setup class questions show **Board** outside the searchable class menu. Board is a prerequisite filter, not another saved question: the answer remains the class ID, whose metadata restores Board on reopen. Changing Board clears the current class through the existing answer/dependency handler; loading failures never clear saved answers. Classes are filtered by Board ID while medium/stage labels distinguish classes within that board; academic years are not added to option labels. Both menus use the common Scrollbar. The pair occupies a runtime field row with equal-width small controls and stacks in narrow containers. Explicit medium/stage/class/division cascades keep their existing controls. Reused Inquiry questions retain their source definition and settings locks, and public Inquiry options remain restricted to the selected offering.
+Legacy standalone `Standards` questions show **Board** and, when metadata supplies it, **Medium** before the searchable Class menu.
+These are prerequisite filters rather than additional saved answers: the stored value remains the Class ID, whose metadata restores its Board/Medium context on reopen.
+Changing a prerequisite clears the dependent Class through the existing answer handler; loading failures preserve saved answers.
+The controls use equal-width small fields, stack in narrow containers and share the common Scrollbar; existing explicit academic cascades retain their configured controls.
+Reused Inquiry questions retain source locks, and public Inquiry options remain restricted to the selected offering.
 
 Registration drafts can enable **Include Inquiry questions in Registration** and preview a compatible exact Inquiry version before choosing **Allow these questions**. **Reuse Inquiry Questions** offers one picker for published choices, saved approvals, scoped Offering connections and retained captured versions. Connection metadata retains the existing View and usage permission gates. A retained Archived version is available only through scoped captured history or a previously published Registration-family approval. **Load more Inquiry versions** keeps retained choices reachable; published choices page through the searchable picker. Previewing or approving a source does not change routing. The Offering still selects Inquiry and its workflow supplies Registration.
 
@@ -438,7 +500,7 @@ The Registration builder groups source selection under **Reuse Inquiry Questions
 
 Builder validation actions select the affected step, section or question and open its editable setting, including the Rules tab for field rules. Locked Inquiry definitions open their read-only question settings with source-form guidance. Internal saved settings without an editor use **Review section**, **Review step** or **Review question** and recovery guidance rather than promising an unavailable edit control. Preview returns to the same mounted draft.
 
-The selected source changes only the builder preview. Inquiry questions appear first in their original sections, steps and grid; Registration-only questions follow. Effective inherited fields keep the Inquiry labels, translations, types, options, requiredness, validation, visibility and order, and are not copied into the base Registration draft. These definitions cannot be edited, moved or deleted from Registration. Equivalent Registration controls are suppressed in the effective form, including verified standard starter aliases; empty duplicate-only sections are omitted. Arbitrary equal labels do not establish identity, and explicit compatible custom-question mapping remains available. Registration-only questions retain their normal editing controls. When the Inquiry captures a full student name and Registration uses separate name parts, the captured full name remains a read-only reference without automatic splitting.
+The selected source changes only the builder preview. Inquiry questions appear first in their original sections, steps and grid; Registration-only questions follow. Effective inherited fields keep the Inquiry labels, translations, types, options, requiredness, validation, visibility and order, and are not copied into the base Registration draft. These definitions cannot be edited, moved or deleted from Registration. Equivalent Registration controls are suppressed in the effective form, including verified standard starter aliases; empty duplicate-only sections are omitted. Arbitrary equal labels do not establish identity, and explicit compatible custom-question mapping remains available. Registration-only questions retain their normal editing controls. A historical full-name Inquiry source is preserved without automatic splitting; version-1 Registration reuse does not add competing First name/Last name controls beside it.
 
 Applicant Registration uses its exact linked Inquiry and saved effective schema; it has no source selector. Compatible editable answers prefill once, while saved corrections and explicit clears survive later reads without changing the original Inquiry answers. A definition lock does not make an otherwise editable answer read-only. Inquiry-only details and the captured full-name reference remain read-only context. New published versions do not silently replace an existing application's labels, rules or answers. Forms without inheritance settings retain their existing behavior. Backend ownership and version rules are documented in [Student product behavior](../../../Shikshamitra-BE/docs/modules/student/product.md).
 
@@ -675,6 +737,10 @@ Backend services remain authoritative for duplicate detection, tenant isolation,
 Add new admission behavior only after extending and validating the owning backend contract, permission, workflow, and persistence rules.
 
 ## Confirm a parent and reuse sibling login
+
+For two inquiries already captured with the same family contact, open the target pending Inquiry and save any edits first. Use **Confirm siblings**, explicitly choose the existing child and saved parent, and use **Confirm family**. A legacy parent without a saved role requires Father or Mother. The dialog shows loading, no available matches, retry and stale-selection feedback; Cancel, close and Escape share the normal Keep editing/Discard changes guard. Only the target inquiry is confirmed. A phone match or opening the dialog does not link the family. Existing new-inquiry Add sibling remains available separately.
+
+Confirmed sibling Registration fills available compatible parent fields automatically from the accessible saved family source. This also applies when both children's registrations were started before the source parent details were saved. There is no separate parent-details review or Use saved family details button. Existing target answers, deliberate clears and unsaved edits take precedence; missing fields retain the configured validation. Save draft/Save & Next persists the copied snapshot only on the target. Child-specific information, addresses, documents and app credentials are not copied by this flow. Registration detail reuse and the App Login authorization below remain separate operations.
 
 1. In staff Inquiry or Direct Registration, choose Father or Mother and enter the parent's contact details.
 2. Use the existing Submit duplicate check or Check existing families action; an eligible email or mobile match offers Add sibling.

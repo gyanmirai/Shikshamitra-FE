@@ -148,18 +148,18 @@ export default function AdmissionApplicationsScreen() {
   }
 
   const emptyState = !academic.academicYearId
-    ? 'Select an academic year to view Applications'
+    ? 'Select an Academic Year to View Applications'
     : !academic.dashboardScope && (!academic.boardId || !academic.mediumId)
-      ? 'Select a Board and Medium to view Applications'
+      ? 'Select a Board and Medium to View Applications'
       : state.search || state.filters.length || state.status !== undefined
-        ? 'No applications match the selected search or filters'
+        ? 'No Applications Match the Selected Search or Filters'
         : academic.standardId
-          ? 'No applications match the selected classes'
+          ? 'No Applications Match the Selected Classes'
           : activeApplications
-            ? 'No active applications match this scope'
+            ? 'No Active Applications Match This Scope'
             : pendingDecisions
-              ? 'No admission decisions are pending in this scope'
-              : 'No applications have reached the admission decision phase yet';
+              ? 'No Admission Decisions Are Pending in This Scope'
+              : 'No Applications Have Reached the Admission Decision Phase Yet';
 
   return (
     <Box
@@ -195,11 +195,11 @@ export default function AdmissionApplicationsScreen() {
             <Button
               size="small"
               variant="contained"
-              startIcon={<Iconify icon="mdi:plus" />}
+              startIcon={<Iconify icon="mdi:account-arrow-right-outline" />}
               disabled={!academic.academicYearId}
               onClick={registration.onTrue}
             >
-              Start special registration
+              Start Special Registration
             </Button>
           ) : undefined
         }
@@ -226,7 +226,7 @@ export default function AdmissionApplicationsScreen() {
           >
             <CustomizableTable
               tableId="admission-applications"
-              tableTitle="Admission applications"
+              tableTitle="Admission Applications"
               exportLabel="Export"
               wrapperProps={{ sx: { height: 1, flex: 1, minHeight: 0, minWidth: 0 } }}
               tableContainerProps={{ sx: { height: 1 } }}
@@ -300,7 +300,7 @@ export default function AdmissionApplicationsScreen() {
                 update({ page: String(page), size: String(size) }, size !== state.rowsPerPage)
               }
               searchFieldProps={{
-                placeholder: 'Search applicant, application or contact',
+                placeholder: 'Search Applicant, Application or Contact',
                 inputProps: { 'aria-label': 'Search Applications' },
               }}
               errorContent={
@@ -317,18 +317,18 @@ export default function AdmissionApplicationsScreen() {
                   <Box>{emptyState}</Box>
                   {state.search ? (
                     <Button size="small" onClick={() => update({ search: undefined })}>
-                      Clear search
+                      Clear Search
                     </Button>
                   ) : state.filters.length || state.status !== undefined ? (
                     <Button
                       size="small"
                       onClick={() => update({ filters: undefined, status: undefined })}
                     >
-                      Clear filters
+                      Clear Filters
                     </Button>
                   ) : academic.standardId ? (
                     <Button size="small" onClick={academic.clear}>
-                      Clear class filter
+                      Clear Class Filter
                     </Button>
                   ) : null}
                 </Stack>

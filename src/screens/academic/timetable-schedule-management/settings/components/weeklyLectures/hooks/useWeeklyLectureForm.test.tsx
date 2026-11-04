@@ -7,6 +7,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import { it, vi, expect, afterEach } from 'vitest';
 import { act, cleanup, waitFor, renderHook } from '@testing-library/react';
 import { lectureSlotsApi as api } from 'src/redux/academicAPI/timetableApi/lectureSlotsApi';
+import { useGetWeeklyLectureSlotsQuery } from 'src/redux/academicAPI/timetableApi/weeklyLecturesApi';
 
 import { useWeeklyLectureForm } from './useWeeklyLectureForm';
 
@@ -208,4 +209,88 @@ it('loads saved targets without depending on the create-only subject assignment 
   await waitFor(() => expect(result.current.isSubjectsLoading).toBe(false));
   expect(assignmentRequests).toBe(0);
   expect(result.current.subjectsError).toBe(false);
+});
+
+it('excludes a previously configured class returned beyond the first API page from Add', async () => {
+  const { wrapper } = setup();
+  const rows = Array.from({ length: 13 }, (_, index) => ({
+    id: `weekly-${index}`,
+    standardId: index === 12 ? 'std-4' : `other-standard-${index}`,
+    classId: index === 12 ? 'std-4' : `other-standard-${index}`,
+    className: index === 12 ? 'Std 4' : `Other class ${index}`,
+    subjects: [],
+    totalLectures: 0,
+  }));
+  mswServer.use(
+    http.get(`${endpoint}/academics/timetable/settings/weekly-lecture-slots`, ({ request }) => {
+      const offset = Number(new URL(request.url).searchParams.get('SkipCount') ?? 0);
+      return HttpResponse.json({ totalCount: rows.length, items: rows.slice(offset, offset + 10) });
+    })
+  );
+  const { result } = renderHook(
+    () => {
+      const { data, isSuccess } = useGetWeeklyLectureSlotsQuery({ AcademicMediumId: medium.id });
+      const form = useWeeklyLectureForm({
+        editData: null,
+        tableData: data?.items as typeof rows | undefined,
+      });
+      return { isSuccess, form };
+    },
+    { wrapper }
+  );
+  await waitFor(() => expect(result.current.isSuccess).toBe(true));
+  await waitFor(() =>
+    expect(result.current.form.allClass).toEqual([{ id: 'std-5', name: 'Std 5' }])
+  );
+});
+
+it('saves an existing class through PUT instead of creating a duplicate configuration', async () => {
+  const { wrapper } = setup();
+  const onClose = vi.fn();
+  const writes: string[] = [];
+  const saved = {
+    id: 'weekly-4',
+    standardId: 'std-4',
+    standardName: 'Std 4',
+    subjects: [{ subjectId: 'math-std-4', subjectName: 'Mathematics', weeklyLectures: 5 }],
+  };
+  mswServer.use(
+    http.get(`${endpoint}/academics/timetable/settings/weekly-lecture-slots/weekly-4`, () =>
+      HttpResponse.json(saved)
+    ),
+    http.put(
+      `${endpoint}/academics/timetable/settings/weekly-lecture-slots/weekly-4`,
+      async ({ request }) => {
+        writes.push(request.method);
+        expect(await request.json()).toEqual({
+          subjects: [{ subjectId: 'math-std-4', weeklyLectures: 6, electiveGroupId: null }],
+        });
+        return HttpResponse.json(saved);
+      }
+    ),
+    http.post(`${endpoint}/academics/timetable/settings/weekly-lecture-slots`, ({ request }) => {
+      writes.push(request.method);
+      return HttpResponse.json({}, { status: 400 });
+    })
+  );
+  const editData = {
+    id: 'weekly-4',
+    standardId: 'std-4',
+    classId: 'std-4',
+    className: 'Std 4',
+    subjects: [],
+    totalLectures: 5,
+  };
+  const { result } = renderHook(() => useWeeklyLectureForm({ editData, tableData: [], onClose }), {
+    wrapper,
+  });
+  await waitFor(() => expect(result.current.formik.values.subjects[0]?.noOfLecture).toBe(5));
+  await act(async () => {
+    await result.current.formik.setFieldValue('subjects[0].noOfLecture', 6);
+  });
+  await act(async () => {
+    await result.current.formik.submitForm();
+  });
+  expect(writes).toEqual(['PUT']);
+  expect(onClose).toHaveBeenCalledWith(null, true);
 });

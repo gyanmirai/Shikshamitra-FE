@@ -40,7 +40,7 @@ export function ReviewHistory(props: ReviewStageKey) {
   return (
     <Accordion expanded={open} onChange={(_, value) => setOpen(value)}>
       <AccordionSummary expandIcon={<Iconify icon="mdi:chevron-down" />}>
-        <Typography variant="subtitle2">Review history</Typography>
+        <Typography variant="subtitle2">Review History</Typography>
       </AccordionSummary>
       <AccordionDetails>{open && <HistoryRecords {...props} />}</AccordionDetails>
     </Accordion>

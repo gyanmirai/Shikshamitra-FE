@@ -5,7 +5,6 @@ import CustomSelect from 'src/components/custom-select';
 import { Box, Stack, Button, Typography } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import { AcademicDesignNotes } from './academic-design-notes';
 import { getAcademicInsightsRoleLabel } from '../insights/academic-insights-model';
 
 import type { useAcademicInsights } from '../insights/use-academic-insights';
@@ -17,8 +16,7 @@ export function AcademicDesignHeader({ query, refresh }: { query: ReturnType<typ
       description="Academic insights and permitted workflows for your assigned responsibilities."
       links={[{ name: 'Academics' }, { name: 'Dashboard' }]}
       slotProps={{ action: { maxWidth: 1, width: { xs: 1, md: 'auto' } }, heading: {}, moreLink: {}, breadcrumbs: {} }}
-      action={<Stack direction="row" alignItems="center" justifyContent="space-between" useFlexGap flexWrap="wrap" gap={1}>
-        <AcademicDesignNotes />
+      action={<Stack direction="row" alignItems="center" justifyContent="flex-end" useFlexGap flexWrap="wrap" gap={1}>
         <Button size="small" variant="outlined" startIcon={<Iconify icon={GlobalIcons.refresh} />}
         disabled={!query.hasContext || !query.authorized || query.isFetching} onClick={refresh}>
         {query.isFetching ? 'Refreshing' : 'Refresh'}

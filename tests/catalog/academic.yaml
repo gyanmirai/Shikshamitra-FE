@@ -1,6 +1,48 @@
 module: Academic
 generatedAt: 2026-07-29
 scenarios:
+  - id: ACM-INSIGHTS-LOADING-CACHE-001
+    module: Academic
+    submodule: Dashboard
+    title: Academic dashboard uses content-shaped responsive skeletons, preserves cards during refresh and reuses fresh scoped data on return
+    risk: medium
+    priority: P1
+    type: [functional, regression, responsive, accessibility]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/academic/dashboard]
+    automated: true
+    automationFile: e2e/academic/academic-dashboard-loading.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-dashboard', '@regression', '@responsive', '@accessibility']
+  - id: ACM-LECTURE-UI-001
+    module: Academic
+    submodule: Lecture Slots
+    title: Lecture slot form uses schedule presets and a Time Slots counter with accessible validation and responsive scrolling
+    risk: high
+    priority: P1
+    type: [functional, regression, responsive, accessibility]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/academic/setup, /academic/timetableSettings/lectureSlots]
+    automated: true
+    automationFile: e2e/academic/lecture-slot-ui.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-timetable', '@regression', '@responsive', '@accessibility']
+  - id: ACM-SETUP-LECTURE-SLOT-SCROLL-001
+    module: Academic
+    submodule: Setup Guide
+    title: Embedded lecture slot forms scroll to period timings and working submit and cancel actions
+    risk: high
+    priority: P1
+    type: [functional, regression, responsive]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/academic/setup]
+    automated: true
+    automationFile: e2e/academic/lecture-slot-scroll.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-setup', '@regression', '@responsive']
   - id: ACM-HOMEWORK-SUBMISSION-PREVIEW-001
     module: Academic
     submodule: Homework and Assignment

@@ -3,7 +3,7 @@ module: security
 domain: permissions
 content_type: How-to
 status: canonical
-updated_on: 2026-10-30
+updated_on: 2026-11-03
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -11,6 +11,8 @@ audience: humans-and-agents
 # Edit role and user permissions
 
 TL;DR: edit individual actions or use scoped bulk controls, review the complete draft, and save verified changes for the selected role or user.
+
+The built-in admin role and users currently assigned to it open in read-only mode in both dialogs. The existing matrix displays effective access, an information message explains the lock, and permission controls and Review changes stay disabled. User protection comes from the server's `isReadOnly` flag. [Backend permission policy](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/common/security/permission-consistency.md) owns defaults, membership validation, and write rejection.
 
 1. Open Role Management or User Management as an authorized permission administrator.
 2. Select Module Permission or Set Module Visibility. These remain separate dialogs.

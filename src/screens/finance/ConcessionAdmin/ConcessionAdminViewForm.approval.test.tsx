@@ -1,7 +1,7 @@
 import React from 'react';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
-import { act, render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { ConcessionStatusType } from 'src/enums/concession-status-type';
+import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { concessionRequestErrorMessage } from 'src/utils/concession-request-error';
 
 import ViewConcessionRequest from './ConcessionAdminViewForm';
@@ -12,11 +12,16 @@ vi.mock('src/components/customDialog', () => ({
   DialogScrollContent: () => null,
 }));
 
-const state = vi.hoisted(() => ({ check: vi.fn(), toast: vi.fn(), userId: 'checker' }));
+const state = vi.hoisted(() => ({
+  check: vi.fn(),
+  toast: vi.fn(),
+  userId: 'checker',
+  yearId: 'year',
+}));
 vi.mock('react-redux', () => ({
   useSelector: (select: any) =>
     select({
-      globalState: { currentYear: { id: 'year' } },
+      globalState: { currentYear: { id: state.yearId } },
       auth: { user: { sub: state.userId }, permissions: [] },
     }),
 }));
@@ -28,11 +33,24 @@ vi.mock('src/components/scrollbar', () => ({
 vi.mock('src/components/preview-document/DocumentPreviewDialog', () => ({ default: () => null }));
 vi.mock('./StucentConcessionCard', () => ({ default: () => <div>Student information</div> }));
 vi.mock('./ConcessionFeeHeadApprovalView', () => ({ default: () => <div>Approval panel</div> }));
+vi.mock('./ConcessionRequestDetails', () => ({
+  default: ({ item, onClose }: any) => (
+    <div role="dialog" aria-label="Request details">
+      {item.studentConcessionTypeRequestId}
+      <button type="button" onClick={onClose}>Close details</button>
+    </div>
+  ),
+}));
 vi.mock('./ConcessionItemCard', () => ({
-  default: ({ item, onApprove, approvalChecking }: any) => (
-    <button type="button" disabled={approvalChecking} onClick={() => onApprove(item)}>
-      Approve request
-    </button>
+  default: ({ item, onApprove, onViewDetails, approvalChecking }: any) => (
+    <>
+      <button type="button" disabled={approvalChecking} onClick={() => onApprove(item)}>
+        Approve request
+      </button>
+      <button type="button" onClick={() => onViewDetails(item)}>
+        View request details
+      </button>
+    </>
   ),
 }));
 vi.mock('src/redux/finance/ConcessionManagement/concessionManagementApi', () => ({
@@ -71,8 +89,23 @@ const approve = () => fireEvent.click(screen.getByRole('button', { name: 'Approv
 const duplicateMessage = concessionRequestErrorMessage('Finance:Concession:010034');
 
 describe('Student concession approval entry', () => {
+  it.each(['year', 'student'])('closes selected details when the %s scope changes', (scope) => {
+    const view = setup();
+    fireEvent.click(screen.getByRole('button', { name: 'View request details' }));
+    expect(screen.getByRole('dialog', { name: 'Request details' })).toHaveTextContent('request');
+    if (scope === 'year') state.yearId = 'other-year';
+    view.rerender(
+      <ViewConcessionRequest
+        student={{ studentId: scope === 'student' ? 'other-student' : 'student' } as any}
+        onClose={vi.fn()}
+      />
+    );
+    expect(screen.queryByRole('dialog', { name: 'Request details' })).not.toBeInTheDocument();
+  });
+
   beforeEach(() => {
     state.userId = 'checker';
+    state.yearId = 'year';
     state.check.mockReset().mockResolvedValue({});
     state.toast.mockClear();
   });

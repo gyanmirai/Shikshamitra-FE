@@ -215,7 +215,7 @@ function InquiryFollowUpContent({
     <>
       <CustomDialog
         open
-        title="Follow-up"
+        title="Follow-Up"
         maxWidth="sm"
         hasForm={false}
         handleClose={close}
@@ -227,10 +227,10 @@ function InquiryFollowUpContent({
         }}
       >
         <Box component="form" noValidate onSubmit={formik.handleSubmit}>
-          <DialogScrollContent aria-label="Follow-up notes, newest first">
+          <DialogScrollContent aria-label="Follow-Up Notes, Newest First">
             <Stack spacing={1.5}>
               {(fetching || !initialized.value) && !queryError && (
-                <Stack spacing={1} aria-label="Loading follow-up notes">
+                <Stack spacing={1} aria-label="Loading Follow-Up Notes">
                   <Skeleton variant="rounded" height={110} />
                   <Skeleton variant="rounded" height={110} />
                 </Stack>
@@ -327,7 +327,7 @@ function InquiryFollowUpContent({
               >
                 <ShakingTextField error={dateError}>
                   <DatePicker
-                    label="Next reminder date"
+                    label="Next Reminder Date"
                     format="DD-MM-YYYY"
                     value={formik.values.reminderDate}
                     minDate={dayjs().add(1, 'day').startOf('day')}
@@ -369,7 +369,7 @@ function InquiryFollowUpContent({
             {saving && (
               <Box
                 role="status"
-                aria-label="Saving follow-up"
+                aria-label="Saving Follow-Up"
                 sx={{
                   position: 'absolute',
                   inset: 0,
@@ -412,7 +412,7 @@ function InquiryFollowUpContent({
         onClose={discard.onFalse}
         icon="warning"
         disableBackdropClick
-        title="Discard unsaved changes?"
+        title="Discard Unsaved Changes?"
         content="Your follow-up note and reminder changes will be discarded."
         action={
           <Button
@@ -425,7 +425,7 @@ function InquiryFollowUpContent({
             }}
             startIcon={<Iconify icon={GlobalIcons.cancel} />}
           >
-            Discard changes
+            Discard Changes
           </Button>
         }
       />
@@ -515,7 +515,7 @@ function FollowUpNoteCard({ note }: { note: InquiryFollowUpNote }) {
               <Stack direction="row" spacing={0.5} alignItems="center">
                 <Iconify icon={GlobalIcons.calendar} width={14} color="text.secondary" />
                 <Typography variant="caption" color="text.secondary">
-                  Remind date: {fDate(note.reminderAt)}
+                  Remind Date: {fDate(note.reminderAt)}
                 </Typography>
               </Stack>
             )}

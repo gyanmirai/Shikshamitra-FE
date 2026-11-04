@@ -12,6 +12,15 @@ import { render, screen, waitFor } from '@testing-library/react';
 
 import { AdmissionFormHistoryDialog } from './admission-form-history-dialog';
 
+const toast = vi.hoisted(() => ({
+  error: vi.fn(
+    (_options: { message: ReactNode; alertProps: (id: string) => { action?: ReactNode } }) =>
+      'history-error'
+  ),
+  dismiss: vi.fn(),
+}));
+vi.mock('src/components/toast', () => ({ shikshaMitraToast: toast }));
+
 const hooks = vi.hoisted(() => ({
   audit: {
     currentData: [] as AdmissionFormAuditEntry[] | undefined,
@@ -70,15 +79,25 @@ vi.mock('src/components/customDialog', () => ({
 }));
 
 const form = { id: 'current-form', name: 'School inquiry', version: 2 } as AdmissionForm;
-const props = { form, onClose: vi.fn(), onRestoreVersion: vi.fn() };
+const props = { form, canRestore: true, onClose: vi.fn(), onRestoreVersion: vi.fn() };
 const olderVersion = { id: 'older-form', version: 1 } as AdmissionFormVersionSummary;
 
 const selectVersion = async (user: ReturnType<typeof userEvent.setup>) => {
-  await user.click(screen.getByRole('combobox', { name: 'Compare with' }));
+  await user.click(screen.getByRole('combobox', { name: 'Compare With' }));
   await user.click(screen.getByRole('option', { name: 'Version 1' }));
 };
 
 describe('Admission form history dialog', () => {
+  it('lets view-only staff compare history without offering a restore mutation', async () => {
+    const user = userEvent.setup();
+    hooks.versions.currentData = [olderVersion];
+    render(<AdmissionFormHistoryDialog {...props} canRestore={false} />);
+    await selectVersion(user);
+    expect(screen.queryByRole('button', { name: 'Restore as New Draft' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /^Compare$/ }));
+    expect(hooks.compare).toHaveBeenCalledWith({ id: form.id, otherId: olderVersion.id }, true);
+    expect(props.onRestoreVersion).not.toHaveBeenCalled();
+  });
   beforeEach(() => {
     vi.clearAllMocks();
     hooks.audit.currentData = [];
@@ -102,13 +121,13 @@ describe('Admission form history dialog', () => {
     const user = userEvent.setup();
     render(<AdmissionFormHistoryDialog {...props} />);
     expect(
-      screen.getByRole('dialog', { name: 'History & versions · School inquiry' })
+      screen.getByRole('dialog', { name: 'History & Versions · School inquiry' })
     ).toBeVisible();
-    expect(screen.getByRole('heading', { name: 'Compare versions' })).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Compare Versions' })).toBeVisible();
     expect(screen.getByRole('heading', { name: 'Activity' })).toBeVisible();
     expect(screen.getByText('No other versions are available yet.')).toBeVisible();
     expect(screen.getByText('No recorded form activity is available.')).toBeVisible();
-    await user.click(screen.getByRole('button', { name: 'Close' }));
+    await user.click(screen.getByRole('button', { name: 'close' }));
     await user.click(screen.getByRole('button', { name: 'close' }));
     expect(props.onClose).toHaveBeenCalledTimes(2);
   });
@@ -118,10 +137,22 @@ describe('Admission form history dialog', () => {
     hooks.audit.isError = true;
     hooks.versions.isError = true;
     render(<AdmissionFormHistoryDialog {...props} />);
-    expect(screen.getByText(/Unable to load form versions/)).toBeVisible();
-    expect(screen.getByText(/Unable to load form activity/)).toBeVisible();
+    expect(toast.error).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'Unable to load form versions. Please try again.' })
+    );
+    expect(toast.error).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'Unable to load form activity. Please try again.' })
+    );
+    expect(screen.queryByText(/Unable to load form versions/)).not.toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     expect(screen.queryByText('No other versions are available yet.')).not.toBeInTheDocument();
+    render(
+      <>
+        {toast.error.mock.calls.map(([notice], index) => (
+          <span key={index}>{notice.alertProps('history-error').action}</span>
+        ))}
+      </>
+    );
     const retryActions = screen.getAllByRole('button', { name: 'Retry' });
     await user.click(retryActions[0]);
     await user.click(retryActions[1]);
@@ -133,9 +164,9 @@ describe('Admission form history dialog', () => {
     hooks.audit.isLoading = true;
     hooks.versions.isLoading = true;
     const view = render(<AdmissionFormHistoryDialog {...props} />);
-    expect(screen.getByLabelText('Loading form versions')).toBeVisible();
-    expect(screen.getByLabelText('Loading form activity')).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Close' })).toBeEnabled();
+    expect(screen.getByLabelText('Loading Form Versions')).toBeVisible();
+    expect(screen.getByLabelText('Loading Form Activity')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'close' })).toBeEnabled();
     hooks.audit.isLoading = false;
     hooks.audit.currentData = [
       {
@@ -148,7 +179,7 @@ describe('Admission form history dialog', () => {
     ];
     view.rerender(<AdmissionFormHistoryDialog {...props} />);
     expect(screen.getByText('Admin Override Approved')).toBeVisible();
-    expect(screen.getByText(/Version 1 · Approved by the school administrator/)).toBeVisible();
+    expect(screen.getByText(/version 1 · Approved by the school administrator/)).toBeVisible();
   });
 
   it('shows loading instead of the previous form history while another form loads', () => {
@@ -166,10 +197,10 @@ describe('Admission form history dialog', () => {
     hooks.versions.isFetching = true;
     hooks.versions.data = [olderVersion];
     render(<AdmissionFormHistoryDialog {...props} />);
-    expect(screen.getByLabelText('Loading form activity')).toBeVisible();
-    expect(screen.getByLabelText('Loading form versions')).toBeVisible();
+    expect(screen.getByLabelText('Loading Form Activity')).toBeVisible();
+    expect(screen.getByLabelText('Loading Form Versions')).toBeVisible();
     expect(screen.queryByText('Previous Form Published')).not.toBeInTheDocument();
-    expect(screen.queryByRole('combobox', { name: 'Compare with' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Compare With' })).not.toBeInTheDocument();
   });
 
   it('compares the selected version and scopes results to the selected form', async () => {
@@ -195,6 +226,26 @@ describe('Admission form history dialog', () => {
     expect(screen.queryByText('Added guardian details')).not.toBeInTheDocument();
   });
 
+  it('renders every readable comparison when fields share the same label', async () => {
+    const user = userEvent.setup();
+    hooks.versions.currentData = [olderVersion];
+    hooks.comparison.originalArgs = { id: form.id, otherId: olderVersion.id };
+    hooks.comparison.data = {
+      fromId: form.id,
+      toId: olderVersion.id,
+      changes: ['Field changed: Parent email (Contact)', 'Field changed: Parent email (Contact)'],
+    };
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      render(<AdmissionFormHistoryDialog {...props} />);
+      await selectVersion(user);
+      expect(screen.getAllByText('Field changed: Parent email (Contact)')).toHaveLength(2);
+      expect(errors.mock.calls.flat().join(' ')).not.toContain('same key');
+    } finally {
+      errors.mockRestore();
+    }
+  });
+
   it('displays an actionable comparison error and a valid zero-change result', async () => {
     const user = userEvent.setup();
     hooks.versions.currentData = [olderVersion];
@@ -202,7 +253,14 @@ describe('Admission form history dialog', () => {
     hooks.comparison.isError = true;
     const view = render(<AdmissionFormHistoryDialog {...props} />);
     await selectVersion(user);
-    expect(screen.getByText('Unable to compare these versions.', { exact: false })).toBeVisible();
+    expect(toast.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'Unable to compare these versions. Select Compare to try again.',
+      })
+    );
+    expect(
+      screen.queryByText('Unable to compare these versions.', { exact: false })
+    ).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /^Compare$/ }));
     expect(hooks.compare).toHaveBeenCalledOnce();
     expect(hooks.compare).toHaveBeenCalledWith({ id: form.id, otherId: olderVersion.id }, false);
@@ -224,11 +282,11 @@ describe('Admission form history dialog', () => {
     );
     render(<AdmissionFormHistoryDialog {...props} />);
     await selectVersion(user);
-    await user.click(screen.getByRole('button', { name: 'Restore as new draft' }));
+    await user.click(screen.getByRole('button', { name: 'Restore as New Draft' }));
     expect(props.onRestoreVersion).toHaveBeenCalledWith(olderVersion.id);
-    expect(screen.getByRole('button', { name: 'Restore as new draft' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Restore as New Draft' })).toBeDisabled();
     expect(screen.getByRole('button', { name: /^Compare$/ })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Close' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'close' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'close' })).toBeDisabled();
     rejectRestore({ data: { detail: 'This version is not available for restoration.' } });
     await waitFor(() =>
@@ -236,7 +294,7 @@ describe('Admission form history dialog', () => {
         screen.getByText('This version is not available for restoration.', { exact: false })
       ).toBeVisible()
     );
-    expect(screen.getByRole('button', { name: 'Restore as new draft' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Restore as New Draft' })).toBeEnabled();
     expect(props.onClose).not.toHaveBeenCalled();
   });
 
@@ -246,13 +304,13 @@ describe('Admission form history dialog', () => {
     props.onRestoreVersion.mockResolvedValueOnce(false).mockResolvedValueOnce(undefined);
     render(<AdmissionFormHistoryDialog {...props} />);
     await selectVersion(user);
-    await user.click(screen.getByRole('button', { name: 'Restore as new draft' }));
+    await user.click(screen.getByRole('button', { name: 'Restore as New Draft' }));
     expect(
       screen.getByText('Unable to restore this version. Please try again.', { exact: false })
     ).toBeVisible();
     expect(props.onClose).not.toHaveBeenCalled();
-    expect(screen.getByRole('button', { name: 'Restore as new draft' })).toBeEnabled();
-    await user.click(screen.getByRole('button', { name: 'Restore as new draft' }));
+    expect(screen.getByRole('button', { name: 'Restore as New Draft' })).toBeEnabled();
+    await user.click(screen.getByRole('button', { name: 'Restore as New Draft' }));
     expect(props.onRestoreVersion).toHaveBeenCalledTimes(2);
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });

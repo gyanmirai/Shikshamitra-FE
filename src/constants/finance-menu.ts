@@ -6,6 +6,7 @@ import { defaultModulePermissionName } from './student-menu';
 const defaultFinancePermissionName = 'Finance.';
 
 export const financePaths = {
+  setup: '/finance/setup',
   dashboard: '/finance/dashboard',
   auditTrail: '/finance/audit-trail',
   // Fees
@@ -286,6 +287,33 @@ export const financePermissions = {
   },
 };
 
+// The guide reuses existing exact action grants; visiting it never grants access to a setting.
+export const financeSetupViewPermissions = [
+  financePermissions.accounts.settings.incomeCategory,
+  financePermissions.accounts.settings.expenseCategory,
+  financePermissions.accounts.settings.bankAccount,
+  `${financePermissions.fees.settings.feeCategory}.View`,
+  `${financePermissions.fees.settings.paymentTerms}.View`,
+  `${financePermissions.fees.settings.chargeCategory}.View`,
+  `${financePermissions.fees.settings.concessionType}.View`,
+  financePermissions.policies.collectionPolicy,
+  financePermissions.policies.refundPolicy,
+  financePermissions.policies.concessionPolicy,
+  financePermissions.policies.prorationPolicy,
+  financePermissions.fees.settings.feeStructureActions.view,
+  `${financePermissions.fees.structureAssign}.View`,
+  `${financePermissions.fees.collections}.View`,
+  financePermissions.fees.chargeActions.view,
+  financePermissions.fees.refundActions.view,
+  financePermissions.fees.concessionActions.view,
+  `${financePermissions.fees.invoicesAndReceipts}.View`,
+  `${financePermissions.accounts.income}.View`,
+  `${financePermissions.accounts.expense}.View`,
+  `${financePermissions.accounts.cashManagement}.View`,
+  `${financePermissions.accounts.reconciliation}.View`,
+  financePermissions.auditTrail,
+];
+
 const financeModule = {
   [financePath]: [
     {
@@ -299,6 +327,13 @@ const financeModule = {
           shortcutKeyName: 'Alt+F+1',
           permissionName: financePermissions.dashboard,
           icon: menuIconView('mdi:view-dashboard-outline'),
+        },
+        {
+          title: 'Setup guide',
+          path: financePaths.setup,
+          _action: 'finance-setup',
+          permissionName: financeSetupViewPermissions,
+          icon: menuIconView('mdi:clipboard-list-outline'),
         },
         {
           title: 'Audit Trail',
@@ -363,15 +398,15 @@ const financeModule = {
               permissionName: `${financePermissions.fees.concessions}.View`,
               icon: menuIconView('mdi:ticket-percent-outline'),
             },
-            // {
-            //   title: 'Adjustments',
-            //   path: financePaths.fees.adjustments,
-            //   _action: 'fee-adjustments',
-            //   shortcutKey: 'Alt+F+2+J',
-            //   shortcutKeyName: 'Alt+F+2+J',
-            //   permissionName: `${financePermissions.fees.adjustment}.View`,
-            //   icon: menuIconView('mdi:tune-variant'),
-            // },
+            {
+              title: 'Adjustments',
+              path: financePaths.fees.adjustments,
+              _action: 'fee-adjustments',
+              shortcutKey: 'Alt+F+2+J',
+              shortcutKeyName: 'Alt+F+2+J',
+              permissionName: `${financePermissions.fees.adjustment}.View`,
+              icon: menuIconView('mdi:tune-variant'),
+            },
             {
               title: 'Fee Structure Assign',
               path: financePaths.fees.structureAssign,
@@ -484,7 +519,7 @@ const financeModule = {
               title: 'Cash Management',
               path: financePaths.accounts.cashManagement,
               _action: 'cash-management',
-              permissionName: financePermissions.accounts.cashManagement + '.View',
+              permissionName: `${financePermissions.accounts.cashManagement  }.View`,
               icon: menuIconView('mdi:cash-check'),
             },
             {

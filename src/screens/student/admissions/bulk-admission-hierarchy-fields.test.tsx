@@ -74,7 +74,7 @@ describe('bulk offering class fields', () => {
     const user = userEvent.setup();
     renderAvailability({ configuredClassIds: ['class-1'] });
     await user.click(screen.getByRole('combobox', { name: 'Class *' }));
-    const configured = screen.getByRole('option', { name: 'Class 1 Offering already exists' });
+    const configured = screen.getByRole('option', { name: 'Class 1 Offering Already Exists' });
     expect(configured).toHaveAttribute('aria-disabled', 'true');
     await expect(user.click(configured)).rejects.toThrow('pointer-events: none');
     expect(screen.getByTestId('available-selection')).toHaveTextContent('[]');
@@ -95,7 +95,7 @@ describe('bulk offering class fields', () => {
     await waitFor(() =>
       expect(screen.getByTestId('available-selection')).toHaveTextContent('["class-2","class-9"]')
     );
-    expect(screen.getByRole('option', { name: 'Class 1 Offering already exists' })).toHaveAttribute(
+    expect(screen.getByRole('option', { name: 'Class 1 Offering Already Exists' })).toHaveAttribute(
       'aria-disabled',
       'true'
     );
@@ -178,7 +178,7 @@ describe('bulk offering class fields', () => {
     expect(
       screen.getByText('Offering classes could not be checked. Retry to select classes.')
     ).toBeVisible();
-    await user.click(screen.getByRole('button', { name: 'Retry class check' }));
+    await user.click(screen.getByRole('button', { name: 'Retry Class Check' }));
     expect(retry).toHaveBeenCalledOnce();
   });
   it('validates a medium selection and its class reset together without stale required feedback', async () => {
@@ -293,7 +293,7 @@ describe('bulk offering class fields', () => {
     expect(screen.getByRole('combobox', { name: 'Board *' })).toBeVisible();
     expect(screen.getByRole('combobox', { name: 'Medium *' })).toBeVisible();
     expect(screen.getByRole('combobox', { name: 'Class *' })).toBeVisible();
-    expect(screen.queryByRole('combobox', { name: /School level/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: /School Level/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('combobox', { name: /Campus/i })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('combobox', { name: 'Class *' }));

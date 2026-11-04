@@ -2,35 +2,27 @@
 
 import type { RootState } from 'src/redux/store';
 
+import { Box } from '@mui/material';
 import React, { useState } from 'react';
-import { GlobalIcons } from 'src/utils/icons';
-import { Box, Typography } from '@mui/material';
-import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import HelpTooltip from 'src/components/help-tooltip';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { academicPermissions } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { HomeworkSubmissionStatusOptions } from 'src/enums/homework-submission-status';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
+import {
+  dedupeEvaluationRows,
+} from 'src/screens/academic/homework-assignment-management/marksAndFeedback/evaluationWorkspaceUi';
+import { getEvaluationSubmissionColumns } from 'src/screens/academic/homework-assignment-management/marksAndFeedback/evaluationSubmissionColumns';
 import {
   useGetHomeworkSubmissionsQuery,
   useUpdateHomeworkSubmissionFeedbackMutation,
 } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/HomeworkAssessmentAndFeedbackApi';
-import {
-  FeedbackStatusChip,
-  EvaluationStatusChip,
-  dedupeEvaluationRows,
-  EvaluationActionButton,
-  isRowEvaluationDisabled,
-} from 'src/screens/academic/homework-assignment-management/marksAndFeedback/evaluationWorkspaceUi';
 
 import AssignGrade from '../component/assignGradeForm';
 
@@ -54,7 +46,9 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
     `${academicPermissions.homework.assessment}.Add`
   );
   const {
-    data: homeworkSubmissions,
+    currentData: homeworkSubmissions,
+    error: submissionsError,
+    refetch: refetchSubmissions,
     isLoading: isSubmissionsLoading,
     isFetching,
   } = useQueryAndMutation({
@@ -245,161 +239,25 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
     >
       <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         <CustomizableTable
-          tableTitle="Homework Submissions"
           onSendNotification={handlerSendNotification}
           showCheckbox={selectedStudents?.length > 0}
-          tableId="student-submissions"
-          noDataText="Homework Submission Data Not Found"
-          columns={[
-            {
-              id: 'studentName',
-              label: 'Student Name/Gr No.',
-              align: 'left',
-              sticky: true,
-              minWidth: 190,
-              render: (value, row) => (
-                <Box>
-                  <Typography variant="body2">{value}</Typography>
-                  <Typography variant="caption">({row.grNumber})</Typography>
-                </Box>
-              ),
-            },
-            {
-              id: 'rollNumber',
-              label: 'Roll No.',
-              align: 'left',
-              minWidth: 90,
-              filterType: 'number',
-            },
-            { id: 'homeworkType', label: 'Type', align: 'left' },
-            {
-              id: 'submissionDate',
-              label: 'Submission Date',
-              align: 'left',
-              filterType: 'date',
-              minWidth: 160,
-            },
-            {
-              id: 'dueDate',
-              label: 'Due Date',
-              align: 'left',
-              filterType: 'date',
-              minWidth: 140,
-            },
-            {
-              id: 'feedback',
-              label: 'Feedback',
-              render: (value, row) => {
-                const isDisabled = isRowEvaluationDisabled(row, selectedHomework?.submissionType);
-                const text = value && value !== '-' ? value : null;
+          tableId="homework-evaluation-submissions"
+          tableTitle="Homework Submissions"
+          noDataText="No student submissions match the selected task."
+          error={submissionsError}
+          onRetry={() => refetchSubmissions()}
+          wrapperProps={{ sx: { flex: 1, minHeight: 0, height: { xs: 'auto', md: 1 } } }}
+          tableContainerProps={{ sx: { height: { xs: 'auto', md: 1 } } }}
+          columns={getEvaluationSubmissionColumns({
+            assignment: false,
 
-                if (isDisabled) {
-                  return (
-                    <CustomTooltip title="Student has not submitted homework yet" arrow>
-                      <Typography
-                        variant="caption"
-                        fontSize="13px"
-                        sx={{
-                          color: 'text.disabled',
-                          fontStyle: 'italic',
-                          p: 0.5,
-                          display: 'block',
-                        }}
-                      >
-                        No submission
-                      </Typography>
-                    </CustomTooltip>
-                  );
-                }
-
-                return (
-                  <Box
-                    onClick={() => {
-                      if (canAdd) {
-                        openStudentForEdit(row);
-                      } else {
-                        openStudentForView(row);
-                      }
-                    }}
-                    sx={{
-                      cursor: 'pointer',
-                      '&:hover': {
-                        backgroundColor: 'action.hover',
-                        borderRadius: 1,
-                      },
-                      p: 0.5,
-                    }}
-                  >
-                    <CustomTooltip
-                      title={text || (canAdd ? 'Click to add feedback' : 'View feedback')}
-                      arrow
-                      sx={{ textAlign: 'justify' }}
-                    >
-                      <Typography
-                        variant="caption"
-                        fontSize="13px"
-                        noWrap
-                        sx={{
-                          maxWidth: 0,
-                          minWidth: '100%',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                          display: 'block',
-                          color: text ? 'text.primary' : 'text.secondary',
-                          fontStyle: text ? 'normal' : 'italic',
-                        }}
-                      >
-                        {text || (canAdd ? 'Add feedback' : '-')}
-                      </Typography>
-                    </CustomTooltip>
-                  </Box>
-                );
-              },
-            },
-            {
-              id: 'submissionStatusLabel',
-              label: 'Submission Status',
-              minWidth: 150,
-              filterType: 'enum',
-              enumOptions: HomeworkSubmissionStatusOptions,
-              align: 'left',
-              render(_value, row) {
-                return <EvaluationStatusChip row={row} />;
-              },
-            },
-            {
-              id: 'evaluationStatus',
-              label: 'Evaluation Status',
-              minWidth: 150,
-              sticky: true,
-              align: 'left',
-              render(_value, row) {
-                return <FeedbackStatusChip row={row} />;
-              },
-            },
-            {
-              id: 'actions',
-              label: 'Actions',
-              minWidth: 100,
-              isSort: false,
-              isFilter: false,
-              align: 'center',
-              sticky: true,
-              render(value, row) {
-                return (
-                  <EvaluationActionButton
-                    row={row}
-                    canAdd={canAdd}
-                    taskSubmissionType={selectedHomework?.submissionType}
-                    onView={openStudentForView}
-                    onEdit={openStudentForEdit}
-                  />
-                );
-              },
-            },
-          ]}
-          isLoading={isSubmissionsLoading || isFetching}
+            canAdd,
+            taskSubmissionType: selectedHomework?.submissionType,
+            onView: openStudentForView,
+            onEdit: openStudentForEdit,
+          })}
+          isLoading={isSubmissionsLoading || (isFetching && !homeworkSubmissions)}
+          isRefreshing={isFetching && Boolean(homeworkSubmissions)}
           data={tableData}
         />
       </Box>
@@ -416,36 +274,20 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         open={viewSubmissionDialog.value}
         handleClose={handleCloseDialog}
         title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">
-              {!isEditMode
-                ? 'View Homework Submission & Feedback'
-                : selectedStudent?.feedback
-                  ? 'Edit Feedback'
-                  : 'Add Feedback'}
-            </Typography>
-            <HelpTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title={
-                !isEditMode
-                  ? 'View student submission details and feedback in read-only mode.'
-                  : selectedStudent?.feedback
-                    ? 'You can modify the feedback given to the student for their homework submission.'
-                    : "You can provide feedback for the student's homework submission."
-              }
-            >
-              <Iconify
-                icon={GlobalIcons.info}
-                width={16}
-                height={16}
-                sx={{ cursor: 'pointer' }}
-                color="info.main"
-              />
-            </HelpTooltip>
-          </Box>
+          !isEditMode
+            ? 'View Homework Submission & Feedback'
+            : selectedStudent?.feedback
+              ? 'Edit Feedback'
+              : 'Add Feedback'
         }
+        titleInfo={
+          !isEditMode
+            ? 'View student submission details and feedback in read-only mode.'
+            : selectedStudent?.feedback
+              ? 'You can modify the feedback given to the student for their homework submission.'
+              : "You can provide feedback for the student's homework submission."
+        }
+        hasForm={isEditMode}
         maxWidth="md"
         paperProps={{ sx: { maxHeight: '90vh' } }}
       >

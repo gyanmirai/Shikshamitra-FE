@@ -5,7 +5,8 @@ import { render, screen, waitFor } from '@testing-library/react';
 import DocumentHistoryActions from './document-history-actions';
 
 // Icon assets come from an external provider; these tests exercise the real UI controls.
-vi.mock('@iconify/react', () => ({
+vi.mock('@iconify/react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@iconify/react')>()),
   Icon: () => <svg aria-hidden="true" />,
   disableCache: vi.fn(),
 }));

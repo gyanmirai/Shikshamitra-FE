@@ -7,9 +7,9 @@ import { StudentFeedback } from 'src/components/student-feedback';
 import type { WorkflowTransitionFormValues } from '../workflow-transition-form';
 
 const routes = [
-  { value: 'approve', label: 'Admission approved' },
-  { value: 'waitlist', label: 'Applicant waitlisted (explicit route)' },
-  { value: 'reject', label: 'Application rejected (explicit route)' },
+  { value: 'approve', label: 'Admission Approved' },
+  { value: 'waitlist', label: 'Applicant Waitlisted (Explicit Route)' },
+  { value: 'reject', label: 'Application Rejected (Explicit Route)' },
 ];
 export function getReviewRoute(values: WorkflowTransitionFormValues) {
   if (!values.hasCondition && values.isDefault) return 'default';
@@ -34,13 +34,13 @@ export function WorkflowReviewRoute({
       <CustomSelect
         fullWidth
         size="small"
-        label="Continue after review decision"
+        label="Continue After Review Decision"
         disabled={readOnly}
         value={getReviewRoute(formik.values)}
         options={[
-          { value: 'default', label: 'Admission approved (default route)' },
+          { value: 'default', label: 'Admission Approved (Default Route)' },
           ...routes,
-          { value: 'custom', label: 'Another condition' },
+          { value: 'custom', label: 'Another Condition' },
         ]}
         onChange={(value) => {
           const known = routes.some((route) => route.value === value);

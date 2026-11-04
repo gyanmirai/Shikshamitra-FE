@@ -31,7 +31,7 @@ export function EligibilityHistory({
   return (
     <Accordion expanded={expanded} onChange={(_, open) => setExpanded(open)}>
       <AccordionSummary expandIcon={<Iconify icon="mdi:chevron-down" />}>
-        <Typography variant="subtitle2">Eligibility check history</Typography>
+        <Typography variant="subtitle2">Eligibility Check History</Typography>
       </AccordionSummary>
       <AccordionDetails>
         {query.isLoading ? (

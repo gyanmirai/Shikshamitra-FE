@@ -85,7 +85,7 @@ const current = () => JSON.parse(screen.getByTestId('field-json').textContent ??
 describe('linked field answer types', () => {
   it('prevents a linked checkbox from becoming an incompatible select', () => {
     mount({});
-    expect(screen.getByRole('combobox', { name: 'Field type' })).toHaveAttribute(
+    expect(screen.getByRole('combobox', { name: 'Field Type' })).toHaveAttribute(
       'aria-disabled',
       'true'
     );
@@ -117,10 +117,10 @@ describe('linked field answer types', () => {
   it('keeps genuine custom types editable', async () => {
     const user = userEvent.setup();
     mount({ fieldType: 0, bindingType: 1, bindingKey: 'MY_QUESTION' });
-    await user.click(screen.getByRole('combobox', { name: 'Field type' }));
+    await user.click(screen.getByRole('combobox', { name: 'Field Type' }));
     await user.click(screen.getByRole('option', { name: 'Select' }));
     expect(current()).toMatchObject({ fieldType: 6, bindingType: 1, bindingKey: 'MY_QUESTION' });
-    expect(screen.getByRole('button', { name: 'Add choice' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Add Choice' })).toBeVisible();
   });
 
   it('restores authoritative validation without losing custom validation messages', async () => {

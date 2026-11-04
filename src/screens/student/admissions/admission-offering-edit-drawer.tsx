@@ -16,6 +16,7 @@ import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { useGetClassByMediumQuery } from 'src/redux/class/classApi';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
+import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
 import {
   Box,
   Card,
@@ -29,13 +30,13 @@ import {
   Typography,
 } from '@mui/material';
 
-import { AdmissionDialogTitle } from './admission-dialog-title';
 import { admissionOfferingSchema } from './admission-offering-schema';
 import { getAdmissionHierarchyOptions } from './admission-hierarchy-options';
 import { useAdmissionOfferingEditor } from './use-admission-offering-editor';
 import { useAdmissionUnsavedChanges } from './use-admission-unsaved-changes';
 import { AdmissionOfferingCycleContext } from './admission-offering-cycle-context';
 import { AdmissionOfferingHierarchyFields } from './admission-offering-hierarchy-fields';
+import { getOfferingConfigurationAccess } from './admission-offering-configuration-access';
 import { AdmissionOfferingConfigurationFields } from './admission-offering-configuration-fields';
 import {
   admissionTrackLabels,
@@ -55,6 +56,7 @@ type Props = {
   onRetryDetail?: () => void;
   saving: boolean;
   onSave: (values: AdmissionOfferingWriteInput, admissionCycleId: string) => Promise<void>;
+  onDeactivate?: () => void;
 };
 
 const EDIT_STEPS = ['Configure', 'Preview'];
@@ -81,8 +83,8 @@ export function AdmissionOfferingEditDrawer(props: Props) {
               {detailError}
             </StudentFeedback>
           ) : (
-            <Box role="status" aria-label="Loading admission offering" aria-busy="true">
-              <FormSectionCard icon="mdi:school-outline" title="Class and academic scope">
+            <Box role="status" aria-label="Loading Admission Offering" aria-busy="true">
+              <FormSectionCard icon="mdi:school-outline" title="Class and Academic Scope">
                 <Skeleton variant="rounded" height={44} />
                 <Skeleton variant="rounded" height={44} />
                 <Skeleton variant="rounded" height={44} />
@@ -101,11 +103,13 @@ function AdmissionOfferingEditShell({
   busy,
   onClose,
   children,
+  isActive,
 }: {
   open: boolean;
   busy: boolean;
   onClose: () => void;
   children: ReactNode;
+  isActive?: boolean;
 }) {
   return (
     <Drawer
@@ -130,14 +134,24 @@ function AdmissionOfferingEditShell({
           component="h2"
           sx={{ flex: 1, minWidth: 0 }}
         >
-          <AdmissionDialogTitle
-            title="Edit Admission Offering"
-            helpText="Configure the class and offering, then preview your changes before saving. Saving preserves the offering’s active or inactive state."
-            helpLabel="Admission offering information"
-          />
+          <Box
+            component="span"
+            sx={{ display: 'inline-flex', alignItems: 'center', flexWrap: 'wrap', gap: 0.75 }}
+          >
+            Edit Admission Offering
+            {isActive !== undefined && (
+              <Label color={isActive ? 'success' : 'default'}>
+                {isActive ? 'Active' : 'Inactive'}
+              </Label>
+            )}
+            <InfoTooltipIcon
+              label="Admission Offering Information"
+              title="Configure the class and offering, then preview your changes before saving. Saving preserves the offering’s active or inactive state."
+            />
+          </Box>
         </Typography>
         <IconButton
-          aria-label="Close admission offering"
+          aria-label="Close Admission Offering"
           size="small"
           disabled={busy}
           onClick={onClose}
@@ -149,7 +163,7 @@ function AdmissionOfferingEditShell({
       <Box sx={{ p: { xs: 1, sm: 2 }, flex: 1, minHeight: 0, display: 'flex' }}>
         <Card
           component="section"
-          aria-label="Admission offering editor"
+          aria-label="Admission Offering Editor"
           aria-busy={busy}
           sx={{
             flex: 1,
@@ -174,6 +188,7 @@ function AdmissionOfferingEditForm({
   offering,
   saving,
   onSave,
+  onDeactivate,
 }: Omit<Props, 'loadingDetail' | 'detailError' | 'onRetryDetail'> & {
   offering: AdmissionOffering;
 }) {
@@ -201,6 +216,13 @@ function AdmissionOfferingEditForm({
     onClose();
   };
 
+  const requestDeactivate = () => {
+    if (!onDeactivate || saving || editor.validating) return;
+    if (dirty && !window.confirm('You have unsaved changes. Do you want to discard them?')) return;
+    onClose();
+    onDeactivate();
+  };
+
   const handleNext = async (
     _isLastStep: boolean,
     values: AdmissionOfferingFormValues,
@@ -225,6 +247,7 @@ function AdmissionOfferingEditForm({
       open={open}
       busy={saving || editor.validating}
       onClose={requestClose}
+      isActive={offering.isActive}
     >
       <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
         <CustomStepperWithFormik
@@ -242,9 +265,9 @@ function AdmissionOfferingEditForm({
           completedSteps={activeStep === 1 ? [0] : []}
           validateForwardStepClick
           showSaveButton={false}
-          backButtonProps={{ sx: { ml: 'auto', mr: 1 } }}
+          backButtonProps={{ sx: { ml: 'auto', '& + .MuiBox-root': { ml: 0 } } }}
           nextButtonLabel="Continue"
-          finalButtonLabel="Save changes"
+          finalButtonLabel="Save Changes"
           disableSubmit={Boolean(
             activeStep === 1 && formikRef.current?.values.isActive && !editor.readiness?.isValid
           )}
@@ -265,6 +288,7 @@ function AdmissionOfferingEditForm({
                   offering={offering}
                   onDirtyChange={setDirty}
                   onOptionsFailed={setOptionsFailed}
+                  onDeactivate={onDeactivate ? requestDeactivate : undefined}
                 />
               </Stack>
             );
@@ -284,6 +308,7 @@ function AdmissionOfferingEditStep({
   offering,
   onDirtyChange,
   onOptionsFailed,
+  onDeactivate,
 }: {
   activeStep: number;
   formik: FormikProps<AdmissionOfferingFormValues>;
@@ -291,7 +316,9 @@ function AdmissionOfferingEditStep({
   offering: AdmissionOffering;
   onDirtyChange: (dirty: boolean) => void;
   onOptionsFailed: (failed: boolean) => void;
+  onDeactivate?: () => void;
 }) {
+  const setup = getOfferingConfigurationAccess(offering);
   const standardsQuery = useGetClassByMediumQuery(formik.values.mediumId, {
     skip: !formik.values.mediumId,
   });
@@ -313,11 +340,11 @@ function AdmissionOfferingEditStep({
         <Stack spacing={2}>
           <FormSectionCard
             icon="mdi:school-outline"
-            title="Class and academic scope"
+            title="Class and Academic Scope"
             descriptionTooltip={
               offering.canEditIdentity
-                ? 'Confirm the board, medium, school level and class attached to this offering.'
-                : 'Academic identity is locked because applications already reference this offering. Its operational configuration can still be updated.'
+                ? 'Confirm the Board, Medium, School Level and Class Attached to This Offering.'
+                : 'Academic Identity Is Locked Because Applications Already Reference This Offering. Its Operational Configuration Can Still Be Updated.'
             }
           >
             {(editor.queryFailed || standardsQuery.isError) && (
@@ -367,8 +394,9 @@ function AdmissionOfferingEditStep({
           </FormSectionCard>
           <FormSectionCard
             icon="mdi:cog-outline"
-            title="Configure offering"
-            descriptionTooltip={`Update the offering name, published workflow and inquiry form. The application form comes from the workflow’s Form stage. Intake & assignment is optional; leave it empty for manual assignment.${offering.applicationCount > 0 ? ' Workflow and form changes apply only to future applications; existing applications keep their frozen versions.' : ''}`}
+            title="Configure Offering"
+            descriptionTooltip={setup.helpText}
+            action={setup.locked ? <Label>Locked</Label> : undefined}
           >
             <AdmissionOfferingConfigurationFields
               compact
@@ -376,6 +404,7 @@ function AdmissionOfferingEditStep({
               twoColumnLayout
               hideConfigurationWarning
               routingLocked={!offering.canEditIdentity}
+              configurationLocked={setup.locked}
               formik={formik}
               fetchWorkflows={editor.fetchWorkflows}
               fetchInquiryForms={editor.fetchInquiryForms}
@@ -400,14 +429,54 @@ function AdmissionOfferingEditStep({
                   : null
               }
             />
+            <Stack direction="row" spacing={2} useFlexGap flexWrap="wrap">
+              <Typography variant="caption" color="text.secondary">
+                {offering.inquiryCount == null
+                  ? 'Inquiry usage unavailable'
+                  : `${offering.inquiryCount} inquiries`}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {offering.applicationCount} applications
+              </Typography>
+            </Stack>
+            <Stack spacing={0.5}>
+              <Stack direction="row" spacing={0.5} alignItems="center">
+                <Typography variant="caption" color="text.secondary">
+                  Registration Form
+                </Typography>
+                <InfoTooltipIcon
+                  label="Registration form information"
+                  title="The registration form is set by the selected workflow’s Form stage. A changed workflow’s form is resolved when you save the offering."
+                />
+              </Stack>
+              <Typography variant="body2">
+                {formik.values.workflowDefinitionId !== offering.workflowDefinitionId
+                  ? 'From selected workflow'
+                  : offering.applicationFormName
+                    ? `${offering.applicationFormName}${offering.applicationFormVersion ? ` · v${offering.applicationFormVersion}` : ''}`
+                    : 'Not configured'}
+              </Typography>
+            </Stack>
+            {setup.canDeactivateToEdit && onDeactivate && (
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={onDeactivate}
+                disabled={editor.validating}
+                startIcon={<Iconify icon="mdi:lock-outline" />}
+                sx={{ alignSelf: 'flex-start' }}
+              >
+                Deactivate offering
+              </Button>
+            )}
           </FormSectionCard>
         </Stack>
       </Box>
       {activeStep === 1 && (
         <FormSectionCard
           icon="mdi:clipboard-check-outline"
-          title="Preview offering"
-          descriptionTooltip="Confirm the updated setup before saving. Saving keeps the current active or inactive state; use the table action to activate or deactivate the offering."
+          title="Preview Offering"
+          descriptionTooltip="Confirm the Updated Setup Before Saving. Saving Keeps the Current Active or Inactive State; Use the Table Action to Activate or Deactivate the Offering."
         >
           <Stack spacing={1.5}>
             <Stack
@@ -446,7 +515,7 @@ function AdmissionOfferingEditStep({
             </Stack>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={{ xs: 1, sm: 4 }}>
               <ReviewValue
-                label="School level"
+                label="School Level"
                 value={
                   stages.find((item) => item.id === formik.values.stageId)?.name ??
                   offering.stageName ??
@@ -464,11 +533,11 @@ function AdmissionOfferingEditStep({
             </Stack>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={{ xs: 1, sm: 4 }}>
               <ReviewValue
-                label="Admission type"
+                label="Admission Type"
                 value={admissionTrackLabels[formik.values.track]}
               />
               <ReviewValue
-                label="Entry mode"
+                label="Entry Mode"
                 value={admissionEntryModeLabels[formik.values.entryMode]}
               />
             </Stack>
@@ -476,7 +545,7 @@ function AdmissionOfferingEditStep({
           {editor.readiness?.isValid && <Label color="success">Ready</Label>}
           {editor.readiness && !editor.readiness.isValid && (
             <StudentFeedback notificationKey="STU-0125" presentation="persistent" severity="error">
-              <Typography variant="subtitle2">Configuration incomplete</Typography>
+              <Typography variant="subtitle2">Configuration Incomplete</Typography>
               {editor.readiness.errors.map((error) => (
                 <Typography key={`${error.code}-${error.message}`} variant="body2">
                   {error.message}

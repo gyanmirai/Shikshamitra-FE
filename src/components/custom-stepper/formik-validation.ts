@@ -46,12 +46,11 @@ export const focusFirstFormikError = (errors: unknown, root?: ParentNode): void 
   const focusField = () => {
     const scope = root ?? document.activeElement?.closest('form, [role="dialog"]') ?? document;
     const fields = scope.querySelectorAll<HTMLElement>('[name]');
-    // Follow rendered field order, including nested/array paths. MUI Select's named input
-    // is hidden; focus its visible combobox instead. Hidden steps cannot receive focus.
+    // Selects and segmented pickers keep their named input hidden; focus the visible control.
     Array.from(fields).some((field) => {
       if (!paths.has(field.getAttribute('name') ?? '')) return false;
       const target = field.matches('input[type="hidden"], input[aria-hidden="true"]')
-        ? field.parentElement?.querySelector<HTMLElement>('[role="combobox"]')
+        ? field.parentElement?.querySelector<HTMLElement>('[role="combobox"], [role="spinbutton"]')
         : field;
       if (
         !target ||

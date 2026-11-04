@@ -3,11 +3,11 @@ import type { EligibilityStatus } from 'src/redux/student/admissions/admission-e
 import { Label } from 'src/components/label';
 
 const labels: Record<EligibilityStatus, string> = {
-  notChecked: 'Not checked',
+  notChecked: 'Not Checked',
   eligible: 'Eligible',
   ineligible: 'Ineligible',
-  needsInformation: 'More information needed',
-  exceptionApproved: 'Exception approved',
+  needsInformation: 'More Information Needed',
+  exceptionApproved: 'Exception Approved',
 };
 export function EligibilityStatusLabel({
   status,
@@ -24,5 +24,5 @@ export function EligibilityStatusLabel({
         : status === 'ineligible'
           ? 'error'
           : 'default';
-  return <Label color={color}>{stale ? 'Out of date' : labels[status]}</Label>;
+  return <Label color={color}>{stale ? 'Out of Date' : labels[status]}</Label>;
 }

@@ -21,6 +21,8 @@ import {
   useFinanceAcademicFilters,
 } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
 
+import { assignmentSelectionGroup } from './assignmentSelection';
+
 import type { IFeeStructureData, IFeeStructureTableProps } from './type';
 
 export default function FeeStructureAssignTable({
@@ -93,18 +95,16 @@ export default function FeeStructureAssignTable({
   }, [scope]);
   useEffect(() => {
     if (!query.currentData) return;
-    const eligibleIds = new Set(
-      query.currentData.items
-        .filter(
-          (student) =>
-            student.isActive &&
-            !student.isFeeStructureAssigned &&
-            !['Prepared', 'NeedsAttention', 'Assigned'].includes(student.assignmentState ?? '')
-        )
-        .map((student) => student.studentId)
+    const eligibleGroups = new Map(
+      query.currentData.items.map(
+        (student) => [student.studentId, assignmentSelectionGroup(student)] as const
+      )
     );
     setSelected((previous) => {
-      const next = previous.filter((student) => eligibleIds.has(student.studentId));
+      const next = previous.filter((student) => {
+        const latestGroup = eligibleGroups.get(student.studentId);
+        return latestGroup !== undefined && latestGroup === assignmentSelectionGroup(student);
+      });
       return next.length === previous.length ? previous : next;
     });
   }, [query.currentData]);
@@ -112,16 +112,20 @@ export default function FeeStructureAssignTable({
     ...student,
     id: student.enrollmentId,
   }));
-  const eligible = rows.filter(
-    (r) =>
-      r.isActive &&
-      !r.isFeeStructureAssigned &&
-      !['Prepared', 'NeedsAttention', 'Assigned'].includes(r.assignmentState ?? '')
-  );
+  const selectionGroup = selected[0] ? assignmentSelectionGroup(selected[0]) : undefined;
+  const eligible = rows.filter((row) => {
+    const group = assignmentSelectionGroup(row);
+    return group && (!selectionGroup || group === selectionGroup);
+  });
+  const bulkEditing = selectionGroup != null && selectionGroup !== 'unassigned';
   // Always derive the action payload from the latest enrollment state. A refresh
   // can mark a previously selected student assigned before effect cleanup runs.
   const selectedEligible = eligible.filter((row) =>
-    selected.some((student) => student.studentId === row.studentId)
+    selected.some(
+      (student) =>
+        student.studentId === row.studentId &&
+        assignmentSelectionGroup(student) === assignmentSelectionGroup(row)
+    )
   );
   return (
     <Stack sx={{ flex: 1, minHeight: 0, gap: 1 }}>
@@ -185,12 +189,16 @@ export default function FeeStructureAssignTable({
           </Typography>
           <Button
             size="small"
-            startIcon={<Iconify icon="mdi:account-multiple-plus-outline" />}
+            startIcon={
+              <Iconify
+                icon={bulkEditing ? GlobalIcons.edit : 'mdi:account-multiple-plus-outline'}
+              />
+            }
             variant="contained"
             disabled={query.isFetching}
             onClick={() => onBulkAssign?.(selectedEligible, standardId ?? '')}
           >
-            Assign structure
+            {bulkEditing ? 'Edit fee structures' : 'Assign structure'}
           </Button>
           <Button size="small" onClick={() => setSelected([])}>
             Clear selection
@@ -238,7 +246,7 @@ export default function FeeStructureAssignTable({
         onServerFilter={setFilters}
         onServerSort={(_column, nextSorts) => setSorts(nextSorts)}
         searchFieldProps={{
-          placeholder: 'Search by name, roll no. or GR no.',
+          placeholder: 'Search',
           label: '',
           inputProps: { 'aria-label': 'Search students by name, roll number or GR number' },
         }}
@@ -269,7 +277,14 @@ export default function FeeStructureAssignTable({
                         selectedEligible.length > 0 && selectedEligible.length < eligible.length
                       }
                       disabled={!standardId || query.isFetching || eligible.length === 0}
-                      onChange={(_, checked) => setSelected(checked ? eligible : [])}
+                      onChange={(_, checked) => {
+                        const group = selectionGroup ?? assignmentSelectionGroup(eligible[0]);
+                        setSelected(
+                          checked
+                            ? eligible.filter((row) => assignmentSelectionGroup(row) === group)
+                            : []
+                        );
+                      }}
                     />
                   ),
                   render: (_value: unknown, rawRow: IData) => {
@@ -279,28 +294,22 @@ export default function FeeStructureAssignTable({
                         inputProps={{
                           'aria-label': `Select ${row.studentName}`,
                           ...(row.isFeeStructureAssigned && {
-                            'aria-description': 'Fees already assigned',
+                            'aria-description': row.canEditStructure
+                              ? 'Unpaid fee assignment; select students with the same structure and revision.'
+                              : row.structureEditBlocker || 'Fees already assigned',
                           }),
                         }}
                         checked={selectedEligible.some((s) => s.studentId === row.studentId)}
                         disabled={
                           !standardId ||
                           query.isFetching ||
-                          !row.isActive ||
-                          row.isFeeStructureAssigned ||
-                          ['Prepared', 'NeedsAttention', 'Assigned'].includes(
-                            row.assignmentState ?? ''
-                          )
+                          !eligible.some((student) => student.studentId === row.studentId)
                         }
                         onChange={(_, checked) => {
                           if (
                             !standardId ||
                             query.isFetching ||
-                            !row.isActive ||
-                            row.isFeeStructureAssigned ||
-                            ['Prepared', 'NeedsAttention', 'Assigned'].includes(
-                              row.assignmentState ?? ''
-                            )
+                            !eligible.some((student) => student.studentId === row.studentId)
                           )
                             return;
                           setSelected((previous) =>
@@ -509,7 +518,7 @@ export default function FeeStructureAssignTable({
                       disabled: query.isFetching,
                       onClick: () => onAssignStructure(row),
                     },
-                    ...(canEdit && onEdit
+                    ...((canEdit || (canAssign && row.canEditStructure && row.isActive)) && onEdit
                       ? [
                           {
                             id: 'edit',

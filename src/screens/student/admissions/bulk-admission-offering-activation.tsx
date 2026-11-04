@@ -1,24 +1,35 @@
 'use client';
 
 import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { StudentFeedback } from 'src/components/student-feedback';
 import { Box, Stack, Paper, Button, Typography } from '@mui/material';
+
+import { AdmissionOfferingConfigurationIssues } from './admission-offering-configuration-issues';
 
 import type { useBulkAdmissionOfferingActivation } from './use-bulk-admission-offering-activation';
 
 type Props = {
   activation: ReturnType<typeof useBulkAdmissionOfferingActivation>;
   disabled: boolean;
+  canReviewForms?: boolean;
+  canRestoreForms?: boolean;
+  canReviewWorkflows?: boolean;
 };
 
-export function BulkAdmissionOfferingActivation({ activation, disabled }: Props) {
+export function BulkAdmissionOfferingActivation({
+  activation,
+  disabled,
+  ...recoveryAccess
+}: Props) {
   const count =
     activation.busy && activation.progress
       ? activation.progress.total
       : activation.selectedRows.length;
 
   if (!count && !activation.busy && !activation.failures.length) return null;
+  const blocked = activation.failures.length > 0 && !activation.busy;
+  const title = blocked ? 'Offering Activation Needs Changes' : 'Activate Admission Offerings?';
 
   return (
     <>
@@ -52,30 +63,14 @@ export function BulkAdmissionOfferingActivation({ activation, disabled }: Props)
           </Button>
         </Stack>
       </Paper>
-      {activation.failures.length > 0 && (
-        <StudentFeedback
-          notificationKey="STU-0295"
-          presentation="inline"
-          severity="error"
-          sx={{ mb: 1, flexShrink: 0 }}
-        >
-          <Stack spacing={0.5} sx={{ maxHeight: 160, overflow: 'auto' }}>
-            <Typography variant="subtitle2">Some offerings could not be activated.</Typography>
-            {activation.failures.map((failure) => (
-              <Typography key={failure.id} variant="body2">
-                {failure.name}: {failure.message}
-              </Typography>
-            ))}
-          </Stack>
-        </StudentFeedback>
-      )}
       <ConfirmDialog
         open={activation.confirmationOpen}
         onClose={activation.cancelActivation}
-        title="Activate Admission Offerings?"
-        aria-label="Activate Admission Offerings?"
+        title={title}
+        aria-label={title}
         aria-describedby="bulk-offering-activation-description"
-        icon={null}
+        icon={blocked ? 'warning' : null}
+        cancelText={blocked ? 'Close' : 'Cancel'}
         disableBackdropClick
         disableCancel={activation.busy}
         disableEscapeKeyDown={activation.busy}
@@ -86,8 +81,33 @@ export function BulkAdmissionOfferingActivation({ activation, disabled }: Props)
             : 'Activating offerings…'
         }
         content={
-          <Box component="span" id="bulk-offering-activation-description">
-            {count} selected {count === 1 ? 'offering' : 'offerings'} will become active.
+          <Box id="bulk-offering-activation-description">
+            {blocked ? (
+              <Scrollbar sx={{ maxHeight: 'min(440px, 55dvh)' }}>
+                <Stack spacing={2}>
+                  <Typography variant="body2">
+                    Resolve these requirements, then retry the remaining offerings.
+                  </Typography>
+                  {activation.failures.map((failure) => (
+                    <Stack key={failure.id} spacing={0.5}>
+                      <Typography variant="subtitle2">{failure.name}</Typography>
+                      {failure.configurationErrors?.length ? (
+                        <AdmissionOfferingConfigurationIssues
+                          errors={failure.configurationErrors}
+                          {...recoveryAccess}
+                        />
+                      ) : (
+                        <Typography variant="body2" role="alert">
+                          {failure.message}
+                        </Typography>
+                      )}
+                    </Stack>
+                  ))}
+                </Stack>
+              </Scrollbar>
+            ) : (
+              `${count} selected ${count === 1 ? 'offering' : 'offerings'} will become active.`
+            )}
           </Box>
         }
         action={
@@ -99,7 +119,7 @@ export function BulkAdmissionOfferingActivation({ activation, disabled }: Props)
             onClick={activation.confirmActivation}
             sx={{ bgcolor: 'text.primary', color: 'background.paper' }}
           >
-            Activate
+            {blocked ? 'Retry activation' : 'Activate'}
           </Button>
         }
       />

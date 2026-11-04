@@ -82,7 +82,7 @@ it('stages Guardian, cancels with the previous identity intact, and confirms wit
     PHONE: '9876543210',
   });
   await user.click(screen.getByRole('button', { name: 'Guardian' }));
-  await user.click(screen.getByRole('button', { name: 'Confirm guardian' }));
+  await user.click(screen.getByRole('button', { name: 'Confirm Guardian' }));
   expect(JSON.parse(screen.getByTestId('values').textContent!)).toMatchObject({
     guardianResponsibilityConfirmed: true,
     fields: { ROLE: 'guardian', NAME: '', PHONE: '' },

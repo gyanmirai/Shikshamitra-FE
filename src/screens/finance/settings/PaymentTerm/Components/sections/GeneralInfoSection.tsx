@@ -65,9 +65,14 @@ export function GeneralInfoSection({ formik, boards }: GeneralInfoSectionProps) 
               name="paymentTermName"
               placeholder="e.g. Monthly installments"
               value={formik.values.paymentTermName || ''}
-              onChange={(event) =>
-                formik.setFieldValue(event.target.name, sanitizeFinanceName(event.target.value))
-              }
+              onChange={(event) => {
+                formik.setFieldValue(event.target.name, sanitizeFinanceName(event.target.value));
+                // Clear any server-side name-conflict error as soon as the user
+                // starts editing, so the stale error does not block re-submission.
+                if (formik.status?.nameConflict) {
+                  formik.setStatus({ ...formik.status, nameConflict: undefined });
+                }
+              }}
               onBlur={(event) => {
                 formik.setFieldValue('paymentTermName', formik.values.paymentTermName.trim());
                 formik.handleBlur(event);

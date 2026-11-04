@@ -40,13 +40,13 @@ export const bulkOfferingValidationFields: Record<string, keyof BulkOfferingValu
 };
 
 export const bulkOfferingFieldLabels: Partial<Record<keyof BulkOfferingValues, string>> = {
-  admissionCycle: 'Admission cycle',
-  track: 'Admission type',
-  entryMode: 'Admission route',
+  admissionCycle: 'Admission Cycle',
+  track: 'Admission Type',
+  entryMode: 'Admission Route',
   standardIds: 'Class',
-  workflowDefinitionId: 'Published workflow',
-  inquiryFormDefinitionId: 'Inquiry form',
-  inquiryIntakeProfileId: 'Intake & assignment setup',
+  workflowDefinitionId: 'Published Workflow',
+  inquiryFormDefinitionId: 'Inquiry Form',
+  inquiryIntakeProfileId: 'Intake & Assignment Setup',
 };
 
 // The API permits missing configuration when saving Inactive. Keep those checks visible,

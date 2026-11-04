@@ -137,7 +137,7 @@ export function WorkflowStageCard({
                 variant="soft"
                 startIcon={<Iconify icon="mdi:alert-outline" />}
               >
-                {issueCount} {issueCount === 1 ? 'issue' : 'issues'}
+                {issueCount} {issueCount === 1 ? 'Issue' : 'Issues'}
               </Label>
             )}
           </Stack>
@@ -163,18 +163,18 @@ export function WorkflowStageCard({
             />
             {stage.isTerminalStage ? (
               <Typography variant="caption" color="text.secondary">
-                End of journey
+                End of Journey
               </Typography>
             ) : orderedTransitions.length === 0 ? (
               <Typography variant="caption" color="warning.main">
-                Choose the next step before publishing
+                Choose the Next Step Before Publishing
               </Typography>
             ) : (
               <Stack direction="row" useFlexGap flexWrap="wrap" gap={0.5} sx={{ minWidth: 0 }}>
                 {orderedTransitions.map((path) => (
                   <Stack key={path.id} direction="row" alignItems="center" sx={{ minWidth: 0 }}>
                     <ButtonBase
-                      aria-label={`${readOnly || !path.isDefault ? 'View' : 'Edit'} route to ${getDestination(path)}`}
+                      aria-label={`${readOnly || !path.isDefault ? 'View' : 'Edit'} Route To ${getDestination(path)}`}
                       onClick={() => onEditPath(path)}
                       sx={{
                         ...textActionFocusSx,
@@ -189,10 +189,10 @@ export function WorkflowStageCard({
                       {getTransitionSummary(path)} → {getDestination(path)}
                     </ButtonBase>
                     {!readOnly && path.isDefault && (
-                      <CustomTooltip title={`Remove route to ${getDestination(path)}`}>
+                      <CustomTooltip title={`Remove Route To ${getDestination(path)}`}>
                         <IconButton
                           size="small"
-                          aria-label={`Remove route to ${getDestination(path)}`}
+                          aria-label={`Remove Route To ${getDestination(path)}`}
                           onClick={() => onDeletePath(path.id)}
                         >
                           <Iconify icon="mdi:close" width={16} />
@@ -219,23 +219,23 @@ export function WorkflowStageCard({
               justifySelf: 'start',
             }}
           >
-            Choose next step
+            Choose Next Step
           </Button>
         )}
 
         {!readOnly && (
           <Stack direction="row" sx={{ gridColumn: 3, gridRow: 1, flexShrink: 0 }}>
-            <CustomTooltip title="Edit stage">
+            <CustomTooltip title="Edit Stage">
               <IconButton size="small" aria-label={`Edit ${stage.name}`} onClick={onEdit}>
                 <Iconify icon="mdi:pencil-outline" width={20} />
               </IconButton>
             </CustomTooltip>
-            <CustomTooltip title="Duplicate stage">
+            <CustomTooltip title="Duplicate Stage">
               <IconButton size="small" aria-label={`Duplicate ${stage.name}`} onClick={onDuplicate}>
                 <Iconify icon="mdi:content-copy" width={20} />
               </IconButton>
             </CustomTooltip>
-            <CustomTooltip title="Delete stage">
+            <CustomTooltip title="Delete Stage">
               <IconButton size="small" aria-label={`Delete ${stage.name}`} onClick={onDelete}>
                 <Iconify icon="mdi:delete-outline" width={20} />
               </IconButton>

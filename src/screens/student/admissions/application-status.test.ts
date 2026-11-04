@@ -8,10 +8,10 @@ import {
 describe('admission application statuses', () => {
   it('keeps the complete decision lifecycle readable', () => {
     expect(getAdmissionApplicationStatusLabel(0)).toBe('Draft');
-    expect(getAdmissionApplicationStatusLabel(4)).toBe('In review');
-    expect(getAdmissionApplicationStatusLabel(7)).toBe('Offer issued');
-    expect(getAdmissionApplicationStatusLabel(10)).toBe('Enrolled (legacy)');
-    expect(getAdmissionApplicationStatusLabel(11)).toBe('Admission finalized');
+    expect(getAdmissionApplicationStatusLabel(4)).toBe('In Review');
+    expect(getAdmissionApplicationStatusLabel(7)).toBe('Offer Issued');
+    expect(getAdmissionApplicationStatusLabel(10)).toBe('Enrolled (Legacy)');
+    expect(getAdmissionApplicationStatusLabel(11)).toBe('Admission Finalized');
     expect(getAdmissionApplicationStatusLabel(99)).toBe('Unknown');
   });
 

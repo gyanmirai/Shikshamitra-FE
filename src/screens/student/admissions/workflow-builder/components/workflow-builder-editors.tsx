@@ -103,7 +103,7 @@ export function WorkflowBuilderEditors({
         open={Boolean(stageToDelete)}
         onClose={onCloseDelete}
         icon="warning"
-        title="Remove workflow stage?"
+        title="Remove Workflow Stage?"
         content={
           stageToDelete
             ? `Removing ${stageToDelete.name} updates ${connectedTransitions} connected path(s) and reconnects its usual sequence where safe. Stages with special paths or ambiguous connections must be repaired before removal. This change is saved only when you save the draft.`
@@ -120,7 +120,7 @@ export function WorkflowBuilderEditors({
               if (onDeleteStage(stageToDelete.id) !== false) onCloseDelete();
             }}
           >
-            Remove stage
+            Remove Stage
           </Button>
         }
       />

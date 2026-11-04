@@ -39,7 +39,7 @@ export function AssessmentAttemptWorkspace({
     [onStateChange]
   );
   return (
-    <FormBusyRegion busy={busy} label="Updating assessment…">
+    <FormBusyRegion busy={busy} label="Updating Assessment…">
       <Stack spacing={1.5} sx={{ minWidth: 0 }}>
         {!readOnly && assessment.canBook && permissions.book && (
           <Button
@@ -49,7 +49,7 @@ export function AssessmentAttemptWorkspace({
             sx={{ alignSelf: 'flex-end' }}
             onClick={() => onAction('book')}
           >
-            {assessment.policy.schedulingEnabled ? 'Book Assessment Slot' : 'Start assessment'}
+            {assessment.policy.schedulingEnabled ? 'Book Assessment Slot' : 'Start Assessment'}
           </Button>
         )}
         {quick.error && (
@@ -73,7 +73,7 @@ export function AssessmentAttemptWorkspace({
             ))
         ) : (
           <EmptyContent
-            title="No assessment attempt yet"
+            title="No Assessment Attempt Yet"
             description="Assessment attempts and results will appear here."
             sx={{ py: 3, height: 'auto' }}
             slotProps={{ img: { maxWidth: 64 } }}
@@ -86,7 +86,7 @@ export function AssessmentAttemptWorkspace({
             disabled={busy}
             onClick={quick.discardResult}
           >
-            Discard result
+            Discard Result
           </Button>
         )}
         {!assessment.attempts.length && !readOnly && assessment.canWaive && permissions.waive && (
@@ -97,7 +97,7 @@ export function AssessmentAttemptWorkspace({
             disabled={disabled || busy || dirty}
             onClick={() => onAction('waive')}
           >
-            Waive assessment
+            Waive Assessment
           </Button>
         )}
       </Stack>

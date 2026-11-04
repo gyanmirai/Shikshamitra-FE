@@ -174,7 +174,7 @@ beforeEach(() => {
 it('shows an inline empty state and opens shared slot fields in the same small-button drawer', () => {
   draw();
   expect(screen.getByRole('dialog', { name: 'Book Assessment Slot' })).toBeInTheDocument();
-  expect(screen.getByText('No slots available')).toBeVisible();
+  expect(screen.getByText('No Slots Available')).toBeVisible();
   expect(screen.getByRole('button', { name: 'Book Slot' })).toBeDisabled();
   const add = screen.getByRole('button', { name: 'Add Slot' });
   expect(add).toHaveClass('MuiButton-sizeSmall');
@@ -193,7 +193,7 @@ it('books an existing selected session without creating a new slot', async () =>
     isError: false,
   });
   draw(onClose);
-  fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Assessment session' }));
+  fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Assessment Session' }));
   fireEvent.click(await screen.findByRole('option', { name: /Entrance exam/ }));
   fireEvent.click(screen.getByRole('button', { name: 'Book Slot' }));
   await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
@@ -218,16 +218,16 @@ it('shows a blocking body loader until booking settles and retains the selection
   });
   const onClose = vi.fn();
   draw(onClose);
-  fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Assessment session' }));
+  fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Assessment Session' }));
   fireEvent.click(await screen.findByRole('option', { name: /Entrance exam/ }));
   fireEvent.click(screen.getByRole('button', { name: 'Book Slot' }));
   await waitFor(() => expect(mocks.run).toHaveBeenCalledOnce());
 
-  expect(screen.getByRole('status', { name: 'Booking assessment slot…' })).toBeVisible();
+  expect(screen.getByRole('status', { name: 'Booking Assessment Slot…' })).toBeVisible();
   expect(screen.getByRole('button', { name: 'Book Slot' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
-  expect(screen.getByRole('button', { name: 'Close assessment booking' })).toBeDisabled();
-  expect(screen.getByRole('combobox', { name: 'Assessment session' })).toHaveAttribute(
+  expect(screen.getByRole('button', { name: 'Close Assessment Booking' })).toBeDisabled();
+  expect(screen.getByRole('combobox', { name: 'Assessment Session' })).toHaveAttribute(
     'aria-disabled',
     'true'
   );
@@ -240,9 +240,9 @@ it('shows a blocking body loader until booking settles and retains the selection
 
   await act(async () => rejectBooking(new Error('Booking failed')));
   expect(
-    screen.queryByRole('status', { name: 'Booking assessment slot…' })
+    screen.queryByRole('status', { name: 'Booking Assessment Slot…' })
   ).not.toBeInTheDocument();
-  expect(screen.getByRole('combobox', { name: 'Assessment session' })).toHaveTextContent(
+  expect(screen.getByRole('combobox', { name: 'Assessment Session' })).toHaveTextContent(
     'Entrance exam'
   );
   expect(screen.getByRole('button', { name: 'Book Slot' })).toBeEnabled();
@@ -273,10 +273,10 @@ it('keeps the create-and-book body loader through preview and confirmation', asy
   await waitFor(() => expect(mocks.preview).toHaveBeenCalledOnce());
 
   expect(
-    screen.getByRole('status', { name: 'Creating and booking assessment slot…' })
+    screen.getByRole('status', { name: 'Creating and Booking Assessment Slot…' })
   ).toBeVisible();
   expect(screen.getByRole('textbox', { name: 'Session name' })).toBeDisabled();
-  expect(screen.getByRole('button', { name: 'Back to booking' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Back to Booking' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Create & Book' })).toBeDisabled();
   await act(async () =>
     resolvePreview({
@@ -289,7 +289,7 @@ it('keeps the create-and-book body loader through preview and confirmation', asy
   );
   await waitFor(() => expect(mocks.confirm).toHaveBeenCalledOnce());
   expect(
-    screen.getByRole('status', { name: 'Creating and booking assessment slot…' })
+    screen.getByRole('status', { name: 'Creating and Booking Assessment Slot…' })
   ).toBeVisible();
   expect(onClose).not.toHaveBeenCalled();
 
@@ -372,7 +372,7 @@ it('guards unsaved slot changes and returns to booking without leaving Pipeline'
   fireEvent.change(screen.getByRole('textbox', { name: 'Session name' }), {
     target: { value: 'My slot' },
   });
-  fireEvent.click(screen.getByRole('button', { name: 'Back to booking' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Back to Booking' }));
   expect(screen.getByRole('dialog', { name: 'Discard Changes?' })).toBeVisible();
   fireEvent.click(screen.getByRole('button', { name: 'Discard' }));
   expect(await screen.findByRole('dialog', { name: 'Book Assessment Slot' })).toBeInTheDocument();
@@ -383,5 +383,5 @@ it('does not offer Add Slot without session-management permission', () => {
   mocks.permissions.manageSessions = false;
   draw();
   expect(screen.queryByRole('button', { name: 'Add Slot' })).not.toBeInTheDocument();
-  expect(screen.getByText('No slots available')).toBeVisible();
+  expect(screen.getByText('No Slots Available')).toBeVisible();
 });

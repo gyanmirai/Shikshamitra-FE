@@ -24,6 +24,7 @@ export default function StudentSubmissionAttachments({
   return (
     <FormSectionCard
       title="Student Submission Attachments"
+      titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
       icon={GlobalIcons.documentIcon}
       descriptionTooltip="Files uploaded by this student. Preview or download them before evaluating the submission."
       collapsible

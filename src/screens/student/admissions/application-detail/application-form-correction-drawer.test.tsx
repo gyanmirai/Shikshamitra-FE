@@ -65,7 +65,7 @@ const props = { open: true, applicationId: 'app', onClose: vi.fn(), onSaved: vi.
 it('waits for fresh reads before freezing a correction snapshot', async () => {
   state.form.isFetching = true;
   const { rerender } = render(<ApplicationFormCorrectionDrawer {...props} />);
-  expect(screen.getByRole('status', { name: 'Loading application form' })).toBeVisible();
+  expect(screen.getByRole('status', { name: 'Loading Application Form' })).toBeVisible();
   expect(screen.queryByText('original-stamp')).not.toBeInTheDocument();
   state.form.isFetching = false;
   rerender(<ApplicationFormCorrectionDrawer {...props} />);
@@ -107,7 +107,7 @@ it('does not fetch form data when existing view/edit permissions are missing', (
   state.application = {};
   state.form = {};
   render(<ApplicationFormCorrectionDrawer {...props} />);
-  expect(screen.getByText('You do not have permission to correct this application.')).toBeVisible();
+  expect(screen.getByText('You Do Not Have Permission to Correct This Application.')).toBeVisible();
   expect(state.applicationOptions.skip).toBe(true);
   expect(state.formOptions.skip).toBe(true);
 });

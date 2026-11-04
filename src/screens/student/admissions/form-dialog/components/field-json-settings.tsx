@@ -6,14 +6,14 @@ import type { FieldSettingsProps } from '../types/field-settings';
 const JSON_SETTINGS = [
   {
     key: 'requiredRuleJson',
-    label: 'Required rule JSON',
+    label: 'Required Rule JSON',
     placeholder: '{"field":"HAS_PREVIOUS_SCHOOL","operator":"Equals","value":true}',
     help: 'Make an answer required when this condition is met.',
   },
   {
     key: 'validationJson',
     label: 'Validation JSON',
-    placeholder: '{"minLength":2,"messages":{"minLength":"Enter at least 2 characters."}}',
+    placeholder: '{"minLength":2,"Messages":{"minLength":"Enter at Least 2 Characters."}}',
     help: 'Set additional checks and applicant-facing error messages.',
   },
 ] as const;

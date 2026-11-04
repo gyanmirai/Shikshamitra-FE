@@ -40,6 +40,7 @@ export default defineConfig({
         replacement: here + '/mock-api.ts',
       },
       { find: 'src/redux/finance/adjustments/adjustmentApi', replacement: here + '/mock-api.ts' },
+      { find: 'src/redux/finance/financeRoutingApi', replacement: here + '/mock-api.ts' },
       {
         find: 'src/components/back-popup-check/BackPopUpCheck',
         replacement: here + '/mock-navigation.tsx',

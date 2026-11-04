@@ -40,7 +40,7 @@ export const hrPaths = {
     salaryEditor: (employeeId: string) =>
       `/hr/payroll/structure/${encodeURIComponent(employeeId)}/edit`,
     settings: {
-      root: '/hr/payroll/setting/earning-component',
+      root: '/hr/payroll/setting',
       earningComponents: '/hr/payroll/setting/earning-component',
       deductionComponents: '/hr/payroll/setting/deduction-component',
       pfRule: '/hr/payroll/setting/pf',
@@ -213,7 +213,15 @@ export const hrPermissions = {
 
 const payrollSettingsMenuItems = [
   {
-    title: 'Earning Component',
+    title: 'Salary Templates',
+    path: hrPaths.payroll.settings.salaryTemplates,
+    _action: 'payroll-setting-salary-templates',
+    permissionName: hrPermissions.payroll.settings.salaryTemplates,
+    icon: menuIconView('mdi:file-tree-outline'),
+  },
+
+  {
+    title: 'Earning Components',
     path: hrPaths.payroll.settings.earningComponents,
     _action: 'payroll-setting-earning-components',
     shortcutKey: 'Alt+H+P+4',
@@ -222,7 +230,7 @@ const payrollSettingsMenuItems = [
     icon: menuIconView('mdi:cash-plus'),
   },
   {
-    title: 'Deduction Component',
+    title: 'Deduction Components',
     path: hrPaths.payroll.settings.deductionComponents,
     _action: 'payroll-setting-deduction-components',
     shortcutKey: 'Alt+H+P+4+2',
@@ -238,13 +246,6 @@ const payrollSettingsMenuItems = [
     shortcutKeyName: 'Alt+H+P+4+2',
     permissionName: hrPermissions.payroll.settings.pfRule,
     icon: menuIconView('mdi:bank-outline'),
-  },
-  {
-    title: 'Salary Templates',
-    path: hrPaths.payroll.settings.salaryTemplates,
-    _action: 'payroll-setting-salary-templates',
-    permissionName: hrPermissions.payroll.settings.salaryTemplates,
-    icon: menuIconView('mdi:file-tree-outline'),
   },
   {
     title: 'Professional tax',
@@ -378,7 +379,7 @@ const hrModule = () => ({
               icon: menuIconView('mdi:file-document-multiple-outline'),
             },
             {
-              title: 'Payroll structure',
+              title: 'Staff Salaries',
               path: hrPaths.payroll.structure,
               _action: 'payroll-structure',
               permissionName: hrPermissions.payroll.payrollStructure,

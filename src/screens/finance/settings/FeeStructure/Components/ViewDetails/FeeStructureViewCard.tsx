@@ -80,6 +80,7 @@ const FeeStructureViewCard: React.FC<FeeStructureViewCardProps> = ({ className, 
                 { id: 'categoryName', label: 'Category', align: 'left' },
                 { id: 'feeHeadName', label: 'Name', align: 'left' },
                 {
+                  cellSx: { textAlign: 'right' as const },
                   id: 'amount',
                   label: 'Amount',
                   align: 'left',
@@ -125,6 +126,7 @@ const FeeStructureViewCard: React.FC<FeeStructureViewCardProps> = ({ className, 
                 },
               ]}
               data={feeHeads || []}
+              searchFieldProps={{ placeholder: 'Search' }}
             />
           )}
         </Box>

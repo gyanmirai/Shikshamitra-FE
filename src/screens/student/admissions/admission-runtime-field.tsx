@@ -237,7 +237,7 @@ function renderFieldHelp(field: Field) {
       <Box
         component="span"
         tabIndex={0}
-        aria-label={`${field.label} information`}
+        aria-label={`${field.label} Information`}
         sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, maxWidth: 1 }}
       >
         <span>{field.helpText}</span>

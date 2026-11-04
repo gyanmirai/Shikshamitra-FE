@@ -17,15 +17,15 @@ export function renderPipelineStep(row: AdmissionPipelineItem) {
         </Typography>
         {current >= 0 && (
           <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
-            {formatNumber(current + 1)} of {formatNumber(stages.length)}
+            {formatNumber(current + 1)} Of {formatNumber(stages.length)}
           </Typography>
         )}
       </Stack>
       {current >= 0 && (
-        <Box role="group" aria-label="Admission stages" sx={{ display: 'flex', gap: 0.5 }}>
+        <Box role="group" aria-label="Admission Stages" sx={{ display: 'flex', gap: 0.5 }}>
           <Box
             role="progressbar"
-            aria-label="Admission journey"
+            aria-label="Admission Journey"
             aria-valuemin={1}
             aria-valuemax={stages.length}
             aria-valuenow={current + 1}
@@ -94,7 +94,7 @@ export function renderPipelineFollowUps(row: AdmissionPipelineItem) {
   if (row.inquiryId === null || !row.openFollowUpCount) {
     return (
       <Typography variant="body2" color="text.secondary" noWrap>
-        {row.inquiryId === null ? 'No inquiry follow-ups' : 'No open follow-ups'}
+        {row.inquiryId === null ? 'No Inquiry Follow-ups' : 'No Open Follow-ups'}
       </Typography>
     );
   }

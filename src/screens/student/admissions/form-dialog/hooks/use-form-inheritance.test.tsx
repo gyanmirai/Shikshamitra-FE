@@ -342,7 +342,7 @@ describe('Registration source preview controller', () => {
         (source: { inquiryFormDefinitionId: string }) => source.inquiryFormDefinitionId
       )
     ).toEqual(['A']);
-    expect(unchanged.sections[0].fields).toEqual([]);
+    expect(unchanged.sections[0].fields).toHaveLength(7);
     fireEvent.click(screen.getByRole('button', { name: 'Approve' }));
     await waitFor(() =>
       expect(JSON.parse(screen.getByTestId('draft').textContent!).inheritance.sources).toHaveLength(

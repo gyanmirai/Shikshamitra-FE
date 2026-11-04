@@ -20,6 +20,7 @@ describe('admission form row action visibility', () => {
       history: true,
       createVersion: false,
       archive: false,
+      restore: false,
     });
   });
 
@@ -33,10 +34,11 @@ describe('admission form row action visibility', () => {
       history: true,
       createVersion: true,
       archive: true,
+      restore: false,
     });
   });
 
-  it('only allows cloning an archived form when management is granted', () => {
+  it('allows restoring an archived form with management permission', () => {
     expect(getFormRowActionVisibility(2, true, true, false)).toEqual({
       edit: false,
       clone: true,
@@ -46,6 +48,7 @@ describe('admission form row action visibility', () => {
       history: true,
       createVersion: false,
       archive: false,
+      restore: true,
     });
   });
 
@@ -56,6 +59,7 @@ describe('admission form row action visibility', () => {
         .filter(([name]) => name !== 'history')
         .map(([, value]) => value)
     ).not.toContain(true);
+    expect(getFormRowActionVisibility(2, false, false, true).restore).toBe(false);
   });
 
   it('allows a publisher to publish any draft without a review state', () => {

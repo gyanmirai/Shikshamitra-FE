@@ -69,7 +69,7 @@ it('keeps assessment context in the accessible title tooltip instead of a repeat
   expect(screen.queryByText(/Grade 6/)).not.toBeInTheDocument();
   const info = screen.getByRole('button', { name: 'Create Assessment Session information' });
   await userEvent.hover(info);
-  expect(await screen.findByRole('tooltip')).toHaveTextContent('Set the session time, location, and capacity for Grade 6');
+  expect(await screen.findByRole('tooltip')).toHaveTextContent('Set the Session Time, Location, and Capacity For Grade 6');
 });
 it.each(['session', 'action'] as const)('closing a clean %s dialog preserves the parent page guard', async (kind) => {
   const confirm = vi.fn().mockReturnValue(true);
@@ -86,7 +86,7 @@ it.each(['session', 'action'] as const)('local %s edits require confirmation wit
   const confirm = vi.fn().mockReturnValueOnce(false).mockReturnValueOnce(true);
   vi.stubGlobal('confirm', confirm);
   const { store, closed } = setup(kind);
-  await userEvent.type(screen.getByRole('textbox', { name: kind === 'session' ? /Session name/ : 'Notes / reason' }), 'Keep these notes');
+  await userEvent.type(screen.getByRole('textbox', { name: kind === 'session' ? /Session Name/ : 'Notes / Reason' }), 'Keep these notes');
   await userEvent.click(screen.getByRole('button', { name: 'close' }));
   expect(closed).not.toHaveBeenCalled();
   expect(store.getState().confirmPopup.isChanges).toBe(true);
@@ -108,7 +108,7 @@ it('preserves the existing legacy dialog confirmation and global clear', async (
 it('guards browser refresh only while the locally edited dialog is open', async () => {
   vi.stubGlobal('confirm', vi.fn().mockReturnValue(true));
   const { store } = setup('action');
-  await userEvent.type(screen.getByRole('textbox', { name: 'Notes / reason' }), 'Unsubmitted result');
+  await userEvent.type(screen.getByRole('textbox', { name: 'Notes / Reason' }), 'Unsubmitted result');
   const pending = new Event('beforeunload', { cancelable: true });
   window.dispatchEvent(pending);
   expect(pending.defaultPrevented).toBe(true);

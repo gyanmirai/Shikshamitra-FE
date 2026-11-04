@@ -8,6 +8,7 @@ import { Label } from 'src/components/label';
 import { alpha } from '@mui/material/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { formatNumber } from 'src/utils/formate_number';
 import { DetailGrid, DetailField, DetailSection } from 'src/components/detail-view';
@@ -34,6 +35,8 @@ import FinancePolicyDrawerHeader from '../../policies/components/FinancePolicyDr
 
 import type { IStudentFeeData, IRefundFormProps } from '../type';
 import type { IRefundFeeHeadItem } from './RefundFeeHeadViewTable';
+
+const RefundReceiptDialog = React.lazy(() => import('./RefundReceiptDialog'));
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 
@@ -95,6 +98,7 @@ const RefundRemarksForm: React.FC<IRefundFormProps> = ({
   onApprove,
 }) => {
   const refundId = student._refundRequestId;
+  const receiptPreview = useBoolean();
 
   const {
     currentData: refundDetail,
@@ -116,8 +120,11 @@ const RefundRemarksForm: React.FC<IRefundFormProps> = ({
       value: dto?.voucherNumber || 'N/A',
     },
     {
-      label: 'Original Receipt',
-      value: dto?.originalReceiptNumber || 'N/A',
+      label: 'Source receipts',
+      value:
+        dto?.sourceReceipts?.map((receipt) => receipt.receiptNumber).join(', ') ||
+        dto?.originalReceiptNumber ||
+        'N/A',
     },
     {
       label: 'Source',
@@ -156,8 +163,18 @@ const RefundRemarksForm: React.FC<IRefundFormProps> = ({
 
   const status = dto?.status ?? student.status;
   const statusOption = FeeRefundStatusOptions.find((option) => option.value === status);
-  const closeView = () => onClose(null, false);
+  const closeView = () => {
+    receiptPreview.onFalse();
+    onClose(null, false);
+  };
   const availableActions = dto?.availableActions ?? student._availableActions ?? [];
+  const canViewReceipt = Boolean(
+    dto &&
+      (status === FeeRefundStatusType.Processed
+        ? dto.processedAmount > 0
+        : status === FeeRefundStatusType.Processing &&
+          dto.settlements?.some((settlement) => settlement.status === 0))
+  );
 
   return (
     <Drawer
@@ -407,6 +424,19 @@ const RefundRemarksForm: React.FC<IRefundFormProps> = ({
           gap: 1,
         }}
       >
+        {refundId && canViewReceipt && (
+            <Button
+              variant="contained"
+              size="small"
+              disabled={loading || isError}
+              onClick={receiptPreview.onTrue}
+              startIcon={<Iconify icon={GlobalIcons.receiptIcon} />}
+            >
+              {status === FeeRefundStatusType.Processing
+                ? 'View provisional refund receipt'
+                : 'View refund receipt'}
+            </Button>
+          )}
         <Button
           variant="outlined"
           color="inherit"
@@ -443,6 +473,19 @@ const RefundRemarksForm: React.FC<IRefundFormProps> = ({
           </Button>
         )}
       </DialogActions>
+      {receiptPreview.value &&
+        open.value &&
+        refundId &&
+        !isError &&
+        canViewReceipt && (
+        <React.Suspense fallback={null}>
+          <RefundReceiptDialog
+            refundId={refundId}
+            provisional={status === FeeRefundStatusType.Processing}
+            onClose={receiptPreview.onFalse}
+          />
+        </React.Suspense>
+      )}
     </Drawer>
   );
 };

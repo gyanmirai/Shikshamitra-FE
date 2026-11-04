@@ -7,8 +7,8 @@ import { studentPaths } from 'src/constants/student-menu';
 export type ApplicationExperienceView = 'inquiry' | 'registration';
 
 const ITEMS: { value: ApplicationExperienceView; label: string; icon: string }[] = [
-  { value: 'inquiry', label: 'Inquiry forms', icon: 'mdi:account-question-outline' },
-  { value: 'registration', label: 'Registration forms', icon: 'mdi:file-document-edit-outline' },
+  { value: 'inquiry', label: 'Inquiry Forms', icon: 'mdi:account-question-outline' },
+  { value: 'registration', label: 'Registration Forms', icon: 'mdi:file-document-edit-outline' },
 ];
 
 export function ApplicationExperienceNavigation({ value }: { value: ApplicationExperienceView }) {
@@ -21,7 +21,7 @@ export function ApplicationExperienceNavigation({ value }: { value: ApplicationE
         value={value}
         variant="scrollable"
         scrollButtons="auto"
-        aria-label="Admission form views"
+        aria-label="Admission Form Views"
         guardUnsavedChanges={false}
         slotProps={{ tab: { minHeight: 44 } }}
       >

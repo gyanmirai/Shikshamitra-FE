@@ -47,46 +47,46 @@ it('collapses sections without losing fields and reveals newly added fields in a
   const user = userEvent.setup({ delay: null });
   renderBuilder();
   const before = savedForm();
-  await user.click(screen.getByRole('button', { name: 'Collapse Student Details section' }));
-  const expand = screen.getByRole('button', { name: 'Expand Student Details section' });
+  await user.click(screen.getByRole('button', { name: 'Collapse Student Details Section' }));
+  const expand = screen.getByRole('button', { name: 'Expand Student Details Section' });
   expect(expand).toHaveAttribute('aria-expanded', 'false');
   await waitFor(() =>
-    expect(screen.queryByRole('heading', { name: 'Add your first field' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Add Your First Field' })).not.toBeInTheDocument()
   );
   expect(savedForm()).toEqual(before);
-  await user.click(screen.getByRole('tab', { name: 'Student fields' }));
-  await user.click(screen.getByRole('tab', { name: 'Custom fields' }));
+  await user.click(screen.getByRole('tab', { name: 'Student Fields' }));
+  await user.click(screen.getByRole('tab', { name: 'Custom Fields' }));
   await user.type(screen.getByRole('textbox', { name: 'Question' }), 'School activity');
-  await user.click(screen.getByRole('button', { name: 'Add custom field' }));
-  await user.click(screen.getByRole('tab', { name: 'Your form' }));
-  expect(screen.getByRole('button', { name: 'Collapse Student Details section' })).toHaveAttribute(
+  await user.click(screen.getByRole('button', { name: 'Add Custom Field' }));
+  await user.click(screen.getByRole('tab', { name: 'Your Form' }));
+  expect(screen.getByRole('button', { name: 'Collapse Student Details Section' })).toHaveAttribute(
     'aria-expanded',
     'true'
   );
   await waitFor(() =>
-    expect(screen.getByRole('button', { name: 'Edit School activity field' })).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Edit School activity Field' })).toBeVisible()
   );
   expect(savedForm().sections[0].fields).toHaveLength(before.sections[0].fields.length + 1);
-  await user.click(screen.getByRole('button', { name: 'Collapse Student Details section' }));
-  await user.click(screen.getByRole('button', { name: 'Add fields to Student Details' }));
+  await user.click(screen.getByRole('button', { name: 'Collapse Student Details Section' }));
+  await user.click(screen.getByRole('button', { name: 'Add Fields To Student Details' }));
   await waitFor(() =>
-    expect(screen.getByRole('button', { name: 'Edit School activity field' })).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Edit School activity Field' })).toBeVisible()
   );
 }, 15000);
 
 it('keeps earlier sections visible when adding and selecting another section in the same step', async () => {
   const user = userEvent.setup({ delay: null });
   renderBuilder();
-  await user.click(screen.getByRole('button', { name: 'Add section' }));
+  await user.click(screen.getByRole('button', { name: 'Add Section' }));
   expect(screen.getByRole('heading', { name: 'Student Details' })).toBeVisible();
   expect(screen.getByRole('heading', { name: 'Section 2' })).toBeVisible();
-  await user.click(screen.getByRole('button', { name: 'Add fields to Student Details' }));
+  await user.click(screen.getByRole('button', { name: 'Add Fields To Student Details' }));
   expect(screen.getByRole('heading', { name: 'Section 2' })).toBeVisible();
   expect(savedForm().sections).toHaveLength(2);
   expect(savedForm().sections[0].stepId).toBe(savedForm().sections[1].stepId);
-  expect(screen.getAllByRole('button', { name: 'Add section' })).toHaveLength(1);
-  expect(screen.getAllByRole('button', { name: 'Add step' })).toHaveLength(1);
-  expect(screen.queryByRole('button', { name: 'Add custom field' })).not.toBeInTheDocument();
+  expect(screen.getAllByRole('button', { name: 'Add Section' })).toHaveLength(1);
+  expect(screen.getAllByRole('button', { name: 'Add Step' })).toHaveLength(1);
+  expect(screen.queryByRole('button', { name: 'Add Custom Field' })).not.toBeInTheDocument();
 }, 15000);
 
 it.each([0, 1] as const)(
@@ -103,16 +103,16 @@ it.each([0, 1] as const)(
       visibilityRuleJson: '{"field":"HAS_SIBLING","equals":true}',
     });
     renderBuilder(values);
-    await user.click(screen.getByRole('button', { name: 'Edit Student Details section' }));
+    await user.click(screen.getByRole('button', { name: 'Edit Student Details Section' }));
     expect(screen.queryByRole('textbox', { name: 'Section name *' })).not.toBeInTheDocument();
-    expect(screen.queryByText('Advanced settings')).not.toBeInTheDocument();
+    expect(screen.queryByText('Advanced Settings')).not.toBeInTheDocument();
     expect(screen.queryByText('Allow multiple entries')).not.toBeInTheDocument();
-    const heading = screen.getByRole('textbox', { name: 'Section heading' });
+    const heading = screen.getByRole('textbox', { name: 'Section Heading' });
     await user.clear(heading);
     await user.paste('Student information');
     await user.keyboard('{Enter}');
     expect(screen.getByRole('heading', { name: 'Student information' })).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Edit Student information section' })).toHaveFocus();
+    expect(screen.getByRole('button', { name: 'Edit Student information Section' })).toHaveFocus();
     expect(savedForm().sections[0]).toMatchObject({
       name: 'Student information',
       code: values.sections[0].code,
@@ -131,11 +131,13 @@ it.each([0, 1] as const)(
   async (purpose) => {
     const user = userEvent.setup({ delay: null });
     const values = { ...getBlankAdmissionFormInitialValues(), purpose };
+    // This test exercises deletion of an ordinary empty section; core sections are protected.
+    values.sections[0].fields = [];
     renderBuilder(values);
     expect(
-      screen.queryByRole('button', { name: 'Actions for Student Details section' })
+      screen.queryByRole('button', { name: 'Actions For Student Details section' })
     ).not.toBeInTheDocument();
-    const remove = screen.getByRole('button', { name: 'Delete Student Details section' });
+    const remove = screen.getByRole('button', { name: 'Delete Student Details Section' });
     await user.click(remove);
     expect(screen.getByRole('dialog', { name: 'Delete section?' })).toBeVisible();
     expect(savedForm()).toEqual(values);
@@ -154,10 +156,10 @@ it.each([0, 1] as const)(
 it('adds a step, edits its heading inline, and returns to earlier sections without losing the draft', async () => {
   const user = userEvent.setup({ delay: null });
   renderBuilder();
-  await user.click(screen.getByRole('button', { name: 'Add step' }));
-  const heading = screen.getByRole('textbox', { name: 'Step heading' });
+  await user.click(screen.getByRole('button', { name: 'Add Step' }));
+  const heading = screen.getByRole('textbox', { name: 'Step Heading' });
   await user.clear(heading);
-  await user.click(screen.getByRole('button', { name: 'Finish editing step heading' }));
+  await user.click(screen.getByRole('button', { name: 'Finish Editing Step Heading' }));
   expect(screen.getByText('Step heading is required')).toBeVisible();
   expect(heading).toBeVisible();
   await user.click(heading);
@@ -166,9 +168,9 @@ it('adds a step, edits its heading inline, and returns to earlier sections witho
   expect(screen.getByRole('button', { name: 'Family details' })).toBeVisible();
   expect(screen.queryByRole('heading', { name: 'Family details' })).not.toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Family details' })).toHaveFocus();
-  await user.click(screen.getByRole('button', { name: 'Actions for Family details step' }));
+  await user.click(screen.getByRole('button', { name: 'Actions For Family details step' }));
   await user.click(screen.getByRole('menuitem', { name: 'Edit' }));
-  await user.clear(screen.getByRole('textbox', { name: 'Step heading' }));
+  await user.clear(screen.getByRole('textbox', { name: 'Step Heading' }));
   await user.paste('Parent information');
   await user.keyboard('{Enter}');
   expect(screen.getByRole('button', { name: 'Parent information' })).toBeVisible();

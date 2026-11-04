@@ -78,7 +78,7 @@ export default function ConcessionPolicyFields({
           valueKey="id"
           options={policies.map((policy) => ({
             id: policy.concessionPolicyVersionId,
-            label: `${policy.policyName} (${policy.policyCode}, v${policy.version})`,
+            label: policy.policyName,
           }))}
           value={policyVersionId}
           endAdornment={

@@ -75,7 +75,7 @@ const POLICY_CONFIG: Array<{
     label: 'Refund Policy',
     icon: 'solar:arrow-left-up-bold-duotone',
     color: 'warning',
-    required: false,
+    required: true,
     description: 'Defines eligible paid amounts, caps, deductions, and allowed payout methods',
   },
 ];
@@ -219,6 +219,7 @@ const PolicyRow: React.FC<PolicyRowProps> = ({
 
         <CustomSelect
           label={`Select ${label}`}
+          required={required}
           options={options}
           isLoading={isLoading}
           labelKey="label"
@@ -272,7 +273,9 @@ const FeePoliciesTab: React.FC<FeePoliciesTabProps> = ({
 
   const lateFeePolicyHeadIds = new Set<string>(
     selectedCollectionPolicy?.enableLateFee
-      ? (selectedCollectionPolicy.lateFeeApplyOnFeeHeads ?? [])
+      ? selectedCollectionPolicy.applyLateFeeToAllFeeHeads
+        ? feeHeads.map((head) => head.feeHeadId)
+        : (selectedCollectionPolicy.lateFeeApplyOnFeeHeads ?? [])
       : []
   );
 
@@ -299,9 +302,9 @@ const FeePoliciesTab: React.FC<FeePoliciesTabProps> = ({
           sx={{ color: theme.palette.info.main, flexShrink: 0, mt: 0.1 }}
         />
         <Typography variant="caption" color="info.main" fontWeight={500}>
-          Collection rules apply only where the selected policy and this structure share the same
-          Fee Head. The policy is version-pinned when the structure is saved, so future policy edits
-          do not silently change existing student assignments.
+          New Collection Policy versions apply one common late-fee rule across overdue fees. The
+          policy is version-pinned when the structure is saved, so future policy edits do not
+          silently change existing student assignments.
         </Typography>
       </Box>
       <Divider sx={{ my: 2, borderColor: alpha(theme.palette.grey[500], 0.1) }} />

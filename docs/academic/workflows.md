@@ -3,7 +3,7 @@ module: academic
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-10-30
+updated_on: 2026-11-04
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -58,6 +58,8 @@ Do not infer completion from having visited a page.
 The catalogue orders Welcome, Curriculum, Timetable, Homework & Assignment, Examination, and Review & Finish.
 Curriculum includes subjects and elective groups; Timetable includes weekly lectures and lecture slots.
 Homework & Assignment includes homework types, assignment types, and reusable rubric templates.
+The rubric template's final Preview step reuses the teacher evaluation controls for trial scores and feedback, with a live total and Reset preview action.
+Trial entries stay local, are cleared when leaving the preview or changing its configuration, and are excluded from Save draft and Publish Rubric requests.
 Examination includes grade scaling and exam types.
 
 The guide renders each existing manager under `AcademicSetupEmbeddingProvider`.
@@ -91,6 +93,8 @@ Homework publish and due pickers use Asia/Kolkata (IST), including initial value
 ## Assign electives after admission
 
 On `/academic/assign-elective-subject`, newly admitted students remain editable beside previously locked students. Locked rows disable their subject controls and selection checkboxes. Individual edits, bulk assignment and clearing preserve locked rows, and saving excludes them from the update payload. Save new selections before using Review & Lock; refreshing after the final lock makes those students read-only too. The [backend product rules](../../../Shikshamitra-BE/docs/modules/academic/product.md#data-integrity) own lock enforcement.
+
+When the roster's server capability permits locked corrections, an edit action appears on locked rows. Save or discard other draft assignments before opening it. Select a new subject, a preference correction, or both, then choose Review changes. The review shows old/new values and backend-reported effects. Confirm changes submits that exact reviewed input and token. A failed or stale confirmation retains the draft and requires a new review; success refreshes the roster while keeping the row locked. Other roles retain the existing read-only locked rows. See [backend correction contracts](../../../Shikshamitra-BE/docs/modules/academic/api.md#locked-elective-corrections).
 
 ## Review the current scope
 

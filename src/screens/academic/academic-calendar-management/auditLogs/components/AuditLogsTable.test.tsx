@@ -21,6 +21,33 @@ const logs = Array.from({ length: 5 }, (_, index) => ({
 }));
 
 describe('calendar audit pagination', () => {
+  it('distinguishes missing impact data from a recorded assessment of no impact', () => {
+    renderWithProviders(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <AuditLogsTable logs={logs} page={0} rowsPerPage={20} onPageChange={() => {}} />
+      </ThemeProvider>
+    );
+    expect(screen.getAllByText('Impact not recorded')).toHaveLength(5);
+    expect(screen.queryByText('No academic impact')).not.toBeInTheDocument();
+  });
+  it('provides a named keyboard-operable details action without empty row expanders', () => {
+    const openDetails = vi.fn();
+    renderWithProviders(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <AuditLogsTable
+          logs={logs}
+          page={0}
+          rowsPerPage={20}
+          onPageChange={() => {}}
+          onRowClick={openDetails}
+        />
+      </ThemeProvider>
+    );
+    expect(screen.queryByRole('button', { name: 'Expand row 1' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getAllByRole('button', { name: 'View details for School holiday' })[0]);
+    expect(openDetails).toHaveBeenCalledWith(logs[0]);
+  });
+
   it('shows the first five records with Previous disabled', () => {
     renderWithProviders(
       <ThemeProvider theme={createTheme(defaultSettings)}>

@@ -42,7 +42,7 @@ const HomeworkMarksAndFeedback = (props: MarksFeedbackTabProps) => {
   const selectedDivisionData = allDivision.find((d) => d.id === division);
 
   const {
-    data: subjectOptionsData,
+    currentData: subjectOptionsData,
     isLoading: isSubjectOptionsLoading,
     isFetching: isSubjectOptionsFetching,
   } = useQueryAndMutation({
@@ -53,7 +53,7 @@ const HomeworkMarksAndFeedback = (props: MarksFeedbackTabProps) => {
   });
 
   const {
-    data: homeworkData,
+    currentData: homeworkData,
     isLoading: isHomeworkDataLoading,
     isFetching: isHomeworkDataFetching,
   } = useQueryAndMutation({
@@ -134,9 +134,15 @@ const HomeworkMarksAndFeedback = (props: MarksFeedbackTabProps) => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', flex: 1, minHeight: 0 }}>
       <Box
-        display="flex"
         sx={{
-          borderRadius: '8px',
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: 'minmax(0, 1fr)',
+            sm: 'repeat(2, minmax(0, 1fr))',
+            md: 'repeat(4, minmax(0, 1fr))',
+          },
+          flexShrink: 0,
+          borderRadius: 1,
           bgcolor: 'background.paper',
           boxShadow: 'var(--shadows-3)',
           mt: 1,
@@ -149,19 +155,30 @@ const HomeworkMarksAndFeedback = (props: MarksFeedbackTabProps) => {
           options={allClass}
           label="Class"
           value={classes}
-          onChange={(val) => setClass(val as string)}
+          onChange={(val) => {
+            setClass(val as string);
+            setDivision('');
+            setSubject('');
+            setSubjectSelectValue('');
+            setHomeworkTitle('');
+            setSelectedHomework(null);
+          }}
           labelKey="name"
           valueKey="id"
-          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
+          formControlProps={{ sx: { minWidth: 0, width: 1 } }}
         />
         <CustomSelect
           options={allDivision}
           label="Division"
           value={division}
-          onChange={(val) => setDivision(val as string)}
+          onChange={(val) => {
+            setDivision(val as string);
+            setHomeworkTitle('');
+            setSelectedHomework(null);
+          }}
           labelKey="name"
           valueKey="id"
-          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
+          formControlProps={{ sx: { minWidth: 0, width: 1 } }}
           disabled={!classes}
         />
         <CustomSelect
@@ -174,11 +191,13 @@ const HomeworkMarksAndFeedback = (props: MarksFeedbackTabProps) => {
             const resolvedSubjectId = strVal.includes('::') ? strVal.split('::')[1] : strVal;
             setSubjectSelectValue(strVal);
             setSubject(resolvedSubjectId);
+            setHomeworkTitle('');
+            setSelectedHomework(null);
           }}
           labelKey="label"
           valueKey="value"
           isLoading={isSubjectOptionsLoading || isSubjectOptionsFetching}
-          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
+          formControlProps={{ sx: { minWidth: 0, width: 1 } }}
           disabled={!division}
         />
 
@@ -187,6 +206,7 @@ const HomeworkMarksAndFeedback = (props: MarksFeedbackTabProps) => {
           title={selectedHomework ? `${selectedHomework.label}` : undefined}
         >
           <Autocomplete
+            sx={{ minWidth: 0, width: 1 }}
             options={homeworkOptions}
             getOptionLabel={(option: any) => option.label || ''}
             isOptionEqualToValue={(option, value) => option.id === value.id}
@@ -200,10 +220,9 @@ const HomeworkMarksAndFeedback = (props: MarksFeedbackTabProps) => {
             renderInput={(params) => (
               <TextField
                 {...params}
-                label="Homework Title"
+                label="Homework title"
                 size="small"
                 fullWidth
-                sx={{ minWidth: '248px', width: '100%' }}
                 disabled={!subject}
               />
             )}
@@ -212,6 +231,7 @@ const HomeworkMarksAndFeedback = (props: MarksFeedbackTabProps) => {
       </Box>
       {homeworkTitle ? (
         <StudentSubmissions
+          key={`${classes}:${division}:${subject}:${homeworkTitle}`}
           selectedClass={classes}
           selectedDivision={division}
           selectedSubject={subject}

@@ -47,8 +47,8 @@ export function WorkflowEligibilitySettings({
     <Stack spacing={2}>
       <FormSectionCard
         icon="mdi:clipboard-check-outline"
-        title="Eligibility checks"
-        descriptionTooltip="Check saved information, resolve missing answers and review authorized exceptions before continuing. Failed eligibility checks do not automatically reject the application."
+        title="Eligibility Checks"
+        descriptionTooltip="Check Saved Information, Resolve Missing Answers and Review Authorized Exceptions Before Continuing. Failed Eligibility Checks Do Not Automatically Reject the Application."
       >
         <Stack spacing={2}>
           {!available && (
@@ -62,20 +62,20 @@ export function WorkflowEligibilitySettings({
             </StudentFeedback>
           )}
           <WorkflowProcessChoice
-            label="Eligibility process"
+            label="Eligibility Process"
             value={policy?.enabled ? 'managed' : 'basic'}
             disabled={disabled}
             onChange={(value) => update({ enabled: value === 'managed' })}
             options={[
               {
                 value: 'basic',
-                title: 'Complete manually',
+                title: 'Complete Manually',
                 description: 'Staff complete this stage using the existing workflow controls.',
                 icon: 'mdi:check-circle-outline',
               },
               {
                 value: 'managed',
-                title: 'Check eligibility rules',
+                title: 'Check Eligibility Rules',
                 description:
                   'Evaluate saved information, explain each result and record approved exceptions.',
                 icon: 'mdi:clipboard-check-outline',

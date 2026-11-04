@@ -4,26 +4,37 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { useRef, useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
+import { useRef, useMemo, useState, useEffect } from 'react';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { FormSectionCard } from 'src/components/form-section-card';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { createFilterOptions } from '@mui/material/Autocomplete';
 import {
   Box,
   Alert,
   Button,
   Switch,
   Checkbox,
+  TextField,
+  Autocomplete,
   DialogActions,
   FormControlLabel,
+  CircularProgress,
 } from '@mui/material';
 
 import { amountError, defaultPaymentTerm } from '../feeStructureModel';
+
+const filterHeads = createFilterOptions<{
+  id: string;
+  name: string;
+  categoryName: string;
+  label: string;
+}>({ stringify: (head) => `${head.name} ${head.categoryName}` });
 
 interface Props {
   line?: StructureLine;
@@ -159,32 +170,38 @@ export default function FeeStructureHeadDialog({
     if ((formik.submitCount || revealErrors) && !formik.isValidating)
       formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
   }, [formik.submitCount, formik.isValidating, revealErrors]);
-  const heads = settings.heads.filter(
-    (head) => head.id === line?.feeHeadId || !lines.some((entry) => entry.feeHeadId === head.id)
-  );
-  if (line && !heads.some((head) => head.id === line.feeHeadId))
-    heads.push({
-      id: line.feeHeadId,
-      name: line.feeHeadName || 'Retained fee head',
-      categoryName: line.categoryName || '',
-      isConcessionApplied: false,
-    });
-  const headOptions = heads
-    .map((head) => {
-      const categoryName = head.categoryName?.trim() || 'Category unavailable';
-      const duplicateName = settings.heads.some(
-        (other) => other.id !== head.id && other.name === head.name
-      );
-      return {
-        ...head,
-        categoryName,
-        label: duplicateName ? `${head.name} · ${categoryName}` : head.name,
-      };
-    })
-    .sort(
-      (left, right) =>
-        left.categoryName.localeCompare(right.categoryName) || left.name.localeCompare(right.name)
+  const headOptions = useMemo(() => {
+    const selectedIds = new Set(lines.map((entry) => entry.feeHeadId));
+    const knownIds = new Set(settings.heads.map((head) => head.id));
+    const nameCounts = new Map<string, number>();
+    settings.heads.forEach((head) =>
+      nameCounts.set(head.name, (nameCounts.get(head.name) ?? 0) + 1)
     );
+    const heads = settings.heads.filter(
+      (head) => head.id === line?.feeHeadId || !selectedIds.has(head.id)
+    );
+    if (line && !heads.some((head) => head.id === line.feeHeadId))
+      heads.push({
+        id: line.feeHeadId,
+        name: line.feeHeadName || 'Retained fee head',
+        categoryName: line.categoryName || '',
+        isConcessionApplied: false,
+      });
+    return heads
+      .map((head) => {
+        const categoryName = head.categoryName?.trim() || 'Category unavailable';
+        const duplicateName = (nameCounts.get(head.name) ?? 0) > (knownIds.has(head.id) ? 1 : 0);
+        return {
+          ...head,
+          categoryName,
+          label: duplicateName ? `${head.name} · ${categoryName}` : head.name,
+        };
+      })
+      .sort(
+        (left, right) =>
+          left.categoryName.localeCompare(right.categoryName) || left.name.localeCompare(right.name)
+      );
+  }, [settings.heads, lines, line]);
   const terms = settings.terms.map((term) => ({
     value: term.versionId,
     label: `${term.name} · v${term.versionNumber}${term.isDefault ? ' · Default' : ''}`,
@@ -228,26 +245,44 @@ export default function FeeStructureHeadDialog({
               title="Fee Head Details"
             >
               <ShakingTextField error={!!errorFor('feeHeadId')}>
-                <CustomSelect
-                  name="feeHeadId"
-                  label="Fee head"
+                <Autocomplete
                   size="small"
-                  required
-                  isSearch
-                  value={formik.values.feeHeadId}
                   options={headOptions}
-                  labelKey="label"
-                  valueKey="id"
-                  groupKey="categoryName"
-                  searchPlaceholder="Search fee category or fee head"
-                  disabled={busy || headsLoading || headsError || !settings.permissions.headsRead}
-                  isLoading={headsLoading}
-                  onChange={(value) => formik.setFieldValue('feeHeadId', String(value ?? ''))}
-                  onBlur={() => formik.setFieldTouched('feeHeadId', true)}
-                  error={!!errorFor('feeHeadId')}
-                  helperText={errorFor('feeHeadId')}
-                  noOptionsMessage="All available fee heads have been added."
-                  formControlProps={{ fullWidth: true, required: true }}
+                  filterOptions={filterHeads}
+                  groupBy={(option) => option.categoryName || 'Other'}
+                  getOptionLabel={(option) => option.label || ''}
+                  isOptionEqualToValue={(option, value) => option.id === value.id}
+                  value={headOptions.find((head) => head.id === formik.values.feeHeadId) || null}
+                  onChange={(_, newValue) => {
+                    formik.setFieldValue('feeHeadId', String(newValue?.id ?? ''));
+                  }}
+                  disabled={
+                    busy || headsLoading || Boolean(headsError) || !settings.permissions.headsRead
+                  }
+                  loading={headsLoading}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      name="feeHeadId"
+                      label="Fee head"
+                      placeholder="Search fee category or fee head"
+                      required
+                      onBlur={() => formik.setFieldTouched('feeHeadId', true)}
+                      error={!!errorFor('feeHeadId')}
+                      helperText={errorFor('feeHeadId')}
+                      InputProps={{
+                        ...params.InputProps,
+                        endAdornment: (
+                          <>
+                            {headsLoading ? <CircularProgress size={18} /> : null}
+                            {params.InputProps.endAdornment}
+                          </>
+                        ),
+                      }}
+                    />
+                  )}
+                  noOptionsText="All available fee heads have been added."
+                  fullWidth
                 />
               </ShakingTextField>
               <FormControlLabel

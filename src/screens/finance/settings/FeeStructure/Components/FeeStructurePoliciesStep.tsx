@@ -11,9 +11,11 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { FormSectionHeader } from 'src/components/form-section-card';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { alpha, useTheme } from '@mui/material/styles';
 import {
   Box,
   Card,
+  Chip,
   Alert,
   Stack,
   Button,
@@ -65,6 +67,7 @@ export default function FeeStructurePoliciesStep({
   onChange,
   onView,
 }: Props) {
+  const theme = useTheme();
   const [choosing, setChoosing] = useState<StructurePolicyFamily>();
   const selectedFamily = impacts.find((impact) => impact.key === choosing);
   const options = choosing
@@ -88,10 +91,21 @@ export default function FeeStructurePoliciesStep({
               ? row.treatment === 'Late fee applies'
               : row.treatment !== 'Excluded'
           ).length;
+          const attachedVersionId = candidate[`${choosing}PolicyVersionId`];
+          const attachedPolicyId = candidate[`${choosing}PolicyId`];
+          const isSelected = Boolean(
+            (attachedVersionId &&
+              String(attachedVersionId).trim().toLowerCase() ===
+                String(policy.versionId).trim().toLowerCase()) ||
+            (!attachedVersionId &&
+              attachedPolicyId &&
+              String(attachedPolicyId).trim().toLowerCase() ===
+                String(policy.id).trim().toLowerCase())
+          );
           return {
             ...policy,
             _id: policy.versionId,
-            selected: candidate[`${choosing}PolicyVersionId`] === policy.versionId,
+            selected: isSelected,
             coverage: rows
               ? choosing === 'collection'
                 ? `Late fees on ${matches} of ${rows.length} fee heads`
@@ -325,13 +339,14 @@ export default function FeeStructurePoliciesStep({
               rowProps={(row) => ({
                 selected: row.selected,
                 'aria-selected': row.selected,
-                sx: {
-                  '&.Mui-selected > td, &.Mui-selected:hover > td': {
-                    bgcolor: 'background.paper',
-                    backgroundImage: (theme) =>
-                      `linear-gradient(${theme.vars.palette.action.selected}, ${theme.vars.palette.action.selected})`,
-                  },
-                },
+                sx: row.selected
+                  ? {
+                      outline: `2px solid ${theme.palette.success.main}`,
+                      outlineOffset: -2,
+                      bgcolor: alpha(theme.palette.success.main, 0.08),
+                      '& > td': { bgcolor: 'transparent', backgroundImage: 'none' },
+                    }
+                  : {},
               })}
               isLoading={catalogs[choosing].loading && !options.length}
               isSearch
@@ -363,7 +378,18 @@ export default function FeeStructurePoliciesStep({
                   isFilter: false,
                   render: (_value, row) => (
                     <Stack spacing={0.5}>
-                      <Typography variant="subtitle2">{row.name}</Typography>
+                      <Stack direction="row" alignItems="center" spacing={0.75} flexWrap="wrap" useFlexGap>
+                        <Typography variant="subtitle2">{row.name}</Typography>
+                        {row.selected && (
+                          <Chip
+                            size="small"
+                            color="success"
+                            label="Currently applied"
+                            icon={<Iconify icon="solar:check-circle-bold" width={14} />}
+                            sx={{ fontSize: 10, height: 20, fontWeight: 600, borderRadius: 1 }}
+                          />
+                        )}
+                      </Stack>
                       <Typography variant="caption" color="text.secondary">
                         Version {row.versionNumber}
                         {row.isDefault ? ' · Default' : ''}
@@ -393,6 +419,7 @@ export default function FeeStructurePoliciesStep({
                     <Button
                       size="small"
                       variant="outlined"
+                      color={row.selected ? 'success' : 'inherit'}
                       disabled={
                         row.selected ||
                         busy ||
@@ -401,6 +428,11 @@ export default function FeeStructurePoliciesStep({
                         !settings.permissions[`${choosing}Read`]
                       }
                       aria-label={`${row.selected ? 'Currently applied:' : 'Select'} ${row.name} version ${row.versionNumber}`}
+                      startIcon={
+                        row.selected ? (
+                          <Iconify icon="solar:check-circle-bold" width={16} />
+                        ) : undefined
+                      }
                       onClick={() => {
                         if (row.selected) return;
                         onChange(choosing, row.versionId);
@@ -409,12 +441,27 @@ export default function FeeStructurePoliciesStep({
                         });
                         setChoosing(undefined);
                       }}
+                      sx={
+                        row.selected
+                          ? {
+                              fontWeight: 700,
+                              borderColor: 'success.main',
+                              color: 'success.main',
+                              '&.Mui-disabled': {
+                                color: 'success.main',
+                                borderColor: 'success.main',
+                                opacity: 0.9,
+                              },
+                            }
+                          : undefined
+                      }
                     >
                       {row.selected ? 'Selected' : 'Select'}
                     </Button>
                   ),
                 },
               ]}
+              searchFieldProps={{ placeholder: 'Search' }}
             />
             {catalogs[choosing].loading && !!options.length && (
               <Typography variant="caption" role="status">

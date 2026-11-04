@@ -228,10 +228,10 @@ const studentModule = () => ({
                   permissionName: studentPermissions.enrollment.applications,
                 },
                 {
-                  title: 'Applicant profiles',
+                  title: 'Applicant Profiles',
                   permissionName: studentPermissions.enrollment.applicants,
                 },
-                { title: 'Payment workflow', permissionName: 'Students.Admissions.Payments.View' },
+                { title: 'Payment Workflow', permissionName: 'Students.Admissions.Payments.View' },
                 { title: 'Offers', permissionName: 'Students.Admissions.Offers.View' },
                 { title: 'Seats', permissionName: 'Students.Admissions.Seats.View' },
                 { title: 'Documents', permissionName: 'Students.Admissions.Documents.View' },

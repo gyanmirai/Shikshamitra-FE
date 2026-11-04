@@ -151,6 +151,7 @@ const UpiTable = ({
         ),
       },
       {
+        cellSx: { textAlign: 'right' as const },
         id: 'amount',
         label: 'Amount',
         width: 140,
@@ -374,6 +375,7 @@ const UpiTable = ({
         data={data}
         isLoading={isLoading || isFetching}
         noDataText={<>No UPI Data Found</>}
+        searchFieldProps={{ placeholder: 'Search' }}
       />
       <CustomDialog
         open={isDialog.value}

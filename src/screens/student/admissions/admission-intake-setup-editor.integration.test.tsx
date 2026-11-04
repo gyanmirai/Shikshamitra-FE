@@ -8,6 +8,7 @@ import { vi, it, expect, beforeEach } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings/config-settings';
+import { expectStudentErrorToast } from 'src/test/student-toast-test-fixture';
 import { render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import {
@@ -81,22 +82,22 @@ it('shows the simplified inquiry controls and saves API-selected pool and fallba
     })
   ).not.toBeInTheDocument();
   expect(
-    screen.queryByRole('checkbox', { name: /Require guardian email|Require applicant birth date/ })
+    screen.queryByRole('checkbox', { name: /Require guardian Email|Require applicant birth date/ })
   ).not.toBeInTheDocument();
-  expect(screen.getByRole('combobox', { name: 'Allowed sources' })).toBeInTheDocument();
-  fireEvent.change(screen.getByRole('textbox', { name: 'Setup name *' }), {
+  expect(screen.getByRole('combobox', { name: 'Allowed Sources' })).toBeInTheDocument();
+  fireEvent.change(screen.getByRole('textbox', { name: 'Setup Name *' }), {
     target: { value: 'General intake' },
   });
   await user.click(screen.getByRole('button', { name: 'Next' }));
   expect(hooks.info).toHaveBeenCalledOnce();
-  expect(screen.queryByText(/New inquiries go to the eligible counsellor/)).not.toBeInTheDocument();
-  await user.click(screen.getByRole('combobox', { name: 'Counsellor pool *' }));
+  expect(screen.queryByText(/New Inquiries go to the Eligible counsellor/)).not.toBeInTheDocument();
+  await user.click(screen.getByRole('combobox', { name: 'Counsellor Pool *' }));
   await user.click(screen.getByRole('option', { name: 'Admissions Counselor' }));
   await user.keyboard('{Escape}');
-  await user.click(screen.getByRole('combobox', { name: 'Fallback manager *' }));
+  await user.click(screen.getByRole('combobox', { name: 'Fallback Manager *' }));
   await user.click(screen.getByRole('option', { name: 'Admissions Manager' }));
   await user.click(screen.getByRole('button', { name: 'Next' }));
-  await user.click(screen.getByRole('button', { name: 'Create setup' }));
+  await user.click(screen.getByRole('button', { name: 'Create Setup' }));
   await waitFor(() =>
     expect(hooks.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -122,45 +123,39 @@ it('keeps source and pool checkbox menus open for multiple selections and review
   const user = userEvent.setup();
   render(editor());
   expect(screen.getByRole('dialog', { name: 'Create Admission Intake Setup' })).toBeVisible();
-  fireEvent.change(screen.getByRole('textbox', { name: 'Setup name *' }), {
+  fireEvent.change(screen.getByRole('textbox', { name: 'Setup Name *' }), {
     target: { value: 'Multiple sources' },
   });
-  await user.click(screen.getByRole('combobox', { name: 'Allowed sources' }));
+  await user.click(screen.getByRole('combobox', { name: 'Allowed Sources' }));
   await user.click(screen.getByRole('option', { name: 'Website' }));
-  expect(
-    within(screen.getByRole('option', { name: 'Website' })).getByRole('checkbox')
-  ).toBeChecked();
-  await user.click(screen.getByRole('option', { name: 'QR code' }));
-  expect(
-    within(screen.getByRole('option', { name: 'QR code' })).getByRole('checkbox')
-  ).toBeChecked();
+  expect(screen.getByRole('option', { name: 'Website', selected: true })).toBeVisible();
+  await user.click(screen.getByRole('option', { name: 'QR Code' }));
+  expect(screen.getByRole('option', { name: 'QR Code', selected: true })).toBeVisible();
   await user.keyboard('{Escape}');
   await user.click(screen.getByRole('button', { name: 'Next' }));
-  await user.click(screen.getByRole('combobox', { name: 'Counsellor pool *' }));
+  await user.click(screen.getByRole('combobox', { name: 'Counsellor Pool *' }));
   await user.click(screen.getByRole('option', { name: 'Admissions Counselor' }));
   await user.click(screen.getByRole('option', { name: 'Admissions Manager' }));
   expect(
-    within(screen.getByRole('option', { name: 'Admissions Counselor' })).getByRole('checkbox')
-  ).toBeChecked();
-  expect(
-    within(screen.getByRole('option', { name: 'Admissions Manager' })).getByRole('checkbox')
-  ).toBeChecked();
+    screen.getByRole('option', { name: 'Admissions Counselor', selected: true })
+  ).toBeVisible();
+  expect(screen.getByRole('option', { name: 'Admissions Manager', selected: true })).toBeVisible();
   await user.keyboard('{Escape}');
   expect(screen.getByText('Admissions Counselor').closest('.MuiChip-root')).toHaveClass(
     'MuiChip-colorDefault'
   );
-  await user.click(screen.getByRole('combobox', { name: 'Fallback manager *' }));
+  await user.click(screen.getByRole('combobox', { name: 'Fallback Manager *' }));
   await user.click(screen.getByRole('option', { name: 'Admissions Manager' }));
   await user.click(screen.getByRole('button', { name: 'Next' }));
   expect(screen.getByText('Website')).toBeInTheDocument();
-  expect(screen.getByText('QR code')).toBeInTheDocument();
+  expect(screen.getByText('QR Code')).toBeInTheDocument();
   expect(screen.getByText('Admissions Counselor')).toBeInTheDocument();
-  await user.click(screen.getByRole('button', { name: 'Edit inquiry handling' }));
-  expect(screen.getByRole('textbox', { name: 'Setup name *' })).toHaveValue('Multiple sources');
+  await user.click(screen.getByRole('button', { name: 'Edit Inquiry Handling' }));
+  expect(screen.getByRole('textbox', { name: 'Setup Name *' })).toHaveValue('Multiple sources');
   await user.click(screen.getByRole('button', { name: 'Next' }));
   expect(hooks.info).toHaveBeenCalledOnce();
   await user.click(screen.getByRole('button', { name: 'Next' }));
-  await user.click(screen.getByRole('button', { name: 'Create setup' }));
+  await user.click(screen.getByRole('button', { name: 'Create Setup' }));
   await waitFor(() =>
     expect(hooks.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -194,12 +189,12 @@ it('reviews edits with an update label and retains the concurrency stamp', async
   expect(screen.getByRole('button', { name: 'Step 3: Review & update' })).toBeInTheDocument();
   await user.click(screen.getByRole('button', { name: 'Next' }));
   await user.click(screen.getByRole('button', { name: 'Next' }));
-  await user.click(screen.getByRole('button', { name: 'Edit counsellor routing' }));
-  expect(screen.getByRole('combobox', { name: 'Counsellor pool *' })).toHaveTextContent(
+  await user.click(screen.getByRole('button', { name: 'Edit Counsellor Routing' }));
+  expect(screen.getByRole('combobox', { name: 'Counsellor Pool *' })).toHaveTextContent(
     'Admissions Counselor'
   );
   await user.click(screen.getByRole('button', { name: 'Next' }));
-  await user.click(screen.getByRole('button', { name: 'Update setup' }));
+  await user.click(screen.getByRole('button', { name: 'Update Setup' }));
   await waitFor(() =>
     expect(hooks.update).toHaveBeenCalledWith({
       id: 'setup-1',
@@ -212,19 +207,19 @@ it('reviews edits with an update label and retains the concurrency stamp', async
 it('preserves a drawer draft when discarding is cancelled', async () => {
   const user = userEvent.setup();
   render(editor());
-  fireEvent.change(screen.getByRole('textbox', { name: 'Setup name *' }), {
+  fireEvent.change(screen.getByRole('textbox', { name: 'Setup Name *' }), {
     target: { value: 'Keep draft' },
   });
-  await user.click(screen.getByRole('button', { name: 'Close admission intake setup editor' }));
-  expect(screen.getByRole('dialog', { name: 'Discard setup changes?' })).toHaveTextContent(
-    'Discard setup changes?'
+  await user.click(screen.getByRole('button', { name: 'Close Admission Intake Setup Editor' }));
+  expect(screen.getByRole('dialog', { name: 'Discard Setup Changes?' })).toHaveTextContent(
+    'Discard Setup Changes?'
   );
   await user.click(
-    within(screen.getByRole('dialog', { name: 'Discard setup changes?' })).getByRole('button', {
+    within(screen.getByRole('dialog', { name: 'Discard Setup Changes?' })).getByRole('button', {
       name: 'Cancel',
     })
   );
-  expect(screen.getByRole('textbox', { name: 'Setup name *' })).toHaveValue('Keep draft');
+  expect(screen.getByRole('textbox', { name: 'Setup Name *' })).toHaveValue('Keep draft');
   expect(hooks.close).not.toHaveBeenCalled();
 });
 
@@ -236,43 +231,44 @@ it('recovers both routing fields after a failed lookup without losing inquiry va
     { counsellorOnly: true },
     { refetchOnMountOrArgChange: true }
   );
-  fireEvent.change(screen.getByRole('textbox', { name: 'Setup name *' }), {
+  fireEvent.change(screen.getByRole('textbox', { name: 'Setup Name *' }), {
     target: { value: 'Preserved draft' },
   });
   await user.click(screen.getByRole('button', { name: 'Next' }));
-  expect(screen.getByRole('combobox', { name: 'Counsellor pool *' })).toHaveAttribute(
+  expect(screen.getByRole('combobox', { name: 'Counsellor Pool *' })).toHaveAttribute(
     'aria-disabled',
     'true'
   );
-  expect(screen.getByRole('combobox', { name: 'Fallback manager *' })).toHaveAttribute(
+  expect(screen.getByRole('combobox', { name: 'Fallback Manager *' })).toHaveAttribute(
     'aria-disabled',
     'true'
   );
-  await user.click(screen.getByRole('button', { name: 'Retry' }));
-  expect(hooks.refetch).toHaveBeenCalledOnce();
+  await expectStudentErrorToast(/Unable to load eligible counsellors/);
+  expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+  expect(hooks.refetch).not.toHaveBeenCalled();
   hooks.lookup = { data: counsellors, isLoading: false, isFetching: false, isError: false };
   view.rerender(editor());
-  expect(screen.queryByText('Unable to load eligible counsellors.')).not.toBeInTheDocument();
-  await user.click(screen.getByRole('combobox', { name: 'Counsellor pool *' }));
+  expect(screen.queryByText('Unable to load Eligible counsellors.')).not.toBeInTheDocument();
+  await user.click(screen.getByRole('combobox', { name: 'Counsellor Pool *' }));
   expect(screen.getByRole('option', { name: 'Admissions Counselor' })).toBeInTheDocument();
   await user.click(screen.getByRole('option', { name: 'Admissions Counselor' }));
   await user.keyboard('{Escape}');
-  await user.click(screen.getByRole('combobox', { name: 'Fallback manager *' }));
+  await user.click(screen.getByRole('combobox', { name: 'Fallback Manager *' }));
   expect(screen.getByRole('option', { name: 'Admissions Manager' })).toBeInTheDocument();
   await user.click(screen.getByRole('option', { name: 'Admissions Manager' }));
   await user.click(screen.getByRole('button', { name: 'Back' }));
-  expect(screen.getByRole('textbox', { name: 'Setup name *' })).toHaveValue('Preserved draft');
+  expect(screen.getByRole('textbox', { name: 'Setup Name *' })).toHaveValue('Preserved draft');
 }, 15000);
 
 it('uses safe Escape dismissal for a dirty drawer and retains its draft', async () => {
   const user = userEvent.setup();
   render(editor());
-  fireEvent.change(screen.getByRole('textbox', { name: 'Setup name *' }), {
+  fireEvent.change(screen.getByRole('textbox', { name: 'Setup Name *' }), {
     target: { value: 'Escape draft' },
   });
   await user.keyboard('{Escape}');
-  expect(screen.getByRole('dialog', { name: 'Discard setup changes?' })).toBeVisible();
+  expect(screen.getByRole('dialog', { name: 'Discard Setup Changes?' })).toBeVisible();
   await user.click(screen.getByRole('button', { name: 'Cancel' }));
-  expect(screen.getByRole('textbox', { name: 'Setup name *' })).toHaveValue('Escape draft');
+  expect(screen.getByRole('textbox', { name: 'Setup Name *' })).toHaveValue('Escape draft');
   expect(hooks.close).not.toHaveBeenCalled();
 });

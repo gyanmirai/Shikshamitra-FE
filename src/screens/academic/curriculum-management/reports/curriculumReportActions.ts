@@ -5,6 +5,7 @@ import { GlobalIcons } from 'src/utils/icons';
 
 type CurriculumReportActionOptions = {
   downloadingJobId: string | null;
+  loadingJobId?: string | null;
   onView: (row: AcademicReportExportJobResponse) => void;
   onDownload: (jobId: string, status: string) => void;
 };
@@ -22,6 +23,8 @@ export function getCurriculumReportActions(
       id: 'view',
       label: 'View report',
       icon: GlobalIcons.eye,
+      loading: options.loadingJobId === row.id,
+      disabled: Boolean(options.loadingJobId),
       onClick: () => options.onView(row),
     });
   }

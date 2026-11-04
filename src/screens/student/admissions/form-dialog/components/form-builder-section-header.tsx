@@ -79,7 +79,7 @@ export function FormBuilderSectionHeader({
       }}
     >
       {reorderEnabled && (
-        <CustomTooltip title="Drag to reorder. With a keyboard, press Space, then arrow keys.">
+        <CustomTooltip title="Drag to Reorder. With a Keyboard, Press Space, Then Arrow Keys.">
           <IconButton
             size="small"
             ref={sortable.setActivatorNodeRef}
@@ -106,7 +106,7 @@ export function FormBuilderSectionHeader({
         <ButtonBase
           id={`section-select-${section.id}`}
           onClick={onSelect}
-          aria-label={readOnly ? `Review ${name} section` : `Add fields to ${name}`}
+          aria-label={readOnly ? `Review ${name} Section` : `Add Fields To ${name}`}
           aria-pressed={selected}
           sx={{
             flex: 1,
@@ -130,10 +130,10 @@ export function FormBuilderSectionHeader({
           </Box>
         </ButtonBase>
       )}
-      <CustomTooltip title={expanded ? 'Collapse section' : 'Expand section'}>
+      <CustomTooltip title={expanded ? 'Collapse Section' : 'Expand Section'}>
         <IconButton
           size="small"
-          aria-label={`${expanded ? 'Collapse' : 'Expand'} ${name} section`}
+          aria-label={`${expanded ? 'Collapse' : 'Expand'} ${name} Section`}
           aria-expanded={expanded}
           aria-controls={contentId}
           onClick={onToggleExpanded}
@@ -143,10 +143,10 @@ export function FormBuilderSectionHeader({
         </IconButton>
       </CustomTooltip>
       {readOnly ? null : settingsOpen ? (
-        <CustomTooltip title="Finish editing heading">
+        <CustomTooltip title="Finish Editing Heading">
           <IconButton
             size="small"
-            aria-label="Finish editing section heading"
+            aria-label="Finish Editing Section Heading"
             aria-expanded={settingsOpen}
             aria-controls={settingsOpen ? `section-heading-${section.id}` : undefined}
             onClick={() => {
@@ -164,12 +164,12 @@ export function FormBuilderSectionHeader({
           <AdaptiveThreeDotsActions
             directActionLimit={2}
             collapseOnOverflow={false}
-            moreLabel={`More actions for ${name} section`}
+            moreLabel={`More Actions For ${name} Section`}
             sx={{ flexShrink: 0, gap: 0.5, '& .MuiIconButton-root': { width: 44, height: 44 } }}
             actions={[
               {
                 id: 'edit',
-                label: `Edit ${name} section`,
+                label: `Edit ${name} Section`,
                 icon: GlobalIcons.edit,
                 onClick: () => {
                   onSelect();
@@ -178,10 +178,10 @@ export function FormBuilderSectionHeader({
               },
               {
                 id: 'delete',
-                label: `Delete ${name} section`,
+                label: `Delete ${name} Section`,
                 disabled: deleteDisabled,
                 tooltip: deleteDisabled
-                  ? 'This section contains required, locked Inquiry fields.'
+                  ? 'This Section Contains Protected Core Fields.'
                   : undefined,
                 icon: GlobalIcons.delete,
                 color: 'error.main',

@@ -105,10 +105,10 @@ describe('single-page stage drawer', { timeout: 15000 }, () => {
         onSave={vi.fn()}
       />
     );
-    expect(screen.getByRole('combobox', { name: 'Published form version *' })).toHaveTextContent(
+    expect(screen.getByRole('combobox', { name: 'Published Form Version *' })).toHaveTextContent(
       'Application form · v2'
     );
-    expect(screen.getByRole('combobox', { name: 'Published form version *' })).toHaveAttribute(
+    expect(screen.getByRole('combobox', { name: 'Published Form Version *' })).toHaveAttribute(
       'aria-disabled',
       'true'
     );
@@ -128,7 +128,7 @@ describe('single-page stage drawer', { timeout: 15000 }, () => {
       [],
       [form, inquiry, draft]
     );
-    await user.click(screen.getByRole('combobox', { name: 'Published form version *' }));
+    await user.click(screen.getByRole('combobox', { name: 'Published Form Version *' }));
     expect(screen.getByRole('option', { name: 'Application form · v2' })).toBeVisible();
     expect(screen.queryByRole('option', { name: /Inquiry form/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('option', { name: /Draft registration/ })).not.toBeInTheDocument();
@@ -143,11 +143,11 @@ describe('single-page stage drawer', { timeout: 15000 }, () => {
       [form, inquiry]
     );
     expect(screen.getByText(/Inquiry forms cannot be used in this stage/)).toBeVisible();
-    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
+    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
     expect(onSave).not.toHaveBeenCalled();
-    await user.click(screen.getByRole('combobox', { name: 'Published form version *' }));
+    await user.click(screen.getByRole('combobox', { name: 'Published Form Version *' }));
     await user.click(screen.getByRole('option', { name: 'Application form · v2' }));
-    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
+    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(JSON.parse(onSave.mock.calls[0][0].configurationJson)).toMatchObject({
       formDefinitionId: form.id,
@@ -182,9 +182,9 @@ describe('single-page stage drawer', { timeout: 15000 }, () => {
         onSave={vi.fn()}
       />
     );
-    expect(screen.getByRole('heading', { name: 'Stage details' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Stage Details' })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Next step' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Choose next step' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Choose Next Step' })).not.toBeInTheDocument();
   });
   it('shows Form details, completion and advanced controls together without the stepper or removed fields', async () => {
     const { user, onSave } = setup(
@@ -201,31 +201,31 @@ describe('single-page stage drawer', { timeout: 15000 }, () => {
         extension: 'keep',
       })
     );
-    ['Stage details', 'Form completion', 'Stage behavior', 'Advanced submission settings'].forEach(
+    ['Stage Details', 'Form Completion', 'Stage Behavior', 'Advanced Submission Settings'].forEach(
       (name) => expect(screen.getByRole('heading', { name })).toBeInTheDocument()
     );
     expect(screen.queryByRole('heading', { name: 'Next step' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Choose next step' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: 'Advanced settings' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Choose Next Step' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Advanced Settings' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Next' })).not.toBeInTheDocument();
     expect(screen.queryByRole('tablist')).not.toBeInTheDocument();
     expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument();
     expect(screen.queryByRole('combobox', { name: 'Completed by' })).not.toBeInTheDocument();
     expect(screen.queryByRole('spinbutton', { name: 'Due after in days' })).not.toBeInTheDocument();
     expect(screen.queryByRole('spinbutton', { name: 'Submission limit' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('switch', { name: 'Show Save draft' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('switch', { name: 'Show Save Draft' })).not.toBeInTheDocument();
     expect(
       screen.queryByRole('switch', { name: 'Move to the next stage automatically' })
     ).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Apply changes' })).toHaveClass(
+    expect(screen.getByRole('button', { name: 'Apply Changes' })).toHaveClass(
       'MuiButton-sizeSmall'
     );
     expect(screen.getByRole('button', { name: 'Back' }).parentElement).toHaveStyle({
       justifyContent: 'flex-end',
     });
-    await user.click(screen.getByRole('switch', { name: 'Allow corrections' }));
-    await user.click(screen.getByRole('switch', { name: 'End of journey' }));
-    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
+    await user.click(screen.getByRole('switch', { name: 'Allow Corrections' }));
+    await user.click(screen.getByRole('switch', { name: 'End Of Journey' }));
+    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     const saved = onSave.mock.calls[0][0];
     expect(saved).toMatchObject({
@@ -251,14 +251,14 @@ describe('single-page stage drawer', { timeout: 15000 }, () => {
     expect(
       screen.queryByRole('button', { name: 'Submission and verification' })
     ).not.toBeInTheDocument();
-    expect(screen.getByText('Allow corrections')).toBeVisible();
-    expect(screen.getByRole('switch', { name: 'Allow corrections' })).toBeChecked();
-    expect(screen.getByText('Required stage')).toBeVisible();
-    expect(screen.getByText('Entry stage')).toBeVisible();
+    expect(screen.getByText('Allow Corrections')).toBeVisible();
+    expect(screen.getByRole('switch', { name: 'Allow Corrections' })).toBeChecked();
+    expect(screen.getByText('Required Stage')).toBeVisible();
+    expect(screen.getByText('Entry Stage')).toBeVisible();
     expect(
-      screen.getByText('End of journey', { selector: '.MuiFormControlLabel-label' })
+      screen.getByText('End Of Journey', { selector: '.MuiFormControlLabel-label' })
     ).toBeVisible();
-    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
+    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(JSON.parse(onSave.mock.calls[0][0].configurationJson).form).toMatchObject(
       DEFAULT_FORM_STAGE_POLICY
@@ -267,11 +267,11 @@ describe('single-page stage drawer', { timeout: 15000 }, () => {
   it('removes staff verification settings while preserving normal completion controls', async () => {
     const { user, onSave } = setup(JSON.stringify({ formDefinitionId: form.id }));
     expect(
-      screen.queryByRole('switch', { name: /Require staff verification/ })
+      screen.queryByRole('switch', { name: /Require Staff Verification/ })
     ).not.toBeInTheDocument();
-    expect(screen.queryByText('Sections staff must verify')).not.toBeInTheDocument();
-    expect(screen.getByRole('switch', { name: 'Allow corrections' })).toBeChecked();
-    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
+    expect(screen.queryByText('Sections Staff Must Verify')).not.toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: 'Allow Corrections' })).toBeChecked();
+    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(JSON.parse(onSave.mock.calls[0][0].configurationJson).form).toMatchObject({
       requireSectionVerification: false,
@@ -283,47 +283,47 @@ describe('single-page stage drawer', { timeout: 15000 }, () => {
       stage,
       { ...stage, id: 'other-entry', code: 'OTHER_ENTRY' },
     ]);
-    expect(screen.queryByRole('switch', { name: 'Entry stage' })).not.toBeInTheDocument();
-    expect(screen.getByRole('switch', { name: 'End of journey' })).toBeInTheDocument();
+    expect(screen.queryByRole('switch', { name: 'Entry Stage' })).not.toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: 'End Of Journey' })).toBeInTheDocument();
   });
   it('keeps the current Entry stage toggle available so staff can change the starting stage', async () => {
     const { user, onSave } = setup(JSON.stringify({ formDefinitionId: form.id }), {}, [stage]);
-    expect(screen.getByRole('switch', { name: 'Entry stage' })).toBeChecked();
-    await user.click(screen.getByRole('switch', { name: 'Entry stage' }));
-    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
+    expect(screen.getByRole('switch', { name: 'Entry Stage' })).toBeChecked();
+    await user.click(screen.getByRole('switch', { name: 'Entry Stage' }));
+    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(onSave.mock.calls[0][0].isEntryStage).toBe(false);
   });
   it('blocks an unattached form and exposes the published-form validation', async () => {
     const { user, onSave } = setup();
-    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
+    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
     expect(await screen.findByText('Select a published form version.')).toBeInTheDocument();
     expect(onSave).not.toHaveBeenCalled();
   });
   it('preserves field validation and entered values when applying invalid stage details', async () => {
     const { user, onSave } = setup(JSON.stringify({ formDefinitionId: form.id }));
-    await user.clear(screen.getByRole('textbox', { name: 'Stage name *' }));
-    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
+    await user.clear(screen.getByRole('textbox', { name: 'Stage Name *' }));
+    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
     expect(await screen.findByText('Stage name is required')).toBeInTheDocument();
     expect(onSave).not.toHaveBeenCalled();
   });
   it('explains invalid saved internal references without exposing a code input', async () => {
     const { user, onSave } = setup(JSON.stringify({ formDefinitionId: form.id }), { code: '' });
-    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
+    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
     expect(await screen.findByText(/This stage has invalid saved details/)).toBeInTheDocument();
     expect(screen.queryByRole('textbox', { name: 'Stage code *' })).not.toBeInTheDocument();
-    expect(screen.getByRole('textbox', { name: 'Stage name *' })).toHaveValue(stage.name);
+    expect(screen.getByRole('textbox', { name: 'Stage Name *' })).toHaveValue(stage.name);
     expect(onSave).not.toHaveBeenCalled();
   });
   it('protects unsaved changes when Back closes the editor', async () => {
     const { user, onSave } = setup(JSON.stringify({ formDefinitionId: form.id }));
-    await user.type(screen.getByRole('textbox', { name: 'Stage name *' }), ' changed');
+    await user.type(screen.getByRole('textbox', { name: 'Stage Name *' }), ' changed');
     await user.click(screen.getByRole('button', { name: 'Back' }));
     expect(
-      await screen.findByRole('heading', { name: 'Discard stage changes?', level: 2 })
+      await screen.findByRole('heading', { name: 'Discard Stage Changes?', level: 2 })
     ).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
-    expect(screen.getByRole('textbox', { name: 'Stage name *' })).toHaveValue('Form changed');
+    expect(screen.getByRole('textbox', { name: 'Stage Name *' })).toHaveValue('Form changed');
     expect(onSave).not.toHaveBeenCalled();
   });
   it('allows read-only closing without validating or saving', async () => {
@@ -340,9 +340,9 @@ describe('single-page stage drawer', { timeout: 15000 }, () => {
         onSave={onSave}
       />
     );
-    expect(screen.getByRole('textbox', { name: 'Stage name *' })).toBeDisabled();
-    expect(screen.getByRole('switch', { name: 'Required stage' })).toBeDisabled();
-    expect(screen.queryByRole('button', { name: 'Apply changes' })).not.toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Stage Name *' })).toBeDisabled();
+    expect(screen.getByRole('switch', { name: 'Required Stage' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Apply Changes' })).not.toBeInTheDocument();
     await userEvent.setup().click(screen.getByRole('button', { name: 'Close' }));
     expect(onClose).toHaveBeenCalledOnce();
     expect(onSave).not.toHaveBeenCalled();
@@ -370,10 +370,10 @@ describe('single-page stage drawer', { timeout: 15000 }, () => {
     );
     expect(screen.queryByRole('checkbox', { name: 'Applicant details' })).not.toBeInTheDocument();
     expect(
-      screen.queryByRole('switch', { name: /Require staff verification/ })
+      screen.queryByRole('switch', { name: /Require Staff Verification/ })
     ).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Apply changes' })).toBeEnabled();
-    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
+    expect(screen.getByRole('button', { name: 'Apply Changes' })).toBeEnabled();
+    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(loadSections).not.toHaveBeenCalled();
     expect(JSON.parse(onSave.mock.calls[0][0].configurationJson)).toMatchObject({
@@ -401,9 +401,9 @@ describe('single-page stage drawer', { timeout: 15000 }, () => {
       [],
       [{ ...form, sections: [] }]
     );
-    await user.click(screen.getByRole('combobox', { name: 'Published form version *' }));
+    await user.click(screen.getByRole('combobox', { name: 'Published Form Version *' }));
     await user.click(screen.getByRole('option', { name: 'Application form · v2' }));
-    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
+    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(loadSections).not.toHaveBeenCalled();
     expect(JSON.parse(onSave.mock.calls[0][0].configurationJson)).toMatchObject({

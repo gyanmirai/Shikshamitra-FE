@@ -82,12 +82,12 @@ export function AdmissionWorkflowStageDrawer(props: Props) {
                       ? 'Review this stage’s details and completion rules.'
                       : 'Apply changes updates this stage in the journey. Use Save draft to store the workflow.'
                   }
-                  helpLabel="Stage configuration information"
+                  helpLabel="Stage Configuration Information"
                 />
               </Typography>
             </Box>
             <IconButton
-              aria-label="Close stage editor"
+              aria-label="Close Stage Editor"
               size="small"
               onClick={requestClose}
               sx={{ width: 44, height: 44, flexShrink: 0 }}
@@ -161,7 +161,7 @@ export function AdmissionWorkflowStageDrawer(props: Props) {
                 }
                 startIcon={<Iconify icon={readOnly ? 'mdi:close' : 'mdi:content-save-outline'} />}
               >
-                {readOnly ? 'Close' : 'Apply changes'}
+                {readOnly ? 'Close' : 'Apply Changes'}
               </Button>
             </Stack>
           </Box>
@@ -170,11 +170,11 @@ export function AdmissionWorkflowStageDrawer(props: Props) {
       <ConfirmDialog
         open={discard.value}
         onClose={discard.onFalse}
-        title="Discard stage changes?"
+        title="Discard Stage Changes?"
         content="Your changes to this stage have not been added to the workflow draft."
         action={
           <Button size="small" variant="contained" color="error" onClick={close}>
-            Discard changes
+            Discard Changes
           </Button>
         }
       />

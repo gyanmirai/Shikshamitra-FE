@@ -10,6 +10,7 @@ export type AcademicInsightsQuery = AcademicInsightsInput & { accessKey: string 
 export const academicInsightsApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
     getAcademicInsights: builder.query<AcademicInsightsResponse, AcademicInsightsQuery>({
+      keepUnusedDataFor: 300,
       async queryFn(input, _queryApi, _options, baseQuery) {
         const { academicYearId, boardId, educationMediumId, standardId, divisionId, studentId } = input;
         const result = await baseQuery({

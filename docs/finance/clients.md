@@ -3,12 +3,32 @@ module: finance
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-31
+updated_on: 2026-11-04
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Find Finance frontend clients
+
+## Fee Structure editor reads
+
+Only the active structure renders its workflow body. The card keeps its in-memory
+draft, action permissions and mounted form state when another structure is selected.
+Policy and term catalogs start on the first activation of that editor; visited editors
+retain their shared subscriptions so returning does not reset a completed multipage
+catalog or an unchanged publication review. The year-wide fee-head catalog stays
+shared. Schedule detail and window-focus refresh run only for the active editor.
+Explicit catalog refresh traverses fresh pages, including defaults on later pages.
+
+Copy sources use the existing scoped class reads with at most four concurrent
+requests. Results preserve class order and every saved structure; a failed class read
+returns an error instead of an incomplete source list.
+Payment Term source-year options are requested when the Clone dialog opens, subject to the existing Clone permission.
+
+Internal Finance navigation defers route downloads until navigation. The shared
+`src/components/nav-section/hooks.tsx` passes `prefetch={false}` through `RouterLink`;
+query preservation, permissions, external links and non-link groups retain their
+normal behavior. A first visit may need to fetch the destination route files.
 
 ## Admission assignment context
 
@@ -73,10 +93,10 @@ Admission collection responses and Records withdrawal preview rows share the out
 Refund eligibility and request types in `src/redux/finance/RefundManagement/feeRefundManage.ts`
 support the separate **Paid charges** and **Paid late fees** groups with distinct selection keys. `FeeHeadRefundTable` preserves the charge/payment/
 receipt references when selecting one row or a whole group. `buildFeeRefundApiPayload` sends
-`chargeId` for charge payments, `lateFeeDueFeeId` for late-fee payments, and `dueFeeId` for fee dues; all use the existing receipt selection
-restriction. Replacement hydration and the refund detail table retain charge names and amounts.
-When the policy requires the whole receipt, the client preserves all selected source amounts
-and lets the server apportion any policy cap, including sources whose payout share rounds to zero.
+`chargeId` for charge payments, `lateFeeDueFeeId` for late-fee payments, and `dueFeeId` for fee dues, with each line's `sourceReceiptId`.
+Selections span eligible receipts, heads and months. Edit and replacement payloads preserve the original lead `originalReceiptId` independently of selection order; responses expose `sourceReceipts` for receipt-number display and search.
+Replacement hydration and the refund detail table retain charge names and amounts.
+For Full requests, the client preserves selected source amounts and lets the server apportion formula limits and caps, including sources whose payout share rounds to zero. The legacy policy partial-refund flag does not lock the request's Full/Partial choice.
 See the [backend contract](../../../Shikshamitra-BE/docs/modules/finance/api.md#paid-charges-in-refund-requests).
 Focused checks: `RefundSelection.test.tsx` and `RefundForm.test.tsx` in the refund form folder.
 
@@ -199,6 +219,12 @@ Confirm request and response behavior there before changing a client shape.
 
 ## Cache and mapper rules
 
+Successful concession Create and Submit commands invalidate both `concessionRequest` and
+`feeRefund`: administrator submission can approve immediately and create linked refunds.
+This refreshes subscribed Refunds queries and expires inactive cached lists before the next
+visit. Failed commands preserve the loaded refund queries. Explicit approval and manual
+linked-refund creation retain their existing refund invalidation.
+
 The collection ledger preserves `refundAmount` / `refundDescription` as completed-payout
 history and maps optional `pendingRefundAmount` / `pendingRefundDescription` separately
 through both month and fee-head views. It displays the server's retained `paid` value without
@@ -241,6 +267,12 @@ Use [the workspace contract](./references/income-expense-workspaces.md) for UI b
 
 ## Receipt lifecycle client fields
 
+Collection, charge, receipt-history, reconciliation and mobile receipt downloads share the backend's classic PDF composer and configured school identity; the frontend does not reconstruct printable monetary totals.
+Refunds use `useDownloadRefundReceiptPdfMutation` from `feeRefundManage.ts` for the authenticated `GET /fee-refunds/{id}/receipt/pdf`, returning `{ blob, fileName }` with the server Content-Disposition filename.
+`RefundReceiptDialog` uses the shared canvas `PdfPreview`, revokes object URLs, retries only the PDF read, and reloads when the same payout changes from provisional to final.
+The refund detail view exposes the preview only for Processing/Completed requests and retires an open preview if the payout becomes ineligible.
+Presentation, legacy balance handling and payout-state rules belong to the [backend receipt contract](../../../Shikshamitra-BE/docs/modules/finance/references/receipt-lifecycle.md).
+
 Collection responses optionally expose `feeReceiptAmount` and `chargeReceiptAmount`, the actual
 issued document totals. `collectionReceiptAmounts.ts` prefers these amounts, including receipt
 replays. When absent, the legacy contract places paid late fees on the fee receipt whenever a
@@ -263,3 +295,27 @@ Receipt and reconciliation list clients carry serialized `filters` alongside the
 Charge detail student lists declare Collected, Waived and Outstanding as numeric filters. Equals, Greater Than, Less Than and Between compare raw currency amounts, including fractional values; INR formatting is applied only to the displayed cell.
 
 Cash expense Paid, adjustment target Applied Amount and collection outcome Paid/Pending after also use numeric criteria over raw amounts. Cash expense Payment date uses date criteria over the recorded datetime. These detail menus are independent of the table toolbar; hiding that toolbar does not disable the per-column filters.
+
+Cash Management's existing page response adds `activitySummary` (`collected`, `spent`, `deposited`) for the activity cards. `summary` still describes filtered source rows, while `yearSummary` and `availableCash` retain cumulative academic-year positions. Query month/year and existing non-month scope are unchanged.
+
+The collection summary response adds `paidCharges`; `FeeCollectionTable` sends its numeric sort/filter criteria to the existing summary endpoint and preserves it in the shared column picker and export flow. The optional client field supports older cached responses without inventing a zero balance. Backend ownership: [charge balance projection](../../../Shikshamitra-BE/docs/modules/finance/api.md#staff-collection-charge-balances).
+
+The collection summary also exposes `refundAmount` separately from gross `paidFees`. `FeeCollectionTable` displays Total Fees, Total Concession Amount, Refund Amount, Paid Fees, Pending Fees, then the existing charge/status/action columns. Refund Amount uses the shared INR formatter, column picker/export and server numeric filter/sort wiring. Refund timing and balances are owned by the [backend collection contract](../../../Shikshamitra-BE/docs/modules/finance/api.md).
+
+## Finance setup guide client
+
+| Source | Responsibility |
+| --- | --- |
+| `src/redux/finance/setup/api.ts` | State query and progress mutation injected into the existing Finance module API |
+| `src/redux/finance/setup/types.ts` | Typed year-scoped configuration and guide progress responses |
+| `src/screens/finance/setup/use-finance-setup-progress.ts` | Resume, deferred settings, save locks, safe navigation and explicit concurrency reload |
+
+Cache arguments include tenant/user identity and academic year.
+Only `currentData` matching the selected year is displayed.
+The query provides the guide and owning category, account, term, policy and structure tags.
+Successful progress writes update the same scoped cache; failed writes preserve the current position.
+The twelve configuration screens are lazy-loaded by `FinanceSetupManager.tsx`. The embedding header adapter preserves standalone breadcrumbs and native actions, reports open editors, and prevents guide/year navigation until editors close.
+Owning mutation tags, editor closure, focus and explicit refresh update configuration checks; background refreshes never unmount the active screen.
+Backend contracts are owned by [Finance API documentation](../../../Shikshamitra-BE/docs/modules/finance/api.md).
+
+Finance table search fields use the exact placeholder `Search` through the shared table’s `searchFieldProps`. Keep search fields, existing accessible labels, query handling and filtering unchanged when applying this presentation convention.

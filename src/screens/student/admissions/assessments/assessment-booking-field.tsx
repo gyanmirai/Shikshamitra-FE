@@ -78,7 +78,7 @@ export function AssessmentBookingField({
         </StudentFeedback>
       )}
       <CustomSelect
-        label="Assessment session"
+        label="Assessment Session"
         value={value}
         onChange={(next) => {
           onChange(String(next));
@@ -90,12 +90,12 @@ export function AssessmentBookingField({
         helperText={error}
         options={available.map((session) => ({
           value: session.id,
-          label: `${session.name} · ${dayjs(normalizeAssessmentDateTime(session.startsAt)).format('DD MMM, h:mm A')} · ${session.location} · ${session.capacity - session.bookedCount} places`,
+          label: `${session.name} · ${dayjs(normalizeAssessmentDateTime(session.startsAt)).format('DD MMM, h:mm A')} · ${session.location} · ${session.capacity - session.bookedCount} Places`,
         }))}
         noOptionsMessage={
           inlineBooking
-            ? 'No slots available'
-            : 'No available sessions. Create a session under Admissions → Assessments.'
+            ? 'No Slots Available'
+            : 'No Available Sessions. Create a Session Under Admissions → Assessments.'
         }
       />
       {inlineBooking &&
@@ -104,6 +104,7 @@ export function AssessmentBookingField({
         (available.length ? (
           onAddSlot && (
             <Button
+              aria-label="Add Slot"
               size="small"
               variant="outlined"
               sx={{ alignSelf: 'flex-end' }}
@@ -111,25 +112,26 @@ export function AssessmentBookingField({
               onClick={onAddSlot}
               startIcon={<Iconify icon="mdi:plus" />}
             >
-              Add Slot
+              Slot
             </Button>
           )
         ) : (
           <EmptyContent
-            title="No slots available"
+            title="No Slots Available"
             sx={{ py: 5, height: 'auto' }}
             slotProps={{ img: { maxWidth: 64 } }}
             action={
               <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
                 {onAddSlot && (
                   <Button
+                    aria-label="Add Slot"
                     size="small"
                     variant="contained"
                     disabled={disabled}
                     onClick={onAddSlot}
                     startIcon={<Iconify icon="mdi:plus" />}
                   >
-                    Add Slot
+                    Slot
                   </Button>
                 )}
                 <Button
@@ -162,7 +164,7 @@ export function AssessmentBookingField({
             </StudentFeedback>
           )}
           <CustomSelect
-            label="Interview time slot"
+            label="Interview Time Slot"
             error={Boolean(slotError)}
             helperText={slotError}
             value={slotStartsAt}
@@ -175,7 +177,7 @@ export function AssessmentBookingField({
                 slot.endsAt
               ).format('h:mm A')}`,
             }))}
-            noOptionsMessage="No interview slots are available. Choose another session."
+            noOptionsMessage="No Interview Slots Are Available. Choose Another Session."
           />
         </>
       )}

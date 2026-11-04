@@ -128,7 +128,7 @@ export function AdmissionCycleConfigurationDialog({
         <AdmissionDialogTitle
           title={titles[mode]}
           helpText={descriptions[mode]}
-          helpLabel={`${titles[mode]} information`}
+          helpLabel={`${titles[mode]} Information`}
         />
       }
       maxWidth="sm"
@@ -155,14 +155,14 @@ export function AdmissionCycleConfigurationDialog({
                   fullWidth
                   required
                   size="small"
-                  label="Cycle name"
+                  label="Cycle Name"
                   value={name}
                   onChange={(event) => setName(event.target.value.slice(0, 128))}
                 />
               </Grid>
               <Grid size={{ xs: 12 }}>
                 <CustomSelect
-                  label="Academic year"
+                  label="Academic Year"
                   name="academicYearId"
                   value={academicYearId}
                   options={academicYears.map((year) => ({ value: year.id, label: year.name }))}
@@ -176,7 +176,7 @@ export function AdmissionCycleConfigurationDialog({
                   multiline
                   minRows={2}
                   size="small"
-                  label="Description (optional)"
+                  label="Description (Optional)"
                   value={description}
                   onChange={(event) => setDescription(event.target.value.slice(0, 1000))}
                 />
@@ -188,7 +188,7 @@ export function AdmissionCycleConfigurationDialog({
             <>
               <Grid size={{ xs: 12, sm: 6 }}>
                 <DatePicker
-                  label="Applications open"
+                  label="Applications Open"
                   format={ADMISSION_DATE_FORMAT}
                   value={startDate ? dayjs(startDate) : null}
                   onChange={(value) =>
@@ -199,7 +199,7 @@ export function AdmissionCycleConfigurationDialog({
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
                 <DatePicker
-                  label="Applications close"
+                  label="Applications Close"
                   format={ADMISSION_DATE_FORMAT}
                   value={endDate ? dayjs(endDate) : null}
                   onChange={(value) =>
@@ -228,7 +228,7 @@ export function AdmissionCycleConfigurationDialog({
                 multiline
                 minRows={2}
                 size="small"
-                label="Reason for revising the window"
+                label="Reason for Revising the Window"
                 value={reason}
                 onChange={(event) => setReason(event.target.value.slice(0, 500))}
                 helperText={`${reason.length}/500 characters`}
@@ -241,7 +241,7 @@ export function AdmissionCycleConfigurationDialog({
               {cycle.status === 0 && (
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <DateTimePicker
-                    label="Publish at"
+                    label="Publish At"
                     format={ADMISSION_DATE_TIME_FORMAT}
                     value={publishAt ? dayjs(publishAt) : null}
                     onChange={(value) => {
@@ -254,7 +254,7 @@ export function AdmissionCycleConfigurationDialog({
               )}
               <Grid size={{ xs: 12, sm: 6 }}>
                 <DateTimePicker
-                  label="Close at"
+                  label="Close At"
                   format={ADMISSION_DATE_TIME_FORMAT}
                   value={closeAt ? dayjs(closeAt) : null}
                   onChange={(value) => {
@@ -300,10 +300,10 @@ export function AdmissionCycleConfigurationDialog({
           startIcon={<Iconify icon={GlobalIcons.submit} />}
         >
           {mode === 'clone'
-            ? 'Create draft copy'
+            ? 'Create Draft Copy'
             : mode === 'window'
-              ? 'Update window'
-              : 'Save schedule'}
+              ? 'Update Window'
+              : 'Save Schedule'}
         </LoadingButton>
       </DialogActions>
     </CustomDialog>

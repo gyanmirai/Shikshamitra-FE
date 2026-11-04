@@ -58,29 +58,29 @@ it('saves incomplete draft, submits required confirmations using the refreshed s
       onComplete={onComplete}
     />
   );
-  await user.click(await screen.findByRole('button', { name: 'Review and recommend' }));
+  await user.click(await screen.findByRole('button', { name: 'Review and Recommend' }));
   const dialog = within(screen.getByRole('dialog'));
-  await user.type(dialog.getByLabelText('Review notes'), 'Waiting for confirmation.');
-  await user.click(dialog.getByRole('button', { name: 'Save draft' }));
+  await user.type(dialog.getByLabelText('Review Notes'), 'Waiting for confirmation.');
+  await user.click(dialog.getByRole('button', { name: 'Save Draft' }));
   await waitFor(() => expect(requests).toHaveLength(1));
   expect(requests[0].body.recommendation).toBeNull();
   await waitFor(() =>
-    expect(dialog.getByRole('button', { name: 'Submit recommendation' })).toBeEnabled()
+    expect(dialog.getByRole('button', { name: 'Submit Recommendation' })).toBeEnabled()
   );
-  await user.click(dialog.getByRole('button', { name: 'Submit recommendation' }));
+  await user.click(dialog.getByRole('button', { name: 'Submit Recommendation' }));
   expect(await dialog.findByText('Choose a recommendation before submitting.')).toBeInTheDocument();
   await user.click(dialog.getByRole('combobox', { name: 'Recommendation' }));
-  await user.click(await screen.findByRole('option', { name: 'Recommend approval' }));
+  await user.click(await screen.findByRole('option', { name: 'Recommend Approval' }));
   await user.type(
-    dialog.getByLabelText('Recommendation reason'),
+    dialog.getByLabelText('Recommendation Reason'),
     'The identity matches the evidence.'
   );
-  await user.click(dialog.getByRole('button', { name: 'Submit recommendation' }));
+  await user.click(dialog.getByRole('button', { name: 'Submit Recommendation' }));
   expect(
     await dialog.findByText('Confirm every required checklist item before submitting.')
   ).toBeInTheDocument();
   await user.click(dialog.getByRole('checkbox', { name: 'Identity confirmed *' }));
-  await user.click(dialog.getByRole('button', { name: 'Submit recommendation' }));
+  await user.click(dialog.getByRole('button', { name: 'Submit Recommendation' }));
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   expect(requests).toHaveLength(2);
   expect(requests[1]).toMatchObject({
@@ -92,7 +92,7 @@ it('saves incomplete draft, submits required confirmations using the refreshed s
       checklist: [{ code: 'IDENTITY', checked: true }],
     },
   });
-  expect(await screen.findByText('Awaiting decision')).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Continue admission' })).toBeDisabled();
+  expect(await screen.findByText('Awaiting Decision')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Continue Admission' })).toBeDisabled();
   expect(onComplete).not.toHaveBeenCalled();
 }, 20000);

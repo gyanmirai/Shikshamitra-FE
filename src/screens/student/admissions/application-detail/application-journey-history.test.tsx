@@ -1,5 +1,6 @@
 import { it, vi, expect, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import { expectStudentErrorToast } from 'src/test/student-toast-test-fixture';
 
 import { ApplicationJourneyHistory } from './application-journey-history';
 
@@ -39,18 +40,22 @@ beforeEach(() => {
 it('shows history for the actual applicant with the recorded staff name', () => {
   render(<ApplicationJourneyHistory applicantId="applicant-1" />);
   expect(state.query).toHaveBeenCalledWith('applicant-1');
-  expect(screen.getByText(/Handled by: Asha Sharma/)).toBeInTheDocument();
+  expect(screen.getByText(/Handled By: Asha Sharma/)).toBeInTheDocument();
 });
 it('keeps pending history distinct from an empty history', () => {
   state.loading = true;
   render(<ApplicationJourneyHistory applicantId="applicant-1" />);
-  expect(screen.getByLabelText('Loading journey activity')).toBeInTheDocument();
-  expect(screen.queryByText('No activity recorded')).not.toBeInTheDocument();
+  expect(screen.getByLabelText('Loading Journey Activity')).toBeInTheDocument();
+  expect(screen.queryByText('No Activity Recorded')).not.toBeInTheDocument();
 });
-it('lets staff retry a failed history read without showing stale staff actions', () => {
+it('announces a failed history read and restores current history after recovery', async () => {
   state.error = true;
-  render(<ApplicationJourneyHistory applicantId="applicant-1" />);
-  expect(screen.queryByText(/Handled by: Asha Sharma/)).not.toBeInTheDocument();
-  fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
-  expect(state.refetch).toHaveBeenCalledOnce();
+  const view = render(<ApplicationJourneyHistory applicantId="applicant-1" />);
+  expect(screen.queryByText(/Handled By: Asha Sharma/)).not.toBeInTheDocument();
+  await expectStudentErrorToast('Journey activity could not be loaded.');
+  expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+  expect(state.refetch).not.toHaveBeenCalled();
+  state.error = false;
+  view.rerender(<ApplicationJourneyHistory applicantId="applicant-1" />);
+  expect(screen.getByText(/Handled By: Asha Sharma/)).toBeInTheDocument();
 });

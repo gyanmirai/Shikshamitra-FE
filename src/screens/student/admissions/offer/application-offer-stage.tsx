@@ -82,28 +82,28 @@ export function ApplicationOfferStage({
     {
       show: canWrite && state.canIssue,
       action: 'issue' as const,
-      label: 'Issue offer',
+      label: 'Issue Offer',
       icon: 'mdi:email-fast-outline',
       variant: 'contained' as const,
     },
     {
       show: canWrite && state.canAccept,
       action: 'accept' as const,
-      label: 'Record acceptance',
+      label: 'Record Acceptance',
       icon: 'mdi:check-circle-outline',
       variant: 'contained' as const,
     },
     {
       show: canWrite && state.canDecline,
       action: 'decline' as const,
-      label: 'Record decline',
+      label: 'Record Decline',
       icon: 'mdi:close-circle-outline',
       variant: 'outlined' as const,
     },
     {
       show: canWrite && state.canExtend,
       action: 'extend' as const,
-      label: 'Extend expiry',
+      label: 'Extend Expiry',
       icon: 'mdi:calendar-plus',
       variant: 'outlined' as const,
     },
@@ -117,7 +117,7 @@ export function ApplicationOfferStage({
     {
       show: canWrite && state.canReissue,
       action: 'reissue' as const,
-      label: 'Reissue offer',
+      label: 'Reissue Offer',
       icon: 'mdi:email-sync-outline',
       variant: 'contained' as const,
     },
@@ -143,7 +143,7 @@ export function ApplicationOfferStage({
         <Stack spacing={2}>
           <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" gap={1}>
             <Stack>
-              <Typography variant="h6">{state.policy?.title ?? 'Admission offer'}</Typography>
+              <Typography variant="h6">{state.policy?.title ?? 'Admission Offer'}</Typography>
               <Typography variant="body2" color="text.secondary">
                 Version {Math.max(1, state.versionNumber)} · {state.policy?.offerType}
               </Typography>
@@ -214,7 +214,7 @@ export function ApplicationOfferStage({
           </Stack>
           <Divider />
           <Stack>
-            <Typography variant="subtitle2">Offer history</Typography>
+            <Typography variant="subtitle2">Offer History</Typography>
             <OfferHistory events={state.events} />
           </Stack>
         </Stack>

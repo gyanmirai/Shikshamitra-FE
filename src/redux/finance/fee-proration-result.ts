@@ -4,7 +4,7 @@ export type FeeProrationResult = {
   policyVersionId?: string;
   policyName: string;
   policyVersion: number;
-  joiningDate: string;
+  joiningDate: string | null;
   chargeStartDate: string;
   chargeEndDate: string;
   scheduledAmount: number;

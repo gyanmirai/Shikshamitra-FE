@@ -3,7 +3,7 @@ module: finance
 domain: routes
 content_type: Reference
 status: canonical
-updated_on: 2026-10-28
+updated_on: 2026-11-03
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -27,8 +27,8 @@ Active Fee Structure editor, typed client and browser checks: [workspace impleme
 
 ## Active menu routes
 
-Use this table for visible Finance navigation. The Adjustments menu entry is commented out;
-the `/finance/adjustments` route remains implemented for direct access.
+Use this table for visible Finance navigation. Adjustments is available under Fees;
+its menu and route require `Finance.Fees.Adjustment.View`.
 
 | Menu label           | Route                                       | Source                          |
 | -------------------- | ------------------------------------------- | ------------------------------- |
@@ -40,6 +40,7 @@ the `/finance/adjustments` route remains implemented for direct access.
 | Refunds              | `/finance/fee-refund`                       | `src/constants/finance-menu.ts` |
 | Receipts             | `/finance/invoice-receipt`                  | `src/constants/finance-menu.ts` |
 | Concessions          | `/finance/concession`                       | `src/constants/finance-menu.ts` |
+| Adjustments          | `/finance/adjustments`                      | `src/constants/finance-menu.ts` |
 | Fee Structure Assign | `/finance/fee-structure-assign`             | `src/constants/finance-menu.ts` |
 | Fee Category         | `/finance/settings/fee-category`            | `src/constants/finance-menu.ts` |
 | Fee Head             | `/finance/settings/fee-head`                | `src/constants/finance-menu.ts` |
@@ -97,3 +98,12 @@ The implemented selectors, retired Account Heads route, lookup permissions, cach
 
 Separate registers use exact IncomeTracking.View and ExpenseTracking.View grants in navigation, route and screen guards.
 See [Income and Expenses workspaces](./references/income-expense-workspaces.md).
+
+## Finance setup guide
+
+`/finance/setup` is a protected full-screen guide, linked from Finance > Setup guide.
+`src/app/finance/setup/page.tsx` uses the same authentication boundary as the Academic guide.
+The screen additionally requires Finance module visibility and any exact setup or operational View grant from `financeSetupViewPermissions`.
+The guide starts directly at Accounts Setup and uses the existing globally selected academic year; it does not create academic years.
+Stage and setting navigation uses `stage`, `setting` and `guideYear` query parameters.
+A position belonging to another guide year is ignored in favour of that year's saved position.

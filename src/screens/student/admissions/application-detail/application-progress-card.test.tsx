@@ -62,7 +62,7 @@ describe('ApplicationProgressCard', () => {
 
     const summary = screen.getByRole('button', { name: /Step 4 of 8/ });
     expect(summary).toHaveAttribute('aria-expanded', 'false');
-    expect(summary).toHaveTextContent('View journey');
+    expect(summary).toHaveTextContent('View Journey');
 
     fireEvent.click(summary);
     expect(summary).toHaveAttribute('aria-expanded', 'true');
@@ -73,12 +73,12 @@ describe('ApplicationProgressCard', () => {
     const onOverride = vi.fn();
     const { unmount } = renderCard(false, onOverride);
     fireEvent.click(screen.getByRole('button', { name: /Step 4 of 8/ }));
-    expect(screen.queryByRole('button', { name: 'Override route' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Override Route' })).not.toBeInTheDocument();
     unmount();
 
     renderCard(true, onOverride);
     fireEvent.click(screen.getByRole('button', { name: /Step 4 of 8/ }));
-    fireEvent.click(screen.getByRole('button', { name: 'Override route' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Override Route' }));
     expect(onOverride).toHaveBeenCalledOnce();
   });
 });

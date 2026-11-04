@@ -242,6 +242,13 @@ export type CorrectAdmissionApplicationFormInput = {
   values: { fieldCode: string; valueJson?: string | null }[];
 };
 export type AdmissionApplicationForm = {
+  autoFilledFieldCodes?: string[];
+  familyPrefill?: {
+    sourceApplicantId: string;
+    sourceApplicantName: string;
+    sourceApplicationId?: string | null;
+    relationship: 'father' | 'mother';
+  } | null;
   canCorrectForm?: boolean;
   correctionBlockedReason?: string | null;
   inquiryFormDefinitionId?: string | null;
@@ -488,12 +495,17 @@ export const admissionApplicationsApi = api.injectEndpoints({
         id: string;
         concurrencyStamp?: string | null;
         values: { fieldCode: string; valueJson?: string | null }[];
+        autoFilledFieldCodes?: string[];
       }
     >({
-      query: ({ id, concurrencyStamp, values }) => ({
+      query: ({ id, concurrencyStamp, values, autoFilledFieldCodes }) => ({
         url: `/student/enrollment/admissions/applications/${id}/form-values`,
         method: 'PATCH',
-        body: { concurrencyStamp, values },
+        body: {
+          concurrencyStamp,
+          values,
+          ...(autoFilledFieldCodes?.length ? { autoFilledFieldCodes } : {}),
+        },
       }),
       transformResponse: (response: Result<AdmissionApplicationForm> | AdmissionApplicationForm) =>
         unwrap(response),

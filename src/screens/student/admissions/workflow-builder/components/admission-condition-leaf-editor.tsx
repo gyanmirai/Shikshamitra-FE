@@ -54,7 +54,7 @@ export function AdmissionConditionLeafEditor({
           <TextField
             {...params}
             size="small"
-            label="Applicant answer or fact"
+            label="Applicant Answer or Fact"
             helperText={
               strictTypes
                 ? 'Choose an answer from the selected published form.'
@@ -75,7 +75,7 @@ export function AdmissionConditionLeafEditor({
                 ...operators,
                 {
                   value: value.operator,
-                  label: `${value.operator} (not supported for this answer)`,
+                  label: `${value.operator} (Not Supported for This Answer)`,
                 },
               ]
             : operators
@@ -91,7 +91,7 @@ export function AdmissionConditionLeafEditor({
         <TextField
           size="small"
           fullWidth
-          label="Comparison value"
+          label="Comparison Value"
           type={
             strictTypes &&
             typeof selected !== 'string' &&

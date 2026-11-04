@@ -45,11 +45,11 @@ export function AdmissionCycleDetailsDialog({ cycle, onClose }: Props) {
 
   const metrics = [
     {
-      label: 'Linked offerings',
+      label: 'Linked Offerings',
       value: impactQuery.data?.linkedOfferingCount ?? cycle.linkedOfferingCount,
     },
     {
-      label: 'Active offerings',
+      label: 'Active Offerings',
       value: impactQuery.data?.activeOfferingCount ?? cycle.activeOfferingCount,
     },
     { label: 'Applications', value: impactQuery.data?.applicationCount ?? cycle.applicationCount },
@@ -61,13 +61,13 @@ export function AdmissionCycleDetailsDialog({ cycle, onClose }: Props) {
     <CustomDialog
       open
       handleClose={onClose}
-      title="Admission period details"
+      title="Admission Period Details"
       maxWidth="sm"
       hasForm={false}
     >
       <DialogScrollContent>
         <Stack spacing={3}>
-          <Box component="section" aria-label="Admission period">
+          <Box component="section" aria-label="Admission Period">
             <Typography component="h2" variant="h6" sx={{ overflowWrap: 'anywhere' }}>
               {cycle.name}
             </Typography>
@@ -85,7 +85,7 @@ export function AdmissionCycleDetailsDialog({ cycle, onClose }: Props) {
               </Label>
             </Stack>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              {cycle.code} · {cycle.academicYearName || 'Academic year not set'}
+              {cycle.code} · {cycle.academicYearName || 'Academic Year Not Set'}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
               Review this period’s admission window, usage, and recorded activity.
@@ -99,7 +99,7 @@ export function AdmissionCycleDetailsDialog({ cycle, onClose }: Props) {
 
           <Box component="section" aria-labelledby="admission-cycle-window-heading">
             <Typography id="admission-cycle-window-heading" variant="subtitle1" sx={{ mb: 1.5 }}>
-              Admission window
+              Admission Window
             </Typography>
             <Box
               sx={{
@@ -113,13 +113,13 @@ export function AdmissionCycleDetailsDialog({ cycle, onClose }: Props) {
               <DetailItem label="Closes" value={formatDateOnly(cycle.endDate, 'DD MMM YYYY')} />
               {cycle.scheduledPublishAt && (
                 <DetailItem
-                  label="Scheduled publish"
+                  label="Scheduled Publish"
                   value={dayjs(cycle.scheduledPublishAt).format('DD MMM YYYY, hh:mm A')}
                 />
               )}
               {cycle.scheduledCloseAt && (
                 <DetailItem
-                  label="Scheduled close"
+                  label="Scheduled Close"
                   value={dayjs(cycle.scheduledCloseAt).format('DD MMM YYYY, hh:mm A')}
                 />
               )}
@@ -172,10 +172,10 @@ export function AdmissionCycleDetailsDialog({ cycle, onClose }: Props) {
 
           <Box component="section" aria-labelledby="admission-cycle-history-heading">
             <Typography id="admission-cycle-history-heading" variant="subtitle1" sx={{ mb: 2 }}>
-              Activity history
+              Activity History
             </Typography>
             {historyQuery.isLoading && (
-              <Stack spacing={2} aria-label="Loading activity history">
+              <Stack spacing={2} aria-label="Loading Activity History">
                 {[0, 1].map((item) => (
                   <Stack key={item} direction="row" spacing={1.5}>
                     <Skeleton
@@ -239,7 +239,7 @@ export function AdmissionCycleDetailsDialog({ cycle, onClose }: Props) {
                       {item.description}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      {fDateTime(item.occurredAt) || 'Time not recorded'}
+                      {fDateTime(item.occurredAt) || 'Time Not Recorded'}
                     </Typography>
                     {item.reason && (
                       <Typography variant="body2" sx={{ mt: 0.5, overflowWrap: 'anywhere' }}>

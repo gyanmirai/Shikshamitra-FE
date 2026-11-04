@@ -5,15 +5,12 @@ import { varAlpha } from 'src/theme/styles';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
 import { Box, Stack, Button, Typography, IconButton, LinearProgress } from '@mui/material';
 
 import { QuickSubjectSwitcher } from './QuickSubjectSwitcher';
 
-import type {
-  ISubjectDetail,
-  INavigatorSubjectItem,
-  INavigatorElectiveGroup,
-} from '../type';
+import type { ISubjectDetail, INavigatorSubjectItem, INavigatorElectiveGroup } from '../type';
 
 interface SubjectWorkspaceHeaderProps {
   subject: ISubjectDetail | null;
@@ -57,7 +54,8 @@ const SubjectWorkspaceHeader: React.FC<SubjectWorkspaceHeaderProps> = ({
     <Box
       sx={{
         position: 'relative',
-        p: { xs: 1.5, sm: 2 },
+        px: 1,
+        py: 1,
         borderBottom: `1px solid ${theme.palette.divider}`,
         // Use the theme surface directly so dark mode does not blend the header
         // with the default background into a washed-out gray overlay.
@@ -91,10 +89,13 @@ const SubjectWorkspaceHeader: React.FC<SubjectWorkspaceHeaderProps> = ({
             {onOpenMobileNav && (
               <IconButton
                 size="small"
+                aria-label="Open subject navigator"
                 onClick={onOpenMobileNav}
                 sx={{
                   display: { xs: 'inline-flex', md: 'none' },
                   mr: 0.5,
+                  width: 44,
+                  height: 44,
                   bgcolor: varAlpha(theme.palette.grey['500Channel'], 0.08),
                 }}
               >
@@ -103,7 +104,9 @@ const SubjectWorkspaceHeader: React.FC<SubjectWorkspaceHeaderProps> = ({
             )}
 
             <QuickSubjectSwitcher
-              currentSubjectName={subject?.subjectName || activeNavigatorItem?.subjectName || 'Select Subject'}
+              currentSubjectName={
+                activeNavigatorItem?.subjectName || subject?.subjectName || 'Select Subject'
+              }
               coreSubjects={coreSubjects}
               electiveGroups={electiveGroups}
               selectedAssignmentId={selectedAssignmentId}
@@ -111,14 +114,25 @@ const SubjectWorkspaceHeader: React.FC<SubjectWorkspaceHeaderProps> = ({
               selectedSubjectId={selectedSubjectId}
               onSelectSubject={onSelectSubject}
             />
+            <InfoTooltipIcon
+              label="Subject details information"
+              title="Review this subject's saved allocation details, syllabus, and documents. Use the navigator or Previous and Next to switch subjects."
+            />
           </Stack>
-
         </Box>
 
         {/* Right Area: Position Indicator + Prev/Next Controls */}
-        <Stack direction="row" alignItems="center" spacing={1.5} sx={{ alignSelf: { xs: 'flex-end', md: 'center' } }}>
+        <Stack
+          direction="row"
+          alignItems="center"
+          spacing={1.5}
+          sx={{ alignSelf: { xs: 'flex-end', md: 'center' } }}
+        >
           {navigationInfo.positionText && (
-            <CustomTooltip title={`Position in ${isElective ? 'Elective Group' : 'Core Subjects'}`} arrow>
+            <CustomTooltip
+              title={`Position in ${isElective ? 'Elective Group' : 'Core Subjects'}`}
+              arrow
+            >
               <Typography
                 variant="caption"
                 sx={{
@@ -147,8 +161,6 @@ const SubjectWorkspaceHeader: React.FC<SubjectWorkspaceHeaderProps> = ({
               onClick={navigationInfo.goToPrevious}
               sx={{
                 minWidth: 86,
-                height: 32,
-                fontSize: '0.78125rem',
                 borderColor: theme.palette.divider,
                 '&:hover': {
                   borderColor: theme.palette.text.primary,
@@ -168,8 +180,6 @@ const SubjectWorkspaceHeader: React.FC<SubjectWorkspaceHeaderProps> = ({
               onClick={navigationInfo.goToNext}
               sx={{
                 minWidth: 76,
-                height: 32,
-                fontSize: '0.78125rem',
                 borderColor: theme.palette.divider,
                 '&:hover': {
                   borderColor: theme.palette.text.primary,

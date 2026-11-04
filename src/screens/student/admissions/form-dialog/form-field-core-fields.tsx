@@ -10,9 +10,11 @@ import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/Inform
 import { useGetAdmissionFormSystemFieldsQuery } from 'src/redux/student/admissions/admission-forms-api';
 
 import { parseFieldConfiguration } from './form-field-presets';
+import { isLockedInquiryField } from './inquiry-default-fields';
 import { FieldChoiceSettings } from './components/field-choice-settings';
 import { FIELD_TYPES, getConfigurableFieldTypes } from './form-dialog-model';
 import { FieldTranslationSettings } from './components/field-translation-settings';
+import { academicOptionsJson, isInstituteAcademicSource } from '../admission-academic-options';
 import {
   classInterestOptions,
   isClassInterestQuestion,
@@ -23,11 +25,17 @@ import type { FieldSettingsProps } from './types/field-settings';
 
 export function FormFieldCoreFields({ formik, sectionIndex, fieldIndex }: FieldSettingsProps) {
   const field = formik.values.sections[sectionIndex].fields[fieldIndex];
+  const locked = isLockedInquiryField(
+    formik.values.purpose,
+    field,
+    formik.values.coreFieldPolicyVersion
+  );
   const path = `sections[${sectionIndex}].fields[${fieldIndex}]`;
   const isChoice = field.fieldType === 6 || field.fieldType === 7 || field.fieldType === 8;
   const isStatic = field.fieldType === 12;
   const isLinked = field.bindingType === 0;
   const isClassInterest = isClassInterestQuestion(field);
+  const isAcademic = isInstituteAcademicSource(academicOptionsJson(field));
   const needsClassRepair = isClassInterest && !classInterestConfigurationValid(field);
   const catalogue = useGetAdmissionFormSystemFieldsQuery(undefined, { skip: !isLinked });
   const catalogueReady = catalogue.data !== undefined && !catalogue.isLoading && !catalogue.isError;
@@ -41,7 +49,7 @@ export function FormFieldCoreFields({ formik, sectionIndex, fieldIndex }: FieldS
   return (
     <Stack spacing={1.5}>
       <SectionCard
-        title="Basic settings"
+        title="Basic Settings"
         paperProps={{ sx: { mb: 0, minWidth: 0 } }}
         gridProps={{ sx: { display: 'block' } }}
       >
@@ -51,7 +59,7 @@ export function FormFieldCoreFields({ formik, sectionIndex, fieldIndex }: FieldS
               fullWidth
               required
               size="small"
-              label="Field label"
+              label="Field Label"
               value={field.label}
               name={`${path}.label`}
               onBlur={formik.handleBlur}
@@ -62,13 +70,13 @@ export function FormFieldCoreFields({ formik, sectionIndex, fieldIndex }: FieldS
           </ShakingTextField>
           <CustomSelect
             size="small"
-            label="Field type"
+            label="Field Type"
             value={field.fieldType}
             options={getConfigurableFieldTypes(field.fieldType).map(([label, value]) => ({
               label,
               value,
             }))}
-            disabled={isLinked || isClassInterest || field.fieldType === 10}
+            disabled={isLinked || isClassInterest || isAcademic || field.fieldType === 10}
             error={
               needsClassRepair ||
               needsTypeRepair ||
@@ -91,7 +99,7 @@ export function FormFieldCoreFields({ formik, sectionIndex, fieldIndex }: FieldS
             }
             onChange={(value) => formik.setFieldValue(`${path}.fieldType`, Number(value))}
           />
-          {needsClassRepair && (
+          {!locked && needsClassRepair && (
             <Button
               type="button"
               size="small"
@@ -104,10 +112,10 @@ export function FormFieldCoreFields({ formik, sectionIndex, fieldIndex }: FieldS
                 })
               }
             >
-              Use Institute Setup classes
+              Use Institute Setup Classes
             </Button>
           )}
-          {needsTypeRepair && linkedField && (
+          {!locked && needsTypeRepair && linkedField && (
             <Button
               type="button"
               size="small"
@@ -143,6 +151,7 @@ export function FormFieldCoreFields({ formik, sectionIndex, fieldIndex }: FieldS
                 <Switch
                   size="small"
                   checked={field.required}
+                  disabled={locked}
                   onChange={(event) =>
                     formik.setFieldValue(`${path}.required`, event.target.checked)
                   }
@@ -151,26 +160,28 @@ export function FormFieldCoreFields({ formik, sectionIndex, fieldIndex }: FieldS
               label={
                 <Stack>
                   <Typography variant="body2" fontWeight={600}>
-                    Required field
+                    Required Field
                   </Typography>
                 </Stack>
               }
             />
           )}
-          <TextField
-            fullWidth
-            size="small"
-            label="Help text (optional)"
-            value={field.helpText ?? ''}
-            multiline
-            minRows={2}
-            onChange={(event) =>
-              formik.setFieldValue(`${path}.helpText`, event.target.value || undefined)
-            }
-          />
+          {!locked && (
+            <TextField
+              fullWidth
+              size="small"
+              label="Help Text (Optional)"
+              value={field.helpText ?? ''}
+              multiline
+              minRows={2}
+              onChange={(event) =>
+                formik.setFieldValue(`${path}.helpText`, event.target.value || undefined)
+              }
+            />
+          )}
         </Stack>
       </SectionCard>
-      {isChoice && (
+      {isChoice && !locked && (
         <FieldChoiceSettings formik={formik} sectionIndex={sectionIndex} fieldIndex={fieldIndex} />
       )}
       <FieldTranslationSettings

@@ -45,7 +45,7 @@ export function BulkAdmissionConfigurationFields({
       <Grid size={{ xs: 12, sm: 6 }}>
         <ShakingTextField error={workflowFeedback.error}>
           <AdmissionDefinitionSelect
-            label="Published workflow"
+            label="Published Workflow"
             name="workflowDefinitionId"
             required={values.isActive}
             valueId={values.workflowDefinitionId || null}
@@ -68,7 +68,7 @@ export function BulkAdmissionConfigurationFields({
         <Grid size={{ xs: 12, sm: 6 }}>
           <ShakingTextField error={inquiryFeedback.error}>
             <AdmissionDefinitionSelect
-              label="Inquiry form"
+              label="Inquiry Form"
               name="inquiryFormDefinitionId"
               required={values.isActive}
               valueId={values.inquiryFormDefinitionId || null}

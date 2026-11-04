@@ -3,7 +3,7 @@ import type { IParams } from 'src/components/customizabaleTable/types';
 import { assessmentStatusLabels, assessmentAttendanceLabels } from './assessment-roster-status';
 
 const labels: Record<string, string> = {
-  applicationNumber: 'Application number',
+  applicationNumber: 'Application Number',
   className: 'Class',
   sessionName: 'Session',
   attendance: 'Attendance',

@@ -1,5 +1,7 @@
 import type { FormikProps } from 'formik';
 
+import Box from '@mui/material/Box';
+
 import { LoginField } from './login-field';
 import { AuthPasswordField } from './auth-password-field';
 
@@ -23,14 +25,16 @@ export function LoginCredentials({ formik }: { formik: FormikProps<LoginValues> 
         required
         formik={formik}
       />
-      <AuthPasswordField
-        name="password"
-        label="Password"
-        placeholder="Enter your password"
-        autoComplete="current-password"
-        required
-        formik={formik}
-      />
+      <Box data-login-password>
+        <AuthPasswordField
+          name="password"
+          label="Password"
+          placeholder="Enter your password"
+          autoComplete="current-password"
+          required
+          formik={formik}
+        />
+      </Box>
     </>
   );
 }

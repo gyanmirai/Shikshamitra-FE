@@ -7,8 +7,11 @@ export const GlobalIcons = {
   building: 'solar:buildings-2-linear',
   floors: 'solar:layers-linear',
   moveUp: 'eva:arrow-upward-fill',
+  expandMore: 'mdi:chevron-down',
   moveDown: 'eva:arrow-downward-fill',
   back: 'eva:arrow-back-fill',
+  exit: 'mdi:exit-to-app',
+  openInNew: 'mdi:open-in-new',
   family: 'mdi:account-group-outline',
   retrunIcon: 'famicons:return-down-back-outline',
   info: 'lucide:info',
@@ -77,6 +80,9 @@ export const GlobalIcons = {
   refresh: 'mdi:refresh',
   history: 'mdi:history',
   notebook: 'solar:notebook-bold',
+  feedback: 'solar:chat-round-dots-bold',
+  learningGoal: 'mdi:target',
+  prerequisites: 'mdi:clipboard-check-outline',
   clock: 'solar:clock-circle-bold',
 };
 

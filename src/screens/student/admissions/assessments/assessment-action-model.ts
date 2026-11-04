@@ -24,13 +24,13 @@ export type AssessmentActionValues = {
   subjectScores?: AssessmentSubjectValues;
 };
 export const assessmentActionLabels: Record<AssessmentAction, string> = {
-  book: 'Start assessment',
-  attendance: 'Record attendance',
-  result: 'Record result',
-  resultDraft: 'Save draft',
-  retake: 'Allow retake',
-  cancel: 'Cancel attempt',
-  waive: 'Waive assessment',
+  book: 'Start Assessment',
+  attendance: 'Record Attendance',
+  result: 'Record Result',
+  resultDraft: 'Save Draft',
+  retake: 'Allow Retake',
+  cancel: 'Cancel Attempt',
+  waive: 'Waive Assessment',
 };
 
 export function latestAssessmentAttempt(assessment: ApplicationAssessment) {

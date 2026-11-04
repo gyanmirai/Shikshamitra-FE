@@ -4,7 +4,9 @@ import dayjs from 'dayjs';
 import { http, HttpResponse } from 'msw';
 import { mswServer } from 'src/test/mswServer';
 import { vi, it, expect, beforeEach } from 'vitest';
-import { screen, within, waitFor, fireEvent } from '@testing-library/react';
+import { expectStudentErrorToast } from 'src/test/student-toast-test-fixture';
+import { act, screen, within, waitFor, fireEvent } from '@testing-library/react';
+import { admissionApplicationFollowUpsApi } from 'src/redux/student/admissions/admission-application-follow-ups-api';
 
 import { ApplicationActivityDrawer } from './application-activity-drawer';
 import { renderDocumentUi } from '../document-verification/document-ui-test-fixture';
@@ -107,18 +109,18 @@ it('combines evidence in one history and preserves the note endpoint and edit fl
   renderDrawer();
   expect(await screen.findByText(note.text)).toBeVisible();
   expect(await screen.findByText(followUp.purpose)).toBeVisible();
-  expect(screen.getByText('1 open')).toBeVisible();
+  expect(screen.getByText('1 Open')).toBeVisible();
   expect(notesReads).toBe(1);
   expect(followReads).toBe(1);
-  const field = screen.getByRole('textbox', { name: 'Add note' });
+  const field = screen.getByRole('textbox', { name: 'Add Note' });
   fireEvent.change(field, { target: { value: '  Parent asked for a morning visit  ' } });
-  fireEvent.click(screen.getByRole('button', { name: 'Add note' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Add Note' }));
   await waitFor(() =>
     expect(writes).toHaveBeenCalledWith({ text: 'Parent asked for a morning visit' })
   );
   await waitFor(() => expect(field).toHaveValue(''));
   fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
-  expect(screen.getByRole('textbox', { name: 'Edit note' })).toHaveValue(note.text);
+  expect(screen.getByRole('textbox', { name: 'Edit Note' })).toHaveValue(note.text);
 });
 
 it('schedules a follow-up through the existing application route with an ISO date and current stamp', async () => {
@@ -131,15 +133,15 @@ it('schedules a follow-up through the existing application route with an ISO dat
   );
   renderDrawer();
   await screen.findByText(followUp.purpose);
-  fireEvent.click(screen.getByRole('tab', { name: 'Follow-up' }));
-  expect(screen.queryByRole('textbox', { name: 'Add note' })).not.toBeInTheDocument();
-  fireEvent.change(screen.getByLabelText('Next follow-up'), {
+  fireEvent.click(screen.getByRole('tab', { name: 'Follow-Up' }));
+  expect(screen.queryByRole('textbox', { name: 'Add Note' })).not.toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText('Next Follow-Up'), {
     target: { value: '2026-10-12T16:00' },
   });
   fireEvent.change(screen.getByRole('textbox', { name: /Purpose/ }), {
     target: { value: '  Check fee structure  ' },
   });
-  fireEvent.click(screen.getByRole('button', { name: 'Schedule follow-up' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Schedule Follow-Up' }));
   await waitFor(() =>
     expect(writes).toHaveBeenCalledWith({
       purpose: 'Check fee structure',
@@ -166,7 +168,7 @@ it.each(['complete', 'cancel'])(
       name: action === 'complete' ? 'Complete' : 'Cancel',
     });
     expect(button).toBeDisabled();
-    fireEvent.change(screen.getByRole('textbox', { name: /Completion or cancellation note/ }), {
+    fireEvent.change(screen.getByRole('textbox', { name: /Completion or Cancellation Note/ }), {
       target: { value: 'Parent contacted' },
     });
     fireEvent.click(button);
@@ -184,20 +186,20 @@ it('protects both note and follow-up drafts when changing type or closing', asyn
   const onClose = vi.fn();
   renderDrawer(grants, { onClose });
   await screen.findByText(note.text);
-  fireEvent.change(screen.getByRole('textbox', { name: 'Add note' }), {
+  fireEvent.change(screen.getByRole('textbox', { name: 'Add Note' }), {
     target: { value: 'Unsaved note' },
   });
-  fireEvent.click(screen.getByRole('tab', { name: 'Follow-up' }));
+  fireEvent.click(screen.getByRole('tab', { name: 'Follow-Up' }));
   fireEvent.change(screen.getByRole('textbox', { name: /Purpose/ }), {
     target: { value: 'Unsaved follow-up' },
   });
   fireEvent.click(screen.getByRole('tab', { name: 'Note' }));
-  expect(screen.getByRole('textbox', { name: 'Add note' })).toHaveValue('Unsaved note');
+  expect(screen.getByRole('textbox', { name: 'Add Note' })).toHaveValue('Unsaved note');
   fireEvent.click(screen.getByRole('button', { name: 'Close' }));
   expect(onClose).not.toHaveBeenCalled();
   expect(screen.getByRole('dialog', { name: 'Discard Unsaved Activity?' })).toBeVisible();
   fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
-  fireEvent.click(screen.getByRole('tab', { name: 'Follow-up' }));
+  fireEvent.click(screen.getByRole('tab', { name: 'Follow-Up' }));
   expect(screen.getByRole('textbox', { name: /Purpose/ })).toHaveValue('Unsaved follow-up');
 });
 
@@ -214,12 +216,12 @@ it('keeps notes available when the application has no inquiry and skips the foll
   renderDrawer(grants, { application: { ...application, inquiryId: null } });
   expect(await screen.findByText(note.text)).toBeVisible();
   expect(
-    screen.getByText('No source inquiry is linked to this application. Follow-ups are unavailable.')
+    screen.getByText('No Source Inquiry Is Linked to This Application. Follow-ups Are Unavailable.')
   ).toBeVisible();
   expect(followReads).toBe(0);
 });
 
-it('keeps failed-save drafts and supports an independent follow-up retry', async () => {
+it('keeps failed-save drafts when a failed follow-up query recovers independently', async () => {
   let failFollow = true;
   mswServer.use(
     http.get(followPath, () =>
@@ -231,19 +233,29 @@ it('keeps failed-save drafts and supports an independent follow-up retry', async
       HttpResponse.json({ detail: 'Could not save note' }, { status: 400 })
     )
   );
-  renderDrawer();
+  const store = renderDrawer();
   expect(await screen.findByText(note.text)).toBeVisible();
-  await screen.findByRole('button', { name: 'Retry follow-ups' });
-  fireEvent.change(screen.getByRole('textbox', { name: 'Add note' }), {
+  await expectStudentErrorToast('Follow-ups unavailable');
+  expect(screen.queryByRole('button', { name: 'Retry Follow-Ups' })).not.toBeInTheDocument();
+  fireEvent.change(screen.getByRole('textbox', { name: 'Add Note' }), {
     target: { value: 'Keep this note' },
   });
-  fireEvent.click(screen.getByRole('button', { name: 'Add note' }));
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Add note' })).toBeEnabled());
-  expect(screen.getByRole('textbox', { name: 'Add note' })).toHaveValue('Keep this note');
+  fireEvent.click(screen.getByRole('button', { name: 'Add Note' }));
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Add Note' })).toBeEnabled());
+  expect(screen.getByRole('textbox', { name: 'Add Note' })).toHaveValue('Keep this note');
+  const previousNotesReads = notesReads;
   failFollow = false;
-  fireEvent.click(screen.getByRole('button', { name: 'Retry follow-ups' }));
+  await act(async () => {
+    await store.dispatch(
+      admissionApplicationFollowUpsApi.endpoints.getAdmissionApplicationFollowUps.initiate(
+        application.id,
+        { subscribe: false, forceRefetch: true }
+      )
+    );
+  });
   expect(await screen.findByText(followUp.purpose)).toBeVisible();
-  expect(screen.getByRole('textbox', { name: 'Add note' })).toHaveValue('Keep this note');
+  expect(notesReads).toBe(previousNotesReads);
+  expect(screen.getByRole('textbox', { name: 'Add Note' })).toHaveValue('Keep this note');
 });
 
 it('shows a combined empty state and withholds all editing for a read-only viewer', async () => {
@@ -254,8 +266,8 @@ it('shows a combined empty state and withholds all editing for a read-only viewe
     )
   );
   renderDrawer(['Students.Admissions.Applicants.View', 'Students.Admissions.Applications.View']);
-  expect(await screen.findByText('No notes or follow-ups yet')).toBeVisible();
-  const drawer = screen.getByRole('dialog', { name: 'Notes & Follow-ups' });
+  expect(await screen.findByText('No Notes or Follow-Ups Yet')).toBeVisible();
+  const drawer = screen.getByRole('dialog', { name: 'Notes & Follow-Ups' });
   expect(within(drawer).queryByRole('textbox')).not.toBeInTheDocument();
 });
 
@@ -275,15 +287,15 @@ it('locks closing and duplicate note submissions until the save finishes', async
   );
   renderDrawer(grants, { onClose });
   await screen.findByText(note.text);
-  fireEvent.change(screen.getByRole('textbox', { name: 'Add note' }), {
+  fireEvent.change(screen.getByRole('textbox', { name: 'Add Note' }), {
     target: { value: 'QA pending note' },
   });
-  fireEvent.click(screen.getByRole('button', { name: 'Add note' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Add Note' }));
   await waitFor(() => expect(writes).toHaveBeenCalledOnce());
   expect(screen.getByRole('button', { name: 'Close' })).toBeDisabled();
-  expect(screen.getByRole('button', { name: 'Close Notes & Follow-ups' })).toBeDisabled();
-  fireEvent.click(screen.getByRole('button', { name: 'Add note' }));
-  fireEvent.keyDown(screen.getByRole('dialog', { name: 'Notes & Follow-ups' }), { key: 'Escape' });
+  expect(screen.getByRole('button', { name: 'Close Notes & Follow-Ups' })).toBeDisabled();
+  fireEvent.click(screen.getByRole('button', { name: 'Add Note' }));
+  fireEvent.keyDown(screen.getByRole('dialog', { name: 'Notes & Follow-Ups' }), { key: 'Escape' });
   expect(onClose).not.toHaveBeenCalled();
   expect(writes).toHaveBeenCalledOnce();
   finish();
@@ -298,6 +310,7 @@ it('does not show an empty history as confirmed when a source cannot be loaded',
     http.get(followPath, () => HttpResponse.json({ ...followValue, followUps: [] }))
   );
   renderDrawer();
-  await screen.findByRole('button', { name: 'Retry notes' });
-  expect(screen.queryByText('No notes or follow-ups yet')).not.toBeInTheDocument();
+  await expectStudentErrorToast('Applicant notes could not be loaded. Try again.');
+  expect(screen.queryByRole('button', { name: 'Retry Notes' })).not.toBeInTheDocument();
+  expect(screen.queryByText('No Notes or Follow-Ups Yet')).not.toBeInTheDocument();
 });

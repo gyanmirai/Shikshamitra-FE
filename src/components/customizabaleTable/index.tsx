@@ -14,6 +14,9 @@ import {
   Table,
   Button,
   Switch,
+  TableRow,
+  TableCell,
+  TableFooter,
   TableContainer,
   LinearProgress,
   TablePagination,
@@ -25,6 +28,7 @@ import CustomDialog from '../customDialog';
 import { exportTable } from './table-export';
 import { shikshaMitraToast } from '../toast';
 import { getExportableColumns } from './utils';
+import { getColumnSizeSx } from './utils/columnSizing';
 import { TableBody } from './components/TableBody';
 import { ComponentBlock } from '../component-block';
 import { useTableData } from './hooks/useTableData';
@@ -48,6 +52,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   columns,
   serverColumnTypes,
   data,
+  summaryRow,
   tableTitle = 'Table View',
   exportLabel = 'Export',
   exportContext: tableExportContext = [],
@@ -610,6 +615,9 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
               gap: 0.5,
               display: 'flex',
               flexDirection: 'column',
+              flexWrap: 'nowrap',
+              alignItems: 'stretch',
+              justifyContent: 'flex-start',
               flex: 1,
               minHeight: 0,
             }}
@@ -697,6 +705,46 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                     }
                   }}
                 />
+                {summaryRow && !isLoading && !errorContent && (
+                  <TableFooter>
+                    <TableRow>
+                      {memoizedColumns.some((column) => column.children) && <TableCell />}
+                      {memoizedColumns
+                        .filter((column) => columnVisibility[column.id])
+                        .map((column, index) => (
+                          <TableCell
+                            key={column.id}
+                            component={index === 0 ? 'th' : 'td'}
+                            scope={index === 0 ? 'row' : undefined}
+                            align={column.align}
+                            sx={{
+                              ...getColumnSizeSx(column),
+                              ...getStickyStyle(column),
+                              ...column.cellSx,
+                              position: 'sticky',
+                              bottom: 0,
+                              zIndex: column.sticky ? 13 : 12,
+                              bgcolor: 'background.paper',
+                              color: 'text.primary',
+                              fontSize: 'inherit',
+                              fontWeight: 700,
+                              borderTop: '2px solid',
+                              borderColor: 'divider',
+                              py: dense ? 1.5 : 2,
+                              px: 2,
+                            }}
+                          >
+                            {index === 0 && (
+                              <Box component="span" sx={{ display: 'block' }}>
+                                {summaryRow.label}
+                              </Box>
+                            )}
+                            {summaryRow.values[column.id]}
+                          </TableCell>
+                        ))}
+                    </TableRow>
+                  </TableFooter>
+                )}
               </Table>
             </TableContainer>
             {(isShowedDense || isPagination) && (
@@ -848,6 +896,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
       tableId,
       sortedData,
       data.length,
+      summaryRow,
       exportContext,
       tableExportContext,
       onExport,

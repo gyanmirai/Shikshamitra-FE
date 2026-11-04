@@ -3,12 +3,68 @@ module: finance
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-10-31
+updated_on: 2026-11-04
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Validate Finance frontend changes
+
+## Classic receipt documents
+
+Run `RefundReceiptDialog.test.tsx` and `RefundRemarksForm.test.tsx` under `src/screens/finance/feeRefund/Components`, plus `src/redux/feeCollection/feeCollection.receipt.test.ts`.
+They cover payout eligibility, preview state changes, failed-download retry, preserved filenames, stale-response protection and object URL cleanup.
+Use the [classic receipt fixture](../../e2e/fixtures/classic-receipts/README.md) for final in-app browser checks of actual backend-generated PDFs in the production receipt-history/refund viewers.
+Backend PDF and monetary snapshot acceptance lives in [the receipt contract](../../../Shikshamitra-BE/docs/modules/finance/references/receipt-lifecycle.md).
+Run `npm run ts`, focused ESLint and `npm run docs:check`; synthetic browser state does not prove persisted financial transitions or authorization.
+
+## Critical icon delivery
+
+The shared `src/components/iconify/iconify.tsx` registers only the existing navigation/Finance glyphs in `src/components/iconify/critical-icons.ts`.
+All other icon names retain Iconify's normal provider fallback; glyph choices, NoSsr, refs, sizing and accessibility props remain in the shared renderer.
+Author credits and upstream license texts are served from `public/icon-attributions.txt`.
+Run `src/components/iconify/iconify.offline.test.tsx` against the real Iconify/MUI/React implementation with only provider transport mocked.
+Also run the existing report-card, dashboard, room-access and student-transition/document tests when changing shared Iconify exports.
+Use `e2e/fixtures/icon-delivery/vite.config.mjs` for an isolated in-app browser check at desktop, tablet and mobile widths, including dark mode.
+The fixture blocks provider transport and displays the rendered-icon/request counts; it does not use Finance APIs or establish deployed page-load latency.
+Finish with project TypeScript, focused ESLint and the Finance docs check.
+
+## Fee settings performance regressions
+
+Run `FeeStructure/hooks/useFeeStructureLookups.test.tsx`,
+`FeeStructure/feeStructureFields.test.tsx`, and the Copy dialog/model tests under
+`src/screens/finance/settings`, plus `src/redux/finance/feeStructureWorkspace.test.ts`.
+They cover deferred catalogs, permissions and refresh on card activation, stable
+settings across suspension, draft preservation, category/head search, and bounded
+Copy requests with complete ordered results. Run `npm run ts`, touched-file ESLint,
+and `npm run docs:check` after changes.
+
+Navigation coverage: run `src/components/nav-section/path-utils.test.ts`,
+`src/components/nav-section/vertical/nav-list.test.tsx`, and
+`src/components/nav-section/hooks.prefetch.test.ts`. Retain query parameters,
+active/expanded groups, external links and groups with an absent or empty path.
+After deployment, inspect the production network waterfall to confirm that unopened
+Finance destinations are deferred and check the first navigation to each page.
+
+Browser smoke: prepare a ready draft, switch structures and return; verify its name,
+unsaved input and readiness survive. Repeat with more than 100 terms/policies, then
+change a prerequisite in another tab and explicitly refresh. Verify updated options,
+later-page defaults, error recovery, schedule opening, save and publish. Automated
+component checks do not establish production API latency or browser sign-off.
+
+## Automatic concession refunds
+
+Run `src/redux/finance/ConcessionManagement/concessionManagementApi.refund.test.ts` with
+the existing benefit and refund-cache tests. The regression covers administrator Create and
+Submit after Refunds has cached an empty list, both with an active subscription and after
+leaving the page; failed commands must not refresh refund queries.
+
+In the authenticated local app, open Refunds first, then select an automatic-refund concession
+policy and a settled paid installment. Submit and approve a concession, return to Refunds
+without reloading, and verify its amount, student, count and receipt/concession links. Repeat
+from a saved draft. Check unpaid-only and manual-refund policies separately; backend
+[Finance tests](../../../Shikshamitra-BE/docs/modules/finance/testing.md) own policy calculations,
+persistence and duplicate prevention.
 
 ## Admission assignment handoff
 
@@ -318,6 +374,17 @@ and authenticated session are required to verify cloning the default proration p
 archiving previous copies and rejecting normalized duplicate names through direct API calls.
 
 ### Concession request form presentation
+
+Bulk installment entry: run `ConcessionSteps/concessionBulkAllocation.test.ts` and
+`ConcessionSteps/RequestEnteredInstallments.bulk.test.tsx` under
+`src/screens/finance/Concession/Components`, together with `ConcessionSteps/ValueEntryStep.test.tsx`
+and `ConcessionRequestForm.test.tsx`. Cover exact total/remainder, capped equal splitting, atomic
+rejection, shared allowances across heads, retained untargeted raw values, repeated Apply, manual
+editing, select-all/mixed/empty states, scope resets, saving locks and accessible inline errors.
+In `e2e/fixtures/concession-request-ui`, use fixed and percentage modes to check the same controls
+with two fee heads, then check a subset of months, a shared-cap rejection, narrow screens and dark
+theme. Fixture results verify actual UI components with synthetic data; they do not prove a signed-in
+backend submission. Backend preview, validation and approval remain authoritative.
 
 For View Concession, run the focused `ConcessionAdmin/StucentConcessionCard.test.tsx` and
 `ConcessionAdmin/ConcessionItemCard.test.tsx` suites. The `e2e/fixtures/concession-card` fixture
@@ -760,3 +827,57 @@ Charge detail amount regressions render the actual detail component and shared t
 Collection group checkbox regressions in `CollectionLedgerTable.test.tsx` cover fully paid fee groups in all three layouts, settled charge groups, and mixed paid/unpaid selection, including partial states and bulk deselection. The late-fee browser fixture's Settled balances scenario must show both parent checkboxes checked and disabled; the default pending scenario must retain normal bulk selection without including settled items.
 
 `ReconciliationClearSearch.integration.test.tsx` mounts the production shared table and owning query hook for all six methods. It verifies that clearing an empty search resets the input and API query together, cancels restoration of the old keyword, and returns the baseline row. The owning hook must reset search, column criteria and page atomically while retaining scope and page size. These component checks remain separate from signed-in DDVS results.
+
+## Monthly activity, waived charges and concession presentation
+
+Run `CashManagement.test.tsx`, `src/test/fee-collection-waiver-fixture.test.ts` and the existing collection receipt-fixture tests with one Vitest worker. Verify selected-month and All-months activity, stable academic-year cash available, full/partial waivers and paid-plus-waived charge totals. Monetary projection/persistence proof belongs to backend `LateFeeCollectionRuntime_Tests` and `CashActivitySummaryApi_Tests`.
+
+`FeeCollectionTable.charges.test.tsx` and `FeeCollectionTable.query.test.tsx` cover Paid Charges placement, right-aligned currency, zero versus unavailable amounts, refreshed balances and server sort/filter wiring. In the in-app browser, verify the column's default visibility with saved preferences, hide/show, numeric filters, both sort directions, contained narrow-screen scrolling and CSV/XLSX placement between Total and Pending Charges. Use the waiver fixture's full, partial and mixed scenarios; payment and waiver amounts must remain separate.
+
+Refund form, selection, detail, worklist and policy suites verify cross-receipt selection, the retained Full/Partial request choice with a deprecated false policy flag, immutable lead receipt on edits/replacements, and Cash approval action permissions. The refund-request-validation fixture exercises review cancellation and per-line source receipt IDs. Its synthetic completion result is client proof only; actual payout, rollback, annual cap, prior-refund balance, permission denial and replay proof belong to backend `FeeRefundApi_Tests`.
+
+Run `ConcessionPolicyFields.test.tsx` and `ConcessionSteps/ValueEntryStep.test.tsx`. Exercise same-name policies with distinct immutable IDs. In the concession-request-ui fixture, scroll the twelve-row fixed/percentage tables while focusing inputs; headings must remain opaque above floating labels in both themes at the three standard widths.
+
+## Finance setup guide checks
+
+```bash
+node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run src/screens/finance/setup --pool=forks --maxWorkers=1
+npm run ts
+node node_modules/eslint/bin/eslint.js src/screens/finance/setup src/redux/finance/setup src/app/finance/setup/page.tsx src/constants/finance-menu.ts src/redux/tagTypes.ts
+```
+
+The focused tests cover the Accounts-first entry, inline management screens, editor navigation locks, draft preservation during refresh/error, standalone versus embedded headers, authorized deep links, deferred versus configured status, failed saves, conflicts, stale-year data, duplicate writes and unmounted saves.
+Use [the browser fixture](../../e2e/fixtures/finance-setup-guide/README.md) for the real guide/shell/RTK integration with synthetic identity and API adapters.
+Check desktop and phone layout, tab/step navigation, native form link destinations, year switching, read-only/limited/denied access, request failure, concurrency reload and final review.
+This fixture does not establish authenticated Next/API/PostgreSQL or real-money behaviour.
+
+For embedded settings, use the authenticated local Next frontend to inspect native Income/Expense Categories, Bank Accounts, Fee Categories and Heads, Payment Terms, Charge Categories, Concession Types, four policy workspaces and Fee Structures. Open and close unchanged add/edit forms; confirm guide/year navigation is locked, tables survive background checks, and the phone refresh action follows the table without overlap. The guide-only fixture does not simulate native setting mutations.
+
+## Concession request details drawer
+
+Run `ConcessionRequestDetails.test.tsx`, `ConcessionItemCard.test.tsx` and
+`ConcessionAdminViewForm.approval.test.tsx` in `src/screens/finance/ConcessionAdmin/` with Vitest
+(one fork worker). Coverage includes saved allocations instead of live suggestions, fee-head
+subtotals, complete reversals with zero remaining amounts, pending/rejected semantics, failed
+loads/retry, and document-preview permission. Run `npm run ts`, touched-file ESLint and docs checks.
+
+The existing `e2e/fixtures/concession-card/vite.config.mts` fixture serves the actual drawer on
+port 4212 with synthetic data and no backend writes. Use `?status=1` (approved), `?status=0`
+(pending), `?status=2` (rejected), `?status=5` (reversed), `&fail=details`, `&fail=breakdown`,
+and `&loading=true`. Check 1440×900, 768×1024 and 390×844, both themes, section help, keyboard
+opening, Escape/footer/header close, focus return, no document overflow and per-table scrolling.
+Authenticated allocation correctness remains a separate backend/integration check.
+
+## Adjustment workspace consistency
+
+Run the focused adjustment, numeric precision and dirty-navigation regressions:
+
+```bash
+node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run src/screens/finance/adjustments src/utils/formate_number.precision.test.ts src/hooks/use-finance-form-close.test.tsx src/hooks/use-unsaved-navigation.test.tsx --pool=vmThreads --maxWorkers=1 --cache=false --testTimeout=30000
+```
+
+Coverage includes server status identities, creator/View-only restrictions, scoped query paging and criteria, URL history, incomplete decimal drafts, per-installment limits, exact review display, unchanged-payload retry keys, retained failed creation, detail retry and owned-form reset during accepted browser traversal. Run `npm run ts`, touched-file lint, docs checks and whitespace checks separately.
+
+The actual workspace can be inspected through `e2e/fixtures/adjustment-workspace/vite.config.mts`. Build and preview it using that fixture's README. Synthetic requests and account switches remain in memory and do not prove backend authorization or ledger mutation. Check the create form, drawer, allocation and review tables, filters/search, failed-save retention, Retry, dirty-close/Back, creator versus reviewer, View-only access, table scroll ownership, both themes and 390×844 / 768×1024 / 1440×900 layouts.
+
+Backend header-status matching is covered by `DirectFinanceTableFilterApi_Tests.Adjustment_status_criteria_and_search_match_the_displayed_state`.

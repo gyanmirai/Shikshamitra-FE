@@ -11,6 +11,7 @@ type ClassQuestion = {
   bindingType?: number;
   bindingKey?: string | null;
   fieldType?: number;
+  optionsJson?: string | null;
 };
 const normalize = (value: string) => value.replace(/[\s_.-]/g, '').toLowerCase();
 const aliases = new Set(['classinterested', 'classinterestedin', 'interestedclass']);
@@ -19,6 +20,11 @@ export function isClassInterestQuestion(field: ClassQuestion) {
   // Explicitly linked Student fields retain their meaning after relabelling.
   if (field.fieldType === 12 || field.bindingType === 0 || field.bindingKey?.includes('.'))
     return false;
+  try {
+    if (['EducationBoards', 'EducationMediums'].includes(JSON.parse(field.optionsJson || '{}').source)) return false;
+  } catch {
+    // Malformed historical options still retain their reserved-code identity for repair.
+  }
   return (
     aliases.has(normalize(field.code.replace(/_\d+$/, ''))) ||
     aliases.has(normalize(field.label ?? ''))
@@ -30,7 +36,9 @@ export function classInterestConfigurationValid(
 ) {
   if (field.fieldType !== 6) return false;
   try {
-    return JSON.parse(field.optionsJson || '{}').source === 'Standards';
+    const source = JSON.parse(field.optionsJson || '{}');
+    return source.source === 'Standards' || (source.source === 'StandardsByMedium' &&
+      typeof source.parentField === 'string' && Boolean(source.parentField.trim()));
   } catch {
     return false;
   }

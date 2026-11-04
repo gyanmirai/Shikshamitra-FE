@@ -47,8 +47,8 @@ it('keeps Publish visible before overflow and does not trigger the row click', (
   expect(actions.onPublish).toHaveBeenCalledOnce();
   expect(rowClick).not.toHaveBeenCalled();
   expect(screen.getByRole('button', { name: 'Edit Regular admission' })).toBeVisible();
-  expect(screen.getByRole('button', { name: 'Clone as draft' })).toBeVisible();
-  fireEvent.click(screen.getByRole('button', { name: 'Actions for Regular admission' }));
+  expect(screen.getByRole('button', { name: 'Clone as Draft' })).toBeVisible();
+  fireEvent.click(screen.getByRole('button', { name: 'Actions For Regular admission' }));
   expect(screen.getByRole('menuitem', { name: /^Delete$/ })).toBeVisible();
 });
 

@@ -19,4 +19,6 @@ export type SetupFlowShellProps = {
   footer: ReactNode;
   heightMode?: 'viewport' | 'container';
   fillContent?: boolean;
+  density?: 'standard' | 'compact';
+  contentMaxWidth?: number | 'none';
 };

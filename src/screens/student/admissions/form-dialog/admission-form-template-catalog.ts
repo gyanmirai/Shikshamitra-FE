@@ -963,13 +963,20 @@ export const ADMISSION_FORM_TEMPLATE_CATEGORIES: AdmissionFormTemplateCategory[]
 
 export const SYSTEM_ADMISSION_FORM_TEMPLATES: AdmissionFormTemplateSummary[] = DEFINITIONS.filter(
   (definition) => definition.id !== 'consent-declaration'
-).map(({ create: _create, ...summary }) => summary);
+).map(({ create, ...summary }) => {
+  const form = lockNewInquiryStarter(create());
+  return {
+    ...summary,
+    sectionCount: form.sections.length,
+    fieldCount: form.sections.reduce((count, section) => count + section.fields.length, 0),
+  };
+});
 
 export function getSystemAdmissionFormTemplate(id: SystemAdmissionFormTemplateId) {
   const definition = DEFINITIONS.find((item) => item.id === id);
   if (!definition) throw new Error(`Unknown admission form template: ${id}`);
   const form = ensureAdmissionCustomFieldIdentities(definition.create());
-  return id === 'admission-inquiry' ? lockNewInquiryStarter(form) : form;
+  return lockNewInquiryStarter(form);
 }
 
 export function cloneSchoolFormAsStarter(source: AdmissionForm): CreateUpdateAdmissionForm {
@@ -994,17 +1001,20 @@ export function cloneSchoolFormAsStarter(source: AdmissionForm): CreateUpdateAdm
     };
   });
 
-  return ensureAdmissionCustomFieldIdentities({
-    name: `${source.name} copy`,
-    code: copyCode,
-    description: source.description,
-    layoutType: source.layoutType,
-    purpose:
-      source.purpose ??
-      (source.code.includes('INQUIRY') || source.name.toLowerCase().includes('inquiry') ? 0 : 1),
-    fieldsPerRow: source.fieldsPerRow ?? 1,
-    defaultLanguage: source.defaultLanguage ?? 'en',
-    supportedLanguages: source.supportedLanguages?.length ? source.supportedLanguages : ['en'],
-    sections,
-  });
+  return lockNewInquiryStarter(
+    ensureAdmissionCustomFieldIdentities({
+      name: `${source.name} copy`,
+      code: copyCode,
+      description: source.description,
+      layoutType: source.layoutType,
+      purpose:
+        source.purpose ??
+        (source.code.includes('INQUIRY') || source.name.toLowerCase().includes('inquiry') ? 0 : 1),
+      fieldsPerRow: source.fieldsPerRow ?? 1,
+      defaultLanguage: source.defaultLanguage ?? 'en',
+      supportedLanguages: source.supportedLanguages?.length ? source.supportedLanguages : ['en'],
+      sections,
+      inheritance: source.inheritance,
+    })
+  );
 }

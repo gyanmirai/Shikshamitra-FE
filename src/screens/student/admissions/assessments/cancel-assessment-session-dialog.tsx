@@ -51,7 +51,7 @@ export function CancelAssessmentSessionDialog({
       </DialogScrollContent>
       <DialogActions>
         <Button size="small" variant="outlined" onClick={onClose} disabled={state.isLoading}>
-          Keep session
+          Keep Session
         </Button>
         <Button
           size="small"
@@ -60,7 +60,7 @@ export function CancelAssessmentSessionDialog({
           onClick={submit}
           disabled={state.isLoading}
         >
-          Cancel session
+          Cancel Session
         </Button>
       </DialogActions>
     </CustomDialog>

@@ -22,8 +22,8 @@ export const isAdmissionOfferingConfigurationIncomplete = (
 ) => !values.workflowDefinitionId || (values.entryMode !== 1 && !values.inquiryFormDefinitionId);
 
 export const availabilityLabels = [
-  'Configuration incomplete',
-  'Not open yet',
+  'Configuration Incomplete',
+  'Not Open Yet',
   'Open',
   'Closed',
   'Inactive',
@@ -32,9 +32,9 @@ export const availabilityLabels = [
 export const availabilityColors = ['warning', 'info', 'success', 'default', 'default'] as const;
 export const admissionTrackLabels = ['General', 'RTE', 'Management', 'Staff'] as const;
 export const admissionEntryModeLabels = [
-  'Inquiry first',
-  'Direct registration',
-  'Inquiry or direct',
+  'Inquiry First',
+  'Direct Registration',
+  'Inquiry or Direct',
 ] as const;
 
 export const getOfferingInitialValues = (

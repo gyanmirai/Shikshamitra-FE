@@ -33,7 +33,7 @@ export function EligibilityExceptions({
                 }
               >
                 {exception.status === 'pending'
-                  ? 'Pending review'
+                  ? 'Pending Review'
                   : exception.status === 'approved'
                     ? 'Approved'
                     : 'Declined'}
@@ -47,7 +47,7 @@ export function EligibilityExceptions({
             </Typography>
             {exception.reviewReason && (
               <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-                Decision reason: {exception.reviewReason}
+                Decision Reason: {exception.reviewReason}
               </Typography>
             )}
             {exception.reviewedAt && (
@@ -63,7 +63,7 @@ export function EligibilityExceptions({
                   disabled={disabled}
                   onClick={() => onReview(exception.id, true)}
                 >
-                  Approve exception
+                  Approve Exception
                 </Button>
                 <Button
                   size="small"
@@ -71,7 +71,7 @@ export function EligibilityExceptions({
                   disabled={disabled}
                   onClick={() => onReview(exception.id, false)}
                 >
-                  Decline exception
+                  Decline Exception
                 </Button>
               </Stack>
             )}

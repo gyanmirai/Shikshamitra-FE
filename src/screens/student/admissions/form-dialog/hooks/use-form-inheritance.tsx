@@ -31,7 +31,12 @@ import {
 } from 'src/redux/student/admissions/admission-forms-api';
 
 import { getAdmissionFormAccess } from '../../form-access';
-import { getInheritedFields, approveInquirySource } from '../form-inheritance-model';
+import { changeNewFormInheritance } from '../inquiry-default-fields';
+import {
+  getInheritedFields,
+  approveInquirySource,
+  getInheritancePreviewValues,
+} from '../form-inheritance-model';
 
 type ContextValue = {
   formik: FormikProps<CreateUpdateAdmissionForm>;
@@ -100,11 +105,7 @@ export function FormInheritanceProvider({
       formik,
       editingId,
       enabled,
-      setEnabled: (next) =>
-        formik.setFieldValue('inheritance', {
-          enabled: next,
-          sources: formik.values.inheritance?.sources ?? [],
-        }),
+      setEnabled: (next) => formik.setValues(changeNewFormInheritance(formik.values, next)),
       sourceId: null,
       selectSource: () => undefined,
       loading: false,
@@ -285,7 +286,13 @@ const EnabledInheritanceController = memo(
       },
       [loadForms, canViewSources]
     );
-    const inherited = getInheritedFields(preview?.definition);
+    const inherited = getInheritedFields(
+      getInheritancePreviewValues(
+        formik.values,
+        preview?.definition,
+        preview?.inquiryContextSections
+      )
+    );
     const selectedField =
       inherited.find((field) => field.inheritedFrom?.fieldIdentity === selectedIdentity) ?? null;
     const value = useMemo<ContextValue>(
@@ -293,8 +300,7 @@ const EnabledInheritanceController = memo(
         formik,
         editingId,
         enabled: true,
-        setEnabled: (enabled) =>
-          formik.setFieldValue('inheritance', { ...formik.values.inheritance, enabled }),
+        setEnabled: (enabled) => formik.setValues(changeNewFormInheritance(formik.values, enabled)),
         sourceId,
         selectSource: (id) => {
           selectSource(id);

@@ -52,10 +52,10 @@ it('replays the immutable command after a lost response even if an eligibility r
   fireEvent.change(screen.getByRole('textbox', { name: 'Reason' }), {
     target: { value: 'Parent returned' },
   });
-  fireEvent.click(screen.getByRole('button', { name: 'Resume admission' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Resume Admission' }));
   await waitFor(() => expect(mock.resume).toHaveBeenCalledOnce());
   await waitFor(() =>
-    expect(screen.getByRole('button', { name: 'Resume admission' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Resume Admission' })).toBeEnabled()
   );
   mock.preview = {
     ...mock.preview,
@@ -63,9 +63,9 @@ it('replays the immutable command after a lost response even if an eligibility r
     blockers: ['Only an admission ended before finalization can be resumed here.'],
   };
   view.rerender(<ApplicationResumeJourney {...props} />);
-  expect(screen.getByRole('button', { name: 'Resume admission' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: 'Resume Admission' })).toBeEnabled();
   expect(screen.getByRole('textbox', { name: 'Reason' })).toBeDisabled();
-  fireEvent.click(screen.getByRole('button', { name: 'Resume admission' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Resume Admission' }));
   await waitFor(() => expect(props.onResumed).toHaveBeenCalledOnce());
   expect(mock.resume.mock.calls[1][0]).toEqual(mock.resume.mock.calls[0][0]);
   expect(mock.refetch).not.toHaveBeenCalled();

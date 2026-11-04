@@ -9,8 +9,11 @@ import type { AdmissionOfferingListInput } from 'src/redux/student/admissions/ad
 import { useSelector } from 'react-redux';
 import { useState, useEffect } from 'react';
 import { useGetClassByMediumQuery } from 'src/redux/class/classApi';
-import { academicClassFilterInput } from 'src/utils/student-academic-filter-query';
 import { useGetAdmissionOfferingsQuery } from 'src/redux/student/admissions/admission-offerings-api';
+import {
+  readAcademicFilterIds,
+  academicClassFilterInput,
+} from 'src/utils/student-academic-filter-query';
 import { useGetAcademicOrganizationOptionsQuery } from 'src/redux/academicOrganizationOptions/academicOrganizationOptionsApi';
 import {
   useGetAdmissionCycleQuery,
@@ -34,7 +37,7 @@ import type { BulkOfferingValues } from './bulk-admission-offering-model';
 const scopeColumnLabels: Record<keyof typeof offeringScopeColumns, string> = {
   boardName: 'Board',
   mediumName: 'Medium',
-  stageName: 'School level',
+  stageName: 'School Level',
   standardName: 'Class',
   availabilityStatus: 'Availability',
   configurationStatus: 'Configuration',
@@ -187,7 +190,7 @@ export function useAdmissionOfferingsScreen() {
       label,
     })),
     configurationStatus: [
-      { value: '0', label: 'Missing config' },
+      { value: '0', label: 'Missing Config' },
       { value: '1', label: 'Ready' },
     ],
   };
@@ -197,6 +200,14 @@ export function useAdmissionOfferingsScreen() {
       if (field === 'boardId' || field === 'mediumId') return [];
       const value = filterState.filters[field];
       if (!value) return [];
+      const selectedIds = readAcademicFilterIds(value);
+      const classSummary =
+        field === 'standardId' && selectedIds.length > 1
+          ? columnOptions.standardName.length === selectedIds.length &&
+            columnOptions.standardName.every((option) => selectedIds.includes(option.value))
+            ? `All (${selectedIds.length})`
+            : `${selectedIds.length} selected`
+          : undefined;
       return [
         {
           column,
@@ -204,15 +215,17 @@ export function useAdmissionOfferingsScreen() {
           value,
           valueType: 'enum',
           label: scopeColumnLabels[column as keyof typeof offeringScopeColumns],
-          displayValue: value
-            .split(',')
-            .map(
-              (id) =>
-                columnOptions[column as keyof typeof columnOptions].find(
-                  (option) => String(option.value) === id
-                )?.label ?? id
-            )
-            .join(', '),
+          displayValue:
+            classSummary ??
+            value
+              .split(',')
+              .map(
+                (id) =>
+                  columnOptions[column as keyof typeof columnOptions].find(
+                    (option) => String(option.value) === id
+                  )?.label ?? id
+              )
+              .join(', '),
         },
       ];
     }),

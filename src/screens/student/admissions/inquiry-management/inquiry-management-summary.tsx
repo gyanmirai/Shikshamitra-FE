@@ -7,9 +7,9 @@ import { Chip, Grid, Paper, Stack, Typography } from '@mui/material';
 const outcomeLabels = [
   'Interested',
   'Pending',
-  'Not interested',
-  'Not interested',
-  'Not interested',
+  'Not Interested',
+  'Not Interested',
+  'Not Interested',
 ];
 
 export function InquiryManagementSummary({
@@ -26,12 +26,12 @@ export function InquiryManagementSummary({
     },
     { label: 'Contacts', value: String(value.contactCount) },
     {
-      label: 'First contact due',
-      value: value.firstContactDueAt ? fDateTime(value.firstContactDueAt) : 'Not tracked',
+      label: 'First Contact Due',
+      value: value.firstContactDueAt ? fDateTime(value.firstContactDueAt) : 'Not Tracked',
     },
     {
-      label: 'Qualification due',
-      value: value.qualificationDueAt ? fDateTime(value.qualificationDueAt) : 'Not tracked',
+      label: 'Qualification Due',
+      value: value.qualificationDueAt ? fDateTime(value.qualificationDueAt) : 'Not Tracked',
     },
   ];
   return (
@@ -40,7 +40,7 @@ export function InquiryManagementSummary({
         <Chip
           size="small"
           color={value.isOverdue ? 'error' : 'default'}
-          label={value.isOverdue ? 'Action overdue' : 'On track'}
+          label={value.isOverdue ? 'Action Overdue' : 'On Track'}
         />
         <Chip
           size="small"
@@ -49,8 +49,8 @@ export function InquiryManagementSummary({
             value.isLocked
               ? 'Moved to Pipeline'
               : value.canStartApplication
-                ? 'Ready for next stage'
-                : 'Next stage unavailable'
+                ? 'Ready for Next Stage'
+                : 'Next Stage Unavailable'
           }
         />
         {value.outcome != null && (
@@ -73,7 +73,7 @@ export function InquiryManagementSummary({
       </Grid>
       {value.blockers.length > 0 && (
         <StudentFeedback notificationKey="STU-0415" presentation="persistent" severity="warning">
-          <Typography variant="subtitle2">Before starting an application</Typography>
+          <Typography variant="subtitle2">Before Starting an Application</Typography>
           {value.blockers.map((blocker) => (
             <Typography key={blocker} variant="body2">
               • {blocker}

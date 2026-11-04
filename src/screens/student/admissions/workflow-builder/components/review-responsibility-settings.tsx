@@ -21,10 +21,10 @@ export function ReviewResponsibilitySettings({
   const query = useGetAdmissionReviewRolesQuery(undefined, { skip: !available });
   const roles = query.data ?? [];
   const roleOptions = (value: string | null) => [
-    { value: '', label: 'Any authorized staff member' },
+    { value: '', label: 'Any Authorized Staff Member' },
     ...roles.map((role) => ({ value: role.name, label: role.name })),
     ...(value && !roles.some((role) => role.name === value)
-      ? [{ value, label: `${value} (saved role)` }]
+      ? [{ value, label: `${value} (Saved Role)` }]
       : []),
   ];
   return (
@@ -32,7 +32,7 @@ export function ReviewResponsibilitySettings({
       <CustomSelect
         fullWidth
         size="small"
-        label="Reviewer role (optional)"
+        label="Reviewer Role (Optional)"
         value={policy.reviewerRole ?? ''}
         options={roleOptions(policy.reviewerRole)}
         disabled={disabled || query.isFetching}
@@ -48,7 +48,7 @@ export function ReviewResponsibilitySettings({
         onChange={(assignedReviewerId) => onChange({ assignedReviewerId })}
       />
       <FormControlLabel
-        label="Require a different person to make the admission decision"
+        label="Require a Different Person to Make the Admission Decision"
         control={
           <Switch
             size="small"
@@ -61,7 +61,7 @@ export function ReviewResponsibilitySettings({
       <CustomSelect
         fullWidth
         size="small"
-        label="Final approver role (optional)"
+        label="Final Approver Role (Optional)"
         value={policy.approverRole ?? ''}
         options={roleOptions(policy.approverRole)}
         disabled={disabled || query.isFetching}

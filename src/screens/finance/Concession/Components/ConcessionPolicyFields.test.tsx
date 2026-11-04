@@ -4,7 +4,7 @@ import { it, vi, expect, describe } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
-import { act, render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { act, render, screen, within, fireEvent, waitFor } from '@testing-library/react';
 
 import ConcessionPolicyFields from './ConcessionPolicyFields';
 import { useRefreshFinancePrerequisites } from '../../hooks/useRefreshFinancePrerequisites';
@@ -50,7 +50,9 @@ describe('concession policy field consistency', () => {
     const view = screen.getByRole('button', { name: 'View selected concession policy' });
     await user.click(view);
     expect(screen.getByRole('dialog', { name: 'Concession Policy' })).toBeVisible();
-    expect(screen.getByText('Sibling policy')).toBeVisible();
+    expect(
+      within(screen.getByRole('dialog', { name: 'Concession Policy' })).getByText('Sibling policy')
+    ).toBeVisible();
     expect(screen.getByText('v2')).toBeVisible();
     expect(screen.getByText('25%')).toBeVisible();
     expect(screen.getByText('All unpaid installments')).toBeVisible();
@@ -151,7 +153,7 @@ describe('concession policy field consistency', () => {
     },
   ];
 
-  it('uses required, named searchable shared selects and preserves the chosen policy version', () => {
+  it('shows policy names only and preserves each same-name option’s policy version', () => {
     const onPolicyChange = vi.fn();
     const onPolicyBlur = vi.fn();
     render(
@@ -167,6 +169,7 @@ describe('concession policy field consistency', () => {
       />
     );
     const select = screen.getByRole('combobox', { name: 'Concession policy' });
+    expect(select).toHaveTextContent(/^Sibling policy$/);
     expect(select).toHaveAttribute('aria-required', 'true');
     expect(screen.getByRole('combobox', { name: 'Concession type' })).toHaveAttribute(
       'aria-required',
@@ -175,7 +178,11 @@ describe('concession policy field consistency', () => {
     fireEvent.mouseDown(select);
     expect(screen.getByRole('textbox', { name: 'Search Concession policy' })).toBeVisible();
     expect(screen.getAllByRole('textbox')).toHaveLength(1);
-    fireEvent.click(screen.getByRole('option', { name: 'Sibling policy (SIB, v2)' }));
+    const sameNameOptions = screen.getAllByRole('option', { name: /^Sibling policy$/ });
+    expect(sameNameOptions).toHaveLength(2);
+    expect(sameNameOptions[0]).toHaveAttribute('data-value', 'version');
+    expect(sameNameOptions[1]).toHaveAttribute('data-value', 'version-2');
+    fireEvent.click(sameNameOptions[1]);
     expect(onPolicyChange).toHaveBeenCalledWith(policies[1]);
     fireEvent.blur(select);
     expect(onPolicyBlur).toHaveBeenCalled();
@@ -213,7 +220,7 @@ describe('concession policy field consistency', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Search Concession policy' }), {
       target: { value: 'merit' },
     });
-    expect(screen.queryByRole('option', { name: 'Sibling policy (SIB, v2)' })).toBeNull();
+    expect(screen.queryByRole('option', { name: /^Sibling policy$/ })).toBeNull();
     expect(onPolicyChange).not.toHaveBeenCalled();
     await user.click(screen.getByRole('option', { name: /Merit policy/ }));
     expect(onPolicyChange).toHaveBeenCalledExactlyOnceWith(meritPolicy);
@@ -223,7 +230,7 @@ describe('concession policy field consistency', () => {
     const policySearch = screen.getByRole('textbox', { name: 'Search Concession policy' });
     expect(policySearch).toHaveValue('');
     expect(screen.getAllByRole('textbox')).toHaveLength(1);
-    expect(screen.getByRole('option', { name: 'Sibling policy (SIB, v2)' })).toBeVisible();
+    expect(screen.getAllByRole('option', { name: /^Sibling policy$/ })).toHaveLength(2);
     await user.keyboard('{Escape}');
     await waitFor(() => expect(screen.queryByRole('listbox')).not.toBeInTheDocument());
 

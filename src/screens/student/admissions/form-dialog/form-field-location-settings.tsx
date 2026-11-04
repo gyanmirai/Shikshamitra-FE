@@ -38,7 +38,7 @@ export function FormFieldLocationSettings({ formik, sectionIndex, fieldIndex }: 
 
   return (
     <SectionCard
-      title="Location dependency"
+      title="Location Dependency"
       paperProps={{ sx: { mb: 0, minWidth: 0 } }}
       gridProps={{ spacing: 1.5 }}
     >
@@ -47,12 +47,12 @@ export function FormFieldLocationSettings({ formik, sectionIndex, fieldIndex }: 
           <CustomSelect
             required
             size="small"
-            label="Country field"
+            label="Country Field"
             value={configuration.countryField ?? ''}
             options={[
               ...countryFields.map((item) => ({ value: item.code, label: item.label })),
               ...(countryFieldMissing
-                ? [{ value: configuration.countryField!, label: 'Unavailable country field' }]
+                ? [{ value: configuration.countryField!, label: 'Unavailable Country Field' }]
                 : []),
             ]}
             onChange={(value) =>
@@ -76,12 +76,12 @@ export function FormFieldLocationSettings({ formik, sectionIndex, fieldIndex }: 
             <CustomSelect
               required
               size="small"
-              label="State field"
+              label="State Field"
               value={configuration.stateField ?? ''}
               options={[
                 ...stateFields.map((item) => ({ value: item.code, label: item.label })),
                 ...(stateFieldMissing
-                  ? [{ value: configuration.stateField!, label: 'Unavailable state field' }]
+                  ? [{ value: configuration.stateField!, label: 'Unavailable State Field' }]
                   : []),
               ]}
               onChange={(value) => update({ stateField: String(value) })}

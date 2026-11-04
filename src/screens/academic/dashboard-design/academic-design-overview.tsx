@@ -9,7 +9,7 @@ import type { AcademicDesignMetric } from './academic-design-model';
 
 export function AcademicDesignOverview({ metrics }: { metrics: AcademicDesignMetric[] }) {
   if (!metrics.length) return null;
-  return <Box role="group" aria-label="Academic overview" sx={{ display: 'grid', gap: 2,
+  return <Box role="group" aria-label="Academic overview" sx={{ display: 'grid', gap: 1,
     gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', lg: `repeat(${metrics.length}, minmax(0, 1fr))` } }}>
     {metrics.map((metric) => <Card key={metric.key} variant="outlined" sx={{ p: 1.5, minWidth: 0,
       borderRadius: 1, boxShadow: 'none', display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>

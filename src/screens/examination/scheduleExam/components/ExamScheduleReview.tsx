@@ -1,6 +1,7 @@
 import type { FormikProps } from 'formik';
 
 import dayjs from 'dayjs';
+import { GlobalIcons } from 'src/utils/icons';
 import { Box, Chip, Grid, Paper, Divider, Typography } from '@mui/material';
 
 import { ExamReviewInfoItem } from './ExamReviewInfoItem';
@@ -61,11 +62,7 @@ const ExamScheduleReview = ({
   const reviewRows = buildReviewRows(formik.values.subjects);
 
   return (
-    <ExamReviewAccordion
-      title="Subject Schedule"
-      icon="solar:calendar-bold-duotone"
-      onEdit={onEdit}
-    >
+    <ExamReviewAccordion title="Subject Schedule" icon={GlobalIcons.calendar} onEdit={onEdit}>
       {reviewRows.length === 0 ? (
         <Typography variant="body2" color="text.secondary">
           No subjects scheduled yet.
@@ -94,8 +91,8 @@ const ExamScheduleReview = ({
                     }}
                   >
                     <Typography
-                      variant="subtitle2"
-                      fontWeight={700}
+                      variant="subtitle1"
+                      fontWeight={600}
                       sx={{ overflowWrap: 'anywhere' }}
                     >
                       {row.subjectName || '-'}
@@ -135,8 +132,8 @@ const ExamScheduleReview = ({
                           : '-'
                       }
                     />
-                    <ExamReviewInfoItem label="Total Marks" value={totalMarks} />
-                    <ExamReviewInfoItem label="Passing Marks" value={passingMarks} />
+                    <ExamReviewInfoItem label="Total marks" value={totalMarks} />
+                    <ExamReviewInfoItem label="Passing marks" value={passingMarks} />
                     {row.notes && (
                       <Box sx={{ gridColumn: '1 / -1' }}>
                         <ExamReviewInfoItem label="Notes" value={row.notes} />

@@ -155,6 +155,8 @@ export interface AcademicReportExportJobResponse {
   id: string;
   reportType: string;
   status: string;
+  format?: string | null;
+  requestJson?: string | null;
   fileName?: string | null;
   errorMessage?: string | null;
   isDynamic: boolean;

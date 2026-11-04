@@ -70,11 +70,11 @@ describe('StudentFieldPalette', () => {
         screen.getByRole('button', { name: `${field.displayName} captured in inquiry` })
       ).toBeDisabled();
     });
-    await user.click(screen.getByRole('button', { name: 'Add Admission preferences section' }));
+    await user.click(screen.getByRole('button', { name: 'Add Admission preferences Section' }));
     expect(onAddSection).toHaveBeenCalledWith('Admission preferences', [catalogue[3]]);
-    await user.click(screen.getByRole('button', { name: 'Add Transport preferences section' }));
+    await user.click(screen.getByRole('button', { name: 'Add Transport preferences Section' }));
     expect(onAddSection).toHaveBeenLastCalledWith('Transport preferences', catalogue.slice(4, 6));
-    await user.type(screen.getByRole('textbox', { name: 'Search student fields' }), 'lastclass');
+    await user.type(screen.getByRole('textbox', { name: 'Search Student Fields' }), 'lastclass');
     expect(
       screen.queryByRole('button', { name: 'Board, medium and class' })
     ).not.toBeInTheDocument();
@@ -98,7 +98,7 @@ describe('StudentFieldPalette', () => {
         <StudentFieldPalette fields={transportFields} onAdd={onAdd} onAddSection={onAddSection} />
       </ThemeProvider>
     );
-    const search = screen.getByRole('textbox', { name: 'Search student fields' });
+    const search = screen.getByRole('textbox', { name: 'Search Student Fields' });
     await user.type(search, 'transport preferences');
     expect(screen.getByRole('button', { name: 'Add Preferred pickup area' })).toBeVisible();
     await user.clear(search);
@@ -106,7 +106,7 @@ describe('StudentFieldPalette', () => {
     expect(screen.queryByRole('button', { name: 'Add Transport needed' })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Add Preferred pickup area' }));
     expect(onAdd).toHaveBeenCalledWith(transportFields[1]);
-    await user.click(screen.getByRole('button', { name: 'Add Transport preferences section' }));
+    await user.click(screen.getByRole('button', { name: 'Add Transport preferences Section' }));
     expect(onAddSection).toHaveBeenCalledWith('Transport preferences', transportFields);
   });
   it('disables the transport pack when both linked fields are already used', () => {
@@ -130,7 +130,7 @@ describe('StudentFieldPalette', () => {
       </ThemeProvider>
     );
     expect(
-      screen.getByRole('button', { name: 'Add Transport preferences section' })
+      screen.getByRole('button', { name: 'Add Transport preferences Section' })
     ).toBeDisabled();
   });
   it('keeps address packs inside the related expandable category', async () => {
@@ -155,10 +155,10 @@ describe('StudentFieldPalette', () => {
         />
       </ThemeProvider>
     );
-    expect(screen.queryByRole('button', { name: 'Current address pack' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Current address Pack' })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Contact and addresses (3)' }));
-    expect(screen.getByRole('button', { name: 'Permanent address pack' })).toBeDisabled();
-    await user.click(screen.getByRole('button', { name: 'Current address pack' }));
+    expect(screen.getByRole('button', { name: 'Permanent address Pack' })).toBeDisabled();
+    await user.click(screen.getByRole('button', { name: 'Current address Pack' }));
     expect(onAddSection).toHaveBeenCalledWith('Current address', addressFields.slice(0, 2));
   });
   it('groups linked fields, marks used fields, and filters by group or name', async () => {
@@ -176,10 +176,10 @@ describe('StudentFieldPalette', () => {
       </ThemeProvider>
     );
 
-    expect(screen.queryByText(/available of .* student fields/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/available of .* Student Fields/)).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Health and support (1)' })).toBeVisible();
     expect(screen.queryByRole('button', { name: 'Add Blood group' })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Add Health and support section' }));
+    await user.click(screen.getByRole('button', { name: 'Add Health and support Section' }));
     expect(onAddSection).toHaveBeenCalledWith('Health and support', [fields[1]]);
     await user.click(screen.getByRole('button', { name: 'Health and support (1)' }));
     await user.click(screen.getByRole('button', { name: 'Student profile (1)' }));
@@ -190,7 +190,7 @@ describe('StudentFieldPalette', () => {
     await user.click(screen.getByRole('button', { name: 'Add Blood group' }));
     expect(onAdd).toHaveBeenCalledWith(fields[1]);
 
-    const search = screen.getByRole('textbox', { name: 'Search student fields' });
+    const search = screen.getByRole('textbox', { name: 'Search Student Fields' });
     const label = search.closest('.MuiFormControl-root')?.querySelector('label');
     expect(label).toHaveAttribute('data-shrink', 'false');
     await user.click(search);
@@ -202,7 +202,7 @@ describe('StudentFieldPalette', () => {
     expect(screen.queryByRole('button', { name: 'Add Blood group' })).not.toBeInTheDocument();
     await user.clear(search);
     expect(label).toHaveAttribute('data-shrink', 'false');
-    expect(screen.queryByText(/available of .* student fields/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/available of .* Student Fields/)).not.toBeInTheDocument();
   });
 
   it('keeps the last option searchable when the catalogue has 100 fields', async () => {
@@ -221,8 +221,8 @@ describe('StudentFieldPalette', () => {
       </ThemeProvider>
     );
 
-    expect(screen.queryByText(/available of .* student fields/)).not.toBeInTheDocument();
-    fireEvent.change(screen.getByRole('textbox', { name: 'Search student fields' }), {
+    expect(screen.queryByText(/available of .* Student Fields/)).not.toBeInTheDocument();
+    fireEvent.change(screen.getByRole('textbox', { name: 'Search Student Fields' }), {
       target: { value: 'record 100' },
     });
     expect(screen.queryByText(/\d+ matching fields/)).not.toBeInTheDocument();
@@ -249,10 +249,10 @@ describe('StudentFieldPalette', () => {
       </ThemeProvider>
     );
 
-    await user.type(screen.getByRole('textbox', { name: 'Search student fields' }), 'blood');
-    await user.click(screen.getByRole('button', { name: 'Add Health and support section' }));
+    await user.type(screen.getByRole('textbox', { name: 'Search Student Fields' }), 'blood');
+    await user.click(screen.getByRole('button', { name: 'Add Health and support Section' }));
     expect(onAddSection).toHaveBeenCalledWith('Health and support', healthFields);
-    expect(screen.getByRole('textbox', { name: 'Search student fields' })).toHaveValue('');
+    expect(screen.getByRole('textbox', { name: 'Search Student Fields' })).toHaveValue('');
   });
 
   it('shows distinct loading, error, and empty catalogue states', () => {
@@ -261,21 +261,21 @@ describe('StudentFieldPalette', () => {
         <StudentFieldPalette fields={[]} loading onAdd={vi.fn()} />
       </ThemeProvider>
     );
-    expect(screen.getByText('Loading student fields…')).toBeVisible();
-    expect(screen.getByRole('textbox', { name: 'Search student fields' })).toBeDisabled();
+    expect(screen.getByText('Loading Student Fields…')).toBeVisible();
+    expect(screen.getByRole('textbox', { name: 'Search Student Fields' })).toBeDisabled();
 
     rerender(
       <ThemeProvider theme={createTheme(defaultSettings)}>
         <StudentFieldPalette fields={[]} error onAdd={vi.fn()} />
       </ThemeProvider>
     );
-    expect(screen.getByText('Student fields unavailable')).toBeVisible();
+    expect(screen.getByText('Student Fields Unavailable')).toBeVisible();
 
     rerender(
       <ThemeProvider theme={createTheme(defaultSettings)}>
         <StudentFieldPalette fields={[]} onAdd={vi.fn()} />
       </ThemeProvider>
     );
-    expect(screen.getByText('No student fields available')).toBeVisible();
+    expect(screen.getByText('No Student Fields Available')).toBeVisible();
   });
 });

@@ -61,9 +61,9 @@ test.describe('Payroll salary structure with the real local API', () => {
       expect(registration.ok(), await registration.text()).toBeTruthy();
       const overview = `/hr/payroll/structure?employeeId=${employeeId}&month=${month}`;
       await page.goto(overview, { waitUntil: 'domcontentloaded' });
-      await expect(
-        page.getByRole('heading', { name: 'Payroll Structure', exact: true })
-      ).toBeVisible({ timeout: 60_000 });
+      await expect(page.getByRole('heading', { name: 'Staff Salaries', exact: true })).toBeVisible({
+        timeout: 60_000,
+      });
       await expect(page.getByText('Estimated take-home', { exact: true })).toBeVisible({
         timeout: 60_000,
       });
@@ -80,16 +80,17 @@ test.describe('Payroll salary structure with the real local API', () => {
       });
       const upgrade = page.getByRole('button', { name: 'Use current template', exact: true });
       if (await upgrade.isVisible()) await upgrade.click();
-      await page.getByRole('combobox', { name: 'Amount basis', exact: true }).click();
-      await page.getByRole('option', { name: 'Monthly salary', exact: true }).click();
+      await page.getByRole('radio', { name: /^Monthly salary/ }).check();
       await page.getByLabel('Monthly salary', { exact: true }).fill('18000');
+      await page.getByRole('button', { name: 'Next', exact: true }).click();
       await page.getByRole('combobox', { name: 'Previous PF membership' }).click();
       await page.getByRole('option', { name: 'Existing PF member', exact: true }).click();
-      await expect(page.getByRole('button', { name: 'Save salary', exact: true })).toBeDisabled();
+      await expect(page.getByRole('button', { name: 'Next', exact: true })).toBeEnabled();
       await page.getByRole('button', { name: 'PF registration details', exact: true }).click();
       await expect(page.getByLabel('PF number', { exact: true })).toHaveValue('');
       await expect(page.getByLabel('UAN', { exact: true })).toHaveValue('');
       await page.getByRole('button', { name: 'PF registration details', exact: true }).click();
+      await page.getByRole('button', { name: 'Next', exact: true }).click();
       const previewResponse = page.waitForResponse(
         (response) =>
           response.url().endsWith('/calculate') && response.request().method() === 'POST'
@@ -177,9 +178,9 @@ test.describe('Payroll salary structure with the real local API', () => {
       ]) {
         await page.setViewportSize(viewport);
         await expect(
-          page.getByRole('heading', { name: 'Payroll Structure', exact: true })
+          page.getByRole('heading', { name: 'Staff Salaries', exact: true })
         ).toBeVisible();
-        await page.getByRole('heading', { name: 'Payroll Structure', exact: true }).hover();
+        await page.getByRole('heading', { name: 'Staff Salaries', exact: true }).hover();
         expect(
           await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)
         ).toBeTruthy();

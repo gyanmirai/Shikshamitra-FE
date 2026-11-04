@@ -39,7 +39,7 @@ async function openReview() {
     <ApplicationDocumentsPanel applicationId="application-1" stage={documentStage} layout="table" />
   );
   await userEvent.click(
-    await screen.findByRole('button', { name: 'View document for Birth certificate' })
+    await screen.findByRole('button', { name: 'View Document For Birth certificate' })
   );
   return within(screen.getByRole('dialog'));
 }
@@ -61,7 +61,7 @@ describe('document review commands', { timeout: 15000 }, () => {
     );
     const dialog = await openReview();
     expect(dialog.queryByRole('textbox', { name: 'Notes' })).not.toBeInTheDocument();
-    expect(dialog.queryByRole('textbox', { name: /reason/i })).not.toBeInTheDocument();
+    expect(dialog.queryByRole('textbox', { name: /Reason/i })).not.toBeInTheDocument();
     await userEvent.click(dialog.getByRole('button', { name: 'Approve' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(submitted).toEqual({
@@ -94,19 +94,19 @@ describe('document review commands', { timeout: 15000 }, () => {
     const preview = await openReview();
     await userEvent.click(preview.getByRole('button', { name: 'Reject' }));
     const dialog = within(screen.getByRole('dialog', { name: 'Reject Document' }));
-    await userEvent.click(dialog.getByRole('button', { name: 'Reject document' }));
+    await userEvent.click(dialog.getByRole('button', { name: 'Reject Document' }));
     expect(await dialog.findByText('Give a reason for this decision')).toBeVisible();
     expect(submitted).toBeUndefined();
     await userEvent.type(
-      dialog.getByRole('textbox', { name: 'Rejection reason' }),
+      dialog.getByRole('textbox', { name: 'Rejection Reason' }),
       ' Replace blurred scan '
     );
-    await userEvent.click(dialog.getByRole('button', { name: 'Reject document' }));
+    await userEvent.click(dialog.getByRole('button', { name: 'Reject Document' }));
     expect(
       await dialog.findByText('The evidence changed. Reopen this document before reviewing it.')
     ).toBeVisible();
     await waitFor(() => expect(reads).toBe(2));
-    expect(dialog.getByRole('textbox', { name: 'Rejection reason' })).toHaveValue(
+    expect(dialog.getByRole('textbox', { name: 'Rejection Reason' })).toHaveValue(
       ' Replace blurred scan '
     );
     expect(submitted).toEqual({
@@ -138,10 +138,10 @@ describe('document review commands', { timeout: 15000 }, () => {
       await waitFor(() => expect(reviews).toBe(1));
       expect(approve).toBeDisabled();
       expect(dialog.queryByRole('textbox', { name: 'Notes' })).not.toBeInTheDocument();
-      expect(dialog.getByRole('button', { name: 'Close' })).toBeDisabled();
+      expect(dialog.getByRole('button', { name: 'close' })).toBeDisabled();
       expect(dialog.getByRole('button', { name: 'Reject' })).toBeDisabled();
       expect(dialog.getByRole('button', { name: 'close' })).toBeDisabled();
-      expect(dialog.getByRole('button', { name: 'Evidence history (1)' })).toBeDisabled();
+      expect(dialog.getByRole('button', { name: 'Evidence History (1)' })).toBeDisabled();
       await userEvent.keyboard('{Escape}');
       fireEvent.click(approve);
       expect(screen.getByRole('dialog')).toBeInTheDocument();
@@ -169,7 +169,7 @@ describe('document review commands', { timeout: 15000 }, () => {
     await userEvent.click(preview.getByRole('button', { name: 'Reject' }));
     const dialog = within(screen.getByRole('dialog', { name: 'Reject Document' }));
     await userEvent.type(
-      dialog.getByRole('textbox', { name: 'Rejection reason' }),
+      dialog.getByRole('textbox', { name: 'Rejection Reason' }),
       'Version one is unclear'
     );
     summary = {
@@ -189,7 +189,7 @@ describe('document review commands', { timeout: 15000 }, () => {
     await waitFor(() =>
       expect(screen.getByRole('button', { name: 'Refresh', hidden: true })).toBeEnabled()
     );
-    await userEvent.click(dialog.getByRole('button', { name: 'Reject document' }));
+    await userEvent.click(dialog.getByRole('button', { name: 'Reject Document' }));
     expect(
       await dialog.findByText('Refresh the changed evidence before reviewing it.')
     ).toBeVisible();
@@ -211,14 +211,14 @@ describe('document review commands', { timeout: 15000 }, () => {
       })
     );
     const preview = await openReview();
-    const history = preview.getByRole('button', { name: 'Evidence history (1)' });
+    const history = preview.getByRole('button', { name: 'Evidence History (1)' });
     await userEvent.click(preview.getByRole('button', { name: 'Reject' }));
     const dialog = within(screen.getByRole('dialog', { name: 'Reject Document' }));
     await userEvent.click(dialog.getByRole('button', { name: 'Cancel' }));
     expect(
       screen.getByRole('dialog', { name: 'Birth certificate · Document Review' })
     ).toBeVisible();
-    expect(preview.getByRole('button', { name: 'Evidence history (1)' })).toBe(history);
+    expect(preview.getByRole('button', { name: 'Evidence History (1)' })).toBe(history);
     expect(preview.getByRole('button', { name: 'Reject' })).toHaveFocus();
     expect(reviews).toBe(0);
     expect(preview.queryByRole('textbox')).not.toBeInTheDocument();
@@ -241,7 +241,7 @@ describe('document review commands', { timeout: 15000 }, () => {
       />
     );
     await userEvent.click(
-      await screen.findByRole('button', { name: 'Upload document for Birth certificate' })
+      await screen.findByRole('button', { name: 'Upload Document for Birth certificate' })
     );
     const dialog = within(screen.getByRole('dialog'));
     const file = new File(['%PDF'], 'birth.pdf', { type: 'application/pdf' });
@@ -253,8 +253,8 @@ describe('document review commands', { timeout: 15000 }, () => {
         setPermissions([{ name: 'Students.Admissions.Documents.View', isGranted: true }])
       );
     });
-    expect(dialog.getByRole('button', { name: 'Upload document' })).toBeDisabled();
-    fireEvent.submit(dialog.getByRole('button', { name: 'Upload document' }).closest('form')!);
+    expect(dialog.getByRole('button', { name: 'Upload Document' })).toBeDisabled();
+    fireEvent.submit(dialog.getByRole('button', { name: 'Upload Document' }).closest('form')!);
     expect(
       await dialog.findByText(
         'This action is no longer available. Refresh the checklist before continuing.'

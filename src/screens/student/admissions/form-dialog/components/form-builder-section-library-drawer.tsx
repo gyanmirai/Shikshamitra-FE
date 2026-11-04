@@ -82,14 +82,14 @@ export function FormBuilderSectionLibraryDrawer({
         >
           <Box sx={{ minWidth: 0 }}>
             <Typography id="admission-form-section-library-title" variant="h6">
-              Add a ready-made section
+              Add a Ready-Made Section
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Add a complete group of editable fields
+              Add a Complete Group of Editable Fields
               {targetLabel ? ` beside ${targetLabel}` : ''}.
             </Typography>
           </Box>
-          <IconButton aria-label="Close section library" onClick={onClose}>
+          <IconButton aria-label="Close Section Library" onClick={onClose}>
             <Iconify icon="mdi:close" />
           </IconButton>
         </Stack>
@@ -99,7 +99,7 @@ export function FormBuilderSectionLibraryDrawer({
           <TextField
             fullWidth
             size="small"
-            label="Search section templates"
+            label="Search Section Templates"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             InputProps={{
@@ -169,7 +169,7 @@ export function FormBuilderSectionLibraryDrawer({
                       {template.description}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      {template.fieldCount} {template.fieldCount === 1 ? 'field' : 'fields'}
+                      {template.fieldCount} {template.fieldCount === 1 ? 'Field' : 'Fields'}
                     </Typography>
                   </Box>
                 </ButtonBase>
@@ -177,7 +177,7 @@ export function FormBuilderSectionLibraryDrawer({
             })}
             {!templates.length && (
               <Box sx={{ py: 4, textAlign: 'center' }}>
-                <Typography variant="subtitle2">No sections found</Typography>
+                <Typography variant="subtitle2">No Sections Found</Typography>
                 <Typography variant="body2" color="text.secondary">
                   Try another search or category.
                 </Typography>
@@ -186,7 +186,7 @@ export function FormBuilderSectionLibraryDrawer({
 
             {selected && (
               <Box sx={{ p: 2, borderRadius: 1.5, bgcolor: 'background.neutral' }}>
-                <Typography variant="subtitle2">Included fields</Typography>
+                <Typography variant="subtitle2">Included Fields</Typography>
                 <Stack spacing={0.5} sx={{ mt: 1 }}>
                   {selectedFields.map((field) => (
                     <Stack key={field.code} direction="row" spacing={1} alignItems="center">
@@ -209,12 +209,13 @@ export function FormBuilderSectionLibraryDrawer({
             Cancel
           </Button>
           <Button
+            aria-label="Add Section"
             variant="contained"
             startIcon={<Iconify icon="mdi:plus" />}
             disabled={!selected}
             onClick={addSection}
           >
-            Add section
+            Section
           </Button>
         </Stack>
       </Stack>

@@ -6,7 +6,9 @@ export interface AcademicReportRequestDto {
   filters?: {
     academicYearId?: string | null;
     classIds?: string[] | null;
+    divisionIds?: string[] | null;
     subjectIds?: string[] | null;
+    chapterIds?: string[] | null;
     statuses?: number[] | null;
     revisionRequired?: boolean | null;
   };
@@ -15,6 +17,7 @@ export interface AcademicReportRequestDto {
 export interface PreviewColumn {
   id: string | null;
   label: string | null;
+  align?: 'left' | 'center' | 'right';
 }
 
 export interface PreviewData {

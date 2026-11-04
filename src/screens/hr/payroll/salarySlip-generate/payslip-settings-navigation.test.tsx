@@ -1,4 +1,9 @@
+import type { ReactElement } from 'react';
+
+import { Provider } from 'react-redux';
+import { configureStore } from '@reduxjs/toolkit';
 import { it, vi, expect, afterEach } from 'vitest';
+import authReducer from 'src/redux/auth/authSlice';
 import { act, render, screen, cleanup, fireEvent } from '@testing-library/react';
 
 import PayslipSettingsForm from './payslip-settings-form';
@@ -29,6 +34,21 @@ vi.mock('src/redux/hr/payslip-api', async (importOriginal) => ({
 }));
 vi.mock('src/components/toast', () => ({ shikshaMitraToast: { success: vi.fn() } }));
 const navigationDescriptor = Object.getOwnPropertyDescriptor(window, 'navigation');
+
+function renderSettings(ui: ReactElement) {
+  const store = configureStore({
+    reducer: { auth: authReducer },
+    preloadedState: {
+      auth: {
+        ...authReducer(undefined, { type: 'test/initialize' }),
+        permissionsInitialized: true,
+      },
+    },
+  });
+  return render(ui, {
+    wrapper: ({ children }) => <Provider store={store}>{children}</Provider>,
+  });
+}
 afterEach(() => {
   cleanup();
   state.push.mockReset();
@@ -37,7 +57,7 @@ afterEach(() => {
 });
 
 it('protects a dirty settings draft on internal links, including keep-editing and deliberate discard', async () => {
-  render(
+  renderSettings(
     <>
       <PayslipSettingsForm canEdit />
       <a href="/hr/payroll/run-payroll">Run payroll</a>
@@ -66,7 +86,7 @@ it('protects browser traversal and only resumes it after discard', async () => {
     traverseTo: vi.fn(() => ({ finished: Promise.resolve() })),
   });
   Object.defineProperty(window, 'navigation', { configurable: true, value: navigation });
-  render(<PayslipSettingsForm canEdit />);
+  renderSettings(<PayslipSettingsForm canEdit />);
   await act(async () => {
     fireEvent.click(
       screen.getByRole('switch', { name: 'Email each employee after payroll finalization' })

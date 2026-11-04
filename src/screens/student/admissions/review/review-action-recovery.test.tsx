@@ -48,26 +48,26 @@ it.each(['assignment', 'correction'] as const)(
       )
     );
     const dialog = within(screen.getByRole('dialog'));
-    const field = kind === 'assignment' ? 'Reason *' : 'Correction instructions *';
-    const action = kind === 'assignment' ? 'Save assignment' : 'Request corrections';
+    const field = kind === 'assignment' ? 'Reason *' : 'Correction Instructions *';
+    const action = kind === 'assignment' ? 'Save Assignment' : 'Request Corrections';
     await user.type(dialog.getByLabelText(field), 'My original reason.');
     await user.click(dialog.getByRole('button', { name: action }));
     expect(await dialog.findByText(/Your edits are still here/)).toBeInTheDocument();
     expect(dialog.getByLabelText(field)).toHaveValue('My original reason.');
     expect(onClose).not.toHaveBeenCalled();
-    await user.click(dialog.getByRole('button', { name: 'Reload latest review' }));
+    await user.click(dialog.getByRole('button', { name: 'Reload Latest review' }));
     await user.click(
-      within(await screen.findByRole('dialog', { name: 'Reload the latest review?' })).getByRole(
+      within(await screen.findByRole('dialog', { name: 'Reload the Latest review?' })).getByRole(
         'button',
         { name: 'Cancel' }
       )
     );
     expect(onReload).not.toHaveBeenCalled();
-    await user.click(dialog.getByRole('button', { name: 'Reload latest review' }));
+    await user.click(dialog.getByRole('button', { name: 'Reload Latest review' }));
     await user.click(
-      within(await screen.findByRole('dialog', { name: 'Reload the latest review?' })).getByRole(
+      within(await screen.findByRole('dialog', { name: 'Reload the Latest review?' })).getByRole(
         'button',
-        { name: 'Discard edits and reload' }
+        { name: 'Discard Edits and Reload' }
       )
     );
     await waitFor(() => expect(dialog.getByLabelText(field)).toHaveValue(''));

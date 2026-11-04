@@ -53,7 +53,7 @@ describe('admission form template catalogue', () => {
       expect(source[0].bindingType).toBe(0);
       expect(target[0].bindingType).toBe(0);
     });
-    expect(inquiryFields.some((field) => field.bindingKey === 'Applicant.Name')).toBe(true);
+    expect(inquiryFields.some((field) => field.bindingKey === 'Applicant.FirstName')).toBe(true);
     expect(registrationFields.some((field) => field.bindingKey === 'Applicant.FirstName')).toBe(
       true
     );

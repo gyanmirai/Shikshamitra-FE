@@ -390,7 +390,7 @@ export function AdmissionPublicInquiryLinks({
     },
     {
       id: 'periodName',
-      label: 'Admission period',
+      label: 'Admission Period',
       filterType: 'string',
       isFilter: true,
       minWidth: 180,
@@ -407,14 +407,14 @@ export function AdmissionPublicInquiryLinks({
         return (
           <AdmissionTableText
             text={expiresAtUtc ? (fDate(expiresAtUtc, 'DD-MM-YYYY') ?? '—') : 'No expiry'}
-            tooltip={expiresAtUtc ? fDateTime(expiresAtUtc) : 'No expiry'}
+            tooltip={expiresAtUtc ? fDateTime(expiresAtUtc) : 'No Expiry'}
           />
         );
       },
     },
     {
       id: 'formName',
-      label: 'Inquiry form',
+      label: 'Inquiry Form',
       filterType: 'string',
       isFilter: true,
       minWidth: 180,
@@ -455,7 +455,7 @@ export function AdmissionPublicInquiryLinks({
           <AdaptiveThreeDotsActions
             mobileDirectActionLimit={0}
             placement="top-right"
-            moreLabel={`More actions for ${link.name}`}
+            moreLabel={`More Actions For ${link.name}`}
             sx={{
               justifyContent: 'flex-end',
               gap: 0.5,
@@ -469,7 +469,7 @@ export function AdmissionPublicInquiryLinks({
                 ? [
                     {
                       id: 'copy',
-                      label: isMobile ? 'Copy inquiry link' : `Copy inquiry link for ${link.name}`,
+                      label: isMobile ? 'Copy Inquiry Link' : `Copy Inquiry Link For ${link.name}`,
                       icon: 'mdi:content-copy',
                       disabled:
                         !createdLinks[link.id]?.token ||
@@ -477,22 +477,22 @@ export function AdmissionPublicInquiryLinks({
                         Boolean(copyingLinkId),
                       tooltip:
                         link.status !== 'Active'
-                          ? 'This inquiry link has expired.'
+                          ? 'This Inquiry Link Has Expired.'
                           : createdLinks[link.id]?.token
-                            ? 'Copy this link before leaving the page. Its full address is only available after creation.'
-                            : 'The full address is only available during the session in which this link was created.',
+                            ? 'Copy This Link Before Leaving the Page. Its Full Address Is Only Available After Creation.'
+                            : 'The Full Address Is Only Available During the Session in Which This Link Was Created.',
                       onClick: () => copyLink(link),
                     },
                     {
                       id: 'form',
-                      label: isMobile ? 'Set inquiry form' : `Set inquiry form for ${link.name}`,
+                      label: isMobile ? 'Set Inquiry Form' : `Set Inquiry Form For ${link.name}`,
                       icon: 'mdi:form-select',
                       disabled: setLinkFormState.isLoading,
                       onClick: () => openFormEditor(link),
                     },
                     {
                       id: 'revoke',
-                      label: isMobile ? 'Revoke link' : `Revoke ${link.name}`,
+                      label: isMobile ? 'Revoke Link' : `Revoke ${link.name}`,
                       icon: 'mdi:link-variant-off',
                       color: 'error.main',
                       disabled: revokeState.isLoading,
@@ -536,7 +536,7 @@ export function AdmissionPublicInquiryLinks({
         <Box sx={{ flex: 1, minHeight: 0, minWidth: 0, overflow: 'hidden' }}>
           <CustomizableTable
             tableId="admission-public-inquiry-links"
-            tableTitle="Public admission inquiry links"
+            tableTitle="Public Admission Inquiry Links"
             wrapperProps={{ sx: { flex: 1, height: 1, minHeight: 0, minWidth: 0 } }}
             tableContainerProps={{ sx: { height: 1 } }}
             columns={columns}
@@ -566,7 +566,7 @@ export function AdmissionPublicInquiryLinks({
             isPagination
             isSearch
             isFilter
-            noDataText="No inquiry links yet. Create a link for a website, QR code, or school event."
+            noDataText="No Inquiry Links Yet. Create a Link for a Website, QR Code, or School Event."
           />
         </Box>
       </Box>
@@ -574,7 +574,7 @@ export function AdmissionPublicInquiryLinks({
       <CustomDialog
         open={Boolean(viewLink)}
         handleClose={() => setViewLink(null)}
-        title={viewLink ? `Inquiry link: ${viewLink.name}` : 'Inquiry link details'}
+        title={viewLink ? `Inquiry Link: ${viewLink.name}` : 'Inquiry Link Details'}
         hasForm={false}
         maxWidth="sm"
         paperProps={{ sx: { '& .MuiTypography-h6': { overflowWrap: 'anywhere' } } }}
@@ -583,8 +583,8 @@ export function AdmissionPublicInquiryLinks({
           <Stack spacing={2}>
             <FormSectionCard
               icon="mdi:link-variant"
-              title="Link details"
-              descriptionTooltip="Review this link’s source, admission period, form, and availability."
+              title="Link Details"
+              descriptionTooltip="Review This Link’s Source, Admission Period, Form, and Availability."
               titleTypographyProps={{
                 sx: { fontSize: { xs: '1rem', sm: '1.05rem' }, fontWeight: 700 },
               }}
@@ -645,8 +645,8 @@ export function AdmissionPublicInquiryLinks({
                 }}
               >
                 {[
-                  { label: 'Admission period', value: viewLink?.periodName },
-                  { label: 'Inquiry form', value: viewLink?.formName },
+                  { label: 'Admission Period', value: viewLink?.periodName },
+                  { label: 'Inquiry Form', value: viewLink?.formName },
                 ].map(({ label, value }) => (
                   <Box key={label} sx={{ minWidth: 0 }}>
                     <Typography component="dt" variant="caption" color="text.secondary">
@@ -707,18 +707,18 @@ export function AdmissionPublicInquiryLinks({
               Create Inquiry Link
             </Typography>
             <CustomTooltip
-              title="Share a link for a website, QR code, or event."
+              title="Share a Link for a Website, QR Code, or Event."
               arrow
               placement="right"
             >
-              <IconButton size="small" color="info" aria-label="Create inquiry link information">
+              <IconButton size="small" color="info" aria-label="Create Inquiry Link Information">
                 <Iconify icon="lucide:info" width={16} />
               </IconButton>
             </CustomTooltip>
           </Stack>
           <IconButton
             size="small"
-            aria-label="Close create inquiry link"
+            aria-label="Close Create Inquiry Link"
             onClick={closeDrawer}
             disabled={createState.isLoading}
             sx={{ width: { xs: 44, sm: 32 }, height: { xs: 44, sm: 32 } }}
@@ -733,13 +733,13 @@ export function AdmissionPublicInquiryLinks({
               {error}
             </StudentFeedback>
           )}
-          <SectionCard title="Link details" paperProps={sectionProps} gridProps={{ spacing: 2 }}>
+          <SectionCard title="Link Details" paperProps={sectionProps} gridProps={{ spacing: 2 }}>
             <Grid size={12}>
               <TextField
                 inputRef={nameInputRef}
                 fullWidth
                 size="small"
-                label="Link name"
+                label="Link Name"
                 name="name"
                 value={formik.values.name}
                 onChange={formik.handleChange}
@@ -767,13 +767,13 @@ export function AdmissionPublicInquiryLinks({
             </Grid>
           </SectionCard>
           <SectionCard
-            title="Admission period and form"
+            title="Admission Period and Form"
             headerContent={
               <CustomTooltip title={formEligibilityHelp}>
                 <IconButton
                   size="small"
                   color="info"
-                  aria-label="Admission period and form information"
+                  aria-label="Admission Period and Form Information"
                 >
                   <Iconify icon="lucide:info" width={16} />
                 </IconButton>
@@ -788,7 +788,7 @@ export function AdmissionPublicInquiryLinks({
                 inputRef={cycleInputRef}
                 fullWidth
                 size="small"
-                label="Admission period"
+                label="Admission Period"
                 name="cycleId"
                 value={formik.values.cycleId}
                 onChange={(event) => {
@@ -804,7 +804,7 @@ export function AdmissionPublicInquiryLinks({
                 error={Boolean(formik.touched.cycleId && formik.errors.cycleId)}
                 helperText={formik.touched.cycleId ? formik.errors.cycleId : undefined}
               >
-                <MenuItem value="">Choose period</MenuItem>
+                <MenuItem value="">Choose Period</MenuItem>
                 {publishedCycles.map((cycle) => (
                   <MenuItem key={cycle.id} value={cycle.id}>
                     {cycle.name}
@@ -818,7 +818,7 @@ export function AdmissionPublicInquiryLinks({
                   spacing={0.5}
                   role="status"
                   aria-live="polite"
-                  aria-label="Loading published inquiry forms"
+                  aria-label="Loading Published Inquiry Forms"
                 >
                   <Skeleton variant="rounded" height={40} />
                 </Stack>
@@ -829,7 +829,7 @@ export function AdmissionPublicInquiryLinks({
                   required
                   size="small"
                   inputRef={formInputRef}
-                  label="Published inquiry form"
+                  label="Published Inquiry Form"
                   name="formId"
                   value={formik.values.formId}
                   disabled={!routingReady || forms.isError}
@@ -857,7 +857,7 @@ export function AdmissionPublicInquiryLinks({
                   error={Boolean(formik.touched.formId && formik.errors.formId)}
                   helperText={formik.touched.formId ? formik.errors.formId : undefined}
                 >
-                  <MenuItem value="">Choose form</MenuItem>
+                  <MenuItem value="">Choose Form</MenuItem>
                   {availableForms.map((form) => (
                     <MenuItem key={form.id} value={form.id}>
                       {form.name} · v{form.version}
@@ -893,7 +893,7 @@ export function AdmissionPublicInquiryLinks({
             {routingReady && !forms.isError && availableForms.length === 0 && (
               <Grid size={12}>
                 <Button size="small" onClick={() => routingOptions.refetch()}>
-                  Refresh offerings
+                  Refresh Offerings
                 </Button>
               </Grid>
             )}
@@ -914,13 +914,13 @@ export function AdmissionPublicInquiryLinks({
               )}
           </SectionCard>
           <SectionCard
-            title="Optional details"
+            title="Optional Details"
             paperProps={sectionProps}
             gridProps={{ spacing: 2 }}
             headerContent={
               <IconButton
                 size="small"
-                aria-label={optionalOpen ? 'Hide optional details' : 'Show optional details'}
+                aria-label={optionalOpen ? 'Hide Optional Details' : 'Show Optional Details'}
                 aria-expanded={optionalOpen}
                 onClick={() => setOptionalOpen(!optionalOpen)}
                 sx={{ width: 44, height: 44 }}
@@ -935,7 +935,7 @@ export function AdmissionPublicInquiryLinks({
                   <TextField
                     fullWidth
                     size="small"
-                    label="Campaign or event details"
+                    label="Campaign or Event Details"
                     name="detail"
                     value={formik.values.detail}
                     onChange={formik.handleChange}
@@ -944,7 +944,7 @@ export function AdmissionPublicInquiryLinks({
                 </Grid>
                 <Grid size={12}>
                   <DateTimePicker
-                    label="Link expiry"
+                    label="Link Expiry"
                     value={formik.values.expiresAt}
                     onChange={(value) => formik.setFieldValue('expiresAt', value)}
                     slotProps={{
@@ -965,7 +965,7 @@ export function AdmissionPublicInquiryLinks({
             ) : (
               <Grid size={12}>
                 <Typography variant="body2" color="text.secondary">
-                  Campaign or event details and link expiry
+                  Campaign or Event Details and Link Expiry
                 </Typography>
               </Grid>
             )}
@@ -998,7 +998,7 @@ export function AdmissionPublicInquiryLinks({
             }
             onClick={createLink}
           >
-            Create link
+            Create Link
           </LoadingButton>
         </Stack>
       </Drawer>
@@ -1023,7 +1023,7 @@ export function AdmissionPublicInquiryLinks({
         <Stack direction="row" spacing={1} alignItems="center" sx={{ px: 2, py: 1.5 }}>
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography id="set-inquiry-form-title" variant="h6">
-              Set inquiry form
+              Set Inquiry Form
             </Typography>
             <Typography variant="body2" color="text.secondary">
               {formTarget?.name}
@@ -1031,7 +1031,7 @@ export function AdmissionPublicInquiryLinks({
           </Box>
           <IconButton
             size="small"
-            aria-label="Close set inquiry form"
+            aria-label="Close Set Inquiry Form"
             onClick={closeFormEditor}
             disabled={setLinkFormState.isLoading}
             sx={{ width: { xs: 44, sm: 32 }, height: { xs: 44, sm: 32 } }}
@@ -1051,7 +1051,7 @@ export function AdmissionPublicInquiryLinks({
             </StudentFeedback>
           )}
           {replacementLoading ? (
-            <Stack role="status" aria-live="polite" aria-label="Loading published inquiry forms">
+            <Stack role="status" aria-live="polite" aria-label="Loading Published Inquiry Forms">
               <Skeleton variant="rounded" height={40} />
             </Stack>
           ) : (
@@ -1060,7 +1060,7 @@ export function AdmissionPublicInquiryLinks({
               fullWidth
               required
               size="small"
-              label="Published inquiry form"
+              label="Published Inquiry Form"
               name="formId"
               value={
                 replacementForms.some((form) => form.id === formEditor.values.formId)
@@ -1078,7 +1078,7 @@ export function AdmissionPublicInquiryLinks({
                   : formEligibilityHelp)
               }
             >
-              <MenuItem value="">Choose form</MenuItem>
+              <MenuItem value="">Choose Form</MenuItem>
               {replacementForms.map((form) => (
                 <MenuItem key={form.id} value={form.id}>
                   {form.name} · v{form.version}
@@ -1088,7 +1088,7 @@ export function AdmissionPublicInquiryLinks({
           )}
           {replacementReady && replacementForms.length === 0 && (
             <Button size="small" onClick={() => replacementOptions.refetch()}>
-              Refresh offerings
+              Refresh Offerings
             </Button>
           )}
           {(forms.isError || replacementOptions.isError) && (
@@ -1134,14 +1134,14 @@ export function AdmissionPublicInquiryLinks({
               !replacementForms.some((form) => form.id === formEditor.values.formId)
             }
           >
-            Save form
+            Save Form
           </LoadingButton>
         </Stack>
       </Drawer>
       <ConfirmDialog
         open={formDiscardOpen}
         onClose={() => setFormDiscardOpen(false)}
-        title="Discard form selection?"
+        title="Discard Form Selection?"
         content="The new form selection will not be saved."
         action={
           <Button
@@ -1155,25 +1155,25 @@ export function AdmissionPublicInquiryLinks({
               setError('');
             }}
           >
-            Discard selection
+            Discard Selection
           </Button>
         }
       />
       <ConfirmDialog
         open={discardOpen}
         onClose={() => setDiscardOpen(false)}
-        title="Discard inquiry link details?"
+        title="Discard Inquiry Link Details?"
         content="The link details you entered will be lost."
         action={
           <Button size="small" color="error" variant="contained" onClick={discardAndClose}>
-            Discard details
+            Discard Details
           </Button>
         }
       />
       <ConfirmDialog
         open={Boolean(revokeTarget)}
         onClose={() => !revokeState.isLoading && setRevokeTarget(null)}
-        title="Revoke inquiry link?"
+        title="Revoke Inquiry Link?"
         content={`The ${revokeTarget?.name ?? 'selected'} link will stop accepting new inquiries.`}
         action={
           <LoadingButton
@@ -1185,7 +1185,7 @@ export function AdmissionPublicInquiryLinks({
               if (revokeTarget) revokeLink(revokeTarget.id, revokeTarget.concurrencyStamp);
             }}
           >
-            Revoke link
+            Revoke Link
           </LoadingButton>
         }
       />

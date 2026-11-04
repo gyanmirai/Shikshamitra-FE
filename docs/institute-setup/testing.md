@@ -3,12 +3,24 @@ module: institute-setup
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-11-02
+updated_on: 2026-11-04
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Validate School Identity
+
+## Calendar dates after institute updates
+
+Run `npx vitest run src/redux/academicAPI/AcademicCalendarApi/institute-date-cache.test.ts src/redux/academicAPI/AcademicCalendarApi/calendar-day-cache.test.ts src/utils/academic-calendar-selection.test.ts`, then `npm run ts`.
+
+In the in-app browser, use an isolated academic year and board. Open Calendar Management to create the medium's calendar with a May end date, return to Institute Setup and extend the board through June, then save a summer vacation spanning May and June. Verify the saved range survives reload and that a later board-date shrink excluding the vacation is rejected without removing it.
+
+## Academic Setup year context
+
+Run `use-academic-setup-year-context.test.tsx` and `use-academic-setup-workspace.test.tsx` under `src/components/academic-setup`.
+They cover the shell year, explicit initial year, manual selection, unavailable-year fallback, late context hydration and selected-year query/cache behavior.
+In browser verification, begin with a newer shell year and an older year first in the API list; Academic Setup must open the shell year, while explicitly provided years and manual changes retain their requested year.
 
 ## Academic field formatting
 

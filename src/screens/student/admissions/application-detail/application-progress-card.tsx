@@ -71,7 +71,7 @@ export function ApplicationProgressCard({
       onClick={onOverride}
       sx={{ minHeight: 44 }}
     >
-      Override route
+      Override Route
     </Button>
   ) : null;
 
@@ -95,10 +95,10 @@ export function ApplicationProgressCard({
           <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1}>
             <Box sx={{ minWidth: 0 }}>
               <Typography id="application-journey-heading" variant="h6">
-                Admission journey
+                Admission Journey
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {progress.completed} of {progress.total} completed
+                {progress.completed} Of {progress.total} Completed
               </Typography>
             </Box>
             {workflow?.status === 1 && <Label color="success">Completed</Label>}
@@ -128,7 +128,7 @@ export function ApplicationProgressCard({
       <Paper
         component="section"
         variant="outlined"
-        aria-label="Admission journey summary"
+        aria-label="Admission Journey Summary"
         sx={{
           display: { xs: 'block', lg: 'none' },
           gridColumn: 1,
@@ -160,10 +160,10 @@ export function ApplicationProgressCard({
                 <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
                   {stages.length
                     ? `Step ${currentIndex + 1} of ${stages.length} · ${currentStage?.name ?? 'Admission journey'}`
-                    : 'Admission journey'}
+                    : 'Admission Journey'}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {progress.completed} of {progress.total} completed
+                  {progress.completed} Of {progress.total} Completed
                 </Typography>
               </Box>
               {currentStage && (
@@ -172,7 +172,7 @@ export function ApplicationProgressCard({
                     {getStageStatusLabel(currentStage.status)}
                   </Label>
                   <Typography variant="caption" sx={{ textDecoration: 'underline' }}>
-                    View journey
+                    View Journey
                   </Typography>
                 </Stack>
               )}

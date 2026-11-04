@@ -6,12 +6,14 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { useGetAdmissionFormSystemFieldsQuery } from 'src/redux/student/admissions/admission-forms-api';
 
+import { academicOptionsJson, isInstituteAcademicSource } from '../../admission-academic-options';
 import { configureStudentField, connectStudentAddressFields } from '../student-field-configuration';
 
 import type { FieldSettingsProps } from '../types/field-settings';
 
 export function FieldDataSettings({ formik, sectionIndex, fieldIndex }: FieldSettingsProps) {
   const field = formik.values.sections[sectionIndex].fields[fieldIndex];
+  const isAcademic = isInstituteAcademicSource(academicOptionsJson(field));
   const path = `sections[${sectionIndex}].fields[${fieldIndex}]`;
   const {
     data: systemFields,
@@ -39,9 +41,10 @@ export function FieldDataSettings({ formik, sectionIndex, fieldIndex }: FieldSet
           fullWidth
           required
           size="small"
-          label="Field code"
+          label="Field Code"
           name={`${path}.code`}
           value={field.code}
+          disabled={isAcademic}
           error={codeError}
           onBlur={formik.handleBlur}
           helperText={
@@ -60,11 +63,12 @@ export function FieldDataSettings({ formik, sectionIndex, fieldIndex }: FieldSet
         <>
           <CustomSelect
             size="small"
-            label="Save answer to"
+            label="Save Answer To"
             value={field.bindingType}
+            disabled={isAcademic}
             options={[
-              { value: 0, label: 'Student record' },
-              { value: 1, label: 'This admission form only' },
+              { value: 0, label: 'Student Record' },
+              { value: 1, label: 'This Admission Form Only' },
             ]}
             disabledValues={isLoading || isError || !compatibleFields.length ? [0] : []}
             disabledLabel={isLoading || isError ? 'Fields unavailable' : 'No compatible field'}
@@ -85,10 +89,10 @@ export function FieldDataSettings({ formik, sectionIndex, fieldIndex }: FieldSet
           {field.bindingType === 0 && (
             <CustomSelect
               size="small"
-              label="Student record field"
+              label="Student Record Field"
               value={field.bindingKey ?? ''}
               options={[
-                { value: '', label: 'Select a student record field' },
+                { value: '', label: 'Select a Student Record Field' },
                 ...(retainedMapping
                   ? [
                       {
@@ -102,7 +106,7 @@ export function FieldDataSettings({ formik, sectionIndex, fieldIndex }: FieldSet
               disabledValues={retainedMapping ? [field.bindingKey!] : []}
               disabledLabel="Choose another field"
               isLoading={isLoading}
-              disabled={isError}
+              disabled={isError || isAcademic}
               error={invalidMapping}
               helperText={
                 invalidMapping

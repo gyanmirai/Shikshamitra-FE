@@ -1,3 +1,5 @@
+import { GlobalIcons } from 'src/utils/icons';
+import { FormSectionHeader } from 'src/components/form-section-card';
 import { Box, Paper, Stack, Divider, TextField, Typography } from '@mui/material';
 import { RubricScoringModel } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricAssessmentApi';
 
@@ -35,10 +37,18 @@ export default function RubricScoreSummary({
           spacing={0.5}
         >
           <Box>
-            <Typography id="rubric-score-summary" component="h3" variant="subtitle2">
-              Score summary
-            </Typography>
-            {!compact ? (
+            <FormSectionHeader
+              title="Score Summary"
+              icon={GlobalIcons.usage}
+              titleTypographyProps={{
+                id: 'rubric-score-summary',
+                component: 'h3',
+                variant: 'subtitle1',
+                fontWeight: 600,
+              }}
+              descriptionTooltip="Total recorded score across the rubric criteria and feedback for the complete assessment."
+            />
+            {!compact && !readOnly ? (
               <Typography variant="caption" color="text.secondary">
                 Updates automatically as criteria are scored.
               </Typography>
@@ -48,7 +58,7 @@ export default function RubricScoreSummary({
             variant="h6"
             sx={{
               fontVariantNumeric: 'tabular-nums',
-              color: compact ? 'primary.main' : 'text.primary',
+              color: 'text.primary',
             }}
           >
             {Number(totalMarks.toFixed(2))}
@@ -65,18 +75,31 @@ export default function RubricScoreSummary({
 
         <Divider />
 
-        <TextField
-          fullWidth
-          size="small"
-          label="Overall rubric feedback (optional)"
-          value={remarks}
-          onChange={(event) => onRemarksChange(event.target.value)}
-          placeholder="Summarize the student's overall performance"
-          multiline
-          rows={3}
-          disabled={readOnly}
-          helperText={compact ? undefined : 'This note applies to the complete rubric assessment.'}
-        />
+        {readOnly ? (
+          <Box>
+            <Typography variant="body2" color="text.secondary">
+              Overall rubric feedback
+            </Typography>
+            <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
+              {remarks.trim() ? remarks : 'No overall rubric feedback recorded.'}
+            </Typography>
+          </Box>
+        ) : (
+          <TextField
+            fullWidth
+            size="small"
+            label="Overall rubric feedback (optional)"
+            value={remarks}
+            onChange={(event) => onRemarksChange(event.target.value)}
+            placeholder="Summarize the student's overall performance"
+            multiline
+            rows={3}
+            disabled={readOnly}
+            helperText={
+              compact ? undefined : 'This note applies to the complete rubric assessment.'
+            }
+          />
+        )}
       </Stack>
     </Paper>
   );

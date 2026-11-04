@@ -7,9 +7,11 @@ import type {
 export function configurationValues(settings: EsiConfigurationSettings): EsiConfigurationDraft {
   if (!settings.current) throw new Error('ESIC configuration is unavailable.');
   const selected =
-    settings.history.find(
-      (item) => !item.isCancelled && item.effectiveMonth <= settings.suggestedEffectiveMonth
-    ) ?? settings.current;
+    [...settings.history, settings.current]
+      .sort((a, b) => b.effectiveMonth.localeCompare(a.effectiveMonth))
+      .find(
+        (item) => !item.isCancelled && item.effectiveMonth <= settings.suggestedEffectiveMonth
+      ) ?? settings.current;
   return {
     effectiveMonth: settings.suggestedEffectiveMonth,
     calculationSettings: {

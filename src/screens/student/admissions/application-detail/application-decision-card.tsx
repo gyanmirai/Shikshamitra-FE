@@ -179,16 +179,16 @@ export function ApplicationDecisionCard({
           <Stack spacing={0.5}>
             <Stack direction="row" alignItems="center" spacing={0.5}>
               <Typography variant="h6" component="h2">
-                Admission decision
+                Admission Decision
               </Typography>
               {compact && (
                 <CustomTooltip
-                  title="Review the saved stage outcomes, then record the admission decision. Approval and journey completion are required before finalizing admission."
+                  title="Review the Saved Stage Outcomes, Then Record the Admission Decision. Approval and Journey Completion Are Required Before Finalizing Admission."
                   arrow
                 >
                   <IconButton
                     size="small"
-                    aria-label="Admission decision information"
+                    aria-label="Admission Decision Information"
                     sx={{ color: 'info.main' }}
                   >
                     <Iconify icon="mdi:information-outline" width={18} />
@@ -199,12 +199,12 @@ export function ApplicationDecisionCard({
             {compact && (
               <Typography variant="body2" color="text.secondary">
                 {application.status === 6
-                  ? 'Approved. Finalize admission once the journey is complete.'
+                  ? 'Approved. Finalize Admission Once the Journey Is Complete.'
                   : application.status === 0
-                    ? 'Submit the application before recording an admission decision.'
+                    ? 'Submit the Application Before Recording an Admission Decision.'
                     : application.status >= 10 || !visibleActions.length
-                      ? 'Review the saved admission decision.'
-                      : 'Review the application, then choose Approve, Waitlist, or Reject.'}
+                      ? 'Review the Saved Admission Decision.'
+                      : 'Review the Application, Then Choose Approve, Waitlist, or Reject.'}
               </Typography>
             )}
             {!compact && (
@@ -262,7 +262,7 @@ export function ApplicationDecisionCard({
                 sx={{ mb: 1.5, pb: 1, borderBottom: 1, borderColor: 'divider' }}
               >
                 <Typography variant="subtitle1" component="h3">
-                  Record decision
+                  Record Decision
                 </Typography>
                 <Chip
                   label={getAdmissionApplicationStatusLabel(application.status)}
@@ -274,7 +274,7 @@ export function ApplicationDecisionCard({
             <ApplicationDecisionStatus application={application} compact={compact} />
             {compact && visibleActions.length > 0 && (
               <>
-                <Typography variant="subtitle2">Choose an outcome</Typography>
+                <Typography variant="subtitle2">Choose an Outcome</Typography>
                 <Typography variant="body2" color="text.secondary">
                   Each decision is recorded in the application history.
                 </Typography>
@@ -320,7 +320,7 @@ export function ApplicationDecisionCard({
             )}
             {compact ? (
               <CustomAccordion
-                title="Decision history"
+                title="Decision History"
                 expanded={history.value}
                 onChange={history.onToggle}
                 content={

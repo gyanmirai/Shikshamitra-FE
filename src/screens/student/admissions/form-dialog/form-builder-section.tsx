@@ -92,7 +92,7 @@ export function FormBuilderSection({
     id: `section:${section.id}`,
     disabled: readOnly || !sectionReorderEnabled,
   });
-  const deleteDisabled = hasLockedInquiryFields(formik.values.purpose, [section]);
+  const deleteDisabled = hasLockedInquiryFields(formik.values.purpose, [section], formik.values.coreFieldPolicyVersion);
   const removeSection = () => {
     if (deleteDisabled) return;
     formik.setFieldValue(
@@ -176,7 +176,7 @@ export function FormBuilderSection({
                       key={language}
                       fullWidth
                       size="small"
-                      label={`${getAdmissionLanguageLabel(language)} section heading`}
+                      label={`${getAdmissionLanguageLabel(language)} Section Heading`}
                       value={section.translations?.[language]?.label ?? ''}
                       onChange={(event) =>
                         formik.setFieldValue(

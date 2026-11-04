@@ -56,6 +56,8 @@ export function useNavItem({
     : {
         component: RouterLink,
         href: resolvedPath,
+        // Keep other finance pages from competing with the current page's API reads.
+        prefetch: path === '/finance' || path?.startsWith('/finance/') ? false : undefined,
       };
 
   const baseProps = hasChild && !enabledRootRedirect ? { component: 'div' } : linkProps;

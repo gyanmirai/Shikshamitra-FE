@@ -63,14 +63,14 @@ describe('Admission Form Builder choice field settings', () => {
       bindingKey: 'Applicant.Gender',
       optionsJson: '[{"value":"Male","label":"लड़का"},{"value":"Female","label":"लड़की"}]',
     });
-    await userEvent.click(screen.getByRole('button', { name: 'Add choice' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Add Choice' }));
     expect(JSON.parse(screen.getByTestId('choices-json').textContent!)).toEqual([
       { value: 'Male', label: 'लड़का' },
       { value: 'Female', label: 'लड़की' },
       { value: 'Other', label: 'Other' },
     ]);
-    expect(screen.getByRole('button', { name: 'Add choice' })).toBeDisabled();
-    expect(screen.queryByRole('button', { name: 'Paste choices' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Add Choice' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Paste Choices' })).not.toBeInTheDocument();
     await userEvent.clear(screen.getByRole('textbox', { name: 'Option 3' }));
     await userEvent.type(screen.getByRole('textbox', { name: 'Option 3' }), 'अन्य');
     expect(JSON.parse(screen.getByTestId('choices-json').textContent!)[2]).toEqual({
@@ -84,12 +84,12 @@ describe('Admission Form Builder choice field settings', () => {
       label: 'Class interested in',
       optionsJson: '{"source":"Standards"}',
     });
-    expect(screen.getByRole('combobox', { name: 'Field type' })).toHaveAttribute(
+    expect(screen.getByRole('combobox', { name: 'Field Type' })).toHaveAttribute(
       'aria-disabled',
       'true'
     );
-    expect(screen.queryByRole('button', { name: 'Enter my own options' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Add choice' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Enter My Own Options' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Add Choice' })).not.toBeInTheDocument();
     expect(screen.getByTestId('choices-json')).toHaveTextContent('{"source":"Standards"}');
   });
   it('repairs a legacy manual class alias explicitly, without altering ordinary custom choice fields', async () => {
@@ -98,9 +98,9 @@ describe('Admission Form Builder choice field settings', () => {
       label: 'Interested Class',
       optionsJson: '["Class 1"]',
     });
-    await userEvent.click(screen.getByRole('button', { name: 'Use Institute Setup classes' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Use Institute Setup Classes' }));
     expect(screen.getByTestId('choices-json')).toHaveTextContent('{"source":"Standards"}');
-    expect(screen.queryByRole('button', { name: 'Add choice' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Add Choice' })).not.toBeInTheDocument();
   });
   it.each([6, 7, 8] as const)(
     'lets a custom field of type %s replace the default option name',
@@ -111,7 +111,7 @@ describe('Admission Form Builder choice field settings', () => {
       expect(screen.queryByRole('combobox', { name: 'Options source' })).not.toBeInTheDocument();
       expect(screen.queryByRole('combobox', { name: 'Depends on field' })).not.toBeInTheDocument();
 
-      await user.click(screen.getByRole('button', { name: 'Add choice' }));
+      await user.click(screen.getByRole('button', { name: 'Add Choice' }));
       const firstOption = screen.getByRole('textbox', { name: 'Option 1' });
       await user.clear(firstOption);
       expect(firstOption).toHaveValue('');
@@ -130,14 +130,14 @@ describe('Admission Form Builder choice field settings', () => {
     const user = userEvent.setup();
     renderFieldSettings(8);
 
-    await user.click(screen.getByRole('button', { name: 'Add choice' }));
-    await user.click(screen.getByRole('button', { name: 'Add choice' }));
+    await user.click(screen.getByRole('button', { name: 'Add Choice' }));
+    await user.click(screen.getByRole('button', { name: 'Add Choice' }));
     await user.clear(screen.getByRole('textbox', { name: 'Option 1' }));
     await user.type(screen.getByRole('textbox', { name: 'Option 1' }), 'Yes');
     await user.clear(screen.getByRole('textbox', { name: 'Option 2' }));
     await user.type(screen.getByRole('textbox', { name: 'Option 2' }), 'No');
 
-    await user.click(screen.getByRole('button', { name: 'Move No up' }));
+    await user.click(screen.getByRole('button', { name: 'Move No Up' }));
     expect(JSON.parse(screen.getByTestId('choices-json').textContent ?? '[]')).toEqual([
       { value: 'OPTION_2', label: 'No' },
       { value: 'OPTION_1', label: 'Yes' },
@@ -153,9 +153,9 @@ describe('Admission Form Builder choice field settings', () => {
     const user = userEvent.setup();
     renderFieldSettings(8);
 
-    await user.click(screen.getByRole('button', { name: 'Paste choices' }));
-    await user.type(screen.getByRole('textbox', { name: 'Paste choices' }), 'Bus{enter}Bus');
-    await user.click(screen.getByRole('button', { name: 'Add choices' }));
+    await user.click(screen.getByRole('button', { name: 'Paste Choices' }));
+    await user.type(screen.getByRole('textbox', { name: 'Paste Choices' }), 'Bus{enter}Bus');
+    await user.click(screen.getByRole('button', { name: 'Add Choices' }));
 
     expect(JSON.parse(screen.getByTestId('choices-json').textContent ?? '[]')).toEqual([
       { value: 'BUS', label: 'Bus' },
@@ -163,20 +163,15 @@ describe('Admission Form Builder choice field settings', () => {
     ]);
   });
 
-  it('keeps an existing custom lookup until it is explicitly replaced with manual options', async () => {
-    const user = userEvent.setup();
+  it('protects an academic lookup and its parent dependency from manual options', () => {
     const optionsJson = '{"source":"EducationMediums","parentField":"BOARD"}';
     renderFieldSettings(6, { optionsJson });
 
     expect(screen.getByTestId('choices-json')).toHaveTextContent(optionsJson);
     expect(screen.queryByRole('combobox', { name: 'Options source' })).not.toBeInTheDocument();
     expect(screen.queryByRole('combobox', { name: 'Depends on field' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Add choice' })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Enter my own options' }));
-    await user.click(screen.getByRole('button', { name: 'Add choice' }));
-    expect(JSON.parse(screen.getByTestId('choices-json').textContent ?? '[]')).toEqual([
-      { value: 'OPTION_1', label: 'Option 1' },
-    ]);
+    expect(screen.queryByRole('button', { name: 'Add Choice' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Enter My Own Options' })).not.toBeInTheDocument();
   });
 
   it('preserves the automatic options and parent dependency of a linked Student field', () => {
@@ -184,7 +179,7 @@ describe('Admission Form Builder choice field settings', () => {
     renderFieldSettings(6, { optionsJson, bindingType: 0, bindingKey: 'Admission.Medium' });
 
     expect(screen.getByTestId('choices-json')).toHaveTextContent(optionsJson);
-    expect(screen.queryByText('Answer options')).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Enter my own options' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Answer Options')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Enter My Own Options' })).not.toBeInTheDocument();
   });
 });

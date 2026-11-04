@@ -78,21 +78,11 @@ export function collectionPolicyPrerequisites(
   values: {
     status: string;
     enableLateFee: boolean;
-    lateFeeApplyOnFeeHeads: string[];
     lateFeeIncomeCategoryId?: string | null;
   },
-  heads: Heads,
   routing: RoutingLookup
 ): FinancePrerequisite[] {
   const requirements: FinancePrerequisite[] = [];
-  if (
-    isFinancePrerequisiteMissing({
-      ...heads,
-      options: heads.currentData,
-      required: values.enableLateFee && !values.lateFeeApplyOnFeeHeads.length,
-    })
-  )
-    requirements.push({ key: 'fee-head' });
   if (
     isFinancePrerequisiteMissing({
       ...routing,

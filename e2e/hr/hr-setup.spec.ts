@@ -5,6 +5,30 @@ test.describe.serial('HR setup wizard with disposable SQLite and real backend AP
   test.beforeEach(async ({ request }) => {
     expect((await request.post('/fixture/reset')).ok()).toBe(true);
   });
+
+  test('lists missing PF coverage as required salary setup', async ({ page }) => {
+    await page.goto('/');
+    const wizard = page.getByRole('dialog', { name: 'Complete HR Setup', exact: true });
+    await wizard.getByRole('button', { name: 'Salary Template', exact: true }).click();
+    await expect(wizard.getByTestId('hr-setup-check-pf-coverage')).toContainText('missing');
+    await wizard
+      .getByTestId('hr-setup-check-pf-coverage')
+      .getByRole('button', { name: 'Set up', exact: true })
+      .click();
+    await expect(wizard.getByLabel(/PF coverage effective month/)).toBeVisible();
+    await expect(page.getByRole('dialog')).toHaveCount(1);
+    await page.screenshot({ path: '.artifacts/hr-setup/pf-coverage-wizard.png' });
+    await wizard.getByLabel(/PF coverage evidence reference/).fill('Unsaved coverage evidence');
+    await wizard.getByRole('button', { name: 'Back', exact: true }).click();
+    const confirmation = page.getByRole('dialog', { name: 'Discard Unsaved Changes?' });
+    await confirmation.getByRole('button', { name: 'Keep Editing', exact: true }).click();
+    await expect(wizard.getByLabel(/PF coverage evidence reference/)).toHaveValue(
+      'Unsaved coverage evidence'
+    );
+    await wizard.getByRole('button', { name: 'Back', exact: true }).click();
+    await confirmation.getByRole('button', { name: 'Discard Changes', exact: true }).click();
+    await expect(wizard.getByTestId('hr-setup-check-pf-coverage')).toContainText('missing');
+  });
   test('dismissal survives HR navigation and resets on refresh', async ({ page }) => {
     await page.goto('/');
     const wizard = page.getByRole('dialog', { name: 'Complete HR Setup', exact: true });
@@ -62,6 +86,22 @@ test.describe.serial('HR setup wizard with disposable SQLite and real backend AP
         await page.keyboard.press('Tab');
         await expect(wizard.locator(':focus')).toHaveCount(1);
         await page.screenshot({ path: `.artifacts/hr-setup/${theme}-${viewport.width}.png` });
+        await wizard.getByRole('button', { name: 'Next', exact: true }).click();
+        await wizard.getByRole('button', { name: 'Next', exact: true }).click();
+        await wizard.getByRole('button', { name: 'Next', exact: true }).click();
+        await wizard
+          .getByTestId('hr-setup-check-pf-coverage')
+          .getByRole('button', { name: 'Set up', exact: true })
+          .click();
+        await expect(wizard.getByLabel(/PF coverage effective month/)).toBeInViewport();
+        await expect(wizard.getByLabel(/PF coverage evidence reference/)).toBeInViewport();
+        await expect(
+          wizard.getByRole('button', { name: 'Save and next', exact: true })
+        ).toBeInViewport();
+        expect(
+          await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)
+        ).toBe(true);
+        await page.screenshot({ path: `.artifacts/hr-setup/pf-${theme}-${viewport.width}.png` });
       }
     }
   });
@@ -156,7 +196,10 @@ test.describe.serial('HR setup wizard with disposable SQLite and real backend AP
     await expect(
       wizard.getByRole('button', { name: 'Salary Template', exact: true })
     ).toHaveAttribute('aria-current', 'step');
-    await wizard.getByRole('button', { name: 'Set up', exact: true }).click();
+    await wizard
+      .getByTestId('hr-setup-check-salary-template')
+      .getByRole('button', { name: 'Set up', exact: true })
+      .click();
     await wizard.getByLabel(/^Template name/).fill('Browser Staff Salary');
     await wizard.getByRole('combobox', { name: /^ESIC management/ }).click();
     await page.getByRole('option', { name: 'Handled outside ShikshaMitra', exact: true }).click();
@@ -202,11 +245,39 @@ test.describe.serial('HR setup wizard with disposable SQLite and real backend AP
     await wizard.getByRole('button', { name: 'Preview salary', exact: true }).click();
     await expect(wizard.getByText('Preview ready', { exact: true }).first()).toBeVisible();
     await wizard.getByRole('button', { name: 'Save and next', exact: true }).click();
+    await expect(wizard.getByTestId('hr-setup-check-pf-coverage')).toContainText('missing');
+    await page
+      .locator('[data-sonner-toast]')
+      .filter({ hasText: 'Salary template is active for new salary setups.' })
+      .getByLabel('Close')
+      .click();
+    await wizard.getByRole('button', { name: 'Next', exact: true }).click();
+    await expect(
+      wizard.getByText(
+        'Some setup still needs attention. Complete the unresolved steps, then check again.'
+      )
+    ).toBeVisible();
+    await wizard.getByRole('button', { name: 'Finish setup', exact: true }).click();
+    await wizard
+      .getByTestId('hr-setup-check-pf-coverage')
+      .getByRole('button', { name: 'Set up', exact: true })
+      .click();
+    await wizard.getByRole('combobox', { name: /School establishment coverage/ }).click();
+    await page.getByRole('option', { name: 'Not covered under PF', exact: true }).click();
+    await wizard
+      .getByLabel(/PF coverage evidence reference/)
+      .fill('Synthetic school coverage review');
+    await wizard.getByRole('button', { name: 'Save and next', exact: true }).click();
     await expect(
       wizard.getByText(
         'HR setup is complete. Individual staff still need salary setup before activation.'
       )
     ).toBeVisible();
+    await page
+      .locator('[data-sonner-toast]')
+      .filter({ hasText: 'School PF coverage saved.' })
+      .getByLabel('Close')
+      .click();
     await wizard.getByRole('button', { name: 'Finish setup', exact: true }).click();
     await expect(wizard).toHaveCount(0);
     await page.reload();

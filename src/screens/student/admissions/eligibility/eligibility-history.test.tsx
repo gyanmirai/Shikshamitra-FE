@@ -55,12 +55,12 @@ it('loads visited eligibility and earlier evaluations only when their history is
   );
   expect(reads).toBe(0);
   await user.click(
-    screen.getByRole('button', { name: /Admission eligibility · Eligibility history/ })
+    screen.getByRole('button', { name: /Admission eligibility · Eligibility History/ })
   );
   expect(await screen.findByText('Minimum age')).toBeInTheDocument();
   expect(historyReads).toBe(0);
-  expect(screen.queryByRole('button', { name: 'Continue admission' })).not.toBeInTheDocument();
-  await user.click(screen.getByRole('button', { name: 'Eligibility check history' }));
+  expect(screen.queryByRole('button', { name: 'Continue Admission' })).not.toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Eligibility Check History' }));
   expect(await screen.findByText('Earlier age check')).toBeInTheDocument();
   await waitFor(() => expect(historyReads).toBe(1));
 }, 15000);
@@ -89,7 +89,7 @@ it('allows the server-approved recheck of a stale visited stage without offering
   );
   expect(await screen.findByText(/Applicant information has changed/)).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Check eligibility again' })).toBeEnabled();
-  expect(screen.queryByRole('button', { name: 'Continue admission' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Continue Admission' })).not.toBeInTheDocument();
 });
 
 it('does not query or expose eligibility data without view permission', () => {

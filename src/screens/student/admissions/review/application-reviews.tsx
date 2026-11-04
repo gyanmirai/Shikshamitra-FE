@@ -35,7 +35,7 @@ export function ApplicationReviews({
           onChange={(_, open) => setExpanded(open ? stage.id : null)}
         >
           <AccordionSummary expandIcon={<Iconify icon="mdi:chevron-down" />}>
-            <Typography variant="subtitle2">{stage.name} · Review records</Typography>
+            <Typography variant="subtitle2">{stage.name} · Review Records</Typography>
           </AccordionSummary>
           <AccordionDetails>
             {expanded === stage.id && (

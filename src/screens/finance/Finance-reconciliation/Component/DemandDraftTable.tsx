@@ -185,6 +185,7 @@ const DemandDraftTable = ({
         filterType: 'string',
       },
       {
+        cellSx: { textAlign: 'right' as const },
         id: 'amount',
         label: 'Amount',
         width: 96,
@@ -388,6 +389,7 @@ const DemandDraftTable = ({
         tableId="demand-draft-table"
         columns={columns}
         data={data}
+        searchFieldProps={{ placeholder: 'Search' }}
       />
       <CustomDialog
         open={isDialog.value}

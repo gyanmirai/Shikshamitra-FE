@@ -53,7 +53,7 @@ export function WorkflowLifecycleActions({
   return (
     <Stack
       role="group"
-      aria-label="Workflow lifecycle actions"
+      aria-label="Workflow Lifecycle Actions"
       direction="row"
       spacing={1}
       useFlexGap
@@ -69,7 +69,7 @@ export function WorkflowLifecycleActions({
           startIcon={<Iconify icon="mdi:content-save-outline" />}
           onClick={onSave}
         >
-          Save draft
+          Save Draft
         </LoadingButton>
       )}
       {canPublish && (
@@ -126,7 +126,7 @@ export function WorkflowBuilderHeader({
       {!detailsOpen && (
         <Card
           component="section"
-          aria-label="Workflow journey workspace"
+          aria-label="Workflow Journey Workspace"
           sx={{
             display: 'flex',
             flexDirection: 'column',

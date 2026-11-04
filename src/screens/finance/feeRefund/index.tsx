@@ -18,6 +18,7 @@ import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { FeeRefundStatusType } from 'src/enums/feeRefund-status-type';
 import { useFinanceFormClose } from 'src/hooks/use-finance-form-close';
 import { Box, Card, Stack, Button, TextField, Typography } from '@mui/material';
 import { useGetFinanceRoutingOptionsQuery } from 'src/redux/finance/financeRoutingApi';
@@ -360,15 +361,18 @@ const FeeRefund = () => {
         {onConfirmDialg.value && (
           <FeeRefundReasonApprovalForm
             key={selectedFeeRefund?._refundRequestId}
-            onClose={async (e, isSubmit, notes) => {
+            onClose={async (e, isSubmit, notes, routing) => {
               if (isSubmit && selectedFeeRefund) {
                 try {
                   const refundId = (selectedFeeRefund as any)._refundRequestId;
+                  let cashCompleted = false;
                   if (selectedMode === 'Approve') {
-                    await approveRefund({
+                    const approved = await approveRefund({
                       id: refundId,
                       notes: notes ?? undefined,
+                      ...routing,
                     }).unwrap();
+                    cashCompleted = approved.status === FeeRefundStatusType.Processed;
                   } else if (selectedMode === 'Reject') {
                     await rejectRefund({ id: refundId, notes: notes ?? '' }).unwrap();
                   } else {
@@ -377,7 +381,9 @@ const FeeRefund = () => {
                   shikshaMitraToast.success({
                     message:
                       selectedMode === 'Approve'
-                        ? 'Refund request approved successfully.'
+                        ? cashCompleted
+                          ? 'Cash refund completed successfully.'
+                          : 'Refund request approved successfully.'
                         : selectedMode === 'Cancel'
                           ? 'Refund request cancelled successfully.'
                           : 'Refund request rejected successfully.',
@@ -388,7 +394,7 @@ const FeeRefund = () => {
                   setIsEditMode(false);
                 } catch (err: any) {
                   shikshaMitraToast.error({
-                    message: err?.data?.error?.message ?? 'Status update failed.',
+                    message: parseApiProblemDetail(err).detail,
                   });
                 }
               } else {
@@ -396,6 +402,13 @@ const FeeRefund = () => {
               }
             }}
             mode={selectedMode}
+            cashRefund={
+              selectedFeeRefund?._workflowVersion === 1 &&
+              selectedFeeRefund?.refundMethod === 'Cash'
+            }
+            academicYearId={currentYear?.id}
+            defaultExpenseCategoryId={selectedFeeRefund?._defaultExpenseCategoryId}
+            defaultBankAccountId={selectedFeeRefund?._defaultPayingBankAccountId}
             loading={isApproving || isRejecting || isCancelling}
           />
         )}

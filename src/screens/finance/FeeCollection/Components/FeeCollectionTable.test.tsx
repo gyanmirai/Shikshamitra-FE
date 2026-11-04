@@ -50,6 +50,7 @@ vi.mock('src/redux/customQueryAndMutation', () => ({
           studentName: 'Future Installment Student',
           totalFees: 43000,
           paidFees: 13224,
+          refundAmount: 1500,
           pendingFees: 29776,
           overdueFees: 3306,
           isFeeStructureAssigned: true,
@@ -105,7 +106,7 @@ vi.mock('src/redux/customQueryAndMutation', () => ({
 
 // Keep the real column rendering and Label while isolating table infrastructure.
 vi.mock('src/components/customizabaleTable', () => ({
-  default: ({ columns, data, getRowAction }: any) => {
+  default: ({ columns, data, getRowAction, summaryRow }: any) => {
     const statusColumn = columns.find((column: any) => column.id === 'status');
     return (
       <>
@@ -144,6 +145,17 @@ vi.mock('src/components/customizabaleTable', () => ({
               </tr>
             ))}
           </tbody>
+          {summaryRow && (
+            <tfoot>
+              <tr>
+                {columns.map((column: any, index: number) => (
+                  <td key={column.id}>
+                    {index === 0 ? summaryRow.label : summaryRow.values[column.id]}
+                  </td>
+                ))}
+              </tr>
+            </tfoot>
+          )}
         </table>
       </>
     );
@@ -151,6 +163,55 @@ vi.mock('src/components/customizabaleTable', () => ({
 }));
 
 describe('Collections status', () => {
+  it('totals only the rows on the displayed page', () => {
+    render(
+      <FeeCollectionTable
+        academicFilters={{ selectedMedium: 'medium', isReady: true, filterPayload: {} } as any}
+        onAddFee={{} as any}
+        onCollectFee={vi.fn()}
+        onView={vi.fn()}
+        onGiveAdjustment={vi.fn()}
+        onDelete={vi.fn()}
+      />
+    );
+    const totalRow = screen.getByText('Total (displayed rows)').closest('tr')!;
+    expect(within(totalRow).getAllByRole('cell').map((cell) => cell.textContent)).toEqual([
+      'Total (displayed rows)', '', '', '₹ 107,800', '₹ 0', '₹ 1,500',
+      '₹ 60,024', '₹ 47,776', '₹ 0', '—', '₹ 0', '', '',
+    ]);
+  });
+  it('shows refunds separately and keeps the requested financial column order', () => {
+    render(
+      <FeeCollectionTable
+        academicFilters={{ selectedMedium: 'medium', isReady: true, filterPayload: {} } as any}
+        onAddFee={{} as any}
+        onCollectFee={vi.fn()}
+        onView={vi.fn()}
+        onGiveAdjustment={vi.fn()}
+        onDelete={vi.fn()}
+      />
+    );
+    const headings = screen.getAllByRole('columnheader').map((header) => header.textContent);
+    expect(headings.slice(3)).toEqual([
+      'Total Fees',
+      'Total Concession Amount',
+      'Refund Amount',
+      'Paid Fees',
+      'Pending Fees',
+      'Total Charges',
+      'Paid Charges',
+      'Pending Charges',
+      'Status',
+      'Actions',
+    ]);
+    const cells = within(
+      screen.getByText('Future Installment Student').closest('tr')!
+    ).getAllByRole('cell');
+    expect(cells[headings.indexOf('Refund Amount')]).toHaveTextContent('₹ 1,500');
+    expect(cells[headings.indexOf('Paid Fees')]).toHaveTextContent('₹ 13,224');
+    const noRefund = within(screen.getByText('Paid Student').closest('tr')!).getAllByRole('cell');
+    expect(noRefund[headings.indexOf('Refund Amount')]).toHaveTextContent('₹ 0');
+  });
   it('displays No Fee Assigned separately from fully paid students and offers it as a filter', () => {
     render(
       <FeeCollectionTable

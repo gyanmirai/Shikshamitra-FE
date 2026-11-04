@@ -29,7 +29,7 @@ export function AssessmentWorkbenchControls({
       <Paper variant="outlined" sx={{ px: 1 }}>
         <Tabs
           value={state.tab}
-          aria-label="Assessment workspace"
+          aria-label="Assessment Workspace"
           variant="scrollable"
           scrollButtons="auto"
         >
@@ -60,7 +60,7 @@ export function AssessmentWorkbenchControls({
               isLoading={sessions.isLoading}
               disabled={sessions.isError}
               options={[
-                { value: '', label: 'All sessions' },
+                { value: '', label: 'All Sessions' },
                 ...(sessions.currentData ?? []).map((item) => ({
                   value: item.id,
                   label: `${item.name}${item.isCancelled ? ' (cancelled)' : ''}`,
@@ -87,7 +87,7 @@ export function AssessmentWorkbenchControls({
                     updateWorkbench({ assessmentSession: undefined, assessmentPage: 0 })
                   }
                 >
-                  Clear session filter
+                  Clear Session Filter
                 </Button>
               }
             >
@@ -99,7 +99,7 @@ export function AssessmentWorkbenchControls({
             variant="outlined"
             sx={{ p: 1, display: 'flex', gap: 0.5, overflowX: 'auto' }}
             role="group"
-            aria-label="Filter assessment queue"
+            aria-label="Filter Assessment Queue"
           >
             {assessmentQueues.map((item) => (
               <Button
@@ -121,11 +121,11 @@ export function AssessmentWorkbenchControls({
                   : ''}
               </Button>
             ))}
-            <Tooltip title="Refresh applicants">
+            <Tooltip title="Refresh Applicants">
               <span>
                 <IconButton
                   size="small"
-                  aria-label="Refresh assessment applicants"
+                  aria-label="Refresh Assessment Applicants"
                   disabled={invalidSession || applicants.isUninitialized || applicants.isFetching}
                   onClick={applicants.refetch}
                 >

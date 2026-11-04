@@ -514,6 +514,7 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
               maxWidth: 200,
             },
             {
+              cellSx: { textAlign: 'right' as const },
               id: 'concessionAmount',
               label: 'Amount',
               filterType: 'number',
@@ -733,6 +734,7 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
             )}
           </>
         }
+        searchFieldProps={{ placeholder: 'Search' }}
       />
 
       <ConfirmDialog

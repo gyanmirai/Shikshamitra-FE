@@ -41,8 +41,8 @@ export function WorkflowDocumentSettings({ formik, available, readOnly }: Props)
     <Stack spacing={2}>
       <FormSectionCard
         icon="mdi:file-document-check-outline"
-        title="Document checklist"
-        descriptionTooltip="Upload documents and accept required items before continuing. Rejected documents need replacement and fresh verification. Student document categories link accepted uploads to Student Records."
+        title="Document Checklist"
+        descriptionTooltip="Upload Documents and Accept Required Items Before Continuing. Rejected Documents Need Replacement and Fresh Verification. Student Document Categories Link Accepted Uploads to Student Records."
       >
         <Stack spacing={2}>
           {!available && (
@@ -88,7 +88,7 @@ export function WorkflowDocumentSettings({ formik, available, readOnly }: Props)
                   severity={policy.requirements.length === 0 ? 'info' : 'error'}
                 >
                   {policy.requirements.length === 0
-                    ? 'Add at least one document before applying this stage.'
+                    ? 'Add at Least One Document Before Applying This Stage.'
                     : invalid}
                 </StudentFeedback>
               )}

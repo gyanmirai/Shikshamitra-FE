@@ -197,6 +197,14 @@ A mobile-only practical minimum height is allowed when the surrounding mobile la
 A bounded table is allowed only when it is an embedded preview, import result, comparison, or history inside a larger task.
 The component and its tests must make that embedded-table exception explicit.
 
+Table-first setup steps may use `src/components/setup-flow/setup-flow-shell.tsx` with
+`fillContent`, `density="compact"`, and `contentMaxWidth="none"`. Compact mode uses the shared
+spacing scale for shell padding and retains table-owned desktop scrolling; the default form shell
+keeps its existing width and spacing. Finance setup places the shared title/help header first,
+native setting actions beside `CustomTabs`, and secondary guidance behind an expandable summary.
+As requested for this guide, omit the breadcrumb trail while retaining the shared header component;
+use compact vertical content padding and footer top padding to keep actions close to their content.
+
 Use one primary `CustomizableTable` per table workspace.
 If two record sets are both primary, separate them with URL-backed tabs or routes.
 Keep domain filters outside the table toolbar.
@@ -212,6 +220,8 @@ The animated character loader is retained in `src/assets/illustrations/table-loa
 Server refetches retain the current rows when safe and add a thin labelled progress indicator.
 Pass `isRefreshing` for a same-scope refetch with safe current data; keep `isLoading` for the initial request or a new scope without current data.
 Column headings default to left alignment independently of body-cell `align`; use the explicit `headerAlign` column option only for a documented specialized control.
+Finance monetary body cells align right, including embedded tables and report previews. The shared
+`CurriculumReportPreviewTable` accepts optional `PreviewColumn.align` for body cells without changing headings.
 Use the optional column `rowHeader` flag when a body cell identifies the row, such as the month in a chart data table; it renders `th` with `scope="row"` and preserves body-cell styling.
 Computed cells may supply `filterValue` independently of their display/export formatting; use null when a value such as unlimited leave has no finite numeric meaning.
 Numeric filter inputs accept fractional values by default; a column may explicitly set `filterStep: 1` for integer-only criteria or another required increment.

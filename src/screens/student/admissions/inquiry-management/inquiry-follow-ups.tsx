@@ -132,7 +132,7 @@ export function InquiryFollowUpsPanel({
           flexWrap="wrap"
         >
           <Typography variant="subtitle2">
-            Follow-ups · {value.followUps.filter((item) => item.status === 0).length} open
+            Follow-Ups · {value.followUps.filter((item) => item.status === 0).length} Open
           </Typography>
           {!readOnly && (
             <Button
@@ -145,14 +145,14 @@ export function InquiryFollowUpsPanel({
               aria-controls={scheduler.open ? schedulerId : undefined}
               onClick={scheduler.onOpen}
             >
-              Schedule follow-up
+              Schedule Follow-Up
             </Button>
           )}
         </Stack>
       )}
       {!compact && (
         <Typography variant="subtitle2">
-          Follow-ups · {value.followUps.filter((item) => item.status === 0).length} open
+          Follow-Ups · {value.followUps.filter((item) => item.status === 0).length} Open
         </Typography>
       )}
       {!readOnly && !compact && renderScheduler()}
@@ -177,7 +177,7 @@ export function InquiryFollowUpsPanel({
       )}
       {compact ? (
         <CustomAccordion
-          title="Follow-up history"
+          title="Follow-Up History"
           expanded={history.value}
           onChange={() => {
             if (!interactionBlocked) history.onToggle();
@@ -302,7 +302,7 @@ export function FollowUpCard({
           <>
             <TextField
               size="small"
-              label="Completion or cancellation note *"
+              label="Completion or Cancellation Note *"
               value={note}
               disabled={busy}
               onChange={(event) => setNote(event.target.value)}

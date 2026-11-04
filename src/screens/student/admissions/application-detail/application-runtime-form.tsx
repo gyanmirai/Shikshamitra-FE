@@ -4,6 +4,7 @@ import type {
   AdmissionApplicationForm,
 } from 'src/redux/student/admissions/admission-applications-api';
 
+import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -12,7 +13,7 @@ import CustomStepper from 'src/components/custom-stepper';
 import { useRef, useMemo, useState, useEffect } from 'react';
 import { LoadingButton } from 'src/components/loading-button';
 import { StudentFeedback } from 'src/components/student-feedback';
-import { Box, Grid, Stack, Button, Typography } from '@mui/material';
+import { Box, Grid, Stack, Button, Tooltip, Typography } from '@mui/material';
 import { useLazyGetAdmissionFormOptionsQuery } from 'src/redux/student/admissions/admission-forms-api';
 import {
   FormSectionCard,
@@ -22,12 +23,12 @@ import {
 
 import AdmissionRuntimeField from '../admission-runtime-field';
 import { useAdmissionPhotoReads } from '../use-admission-photo-reads';
-import { isAdmissionRuleVisible } from '../admission-visibility-rules';
-import { ApplicationInquiryContext } from './application-inquiry-context';
 import { getAdmissionFormStepGroups } from '../form-dialog/form-step-groups';
+import { mergeInquiryContextSections } from '../inquiry-context-presentation';
 import { AdmissionSectionFields } from '../components/admission-section-fields';
 import { dependentAdmissionFieldValues } from '../admission-field-dependencies';
 import { AdmissionFormStepNavigation } from '../components/admission-form-step-navigation';
+import { isAdmissionRuleVisible, readAdmissionFormValue } from '../admission-visibility-rules';
 import { academicOptionsJson, isInstituteAcademicSource } from '../admission-academic-options';
 import { useAdmissionAddressSync, isAdmissionCopiedAddressField } from '../admission-address-sync';
 import { localizeAdmissionSection, getAdmissionLanguageLabel } from '../form-dialog/form-languages';
@@ -121,6 +122,33 @@ export function ApplicationRuntimeForm({
     () => form.definition.sections.map((section) => localizeAdmissionSection(section, language)),
     [form.definition.sections, language]
   );
+  const contextFieldIds = useMemo(
+    () =>
+      new Set(
+        form.inquiryContextSections?.flatMap((section) =>
+          section.fields.map((field) => field.id)
+        ) ?? []
+      ),
+    [form.inquiryContextSections]
+  );
+  const contextAnswers = useMemo(
+    () =>
+      Object.fromEntries(
+        (form.inquiryContextValues ?? []).map((answer) => [
+          answer.fieldCode,
+          readAdmissionFormValue(answer.valueJson),
+        ])
+      ),
+    [form.inquiryContextValues]
+  );
+  const displayValues = useMemo(() => ({ ...values, ...contextAnswers }), [values, contextAnswers]);
+  const presentationSections = useMemo(
+    () =>
+      mergeInquiryContextSections(form.definition.sections, form.inquiryContextSections).map(
+        (section) => localizeAdmissionSection(section, language)
+      ),
+    [form.definition.sections, form.inquiryContextSections, language]
+  );
   const correctionSections = useMemo(
     () => (correctionMode ? getCorrectionSections(form.definition, values, undefined, true) : []),
     [correctionMode, form.definition, values]
@@ -131,16 +159,18 @@ export function ApplicationRuntimeForm({
   );
   const visibleSections = useMemo(
     () =>
-      localizedSections.filter((section) =>
+      presentationSections.filter((section) =>
         correctionMode
           ? correctionSectionIds.has(section.id)
-          : isAdmissionRuleVisible(section.visibilityRuleJson, values)
+          : isAdmissionRuleVisible(section.visibilityRuleJson, displayValues)
       ),
-    [localizedSections, values, correctionMode, correctionSectionIds]
+    [presentationSections, displayValues, correctionMode, correctionSectionIds]
   );
   const isStepper = form.definition.layoutType === 1;
-  const visibleSteps = getAdmissionFormStepGroups(localizedSections)
-    .filter((step) => correctionMode || isAdmissionRuleVisible(step.visibilityRuleJson, values))
+  const visibleSteps = getAdmissionFormStepGroups(presentationSections)
+    .filter(
+      (step) => correctionMode || isAdmissionRuleVisible(step.visibilityRuleJson, displayValues)
+    )
     .map((step) => ({
       ...step,
       sections: step.sections.filter(({ section }) => visibleSections.includes(section)),
@@ -305,14 +335,25 @@ export function ApplicationRuntimeForm({
       !currentSections.length ||
       (!readOnly &&
         !alreadyValidated &&
-        !currentSections.every((section) => onValidateStep(section.id)))
+        !currentSections
+          .filter((section) =>
+            form.definition.sections.some((editable) => editable.id === section.id)
+          )
+          .every((section) => onValidateStep(section.id)))
     )
       return;
     setActiveStep(Math.min(safeActiveStep + 1, visibleSteps.length - 1));
   };
   const saveAndContinue = async () => {
     if (interactionLocked) return;
-    if (!currentSections.every((section) => onValidateStep(section.id))) return;
+    if (
+      !currentSections
+        .filter((section) =>
+          form.definition.sections.some((editable) => editable.id === section.id)
+        )
+        .every((section) => onValidateStep(section.id))
+    )
+      return;
     setSavingStep(true);
     try {
       const saved = await onSave();
@@ -329,13 +370,13 @@ export function ApplicationRuntimeForm({
   ) => {
     const rowValues =
       entryIndex === undefined
-        ? values
+        ? displayValues
         : {
-            ...values,
+            ...displayValues,
             ...Object.fromEntries(
               section.fields.map((field) => [
                 field.code,
-                readRepeatableValues(values[field.code])[entryIndex] ?? '',
+                readRepeatableValues(displayValues[field.code])[entryIndex] ?? '',
               ])
             ),
           };
@@ -347,11 +388,15 @@ export function ApplicationRuntimeForm({
         columns={section.fieldsPerRow ?? fieldsPerRow}
         spacing={2}
         renderField={(field) => {
+          const context = contextFieldIds.has(field.id);
+          const answers = context ? contextAnswers : values;
           const value =
             entryIndex === undefined
-              ? (values[field.code] ?? '')
-              : (readRepeatableValues(values[field.code])[entryIndex] ?? '');
-          const fieldError = fieldErrors[`${field.code}[${entryIndex}]`] || fieldErrors[field.code];
+              ? (answers[field.code] ?? '')
+              : (readRepeatableValues(answers[field.code])[entryIndex] ?? '');
+          const fieldError = context
+            ? undefined
+            : fieldErrors[`${field.code}[${entryIndex}]`] || fieldErrors[field.code];
           const inheritedError =
             field.inheritedFrom &&
             fieldError?.startsWith(field.code) &&
@@ -376,6 +421,7 @@ export function ApplicationRuntimeForm({
               academicMediumId={academicMediumId}
               disabled={
                 interactionLocked ||
+                context ||
                 !canEditForm ||
                 field.readOnly ||
                 isAdmissionCopiedAddressField(field, localizedSections, rowValues)
@@ -385,18 +431,22 @@ export function ApplicationRuntimeForm({
                   ? field.translations?.[language]?.validationMessage || inheritedError
                   : undefined
               }
-              onBlur={() => onBlur(field.code)}
+              onBlur={() => {
+                if (!context) onBlur(field.code);
+              }}
               onBusyChange={(busy) => onPhotoReading(`${field.code}[${entryIndex ?? 0}]`, busy)}
               formValues={rowValues}
               onChange={(nextValue) =>
-                entryIndex === undefined
-                  ? updateField(field.code, nextValue)
-                  : updateField(
-                      field.code,
-                      nextValue,
-                      entryIndex,
-                      section.fields.map((item) => item.code)
-                    )
+                context
+                  ? undefined
+                  : entryIndex === undefined
+                    ? updateField(field.code, nextValue)
+                    : updateField(
+                        field.code,
+                        nextValue,
+                        entryIndex,
+                        section.fields.map((item) => item.code)
+                      )
               }
             />
           );
@@ -408,21 +458,55 @@ export function ApplicationRuntimeForm({
   const sectionHeader = (title: string, action?: ReactNode) => ({
     title,
     icon: GlobalIcons.admissionDetails,
-    descriptionTooltip: `Details captured in ${title} on the published registration form.`,
+    descriptionTooltip: `Details Captured In ${title} On the Published Registration Form.`,
     action,
   });
+  const { familyPrefill } = form;
+  const firstParentField = visibleSections
+    .flatMap((section) => section.fields)
+    .find(
+      (field) =>
+        !contextFieldIds.has(field.id) &&
+        /^(Father|Mother|Guardian)\./i.test(field.bindingKey ?? '')
+    );
+  const familyStatus =
+    familyPrefill?.sourceApplicantId?.trim() &&
+    familyPrefill.sourceApplicantName?.trim() &&
+    ['father', 'mother'].includes(familyPrefill.relationship) ? (
+      <Tooltip
+        title={`Parent Details From ${familyPrefill.sourceApplicantName}'s Confirmed Family (${familyPrefill.relationship}).`}
+      >
+        <Label color="success" tabIndex={0}>
+          Sibling Confirmed
+        </Label>
+      </Tooltip>
+    ) : undefined;
+  const parentSectionAction = (
+    sectionFields: (typeof localizedSections)[number]['fields'],
+    action?: ReactNode
+  ) =>
+    familyStatus && sectionFields.some((field) => field === firstParentField) ? (
+      <Stack direction="row" spacing={1} alignItems="center">
+        {familyStatus}
+        {action}
+      </Stack>
+    ) : (
+      action
+    );
   const renderSection = (section: (typeof localizedSections)[number]) => {
     const actions = section.id === currentSections[0]?.id ? sectionActions : undefined;
     if (!section.isRepeatable) {
       const splitStudentDetails =
+        !section.fields.some((field) => field.inheritedFrom || contextFieldIds.has(field.id)) &&
         form.definition.sections.some(
           (configured) =>
             configured.id === section.id && configured.name.toLowerCase() === 'student details'
-        ) && section.fields.length >= 10;
+        ) &&
+        section.fields.length >= 10;
       const groups = splitStudentDetails
         ? groupStudentDetailFields(
             section.fields.filter((field) =>
-              isAdmissionRuleVisible(field.visibilityRuleJson, values)
+              isAdmissionRuleVisible(field.visibilityRuleJson, displayValues)
             )
           )
         : [];
@@ -433,14 +517,19 @@ export function ApplicationRuntimeForm({
               {groups.map((group, index) => (
                 <FormSectionCard
                   key={group.name}
-                  {...sectionHeader(group.name, index === 0 ? actions : undefined)}
+                  {...sectionHeader(
+                    group.name,
+                    parentSectionAction(group.fields, index === 0 ? actions : undefined)
+                  )}
                 >
                   {renderSectionFields(section, undefined, group.fields)}
                 </FormSectionCard>
               ))}
             </Stack>
           ) : (
-            <FormSectionCard {...sectionHeader(section.name, actions)}>
+            <FormSectionCard
+              {...sectionHeader(section.name, parentSectionAction(section.fields, actions))}
+            >
               {renderSectionFields(section)}
             </FormSectionCard>
           )}
@@ -449,14 +538,16 @@ export function ApplicationRuntimeForm({
     }
 
     const count = getRepeatableEntryCount(
-      section.fields.map((field) => values[field.code]),
+      section.fields.map((field) => displayValues[field.code]),
       section.minEntries
     );
     const entryLabel = section.entryLabel || section.name.replace(/s$/i, '') || 'Entry';
     const maxEntries = section.maxEntries ?? 1;
     return (
       <Stack key={section.id} spacing={2}>
-        <FormSectionHeader {...sectionHeader(section.name, actions)} />
+        <FormSectionHeader
+          {...sectionHeader(section.name, parentSectionAction(section.fields, actions))}
+        />
         {Array.from({ length: count }, (_, entryIndex) => entryIndex)
           .filter(
             (entryIndex) =>
@@ -473,41 +564,53 @@ export function ApplicationRuntimeForm({
               {...sectionHeader(`${entryLabel} ${entryIndex + 1}`)}
             >
               {renderSectionFields(section, entryIndex)}
-              {count > Math.max(section.minEntries ?? 0, 1) && canEditForm && !readOnly && (
-                <Grid size={{ xs: 12 }}>
-                  <Button
-                    size="small"
-                    color="error"
-                    variant="text"
-                    disabled={interactionLocked}
-                    onClick={() =>
-                      section.fields.forEach((field) =>
-                        onChange(field.code, removeRepeatableEntry(values[field.code], entryIndex))
-                      )
-                    }
-                  >
-                    Remove {entryLabel.toLowerCase()}
-                  </Button>
-                </Grid>
-              )}
+              {count > Math.max(section.minEntries ?? 0, 1) &&
+                canEditForm &&
+                !readOnly &&
+                section.fields.some((field) => !contextFieldIds.has(field.id)) && (
+                  <Grid size={{ xs: 12 }}>
+                    <Button
+                      size="small"
+                      color="error"
+                      variant="text"
+                      disabled={interactionLocked}
+                      onClick={() =>
+                        section.fields
+                          .filter((field) => !contextFieldIds.has(field.id))
+                          .forEach((field) =>
+                            onChange(
+                              field.code,
+                              removeRepeatableEntry(values[field.code], entryIndex)
+                            )
+                          )
+                      }
+                    >
+                      Remove {entryLabel.toLowerCase()}
+                    </Button>
+                  </Grid>
+                )}
             </FormSectionCard>
           ))}
-        {count < maxEntries && canEditForm && (
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={<Iconify icon="mdi:plus" />}
-            disabled={interactionLocked}
-            onClick={() =>
-              section.fields.forEach((field) =>
-                onChange(field.code, writeRepeatableValue(values[field.code], count, ''))
-              )
-            }
-            sx={{ alignSelf: 'flex-start' }}
-          >
-            Add {entryLabel.toLowerCase()}
-          </Button>
-        )}
+        {count < maxEntries &&
+          canEditForm &&
+          section.fields.some((field) => !contextFieldIds.has(field.id)) && (
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<Iconify icon="mdi:plus" />}
+              disabled={interactionLocked}
+              onClick={() =>
+                section.fields
+                  .filter((field) => !contextFieldIds.has(field.id))
+                  .forEach((field) =>
+                    onChange(field.code, writeRepeatableValue(values[field.code], count, ''))
+                  )
+              }
+              sx={{ alignSelf: 'flex-start' }}
+            >
+              Add {entryLabel.toLowerCase()}
+            </Button>
+          )}
       </Stack>
     );
   };
@@ -542,7 +645,7 @@ export function ApplicationRuntimeForm({
         {compact && isStepper && visibleSteps.length > 0 && (
           <Box
             component="nav"
-            aria-label="Form steps"
+            aria-label="Form Steps"
             sx={{
               width: 1,
               minWidth: 0,
@@ -600,7 +703,7 @@ export function ApplicationRuntimeForm({
             <Stack direction="row" justifyContent="flex-end" sx={{ mb: 2 }}>
               <CustomSelect
                 size="small"
-                label="Form language"
+                label="Form Language"
                 disabled={interactionLocked}
                 value={language}
                 options={supportedLanguages.map((code) => ({
@@ -656,13 +759,6 @@ export function ApplicationRuntimeForm({
               )}
             </FormFieldSpacing>
           </Stack>
-          {!!form.inquiryContextSections?.length && (
-            <ApplicationInquiryContext
-              sections={form.inquiryContextSections}
-              values={form.inquiryContextValues ?? []}
-              language={language}
-            />
-          )}
           {documents && (!isStepper || safeActiveStep === visibleSteps.length - 1) && (
             <Stack sx={{ mt: 2 }}>{documents}</Stack>
           )}
@@ -777,7 +873,7 @@ export function ApplicationRuntimeForm({
                 disabled={interactionLocked || !canSubmitForm}
                 onClick={onSubmit}
               >
-                {correctionMode ? 'Save corrections' : 'Submit application'}
+                {correctionMode ? 'Save Corrections' : 'Submit Application'}
               </LoadingButton>
             )}
             {!correctionMode &&
@@ -794,7 +890,7 @@ export function ApplicationRuntimeForm({
                   disabled={interactionLocked}
                   onClick={onReopen}
                 >
-                  Reopen form
+                  Reopen Form
                 </LoadingButton>
               )}
           </Stack>

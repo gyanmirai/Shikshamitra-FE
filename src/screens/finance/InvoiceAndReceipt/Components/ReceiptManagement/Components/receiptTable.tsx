@@ -42,6 +42,7 @@ const ReceiptTable = ({
         },
         { id: 'rollNo', label: 'Roll No.', align: 'left', minWidth: '6vw' },
         {
+          cellSx: { textAlign: 'right' as const },
           id: 'totalPaidFees',
           label: 'Total Paid Fees',
           align: 'left',
@@ -50,6 +51,7 @@ const ReceiptTable = ({
           render: (value) => `₹ ${value.toLocaleString()}`,
         },
         {
+          cellSx: { textAlign: 'right' as const },
           id: 'totalPendingFees',
           label: 'Total Pending Fees',
           align: 'left',
@@ -82,6 +84,7 @@ const ReceiptTable = ({
         },
       ]}
       data={data || []}
+      searchFieldProps={{ placeholder: 'Search' }}
     />
   </Box>
 );

@@ -1,26 +1,22 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
+import type { AdaptiveThreeDotsAction } from 'src/components/adaptive-three-dots-actions/types';
 
-import * as Yup from 'yup';
-import { useFormik } from 'formik';
 import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
-import Add from '@mui/icons-material/Add';
+import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { fDate } from 'src/utils/format-time';
 import { Iconify } from 'src/components/iconify';
-import { hrPaths } from 'src/constants/hr-menus';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { Box, Stack, Button } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
-import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
-import { formatCurrency } from 'src/utils/cureencyFormater';
+import { formatNumber } from 'src/utils/formate_number';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { useConfirmDialog } from 'src/hooks/use-confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import ShakingTextField from 'src/components/shaking-text-field';
+import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -28,33 +24,13 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
-import {
-  pfApi,
-  useGetPFQuery,
-  useAddPFMutation,
-  useUpdatePFMutation,
-  useDeletePFMutation,
-} from 'src/redux/PF/PFApi';
-import {
-  SetupEditorBody,
-  SetupEditorGuard,
-  SetupEditorActions,
-  useHrSetupEditorState,
-} from 'src/screens/hr/setup/hr-setup-editor-context';
-import {
-  Box,
-  Stack,
-  Button,
-  Switch,
-  MenuItem,
-  TextField,
-  Typography,
-  DialogActions,
-  InputAdornment,
-  FormControlLabel,
-} from '@mui/material';
+import { pfApi, useGetPFQuery, useDeletePFMutation } from 'src/redux/PF/PFApi';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 
+import { PFForm } from './pf-rule-form';
 import { PfCoverageSettings } from './pf-coverage-settings';
+
+export { PFForm } from './pf-rule-form';
 
 interface IPF {
   id: string;
@@ -75,12 +51,22 @@ interface IPF {
   version: number;
 }
 const PF = () => {
-  const [showConfirm, ChangesConfirmDialog] = useConfirmDialog();
+  const discard = useBoolean();
   const [tableQuery, setTableQuery] = useState({ page: 1, pageSize: 20, search: '' });
   const exportTable = useHrTableExport('hr-pf-rules', tableQuery);
   const dialog = useBoolean();
   const confirm = useBoolean();
   const [editData, setEditData] = useState<null | IPF>(null);
+  const [formBusy, setFormBusy] = useState(false);
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const canManage = hasGrantedPermission(
+    permissions,
+    `${hrPermissions.payroll.settings.pfRule}.Add`
+  );
+  const canDelete = hasGrantedPermission(
+    permissions,
+    `${hrPermissions.payroll.settings.pfRule}.Delete`
+  );
   // const [employee, setEmployee] = useState<string[] | undefined>([]);
   // Redux state for tracking unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
@@ -113,23 +99,15 @@ const PF = () => {
   });
   const dispatch = useDispatch();
 
-  const handleClose = async (_e?: any, isSubmit?: boolean) => {
-    if (
-      isSubmit ||
-      (isChanges &&
-        (await showConfirm({
-          title: 'Alert',
-          message: 'Are you sure you want to discard changes?',
-          icon: 'warning',
-        })))
-    ) {
-      dispatch(setIsChanges(false));
-      dialog.onFalse();
-      setEditData(null);
-    } else if (!isChanges) {
-      dialog.onFalse();
-      setEditData(null);
-    }
+  const closeForm = () => {
+    dispatch(setIsChanges(false));
+    dialog.onFalse();
+    setEditData(null);
+  };
+  const handleClose = (_event?: unknown, isSubmit?: boolean) => {
+    if (formBusy && !isSubmit) return;
+    if (isSubmit || !isChanges) closeForm();
+    else discard.onTrue();
   };
 
   const { confirmWithUndo } = useConfirmWithUndo();
@@ -139,11 +117,13 @@ const PF = () => {
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
+        minHeight: 0,
+        overflow: 'hidden',
       }}
     >
       <CustomBreadcrumbs
         heading="PF Rule"
-        description="Configure PF rule for staff"
+        description="Manage contribution rates, wage limits, and effective dates for staff provident fund rules."
         links={[
           {
             name: 'Payroll Management',
@@ -152,20 +132,51 @@ const PF = () => {
           { name: 'PF Rule' },
         ]}
         action={
-          <Button size="small" startIcon={<Add />} variant="contained" onClick={dialog.onTrue}>
-            PF Rule
-          </Button>
+          canManage ? (
+            <Button
+              size="small"
+              aria-label="Add PF rule"
+              startIcon={<Iconify icon={GlobalIcons.addIcon} />}
+              variant="contained"
+              onClick={() => {
+                setEditData(null);
+                dialog.onTrue();
+              }}
+            >
+              PF Rule
+            </Button>
+          ) : undefined
         }
       />
       <PfCoverageSettings />
-      {ChangesConfirmDialog}
+      <ConfirmDialog
+        open={discard.value}
+        onClose={discard.onFalse}
+        title="Discard Changes?"
+        icon="warning"
+        content="Your unsaved PF rule changes will be lost."
+        cancelText="Keep editing"
+        action={
+          <Button
+            size="small"
+            variant="contained"
+            color="warning"
+            onClick={() => {
+              discard.onFalse();
+              closeForm();
+            }}
+          >
+            Discard changes
+          </Button>
+        }
+      />
       <ConfirmDialog
         open={confirm.value}
         onClose={() => {
           setEditData(null);
           confirm.onFalse();
         }}
-        title="Delete"
+        title="Delete PF Rule"
         content={
           <>
             Are you sure you want to delete <b>{editData?.name}</b> PF Rule?
@@ -201,7 +212,7 @@ const PF = () => {
               setEditData(null);
             }}
           >
-            Yes
+            Delete
           </LoadingButton>
         }
       />
@@ -212,37 +223,24 @@ const PF = () => {
         showFullScreen
         exportScope="all"
         noDataText={
-          <>
-            No PF Found{' '}
-            <Box
-              component="button"
-              type="button"
-              onClick={() => {
-                dialog.onTrue();
-              }}
-              color="primary.main"
-              fontWeight={600}
-              sx={{
-                border: 0,
-                p: 0,
-                bgcolor: 'transparent',
-                font: 'inherit',
-                '&:focus-visible': {
-                  outline: '2px solid',
-                  outlineColor: 'primary.main',
-                  outlineOffset: 2,
-                },
-                '&:hover': {
-                  cursor: 'pointer',
-                  color: 'primary.main',
-                  textDecoration: 'underline',
-                },
-              }}
-            >
-              Add PF
-            </Box>
-          </>
+          <Stack spacing={1} alignItems="center">
+            <span>No PF rules found.</span>
+            {canManage && (
+              <Button
+                size="small"
+                onClick={() => {
+                  setEditData(null);
+                  dialog.onTrue();
+                }}
+                startIcon={<Iconify icon={GlobalIcons.addIcon} />}
+              >
+                Add PF rule
+              </Button>
+            )}
+          </Stack>
         }
+        wrapperProps={{ sx: { flex: 1, minHeight: 0, overflow: 'hidden' } }}
+        tableContainerProps={{ sx: { height: 1 } }}
         tableId="pf-table"
         tableTitle="Provident fund rules"
         onExport={exportTable}
@@ -259,12 +257,27 @@ const PF = () => {
         onServerSearch={(value) =>
           setTableQuery((current) => ({ ...current, page: 1, search: value }))
         }
-        isLoading={isLoading || tableFetching}
+        isLoading={isLoading || (tableFetching && !PFData)}
+        isRefreshing={tableFetching && Boolean(PFData)}
         columns={[
           { id: 'name', label: 'Name', sticky: true, minWidth: '140px', align: 'left' },
           { id: 'code', label: 'Code' },
-          { id: 'employeePercentage', label: 'Staff Percentage', filterType: 'number' },
-          { id: 'employerPercentage', label: 'Employer Percentage', filterType: 'number' },
+          {
+            id: 'employeePercentage',
+            label: 'Staff percentage',
+            filterType: 'number',
+            align: 'right',
+            render: (value) => `${value}%`,
+            exportValue: (value) => Number(value),
+          },
+          {
+            id: 'employerPercentage',
+            label: 'Employer percentage',
+            filterType: 'number',
+            align: 'right',
+            render: (value) => `${value}%`,
+            exportValue: (value) => Number(value),
+          },
           {
             id: 'contributionBasis',
             filterType: 'enum',
@@ -280,11 +293,12 @@ const PF = () => {
           {
             id: 'wageCeiling',
             label: 'Wage ceiling',
+            align: 'right',
             render(value) {
               const numericValue = Number(value);
               return value == null || value === '' || !Number.isFinite(numericValue)
                 ? 'No ceiling'
-                : formatCurrency(numericValue);
+                : formatNumber(numericValue, 'INR', { fractionDigits: numericValue % 1 ? 2 : 0 });
             },
           },
           {
@@ -303,31 +317,50 @@ const PF = () => {
             ],
             label: 'Status',
             render(value) {
-              return value ? 'Active' : 'Inactive';
+              return (
+                <Label color={value ? 'success' : 'default'}>{value ? 'Active' : 'Inactive'}</Label>
+              );
             },
           },
           {
             id: 'action',
-            label: 'Action',
+            label: 'Actions',
+            excludeFromExport: true,
             isSort: false,
             isFilter: false,
             sticky: true,
             stickyPosition: 'right' as const,
             minWidth: '80px',
             render(value, row) {
-              return (
-                <ThreeDotsActions
-                  showEditIcon
-                  showDeleteIcon
-                  handleEditClick={() => {
+              const actions: AdaptiveThreeDotsAction[] = [];
+              if (canManage)
+                actions.push({
+                  id: 'edit',
+                  label: `Edit ${row.name}`,
+                  icon: GlobalIcons.edit,
+                  onClick: () => {
                     setEditData(row as IPF);
                     dialog.onTrue();
-                  }}
-                  handleDeleteClick={() => {
+                  },
+                });
+              if (canDelete)
+                actions.push({
+                  id: 'delete',
+                  label: `Delete ${row.name}`,
+                  icon: GlobalIcons.delete,
+                  color: 'error.main',
+                  onClick: () => {
                     setEditData(row as IPF);
                     confirm.onTrue();
-                  }}
-                  showThreeDots={false}
+                  },
+                });
+              return (
+                <AdaptiveThreeDotsActions
+                  actions={actions}
+                  directActionLimit={2}
+                  collapseOnOverflow={false}
+                  moreLabel={`More actions for ${row.name}`}
+                  sx={{ justifyContent: 'flex-end' }}
                 />
               );
             },
@@ -340,335 +373,24 @@ const PF = () => {
       <CustomDialog
         open={dialog.value}
         handleClose={(e) => handleClose(e, false)}
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">{editData ? 'Update PF Rule' : 'Create PF Rule'}</Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              title="In this section, you can create a new Provident Fund (PF) entry by specifying the percentage to be deducted from the staff's salary."
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
+        title={editData ? 'Edit PF Rule' : 'Create PF Rule'}
+        titleInfo="Set employee and employer contributions, the wage basis, and the period when this rule applies. School PF coverage is configured separately."
+        maxWidth="sm"
+        hasForm={false}
+        guardUnsavedChanges={false}
+        disableClose={formBusy}
       >
-        <PFForm editData={editData} handleClose={handleClose} />
+        {dialog.value && (
+          <PFForm
+            key={editData?.id || 'new'}
+            editData={editData}
+            handleClose={handleClose}
+            onBusyChange={setFormBusy}
+          />
+        )}
       </CustomDialog>
     </Box>
   );
 };
 
 export default PF;
-
-export const PFForm = ({
-  editData,
-  handleClose,
-}: {
-  editData: any;
-  handleClose: (e: any, isSubmit?: boolean) => void;
-}) => {
-  const [addPF, { isLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useAddPFMutation,
-    isThrowError: true,
-  });
-  const [updatePF, { isLoading: isUpdatePFLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUpdatePFMutation,
-    isThrowError: true,
-  });
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
-
-  const formik = useFormik({
-    initialValues: {
-      code: editData?.code || '',
-      name: editData?.name || '',
-      employeePercentage: editData?.employeePercentage || '',
-      employerPercentage: editData?.employerPercentage || '',
-      contributionBasis: editData?.contributionBasis ?? 0,
-      wageCeiling: editData?.wageCeiling ?? '',
-      effectiveFrom: editData?.effectiveFrom?.slice(0, 10) || new Date().toISOString().slice(0, 10),
-      effectiveTo: editData?.effectiveTo?.slice(0, 10) || '',
-      isActive: editData?.isActive ?? true,
-    },
-    validationSchema: Yup.object().shape({
-      code: Yup.string().required('Code is required'),
-      name: Yup.string().required('Name is required'),
-      employeePercentage: Yup.number()
-        .typeError('Staff Percentage must be a number')
-        .required('Staff Percentage is required')
-        .min(0, 'Staff Percentage cannot be less than 0')
-        .max(100, 'Staff Percentage cannot be more than 100'),
-      employerPercentage: Yup.number()
-        .typeError('Employer Percentage must be a number')
-        .required('Employer Percentage is required')
-        .min(0, 'Employer Percentage cannot be less than 0')
-        .max(100, 'Employer Percentage cannot be more than 100'),
-      contributionBasis: Yup.number().oneOf([0, 1]).required('Contribution basis is required'),
-      wageCeiling: Yup.number()
-        .nullable()
-        .transform((value, originalValue) => (originalValue === '' ? null : value))
-        .min(0, 'Wage ceiling cannot be negative'),
-      effectiveFrom: Yup.string().required('Effective from is required'),
-      effectiveTo: Yup.string()
-        .nullable()
-        .test(
-          'after-effective-from',
-          'Effective to must be on or after effective from',
-          (value, context) =>
-            !value || !context.parent.effectiveFrom || value >= context.parent.effectiveFrom
-        ),
-    }),
-    onSubmit: async (values) => {
-      try {
-        const body = {
-          ...values,
-          wageCeiling: values.wageCeiling === '' ? null : Number(values.wageCeiling),
-          effectiveTo: values.effectiveTo || null,
-        };
-        if (editData) {
-          await updatePF({
-            body: {
-              ...body,
-              academicYearId: currentYear?.id,
-            },
-            id: editData.id,
-          }).unwrap();
-          shikshaMitraToast.success({
-            message: `PF rule "${values.name}" updated successfully`,
-          });
-        } else {
-          await addPF({ body, academicYearId: currentYear?.id }).unwrap();
-          shikshaMitraToast.success({
-            message: `PF rule "${values.name}" created successfully`,
-          });
-        }
-        handleClose(undefined, true);
-      } catch (error) {
-        console.error(error);
-      }
-    },
-  });
-
-  useHrSetupEditorState({
-    dirty: formik.dirty,
-    busy: isLoading || isUpdatePFLoading || formik.isSubmitting,
-    save: formik.submitForm,
-  });
-
-  return (
-    <>
-      <SetupEditorGuard initialValues={formik.initialValues} currentValues={formik.values}>
-        <SetupEditorBody>
-          <Stack spacing={3}>
-            <ShakingTextField error={formik.touched.name && Boolean(formik.errors.name)}>
-              <TextField
-                size="small"
-                label="Name *"
-                fullWidth
-                name="name"
-                value={formik.values.name}
-                onChange={formik.handleChange}
-                error={formik.touched.name && Boolean(formik.errors.name)}
-                helperText={
-                  formik.touched.name && formik.errors.name ? String(formik.errors.name) : ''
-                }
-              />
-            </ShakingTextField>
-            <ShakingTextField error={formik.touched.code && Boolean(formik.errors.code)}>
-              <TextField
-                size="small"
-                label="Code *"
-                fullWidth
-                name="code"
-                value={formik.values.code}
-                onChange={(e) => {
-                  const value = e.target.value.toUpperCase().replace(/[^A-Z_]/g, '');
-                  formik.setFieldValue('code', value);
-                }}
-                error={formik.touched.code && Boolean(formik.errors.code)}
-                helperText={
-                  formik.touched.code && formik.errors.code ? String(formik.errors.code) : ''
-                }
-              />
-            </ShakingTextField>
-            <ShakingTextField
-              error={formik.touched.employeePercentage && Boolean(formik.errors.employeePercentage)}
-            >
-              <TextField
-                size="small"
-                fullWidth
-                label="Staff Percentage *"
-                name="employeePercentage"
-                type="number"
-                value={formik.values.employeePercentage}
-                onChange={(e) => {
-                  const { value } = e.target;
-
-                  // Allow empty value
-                  if (value === '') {
-                    formik.setFieldValue('employeePercentage', value);
-                    return;
-                  }
-
-                  const numericValue = Number(value);
-
-                  // Restrict between 0 and 100
-                  if (numericValue >= 0 && numericValue <= 100) {
-                    formik.setFieldValue('employeePercentage', numericValue);
-                  }
-                }}
-                inputProps={{
-                  min: 0,
-                  max: 100,
-                }}
-                InputProps={{
-                  endAdornment: <InputAdornment position="end">%</InputAdornment>,
-                }}
-                error={
-                  formik.touched.employeePercentage && Boolean(formik.errors.employeePercentage)
-                }
-                helperText={
-                  (formik.touched.employeePercentage && formik.errors.employeePercentage) as string
-                }
-              />
-            </ShakingTextField>
-            <ShakingTextField
-              error={formik.touched.employerPercentage && Boolean(formik.errors.employerPercentage)}
-            >
-              <TextField
-                size="small"
-                fullWidth
-                label="Employer Percentage *"
-                name="employerPercentage"
-                type="number"
-                value={formik.values.employerPercentage}
-                onChange={(e) => {
-                  const { value } = e.target;
-
-                  // Allow empty value
-                  if (value === '') {
-                    formik.setFieldValue('employerPercentage', value);
-                    return;
-                  }
-
-                  const numericValue = Number(value);
-
-                  // Restrict between 0 and 100
-                  if (numericValue >= 0 && numericValue <= 100) {
-                    formik.setFieldValue('employerPercentage', numericValue);
-                  }
-                }}
-                inputProps={{
-                  min: 0,
-                  max: 100,
-                }}
-                InputProps={{
-                  endAdornment: <InputAdornment position="end">%</InputAdornment>,
-                }}
-                error={
-                  formik.touched.employerPercentage && Boolean(formik.errors.employerPercentage)
-                }
-                helperText={
-                  (formik.touched.employerPercentage && formik.errors.employerPercentage) as string
-                }
-              />
-            </ShakingTextField>
-            <TextField
-              select
-              fullWidth
-              size="small"
-              label="Contribution basis"
-              name="contributionBasis"
-              value={formik.values.contributionBasis}
-              onChange={formik.handleChange}
-            >
-              <MenuItem value={0}>Basic</MenuItem>
-              <MenuItem value={1}>Basic + Dearness Allowance</MenuItem>
-            </TextField>
-            <TextField
-              size="small"
-              fullWidth
-              label="Wage ceiling"
-              name="wageCeiling"
-              type="number"
-              value={formik.values.wageCeiling}
-              onChange={formik.handleChange}
-              error={formik.touched.wageCeiling && Boolean(formik.errors.wageCeiling)}
-              helperText={
-                formik.touched.wageCeiling && formik.errors.wageCeiling
-                  ? String(formik.errors.wageCeiling)
-                  : 'Leave blank for no ceiling'
-              }
-              inputProps={{ min: 0, step: 0.01 }}
-            />
-            <TextField
-              size="small"
-              fullWidth
-              type="date"
-              label="Effective from"
-              name="effectiveFrom"
-              value={formik.values.effectiveFrom}
-              onChange={formik.handleChange}
-              InputLabelProps={{ shrink: true }}
-              error={formik.touched.effectiveFrom && Boolean(formik.errors.effectiveFrom)}
-              helperText={
-                formik.touched.effectiveFrom && formik.errors.effectiveFrom
-                  ? String(formik.errors.effectiveFrom)
-                  : ''
-              }
-            />
-            <TextField
-              size="small"
-              fullWidth
-              type="date"
-              label="Effective to"
-              name="effectiveTo"
-              value={formik.values.effectiveTo}
-              onChange={formik.handleChange}
-              InputLabelProps={{ shrink: true }}
-              error={formik.touched.effectiveTo && Boolean(formik.errors.effectiveTo)}
-              helperText={
-                formik.touched.effectiveTo && formik.errors.effectiveTo
-                  ? String(formik.errors.effectiveTo)
-                  : 'Optional'
-              }
-            />
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={formik.values.isActive}
-                  onChange={(_, checked) => formik.setFieldValue('isActive', checked)}
-                />
-              }
-              label="Active rule"
-            />
-          </Stack>
-        </SetupEditorBody>
-      </SetupEditorGuard>
-      <SetupEditorActions>
-        <DialogActions>
-          <Button
-            startIcon={<Iconify icon={GlobalIcons.cancel} />}
-            size="small"
-            variant="outlined"
-            onClick={(e) => handleClose(e, false)}
-          >
-            Cancel
-          </Button>
-          <LoadingButton
-            loading={isLoading || isUpdatePFLoading}
-            size="small"
-            variant="contained"
-            type="submit"
-            startIcon={<Iconify icon={GlobalIcons.submit} />}
-            onClick={(e: any) => formik.handleSubmit(e)}
-          >
-            Submit
-          </LoadingButton>
-        </DialogActions>
-      </SetupEditorActions>
-    </>
-  );
-};

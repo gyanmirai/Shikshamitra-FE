@@ -25,6 +25,7 @@ type Props = {
   error?: boolean;
   onAdd: (field: AdmissionFormSystemFieldMetadata) => void;
   onAddSection?: (name: string, fields: AdmissionFormSystemFieldMetadata[]) => void;
+  onAddClassSelector?: () => void;
 };
 
 const admissionContextBindings = new Set([
@@ -44,12 +45,15 @@ export function StudentFieldPalette({
   error = false,
   onAdd,
   onAddSection,
+  onAddClassSelector,
 }: Props) {
   const paletteId = useId();
   const [search, setSearch] = useState('');
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
   const normalizedSearch = search.trim().toLowerCase();
   const groupedFields = groupStudentFields(fields);
+  if (onAddClassSelector && !groupedFields.some(group => group.name === 'Admission preferences'))
+    groupedFields.push({ name: 'Admission preferences', fields: [] });
   const visibleGroups = groupedFields
     .map((group) => ({
       ...group,
@@ -58,7 +62,8 @@ export function StudentFieldPalette({
         matchesStudentField(field, normalizedSearch, group.name)
       ),
     }))
-    .filter((group) => group.fields.length > 0);
+    .filter((group) => group.fields.length > 0 || (group.name === 'Admission preferences' && onAddClassSelector &&
+      (!normalizedSearch || 'class selector board medium admission preferences'.includes(normalizedSearch))));
   const used = new Set(usedBindings.map((key) => key.toLowerCase()));
   const addressPacks = [
     {
@@ -89,7 +94,7 @@ export function StudentFieldPalette({
       <TextField
         fullWidth
         size="small"
-        label="Search student fields"
+        label="Search Student Fields"
         InputLabelProps={{ shrink: Boolean(search) }}
         value={search}
         disabled={loading || error}
@@ -108,12 +113,12 @@ export function StudentFieldPalette({
       />
       {(loading || error) && (
         <Typography variant="caption" color="text.secondary" role="status">
-          {loading ? 'Loading student fields…' : 'Student fields unavailable'}
+          {loading ? 'Loading Student Fields…' : 'Student Fields Unavailable'}
         </Typography>
       )}
       <Scrollbar
         fillContent
-        aria-label="Student field categories"
+        aria-label="Student Field Categories"
         sx={{
           flex: 1,
           minHeight: 0,
@@ -164,7 +169,7 @@ export function StudentFieldPalette({
                         component="h3"
                         sx={{ overflowWrap: 'anywhere', mr: 1 }}
                       >
-                        {group.name} ({group.fields.length})
+                        {group.name} ({group.fields.length + (group.name === 'Admission preferences' && onAddClassSelector ? 1 : 0)})
                       </Typography>
                       <Iconify
                         icon={expanded ? 'mdi:chevron-up' : 'mdi:chevron-down'}
@@ -174,7 +179,7 @@ export function StudentFieldPalette({
                     </ButtonBase>
                     {onAddSection && (
                       <IconButton
-                        aria-label={`Add ${group.name} section`}
+                        aria-label={`Add ${group.name} Section`}
                         disabled={!availableFields.length}
                         onClick={() => {
                           onAddSection(
@@ -196,6 +201,14 @@ export function StudentFieldPalette({
                       spacing={0.75}
                       sx={{ p: 1, borderTop: 1, borderColor: 'divider' }}
                     >
+                      {group.name === 'Admission preferences' && onAddClassSelector && (
+                        <PaletteFieldButton
+                          label="Class Selector"
+                          icon="mdi:school-outline"
+                          description="Linked Board, Medium and Class from Institute Setup"
+                          onClick={onAddClassSelector}
+                        />
+                      )}
                       {group.name === 'Contact and addresses' &&
                         onAddSection &&
                         addressPacks
@@ -225,7 +238,7 @@ export function StudentFieldPalette({
                                 )}
                                 onClick={() => onAddSection(pack.name, packFields)}
                               >
-                                {pack.name} pack
+                                {pack.name} Pack
                               </Button>
                             );
                           })}
@@ -257,16 +270,16 @@ export function StudentFieldPalette({
             <Stack spacing={1} alignItems="center" sx={{ py: 3, textAlign: 'center' }}>
               <Iconify icon="mdi:magnify-close" width={28} sx={{ color: 'text.secondary' }} />
               <Typography variant="subtitle2">
-                {fields.length ? 'No matching fields' : 'No student fields available'}
+                {fields.length ? 'No Matching Fields' : 'No Student Fields Available'}
               </Typography>
               <Typography variant="caption" color="text.secondary">
                 {fields.length
-                  ? 'Try a different name or add a custom field.'
-                  : 'Add a custom field to continue building this form.'}
+                  ? 'Try a Different Name or Add a Custom Field.'
+                  : 'Add a Custom Field to Continue Building This Form.'}
               </Typography>
               {search && (
                 <Button size="small" sx={{ minHeight: 44 }} onClick={() => setSearch('')}>
-                  Clear search
+                  Clear Search
                 </Button>
               )}
             </Stack>

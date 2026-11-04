@@ -14,6 +14,7 @@ const handlers = {
   onHistory: vi.fn(),
   onCreateVersion: vi.fn(),
   onArchive: vi.fn(),
+  onRestore: vi.fn(),
   onDelete: vi.fn(),
 };
 

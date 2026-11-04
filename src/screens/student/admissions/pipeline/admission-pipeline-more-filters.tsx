@@ -126,10 +126,10 @@ export function AdmissionPipelineMoreFilters({
           sx={{ px: 2, py: 1, flexShrink: 0 }}
         >
           <Typography id={titleId} variant="subtitle1">
-            Pipeline filters
+            Pipeline Filters
           </Typography>
           <IconButton
-            aria-label="Close filters"
+            aria-label="Close Filters"
             onClick={popover.onClose}
             sx={{ width: 44, height: 44 }}
           >
@@ -156,16 +156,16 @@ export function AdmissionPipelineMoreFilters({
               </StudentFeedback>
             ) : !options ? (
               <Typography variant="body2" color="text.secondary" role="status">
-                {isLoading ? 'Loading filter options...' : 'Filter options are not available yet.'}
+                {isLoading ? 'Loading Filter Options...' : 'Filter Options Are Not Available Yet.'}
               </Typography>
             ) : null}
 
             <CustomSelect
               fullWidth
-              label="Current step"
+              label="Current Step"
               value={draft.stage || ALL}
               options={[
-                { label: 'All steps', value: ALL },
+                { label: 'All Steps', value: ALL },
                 ...(options?.stages ?? []).map((item) => ({ label: item.name, value: item.code })),
               ]}
               isSearch
@@ -177,7 +177,7 @@ export function AdmissionPipelineMoreFilters({
               label="Status"
               value={draft.status || ALL}
               options={[
-                { label: 'All active statuses', value: ALL },
+                { label: 'All Active Statuses', value: ALL },
                 ...PIPELINE_ACTIVE_STATUSES.map((value) => ({
                   label: getAdmissionApplicationStatusLabel(value),
                   value: String(value),

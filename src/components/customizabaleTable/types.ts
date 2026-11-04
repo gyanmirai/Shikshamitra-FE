@@ -81,6 +81,8 @@ export interface ICustomizableTableProps {
   tableContainerProps?: CustomizableTableContainerProps;
   columns: IColumn[];
   data: IData[];
+  /** Display-only totals supplied by the owner; excluded from record actions and pagination. */
+  summaryRow?: { label: ReactNode; values: Record<string, ReactNode> };
   tableTitle?: ReactNode;
   exportLabel?: string;
   exportContext?: string[];

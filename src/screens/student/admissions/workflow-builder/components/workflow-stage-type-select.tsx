@@ -59,7 +59,7 @@ export function WorkflowStageTypeSelect({
       <CustomSelect
         fullWidth
         size="small"
-        label="Stage type *"
+        label="Stage Type *"
         disabled={readOnly}
         value={formik.values.stageType}
         options={stageTypes
@@ -96,7 +96,7 @@ export function WorkflowStageTypeSelect({
         open={Boolean(pending)}
         onClose={() => setPending(null)}
         icon="warning"
-        title="Change stage type?"
+        title="Change Stage Type?"
         content={`Changing to ${pending?.displayName ?? 'another type'} clears this stage's process settings and attached form. Your custom name and instructions stay. Review connected next steps and any stages that depend on this one before publishing.`}
         action={
           <Button
@@ -105,7 +105,7 @@ export function WorkflowStageTypeSelect({
             startIcon={<Iconify icon="mdi:swap-horizontal" />}
             onClick={() => pending && applyType(pending)}
           >
-            Change type
+            Change Type
           </Button>
         }
       />

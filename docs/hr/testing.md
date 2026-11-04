@@ -3,10 +3,15 @@ module: hr
 domain: testing
 content_type: Reference
 status: canonical
-updated_on: 2026-11-02
+updated_on: 2026-11-04
 owner: frontend-team
 audience: humans-and-agents
 ---
+
+## Historical ESIC setup and payroll branding navigation
+
+Run `esi-configuration-form.test.ts`, `esi-request-error.test.ts`, `esi-automatic-calculation.test.tsx`, `esi-statutory-settings.test.tsx`, `earning-esi-treatment-dialog.test.tsx` and `payslip-settings-form.test.tsx` for retained month/drafts, retry identity, policy/access guidance and both required School Identity route grants.
+Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/@playwright/test/cli.js test --config e2e/hr/esic-historical-recovery.config.ts` for desktop/mobile guidance and permission-aware links using production components with synthetic responses. Complete the final Codex in-app browser smoke check. This frontend fixture does not prove the save guard or deployed tenant setup; real clock-controlled HTTP and PostgreSQL cases live in the backend suite.
 
 ## HR setup readiness wizard
 
@@ -26,8 +31,18 @@ For disposable API-backed browser verification, start `dotnet run --project test
 The fixture uses loopback ports 4396 and 4196, disposable SQLite, synthetic authentication, production setup editors, and real backend endpoints.
 It does not connect to an operational school.
 Browser coverage includes dismissal, refresh, self-service exclusion, request failures, supported viewports/themes, and independent configuration saves through salary preview and completion.
+PF coverage browser checks verify the missing checklist item, embedded fields, unsaved-entry protection, refusal to finish without coverage, and completion after saving a school coverage decision.
 The salary journey creates an auxiliary deduction while preserving the template draft and refreshes its component catalogue before preview and save.
 Finish user-facing verification in the Codex in-app browser after automated checks.
+
+## PF coverage UI
+
+Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vitest/vitest.mjs run src/screens/hr/payroll/setting/pf-coverage-settings.test.tsx --pool=threads --maxWorkers=1` for coverage request states, setup prompts, permissions, validation, draft preservation, and unchanged save payloads.
+Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/@playwright/test/cli.js test --config e2e/hr/pf-coverage.config.ts` for the real coverage component with synthetic responses on loopback port 4198.
+Browser checks cover Retry, configuration entry, failed saves, dirty-close decisions, focus restoration, and spacing at 390/768/1440px in light and dark themes.
+This fixture changes no school records and does not certify backend persistence or PF calculations.
+Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/@playwright/test/cli.js test --config e2e/hr/pf-page.config.ts` with the disposable HR setup bridge for the full PF page.
+It verifies real API create/edit round trips for decimal and zero contributions, retained failed drafts, pending-save locks, read-only actions, validation focus, and light/dark layouts at 390/768/1440px.
 
 ## Onboarding initial load
 
@@ -72,7 +87,12 @@ It does not establish authenticated tenant access, payroll locking, real payment
 
 ## Payslip & statement settings regression
 
-Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vitest/vitest.mjs run src/screens/hr/payroll/salarySlip-generate/payslip-settings --pool=forks --maxWorkers=1` on Windows. The preview tests cover debounce, stale response suppression, cancellation, retry and identical viewer/download URLs; settings tests cover draft reset/cancel, save recovery and navigation. Browser acceptance must additionally check 390/768/1440px, both themes, keyboard focus and live PDF layout; automated component tests alone do not certify these states.
+Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vitest/vitest.mjs run src/screens/hr/payroll/salarySlip-generate/payslip-settings src/screens/hr/payroll/salarySlip-generate/payslip-pdf-viewer.test.tsx --pool=forks --maxWorkers=1` on Windows.
+The preview tests cover debounce, stale response suppression, cancellation, retry and identical viewer/download URLs; settings tests cover draft reset/cancel, save recovery and navigation.
+Viewer tests cover zoom buttons, 25%-200% limits, unchanged canvas/PDF requests and rendering failure recovery.
+Run `npx playwright test --config e2e/hr/payslip-preview.config.ts` for the production settings form against an isolated synthetic PDF endpoint at 390/768/1440px in both themes.
+The browser suite checks Fit page, internal keyboard scrolling, stationary zoom controls, no document-level horizontal overflow, download and appearance regeneration.
+Finish with an in-app browser smoke test; the local fixture does not certify authenticated backend issuance or production document typography.
 
 For HR keyboard coverage, the route/component inventory, synthetic browser procedure, and remaining authenticated acceptance limits, see [Keyboard usability](references/keyboard-usability.md).
 
@@ -975,3 +995,10 @@ Verify both catalogues against the disposable shift-isolation backend bridge.
 Run focused Vitest, ESLint, TypeScript and browser checks for shift forms, employee creation and schedule changes.
 Check keyboard access, dirty-close behavior, loading/error states, future cancellation, stale writes and independent cache invalidation.
 Perform the final smoke test in the Codex in-app browser after automated checks.
+
+## Guided salary setup
+
+Run `npx playwright test --config e2e/hr/salary-setup.config.ts` for the production salary page with loopback-only synthetic hooks.
+The journey verifies stage validation, retained drafts, preview invalidation, failed-save retry, confirmed-save metadata, mobile containment and the persistent footer.
+Screenshots stay under `.artifacts/salary-setup-browser`; these checks do not certify backend calculations or deployed persistence.
+Use `SalaryStructureBuilder.test.tsx`, `salary-editor-screen.test.tsx`, `salary-template-editor.test.tsx`, `payroll-settings.test.tsx` and `permissions.test.ts` for focused component and navigation coverage.

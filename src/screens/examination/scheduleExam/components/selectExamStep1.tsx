@@ -5,6 +5,7 @@ import type { Medium, Standards, Organization } from 'src/types/school';
 
 import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
+import { GlobalIcons } from 'src/utils/icons';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
@@ -12,10 +13,9 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { useRef, useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { FormSectionHeader } from 'src/components/form-section-card';
+import { FormSectionCard, FormFieldSpacing } from 'src/components/form-section-card';
 import { LanguageInputField } from 'src/screens/academic/components/language-typing';
 import { Box, Grid, Checkbox, TextField, Typography, Autocomplete } from '@mui/material';
-import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import { useGetExaminationTypesQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/exam-type-api';
 import { useGetGradeScalingsQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/grade-scalling-api';
 import { useGetExamSubjectsLookupQuery } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
@@ -230,646 +230,423 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
   };
 
   return (
-    <Grid container>
-      <Grid size={{ xs: 12 }}>
-        <SectionCard
-          headerContent={
-            <FormSectionHeader
-              icon="mdi:calendar"
-              title="Exam Setup"
-              descriptionTooltip="Choose the exam name, classes, subjects, exam type, and grading scale before scheduling."
-              titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
-            />
-          }
-          paperProps={{
-            sx: {
-              p: 2,
-              border: '1px solid',
-              borderColor: 'divider',
-              boxShadow: 'none',
-              transition: 'none',
-              '&:hover': { boxShadow: 'none' },
-            },
-          }}
-        >
-          <motion.div
-            variants={formContainerVariants}
-            initial="hidden"
-            animate="show"
-            style={{ width: '100%' }}
-          >
-            <Grid container spacing={2}>
-              <Grid size={{ xs: 12, lg: 9 }}>
-                <Grid container spacing={2}>
-                  <Grid size={{ xs: 12, md: 6, lg: 4 }}>
-                    <motion.div variants={formItemVariants} style={{ width: '100%' }}>
-                      <ShakingTextField
-                        error={Boolean(formik.touched.examName && formik.errors.examName)}
-                      >
-                        <LanguageInputField
-                          fullWidth
-                          label="Exam name *"
-                          size="small"
-                          name="examName"
-                          placeholder="e.g. First Terminal 2024-25"
-                          value={formik.values.examName}
-                          onChange={formik.handleChange}
-                          onBlur={formik.handleBlur}
-                          error={Boolean(formik.touched.examName && formik.errors.examName)}
-                          helperText={
-                            formik.touched.examName && formik.errors.examName
-                              ? formik.errors.examName
-                              : undefined
-                          }
-                          FormHelperTextProps={{
-                            sx: {
-                              position: 'relative',
-                              whiteSpace: 'normal',
-                              mx: 0,
-                              mt: 0.5,
-                            },
-                          }}
-                        />
-                      </ShakingTextField>
-                    </motion.div>
-                  </Grid>
+    <FormSectionCard
+      icon={GlobalIcons.calendar}
+      title="Exam Setup"
+      descriptionTooltip="Choose the exam name, class, divisions, subjects, exam type, and grading scale before scheduling."
+      titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+    >
+      <motion.div
+        variants={formContainerVariants}
+        initial="hidden"
+        animate="show"
+        style={{ width: '100%' }}
+      >
+        <FormFieldSpacing>
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12 }}>
+              <motion.div variants={formItemVariants} style={{ width: '100%' }}>
+                <ShakingTextField
+                  error={Boolean(formik.touched.examName && formik.errors.examName)}
+                >
+                  <LanguageInputField
+                    fullWidth
+                    required
+                    label="Exam name"
+                    size="small"
+                    name="examName"
+                    placeholder="e.g. First terminal exam"
+                    value={formik.values.examName}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    error={Boolean(formik.touched.examName && formik.errors.examName)}
+                    helperText={
+                      formik.touched.examName && formik.errors.examName
+                        ? formik.errors.examName
+                        : undefined
+                    }
+                    FormHelperTextProps={{
+                      sx: {
+                        position: 'relative',
+                        whiteSpace: 'normal',
+                        mx: 0,
+                        mt: 0.5,
+                      },
+                    }}
+                  />
+                </ShakingTextField>
+              </motion.div>
+            </Grid>
 
-                  <Grid size={{ xs: 12, md: 6, lg: 4 }}>
-                    <motion.div variants={formItemVariants} style={{ width: '100%' }}>
-                      <ShakingTextField
-                        error={!!(formik.touched.className && formik.errors.className)}
-                      >
-                        <CustomSelect
-                          options={allClass}
-                          onChange={(val) => {
-                            formik.setFieldValue('className', val as string);
-                            // Reset all class-dependent fields on class change
-                            formik.setFieldValue('divisions', []);
-                            formik.setFieldValue('subjects', []);
-                            formik.setFieldValue('roomDetails', {});
-                            formik.setFieldTouched(`className`, false);
-                            formik.setFieldTouched('divisions', false);
-                            formik.setFieldTouched('subjects', false);
-                          }}
-                          label="Class *"
-                          labelKey="name"
-                          valueKey="id"
-                          value={formik.values.className}
-                          formControlProps={{ fullWidth: true }}
-                          error={!!(formik.touched.className && formik.errors.className)}
-                          helperText={
-                            formik.touched.className && formik.errors.className
-                              ? formik.errors.className
-                              : undefined
-                          }
-                          helperTextProps={{
-                            sx: {
-                              position: 'relative',
-                              whiteSpace: 'normal',
-                              mx: 0,
-                              mt: 0.5,
-                            },
-                          }}
-                        />
-                      </ShakingTextField>
-                    </motion.div>
-                  </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <motion.div variants={formItemVariants} style={{ width: '100%' }}>
+                <ShakingTextField error={!!(formik.touched.className && formik.errors.className)}>
+                  <CustomSelect
+                    options={allClass}
+                    onChange={(val) => {
+                      formik.setFieldValue('className', val as string);
+                      // Reset all class-dependent fields on class change
+                      formik.setFieldValue('divisions', []);
+                      formik.setFieldValue('subjects', []);
+                      formik.setFieldValue('roomDetails', {});
+                      formik.setFieldTouched(`className`, false);
+                      formik.setFieldTouched('divisions', false);
+                      formik.setFieldTouched('subjects', false);
+                    }}
+                    required
+                    name="className"
+                    label="Class"
+                    labelKey="name"
+                    valueKey="id"
+                    value={formik.values.className}
+                    formControlProps={{ fullWidth: true }}
+                    error={!!(formik.touched.className && formik.errors.className)}
+                    helperText={
+                      formik.touched.className && formik.errors.className
+                        ? formik.errors.className
+                        : undefined
+                    }
+                    helperTextProps={{
+                      sx: {
+                        position: 'relative',
+                        whiteSpace: 'normal',
+                        mx: 0,
+                        mt: 0.5,
+                      },
+                    }}
+                  />
+                </ShakingTextField>
+              </motion.div>
+            </Grid>
 
-                  <Grid size={{ xs: 12, md: 6, lg: 4 }}>
-                    <motion.div variants={formItemVariants} style={{ width: '100%' }}>
-                      <ShakingTextField
-                        error={!!(formik.touched.divisions && formik.errors.divisions)}
-                      >
-                        <CustomSelect
-                          label="Division *"
-                          labelKey="name"
-                          valueKey="id"
-                          multiple
-                          disabled={!formik.values.className}
-                          isLoading={isTableLoading || isFetchingSubjects}
-                          options={[
-                            { id: 'all', name: 'All' },
-                            ...(allClass?.find((i: Standards) => i.id === formik.values.className)
-                              ?.divisions || []),
-                          ]}
-                          value={getDisplayedDivisionSelection(formik.values.divisions)}
-                          onChange={(val) => {
-                            const value = val as string[];
-                            const divisionOptions =
-                              allClass?.find((i: Standards) => i.id === formik.values.className)
-                                ?.divisions || [];
-                            const allDivisionIds = divisionOptions.map((d) => d.id);
-                            const nextDivisions = resolveDivisionSelection(
-                              value,
-                              formik.values.divisions,
-                              allDivisionIds
-                            );
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <motion.div variants={formItemVariants} style={{ width: '100%' }}>
+                <ShakingTextField error={!!(formik.touched.divisions && formik.errors.divisions)}>
+                  <CustomSelect
+                    required
+                    name="divisions"
+                    label="Division"
+                    labelKey="name"
+                    valueKey="id"
+                    multiple
+                    disabled={!formik.values.className}
+                    isLoading={isTableLoading || isFetchingSubjects}
+                    options={[
+                      { id: 'all', name: 'All' },
+                      ...(allClass?.find((i: Standards) => i.id === formik.values.className)
+                        ?.divisions || []),
+                    ]}
+                    value={getDisplayedDivisionSelection(formik.values.divisions)}
+                    onChange={(val) => {
+                      const value = val as string[];
+                      const divisionOptions =
+                        allClass?.find((i: Standards) => i.id === formik.values.className)
+                          ?.divisions || [];
+                      const allDivisionIds = divisionOptions.map((d) => d.id);
+                      const nextDivisions = resolveDivisionSelection(
+                        value,
+                        formik.values.divisions,
+                        allDivisionIds
+                      );
 
-                            formik.setFieldValue('divisions', nextDivisions);
-                            formik.setFieldTouched(`divisions`, false);
+                      formik.setFieldValue('divisions', nextDivisions);
+                      formik.setFieldTouched(`divisions`, false);
 
-                            // Prune room details for deselected divisions and subjects
-                            const updatedRoomDetails = pruneRoomDetails(
-                              formik.values.roomDetails,
-                              formik.values.subjects,
-                              nextDivisions
-                            );
-                            formik.setFieldValue('roomDetails', updatedRoomDetails);
+                      // Prune room details for deselected divisions and subjects
+                      const updatedRoomDetails = pruneRoomDetails(
+                        formik.values.roomDetails,
+                        formik.values.subjects,
+                        nextDivisions
+                      );
+                      formik.setFieldValue('roomDetails', updatedRoomDetails);
+                    }}
+                    formControlProps={{ fullWidth: true }}
+                    error={!!(formik.touched.divisions && formik.errors.divisions)}
+                    helperText={
+                      formik.touched.divisions && formik.errors.divisions
+                        ? Array.isArray(formik.errors.divisions)
+                          ? formik.errors.divisions.join(', ')
+                          : formik.errors.divisions
+                        : undefined
+                    }
+                    helperTextProps={{
+                      sx: {
+                        position: 'relative',
+                        whiteSpace: 'normal',
+                        mx: 0,
+                        mt: 0.5,
+                      },
+                    }}
+                  />
+                </ShakingTextField>
+              </motion.div>
+            </Grid>
+
+            <Grid size={{ xs: 12, md: 12 }}>
+              <motion.div variants={formItemVariants} style={{ width: '100%' }}>
+                <ShakingTextField
+                  error={formik.touched.subjects && typeof formik.errors.subjects === 'string'}
+                >
+                  <Autocomplete
+                    multiple
+                    options={subjectOptions}
+                    disabled={!formik.values.className || selectedDivisionIds.length === 0}
+                    loading={isTableLoading || isFetchingSubjects}
+                    getOptionLabel={(option: any) =>
+                      option?.subjectName ||
+                      option?.subjects?.[0]?.subjectName ||
+                      option?.electiveGroupName ||
+                      option?.name ||
+                      ''
+                    }
+                    groupBy={(option: any) => option.optionGroup || 'Subjects'}
+                    getOptionDisabled={(option: any) => !!option.isDisabled}
+                    isOptionEqualToValue={(option: any, val: any) => {
+                      const optionKey = getSubjectSelectionKey(option);
+                      const valueKey = getSubjectSelectionKey(val);
+                      return !!optionKey && optionKey === valueKey;
+                    }}
+                    size="small"
+                    disableCloseOnSelect
+                    renderOption={(optionProps, option, { selected }) => {
+                      const { key, ...restOptionProps } = optionProps as any;
+                      const label =
+                        option?.subjectName ||
+                        option?.subjects?.[0]?.subjectName ||
+                        option?.electiveGroupName ||
+                        option?.name ||
+                        '';
+                      const optionKey = getSubjectSelectionKey(option);
+                      return (
+                        <li key={key ?? optionKey} {...restOptionProps}>
+                          <Checkbox
+                            checked={selected}
+                            size="small"
+                            sx={{ mr: 0.5, p: 0.5 }}
+                            disabled={!!option.isDisabled}
+                          />
+                          <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                            <Typography
+                              variant="body2"
+                              color={option.isDisabled ? 'text.disabled' : 'text.primary'}
+                            >
+                              {label}
+                            </Typography>
+                            {option.isDisabled && (
+                              <Typography
+                                variant="caption"
+                                color="error.main"
+                                sx={{ fontSize: '0.725rem', mt: -0.25 }}
+                              >
+                                {option.disabledReason ||
+                                  'This subject is not finalized from class management.'}
+                              </Typography>
+                            )}
+                          </Box>
+                        </li>
+                      );
+                    }}
+                    renderGroup={(params) => (
+                      <li key={params.key}>
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            display: 'block',
+                            px: 1.5,
+                            py: 0.75,
+                            fontWeight: 700,
+                            color: 'text.secondary',
                           }}
-                          formControlProps={{ fullWidth: true }}
-                          error={!!(formik.touched.divisions && formik.errors.divisions)}
-                          helperText={
-                            formik.touched.divisions && formik.errors.divisions
-                              ? Array.isArray(formik.errors.divisions)
-                                ? formik.errors.divisions.join(', ')
-                                : formik.errors.divisions
-                              : undefined
-                          }
-                          helperTextProps={{
-                            sx: {
-                              position: 'relative',
-                              whiteSpace: 'normal',
-                              mx: 0,
-                              mt: 0.5,
-                            },
-                          }}
-                        />
-                      </ShakingTextField>
-                    </motion.div>
-                  </Grid>
-
-                  <Grid size={{ xs: 12, md: 12 }}>
-                    <motion.div variants={formItemVariants} style={{ width: '100%' }}>
-                      <ShakingTextField
+                        >
+                          {params.group}
+                        </Typography>
+                        <ul style={{ padding: 0 }}>{params.children}</ul>
+                      </li>
+                    )}
+                    value={formik.values.subjects}
+                    onChange={(_event, value) => {
+                      handleSubjectsChange(value as SubjectSelectionOption[]);
+                    }}
+                    onBlur={() => {
+                      formik.setFieldTouched('subjects', true, true);
+                    }}
+                    slotProps={{
+                      chip: {
+                        variant: 'soft' as any,
+                      },
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        name="subjects"
+                        label="Subjects *"
+                        inputProps={{ ...params.inputProps, 'aria-required': true }}
+                        size="small"
                         error={
                           formik.touched.subjects && typeof formik.errors.subjects === 'string'
                         }
-                      >
-                        <Autocomplete
-                          multiple
-                          options={subjectOptions}
-                          disabled={!formik.values.className || selectedDivisionIds.length === 0}
-                          loading={isTableLoading || isFetchingSubjects}
-                          getOptionLabel={(option: any) =>
-                            option?.subjectName ||
-                            option?.subjects?.[0]?.subjectName ||
-                            option?.electiveGroupName ||
-                            option?.name ||
-                            ''
-                          }
-                          groupBy={(option: any) => option.optionGroup || 'Subjects'}
-                          getOptionDisabled={(option: any) => !!option.isDisabled}
-                          isOptionEqualToValue={(option: any, val: any) => {
-                            const optionKey = getSubjectSelectionKey(option);
-                            const valueKey = getSubjectSelectionKey(val);
-                            return !!optionKey && optionKey === valueKey;
-                          }}
-                          size="small"
-                          disableCloseOnSelect
-                          renderOption={(optionProps, option, { selected }) => {
-                            const { key, ...restOptionProps } = optionProps as any;
-                            const label =
-                              option?.subjectName ||
-                              option?.subjects?.[0]?.subjectName ||
-                              option?.electiveGroupName ||
-                              option?.name ||
-                              '';
-                            const optionKey = getSubjectSelectionKey(option);
-                            return (
-                              <li key={key ?? optionKey} {...restOptionProps}>
-                                <Checkbox
-                                  checked={selected}
-                                  size="small"
-                                  sx={{ mr: 0.5, p: 0.5 }}
-                                  disabled={!!option.isDisabled}
-                                />
-                                <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                                  <Typography
-                                    variant="body2"
-                                    color={option.isDisabled ? 'text.disabled' : 'text.primary'}
-                                  >
-                                    {label}
-                                  </Typography>
-                                  {option.isDisabled && (
-                                    <Typography
-                                      variant="caption"
-                                      color="error.main"
-                                      sx={{ fontSize: '0.725rem', mt: -0.25 }}
-                                    >
-                                      {option.disabledReason ||
-                                        'This subject is not finalized from class management.'}
-                                    </Typography>
-                                  )}
-                                </Box>
-                              </li>
-                            );
-                          }}
-                          renderGroup={(params) => (
-                            <li key={params.key}>
-                              <Typography
-                                variant="caption"
-                                sx={{
-                                  display: 'block',
-                                  px: 1.5,
-                                  py: 0.75,
-                                  fontWeight: 700,
-                                  color: 'text.secondary',
-                                }}
-                              >
-                                {params.group}
-                              </Typography>
-                              <ul style={{ padding: 0 }}>{params.children}</ul>
-                            </li>
-                          )}
-                          value={formik.values.subjects}
-                          onChange={(_event, value) => {
-                            handleSubjectsChange(value as SubjectSelectionOption[]);
-                          }}
-                          onBlur={() => {
-                            formik.setFieldTouched('subjects', true, true);
-                          }}
-                          slotProps={{
-                            chip: {
-                              variant: 'soft' as any,
-                            },
-                          }}
-                          renderInput={(params) => (
-                            <TextField
-                              {...params}
-                              label="Subjects *"
-                              size="small"
-                              error={
-                                formik.touched.subjects &&
-                                typeof formik.errors.subjects === 'string'
-                              }
-                              helperText={
-                                formik.touched.subjects &&
-                                typeof formik.errors.subjects === 'string'
-                                  ? formik.errors.subjects
-                                  : undefined
-                              }
-                              FormHelperTextProps={{
-                                sx: {
-                                  position: 'relative',
-                                  whiteSpace: 'normal',
-                                  mx: 0,
-                                  mt: 0.5,
-                                },
-                              }}
-                            />
-                          )}
-                        />
-                      </ShakingTextField>
-                    </motion.div>
-                  </Grid>
-
-                  <Grid size={{ xs: 12, md: 6 }}>
-                    <motion.div variants={formItemVariants} style={{ width: '100%' }}>
-                      <ShakingTextField
-                        error={formik.touched.examType && Boolean(formik.errors.examType)}
-                      >
-                        <CustomSelect
-                          options={examTypeOptions}
-                          isLoading={isLoading || isFetching}
-                          value={formik.values.examType}
-                          onChange={(val) => {
-                            formik.setFieldValue('examType', val);
-                            // Also store the display name so the Review step shows it correctly
-                            const selectedType = examTypeOptions.find(
-                              (item: any) => item.id === val
-                            );
-                            formik.setFieldValue('examTypeName', selectedType?.examType ?? '');
-                            formik.setFieldTouched(`examType`, false);
-
-                            if (selectedType?.defaultGradeScaleId) {
-                              formik.setFieldValue(
-                                'gradingScaleId',
-                                selectedType.defaultGradeScaleId
-                              );
-                            }
-
-                            const defaultTotalMarks = selectedType?.defaultTotalMarks ?? '';
-                            const defaultGradeScaleId = selectedType?.defaultGradeScaleId ?? null;
-
-                            const normalizeScheduleFields = (subject: any) => ({
-                              ...subject,
-                              totalMarks: subject.totalMarks || defaultTotalMarks,
-                              passingMarks: subject.passingMarks ?? '',
-                              gradeScalingId: subject.gradeScalingId || defaultGradeScaleId,
-                            });
-
-                            formik.setFieldValue(
-                              'subjects',
-                              formik.values.subjects.map((subject: any) => {
-                                const normalized = normalizeScheduleFields(subject);
-                                if (subject.electiveGroupId && Array.isArray(subject.subjects)) {
-                                  return {
-                                    ...normalized,
-                                    subjects: subject.subjects.map(normalizeScheduleFields),
-                                  };
-                                }
-                                return normalized;
-                              })
-                            );
-                          }}
-                          labelKey="examType"
-                          valueKey="id"
-                          label="Exam type *"
-                          formControlProps={{ fullWidth: true }}
-                          error={formik.touched.examType && Boolean(formik.errors.examType)}
-                          helperText={formik.touched.examType ? formik.errors.examType : undefined}
-                          helperTextProps={{
-                            sx: {
-                              position: 'relative',
-                              whiteSpace: 'normal',
-                              mx: 0,
-                              mt: 0.5,
-                            },
-                          }}
-                        />
-                      </ShakingTextField>
-
-                      <CustomDialog
-                        title="Create Exam Type"
-                        open={examTypeDialog.value}
-                        handleClose={examTypeDialog.onFalse}
-                      >
-                        <ExamTypeForm
-                          onClose={examTypeDialog.onFalse}
-                          data={null}
-                          onSubmit={() => {}}
-                          isEdit={false}
-                        />
-                      </CustomDialog>
-                    </motion.div>
-                  </Grid>
-                  <Grid size={{ xs: 12, md: 6 }}>
-                    <motion.div variants={formItemVariants} style={{ width: '100%' }}>
-                      <ShakingTextField
-                        error={
-                          formik.touched.gradingScaleId && Boolean(formik.errors.gradingScaleId)
+                        helperText={
+                          formik.touched.subjects && typeof formik.errors.subjects === 'string'
+                            ? formik.errors.subjects
+                            : undefined
                         }
-                      >
-                        <CustomSelect
-                          options={gradeScalingOptions}
-                          isLoading={isGradeScalingsLoading || isGradeScalingsFetching}
-                          value={formik.values.gradingScaleId || ''}
-                          onChange={(val) => {
-                            formik.setFieldValue('gradingScaleId', val);
-                            formik.setFieldTouched('gradingScaleId', false);
-
-                            const selectedGradeScale = gradeScalingOptions.find(
-                              (item: any) => String(item.id) === String(val)
-                            );
-                            const normalizeScheduleFields = (subject: any) => ({
-                              ...subject,
-                              gradeScalingId: val || null,
-                              totalMarks: selectedGradeScale?.totalMarks ?? '',
-                              passingMarks: selectedGradeScale?.passMarks ?? '',
-                            });
-
-                            formik.setFieldValue(
-                              'subjects',
-                              formik.values.subjects.map((subject: any) => {
-                                const normalized = normalizeScheduleFields(subject);
-                                if (subject.electiveGroupId && Array.isArray(subject.subjects)) {
-                                  return {
-                                    ...normalized,
-                                    subjects: subject.subjects.map(normalizeScheduleFields),
-                                  };
-                                }
-                                return normalized;
-                              })
-                            );
-                          }}
-                          labelKey="name"
-                          valueKey="id"
-                          label="Grading scale *"
-                          formControlProps={{ fullWidth: true }}
-                          error={
-                            formik.touched.gradingScaleId && Boolean(formik.errors.gradingScaleId)
-                          }
-                          helperText={
-                            formik.touched.gradingScaleId && formik.errors.gradingScaleId
-                              ? formik.errors.gradingScaleId
-                              : undefined
-                          }
-                          helperTextProps={{
-                            sx: {
-                              position: 'relative',
-                              whiteSpace: 'normal',
-                              mx: 0,
-                              mt: 0.5,
-                            },
-                          }}
-                        />
-                      </ShakingTextField>
-                    </motion.div>
-                  </Grid>
-
-                  {/* <Grid size={{ xs: 12 }}>
-                <motion.div variants={formItemVariants} style={{ width: '100%' }}>
-                  <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 700 }}>
-                    Scheduling Mode
-                  </Typography>
-                  <Grid container spacing={2}>
-                    <Grid size={{ xs: 12, md: 4 }}>
-                      <Paper
-                        variant="outlined"
-                        sx={{
-                          p: 2,
-                          borderRadius: 1,
-                          cursor: 'pointer',
-                          borderColor: 'primary.main',
-                          bgcolor: (theme) => alpha(theme.palette.primary.main, 0.04),
-                          display: 'flex',
-                          alignItems: 'flex-start',
-                          gap: 1.5,
+                        FormHelperTextProps={{
+                          sx: {
+                            position: 'relative',
+                            whiteSpace: 'normal',
+                            mx: 0,
+                            mt: 0.5,
+                          },
                         }}
-                      >
-                        <Radio checked={true} size="small" sx={{ p: 0 }} color="primary" />
-                        <Box>
-                          <Typography variant="subtitle2" fontWeight={700}>
-                            Manual scheduling
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            Define date, time, and marks for each subject manually in the next step.
-                          </Typography>
-                        </Box>
-                      </Paper>
-                    </Grid>
-
-                    <Grid size={{ xs: 12, md: 4 }}>
-                      <Tooltip title="Coming soon!" arrow>
-                        <Paper
-                          variant="outlined"
-                          sx={{
-                            p: 2,
-                            borderRadius: 1,
-                            borderColor: 'divider',
-                            opacity: 0.6,
-                            bgcolor: 'action.disabledBackground',
-                            display: 'flex',
-                            alignItems: 'flex-start',
-                            gap: 1.5,
-                            cursor: 'not-allowed',
-                          }}
-                        >
-                          <Radio checked={false} disabled size="small" sx={{ p: 0 }} />
-                          <Box>
-                            <Typography variant="subtitle2" fontWeight={700} color="text.disabled">
-                              Copy from existing exam
-                            </Typography>
-                            <Typography variant="caption" color="text.disabled">
-                              Import schedule parameters from a previously scheduled exam.
-                            </Typography>
-                          </Box>
-                        </Paper>
-                      </Tooltip>
-                    </Grid>
-
-                    <Grid size={{ xs: 12, md: 4 }}>
-                      <Tooltip title="Coming soon!" arrow>
-                        <Paper
-                          variant="outlined"
-                          sx={{
-                            p: 2,
-                            borderRadius: 1,
-                            borderColor: 'divider',
-                            opacity: 0.6,
-                            bgcolor: 'action.disabledBackground',
-                            display: 'flex',
-                            alignItems: 'flex-start',
-                            gap: 1.5,
-                            cursor: 'not-allowed',
-                          }}
-                        >
-                          <Radio checked={false} disabled size="small" sx={{ p: 0 }} />
-                          <Box>
-                            <Typography variant="subtitle2" fontWeight={700} color="text.disabled">
-                              Auto-generate schedule
-                            </Typography>
-                            <Typography variant="caption" color="text.disabled">
-                              AI-powered automatic scheduling based on school timetable constraints.
-                            </Typography>
-                          </Box>
-                        </Paper>
-                      </Tooltip>
-                    </Grid>
-                  </Grid>
-                </motion.div>
-              </Grid> */}
-                </Grid>
-              </Grid>
-              <Grid size={{ xs: 12, lg: 3 }}>
-                <Box
-                  sx={{
-                    p: 1.5,
-                    borderRadius: 2,
-                    bgcolor: 'background.neutral',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 1.5,
-                  }}
-                >
-                  {!formik.values.examName &&
-                  !formik.values.className &&
-                  formik.values.subjects.length === 0 ? (
-                    <Typography variant="body2" color="text.secondary">
-                      Exam details and selected subjects will appear here as you fill out the form.
-                    </Typography>
-                  ) : (
-                    <>
-                      {(formik.values.examName || formik.values.className) && (
-                        <Box
-                          sx={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-                            gap: 2,
-                          }}
-                        >
-                          {formik.values.examName && (
-                            <Box>
-                              <Typography variant="caption" color="text.secondary">
-                                Exam name
-                              </Typography>
-                              <Typography
-                                variant="body2"
-                                fontWeight={600}
-                                sx={{ overflowWrap: 'anywhere' }}
-                              >
-                                {formik.values.examName}
-                              </Typography>
-                            </Box>
-                          )}
-                          {formik.values.className && (
-                            <Box>
-                              <Typography variant="caption" color="text.secondary">
-                                Class
-                              </Typography>
-                              <Typography
-                                variant="body2"
-                                fontWeight={600}
-                                sx={{ overflowWrap: 'anywhere' }}
-                              >
-                                {
-                                  allClass.find((c: Standards) => c.id === formik.values.className)
-                                    ?.name
-                                }
-                              </Typography>
-                            </Box>
-                          )}
-                        </Box>
-                      )}
-                      {formik.values.subjects.length > 0 && (
-                        <Box>
-                          <Typography variant="caption" color="text.secondary">
-                            Selected subjects
-                          </Typography>
-                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mt: 0.75 }}>
-                            {formik.values.subjects.map((sub: any) => (
-                              <Box
-                                key={sub.subjectId}
-                                sx={{
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  gap: 0.75,
-                                  px: 1.25,
-                                  py: 0.5,
-                                  borderRadius: 1,
-                                  bgcolor: 'action.hover',
-                                }}
-                              >
-                                <Box
-                                  sx={{
-                                    width: 7,
-                                    height: 7,
-                                    borderRadius: '50%',
-                                    bgcolor: sub.subjectColor || 'grey.500',
-                                    flexShrink: 0,
-                                  }}
-                                />
-                                <Typography
-                                  variant="caption"
-                                  fontWeight={600}
-                                  sx={{ overflowWrap: 'anywhere' }}
-                                >
-                                  {sub.subjectName}
-                                </Typography>
-                              </Box>
-                            ))}
-                          </Box>
-                        </Box>
-                      )}
-                    </>
-                  )}
-                </Box>
-              </Grid>
+                      />
+                    )}
+                  />
+                </ShakingTextField>
+              </motion.div>
             </Grid>
-          </motion.div>
-        </SectionCard>
-      </Grid>
-    </Grid>
+
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <motion.div variants={formItemVariants} style={{ width: '100%' }}>
+                <ShakingTextField
+                  error={formik.touched.examType && Boolean(formik.errors.examType)}
+                >
+                  <CustomSelect
+                    options={examTypeOptions}
+                    isLoading={isLoading || isFetching}
+                    value={formik.values.examType}
+                    onChange={(val) => {
+                      formik.setFieldValue('examType', val);
+                      // Also store the display name so the Review step shows it correctly
+                      const selectedType = examTypeOptions.find((item: any) => item.id === val);
+                      formik.setFieldValue('examTypeName', selectedType?.examType ?? '');
+                      formik.setFieldTouched(`examType`, false);
+
+                      if (selectedType?.defaultGradeScaleId) {
+                        formik.setFieldValue('gradingScaleId', selectedType.defaultGradeScaleId);
+                      }
+
+                      const defaultTotalMarks = selectedType?.defaultTotalMarks ?? '';
+                      const defaultGradeScaleId = selectedType?.defaultGradeScaleId ?? null;
+
+                      const normalizeScheduleFields = (subject: any) => ({
+                        ...subject,
+                        totalMarks: subject.totalMarks || defaultTotalMarks,
+                        passingMarks: subject.passingMarks ?? '',
+                        gradeScalingId: subject.gradeScalingId || defaultGradeScaleId,
+                      });
+
+                      formik.setFieldValue(
+                        'subjects',
+                        formik.values.subjects.map((subject: any) => {
+                          const normalized = normalizeScheduleFields(subject);
+                          if (subject.electiveGroupId && Array.isArray(subject.subjects)) {
+                            return {
+                              ...normalized,
+                              subjects: subject.subjects.map(normalizeScheduleFields),
+                            };
+                          }
+                          return normalized;
+                        })
+                      );
+                    }}
+                    labelKey="examType"
+                    valueKey="id"
+                    required
+                    name="examType"
+                    label="Exam type"
+                    formControlProps={{ fullWidth: true }}
+                    error={formik.touched.examType && Boolean(formik.errors.examType)}
+                    helperText={formik.touched.examType ? formik.errors.examType : undefined}
+                    helperTextProps={{
+                      sx: {
+                        position: 'relative',
+                        whiteSpace: 'normal',
+                        mx: 0,
+                        mt: 0.5,
+                      },
+                    }}
+                  />
+                </ShakingTextField>
+
+                <CustomDialog
+                  title="Create Exam Type"
+                  open={examTypeDialog.value}
+                  handleClose={examTypeDialog.onFalse}
+                >
+                  <ExamTypeForm
+                    onClose={examTypeDialog.onFalse}
+                    data={null}
+                    onSubmit={() => {}}
+                    isEdit={false}
+                  />
+                </CustomDialog>
+              </motion.div>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <motion.div variants={formItemVariants} style={{ width: '100%' }}>
+                <ShakingTextField
+                  error={formik.touched.gradingScaleId && Boolean(formik.errors.gradingScaleId)}
+                >
+                  <CustomSelect
+                    options={gradeScalingOptions}
+                    isLoading={isGradeScalingsLoading || isGradeScalingsFetching}
+                    value={formik.values.gradingScaleId || ''}
+                    onChange={(val) => {
+                      formik.setFieldValue('gradingScaleId', val);
+                      formik.setFieldTouched('gradingScaleId', false);
+
+                      const selectedGradeScale = gradeScalingOptions.find(
+                        (item: any) => String(item.id) === String(val)
+                      );
+                      const normalizeScheduleFields = (subject: any) => ({
+                        ...subject,
+                        gradeScalingId: val || null,
+                        totalMarks: selectedGradeScale?.totalMarks ?? '',
+                        passingMarks: selectedGradeScale?.passMarks ?? '',
+                      });
+
+                      formik.setFieldValue(
+                        'subjects',
+                        formik.values.subjects.map((subject: any) => {
+                          const normalized = normalizeScheduleFields(subject);
+                          if (subject.electiveGroupId && Array.isArray(subject.subjects)) {
+                            return {
+                              ...normalized,
+                              subjects: subject.subjects.map(normalizeScheduleFields),
+                            };
+                          }
+                          return normalized;
+                        })
+                      );
+                    }}
+                    labelKey="name"
+                    valueKey="id"
+                    required
+                    name="gradingScaleId"
+                    label="Grading scale"
+                    formControlProps={{ fullWidth: true }}
+                    error={formik.touched.gradingScaleId && Boolean(formik.errors.gradingScaleId)}
+                    helperText={
+                      formik.touched.gradingScaleId && formik.errors.gradingScaleId
+                        ? formik.errors.gradingScaleId
+                        : undefined
+                    }
+                    helperTextProps={{
+                      sx: {
+                        position: 'relative',
+                        whiteSpace: 'normal',
+                        mx: 0,
+                        mt: 0.5,
+                      },
+                    }}
+                  />
+                </ShakingTextField>
+              </motion.div>
+            </Grid>
+          </Grid>
+        </FormFieldSpacing>
+      </motion.div>
+    </FormSectionCard>
   );
 };
 

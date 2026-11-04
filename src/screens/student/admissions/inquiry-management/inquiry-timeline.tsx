@@ -19,7 +19,7 @@ export function InquiryTimeline({
   const activities = (query.currentData ?? []).filter(
     (item) => scope !== 'form' || isInquiryFormActivity(item)
   );
-  const title = scope === 'form' ? 'Form history' : 'Timeline and communications';
+  const title = scope === 'form' ? 'Form History' : 'Timeline and Communications';
 
   return (
     <Paper variant="outlined" sx={{ p: 2 }}>
@@ -31,15 +31,15 @@ export function InquiryTimeline({
             </Typography>
             <Typography variant="body2" color="text.secondary">
               {scope === 'form'
-                ? 'Inquiry form creation and saved changes, newest first.'
-                : 'Staff handling, follow-ups, and communications in one place.'}
+                ? 'Inquiry Form Creation and Saved Changes, Newest First.'
+                : 'Staff Handling, Follow-ups, and Communications in One Place.'}
             </Typography>
           </Stack>
           {!loading && <Label color="default">{activities.length}</Label>}
         </Stack>
 
         {loading && (
-          <Stack spacing={1} aria-label="Loading inquiry timeline">
+          <Stack spacing={1} aria-label="Loading Inquiry Timeline">
             <Skeleton variant="rounded" height={64} />
             <Skeleton variant="rounded" height={64} />
             <Skeleton variant="rounded" height={64} />
@@ -70,8 +70,8 @@ export function InquiryTimeline({
             initiallyVisible={5}
             emptyDescription={
               scope === 'form'
-                ? 'Saved inquiry form changes will appear here.'
-                : 'Contact notes, follow-ups, and communications will appear here.'
+                ? 'Saved Inquiry Form Changes Will Appear Here.'
+                : 'Contact Notes, Follow-ups, and Communications Will Appear Here.'
             }
           />
         )}

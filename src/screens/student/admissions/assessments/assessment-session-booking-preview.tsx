@@ -87,7 +87,7 @@ export function AssessmentSessionBookingPreview({
     },
     {
       id: 'admissionOfferingId',
-      label: 'Offering / stage',
+      label: 'Offering / Stage',
       isSort: false,
       render: (_, row) => {
         const scope = scopes.find(
@@ -97,11 +97,11 @@ export function AssessmentSessionBookingPreview({
         );
         return (
           <Stack>
-            <Typography variant="body2">{scope?.offeringName ?? 'Offering unavailable'}</Typography>
+            <Typography variant="body2">{scope?.offeringName ?? 'Offering Unavailable'}</Typography>
             <Typography variant="caption" color="text.secondary">
               {scope
                 ? `${scope.stageName} · ${scope.workflowName || 'Workflow'} v${scope.workflowVersion}`
-                : 'Stage unavailable'}
+                : 'Stage Unavailable'}
             </Typography>
           </Stack>
         );
@@ -109,7 +109,7 @@ export function AssessmentSessionBookingPreview({
     },
     {
       id: 'slotStartsAt',
-      label: 'Interview time',
+      label: 'Interview Time',
       filterType: 'dateTime',
       isSort: false,
       render: (_, raw) => {
@@ -117,19 +117,19 @@ export function AssessmentSessionBookingPreview({
         return item?.slotStartsAt
           ? fDateTime(item.slotStartsAt)
           : preview.slots.length
-            ? 'Assigned on confirmation'
-            : 'Shared session time';
+            ? 'Assigned on Confirmation'
+            : 'Shared Session Time';
       },
     },
   ];
   return (
     <Stack spacing={1.5} sx={{ minHeight: 0, flex: 1, height: 1 }}>
       <Stack direction="row" spacing={2} useFlexGap flexWrap="wrap">
-        <Typography variant="body2">{preview.eligibleCount} eligible</Typography>
-        <Typography variant="body2">{preview.availableCount} available seats / slots</Typography>
-        <Typography variant="subtitle2">{selected.length} selected</Typography>
+        <Typography variant="body2">{preview.eligibleCount} Eligible</Typography>
+        <Typography variant="body2">{preview.availableCount} Available Seats / Slots</Typography>
+        <Typography variant="subtitle2">{selected.length} Selected</Typography>
         <Typography variant="body2" color="text.secondary">
-          {Math.max(0, preview.eligibleCount - selected.length)} remain pending
+          {Math.max(0, preview.eligibleCount - selected.length)} Remain Pending
         </Typography>
       </Stack>
       {preview.requiresRoomApproval && (
@@ -171,14 +171,14 @@ export function AssessmentSessionBookingPreview({
             onChange([...selected, ...additions]);
           }}
         >
-          Select available on this page
+          Select Available on This Page
         </Button>
         <Button
           size="small"
           disabled={disabled || selected.length === 0}
           onClick={() => onChange([])}
         >
-          Clear selection
+          Clear Selection
         </Button>
       </Stack>
       <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
@@ -204,8 +204,8 @@ export function AssessmentSessionBookingPreview({
           tableContainerProps={{ sx: { height: 1 } }}
           noDataText={
             existingSession
-              ? 'No eligible applicants match this booking preview. You can book applicants into this session later.'
-              : 'No eligible applicants match this booking preview. You can create the session and book applicants later.'
+              ? 'No Eligible Applicants Match This Booking Preview. You Can Book Applicants Into This Session Later.'
+              : 'No Eligible Applicants Match This Booking Preview. You Can Create the Session and Book Applicants Later.'
           }
           errorContent={
             error ? (

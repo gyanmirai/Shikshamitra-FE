@@ -52,7 +52,7 @@ export function getRouteConditionFields(
 ): WorkflowConditionField[] {
   const formIds = new Set(getRouteSourceFormIds(stages, transitions, fromStageId));
   const result: WorkflowConditionField[] = [
-    { value: 'application.status', label: 'Application status', fieldType: 6 },
+    { value: 'application.status', label: 'Application Status', fieldType: 6 },
   ];
   forms
     .filter((form) => formIds.has(form.id))
@@ -92,15 +92,15 @@ export function isValidRouteNumber(value: string, operator: string): boolean {
 }
 
 export const ROUTE_OPERATOR_LABELS: Record<string, string> = {
-  Equals: 'is',
-  NotEquals: 'is not',
-  GreaterThan: 'is greater than',
-  GreaterThanOrEqual: 'is at least',
-  LessThan: 'is less than',
-  LessThanOrEqual: 'is at most',
-  Contains: 'contains',
-  IsEmpty: 'is empty',
-  IsNotEmpty: 'is not empty',
-  In: 'is one of',
-  NotIn: 'is not one of',
+  Equals: 'Is',
+  NotEquals: 'Is Not',
+  GreaterThan: 'Is Greater Than',
+  GreaterThanOrEqual: 'Is at Least',
+  LessThan: 'Is Less Than',
+  LessThanOrEqual: 'Is at Most',
+  Contains: 'Contains',
+  IsEmpty: 'Is Empty',
+  IsNotEmpty: 'Is Not Empty',
+  In: 'Is One Of',
+  NotIn: 'Is Not One Of',
 };

@@ -5,6 +5,8 @@ import type {
 
 import { amountError } from 'src/screens/finance/settings/FeeStructure/feeStructureModel';
 
+import { assignmentEditReasonError } from './assignmentEditRequest';
+
 export function assignmentFeeSelectionError(
   candidate: AssignmentCandidate,
   request: AssignmentRequest
@@ -21,7 +23,9 @@ export function assignmentInputError(
   request: AssignmentRequest
 ): string | undefined {
   return (
-    assignmentFeeSelectionError(candidate, request) || variableAssignmentError(candidate, request)
+    assignmentEditReasonError(request) ||
+    assignmentFeeSelectionError(candidate, request) ||
+    variableAssignmentError(candidate, request)
   );
 }
 
@@ -44,4 +48,27 @@ export function variableAssignmentError(
       return undefined;
     })
     .find(Boolean);
+}
+
+export function assignmentPolicyError(
+  candidate: AssignmentCandidate,
+  request: AssignmentRequest
+): string | undefined {
+  const collectionVersion =
+    request.policies?.find((p) => p.family === 'collection')?.versionId ??
+    candidate.policies?.find((p) => p.family === 'collection')?.versionId;
+  const refundVersion =
+    request.policies?.find((p) => p.family === 'refund')?.versionId ??
+    candidate.policies?.find((p) => p.family === 'refund')?.versionId;
+
+  if (!collectionVersion?.trim() && !refundVersion?.trim()) {
+    return 'Select a Collection Policy and a Refund Policy before continuing.';
+  }
+  if (!collectionVersion?.trim()) {
+    return 'Select a Collection Policy before continuing.';
+  }
+  if (!refundVersion?.trim()) {
+    return 'Select a Refund Policy before continuing.';
+  }
+  return undefined;
 }

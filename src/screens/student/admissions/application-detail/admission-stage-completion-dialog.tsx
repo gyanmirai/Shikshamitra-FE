@@ -85,14 +85,14 @@ export function AdmissionStageCompletionDialog({ open, stage, loading, onClose, 
     <CustomDialog
       open={open}
       handleClose={onClose}
-      title={isExam ? 'Record entrance exam result' : 'Confirm physical form issue'}
+      title={isExam ? 'Record Entrance Exam Result' : 'Confirm Physical Form Issue'}
       maxWidth="sm"
     >
       <DialogScrollContent onSubmit={() => submitStageCompletion().catch(() => undefined)}>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           {isExam
-            ? 'Record the schedule and marks. Only a passing result can move the application forward.'
-            : 'Confirm that the school issued the physical registration form before moving forward.'}
+            ? 'Record the Schedule and Marks. Only a Passing Result Can Move the Application Forward.'
+            : 'Confirm That the School Issued the Physical Registration Form Before Moving Forward.'}
         </Typography>
         {isExam ? (
           <EntranceExamCompletionFields
@@ -124,7 +124,7 @@ export function AdmissionStageCompletionDialog({ open, stage, loading, onClose, 
           }
           onClick={() => submitStageCompletion().catch(() => undefined)}
         >
-          {isExam ? 'Record pass and continue' : 'Confirm issue and continue'}
+          {isExam ? 'Record Pass and Continue' : 'Confirm Issue and Continue'}
         </LoadingButton>
       </DialogActions>
     </CustomDialog>

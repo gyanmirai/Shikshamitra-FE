@@ -65,7 +65,7 @@ export function AdmissionNumberingPreview({
   return (
     <Stack spacing={0.5} aria-busy={loading}>
       <Typography variant="caption" color="text.secondary">
-        Next application number{academicYear ? ` · ${academicYear.name}` : ''}
+        Next Application Number{academicYear ? ` · ${academicYear.name}` : ''}
       </Typography>
       {needsYear ? (
         <Typography variant="body2">
@@ -82,7 +82,7 @@ export function AdmissionNumberingPreview({
           <Stack spacing={1}>
             <span>{error}</span>
             <Button size="small" onClick={() => setRefresh((value) => value + 1)}>
-              Retry preview
+              Retry Preview
             </Button>
           </Stack>
         </StudentFeedback>
@@ -99,7 +99,7 @@ export function AdmissionNumberingPreview({
       {valid && !needsYear && !error && (
         <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
           <Typography variant="caption" color="text.secondary">
-            Not reserved · May change with new registrations
+            Not Reserved · May Change with New Registrations
           </Typography>
           <Button
             size="small"
@@ -107,7 +107,7 @@ export function AdmissionNumberingPreview({
             sx={{ flexShrink: 0, whiteSpace: 'nowrap' }}
             onClick={() => setRefresh((value) => value + 1)}
           >
-            Refresh preview
+            Refresh Preview
           </Button>
         </Stack>
       )}

@@ -153,6 +153,7 @@ const BankTransferTable = ({
         ),
       },
       {
+        cellSx: { textAlign: 'right' as const },
         id: 'amount',
         label: 'Amount',
         width: 140,
@@ -372,6 +373,7 @@ const BankTransferTable = ({
         noDataText={<>No Bank Transfer Data Found</>}
         columns={columns}
         data={bankTransferData}
+        searchFieldProps={{ placeholder: 'Search' }}
       />
       <CustomDialog
         open={isDialog.value}

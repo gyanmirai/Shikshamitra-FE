@@ -123,7 +123,7 @@ export default function AdmissionApplicant360Screen() {
         <Typography id="applicant-route-title" variant="h6">
           {data?.applications.length ? 'Choose Application' : 'Applicant Record'}
         </Typography>
-        <IconButton aria-label="Close applicant record" onClick={close}>
+        <IconButton aria-label="Close Applicant Record" onClick={close}>
           <Iconify icon="mdi:close" />
         </IconButton>
       </Stack>
@@ -138,7 +138,7 @@ export default function AdmissionApplicant360Screen() {
               You do not have permission to view this applicant.
             </StudentFeedback>
           ) : query.isLoading || (!data && query.isFetching) ? (
-            <Stack role="status" aria-label="Loading applicant record" spacing={1}>
+            <Stack role="status" aria-label="Loading Applicant Record" spacing={1}>
               <Skeleton height={48} />
               <Skeleton height={80} />
             </Stack>
@@ -182,7 +182,7 @@ export default function AdmissionApplicant360Screen() {
                             component={Link}
                             href={getApplicantApplicationUrl(returnTo, application.id)}
                           >
-                            Open application
+                            Open Application
                           </Button>
                         </ListItem>
                       ))}
@@ -203,7 +203,7 @@ export default function AdmissionApplicant360Screen() {
                   href={returnUrl}
                   sx={{ alignSelf: 'flex-start' }}
                 >
-                  Manage inquiry
+                  Manage Inquiry
                 </Button>
               )}
               {canEdit && (
@@ -216,7 +216,7 @@ export default function AdmissionApplicant360Screen() {
                   onClick={identity.onTrue}
                   sx={{ alignSelf: 'flex-start' }}
                 >
-                  Edit identity
+                  Edit Identity
                 </Button>
               )}
               <Button
@@ -225,7 +225,7 @@ export default function AdmissionApplicant360Screen() {
                 onClick={notes.onTrue}
                 sx={{ alignSelf: 'flex-start' }}
               >
-                Applicant notes
+                Applicant Notes
               </Button>
             </>
           )}

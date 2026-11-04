@@ -3,7 +3,7 @@ module: finance
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-10-31
+updated_on: 2026-11-02
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -16,6 +16,10 @@ The backend [security standard](https://github.com/gyanmirai/Shikshamitra-BE/blo
 Existing backend operations that share one permission identifier remain one capability until a separately approved domain change.
 
 # Trace Finance frontend workflows
+
+Finance tables right-align monetary body values, including embedded detail, receipt,
+reconciliation and report tables. Shared-table columns use `cellSx.textAlign: 'right'`
+so headings retain their existing alignment; custom MUI amount cells use `align="right"`.
 
 ## Admission fee handoff and assignment
 
@@ -240,8 +244,16 @@ wrap these facts. Segmented request cards use two columns when their container h
 one column on smaller screens. Each card separates the request header/status, requested amount,
 documents, latest activity and icon-only action footer. Shared ThreeDotsActions renders all
 applicable icons with tooltips and accessible names; card icons retain 44 px touch targets.
-The eye action opens a read-only CustomDialog with full recorded amounts, documents, linked
-refunds and activity. Review/submit, Edit, Approve, Reject, Reverse, Delete and refund creation
+View details opens the read-only right drawer for the selected request. It loads saved request
+details and the existing read-authorized allocation context for pending and approved requests.
+Fee Breakdown groups instalments under each fee head with original fees, requested input values
+with their units, applied subtotals and the server total. Approved/reversed rows use stored
+allocations, including zero remaining concession. Pending INR values come from the server context;
+raw percentage inputs are never displayed as currency. Pending proposals have separate subtotals
+and retain the saved requested total. Rejected/cancelled requests explicitly show no applied benefit.
+Document status uses upload metadata even when preview URLs are redacted by permissions.
+The drawer uses the Student Information reference typography, combines the GR number with the student name, includes roll number, and keeps two fields per row in Student Information and Concession Details (stacked on mobile). Each fee head uses the shared accordion with a visible subtotal. Remarks and activity are omitted. The drawer includes section help, one body scroll and a fixed Close footer; changing student or
+academic year closes it. Linked refunds appear when present. Review/submit, Edit, Approve, Reject, Reverse, Delete and refund creation
 retain their existing permission, state, reason and confirmation workflows.
 
 Concession requests retain student scope above common FormSectionCard sections. Concession
@@ -579,6 +591,21 @@ See the [Fee Collection waiver contract](../../../Shikshamitra-BE/docs/modules/f
 
 ## Trace concession and adjustment changes
 
+### Adjustment workspace
+
+The adjustment workspace follows Refund Management's shared finance presentation while retaining the [backend adjustment contract](../../../Shikshamitra-BE/docs/modules/finance/api.md).
+
+| Surface | Frontend behavior |
+|---|---|
+| Worklist | Shared full-height table, academic context controls, status groups, server search and supported text/number/date header criteria. Status, page, page size, search and header criteria are URL-backed; changing academic context resets the page. Counts come from the visible query's academic scope. |
+| Create | Student Information, Adjustment Information and Source Fee Lines sections; shared source selector in adjustment mode; Cancel/Submit footer; successful saves close the form, failed saves retain the entered values. |
+| View | Contextual right drawer above the mounted worklist, with student/request information, source fee lines, allocation history and review notes. Fetch failures expose Retry and retain Close. |
+| Approval | Full-page allocation workspace with student/request context, editable outstanding-fee table, auto allocation, approval notes and a separate allocation preview before applying. Partially applied requests retain their distinct status and can expose Apply remaining. |
+| Permissions | Existing View/Add/Delete grouping is unchanged. Add gates creation and review; requester/checker separation remains enforced in the frontend and backend. |
+| Amounts and recovery | Decimal drafts remain strings until validated. Adjustment money displays opt into two decimals through the shared formatter. Saving locks conflicting controls; confirmed navigation discards the owned form. Retrying an unchanged allocation payload reuses its idempotency key. |
+
+The Approved worklist group includes partially applied and fully applied requests. Its row labels retain the actual state rather than collapsing both to one status.
+
 Concession and adjustment workflows should preserve approval and audit behavior.
 
 | Workflow    | Inspect first                                                                                                                  |
@@ -878,7 +905,7 @@ Finance forms share `FormPrerequisiteState` through the Finance route/permission
 
 | Forms | Prerequisites covered |
 | --- | --- |
-| Refund, Proration and Collection policies | Selected/late-fee heads; expense or income mapping when activating; non-cash refund bank |
+| Refund, Proration and Collection policies | Refund/proration fee-head setup; expense or income mapping when activating; non-cash refund bank. Collection late fees use a common rule without fee-head selection or setup. |
 | Fee heads, Fee Categories and Charge Categories | Fee category and income mappings |
 | Payment Terms and Fee Structures | Board/calendar; active heads; published board/year terms; active collection policy for publication |
 | Fee Assignment and Concession Requests | Matching published structure; student assignment; active concession type and policy |
@@ -911,3 +938,52 @@ Direct Finance routes: Fee Head and Receipt Book remain implemented behind their
 ## Collection group checkboxes
 
 A fully settled fee or charge group shows checked, disabled group and table-header checkboxes, matching its checked, disabled rows. Groups with collectible balances continue to derive selected and partial states from the collectible rows only. Bulk selection never adds settled items to the payment allocation.
+
+## Cash activity and net charge summaries
+
+Collections includes a bold sticky `Total (displayed rows)` footer above pagination. It sums the eight amount columns in the currently loaded page, so page changes and search or header filters update the displayed totals. Column visibility and horizontal scrolling preserve alignment. Loading and errors hide the footer; unavailable row amounts show as `—` instead of being treated as zero. The footer is display-only and does not add records, actions or export rows.
+
+Collections shows server-calculated Total Charges after applied waivers, Paid Charges for active collected payments, and Pending Charges after waivers and active payments. Paid Charges sits between Total and Pending with numeric sort/filter, right-aligned INR values, column visibility and export support. Its tooltip explains payments awaiting verification; waived and reversed amounts are excluded. Missing amounts in older cached responses show `—`, while an actual zero shows ₹0. Fully waived unpaid charges contribute zero to all three; ledger details preserve gross, collected and waived evidence.
+
+Cash Management uses `activitySummary` for Collected, Spent and Deposited. Selected-month activity follows each collection, expense payment and confirmed credit date, including payments funded by earlier cash sources. All months shows all scoped activity. Academic-year cash available remains cumulative and is not replaced by the monthly activity difference.
+
+## Concession request policy names and installment headers
+
+Policy options and the selected field show only the policy name. Preview/save retain immutable policy/version identities, and explicit policy details retain version information. Bounded installment-entry headers use an opaque theme surface above floating input labels so labels scroll underneath the headings.
+
+## Bulk concession installment entry
+
+For request-entered concessions, each fee head's breakdown offers **Apply to all installments**
+and **Auto-distribute equal** above its installment table. Eligible rows start checked; the header
+checkbox selects all or clears the bulk targets and shows a mixed state for a subset. Checkboxes
+only choose which rows a bulk action updates: unchecking a row preserves its current amount and
+does not exclude a positive entered amount from the request. Manual row editing remains available.
+
+Apply sets an exact amount or percentage on every checked row. Auto-distribute divides the entered
+total within eligible row capacities, reallocating amounts from capped rows and putting the rounding
+remainder on the last checked row with capacity. Fixed concessions retain the backend's whole-rupee
+rule (₹5,000 across six rows is ₹833 on five and ₹835 on the last); percentage totals retain two
+decimal places. Both actions respect the allowance shared across all selected heads, including
+untargeted manual values, and reject an invalid batch without changing any entries. Bulk drafts and
+targets reset with student, assignment, policy version, concession type or eligible-row changes.
+Policy-fixed concessions keep their existing automatic calculation.
+
+## Review Finance setup
+
+Open Finance > Setup guide to follow Accounts Setup, Fee Settings, Policies & Rules, Fee Structures, Student Fee Assignment, Finance Workflows and Review & Finish.
+Accounts starts with Income Categories, then Expense Categories and Bank Accounts.
+Fee Category forms own the fee-head creation and income mappings; the guide does not expose a separate retired Fee Head menu item.
+Each configuration tab embeds its existing Finance management screen, including the native table and authorized add/edit dialogs or drawers.
+The guide owns the step heading; standalone routes keep their usual breadcrumbs and actions.
+Submit or close the native editor before changing steps or academic year. Background checks preserve the mounted screen and its draft; closing an editor refreshes configuration presence.
+Expandable setup guidance explains the dependency order without replacing the working screen.
+Configuration steps use the compact setup shell and fill the available width and height with the native table. The shared title/help header contains the academic-year selector and refresh/exit controls; each setting's native actions sit beside its tabs. Configuration status stays visible beside expandable guidance, and the compact footer keeps save feedback and navigation together.
+The native form retains ownership of drafts, validation, exact action permissions and financial writes.
+
+Active configuration available means relevant active records were found; it does not prove every class, mapping or payment method is ready.
+Do this later saves a deferred item without marking its configuration complete.
+Assignment and operational steps explain prerequisites and provide authorized links without requiring financial transactions.
+Finish review records the review separately from configuration presence; pending and inaccessible settings remain explicit.
+Saving progress does not change policy versions, assign fees, generate dues or approve requests.
+Changing the selected year remounts the guide, loads its own saved progress and discards stale year results.
+The backend [Finance workflows](../../../Shikshamitra-BE/docs/modules/finance/workflows.md) own persistence, scope and permission rules.

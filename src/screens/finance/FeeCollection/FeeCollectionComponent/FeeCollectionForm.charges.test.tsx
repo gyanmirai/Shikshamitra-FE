@@ -487,7 +487,7 @@ describe('Collect Fees presentation and shared ledger', () => {
     ).toBeVisible();
     const feeGroup = screen.getByRole('checkbox', { name: 'Select Class 3 Tuition Fee' });
     expect(feeGroup).toBeDisabled();
-    expect(feeGroup).not.toBeChecked();
+    expect(feeGroup).toBeChecked();
     fireEvent.click(feeGroup);
     await waitFor(() =>
       expect(

@@ -54,6 +54,8 @@ const dashboardSurfaceSx = {
 const AuditAnalyticsView = ({ logs }: Props) => {
   const theme = useTheme();
   const analytics = useMemo(() => buildAuditAnalytics(logs || []), [logs]);
+  const hasRiskData = logs.some((log) => log.riskLevel != null);
+  const hasApprovalData = logs.some((log) => log.approvalStatus != null);
 
   const totalRiskEvents = useMemo(
     () => analytics.riskDistribution.reduce((acc, r) => acc + r.count, 0),
@@ -70,19 +72,19 @@ const AuditAnalyticsView = ({ logs }: Props) => {
     () => [
       {
         label: 'Critical Changes',
-        value: analytics.criticalCount,
+        value: hasRiskData ? analytics.criticalCount : 'Not recorded',
         icon: 'mdi:alert-octagon-outline',
         color: 'error',
       },
       {
         label: 'High+ Risk Changes',
-        value: analytics.highRiskCount,
+        value: hasRiskData ? analytics.highRiskCount : 'Not recorded',
         icon: 'mdi:alert-outline',
         color: 'warning',
       },
       {
         label: 'Pending Approvals',
-        value: analytics.pendingApprovalCount,
+        value: hasApprovalData ? analytics.pendingApprovalCount : 'Not recorded',
         icon: 'mdi:clock-alert-outline',
         color: 'info',
       },
@@ -93,7 +95,14 @@ const AuditAnalyticsView = ({ logs }: Props) => {
         color: 'primary',
       },
     ],
-    [analytics.criticalCount, analytics.highRiskCount, analytics.pendingApprovalCount, logs?.length]
+    [
+      analytics.criticalCount,
+      analytics.highRiskCount,
+      analytics.pendingApprovalCount,
+      logs?.length,
+      hasRiskData,
+      hasApprovalData,
+    ]
   );
 
   // ─── Bar Chart Options (Action Type Distribution) ──────────────────────────

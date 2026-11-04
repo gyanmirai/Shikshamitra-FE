@@ -34,6 +34,7 @@ export const useIncomeTableColumns = ({
         minWidth: '160px',
       },
       {
+        cellSx: { textAlign: 'right' as const },
         id: 'amount',
         label: 'Amount',
         align: 'left',

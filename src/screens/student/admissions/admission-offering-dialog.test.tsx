@@ -65,13 +65,13 @@ describe('Admission Offering dialog routing', () => {
       </ThemeProvider>
     );
     expect(screen.getByText('Offering class configuration')).toBeVisible();
-    expect(screen.queryByRole('combobox', { name: 'Admission window' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Admission Window' })).not.toBeInTheDocument();
     expect(
       screen.queryByRole('checkbox', { name: 'Use Admission Cycle dates' })
     ).not.toBeInTheDocument();
-    expect(screen.queryByLabelText(/Applications open/)).not.toBeInTheDocument();
-    expect(screen.queryByLabelText(/Applications close/)).not.toBeInTheDocument();
-    expect(screen.getByText(/Cycle window:/)).toBeVisible();
+    expect(screen.queryByLabelText(/Applications Open/)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Applications Close/)).not.toBeInTheDocument();
+    expect(screen.getByText(/Cycle Window:/)).toBeVisible();
   });
   it('uses the edit shell while details are still loading instead of the create form', () => {
     render(

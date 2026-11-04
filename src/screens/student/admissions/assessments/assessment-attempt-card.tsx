@@ -20,11 +20,11 @@ import type { AssessmentAction } from './assessment-action-model';
 import type { useAssessmentQuickActions } from './use-assessment-quick-actions';
 
 const outcomeLabels = {
-  pending: 'Result pending',
+  pending: 'Result Pending',
   passed: 'Passed',
   failed: 'Failed',
   absent: 'Absent',
-  retake: 'Retake allowed',
+  retake: 'Retake Allowed',
   waived: 'Waived',
 };
 const attendanceLabels = { pending: 'Pending', present: 'Present', absent: 'Absent' };
@@ -73,7 +73,7 @@ export function AssessmentAttemptCard({
     attempt.status === 'cancelled'
       ? 'Cancelled'
       : attempt.status === 'pendingReview'
-        ? 'Awaiting review'
+        ? 'Awaiting Review'
         : outcomeLabels[attempt.outcome];
   const schedule = formatAssessmentSchedule(
     attempt.slotStartsAt ?? attempt.sessionStartsAt,
@@ -83,7 +83,7 @@ export function AssessmentAttemptCard({
   return (
     <Box
       component="article"
-      aria-label={`Assessment attempt ${attempt.attemptNumber}`}
+      aria-label={`Assessment Attempt ${attempt.attemptNumber}`}
       sx={{
         border: 1,
         borderColor: 'divider',
@@ -116,7 +116,7 @@ export function AssessmentAttemptCard({
           </Stack>
           {actions.length > 0 && (
             <ThreeDotsActions
-              moreLabel={`More actions for attempt ${attempt.attemptNumber}`}
+              moreLabel={`More Actions for Attempt ${attempt.attemptNumber}`}
               placement="bottom-right"
               actions={({ popover }) =>
                 actions.map((action) => (
@@ -129,9 +129,9 @@ export function AssessmentAttemptCard({
                     }}
                   >
                     {action === 'attendance'
-                      ? 'Record attendance with notes'
+                      ? 'Record Attendance with Notes'
                       : action === 'result'
-                        ? 'Record result with notes'
+                        ? 'Record Result with Notes'
                         : assessmentActionLabels[action]}
                   </MenuItem>
                 ))
@@ -143,7 +143,7 @@ export function AssessmentAttemptCard({
         <Stack spacing={1}>
           <Typography variant="subtitle1">
             {attempt.sessionName ||
-              (attempt.sessionId ? 'Scheduled session' : 'No session required')}
+              (attempt.sessionId ? 'Scheduled Session' : 'No Session Required')}
           </Typography>
           <Stack direction="row" gap={2} flexWrap="wrap" useFlexGap>
             {schedule && (
@@ -192,7 +192,7 @@ export function AssessmentAttemptCard({
                       key={value}
                       size="small"
                       variant="outlined"
-                      aria-label={`Mark attempt ${attempt.attemptNumber} ${value}`}
+                      aria-label={`Mark Attempt ${attempt.attemptNumber} ${attendanceLabels[value]}`}
                       disabled={disabled || quick?.formik.dirty}
                       onClick={() => quick?.recordAttendance(value)}
                     >
@@ -212,7 +212,7 @@ export function AssessmentAttemptCard({
                 >
                   {assessment.policy?.attendanceRequired === false &&
                   attempt.attendance === 'pending'
-                    ? 'Not required'
+                    ? 'Not Required'
                     : attendanceLabels[attempt.attendance]}
                 </Label>
               )}
@@ -220,7 +220,7 @@ export function AssessmentAttemptCard({
                 <Button
                   size="small"
                   variant="outlined"
-                  aria-label={`Change attendance for attempt ${attempt.attemptNumber}`}
+                  aria-label={`Change Attendance for Attempt ${attempt.attemptNumber}`}
                   disabled={disabled || quick?.formik.dirty}
                   onClick={() => onAction?.('attendance')}
                 >
@@ -265,7 +265,7 @@ export function AssessmentAttemptCard({
             )}
             {!attempt.effectiveProfile && assessment.policy?.scoringEnabled && (
               <Typography variant="caption" color="text.secondary">
-                Pass mark: {assessment.policy.passingMarks} / {assessment.policy.totalMarks}
+                Pass Mark: {assessment.policy.passingMarks} / {assessment.policy.totalMarks}
               </Typography>
             )}
           </Stack>

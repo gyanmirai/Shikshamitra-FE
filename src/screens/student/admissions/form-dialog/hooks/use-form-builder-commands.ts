@@ -13,6 +13,7 @@ import { newField, nextFieldOrder, nextFieldDisplayOrder } from '../form-dialog-
 import { classInterestOptions, isClassInterestQuestion } from '../../admission-class-question';
 import { nextStepNumber, nextSectionNumber, getAdmissionFormStepGroups } from '../form-step-groups';
 import { configureStudentField, connectStudentAddressFields } from '../student-field-configuration';
+import { addAcademicClassSelector, findAcademicClassSelectorField } from '../academic-class-selector';
 import {
   type AdmissionFormSectionTemplateId,
   materializeAdmissionFormSectionTemplate,
@@ -142,12 +143,22 @@ export function useFormBuilderCommands(
     systemBinding?: string,
     preset?: AdmissionFieldPreset
   ) => {
+    if (preset?.key === 'class-selector') {
+      const result = addAcademicClassSelector(formik.values, selectedSectionId, inheritedFields);
+      if (result.inheritedField) onSelectInherited?.(result.inheritedField);
+      else {
+        formik.setFieldValue('sections', result.form.sections);
+        if (result.sectionId) onSelect(result.sectionId, result.fieldId);
+      }
+      return;
+    }
     const isClassInterest =
       !systemBinding &&
       preset &&
       isClassInterestQuestion({ code: '', label: preset.label, bindingType: 1 });
     if (isClassInterest) {
-      const inherited = inheritedFields.find(isClassInterestQuestion);
+      const inheritedAcademic = findAcademicClassSelectorField(inheritedFields, false);
+      const inherited = inheritedFields.find(field => field.id === inheritedAcademic?.id) ?? inheritedFields.find(isClassInterestQuestion);
       if (inherited) {
         shikshaMitraToast.info({
           message: 'Class interested in is already included from Inquiry.',
@@ -155,10 +166,11 @@ export function useFormBuilderCommands(
         onSelectInherited?.(inherited);
         return;
       }
+      const existingAcademic = findAcademicClassSelectorField(formik.values.sections.flatMap(section => section.fields), false);
       const existingSection = formik.values.sections.find((section) =>
-        section.fields.some(isClassInterestQuestion)
+        section.fields.some(field => field.id === existingAcademic?.id || isClassInterestQuestion(field))
       );
-      const existing = existingSection?.fields.find(isClassInterestQuestion);
+      const existing = existingSection?.fields.find(field => field.id === existingAcademic?.id || isClassInterestQuestion(field));
       if (existing && existingSection) {
         shikshaMitraToast.info({ message: 'Class interested in is already included in the form.' });
         onSelect(existingSection.id, existing.id);

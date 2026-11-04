@@ -48,7 +48,7 @@ export function AssessmentWorkspaceControls({
               value={state.sessionId || ALL}
               isLoading={sessions.isLoading}
               options={[
-                { value: ALL, label: 'All sessions' },
+                { value: ALL, label: 'All Sessions' },
                 ...sessionChoices.map((session) => ({
                   value: session.id,
                   label: `${session.name}${session.isCancelled ? ' (cancelled)' : ''}`,
@@ -70,7 +70,7 @@ export function AssessmentWorkspaceControls({
           notificationKey="STU-0286"
           presentation="persistent"
           severity="warning"
-          action={<Button onClick={() => setScope('')}>Clear filter</Button>}
+          action={<Button onClick={() => setScope('')}>Clear Filter</Button>}
         >
           This assessment is unavailable in the selected academic context.
         </StudentFeedback>
@@ -84,7 +84,7 @@ export function AssessmentWorkspaceControls({
             <Button
               onClick={() => updateWorkbench({ assessmentSession: undefined, assessmentPage: 0 })}
             >
-              Clear session
+              Clear Session
             </Button>
           }
         >
@@ -101,7 +101,7 @@ export function AssessmentWorkspaceControls({
         <Stack
           direction="row"
           role="group"
-          aria-label="Assessment status filter"
+          aria-label="Assessment Status Filter"
           sx={{ gap: 2, overflowX: 'auto' }}
         >
           {assessmentWorkspaceQueues.map((tab) => (

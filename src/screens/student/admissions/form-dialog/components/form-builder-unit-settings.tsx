@@ -31,7 +31,7 @@ export function FormBuilderUnitSettings({
         value={name}
         error={Boolean(nameError)}
         helperText={nameError}
-        slotProps={{ htmlInput: { 'aria-label': `${unit} heading` } }}
+        slotProps={{ htmlInput: { 'aria-label': `${unit} Heading` } }}
         onBlur={onNameBlur}
         onChange={(event) => onNameChange(event.target.value)}
         onKeyDown={(event) => {

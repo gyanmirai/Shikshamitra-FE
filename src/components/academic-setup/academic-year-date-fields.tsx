@@ -20,7 +20,7 @@ export const AcademicYearDateFields = ({
         <DatePicker
           label={name === 'startDate' ? 'Start date' : 'End date'}
           value={formik.values[name]}
-          format="DD-MMM-YYYY"
+          format="DD-MM-YYYY"
           views={['year', 'month', 'day']}
           openTo="day"
           slots={{ calendarHeader: DatePickerCalendarHeader }}

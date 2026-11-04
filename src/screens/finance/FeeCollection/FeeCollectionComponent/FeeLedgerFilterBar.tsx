@@ -117,7 +117,7 @@ const FeeLedgerFilterBar = ({
 }: FeeLedgerFilterBarProps) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const resolvedYearId = academicYearId ?? currentYear?.id;
-  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(true);
   const filterPanelId = useId();
   const activeFilterCount = [filters.month, filters.feeHead, filters.status].filter(
     (value) => value !== 'All'
@@ -162,7 +162,18 @@ const FeeLedgerFilterBar = ({
   ];
 
   return (
-    <Paper variant="outlined" sx={{ p: 1.5, flexShrink: 0, borderRadius: 2 }}>
+    <Paper
+      variant="outlined"
+      sx={{
+        p: 1.5,
+        flexShrink: 0,
+        borderRadius: 2,
+        bgcolor: 'background.neutral',
+        borderInlineStart: '3px solid',
+        borderInlineStartColor: (theme) => (theme.vars || theme).palette.primary.main,
+        '& .MuiInputBase-root': { bgcolor: 'background.paper' },
+      }}
+    >
       <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
         <Typography variant="subtitle1" component="h2">
           Fees for this student
@@ -170,8 +181,14 @@ const FeeLedgerFilterBar = ({
         <Button
           size="small"
           variant="outlined"
-          color={activeFilterCount ? 'primary' : 'inherit'}
+          color="inherit"
           startIcon={<Iconify icon="solar:filter-linear" width={18} />}
+          endIcon={
+            <Iconify
+              icon={filtersOpen ? 'eva:chevron-up-fill' : 'eva:chevron-down-fill'}
+              width={16}
+            />
+          }
           aria-expanded={filtersOpen}
           aria-controls={filterPanelId}
           onClick={() => setFiltersOpen((open) => !open)}

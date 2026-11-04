@@ -140,24 +140,83 @@ describe('refund receipt selection', () => {
     );
   });
 
-  it('keeps both receipts visible and selects only one receipt with the group checkbox', async () => {
+  it('selects eligible installments from multiple receipts with the group checkbox', async () => {
     render(<Request />);
     fireEvent.click(
       screen.getByRole('checkbox', { name: 'Select refundable installments for Examination fee' })
     );
     await waitFor(() =>
-      expect(screen.getByLabelText('Selection total')).toHaveTextContent('1 installments · 200')
+      expect(screen.getByLabelText('Selection total')).toHaveTextContent('2 installments · 400')
     );
     expect(screen.getByRole('checkbox', { name: 'Select December 2026 · FIN-0' })).toBeChecked();
-    expect(screen.getByRole('checkbox', { name: 'Select June 2026 · FIN-1' })).toBeDisabled();
+    expect(screen.getByRole('checkbox', { name: 'Select June 2026 · FIN-1' })).toBeChecked();
     expect(screen.getByText('2 refundable')).toBeVisible();
     const payload = JSON.parse(screen.getByLabelText('Request payload').textContent!);
     expect(payload.originalReceiptId).toBe('receipt-0');
     expect(payload.lines).toEqual([
-      { dueFeeId: 'due-0', sourceAllocationId: 'allocation-0', amount: 200 },
+      {
+        dueFeeId: 'due-0',
+        sourceAllocationId: 'allocation-0',
+        sourceReceiptId: 'receipt-0',
+        amount: 200,
+      },
+      {
+        dueFeeId: 'due-1',
+        sourceAllocationId: 'allocation-1',
+        sourceReceiptId: 'receipt-1',
+        amount: 200,
+      },
     ]);
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     expect(screen.queryByText(/This request is locked/)).not.toBeInTheDocument();
+  });
+
+  it('keeps other eligible receipts selectable and excludes exhausted sources', async () => {
+    const head = mocks.eligibility.currentData.feeHeads[0];
+    head.months.push({
+      ...head.months[0],
+      sourceAllocationId: 'exhausted',
+      receiptNumber: 'FIN-USED',
+      refundable: 0,
+    });
+    render(<Request />);
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Select December 2026 · FIN-0' }));
+    const other = screen.getByRole('checkbox', { name: 'Select June 2026 · FIN-1' });
+    expect(other).toBeEnabled();
+    expect(
+      screen.getByRole('checkbox', { name: 'Select December 2026 · FIN-USED' })
+    ).toBeDisabled();
+    fireEvent.click(other);
+    await waitFor(() =>
+      expect(screen.getByLabelText('Selection total')).toHaveTextContent('2 installments · 400')
+    );
+  });
+
+  it('preserves separate receipt allocations paying the same installment', async () => {
+    const { months } = mocks.eligibility.currentData.feeHeads[0];
+    months[1].dueFeeId = months[0].dueFeeId;
+    months[1].month = months[0].month;
+    render(<Request />);
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Select December 2026 · FIN-0' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Select December 2026 · FIN-1' }));
+    await waitFor(() =>
+      expect(screen.getByLabelText('Selection total')).toHaveTextContent('2 installments · 400')
+    );
+    const payload = JSON.parse(screen.getByLabelText('Request payload').textContent!);
+    expect(payload.lines).toEqual([
+      {
+        dueFeeId: 'due-0',
+        sourceAllocationId: 'allocation-0',
+        sourceReceiptId: 'receipt-0',
+        amount: 200,
+      },
+      {
+        dueFeeId: 'due-0',
+        sourceAllocationId: 'allocation-1',
+        sourceReceiptId: 'receipt-1',
+        amount: 200,
+      },
+    ]);
   });
 
   it('selects paid charges with fees and submits their charge payment reference', async () => {
@@ -193,13 +252,23 @@ describe('refund receipt selection', () => {
     const payload = JSON.parse(screen.getByLabelText('Request payload').textContent!);
     expect(payload.originalReceiptId).toBe('receipt-0');
     expect(payload.lines).toEqual([
-      { dueFeeId: 'due-0', sourceAllocationId: 'allocation-0', amount: 200 },
-      { chargeId: 'charge-1', sourceAllocationId: 'charge-payment-1', amount: 250 },
+      {
+        dueFeeId: 'due-0',
+        sourceAllocationId: 'allocation-0',
+        sourceReceiptId: 'receipt-0',
+        amount: 200,
+      },
+      {
+        chargeId: 'charge-1',
+        sourceAllocationId: 'charge-payment-1',
+        sourceReceiptId: 'receipt-0',
+        amount: 250,
+      },
     ]);
-    expect(screen.getByRole('checkbox', { name: 'Select June 2026 · FIN-1' })).toBeDisabled();
+    expect(screen.getByRole('checkbox', { name: 'Select June 2026 · FIN-1' })).toBeEnabled();
   });
 
-  it('bulk selects charge payments from one receipt', async () => {
+  it('bulk selects eligible charge payments across receipts', async () => {
     mocks.eligibility.currentData.feeHeads = [
       {
         feeHeadId: null,
@@ -225,13 +294,24 @@ describe('refund receipt selection', () => {
       screen.getByRole('checkbox', { name: 'Select refundable installments for Paid charges' })
     );
     await waitFor(() =>
-      expect(screen.getByLabelText('Selection total')).toHaveTextContent('1 installments · 200')
+      expect(screen.getByLabelText('Selection total')).toHaveTextContent('2 installments · 400')
     );
     const payload = JSON.parse(screen.getByLabelText('Request payload').textContent!);
     expect(payload.lines).toEqual([
-      { chargeId: 'charge-0', sourceAllocationId: 'charge-payment-0', amount: 200 },
+      {
+        chargeId: 'charge-0',
+        sourceAllocationId: 'charge-payment-0',
+        sourceReceiptId: 'receipt-0',
+        amount: 200,
+      },
+      {
+        chargeId: 'charge-1',
+        sourceAllocationId: 'charge-payment-1',
+        sourceReceiptId: 'receipt-1',
+        amount: 200,
+      },
     ]);
-    expect(screen.getByRole('checkbox', { name: 'Select Materials 1 · FIN-1' })).toBeDisabled();
+    expect(screen.getByRole('checkbox', { name: 'Select Materials 1 · FIN-1' })).toBeChecked();
   });
 
   it('keeps paid charges and paid late fees separate and submits the late fee source', async () => {
@@ -284,7 +364,12 @@ describe('refund receipt selection', () => {
     );
     expect(screen.getByRole('checkbox', { name: 'Select Materials · FIN-1' })).not.toBeChecked();
     expect(JSON.parse(screen.getByLabelText('Request payload').textContent!).lines).toEqual([
-      { lateFeeDueFeeId: 'late-due', sourceAllocationId: 'late-payment', amount: 250 },
+      {
+        lateFeeDueFeeId: 'late-due',
+        sourceAllocationId: 'late-payment',
+        sourceReceiptId: 'receipt',
+        amount: 250,
+      },
     ]);
   });
 
@@ -339,25 +424,35 @@ describe('refund receipt selection', () => {
     );
     await waitFor(() =>
       expect(JSON.parse(screen.getByLabelText('Request payload').textContent!).lines).toEqual([
-        { dueFeeId: 'principal', sourceAllocationId: 'principal-payment', amount: 1000 },
-        { lateFeeDueFeeId: 'principal', sourceAllocationId: 'late-payment', amount: 250 },
+        {
+          dueFeeId: 'principal',
+          sourceAllocationId: 'principal-payment',
+          sourceReceiptId: 'receipt',
+          amount: 1000,
+        },
+        {
+          lateFeeDueFeeId: 'principal',
+          sourceAllocationId: 'late-payment',
+          sourceReceiptId: 'receipt',
+          amount: 250,
+        },
       ])
     );
   });
 
-  it('unlocks the other receipt when the selection is cleared', async () => {
+  it('keeps other receipts available while selection changes', async () => {
     render(<Request />);
     const first = screen.getByRole('checkbox', { name: 'Select December 2026 · FIN-0' });
     const second = screen.getByRole('checkbox', { name: 'Select June 2026 · FIN-1' });
     fireEvent.click(first);
-    expect(second).toBeDisabled();
+    expect(second).toBeEnabled();
     fireEvent.click(first);
     expect(second).toBeEnabled();
     fireEvent.click(second);
     await waitFor(() =>
       expect(screen.getByLabelText('Selection total')).toHaveTextContent('1 installments · 200')
     );
-    expect(first).toBeDisabled();
+    expect(first).toBeEnabled();
     expect(second).toBeChecked();
   });
 
@@ -380,7 +475,7 @@ describe('refund receipt selection', () => {
   it('keeps bulk adjustment selection available across receipts', async () => {
     render(<Request mode="adjustment" />);
     fireEvent.click(
-      screen.getByRole('checkbox', { name: 'Select refundable installments for Examination fee' })
+      screen.getByRole('checkbox', { name: 'Select adjustable installments for Examination fee' })
     );
     await waitFor(() =>
       expect(screen.getByLabelText('Selection total')).toHaveTextContent('2 installments · 400')

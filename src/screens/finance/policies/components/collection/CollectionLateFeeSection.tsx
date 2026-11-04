@@ -1,7 +1,5 @@
 'use client';
 
-import { FinanceFieldSkeleton } from 'src/screens/finance/components/FinanceFormSkeleton';
-
 import { getIn } from 'formik';
 import { varAlpha } from 'src/theme/styles';
 import { alpha } from '@mui/material/styles';
@@ -18,10 +16,8 @@ import {
   Select,
   Button,
   Tooltip,
-  Checkbox,
   MenuItem,
   TableRow,
-  TextField,
   TableHead,
   TableCell,
   TableBody,
@@ -29,7 +25,6 @@ import {
   Typography,
   IconButton,
   FormControl,
-  Autocomplete,
   FormHelperText,
   TableContainer,
   InputAdornment,
@@ -41,31 +36,15 @@ import { SectionCard, computeSlabIssues, CollectionInfoTip } from './CollectionC
 
 interface CollectionLateFeeSectionProps {
   formik: any;
-  feeHeads: any[];
-  isFeeHeadsLoading?: boolean;
   addSlab: () => void;
   removeSlab: (index: number) => void;
 }
 
 export default function CollectionLateFeeSection({
   formik,
-  feeHeads,
-  isFeeHeadsLoading = false,
   addSlab,
   removeSlab,
 }: CollectionLateFeeSectionProps) {
-  const selectedHeads = (formik.values.lateFeeApplyOnFeeHeads ?? []).map(
-    (id: string) =>
-      feeHeads.find((head) => head.id === id) ?? {
-        id,
-        name: 'Fee head name unavailable (saved selection)',
-        savedOnly: true,
-      }
-  );
-  const headOptions = [
-    ...feeHeads,
-    ...selectedHeads.filter((head: any) => !feeHeads.some((active) => active.id === head.id)),
-  ];
   const isLateFeeEnabled = Boolean(formik.values.enableLateFee);
   const { overlapIndices } = computeSlabIssues(
     formik.values.escalationRules,
@@ -74,7 +53,7 @@ export default function CollectionLateFeeSection({
 
   return (
     <SectionCard
-      subtitle="Enable charges on unpaid fee heads, then set the grace period, calculation method, escalation slabs, and limits."
+      subtitle="Apply one common rule across overdue fees, with a grace period, calculation method, escalation slabs, and limits."
       title="Late Fee Rules"
 
       icon={GlobalIcons.receiptIcon}
@@ -131,78 +110,6 @@ export default function CollectionLateFeeSection({
                     undefined
                   }
                 />
-              </ShakingTextField>
-            </Grid>
-
-            {/* Apply On Fee Heads */}
-            <Grid size={{ xs: 12 }}>
-              <ShakingTextField
-                error={
-                  formik.touched.lateFeeApplyOnFeeHeads &&
-                  Boolean(formik.errors.lateFeeApplyOnFeeHeads)
-                }
-              >
-                <FinanceFieldSkeleton
-                  loading={isFeeHeadsLoading}
-                  label="Loading applicable fee heads"
-                >
-                  <Autocomplete
-                    multiple
-                    size="small"
-                    options={headOptions}
-                    getOptionDisabled={(option) => Boolean(option.savedOnly)}
-                    groupBy={(option) => option.feeCategoryName || 'Other'}
-                    getOptionLabel={(option) => option.name || ''}
-                    isOptionEqualToValue={(option, value) => option.id === value.id}
-                    value={selectedHeads}
-                    onChange={(_, newValue) => {
-                      formik.setFieldValue(
-                        'lateFeeApplyOnFeeHeads',
-                        newValue.map((v) => v.id)
-                      );
-                    }}
-                    disableCloseOnSelect
-                    renderOption={(props, option, { selected }) => {
-                      const { key, ...optionProps } = props as any;
-                      return (
-                        <li key={key || option.id} {...optionProps}>
-                          <Checkbox size="small" style={{ marginRight: 8 }} checked={selected} />
-                          <Typography variant="body2">{option.name}</Typography>
-                        </li>
-                      );
-                    }}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        name="lateFeeApplyOnFeeHeads"
-                        label="Apply late fee on fee heads *"
-                        placeholder="Select applicable fee heads..."
-                        InputProps={{
-                          ...params.InputProps,
-                          endAdornment: (
-                            <>
-                              <CollectionInfoTip
-                                label="Apply late fee on fee heads"
-                                title="Late fees are computed only on unpaid balances of the selected fee heads."
-                              />
-                              {params.InputProps.endAdornment}
-                            </>
-                          ),
-                        }}
-                        onBlur={formik.handleBlur}
-                        error={
-                          formik.touched.lateFeeApplyOnFeeHeads &&
-                          Boolean(formik.errors.lateFeeApplyOnFeeHeads)
-                        }
-                        helperText={
-                          (formik.touched.lateFeeApplyOnFeeHeads &&
-                            (formik.errors.lateFeeApplyOnFeeHeads as string)) ||
-                          undefined
-                        }
-                      />
-                    )}
-                  />
-                </FinanceFieldSkeleton>
               </ShakingTextField>
             </Grid>
 

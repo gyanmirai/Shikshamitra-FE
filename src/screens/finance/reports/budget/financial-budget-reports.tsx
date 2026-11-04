@@ -46,8 +46,8 @@ const budgetOverviewData = [
 
 const pendigDatacolumns: any = [
   { id: 'budgetName', label: 'Budget Name' },
-  { id: 'budgetAllocated', label: 'Budget Allocated' },
-  { id: 'budgetSpent', label: 'Budget Spent' },
+  { cellSx: { textAlign: 'right' as const }, id: 'budgetAllocated', label: 'Budget Allocated' },
+  { cellSx: { textAlign: 'right' as const }, id: 'budgetSpent', label: 'Budget Spent' },
   { id: 'remainingFund', label: 'Remaining Fund' },
   {
     id: 'overSpendingAlert',
@@ -225,6 +225,7 @@ const FinancialBudgetReports = () => {
         columns={pendigDatacolumns}
         data={budgetOverviewData}
         tableId="budget-overview-table"
+        searchFieldProps={{ placeholder: 'Search' }}
       />
 
       <Box py="15px" gap={1} display="flex" justifyContent="flex-end">

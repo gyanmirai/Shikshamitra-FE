@@ -26,8 +26,8 @@ export function PaymentCollectionSettings({ policy, disabled, onChange }: Props)
   return (
     <FormSectionCard
       icon="mdi:credit-card-check-outline"
-      title="Collection settings"
-      descriptionTooltip="Accepted methods, due dates and installment limits control collection. Completion still requires full settlement or an authorized waiver, including independent verification when enabled."
+      title="Collection Settings"
+      descriptionTooltip="Accepted Methods, Due Dates and Installment Limits Control Collection. Completion Still Requires Full Settlement or an Authorized Waiver, Including Independent Verification When Enabled."
     >
       <Stack spacing={1.5}>
         <StudentFeedback notificationKey="STU-0525" presentation="inline" severity="info">
@@ -35,7 +35,7 @@ export function PaymentCollectionSettings({ policy, disabled, onChange }: Props)
           payment gateway is connected.
         </StudentFeedback>
         <Typography variant="body2" color="text.secondary">
-          Accepted staff methods
+          Accepted Staff Methods
         </Typography>
         <Stack direction="row" flexWrap="wrap" useFlexGap spacing={0.5}>
           {STAFF_PAYMENT_METHODS.map((method) => (
@@ -61,19 +61,19 @@ export function PaymentCollectionSettings({ policy, disabled, onChange }: Props)
             type="number"
             label={
               <WorkflowSettingLabel
-                label="Due after stage entry (days)"
+                label="Due After Stage Entry (Days)"
                 help="Leave blank for no deadline."
               />
             }
             disabled={disabled}
             value={policy.dueInDays ?? ''}
-            inputProps={{ min: 1, max: 365, 'aria-label': 'Due after stage entry (days)' }}
+            inputProps={{ min: 1, max: 365, 'aria-label': 'Due After Stage Entry (Days)' }}
             onChange={(event) =>
               onChange({ dueInDays: event.target.value ? Number(event.target.value) : null })
             }
           />
           <FormControlLabel
-            label="Accept after deadline"
+            label="Accept After Deadline"
             control={
               <Switch
                 size="small"
@@ -85,7 +85,7 @@ export function PaymentCollectionSettings({ policy, disabled, onChange }: Props)
           />
         </Stack>
         <FormControlLabel
-          label="Allow installments"
+          label="Allow Installments"
           control={
             <Switch
               size="small"
@@ -108,7 +108,7 @@ export function PaymentCollectionSettings({ policy, disabled, onChange }: Props)
             type="number"
             label={
               <WorkflowSettingLabel
-                label="Minimum installment *"
+                label="Minimum Installment *"
                 help="Each payment must meet this minimum, except the final remaining balance. The stage still requires full settlement or an authorized waiver."
               />
             }
@@ -118,7 +118,7 @@ export function PaymentCollectionSettings({ policy, disabled, onChange }: Props)
               min: 0.01,
               max: policy.amount,
               step: 0.01,
-              'aria-label': 'Minimum installment *',
+              'aria-label': 'Minimum Installment *',
             }}
             onChange={(event) =>
               onChange({
@@ -133,7 +133,7 @@ export function PaymentCollectionSettings({ policy, disabled, onChange }: Props)
           />
         )}
         <FormControlLabel
-          label="Require a second staff member to verify every payment"
+          label="Require a Second Staff Member to Verify Every Payment"
           control={
             <Switch
               size="small"
@@ -144,7 +144,7 @@ export function PaymentCollectionSettings({ policy, disabled, onChange }: Props)
           }
         />
         <FormControlLabel
-          label="Allow authorized full waiver with a reason"
+          label="Allow Authorized Full Waiver with a Reason"
           control={
             <Switch
               size="small"
@@ -155,7 +155,7 @@ export function PaymentCollectionSettings({ policy, disabled, onChange }: Props)
           }
         />
         <FormControlLabel
-          label="Continue automatically after settlement"
+          label="Continue Automatically After Settlement"
           control={
             <Switch
               size="small"

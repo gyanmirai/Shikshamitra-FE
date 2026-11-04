@@ -66,7 +66,7 @@ export const deriveImpactLevel = (impact?: AuditLogImpact): AuditImpactLevel => 
 
 /** One-line impact summary like "1 working day · 32 lectures affected". */
 export const summarizeImpact = (impact?: AuditLogImpact): string => {
-  if (!impact) return 'No academic impact';
+  if (!impact) return 'Impact not recorded';
   const parts: string[] = [];
   if (impact.workingDaysAffected)
     parts.push(

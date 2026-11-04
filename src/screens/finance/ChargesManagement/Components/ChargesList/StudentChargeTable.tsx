@@ -89,6 +89,7 @@ const StudentChargeListTable: React.FC<ICombinedProps> = ({
       ]}
       isLoading={isLoading}
       data={tableData || []}
+      searchFieldProps={{ placeholder: 'Search' }}
     />
   );
 };

@@ -69,6 +69,7 @@ export function PaymentTermUsageBreakdown({ usage }: { usage: Usage }) {
         wrapperProps={{ sx: { flex: 1, minHeight: 0 } }}
         tableContainerProps={{ sx: { height: 1 } }}
         noDataText="This payment term has no fee head assignments."
+        searchFieldProps={{ placeholder: 'Search' }}
       />
     </Stack>
   );

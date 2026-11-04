@@ -71,6 +71,7 @@ import CustomTooltip from 'src/components/custom-tooltip';
 const feeStructureSchema = Yup.object({
   name: financeNameSchema('Fee Structure Name').trim().required('Fee Structure name is required'),
   collectionPolicyId: Yup.string().required('Collection Policy is required'),
+  refundPolicyId: Yup.string().required('Refund Policy is required'),
   feeHeads: Yup.array(
     Yup.object({
       isOptional: Yup.boolean().optional(),

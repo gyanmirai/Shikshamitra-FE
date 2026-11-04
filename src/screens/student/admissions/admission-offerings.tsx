@@ -51,13 +51,13 @@ export default function AdmissionOfferingsScreen() {
       }}
     >
       <CustomBreadcrumbs
-        heading="Admission offerings"
-        description="Connect classes, admission periods, processes, and forms before accepting applications."
+        heading="Admission Offerings"
+        description="Connect Classes, Admission Periods, Processes, and Forms Before Accepting Applications."
         links={[
           { name: 'Student', href: studentPaths.dashboard },
           { name: 'Admissions', href: studentPaths.enrollment.root },
           { name: 'Settings', href: studentPaths.enrollment.settings.root },
-          { name: 'Admission offerings' },
+          { name: 'Admission Offerings' },
         ]}
         slotProps={{
           action: { alignSelf: { xs: 'flex-end', md: 'center' }, maxWidth: '100%' },
@@ -68,13 +68,14 @@ export default function AdmissionOfferingsScreen() {
         action={
           screen.permissions.bulkCreate ? (
             <Button
+              aria-label="Add Offering"
               variant="contained"
               size="small"
               startIcon={<Iconify icon={GlobalIcons.addIcon} />}
               disabled={!screen.cycle || screen.bulkActivation.busy}
               onClick={screen.openBulk}
             >
-              Add offering
+              Offering
             </Button>
           ) : null
         }
@@ -124,6 +125,9 @@ export default function AdmissionOfferingsScreen() {
         <BulkAdmissionOfferingActivation
           activation={screen.bulkActivation}
           disabled={screen.bulkActivationDisabled}
+          canReviewForms={screen.formAccess?.canView}
+          canRestoreForms={screen.formAccess?.canView && screen.formAccess?.canManage}
+          canReviewWorkflows={screen.workflowAccess?.canView}
         />
         <Box sx={{ flex: 1, minHeight: 0, minWidth: 0, overflow: 'hidden' }}>
           <AdmissionOfferingTable
@@ -205,6 +209,7 @@ export default function AdmissionOfferingsScreen() {
           saving={screen.saving}
           onClose={screen.closeDialog}
           onSave={screen.save}
+          onDeactivate={screen.permissions.deactivate ? screen.deactivateFromEditor : undefined}
         />
       )}
       {screen.cycle && screen.bulkOpen && (
@@ -227,6 +232,11 @@ export default function AdmissionOfferingsScreen() {
         commanding={screen.commanding}
         onClose={screen.cancelAction}
         onConfirm={screen.confirmAction}
+        activationErrors={screen.activationErrors}
+        canReviewForms={screen.formAccess?.canView}
+        canRestoreForms={screen.formAccess?.canView && screen.formAccess?.canManage}
+        canReviewWorkflows={screen.workflowAccess?.canView}
+        onEdit={screen.editBlockedOffering}
       />
     </Box>
   );

@@ -1,350 +1,262 @@
 'use client';
 
-import { useFinanceFormClose } from 'src/hooks/use-finance-form-close';
 import type { RootState } from 'src/redux/store';
 
-import { useState } from 'react';
-import { Add } from '@mui/icons-material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-import { useSelector, useDispatch } from 'react-redux';
+import { Suspense, useRef, useState } from 'react';
+import { useSelector } from 'react-redux';
+import { Box, Card, Button, Typography, LinearProgress } from '@mui/material';
+import { GlobalIcons } from 'src/utils/icons';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
-
-import { Box, Card, Button, Typography } from '@mui/material';
-import { financePermissions } from 'src/constants/finance-menu';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Iconify } from 'src/components/iconify';
-import CustomTooltip from 'src/components/custom-tooltip';
-
+import { financePaths, financePermissions } from 'src/constants/finance-menu';
+import { useFinanceFormClose } from 'src/hooks/use-finance-form-close';
 import { useFinanceAcademicFilters } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
+import type { IAdjustmentFullFormValues } from './types/adjustmentFormValues';
+import type { AdjustmentRequest } from './types/adjustment.types';
 
 import { useAdjustment } from './hooks/useAdjustment';
 import AdjustmentForm from './components/AdjustmentForm';
 import AdjustmentView from './components/AdjustmentView';
 import AdjustmentTable from './components/AdjustmentTable';
-import { useFinancePermissions } from '../hooks/useFinancePermissions';
 import ApplyAdjustmentScreen from './components/ApplyAdjustmentScreen';
-import { AdjustmentTabEnum, AdjustmentStatusEnum } from './enums/adjustment.enum';
+import { useFinancePermissions } from '../hooks/useFinancePermissions';
+import { AdjustmentStatusEnum } from './enums/adjustment.enum';
 import AdjustmentApproveRejectForm from './components/AdjustmentApproveRejectForm';
 
-import type { AdjustmentRequest } from './types/adjustment.types';
-import type { IAdjustmentFullFormValues } from './types/adjustmentFormValues';
-
-const Adjustments = () => {
+export default function Adjustments() {
   const access = useFinancePermissions(financePermissions.fees.adjustment);
   const academicFilters = useFinanceAcademicFilters();
-  const [activeTab, setActiveTab] = useState(AdjustmentTabEnum.Pending);
-  const [selectedAdjustment, setSelectedAdjustment] = useState<AdjustmentRequest | null>(null);
-  // Tracks whether the Apply screen was opened from View screen (true) or list table (false)
-  const [applyFromView, setApplyFromView] = useState(false);
-
-  const addDialog = useBoolean();
-  const viewDialog = useBoolean();
-  const confirmDialog = useBoolean();
-  // applyScreen replaces applyDialog — Approve now opens a full-page screen
-  const applyScreen = useBoolean();
-
-  const { user } = useSelector((state: RootState) => state.auth);
-  const dispatch = useDispatch();
-
-  const currentUserId = user?.id ?? '';
-  const currentUserName = user?.name ?? user?.userName ?? 'User';
-
-  const { tabCounts, createAdjustment, rejectAdjustment, refetch } = useAdjustment(activeTab);
-
-  const { handleClose, confirmation: discardConfirmation } = useFinanceFormClose(
-    addDialog.value || viewDialog.value,
+  const user = useSelector((state: RootState) => state.auth.user);
+  const [mode, setMode] = useState<'list' | 'create' | 'apply'>('list');
+  const [selected, setSelected] = useState<AdjustmentRequest | null>(null);
+  const [viewOpen, setViewOpen] = useState(false);
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [fromView, setFromView] = useState(false);
+  const [workflowBusy, setWorkflowBusy] = useState(false);
+  const completed = useRef(false);
+  const { createAdjustment, rejectAdjustment, isCreating, isRejecting } = useAdjustment();
+  const busy = workflowBusy || isCreating;
+  const canReview = (row: AdjustmentRequest) =>
+    Boolean(access.canAdd && user?.sub && row.requestedByUserId !== user.sub);
+  const { handleClose, confirmation } = useFinanceFormClose(
+    mode !== 'list',
     () => {
-      addDialog.onFalse();
-      viewDialog.onFalse();
-      setSelectedAdjustment(null);
+      const returnToDetails = mode === 'apply' && fromView && !completed.current;
+      completed.current = false;
+      setMode('list');
+      setViewOpen(returnToDetails);
+      if (!returnToDetails) setSelected(null);
+      setFromView(false);
     },
-    false,
-    addDialog.value ? undefined : false
+    busy
   );
-
-  const handleConfirmClose = async (_e: any, isSubmit?: boolean, notes?: string) => {
-    if (isSubmit && selectedAdjustment && access.canAdd) {
-      try {
-        await rejectAdjustment(selectedAdjustment.id, currentUserName, notes ?? '');
-        shikshaMitraToast.success({ message: 'Adjustment request rejected.' });
-        confirmDialog.onFalse();
-        viewDialog.onFalse();
-        setSelectedAdjustment(null);
-        refetch();
-      } catch (err: any) {
-        shikshaMitraToast.error({
-          message: err?.data?.error?.message || 'Failed to reject adjustment.',
-        });
-      }
-    } else {
-      confirmDialog.onFalse();
-    }
+  const { handleClose: closeRejection, confirmation: rejectConfirmation } = useFinanceFormClose(
+    rejectOpen,
+    () => setRejectOpen(false),
+    isRejecting
+  );
+  const closeDetails = () => {
+    setViewOpen(false);
+    setSelected(null);
   };
-
-  const handleFormSubmit = async (values: IAdjustmentFullFormValues) => {
-    if (!access.canAdd) return;
+  const apply = (row: AdjustmentRequest, fromDetails: boolean) => {
+    if (
+      !canReview(row) ||
+      ![AdjustmentStatusEnum.Pending, AdjustmentStatusEnum.PartiallyApplied].includes(row.status)
+    )
+      return;
+    setSelected(row);
+    setFromView(fromDetails);
+    setViewOpen(false);
+    setMode('apply');
+  };
+  const reject = (row: AdjustmentRequest) => {
+    if (!canReview(row) || row.status !== AdjustmentStatusEnum.Pending) return;
+    setSelected(row);
+    setRejectOpen(true);
+  };
+  const submit = async (values: IAdjustmentFullFormValues) => {
+    if (!access.canAdd) throw new Error('You do not have permission to create adjustments.');
+    const result = await createAdjustment(values);
+    shikshaMitraToast.success({
+      message: result?.appliedAmount > 0
+        ? 'Adjustment approved and applied successfully.'
+        : 'Adjustment request submitted successfully.',
+    });
+  };
+  const submitRejection = async (_event: unknown, submitted = false, notes?: string) => {
+    if (!submitted) {
+      closeRejection();
+      return;
+    }
+    if (!selected || !canReview(selected) || selected.status !== AdjustmentStatusEnum.Pending)
+      return;
     try {
-      await createAdjustment(values);
-      shikshaMitraToast.success({ message: 'Adjustment request submitted successfully.' });
-      handleClose(null, true);
-      refetch();
-    } catch (err: any) {
-      shikshaMitraToast.error({
-        message: err?.data?.error?.message || 'Failed to submit adjustment request.',
-      });
+      await rejectAdjustment(selected.id, user?.name || user?.userName || 'User', notes ?? '');
+      shikshaMitraToast.success({ message: 'Adjustment request rejected.' });
+      closeRejection(null, true);
+      closeDetails();
+    } catch (error) {
+      shikshaMitraToast.error({ message: parseApiProblemDetail(error).detail });
     }
   };
-
-  const handleView = (row: AdjustmentRequest) => {
-    setSelectedAdjustment(row);
-    viewDialog.onTrue();
-  };
-
-  // Navigate back from the approval screen — respects entry point
-  const handleApproveScreenBack = () => {
-    applyScreen.onFalse();
-    if (applyFromView) {
-      viewDialog.onTrue();
-    } else {
-      // Came from the list table — just show the table
-      setSelectedAdjustment(null);
-    }
-    setApplyFromView(false);
-  };
-
-  const canApprove =
-    access.canAdd &&
-    (selectedAdjustment?.status === AdjustmentStatusEnum.Pending ||
-      selectedAdjustment?.status === AdjustmentStatusEnum.PartiallyApplied) &&
-    selectedAdjustment.requestedByUserId !== currentUserId;
-
-  const renderBreadcrumbs = () => {
-    if (addDialog.value) {
-      return (
-        <CustomBreadcrumbs
-          description="Fill in the adjustment details against the student's paid fee records."
-          heading="Create Adjustment"
-
-          links={[
-            { name: 'Finance', href: '/finance/dashboard' },
-            {
-              name: 'Adjustments',
-              href: '/finance/adjustments',
-              onClick() {
-                addDialog.onFalse();
-                setSelectedAdjustment(null);
-              },
-            },
-            { name: 'Create Adjustment' },
-          ]}
-          isBack={addDialog.value}
-          onBack={() => handleClose(null, false)}
-        />
-      );
-    }
-
-    if (applyScreen.value && selectedAdjustment) {
-      return (
-        <CustomBreadcrumbs
-          description="Distribute approved adjustment amount across the student's pending fees."
-          heading="Apply Adjustment"
-
-          links={[
-            { name: 'Finance', href: '/finance/dashboard' },
-            {
-              name: 'Adjustments',
-              href: '/finance/adjustments',
-              onClick() {
-                applyScreen.onFalse();
-                viewDialog.onFalse();
-                setSelectedAdjustment(null);
-              },
-            },
-            {
-              name: 'View Adjustment',
-              onClick() {
-                applyScreen.onFalse();
-                viewDialog.onTrue();
-              },
-            },
-            { name: 'Apply Adjustment' },
-          ]}
-          isBack={applyScreen.value}
-          onBack={handleApproveScreenBack}
-        />
-      );
-    }
-
-    if (viewDialog.value) {
-      return (
-        <CustomBreadcrumbs
-          description="Review the adjustment request details and take an approval action."
-          heading="View Adjustment"
-
-          links={[
-            { name: 'Finance', href: '/finance/dashboard' },
-            {
-              name: 'Adjustments',
-              href: '/finance/adjustments',
-              onClick() {
-                viewDialog.onFalse();
-                setSelectedAdjustment(null);
-              },
-            },
-            { name: 'View Adjustment' },
-          ]}
-          isBack={viewDialog.value}
-          onBack={() => {
-            viewDialog.onFalse();
-            setSelectedAdjustment(null);
-          }}
-        />
-      );
-    }
-
-    return (
-      <CustomBreadcrumbs
-        description="Manage fee adjustment requests — create, review, and approve or reject adjustments against paid student fees."
-        heading="Adjustments"
-
-        links={[{ name: 'Finance', href: '/finance/dashboard' }, { name: 'Adjustments' }]}
-      />
-    );
-  };
+  const title =
+    mode === 'create' ? 'Create Adjustment' : mode === 'apply' ? 'Apply Adjustment' : 'Adjustments';
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      {discardConfirmation}
-      {renderBreadcrumbs()}
-
-      {!addDialog.value && !viewDialog.value && !applyScreen.value && (
-        <AdjustmentTable
-          primaryAction={
+    <Box sx={{ height: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+      <CustomBreadcrumbs
+        heading={title}
+        description={
+          mode === 'create'
+            ? 'Select the student, source fee installments and amount to request an adjustment.'
+            : mode === 'apply'
+              ? 'Allocate the available adjustment to outstanding fees and review before applying.'
+              : 'Create, review and apply non-cash student fee adjustments.'
+        }
+        links={[
+          { name: 'Finance', href: financePaths.dashboard },
+          ...(mode !== 'list'
+            ? [
+                {
+                  name: 'Adjustments',
+                  href: financePaths.fees.adjustments,
+                  onClick: (event: React.MouseEvent) => {
+                    event.preventDefault();
+                    handleClose();
+                  },
+                },
+              ]
+            : []),
+          { name: title },
+        ]}
+        isBack={mode !== 'list'}
+        backDisabled={busy}
+        onBack={() => handleClose()}
+        action={
+          mode === 'list' && access.canAdd ? (
             <Button
               size="small"
               variant="contained"
-              disabled={!access.canAdd}
-              startIcon={<Add />}
-              sx={{ px: 4 }}
-              onClick={addDialog.onTrue}
+              startIcon={<Iconify icon={GlobalIcons.addIcon} />}
+              onClick={() => {
+                closeDetails();
+                setMode('create');
+              }}
             >
-              New Adjustment
+              New adjustment
             </Button>
-          }
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          tabCounts={tabCounts}
-          onCreateAdjustment={() => {
-            if (access.canAdd) addDialog.onTrue();
-          }}
-          onView={handleView}
-          onApprove={(row) => {
-            if (!access.canAdd) return;
-            setSelectedAdjustment(row);
-            setApplyFromView(false);
-            applyScreen.onTrue();
-          }}
-          onReject={(row) => {
-            if (!access.canAdd) return;
-            setSelectedAdjustment(row);
-            confirmDialog.onTrue();
-          }}
-          academicFilters={academicFilters}
-        />
+          ) : undefined
+        }
+      />
+      {mode === 'list' && (
+        <Suspense fallback={<LinearProgress aria-label="Loading adjustments" />}>
+          <AdjustmentTable
+            academicFilters={academicFilters}
+            onCreateAdjustment={() => {
+              if (access.canAdd) setMode('create');
+            }}
+            onView={(row) => {
+              if (access.canView) {
+                setSelected(row);
+                setViewOpen(true);
+              }
+            }}
+            onApprove={(row) => apply(row, false)}
+            onReject={reject}
+          />
+        </Suspense>
       )}
-
-      {addDialog.value && access.canAdd && (
-        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
+      {mode === 'create' && access.canAdd && (
+        <Card
+          sx={{
+            flex: 1,
+            minHeight: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+          }}
+        >
           <AdjustmentForm
             onCancel={handleClose}
-            onSubmit={handleFormSubmit}
+            onSubmit={submit}
+            onBusyChange={setWorkflowBusy}
             defaultBoardId={academicFilters.selectedBoard}
             defaultMediumId={academicFilters.selectedMedium}
             defaultStandardId={
-              academicFilters.selectedStandardId !== 'All Classes'
-                ? academicFilters.selectedStandardId
-                : ''
+              academicFilters.selectedStandardId === 'All Classes'
+                ? ''
+                : academicFilters.selectedStandardId
             }
             defaultDivisionId={
-              academicFilters.selectedDivisionId !== 'All Divisions'
-                ? academicFilters.selectedDivisionId
-                : ''
+              academicFilters.selectedDivisionId === 'All Divisions'
+                ? ''
+                : academicFilters.selectedDivisionId
             }
           />
         </Card>
       )}
-
-      {viewDialog.value && selectedAdjustment && (
-        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
-          <AdjustmentView
-            adjustmentId={selectedAdjustment.id}
-            viewMeta={{
-              id: selectedAdjustment.id,
-              status: selectedAdjustment.status,
-              requestedByUserId: selectedAdjustment.requestedByUserId,
-            }}
-            onClose={() => {
-              viewDialog.onFalse();
-              setSelectedAdjustment(null);
-            }}
-            onApprove={() => {
-              // Navigate to the approval screen instead of opening a dialog
-              viewDialog.onFalse();
-              setApplyFromView(true);
-              applyScreen.onTrue();
-            }}
-            onReject={() => {
-              confirmDialog.onTrue();
-            }}
-            showApprove={canApprove}
-            showReject={access.canAdd && selectedAdjustment.status === AdjustmentStatusEnum.Pending}
-          />
-        </Card>
+      {viewOpen && selected && (
+        <AdjustmentView
+          adjustmentId={selected.id}
+          viewMeta={{
+            id: selected.id,
+            status: selected.status,
+            requestedByUserId: selected.requestedByUserId,
+          }}
+          onClose={closeDetails}
+          onApprove={() => apply(selected, true)}
+          onReject={() => reject(selected)}
+          showApprove={canReview(selected)}
+          showReject={canReview(selected)}
+        />
       )}
-
-      {/* ── Approval Screen (replaces ApplyAdjustmentDialog) ── */}
-      {applyScreen.value && selectedAdjustment && access.canAdd && (
+      {mode === 'apply' && selected && canReview(selected) && (
         <ApplyAdjustmentScreen
-          approvedBy={currentUserName}
-          adjustment={selectedAdjustment}
-          fromView={applyFromView}
-          onBack={handleApproveScreenBack}
-          onApplied={async () => {
-            applyScreen.onFalse();
-            viewDialog.onFalse();
-            setSelectedAdjustment(null);
-            setApplyFromView(false);
-            refetch();
+          key={selected.id}
+          approvedBy={user?.name || user?.userName || 'User'}
+          adjustment={selected}
+          fromView={fromView}
+          onBack={() => handleClose()}
+          onBusyChange={setWorkflowBusy}
+          onApplied={() => {
+            completed.current = true;
+            handleClose(null, true);
           }}
         />
       )}
-
       <CustomDialog
-        open={confirmDialog.value}
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">Reject Adjustment</Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title="Reject this adjustment request. A rejection reason is required."
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
-        handleClose={() => {
-          confirmDialog.onFalse();
-        }}
+        open={rejectOpen}
+        title="Reject Adjustment Request"
+        titleInfo="Record a meaningful reason to reject this request. The requester cannot reject their own adjustment."
+        guardUnsavedChanges={false}
+        disableClose={isRejecting}
+        handleClose={() => closeRejection()}
         maxWidth="xs"
       >
-        <AdjustmentApproveRejectForm mode="Reject" onClose={handleConfirmClose} />
+        {rejectOpen && (
+          <>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ px: 2, pb: 2, overflowWrap: 'anywhere' }}
+            >
+              {selected?.studentName}
+              {selected?.studentGrNo ? ` · GR ${selected.studentGrNo}` : ''}
+            </Typography>
+            <AdjustmentApproveRejectForm
+              mode="Reject"
+              onClose={submitRejection}
+              loading={isRejecting}
+            />
+          </>
+        )}
       </CustomDialog>
+      {confirmation}
+      {rejectConfirmation}
     </Box>
   );
-};
-
-export default Adjustments;
+}

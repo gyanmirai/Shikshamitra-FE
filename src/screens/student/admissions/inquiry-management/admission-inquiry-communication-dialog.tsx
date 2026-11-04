@@ -84,7 +84,7 @@ export function AdmissionInquiryCommunicationDialog({ inquiry, canSend, onClose 
   const formik = useFormik<FormValues>({
     initialValues: {
       templateId: '',
-      title: inquiry ? `Admission follow-up – ${inquiry.applicantName}` : '',
+      title: inquiry ? `Admission Follow-Up – ${inquiry.applicantName}` : '',
       subject: '',
       body: '',
       channels: recipient?.defaultChannels ?? [],
@@ -148,7 +148,7 @@ export function AdmissionInquiryCommunicationDialog({ inquiry, canSend, onClose 
     <CustomDialog
       open
       maxWidth="sm"
-      title="Compose inquiry communication"
+      title="Compose Inquiry Communication"
       handleClose={onClose}
       disableClose={createState.isLoading}
     >
@@ -179,7 +179,7 @@ export function AdmissionInquiryCommunicationDialog({ inquiry, canSend, onClose 
             fullWidth
             size="small"
             name="templateId"
-            label="Start from a template"
+            label="Start From a Template"
             value={formik.values.templateId}
             helperText={`Uses ${inquiry.preferredLanguageCode || 'en'} when available; otherwise English.`}
             onChange={(event) => {
@@ -207,7 +207,7 @@ export function AdmissionInquiryCommunicationDialog({ inquiry, canSend, onClose 
               required
               size="small"
               name="title"
-              label="Communication title"
+              label="Communication Title"
               value={formik.values.title}
               error={Boolean(formik.touched.title && formik.errors.title)}
               helperText={formik.touched.title && formik.errors.title}
@@ -217,7 +217,7 @@ export function AdmissionInquiryCommunicationDialog({ inquiry, canSend, onClose 
           </ShakingTextField>
 
           <Stack spacing={0.5}>
-            <Typography variant="subtitle2">Delivery channels</Typography>
+            <Typography variant="subtitle2">Delivery Channels</Typography>
             <FormGroup row>
               {CHANNELS.map((channel) => {
                 const disabled = channel.value === 2 && !inquiry.email;
@@ -253,7 +253,7 @@ export function AdmissionInquiryCommunicationDialog({ inquiry, canSend, onClose 
                 required
                 size="small"
                 name="subject"
-                label="Email subject"
+                label="Email Subject"
                 value={formik.values.subject}
                 error={Boolean(formik.touched.subject && formik.errors.subject)}
                 helperText={formik.touched.subject && formik.errors.subject}
@@ -307,7 +307,7 @@ export function AdmissionInquiryCommunicationDialog({ inquiry, canSend, onClose 
                   }}
                 />
               }
-              label="Require acknowledgement"
+              label="Require Acknowledgement"
             />
             {canSend ? (
               <FormControlLabel
@@ -320,7 +320,7 @@ export function AdmissionInquiryCommunicationDialog({ inquiry, canSend, onClose 
                     }}
                   />
                 }
-                label="Send now"
+                label="Send Now"
               />
             ) : (
               <Typography variant="caption" color="text.secondary">
@@ -356,7 +356,7 @@ export function AdmissionInquiryCommunicationDialog({ inquiry, canSend, onClose 
           }
           onClick={() => formik.handleSubmit()}
         >
-          {canSend && formik.values.publishImmediately ? 'Send now' : 'Create draft'}
+          {canSend && formik.values.publishImmediately ? 'Send Now' : 'Create Draft'}
         </LoadingButton>
       </DialogActions>
     </CustomDialog>

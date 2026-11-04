@@ -28,12 +28,12 @@ type Props = {
   onSubmit: (value: OfferActionValue) => Promise<void>;
 };
 const TITLES = {
-  issue: 'Issue offer',
-  accept: 'Accept offer',
-  decline: 'Decline offer',
-  extend: 'Extend offer',
-  withdraw: 'Withdraw offer',
-  reissue: 'Reissue offer',
+  issue: 'Issue Offer',
+  accept: 'Accept Offer',
+  decline: 'Decline Offer',
+  extend: 'Extend Offer',
+  withdraw: 'Withdraw Offer',
+  reissue: 'Reissue Offer',
 };
 
 export function OfferActionDialog({ action, state, busy, onClose, onSubmit }: Props) {
@@ -137,13 +137,13 @@ function OfferActionForm({
         <Stack spacing={2}>
           <StudentFeedback notificationKey="STU-0440" presentation="inline" severity="info">
             {action === 'accept'
-              ? 'Record this response only after confirming it with the applicant or guardian.'
-              : 'This action will be recorded in the admission offer history.'}
+              ? 'Record This Response Only After Confirming It with the Applicant or Guardian.'
+              : 'This Action Will Be Recorded in the Admission Offer History.'}
           </StudentFeedback>
           {expiryAction && (
             <ShakingTextField error={Boolean(formik.touched.expiresAt && formik.errors.expiresAt)}>
               <DateTimePicker
-                label="Offer expiry"
+                label="Offer Expiry"
                 value={formik.values.expiresAt ? dayjs(formik.values.expiresAt) : null}
                 minDateTime={dayjs()}
                 onChange={(value) =>
@@ -165,7 +165,7 @@ function OfferActionForm({
           )}
           {action === 'accept' && state.policy?.requireTermsAcceptance && (
             <FormControlLabel
-              label="I confirm the offer terms were accepted"
+              label="I Confirm the Offer Terms Were Accepted"
               control={
                 <Checkbox
                   checked={formik.values.confirmTerms}
@@ -176,7 +176,7 @@ function OfferActionForm({
           )}
           {action === 'accept' && state.policy?.requireConditionsConfirmation && (
             <FormControlLabel
-              label="I confirm the offer conditions were satisfied"
+              label="I Confirm the Offer Conditions Were Satisfied"
               control={
                 <Checkbox
                   checked={formik.values.confirmConditions}

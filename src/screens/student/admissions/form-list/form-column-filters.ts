@@ -4,10 +4,12 @@ const queryColumns = ['name', 'version', 'sectionCount'];
 
 export function normalizeAdmissionFormFilters(filters: IParams['filters']): IParams['filters'] {
   const latestStatus = filters.findLast((filter) => filter.column === 'status');
+  const latestPurpose = filters.findLast((filter) => filter.column === 'purpose');
   return filters.filter(
     (filter) =>
       queryColumns.includes(filter.column) ||
-      (filter.column === 'status' && filter === latestStatus)
+      (filter.column === 'status' && filter === latestStatus) ||
+      (filter.column === 'purpose' && filter === latestPurpose)
   );
 }
 

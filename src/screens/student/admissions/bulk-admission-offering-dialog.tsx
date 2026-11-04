@@ -147,13 +147,13 @@ export function BulkAdmissionOfferingDialog({
             <Typography id="bulk-admission-offering-title" variant="h6" component="h2">
               <AdmissionDialogTitle
                 title="Bulk Create Offerings"
-                helpText="Create one admission offering for every selected class."
+                helpText="Create One Admission Offering for Every Selected Class."
               />
             </Typography>
           </Stack>
         </Box>
         <IconButton
-          aria-label="Close bulk admission offering drawer"
+          aria-label="Close Bulk Admission Offering Drawer"
           size="small"
           disabled={bulk.loading}
           onClick={requestClose}
@@ -180,8 +180,8 @@ export function BulkAdmissionOfferingDialog({
           validateForwardStepClick
           showSaveButton={false}
           backButtonProps={{ sx: { ml: 'auto', '& + .MuiBox-root': { ml: 0 } } }}
-          nextButtonLabel="Preview offerings"
-          finalButtonLabel={`Create ${selectedCount} offering${selectedCount === 1 ? '' : 's'}`}
+          nextButtonLabel="Preview Offerings"
+          finalButtonLabel={`Create ${selectedCount} Offering${selectedCount === 1 ? '' : 's'}`}
           disableSubmit={activeStep === 1 && !bulk.canSaveInactive}
           saveAndNextButtonProps={{
             disabled: activeStep === 0 && !classesReady,
@@ -331,7 +331,7 @@ function BulkAdmissionOfferingStep({
         <Stack spacing={2}>
           <FormSectionCard
             icon="mdi:school-outline"
-            title="Select classes"
+            title="Select Classes"
             titleTypographyProps={{
               sx: { fontSize: { xs: '1rem', sm: '1.05rem' }, fontWeight: 700 },
             }}
@@ -347,7 +347,7 @@ function BulkAdmissionOfferingStep({
                 key={cycleOptionsRevision}
                 fullWidth
                 size="small"
-                label="Admission cycle *"
+                label="Admission Cycle *"
                 disableClearable
                 name="admissionCycle"
                 value={formik.values.admissionCycle ?? undefined}
@@ -494,13 +494,13 @@ function BulkAdmissionOfferingStep({
 
           <FormSectionCard
             icon="mdi:cog-outline"
-            title="Configure offerings"
+            title="Configure Offerings"
             descriptionTooltip={
               formik.values.track === 1
-                ? 'RTE starts with Registration. Choose a published workflow that starts with a Registration Form and has no Inquiry or Entrance Assessment stage.'
+                ? 'RTE Starts with Registration. Choose a Published Workflow That Starts with a Registration Form and Has No Inquiry or Entrance Assessment Stage.'
                 : formik.values.entryMode === 1
-                  ? 'Choose a published workflow that starts with a Registration Form and has no Inquiry stage.'
-                  : 'Workflow and Inquiry form are required before activation. Inactive preparation is allowed without them.'
+                  ? 'Choose a Published Workflow That Starts with a Registration Form and Has No Inquiry Stage.'
+                  : 'Workflow and Inquiry Form Are Required Before Activation. Inactive Preparation Is Allowed Without Them.'
             }
             titleTypographyProps={{
               sx: { fontSize: { xs: '1rem', sm: '1.05rem' }, fontWeight: 700 },

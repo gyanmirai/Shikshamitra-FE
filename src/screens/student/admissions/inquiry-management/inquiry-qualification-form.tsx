@@ -78,9 +78,9 @@ export function InquiryQualificationForm({
     },
   });
   return (
-    <Stack spacing={1.5} component="section" aria-label="Inquiry status">
+    <Stack spacing={1.5} component="section" aria-label="Inquiry Status">
       <Typography variant="subtitle1" component="h2">
-        Inquiry status
+        Inquiry Status
       </Typography>
       <CustomSelect
         fullWidth
@@ -98,8 +98,8 @@ export function InquiryQualificationForm({
         size="small"
         label={
           formik.values.status === 6 || (formik.values.status === 0 && originalStatus !== 0)
-            ? 'Status change reason *'
-            : 'Status change note'
+            ? 'Status Change Reason *'
+            : 'Status Change Note'
         }
         name="reason"
         disabled={updateState.isLoading || value.isLocked}
@@ -124,7 +124,7 @@ export function InquiryQualificationForm({
         disabled={formik.values.status === originalStatus || value.isLocked}
         onClick={() => formik.handleSubmit()}
       >
-        Save status
+        Save Status
       </LoadingButton>
     </Stack>
   );

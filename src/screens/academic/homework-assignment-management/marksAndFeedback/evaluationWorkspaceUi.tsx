@@ -2,10 +2,7 @@
 
 import React from 'react';
 import { Label } from 'src/components/label';
-import { GlobalIcons } from 'src/utils/icons';
-import { Iconify } from 'src/components/iconify';
-import CustomTooltip from 'src/components/custom-tooltip';
-import { Stack, Button, IconButton } from '@mui/material';
+import { Stack, Button } from '@mui/material';
 import {
   type ITimetableSummaryCard,
   TimetableSettingsSummaryCards,
@@ -74,11 +71,22 @@ export function getEvaluationSummary(rows: any[] = [], apiSummary?: Summary): Re
       if (status === 4) acc.reviewed += 1;
       if ([1, 2, 6].includes(status)) acc.needsReview += 1;
       if (status === 2) acc.late += 1;
-      if (Number.isFinite(Number(row?.marks))) {
+      if (
+        row?.marks !== null &&
+        row?.marks !== undefined &&
+        row?.marks !== '' &&
+        Number.isFinite(Number(row.marks))
+      ) {
         acc.markRows += 1;
         acc.markTotal += Number(row.marks);
       }
-      if (!acc.totalMarks && Number.isFinite(Number(row?.totalMarks))) {
+      if (
+        !acc.totalMarks &&
+        row?.totalMarks !== null &&
+        row?.totalMarks !== undefined &&
+        row?.totalMarks !== '' &&
+        Number.isFinite(Number(row.totalMarks))
+      ) {
         acc.totalMarks = Number(row.totalMarks);
       }
       return acc;
@@ -173,13 +181,13 @@ export function EvaluationSummaryCards({
     },
     ...(showMarks
       ? [
-        {
-          label: 'Average Marks',
-          value: summary.averageMarks ?? '-',
-          icon: 'solar:chart-2-bold',
-          color: 'info' as const,
-        },
-      ]
+          {
+            label: 'Average Marks',
+            value: summary.averageMarks ?? '-',
+            icon: 'solar:chart-2-bold',
+            color: 'info' as const,
+          },
+        ]
       : []),
   ];
 
@@ -215,23 +223,38 @@ export function EvaluationStatusChip({ row }: { row: any }) {
     label: row?.submissionStatusLabel ?? '-',
     color: 'default',
   };
-  return <Label color={status.color}>{row?.submissionStatusLabel || status.label}</Label>;
+  return (
+    <Label
+      color={status.color}
+      sx={status.color === 'default' ? { color: 'text.primary' } : undefined}
+    >
+      {row?.submissionStatusLabel || status.label}
+    </Label>
+  );
 }
 
-export function FeedbackStatusChip({ row }: { row: any }) {
+export function getFeedbackStatusLabel(row: any): string {
   const isReviewed = Number(row?.status) === 4;
   const isNeedsReview = Number(row?.status) === 6;
   const hasFeedback = Boolean(row?.feedback);
   const hasMarks = row?.marks !== undefined && row?.marks !== null && row?.marks !== '';
   const apiStatus = row?.evaluationStatus;
-  const statusLabel =
-    isReviewed || ((hasFeedback || hasMarks) && apiStatus === 'Draft')
-      ? 'Reviewed'
-      : apiStatus ||
-      (isNeedsReview ? 'Needs Review' : hasFeedback || hasMarks ? 'Reviewed' : 'Not Started');
+  return isReviewed || ((hasFeedback || hasMarks) && apiStatus === 'Draft')
+    ? 'Reviewed'
+    : apiStatus ||
+        (isNeedsReview ? 'Needs Review' : hasFeedback || hasMarks ? 'Reviewed' : 'Not Started');
+}
+
+export function FeedbackStatusChip({ row }: { row: any }) {
+  const statusLabel = getFeedbackStatusLabel(row);
 
   return (
     <Label
+      sx={
+        statusLabel !== 'Reviewed' && statusLabel !== 'Needs Review'
+          ? { color: 'text.primary' }
+          : undefined
+      }
       color={
         statusLabel === 'Reviewed'
           ? 'success'
@@ -261,89 +284,4 @@ export function isRowEvaluationDisabled(
 
   const status = Number(row?.status);
   return status === 0 && !isInPerson;
-}
-
-export function EvaluationActionButton({
-  row,
-  onOpen,
-  onView,
-  onEdit,
-  canAdd = true,
-  taskSubmissionType,
-}: {
-  row: any;
-  canAdd?: boolean;
-  taskSubmissionType?: number | string | null;
-  onOpen?: (row: any) => void;
-  onView?: (row: any) => void;
-  onEdit?: (row: any) => void;
-}) {
-  const isNotSubmitted = isRowEvaluationDisabled(row, taskSubmissionType);
-  const rowSubmissionType = row?.submissionType || taskSubmissionType;
-  const normalizedSubmissionType = String(rowSubmissionType || '').toLowerCase();
-  const isInPerson =
-    Number(rowSubmissionType) === 2 ||
-    normalizedSubmissionType.includes('inperson') ||
-    normalizedSubmissionType.includes('in person') ||
-    String(row?.homeworkType || '')
-      .toLowerCase()
-      .includes('in person');
-
-  const status = Number(row?.status);
-  const isReviewed = status === 4;
-  const editTitle = isNotSubmitted
-    ? 'Send Reminder'
-    : isReviewed
-      ? 'Edit Feedback'
-      : isInPerson && status === 0
-        ? 'Add Marks & Feedback'
-        : 'Evaluate';
-  const editIcon = isNotSubmitted
-    ? 'mdi:bell-outline'
-    : isReviewed
-      ? 'solar:pen-bold'
-      : 'solar:clipboard-check-bold';
-
-  const handleViewClick = () => {
-    if (onView) {
-      onView(row);
-    } else if (onOpen) {
-      onOpen(row);
-    }
-  };
-
-  const handleEditClick = () => {
-    if (onEdit) {
-      onEdit(row);
-    } else if (onOpen) {
-      onOpen(row);
-    }
-  };
-
-  return (
-    <Stack direction="row" spacing={0.5} justifyContent="center" alignItems="center">
-      <CustomTooltip title="View Details" arrow>
-        <span>
-          <IconButton size="small" onClick={handleViewClick} color="default">
-            <Iconify icon={GlobalIcons.eye} width={18} />
-          </IconButton>
-        </span>
-      </CustomTooltip>
-
-      {canAdd && (
-        <CustomTooltip title={editTitle} arrow>
-          <span>
-            <IconButton
-              size="small"
-              disabled={isNotSubmitted}
-              onClick={handleEditClick}
-              color="default"
-            >
-              <Iconify icon={editIcon} width={18} />
-            </IconButton>
-          </span>
-        </CustomTooltip>
-      )}
-    </Stack>
-  );
 }

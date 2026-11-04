@@ -47,9 +47,13 @@ export interface FeeCollectionSummaryItem {
   standardDivision: string;
   totalFees: number;
   paidFees: number;
+  /** Recorded principal refunds, net of returns; paidFees remains gross collected history. */
+  refundAmount?: number;
   pendingFees: number;
   overdueFees: number;
   totalCharges: number;
+  /** Missing only for older/cached API responses; unavailable must not be displayed as zero. */
+  paidCharges?: number | null;
   pendingCharges: number;
   totalConcessionAmount: number;
   isFeeStructureAssigned: boolean;
@@ -133,6 +137,7 @@ export interface FeeLedgerLine {
   withdrawalProrationCredit?: number;
   withdrawalProrationExplanation?: string | null;
   paid: number;
+  adjustmentCreditAmount?: number;
   due: number;
   status: number | string;
   reconciliationAmount?: number;
@@ -170,6 +175,13 @@ export interface ChargeDetail {
   waivedAmount: number;
   canWaive: boolean;
   explanation?: string;
+  /** Authoritative obligation due date for system-generated late fees. */
+  dueDate?: string;
+  lateFeeAppliedFromDate?: string;
+  lateFeeAppliedThroughDate?: string;
+  /** Inclusive, possibly disjoint calendar-date intervals counted by the late-fee engine. */
+  lateFeeAppliedIntervals?: { fromDate: string; throughDate: string }[];
+  lateFeeAppliedDays?: number;
   reconciliationAmount?: number;
   status: number | string;
 }

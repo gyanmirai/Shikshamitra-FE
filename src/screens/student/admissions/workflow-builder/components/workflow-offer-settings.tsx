@@ -35,8 +35,8 @@ export function WorkflowOfferSettings({ formik, available, readOnly }: Props) {
     <Stack spacing={2}>
       <FormSectionCard
         icon="mdi:email-check-outline"
-        title="Offer process"
-        descriptionTooltip="Configure offer content, validity, responses and allowed completion outcomes. Every offer action is recorded. The workflow continues only for the selected completion outcomes."
+        title="Offer Process"
+        descriptionTooltip="Configure Offer Content, Validity, Responses and Allowed Completion Outcomes. Every Offer Action Is Recorded. The Workflow Continues Only for the Selected Completion Outcomes."
       >
         <Stack spacing={2}>
           {!available && (
@@ -45,20 +45,20 @@ export function WorkflowOfferSettings({ formik, available, readOnly }: Props) {
             </StudentFeedback>
           )}
           <WorkflowProcessChoice
-            label="Offer process"
+            label="Offer Process"
             value={policy?.enabled ? 'managed' : 'basic'}
             disabled={disabled}
             onChange={(value) => update({ enabled: value === 'managed' })}
             options={[
               {
                 value: 'basic',
-                title: 'Use existing offer actions',
+                title: 'Use Existing Offer Actions',
                 description: 'Keep the existing Offer actions and completion process.',
                 icon: 'mdi:email-outline',
               },
               {
                 value: 'managed',
-                title: 'Manage offer validity and responses',
+                title: 'Manage Offer Validity and Responses',
                 description:
                   'Configure the offer message, expiry, response evidence and permitted completion outcomes.',
                 icon: 'mdi:email-check-outline',
@@ -78,23 +78,23 @@ export function WorkflowOfferSettings({ formik, available, readOnly }: Props) {
           <OfferResponseSettings policy={policy} disabled={disabled} onChange={update} />
           <FormSectionCard
             icon="mdi:eye-outline"
-            title="Offer preview"
-            descriptionTooltip="Review the title and message before applying this offer configuration."
+            title="Offer Preview"
+            descriptionTooltip="Review the Title and Message Before Applying This Offer Configuration."
           >
             <CustomAccordion
-              title="Preview offer content"
+              title="Preview Offer Content"
               content={
                 <Stack spacing={1}>
-                  <Typography variant="subtitle1">{policy.title || 'Untitled offer'}</Typography>
+                  <Typography variant="subtitle1">{policy.title || 'Untitled Offer'}</Typography>
                   <Typography
                     variant="body2"
                     sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}
                   >
-                    {policy.message || 'Add the offer message.'}
+                    {policy.message || 'Add the Offer Message.'}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
                     {policy.offerType === 'conditional' ? 'Conditional' : 'Unconditional'} · valid
-                    for {policy.validityDays} days
+                    For {policy.validityDays} Days
                   </Typography>
                 </Stack>
               }

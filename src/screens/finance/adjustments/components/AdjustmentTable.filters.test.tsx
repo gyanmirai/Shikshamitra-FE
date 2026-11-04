@@ -5,8 +5,12 @@ import AdjustmentTable from './AdjustmentTable';
 import { AdjustmentTabEnum } from '../enums/adjustment.enum';
 
 const state = vi.hoisted(() => ({ query: {} as any }));
+vi.mock('next/navigation', () => ({
+  useSearchParams: () => new URLSearchParams(window.location.search),
+}));
 vi.mock('react-redux', () => ({
-  useSelector: (fn: any) => fn({ globalState: { currentYear: { id: 'year' } } }),
+  useSelector: (fn: any) =>
+    fn({ globalState: { currentYear: { id: 'year' } }, auth: { user: { sub: 'checker' } } }),
 }));
 vi.mock('../../hooks/useFinancePermissions', () => ({
   useFinancePermissions: () => ({ canView: true, canAdd: false }),
@@ -28,7 +32,7 @@ vi.mock('src/redux/customQueryAndMutation', () => ({
   default: ({ params }: any) => {
     state.query = params;
     return {
-      data: {
+      currentData: {
         items: [
           {
             id: 'request',
@@ -60,6 +64,7 @@ vi.mock('src/components/customizabaleTable', () => ({
   ),
 }));
 beforeEach(() => {
+  window.history.replaceState(null, '', '/finance/adjustments');
   state.query = {};
 });
 function show() {

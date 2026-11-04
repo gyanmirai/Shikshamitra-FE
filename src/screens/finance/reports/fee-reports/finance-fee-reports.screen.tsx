@@ -107,8 +107,8 @@ const columns: any = [
   { id: 'studentName', label: 'Student Name' },
   { id: 'class', label: 'Class' },
   { id: 'feeType', label: 'Fee Type' },
-  { id: 'amountPaid', label: 'Amount Paid' },
-  { id: 'pendingAmount', label: 'Pending Amount' },
+  { cellSx: { textAlign: 'right' as const }, id: 'amountPaid', label: 'Amount Paid' },
+  { cellSx: { textAlign: 'right' as const }, id: 'pendingAmount', label: 'Pending Amount' },
   { id: 'dueDate', label: 'Due Date' },
   { id: 'status', label: 'Status' },
 ];
@@ -387,6 +387,7 @@ const FinanceFeeReportsScreen = () => {
         columns={columns}
         data={monthlyFeeCollectedData}
         tableId="monthly-fee-collected"
+        searchFieldProps={{ placeholder: 'Search' }}
       />
     </>
   );

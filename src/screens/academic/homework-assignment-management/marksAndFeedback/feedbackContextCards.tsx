@@ -1,6 +1,6 @@
 import { Iconify } from 'src/components/iconify';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { sanitizeHtml } from 'src/utils/sanitize-html';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { Box, Card, Stack, Avatar, Typography } from '@mui/material';
 
 type StudentFeedbackContextProps = {
@@ -34,6 +34,7 @@ export const StudentFeedbackContext = ({
         sx={{
           width: 48,
           height: 48,
+          flexShrink: 0,
           bgcolor: 'primary.lighter',
           color: 'primary.main',
           fontWeight: 700,
@@ -41,7 +42,7 @@ export const StudentFeedbackContext = ({
       >
         {studentName?.charAt(0) || 'S'}
       </Avatar>
-      <Box>
+      <Box sx={{ minWidth: 0, overflowWrap: 'anywhere' }}>
         <Typography variant="subtitle1" fontWeight={600}>
           {studentName || 'Student'}
         </Typography>

@@ -9,6 +9,7 @@ import { createRoot } from 'react-dom/client';
 import { hrPaths } from 'src/constants/hr-menus';
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from 'src/redux/auth/authSlice';
+import PF from 'src/screens/hr/payroll/setting/pf';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { setupListeners } from '@reduxjs/toolkit/query';
@@ -16,10 +17,10 @@ import globalReducer from 'src/redux/globalState/globalSlice';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { hrSetupOperatorPermissions } from 'src/constants/hr-setup';
-import { Stack, Button, Typography, CssBaseline } from '@mui/material';
 import { defaultSettings } from 'src/components/settings/config-settings';
 import confirmPopupReducer from 'src/redux/confirmPopup/confirmPopupSlice';
 import { hrRecoveryMiddleware } from 'src/redux/hr/hr-recovery-middleware';
+import { Box, Stack, Button, Typography, CssBaseline } from '@mui/material';
 import { HrSetupSessionProvider } from 'src/screens/hr/setup/hr-setup-session';
 import { HrSetupCoordinator } from 'src/screens/hr/setup/hr-setup-coordinator';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -27,6 +28,8 @@ import EarningComponent from 'src/screens/hr/payroll/setting/earning-component';
 import { HrRecoveryProvider } from 'src/screens/hr/recovery/hr-recovery-provider';
 import DeductionComponent from 'src/screens/hr/payroll/setting/deduction-component';
 import SalaryTemplateEditor from 'src/screens/hr/payroll/setting/salary-template-editor';
+import EsiStatutorySettings from 'src/screens/hr/payroll/setting/esi-statutory-settings';
+import PayslipSettingsForm from 'src/screens/hr/payroll/salarySlip-generate/payslip-settings-form';
 
 dayjs.extend(customParseFormat);
 const context = await (await fetch('/fixture/context')).json();
@@ -49,16 +52,25 @@ const baseGrants =
         'HR.PayrollManagement.Settings.EarningComponents.View',
         'HR.PayrollManagement.Settings.DeductionComponents.View',
         'HR.PayrollManagement.Settings.PfRule.View',
+        'HR.PayrollManagement.Settings.PfRule.Delete',
         'HR.PayrollManagement.Settings.SalaryTemplates.View',
         'HR.PayrollManagement.Settings.StatutorySchemes.View',
         'HR.PayrollManagement.Settings.StatutorySchemes.Activate',
         'HR.PayrollManagement.Settings.StatutorySchemes.ConfigureCalculation',
         'AbpIdentity.Roles.Update',
       ];
-const grants = baseGrants.filter(
+const grants = [
+  ...baseGrants,
+  ...(new URLSearchParams(window.location.search).get('identity') === 'allowed'
+    ? ['ShikshaMitra.Module.InstituteSetup', 'InstituteSetup.SchoolIdentity.View']
+    : new URLSearchParams(window.location.search).get('identity') === 'view-only'
+      ? ['InstituteSetup.SchoolIdentity.View']
+      : []),
+].filter(
   (name) =>
-    scenario !== 'no-deduction-create' ||
-    name !== 'HR.PayrollManagement.Settings.DeductionComponents.Add'
+    (scenario !== 'pf-view-only' || name === 'HR.PayrollManagement.Settings.PfRule.View') &&
+    (scenario !== 'no-deduction-create' ||
+      name !== 'HR.PayrollManagement.Settings.DeductionComponents.Add')
 );
 const store = configureStore({
   reducer: {
@@ -85,9 +97,18 @@ setupListeners(store.dispatch);
 
 function Fixture() {
   const [hr, setHr] = useState(true);
+  if (scenario === 'pf-page' || scenario === 'pf-view-only')
+    return (
+      <Box sx={{ height: '100dvh', minHeight: 0, p: 1 }}>
+        <PF />
+      </Box>
+    );
   return (
     <HrSetupSessionProvider>
-      <Stack spacing={2} sx={{ p: 2 }}>
+      <Stack
+        spacing={2}
+        sx={{ p: 2, ...(scenario === 'esic-settings' && { height: '100dvh', overflow: 'hidden' }) }}
+      >
         <Typography variant="h5">HR Workspace</Typography>
         <Typography variant="body2">
           {context.synthetic
@@ -96,7 +117,11 @@ function Fixture() {
         </Typography>
         <Button onClick={() => setHr((value) => !value)}>{hr ? 'Leave HR' : 'Return to HR'}</Button>
         <Typography>Normal HR operations remain available after closing setup.</Typography>
-        {scenario === 'salary-template' ? (
+        {scenario === 'esic-settings' ? (
+          <EsiStatutorySettings />
+        ) : scenario === 'payslip-settings' ? (
+          <PayslipSettingsForm canEdit />
+        ) : scenario === 'salary-template' ? (
           <SalaryTemplateEditor mode="create" />
         ) : scenario === 'earning-components' ? (
           <EarningComponent />

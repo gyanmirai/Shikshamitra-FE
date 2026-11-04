@@ -27,7 +27,11 @@ export function reorderFormBuilder(
     );
     return;
   }
-  if (!activeId.startsWith('field:') || !overId.startsWith('field:')) return;
+  if (
+    !activeId.startsWith('field:') ||
+    (!overId.startsWith('field:') && !overId.startsWith('section:'))
+  )
+    return;
   const [, activeSectionId, activeFieldId] = activeId.split(':');
   const [, overSectionId, overFieldId] = overId.split(':');
   const sourceIndex = formik.values.sections.findIndex((section) => section.id === activeSectionId);
@@ -36,9 +40,17 @@ export function reorderFormBuilder(
   const sourceFields = [...formik.values.sections[sourceIndex].fields];
   const fieldIndex = sourceFields.findIndex((field) => field.id === activeFieldId);
   if (fieldIndex < 0) return;
+  if (sourceFields[fieldIndex].inheritedFrom) return;
+  const target = formik.values.sections[targetIndex];
   if (
-    sourceFields[fieldIndex].inheritedFrom ||
-    isLockedInquiryField(formik.values.purpose, sourceFields[fieldIndex])
+    isLockedInquiryField(
+      formik.values.purpose,
+      sourceFields[fieldIndex],
+      formik.values.coreFieldPolicyVersion
+    ) &&
+    (target.isRepeatable ||
+      target.visibilityRuleJson?.trim() ||
+      target.stepVisibilityRuleJson?.trim())
   )
     return;
   // Use the original target position so a downward move lands after the target field.

@@ -63,13 +63,13 @@ export function ApplicationOnboardingHandover({
   return (
     <Paper
       component="section"
-      aria-label="Onboarding handover"
+      aria-label="Onboarding Handover"
       variant="outlined"
       sx={{ p: 1.5, minWidth: 0, boxShadow: 'none' }}
     >
       <Stack direction="row" alignItems="center" spacing={0.5} useFlexGap flexWrap="wrap">
         <Typography variant="subtitle1" component="h3">
-          Onboarding handover
+          Onboarding Handover
         </Typography>
         <CustomTooltip
           arrow
@@ -84,7 +84,7 @@ export function ApplicationOnboardingHandover({
         >
           <IconButton
             size="small"
-            aria-label="Admission handoff information"
+            aria-label="Admission Handoff Information"
             sx={{ color: 'info.main', minWidth: { xs: 44, sm: 30 }, minHeight: { xs: 44, sm: 30 } }}
           >
             <Iconify icon="mdi:information-outline" width={18} />
@@ -107,7 +107,7 @@ export function ApplicationOnboardingHandover({
           Onboarding viewing access is required to see placement, identifiers and activation status.
         </Typography>
       ) : loading ? (
-        <Stack spacing={1} sx={{ mt: 1.5 }} aria-label="Loading onboarding handover">
+        <Stack spacing={1} sx={{ mt: 1.5 }} aria-label="Loading Onboarding Handover">
           <Skeleton height={32} />
           <Skeleton height={32} />
           <Skeleton height={32} />
@@ -130,7 +130,7 @@ export function ApplicationOnboardingHandover({
       ) : (
         <>
           {refreshing && (
-            <LinearProgress aria-label="Refreshing onboarding handover" sx={{ mt: 1 }} />
+            <LinearProgress aria-label="Refreshing Onboarding Handover" sx={{ mt: 1 }} />
           )}
           <Box component="dl" sx={{ m: 0 }}>
             {[
@@ -145,9 +145,9 @@ export function ApplicationOnboardingHandover({
               [
                 'GR / Roll number',
                 <Stack direction="row" spacing={0.5} useFlexGap flexWrap="wrap">
-                  <Typography variant="body2">GR: {value.grNumber || 'Not assigned'}</Typography>
+                  <Typography variant="body2">GR: {value.grNumber || 'Not Assigned'}</Typography>
                   <Typography variant="body2">
-                    · Roll: {value.rollNumber ?? 'Not assigned'}
+                    · Roll: {value.rollNumber ?? 'Not Assigned'}
                   </Typography>
                 </Stack>,
               ],
@@ -179,7 +179,7 @@ export function ApplicationOnboardingHandover({
             ))}
           </Box>
           <Box sx={{ p: 1.5, mt: 1, bgcolor: 'background.neutral', borderRadius: 1 }}>
-            <Typography variant="subtitle2">Next action</Typography>
+            <Typography variant="subtitle2">Next Action</Typography>
             <Typography
               variant="body2"
               color="text.secondary"

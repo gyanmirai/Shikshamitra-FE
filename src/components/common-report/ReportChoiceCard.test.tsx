@@ -4,7 +4,8 @@ import { render, screen } from '@testing-library/react';
 
 import { ReportChoiceCard } from './ReportChoiceCard';
 
-vi.mock('@iconify/react', () => ({ Icon: () => null }));
+vi.mock('@iconify/react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@iconify/react')>()), Icon: () => null }));
 
 it('lets Curriculum and Institute Setup users select a report using the keyboard', async () => {
   const user = userEvent.setup();

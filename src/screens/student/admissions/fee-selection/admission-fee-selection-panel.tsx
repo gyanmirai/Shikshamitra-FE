@@ -127,14 +127,14 @@ export default function AdmissionFeeSelectionPanel({
   if (!canRead || !applicationId) return null;
   if (query.isLoading || (!state && query.isFetching))
     return mode === 'onboarding' ? (
-      <Stack role="status" aria-label="Loading fee structure" spacing={0.5}>
+      <Stack role="status" aria-label="Loading Fee Structure" spacing={0.5}>
         <Skeleton variant="text" width={148} height={28} />
         <Skeleton variant="text" width="60%" height={22} />
         <Skeleton variant="text" width="42%" height={18} />
         <Skeleton variant="rounded" height={44} sx={{ mt: 1 }} />
       </Stack>
     ) : workspaceLayout ? (
-      <Stack role="status" aria-label="Loading fee structure" spacing={1.5} sx={{ flex: 1 }}>
+      <Stack role="status" aria-label="Loading Fee Structure" spacing={1.5} sx={{ flex: 1 }}>
         <Typography variant="subtitle1">Payment</Typography>
         <Box
           sx={{
@@ -157,7 +157,7 @@ export default function AdmissionFeeSelectionPanel({
         </Box>
       </Stack>
     ) : (
-      <Box aria-label="Loading fee structure">
+      <Box aria-label="Loading Fee Structure">
         <Skeleton height={90} />
       </Box>
     );
@@ -205,7 +205,7 @@ export default function AdmissionFeeSelectionPanel({
       disabled={query.isFetching || query.isError || continuing || collectionOpen}
       onClick={() => setEditing(true)}
     >
-      {selection ? 'Change fee structure' : 'Select fee structure'}
+      {selection ? 'Change Fee Structure' : 'Select Fee Structure'}
     </Button>
   );
   const deferralAction = onCollectLater &&
@@ -222,14 +222,14 @@ export default function AdmissionFeeSelectionPanel({
         onClick={onCollectLater}
         sx={{ flexShrink: 0 }}
       >
-        Collect later in Onboarding
+        Collect Later in Onboarding
       </Button>
     );
 
   return (
     <Box
       component="section"
-      aria-label={workspaceLayout ? 'Payment' : 'Fee structure'}
+      aria-label={workspaceLayout ? 'Payment' : 'Fee Structure'}
       sx={{
         minWidth: 0,
         ...(workspaceLayout && { display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }),
@@ -250,14 +250,14 @@ export default function AdmissionFeeSelectionPanel({
         >
           <Stack direction="row" spacing={0.5} alignItems="center">
             <Typography variant="subtitle1">
-              {compact && mode === 'admissions' ? 'Payment' : 'Fee structure'}
+              {compact && mode === 'admissions' ? 'Payment' : 'Fee Structure'}
             </Typography>
             {mode === 'admissions' && (
-              <CustomTooltip title="A confirmed payment is sufficient. Finance-verified zero payable needs no payment entry. Authorized staff can instead collect later in Onboarding with a reason.">
+              <CustomTooltip title="A Confirmed Payment Is Sufficient. Finance-Verified Zero Payable Needs No Payment Entry. Authorized Staff Can Instead Collect Later in Onboarding with a Reason.">
                 <IconButton
                   size="small"
                   color="info"
-                  aria-label="Fee structure information"
+                  aria-label="Fee Structure Information"
                   sx={{ width: { xs: 44, sm: 30 }, height: { xs: 44, sm: 30 } }}
                 >
                   <Iconify icon="mdi:information-outline" width={16} />
@@ -322,7 +322,7 @@ export default function AdmissionFeeSelectionPanel({
         >
           <Stack
             component={workspaceLayout ? 'section' : 'div'}
-            aria-label={workspaceLayout ? 'Fee structure' : undefined}
+            aria-label={workspaceLayout ? 'Fee Structure' : undefined}
             spacing={1.5}
             useFlexGap
             sx={
@@ -333,7 +333,7 @@ export default function AdmissionFeeSelectionPanel({
           >
             {workspaceLayout && (
               <Typography variant="subtitle2" component="h3">
-                Fee structure
+                Fee Structure
               </Typography>
             )}
             {showEditor ? (
@@ -348,7 +348,7 @@ export default function AdmissionFeeSelectionPanel({
                 compact={compact}
               />
             ) : query.isFetching ? (
-              <Stack role="status" aria-label="Refreshing fee structure" aria-busy spacing={1.5}>
+              <Stack role="status" aria-label="Refreshing Fee Structure" aria-busy spacing={1.5}>
                 <Skeleton variant="text" width="60%" height={24} />
                 <Skeleton variant="text" width="75%" height={20} />
                 <Stack
@@ -383,7 +383,7 @@ export default function AdmissionFeeSelectionPanel({
                 <Typography variant="body2" fontWeight={600} sx={{ overflowWrap: 'anywhere' }}>
                   <AdmissionDialogTitle
                     title={`${selection.structureName} · Revision ${selection.revisionNumber}`}
-                    helpLabel="Fee selection details"
+                    helpLabel="Fee Selection Details"
                     helpText={`Fee structure confirmed ${fDateTime(selection.savedAt)}${state.ownerStageName ? ` in ${state.ownerStageName}` : ''}.${state.isLocked ? ' Payment has been recorded. This fee selection is locked; ask Finance to review any adjustment or refund.' : ''}`}
                   />
                 </Typography>
@@ -408,7 +408,7 @@ export default function AdmissionFeeSelectionPanel({
                         minWidth: 0,
                       }}
                     >
-                      <Typography variant="subtitle2">Published fee heads</Typography>
+                      <Typography variant="subtitle2">Published Fee Heads</Typography>
                       <AdmissionFeeHeads heads={selection.heads} currency={selection.currency} />
                     </Stack>
                     <AdmissionFeeSelectionSummary
@@ -432,7 +432,7 @@ export default function AdmissionFeeSelectionPanel({
                       sx={{ color: 'text.disabled' }}
                     />
                     <Typography component="span" variant="subtitle2" color="text.primary">
-                      No fee structure selected
+                      No Fee Structure Selected
                     </Typography>
                   </Stack>
                 }
@@ -450,8 +450,8 @@ export default function AdmissionFeeSelectionPanel({
             ) : (
               <Typography variant="body2" color="text.secondary">
                 {readOnly
-                  ? 'No fee structure was selected in this step.'
-                  : 'Select a fee structure to collect fees now, or continue with a reason to collect later in Onboarding.'}
+                  ? 'No Fee Structure Was Selected in This Step.'
+                  : 'Select a Fee Structure to Collect Fees Now, or Continue with a Reason to Collect Later in Onboarding.'}
               </Typography>
             )}
             {workspaceLayout &&
@@ -494,8 +494,8 @@ export default function AdmissionFeeSelectionPanel({
           >
             <Typography variant="body2" color="text.secondary">
               {state.hasRecordedFeePayment
-                ? 'Any unpaid balance remains available for collection in Onboarding.'
-                : 'Collection is optional at this stage. A reason is required to collect later.'}
+                ? 'Any Unpaid Balance Remains Available for Collection in Onboarding.'
+                : 'Collection Is Optional at This Stage. A Reason Is Required to Collect Later.'}
             </Typography>
             {deferralAction}
           </Stack>
@@ -503,7 +503,7 @@ export default function AdmissionFeeSelectionPanel({
         {state.feeCollectionDeferral && (
           <StudentFeedback notificationKey="STU-0352" presentation="inline" severity="info">
             <Stack spacing={0.5}>
-              <Typography variant="subtitle2">Collection deferred to Onboarding</Typography>
+              <Typography variant="subtitle2">Collection Deferred to Onboarding</Typography>
               <Typography variant="body2" sx={{ overflowWrap: 'anywhere', whiteSpace: 'pre-wrap' }}>
                 {state.feeCollectionDeferral.reason}
               </Typography>
@@ -555,7 +555,7 @@ export default function AdmissionFeeSelectionPanel({
         )}
         {!canEdit && !state.isLocked && mode === 'admissions' && state.ownerStageName && (
           <Typography variant="caption" color="text.secondary">
-            Fee structure selection is managed in {state.ownerStageName} by authorized admissions
+            Fee Structure Selection Is Managed In {state.ownerStageName} by authorized admissions
             staff.
           </Typography>
         )}
@@ -567,8 +567,8 @@ export default function AdmissionFeeSelectionPanel({
               severity={state.onboardingConfirmed && !state.onboardingBlocker ? 'success' : 'info'}
             >
               {state.onboardingConfirmed
-                ? 'The admission fee selection has been confirmed for Onboarding.'
-                : 'Review and confirm the saved admission fee selection before completing Onboarding.'}
+                ? 'The Admission Fee Selection Has Been Confirmed for Onboarding.'
+                : 'Review and Confirm the Saved Admission Fee Selection Before Completing Onboarding.'}
             </StudentFeedback>
             {state.onboardingBlocker && (
               <StudentFeedback
@@ -612,7 +612,7 @@ export default function AdmissionFeeSelectionPanel({
                   }
                 }}
               >
-                {confirmState.isLoading ? 'Confirming…' : 'Confirm admission fee selection'}
+                {confirmState.isLoading ? 'Confirming…' : 'Confirm Admission Fee Selection'}
               </Button>
             )}
             {!state.onboardingConfirmed && !canConfirmSelection && !state.onboardingBlocker && (

@@ -29,6 +29,7 @@ export type AdmissionOfferingListItem = {
   effectiveCloseDate: string;
   workflowName?: string | null;
   workflowVersion?: number | null;
+  coreFieldPolicyVersion?: number | null;
   isActive: boolean;
   availabilityStatus: AdmissionOfferingAvailabilityStatus;
   configurationStatus: AdmissionOfferingConfigurationStatus;
@@ -38,7 +39,16 @@ export type AdmissionOfferingListItem = {
   canDelete: boolean;
 };
 
-export type AdmissionOfferingValidationError = { code: string; message: string };
+export type AdmissionOfferingValidationError = {
+  code: string;
+  message: string;
+  formDefinitionId?: string | null;
+  formName?: string | null;
+  formPurpose?: 0 | 1 | null;
+  workflowDefinitionId?: string | null;
+  workflowStageId?: string | null;
+  workflowStageName?: string | null;
+};
 
 export type AdmissionOfferingValidation = {
   isValid: boolean;
@@ -74,6 +84,9 @@ export type AdmissionRoomChoice = AdmissionClassCapacity['rooms'][number] & {
 };
 
 export type AdmissionOffering = AdmissionOfferingListItem & {
+  inquiryCount?: number;
+  hasConfigurationUsage?: boolean;
+  canEditConfiguration?: boolean;
   classCapacity?: AdmissionClassCapacity | null;
   useCycleDates: boolean;
   openDate?: string | null;

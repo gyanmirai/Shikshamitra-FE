@@ -7,6 +7,7 @@ import { createTheme } from 'src/theme/create-theme';
 import { render, screen } from '@testing-library/react';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
 import { defaultSettings } from 'src/components/settings/config-settings';
+import { expectStudentErrorToast } from 'src/test/student-toast-test-fixture';
 
 import { ApplicationFormStage } from './application-form-stage';
 
@@ -100,11 +101,11 @@ describe('Form stage after section verification removal', () => {
     (compact) => {
       renderStage(compact);
       expect(
-        screen.queryByRole('button', { name: /Section verification|Verify Student details/ })
+        screen.queryByRole('button', { name: /Section Verification|Verify Student details/ })
       ).not.toBeInTheDocument();
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
       expect(screen.queryByText('Student details')).not.toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Continue admission' })).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Continue Admission' })).toBeDisabled();
       if (!compact) expect(screen.getByText('Submit the application form.')).toBeVisible();
     }
   );
@@ -112,7 +113,7 @@ describe('Form stage after section verification removal', () => {
   it('retains the authorized correction action for a submitted form', async () => {
     Object.assign(state.summary!, { formStatus: 1, canRequestCorrection: true });
     renderStage();
-    await userEvent.setup().click(screen.getByRole('button', { name: 'Request correction' }));
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Request Correction' }));
     expect(state.setAction).toHaveBeenCalledWith({ type: 'correction' });
   });
 
@@ -125,30 +126,31 @@ describe('Form stage after section verification removal', () => {
     });
     state.canReopen = false;
     const complete = renderStage();
-    expect(screen.queryByRole('button', { name: 'Request correction' })).not.toBeInTheDocument();
-    await userEvent.setup().click(screen.getByRole('button', { name: 'Continue admission' }));
+    expect(screen.queryByRole('button', { name: 'Request Correction' })).not.toBeInTheDocument();
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Continue Admission' }));
     expect(complete).toHaveBeenCalledOnce();
   });
 
-  it('exposes the error and retry without a verification dialog', async () => {
+  it('announces the query error without a page retry or verification dialog', async () => {
     state.error = true;
     renderStage();
-    await userEvent.setup().click(screen.getByRole('button', { name: /Retry/i }));
-    expect(state.retry).toHaveBeenCalledOnce();
-    expect(screen.queryByRole('button', { name: 'Continue admission' })).not.toBeInTheDocument();
+    await expectStudentErrorToast('Unable to load this enrollment data.');
+    expect(screen.queryByRole('button', { name: /Retry/i })).not.toBeInTheDocument();
+    expect(state.retry).not.toHaveBeenCalled();
+    expect(screen.queryByRole('button', { name: 'Continue Admission' })).not.toBeInTheDocument();
   });
 
   it.each([true, false])('uses skeletons instead of linear progress in compact=%s', (compact) => {
     state.fetching = true;
     state.busy = true;
     renderStage(compact);
-    expect(screen.getByRole('status', { name: 'Loading Form stage' })).toBeVisible();
+    expect(screen.getByRole('status', { name: 'Loading Form Stage' })).toBeVisible();
     expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Continue admission' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Continue Admission' })).not.toBeInTheDocument();
   });
 
   it('does not expose a correction action when the server disallows correction', () => {
     renderStage();
-    expect(screen.queryByRole('button', { name: 'Request correction' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Request Correction' })).not.toBeInTheDocument();
   });
 });

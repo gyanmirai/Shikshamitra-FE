@@ -2,11 +2,12 @@
 
 import CustomizableTable from 'src/components/customizabaleTable';
 
-import type { AssignmentStatus, PreferenceMatchStatus, StudentElectiveRow } from '../types';
-
 import { getElectiveAssignmentColumns } from './electiveAssignmentColumns';
 
+import type { AssignmentStatus, StudentElectiveRow, PreferenceMatchStatus } from '../types';
+
 interface ElectiveAssignmentTableProps {
+  onCorrectLocked?: (student: StudentElectiveRow) => void;
   students: StudentElectiveRow[];
   isLoading: boolean;
   isLocked: boolean;
@@ -22,6 +23,7 @@ interface ElectiveAssignmentTableProps {
 }
 
 export default function ElectiveAssignmentTable({
+  onCorrectLocked,
   students,
   isLoading,
   isLocked,
@@ -36,6 +38,7 @@ export default function ElectiveAssignmentTable({
   getRowStatus,
 }: ElectiveAssignmentTableProps) {
   const columns = getElectiveAssignmentColumns({
+    onCorrectLocked,
     isLocked,
     students,
     selectedRowIds,

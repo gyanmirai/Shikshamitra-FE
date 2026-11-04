@@ -9,11 +9,11 @@ vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 it('removes Eligibility outcome presets and blocks configuring a retired-stage route', () => {
   const { onSave } = renderRetiredRoute(3, 'Eligibility');
   expect(
-    screen.queryByRole('combobox', { name: 'Continue after eligibility check' })
+    screen.queryByRole('combobox', { name: 'Continue After Eligibility Check' })
   ).not.toBeInTheDocument();
   expect(
     screen.getByText('Replace retired stage types before configuring their next steps.')
   ).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Save path' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Save Path' })).toBeDisabled();
   expect(onSave).not.toHaveBeenCalled();
 });

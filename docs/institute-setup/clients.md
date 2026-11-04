@@ -3,12 +3,23 @@ module: institute-setup
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-11-02
+updated_on: 2026-11-04
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Institute Setup clients
+
+## Calendar cache after institute date changes
+
+`boardApi.updateBoard` and `yearApi.updateYear` invalidate the shared academic calendar, day, date-check and audit-log tags. Year updates also invalidate the board hierarchy and academic organization options. Active queries refetch after saving; inactive calendar queries are discarded so returning to Calendar Management reads the synchronized dates. New calendars use the selected board's dates before falling back to academic-year dates. The [backend product guide](../../../Shikshamitra-BE/docs/modules/institute-setup/product.md#academic-dates-and-calendars) owns synchronization and date-shrink rules.
+
+## Academic Setup year context
+
+`useAcademicSetupWorkspace` opens an explicitly provided or manually selected year first, then the application's selected year when it is present in the permitted year list, then the first available year.
+An untouched workspace follows late shell context hydration; choosing a year pins that workspace without changing the global academic context.
+This keeps the initial division hierarchy aligned with Academics while retaining access to earlier years.
+Division home rooms belong to that year's division record; changing one year does not change another year's division or overwrite saved timetable room assignments.
 
 ## Institute form field formatting
 

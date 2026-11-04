@@ -108,7 +108,7 @@ export function AdmissionUnmatchedInquiryDrawer({
     >
       <Stack direction="row" spacing={1} alignItems="center" sx={{ p: 2 }}>
         <Box sx={{ flex: 1 }}>
-          <Typography variant="h6">Capture inquiry before offering is known</Typography>
+          <Typography variant="h6">Capture Inquiry Before Offering Is Known</Typography>
           <Typography variant="body2" color="text.secondary">
             Record the lead now. Staff can confirm the class offering later.
           </Typography>
@@ -129,12 +129,12 @@ export function AdmissionUnmatchedInquiryDrawer({
           fullWidth
           required
           size="small"
-          label="Admission period"
+          label="Admission Period"
           value={cycleId}
           onChange={(event) => setCycleId(event.target.value)}
           disabled={cycles.isLoading}
         >
-          <MenuItem value="">Choose a period</MenuItem>
+          <MenuItem value="">Choose a Period</MenuItem>
           {publishedCycles.map((cycle) => (
             <MenuItem key={cycle.id} value={cycle.id}>
               {cycle.name}
@@ -146,7 +146,7 @@ export function AdmissionUnmatchedInquiryDrawer({
           fullWidth
           required
           size="small"
-          label="How the inquiry arrived"
+          label="How the Inquiry Arrived"
           value={source}
           onChange={(event) => setSource(Number(event.target.value) as AdmissionInquirySource)}
         >
@@ -159,7 +159,7 @@ export function AdmissionUnmatchedInquiryDrawer({
         <TextField
           fullWidth
           size="small"
-          label="Source details"
+          label="Source Details"
           value={sourceDetail}
           onChange={(event) => setSourceDetail(event.target.value)}
           helperText="Optional event, campaign, referral, or location details."
@@ -170,7 +170,7 @@ export function AdmissionUnmatchedInquiryDrawer({
               fullWidth
               required
               size="small"
-              label="Applicant first name"
+              label="Applicant First Name"
               value={applicantFirstName}
               onChange={(event) => setApplicantFirstName(event.target.value)}
             />
@@ -179,7 +179,7 @@ export function AdmissionUnmatchedInquiryDrawer({
             <TextField
               fullWidth
               size="small"
-              label="Applicant last name"
+              label="Applicant Last Name"
               value={applicantLastName}
               onChange={(event) => setApplicantLastName(event.target.value)}
             />
@@ -189,7 +189,7 @@ export function AdmissionUnmatchedInquiryDrawer({
               fullWidth
               required
               size="small"
-              label="Guardian first name"
+              label="Guardian First Name"
               value={guardianFirstName}
               onChange={(event) => setGuardianFirstName(event.target.value)}
             />
@@ -199,7 +199,7 @@ export function AdmissionUnmatchedInquiryDrawer({
               fullWidth
               required
               size="small"
-              label="Guardian mobile"
+              label="Guardian Mobile"
               value={guardianPhone}
               onChange={(event) => setGuardianPhone(event.target.value)}
             />
@@ -209,7 +209,7 @@ export function AdmissionUnmatchedInquiryDrawer({
           fullWidth
           size="small"
           type="email"
-          label="Guardian email"
+          label="Guardian Email"
           value={guardianEmail}
           onChange={(event) => setGuardianEmail(normalizeEmail(event.target.value))}
           inputProps={{ autoCapitalize: 'none', autoCorrect: 'off', spellCheck: false }}
@@ -221,14 +221,14 @@ export function AdmissionUnmatchedInquiryDrawer({
               onChange={(_, checked) => setSeparateFamily(checked)}
             />
           }
-          label="Create a separate family if this mobile already has an inquiry"
+          label="Create a Separate Family If This Mobile Already Has an Inquiry"
         />
         {separateFamily && (
           <TextField
             fullWidth
             required
             size="small"
-            label="Reason for separate family"
+            label="Reason for Separate Family"
             value={duplicateReason}
             onChange={(event) => setDuplicateReason(event.target.value)}
           />
@@ -246,7 +246,7 @@ export function AdmissionUnmatchedInquiryDrawer({
           startIcon={<Iconify icon="mdi:content-save-outline" />}
           onClick={save}
         >
-          Capture inquiry
+          Capture Inquiry
         </LoadingButton>
       </Stack>
     </Drawer>

@@ -81,6 +81,7 @@ export type AdmissionFormSection = {
   translations?: Record<string, AdmissionFormTranslation>;
 };
 export type AdmissionForm = {
+  coreFieldPolicyVersion?: number | null;
   id: string;
   name: string;
   code: string;
@@ -101,6 +102,7 @@ export type AdmissionForm = {
   inheritance?: AdmissionFormInheritance | null;
 };
 export type CreateUpdateAdmissionForm = {
+  coreFieldPolicyVersion?: number | null;
   name: string;
   code: string;
   description?: string | null;
@@ -153,6 +155,8 @@ export type AdmissionFormDataSourceMetadata = {
   supportsParent: boolean;
 };
 export type AdmissionFormOption = {
+  mediumId?: string | null;
+  mediumLabel?: string | null;
   value: string;
   label: string;
   displayOrder: number;
@@ -192,6 +196,33 @@ export type AdmissionFormVersionComparison = {
   toId: string;
   changes: string[];
 };
+export type AdmissionFormArchiveImpact = {
+  formDefinitionId: string;
+  formName: string;
+  purpose: AdmissionFormPurpose;
+  status: AdmissionFormStatus;
+  concurrencyStamp: string;
+  inquiryCount: number;
+  applicationCount: number;
+  offeringCount: number;
+  workflowCount: number;
+  publicLinkCount: number;
+  hasRestrictedOfferings: boolean;
+  hasRestrictedDependencies?: boolean;
+  dependencies: {
+    kind: 'offering' | 'workflow' | 'publicLink' | 'registrationForm';
+    id: string;
+    name: string;
+    workflowStageId?: string | null;
+    workflowStageName?: string | null;
+    isActive?: boolean;
+  }[];
+};
+// Published form status affects intake and offering readiness, not just the form list.
+const formLifecycleTags = [
+  studentAdmissionsCrmType.admissionForm,
+  studentAdmissionsCrmType.admissionOffering,
+];
 type Result<T> = { data?: T };
 const unwrap = <T>(r: Result<T> | T): T => {
   if (typeof r === 'object' && r !== null && 'data' in r && r.data !== undefined) return r.data;
@@ -199,6 +230,11 @@ const unwrap = <T>(r: Result<T> | T): T => {
 };
 export const admissionFormsApi = api.injectEndpoints({
   endpoints: (builder) => ({
+    getSavedAdmissionFormInheritancePreview: builder.query<AdmissionFormInheritancePreview, { id: string; inquiryFormDefinitionId: string }>({
+      query: ({ id, inquiryFormDefinitionId }) => ({ url: `/student/enrollment/admissions/forms/${id}/inheritance-preview`, params: { inquiryFormDefinitionId } }),
+      transformResponse: (response: Result<AdmissionFormInheritancePreview> | AdmissionFormInheritancePreview) => unwrap(response),
+      providesTags: [studentAdmissionsCrmType.admissionForm],
+    }),
     getAdmissionFormInheritanceSources: builder.query<
       { totalCount: number; items: AdmissionFormConnectedSource[] },
       string | { id: string; skipCount?: number; maxResultCount?: number }
@@ -302,19 +338,21 @@ export const admissionFormsApi = api.injectEndpoints({
           params: { concurrencyStamp },
         }),
         transformResponse: (r: Result<AdmissionForm> | AdmissionForm) => unwrap(r),
-        invalidatesTags: [studentAdmissionsCrmType.admissionForm],
+        invalidatesTags: (_result, error) => (error ? [] : formLifecycleTags),
       }
     ),
     getAdmissionFormAudit: builder.query<AdmissionFormAuditEntry[], string>({
       query: (id) => `/student/enrollment/admissions/forms/${id}/audit`,
       transformResponse: (r: Result<AdmissionFormAuditEntry[]> | AdmissionFormAuditEntry[]) =>
         unwrap(r),
+      providesTags: [studentAdmissionsCrmType.admissionForm],
     }),
     getAdmissionFormVersions: builder.query<AdmissionFormVersionSummary[], string>({
       query: (id) => `/student/enrollment/admissions/forms/${id}/versions`,
       transformResponse: (
         r: Result<AdmissionFormVersionSummary[]> | AdmissionFormVersionSummary[]
       ) => unwrap(r),
+      providesTags: [studentAdmissionsCrmType.admissionForm],
     }),
     compareAdmissionFormVersions: builder.query<
       AdmissionFormVersionComparison,
@@ -324,6 +362,7 @@ export const admissionFormsApi = api.injectEndpoints({
       transformResponse: (
         r: Result<AdmissionFormVersionComparison> | AdmissionFormVersionComparison
       ) => unwrap(r),
+      providesTags: [studentAdmissionsCrmType.admissionForm],
     }),
     createAdmissionFormVersion: builder.mutation<AdmissionForm, string>({
       query: (id) => ({
@@ -341,7 +380,24 @@ export const admissionFormsApi = api.injectEndpoints({
           params: { concurrencyStamp },
         }),
         transformResponse: (r: Result<AdmissionForm> | AdmissionForm) => unwrap(r),
-        invalidatesTags: [studentAdmissionsCrmType.admissionForm],
+        invalidatesTags: (_result, error) => (error ? [] : formLifecycleTags),
+      }
+    ),
+    getAdmissionFormArchiveImpact: builder.query<AdmissionFormArchiveImpact, string>({
+      query: (id) => `/student/enrollment/admissions/forms/${id}/archive-impact`,
+      transformResponse: (r: Result<AdmissionFormArchiveImpact> | AdmissionFormArchiveImpact) =>
+        unwrap(r),
+      providesTags: formLifecycleTags,
+    }),
+    restoreAdmissionForm: builder.mutation<AdmissionForm, { id: string; concurrencyStamp: string }>(
+      {
+        query: ({ id, concurrencyStamp }) => ({
+          url: `/student/enrollment/admissions/forms/${id}/restore`,
+          method: 'POST',
+          params: { concurrencyStamp },
+        }),
+        transformResponse: (r: Result<AdmissionForm> | AdmissionForm) => unwrap(r),
+        invalidatesTags: (_result, error) => (error ? [] : formLifecycleTags),
       }
     ),
     deleteAdmissionForm: builder.mutation<void, { id: string; concurrencyStamp: string }>({
@@ -431,6 +487,7 @@ export const admissionFormsApi = api.injectEndpoints({
   }),
 });
 export const {
+  useGetSavedAdmissionFormInheritancePreviewQuery,
   useGetAdmissionFormInheritanceSourcesQuery,
   usePreviewAdmissionFormInheritanceMutation,
   useGetAdmissionFormsQuery,
@@ -442,6 +499,8 @@ export const {
   useCloneAdmissionFormMutation,
   useCreateAdmissionFormVersionMutation,
   useArchiveAdmissionFormMutation,
+  useRestoreAdmissionFormMutation,
+  useGetAdmissionFormArchiveImpactQuery,
   useDeleteAdmissionFormMutation,
   useGetAdmissionFormUsageQuery,
   useGetAdmissionFormFieldTypesQuery,

@@ -37,7 +37,7 @@ describe('Admission form publish confirmation', () => {
       screen.getByText(/Version 1 will become available for new admission offerings/)
     ).toBeVisible();
     expect(screen.getByText(/Published versions cannot be edited/)).toBeVisible();
-    fireEvent.click(screen.getByRole('button', { name: 'Publish form' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Publish Form' }));
     expect(callbacks.onPublish).toHaveBeenCalledOnce();
   });
 
@@ -46,7 +46,7 @@ describe('Admission form publish confirmation', () => {
     render(<AdmissionFormPublishDialog {...callbacks} />);
 
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Publish form' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Publish Form' })).toBeDisabled();
     fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape', code: 'Escape' });
     expect(callbacks.onClose).not.toHaveBeenCalled();
   });
@@ -55,10 +55,10 @@ describe('Admission form publish confirmation', () => {
     const callbacks = { ...props(), issues: ['Add a required student name field.'] };
     render(<AdmissionFormPublishDialog {...callbacks} />);
 
-    expect(screen.getByRole('dialog', { name: 'Form needs changes' })).toBeVisible();
+    expect(screen.getByRole('dialog', { name: 'Form Needs Changes' })).toBeVisible();
     expect(screen.getByText('Add a required student name field.')).toBeVisible();
-    expect(screen.queryByRole('button', { name: 'Publish form' })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Edit draft' }));
+    expect(screen.queryByRole('button', { name: 'Publish Form' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Draft' }));
     expect(callbacks.onEdit).toHaveBeenCalledOnce();
   });
 });

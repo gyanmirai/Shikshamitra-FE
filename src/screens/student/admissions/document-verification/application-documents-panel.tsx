@@ -115,7 +115,7 @@ export function ApplicationDocumentsPanel({
           </StudentFeedback>
         ) : (
           <>
-            {query.isFetching && <LinearProgress aria-label="Refreshing document checklist" />}
+            {query.isFetching && <LinearProgress aria-label="Refreshing Document Checklist" />}
             <DocumentChecklistContent
               layout={layout}
               summary={summary}
@@ -137,7 +137,7 @@ export function ApplicationDocumentsPanel({
                   }
                   onClick={() => onComplete?.()}
                 >
-                  {advancing ? 'Continuing…' : 'Continue admission'}
+                  {advancing ? 'Continuing…' : 'Continue Admission'}
                 </Button>
               </Stack>
             )}

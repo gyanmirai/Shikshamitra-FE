@@ -225,7 +225,7 @@ export function CashContent({ academicYearId }: { academicYearId: string }) {
     },
     { refetchOnMountOrArgChange: true }
   );
-  const summary = query.isError ? undefined : query.currentData?.yearSummary;
+  const summary = query.isError ? undefined : query.currentData?.activitySummary;
   const availableCash = query.isError ? undefined : query.currentData?.availableCash;
   const consumedDeposit = useRef('');
   const requestedDepositKey = entryContext
@@ -405,7 +405,7 @@ export function CashContent({ academicYearId }: { academicYearId: string }) {
           filters={filters}
           sorts={sorts}
           searchFieldProps={{
-            placeholder: 'Search receipts or payers…',
+            placeholder: 'Search',
             inputProps: { 'aria-label': 'Search cash receipts or payers', maxLength: 200 },
           }}
           onServerSearch={(value) => {

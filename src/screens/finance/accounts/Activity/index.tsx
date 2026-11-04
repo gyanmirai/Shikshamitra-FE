@@ -217,6 +217,7 @@ export default function AccountsActivity({ embedded = false }: { embedded?: bool
                 setPage(1);
               }}
               noDataText="No completed collections, refunds, or manual entries found."
+              searchFieldProps={{ placeholder: 'Search' }}
             />
           </Box>
         </>

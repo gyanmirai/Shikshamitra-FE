@@ -125,7 +125,7 @@ export function WorkflowAssessmentClassProfile({
             {profile.name}
           </Typography>
           <Label variant="soft" color="default">
-            {profile.subjects.length} subjects · {total} marks
+            {profile.subjects.length} Subjects · {total} Marks
           </Label>
         </Stack>
       </AccordionSummary>
@@ -145,7 +145,7 @@ export function WorkflowAssessmentClassProfile({
                     ? [
                         {
                           value: profile.boardId,
-                          label: catalogLoaded ? 'Unavailable board' : 'Saved board',
+                          label: catalogLoaded ? 'Unavailable Board' : 'Saved Board',
                         },
                       ]
                     : []),
@@ -176,7 +176,7 @@ export function WorkflowAssessmentClassProfile({
                     ? [
                         {
                           value: profile.mediumId,
-                          label: catalogLoaded ? 'Unavailable medium' : 'Saved medium',
+                          label: catalogLoaded ? 'Unavailable Medium' : 'Saved Medium',
                         },
                       ]
                     : []),
@@ -196,14 +196,14 @@ export function WorkflowAssessmentClassProfile({
                 multiple
                 required
                 isSearch
-                label="Applies to classes"
+                label="Applies to Classes"
                 value={profile.standardIds}
                 disabled={disabled || catalogUnavailable || !profile.mediumId}
                 options={[
                   ...classes.map((item) => ({ value: item.id, label: item.name })),
                   ...missingClasses.map((id) => ({
                     value: id,
-                    label: catalogLoaded ? 'Unavailable class (remove or replace)' : 'Saved class',
+                    label: catalogLoaded ? 'Unavailable Class (Remove or Replace)' : 'Saved Class',
                   })),
                 ]}
                 disabledValues={assigned.filter((id) => !profile.standardIds.includes(id))}
@@ -270,13 +270,13 @@ export function WorkflowAssessmentClassProfile({
             size="small"
             fullWidth
             required
-            label="Pass rule"
+            label="Pass Rule"
             value={profile.passRule}
             disabled={disabled}
             options={[
-              { value: 'overall', label: 'Overall marks only' },
-              { value: 'everySubject', label: 'Every subject' },
-              { value: 'both', label: 'Overall and every subject' },
+              { value: 'overall', label: 'Overall Marks Only' },
+              { value: 'everySubject', label: 'Every Subject' },
+              { value: 'both', label: 'Overall and Every Subject' },
             ]}
             onChange={(value) =>
               update({
@@ -294,12 +294,12 @@ export function WorkflowAssessmentClassProfile({
           />
           <Grid container spacing={1}>
             <Grid size={{ xs: 12, sm: profile.passRule === 'everySubject' ? 12 : 6 }}>
-              <TextField size="small" fullWidth label="Total marks" value={total} disabled />
+              <TextField size="small" fullWidth label="Total Marks" value={total} disabled />
             </Grid>
             {profile.passRule !== 'everySubject' && (
               <Grid size={{ xs: 12, sm: 6 }}>
                 <WorkflowAssessmentMarksField
-                  label="Overall passing marks"
+                  label="Overall Passing Marks"
                   value={profile.passingMarks < 0 ? null : profile.passingMarks}
                   max={total}
                   disabled={disabled}
@@ -322,7 +322,7 @@ export function WorkflowAssessmentClassProfile({
               startIcon={<Iconify icon={GlobalIcons.delete} />}
               onClick={onRemove}
             >
-              Remove profile
+              Remove Profile
             </Button>
           </Stack>
         </Stack>

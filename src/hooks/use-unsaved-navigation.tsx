@@ -6,7 +6,6 @@ import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { Iconify } from 'src/components/iconify';
 import { GlobalIcons } from 'src/utils/icons';
 
-
 type Options = {
   title?: string;
   description?: string;
@@ -14,6 +13,7 @@ type Options = {
   discardLabel?: string;
   push?: (href: string) => void;
   blockNavigation?: boolean;
+  onBeforeTraversal?: () => void;
   renderConfirmation?: (keepEditing: () => void, discard: () => void) => React.ReactNode;
 };
 
@@ -31,6 +31,9 @@ export function useUnsavedNavigation(isDirty: boolean, options: Options = {}) {
   const [pending, setPending] = useState<(() => void) | null>(null);
   const cancelNavigation = useCallback(() => setPending(null), []);
   const permittedTraversal = useRef<string | null>(null);
+  const beforeTraversal = useRef(options.onBeforeTraversal);
+  beforeTraversal.current = options.onBeforeTraversal;
+  const handlesTraversal = Boolean(options.onBeforeTraversal);
   const requestNavigation = useCallback(
     (proceed: () => void) => {
       if (blockNavigation) return;
@@ -48,7 +51,7 @@ export function useUnsavedNavigation(isDirty: boolean, options: Options = {}) {
   }, [isDirty, blockNavigation]);
 
   useEffect(() => {
-    if ((!isDirty && !blockNavigation) || !push) return undefined;
+    if ((!isDirty && !blockNavigation && !handlesTraversal) || !push) return undefined;
 
     const guardLink = (event: MouseEvent) => {
       if (
@@ -104,6 +107,7 @@ export function useUnsavedNavigation(isDirty: boolean, options: Options = {}) {
       event.preventDefault();
       requestNavigation(() => {
         permittedTraversal.current = traversal.destination.key;
+        beforeTraversal.current?.();
         navigation?.traverseTo(traversal.destination.key).finished.catch(() => {
           permittedTraversal.current = null;
         });
@@ -116,7 +120,7 @@ export function useUnsavedNavigation(isDirty: boolean, options: Options = {}) {
       document.removeEventListener('click', guardLink, true);
       navigation?.removeEventListener('navigate', guardTraversal);
     };
-  }, [isDirty, blockNavigation, push, requestNavigation]);
+  }, [isDirty, blockNavigation, handlesTraversal, push, requestNavigation]);
 
   const confirmation =
     pending && renderConfirmation ? (

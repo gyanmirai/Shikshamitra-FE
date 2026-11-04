@@ -31,6 +31,16 @@ const createColumns = (isLocked: boolean) =>
   });
 
 describe('elective assignment columns', () => {
+  it('offers locked corrections only when the server-authorized edit callback is supplied', () => {
+    const onCorrectLocked = vi.fn();
+    const columns = getElectiveAssignmentColumns({
+      isLocked: true, students, selectedRowIds: new Set(), studentSelections: {},
+      onToggleRow: vi.fn(), onToggleAllRows: vi.fn(), onToggleSubject: vi.fn(),
+      getPreferenceMatch: () => 'noPreference', getRowStatus: () => 'assigned', onCorrectLocked,
+    });
+    expect(columns.some((column) => column.id === 'lockedCorrection')).toBe(true);
+    expect(createColumns(true).some((column) => column.id === 'lockedCorrection')).toBe(false);
+  });
   it('lets pinned identity, selection, and status columns scroll away on phones', () => {
     expect(createColumns(false).filter((column) => column.sticky)
       .every((column) => column.stickyOnMobile === false)).toBe(true);

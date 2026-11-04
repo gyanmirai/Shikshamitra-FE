@@ -273,6 +273,7 @@ export default function FeeStructureHeadsStep({
                   ),
                 },
                 {
+                  cellSx: { textAlign: 'right' as const },
                   id: 'amount',
                   label: 'Annual amount',
                   minWidth: 160,

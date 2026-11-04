@@ -4,6 +4,7 @@ import type { Division } from 'src/types/school';
 
 import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
+import { GlobalIcons } from 'src/utils/icons';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Chip, Grid, Paper, Divider, Typography } from '@mui/material';
 import { useGetRoomsQuery } from 'src/redux/InstituteSetup/RoomApi/RoomApi';
@@ -71,11 +72,7 @@ const RoomAllocationReview = ({
   if (activeReviewSubjects.length === 0) return null;
 
   return (
-    <ExamReviewAccordion
-      title="Room Allocation"
-      icon="fluent:conference-room-24-filled"
-      onEdit={onEdit}
-    >
+    <ExamReviewAccordion title="Room Allocation" icon={GlobalIcons.building} onEdit={onEdit}>
       <Grid container spacing={2} alignItems="stretch">
         {activeReviewSubjects.map((entry) => {
           const { subjectId, subjectName, electiveGroupName, divisionMap } = entry;
@@ -93,8 +90,8 @@ const RoomAllocationReview = ({
                   }}
                 >
                   <Typography
-                    variant="subtitle2"
-                    fontWeight={700}
+                    variant="subtitle1"
+                    fontWeight={600}
                     sx={{ overflowWrap: 'anywhere' }}
                   >
                     {subjectName}

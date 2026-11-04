@@ -3,7 +3,7 @@ module: academic
 domain: validation
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-11-02
+updated_on: 2026-11-04
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -14,6 +14,10 @@ TL;DR: verify guide persistence and authorization separately from the existing s
 Do not report a check as passed unless it ran against the current implementation.
 
 ## Local checks
+
+Locked elective corrections: run focused Vitest tests under `assignElectiveSubject/hooks/useLockedElectiveCorrection.test.tsx` and `components/electiveAssignmentColumns.test.tsx`. They cover capability-gated actions, no confirmation before preview, exact reviewed payloads, and stale-review recovery without losing drafts. Browser acceptance covers subject/preference edits, review warnings, confirmation, cancellation, busy locks, keyboard focus, mobile layout, and both themes. [Backend tests](../../../Shikshamitra-BE/docs/modules/academic/testing.md#elective-late-admissions) cover persistence, authority, impacts and immutable records separately.
+
+Timetable conflict formatting is covered by `src/components/timetable/timetableValidationIssues.test.ts`: teacher and room conflicts include the competing year/board/medium, while legacy responses retain the existing fallback. Run it with `AssignTeacherDialog.reassignment.test.tsx` to protect the production teacher dialog's allocated options and error flow. Browser acceptance should distinguish the currently selected academic context from the context named in the conflict; changing the displayed board or medium must not bypass a teacher's published booking.
 
 Run from the frontend repository root:
 
@@ -43,6 +47,9 @@ npx vitest run src/screens/academic/dashboard-design
 ```
 
 These cover strict response parsing, exact scope parameters, cache separation by identity/context/child, mutation refresh, permission filtering, role ordering, context switching and accessible chart alternatives.
+The context-hook tests also verify requests start while dashboard code is pending, fresh return visits avoid another request, and a return after one minute retains the snapshot while revalidating.
+Run `npx playwright test --config e2e/academic/academic-insights.config.mjs academic-dashboard-loading.spec.ts` for delayed initial loading, reduced motion, desktop/light and phone/dark layouts, retained cards during refresh, and same-scope cached navigation.
+Both code-loading and data-loading placeholders use `AcademicInsightsSkeleton`: four metric cards followed by mapping, progress, timetable and list previews, with one busy status and no interactive placeholder controls.
 Overview tests verify semantic metric definitions, role-supplied priority and genuine zero values without exposing links or substituting sample counts. Progress-headline tests verify the server aggregate instead of the preview average and omit an unavailable aggregate.
 Separate dashboard tests cover exact administrator image order, unchanged priorities for other roles, authoritative mapped totals, null/zero timetable counts, compact lesson summaries, numeric donut legends, source dates/values, read-only templates and five audit rows.
 Dashboard browser cases assert the active image-dashboard root, exact administrator row pairs, compact chart geometry, two columns on desktop and one column on narrow screens, all role priorities, linked students, both themes and chart containment. The prior presentation remains in code and its existing tests remain applicable.
@@ -112,6 +119,7 @@ Frontend regression sources cover query ownership and UI behavior:
 | Rubric server paging, on-demand detail and evaluation refresh | `src/screens/academic/homework-assignment-management/setting/rubricConfig/hooks/useRubricTemplateList.integration.test.tsx`, `src/screens/academic/homework-assignment-management/setting/rubricConfig/hooks/useRubricTemplateDetails.integration.test.tsx`, `src/screens/academic/homework-assignment-management/marksAndFeedback/useRubricEvaluationQueries.integration.test.tsx`, `src/screens/academic/homework-assignment-management/marksAndFeedback/rubricSaveRefresh.integration.test.tsx` |
 | Room page controls, tab/query ownership and summary reads | `src/screens/academic/timetable-schedule-management/roomAvailability/room-paging.integration.test.tsx`, `src/screens/academic/timetable-schedule-management/roomAvailability/room-query-ownership.test.tsx` |
 | Native file responses, polling cancellation and preview reopening | `src/redux/academicAPI/AcademicReportApi.download.test.ts`, `src/screens/academic/components/reports/useAcademicReportDownload.test.tsx`, `src/screens/academic/components/reports/report-preview-lifecycle.test.tsx` |
+| Curriculum history saved filters, backend key casing, failed/malformed detail reads, loading and late-response protection, existing PDF reuse | `src/screens/academic/curriculum-management/reports/curriculum-report-history.test.tsx` |
 | Student detail paging, query serialization and cache reuse | `src/screens/academic/student-academic-360/components/StudentAcademic360Drawer.test.tsx`, `src/redux/academicAPI/StudentAcademic360Api/studentAcademic360Api.test.ts` |
 | Grouped elective readiness and cached published seating | `src/screens/examination/scheduleExam/components/use-elective-readiness.test.tsx`, `src/screens/examination/seatingPlan/guided/published/use-published-seating-data.cache.test.tsx` |
 

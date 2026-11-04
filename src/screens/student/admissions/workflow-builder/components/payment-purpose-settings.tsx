@@ -15,15 +15,15 @@ export function PaymentPurposeSettings({ policy, disabled, onChange }: Props) {
   return (
     <FormSectionCard
       icon="mdi:receipt-text-outline"
-      title="Payment details"
-      descriptionTooltip="Configure the payment purpose, payer and required amount. Purpose name is shown to staff and on the admission receipt."
+      title="Payment Details"
+      descriptionTooltip="Configure the Payment Purpose, Payer and Required Amount. Purpose Name Is Shown to Staff and on the Admission Receipt."
     >
       <Stack spacing={1.5}>
         <FormControlLabel
           control={
             <Checkbox
               size="small"
-              slotProps={{ input: { 'aria-label': 'Require fee structure selection' } }}
+              slotProps={{ input: { 'aria-label': 'Require Fee Structure Selection' } }}
               disabled={disabled}
               checked={policy.requiresFeeStructureSelection}
               onChange={(_, checked) => onChange({ requiresFeeStructureSelection: checked })}
@@ -31,14 +31,14 @@ export function PaymentPurposeSettings({ policy, disabled, onChange }: Props) {
           }
           label={
             <WorkflowSettingLabel
-              label="Require fee structure selection"
+              label="Require Fee Structure Selection"
               help="Require a saved fee structure before collecting this fee or completing the first Offer or Payment step."
             />
           }
         />
         <TextField
           size="small"
-          label="Purpose name *"
+          label="Purpose Name *"
           value={policy.purposeName}
           disabled={disabled}
           onChange={(event) => onChange({ purposeName: event.target.value })}
@@ -47,7 +47,7 @@ export function PaymentPurposeSettings({ policy, disabled, onChange }: Props) {
           <TextField
             fullWidth
             size="small"
-            label="Purpose code *"
+            label="Purpose Code *"
             value={policy.purposeCode}
             disabled={disabled}
             onChange={(event) =>
@@ -67,7 +67,7 @@ export function PaymentPurposeSettings({ policy, disabled, onChange }: Props) {
           >
             <MenuItem value="applicant">Applicant</MenuItem>
             <MenuItem value="guardian">Guardian</MenuItem>
-            <MenuItem value="either">Applicant or guardian</MenuItem>
+            <MenuItem value="either">Applicant or Guardian</MenuItem>
           </TextField>
         </Stack>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
@@ -75,7 +75,7 @@ export function PaymentPurposeSettings({ policy, disabled, onChange }: Props) {
             fullWidth
             size="small"
             type="number"
-            label="Required amount *"
+            label="Required Amount *"
             value={policy.amount}
             disabled={disabled}
             inputProps={{ min: 0.01, max: 10000000, step: 0.01 }}

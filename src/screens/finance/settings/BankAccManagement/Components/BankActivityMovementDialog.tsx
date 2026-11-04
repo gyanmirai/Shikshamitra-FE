@@ -177,6 +177,7 @@ export default function BankActivityMovementDialog({
                   columns={[
                     { id: 'category', label: 'Category' },
                     {
+                      cellSx: { textAlign: 'right' as const },
                       id: 'amount',
                       label: 'Amount',
                       render: (value: number) => formatNumber(value, 'INR'),
@@ -205,6 +206,7 @@ export default function BankActivityMovementDialog({
                     },
                     { id: 'reference', label: 'Reference' },
                     {
+                      cellSx: { textAlign: 'right' as const },
                       id: 'amount',
                       label: 'Amount',
                       render: (value: number) => formatNumber(value, 'INR'),

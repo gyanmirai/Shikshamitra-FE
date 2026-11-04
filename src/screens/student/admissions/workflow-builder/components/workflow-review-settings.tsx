@@ -44,8 +44,8 @@ export function WorkflowReviewSettings({
     <Stack spacing={2}>
       <FormSectionCard
         icon="mdi:account-check-outline"
-        title="Review responsibility"
-        descriptionTooltip="Staff submit a recommendation with a reason. An authorized approver makes the admission decision using the existing permissions. Changed evidence requires another review. Changing the reviewer role clears the default reviewer so you can choose a matching person."
+        title="Review Responsibility"
+        descriptionTooltip="Staff Submit a Recommendation with a Reason. An Authorized Approver Makes the Admission Decision Using the Existing Permissions. Changed Evidence Requires Another Review. Changing the Reviewer Role Clears the Default Reviewer So You Can Choose a Matching Person."
       >
         <Stack spacing={2}>
           {!available && (
@@ -59,20 +59,20 @@ export function WorkflowReviewSettings({
             </StudentFeedback>
           )}
           <WorkflowProcessChoice
-            label="Review process"
+            label="Review Process"
             value={policy?.enabled ? 'managed' : 'basic'}
             disabled={disabled}
             onChange={(value) => update({ enabled: value === 'managed' })}
             options={[
               {
                 value: 'basic',
-                title: 'Complete manually',
+                title: 'Complete Manually',
                 description: 'Staff complete this stage using the existing workflow controls.',
                 icon: 'mdi:check-circle-outline',
               },
               {
                 value: 'managed',
-                title: 'Collect a staff review and recommendation',
+                title: 'Collect a Staff Review and Recommendation',
                 description:
                   'Collect evidence and a staff recommendation before an authorized approver records the admission decision.',
                 icon: 'mdi:account-check-outline',
@@ -104,8 +104,8 @@ export function WorkflowReviewSettings({
         <>
           <FormSectionCard
             icon="mdi:folder-check-outline"
-            title="Evidence to review"
-            descriptionTooltip="Choose earlier checks that must be current before a decision. Approval requires the selected checks to pass."
+            title="Evidence to Review"
+            descriptionTooltip="Choose Earlier Checks That Must Be Current Before a Decision. Approval Requires the Selected Checks to Pass."
           >
             <ReviewPrerequisites
               value={policy.prerequisites}
@@ -117,8 +117,8 @@ export function WorkflowReviewSettings({
           </FormSectionCard>
           <FormSectionCard
             icon="mdi:format-list-checks"
-            title="Reviewer checklist"
-            descriptionTooltip="Add confirmations staff should complete, or use a recommendation with notes only."
+            title="Reviewer Checklist"
+            descriptionTooltip="Add Confirmations Staff Should Complete, or Use a Recommendation with Notes Only."
           >
             <ReviewChecklistSettings
               value={policy.checklist}

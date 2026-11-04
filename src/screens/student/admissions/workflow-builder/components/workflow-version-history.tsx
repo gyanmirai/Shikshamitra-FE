@@ -89,7 +89,7 @@ export function WorkflowVersionHistory({
             select
             fullWidth
             size="small"
-            label={`Compare with version ${workflow.version}`}
+            label={`Compare with Version ${workflow.version}`}
             value={selectedId}
             onChange={(event) => setSelectedId(event.target.value)}
           >
@@ -116,8 +116,8 @@ export function WorkflowVersionHistory({
                   divider={<Divider flexItem orientation="vertical" />}
                   spacing={1.5}
                 >
-                  <VersionSummary label="Selected version" version={selected} />
-                  <VersionSummary label="Open version" version={current} />
+                  <VersionSummary label="Selected Version" version={selected} />
+                  <VersionSummary label="Open Version" version={current} />
                 </Stack>
                 <Divider />
                 {!comparison.hasChanges ? (
@@ -130,8 +130,8 @@ export function WorkflowVersionHistory({
                   </StudentFeedback>
                 ) : (
                   <>
-                    <ChangeList title="Stage changes" changes={comparison.stageChanges} />
-                    <ChangeList title="Route changes" changes={comparison.routeChanges} />
+                    <ChangeList title="Stage Changes" changes={comparison.stageChanges} />
+                    <ChangeList title="Route Changes" changes={comparison.routeChanges} />
                   </>
                 )}
                 {canCreateVersion && selected.status !== 0 && (
@@ -142,7 +142,7 @@ export function WorkflowVersionHistory({
                     disabled={Boolean(existingDraft)}
                     onClick={() => setRestoreSource(selected)}
                   >
-                    Use version {selected.version} as new draft
+                    Use Version {selected.version} As New Draft
                   </Button>
                 )}
                 {existingDraft && (
@@ -161,7 +161,7 @@ export function WorkflowVersionHistory({
         </StudentFeedback>
       )}
 
-      <Typography variant="subtitle2">All versions</Typography>
+      <Typography variant="subtitle2">All Versions</Typography>
       {versions.map((version) => (
         <Card key={version.id} variant="outlined" sx={{ p: 1.5 }}>
           <Stack spacing={1}>
@@ -184,11 +184,11 @@ export function WorkflowVersionHistory({
                 ? `Published ${formatWorkflowDateTime(version.publishedAt)}`
                 : `Updated ${formatWorkflowDateTime(version.lastModificationTime || version.creationTime)}`}
               {' · '}
-              {version.offeringCount} offering(s) ·{' '}
+              {version.offeringCount} Offering(S) ·{' '}
               {(version.campusCount ?? 0) > 0
                 ? `${version.campusCount} campus(es)`
-                : 'school-wide scope'}{' '}
-              · {version.applicationCount} application(s)
+                : 'School-wide Scope'}{' '}
+              · {version.applicationCount} Application(S)
             </Typography>
             {version.id !== workflow.id && (
               <Button
@@ -197,7 +197,7 @@ export function WorkflowVersionHistory({
                 variant="outlined"
                 startIcon={<Iconify icon="mdi:eye-outline" />}
               >
-                View this version
+                View This Version
               </Button>
             )}
           </Stack>
@@ -208,7 +208,7 @@ export function WorkflowVersionHistory({
         open={Boolean(restoreSource)}
         onClose={() => setRestoreSource(null)}
         icon="warning"
-        title={`Use version ${restoreSource?.version ?? ''} as a new draft?`}
+        title={`Use Version ${restoreSource?.version ?? ''} As a New Draft?`}
         content="A new editable version will be copied from this historical version. Published versions and applications already using them will not change."
         action={
           <LoadingButton
@@ -230,7 +230,7 @@ export function WorkflowVersionHistory({
               }
             }}
           >
-            Create draft
+            Create Draft
           </LoadingButton>
         }
       />
@@ -246,7 +246,7 @@ function VersionSummary({ label, version }: { label: string; version: AdmissionW
       </Typography>
       <Typography fontWeight={600}>Version {version.version}</Typography>
       <Typography variant="caption" color="text.secondary">
-        {version.stages.length} stages · {version.transitions.length} routes
+        {version.stages.length} Stages · {version.transitions.length} Routes
       </Typography>
     </Stack>
   );

@@ -1,7 +1,7 @@
 'use client';
 
-import AddIcon from '@mui/icons-material/Add';
 import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import { Stack, Button, Tooltip } from '@mui/material';
 import { FormSectionHeader } from 'src/components/form-section-card';
 
@@ -47,13 +47,14 @@ export default function SlotConfigurationsHeader({
         >
           <span>
             <Button
-              variant="contained"
+              variant="outlined"
+              color="inherit"
               size="small"
-              startIcon={<AddIcon fontSize="small" />}
+              startIcon={<Iconify icon={GlobalIcons.addIcon} width={18} />}
               onClick={onAdd}
               disabled={!canAdd}
             >
-              Add Slot Group
+              Add slot group
             </Button>
           </span>
         </Tooltip>

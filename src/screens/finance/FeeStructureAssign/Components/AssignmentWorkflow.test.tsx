@@ -130,7 +130,7 @@ vi.mock('src/redux/finance/studentFeeAssignment', () => ({
   useAssignmentCandidatesQuery: () => ({
     ...mocks.candidateState,
     refetch: mocks.candidateRefetch,
-    data: [
+    data: (mocks.candidateState.data as any) ?? [
       {
         id: 'structure',
         name: 'Annual fees',
@@ -144,6 +144,13 @@ vi.mock('src/redux/finance/studentFeeAssignment', () => ({
             policyId: 'default-policy',
             versionId: 'default-version',
             name: 'School collection',
+            version: 2,
+          },
+          {
+            family: 'refund',
+            policyId: 'default-refund-policy',
+            versionId: 'default-refund-version',
+            name: 'School refund',
             version: 2,
           },
         ],
@@ -164,7 +171,9 @@ const result = (id = 'one', amount = 12000) => ({
   proratedTotal: amount,
 });
 function mount(
-  students = [{ studentId: 'one', studentName: 'Aarav', isFeeStructureAssigned: false }],
+  students: Parameters<typeof AssignmentWorkflow>[0]['students'] = [
+    { studentId: 'one', studentName: 'Aarav', isFeeStructureAssigned: false },
+  ],
   canOverride = false,
   editAssignedPolicies = false
 ) {
@@ -638,6 +647,36 @@ describe('assignment review and commit boundaries', () => {
     );
     expect(mocks.preview).not.toHaveBeenCalled();
   });
+  it('does not offer No policy option for refund and blocks advancing without a refund policy', async () => {
+    mocks.candidateState = {
+      data: [
+        {
+          id: 'structure',
+          name: 'Annual fees',
+          revisionNumber: 1,
+          heads: [{ feeHeadId: 'tuition', feeHeadName: 'Tuition', isOptional: false }],
+          policies: [
+            {
+              family: 'collection',
+              policyId: 'default-policy',
+              versionId: 'default-version',
+              name: 'School collection',
+              version: 2,
+            },
+          ],
+        },
+      ],
+    };
+    mount(undefined, true);
+    await chooseStructure();
+    const refundSelect = screen.getByRole('combobox', { name: 'Refund policy' });
+    expect(within(refundSelect).queryByText('No policy assigned')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Select a Refund Policy before continuing.'
+    );
+    expect(screen.queryByRole('heading', { name: 'Fees & Dates' })).not.toBeInTheDocument();
+  });
   it('shows names only during bulk setup and preserves the common form while searching', async () => {
     mount(
       [
@@ -722,6 +761,13 @@ describe('assignment review and commit boundaries', () => {
               name: 'School collection',
               version: 2,
             },
+            {
+              family: 'refund',
+              policyId: 'default-refund-policy',
+              versionId: 'default-refund-version',
+              name: 'School refund',
+              version: 2,
+            },
           ],
         },
         warnings: [],
@@ -770,6 +816,13 @@ describe('assignment review and commit boundaries', () => {
               family: 'collection',
               versionId: 'default-version',
               name: 'School collection',
+              version: 2,
+            },
+            {
+              family: 'refund',
+              policyId: 'default-refund-policy',
+              versionId: 'default-refund-version',
+              name: 'School refund',
               version: 2,
             },
           ],
@@ -863,7 +916,7 @@ describe('assignment review and commit boundaries', () => {
     fireEvent.change(refundSelectors[0], { target: { value: 'refund-version' } });
     fireEvent.change(collectionSelectors[0], { target: { value: 'collection-version' } });
     fireEvent.click(screen.getByRole('button', { name: 'Reset refund' }));
-    expect(refundSelectors[0]).toHaveValue('');
+    expect(refundSelectors[0]).toHaveValue('default-refund-version');
     fireEvent.change(screen.getByRole('textbox', { name: /Policy override reason/ }), {
       target: { value: 'Approved bulk exception' },
     });
@@ -1143,4 +1196,189 @@ describe('assignment review and commit boundaries', () => {
     expect(select).toHaveValue('default-version');
     expect(screen.queryByRole('textbox', { name: /Policy override reason/ })).toBeNull();
   });
+});
+
+function unpaidContext(studentId = 'one') {
+  return {
+    studentId,
+    academicYearId: 'year',
+    status: 'Assigned',
+    source: 'Finance',
+    assignmentId: `saved-${  studentId}`,
+    assignmentConcurrencyStamp: `stamp-${  studentId}`,
+    canEditStructure: true,
+    structureId: 'structure',
+    structureRevision: 1,
+    assignedAssignment: {
+      ...result(studentId),
+      structureId: 'structure',
+      revisionNumber: 1,
+      heads: [{ feeHeadId: 'tuition', included: true, isOptional: false }],
+      policies: [
+        {
+          family: 'collection',
+          policyId: 'default-policy',
+          versionId: 'default-version',
+          name: 'School collection',
+          version: 2,
+        },
+        {
+          family: 'refund',
+          policyId: 'default-refund-policy',
+          versionId: 'default-refund-version',
+          name: 'School refund',
+          version: 2,
+        },
+      ],
+    },
+  };
+}
+
+it('prefills unpaid assignment edits and submits the saved identity and concurrency with a reason', async () => {
+  const reason = 'x'.repeat(501);
+  mocks.contextState = { data: [unpaidContext()] };
+  mount([{ studentId: 'one', studentName: 'Aarav', isFeeStructureAssigned: true }], false, true);
+  await waitFor(() =>
+    expect(screen.getByRole('combobox', { name: 'Fee structure' })).toHaveValue('structure')
+  );
+  fireEvent.change(screen.getByRole('textbox', { name: /Fee structure change reason/ }), {
+    target: { value: reason },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Preview assignments' }));
+  await waitFor(() =>
+    expect(mocks.preview).toHaveBeenCalledWith(
+      expect.objectContaining({
+        editAssignmentId: 'saved-one',
+        assignmentConcurrencyStamp: 'stamp-one',
+        editReason: reason,
+      })
+    )
+  );
+});
+
+it('uses a common edit setup for same-structure unpaid assigned students', async () => {
+  mocks.contextState = { data: [unpaidContext('one'), unpaidContext('two')] };
+  mocks.bulkPreview.mockImplementation(({ items }) => ({
+    unwrap: async () => ({
+      results: items.map((item: any) => ({
+        studentId: item.studentId,
+        preview: result(item.studentId),
+      })),
+    }),
+  }));
+  mount(
+    [
+      { studentId: 'one', studentName: 'Aarav', isFeeStructureAssigned: true },
+      { studentId: 'two', studentName: 'Riya', isFeeStructureAssigned: true },
+    ],
+    false,
+    true
+  );
+  await waitFor(() =>
+    expect(screen.getByRole('combobox', { name: 'Fee structure' })).toHaveValue('structure')
+  );
+  fireEvent.change(screen.getByRole('textbox', { name: /Fee structure change reason/ }), {
+    target: { value: 'Correct shared fees' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Preview assignments' }));
+  await waitFor(() => expect(mocks.bulkPreview).toHaveBeenCalled());
+  expect(mocks.bulkPreview.mock.lastCall?.[0].items).toEqual([
+    expect.objectContaining({
+      studentId: 'one',
+      editAssignmentId: 'saved-one',
+      assignmentConcurrencyStamp: 'stamp-one',
+      editReason: 'Correct shared fees',
+    }),
+    expect.objectContaining({
+      studentId: 'two',
+      editAssignmentId: 'saved-two',
+      assignmentConcurrencyStamp: 'stamp-two',
+      editReason: 'Correct shared fees',
+    }),
+  ]);
+});
+
+it('blocks a bulk edit when a selected student has become paid', async () => {
+  mocks.contextState = {
+    data: [
+      unpaidContext('one'),
+      {
+        ...unpaidContext('two'),
+        canEditStructure: false,
+        structureEditBlocker: 'Payment has been recorded. Only policies can be edited.',
+      },
+    ],
+  };
+  mount(
+    [
+      { studentId: 'one', studentName: 'Aarav', isFeeStructureAssigned: true },
+      { studentId: 'two', studentName: 'Riya', isFeeStructureAssigned: true },
+    ],
+    false,
+    true
+  );
+  expect(await screen.findByText(/Payment has been recorded/)).toBeVisible();
+  expect(screen.queryByRole('combobox', { name: 'Fee structure' })).not.toBeInTheDocument();
+  expect(mocks.bulkPreview).not.toHaveBeenCalled();
+});
+
+it('keeps unchanged saved policy overrides when editing unpaid fees without another policy reason', async () => {
+  const context = unpaidContext();
+  context.assignedAssignment.policies[0].versionId = 'collection-version';
+  mocks.contextState = { data: [context] };
+  mount([{ studentId: 'one', studentName: 'Aarav', isFeeStructureAssigned: true }], false, true);
+  await waitFor(() =>
+    expect(screen.getByRole('combobox', { name: 'Fee structure' })).toHaveValue('structure')
+  );
+  fireEvent.change(screen.getByRole('textbox', { name: /Fee structure change reason/ }), {
+    target: { value: 'Change optional fees only' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+  expect(await screen.findByRole('button', { name: 'Preview assignments' })).toBeVisible();
+});
+
+it('opens policy editing for an inactive unpaid enrollment', async () => {
+  const context = unpaidContext();
+  mocks.contextState = { data: [context] };
+  mocks.details.mockReturnValue({
+    data: {
+      assignment: { ...context.assignedAssignment, academicYearId: 'year' },
+      concurrencyStamp: 'stamp',
+    },
+  });
+  mount(
+    [{ studentId: 'one', studentName: 'Aarav', isFeeStructureAssigned: true, isActive: false }],
+    true,
+    true
+  );
+  expect(await screen.findByText('Student Policies')).toBeVisible();
+  expect(screen.queryByRole('combobox', { name: 'Fee structure' })).not.toBeInTheDocument();
+});
+
+it('falls back to policy editing when a refreshed unpaid context becomes paid', async () => {
+  const context = unpaidContext();
+  mocks.contextState = { data: [context] };
+  mocks.details.mockReturnValue({
+    data: {
+      assignment: { ...context.assignedAssignment, academicYearId: 'year' },
+      concurrencyStamp: 'paid-stamp',
+    },
+  });
+  const view = mount(
+    [{ studentId: 'one', studentName: 'Aarav', isFeeStructureAssigned: true }],
+    true,
+    true
+  );
+  await screen.findByRole('combobox', { name: 'Fee structure' });
+  mocks.contextState = {
+    data: [
+      { ...context, canEditStructure: false, structureEditBlocker: 'Payment has been recorded.' },
+    ],
+  };
+  view.refresh();
+  expect(await screen.findByText('Student Policies')).toBeVisible();
+  expect(screen.queryByRole('combobox', { name: 'Fee structure' })).not.toBeInTheDocument();
+  expect(mocks.commit).not.toHaveBeenCalled();
 });

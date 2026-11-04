@@ -70,7 +70,7 @@ describe('Admissions settings row actions', () => {
     await user.click(screen.getByRole('button', { name: 'Clone' }));
     expect(handlers.onClone).toHaveBeenCalledWith(row);
 
-    await user.click(screen.getByRole('button', { name: 'More actions' }));
+    await user.click(screen.getByRole('button', { name: 'More Actions' }));
     expect(screen.queryByRole('menuitem', { name: 'Clone' })).not.toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: 'Deactivate' })).toBeVisible();
     await user.click(screen.getByRole('menuitem', { name: 'Deactivate' }));
@@ -108,12 +108,12 @@ describe('Admissions settings row actions', () => {
       />
     );
 
-    expect(screen.queryByRole('button', { name: 'More actions' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'More Actions' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Activate' })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: /Complete setup.*activate/ }));
+    await user.click(screen.getByRole('button', { name: 'Resolve Activation Issues' }));
 
-    expect(handlers.onEdit).toHaveBeenCalledWith(row);
-    expect(handlers.onToggleActive).not.toHaveBeenCalled();
+    expect(handlers.onToggleActive).toHaveBeenCalledWith(row);
+    expect(handlers.onEdit).not.toHaveBeenCalled();
   });
 
   it('allows activation when the configuration status is ready', async () => {
@@ -147,7 +147,7 @@ describe('Admissions settings row actions', () => {
       />
     );
 
-    expect(screen.queryByRole('button', { name: 'More actions' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'More Actions' })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Activate' }));
 
     expect(handlers.onToggleActive).toHaveBeenCalledWith(row);
@@ -164,6 +164,7 @@ describe('Admissions settings row actions', () => {
       onHistory: vi.fn(),
       onCreateVersion: vi.fn(),
       onArchive: vi.fn(),
+      onRestore: vi.fn(),
       onDelete: vi.fn(),
     };
     const form = {
@@ -179,10 +180,10 @@ describe('Admissions settings row actions', () => {
     await user.click(screen.getByRole('button', { name: 'Delete' }));
     expect(handlers.onDelete).toHaveBeenCalledOnce();
 
-    await user.click(screen.getByRole('button', { name: 'More actions' }));
+    await user.click(screen.getByRole('button', { name: 'More Actions' }));
     expect(screen.queryByRole('menuitem', { name: 'Delete' })).not.toBeInTheDocument();
-    expect(screen.getByRole('menuitem', { name: 'Clone as draft' })).toBeVisible();
-    expect(screen.getByRole('menuitem', { name: 'History & versions' })).toBeVisible();
+    expect(screen.getByRole('menuitem', { name: 'Clone as Draft' })).toBeVisible();
+    expect(screen.getByRole('menuitem', { name: 'History & Versions' })).toBeVisible();
     expect(
       screen.queryByRole('menuitem', { name: /approve|request changes/i })
     ).not.toBeInTheDocument();
@@ -285,12 +286,12 @@ describe('Admissions settings row actions', () => {
       onDelete: vi.fn(),
     };
     const { rerender } = render(<WorkflowRowActions {...props} />);
-    await userEvent.setup().click(screen.getByRole('button', { name: 'Re-open' }));
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Re-Open' }));
     expect(onReopen).toHaveBeenCalledOnce();
     expect(props.onClone).not.toHaveBeenCalled();
     rerender(<WorkflowRowActions {...props} canReopen={false} />);
-    expect(screen.queryByRole('button', { name: 'Re-open' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Re-Open' })).not.toBeInTheDocument();
     rerender(<WorkflowRowActions {...props} workflow={{ ...props.workflow, status: 1 }} />);
-    expect(screen.queryByRole('button', { name: 'Re-open' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Re-Open' })).not.toBeInTheDocument();
   });
 });

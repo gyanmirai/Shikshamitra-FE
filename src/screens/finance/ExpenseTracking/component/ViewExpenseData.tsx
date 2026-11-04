@@ -177,6 +177,7 @@ const ViewExpenseData = ({
               },
             ]}
             data={expenseList}
+            searchFieldProps={{ placeholder: 'Search' }}
           />
         </Card>
       </DialogScrollContent>

@@ -69,7 +69,7 @@ export function AssessmentSubjectScoreFields({
         ))}
       </Box>
       <Typography variant="body2" aria-live="polite">
-        Total entered: {assessmentEnteredTotal(profile, values)} / {assessmentProfileTotal(profile)}
+        Total Entered: {assessmentEnteredTotal(profile, values)} / {assessmentProfileTotal(profile)}
       </Typography>
     </Stack>
   );

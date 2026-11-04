@@ -178,9 +178,10 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
       isSort: false,
       isFilter: false,
       cellSx: { textAlign: 'right', fontVariantNumeric: 'tabular-nums' },
-      render: (value) => formatNumber(value, 'INR'),
+      render: (value) => formatNumber(value, 'INR', { fractionDigits: isAdj ? 2 : 0 }),
     })),
     {
+      cellSx: { textAlign: 'right' as const },
       id: 'refundValue',
       label: isAdj ? 'Adjustment amount' : 'Refund amount',
       width: 200,
@@ -313,11 +314,11 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   {isAdj ? 'Max adjustable' : 'Max refundable'}:{' '}
-                  {formatNumber(totalRefundable, 'INR')}
+                  {formatNumber(totalRefundable, 'INR', { fractionDigits: isAdj ? 2 : 0 })}
                 </Typography>
                 {totalRefundInput > 0 && (
                   <Typography variant="body2">
-                    {isAdj ? 'Adjustment' : 'Refund'}: {formatNumber(totalRefundInput, 'INR')}
+                    {isAdj ? 'Adjustment' : 'Refund'}: {formatNumber(totalRefundInput, 'INR', { fractionDigits: isAdj ? 2 : 0 })}
                   </Typography>
                 )}
               </Stack>

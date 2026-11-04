@@ -1,8 +1,7 @@
 'use client';
 
-import type { IParams } from 'src/components/customizabaleTable/types';
-
 import type { RootState } from 'src/redux/store';
+import type { IParams } from 'src/components/customizabaleTable/types';
 import type { PaymentTermListItem } from 'src/redux/finance/paymentTerm';
 
 import { LoadingButton } from '@mui/lab';
@@ -12,13 +11,13 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
 import { useGetYearQuery } from 'src/redux/year/yearApi';
-import { getCloneAcademicYears } from './cloneAcademicYears';
 import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { financePermissions } from 'src/constants/finance-menu';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import { serializeFinanceTableFilters } from 'src/screens/finance/components/financeTableQuery';
+import { FinanceSetupManagerHeader } from 'src/screens/finance/setup/embedding/FinanceSetupManagerHeader';
 import {
   Box,
   Card,
@@ -46,9 +45,8 @@ import {
   useLazyGetPaymentTermByIdQuery,
 } from 'src/redux/finance/paymentTerm';
 
-import { serializeFinanceTableFilters } from 'src/screens/finance/components/financeTableQuery';
-
 import PaymentTermForm from './Components/PaymentTermForm';
+import { getCloneAcademicYears } from './cloneAcademicYears';
 import PaymentTermTable from './Components/PaymentTermTable';
 import PaymentTermDetailsDrawer from './Components/PaymentTermDetailsDrawer';
 
@@ -129,7 +127,7 @@ const PaymentTerm = () => {
   const canClone = hasGrantedPermission(permissions, paymentTermPermissions.clone);
   const canDelete = hasGrantedPermission(permissions, paymentTermPermissions.delete);
   const targetAcademicYearId = currentYear?.id ?? '';
-  const yearsQuery = useGetYearQuery(undefined, { skip: !canClone });
+  const yearsQuery = useGetYearQuery(undefined, { skip: !canClone || !cloneDialog.value });
   const { sources: cloneSourceYears, previousYear } = useMemo(
     () => getCloneAcademicYears(yearsQuery.data?.items ?? [], currentYear),
     [yearsQuery.data?.items, currentYear]
@@ -303,7 +301,14 @@ const PaymentTerm = () => {
 
   return (
     <Box sx={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
-      <CustomBreadcrumbs
+      <FinanceSetupManagerHeader
+        editorOpen={
+          addPaymentTermDrawer.value ||
+          cloneDialog.value ||
+          Boolean(publishTarget || archiveTarget || restoreTarget) ||
+          actionLoading ||
+          cloneState.isLoading
+        }
         description="Configure board-period installment schedules, billing dates, and versioned Draft/Active terms."
         heading="Payment Terms"
         links={[

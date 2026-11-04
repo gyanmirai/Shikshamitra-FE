@@ -34,8 +34,8 @@ export function WorkflowSeatSettings({ formik, available, readOnly }: Props) {
     <Stack spacing={2}>
       <FormSectionCard
         icon="mdi:seat-outline"
-        title="Admission capacity"
-        descriptionTooltip="Historical Seat-stage settings preserve capacity, reservation and waitlist rules. Capacity changes and applicant actions are audited. Confirmed admissions consume capacity until released."
+        title="Admission Capacity"
+        descriptionTooltip="Historical Seat-Stage Settings Preserve Capacity, Reservation and Waitlist Rules. Capacity Changes and Applicant Actions Are Audited. Confirmed Admissions Consume Capacity Until Released."
       >
         <Stack spacing={2}>
           {!available && (
@@ -44,20 +44,20 @@ export function WorkflowSeatSettings({ formik, available, readOnly }: Props) {
             </StudentFeedback>
           )}
           <WorkflowProcessChoice
-            label="Seat process"
+            label="Seat Process"
             value={policy?.enabled ? 'managed' : 'basic'}
             disabled={disabled}
             onChange={(value) => update({ enabled: value === 'managed' })}
             options={[
               {
                 value: 'basic',
-                title: 'Basic seat step (existing process)',
+                title: 'Basic Seat Step (Existing Process)',
                 description: 'Keep the saved Seat-stage completion process.',
                 icon: 'mdi:seat-outline',
               },
               {
                 value: 'managed',
-                title: 'Managed capacity, reservation, and waitlist',
+                title: 'Managed Capacity, Reservation, and Waitlist',
                 description:
                   'Preserve capacity, reservation and waitlist rules for this historical Seat stage.',
                 icon: 'mdi:account-group-outline',
@@ -73,10 +73,10 @@ export function WorkflowSeatSettings({ formik, available, readOnly }: Props) {
       </FormSectionCard>
       {policy?.enabled && (
         <>
-          <FormSectionCard icon="mdi:account-group-outline" title="Reservation rules">
+          <FormSectionCard icon="mdi:account-group-outline" title="Reservation Rules">
             <SeatCapacitySettings policy={policy} disabled={disabled} onChange={update} />
           </FormSectionCard>
-          <FormSectionCard icon="mdi:sign-direction" title="Completion outcomes">
+          <FormSectionCard icon="mdi:sign-direction" title="Completion Outcomes">
             <SeatOutcomeSettings policy={policy} disabled={disabled} onChange={update} />
           </FormSectionCard>
         </>

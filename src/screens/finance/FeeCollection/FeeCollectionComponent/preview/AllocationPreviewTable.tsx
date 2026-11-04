@@ -43,7 +43,7 @@ const ColHeader = ({ firstColumnLabel = 'Fee Head' }: { firstColumnLabel?: strin
       {firstColumnLabel}
     </Typography>
 
-    {(['ORIGINAL', 'PAID', 'REMAINING'] as const).map((col) => (
+    {(['ORIGINAL', 'ADJUSTED', 'PAID', 'REMAINING'] as const).map((col) => (
       <Typography
         key={col}
         variant="caption"
@@ -104,6 +104,10 @@ const FeeItemRow = ({ row }: { row: AllocatedFeeRow }) => {
         ₹{formatNumber(row.originalAmount)}
       </Typography>
 
+      {/* PAID */}
+      <Typography variant="body2" sx={{ width: 90, textAlign: 'right', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>
+        ₹{formatNumber(row.adjustmentCreditAmount)}
+      </Typography>
       {/* PAID */}
       <Typography
         variant="body2"

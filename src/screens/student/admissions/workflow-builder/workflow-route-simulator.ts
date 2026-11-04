@@ -44,37 +44,37 @@ const happyPathFacts: Record<string, string> = {
 export const WORKFLOW_SIMULATION_SCENARIOS: WorkflowSimulationScenario[] = [
   {
     id: 'happy',
-    label: 'Happy path',
+    label: 'Happy Path',
     description: 'Completed form, assessment and documents with a confirmed Finance fee structure.',
     facts: happyPathFacts,
   },
   {
     id: 'assessment-failed',
-    label: 'Assessment failed',
+    label: 'Assessment Failed',
     description: 'Checks whether a failed assessment reaches its intended route.',
     facts: { ...happyPathFacts, 'assessment.outcome': 'failed' },
   },
   {
     id: 'documents-missing',
-    label: 'Documents unresolved',
+    label: 'Documents Unresolved',
     description: 'Required documents must be accepted before continuing.',
     facts: { ...happyPathFacts, 'documents.status': 'pending' },
   },
   {
     id: 'fee-unconfirmed',
-    label: 'Fee structure unconfirmed',
+    label: 'Fee Structure Unconfirmed',
     description: 'A published Finance fee structure must be confirmed before continuing.',
     facts: { ...happyPathFacts, 'payment.status': 'pending' },
   },
   {
     id: 'rejected',
-    label: 'Application rejected',
+    label: 'Application Rejected',
     description: 'Checks the route for a rejected admission decision.',
     facts: { ...happyPathFacts, 'application.status': 'Rejected' },
   },
   {
     id: 'waitlisted',
-    label: 'Applicant waitlisted',
+    label: 'Applicant Waitlisted',
     description: 'Checks the route for a waitlisted admission decision.',
     facts: { ...happyPathFacts, 'application.status': 'Waitlisted' },
   },

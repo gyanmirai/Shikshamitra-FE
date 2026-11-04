@@ -34,7 +34,7 @@ export function DocumentTableActions({
   const hasEvidence = requirement.evidence.length > 0;
   const canCollect = permissions.view && !readOnly;
   const canUpload = canCollect && requirement.canUpload && permissions.upload;
-  const uploadLabel = `${requirement.evidence.some((item) => item.fileName) ? 'Upload replacement' : 'Upload document'} for ${requirement.name}`;
+  const uploadLabel = `${requirement.evidence.some((item) => item.fileName) ? 'Upload Replacement' : 'Upload Document'} for ${requirement.name}`;
   // Once evidence exists these less-frequent actions remain in the review workspace.
   // Missing original-only requirements still need a reachable collection action.
   const collectionActions =
@@ -47,11 +47,11 @@ export function DocumentTableActions({
     <ThreeDotsActions
       showViewIcon
       showThreeDots={collectionActions.length > 0}
-      viewLabel={`View document for ${requirement.name}`}
+      viewLabel={`View Document For ${requirement.name}`}
       viewIcon={GlobalIcons.eye}
       disableViewIcon={!permissions.view || !hasEvidence || !onView}
       handleViewClick={onView}
-      moreLabel={`More actions for ${requirement.name}`}
+      moreLabel={`More Actions For ${requirement.name}`}
       sx={{ justifyContent: 'flex-start' }}
       directActions={
         canUpload
@@ -61,7 +61,7 @@ export function DocumentTableActions({
                 label: uploadLabel,
                 icon: GlobalIcons.upload,
                 disabled: disabled || !onAction,
-                tooltip: disabled ? 'Wait for the current update to finish.' : uploadLabel,
+                tooltip: disabled ? 'Wait for the Current Update to Finish.' : uploadLabel,
                 onClick: () => {
                   if (!disabled) onAction?.('upload');
                 },
@@ -73,7 +73,7 @@ export function DocumentTableActions({
         <MenuList
           dense
           autoFocusItem={popover.open}
-          aria-label={`More actions for ${requirement.name}`}
+          aria-label={`More Actions For ${requirement.name}`}
         >
           {collectionActions.map((action) => (
             <MenuItem

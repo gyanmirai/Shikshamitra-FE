@@ -327,3 +327,86 @@ describe('Fee assignment student table', () => {
     );
   });
 });
+
+it('bulk edits only unpaid students sharing the same structure and revision', () => {
+  state.context.selectedStandardId = 'class-a';
+  state.items = ['one', 'two', 'other', 'paid'].map((studentId) => ({
+    enrollmentId: studentId,
+    studentId,
+    studentName: studentId,
+    isActive: true,
+    isFeeStructureAssigned: true,
+    canEditStructure: studentId !== 'paid',
+    structureId: studentId === 'other' ? 'different' : 'structure',
+    structureRevision: 1,
+  }));
+  const bulk = vi.fn();
+  const view = render(<FeeStructureAssignTable onAssignStructure={vi.fn()} onBulkAssign={bulk} />);
+  expect(view.getByRole('checkbox', { name: 'Select one' })).toBeEnabled();
+  expect(view.getByRole('checkbox', { name: 'Select paid' })).toBeDisabled();
+  fireEvent.click(view.getByRole('checkbox', { name: 'Select one' }));
+  expect(view.getByRole('checkbox', { name: 'Select other' })).toBeDisabled();
+  fireEvent.click(view.getByRole('checkbox', { name: 'Select eligible students on this page' }));
+  fireEvent.click(view.getByRole('button', { name: 'Edit fee structures' }));
+  expect(bulk).toHaveBeenCalledWith(
+    [expect.objectContaining({ studentId: 'one' }), expect.objectContaining({ studentId: 'two' })],
+    'class-a'
+  );
+});
+
+it('allows unpaid structure editing with Add permission without policy override access', () => {
+  state.deniedPermissions = ['Finance.Fees.StructureAssign.OverridePolicies'];
+  const edit = vi.fn();
+  render(<FeeStructureAssignTable onAssignStructure={vi.fn()} onEdit={edit} />);
+  const row = {
+    studentId: 'one',
+    studentName: 'Unpaid',
+    isActive: true,
+    isFeeStructureAssigned: true,
+    canEditStructure: true,
+  };
+  const action = state.table.columns.find((column: any) => column.id === 'action');
+  const controls = render(action.render(undefined, row));
+  fireEvent.click(
+    controls.getByRole('button', { name: 'Edit fee structure assignment for Unpaid' })
+  );
+  expect(edit).toHaveBeenCalledWith(row);
+});
+
+it.each([false, true])(
+  'does not carry selection across a server assignment or structure change (assigned=%s)',
+  (originallyAssigned) => {
+    state.context.selectedStandardId = 'class-a';
+    state.deniedPermissions = [];
+    state.items = [
+      {
+        enrollmentId: 'one',
+        studentId: 'one',
+        studentName: 'Changed',
+        isActive: true,
+        isFeeStructureAssigned: originallyAssigned,
+        canEditStructure: originallyAssigned,
+        structureId: 'original',
+        structureRevision: 1,
+      },
+    ];
+    const bulk = vi.fn();
+    const view = render(
+      <FeeStructureAssignTable onAssignStructure={vi.fn()} onBulkAssign={bulk} />
+    );
+    fireEvent.click(view.getByRole('checkbox', { name: 'Select Changed' }));
+    expect(view.getByRole('checkbox', { name: 'Select Changed' })).toBeChecked();
+    state.items = state.items.map((row) => ({
+      ...row,
+      isFeeStructureAssigned: true,
+      canEditStructure: true,
+      structureId: originallyAssigned ? 'replacement' : 'original',
+    }));
+    view.rerender(<FeeStructureAssignTable onAssignStructure={vi.fn()} onBulkAssign={bulk} />);
+    expect(view.getByRole('checkbox', { name: 'Select Changed' })).not.toBeChecked();
+    expect(
+      view.queryByRole('button', { name: /Assign structure|Edit fee structures/ })
+    ).not.toBeInTheDocument();
+    expect(bulk).not.toHaveBeenCalled();
+  }
+);

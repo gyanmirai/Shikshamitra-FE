@@ -177,9 +177,9 @@ describe('Admission periods table states', () => {
       mocks.result[loadingFlag] = true;
       renderScreen();
 
-      expect(screen.getByRole('heading', { name: 'Admission periods' })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Add cycle' })).toBeEnabled();
-      expect(screen.getByRole('combobox', { name: 'Academic year' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Admission Periods' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Add Cycle' })).toBeEnabled();
+      expect(screen.getByRole('combobox', { name: 'Academic Year' })).toBeInTheDocument();
       expect(screen.getByRole('textbox', { name: 'Search table' })).toBeInTheDocument();
       const table = screen.getByRole('table');
       // Responsive status columns remain mounted while CSS chooses their visibility.
@@ -189,7 +189,7 @@ describe('Admission periods table states', () => {
       rows.forEach((row) => expect(row.querySelectorAll('td')).toHaveLength(8));
       expect(table.querySelector('.MuiSkeleton-root')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Go to next page' })).toBeInTheDocument();
-      expect(screen.queryByText(/No admission periods/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/No Admission Periods/)).not.toBeInTheDocument();
     }
   );
 
@@ -202,8 +202,8 @@ describe('Admission periods table states', () => {
     const row = within(table).getByText('Fresh Admission').closest('tr')!;
     expect(within(row).getByText('2')).toBeInTheDocument();
     expect(within(row).getByText('12')).toBeInTheDocument();
-    expect(within(table).getByRole('columnheader', { name: 'Start date' })).toBeInTheDocument();
-    expect(within(table).getByRole('columnheader', { name: 'End date' })).toBeInTheDocument();
+    expect(within(table).getByRole('columnheader', { name: 'Start Date' })).toBeInTheDocument();
+    expect(within(table).getByRole('columnheader', { name: 'End Date' })).toBeInTheDocument();
     expect(within(table).getByText('01-01-2027')).toBeInTheDocument();
     expect(within(table).getByText('31-03-2027')).toBeInTheDocument();
     expect(screen.getByText('1–10 of 36')).toBeInTheDocument();
@@ -216,9 +216,9 @@ describe('Admission periods table states', () => {
   it('shows the successful first-use empty state only after loading completes', () => {
     renderScreen();
 
-    expect(screen.getByText('No admission periods have been created yet.')).toBeInTheDocument();
+    expect(screen.getByText('No Admission Periods Have Been Created Yet.')).toBeInTheDocument();
     expect(
-      screen.queryByText('No admission periods match the selected filters.')
+      screen.queryByText('No Admission Periods Match the Selected Filters.')
     ).not.toBeInTheDocument();
     expect(screen.getByRole('table').querySelector('.MuiSkeleton-root')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Clear filters' })).not.toBeInTheDocument();
@@ -231,7 +231,7 @@ describe('Admission periods table states', () => {
     expect(screen.getByRole('combobox', { name: 'Lifecycle' })).toHaveTextContent('Closed');
     expect(screen.getByText('No results found')).toBeInTheDocument();
     expect(
-      screen.queryByText('No admission periods have been created yet.')
+      screen.queryByText('No Admission Periods Have Been Created Yet.')
     ).not.toBeInTheDocument();
     fireEvent.click(
       within(screen.getByRole('table')).getByRole('button', { name: 'Clear filters' })
@@ -257,14 +257,14 @@ describe('Admission periods table states', () => {
         })
       )
     );
-    expect(screen.getByRole('heading', { name: 'Admission periods' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Admission Periods' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /retry|reload/i })).not.toBeInTheDocument();
     expect(screen.queryByText('Unable to load this enrollment data.')).not.toBeInTheDocument();
     expect
-      .soft(screen.queryByText('No admission periods have been created yet.'))
+      .soft(screen.queryByText('No Admission Periods Have Been Created Yet.'))
       .not.toBeInTheDocument();
     expect
-      .soft(screen.queryByText('No admission periods match the selected filters.'))
+      .soft(screen.queryByText('No Admission Periods Match the Selected Filters.'))
       .not.toBeInTheDocument();
     // EmptyContent's shared decorative illustration also signals a successful empty result.
     expect
@@ -277,11 +277,11 @@ describe('Admission periods table states', () => {
     mocks.result.data = { items: [cycle], totalCount: 1 };
     renderScreen(['Students.Admissions.View']);
 
-    expect(screen.getByRole('button', { name: 'Add cycle' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Numbering settings' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Add Cycle' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Numbering Settings' })).toBeEnabled();
     expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /More actions/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /More Actions/ })).not.toBeInTheDocument();
     expect(screen.getByText('Fresh Admission')).toBeInTheDocument();
   });
 
@@ -321,7 +321,7 @@ describe('Admission periods table states', () => {
     renderScreen();
 
     expect(screen.getByRole('combobox', { name: 'Lifecycle' })).toHaveTextContent('Draft');
-    expect(screen.getByRole('combobox', { name: 'Application window' })).toHaveTextContent(
+    expect(screen.getByRole('combobox', { name: 'Application Window' })).toHaveTextContent(
       'Archived'
     );
     expect(screen.getByRole('button', { name: /Status.*Equals.*Draft/ })).toBeInTheDocument();
@@ -346,7 +346,7 @@ describe('Admission periods table states', () => {
         skipCount: 20,
       })
     );
-    ['Cycle', 'Start date', 'End date', 'Offerings', 'Applications', 'Window', 'Status'].forEach(
+    ['Cycle', 'Start Date', 'End Date', 'Offerings', 'Applications', 'Window', 'Status'].forEach(
       (heading) =>
         expect(
           screen.getByRole('button', { name: `Filter ${heading}`, hidden: true })

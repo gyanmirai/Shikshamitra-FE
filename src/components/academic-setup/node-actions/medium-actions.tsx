@@ -9,7 +9,6 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useDeleteMediumMutation } from 'src/redux/medium/mediumApi';
 
 import { MediumForm } from '../medium-form';
-import { OrganizationForm } from '../stage-form';
 import { AcademicFormDialog } from '../academic-form-dialog';
 import { AcademicActionButtons } from './academic-action-buttons';
 
@@ -22,7 +21,6 @@ export const MediumActions = ({
   medium: Medium;
   parents: AcademicSetupParents;
 }) => {
-  const addDialog = useBoolean();
   const editDialog = useBoolean();
   const deleteDialog = useBoolean();
   const dispatch = useDispatch();
@@ -40,14 +38,6 @@ export const MediumActions = ({
 
   return (
     <>
-      <AcademicFormDialog
-        kind="stage"
-        title={`Add Stage to ${medium.name}`}
-        handleClose={addDialog.onFalse}
-        open={addDialog.value}
-      >
-        <OrganizationForm handleClose={addDialog.onFalse} editData={null} mediumId={medium.id} />
-      </AcademicFormDialog>
       <AcademicFormDialog
         kind="medium"
         title={`Edit Medium ${medium.name}`}
@@ -84,8 +74,6 @@ export const MediumActions = ({
       <AcademicActionButtons
         recordName={medium.name}
         recordType="medium"
-        addLabel="Add stage"
-        onAdd={addDialog.onTrue}
         onEdit={editDialog.onTrue}
         onDelete={deleteDialog.onTrue}
       />

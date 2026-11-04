@@ -23,7 +23,15 @@ type Props = { formik: FormikProps<CreateUpdateAdmissionForm> };
 
 export function FormBuilderReview({ formik }: Props) {
   const inheritance = useFormInheritance();
-  const form = getInheritancePreviewValues(formik.values, inheritance?.preview?.definition);
+  const validationForm = getInheritancePreviewValues(
+    formik.values,
+    inheritance?.preview?.definition
+  );
+  const form = getInheritancePreviewValues(
+    formik.values,
+    inheritance?.preview?.definition,
+    inheritance?.preview?.inquiryContextSections
+  );
   const previewFormik = { ...formik, values: form };
   const [language, setLanguage] = useState(form.defaultLanguage ?? 'en');
   const supportedLanguages = form.supportedLanguages?.length
@@ -108,18 +116,18 @@ export function FormBuilderReview({ formik }: Props) {
         >
           {form.description ? (
             <AdmissionDialogTitle
-              title={form.name || 'Untitled form'}
+              title={form.name || 'Untitled Form'}
               helpText={form.description}
-              helpLabel="About this admission form"
+              helpLabel="About This Admission Form"
             />
           ) : (
-            form.name || 'Untitled form'
+            form.name || 'Untitled Form'
           )}
         </Typography>
         {supportedLanguages.length > 1 && (
           <CustomSelect
             size="small"
-            label="Form language"
+            label="Form Language"
             value={language}
             disabled={formik.isSubmitting}
             options={supportedLanguages.map((code) => ({
@@ -131,7 +139,7 @@ export function FormBuilderReview({ formik }: Props) {
           />
         )}
       </Stack>
-      <FormValidationPanel form={form} />
+      <FormValidationPanel form={validationForm} />
       {inheritance?.enabled && <FormInheritancePanel />}
       <Stack
         direction={{ xs: 'column', md: 'row' }}
@@ -142,7 +150,7 @@ export function FormBuilderReview({ formik }: Props) {
         {form.layoutType === 1 && !!steps.length && (
           <Card
             component="aside"
-            aria-label="Form step navigation"
+            aria-label="Form Step Navigation"
             variant="outlined"
             sx={{
               width: { xs: 1, md: 220 },
@@ -168,7 +176,7 @@ export function FormBuilderReview({ formik }: Props) {
         )}
         <Scrollbar
           ref={previewScrollRef}
-          aria-label="Form preview sections"
+          aria-label="Form Preview Sections"
           sx={{
             flex: 1,
             width: 1,
@@ -195,7 +203,7 @@ export function FormBuilderReview({ formik }: Props) {
                 alignItems="center"
                 sx={{ p: 3, border: 1, borderColor: 'divider', borderRadius: 2 }}
               >
-                <Typography variant="subtitle1">No sections to review</Typography>
+                <Typography variant="subtitle1">No Sections to Review</Typography>
                 <Typography variant="body2" color="text.secondary">
                   Return to Build form to add sections.
                 </Typography>

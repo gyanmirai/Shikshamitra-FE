@@ -272,14 +272,14 @@ export function AdmissionIntakeSetupEditor({ setup, onClose, onReloadLatest }: P
                 {setup ? 'Edit Admission Intake Setup' : 'Create Admission Intake Setup'}
               </Typography>
               <CustomTooltip
-                title="Configure inquiry handling and counsellor routing together."
+                title="Configure Inquiry Handling and Counsellor Routing Together."
                 arrow
                 placement="right"
               >
                 <IconButton
                   size="small"
                   color="info"
-                  aria-label="Admission intake setup information"
+                  aria-label="Admission Intake Setup Information"
                 >
                   <Iconify icon="lucide:info" width={16} />
                 </IconButton>
@@ -287,7 +287,7 @@ export function AdmissionIntakeSetupEditor({ setup, onClose, onReloadLatest }: P
             </Stack>
             <IconButton
               size="small"
-              aria-label="Close admission intake setup editor"
+              aria-label="Close Admission Intake Setup Editor"
               onClick={requestClose}
               disabled={saving || reloadingLatest}
               sx={{ width: { xs: 44, sm: 36 }, height: { xs: 44, sm: 36 } }}
@@ -320,7 +320,7 @@ export function AdmissionIntakeSetupEditor({ setup, onClose, onReloadLatest }: P
                     loading={reloadingLatest}
                     onClick={reloadLatest}
                   >
-                    Reload latest
+                    Reload Latest
                   </Button>
                 }
               >
@@ -355,7 +355,7 @@ export function AdmissionIntakeSetupEditor({ setup, onClose, onReloadLatest }: P
                 completedSteps={Array.from({ length: step }, (_, index) => index)}
                 onStepClick={changeStep}
                 nextButtonLabel="Next"
-                finalButtonLabel={setup ? 'Update setup' : 'Create setup'}
+                finalButtonLabel={setup ? 'Update Setup' : 'Create Setup'}
                 disableSubmit={Boolean(
                   staleConflict ||
                   counsellors.isLoading ||
@@ -411,7 +411,7 @@ export function AdmissionIntakeSetupEditor({ setup, onClose, onReloadLatest }: P
       <ConfirmDialog
         open={confirmClose}
         onClose={() => setConfirmClose(false)}
-        title="Discard setup changes?"
+        title="Discard Setup Changes?"
         content="The information entered in this admission intake setup will be lost."
         action={
           <Button
@@ -423,7 +423,7 @@ export function AdmissionIntakeSetupEditor({ setup, onClose, onReloadLatest }: P
               onClose();
             }}
           >
-            Discard changes
+            Discard Changes
           </Button>
         }
       />
@@ -433,7 +433,7 @@ export function AdmissionIntakeSetupEditor({ setup, onClose, onReloadLatest }: P
         disableBackdropClick
         disableCancel={saving}
         icon="warning"
-        title="Update shared admission setup?"
+        title="Update Shared Admission Setup?"
         content={<SharedUpdateImpact usage={usage.data} fallbackCount={usageCount} />}
         action={
           <Button
@@ -448,7 +448,7 @@ export function AdmissionIntakeSetupEditor({ setup, onClose, onReloadLatest }: P
               setConfirmSharedUpdate(false);
             }}
           >
-            Update setup
+            Update Setup
           </Button>
         }
       />
@@ -480,9 +480,9 @@ function InquiryHandlingStep({
     <>
       <FormSectionCard
         icon="mdi:clipboard-text-outline"
-        title="Inquiry handling"
+        title="Inquiry Handling"
         titleTypographyProps={sectionTitleProps}
-        descriptionTooltip="Recommended school defaults are already filled. Change only the rules your intake needs."
+        descriptionTooltip="Recommended School Defaults Are Already Filled. Change Only the Rules Your Intake Needs."
       >
         <Stack spacing={2}>
           <ShakingTextField error={Boolean(formik.touched.name && formik.errors.name)}>
@@ -491,8 +491,8 @@ function InquiryHandlingStep({
               size="small"
               name="name"
               disabled={saving}
-              label="Setup name *"
-              placeholder="For example, General admission intake"
+              label="Setup Name *"
+              placeholder="For Example, General Admission Intake"
               value={formik.values.name}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
@@ -506,7 +506,7 @@ function InquiryHandlingStep({
                 fullWidth
                 size="small"
                 type="number"
-                label="First contact within hours"
+                label="First Contact Within Hours"
                 disabled={saving}
                 value={rules.firstContactDueInHours ?? ''}
                 onChange={(event) =>
@@ -523,7 +523,7 @@ function InquiryHandlingStep({
                 fullWidth
                 size="small"
                 type="number"
-                label="Qualify within days"
+                label="Qualify Within Days"
                 disabled={saving}
                 value={rules.qualificationDueInDays ?? ''}
                 onChange={(event) =>
@@ -540,7 +540,7 @@ function InquiryHandlingStep({
                 fullWidth
                 size="small"
                 type="number"
-                label="Follow-up after days"
+                label="Follow-Up After Days"
                 disabled={saving}
                 value={rules.followUpDueInDays}
                 onChange={(event) => setRule('followUpDueInDays', Number(event.target.value))}
@@ -552,7 +552,7 @@ function InquiryHandlingStep({
                 fullWidth
                 size="small"
                 type="number"
-                label="Maximum open follow-ups"
+                label="Maximum Open Follow-Ups"
                 disabled={saving}
                 value={rules.maxOpenFollowUps}
                 onChange={(event) => setRule('maxOpenFollowUps', Number(event.target.value))}
@@ -564,15 +564,15 @@ function InquiryHandlingStep({
       </FormSectionCard>
       <FormSectionCard
         icon="mdi:source-branch"
-        title="Inquiry sources"
+        title="Inquiry Sources"
         titleTypographyProps={sectionTitleProps}
-        descriptionTooltip="Leave allowed sources empty when every source may create an inquiry."
+        descriptionTooltip="Leave Allowed Sources Empty When Every Source May Create an Inquiry."
       >
         <Stack spacing={1}>
           <CustomSelect
             multiple
             size="small"
-            label="Allowed sources"
+            label="Allowed Sources"
             disabled={saving}
             options={INQUIRY_SOURCE_OPTIONS}
             value={rules.allowedSources}
@@ -612,9 +612,9 @@ function CounsellorRoutingStep({
   return (
     <FormSectionCard
       icon="mdi:account-switch-outline"
-      title="Counsellor routing"
+      title="Counsellor Routing"
       titleTypographyProps={sectionTitleProps}
-      descriptionTooltip="Choose who may own cases and who receives overflow when everyone reaches capacity. Capacity includes open inquiries, applications, and onboarding cases."
+      descriptionTooltip="Choose Who May Own Cases and Who Receives Overflow When Everyone Reaches Capacity. Capacity Includes Open Inquiries, Applications, and Onboarding Cases."
     >
       <Stack spacing={2}>
         {loadError && (
@@ -646,14 +646,14 @@ function CounsellorRoutingStep({
             multiple
             isSearch
             size="small"
-            label="Counsellor pool *"
+            label="Counsellor Pool *"
             options={counsellors.map((person) => ({
               value: person.id,
               label: person.name || person.userName,
             }))}
             disabled={saving || loading || loadError}
             isLoading={loading}
-            noOptionsMessage="No active admission staff found"
+            noOptionsMessage="No Active Admission Staff Found"
             value={rules.counsellorUserIds.filter((id) =>
               counsellors.some((person) => person.id === id)
             )}
@@ -685,7 +685,7 @@ function CounsellorRoutingStep({
                     )
                   }
                 >
-                  Remove unavailable
+                  Remove Unavailable
                 </Button>
               }
             >
@@ -699,7 +699,7 @@ function CounsellorRoutingStep({
               fullWidth
               size="small"
               type="number"
-              label="Maximum active cases per counsellor *"
+              label="Maximum Active Cases Per Counsellor *"
               disabled={saving}
               value={rules.maxActiveCasesPerCounsellor}
               onChange={(event) =>
@@ -713,14 +713,14 @@ function CounsellorRoutingStep({
             <ShakingTextField error={Boolean(fallbackMeta.touched && fallbackMeta.error)}>
               <CustomSelect
                 size="small"
-                label="Fallback manager *"
+                label="Fallback Manager *"
                 options={counsellors.map((person) => ({
                   value: person.id,
                   label: person.name || person.userName,
                 }))}
                 disabled={saving || loading || loadError}
                 isLoading={loading}
-                noOptionsMessage="No active admission staff found"
+                noOptionsMessage="No Active Admission Staff Found"
                 value={
                   counsellors.some((person) => person.id === rules.fallbackManagerUserId)
                     ? (rules.fallbackManagerUserId ?? '')
@@ -787,7 +787,7 @@ function ReviewStep({
           severity="warning"
           key={usageCount}
         >
-          Used by {usageCount} {usageCount === 1 ? 'Offering or link' : 'Offerings or links'}.
+          Used by {usageCount} {usageCount === 1 ? 'Offering or Link' : 'Offerings or Links'}.
           Offering-linked inquiries keep their captured policy and owner. Public inquiries without a
           confirmed Offering use the current Offering policy when staff confirm one later.
         </AdmissionIntakeNotice>
@@ -795,7 +795,7 @@ function ReviewStep({
       {editing && usage && <UsageNames usage={usage} />}
       <Box sx={{ minWidth: 0, overflowWrap: 'anywhere' }}>
         <Typography variant="body2" color="text.secondary">
-          Setup name
+          Setup Name
         </Typography>
         <Typography variant="subtitle1" component="h2">
           {values.name}
@@ -808,14 +808,14 @@ function ReviewStep({
         >
           <FormSectionCard
             icon="mdi:clipboard-text-outline"
-            title="Inquiry handling"
+            title="Inquiry Handling"
             titleTypographyProps={{ ...sectionTitleProps, id: 'intake-review-inquiry' }}
             action={
               <Button
                 size="small"
                 variant="outlined"
                 disabled={saving}
-                aria-label="Edit inquiry handling"
+                aria-label="Edit Inquiry Handling"
                 onClick={() => onEdit(0)}
                 startIcon={<Iconify icon="solar:pen-bold" />}
               >
@@ -825,7 +825,7 @@ function ReviewStep({
           >
             <Stack spacing={1.5}>
               <SummaryRow
-                label="First contact"
+                label="First Contact"
                 value={
                   values.inquiryRules.firstContactDueInHours
                     ? `Within ${values.inquiryRules.firstContactDueInHours} hours`
@@ -841,16 +841,16 @@ function ReviewStep({
                 }
               />
               <SummaryRow
-                label="Follow-up"
+                label="Follow-Up"
                 value={`Every ${values.inquiryRules.followUpDueInDays} days`}
               />
               <SummaryRow
-                label="Open follow-ups"
+                label="Open Follow-Ups"
                 value={`Up to ${values.inquiryRules.maxOpenFollowUps}`}
               />
               <Divider />
               <Typography variant="body2" color="text.secondary">
-                Allowed sources
+                Allowed Sources
               </Typography>
               <Stack direction="row" spacing={0.5} useFlexGap flexWrap="wrap">
                 {values.inquiryRules.allowedSources.length ? (
@@ -866,7 +866,7 @@ function ReviewStep({
                     />
                   ))
                 ) : (
-                  <Typography variant="body2">All sources</Typography>
+                  <Typography variant="body2">All Sources</Typography>
                 )}
               </Stack>
             </Stack>
@@ -878,14 +878,14 @@ function ReviewStep({
         >
           <FormSectionCard
             icon="mdi:account-switch-outline"
-            title="Counsellor routing"
+            title="Counsellor Routing"
             titleTypographyProps={{ ...sectionTitleProps, id: 'intake-review-routing' }}
             action={
               <Button
                 size="small"
                 variant="outlined"
                 disabled={saving}
-                aria-label="Edit counsellor routing"
+                aria-label="Edit Counsellor Routing"
                 onClick={() => onEdit(1)}
                 startIcon={<Iconify icon="solar:pen-bold" />}
               >
@@ -895,7 +895,7 @@ function ReviewStep({
           >
             <Stack spacing={1.5}>
               <Typography variant="body2" color="text.secondary">
-                Counsellor pool
+                Counsellor Pool
               </Typography>
               <Stack direction="row" spacing={0.5} useFlexGap flexWrap="wrap">
                 {assignment.counsellorUserIds.map((id) => {
@@ -906,7 +906,7 @@ function ReviewStep({
                       size="small"
                       variant="soft"
                       color="default"
-                      label={person ? person.name || person.userName : 'Unavailable counsellor'}
+                      label={person ? person.name || person.userName : 'Unavailable Counsellor'}
                       sx={{
                         maxWidth: 1,
                         height: 'auto',
@@ -922,7 +922,7 @@ function ReviewStep({
                 value={`${assignment.maxActiveCasesPerCounsellor} active cases each`}
               />
               <SummaryRow
-                label="Fallback manager"
+                label="Fallback Manager"
                 value={fallback ? fallback.name || fallback.userName : 'Unavailable'}
               />
             </Stack>
@@ -955,13 +955,13 @@ function UsageNames({ usage }: { usage: AdmissionIntakeSetupUsage }) {
     })),
     ...usage.publicInquiryLinks.map((item) => ({
       id: `link-${item.id}`,
-      label: `Public link · ${item.name}`,
+      label: `Public Link · ${item.name}`,
       active: item.isOperational,
     })),
   ];
   if (!items.length) return null;
   return (
-    <FormSectionCard icon="mdi:link-variant" title="Affected Offerings and links">
+    <FormSectionCard icon="mdi:link-variant" title="Affected Offerings and Links">
       <Stack spacing={0.75}>
         {items.map((item) => (
           <Stack key={item.id} direction="row" spacing={1} justifyContent="space-between">
@@ -986,8 +986,8 @@ function SharedUpdateImpact({
   return (
     <Stack spacing={1}>
       <Typography variant="body2">
-        This setup is used by {fallbackCount}{' '}
-        {fallbackCount === 1 ? 'Offering or link' : 'Offerings or links'}. The new rules apply to
+        This Setup Is Used By {fallbackCount}{' '}
+        {fallbackCount === 1 ? 'Offering or Link' : 'Offerings or Links'}. The new rules apply to
         future work. Public inquiries without a confirmed Offering will use the current Offering
         policy when staff confirm one.
       </Typography>

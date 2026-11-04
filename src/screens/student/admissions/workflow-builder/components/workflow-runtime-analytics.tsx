@@ -26,7 +26,7 @@ export function WorkflowRuntimeAnalytics({ analytics }: { analytics?: Analytics 
 
   return (
     <Stack spacing={1.5}>
-      <Typography variant="subtitle2">Runtime performance</Typography>
+      <Typography variant="subtitle2">Runtime Performance</Typography>
       <Box
         sx={{
           display: 'grid',
@@ -35,14 +35,14 @@ export function WorkflowRuntimeAnalytics({ analytics }: { analytics?: Analytics 
         }}
       >
         <Metric label="Started" value={analytics.startedCount} />
-        <Metric label="In progress" value={analytics.activeCount} />
+        <Metric label="In Progress" value={analytics.activeCount} />
         <Metric label="Completed" value={analytics.completedCount} />
         <Metric label="Completion" value={`${analytics.completionRatePercent}%`} />
       </Box>
       <Typography variant="caption" color="text.secondary">
-        Average journey time: {formatHours(analytics.averageCompletionHours)}
+        Average Journey Time: {formatHours(analytics.averageCompletionHours)}
       </Typography>
-      <Typography variant="subtitle2">Stage throughput</Typography>
+      <Typography variant="subtitle2">Stage Throughput</Typography>
       {analytics.stages.map((stage) => (
         <Card key={stage.definitionStageId} variant="outlined" sx={{ p: 1.5 }}>
           <Stack spacing={1}>
@@ -52,7 +52,7 @@ export function WorkflowRuntimeAnalytics({ analytics }: { analytics?: Analytics 
                   {stage.name}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {stage.code} · {stage.enteredCount} entered
+                  {stage.code} · {stage.enteredCount} Entered
                 </Typography>
               </Box>
               <Typography variant="body2" fontWeight={600}>
@@ -62,29 +62,29 @@ export function WorkflowRuntimeAnalytics({ analytics }: { analytics?: Analytics 
             <LinearProgress
               variant="determinate"
               value={Math.min(100, Math.max(0, stage.completionRatePercent))}
-              aria-label={`${stage.name} completion rate`}
+              aria-label={`${stage.name} Completion Rate`}
             />
             <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
               <Typography variant="caption" color="text.secondary">
-                {stage.activeCount} active
+                {stage.activeCount} Active
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                {stage.completedCount} completed
+                {stage.completedCount} Completed
               </Typography>
               {stage.skippedCount > 0 && (
                 <Typography variant="caption" color="text.secondary">
-                  {stage.skippedCount} skipped
+                  {stage.skippedCount} Skipped
                 </Typography>
               )}
             </Stack>
             <Typography variant="caption" color="text.secondary">
-              Average stage time: {formatHours(stage.averageDurationHours)}
+              Average Stage Time: {formatHours(stage.averageDurationHours)}
             </Typography>
             {stage.oldestActiveEnteredAt && (
               <Stack direction="row" spacing={0.5} alignItems="center">
                 <Iconify icon="mdi:clock-alert-outline" color="warning.main" width={16} />
                 <Typography variant="caption" color="text.secondary">
-                  Oldest active since {formatWorkflowDateTime(stage.oldestActiveEnteredAt)}
+                  Oldest Active Since {formatWorkflowDateTime(stage.oldestActiveEnteredAt)}
                 </Typography>
               </Stack>
             )}

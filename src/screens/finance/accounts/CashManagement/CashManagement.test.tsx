@@ -42,7 +42,13 @@ vi.mock('src/redux/finance/cashManagementApi', () => ({
       currentData: {
         availableCash: 5329,
         yearSummary: { collected: 8429, spent: 3100, deposited: 0, remaining: 5329 },
-        summary: { collected: 0, spent: 0, deposited: 0, remaining: 0 },
+        summary: { collected: 9999, spent: 8888, deposited: 7777, remaining: 0 },
+        activitySummary:
+          args.month === undefined
+            ? { collected: 8429, spent: 3100, deposited: 0, remaining: 5329 }
+            : args.month === 6
+              ? { collected: 50, spent: 10, deposited: 20, remaining: 20 }
+              : { collected: 1234, spent: 200, deposited: 100, remaining: 934 },
         items: [{ id: 'cash', reference: 'CASH-001', status: 0, canApprove: true }],
         totalCount: 1,
         statusCounts: { all: 1, pending: 1, approved: 0 },
@@ -201,7 +207,7 @@ it('shows board medium and academic month filters without statuses or row action
 it('deposits the academic year balance independently of display filters', () => {
   state.url = 'boardId=board&mediumId=medium&month=2026-10&page=3';
   setup();
-  expect(screen.getByText(/8,429/)).toBeInTheDocument();
+  expect(screen.getByText(/1,234/)).toBeInTheDocument();
   expect(state.query).toHaveBeenLastCalledWith(
     expect.objectContaining({
       academicYearId: 'year',
@@ -219,6 +225,31 @@ it('deposits the academic year balance independently of display filters', () => 
   expect(screen.getByRole('dialog')).toHaveTextContent('Deposit year: 5329');
   expect(screen.queryByText('Cash details cash')).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: /reject/i })).not.toBeInTheDocument();
+});
+it('updates activity metrics when the selected month changes while keeping available cash cumulative', () => {
+  state.url = 'month=2026-10';
+  setup();
+  const metric = (label: string) => screen.getByText(label).parentElement!;
+  expect(metric('Collected')).toHaveTextContent('1,234');
+  expect(metric('Spent')).toHaveTextContent('200');
+  expect(metric('Deposited')).toHaveTextContent('100');
+  expect(metric('Academic-year cash available')).toHaveTextContent('5,329');
+
+  fireEvent.change(screen.getByRole('combobox', { name: 'Month' }), {
+    target: { value: '2026-06' },
+  });
+  expect(metric('Collected')).toHaveTextContent('50');
+  expect(metric('Spent')).toHaveTextContent('10');
+  expect(metric('Deposited')).toHaveTextContent('20');
+  expect(metric('Academic-year cash available')).toHaveTextContent('5,329');
+
+  fireEvent.change(screen.getByRole('combobox', { name: 'Month' }), {
+    target: { value: 'all' },
+  });
+  expect(metric('Collected')).toHaveTextContent('8,429');
+  expect(metric('Spent')).toHaveTextContent('3,100');
+  expect(metric('Deposited')).toHaveTextContent('0');
+  expect(metric('Academic-year cash available')).toHaveTextContent('5,329');
 });
 it('preserves a linked page when the table hydrates the same search term', () => {
   state.url = 'page=3&search=receipt';

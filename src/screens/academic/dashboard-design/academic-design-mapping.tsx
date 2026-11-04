@@ -1,5 +1,6 @@
 import type { AcademicInsightsSection } from 'src/redux/academicAPI/academicInsightsTypes';
 
+import { alpha } from '@mui/material/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Box, Stack, Typography } from '@mui/material';
@@ -20,14 +21,16 @@ export function AcademicDesignMapping({ section }: { section: AcademicInsightsSe
     <Box component="ul" aria-label="Class teacher mapping" sx={{ m: 0, p: 0, listStyle: 'none',
       display: 'grid', gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', sm: 'repeat(3, minmax(0, 1fr))' }, gap: 1 }}>
       {preview.map((point) => <Stack component="li" direction="row" alignItems="center" gap={1} key={point.key}
-        sx={{ p: 1, minWidth: 0, borderRadius: 0.75, border: '1px solid',
-          borderColor: point.status === 'mapped' ? 'primary.dark' : 'divider',
-          bgcolor: point.status === 'mapped' ? 'primary.dark' : 'background.neutral',
-          color: point.status === 'mapped' ? 'common.white' : 'text.primary' }}>
-        <Iconify icon={point.status === 'mapped' ? GlobalIcons.tick : GlobalIcons.family} width={20} sx={{ flexShrink: 0 }} aria-hidden />
+        sx={(theme) => ({ p: 1, minWidth: 0, borderRadius: 0.75, border: '1px solid',
+          borderColor: point.status === 'mapped' ? alpha(theme.palette.primary.main, 0.24) : 'divider',
+          bgcolor: point.status === 'mapped' ? alpha(theme.palette.primary.main, 0.1) : 'background.neutral',
+          color: 'text.primary' })}>
+        <Iconify icon={point.status === 'mapped' ? GlobalIcons.tick : GlobalIcons.family} width={20}
+          sx={(theme) => ({ flexShrink: 0, color: point.status === 'mapped' ? 'primary.dark' : 'text.secondary',
+            ...theme.applyStyles('dark', { color: point.status === 'mapped' ? 'primary.light' : 'text.secondary' }) })} aria-hidden />
         <Box sx={{ minWidth: 0 }}>
           <Typography variant="body2" sx={{ fontWeight: 600, overflowWrap: 'anywhere' }}>{point.label}</Typography>
-          <Typography variant="caption">{point.status === 'mapped' ? 'Teacher assigned' : point.status === 'unmapped' ? 'No class teacher' : 'Status unavailable'}</Typography>
+          <Typography variant="caption" color="text.secondary">{point.status === 'mapped' ? 'Teacher assigned' : point.status === 'unmapped' ? 'No class teacher' : 'Status unavailable'}</Typography>
         </Box>
       </Stack>)}
     </Box>

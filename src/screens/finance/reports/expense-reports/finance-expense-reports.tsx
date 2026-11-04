@@ -64,8 +64,8 @@ const FinanceExpenseReports = () => {
     { id: 'dateOfExpense', label: 'Date Of Expense' },
     { id: 'expenseCategory', label: 'Expense Category' },
     { id: 'description', label: 'Description' },
-    { id: 'amountSpent', label: 'Amount Spent' },
-    { id: 'pendingAmount', label: 'Pending Amount' },
+    { cellSx: { textAlign: 'right' as const }, id: 'amountSpent', label: 'Amount Spent' },
+    { cellSx: { textAlign: 'right' as const }, id: 'pendingAmount', label: 'Pending Amount' },
     { id: 'paymentDueDate', label: 'Payment Due Date' },
     { id: 'status', label: 'Status' },
   ];
@@ -104,7 +104,7 @@ const FinanceExpenseReports = () => {
 
   const pendigDatacolumns: any = [
     { id: 'expenseCategory', label: 'Expense Category' },
-    { id: 'pendingAmount', label: 'Pending Amount' },
+    { cellSx: { textAlign: 'right' as const }, id: 'pendingAmount', label: 'Pending Amount' },
     { id: 'paymentDueDate', label: 'Payment Due Date' },
     { id: 'daysOverDue', label: 'Days Over Due' },
   ];
@@ -334,7 +334,8 @@ const FinanceExpenseReports = () => {
         Generate Reports
       </Typography>
 
-      <CustomizableTable columns={columns} data={expenseData} tableId="expense-reports" />
+      <CustomizableTable columns={columns} data={expenseData} tableId="expense-reports"
+        searchFieldProps={{ placeholder: 'Search' }} />
       <Typography variant="h6" sx={{ pt: '15px', pb: '15px' }}>
         Pending Payments
       </Typography>
@@ -342,6 +343,7 @@ const FinanceExpenseReports = () => {
         columns={pendigDatacolumns}
         data={pendingData}
         tableId="pending-payments"
+        searchFieldProps={{ placeholder: 'Search' }}
       />
 
       <Box py="15px" gap={1} display="flex" justifyContent="flex-end">

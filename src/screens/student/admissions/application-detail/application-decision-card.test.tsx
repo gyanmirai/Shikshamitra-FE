@@ -197,7 +197,7 @@ it('releases preparation loading and offers retry if the workflow cannot complet
       />
     </ThemeProvider>
   );
-  fireEvent.click(screen.getByRole('button', { name: 'Finalize admission' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Finalize Admission' }));
   expect(await screen.findByRole('button', { name: 'Retry finalization' })).toBeEnabled();
   expect(screen.queryByRole('status')).not.toBeInTheDocument();
   expect(prepare).toHaveBeenCalledOnce();
@@ -215,7 +215,7 @@ it('uses authoritative workflow completion to recover from a lost preparation re
       />
     </ThemeProvider>
   );
-  fireEvent.click(screen.getByRole('button', { name: 'Finalize admission' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Finalize Admission' }));
   expect(await screen.findByRole('button', { name: 'Retry finalization' })).toBeVisible();
   view.rerender(
     <ThemeProvider theme={createTheme()}>
@@ -235,13 +235,13 @@ it('uses authoritative workflow completion to recover from a lost preparation re
 it('keeps compact decisions actionable while disclosing history on request', async () => {
   panel();
   expect(
-    screen.getByText('Review the application, then choose Approve, Waitlist, or Reject.')
+    screen.getByText('Review the Application, Then Choose Approve, Waitlist, or Reject.')
   ).toBeVisible();
-  expect(screen.getAllByRole('heading', { name: 'Admission decision' })).toHaveLength(1);
+  expect(screen.getAllByRole('heading', { name: 'Admission Decision' })).toHaveLength(1);
   expect(screen.getByRole('button', { name: 'Approve' })).toBeEnabled();
   expect(screen.getByRole('button', { name: 'Waitlist' })).toBeEnabled();
   expect(screen.getByText(/Verified documents/)).not.toBeVisible();
-  fireEvent.click(screen.getByRole('button', { name: 'Decision history' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Decision History' }));
   await waitFor(() => expect(screen.getByText(/Verified documents/)).toBeVisible());
   fireEvent.click(screen.getByRole('button', { name: 'Reject' }));
   expect(screen.getByRole('dialog')).toHaveTextContent('Decision reject');
@@ -260,7 +260,7 @@ it('preserves role and busy guards in compact mode', () => {
 
 it('preserves finalization and the durable Onboarding handoff', () => {
   const { unmount } = panel(6, true);
-  expect(screen.getByRole('button', { name: 'Finalize admission' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: 'Finalize Admission' })).toBeEnabled();
   unmount();
   panel(11, true);
   expect(screen.getByRole('link', { name: 'Continue onboarding' })).toHaveAttribute(
@@ -317,12 +317,12 @@ it('opens full-page finalization and restores journey actions on cancel and unmo
       />
     </ThemeProvider>
   );
-  fireEvent.click(screen.getByRole('button', { name: 'Finalize admission' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Finalize Admission' }));
   expect(screen.getByRole('region', { name: 'Finalization inline' })).toBeVisible();
   expect(onFinalizationOpenChange).toHaveBeenLastCalledWith(true);
-  expect(screen.queryByText('Record decision')).not.toBeInTheDocument();
+  expect(screen.queryByText('Record Decision')).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Return to decision' }));
-  expect(screen.getByText('Record decision')).toBeVisible();
+  expect(screen.getByText('Record Decision')).toBeVisible();
   expect(onFinalizationOpenChange).toHaveBeenLastCalledWith(false);
   view.unmount();
   expect(onFinalizationOpenChange).toHaveBeenLastCalledWith(false);
@@ -341,7 +341,7 @@ it('replaces inline finalization with the persisted summary and unlocks navigati
     </ThemeProvider>
   );
   const view = render(element(6));
-  fireEvent.click(screen.getByRole('button', { name: 'Finalize admission' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Finalize Admission' }));
   expect(onFinalizationOpenChange).toHaveBeenLastCalledWith(true);
   view.rerender(element(11));
   expect(screen.queryByRole('region', { name: 'Finalization inline' })).not.toBeInTheDocument();

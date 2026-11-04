@@ -63,20 +63,20 @@ export function ApplicationWorkspaceActions({
     </CustomTooltip>
   );
   return (
-    <Stack direction="row" spacing={0.75} alignItems="center" aria-label="Applicant actions">
-      {canViewActivity && action('Notes & Follow-ups', 'mdi:note-text-outline', onActivity)}
+    <Stack direction="row" spacing={0.75} alignItems="center" aria-label="Applicant Actions">
+      {canViewActivity && action('Notes & Follow-Ups', 'mdi:note-text-outline', onActivity)}
       {action('Application History', 'mdi:history', onHistory, undefined, historySelected)}
-      {action('Admission journey', 'mdi:chart-timeline-variant', onJourney, journeyOpen)}
+      {action('Admission Journey', 'mdi:chart-timeline-variant', onJourney, journeyOpen)}
       {onFocus &&
         action(
-          focused ? 'Exit focus mode' : 'Focus mode',
+          focused ? 'Exit Focus Mode' : 'Focus Mode',
           focused ? 'mdi:arrow-collapse' : 'mdi:arrow-expand',
           onFocus,
           undefined,
           focused
         )}
       <Divider orientation="vertical" flexItem />
-      {action('Close application', 'mdi:close', onClose, undefined, undefined, closeDisabled)}
+      {action('Close Application', 'mdi:close', onClose, undefined, undefined, closeDisabled)}
     </Stack>
   );
 }

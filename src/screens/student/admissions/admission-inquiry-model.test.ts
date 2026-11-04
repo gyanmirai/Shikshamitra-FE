@@ -97,7 +97,7 @@ describe('admission inquiry model', () => {
       expect(getAdmissionInquiryIdentityErrors(payload, configured, draft)).toEqual({
         fieldErrors: {},
         message:
-          'This inquiry form is missing linked fields: Parent / Guardian name. Update its field mappings in Admissions Settings.',
+          'This inquiry form is missing linked fields: Parent / Guardian Name. Update its field mappings in Admissions Settings.',
       });
     }
   );
@@ -112,7 +112,7 @@ describe('admission inquiry model', () => {
     expect(payload.applicantName).toBe('');
     expect(payload.formValues).toContainEqual({ fieldCode: 'FIELD_1', valueJson: '"Riya Shah"' });
     expect(getAdmissionInquiryIdentityErrors(payload, configured, draft).message).toBe(
-      'This inquiry form is missing linked fields: Student name, Parent / Guardian name. Update its field mappings in Admissions Settings.'
+      'This inquiry form is missing linked fields: Student Name, Parent / Guardian Name. Update its field mappings in Admissions Settings.'
     );
   });
 
@@ -149,9 +149,9 @@ describe('admission inquiry model', () => {
       )
     ).toEqual({
       fieldErrors: {
-        CHILD: 'CHILD is required to create an inquiry.',
-        ADULT: 'ADULT is required to create an inquiry.',
-        PHONE: 'PHONE is required to create an inquiry.',
+        CHILD: 'CHILD is required.',
+        ADULT: 'ADULT is required.',
+        PHONE: 'PHONE is required.',
       },
       message: '',
     });
@@ -316,7 +316,7 @@ describe('admission inquiry model', () => {
     expect(getAdmissionInquiryVisibleSections(sections, visible)).toHaveLength(1);
     expect(
       validateAdmissionInquiry(visible, getAdmissionInquiryFields(form), null, offering)
-    ).toMatchObject({ fields: { STEP_REQUIRED: 'STEP_REQUIRED is required' } });
+    ).toMatchObject({ fields: { STEP_REQUIRED: 'STEP_REQUIRED is required.' } });
   });
 
   it('preserves the saved primary contact when another parent is the only configured complete pair in an old form', () => {
@@ -593,7 +593,7 @@ describe('admission inquiry model', () => {
       },
     };
     expect(validateAdmissionInquiry(draft, parentFields, null, offering)).toMatchObject({
-      fields: { MOM_PHONE: 'MOM_PHONE is required' },
+      fields: { MOM_PHONE: 'MOM_PHONE is required.' },
     });
   });
 
@@ -834,7 +834,7 @@ describe('admission inquiry model', () => {
 
     expect(errors).toMatchObject({
       fields: {
-        GUARDIAN_MOBILE: 'Parent mobile number must be a valid 10-digit Indian mobile number.',
+        GUARDIAN_MOBILE: 'GUARDIAN_MOBILE must be a valid 10-digit Indian mobile number.',
       },
     });
   });
@@ -918,7 +918,7 @@ describe('admission inquiry model', () => {
     );
 
     expect(errors.offeringId).toBe('Offering is required');
-    expect(errors.fields).toEqual({ GENDER: 'GENDER is required' });
+    expect(errors.fields).toEqual({ GENDER: 'GENDER is required.' });
   });
 
   it('requires a preferred class to match the selected offering', () => {

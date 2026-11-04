@@ -1,6 +1,6 @@
 import type { Board } from 'src/types/school';
 
-import { boardType, organizationType } from 'src/redux/tagTypes';
+import { boardType, organizationType, academicCalendarType } from 'src/redux/tagTypes';
 
 import { api } from '../service';
 
@@ -38,7 +38,14 @@ export const boardApi = api.injectEndpoints({
         method: 'PUT',
         body,
       }),
-      invalidatesTags: [boardType.board, organizationType.academicOrganizationOptions],
+      invalidatesTags: [
+        boardType.board,
+        organizationType.academicOrganizationOptions,
+        academicCalendarType.calendar,
+        academicCalendarType.calendarDay,
+        academicCalendarType.checkDate,
+        academicCalendarType.auditLog,
+      ],
     }),
     deleteBoard: builder.mutation({
       query: (id) => ({

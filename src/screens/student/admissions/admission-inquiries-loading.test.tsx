@@ -107,7 +107,7 @@ it('never renders the empty result during scope restoration or before the first 
   const view = render(<AdmissionInquiriesScreen />);
   expect(state.query).toHaveBeenLastCalledWith({ skip: true });
   expect(screen.getByRole('status')).toHaveTextContent('Inquiry skeleton');
-  expect(screen.queryByText('No inquiries awaiting admission handoff')).not.toBeInTheDocument();
+  expect(screen.queryByText('No Inquiries Awaiting Admission Handoff')).not.toBeInTheDocument();
   Object.assign(state, { board: 'board', medium: 'medium', scopeLoading: false, fetching: true });
   view.rerender(<AdmissionInquiriesScreen />);
   expect(state.table.isLoading).toBe(true);
@@ -134,7 +134,7 @@ it('keeps safe rows visible on refetch and handoff progress visible after the mo
   state.fetching = false;
   view.rerender(<AdmissionInquiriesScreen />);
   expect(
-    screen.getByRole('progressbar', { name: 'Moving inquiry to the next stage' })
+    screen.getByRole('progressbar', { name: 'Moving Inquiry to the Next Stage' })
   ).toBeInTheDocument();
 });
 
@@ -146,15 +146,15 @@ it('distinguishes successful empty, failed and unavailable-scope results from in
     data: { items: [], totalCount: 0 },
   });
   const view = render(<AdmissionInquiriesScreen />);
-  expect(screen.getByText('No inquiries awaiting admission handoff')).toBeInTheDocument();
+  expect(screen.getByText('No Inquiries Awaiting Admission Handoff')).toBeInTheDocument();
   state.error = true;
   view.rerender(<AdmissionInquiriesScreen />);
   expect(screen.getByRole('alert')).toBeInTheDocument();
-  expect(screen.queryByText('No inquiries awaiting admission handoff')).not.toBeInTheDocument();
+  expect(screen.queryByText('No Inquiries Awaiting Admission Handoff')).not.toBeInTheDocument();
   Object.assign(state, { error: false, board: '', medium: '', data: undefined });
   view.rerender(<AdmissionInquiriesScreen />);
   expect(screen.queryByRole('status')).not.toBeInTheDocument();
-  expect(screen.getByText(/Select an available academic year/)).toBeInTheDocument();
+  expect(screen.getByText(/Select an Available Academic Year/)).toBeInTheDocument();
 });
 
 it('preserves same-scope rows and the table when a refresh fails', () => {

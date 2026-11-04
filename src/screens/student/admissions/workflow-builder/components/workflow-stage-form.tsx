@@ -29,7 +29,7 @@ export function WorkflowStageForm({ formik, forms, formDefinitionId, readOnly }:
         select
         fullWidth
         size="small"
-        label="Published form version *"
+        label="Published Form Version *"
         disabled={readOnly}
         value={
           registrationForms.some((form) => form.id === formDefinitionId) ? formDefinitionId : ''

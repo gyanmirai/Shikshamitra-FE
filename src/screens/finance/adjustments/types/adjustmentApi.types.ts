@@ -56,6 +56,7 @@ export interface AdjustmentEligibilityDto {
 
 export interface FeeAdjustmentApplicationItemDto {
   id: string;
+  requestedByUserId?: string | null;
   studentId: string;
   studentName: string;
   grNumber: string;

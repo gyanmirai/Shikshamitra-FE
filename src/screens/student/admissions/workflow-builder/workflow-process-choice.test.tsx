@@ -88,7 +88,7 @@ describe('workflow process cards', () => {
     expect(screen.getByRole('radio', { name: 'Complete manually' })).not.toBeChecked();
     await user.click(screen.getByRole('radio', { name: 'Schedule an entrance exam' }));
     expect(onChange).toHaveBeenLastCalledWith('scheduled');
-    expect(screen.queryByRole('button', { name: /information/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Information/ })).not.toBeInTheDocument();
   });
 
   it('uses one Tab stop and supports arrow, Home and End selection with wrapping', async () => {

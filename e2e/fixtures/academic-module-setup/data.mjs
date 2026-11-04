@@ -15,6 +15,8 @@ export const year = {
 export const standard = {
   id: ids.standard,
   name: 'Class 6',
+  shiftId: '77777777-7777-4777-8777-777777777777',
+  shift: { shiftName: 'Afternoon shift', startTime: '12:00:00', endTime: '17:30:00' },
   ageLowerLimit: 11,
   educationMediumStageId: ids.stage,
   divisions: [{ id: ids.division, name: 'A', standardId: ids.standard, strength: 30 }],

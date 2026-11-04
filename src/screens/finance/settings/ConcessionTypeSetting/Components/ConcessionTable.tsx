@@ -290,6 +290,7 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
         searchTerm={searchTerm}
         onServerPagination={onServerPagination}
         onServerSearch={onServerSearch}
+        searchFieldProps={{ placeholder: 'Search' }}
       />
       <ConfirmDialog
         open={statusConfirm.value}

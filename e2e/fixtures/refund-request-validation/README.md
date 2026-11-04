@@ -20,6 +20,14 @@ the wrapping header, contained installment scrolling and accessible actions.
 This validates client behavior with deterministic data; it does not claim live policy, payment,
 backend authorization or payout integration coverage.
 
+Eligibility deliberately contains the deprecated `allowPartialRefund: false` flag and six paid
+allocations across two heads and three receipts. Both Full and Partial must remain available.
+Select July and August under FH1 and September under FH2: all remaining eligible checkboxes
+stay enabled. Enter ₹700 on each selected row and a reason; review shows ₹2,100 and all three
+receipt numbers. **Keep editing** preserves the draft without submitting. The administrator's
+**Submit and pay cash** action returns a synthetic Completed result, and **Submitted refund
+payload** exposes the three distinct per-line `sourceReceiptId` values for inspection.
+
 **View synthetic refund request** opens the production read-only drawer. Its synthetic completed
 refund includes a ₹10,829 fee-head amount and every policy payment method, covering neutral
 refund amounts, metadata grid alignment, full-width payment-method wrapping and contained table scrolling.

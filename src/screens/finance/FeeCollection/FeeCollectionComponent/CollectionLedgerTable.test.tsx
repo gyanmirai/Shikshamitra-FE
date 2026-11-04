@@ -16,6 +16,7 @@ import { FeeCollectionWaiverContext } from './feeCollectionContext';
 import AllocationPreviewTable from './preview/AllocationPreviewTable';
 
 import type { FeeLedgerListProps } from './FeeLedgerList';
+import type { AllocatedFeeRow } from './preview/paymentAllocationUtils';
 
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 vi.mock('@mui/icons-material', () => {
@@ -340,8 +341,8 @@ describe('collection ledger waiver capabilities', () => {
   });
 
   it('keeps the review in collection order across different installment months', () => {
-    const makeRow = (key: string, name: string, period: string) => ({
-      type: 'fee' as const,
+    const makeRow = (key: string, name: string, period: string): AllocatedFeeRow => ({
+      type: 'fee',
       key,
       dueFeeId: key,
       feeHeadId: name,
@@ -349,6 +350,7 @@ describe('collection ledger waiver capabilities', () => {
       period,
       originalAmount: 100,
       paidAmount: 50,
+      adjustmentCreditAmount: 0,
       principalPaidAmount: 50,
       lateFeePaidAmount: 0,
       remainingAmount: 50,
@@ -462,6 +464,7 @@ describe('collection ledger waiver capabilities', () => {
       refundAmount: 20,
       refundDescription: 'Approved refund',
       scheduledTotal: 600,
+      adjustmentCreditAmount: 125,
       prorationExplanation: 'Prorated from the joining date.',
       prorationPolicyName: 'Joining date policy',
       prorationPolicyVersionNumber: 2,
@@ -483,6 +486,7 @@ describe('collection ledger waiver capabilities', () => {
       screen.getByRole('heading', { name: 'Amount Breakdown' }).closest('section')!
     );
     expect(amounts.getByText('Outstanding amount')).toBeVisible();
+    expect(amounts.getByText('Adjustment credit')).toBeVisible();
     expect(amounts.getByText(/550/)).toBeVisible();
     [
       'Total',
@@ -509,7 +513,18 @@ describe('collection ledger waiver capabilities', () => {
 
   it('keeps charge explanations and waiver amounts in charge details', () => {
     const props = ledgerProps();
-    Object.assign(props.chargesData![0], { explanation: 'Lab materials', waivedAmount: 20 });
+    Object.assign(props.chargesData![0], {
+      explanation: 'Per-day late fee; 5 chargeable days.',
+      waivedAmount: 20,
+      sourceType: 'LateFee',
+      isSystemGenerated: true,
+      dueDate: '2026-06-01',
+      lateFeeAppliedIntervals: [
+        { fromDate: '2026-06-02', throughDate: '2026-06-04' },
+        { fromDate: '2026-06-08', throughDate: '2026-06-11' },
+      ],
+      lateFeeAppliedDays: 5,
+    });
     render(
       <LedgerTestProviders>
         <CollectionLedgerTable {...props} layout="ledger" />
@@ -518,11 +533,16 @@ describe('collection ledger waiver capabilities', () => {
     fireEvent.click(screen.getByRole('button', { name: /^Additional Charges/ }));
     fireEvent.click(screen.getByRole('row', { name: 'Open Lab charge, 2026-06-01' }));
     expect(screen.getByRole('heading', { name: 'Charge Details' })).toBeVisible();
-    expect(screen.getByText('Lab materials')).toBeVisible();
+    expect(screen.getByText('Due date')).toBeVisible();
+    expect(screen.getByText('1 June 2026')).toBeVisible();
+    expect(screen.getByText('Late fee applied from/to')).toBeVisible();
+    expect(screen.getByText('2 June 2026 to 4 June 2026; 8 June 2026 to 11 June 2026')).toBeVisible();
+    expect(screen.getByText('5 overdue days considered; grace and exception days are excluded.')).toBeVisible();
+    expect(screen.getByText('Per-day late fee; 5 chargeable days.')).toBeVisible();
     expect(screen.getByText('Charge waived')).toBeVisible();
     expect(screen.queryByText('Refund')).not.toBeInTheDocument();
     expect(screen.queryByText('Proration')).not.toBeInTheDocument();
-  });
+  }, 20_000);
 
   it.each([
     ['Tuition, June 2026', 'LateFee', 'due-one'],

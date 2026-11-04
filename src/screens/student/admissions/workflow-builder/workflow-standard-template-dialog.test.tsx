@@ -56,11 +56,11 @@ describe('manual workflow template drawer', () => {
     expect(screen.getAllByRole('radio')).toHaveLength(1);
     expect(screen.getByRole('radio', { name: /Standard admission/ })).toBeChecked();
     expect(screen.queryByRole('radio', { name: /Post-Inquiry Admission/ })).toBeNull();
-    await user.click(screen.getByRole('button', { name: 'Preview selected journey' }));
-    expect(screen.queryByText('Inquiry submitted')).toBeNull();
+    await user.click(screen.getByRole('button', { name: 'Preview Selected Journey' }));
+    expect(screen.queryByText('Inquiry Submitted')).toBeNull();
     expect(screen.getByText('1. Entrance assessment')).toBeVisible();
     expect(screen.getByText('5. Admission finalization')).toBeVisible();
-    await user.click(screen.getByRole('button', { name: 'Replace journey' }));
+    await user.click(screen.getByRole('button', { name: 'Replace Journey' }));
     expect(props.onApply).toHaveBeenCalledWith('standard', 'registration-form', 'inquiry-form');
   });
 
@@ -72,12 +72,12 @@ describe('manual workflow template drawer', () => {
     expect(
       screen.queryByText(/Registration is attached to the Form stage/)
     ).not.toBeInTheDocument();
-    await user.hover(screen.getByRole('button', { name: 'Workflow template information' }));
+    await user.hover(screen.getByRole('button', { name: 'Workflow Template Information' }));
     expect(await screen.findByRole('tooltip')).toHaveTextContent(
-      'Replace this draft’s journey and select the published forms it uses.'
+      'Replace This Draft’s Journey and Select the Published Forms It Uses.'
     );
-    await user.unhover(screen.getByRole('button', { name: 'Workflow template information' }));
-    await user.click(screen.getByRole('button', { name: 'Preview selected journey' }));
+    await user.unhover(screen.getByRole('button', { name: 'Workflow Template Information' }));
+    await user.click(screen.getByRole('button', { name: 'Preview Selected Journey' }));
     expect(screen.getByText('1. Entrance assessment')).toBeVisible();
     expect(screen.getByText('2. Admission form')).toBeVisible();
     expect(screen.getAllByRole('radio')).toHaveLength(1);
@@ -86,10 +86,10 @@ describe('manual workflow template drawer', () => {
   it('shows the forms already attached to the workflow', async () => {
     renderDrawer(true);
 
-    expect(screen.getByRole('combobox', { name: 'Published inquiry form (optional)' })).toHaveValue(
+    expect(screen.getByRole('combobox', { name: 'Published Inquiry Form (Optional)' })).toHaveValue(
       'Parent inquiry · v2'
     );
-    expect(screen.getByRole('combobox', { name: 'Published registration form *' })).toHaveValue(
+    expect(screen.getByRole('combobox', { name: 'Published Registration Form *' })).toHaveValue(
       'Student registration · v3'
     );
   });
@@ -100,9 +100,9 @@ describe('manual workflow template drawer', () => {
 
     expect(document.querySelector('.MuiDrawer-paperAnchorRight')).toBeInTheDocument();
     await user.click(screen.getByRole('radio', { name: /Standard admission/ }));
-    await selectForm(user, 'Published inquiry form (optional)', 'Parent inquiry · v2');
-    await selectForm(user, 'Published registration form *', 'Student registration · v3');
-    await user.click(screen.getByRole('button', { name: 'Replace journey' }));
+    await selectForm(user, 'Published Inquiry Form (Optional)', 'Parent inquiry · v2');
+    await selectForm(user, 'Published Registration Form *', 'Student registration · v3');
+    await user.click(screen.getByRole('button', { name: 'Replace Journey' }));
 
     await waitFor(() =>
       expect(props.onApply).toHaveBeenCalledWith('standard', 'registration-form', 'inquiry-form')
@@ -114,15 +114,15 @@ describe('manual workflow template drawer', () => {
     const user = userEvent.setup();
     const props = renderDrawer();
 
-    await user.click(screen.getByRole('button', { name: 'Replace journey' }));
+    await user.click(screen.getByRole('button', { name: 'Replace Journey' }));
     expect(await screen.findByText('Select a published registration form')).toBeInTheDocument();
     expect(props.onApply).not.toHaveBeenCalled();
 
-    await selectForm(user, 'Published inquiry form (optional)', 'Parent inquiry · v2');
+    await selectForm(user, 'Published Inquiry Form (Optional)', 'Parent inquiry · v2');
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
-    expect(screen.getByText('Discard template selections?')).toBeInTheDocument();
+    expect(screen.getByText('Discard Template Selections?')).toBeInTheDocument();
     expect(props.onClose).not.toHaveBeenCalled();
-    await user.click(screen.getByRole('button', { name: 'Discard selections' }));
+    await user.click(screen.getByRole('button', { name: 'Discard Selections' }));
     expect(props.onClose).toHaveBeenCalledOnce();
   });
 
@@ -130,12 +130,12 @@ describe('manual workflow template drawer', () => {
     const user = userEvent.setup();
     const props = renderDrawer();
 
-    expect(screen.getByRole('button', { name: 'Workflow template information' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Workflow Template Information' })).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Dismiss template replacement warning' }));
     expect(
       screen.queryByText(/This replaces the current stages and routes/)
     ).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Replace journey' }));
+    await user.click(screen.getByRole('button', { name: 'Replace Journey' }));
     expect(await screen.findByText('Select a published registration form')).toBeInTheDocument();
     expect(props.onApply).not.toHaveBeenCalled();
     expect(props.onClose).not.toHaveBeenCalled();

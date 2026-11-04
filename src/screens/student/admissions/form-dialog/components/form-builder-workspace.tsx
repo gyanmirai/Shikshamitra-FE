@@ -43,12 +43,12 @@ export function FormBuilderWorkspace({ panel, onPanelChange, fields, form, child
         value={panel}
         onChange={(_, value: 'fields' | 'form') => onPanelChange(value)}
         variant="fullWidth"
-        aria-label="Form builder workspace"
+        aria-label="Form Builder Workspace"
         sx={{ display: { lg: 'none' }, bgcolor: 'background.paper' }}
       >
         <Tab
           value="fields"
-          label="Student fields"
+          label="Student Fields"
           icon={<Iconify icon="mdi:account-details-outline" width={18} />}
           iconPosition="start"
           id="builder-tab-fields"
@@ -56,7 +56,7 @@ export function FormBuilderWorkspace({ panel, onPanelChange, fields, form, child
         />
         <Tab
           value="form"
-          label="Your form"
+          label="Your Form"
           icon={<Iconify icon="mdi:form-select" width={18} />}
           iconPosition="start"
           id="builder-tab-form"
@@ -84,7 +84,7 @@ export function FormBuilderWorkspace({ panel, onPanelChange, fields, form, child
           role={desktop ? 'region' : 'tabpanel'}
           tabIndex={desktop ? undefined : -1}
           aria-labelledby={desktop ? undefined : 'builder-tab-fields'}
-          aria-label={desktop ? 'Student fields' : undefined}
+          aria-label={desktop ? 'Student Fields' : undefined}
           sx={{
             display: { xs: panel === 'fields' ? 'flex' : 'none', lg: 'flex' },
             flexDirection: 'column',
@@ -104,7 +104,7 @@ export function FormBuilderWorkspace({ panel, onPanelChange, fields, form, child
           role={desktop ? 'region' : 'tabpanel'}
           tabIndex={desktop ? undefined : -1}
           aria-labelledby={desktop ? undefined : 'builder-tab-form'}
-          aria-label={desktop ? 'Your form' : undefined}
+          aria-label={desktop ? 'Your Form' : undefined}
           sx={{
             display: { xs: panel === 'form' ? 'flex' : 'none', lg: 'flex' },
             flexDirection: 'column',

@@ -49,13 +49,13 @@ export function WorkflowStagePosition({
 }) {
   const options = insertionStages(stages);
   const beforeFinal = options.length > 0 && options.every((stage) => stage.isTerminalStage);
-  const label = beforeFinal ? 'Insert before *' : 'Insert after *';
+  const label = beforeFinal ? 'Insert Before *' : 'Insert After *';
   return (
     <Box sx={{ px: 2, pt: 2 }}>
       <FormSectionCard
         title="Journey Position"
         icon="mdi:source-branch"
-        descriptionTooltip="The stage is inserted at this position and the usual path is connected automatically. Existing special paths are preserved."
+        descriptionTooltip="The Stage Is Inserted at This Position and the Usual Path Is Connected Automatically. Existing Special Paths Are Preserved."
       >
         <ShakingTextField>
           <CustomSelect
@@ -65,7 +65,7 @@ export function WorkflowStagePosition({
             value={sourceId ?? ''}
             disabled={locked}
             options={options.map((stage) => ({ value: stage.id, label: stage.name }))}
-            noOptionsMessage="No safe insertion position is available. Review the existing journey."
+            noOptionsMessage="No Safe Insertion Position Is Available. Review the Existing Journey."
             onChange={(value) => onChange(String(value))}
           />
         </ShakingTextField>

@@ -64,7 +64,7 @@ export function WorkflowGovernanceSettingsDialog({
     <CustomDialog
       open={open}
       maxWidth="sm"
-      title="Workflow governance"
+      title="Workflow Governance"
       handleClose={saving ? () => undefined : onClose}
       disableClose={saving}
       hasUnsavedChanges={formik.dirty}
@@ -76,7 +76,7 @@ export function WorkflowGovernanceSettingsDialog({
             before it can be scheduled or published.
           </StudentFeedback>
           <FormControlLabel
-            label="Require maker-checker approval"
+            label="Require Maker-Checker Approval"
             control={
               <Switch
                 name="makerCheckerEnabled"
@@ -87,7 +87,7 @@ export function WorkflowGovernanceSettingsDialog({
             }
           />
           <FormControlLabel
-            label="Send in-app governance notifications"
+            label="Send In-App Governance Notifications"
             control={
               <Switch
                 name="inAppNotificationsEnabled"
@@ -100,7 +100,7 @@ export function WorkflowGovernanceSettingsDialog({
             }
           />
           <FormControlLabel
-            label="Send governance email notifications"
+            label="Send Governance Email Notifications"
             control={
               <Switch
                 name="emailNotificationsEnabled"
@@ -120,7 +120,7 @@ export function WorkflowGovernanceSettingsDialog({
           >
             {formik.values.makerCheckerEnabled
               ? 'Draft → Validated → Submitted → Approved → Scheduled or Published'
-              : 'Authorized administrators can validate and publish directly.'}
+              : 'Authorized Administrators Can Validate and Publish Directly.'}
           </StudentFeedback>
         </Stack>
       </DialogScrollContent>
@@ -143,7 +143,7 @@ export function WorkflowGovernanceSettingsDialog({
           startIcon={<Iconify icon="mdi:content-save-outline" />}
           onClick={() => formik.handleSubmit()}
         >
-          Save governance
+          Save Governance
         </LoadingButton>
       </DialogActions>
     </CustomDialog>

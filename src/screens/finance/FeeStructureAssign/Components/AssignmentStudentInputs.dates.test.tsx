@@ -161,3 +161,36 @@ describe('shared assignment date pickers', () => {
     );
   });
 });
+
+it('shows saved transport dates in a bulk correction without sharing a student transport picker', () => {
+  render(
+    <AssignmentStudentInputs
+      candidate={candidate}
+      request={{
+        studentId: 'student',
+        academicYearId: 'year',
+        standardFeeStructureId: 'structure',
+        selectedOptionalFeeHeadIds: [],
+        feeHeadDetails: [],
+        servicePeriods: [
+          {
+            feeHeadId: 'tuition',
+            source: 'TransportService',
+            sourceReferenceId: 'saved-route',
+            startDate: '2026-08-01',
+            endDate: '2027-05-14',
+          },
+        ],
+      }}
+      disabled={false}
+      canOverrideDates
+      allowTransportSource={false}
+      onChange={vi.fn()}
+      yearBounds={assignmentYearBounds(year, 'year')}
+      flat
+    />
+  );
+  expect(screen.getByRole('combobox', { name: 'Service period' })).toHaveValue('TransportService');
+  expect(screen.queryByRole('combobox', { name: 'Transport record' })).not.toBeInTheDocument();
+  expect(screen.getByText(/Each student keeps their saved transport dates/)).toBeVisible();
+});

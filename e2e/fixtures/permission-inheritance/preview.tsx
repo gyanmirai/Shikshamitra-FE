@@ -20,6 +20,8 @@ const targets = [
   { id: 'synthetic-override', name: 'User with direct override', provider: 'U', label: 'User override' },
   { id: 'synthetic-additional', name: 'User with additional grant', provider: 'U', label: 'User additional' },
   { name: 'HOD', provider: 'R', label: 'Role HOD' },
+  { name: 'admin', provider: 'R', label: 'Role admin' },
+  { id: 'synthetic-admin', name: 'Admin user (synthetic)', provider: 'U', label: 'Admin user' },
 ];
 function ThemeToggle() {
   const { mode, setMode } = useColorScheme();

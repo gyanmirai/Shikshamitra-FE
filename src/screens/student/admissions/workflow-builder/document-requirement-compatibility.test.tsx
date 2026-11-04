@@ -27,8 +27,8 @@ describe('document requirement validation', { timeout: 15000 }, () => {
         onSave={save}
       />
     );
-    await user.click(screen.getByRole('switch', { name: 'Required document' }));
-    await user.click(screen.getByRole('button', { name: 'Save requirement' }));
+    await user.click(screen.getByRole('switch', { name: 'Required Document' }));
+    await user.click(screen.getByRole('button', { name: 'Save Requirement' }));
     await waitFor(() => expect(save).toHaveBeenCalledOnce());
     expect(save.mock.calls[0][0]).toMatchObject({
       requirement: 'required',
@@ -56,20 +56,20 @@ describe('document requirement validation', { timeout: 15000 }, () => {
         onSave={save}
       />
     );
-    await chooseDocumentOption(user, 'Student document category (optional)', 'Word template');
+    await chooseDocumentOption(user, 'Student Document Category (Optional)', 'Word template');
     expect(screen.getByText(/no format in common/)).toBeInTheDocument();
     expect(screen.queryByRole('combobox', { name: 'Evidence to collect' })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Save requirement' }));
+    await user.click(screen.getByRole('button', { name: 'Save Requirement' }));
     expect(save).not.toHaveBeenCalled();
     await chooseDocumentOption(
       user,
-      'Student document category (optional)',
-      'Keep as admission evidence'
+      'Student Document Category (Optional)',
+      'Keep as Admission Evidence'
     );
-    await user.click(screen.getByRole('combobox', { name: 'Allowed file formats' }));
+    await user.click(screen.getByRole('combobox', { name: 'Allowed File Formats' }));
     await user.click(screen.getByRole('option', { name: 'PDF' }));
     await user.keyboard('{Escape}');
-    await user.click(screen.getByRole('button', { name: 'Save requirement' }));
+    await user.click(screen.getByRole('button', { name: 'Save Requirement' }));
     await waitFor(() => expect(save).toHaveBeenCalledOnce());
     expect(save.mock.calls[0][0]).toMatchObject({
       collectionMode: 'upload',

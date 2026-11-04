@@ -86,7 +86,10 @@ function toRow(item: FeeRefundRequestDto, index: number): IStudentFeeData {
     _defaultPayingBankAccountId: item.defaultPayingBankAccountId ?? undefined,
     _settlementId: payout?.id,
     _voucherNumber: item.voucherNumber,
-    _receiptNumber: item.originalReceiptNumber ?? '',
+    _receiptNumber:
+      item.sourceReceipts?.map((receipt) => receipt.receiptNumber).join(', ') ||
+      item.originalReceiptNumber ||
+      '',
     _payoutPending: payout?.status === 0,
     _payoutReference: payout?.externalReference,
     _paymentDate: payout?.settlementDate,
@@ -299,6 +302,7 @@ export default function RefundWorklist({
                 isSort: false,
               },
               {
+                cellSx: { textAlign: 'right' as const },
                 id: 'refundAmount',
                 label: 'Amount',
                 minWidth: 125,
@@ -434,6 +438,7 @@ export default function RefundWorklist({
           }}
           wrapperProps={{ sx: { flex: 1, minHeight: 0, width: '100%' } }}
           tableContainerProps={{ sx: { height: 1 } }}
+          searchFieldProps={{ placeholder: 'Search' }}
         />
       </Box>
     </Box>

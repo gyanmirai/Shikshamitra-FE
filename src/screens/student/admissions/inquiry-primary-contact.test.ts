@@ -46,12 +46,16 @@ const values = (role: string) => ({
 const offering = { id: 'offering', admissionCycleId: 'cycle' } as AdmissionOfferingListItem;
 
 describe('configured primary contact', () => {
-  it('creates the three identity slots and the configured required contact selector', () => {
+  it('creates six core questions including the configured required contact selector', () => {
     const form = getBlankAdmissionFormInitialValues(0);
     const configured = form.sections.flatMap((section) => section.fields);
-    expect(configured).toHaveLength(4);
+    expect(configured).toHaveLength(6);
     const selector = configured.find((item) => item.bindingKey === 'Inquiry.ParentRelationship')!;
-    expect(selector).toMatchObject({ label: 'Primary contact', required: true, fieldType: 6 });
+    expect(selector).toMatchObject({
+      label: 'Relationship to student',
+      required: true,
+      fieldType: 6,
+    });
     expect(JSON.parse(selector.optionsJson!)).toEqual([
       { value: 'father', label: 'Father' },
       { value: 'mother', label: 'Mother' },
@@ -134,7 +138,7 @@ describe('configured primary contact', () => {
     const selector = form.sections[0].fields.find(
       (item) => item.bindingKey === 'Inquiry.ParentRelationship'
     )!;
-    form.sections[0].fields.push(field('Guardian.Email', 3), field('Father.Email', 3));
+    form.sections[0].fields.push(field('Father.Email', 3));
     expect(getInquiryFormConfigurationIssues(form)).toContain(
       'Show one primary contact email question for each selected role before publishing. Keep other-parent email questions conditional.'
     );

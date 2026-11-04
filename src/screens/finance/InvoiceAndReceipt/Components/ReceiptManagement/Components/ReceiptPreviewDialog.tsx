@@ -258,7 +258,11 @@ const ReceiptPreviewDialog: React.FC<ReceiptPreviewDialogProps> = ({ receiptId, 
                   </Typography>
                 </Stack>
               ) : receiptBlobUrl ? (
-                <PdfPreview url={receiptBlobUrl} title="Fee Receipt" />
+                <PdfPreview
+                  url={receiptBlobUrl}
+                  title={receipt.receiptKindLabel || receiptKindMeta?.label || 'Receipt'}
+                  showPageText={false}
+                />
               ) : (
                 <Box>Receipt preview is not available right now.</Box>
               )}

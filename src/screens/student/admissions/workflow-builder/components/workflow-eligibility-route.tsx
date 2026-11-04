@@ -7,10 +7,10 @@ import { StudentFeedback } from 'src/components/student-feedback';
 import type { WorkflowTransitionFormValues } from '../workflow-transition-form';
 
 const routes = [
-  { value: 'eligible', label: 'Meets all configured criteria' },
-  { value: 'exceptionApproved', label: 'Exception approved' },
-  { value: 'ineligible', label: 'Does not meet the criteria — send for review' },
-  { value: 'needsInformation', label: 'More information needed — send for correction' },
+  { value: 'eligible', label: 'Meets All Configured Criteria' },
+  { value: 'exceptionApproved', label: 'Exception Approved' },
+  { value: 'ineligible', label: 'Does Not Meet the Criteria — Send for Review' },
+  { value: 'needsInformation', label: 'More Information Needed — Send for Correction' },
 ];
 export function getEligibilityRoute(values: WorkflowTransitionFormValues) {
   if (!values.hasCondition && values.isDefault) return 'default';
@@ -35,13 +35,13 @@ export function WorkflowEligibilityRoute({
       <CustomSelect
         fullWidth
         size="small"
-        label="Continue after eligibility check"
+        label="Continue After Eligibility Check"
         disabled={readOnly}
         value={getEligibilityRoute(formik.values)}
         options={[
-          { value: 'default', label: 'Eligible or approved exception (default route)' },
+          { value: 'default', label: 'Eligible or Approved Exception (Default Route)' },
           ...routes,
-          { value: 'custom', label: 'Another condition' },
+          { value: 'custom', label: 'Another Condition' },
         ]}
         onChange={(value) => {
           const known = routes.some((route) => route.value === value);

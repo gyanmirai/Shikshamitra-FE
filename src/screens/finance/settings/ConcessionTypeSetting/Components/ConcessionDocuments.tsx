@@ -67,6 +67,7 @@ const ConcessionDocumentTable: React.FC<ConcessionTableProps> = ({ data }) => {
         },
       ]}
       data={concessionTypeDetails?.data?.documents || []}
+      searchFieldProps={{ placeholder: 'Search' }}
     />
   );
 };

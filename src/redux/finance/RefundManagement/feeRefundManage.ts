@@ -1,6 +1,8 @@
 import type { IFeeRefundApiPayload } from 'src/screens/finance/feeRefund/NewRefundForm/initialValuesAndValidation';
 
 import { financeModuleType } from 'src/redux/tagTypes';
+import { FeeRefundStatusType } from 'src/enums/feeRefund-status-type';
+import { getDownloadFileName } from 'src/utils/get-download-file-name';
 
 import { financeModuleApi } from '../financeModuleApi';
 
@@ -53,6 +55,7 @@ export interface FeeRefundRequestDto {
   allowedPayoutMethods: string[];
   originalReceiptId?: string;
   originalReceiptNumber?: string;
+  sourceReceipts?: { receiptId: string; receiptNumber: string }[];
   currency: string;
   expenseCategoryId?: string | null;
   payingBankAccountId?: string | null;
@@ -153,6 +156,8 @@ export interface RefundEligibilityDto {
   refundPolicyId?: string;
   refundPolicyVersionId?: string;
   refundPolicyName?: string;
+  defaultExpenseCategoryId?: string | null;
+  defaultPayingBankAccountId?: string | null;
   allowedPayoutMethods: string[];
   processingTargetDays?: number;
   allowPartialRefund: boolean;
@@ -245,10 +250,42 @@ export interface UpdateFeeRefundInput {
 
 type FeeRefundCreationPayload = IFeeRefundApiPayload & { idempotencyKey: string };
 
+const refundRequestChangedTags = [
+  financeModuleType.feeRefund,
+  financeModuleType.feeDetails,
+  financeModuleType.feeCollection,
+  financeModuleType.expenseDetails,
+  financeModuleType.incomeTracking,
+];
+const refundPayoutChangedTags = [
+  ...refundRequestChangedTags,
+  financeModuleType.charges,
+  financeModuleType.accountPosting,
+];
+const refundRequestInvalidations = (result: FeeRefundRequestDto | undefined, error: unknown) =>
+  error
+    ? []
+    : result?.status === FeeRefundStatusType.Processed && result.refundMethod === 'Cash'
+      ? [...refundPayoutChangedTags, financeModuleType.cashManagement]
+      : refundRequestChangedTags;
+
 // ─── API slice ────────────────────────────────────────────────────────────────
 
 export const feeRefundApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
+    downloadRefundReceiptPdf: builder.mutation<{ blob: Blob; fileName: string }, string>({
+      query: (id) => ({
+        url: `/fee-refunds/${id}/receipt/pdf`,
+        method: 'GET',
+        responseHandler: (response) => response.blob(),
+      }),
+      transformResponse: (blob: Blob, meta) => ({
+        blob,
+        fileName:
+          getDownloadFileName(meta?.response?.headers.get('content-disposition') ?? null) ??
+          'Refund-Receipt.pdf',
+      }),
+    }),
     getFeeRefunds: builder.query<PagedRefundResult, GetFeeRefundsInput>({
       query: (params) => ({
         url: '/fee-refunds',
@@ -275,6 +312,12 @@ export const feeRefundApi = financeModuleApi.injectEndpoints({
         method: 'GET',
         params: { studentId, academicYearId },
       }),
+      providesTags: [
+        financeModuleType.feeRefund,
+        financeModuleType.feeDetails,
+        financeModuleType.feeCollection,
+        financeModuleType.charges,
+      ],
     }),
 
     createFeeRefund: builder.mutation<FeeRefundRequestDto, FeeRefundCreationPayload>({
@@ -283,13 +326,7 @@ export const feeRefundApi = financeModuleApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [
-        financeModuleType.feeRefund,
-        financeModuleType.feeDetails,
-        financeModuleType.feeCollection,
-        financeModuleType.expenseDetails,
-        financeModuleType.incomeTracking,
-      ],
+      invalidatesTags: refundRequestInvalidations,
     }),
 
     previewFeeRefund: builder.mutation<FeeRefundPreviewDto, FeeRefundCreationPayload>({
@@ -311,9 +348,9 @@ export const feeRefundApi = financeModuleApi.injectEndpoints({
       {
         id: string;
         notes?: string;
-        expenseCategoryId: string;
+        expenseCategoryId?: string;
         bankAccountId?: string;
-        method: string;
+        method?: string;
       }
     >({
       query: ({ id, ...body }) => ({
@@ -321,13 +358,7 @@ export const feeRefundApi = financeModuleApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [
-        financeModuleType.feeRefund,
-        financeModuleType.feeDetails,
-        financeModuleType.feeCollection,
-        financeModuleType.expenseDetails,
-        financeModuleType.incomeTracking,
-      ],
+      invalidatesTags: refundRequestInvalidations,
     }),
 
     rejectFeeRefund: builder.mutation<FeeRefundRequestDto, { id: string; notes: string }>({
@@ -425,15 +456,12 @@ export const feeRefundApi = financeModuleApi.injectEndpoints({
       { id: string; body: RecordRefundPayoutInput }
     >({
       query: ({ id, body }) => ({ url: `/fee-refunds/${id}/payout`, method: 'POST', body }),
-      invalidatesTags: [
-        financeModuleType.charges,
-        financeModuleType.feeRefund,
-        financeModuleType.feeDetails,
-        financeModuleType.feeCollection,
-        financeModuleType.accountPosting,
-        financeModuleType.expenseDetails,
-        financeModuleType.incomeTracking,
-      ],
+      invalidatesTags: (_, error, { body }) =>
+        error
+          ? []
+          : body.method === 'Cash'
+            ? [...refundPayoutChangedTags, financeModuleType.cashManagement]
+            : refundPayoutChangedTags,
     }),
     confirmRefundPayout: builder.mutation<
       FeeRefundRequestDto,
@@ -492,6 +520,7 @@ export const feeRefundApi = financeModuleApi.injectEndpoints({
 });
 
 export const {
+  useDownloadRefundReceiptPdfMutation,
   useRecordRefundPayoutMutation,
   useConfirmRefundPayoutMutation,
   useFailRefundPayoutMutation,

@@ -30,11 +30,12 @@ const systemFields = [
   },
 ];
 
-function renderSettings(fieldType: AdmissionFormFieldType, bindingKey?: string) {
+function renderSettings(fieldType: AdmissionFormFieldType, bindingKey?: string, optionsJson?: string) {
   const form = getAdmissionFormInitialValues();
   const section = form.sections[0];
   const field = newField(section.id!, 0, fieldType);
   if (bindingKey) Object.assign(field, { bindingType: 0, bindingKey });
+  if (optionsJson) field.optionsJson = optionsJson;
   section.fields = [field];
   render(
     <ThemeProvider theme={createTheme(defaultSettings)}>
@@ -55,6 +56,11 @@ function renderSettings(fieldType: AdmissionFormFieldType, bindingKey?: string) 
 const currentField = () => JSON.parse(screen.getByTestId('field-json').textContent ?? '{}');
 
 describe('custom field student-record mapping', () => {
+  it('protects academic source codes and connections while the field label stays independently editable', () => {
+    renderSettings(6, undefined, '{"source":"EducationMediums","parentField":"BOARD"}');
+    expect(screen.getByRole('textbox', {name: 'Field Code'})).toBeDisabled();
+    expect(screen.getByRole('combobox', {name: 'Save Answer To'})).toHaveAttribute('aria-disabled', 'true');
+  });
   it('configures shared identity controls when a custom question is mapped to the Student Aadhaar field', async () => {
     catalogueQuery.mockReturnValue({
       data: [
@@ -72,7 +78,7 @@ describe('custom field student-record mapping', () => {
     });
     const user = userEvent.setup();
     renderSettings(0, 'Applicant.FirstName');
-    await user.click(screen.getByRole('combobox', { name: 'Student record field' }));
+    await user.click(screen.getByRole('combobox', { name: 'Student Record Field' }));
     await user.click(screen.getByRole('option', { name: 'Student Aadhaar number' }));
     expect(JSON.parse(currentField().validationJson)).toMatchObject({ format: 'aadhaar' });
     expect(screen.getByText(/Populates the Student profile/)).toBeVisible();
@@ -84,7 +90,7 @@ describe('custom field student-record mapping', () => {
   it('only offers student-record fields with the same answer type', async () => {
     const user = userEvent.setup();
     renderSettings(0, 'Applicant.FirstName');
-    await user.click(screen.getByRole('combobox', { name: 'Student record field' }));
+    await user.click(screen.getByRole('combobox', { name: 'Student Record Field' }));
     expect(screen.getByRole('option', { name: 'First name' })).toBeVisible();
     expect(screen.queryByRole('option', { name: 'Date of birth' })).not.toBeInTheDocument();
     expect(screen.queryByRole('option', { name: 'Gender' })).not.toBeInTheDocument();
@@ -93,8 +99,8 @@ describe('custom field student-record mapping', () => {
   it('disables student-record mapping when no compatible field exists', async () => {
     const user = userEvent.setup();
     renderSettings(8);
-    await user.click(screen.getByRole('combobox', { name: 'Save answer to' }));
-    expect(screen.getByRole('option', { name: /^Student record/ })).toHaveAttribute(
+    await user.click(screen.getByRole('combobox', { name: 'Save Answer To' }));
+    expect(screen.getByRole('option', { name: /^Student Record/ })).toHaveAttribute(
       'aria-disabled',
       'true'
     );
@@ -106,7 +112,7 @@ describe('custom field student-record mapping', () => {
     renderSettings(0, 'Applicant.DateOfBirth');
     expect(screen.getByText(/does not match this answer type/)).toBeVisible();
     expect(currentField().bindingKey).toBe('Applicant.DateOfBirth');
-    await user.click(screen.getByRole('combobox', { name: 'Student record field' }));
+    await user.click(screen.getByRole('combobox', { name: 'Student Record Field' }));
     await user.click(screen.getByRole('option', { name: 'First name' }));
     expect(currentField().bindingKey).toBe('Applicant.FirstName');
     expect(screen.queryByText(/does not match this answer type/)).not.toBeInTheDocument();
@@ -115,13 +121,13 @@ describe('custom field student-record mapping', () => {
   it('copies the configured choices when selecting a compatible record field', async () => {
     const user = userEvent.setup();
     renderSettings(6);
-    await user.click(screen.getByRole('combobox', { name: 'Save answer to' }));
-    await user.click(screen.getByRole('option', { name: 'Student record' }));
-    await user.click(screen.getByRole('combobox', { name: 'Student record field' }));
+    await user.click(screen.getByRole('combobox', { name: 'Save Answer To' }));
+    await user.click(screen.getByRole('option', { name: 'Student Record' }));
+    await user.click(screen.getByRole('combobox', { name: 'Student Record Field' }));
     await user.click(screen.getByRole('option', { name: 'Gender' }));
     expect(currentField().optionsJson).toBe(systemFields[2].optionsJson);
-    await user.click(screen.getByRole('combobox', { name: 'Save answer to' }));
-    await user.click(screen.getByRole('option', { name: 'This admission form only' }));
+    await user.click(screen.getByRole('combobox', { name: 'Save Answer To' }));
+    await user.click(screen.getByRole('option', { name: 'This Admission Form Only' }));
     expect(currentField().bindingKey).toBe(currentField().code);
   });
 
@@ -141,7 +147,7 @@ describe('custom field student-record mapping', () => {
     );
     expect(screen.queryByText('Could not load student record fields.')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
-    expect(screen.getByRole('combobox', { name: 'Student record field' })).toHaveAttribute(
+    expect(screen.getByRole('combobox', { name: 'Student Record Field' })).toHaveAttribute(
       'aria-disabled',
       'true'
     );

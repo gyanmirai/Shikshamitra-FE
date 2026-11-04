@@ -94,22 +94,26 @@ export default function AssignmentPolicies({
             available.push(inherited);
           const label = `${family.charAt(0).toUpperCase()}${family.slice(1)} policy`;
           const overridden = !editing && value !== (inherited?.versionId ?? '');
+          const isMissing = !value;
           return (
             <Stack key={family} spacing={0.5} sx={{ minWidth: 0 }}>
               <CustomSelect
                 name={`${studentId}-${family}`}
                 label={label}
+                required
+                error={isMissing}
+                helperText={
+                  isMissing
+                    ? `Select a ${family === 'collection' ? 'Collection' : 'Refund'} Policy.`
+                    : undefined
+                }
                 size="small"
                 value={value}
                 disabled={disabled || !canOverride || options.isLoading || options.isError}
-                options={[
-                  ...(family !== 'collection' ? [{ value: '', label: 'No policy assigned' }] : []),
-                  ...available.map((p) => ({
+                options={available.map((p) => ({
                     value: p.versionId,
                     label: `${p.name} · v${p.version}${p.versionId === inherited?.versionId ? ' · default' : ''}`,
-                  })),
-                ]}
-
+                  }))}
                 onChange={(next) => {
                   const nextVersionId = String(next) || null;
                   const nextSelections = [

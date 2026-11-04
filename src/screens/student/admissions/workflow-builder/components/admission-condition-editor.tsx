@@ -55,7 +55,7 @@ function ConditionNode({ value, onChange, depth, ...props }: NodeProps) {
             disabled={props.readOnly}
             onClick={() => onChange({ operator: 'ALL', conditions: [value, emptyCondition()] })}
           >
-            Add another condition
+            Add Another Condition
           </Button>
         )}
       </Stack>
@@ -70,12 +70,12 @@ function ConditionNode({ value, onChange, depth, ...props }: NodeProps) {
       <CustomSelect
         size="small"
         fullWidth
-        label={props.groupLabel ?? 'Match conditions'}
+        label={props.groupLabel ?? 'Match Conditions'}
         disabled={props.readOnly}
         value={value.operator}
         options={[
-          { value: 'ALL', label: 'All conditions match' },
-          { value: 'ANY', label: 'Any condition matches' },
+          { value: 'ALL', label: 'All Conditions Match' },
+          { value: 'ANY', label: 'Any Condition Matches' },
         ]}
         onChange={(operator) =>
           onChange({ ...value, operator: operator === 'ANY' ? 'ANY' : 'ALL' })
@@ -93,7 +93,7 @@ function ConditionNode({ value, onChange, depth, ...props }: NodeProps) {
             size="small"
             color="error"
             disabled={props.readOnly}
-            aria-label={`Remove condition ${index + 1}`}
+            aria-label={`Remove Condition ${index + 1}`}
             onClick={() =>
               onChange({
                 ...value,
@@ -101,7 +101,7 @@ function ConditionNode({ value, onChange, depth, ...props }: NodeProps) {
               })
             }
           >
-            Remove condition
+            Remove Condition
           </Button>
         </Paper>
       ))}
@@ -110,7 +110,7 @@ function ConditionNode({ value, onChange, depth, ...props }: NodeProps) {
         disabled={props.readOnly || value.conditions.length >= 30}
         onClick={() => onChange({ ...value, conditions: [...value.conditions, emptyCondition()] })}
       >
-        Add condition
+        Add Condition
       </Button>
     </Stack>
   );

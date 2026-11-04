@@ -72,11 +72,11 @@ function setup(conditionRuleJson?: string) {
 describe('document outcome route interactions', { timeout: 15000 }, () => {
   it('excludes waiver routes and serializes verified documents instead', async () => {
     const { user, onSave } = setup();
-    await user.click(screen.getByRole('combobox', { name: 'Continue after document review' }));
+    await user.click(screen.getByRole('combobox', { name: 'Continue After Document Review' }));
     expect(screen.queryByRole('option', { name: 'A document waiver was used' })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('option', { name: 'Required documents resolved' }));
+    await user.click(screen.getByRole('option', { name: 'Required Documents Resolved' }));
     await waitFor(() => expect(screen.queryByRole('listbox', { hidden: true })).not.toBeInTheDocument());
-    await user.click(screen.getByRole('button', { name: 'Save path' }));
+    await user.click(screen.getByRole('button', { name: 'Save Path' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(onSave.mock.calls[0][0].isDefault).toBe(false);
     expect(JSON.parse(onSave.mock.calls[0][0].conditionRuleJson)).toEqual({ field: 'documents.status', operator: 'Equals', value: 'verified' });
@@ -86,16 +86,16 @@ describe('document outcome route interactions', { timeout: 15000 }, () => {
       '{"field":"documents.status","operator":"Equals","value":"verified"}'
     );
     expect(
-      screen.getByRole('combobox', { name: 'Continue after document review' })
-    ).toHaveTextContent('Required documents resolved');
-    await user.click(screen.getByRole('combobox', { name: 'Continue after document review' }));
+      screen.getByRole('combobox', { name: 'Continue After Document Review' })
+    ).toHaveTextContent('Required Documents Resolved');
+    await user.click(screen.getByRole('combobox', { name: 'Continue After Document Review' }));
     await user.click(
-      screen.getByRole('option', { name: 'Required documents resolved (default route)' })
+      screen.getByRole('option', { name: 'Required Documents Resolved (Default Route)' })
     );
     await waitFor(() =>
       expect(screen.queryByRole('listbox', { hidden: true })).not.toBeInTheDocument()
     );
-    await user.click(screen.getByRole('button', { name: 'Save path' }));
+    await user.click(screen.getByRole('button', { name: 'Save Path' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(onSave.mock.calls[0][0]).toMatchObject({
       isDefault: true,
@@ -108,8 +108,8 @@ describe('document outcome route interactions', { timeout: 15000 }, () => {
   ] as const)('keeps the path attached to its document stage: %s', async (condition) => {
     const { user, onSave } = setup(condition);
     expect(screen.getByRole('heading', { name: 'Document verification' })).toBeInTheDocument();
-    expect(screen.queryByRole('combobox', { name: 'From stage *' })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Save path' }));
+    expect(screen.queryByRole('combobox', { name: 'From Stage *' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Save Path' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(onSave.mock.calls[0][0].fromStageId).toBe(source.id);
     expect(onSave.mock.calls[0][0].isDefault).toBe(false);

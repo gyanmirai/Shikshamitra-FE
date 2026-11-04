@@ -42,7 +42,7 @@ export function ReviewAssigneeSelect({
           <TextField
             fullWidth
             size="small"
-            label="Find a reviewer"
+            label="Find a Reviewer"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             slotProps={{ htmlInput: { maxLength: 128 } }}

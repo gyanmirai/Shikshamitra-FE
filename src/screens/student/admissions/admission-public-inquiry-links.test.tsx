@@ -196,10 +196,10 @@ const renderDrawer = (initialSetupId?: string) =>
   );
 
 const fillLink = async (user: ReturnType<typeof userEvent.setup>) => {
-  await user.type(screen.getByRole('textbox', { name: 'Link name' }), 'School fair');
-  await user.click(screen.getByRole('combobox', { name: 'Admission period' }));
+  await user.type(screen.getByRole('textbox', { name: 'Link Name' }), 'School fair');
+  await user.click(screen.getByRole('combobox', { name: 'Admission Period' }));
   await user.click(screen.getByRole('option', { name: 'Regular admission' }));
-  await user.click(screen.getByRole('combobox', { name: 'Published inquiry form' }));
+  await user.click(screen.getByRole('combobox', { name: 'Published Inquiry Form' }));
   await user.click(screen.getByRole('option', { name: 'Inquiry form · v1' }));
 };
 
@@ -243,14 +243,14 @@ describe('create public inquiry link', () => {
     });
     renderDrawer();
     const user = userEvent.setup();
-    await user.click(screen.getByRole('combobox', { name: 'Admission period' }));
+    await user.click(screen.getByRole('combobox', { name: 'Admission Period' }));
     await user.click(screen.getByRole('option', { name: 'Regular admission' }));
-    await user.click(screen.getByRole('combobox', { name: 'Published inquiry form' }));
+    await user.click(screen.getByRole('combobox', { name: 'Published Inquiry Form' }));
     expect(screen.getByRole('option', { name: 'Inquiry form · v1' })).toBeVisible();
     expect(screen.getByRole('option', { name: 'Second inquiry · v2' })).toBeVisible();
     expect(screen.queryByRole('option', { name: 'Unlinked inquiry · v1' })).not.toBeInTheDocument();
     await user.click(screen.getByRole('option', { name: 'Second inquiry · v2' }));
-    expect(screen.getByRole('combobox', { name: 'Published inquiry form' })).toHaveTextContent(
+    expect(screen.getByRole('combobox', { name: 'Published Inquiry Form' })).toHaveTextContent(
       'Second inquiry · v2'
     );
   });
@@ -259,13 +259,13 @@ describe('create public inquiry link', () => {
     renderDrawer();
     const user = userEvent.setup();
     await fillLink(user);
-    await user.click(screen.getByRole('combobox', { name: 'Admission period' }));
+    await user.click(screen.getByRole('combobox', { name: 'Admission Period' }));
     await user.click(screen.getByRole('option', { name: 'Next admission' }));
-    expect(screen.getByRole('combobox', { name: 'Published inquiry form' })).not.toHaveTextContent(
+    expect(screen.getByRole('combobox', { name: 'Published Inquiry Form' })).not.toHaveTextContent(
       'Inquiry form · v1'
     );
-    expect(screen.getByRole('textbox', { name: 'Link name' })).toHaveValue('School fair');
-    await user.click(screen.getByRole('button', { name: 'Create link' }));
+    expect(screen.getByRole('textbox', { name: 'Link Name' })).toHaveValue('School fair');
+    await user.click(screen.getByRole('button', { name: 'Create Link' }));
     expect(await screen.findByText('Choose a published inquiry form.')).toBeVisible();
     expect(hooks.create).not.toHaveBeenCalled();
   });
@@ -274,25 +274,25 @@ describe('create public inquiry link', () => {
     hooks.options.currentData = [];
     const { rerender } = renderDrawer();
     const user = userEvent.setup();
-    await user.type(screen.getByRole('textbox', { name: 'Link name' }), 'School fair');
-    await user.click(screen.getByRole('combobox', { name: 'Admission period' }));
+    await user.type(screen.getByRole('textbox', { name: 'Link Name' }), 'School fair');
+    await user.click(screen.getByRole('combobox', { name: 'Admission Period' }));
     await user.click(screen.getByRole('option', { name: 'Regular admission' }));
-    const form = screen.getByRole('combobox', { name: 'Published inquiry form' });
+    const form = screen.getByRole('combobox', { name: 'Published Inquiry Form' });
     form.focus();
     await user.keyboard('{ArrowDown}');
     expect(hooks.infoToast).toHaveBeenCalledOnce();
     expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Refresh offerings' }));
+    await user.click(screen.getByRole('button', { name: 'Refresh Offerings' }));
     expect(hooks.options.refetch).toHaveBeenCalledOnce();
     hooks.options.currentData = [
       { counsellorAssignmentProfileId: null, inquiryFormDefinitionId: 'form-1' },
     ];
     rerender(<AdmissionPublicInquiryLinks canEdit createOpen onCreateClose={hooks.close} />);
-    await user.click(screen.getByRole('combobox', { name: 'Published inquiry form' }));
+    await user.click(screen.getByRole('combobox', { name: 'Published Inquiry Form' }));
     await user.click(screen.getByRole('option', { name: 'Inquiry form · v1' }));
     expect(hooks.infoToast).toHaveBeenCalledOnce();
-    expect(screen.getByRole('textbox', { name: 'Link name' })).toHaveValue('School fair');
-    expect(screen.getByRole('button', { name: 'Create link' })).toBeEnabled();
+    expect(screen.getByRole('textbox', { name: 'Link Name' })).toHaveValue('School fair');
+    expect(screen.getByRole('button', { name: 'Create Link' })).toBeEnabled();
     expect(hooks.create).not.toHaveBeenCalled();
   });
 
@@ -302,14 +302,14 @@ describe('create public inquiry link', () => {
     hooks.options.isFetching = true;
     const { rerender } = renderDrawer();
     const user = userEvent.setup();
-    await user.type(screen.getByRole('textbox', { name: 'Link name' }), 'School fair');
-    await user.click(screen.getByRole('combobox', { name: 'Admission period' }));
+    await user.type(screen.getByRole('textbox', { name: 'Link Name' }), 'School fair');
+    await user.click(screen.getByRole('combobox', { name: 'Admission Period' }));
     await user.click(screen.getByRole('option', { name: 'Regular admission' }));
-    expect(screen.getByRole('status', { name: 'Loading published inquiry forms' })).toBeVisible();
+    expect(screen.getByRole('status', { name: 'Loading Published Inquiry Forms' })).toBeVisible();
     expect(
-      screen.queryByRole('combobox', { name: 'Published inquiry form' })
+      screen.queryByRole('combobox', { name: 'Published Inquiry Form' })
     ).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Create link' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Create Link' })).toBeDisabled();
     expect(
       screen.queryByText(/No compatible inquiry Offering is available/)
     ).not.toBeInTheDocument();
@@ -317,13 +317,13 @@ describe('create public inquiry link', () => {
     hooks.options.isError = true;
     rerender(<AdmissionPublicInquiryLinks canEdit createOpen onCreateClose={hooks.close} />);
     expect(
-      screen.queryByRole('status', { name: 'Loading published inquiry forms' })
+      screen.queryByRole('status', { name: 'Loading Published Inquiry Forms' })
     ).not.toBeInTheDocument();
     expect(hooks.errorToast).toHaveBeenCalledWith(
       expect.objectContaining({ message: 'Unable to load admission periods and forms.' })
     );
     expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
-    expect(screen.getByRole('textbox', { name: 'Link name' })).toHaveValue('School fair');
+    expect(screen.getByRole('textbox', { name: 'Link Name' })).toHaveValue('School fair');
     expect(hooks.create).not.toHaveBeenCalled();
   });
 
@@ -336,21 +336,21 @@ describe('create public inquiry link', () => {
       await fillLink(user);
       hooks.forms[loadingState] = true;
       rerender(<AdmissionPublicInquiryLinks canEdit createOpen onCreateClose={hooks.close} />);
-      expect(screen.getByRole('status', { name: 'Loading published inquiry forms' })).toBeVisible();
+      expect(screen.getByRole('status', { name: 'Loading Published Inquiry Forms' })).toBeVisible();
       expect(
-        screen.queryByRole('combobox', { name: 'Published inquiry form' })
+        screen.queryByRole('combobox', { name: 'Published Inquiry Form' })
       ).not.toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Create link' })).toBeDisabled();
-      expect(screen.getByRole('textbox', { name: 'Link name' })).toHaveValue('School fair');
+      expect(screen.getByRole('button', { name: 'Create Link' })).toBeDisabled();
+      expect(screen.getByRole('textbox', { name: 'Link Name' })).toHaveValue('School fair');
       hooks.forms[loadingState] = false;
       rerender(<AdmissionPublicInquiryLinks canEdit createOpen onCreateClose={hooks.close} />);
       expect(
-        screen.queryByRole('status', { name: 'Loading published inquiry forms' })
+        screen.queryByRole('status', { name: 'Loading Published Inquiry Forms' })
       ).not.toBeInTheDocument();
-      expect(screen.getByRole('combobox', { name: 'Published inquiry form' })).toHaveTextContent(
+      expect(screen.getByRole('combobox', { name: 'Published Inquiry Form' })).toHaveTextContent(
         'Inquiry form · v1'
       );
-      expect(screen.getByRole('button', { name: 'Create link' })).toBeEnabled();
+      expect(screen.getByRole('button', { name: 'Create Link' })).toBeEnabled();
       expect(hooks.create).not.toHaveBeenCalled();
     }
   );
@@ -358,12 +358,12 @@ describe('create public inquiry link', () => {
   it('removes the form skeleton on failure and shows a toast without an empty prerequisite message', async () => {
     hooks.forms.isLoading = true;
     const { rerender } = renderDrawer();
-    expect(screen.getByRole('status', { name: 'Loading published inquiry forms' })).toBeVisible();
+    expect(screen.getByRole('status', { name: 'Loading Published Inquiry Forms' })).toBeVisible();
     hooks.forms.isLoading = false;
     hooks.forms.isError = true;
     rerender(<AdmissionPublicInquiryLinks canEdit createOpen onCreateClose={hooks.close} />);
     expect(
-      screen.queryByRole('status', { name: 'Loading published inquiry forms' })
+      screen.queryByRole('status', { name: 'Loading Published Inquiry Forms' })
     ).not.toBeInTheDocument();
     expect(hooks.errorToast).toHaveBeenCalledWith(
       expect.objectContaining({ message: 'Unable to load admission periods and forms.' })
@@ -388,12 +388,12 @@ describe('create public inquiry link', () => {
     renderDrawer();
     const user = userEvent.setup();
     await fillLink(user);
-    await user.click(screen.getByRole('button', { name: 'Create link' }));
+    await user.click(screen.getByRole('button', { name: 'Create Link' }));
     expect(
       await screen.findByText(/Attach the inquiry form to an Offering, activate it/)
     ).toBeVisible();
     expect(hooks.options.refetch).toHaveBeenCalledOnce();
-    expect(screen.getByRole('textbox', { name: 'Link name' })).toHaveValue('School fair');
+    expect(screen.getByRole('textbox', { name: 'Link Name' })).toHaveValue('School fair');
     expect(hooks.close).not.toHaveBeenCalled();
   });
 
@@ -403,7 +403,7 @@ describe('create public inquiry link', () => {
     const user = userEvent.setup();
 
     await fillLink(user);
-    await user.click(screen.getByRole('button', { name: 'Create link' }));
+    await user.click(screen.getByRole('button', { name: 'Create Link' }));
 
     await waitFor(() =>
       expect(hooks.create).toHaveBeenCalledWith({
@@ -426,7 +426,7 @@ describe('create public inquiry link', () => {
     const clipboard = vi.spyOn(navigator.clipboard, 'writeText');
     const { rerender, unmount } = renderDrawer();
     await fillLink(user);
-    await user.click(screen.getByRole('button', { name: 'Create link' }));
+    await user.click(screen.getByRole('button', { name: 'Create Link' }));
     await waitFor(() => expect(hooks.close).toHaveBeenCalledOnce());
     rerender(
       <AdmissionPublicInquiryLinks canEdit createOpen={false} onCreateClose={hooks.close} />
@@ -447,14 +447,14 @@ describe('create public inquiry link', () => {
     );
     expect(hooks.tableProps.mock.lastCall?.[0].data[0]).not.toHaveProperty('token');
     const copy = within(createdRow).getByRole('button', {
-      name: 'Copy inquiry link for School fair',
+      name: 'Copy Inquiry Link For School fair',
     });
     expect(copy).toBeEnabled();
     expect(
-      screen.getByRole('button', { name: 'Copy inquiry link for Existing link' })
+      screen.getByRole('button', { name: 'Copy Inquiry Link For Existing link' })
     ).toBeDisabled();
     expect(screen.queryByText(/Copy this link now/)).not.toBeInTheDocument();
-    expect(screen.queryByRole('textbox', { name: 'New inquiry link' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: 'Inquiry Link' })).not.toBeInTheDocument();
     await user.click(copy);
     expect(clipboard).toHaveBeenCalledWith(
       `${window.location.origin}/admission-inquiry/fixture-token`
@@ -467,11 +467,11 @@ describe('create public inquiry link', () => {
       <AdmissionPublicInquiryLinks canEdit createOpen={false} onCreateClose={hooks.close} />
     );
     expect(screen.getAllByRole('row', { name: /School fair/ })).toHaveLength(1);
-    expect(screen.getByRole('button', { name: 'Copy inquiry link for School fair' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Copy Inquiry Link For School fair' })).toBeEnabled();
     unmount();
     renderList();
     expect(
-      screen.getByRole('button', { name: 'Copy inquiry link for School fair' })
+      screen.getByRole('button', { name: 'Copy Inquiry Link For School fair' })
     ).toBeDisabled();
   });
 
@@ -483,13 +483,13 @@ describe('create public inquiry link', () => {
     const clipboard = vi.spyOn(navigator.clipboard, 'writeText');
     const { rerender } = renderDrawer();
     await fillLink(user);
-    await user.click(screen.getByRole('button', { name: 'Create link' }));
+    await user.click(screen.getByRole('button', { name: 'Create Link' }));
     await waitFor(() => expect(hooks.close).toHaveBeenCalledOnce());
     rerender(
       <AdmissionPublicInquiryLinks canEdit createOpen={false} onCreateClose={hooks.close} />
     );
 
-    const copy = await screen.findByRole('button', { name: 'Copy inquiry link for School fair' });
+    const copy = await screen.findByRole('button', { name: 'Copy Inquiry Link For School fair' });
     expect(hooks.errorToast).toHaveBeenCalledWith(
       expect.objectContaining({ message: 'Unable to load this enrollment data.' })
     );
@@ -510,13 +510,13 @@ describe('create public inquiry link', () => {
       .mockRejectedValueOnce(new Error('denied'));
     const { rerender } = renderDrawer();
     await fillLink(user);
-    await user.click(screen.getByRole('button', { name: 'Create link' }));
+    await user.click(screen.getByRole('button', { name: 'Create Link' }));
     await waitFor(() => expect(hooks.close).toHaveBeenCalledOnce());
     rerender(
       <AdmissionPublicInquiryLinks canEdit createOpen={false} onCreateClose={hooks.close} />
     );
 
-    const copy = await screen.findByRole('button', { name: 'Copy inquiry link for School fair' });
+    const copy = await screen.findByRole('button', { name: 'Copy Inquiry Link For School fair' });
     await user.click(copy);
     expect(hooks.errorToast).toHaveBeenCalledWith({
       message: 'Unable to copy the link. Allow clipboard access and try again.',
@@ -551,12 +551,12 @@ describe('create public inquiry link', () => {
       renderDrawer();
       const user = userEvent.setup();
       await fillLink(user);
-      await user.click(screen.getByRole('button', { name: 'Create link' }));
+      await user.click(screen.getByRole('button', { name: 'Create Link' }));
 
       expect(await screen.findByText(detail)).toBeVisible();
-      expect(screen.getByRole('textbox', { name: 'Link name' })).toHaveValue('School fair');
+      expect(screen.getByRole('textbox', { name: 'Link Name' })).toHaveValue('School fair');
       expect(hooks.close).not.toHaveBeenCalled();
-      await user.click(screen.getByRole('button', { name: 'Create link' }));
+      await user.click(screen.getByRole('button', { name: 'Create Link' }));
       await waitFor(() => expect(hooks.close).toHaveBeenCalledOnce());
       expect(hooks.create).toHaveBeenCalledTimes(2);
       expect(screen.queryByText(detail)).not.toBeInTheDocument();
@@ -574,7 +574,7 @@ describe('create public inquiry link', () => {
     renderDrawer();
     const user = userEvent.setup();
     await fillLink(user);
-    await user.click(screen.getByRole('button', { name: 'Create link' }));
+    await user.click(screen.getByRole('button', { name: 'Create Link' }));
 
     expect(await screen.findByText('The inquiry form was archived.')).toBeVisible();
     expect(hooks.close).not.toHaveBeenCalled();
@@ -584,25 +584,25 @@ describe('create public inquiry link', () => {
     renderDrawer();
     expect(screen.getByRole('dialog', { name: 'Create Inquiry Link' })).toBeVisible();
     const user = userEvent.setup();
-    const info = screen.getByRole('button', { name: 'Create inquiry link information' });
+    const info = screen.getByRole('button', { name: 'Create Inquiry Link Information' });
     expect(info).toHaveClass('MuiIconButton-colorInfo');
-    expect(screen.queryByText('For example, September school fair')).not.toBeInTheDocument();
+    expect(screen.queryByText('For example, September School fair')).not.toBeInTheDocument();
     expect(screen.queryByText(/This exact form will appear/)).not.toBeInTheDocument();
-    expect(screen.queryByText(/New inquiries enter/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/New Inquiries enter/)).not.toBeInTheDocument();
     expect(screen.queryByText(/This link uses the setup/)).not.toBeInTheDocument();
     expect(
-      screen.queryByText(/Forms linked to active Inquiry or Both Offerings/)
+      screen.queryByText(/Forms linked to Active Inquiry or Both Offerings/)
     ).not.toBeInTheDocument();
     expect(screen.queryByText(/Inquiries are automatically routed/)).not.toBeInTheDocument();
 
     await user.hover(info);
     expect(await screen.findByRole('tooltip')).toHaveTextContent(
-      'Share a link for a website, QR code, or event.'
+      'Share a Link for a Website, QR Code, or Event.'
     );
-    await user.click(screen.getByRole('button', { name: 'Create link' }));
+    await user.click(screen.getByRole('button', { name: 'Create Link' }));
     expect(await screen.findByText('Enter a link name.')).toBeVisible();
     expect(screen.getByText('Choose a published admission period.')).toBeVisible();
-    expect(screen.queryByText('Choose an admission intake setup.')).not.toBeInTheDocument();
+    expect(screen.queryByText('Choose an Admission intake setup.')).not.toBeInTheDocument();
     expect(hooks.create).not.toHaveBeenCalled();
   });
 
@@ -615,15 +615,15 @@ describe('create public inquiry link', () => {
       ];
       renderDrawer();
       const user = userEvent.setup();
-      await user.type(screen.getByRole('textbox', { name: 'Link name' }), 'Manual inquiry link');
-      await user.click(screen.getByRole('combobox', { name: 'Admission period' }));
+      await user.type(screen.getByRole('textbox', { name: 'Link Name' }), 'Manual inquiry link');
+      await user.click(screen.getByRole('combobox', { name: 'Admission Period' }));
       await user.click(screen.getByRole('option', { name: 'Regular admission' }));
-      await user.click(screen.getByRole('combobox', { name: 'Published inquiry form' }));
+      await user.click(screen.getByRole('combobox', { name: 'Published Inquiry Form' }));
       await user.click(screen.getByRole('option', { name: 'Inquiry form · v1' }));
       expect(
         screen.queryByText(/Inquiries from this link stay Unassigned/)
       ).not.toBeInTheDocument();
-      await user.click(screen.getByRole('button', { name: 'Create link' }));
+      await user.click(screen.getByRole('button', { name: 'Create Link' }));
       await waitFor(() =>
         expect(hooks.create).toHaveBeenCalledWith(
           expect.objectContaining({
@@ -637,7 +637,7 @@ describe('create public inquiry link', () => {
       expect(hooks.close).toHaveBeenCalledOnce();
       expect(hooks.setupQuery).not.toHaveBeenCalled();
       expect(
-        screen.queryByRole('combobox', { name: /Admission intake setup/ })
+        screen.queryByRole('combobox', { name: /Admission Intake Setup/ })
       ).not.toBeInTheDocument();
     }
   );
@@ -756,9 +756,9 @@ describe('public inquiry link details and actions', () => {
     const user = userEvent.setup();
     renderList();
     await user.click(screen.getByRole('cell', { name: activeLink.name }));
-    const dialog = screen.getByRole('dialog', { name: `Inquiry link: ${activeLink.name}` });
+    const dialog = screen.getByRole('dialog', { name: `Inquiry Link: ${activeLink.name}` });
     expect(dialog.querySelectorAll('section.MuiCard-root')).toHaveLength(2);
-    expect(within(dialog).getByRole('heading', { name: 'Link details' })).toBeVisible();
+    expect(within(dialog).getByRole('heading', { name: 'Link Details' })).toBeVisible();
     expect(within(dialog).getByRole('heading', { name: 'Routing' })).toBeVisible();
     expect(within(dialog).getByText('Website · School campaign')).toBeVisible();
     expect(within(dialog).getByText('No expiry')).toBeVisible();
@@ -768,10 +768,10 @@ describe('public inquiry link details and actions', () => {
     expect(
       within(dialog).getByRole('button', { name: 'Close' }).querySelector('[data-icon="mdi:close"]')
     ).not.toBeNull();
-    const info = within(dialog).getByRole('button', { name: 'Link details information' });
+    const info = within(dialog).getByRole('button', { name: 'Link Details information' });
     expect(info).toHaveClass('MuiIconButton-colorInfo');
     await user.hover(info);
-    expect(await screen.findByRole('tooltip')).toHaveTextContent('Review this link’s source');
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('Review This Link’s Source');
     await user.click(within(dialog).getByRole('button', { name: 'Close' }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
@@ -779,18 +779,18 @@ describe('public inquiry link details and actions', () => {
   it.each(['Enter', ' '])('retains keyboard details access using %s', (key) => {
     renderList();
     fireEvent.keyDown(screen.getByRole('row', { name: /School website/ }), { key });
-    expect(screen.getByRole('dialog', { name: `Inquiry link: ${activeLink.name}` })).toBeVisible();
+    expect(screen.getByRole('dialog', { name: `Inquiry Link: ${activeLink.name}` })).toBeVisible();
   });
 
   it('opens the existing form editor without triggering row details or submitting', async () => {
     const user = userEvent.setup();
     renderList();
     await user.click(
-      screen.getByRole('button', { name: `Set inquiry form for ${activeLink.name}` })
+      screen.getByRole('button', { name: `Set Inquiry Form For ${activeLink.name}` })
     );
-    expect(screen.getByRole('dialog', { name: 'Set inquiry form' })).toBeVisible();
+    expect(screen.getByRole('dialog', { name: 'Set Inquiry Form' })).toBeVisible();
     expect(
-      screen.queryByRole('dialog', { name: `Inquiry link: ${activeLink.name}` })
+      screen.queryByRole('dialog', { name: `Inquiry Link: ${activeLink.name}` })
     ).not.toBeInTheDocument();
     expect(hooks.setForm).not.toHaveBeenCalled();
     expect(hooks.revoke).not.toHaveBeenCalled();
@@ -817,18 +817,18 @@ describe('public inquiry link details and actions', () => {
     renderList();
     const user = userEvent.setup();
     await user.click(
-      screen.getByRole('button', { name: `Set inquiry form for ${activeLink.name}` })
+      screen.getByRole('button', { name: `Set Inquiry Form For ${activeLink.name}` })
     );
     expect(hooks.optionsQuery).toHaveBeenCalledWith(
       'cycle-1',
       expect.objectContaining({ skip: false })
     );
-    await user.click(screen.getByRole('combobox', { name: 'Published inquiry form' }));
+    await user.click(screen.getByRole('combobox', { name: 'Published Inquiry Form' }));
     expect(screen.getByRole('option', { name: 'Inquiry form · v1' })).toBeVisible();
     expect(screen.getByRole('option', { name: 'Second inquiry · v2' })).toBeVisible();
     expect(screen.queryByRole('option', { name: 'Unlinked inquiry · v1' })).not.toBeInTheDocument();
     await user.click(screen.getByRole('option', { name: 'Second inquiry · v2' }));
-    await user.click(screen.getByRole('button', { name: 'Save form' }));
+    await user.click(screen.getByRole('button', { name: 'Save Form' }));
     await waitFor(() =>
       expect(hooks.setForm).toHaveBeenCalledWith({
         id: activeLink.id,
@@ -847,12 +847,12 @@ describe('public inquiry link details and actions', () => {
       renderList();
       const user = userEvent.setup();
       await user.click(
-        screen.getByRole('button', { name: `Set inquiry form for ${activeLink.name}` })
+        screen.getByRole('button', { name: `Set Inquiry Form For ${activeLink.name}` })
       );
-      expect(screen.getByRole('button', { name: 'Save form' })).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Save Form' })).toBeDisabled();
       if (state === 'loading')
         expect(
-          screen.getByRole('status', { name: 'Loading published inquiry forms' })
+          screen.getByRole('status', { name: 'Loading Published Inquiry Forms' })
         ).toBeVisible();
       if (state === 'empty') {
         expect(
@@ -860,7 +860,7 @@ describe('public inquiry link details and actions', () => {
             /Attach a published Inquiry form to an active inquiry offering in this admission period/
           )
         ).toBeVisible();
-        await user.click(screen.getByRole('button', { name: 'Refresh offerings' }));
+        await user.click(screen.getByRole('button', { name: 'Refresh Offerings' }));
         expect(hooks.options.refetch).toHaveBeenCalledOnce();
       }
       if (state === 'error') {
@@ -902,12 +902,12 @@ describe('public inquiry link details and actions', () => {
     try {
       const user = userEvent.setup();
       renderList();
-      await user.click(screen.getByRole('button', { name: `More actions for ${activeLink.name}` }));
-      const menu = screen.getByRole('menu', { name: `More actions for ${activeLink.name}` });
-      expect(within(menu).getByRole('menuitem', { name: 'Set inquiry form' })).toBeVisible();
-      expect(within(menu).getByRole('menuitem', { name: 'Revoke link' })).toBeVisible();
-      await user.click(within(menu).getByRole('menuitem', { name: 'Set inquiry form' }));
-      expect(screen.getByRole('dialog', { name: 'Set inquiry form' })).toBeVisible();
+      await user.click(screen.getByRole('button', { name: `More Actions For ${activeLink.name}` }));
+      const menu = screen.getByRole('menu', { name: `More Actions For ${activeLink.name}` });
+      expect(within(menu).getByRole('menuitem', { name: 'Set Inquiry Form' })).toBeVisible();
+      expect(within(menu).getByRole('menuitem', { name: 'Revoke Link' })).toBeVisible();
+      await user.click(within(menu).getByRole('menuitem', { name: 'Set Inquiry Form' }));
+      expect(screen.getByRole('dialog', { name: 'Set Inquiry Form' })).toBeVisible();
       expect(hooks.setForm).not.toHaveBeenCalled();
     } finally {
       window.matchMedia = originalMatchMedia;

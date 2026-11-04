@@ -80,9 +80,9 @@ it('merges the outcome into Status and shows waived attendance as not required',
   ]);
   expect(screen.queryByRole('columnheader', { name: /^Result\b/ })).not.toBeInTheDocument();
   const student = within(
-    screen.getByRole('row', { name: 'Assessment details for Waived student' })
+    screen.getByRole('row', { name: 'Assessment Details For Waived student' })
   );
-  expect(student.getByText('Not required')).toBeInTheDocument();
+  expect(student.getByText('Not Required')).toBeInTheDocument();
   expect(student.getByText('Waived')).toBeInTheDocument();
   expect(student.queryByText('Pending')).not.toBeInTheDocument();
   expect(student.queryByText('Complete')).not.toBeInTheDocument();
@@ -98,7 +98,7 @@ it('places Status before the final Action column and opens read-only details fro
   );
   const headers = screen.getAllByRole('columnheader').map((header) => header.textContent?.trim());
   expect(headers.slice(-2)).toEqual(['Status', 'Action']);
-  expect(screen.queryByRole('columnheader', { name: /^Next action\b/ })).not.toBeInTheDocument();
+  expect(screen.queryByRole('columnheader', { name: /^Next Action\b/ })).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'View details for History action' }));
   expect(onDetails).toHaveBeenCalledOnce();
 });
@@ -116,8 +116,8 @@ it('exposes real scalar filters while leaving combined identity and next-action 
       />
     </ThemeProvider>
   );
-  expect(screen.queryByRole('button', { name: 'Filter Student name' })).not.toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: 'Filter Next action' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Filter Student Name' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Filter Next Action' })).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Filter Attendance' }));
   fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Attendance *' }));
   fireEvent.click(await screen.findByRole('option', { name: 'Absent' }));
@@ -154,7 +154,7 @@ it('selects an active row without opening details and supports select-all for el
   expect(onSelection).toHaveBeenLastCalledWith([expect.objectContaining(pending)], true);
   expect(onDetails).not.toHaveBeenCalled();
   expect(screen.getByRole('checkbox', { name: 'Select Ready student' })).toBeEnabled();
-  fireEvent.click(screen.getByRole('checkbox', { name: 'Select applicants on this page' }));
+  fireEvent.click(screen.getByRole('checkbox', { name: 'Select Applicants on This Page' }));
   expect(onSelection).toHaveBeenLastCalledWith([pending, ready], true);
   expect(screen.getByRole('checkbox', { name: 'Select History student' })).toBeDisabled();
 });
@@ -165,7 +165,7 @@ it('shows partial selection and lets select-all clear the eligible rows', () => 
   const onSelection = vi.fn();
   const view = renderTable([first, second], onSelection, new Set([first.stageInstanceId]));
   expect(screen.getByRole('checkbox', { name: 'Select First' })).toBeChecked();
-  expect(screen.getByRole('checkbox', { name: 'Select applicants on this page' })).toHaveAttribute(
+  expect(screen.getByRole('checkbox', { name: 'Select Applicants on This Page' })).toHaveAttribute(
     'data-indeterminate',
     'true'
   );
@@ -175,7 +175,7 @@ it('shows partial selection and lets select-all clear the eligible rows', () => 
     onSelection,
     new Set([first.stageInstanceId, second.stageInstanceId])
   );
-  fireEvent.click(screen.getByRole('checkbox', { name: 'Select applicants on this page' }));
+  fireEvent.click(screen.getByRole('checkbox', { name: 'Select Applicants on This Page' }));
   expect(onSelection).toHaveBeenLastCalledWith([first, second], false);
 });
 
@@ -190,7 +190,7 @@ it('keeps inactive and unmanaged assessment rows unavailable and explains why', 
     new Set(),
     onDetails
   );
-  expect(screen.getByRole('checkbox', { name: 'Select applicants on this page' })).toBeDisabled();
+  expect(screen.getByRole('checkbox', { name: 'Select Applicants on This Page' })).toBeDisabled();
   expect(screen.getByRole('checkbox', { name: 'Select History' })).toBeDisabled();
   expect(screen.getByRole('checkbox', { name: 'Select Unmanaged' })).toBeDisabled();
   expect(screen.getByRole('checkbox', { name: 'Select History' })).toHaveAttribute(
@@ -201,11 +201,11 @@ it('keeps inactive and unmanaged assessment rows unavailable and explains why', 
     'aria-description',
     'Managed assessment is not configured for this stage.'
   );
-  expect(screen.getByRole('checkbox', { name: 'Select applicants on this page' })).toHaveAttribute(
+  expect(screen.getByRole('checkbox', { name: 'Select Applicants on This Page' })).toHaveAttribute(
     'aria-description',
     'No active managed assessments on this page. Open a student row to view assessment details.'
   );
-  const help = screen.getByLabelText('Why selection is unavailable for History');
+  const help = screen.getByLabelText('Why Selection Is Unavailable For History');
   expect(help).toHaveAttribute('tabindex', '0');
   expect(help.getAttribute('title')).toContain('no longer active');
   fireEvent.mouseOver(help);
@@ -214,6 +214,6 @@ it('keeps inactive and unmanaged assessment rows unavailable and explains why', 
   );
   fireEvent.click(help);
   expect(onDetails).not.toHaveBeenCalled();
-  fireEvent.click(screen.getByRole('row', { name: 'Assessment details for History' }));
+  fireEvent.click(screen.getByRole('row', { name: 'Assessment Details For History' }));
   expect(onDetails).toHaveBeenCalledOnce();
 });

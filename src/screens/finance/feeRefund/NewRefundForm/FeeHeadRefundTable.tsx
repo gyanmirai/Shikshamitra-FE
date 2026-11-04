@@ -94,13 +94,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
     return result;
   }, [formik.values.feeHeadRefunds]);
 
-  const selectedReceiptId = useMemo(
-    () =>
-      lockedReceiptId ||
-      formik.values.feeHeadRefunds.flatMap((x) => x.months).find((x) => x.sourceReceiptId)
-        ?.sourceReceiptId,
-    [formik.values.feeHeadRefunds, lockedReceiptId]
-  );
+  const selectedReceiptId = lockedReceiptId;
 
   // Map eligibility API response to IFeeHeadPayment shape used by child components
   const feeHeads: IFeeHeadPayment[] = useMemo(() => {
@@ -186,19 +180,14 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
     if (formik.values.refundType === 'full' && formik.values.feeHeadRefunds.length > 0) {
       const refunds = formik.values.feeHeadRefunds;
       let needsUpdate = false;
-      // Whole-receipt policies require every source; the server apportions their capped payout.
-      let remainingPolicyAmount =
-        isAdj || ('allowPartialRefund' in eligibility && eligibility.allowPartialRefund === false)
-          ? Number.POSITIVE_INFINITY
-          : Number((eligibility as any)?.totalRefundable ?? 0);
+      // Preserve every selected source. The canonical preview applies policy formulas and caps.
       const updated = refunds.map((fh) => {
         const fhInfo = feeHeads.find((f) => f.feeHeadId === fh.feeHeadId);
         if (!fhInfo) return fh;
         const newMonths = fh.months.map((m) => {
           const item = fhInfo.items.find((i) => i.month === m.month);
           const refundable = item ? Math.max(0, item.refundable) : 0;
-          const allowedAmount = Math.min(refundable, Math.max(0, remainingPolicyAmount));
-          remainingPolicyAmount -= allowedAmount;
+          const allowedAmount = refundable;
           if (m.amount !== allowedAmount) {
             needsUpdate = true;
             return { ...m, amount: allowedAmount };
@@ -239,6 +228,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
       const itemInfo = fhInfo?.items.find((i) => i.month === month);
       if (!isAdj && selectedReceiptId && itemInfo?.sourceReceiptId !== selectedReceiptId) return;
       const refundable = itemInfo ? Math.max(0, itemInfo.refundable) : 0;
+      if (refundable <= 0) return;
       const initialAmount = formik.values.refundType === 'full' ? refundable : '';
 
       if (!existing) {
@@ -254,6 +244,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
                 lateFeeDueFeeId: itemInfo?.lateFeeDueFeeId,
                 sourceAllocationId: itemInfo?.sourceAllocationId,
                 sourceReceiptId: itemInfo?.sourceReceiptId,
+                receiptNumber: itemInfo?.receiptNumber,
                 amount: initialAmount,
               },
             ],
@@ -272,6 +263,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
                 lateFeeDueFeeId: itemInfo?.lateFeeDueFeeId,
                 sourceAllocationId: itemInfo?.sourceAllocationId,
                 sourceReceiptId: itemInfo?.sourceReceiptId,
+                receiptNumber: itemInfo?.receiptNumber,
                 amount: initialAmount,
               },
             ];
@@ -300,11 +292,10 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
       const availableItems = feeHead.items.filter(
         (i) => Math.max(0, isAdj ? i.refundable : (i.refundable ?? i.paid - i.refunded)) > 0
       );
-      // Bulk selection follows the same one-receipt contract as an individual row.
-      const receiptId = selectedReceiptId || availableItems[0]?.sourceReceiptId;
-      const refundableItems = isAdj
-        ? availableItems
-        : availableItems.filter((item) => item.sourceReceiptId === receiptId);
+      const refundableItems =
+        isAdj || !selectedReceiptId
+          ? availableItems
+          : availableItems.filter((item) => item.sourceReceiptId === selectedReceiptId);
       if (refundableItems.length === 0) return;
       const refundableMonths = refundableItems.map((i) => i.month);
       const refunds = formik.values.feeHeadRefunds;
@@ -327,6 +318,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
               lateFeeDueFeeId: i.lateFeeDueFeeId,
               sourceAllocationId: i.sourceAllocationId,
               sourceReceiptId: i.sourceReceiptId,
+              receiptNumber: i.receiptNumber,
               amount: formik.values.refundType === 'full' ? Math.max(0, i.refundable) : '',
             })),
           },
@@ -341,6 +333,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
             lateFeeDueFeeId: i.lateFeeDueFeeId,
             sourceAllocationId: i.sourceAllocationId,
             sourceReceiptId: i.sourceReceiptId,
+            receiptNumber: i.receiptNumber,
             amount: formik.values.refundType === 'full' ? Math.max(0, i.refundable) : '',
           }));
         updated = refunds.map((fh) =>
@@ -419,7 +412,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
   if (!studentId)
     return (
       <Typography variant="body2" color="text.secondary">
-        Select a student to load refundable fees.
+        {isAdj ? 'Select a student to load adjustment sources.' : 'Select a student to load refundable fees.'}
       </Typography>
     );
   if (isLoading || isFetching) return <RefundTableSkeleton compact={compact} />;
@@ -445,7 +438,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
     const { detail, errorCode } = parseApiProblemDetail(eligibilityError);
     const message =
       detail === 'Something went wrong' || detail === 'One or more business rules were violated.'
-        ? 'Unable to check refund eligibility. Please try again.'
+        ? `Unable to check ${isAdj ? 'adjustment' : 'refund'} eligibility. Please try again.`
         : detail;
     const isBusinessRule =
       typeof errorCode === 'string' &&

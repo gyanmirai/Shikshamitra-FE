@@ -1,9 +1,9 @@
 import React from 'react';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
-import { defaultSettings } from 'src/components/settings/config-settings';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { defaultSettings } from 'src/components/settings/config-settings';
 
 import RefundRemarksForm from './RefundRemarksForm';
 
@@ -87,6 +87,33 @@ beforeEach(() => {
   });
 });
 describe('Refund detail drawer', () => {
+  it('offers the receipt for a completed payout', () => {
+    setup();
+    expect(screen.getByRole('button', { name: 'View refund receipt' })).toBeEnabled();
+  });
+
+  it('does not offer payment evidence for an unpaid refund request', () => {
+    query.mockReturnValue({
+      currentData: { ...detail, status: 2, processedAmount: 0, settlements: [] },
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+    });
+    setup();
+    expect(screen.queryByRole('button', { name: /View .*refund receipt/i })).not.toBeInTheDocument();
+  });
+
+  it('does not offer a provisional receipt without a recorded payout attempt', () => {
+    query.mockReturnValue({
+      currentData: { ...detail, status: 6, processedAmount: 0, settlements: [] },
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+    });
+    setup();
+    expect(screen.queryByRole('button', { name: /View .*refund receipt/i })).not.toBeInTheDocument();
+  });
+
   it('shows only this approved request installment and hides Reject despite an old action hint', () => {
     query.mockReturnValue({
       currentData: {

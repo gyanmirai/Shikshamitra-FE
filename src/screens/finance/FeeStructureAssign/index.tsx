@@ -3,7 +3,6 @@
 import type { RootState } from 'src/redux/store';
 
 import { useState } from 'react';
-
 import { Box } from '@mui/material';
 import { useSelector } from 'react-redux';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -46,7 +45,12 @@ export default function FeeStructureAssign() {
       <FeeStructureAssignTable
         onAssignStructure={(student) => openAssignment([student])}
         onEdit={(student) => openAssignment([student], true)}
-        onBulkAssign={(selected) => openAssignment(selected)}
+        onBulkAssign={(selected) =>
+          openAssignment(
+            selected,
+            selected.every((student) => student.isFeeStructureAssigned)
+          )
+        }
       />
       <AssignmentDrawer
         students={students}

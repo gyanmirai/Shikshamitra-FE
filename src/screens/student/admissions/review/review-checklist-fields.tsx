@@ -15,7 +15,7 @@ export function ReviewChecklistFields({
 }) {
   return (
     <Stack spacing={1.5}>
-      <Typography variant="subtitle2">Review checklist</Typography>
+      <Typography variant="subtitle2">Review Checklist</Typography>
       {!summary.policy?.checklist.length && (
         <Typography variant="body2" color="text.secondary">
           No checklist confirmations are required.

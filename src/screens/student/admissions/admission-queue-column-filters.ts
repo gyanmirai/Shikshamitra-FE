@@ -2,14 +2,14 @@ import type { IParams } from 'src/components/customizabaleTable/types';
 
 type Queue = 'pipeline' | 'applications';
 const labels: Record<string, string> = {
-  applicantName: 'Student name',
+  applicantName: 'Student Name',
   applicationNumber: 'Application',
   inquiryNumber: 'Inquiry',
   standardName: 'Class',
   contactPhone: 'Phone',
   contactEmail: 'Email',
-  decisionEnteredAt: 'Decision phase entered',
-  lastSavedAt: 'Last saved',
+  decisionEnteredAt: 'Decision Phase Entered',
+  lastSavedAt: 'Last Saved',
 };
 const textColumns = {
   pipeline: [

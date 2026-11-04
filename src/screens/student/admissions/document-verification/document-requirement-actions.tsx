@@ -26,8 +26,8 @@ export function DocumentRequirementActions({
           onClick={() => onAction('upload')}
         >
           {requirement.evidence.some((item) => item.fileName)
-            ? 'Upload replacement'
-            : 'Upload document'}
+            ? 'Upload Replacement'
+            : 'Upload Document'}
         </Button>
       )}
       {requirement.canRecordOriginal && permissions.original && (
@@ -37,7 +37,7 @@ export function DocumentRequirementActions({
           disabled={disabled}
           onClick={() => onAction('original')}
         >
-          Record original
+          Record Original
         </Button>
       )}
       {(requirement.canAccept ?? requirement.canReview) && permissions.review && (
@@ -57,7 +57,7 @@ export function DocumentRequirementActions({
           disabled={disabled}
           onClick={() => onAction('reject')}
         >
-          Request replacement
+          Request Replacement
         </Button>
       )}
     </Stack>

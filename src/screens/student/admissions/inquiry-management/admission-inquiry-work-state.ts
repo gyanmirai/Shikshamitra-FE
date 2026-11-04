@@ -17,42 +17,42 @@ const datedDetail = (value?: string | null, prefix?: string) => {
 };
 
 export function inquiryWorkState(inquiry: AdmissionInquiry): AdmissionInquiryWorkState {
-  if (!inquiry.managed) return { color: 'default', label: 'Basic workflow' };
+  if (!inquiry.managed) return { color: 'default', label: 'Basic Workflow' };
   if (inquiry.hasOverdueFollowUp)
     return {
       color: 'error',
-      label: 'Follow-up overdue',
+      label: 'Follow-Up Overdue',
       detail: datedDetail(inquiry.nextFollowUpAt),
     };
   if (inquiry.isFirstContactOverdue)
     return {
       color: 'error',
-      label: 'First contact overdue',
+      label: 'First Contact Overdue',
       detail: datedDetail(inquiry.firstContactDueAt),
     };
   if (inquiry.isQualificationOverdue)
     return {
       color: 'error',
-      label: 'Qualification overdue',
+      label: 'Qualification Overdue',
       detail: datedDetail(inquiry.qualificationDueAt),
     };
   if (inquiry.nextFollowUpAt)
     return {
       color: 'warning',
-      label: `${inquiry.openFollowUpCount} open follow-up${inquiry.openFollowUpCount === 1 ? '' : 's'}`,
+      label: `${inquiry.openFollowUpCount} Open Follow-Up${inquiry.openFollowUpCount === 1 ? '' : 's'}`,
       detail: datedDetail(inquiry.nextFollowUpAt, 'Next'),
     };
   if (inquiry.needsFirstContact)
     return {
       color: 'info',
-      label: 'Awaiting first contact',
+      label: 'Awaiting First Contact',
       detail: datedDetail(inquiry.firstContactDueAt, 'Due'),
     };
   if (inquiry.needsQualification)
     return {
       color: 'info',
-      label: 'Awaiting qualification',
+      label: 'Awaiting Qualification',
       detail: datedDetail(inquiry.qualificationDueAt, 'Due'),
     };
-  return { color: 'default', label: 'Managed inquiry' };
+  return { color: 'default', label: 'Managed Inquiry' };
 }

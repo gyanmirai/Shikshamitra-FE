@@ -52,6 +52,32 @@ async function selectForm(user: ReturnType<typeof userEvent.setup>, label: strin
 }
 
 describe('workflow creation first step', () => {
+  it('shows a duplicate name error inline, retains details and allows retry with a different name', async () => {
+    const user = userEvent.setup();
+    const onSave = vi
+      .fn()
+      .mockRejectedValueOnce({
+        status: 403,
+        data: { error: { code: 'Admissions.WorkflowNameAlreadyExists' } },
+      })
+      .mockResolvedValue(undefined);
+    renderCreate({ onSave });
+    await user.click(screen.getByRole('radio', { name: /Blank workflow/ }));
+    const name = screen.getByRole('textbox', { name: 'Workflow Name *' });
+    fireEvent.change(name, { target: { value: 'Main Workflow' } });
+    await user.click(screen.getByRole('button', { name: 'Continue' }));
+    expect(
+      await screen.findByText(
+        'A workflow with this name already exists. Please enter a different name.'
+      )
+    ).toBeVisible();
+    expect(name).toHaveValue('Main Workflow');
+    expect(name).toHaveAttribute('aria-invalid', 'true');
+    fireEvent.change(name, { target: { value: 'Main Workflow New' } });
+    await user.click(screen.getByRole('button', { name: 'Continue' }));
+    await waitFor(() => expect(onSave).toHaveBeenCalledTimes(2));
+  });
+
   it('offers only Standard and Blank and saves Standard with the selected registration form', async () => {
     const user = userEvent.setup();
     const onSave = renderCreate();
@@ -60,14 +86,14 @@ describe('workflow creation first step', () => {
     expect(screen.getByRole('radio', { name: /Blank workflow/ })).toBeInTheDocument();
     expect(screen.getByText('Blank workflow')).toBeVisible();
     expect(screen.queryByRole('radio', { name: /Post-Inquiry Admission/ })).toBeNull();
-    expect(screen.queryByText('Inquiry linked')).toBeNull();
-    fireEvent.change(screen.getByRole('textbox', { name: 'Workflow name *' }), {
+    expect(screen.queryByText('Inquiry Linked')).toBeNull();
+    fireEvent.change(screen.getByRole('textbox', { name: 'Workflow Name *' }), {
       target: { value: 'After inquiry' },
     });
     await user.click(screen.getByRole('button', { name: 'Continue' }));
     expect(await screen.findByText('Select a published registration form')).toBeInTheDocument();
     expect(onSave).not.toHaveBeenCalled();
-    await selectForm(user, 'Registration form *', 'Student registration · v3');
+    await selectForm(user, 'Registration Form *', 'Student registration · v3');
     await user.click(screen.getByRole('button', { name: 'Continue' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(onSave).toHaveBeenCalledWith(
@@ -83,13 +109,13 @@ describe('workflow creation first step', () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
     renderCreate({ onClose });
-    fireEvent.change(screen.getByRole('textbox', { name: 'Workflow name *' }), {
+    fireEvent.change(screen.getByRole('textbox', { name: 'Workflow Name *' }), {
       target: { value: 'Unsaved admission' },
     });
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(onClose).not.toHaveBeenCalled();
-    expect(screen.getByRole('dialog', { name: 'Discard workflow details?' })).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Discard details' }));
+    expect(screen.getByRole('dialog', { name: 'Discard Workflow Details?' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Discard Details' }));
     expect(onClose).toHaveBeenCalledOnce();
   });
   it('keeps details and template choices together before the journey builder', async () => {
@@ -110,43 +136,43 @@ describe('workflow creation first step', () => {
     expect(screen.queryByRole('dialog', { name: /Create workflow/ })).toBeNull();
 
     const firstTemplate = screen.getByRole('radio', { name: /Standard admission/ });
-    const name = screen.getByRole('textbox', { name: 'Workflow name *' });
+    const name = screen.getByRole('textbox', { name: 'Workflow Name *' });
     expect(firstTemplate.compareDocumentPosition(name)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
     expect(screen.getAllByRole('radio')).toHaveLength(2);
-    expect(screen.queryByText('Choose a workflow template')).toBeNull();
+    expect(screen.queryByText('Choose a Workflow Template')).toBeNull();
     expect(firstTemplate.closest('.MuiCard-root')).not.toHaveTextContent('5 stages');
-    expect(screen.queryByRole('radio', { name: /Selective admission with offer/ })).toBeNull();
-    expect(screen.queryByRole('combobox', { name: /Inquiry form/ })).toBeNull();
-    expect(screen.getByRole('heading', { name: 'Journey preview' })).toBeInTheDocument();
+    expect(screen.queryByRole('radio', { name: /Selective Admission with offer/ })).toBeNull();
+    expect(screen.queryByRole('combobox', { name: /Inquiry Form/ })).toBeNull();
+    expect(screen.getByRole('heading', { name: 'Journey Preview' })).toBeInTheDocument();
     expect(
       screen
-        .getByRole('heading', { name: 'Workflow details' })
-        .compareDocumentPosition(screen.getByRole('heading', { name: 'Journey preview' }))
+        .getByRole('heading', { name: 'Workflow Details' })
+        .compareDocumentPosition(screen.getByRole('heading', { name: 'Journey Preview' }))
     ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
 
-    expect(screen.getByRole('textbox', { name: 'Description (optional)' })).toBeInTheDocument();
-    const preview = screen.getByRole('heading', { name: 'Journey preview' }).closest('section')!;
-    expect(within(preview).getByText('5 stages')).toBeInTheDocument();
-    expect(within(preview).getByText('4 routes')).toBeInTheDocument();
-    const stages = screen.getByLabelText('Standard admission stage preview');
+    expect(screen.getByRole('textbox', { name: 'Description (Optional)' })).toBeInTheDocument();
+    const preview = screen.getByRole('heading', { name: 'Journey Preview' }).closest('section')!;
+    expect(within(preview).getByText('5 Stages')).toBeInTheDocument();
+    expect(within(preview).getByText('4 Routes')).toBeInTheDocument();
+    const stages = screen.getByLabelText('Standard admission Stage Preview');
     expect(stages).toHaveTextContent(
       /Entrance assessment.*Admission form.*Document verification.*Payment.*Admission finalization/
     );
     await user.click(screen.getByRole('radio', { name: /Blank workflow/ }));
-    expect(within(preview).getByText('0 stages')).toBeInTheDocument();
-    expect(within(preview).getByText('0 routes')).toBeInTheDocument();
-    expect(within(preview).getByText('No stages yet')).toBeInTheDocument();
+    expect(within(preview).getByText('0 Stages')).toBeInTheDocument();
+    expect(within(preview).getByText('0 Routes')).toBeInTheDocument();
+    expect(within(preview).getByText('No Stages Yet')).toBeInTheDocument();
   });
 
   it('keeps the chosen template and registration form without an inquiry default', async () => {
     const user = userEvent.setup();
     const onSave = renderCreate();
 
-    fireEvent.change(screen.getByRole('textbox', { name: 'Workflow name *' }), {
+    fireEvent.change(screen.getByRole('textbox', { name: 'Workflow Name *' }), {
       target: { value: 'Grade 1 Admission' },
     });
     expect(screen.queryByRole('textbox', { name: 'Workflow code *' })).not.toBeInTheDocument();
-    await selectForm(user, 'Registration form *', 'Student registration · v3');
+    await selectForm(user, 'Registration Form *', 'Student registration · v3');
     await user.click(screen.getByRole('button', { name: 'Continue' }));
 
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
@@ -167,7 +193,7 @@ describe('workflow creation first step', () => {
     expect(await screen.findByText('Workflow name is required')).toBeInTheDocument();
     expect(onSave).not.toHaveBeenCalled();
 
-    fireEvent.change(screen.getByRole('textbox', { name: 'Workflow name *' }), {
+    fireEvent.change(screen.getByRole('textbox', { name: 'Workflow Name *' }), {
       target: { value: 'Fresh Admission' },
     });
     await user.click(screen.getByRole('button', { name: 'Continue' }));
@@ -184,11 +210,11 @@ describe('workflow creation first step', () => {
     const user = userEvent.setup();
     const onSave = renderCreate();
 
-    fireEvent.change(screen.getByRole('textbox', { name: 'Workflow name *' }), {
+    fireEvent.change(screen.getByRole('textbox', { name: 'Workflow Name *' }), {
       target: { value: 'Custom Admission' },
     });
     await user.click(screen.getByRole('radio', { name: /Blank workflow/ }));
-    expect(screen.queryByRole('combobox', { name: 'Registration form *' })).toBeNull();
+    expect(screen.queryByRole('combobox', { name: 'Registration Form *' })).toBeNull();
     await user.click(screen.getByRole('button', { name: 'Continue' }));
 
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
@@ -206,14 +232,14 @@ describe('workflow creation first step', () => {
       .mockResolvedValueOnce(undefined);
     renderCreate({ onSave });
 
-    fireEvent.change(screen.getByRole('textbox', { name: 'Workflow name *' }), {
+    fireEvent.change(screen.getByRole('textbox', { name: 'Workflow Name *' }), {
       target: { value: 'Retry admission' },
     });
     await user.click(screen.getByRole('radio', { name: /Blank workflow/ }));
     await user.click(screen.getByRole('button', { name: 'Continue' }));
 
     await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
-    expect(screen.getByRole('textbox', { name: 'Workflow name *' })).toHaveValue('Retry admission');
+    expect(screen.getByRole('textbox', { name: 'Workflow Name *' })).toHaveValue('Retry admission');
     expect(screen.getByRole('radio', { name: /Blank workflow/ })).toBeChecked();
     expect(screen.getByRole('button', { name: 'Step 1: Workflow details' })).toHaveAttribute(
       'aria-current',
@@ -235,7 +261,7 @@ describe('workflow creation first step', () => {
     );
     renderCreate({ onSave });
 
-    fireEvent.change(screen.getByRole('textbox', { name: 'Workflow name *' }), {
+    fireEvent.change(screen.getByRole('textbox', { name: 'Workflow Name *' }), {
       target: { value: 'One draft only' },
     });
     await user.click(screen.getByRole('radio', { name: /Blank workflow/ }));
@@ -247,6 +273,40 @@ describe('workflow creation first step', () => {
     expect(onSave).toHaveBeenCalledOnce();
 
     await act(async () => resolveSave());
+  });
+});
+
+describe('workflow clone name validation', () => {
+  it('shows a duplicate name error in the clone drawer without losing the entered name', async () => {
+    const user = userEvent.setup();
+    const store = configureStore({ reducer: { confirmPopup } });
+    const onClose = vi.fn();
+    const onSave = vi.fn().mockRejectedValue({
+      data: { errorCode: 'Admissions.WorkflowNameAlreadyExists' },
+    });
+    render(
+      <Provider store={store}>
+        <ThemeProvider theme={createTheme(defaultSettings)}>
+          <AdmissionWorkflowDialog
+            open
+            saving={false}
+            title="Clone workflow"
+            submitLabel="Clone"
+            initialValues={{ name: 'Existing copy', code: '' }}
+            onClose={onClose}
+            onSave={onSave}
+          />
+        </ThemeProvider>
+      </Provider>
+    );
+    await user.click(screen.getByRole('button', { name: 'Clone' }));
+    expect(
+      await screen.findByText(
+        'A workflow with this name already exists. Please enter a different name.'
+      )
+    ).toBeVisible();
+    expect(screen.getByRole('textbox', { name: 'Workflow Name *' })).toHaveValue('Existing copy');
+    expect(onClose).not.toHaveBeenCalled();
   });
 });
 
@@ -299,24 +359,24 @@ describe('inline workflow details editing', () => {
     expect(
       screen.queryByRole('heading', { name: 'Edit workflow name and description' })
     ).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Workflow information' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Workflow Information' })).toBeNull();
     expect(screen.queryByText('Step 1 of 2')).toBeNull();
-    expect(screen.getByRole('button', { name: 'Close workflow editor' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Close Workflow Editor' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Step 1: Workflow details' })).toHaveAttribute(
       'aria-current',
       'step'
     );
     expect(screen.getByRole('button', { name: 'Step 2: Build journey' })).toBeEnabled();
     expect(screen.getAllByRole('radio')).toHaveLength(2);
-    expect(screen.getByRole('heading', { name: 'Journey preview' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Journey Preview' })).toBeInTheDocument();
     expect(screen.getByText('School-specific registration')).toBeInTheDocument();
-    expect(screen.getByRole('combobox', { name: 'Registration form *' })).toHaveValue(
+    expect(screen.getByRole('combobox', { name: 'Registration Form *' })).toHaveValue(
       'Student registration · v3'
     );
-    fireEvent.change(screen.getByRole('textbox', { name: 'Workflow name *' }), {
+    fireEvent.change(screen.getByRole('textbox', { name: 'Workflow Name *' }), {
       target: { value: 'Updated admission' },
     });
-    await user.click(screen.getByRole('button', { name: 'Save & continue' }));
+    await user.click(screen.getByRole('button', { name: 'Save & Continue' }));
     await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -333,14 +393,14 @@ describe('inline workflow details editing', () => {
     const user = userEvent.setup();
     const { onSave, onClose } = renderEdit();
     const guidance =
-      'Keep your current journey, or choose a template to replace its stages and routes when saving.';
-    const info = screen.getByRole('button', { name: 'Workflow details information' });
+      'Keep Your Current Journey, or Choose a Template to Replace Its Stages and Routes When Saving.';
+    const info = screen.getByRole('button', { name: 'Workflow Details information' });
 
     expect(screen.queryByText(guidance)).not.toBeInTheDocument();
     await user.hover(info);
     expect(await screen.findByRole('tooltip')).toHaveTextContent(guidance);
     await user.unhover(info);
-    await user.click(screen.getByRole('button', { name: 'Close workflow editor' }));
+    await user.click(screen.getByRole('button', { name: 'Close Workflow Editor' }));
 
     expect(onClose).toHaveBeenCalledOnce();
     expect(onSave).not.toHaveBeenCalled();
@@ -348,13 +408,13 @@ describe('inline workflow details editing', () => {
 
   it('validates the edited details before navigating with the Build journey step', async () => {
     const { onSave, onClose } = renderEdit();
-    fireEvent.change(screen.getByRole('textbox', { name: 'Workflow name *' }), {
+    fireEvent.change(screen.getByRole('textbox', { name: 'Workflow Name *' }), {
       target: { value: '' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Step 2: Build journey' }));
     expect(await screen.findByText('Workflow name is required')).toBeInTheDocument();
     expect(onSave).not.toHaveBeenCalled();
-    fireEvent.change(screen.getByRole('textbox', { name: 'Workflow name *' }), {
+    fireEvent.change(screen.getByRole('textbox', { name: 'Workflow Name *' }), {
       target: { value: 'Edited through step' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Step 2: Build journey' }));
@@ -369,20 +429,20 @@ describe('inline workflow details editing', () => {
     const { onSave } = renderEdit();
     await user.click(screen.getByRole('radio', { name: /Standard admission/ }));
     expect(screen.queryByText('School-specific registration')).toBeNull();
-    await user.click(screen.getByRole('button', { name: 'Save & continue' }));
+    await user.click(screen.getByRole('button', { name: 'Save & Continue' }));
     expect(
-      await screen.findByRole('dialog', { name: 'Replace current journey?' })
+      await screen.findByRole('dialog', { name: 'Replace Current Journey?' })
     ).toBeInTheDocument();
     expect(onSave).not.toHaveBeenCalled();
     await user.click(
-      within(screen.getByRole('dialog', { name: 'Replace current journey?' })).getByRole('button', {
+      within(screen.getByRole('dialog', { name: 'Replace Current Journey?' })).getByRole('button', {
         name: 'Cancel',
       })
     );
     expect(onSave).not.toHaveBeenCalled();
-    await user.click(screen.getByRole('button', { name: 'Keep current journey' }));
+    await user.click(screen.getByRole('button', { name: 'Keep Current Journey' }));
     expect(screen.getByText('School-specific registration')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Save & continue' }));
+    await user.click(screen.getByRole('button', { name: 'Save & Continue' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ starterJourney: undefined }));
   });
@@ -391,8 +451,8 @@ describe('inline workflow details editing', () => {
     const user = userEvent.setup();
     const { onSave } = renderEdit();
     await user.click(screen.getByRole('radio', { name: /Standard admission/ }));
-    await user.click(screen.getByRole('button', { name: 'Save & continue' }));
-    await user.click(await screen.findByRole('button', { name: 'Replace & save' }));
+    await user.click(screen.getByRole('button', { name: 'Save & Continue' }));
+    await user.click(await screen.findByRole('button', { name: 'Replace & Save' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -405,19 +465,19 @@ describe('inline workflow details editing', () => {
   it('routes breadcrumb Back through the same dirty-close guard', async () => {
     const user = userEvent.setup();
     const { onClose, closeRequestRef } = renderEdit();
-    fireEvent.change(screen.getByRole('textbox', { name: 'Workflow name *' }), {
+    fireEvent.change(screen.getByRole('textbox', { name: 'Workflow Name *' }), {
       target: { value: 'Unsaved edit' },
     });
     act(() => closeRequestRef.current?.());
     expect(onClose).not.toHaveBeenCalled();
-    await user.click(screen.getByRole('button', { name: 'Discard details' }));
+    await user.click(screen.getByRole('button', { name: 'Discard Details' }));
     expect(onClose).toHaveBeenCalledOnce();
   });
 
   it('locks edit Back, Close and Save while saving', () => {
     const { onClose, closeRequestRef } = renderEdit(undefined, undefined, 'Saved', true);
-    expect(screen.getByRole('button', { name: 'Save & continue' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Close workflow editor' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Save & Continue' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Close Workflow Editor' })).toBeDisabled();
     act(() => closeRequestRef.current?.());
     expect(onClose).not.toHaveBeenCalled();
   });
@@ -426,21 +486,21 @@ describe('inline workflow details editing', () => {
     const user = userEvent.setup();
     const onSave = vi.fn().mockRejectedValue(new Error('Save failed'));
     const { onClose } = renderEdit(onSave);
-    fireEvent.change(screen.getByRole('textbox', { name: 'Workflow name *' }), {
+    fireEvent.change(screen.getByRole('textbox', { name: 'Workflow Name *' }), {
       target: { value: 'Retry details' },
     });
-    await user.click(screen.getByRole('button', { name: 'Save & continue' }));
+    await user.click(screen.getByRole('button', { name: 'Save & Continue' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(onClose).not.toHaveBeenCalled();
-    expect(screen.getByRole('textbox', { name: 'Workflow name *' })).toHaveValue('Retry details');
+    expect(screen.getByRole('textbox', { name: 'Workflow Name *' })).toHaveValue('Retry details');
   });
 
   it('treats a persisted null description as an empty optional field', async () => {
     const user = userEvent.setup();
     // Older API records can return null even though this optional client field is typed as string.
     const { onSave } = renderEdit(undefined, undefined, null as unknown as string);
-    expect(screen.getByRole('textbox', { name: 'Description (optional)' })).toHaveValue('');
-    await user.click(screen.getByRole('button', { name: 'Save & continue' }));
+    expect(screen.getByRole('textbox', { name: 'Description (Optional)' })).toHaveValue('');
+    await user.click(screen.getByRole('button', { name: 'Save & Continue' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(screen.queryByText('description cannot be null')).toBeNull();
   });

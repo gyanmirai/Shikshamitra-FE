@@ -129,7 +129,7 @@ export function FieldChoiceSettings({ formik, sectionIndex, fieldIndex }: FieldS
 
   return (
     <SectionCard
-      title="Answer options"
+      title="Answer Options"
       paperProps={{ sx: { mb: 0, minWidth: 0 } }}
       gridProps={{ sx: { display: 'block' } }}
     >
@@ -145,7 +145,7 @@ export function FieldChoiceSettings({ formik, sectionIndex, fieldIndex }: FieldS
               variant="outlined"
               onClick={() => formik.setFieldValue(`${path}.optionsJson`, undefined)}
             >
-              Enter my own options
+              Enter My Own Options
             </Button>
           </>
         )}
@@ -160,7 +160,7 @@ export function FieldChoiceSettings({ formik, sectionIndex, fieldIndex }: FieldS
               size="small"
               multiline
               minRows={2}
-              label="Compatibility value"
+              label="Compatibility Value"
               value={field.optionsJson ?? ''}
               helperText="This technical value is shown only because the saved choices need repair."
               onChange={(event) =>
@@ -172,7 +172,7 @@ export function FieldChoiceSettings({ formik, sectionIndex, fieldIndex }: FieldS
               variant="outlined"
               onClick={() => formik.setFieldValue(`${path}.optionsJson`, undefined)}
             >
-              Replace with new choices
+              Replace with New Choices
             </Button>
           </>
         )}
@@ -195,10 +195,10 @@ export function FieldChoiceSettings({ formik, sectionIndex, fieldIndex }: FieldS
                   helperText={!choice.label.trim() ? 'Enter an option name.' : undefined}
                   onChange={(event) => changeChoiceLabel(index, event.target.value)}
                 />
-                <CustomTooltip title="Move option up">
+                <CustomTooltip title="Move Option Up">
                   <span>
                     <IconButton
-                      aria-label={`Move ${choice.label || `option ${index + 1}`} up`}
+                      aria-label={`Move ${choice.label || `option ${index + 1}`} Up`}
                       disabled={index === 0}
                       onClick={() => moveChoice(index, -1)}
                     >
@@ -206,10 +206,10 @@ export function FieldChoiceSettings({ formik, sectionIndex, fieldIndex }: FieldS
                     </IconButton>
                   </span>
                 </CustomTooltip>
-                <CustomTooltip title="Move option down">
+                <CustomTooltip title="Move Option Down">
                   <span>
                     <IconButton
-                      aria-label={`Move ${choice.label || `option ${index + 1}`} down`}
+                      aria-label={`Move ${choice.label || `option ${index + 1}`} Down`}
                       disabled={index === parsedChoices.choices.length - 1}
                       onClick={() => moveChoice(index, 1)}
                     >
@@ -217,7 +217,7 @@ export function FieldChoiceSettings({ formik, sectionIndex, fieldIndex }: FieldS
                     </IconButton>
                   </span>
                 </CustomTooltip>
-                <CustomTooltip title="Delete option">
+                <CustomTooltip title="Delete Option">
                   <IconButton
                     aria-label={`Delete ${choice.label || `option ${index + 1}`}`}
                     onClick={() => removeChoice(index)}
@@ -239,19 +239,20 @@ export function FieldChoiceSettings({ formik, sectionIndex, fieldIndex }: FieldS
                   borderRadius: 1,
                 }}
               >
-                <Typography variant="body2">No choices added yet</Typography>
+                <Typography variant="body2">No Choices Added Yet</Typography>
               </Box>
             )}
 
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
               <Button
+                aria-label="Add Choice"
                 size="small"
                 variant="outlined"
                 startIcon={<Iconify icon="mdi:plus" />}
                 onClick={addChoice}
                 disabled={isApplicantGender && !nextGenderValue}
               >
-                Add choice
+                Choice
               </Button>
               {!isApplicantGender && (
                 <Button
@@ -260,7 +261,7 @@ export function FieldChoiceSettings({ formik, sectionIndex, fieldIndex }: FieldS
                   startIcon={<Iconify icon="mdi:content-paste" />}
                   onClick={() => setPasteOpen((value) => !value)}
                 >
-                  Paste choices
+                  Paste Choices
                 </Button>
               )}
             </Stack>
@@ -272,7 +273,7 @@ export function FieldChoiceSettings({ formik, sectionIndex, fieldIndex }: FieldS
                   size="small"
                   multiline
                   minRows={4}
-                  label="Paste choices"
+                  label="Paste Choices"
                   value={pastedChoices}
                   placeholder={'Bus\nOwn transport\nWalking'}
                   onChange={(event) => setPastedChoices(event.target.value)}
@@ -294,7 +295,7 @@ export function FieldChoiceSettings({ formik, sectionIndex, fieldIndex }: FieldS
                     disabled={!pastedChoices.trim()}
                     onClick={addPastedChoices}
                   >
-                    Add choices
+                    Add Choices
                   </Button>
                 </Stack>
               </Stack>

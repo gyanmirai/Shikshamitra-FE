@@ -13,9 +13,9 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { financePermissions } from 'src/constants/finance-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useGenerateFeeStructureMutation } from 'src/redux/finance/financeFeeStructure';
+import { FinanceSetupManagerHeader } from 'src/screens/finance/setup/embedding/FinanceSetupManagerHeader';
 
 import FeeStructureTable from './Components/FeeStructureTable';
 import FeeStructureWorkspaceDialog from './Components/FeeStructureWorkspaceDialog';
@@ -51,7 +51,8 @@ export default function FeeStructure() {
   };
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-      <CustomBreadcrumbs
+      <FinanceSetupManagerHeader
+        editorOpen={Boolean(selected) || isLoading}
         description="Manage class fee configurations and protected revisions for the selected academic year."
         heading="Fee Structure"
 

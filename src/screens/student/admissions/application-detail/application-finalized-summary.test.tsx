@@ -8,6 +8,7 @@ import { vi, it, expect, beforeEach } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { expectStudentErrorToast } from 'src/test/student-toast-test-fixture';
 
 import {
   ApplicationFinalizedActions,
@@ -128,18 +129,18 @@ beforeEach(() => {
 
 it('shows real finalization data without the success banner, UUIDs, or an assumed activation/payment', () => {
   renderSummary();
-  expect(screen.getByRole('heading', { name: 'Admission finalized' })).toBeVisible();
+  expect(screen.getByRole('heading', { name: 'Admission Finalized' })).toBeVisible();
   expect(screen.getByText('Finalizing Staff')).toBeVisible();
   expect(screen.queryByText('Different counsellor')).not.toBeInTheDocument();
   expect(screen.getByText('Class 5 / 2026–2027')).toBeVisible();
   expect(screen.getByText('CBSE / English')).toBeVisible();
   expect(screen.getByText('Class 5 Regular Fees · Revision 2')).toBeVisible();
   expect(screen.getByText('Choose a division')).toBeVisible();
-  expect(screen.getByText('GR: Not assigned')).toBeVisible();
+  expect(screen.getByText('GR: Not Assigned')).toBeVisible();
   expect(
-    screen.queryByText(/successfully|durable onboarding|student-1|case-1|Paid|Activated/)
+    screen.queryByText(/successfully|durable onboarding|Student-1|case-1|Paid|Activated/)
   ).not.toBeInTheDocument();
-  expect(screen.getByRole('link', { name: 'Continue onboarding' })).toHaveAttribute(
+  expect(screen.getByRole('link', { name: 'Continue Onboarding' })).toHaveAttribute(
     'href',
     expect.stringContaining('search=APP-2026-000012')
   );
@@ -153,7 +154,7 @@ it('discloses helper guidance through the accessible handoff info icon and histo
     () => expect(screen.getByRole('tooltip')).toHaveTextContent('Placement, GR and roll numbers'),
     { timeout: 2000 }
   );
-  fireEvent.click(screen.getByRole('button', { name: 'Decision & finalization history' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Decision & Finalization History' }));
   await waitFor(() =>
     expect(screen.getByText(/Admission finalized and transferred/)).toBeVisible()
   );
@@ -188,14 +189,14 @@ it('does not fetch or offer onboarding navigation without the View grant', () =>
   renderSummary();
   expect(mocks.caseQuery).toHaveBeenCalledWith('case-1', expect.objectContaining({ skip: true }));
   expect(screen.getByText(/Onboarding viewing access is required/)).toBeVisible();
-  expect(screen.queryByRole('link', { name: 'Continue onboarding' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('link', { name: 'Continue Onboarding' })).not.toBeInTheDocument();
   expect(screen.queryByText('Pending')).not.toBeInTheDocument();
 });
 
-it('shows loading and recoverable errors instead of pretending handover data is pending', () => {
+it('shows loading and toast errors instead of pretending handover data is pending', async () => {
   mocks.caseQuery.mockReturnValue({ isLoading: true, refetch: mocks.retryCase });
   const view = renderSummary();
-  expect(screen.getByLabelText('Loading onboarding handover')).toBeVisible();
+  expect(screen.getByLabelText('Loading Onboarding Handover')).toBeVisible();
   view.unmount();
   mocks.caseQuery.mockReturnValue({
     isError: true,
@@ -206,11 +207,12 @@ it('shows loading and recoverable errors instead of pretending handover data is 
   renderSummary({ historyError: true });
   expect(screen.getByText('History unavailable')).toBeVisible();
   expect(screen.queryByText('Finalizing Staff')).not.toBeInTheDocument();
-  expect(screen.queryByText('GR: Not assigned')).not.toBeInTheDocument();
-  fireEvent.click(screen.getAllByRole('button', { name: 'Retry' })[0]);
-  expect(mocks.retryCase).toHaveBeenCalledOnce();
-  fireEvent.click(screen.getAllByRole('button', { name: 'Retry' })[1]);
-  expect(mocks.retryFee).toHaveBeenCalledOnce();
+  expect(screen.queryByText('GR: Not Assigned')).not.toBeInTheDocument();
+  await expectStudentErrorToast('Onboarding details could not be loaded.');
+  await expectStudentErrorToast('Fee confirmation could not be loaded.');
+  expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+  expect(mocks.retryCase).not.toHaveBeenCalled();
+  expect(mocks.retryFee).not.toHaveBeenCalled();
   expect(screen.queryByText('Verified')).not.toBeInTheDocument();
 });
 
@@ -225,7 +227,7 @@ it('never shows a previous applicant case while the next record loads', () => {
     refetch: mocks.retryCase,
   });
   renderSummary();
-  expect(screen.getByLabelText('Loading onboarding handover')).toBeVisible();
+  expect(screen.getByLabelText('Loading Onboarding Handover')).toBeVisible();
   expect(screen.queryByText(/Old division/)).not.toBeInTheDocument();
 });
 
@@ -243,7 +245,7 @@ it('preserves missing-case and skipped-stage states without claiming checks were
   expect(mocks.caseQuery).toHaveBeenCalledWith('', expect.objectContaining({ skip: true }));
   expect(screen.getByText('No onboarding case is linked to this application.')).toBeVisible();
   expect(screen.getByText('Skipped')).toBeVisible();
-  expect(screen.getByText('Not configured')).toBeVisible();
+  expect(screen.getByText('Not Configured')).toBeVisible();
   expect(screen.queryByText('Verified')).not.toBeInTheDocument();
 });
 
@@ -259,7 +261,7 @@ it('preserves the guarded back action and disables onward navigation while the w
     <ApplicationFinalizedActions application={application} disabled onBack={onBack} />
   );
   expect(screen.getByRole('button', { name: 'Back to Applications' })).toBeDisabled();
-  expect(screen.getByRole('button', { name: 'Continue onboarding' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Continue Onboarding' })).toBeDisabled();
   expect(screen.queryByRole('link')).not.toBeInTheDocument();
   view.rerender(<ApplicationFinalizedActions application={application} onBack={onBack} />);
   fireEvent.click(screen.getByRole('button', { name: 'Back to Applications' }));

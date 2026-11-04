@@ -11,6 +11,7 @@ import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import { FormSectionCard } from 'src/components/form-section-card';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
@@ -246,9 +247,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
               </Box>
             </Box>
           ) : isOnlineTextSubmission && data?.submittedContent?.trim() ? (
-            <Card
-              sx={{ bgcolor: 'background.paper', boxShadow: 'none' }}
-            >
+            <Card sx={{ bgcolor: 'background.paper', boxShadow: 'none' }}>
               <Typography
                 variant="caption"
                 color="text.secondary"
@@ -289,18 +288,12 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
       <DialogScrollContent>
         <Grid container spacing={1.5}>
           {/* Student Profile Section */}
-          <Grid
-            size={{ xs: 12, md: 4 }}
-            sx={{ display: 'flex', '& > *': { flex: 1 } }}
-          >
+          <Grid size={{ xs: 12, md: 4 }} sx={{ display: 'flex', '& > *': { flex: 1 } }}>
             <StudentFeedbackContext studentName={data?.studentName} rollNumber={data?.rollNumber} />
           </Grid>
 
           {/* Homework Context Section */}
-          <Grid
-            size={{ xs: 12, md: 4 }}
-            sx={{ display: 'flex', '& > *': { flex: 1 } }}
-          >
+          <Grid size={{ xs: 12, md: 4 }} sx={{ display: 'flex', '& > *': { flex: 1 } }}>
             <HomeworkFeedbackContext
               title={selectedHomework?.title}
               description={selectedHomework?.description}
@@ -340,35 +333,13 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
 
           {/* Feedback Section */}
           <Grid size={{ xs: 12 }} sx={{ display: 'flex', '& > *': { flex: 1 } }}>
-            <Card sx={{ p: 0, overflow: 'hidden', boxShadow: 'var(--shadows-10)' }}>
-              <Box
-                sx={{
-                  px: 2,
-                  py: 1.25,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  bgcolor: 'background.neutral',
-                  borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
-                }}
-              >
-                <Typography
-                  variant="subtitle2"
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 0.75,
-                  }}
-                >
-                  <Iconify
-                    icon="solar:chat-round-dots-bold"
-                    width={18}
-                    sx={{ color: 'primary.main' }}
-                  />
-                  Teacher Feedback & Remarks
-                </Typography>
-
-                {isEdit && (
+            <FormSectionCard
+              title="Teacher Feedback & Remarks"
+              icon={GlobalIcons.feedback}
+              titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+              descriptionTooltip="Teacher remarks for this student's homework submission, separate from criterion-specific rubric feedback."
+              action={
+                isEdit ? (
                   <>
                     <Button
                       ref={templateBtnRef}
@@ -390,7 +361,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                       onClick={() => setTemplateMenuOpen(true)}
                       sx={{ fontSize: 12, py: 0.25 }}
                     >
-                      Quick Templates
+                      Quick templates
                     </Button>
                     <Menu
                       anchorEl={templateBtnRef.current}
@@ -411,10 +382,10 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                       ))}
                     </Menu>
                   </>
-                )}
-              </Box>
-
-              <Box sx={{ p: 2 }}>
+                ) : undefined
+              }
+            >
+              <Box>
                 {isEdit ? (
                   <>
                     <ShakingTextField error={Boolean(formik.errors.feedback)}>
@@ -456,21 +427,14 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                 ) : (
                   <Box>
                     {data?.feedback ? (
-                      <Card
-                        variant="outlined"
-                        sx={{
-                          p: 2,
-                          bgcolor: 'background.paper',
-                          borderLeft: (theme) => `4px solid ${theme.palette.primary.main}`,
-                        }}
-                      >
+                      <Box>
                         <Typography
                           variant="body2"
-                          sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.6 }}
+                          sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}
                         >
                           {data.feedback}
                         </Typography>
-                      </Card>
+                      </Box>
                     ) : (
                       <Box
                         sx={{
@@ -489,7 +453,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                   </Box>
                 )}
               </Box>
-            </Card>
+            </FormSectionCard>
           </Grid>
         </Grid>
       </DialogScrollContent>

@@ -13,12 +13,21 @@ import { DocumentRequirementDialog } from './document-requirement-dialog';
 
 import type { DocumentCategoryQueryState } from './document-requirement-collection';
 
+// defaultName preserves saved configuration while display labels follow UI copy rules.
 const presets = [
-  { value: 'BIRTH_CERTIFICATE', label: 'Birth certificate' },
-  { value: 'TRANSFER_CERTIFICATE', label: 'Transfer certificate' },
-  { value: 'PREVIOUS_REPORT', label: 'Previous school report' },
-  { value: 'ADDRESS_PROOF', label: 'Address proof' },
-  { value: 'STUDENT_PHOTO', label: 'Student photograph' },
+  { value: 'BIRTH_CERTIFICATE', label: 'Birth Certificate', defaultName: 'Birth certificate' },
+  {
+    value: 'TRANSFER_CERTIFICATE',
+    label: 'Transfer Certificate',
+    defaultName: 'Transfer certificate',
+  },
+  {
+    value: 'PREVIOUS_REPORT',
+    label: 'Previous School Report',
+    defaultName: 'Previous school report',
+  },
+  { value: 'ADDRESS_PROOF', label: 'Address Proof', defaultName: 'Address proof' },
+  { value: 'STUDENT_PHOTO', label: 'Student Photograph', defaultName: 'Student photograph' },
 ];
 type Props = DocumentCategoryQueryState & {
   requirements: AdmissionDocumentRequirementPolicy[];
@@ -42,7 +51,7 @@ export function DocumentRequirementsList({ requirements, onChange, readOnly, ...
     <Stack spacing={1}>
       {requirements.length >= 25 && (
         <Typography variant="caption" color="text.secondary">
-          {requirements.length} of 30 documents
+          {requirements.length} Of 30 Documents
         </Typography>
       )}
       {!requirements.length && (
@@ -50,7 +59,7 @@ export function DocumentRequirementsList({ requirements, onChange, readOnly, ...
           Add a standard or custom document to build the applicant checklist.
         </Typography>
       )}
-      <Stack component="ul" aria-label="Selected documents" spacing={1} sx={{ m: 0, p: 0 }}>
+      <Stack component="ul" aria-label="Selected Documents" spacing={1} sx={{ m: 0, p: 0 }}>
         {requirements.map((item, index) => (
           <DocumentRequirementItem
             key={`${item.code}-${index}`}
@@ -70,7 +79,7 @@ export function DocumentRequirementsList({ requirements, onChange, readOnly, ...
             <CustomSelect
               size="small"
               fullWidth
-              label="Add a standard document"
+              label="Add a Standard Document"
               value=""
               options={presets}
               disabled={requirements.length >= 30}
@@ -81,13 +90,14 @@ export function DocumentRequirementsList({ requirements, onChange, readOnly, ...
                   setAnchorEl(standardDocumentAnchor.current);
                   setEditing({
                     index: -1,
-                    value: createDocumentRequirement(preset.value, preset.label),
+                    value: createDocumentRequirement(preset.value, preset.defaultName),
                   });
                 }
               }}
             />
           </Box>
           <Button
+            aria-label="Add Custom Document"
             size="small"
             variant="outlined"
             startIcon={<Iconify icon="mdi:plus" />}
@@ -95,7 +105,7 @@ export function DocumentRequirementsList({ requirements, onChange, readOnly, ...
             disabled={requirements.length >= 30}
             onClick={addCustom}
           >
-            Add custom document
+            Custom Document
           </Button>
         </>
       )}
@@ -120,7 +130,7 @@ export function DocumentRequirementsList({ requirements, onChange, readOnly, ...
       <ConfirmDialog
         open={removing !== null}
         onClose={() => setRemoving(null)}
-        title="Remove document requirement?"
+        title="Remove Document Requirement?"
         content={`Remove ${removing !== null ? requirements[removing]?.name : 'this document'} from this draft checklist? Evidence on existing applications will remain available.`}
         action={
           <Button
@@ -132,7 +142,7 @@ export function DocumentRequirementsList({ requirements, onChange, readOnly, ...
               setRemoving(null);
             }}
           >
-            Remove requirement
+            Remove Requirement
           </Button>
         }
       />

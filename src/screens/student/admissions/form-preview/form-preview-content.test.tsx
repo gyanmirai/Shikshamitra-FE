@@ -121,7 +121,7 @@ describe('embedded admission form preview', () => {
         embedded
       />
     );
-    expect(screen.queryByLabelText('Profile photos')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Profile Photos')).not.toBeInTheDocument();
     expect(screen.queryByRole('textbox', { name: 'Student photo' })).not.toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Student name' })).toBeVisible();
   });
@@ -144,7 +144,7 @@ describe('embedded admission form preview', () => {
     const photos = screen.getAllByRole('textbox', { name: 'Student photo' });
     expect(photos[0]).toHaveValue('first-photo');
     expect(photos[1]).toHaveValue('second-photo');
-    expect(screen.getAllByLabelText('Profile photos')).toHaveLength(2);
+    expect(screen.getAllByLabelText('Profile Photos')).toHaveLength(2);
     await user.type(photos[1], 'X');
     expect(formik.setFieldValue).toHaveBeenLastCalledWith(
       'PHOTO',

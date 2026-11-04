@@ -15,7 +15,7 @@ export type AdmissionFieldConfiguration = {
 };
 
 export type AdmissionFieldPreset = {
-  key?: AdmissionFieldFormat;
+  key?: AdmissionFieldFormat | 'class-selector';
   label: string;
   description: string;
   icon: string;

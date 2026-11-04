@@ -168,18 +168,18 @@ async function setup(openNextStage = true, initialWorkflow = workflow) {
       </ThemeProvider>
     </Provider>
   );
-  await screen.findByRole('list', { name: 'Journey stage sequence' });
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Add stage' })).toBeEnabled());
+  await screen.findByRole('list', { name: 'Journey Stage Sequence' });
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Add Stage' })).toBeEnabled());
   if (!openNextStage) return { saves };
-  const source = within(screen.getByRole('list', { name: 'Journey stage sequence' })).getAllByRole(
+  const source = within(screen.getByRole('list', { name: 'Journey Stage Sequence' })).getAllByRole(
     'listitem'
   )[0];
-  fireEvent.click(within(source).getByRole('button', { name: 'Choose next step' }));
+  fireEvent.click(within(source).getByRole('button', { name: 'Choose Next Step' }));
   expect(await screen.findByText('Configure Assessment')).toBeInTheDocument();
   expect(screen.getByRole('textbox', { name: 'Stage name *' })).toHaveValue('Assessment');
   expect(screen.queryByRole('button', { name: 'Save path' })).not.toBeInTheDocument();
-  expect(screen.queryByRole('combobox', { name: 'Continue to *' })).not.toBeInTheDocument();
-  expect(screen.queryByText('Next step', { exact: true })).not.toBeInTheDocument();
+  expect(screen.queryByRole('combobox', { name: 'Continue To *' })).not.toBeInTheDocument();
+  expect(screen.queryByText('Next Step', { exact: true })).not.toBeInTheDocument();
   return { saves };
 }
 
@@ -189,14 +189,14 @@ describe('Choose next step creates and configures a connected stage', { timeout:
     fireEvent.change(screen.getByRole('textbox', { name: 'Stage name *' }), {
       target: { value: 'Additional assessment' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Apply changes' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Apply Changes' }));
     await waitFor(
-      () => expect(screen.queryByRole('button', { name: 'Apply changes' })).not.toBeInTheDocument(),
+      () => expect(screen.queryByRole('button', { name: 'Apply Changes' })).not.toBeInTheDocument(),
       { timeout: 10000 }
     );
     const sequence = await screen.findByRole(
       'list',
-      { name: 'Journey stage sequence' },
+      { name: 'Journey Stage Sequence' },
       { timeout: 10000 }
     );
     expect(within(sequence).getAllByRole('listitem')).toHaveLength(3);
@@ -221,14 +221,14 @@ describe('Choose next step creates and configures a connected stage', { timeout:
         { id: 'usual', fromStageId: 'source', toStageId: 'decision', priority: 0, isDefault: true },
       ],
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Add stage' }));
-    expect(await screen.findByRole('combobox', { name: 'Insert after *' })).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Add Stage' }));
+    expect(await screen.findByRole('combobox', { name: 'Insert After *' })).toBeVisible();
     fireEvent.change(screen.getByRole('textbox', { name: 'Stage name *' }), {
       target: { value: 'Inserted assessment' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Apply changes' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Apply Changes' }));
     await waitFor(() =>
-      expect(screen.queryByRole('button', { name: 'Apply changes' })).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Apply Changes' })).not.toBeInTheDocument()
     );
     fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
     await waitFor(() => expect(saves).toHaveLength(1));
@@ -251,11 +251,11 @@ describe('Choose next step creates and configures a connected stage', { timeout:
     );
     fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
     expect(
-      within(screen.getByRole('list', { name: 'Journey stage sequence' })).getAllByRole('listitem')
+      within(screen.getByRole('list', { name: 'Journey Stage Sequence' })).getAllByRole('listitem')
     ).toHaveLength(2);
     fireEvent.click(screen.getByRole('button', { name: 'Redo' }));
     expect(
-      within(screen.getByRole('list', { name: 'Journey stage sequence' })).getAllByRole('listitem')
+      within(screen.getByRole('list', { name: 'Journey Stage Sequence' })).getAllByRole('listitem')
     ).toHaveLength(3);
   });
   it('abandons the next-stage editor without adding a stage or route', async () => {
@@ -264,19 +264,19 @@ describe('Choose next step creates and configures a connected stage', { timeout:
       target: { value: 'Unsaved assessment' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Back' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Discard changes' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Discard Changes' }));
     await waitFor(
-      () => expect(screen.queryByRole('button', { name: 'Apply changes' })).not.toBeInTheDocument(),
+      () => expect(screen.queryByRole('button', { name: 'Apply Changes' })).not.toBeInTheDocument(),
       { timeout: 10000 }
     );
     const sequence = await screen.findByRole(
       'list',
-      { name: 'Journey stage sequence' },
+      { name: 'Journey Stage Sequence' },
       { timeout: 10000 }
     );
     expect(within(sequence).getAllByRole('listitem')).toHaveLength(2);
-    expect(within(sequence).queryByText('Unsaved assessment')).not.toBeInTheDocument();
-    expect(within(sequence).getByRole('button', { name: 'Choose next step' })).toBeInTheDocument();
+    expect(within(sequence).queryByText('Unsaved Assessment')).not.toBeInTheDocument();
+    expect(within(sequence).getByRole('button', { name: 'Choose Next Step' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Save draft' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
     expect(saves).toHaveLength(0);
@@ -298,17 +298,17 @@ describe('Choose next step creates and configures a connected stage', { timeout:
         { id: 'last', fromStageId: 'middle', toStageId: 'decision', priority: 0, isDefault: true },
       ],
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Add stage' }));
-    const position = await screen.findByRole('combobox', { name: 'Insert after *' });
+    fireEvent.click(screen.getByRole('button', { name: 'Add Stage' }));
+    const position = await screen.findByRole('combobox', { name: 'Insert After *' });
     expect(position).toHaveTextContent('Middle assessment');
     fireEvent.mouseDown(position);
     fireEvent.click(await screen.findByRole('option', { name: 'Entrance assessment' }));
     fireEvent.change(screen.getByRole('textbox', { name: 'Stage name *' }), {
       target: { value: 'Chosen position assessment' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Apply changes' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Apply Changes' }));
     await waitFor(() =>
-      expect(screen.queryByRole('button', { name: 'Apply changes' })).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Apply Changes' })).not.toBeInTheDocument()
     );
     fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
     await waitFor(() => expect(saves).toHaveLength(1));

@@ -9,6 +9,7 @@ import Tabs from '@mui/material/Tabs';
 import { useId, useState } from 'react';
 import Stack from '@mui/material/Stack';
 
+import { CLASS_SELECTOR_PRESET } from './academic-class-selector';
 import { CustomFieldPalette } from './components/custom-field-palette';
 import { StudentFieldPalette } from './components/student-field-palette';
 
@@ -50,20 +51,20 @@ export function FormBuilderPalette({
           <Tabs
         value={activeTab}
         variant="fullWidth"
-        aria-label="Field library"
+        aria-label="Field Library"
         onChange={(_, value: 'system' | 'custom') => setActiveTab(value)}
         sx={{ minHeight: 44, flexShrink: 0, borderBottom: 1, borderColor: 'divider' }}
       >
         <Tab
           value="system"
-          label="Student fields"
+          label="Student Fields"
           id={`${tabId}-system`}
           aria-controls={`${tabId}-panel-system`}
           sx={{ minHeight: 44 }}
         />
         <Tab
           value="custom"
-          label="Custom fields"
+          label="Custom Fields"
           id={`${tabId}-custom`}
           aria-controls={`${tabId}-panel-custom`}
           sx={{ minHeight: 44 }}
@@ -86,6 +87,7 @@ export function FormBuilderPalette({
               error={error}
               onAdd={(field) => onAddField(field.fieldType, field.key)}
               onAddSection={onAddGroupSection}
+              onAddClassSelector={() => onAddField(6, undefined, CLASS_SELECTOR_PRESET)}
             />
           ) : (
             <CustomFieldPalette

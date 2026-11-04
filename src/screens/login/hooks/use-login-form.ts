@@ -16,6 +16,7 @@ const loginSchema = Yup.object({
 export function useLoginForm() {
   const [tenantInactive, setTenantInactive] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [loginSucceeded, setLoginSucceeded] = useState(false);
 
   useEffect(() => {
     setTenantInactive(
@@ -29,6 +30,7 @@ export function useLoginForm() {
     onSubmit: async (values) => {
       setTenantInactive(false);
       setErrorMessage('');
+      setLoginSucceeded(false);
       try {
         const res = await signIn('credentials', {
           email: values.email.trim(),
@@ -46,6 +48,8 @@ export function useLoginForm() {
             formik.setFieldError('organization', message);
           } else if (!inactive) setErrorMessage(message);
           shikshaMitraToast.error({ message });
+        } else if (res?.ok) {
+          setLoginSucceeded(true);
         }
       } catch {
         setErrorMessage('Unable to sign in. Please try again.');
@@ -59,5 +63,5 @@ export function useLoginForm() {
     if (organization) setFieldValue('organization', organization, false);
   }, [setFieldValue]);
 
-  return { formik, tenantInactive, errorMessage };
+  return { formik, tenantInactive, errorMessage, loginSucceeded };
 }

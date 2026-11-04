@@ -23,7 +23,6 @@ import {
   Typography,
   RadioGroup,
   FormControl,
-  FormHelperText,
   FormControlLabel,
 } from '@mui/material';
 
@@ -81,24 +80,13 @@ export default function FeeRefundDetailsForm({
       setFieldTouched('refundMethod', false, false);
     }
   }, [methodsReady, methods, refundMethod, setFieldValue, setFieldTouched]);
-  useEffect(() => {
-    if (
-      eligibility &&
-      !eligibilityFetching &&
-      !eligibilityError &&
-      !eligibility.allowPartialRefund &&
-      formik.values.refundType === 'partial'
-    ) {
-      setFieldValue('refundType', 'full', false);
-    }
-  }, [eligibility, eligibilityFetching, eligibilityError, formik.values.refundType, setFieldValue]);
   if (formik.values.studentId && eligibilityFetching && !formik.isSubmitting)
     return <RefundDetailsSkeleton />;
 
   return (
     <Box display="flex" flexDirection="column" gap={2} mt={0}>
       <FormSectionCard
-        descriptionTooltip="Select paid fee months from one receipt. Full refund uses the available policy limit; partial refund lets you enter an amount when the linked policy permits it. The server checks deductions and limits on submission."
+        descriptionTooltip="Select eligible paid fee months and heads across receipts. Full refund uses each selected paid balance; partial refund lets you enter smaller amounts. The server applies policy deductions and limits on submission."
         title="Refund Details"
         icon="solar:bill-list-bold-duotone"
       >
@@ -120,12 +108,8 @@ export default function FeeRefundDetailsForm({
                 value="partial"
                 control={<Radio size="small" />}
                 label="Partial refund"
-                disabled={eligibility != null && !eligibility.allowPartialRefund}
               />
             </RadioGroup>
-            {eligibility && !eligibility.allowPartialRefund && (
-              <FormHelperText>The linked refund policy allows full refunds only.</FormHelperText>
-            )}
           </FormControl>
         )}
 
@@ -159,7 +143,7 @@ export default function FeeRefundDetailsForm({
       {/* ── Refund Payment Details Card ── */}
       {formik.values.studentId && hasPaymentRecords && canConfigureRefund && (
         <FormSectionCard
-          descriptionTooltip="Choose a payment method allowed by the refund policy linked to the student's fee structure and enter the recipient details. Payment is recorded separately after approval."
+          descriptionTooltip="Choose a payment method allowed by the refund policy linked to the student's fee structure and enter the recipient details. Cash completes on approval, including automatic approval on administrator submission. Other payment methods are recorded after approval."
           title="Refund Payment Details"
           icon="solar:wallet-bold-duotone"
         >

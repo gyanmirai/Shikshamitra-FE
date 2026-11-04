@@ -11,6 +11,7 @@ import RefundForm from 'src/screens/finance/feeRefund/NewRefundForm/RefundForm';
 import RefundRemarksForm from 'src/screens/finance/feeRefund/Components/RefundRemarksForm';
 import RefundWorklist from 'src/screens/finance/feeRefund/Components/RefundWorklist';
 import 'simplebar-react/dist/simplebar.min.css';
+import { getSubmittedRefund } from './mock-api';
 
 const store = configureStore({
   reducer: () => ({
@@ -19,7 +20,10 @@ const store = configureStore({
       currentYear: { id: 'year', name: '2026–27', startDate: '2026-04-01', endDate: '2027-03-31' },
     },
     auth: {
-      permissions: [{ name: financePermissions.fees.refundActions.approve, isGranted: true }],
+      permissions: [
+        { name: financePermissions.fees.refundActions.approve, isGranted: true },
+        { name: financePermissions.fees.refundActions.process, isGranted: true },
+      ],
     },
   }),
 });
@@ -47,7 +51,12 @@ function Fixture() {
           </Typography>
           <Button onClick={() => setViewRefund(true)}>View synthetic refund request</Button>
           {saved && (
-            <Alert severity="success">Synthetic refund request submitted and approved.</Alert>
+            <>
+              <Alert severity="success">Synthetic cash refund completed.</Alert>
+              <output aria-label="Submitted refund payload">
+                {JSON.stringify(getSubmittedRefund())}
+              </output>
+            </>
           )}
           {worklistView && (
             <RefundWorklist

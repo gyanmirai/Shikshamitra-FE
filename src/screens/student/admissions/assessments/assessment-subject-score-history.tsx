@@ -36,7 +36,7 @@ export function AssessmentSubjectScoreHistory({ attempt }: { attempt: Assessment
       {attempt.status === 'pending' &&
         attempt.subjectScores?.some(({ marks }) => marks != null) && (
           <Typography variant="caption" color="text.secondary">
-            Draft result · not submitted
+            Draft Result · Not Submitted
           </Typography>
         )}
     </Stack>

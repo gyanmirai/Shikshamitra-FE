@@ -21,7 +21,6 @@ import {
   useDeleteAdmissionFormMutation,
   useUpdateAdmissionFormMutation,
   usePublishAdmissionFormMutation,
-  useArchiveAdmissionFormMutation,
   useValidateAdmissionFormMutation,
   useCreateAdmissionFormVersionMutation,
 } from 'src/redux/student/admissions/admission-forms-api';
@@ -55,7 +54,6 @@ export function useFormListActions() {
   const [validate, validateState] = useValidateAdmissionFormMutation();
   const [publish, publishState] = usePublishAdmissionFormMutation();
   const [createVersion] = useCreateAdmissionFormVersionMutation();
-  const [archive] = useArchiveAdmissionFormMutation();
   const [deleteForm, deleteState] = useDeleteAdmissionFormMutation();
   const [loadDeleteForm] = useLazyGetAdmissionFormQuery();
   const [pendingDelete, setPendingDelete] = useState<AdmissionForm | null>(null);
@@ -211,11 +209,6 @@ export function useFormListActions() {
     closeHistory: () => setHistoryForm(null),
     createVersion: (id: string) =>
       run(() => createVersion(id).unwrap(), 'New form version created'),
-    archive: (form: AdmissionForm) =>
-      run(
-        () => archive({ id: form.id, concurrencyStamp: form.concurrencyStamp ?? '' }).unwrap(),
-        'Form archived'
-      ),
     requestDelete: (form: AdmissionForm) => {
       setDeleteError(null);
       setPendingDelete(form);

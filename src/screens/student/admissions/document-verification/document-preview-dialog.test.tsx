@@ -45,14 +45,14 @@ it('previews the protected image bytes with zoom and fit and releases the URL on
     )
   );
   const store = renderPreview();
-  const image = await screen.findByRole('img', { name: 'Birth certificate document preview' });
+  const image = await screen.findByRole('img', { name: 'Birth certificate Document Preview' });
   expect(image).toHaveAttribute('src', 'blob:private-preview');
-  expect(screen.getByText('birth-certificate.pdf · Copy version 1')).toBeInTheDocument();
+  expect(screen.getByText('birth-certificate.pdf · Copy Version 1')).toBeInTheDocument();
   Object.defineProperty(image, 'naturalWidth', { configurable: true, value: 1000 });
   fireEvent.load(image);
-  await userEvent.click(screen.getByRole('button', { name: 'Zoom in' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Zoom In' }));
   expect(screen.getByText('125%')).toBeInTheDocument();
-  await userEvent.click(screen.getByRole('button', { name: 'Fit to page' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Fit to Page' }));
   expect(screen.getByText('Fit', { exact: true })).toBeInTheDocument();
   expect(JSON.stringify(store.getState().api)).not.toContain('blob:private-preview');
   expect(JSON.stringify(store.getState().api)).not.toContain('private image bytes');
@@ -71,10 +71,10 @@ it('embeds a PDF from the same authorized endpoint with a native viewer fallback
     )
   );
   renderPreview();
-  const pdf = await screen.findByTitle('Birth certificate document preview');
+  const pdf = await screen.findByTitle('Birth certificate Document Preview');
   expect(pdf).toHaveAttribute('type', 'application/pdf');
   expect(pdf).toHaveAttribute('data', 'blob:private-preview');
-  expect(screen.queryByRole('button', { name: 'Zoom in' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Zoom In' })).not.toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Download' })).toBeEnabled();
 });
 
@@ -89,11 +89,11 @@ it('retains Close during loading and recovers from a failed request through Retr
     })
   );
   renderPreview();
-  expect(screen.getByLabelText('Loading document preview')).toBeInTheDocument();
+  expect(screen.getByLabelText('Loading Document Preview')).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Close' })).toBeEnabled();
-  await userEvent.click(await screen.findByRole('button', { name: 'Retry preview' }));
+  await userEvent.click(await screen.findByRole('button', { name: 'Retry Preview' }));
   expect(
-    await screen.findByRole('img', { name: 'Birth certificate document preview' })
+    await screen.findByRole('img', { name: 'Birth certificate Document Preview' })
   ).toBeInTheDocument();
   expect(requests).toBe(2);
 });
@@ -109,9 +109,9 @@ it('shows an actionable error if an image cannot decode and retries with a fresh
     )
   );
   renderPreview();
-  fireEvent.error(await screen.findByRole('img', { name: 'Birth certificate document preview' }));
-  await userEvent.click(screen.getByRole('button', { name: 'Retry preview' }));
-  await screen.findByRole('img', { name: 'Birth certificate document preview' });
+  fireEvent.error(await screen.findByRole('img', { name: 'Birth certificate Document Preview' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Retry Preview' }));
+  await screen.findByRole('img', { name: 'Birth certificate Document Preview' });
   expect(createUrl).toHaveBeenCalledTimes(2);
   expect(revokeUrl).toHaveBeenCalledWith('blob:private-preview');
 });
@@ -137,7 +137,7 @@ it('rejects active HTML even when the saved metadata claims PDF', async () => {
   renderPreview();
   expect(await screen.findByText(/Preview is unavailable for this format/)).toBeInTheDocument();
   expect(createUrl).not.toHaveBeenCalled();
-  expect(screen.queryByTitle('Birth certificate document preview')).not.toBeInTheDocument();
+  expect(screen.queryByTitle('Birth certificate Document Preview')).not.toBeInTheDocument();
 });
 
 it('cancels an unfinished preview without leaving a late object URL', async () => {

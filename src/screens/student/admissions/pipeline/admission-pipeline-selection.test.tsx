@@ -32,7 +32,7 @@ describe('Pipeline page selection', () => {
     const column = selectionColumn(state);
     render(<>{column.renderColumn!(column)}</>);
     const checkbox = screen.getByRole('checkbox', {
-      name: 'Select all eligible applications on this page',
+      name: 'Select All Eligible Applications on This Page',
     });
     expect(checkbox).toHaveAttribute('data-indeterminate', 'true');
     expect(checkbox).toHaveAttribute('aria-checked', 'mixed');
@@ -50,7 +50,7 @@ describe('Pipeline page selection', () => {
       </div>
     );
     const checkbox = screen.getByRole('checkbox', {
-      name: 'Select Kabir Shah for counsellor assignment',
+      name: 'Select Kabir Shah For Counsellor Assignment',
     });
     fireEvent.click(checkbox);
     fireEvent.keyDown(checkbox, { key: ' ' });

@@ -99,12 +99,18 @@ export interface AssignmentPolicySelection {
   versionId: string | null;
 }
 export interface AssignmentDetails {
+  studentFeeStructureId?: string;
+  canEditStructure?: boolean;
+  structureEditBlocker?: string;
   assignment: AssignmentPreview;
   warnings: string[];
   concurrencyStamp: string;
 }
 
 export interface AssignmentRequest {
+  editAssignmentId?: string;
+  assignmentConcurrencyStamp?: string;
+  editReason?: string;
   policies?: AssignmentPolicySelection[];
   policyOverrideReason?: string;
   studentId: string;
@@ -130,6 +136,12 @@ export interface AssignmentCandidate {
 }
 
 export interface AssignmentStudent {
+  canEditStructure?: boolean;
+  structureEditBlocker?: string;
+  assignmentId?: string;
+  assignmentConcurrencyStamp?: string;
+  structureId?: string;
+  structureRevision?: number;
   assignmentState?: AssignmentContext['status'];
   assignmentSource?: 'Admission' | 'Finance';
   studentId: string;
@@ -150,6 +162,10 @@ export interface AssignmentStudent {
 }
 
 export interface AssignmentContext {
+  canEditStructure?: boolean;
+  structureEditBlocker?: string;
+  assignmentConcurrencyStamp?: string;
+  assignedAssignment?: AssignmentPreview | null;
   studentId: string;
   academicYearId: string;
   status: 'Unassigned' | 'Selected' | 'Prepared' | 'Assigned' | 'NeedsAttention';
@@ -209,6 +225,10 @@ export function assignmentErrorCode(error: unknown): string {
 
 export function assignmentError(error: unknown): string {
   const code = assignmentErrorCode(error);
+  if (code.endsWith('StructureEditBlocked'))
+    return 'This fee assignment has a payment or another recorded financial change. Only policies can be edited.';
+  if (code.endsWith('MixedOriginalStructures'))
+    return 'Select unpaid students with the same original fee structure and revision.';
   if (code.endsWith('VariableAmountRequired'))
     return 'Enter an amount for every included variable fee head.';
   if (code.endsWith('StalePreview'))
