@@ -71,6 +71,9 @@ Failed refreshes retain the draft and selection, disable Submit, and offer inlin
 Cancelling a changed selection offers Keep editing or Discard changes without discarding the parent template.
 Missing creation access directs the operator to an HR administrator.
 Required deduction and statutory dependencies appear inside the salary step when needed; the salary draft remains mounted while a dependency is configured.
+PF Coverage is a separate required check in the Salary Template step, including when the template itself is already usable.
+Its setup action embeds the shared coverage editor, using the wizard's single Save and next footer and unsaved-change guard.
+Saving refreshes server readiness; missing current-month coverage prevents completion, while either saved coverage decision can satisfy the check.
 Role repair remains an explicitly authorized Role Management task in another tab.
 Each step saves independently through existing APIs, and the final action rechecks server readiness.
 Failed background catalogue reads keep earning and salary-template editors mounted with their entries and an explicit retry action. The earning selector loads the complete paginated catalogue; embedded template loading uses only the wizard's navigation footer.
@@ -589,6 +592,14 @@ Existing membership remains visibly Required, and the backend owns coverage and 
 The salary calculation returns the enrollment decision and blocks saving when required evidence or enrollment is missing.
 The PF settings page records school establishment coverage with an effective month and evidence reference.
 Its write requires the exact PF Add capability and backend-confirmed school-wide scope.
+The page shows a compact coverage summary and opens a focused configuration dialog on request.
+Loading and failed reads never claim that coverage is missing; failed reads offer Retry.
+Confirmed missing current-month coverage offers Set up PF coverage, while read-only users are directed to an authorized school-wide HR administrator.
+The HR setup wizard checks school PF coverage separately from PF contribution rules and embeds the same coverage form.
+Coverage entry remains an explicit school decision, with the existing effective-date, evidence, concurrency, and idempotency contracts.
+The PF rule workspace uses the shared table, status labels, and permission-filtered row actions.
+Create and edit share Rule Details, Contribution Rules, and Effective Dates sections with numeric controls that preserve decimal drafts and zero rates.
+Saving locks fields and close controls; failed saves retain the draft and show an inline error.
 
 ESIC school settings use automatic statutory calculation, an effective payroll month, and an optional registration number.
 The settings panel owns one scrollable content region and a separate bottom action footer.

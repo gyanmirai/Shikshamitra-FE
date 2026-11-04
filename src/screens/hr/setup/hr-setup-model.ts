@@ -38,6 +38,7 @@ export const setupCheckLabels: Record<string, string> = {
   'salary-template': 'Salary Template',
   deductions: 'Deduction Components',
   pf: 'PF Rule',
+  'pf-coverage': 'PF Coverage',
   esi: 'ESIC Policy',
   'professional-tax': 'Professional Tax',
 };

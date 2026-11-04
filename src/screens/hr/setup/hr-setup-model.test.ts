@@ -13,6 +13,7 @@ const complete = (): HrSetupReadiness => ({
     { code: 'calendar', step: 'policies', state: 'ready', reason: '', canConfigure: true },
     { code: 'earnings', step: 'earnings', state: 'ready', reason: '', canConfigure: true },
     { code: 'salary-template', step: 'salary', state: 'ready', reason: '', canConfigure: true },
+    { code: 'pf-coverage', step: 'salary', state: 'ready', reason: '', canConfigure: true },
   ],
 });
 
@@ -47,6 +48,14 @@ describe('HR setup progress', () => {
   it('offers completion only after every server check is ready', () => {
     expect(firstIncompleteSetupStep(complete())).toBe(4);
     expect(setupStepComplete(complete(), 4)).toBe(true);
+  });
+  it('keeps salary setup incomplete when only school PF coverage is missing', () => {
+    const readiness = complete();
+    readiness.isReady = false;
+    readiness.checks[4].state = 'missing';
+    expect(firstIncompleteSetupStep(readiness)).toBe(3);
+    expect(setupStepComplete(readiness, 3)).toBe(false);
+    expect(setupTaskForCheck(readiness, 'pf-coverage')).toBe('pf-coverage');
   });
   it('keeps a conditional salary dependency unresolved', () => {
     const readiness = complete();
