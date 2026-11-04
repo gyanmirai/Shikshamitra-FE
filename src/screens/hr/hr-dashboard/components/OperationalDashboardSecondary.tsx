@@ -99,7 +99,7 @@ export default function OperationalDashboardSecondary({
               ? 'minmax(0, 1.7fr) minmax(0, 1fr)'
               : 'minmax(0, 1fr)',
         },
-        gap: 1.5,
+        gap: 2,
       }}
     >
       {canViewAttendance && (
@@ -142,7 +142,7 @@ export default function OperationalDashboardSecondary({
                 inputLabel: { shrink: true },
                 htmlInput: { max: indiaToday(), 'aria-label': 'Attendance date' },
               }}
-              sx={{ width: 175 }}
+              sx={{ width: { xs: 1, sm: 175 } }}
             />
           </Stack>
           {!data ? (
@@ -191,23 +191,37 @@ export default function OperationalDashboardSecondary({
                 aria-label="Selected day attendance summary"
                 sx={{
                   m: 0,
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  columnGap: 2,
-                  rowGap: 0.75,
+                  display: 'grid',
+                  gridTemplateColumns: {
+                    xs: 'repeat(2, minmax(0, 1fr))',
+                    sm: 'repeat(3, minmax(0, 1fr))',
+                  },
+                  gap: 1,
                   pt: 1.5,
                   borderTop: 1,
                   borderColor: 'divider',
                 }}
               >
                 {statusKeys.slice(1).map((key, i) => (
-                  <Box key={key} sx={{ display: 'flex', gap: 0.5 }}>
+                  <Box
+                    key={key}
+                    sx={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      gap: 1,
+                      px: 1,
+                      py: 0.75,
+                      bgcolor: 'background.neutral',
+                      borderRadius: 1,
+                    }}
+                  >
                     <Typography component="dt" variant="caption" color="text.secondary">
                       {statuses[i + 1].label}:
                     </Typography>
                     <Typography
                       component="dd"
-                      variant="caption"
+                      variant="subtitle2"
                       sx={{ m: 0, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}
                     >
                       {formatCount(data.summary![key])}
@@ -274,7 +288,14 @@ export default function OperationalDashboardSecondary({
                   </Typography>
                 </Box>
                 {payrollGuidance && (
-                  <Box sx={{ minHeight: { xs: 72, sm: 50 } }}>
+                  <Box
+                    sx={{
+                      minHeight: { xs: 72, sm: 50 },
+                      p: 1.5,
+                      borderRadius: 1,
+                      bgcolor: 'background.neutral',
+                    }}
+                  >
                     {payrollGuidance.color === 'info' ? (
                       <Label color="info" sx={{ color: 'text.primary' }}>
                         Review pending
@@ -311,7 +332,7 @@ export default function OperationalDashboardSecondary({
                     ['Locked', payroll.lockedCount],
                     ['Pending', payroll.pendingCount],
                   ].map(([label, count]) => (
-                    <Box key={String(label)}>
+                    <Box key={String(label)} sx={{ minWidth: 0 }}>
                       <Typography
                         component="p"
                         variant="h6"
