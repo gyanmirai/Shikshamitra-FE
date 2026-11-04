@@ -400,7 +400,7 @@ export async function createEmployeeFromExistingDefaults(
       }
 
       const defaults = await detailResponse.json();
-      const shiftsResponse = await fetch(`${evaluatedBaseUrl}/api/app/shift-management`, {
+      const shiftsResponse = await fetch(`${evaluatedBaseUrl}/api/hr/work-shifts`, {
         headers,
       });
       const shifts = shiftsResponse.ok ? await shiftsResponse.json() : { items: [] };
@@ -440,10 +440,10 @@ export async function createEmployeeFromExistingDefaults(
         state: defaults.state ?? { name: 'Gujarat', isoCode: 'GJ' },
         city: defaults.city ?? evaluatedFixture.city,
         pinCode: evaluatedFixture.pincode,
-        shiftId: evaluatedOverrides.shiftId ?? shiftId,
+        initialWorkShiftAssignment: { workShiftId: evaluatedOverrides.shiftId ?? shiftId, effectiveFrom: shifts.today || new Date().toISOString().slice(0,10) },
       };
 
-      if (!body.roleId || !body.shiftId) {
+      if (!body.roleId || !body.initialWorkShiftAssignment.workShiftId) {
         throw new Error('E2E setup could not resolve roleId and shiftId.');
       }
 
@@ -458,7 +458,7 @@ export async function createEmployeeFromExistingDefaults(
       const responseText = await createResponse.text();
       if (!createResponse.ok) {
         throw new Error(
-          `Staff create failed: ${createResponse.status} ${responseText} roleId=${body.roleId} shiftId=${body.shiftId}`
+          `Staff create failed: ${createResponse.status} ${responseText} roleId=${body.roleId} shiftId=${body.initialWorkShiftAssignment.workShiftId}`
         );
       }
 

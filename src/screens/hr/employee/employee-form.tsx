@@ -150,6 +150,7 @@ export const personalInformationInitialValues = (
   employeeId: editData?.id ?? '',
 
   shift: editData?.shiftId ?? '',
+  shiftEffectiveFrom: '',
 
   adharNo: editData?.adharNo ?? '',
   panNo: editData?.panNo ?? '',
@@ -509,7 +510,7 @@ const EmployeeFrom = ({ editData, handleClose, onCreated, initialStep = 0, onBus
           state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
           city: values?.city?.name,
           pinCode: String(values.pincode),
-          shiftId: values.shift,
+          initialWorkShiftAssignment: { workShiftId: values.shift, effectiveFrom: values.shiftEffectiveFrom },
           adharNo: values.adharNo || '',
           panNo: (values.panNo || '').toUpperCase(),
         };

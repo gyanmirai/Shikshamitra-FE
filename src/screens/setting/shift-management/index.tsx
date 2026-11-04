@@ -56,9 +56,9 @@ const ShiftManageMentScreen = () => {
         }}
       />
       <CustomBreadcrumbs
-        heading="Shift Management"
+        heading="School Shifts"
         description="Create and manage named shifts with start and end times for the school's daily schedule."
-        links={[{ name: 'Institute Setup' }, { name: 'Shift Management' }]}
+        links={[{ name: 'Institute Setup' }, { name: 'School Shifts' }]}
         action={
           <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
             <InstituteFieldFormattingPopover scope="shifts" />

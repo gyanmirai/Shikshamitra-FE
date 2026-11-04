@@ -3,7 +3,7 @@ module: institute-setup
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-11-03
+updated_on: 2026-11-04
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -145,3 +145,10 @@ Final Codex browser acceptance should save and reopen zero values through Add Ro
 Use disposable or controlled sample data and keep evidence in ignored `.artifacts/`; the [backend layout checks](../../../Shikshamitra-BE/docs/modules/institute-setup/testing.md#room-layout-and-features) own HTTP and persistence acceptance.
 
 The final Codex browser smoke used the production form with labelled sample data and a temporary sample API because the local authenticated API was unavailable. It verified column fields, calculated capacity, visual benches/seats, feature selection/reuse, submission, scrolling, light/dark themes and phone/tablet/desktop widths. This is UI evidence only; the [backend testing guide](../../../Shikshamitra-BE/docs/modules/institute-setup/testing.md#room-layout-and-features) owns database acceptance. Evidence stays in ignored `.codex/room-preview/`.
+
+## School Shifts
+
+Verify both catalogues against the disposable shift-isolation backend bridge.
+Run focused Vitest, ESLint, TypeScript and browser checks for shift forms, employee creation and schedule changes.
+Check keyboard access, dirty-close behavior, loading/error states, future cancellation, stale writes and independent cache invalidation.
+Perform the final smoke test in the Codex in-app browser after automated checks.

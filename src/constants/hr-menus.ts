@@ -481,7 +481,7 @@ const hrModule = () => ({
               icon: menuIconView('mdi:cog-outline'),
               children: [
                 {
-                  title: 'Shift Management',
+                  title: 'Work Shifts',
                   path: hrPaths.attendance.setting.shiftManagement,
                   _action: 'shift-management',
                   shortcutKey: 'Alt+H+A+4+1',

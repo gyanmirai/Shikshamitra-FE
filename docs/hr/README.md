@@ -3,7 +3,7 @@ module: hr
 domain: overview
 content_type: Landing
 status: canonical
-updated_on: 2026-10-19
+updated_on: 2026-11-02
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -76,3 +76,8 @@ Do not restore old PRDs, technical specs, or acceptance docs under `docs/`.
 
 Use [the route-to-table checklist](./references/hr-table-coverage.md) when changing primary or embedded HR surfaces.
 Minimals is the design foundation and attendance register is the table reference.
+
+## Employee Work Shifts
+
+HR owns employee work-shift configuration and dated employee assignments.
+See [workflows](workflows.md#work-shift-workflows) and [backend contracts](../../../Shikshamitra-BE/docs/modules/hr/api.md#employee-work-shift-apis).

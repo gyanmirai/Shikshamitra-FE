@@ -3,7 +3,7 @@ module: security
 domain: permissions
 content_type: Landing
 status: canonical
-updated_on: 2026-10-09
+updated_on: 2026-11-02
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -47,3 +47,9 @@ Keep inherited grants and unsaved drafts separate from direct-grant edits.
 Run the focused commands in [Testing](testing.md).
 Earlier restoration or replacement-editor tests do not validate later behavior changes.
 Report current checks and historical evidence separately.
+
+## Shift action boundaries
+
+HR shift permissions cannot authorize school-shift API operations.
+Employee editors can select active HR work shifts without receiving HR catalogue administration.
+Schedule writes require employee Edit and employee scope, independently of application role names.

@@ -268,7 +268,7 @@ async function createShift(
   startTime: string,
   endTime: string
 ) {
-  const response = await employeeApiRequest(page, '/app/shift-management', {
+  const response = await employeeApiRequest(page, '/hr/work-shifts', {
     method: 'POST',
     timeout: 120_000,
     body: JSON.stringify({

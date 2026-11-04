@@ -1,5 +1,5 @@
 import { api } from 'src/redux/service';
-import { employeeType, shiftManagementType, payrollStructureType } from 'src/redux/tagTypes';
+import { employeeType, workShiftType, payrollStructureType } from 'src/redux/tagTypes';
 
 export type HrSetupCheck = {
   code: string;
@@ -33,7 +33,7 @@ export const hrSetupReadinessApi = api.injectEndpoints({
         payrollStructureType.payrollStructure,
         payrollStructureType.salaryTemplate,
         payrollStructureType.statutoryScheme,
-        shiftManagementType.shift,
+        workShiftType.workShift,
       ],
       keepUnusedDataFor: 0,
     }),

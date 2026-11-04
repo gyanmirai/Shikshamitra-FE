@@ -116,7 +116,7 @@ const calendar = {
 };
 
 async function populate(page: Page) {
-  await page.route('**/api/app/shift-management**', async (route) => {
+  await page.route('**/api/hr/work-shifts**', async (route) => {
     const url = new URL(route.request().url());
     const skip = Number(url.searchParams.get('skipCount') || 0);
     const size = Number(url.searchParams.get('maxResultCount') || 20);

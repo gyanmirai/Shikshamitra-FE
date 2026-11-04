@@ -12,6 +12,7 @@ import { EmptyContent } from 'src/components/empty-content';
 import { Tab, Box, Tabs, Paper, Avatar, Skeleton, Typography } from '@mui/material';
 
 import EmployeeViewSkeleton from './employee-view-skeleton';
+import EmployeeWorkSchedule from './work-schedule';
 import EmployeeProfileDashboard from './employee-dashboard';
 import { convertBase64Format } from '../../../utils/base64Formate';
 import { getEmployeeStatusDisplayValue } from './employee-status-display';
@@ -76,6 +77,14 @@ export const TABS = [
     icon: <Icon icon="solar:user-id-outline" width={18} height={18} />,
     component: (props: { tabs: UseTabsReturn; employee: any }) => (
       <EmployeeInformation editData={props.employee} />
+    ),
+  },
+  {
+    value: 'workSchedule',
+    label: 'Work Schedule',
+    icon: <Icon icon="solar:clock-circle-outline" width={18} height={18} />,
+    component: (props: { tabs: UseTabsReturn; employee: any }) => (
+      <EmployeeWorkSchedule employeeId={props.employee?.id} />
     ),
   },
   {

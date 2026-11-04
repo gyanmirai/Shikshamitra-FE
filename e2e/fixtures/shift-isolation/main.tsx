@@ -1,5 +1,7 @@
 import dayjs from 'dayjs';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import WorkShifts from 'src/screens/hr/attendance-setting/shift-management';
+import WorkSchedule from 'src/screens/hr/employee/work-schedule';
 import { Toaster } from 'sonner';
 import { Provider } from 'react-redux';
 import { api } from 'src/redux/service';
@@ -46,6 +48,9 @@ const theme = createTheme(defaultSettings);
 function App() {
   const { data } = useSession();
   const [standardOpen, setStandardOpen] = useState(false);
+  const [surface,setSurface]=useState('school');
+  const [employeeId,setEmployeeId]=useState('');
+  useEffect(()=>{fetch('/fixture/context').then(r=>r.json()).then(x=>setEmployeeId(x.employeeId));},[]);
   const school = data.profile.tenantid === tenants.ddvs ? 'DDVS' : 'Shree Swaminarayan Vidyalaya';
   return (
     <Provider store={store}>
@@ -63,9 +68,12 @@ function App() {
               <Button onClick={() => switchTenant('ddvs')}>Switch to DDVS</Button>
               <Button onClick={() => switchTenant('swaminarayan')}>Switch to Swaminarayan</Button>
               <Button onClick={() => setStandardOpen(true)}>Add Standard</Button>
+              <Button onClick={() => setSurface('school')}>School shifts</Button>
+              <Button onClick={() => setSurface('hr')}>Employee shifts</Button>
+              <Button onClick={() => setSurface('schedule')}>Employee schedule</Button>
             </Stack>
             <Box sx={{ flex: 1, minHeight: 0 }}>
-              <ShiftManagementScreen />
+              {surface === 'school' ? <ShiftManagementScreen /> : surface === 'hr' ? <WorkShifts /> : employeeId ? <WorkSchedule employeeId={employeeId} /> : <span>Loading employee fixture...</span>}
             </Box>
             <Dialog open={standardOpen} onClose={() => setStandardOpen(false)} fullWidth>
               <DialogTitle>Add Standard</DialogTitle>

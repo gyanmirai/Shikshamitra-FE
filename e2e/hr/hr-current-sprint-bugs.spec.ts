@@ -362,7 +362,7 @@ async function createPfRule(page: Page) {
 }
 
 async function createShift(page: Page, startTime: string, endTime: string) {
-  const response = await employeeApiRequest(page, '/app/shift-management', {
+  const response = await employeeApiRequest(page, '/hr/work-shifts', {
     method: 'POST',
     body: JSON.stringify({
       shiftName: `E2E Late Arrival Shift ${Date.now()}`,

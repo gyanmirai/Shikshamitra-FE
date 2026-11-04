@@ -3,7 +3,7 @@ module: hr
 domain: testing
 content_type: Reference
 status: canonical
-updated_on: 2026-10-29
+updated_on: 2026-11-04
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -988,6 +988,13 @@ The column follow-up passed independent full TypeScript, scoped ESLint, an isola
 Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vitest/vitest.mjs run src/screens/hr/employee-onboarding src/hooks/use-unsaved-navigation.test.tsx src/components/nav-section/vertical/nav-list.test.tsx src/components/custom-stepper src/screens/hr/payroll/structure --pool=forks --maxWorkers=1 --testTimeout=30000` on Windows. Page tests cover direct loads, exact access grants, loading/403/404/503/ineligible states, wrong IDs, canceled/late reads, actor/tenant changes and draft-safe retry. The real wizard integration covers full-card text/subtitle/padding/control selection, keyboard/disabled multi-selection, staff/salary drafts across steps, dirty Keep Editing/Discard, required preview gates, saving locks, duplicate prevention, server failure and late unmounted completion.
 
 The existing authenticated onboarding and synthetic salary browser adapters target the new page shell. Their type checks do not certify a browser run. Authenticated responsive/light/dark/keyboard visuals, native browser traversal/refresh/close handling, actual template new-tab return and live finalization remain separate acceptance checks; prior denied browser routes must not be retried via alternate ports or transports. No backend or live-account changes are needed for the component suites.
+
+## Employee Work Shifts
+
+Verify both catalogues against the disposable shift-isolation backend bridge.
+Run focused Vitest, ESLint, TypeScript and browser checks for shift forms, employee creation and schedule changes.
+Check keyboard access, dirty-close behavior, loading/error states, future cancellation, stale writes and independent cache invalidation.
+Perform the final smoke test in the Codex in-app browser after automated checks.
 
 ## Guided salary setup
 

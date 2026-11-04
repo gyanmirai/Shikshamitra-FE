@@ -3,7 +3,7 @@ module: hr
 domain: routes
 content_type: Reference
 status: canonical
-updated_on: 2026-10-27
+updated_on: 2026-11-02
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -133,3 +133,9 @@ Policy writes additionally require Edit, Activate, ConfigureCalculation and scho
 Template and salary editors use the selection catalogue through their own permissions without exposing policy management.
 
 Finalize actions in Staff Onboarding list/detail navigate to the application-specific subpage. Its thin App Router entry lives in `src/app/(auth-route)/hr/(Employee)/employee/onboarding/[applicationId]/finalize/page.tsx`; the owning reader is `src/screens/hr/employee-onboarding/finalize-page.tsx`, and `FinalizeWorkflow` in the existing screen file owns the single form implementation. There is no additional sidebar destination. Return links accept only the same-origin Staff Onboarding path and known list/detail query fields; they never carry staff, statutory or salary draft values. The selected academic year stays in the existing global scope store; page navigation does not change it.
+
+## Employee Work Shifts
+
+The existing /hr/attendance-setting/shiftManagement route is labelled Work Shifts.
+Employee profiles expose a Work Schedule section for current, upcoming and historical assignments.
+Catalogue actions use HR shift grants, while schedule actions use employee View/Edit grants.

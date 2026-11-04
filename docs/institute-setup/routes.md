@@ -3,7 +3,7 @@ module: institute-setup
 domain: routes
 content_type: Reference
 status: canonical
-updated_on: 2026-10-21
+updated_on: 2026-11-02
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -34,3 +34,8 @@ The route layout uses `StudentPermissionGuard`; the screen also gates its data q
 `/setting/school-documents` appears immediately after School Identity. Its visibility grant is `ShikshaMitra.Module.InstituteSetup.SchoolDocuments`; the screen independently requires `InstituteSetup.SchoolDocuments.View`. Existing compact View/Add/Delete controls map to exact server actions. Add enables creation/editing; Delete enables record deletion and removal of saved attachments. View permits preview/download.
 
 The authenticated App Router entry wraps the screen in Suspense. `search`, `category`, `page`, `size` and `sort` query parameters retain list context across dialogs and browser navigation. Documents are school-wide and do not follow the shell's academic year, board or medium selection.
+
+## School Shifts
+
+The existing /setting/shift-management route is labelled School Shifts.
+Its existing Institute Setup action grants remain independent of HR grants.

@@ -7,7 +7,7 @@ const mocks = path.join(root, 'mock-hooks.ts').replaceAll('\\', '/');
 const mockedImports = [
   'src/routes/hooks',
   'src/redux/role/roleApi',
-  'src/redux/shiftManagement/shift-management-api',
+  'src/redux/hr/work-shifts-api',
   'src/screens/hr/hooks/useAcademicOrganizationOptions',
   'src/redux/academicOrganizationOptions/academicOrganizationOptionsApi',
   'src/redux/hr/employeeOnboardingApi',

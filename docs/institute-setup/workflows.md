@@ -3,7 +3,7 @@ module: institute-setup
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-10-27
+updated_on: 2026-11-02
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -125,3 +125,9 @@ Back to form, Close and Escape dismiss only the preview and restore the draft an
 Each invalid submission focuses the first invalid field once for that attempt, leaving the other fields and preview usable; submitting again focuses the first remaining error.
 Extra feature saves a reusable catalogue choice immediately and selects it for this room; cancelling the room does not remove that catalogue choice.
 Submit waits for success, locks closing while a write is pending, and retains the draft after failure.
+
+## Work shift workflows
+
+Configure school sessions independently of employee working hours.
+Changing school times does not change employee schedules.
+Use HR Work Shifts and the employee Work Schedule section for staff scheduling.

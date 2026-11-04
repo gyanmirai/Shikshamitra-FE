@@ -521,6 +521,7 @@ export const roleOptionsType = {
 } as const;
 
 // ===== Shift Management API (reducerPath: shiftManagementApi) =====
+export const workShiftType = { workShift: 'EmployeeWorkShift', shiftAssignment: 'EmployeeShiftAssignment' } as const;
 export const shiftManagementType = {
   shift: 'Shift',
 } as const;
@@ -762,6 +763,7 @@ export const allTagTypes = {
   ...roleType,
   ...roleOptionsType,
   ...shiftManagementType,
+  ...workShiftType,
   ...studentType,
   ...studentAdmissionType,
   ...studentAttendanceType,

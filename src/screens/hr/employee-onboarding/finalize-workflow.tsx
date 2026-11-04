@@ -32,11 +32,11 @@ import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { emptyStatutoryProfile } from 'src/redux/hr/statutory-profile-api';
 import CityComponent from 'src/components/stardard-address/city-component';
+import { useGetWorkShiftOptionsQuery } from 'src/redux/hr/work-shifts-api';
 import StateComponent from 'src/components/stardard-address/state-component';
 import { schemaFieldErrors } from 'src/screens/hr/components/form-validation';
 import CountryComponent from 'src/components/stardard-address/country-component';
 import { EmployeeCastType, EmployeeCastTypeArray } from 'src/enums/employee-cast';
-import { useGetShiftsQuery } from 'src/redux/shiftManagement/shift-management-api';
 import { EmployeeGroupType, EmployeeGroupTypeArray } from 'src/enums/employee-group';
 import { OTPInput, REGEXP_ONLY_DIGITS, REGEXP_ONLY_DIGITS_AND_CHARS } from 'input-otp';
 import { focusFirstFormikError } from 'src/components/custom-stepper/formik-validation';
@@ -178,6 +178,7 @@ const buildFinalizeInitialValues = (application: EmployeeApplication): FinalizeF
     identificationMark1: personalInfo?.identificationMark1 || '',
     roleId: '',
     shiftId: '',
+    shiftEffectiveFrom: '',
     academicPermissionStageIds: '',
     address1: personalInfo?.address1 || application.address1 || '',
     address2: personalInfo?.address2 || application.address2 || '',
@@ -271,7 +272,7 @@ export function FinalizeWorkflow({
   const [salaryEditor, setSalaryEditor] = useState({ dirty: false, busy: false });
   const finalizationPending = useRef(false);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const { data: shiftsData, isLoading: shiftsLoading } = useGetShiftsQuery(undefined);
+  const { data: shiftsData, isLoading: shiftsLoading } = useGetWorkShiftOptionsQuery(undefined);
   const {
     options: organizationOptions,
     byId: organizationOptionsById,
@@ -323,6 +324,14 @@ export function FinalizeWorkflow({
 
   // convenience alias
   const form = formik.values;
+  useEffect(() => {
+    if (!shiftsData?.today || form.shiftEffectiveFrom) return;
+    formik.setFieldValue(
+      'shiftEffectiveFrom',
+      form.doj > shiftsData.today ? form.doj : shiftsData.today,
+      false
+    );
+  }, [shiftsData?.today, form.shiftEffectiveFrom, form.doj, formik]);
   const selectedEmployeeGroup = form.isTeaching ? 0 : 1;
   const { setFieldValue } = formik;
   const roleLookup = useFinalizeRoles(open, selectedEmployeeGroup, form.roleId);
@@ -665,7 +674,10 @@ export function FinalizeWorkflow({
             qualification: form.qualification || null,
             identificationMark1: form.identificationMark1 || null,
             roleId: form.roleId,
-            shiftId: form.shiftId,
+            initialWorkShiftAssignment: {
+              workShiftId: form.shiftId,
+              effectiveFrom: form.shiftEffectiveFrom,
+            },
             address1: form.address1,
             address2: form.address2,
             address3: form.address3 || null,
@@ -1825,7 +1837,7 @@ export function FinalizeWorkflow({
                         size="small"
                         error={formik.touched.shiftId && Boolean(formik.errors.shiftId)}
                       >
-                        <InputLabel id="fin-shift-label">Shift *</InputLabel>
+                        <InputLabel id="fin-shift-label">Work shift *</InputLabel>
                         <Select
                           name="shiftId"
                           labelId="fin-shift-label"
@@ -1834,7 +1846,7 @@ export function FinalizeWorkflow({
                             formik.setFieldValue('shiftId', e.target.value);
                             formik.setFieldTouched('shiftId', true, false);
                           }}
-                          label="Shift *"
+                          label="Work shift *"
                           disabled={shiftsLoading}
                         >
                           {(shiftsData?.items || []).map((shift: any) => (
@@ -1850,6 +1862,33 @@ export function FinalizeWorkflow({
                     </Grid>
                   </SectionCard>
 
+                  <SectionCard title="Work Schedule">
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <DatePicker
+                        label="Shift effective from"
+                        value={toDatePickerValue(form.shiftEffectiveFrom)}
+                        minDate={dayjs(shiftsData?.today)}
+                        onChange={(value) =>
+                          formik.setFieldValue(
+                            'shiftEffectiveFrom',
+                            value?.format('YYYY-MM-DD') || ''
+                          )
+                        }
+                        slotProps={{
+                          textField: {
+                            required: true,
+                            size: 'small',
+                            error: Boolean(
+                              formik.touched.shiftEffectiveFrom && formik.errors.shiftEffectiveFrom
+                            ),
+                            helperText: formik.touched.shiftEffectiveFrom
+                              ? formik.errors.shiftEffectiveFrom
+                              : 'Today or a future date, no earlier than joining.',
+                          },
+                        }}
+                      />
+                    </Grid>
+                  </SectionCard>
                   {/* ── Address Details ── */}
                   <SectionCard title="Address Details">
                     <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
@@ -1985,7 +2024,8 @@ export function FinalizeWorkflow({
                       ) : (
                         <Box>
                           <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-                            Select access permissions separately from the work assignment. Your selections are retained when moving between steps.
+                            Select access permissions separately from the work assignment. Your
+                            selections are retained when moving between steps.
                           </Typography>
                           {academicTouched && selectedStageIds?.length === 0 && (
                             <FormHelperText error sx={{ mb: 1, ml: 0 }}>
