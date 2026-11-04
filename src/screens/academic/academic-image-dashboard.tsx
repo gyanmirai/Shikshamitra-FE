@@ -1,17 +1,21 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { Box, Skeleton } from '@mui/material';
+import { Stack } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+import { useAcademicInsights } from './insights/use-academic-insights';
+import { AcademicInsightsSkeleton } from './insights/components/academic-insights-skeleton';
+
 const AcademicDesignScreen = dynamic(() => import('./dashboard-design/academic-design-screen'), {
-  loading: () => <Box aria-label="Loading Academic dashboard" role="status">
+  loading: () => <Stack spacing={1} sx={{ pb: 2, minWidth: 0 }}>
     <CustomBreadcrumbs heading="Academic Dashboard" description="Academic insights and permitted workflows for your assigned responsibilities."
       links={[{ name: 'Academics' }, { name: 'Dashboard' }]} />
-    <Skeleton variant="rounded" height={400} />
-  </Box>,
+    <AcademicInsightsSkeleton />
+  </Stack>,
 });
 
 export default function AcademicImageDashboard() {
-  return <AcademicDesignScreen />;
+  const query = useAcademicInsights();
+  return <AcademicDesignScreen query={query} />;
 }

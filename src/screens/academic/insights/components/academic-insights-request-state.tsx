@@ -1,5 +1,7 @@
+import { Alert, Button } from '@mui/material';
 import { EmptyContent } from 'src/components/empty-content';
-import { Box, Alert, Button, Skeleton } from '@mui/material';
+
+import { AcademicInsightsSkeleton } from './academic-insights-skeleton';
 
 import type { useAcademicInsights } from '../use-academic-insights';
 
@@ -16,11 +18,7 @@ export function AcademicInsightsRequestState({ query, onRetry }: {
       <EmptyContent title="Academic dashboard access is unavailable"
         description="Your current account does not have permission to view this dashboard."
         sx={{ minHeight: 320 }} />}
-    {loading && <Box role="status" aria-label="Loading academic insights" sx={{ display: 'grid', gap: 2,
-      gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' } }}>
-      {['overview', 'teaching', 'operations', 'assessment'].map((key) =>
-        <Skeleton key={key} variant="rounded" height={300} />)}
-    </Box>}
+    {loading && <AcademicInsightsSkeleton />}
     {query.isError && <Alert severity="error" action={<Button size="small" color="inherit" onClick={onRetry}>Retry</Button>}>
       Academic insights could not be loaded. Your academic context has been preserved.
     </Alert>}

@@ -7,7 +7,7 @@ export const buildAuditAnalytics = (logs: AuditLog[]) => {
   const byEntity = new Map<string, { label: string; count: number }>();
 
   logs.forEach((l) => {
-    const riskLevel = l.riskLevel ?? AuditRiskLevel.Low;
+    const { riskLevel } = l;
     const changedByName = l.changedByName ?? 'Unknown user';
     const changedByRole = l.changedByRole ?? 'Unknown role';
     const rawEntityName = (l.entityName ?? 'Unknown record').trim();
@@ -16,7 +16,7 @@ export const buildAuditAnalytics = (logs: AuditLog[]) => {
     const entityKey = rawEntityName.toLowerCase();
 
     byAction.set(l.actionLabel, (byAction.get(l.actionLabel) ?? 0) + 1);
-    byRisk.set(riskLevel, (byRisk.get(riskLevel) ?? 0) + 1);
+    if (riskLevel != null) byRisk.set(riskLevel, (byRisk.get(riskLevel) ?? 0) + 1);
     const u = byUser.get(l.changedByUserId) ?? {
       name: changedByName,
       role: changedByRole,

@@ -34,9 +34,16 @@ interface Props {
 }
 
 /** Shows the quantified academic impact of an audit log (working days, lectures, etc). */
-const AuditImpactPanel = ({ impact, impactLevel = AuditImpactLevel.None }: Props) => {
+const AuditImpactPanel = ({ impact, impactLevel }: Props) => {
   const theme = useTheme();
-  const colorKey = IMPACT_COLOR_KEYS[impactLevel] ?? 'default';
+  if (!impact && impactLevel == null) {
+    return (
+      <Typography variant="body2" color="text.secondary">
+        Impact not recorded for this event.
+      </Typography>
+    );
+  }
+  const colorKey = impactLevel == null ? 'default' : (IMPACT_COLOR_KEYS[impactLevel] ?? 'default');
   const color =
     colorKey === 'default' ? theme.palette.text.secondary : theme.palette[colorKey].main;
 
@@ -118,7 +125,7 @@ const AuditImpactPanel = ({ impact, impactLevel = AuditImpactLevel.None }: Props
             color={colorKey as any}
             sx={{ fontWeight: 700, fontSize: 10, textTransform: 'uppercase' }}
           >
-            {IMPACT_LABELS[impactLevel]}
+            {impactLevel == null ? 'Impact recorded' : IMPACT_LABELS[impactLevel]}
           </Label>
         </Stack>
       </Box>

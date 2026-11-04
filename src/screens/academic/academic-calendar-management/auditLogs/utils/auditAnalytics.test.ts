@@ -5,6 +5,11 @@ import { buildAuditAnalytics } from './auditAnalytics';
 import { type AuditLog, AuditRiskLevel, AuditApprovalStatus } from '../types/auditLogs.types';
 
 describe('calendar audit analytics', () => {
+  it('does not infer low risk from an event without an assessment', () => {
+    expect(buildAuditAnalytics([{ actionLabel: 'Created' } as AuditLog]).riskDistribution).toEqual(
+      []
+    );
+  });
   it('keeps empty records empty without fabricated security accusations', () => {
     expect(buildAuditAnalytics([])).toEqual({
       actionDistribution: [],

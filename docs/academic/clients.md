@@ -3,7 +3,7 @@ module: academic
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-11-03
+updated_on: 2026-11-04
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -68,6 +68,9 @@ Zero remains a real measurement; null metrics and absent samples remain unavaila
 The query key includes academic context, child selection, tenant, user and permission initialization revision.
 The identity key is never sent as a request parameter.
 `use-academic-insights.ts` renders only `currentData`, clears child selection on context changes, and skips requests without initialized module and dashboard grants.
+The active route starts this hook before its lazy dashboard presentation loads, so the request and presentation code load concurrently.
+Unused snapshots remain in memory for five minutes. Returning to the same scope reuses the snapshot immediately; snapshots at least one minute old revalidate in the background.
+Manual refresh always re-reads the current scope. No snapshot is shared across identity, permission revision, academic context or student keys.
 Academic, calendar, class-management and student-attendance mutation tags invalidate active insights.
 Refresh and retry re-read the current scope without changing selection.
 
@@ -100,6 +103,7 @@ These clients replace broad initial reads while retaining existing mutation tags
 | Rubric templates | `src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricTemplateReadApi.ts`, `src/screens/academic/homework-assignment-management/setting/rubricConfig/hooks/useRubricTemplateDetails.ts` | Page summary rows; fetch criterion details only for the selected action. |
 | Rubric scoring | `src/screens/academic/homework-assignment-management/marksAndFeedback/useRubricEvaluationQueries.ts` | Read the selected submission/student evaluation; refresh the saved evaluation chain after mutations. |
 | Elective assignments and exam readiness | `src/redux/classManagementApi/studentElectiveAssignment/studentElectiveAssignment.ts`, `src/screens/examination/scheduleExam/components/use-elective-readiness.ts` | Reuse shared options and grouped selection counts instead of downloading student selections to count them. |
+| Locked elective corrections | `studentElectiveAssignment.ts`, `electiveCorrectionTypes.ts`, `assignElectiveSubject/hooks/useLockedElectiveCorrection.ts` | Typed preview/confirm mutations use the roster capability and backend review token. Confirmation invalidates elective assignment and timetable tags; preview does not mutate or invalidate data. |
 | Rooms and approvals | `src/redux/academicAPI/timetableApi/roomAvailabilityApi.ts`, `src/screens/academic/timetable-schedule-management/roomAvailability/useRoomReservationPage.ts` | Page active reservation/approval views; read badge summaries separately; mount audit reads on demand. Room Availability filters use `getRoomBuildingLookup` at `/academics/timetable/room-availability/buildings/lookup`, with the existing building cache tag, instead of the Institute Setup management list. See the [backend lookup contract](../../../Shikshamitra-BE/docs/modules/academic/references/ui-read-performance.md#read-contracts). |
 | Weekly timetable room assignment | `src/components/timetable/useWeeklyRoomOptions.ts`, `getWeeklyTimetableRooms` in `roomAvailabilityApi.ts` | Send the weekly day and period times without a calendar date. Read current-query options, preserve saved choices, retry failed reads and validate prospective assignments before applying them. Room catalogue and timetable mutations invalidate these options. See the [backend room read contract](../../../Shikshamitra-BE/docs/modules/academic/references/ui-read-performance.md#read-contracts). |
 | Student Academic 360 drawer | `src/screens/academic/student-academic-360/hooks/useStudentAcademic360Detail.ts` | Query only while open; reset filters/page on student or tab changes. Overview requests 10 tasks/5 exams; detail pages request 20 tasks or 10 exams and retain historical pagination. |

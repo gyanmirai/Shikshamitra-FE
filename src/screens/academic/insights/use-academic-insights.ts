@@ -22,7 +22,10 @@ export function useAcademicInsights() {
     hasGrantedPermission(permissions, academicPermissions.root) &&
     hasGrantedPermission(permissions, 'Academics.Dashboard.View');
   const query = useGetAcademicInsightsQuery({ academicYearId, boardId, educationMediumId, accessKey,
-    ...(studentId ? { studentId } : {}) }, { skip: !hasContext || !authorized });
+    ...(studentId ? { studentId } : {}) }, {
+    skip: !hasContext || !authorized,
+    refetchOnMountOrArgChange: 60,
+  });
 
   return {
     ...query, data: hasContext && authorized ? query.currentData : undefined,

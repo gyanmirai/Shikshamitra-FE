@@ -610,6 +610,9 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
               gap: 0.5,
               display: 'flex',
               flexDirection: 'column',
+              flexWrap: 'nowrap',
+              alignItems: 'stretch',
+              justifyContent: 'flex-start',
               flex: 1,
               minHeight: 0,
             }}

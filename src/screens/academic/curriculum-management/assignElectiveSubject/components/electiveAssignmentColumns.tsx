@@ -6,6 +6,7 @@ import { Box } from '@mui/material';
 import { Label } from 'src/components/label';
 
 import SubjectSelectionControl from './SubjectSelectionControl';
+import LockedElectiveEditAction from './LockedElectiveEditAction';
 import {
   compactCell,
   compactHeader,
@@ -16,6 +17,7 @@ import {
 import type { AssignmentStatus, StudentElectiveRow, PreferenceMatchStatus } from '../types';
 
 interface ColumnOptions {
+  onCorrectLocked?: (student: StudentElectiveRow) => void;
   isLocked: boolean;
   students: StudentElectiveRow[];
   selectedRowIds: Set<string>;
@@ -30,6 +32,7 @@ interface ColumnOptions {
 const asStudent = (row: IData) => row as StudentElectiveRow;
 
 export function getElectiveAssignmentColumns({
+  onCorrectLocked,
   isLocked,
   students,
   selectedRowIds,
@@ -116,6 +119,15 @@ export function getElectiveAssignmentColumns({
       },
     },
   ];
+
+  if (onCorrectLocked) dataColumns.push({
+    id: 'lockedCorrection', label: 'Actions', isFilter: false, isSort: false,
+    minWidth: '80px', headerSx: compactHeader, cellSx: compactCell,
+    render: (_, data) => {
+      const row = asStudent(data);
+      return row.isLocked ? <LockedElectiveEditAction student={row} onEdit={onCorrectLocked} /> : null;
+    },
+  });
 
   if (isLocked) return dataColumns;
 

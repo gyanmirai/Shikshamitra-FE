@@ -2,8 +2,17 @@ import { academicType, classManagementType } from 'src/redux/tagTypes';
 
 import { classManagementApi } from '../classManagementApi';
 
+import type { ElectiveCorrectionReview, ElectiveCorrectionRequest } from './electiveCorrectionTypes';
+
 export const studentElectiveAssignmentApi = classManagementApi.injectEndpoints({
   endpoints: (builder) => ({
+    previewLockedElectiveCorrection: builder.mutation<ElectiveCorrectionReview, ElectiveCorrectionRequest>({
+      query: (body) => ({ url: 'class-management/student-elective-assignments/corrections/preview', method: 'POST', body }),
+    }),
+    confirmLockedElectiveCorrection: builder.mutation<void, ElectiveCorrectionRequest & { reviewToken: string }>({
+      query: (body) => ({ url: 'class-management/student-elective-assignments/corrections/confirm', method: 'POST', body }),
+      invalidatesTags: [classManagementType.studentElectiveAssignment, academicType.timetableManagement],
+    }),
     getStudentElectiveSelectionCounts: builder.query<Array<{
       electiveGroupId: string; divisionId: string; subjectId: string; count: number;
     }>, { academicMediumId: string; classId: string; divisionIds: string[]; electiveGroupIds: string[] }>({
@@ -45,6 +54,8 @@ export const studentElectiveAssignmentApi = classManagementApi.injectEndpoints({
 });
 
 export const {
+  usePreviewLockedElectiveCorrectionMutation,
+  useConfirmLockedElectiveCorrectionMutation,
   useLazyGetStudentElectiveSelectionCountsQuery,
   useGetStudentElectiveAssignmentsQuery,
   useLazyGetStudentElectiveAssignmentsQuery,

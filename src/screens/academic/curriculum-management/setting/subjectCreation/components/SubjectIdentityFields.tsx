@@ -6,7 +6,7 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import { Box, Grid, MenuItem, TextField, IconButton } from '@mui/material';
 import { LanguageInputField } from 'src/screens/academic/components/language-typing';
 
-import { SUBJECT_ICONS as subjectIcons, SUBJECT_CATEGORIES as subjectCategories } from '../type';
+import { SUBJECT_CATEGORIES as subjectCategories } from '../type';
 
 import type { SubjectFormValues } from '../initialValues';
 
@@ -56,7 +56,7 @@ export function SubjectIdentityFields({ formik }: SubjectIdentityFieldsProps) {
         />
       </Grid>
 
-      <Grid size={{ xs: 12, sm: 6 }}>
+      <Grid size={{ xs: 12 }}>
         <ShakingTextField error={Boolean(formik.touched.category && formik.errors.category)}>
           <TextField
             select
@@ -101,29 +101,6 @@ export function SubjectIdentityFields({ formik }: SubjectIdentityFieldsProps) {
             ))}
           </TextField>
         </ShakingTextField>
-      </Grid>
-
-      <Grid size={{ xs: 12, sm: 6 }}>
-        <TextField
-          select
-          fullWidth
-          label="Subject icon"
-          name="icon"
-          size="small"
-          value={formik.values.icon}
-          onChange={formik.handleChange}
-          helperText="Optional"
-        >
-          <MenuItem value="">None</MenuItem>
-          {subjectIcons.map((icon) => (
-            <MenuItem key={icon.value} value={icon.value}>
-              <Box display="flex" alignItems="center" gap={1}>
-                <Iconify icon={icon.icon} width={16} height={16} />
-                {icon.label}
-              </Box>
-            </MenuItem>
-          ))}
-        </TextField>
       </Grid>
     </>
   );
