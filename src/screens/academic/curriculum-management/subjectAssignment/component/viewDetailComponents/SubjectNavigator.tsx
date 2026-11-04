@@ -84,8 +84,8 @@ const SubjectNavigator: React.FC<SubjectNavigatorProps> = ({
         <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.25 }}>
           <Stack direction="row" alignItems="center" spacing={0.75}>
             <Iconify icon="solar:notebook-bold-duotone" width={20} sx={{ color: 'primary.main' }} />
-            <Typography variant="subtitle2" sx={{ fontWeight: 700, letterSpacing: 0.5 }}>
-              SUBJECTS
+            <Typography variant="subtitle2" sx={{ fontWeight: 700, letterSpacing: 0 }}>
+              Subjects
             </Typography>
           </Stack>
           <Label variant="soft" color="default" sx={{ height: 20, fontWeight: 700, fontSize: 11 }}>
@@ -100,16 +100,21 @@ const SubjectNavigator: React.FC<SubjectNavigatorProps> = ({
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Search subjects..."
+          inputProps={{ 'aria-label': 'Search subjects' }}
           slotProps={{
             input: {
               startAdornment: (
                 <InputAdornment position="start">
-                  <Iconify icon="eva:search-fill" width={16} sx={{ color: 'text.disabled' }} />
+                  <Iconify icon="eva:search-fill" width={16} sx={{ color: 'text.secondary' }} />
                 </InputAdornment>
               ),
               endAdornment: searchQuery ? (
                 <InputAdornment position="end">
-                  <IconButton size="small" onClick={() => onSearchChange('')} sx={{ p: 0.25 }}>
+                  <IconButton
+                    aria-label="Clear subject search"
+                    size="small"
+                    onClick={() => onSearchChange('')}
+                  >
                     <Iconify icon="eva:close-fill" width={14} />
                   </IconButton>
                 </InputAdornment>
@@ -131,12 +136,12 @@ const SubjectNavigator: React.FC<SubjectNavigatorProps> = ({
             <Iconify
               icon="solar:magnifer-broken"
               width={40}
-              sx={{ color: 'text.disabled', mb: 1, opacity: 0.6 }}
+              sx={{ color: 'text.secondary', mb: 1, opacity: 0.6 }}
             />
             <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 600 }}>
               No subjects found
             </Typography>
-            <Typography variant="caption" color="text.disabled" sx={{ display: 'block', mt: 0.5 }}>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
               No subjects match &quot;{searchQuery}&quot;
             </Typography>
             {searchQuery && (
@@ -165,9 +170,9 @@ const SubjectNavigator: React.FC<SubjectNavigatorProps> = ({
                     variant="caption"
                     sx={{
                       fontWeight: 700,
-                      color: 'text.disabled',
-                      letterSpacing: 0.8,
-                      textTransform: 'uppercase',
+                      color: 'text.secondary',
+                      letterSpacing: 0,
+                      textTransform: 'none',
                     }}
                   >
                     Core Subjects
@@ -203,12 +208,13 @@ const SubjectNavigator: React.FC<SubjectNavigatorProps> = ({
                             textAlign: 'left',
                             borderRadius: 1.5,
                             transition: 'all 0.15s ease-in-out',
-                            bgcolor: 'transparent',
-                            borderLeft: isSelected
-                              ? `3px solid ${theme.palette.primary.main}`
-                              : '3px solid transparent',
+                            bgcolor: isSelected ? 'action.selected' : 'transparent',
+                            '&.Mui-focusVisible': {
+                              outline: '2px solid',
+                              outlineColor: 'info.main',
+                            },
                             '&:hover': {
-                              bgcolor: 'action.hover',
+                              bgcolor: isSelected ? 'action.selected' : 'action.hover',
                             },
                           }}
                         >
@@ -218,8 +224,8 @@ const SubjectNavigator: React.FC<SubjectNavigatorProps> = ({
                               variant="body2"
                               noWrap
                               sx={{
-                                fontWeight: isSelected ? 700 : 500,
-                                color: isSelected ? 'primary.main' : 'text.primary',
+                                fontWeight: isSelected ? 600 : 500,
+                                color: 'text.primary',
                                 fontSize: '0.8125rem',
                               }}
                             >
@@ -230,7 +236,7 @@ const SubjectNavigator: React.FC<SubjectNavigatorProps> = ({
                                 variant="caption"
                                 sx={{
                                   color: 'text.secondary',
-                                  fontSize: '0.7rem',
+                                  fontSize: '0.75rem',
                                   fontFamily: 'monospace',
                                   display: 'block',
                                 }}
@@ -244,7 +250,7 @@ const SubjectNavigator: React.FC<SubjectNavigatorProps> = ({
                             <Iconify
                               icon="eva:checkmark-fill"
                               width={16}
-                              sx={{ color: 'primary.main', flexShrink: 0 }}
+                              sx={{ color: 'text.secondary', flexShrink: 0 }}
                             />
                           )}
                         </ButtonBase>
@@ -255,7 +261,7 @@ const SubjectNavigator: React.FC<SubjectNavigatorProps> = ({
               </Box>
             )}
 
-            {/* ── ELECTIVE GROUPS SECTION ── */}
+            {/* ── Elective Groups SECTION ── */}
             {electiveGroups.length > 0 && (
               <Box>
                 <Stack
@@ -268,9 +274,9 @@ const SubjectNavigator: React.FC<SubjectNavigatorProps> = ({
                     variant="caption"
                     sx={{
                       fontWeight: 700,
-                      color: 'text.disabled',
-                      letterSpacing: 0.8,
-                      textTransform: 'uppercase',
+                      color: 'text.secondary',
+                      letterSpacing: 0,
+                      textTransform: 'none',
                     }}
                   >
                     Elective Groups
@@ -296,10 +302,15 @@ const SubjectNavigator: React.FC<SubjectNavigatorProps> = ({
                         }}
                       >
                         {/* Group Header Row */}
-                        <Box
+                        <ButtonBase
+                          aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${group.electiveGroupName}`}
+                          aria-expanded={isExpanded}
                           onClick={() => onToggleGroup(group.electiveGroupId)}
                           sx={{
                             display: 'flex',
+                            width: 1,
+                            textAlign: 'left',
+                            minHeight: 44,
                             alignItems: 'center',
                             gap: 0.75,
                             px: 1,
@@ -308,6 +319,10 @@ const SubjectNavigator: React.FC<SubjectNavigatorProps> = ({
                             userSelect: 'none',
                             bgcolor: 'transparent',
                             transition: 'background-color 0.15s ease',
+                            '&.Mui-focusVisible': {
+                              outline: '2px solid',
+                              outlineColor: 'info.main',
+                            },
                             '&:hover': {
                               bgcolor: 'action.hover',
                             },
@@ -346,7 +361,7 @@ const SubjectNavigator: React.FC<SubjectNavigatorProps> = ({
                           >
                             {group.subjects.length}
                           </Label>
-                        </Box>
+                        </ButtonBase>
 
                         {/* Indented Group Children */}
                         <Collapse in={isExpanded} timeout="auto" unmountOnExit>
@@ -384,12 +399,13 @@ const SubjectNavigator: React.FC<SubjectNavigatorProps> = ({
                                       textAlign: 'left',
                                       borderRadius: 1.25,
                                       transition: 'all 0.15s ease',
-                                      bgcolor: 'transparent',
-                                      borderLeft: isSelected
-                                        ? `3px solid ${theme.palette.primary.main}`
-                                        : '3px solid transparent',
+                                      bgcolor: isSelected ? 'action.selected' : 'transparent',
+                                      '&.Mui-focusVisible': {
+                                        outline: '2px solid',
+                                        outlineColor: 'info.main',
+                                      },
                                       '&:hover': {
-                                        bgcolor: 'action.hover',
+                                        bgcolor: isSelected ? 'action.selected' : 'action.hover',
                                       },
                                     }}
                                   >
@@ -399,8 +415,8 @@ const SubjectNavigator: React.FC<SubjectNavigatorProps> = ({
                                         variant="body2"
                                         noWrap
                                         sx={{
-                                          fontWeight: isSelected ? 700 : 500,
-                                          color: isSelected ? 'primary.main' : 'text.primary',
+                                          fontWeight: isSelected ? 600 : 500,
+                                          color: 'text.primary',
                                           fontSize: '0.78125rem',
                                         }}
                                       >
@@ -411,7 +427,7 @@ const SubjectNavigator: React.FC<SubjectNavigatorProps> = ({
                                           variant="caption"
                                           sx={{
                                             color: 'text.secondary',
-                                            fontSize: '0.675rem',
+                                            fontSize: '0.75rem',
                                             fontFamily: 'monospace',
                                             display: 'block',
                                           }}
@@ -425,7 +441,7 @@ const SubjectNavigator: React.FC<SubjectNavigatorProps> = ({
                                       <Iconify
                                         icon="eva:checkmark-fill"
                                         width={14}
-                                        sx={{ color: 'primary.main', flexShrink: 0 }}
+                                        sx={{ color: 'text.secondary', flexShrink: 0 }}
                                       />
                                     )}
                                   </ButtonBase>

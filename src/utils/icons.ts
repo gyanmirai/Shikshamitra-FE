@@ -81,6 +81,8 @@ export const GlobalIcons = {
   history: 'mdi:history',
   notebook: 'solar:notebook-bold',
   feedback: 'solar:chat-round-dots-bold',
+  learningGoal: 'mdi:target',
+  prerequisites: 'mdi:clipboard-check-outline',
   clock: 'solar:clock-circle-bold',
 };
 

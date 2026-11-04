@@ -1,62 +1,22 @@
 'use client';
 
-import type { UseTabsReturn } from 'src/hooks/use-tabs';
-
-import React, { useMemo } from 'react';
+import React from 'react';
 import { varAlpha } from 'src/theme/styles';
-import { useTabs } from 'src/hooks/use-tabs';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { Box, Tab, Tabs, Grid, Card, Paper, Drawer, Button, Typography } from '@mui/material';
+import { Box, Grid, Card, Paper, Drawer, Button, Typography } from '@mui/material';
 
-import SubjectOverview from './subjectOverview';
-import SubjectSyllabus from './subjectSyllabus';
-import SubjectDocument from './subjectDocument';
 import SubjectNavigator from './SubjectNavigator';
 import { ViewSubjectSkeleton } from './ViewSubjectSkeleton';
+import { SubjectWorkspaceTabs } from './SubjectWorkspaceTabs';
 import SubjectWorkspaceHeader from './SubjectWorkspaceHeader';
 import { useSubjectWorkspace } from '../../hooks/useSubjectWorkspace';
 
-import type { ISubjectDetail, IViewSubjectProps } from '../type';
-
-export interface StudentTabsComponentType {
-  tabs?: UseTabsReturn;
-  subject?: ISubjectDetail | null;
-  subjectStatus?: number | string;
-  isLoading?: boolean;
-}
-
-const TABS = [
-  {
-    value: 'overview',
-    label: 'Overview',
-    icon: <Iconify icon="solar:widget-2-bold-duotone" width={18} />,
-    component: (props: StudentTabsComponentType) => (
-      <SubjectOverview subject={props.subject ?? null} status={props.subjectStatus} isLoading={props.isLoading} />
-    ),
-  },
-  {
-    value: 'syllabus',
-    label: 'Syllabus',
-    icon: <Iconify icon="solar:notebook-bold-duotone" width={18} />,
-    component: (props: StudentTabsComponentType) => (
-      <SubjectSyllabus subject={props.subject ?? null} />
-    ),
-  },
-  {
-    value: 'documents',
-    label: 'Documents',
-    icon: <Iconify icon="solar:document-bold-duotone" width={18} />,
-    component: (props: StudentTabsComponentType) => (
-      <SubjectDocument subject={props.subject ?? null} isLoading={props.isLoading} />
-    ),
-  },
-];
+import type { IViewSubjectProps, INavigatorSubjectItem } from '../type';
 
 export const ViewSubject: React.FC<IViewSubjectProps> = ({ subject, classId, classes }) => {
   const theme = useTheme();
-  const tabs = useTabs('overview');
   const mobileNav = useBoolean();
 
   const {
@@ -65,6 +25,8 @@ export const ViewSubject: React.FC<IViewSubjectProps> = ({ subject, classId, cla
     refetchList,
     isDetailLoading,
     isDetailFetching,
+    detailError,
+    refetchDetail,
     coreSubjects,
     electiveGroups,
     totalSubjectsCount,
@@ -89,12 +51,7 @@ export const ViewSubject: React.FC<IViewSubjectProps> = ({ subject, classId, cla
 
   const isFetchingDetail = isDetailLoading || isDetailFetching;
 
-  const currentActiveComponent = useMemo(
-    () => TABS.find((tab) => tab.value === tabs.value),
-    [tabs.value]
-  );
-
-  const handleSelectSubject = (item: any) => {
+  const handleSelectSubject = (item: INavigatorSubjectItem) => {
     selectSubject(item);
     if (mobileNav.value) {
       mobileNav.onFalse();
@@ -107,7 +64,16 @@ export const ViewSubject: React.FC<IViewSubjectProps> = ({ subject, classId, cla
 
   if (listError) {
     return (
-      <Box sx={{ p: 4, textAlign: 'center', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <Box
+        sx={{
+          p: 4,
+          textAlign: 'center',
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
         <Paper
           variant="outlined"
           sx={{
@@ -119,7 +85,11 @@ export const ViewSubject: React.FC<IViewSubjectProps> = ({ subject, classId, cla
             bgcolor: varAlpha(theme.palette.error.mainChannel, 0.04),
           }}
         >
-          <Iconify icon="solar:danger-triangle-bold" width={52} sx={{ color: 'error.main', mb: 1.5 }} />
+          <Iconify
+            icon="solar:danger-triangle-bold"
+            width={52}
+            sx={{ color: 'error.main', mb: 1.5 }}
+          />
           <Typography variant="h6" sx={{ mb: 0.5, fontWeight: 700 }}>
             Unable to load subject allocations
           </Typography>
@@ -175,6 +145,7 @@ export const ViewSubject: React.FC<IViewSubjectProps> = ({ subject, classId, cla
           paper: {
             sx: {
               width: 300,
+              maxWidth: '100%',
               p: 1.5,
               bgcolor: 'background.paper',
             },
@@ -226,55 +197,14 @@ export const ViewSubject: React.FC<IViewSubjectProps> = ({ subject, classId, cla
             onOpenMobileNav={mobileNav.onTrue}
           />
 
-          {/* 2. Workspace Navigation Tabs */}
-          <Box
-            sx={{
-              px: { xs: 1.5, sm: 2 },
-              pt: 1,
-              bgcolor: varAlpha(theme.palette.grey['500Channel'], 0.02),
-              borderBottom: `1px solid ${theme.palette.divider}`,
-            }}
-          >
-            <Tabs
-              value={tabs.value}
-              onChange={tabs.onChange}
-              sx={{
-                minHeight: 40,
-                '& .MuiTabs-indicator': { height: 3, borderRadius: '3px 3px 0 0' },
-                '& .MuiTab-root': {
-                  minHeight: 40,
-                  minWidth: 90,
-                  mr: 1,
-                  px: 1.5,
-                  fontSize: '0.8125rem',
-                  fontWeight: 600,
-                },
-              }}
-            >
-              {TABS.map((tab) => (
-                <Tab
-                  key={tab.value}
-                  value={tab.value}
-                  icon={tab.icon}
-                  iconPosition="start"
-                  label={tab.label}
-                  disableRipple
-                />
-              ))}
-            </Tabs>
-          </Box>
-
-          {/* 3. Main Workspace Tab Panel Content */}
-          <Box sx={{ flexGrow: 1, minHeight: 0, overflow: 'hidden' }}>
-            {currentActiveComponent?.component && (
-              <currentActiveComponent.component
-                tabs={tabs}
-                subject={activeSubjectDetail}
-                subjectStatus={activeNavigatorItem?.status}
-                isLoading={isFetchingDetail}
-              />
-            )}
-          </Box>
+          <SubjectWorkspaceTabs
+            subject={activeSubjectDetail}
+            status={activeNavigatorItem?.status}
+            subjectType={activeNavigatorItem?.subjectType}
+            isLoading={isFetchingDetail}
+            hasError={Boolean(detailError)}
+            onRetry={() => refetchDetail()}
+          />
         </Card>
       </Grid>
     </Grid>
