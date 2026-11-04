@@ -18,6 +18,7 @@ import { LeavePolicyForm } from 'src/screens/hr/policies/components/LeavePolicyF
 import { ProfessionalTaxForm } from 'src/screens/hr/payroll/setting/professional-tax';
 import { useGetEarningComponentOptionsQuery } from 'src/redux/hr/employee-payroll-api';
 import { EarningComponentForm } from 'src/screens/hr/payroll/setting/earning-component';
+import { PfCoverageSettings } from 'src/screens/hr/payroll/setting/pf-coverage-settings';
 import { ShiftManagementForm } from 'src/screens/hr/attendance-setting/shift-management';
 import SalaryTemplateEditor from 'src/screens/hr/payroll/setting/salary-template-editor';
 import { DeductionComponentForm } from 'src/screens/hr/payroll/setting/deduction-component';
@@ -96,6 +97,13 @@ export function HrSetupEditor(props: Props) {
           if (saved) onSaved();
         }}
       />
+    ) : (
+      denied
+    );
+  if (task === 'pf-coverage')
+    return granted(`${hrPermissions.payroll.settings.pfRule}.View`) &&
+      granted(`${hrPermissions.payroll.settings.pfRule}.Add`) ? (
+      <PfCoverageSettings onSaved={onSaved} />
     ) : (
       denied
     );

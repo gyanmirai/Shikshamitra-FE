@@ -105,7 +105,7 @@ export function SetupInlineCustomDialog({
   return useHrSetupEmbedded() ? (
     props.open ? (
       <Box role="region">
-        <Typography variant="subtitle1">{title}</Typography>
+        {title != null && <Typography variant="subtitle1">{title}</Typography>}
         {children}
       </Box>
     ) : null

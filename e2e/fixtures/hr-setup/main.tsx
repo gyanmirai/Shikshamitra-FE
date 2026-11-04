@@ -9,6 +9,7 @@ import { createRoot } from 'react-dom/client';
 import { hrPaths } from 'src/constants/hr-menus';
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from 'src/redux/auth/authSlice';
+import PF from 'src/screens/hr/payroll/setting/pf';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { setupListeners } from '@reduxjs/toolkit/query';
@@ -16,10 +17,10 @@ import globalReducer from 'src/redux/globalState/globalSlice';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { hrSetupOperatorPermissions } from 'src/constants/hr-setup';
-import { Stack, Button, Typography, CssBaseline } from '@mui/material';
 import { defaultSettings } from 'src/components/settings/config-settings';
 import confirmPopupReducer from 'src/redux/confirmPopup/confirmPopupSlice';
 import { hrRecoveryMiddleware } from 'src/redux/hr/hr-recovery-middleware';
+import { Box, Stack, Button, Typography, CssBaseline } from '@mui/material';
 import { HrSetupSessionProvider } from 'src/screens/hr/setup/hr-setup-session';
 import { HrSetupCoordinator } from 'src/screens/hr/setup/hr-setup-coordinator';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -51,6 +52,7 @@ const baseGrants =
         'HR.PayrollManagement.Settings.EarningComponents.View',
         'HR.PayrollManagement.Settings.DeductionComponents.View',
         'HR.PayrollManagement.Settings.PfRule.View',
+        'HR.PayrollManagement.Settings.PfRule.Delete',
         'HR.PayrollManagement.Settings.SalaryTemplates.View',
         'HR.PayrollManagement.Settings.StatutorySchemes.View',
         'HR.PayrollManagement.Settings.StatutorySchemes.Activate',
@@ -66,8 +68,9 @@ const grants = [
       : []),
 ].filter(
   (name) =>
-    scenario !== 'no-deduction-create' ||
-    name !== 'HR.PayrollManagement.Settings.DeductionComponents.Add'
+    (scenario !== 'pf-view-only' || name === 'HR.PayrollManagement.Settings.PfRule.View') &&
+    (scenario !== 'no-deduction-create' ||
+      name !== 'HR.PayrollManagement.Settings.DeductionComponents.Add')
 );
 const store = configureStore({
   reducer: {
@@ -94,6 +97,12 @@ setupListeners(store.dispatch);
 
 function Fixture() {
   const [hr, setHr] = useState(true);
+  if (scenario === 'pf-page' || scenario === 'pf-view-only')
+    return (
+      <Box sx={{ height: '100dvh', minHeight: 0, p: 1 }}>
+        <PF />
+      </Box>
+    );
   return (
     <HrSetupSessionProvider>
       <Stack spacing={2} sx={{ p: 2 }}>

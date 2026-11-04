@@ -31,8 +31,18 @@ For disposable API-backed browser verification, start `dotnet run --project test
 The fixture uses loopback ports 4396 and 4196, disposable SQLite, synthetic authentication, production setup editors, and real backend endpoints.
 It does not connect to an operational school.
 Browser coverage includes dismissal, refresh, self-service exclusion, request failures, supported viewports/themes, and independent configuration saves through salary preview and completion.
+PF coverage browser checks verify the missing checklist item, embedded fields, unsaved-entry protection, refusal to finish without coverage, and completion after saving a school coverage decision.
 The salary journey creates an auxiliary deduction while preserving the template draft and refreshes its component catalogue before preview and save.
 Finish user-facing verification in the Codex in-app browser after automated checks.
+
+## PF coverage UI
+
+Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vitest/vitest.mjs run src/screens/hr/payroll/setting/pf-coverage-settings.test.tsx --pool=threads --maxWorkers=1` for coverage request states, setup prompts, permissions, validation, draft preservation, and unchanged save payloads.
+Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/@playwright/test/cli.js test --config e2e/hr/pf-coverage.config.ts` for the real coverage component with synthetic responses on loopback port 4198.
+Browser checks cover Retry, configuration entry, failed saves, dirty-close decisions, focus restoration, and spacing at 390/768/1440px in light and dark themes.
+This fixture changes no school records and does not certify backend persistence or PF calculations.
+Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/@playwright/test/cli.js test --config e2e/hr/pf-page.config.ts` with the disposable HR setup bridge for the full PF page.
+It verifies real API create/edit round trips for decimal and zero contributions, retained failed drafts, pending-save locks, read-only actions, validation focus, and light/dark layouts at 390/768/1440px.
 
 ## Onboarding initial load
 
