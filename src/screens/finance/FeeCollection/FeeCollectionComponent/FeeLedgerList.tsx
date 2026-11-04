@@ -167,7 +167,8 @@ const FeeLedgerList = ({
     itemYear?: number,
     dueFeeId?: string,
     installmentLabel?: string,
-    lateFeeAmount?: number
+    lateFeeAmount?: number,
+    adjustmentCreditAmount?: number
   ) => {
     if (due === 0 && (lateFeeAmount ?? 0) === 0) return;
     const period = toPeriod(month, itemYear ?? year);
@@ -192,6 +193,7 @@ const FeeLedgerList = ({
           originalDueAmount: due,
           roundingAdjustment: safeRoundingDifference(due, roundedDue),
           lateFeeAmount,
+          adjustmentCreditAmount,
           installmentLabel,
         },
       ]);
@@ -231,6 +233,7 @@ const FeeLedgerList = ({
             originalDueAmount: i.due,
             roundingAdjustment: safeRoundingDifference(i.due, roundedDue),
             lateFeeAmount: i.lateFeeAmount,
+            adjustmentCreditAmount: i.adjustmentCreditAmount,
             installmentLabel: i.installmentLabel,
           };
         });
@@ -277,6 +280,7 @@ const FeeLedgerList = ({
             originalDueAmount: i.due,
             roundingAdjustment: safeRoundingDifference(i.due, roundedDue),
             lateFeeAmount: i.lateFeeAmount,
+            adjustmentCreditAmount: i.adjustmentCreditAmount,
             installmentLabel: i.installmentLabel,
           };
         });

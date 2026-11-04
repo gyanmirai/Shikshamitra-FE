@@ -60,8 +60,6 @@ function CollectionPolicyDrawerSession({
     prerequisites = [],
     refreshPrerequisites,
     checks,
-    feeHeads,
-    isFeeHeadsLoading,
     isSaving,
     unsavedChangesDialog,
     otherDefaultPolicyName,
@@ -225,8 +223,6 @@ function CollectionPolicyDrawerSession({
                     <CollectionReceiptSection formik={formik} />
                     <CollectionLateFeeSection
                       formik={formik}
-                      feeHeads={feeHeads}
-                      isFeeHeadsLoading={isFeeHeadsLoading}
                       addSlab={handleAddSlab}
                       removeSlab={handleRemoveSlab}
                     />

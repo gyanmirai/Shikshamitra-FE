@@ -21,7 +21,6 @@ interface CollectionSummaryPanelProps {
   checks: {
     nameValid: boolean;
     graceValid: boolean;
-    headsValid: boolean;
     lateFeeValid: boolean;
     incomeHeadValid: boolean;
     slabValid: boolean;
@@ -342,13 +341,15 @@ export default function CollectionSummaryPanel({
           <Stack spacing={0.5} mb={2}>
             <ValidationCheck label="General Information complete" valid={checks.nameValid} />
             <ValidationCheck label="Grace period configured" valid={checks.graceValid} />
-            <ValidationCheck label="Late fee heads selected" valid={checks.headsValid} />
             <ValidationCheck label="Late fee formula configured" valid={checks.lateFeeValid} />
             <ValidationCheck
               label="Escalation slabs valid (no gaps/overlaps)"
               valid={checks.slabValid}
             />
-            <ValidationCheck label="Late fee ceiling and charging cutoff valid" valid={checks.capsValid} />
+            <ValidationCheck
+              label="Late fee ceiling and charging cutoff valid"
+              valid={checks.capsValid}
+            />
             <ValidationCheck label="Income ledger head selected" valid={checks.incomeHeadValid} />
             <ValidationCheck
               label="Default policy conflict check"

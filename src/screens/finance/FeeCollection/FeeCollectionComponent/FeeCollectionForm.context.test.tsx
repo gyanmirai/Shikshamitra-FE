@@ -513,6 +513,24 @@ describe('embedded Finance collection context', () => {
     expect(onCancel).toHaveBeenCalledWith(null, false);
   });
 
+  it('supplies collection ledger heads for a student with an admission fee account', () => {
+    mocks.formData.student.studentId = 'student-one';
+    render(<FeeCollectComponentForm student={student} academicYear={academicYear} />);
+    expect(mocks.filterProps).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        feeHeads: [{ feeHeadId: 'form-fee', feeHeadName: 'Form fee' }],
+      })
+    );
+  });
+
+  it('supplies an empty head list when the student collection ledger is empty', () => {
+    mocks.formData.ledger = [];
+    render(<FeeCollectComponentForm student={student} academicYear={academicYear} />);
+    expect(mocks.filterProps).toHaveBeenLastCalledWith(
+      expect.objectContaining({ feeHeads: [] })
+    );
+  });
+
   it('retains global-year defaults and uses the explicit year in every Finance query', () => {
     const view = render(<FeeCollectComponentForm student={student} />);
     expect(mocks.queries).toHaveBeenCalledWith(

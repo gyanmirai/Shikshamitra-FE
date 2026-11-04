@@ -100,6 +100,7 @@ const BankStatements = ({
         filterType: 'string',
       },
       {
+        cellSx: { textAlign: 'right' as const },
         id: 'amount',
         label: 'Amount',
         minWidth: '80px',
@@ -111,6 +112,7 @@ const BankStatements = ({
         },
       },
       {
+        cellSx: { textAlign: 'right' as const },
         id: 'chargesAmount',
         label: 'Charges Amount',
         minWidth: '160px',
@@ -196,6 +198,7 @@ const BankStatements = ({
           tableId="bank-statements-table"
           columns={columns}
           data={bankStatements || []}
+          searchFieldProps={{ placeholder: 'Search' }}
         />
       </Box>
     </Box>

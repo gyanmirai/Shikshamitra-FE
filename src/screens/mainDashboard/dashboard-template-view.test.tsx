@@ -12,7 +12,8 @@ import { createDashboardMockDataSourceResult } from './dashboard-data-source';
 
 import type { DashboardDataContract } from './dashboard-types';
 
-vi.mock('@iconify/react', () => ({ Icon: () => null, disableCache: () => {} }));
+vi.mock('@iconify/react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@iconify/react')>()), Icon: () => null, disableCache: () => {} }));
 vi.mock('src/components/chart', () => ({ Chart: () => null, useChart: (options: unknown) => options }));
 
 const allZoneTestIds = [

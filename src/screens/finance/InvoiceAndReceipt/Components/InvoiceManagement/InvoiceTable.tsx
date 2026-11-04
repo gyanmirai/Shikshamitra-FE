@@ -70,6 +70,7 @@ const InvoiceTable = ({
           maxWidth: 160,
         },
         {
+          cellSx: { textAlign: 'right' as const },
           id: 'totalAmount',
           label: 'Total',
           align: 'left',
@@ -80,6 +81,7 @@ const InvoiceTable = ({
           render: (value: number) => `₹ ${value.toLocaleString()}`,
         },
         {
+          cellSx: { textAlign: 'right' as const },
           id: 'paidAmount',
           label: 'Paid',
           align: 'left',
@@ -108,6 +110,7 @@ const InvoiceTable = ({
         },
       ]}
       data={data || []}
+      searchFieldProps={{ placeholder: 'Search' }}
     />
   </Box>
 );

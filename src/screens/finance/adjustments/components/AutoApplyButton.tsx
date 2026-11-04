@@ -8,7 +8,7 @@ interface AutoApplyButtonProps {
 }
 
 const AutoApplyButton = ({ disabled, onAutoApply, onClear }: AutoApplyButtonProps) => (
-  <Stack direction="row" spacing={1} justifyContent="flex-end">
+  <Stack direction="row" spacing={1} justifyContent="flex-end" useFlexGap flexWrap="wrap">
     <Button
       size="small"
       variant="outlined"
@@ -27,7 +27,7 @@ const AutoApplyButton = ({ disabled, onAutoApply, onClear }: AutoApplyButtonProp
       startIcon={<Iconify icon="mdi:auto-fix" />}
       onClick={onAutoApply}
     >
-      Auto Apply Adjustment
+      Auto allocate
     </Button>
   </Stack>
 );

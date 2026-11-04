@@ -405,7 +405,7 @@ export function CashContent({ academicYearId }: { academicYearId: string }) {
           filters={filters}
           sorts={sorts}
           searchFieldProps={{
-            placeholder: 'Search receipts or payers…',
+            placeholder: 'Search',
             inputProps: { 'aria-label': 'Search cash receipts or payers', maxLength: 200 },
           }}
           onServerSearch={(value) => {

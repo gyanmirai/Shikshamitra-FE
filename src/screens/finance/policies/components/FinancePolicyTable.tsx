@@ -1106,7 +1106,7 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
           sx: { height: 1 },
         }}
         searchFieldProps={{
-          placeholder: usesPolicyListApi ? 'Search policies by name…' : 'Search…',
+          placeholder: 'Search',
         }}
         page={queryParams.page - 1}
         rowsPerPage={queryParams.pageSize}

@@ -3,11 +3,15 @@
 import { forwardRef } from 'react';
 import Box from '@mui/material/Box';
 import NoSsr from '@mui/material/NoSsr';
-import { Icon, disableCache } from '@iconify/react';
+import { Icon, addCollection } from '@iconify/react';
 
 import { iconifyClasses } from './classes';
+import { criticalIconCollections } from './critical-icons';
 
 import type { IconifyProps } from './types';
+
+// Resolve critical icons from the application bundle; other names retain the normal API fallback.
+criticalIconCollections.forEach((collection) => addCollection(collection));
 
 // ----------------------------------------------------------------------
 
@@ -41,6 +45,3 @@ export const Iconify = forwardRef<SVGElement, IconifyProps>(
     );
   }
 );
-
-// https://iconify.design/docs/iconify-icon/disable-cache.html
-disableCache('local');

@@ -231,6 +231,7 @@ const ReceiptManagement = () => {
         render: (value) => value ?? '—',
       },
       {
+        cellSx: { textAlign: 'right' as const },
         id: 'totalPaidAmount',
         label: 'Paid Amount',
         align: 'left',
@@ -344,7 +345,7 @@ const ReceiptManagement = () => {
         searchTerm={search}
         rowsPerPage={maxResultCount}
         defaultRowsPerPage={DEFAULT_PAGE_SIZE}
-        searchFieldProps={{ placeholder: 'Receipt number, student name or GR number' }}
+        searchFieldProps={{ placeholder: 'Search' }}
         onServerSearch={(value) => {
           setSearch(value);
           resetPagination();

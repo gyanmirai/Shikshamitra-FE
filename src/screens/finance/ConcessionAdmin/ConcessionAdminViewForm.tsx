@@ -8,25 +8,25 @@ import { useSelector } from 'react-redux';
 import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
-import React, { useRef, useState } from 'react';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
-import { EmptyContent } from 'src/components/empty-content';
 import { shikshaMitraToast } from 'src/components/toast';
 import { Cancel, CheckCircle } from '@mui/icons-material';
 import CustomTooltip from 'src/components/custom-tooltip';
+import React, { useRef, useState, useEffect } from 'react';
+import { EmptyContent } from 'src/components/empty-content';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { financePermissions } from 'src/constants/finance-menu';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useConcessionApprovalPreflight } from 'src/screens/finance/hooks/useConcessionApprovalPreflight';
 import { ConcessionStatusType } from 'src/enums/concession-status-type';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { isFinanceAdministratorSession } from 'src/utils/finance-admin-auto-approval';
 import DocumentPreviewDialog from 'src/components/preview-document/DocumentPreviewDialog';
+import { useConcessionApprovalPreflight } from 'src/screens/finance/hooks/useConcessionApprovalPreflight';
 import {
   Box,
   Tab,
@@ -53,6 +53,7 @@ import {
 } from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
 
 import ConcessionItemCard from './ConcessionItemCard';
+import ConcessionRequestDetails from './ConcessionRequestDetails';
 import StudentInformationAccordion from './StucentConcessionCard';
 import ConcessionFeeHeadApprovalView from './ConcessionFeeHeadApprovalView';
 import { canDecideConcession } from '../Concession/concessionDecisionEligibility';
@@ -523,6 +524,15 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
   const deleteDialog = useBoolean();
   const rejectDialog = useBoolean();
   const [selectedItem, setSelectedItem] = useState<IConcessionRequestItem | null>(null);
+  const detailScopeKey = [student?.studentId || '', currentYear?.id || ''].join(':');
+  const [detailSelection, setDetailSelection] = useState<{
+    item: IConcessionRequestItem;
+    scopeKey: string;
+  } | null>(null);
+  const detailItem = detailSelection?.scopeKey === detailScopeKey ? detailSelection.item : null;
+  useEffect(() => {
+    setDetailSelection((previous) => (previous?.scopeKey === detailScopeKey ? previous : null));
+  }, [detailScopeKey]);
   const deleteCommandKey = useRef('');
   // approvalView drives the in-place fee-head-wise approval screen
   const [approvalView, setApprovalView] = useState<{
@@ -773,6 +783,9 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
               >
                 <ConcessionItemCard
                   item={item}
+                  onViewDetails={(request) =>
+                    setDetailSelection({ item: request, scopeKey: detailScopeKey })
+                  }
                   onEdit={(request) => onEdit?.(request)}
                   onApprove={handleApproveClick}
                   approvalChecking={isCheckingApproval}
@@ -788,6 +801,17 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
           </Grid>
         )}
       </Scrollbar>
+
+      {detailItem && (
+        <ConcessionRequestDetails
+          key={detailItem.studentConcessionTypeRequestId}
+          open
+          item={detailItem}
+          student={data?.studentDetails}
+          academicYear={currentYear?.name}
+          onClose={() => setDetailSelection(null)}
+        />
+      )}
 
       {/* ── Footer ────────────────────────────────────────────── */}
       <Box

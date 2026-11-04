@@ -7,6 +7,7 @@ import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CancelButton from 'src/components/cancel-button';
+import { formatDateOnly } from 'src/utils/date-only';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomizableTable from 'src/components/customizabaleTable';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
@@ -46,6 +47,22 @@ type LedgerRow = MonthWiseFeeItem & {
   charge?: IFeeCharge;
   outstanding: number;
 };
+
+const lateFeeAppliedPeriod = (charge: IFeeCharge) =>
+  charge.lateFeeAppliedIntervals?.length
+    ? charge.lateFeeAppliedIntervals
+        .map(({ fromDate, throughDate }) => {
+          const from = formatDateOnly(fromDate, 'D MMMM YYYY');
+          const through = formatDateOnly(throughDate, 'D MMMM YYYY');
+          return from === through ? from : `${from} to ${through}`;
+        })
+        .join('; ')
+    : 'Historical date range is unavailable because it was not recorded for this assessment.';
+
+const lateFeeAppliedDays = (charge: IFeeCharge) =>
+  charge.lateFeeAppliedDays != null
+    ? `${charge.lateFeeAppliedDays} ${charge.lateFeeAppliedDays === 1 ? 'overdue day' : 'overdue days'} considered; grace and exception days are excluded.`
+    : 'Grace and policy exception days are excluded from the displayed range.';
 
 /** One embedded student ledger. Filtering is owned by the collect form; sorting never changes allocation order. */
 export default function CollectionLedgerTable({
@@ -324,16 +341,19 @@ export default function CollectionLedgerTable({
             const amountColumn = groupColumns.findIndex((column) => column.id === 'outstanding');
             const chargeAmountColumns: IColumn[] = [
               {
+                cellSx: { textAlign: 'right' as const },
                 id: 'total',
                 label: 'Original',
                 render: (_value, row) => formatNumber(row.total, 'INR'),
               },
               {
+                cellSx: { textAlign: 'right' as const },
                 id: 'paid',
                 label: 'Collected',
                 render: (_value, row) => formatNumber(row.paid, 'INR'),
               },
               {
+                cellSx: { textAlign: 'right' as const },
                 id: 'waived',
                 label: 'Waived',
                 render: (_value, row) => formatNumber(row.charge?.waivedAmount ?? 0, 'INR'),
@@ -347,7 +367,7 @@ export default function CollectionLedgerTable({
                 minWidth: 110,
                 isFilter: false,
                 isSort: false,
-                cellSx: { py: 1.5 },
+                cellSx: { ...column.cellSx, py: 1.5 },
               }))
             );
             if (allowWaivers)
@@ -521,7 +541,11 @@ export default function CollectionLedgerTable({
           <DialogScrollContent>
             <Stack spacing={2}>
               <DetailSection
-                helpText="The due period, installment, and current payment status of this entry."
+                helpText={
+                  detail.charge?.sourceType === 'LateFee'
+                    ? 'The due date used by the late-fee rule and the exact calendar intervals counted by the calculation. Gaps from grace periods or policy exceptions are not counted.'
+                    : 'The due period, installment, and current payment status of this entry.'
+                }
                 title={detail.charge ? 'Charge Details' : 'Fee Details'}
                 icon={GlobalIcons.calendar}
                 action={
@@ -533,8 +557,30 @@ export default function CollectionLedgerTable({
                 }
               >
                 <DetailGrid>
-                  <DetailField label="Due period" value={detail.periodLabel} />
-                  <DetailField label="Installment" value={detail.installmentLabel} />
+                  {detail.charge?.sourceType === 'LateFee' ? (
+                    <>
+                      <DetailField
+                        label="Due date"
+                        value={
+                          detail.charge.dueDate
+                            ? formatDateOnly(detail.charge.dueDate, 'D MMMM YYYY')
+                            : undefined
+                        }
+                      />
+                      <DetailField label="Installment" value={detail.installmentLabel} />
+                      <DetailField
+                        label="Late fee applied from/to"
+                        value={lateFeeAppliedPeriod(detail.charge)}
+                        secondary={lateFeeAppliedDays(detail.charge)}
+                        fullWidth
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <DetailField label="Due period" value={detail.periodLabel} />
+                      <DetailField label="Installment" value={detail.installmentLabel} />
+                    </>
+                  )}
                 </DetailGrid>
               </DetailSection>
               <DetailSection
@@ -550,6 +596,10 @@ export default function CollectionLedgerTable({
                   />
                   <DetailField label="Total" value={formatNumber(detail.total, 'INR')} />
                   <DetailField label="Paid" value={formatNumber(detail.paid, 'INR')} />
+                  <DetailField
+                    label="Adjustment credit"
+                    value={formatNumber(detail.adjustmentCreditAmount ?? 0, 'INR')}
+                  />
                   <DetailField
                     label="Outstanding principal"
                     value={formatNumber(detail.due, 'INR')}

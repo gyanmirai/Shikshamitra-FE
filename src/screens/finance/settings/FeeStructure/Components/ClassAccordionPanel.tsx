@@ -485,6 +485,7 @@ export default function ClassAccordionPanel({
             >
               <FeeStructureWorkspaceCard
                 initialData={card}
+                isActive={key === activeKey}
                 actionsContainer={actionContainers[key]}
                 actionsInList
                 index={index}

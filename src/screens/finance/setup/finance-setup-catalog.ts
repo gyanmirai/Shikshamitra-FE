@@ -123,7 +123,7 @@ export const financeSetupSettings = [
       'Choose the late-fee Income Category where required and configure whether fees and charges use combined or separate receipts.',
       'Validate and activate the policy version to use in the fee structure.',
     ],
-    note: 'Income Categories and applicable fee heads should be ready first. Receipt grouping is configured here; inactive posting tools are not setup prerequisites.',
+    note: 'Income Categories should be ready first. Receipt grouping is configured here; inactive posting tools are not setup prerequisites.',
   },
   {
     key: 'refund-policy',

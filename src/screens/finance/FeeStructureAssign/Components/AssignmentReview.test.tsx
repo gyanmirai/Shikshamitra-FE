@@ -6,7 +6,7 @@ import { it, vi, expect, describe } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { act, render, screen, within, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import AssignmentReview from './AssignmentReview';
 
@@ -89,9 +89,9 @@ const preview: AssignmentPreview = {
   ],
 };
 
-const mount = (data = preview, committed = false, dirty = false) =>
+const mount = (data = preview, committed = false) =>
   render(
-    <Provider store={configureStore({ reducer: () => ({ confirmPopup: { isChanges: dirty } }) })}>
+    <Provider store={configureStore({ reducer: () => ({ confirmPopup: { isChanges: false } }) })}>
       <ThemeProvider theme={createTheme(defaultSettings)}>
         <AssignmentReview data={data} committed={committed} />
       </ThemeProvider>
@@ -114,10 +114,13 @@ describe('assignment review evidence', () => {
       heads.queryByRole('button', { name: 'Tuition service details' })
     ).not.toBeInTheDocument();
     expect(screen.queryByText('Configured dates are in the past.')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'View all' }));
-    const schedule = within(screen.getByRole('table', { name: 'Preview fee installments table' }));
+    const schedule = within(
+      screen.getByRole('table', { name: 'Assignment installment schedule table' })
+    );
     expect(schedule.getAllByRole('row')).toHaveLength(13);
-    expect(schedule.getByText('Tuition · Installment 12')).toBeInTheDocument();
+    expect(schedule.getByText('Installment 12')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'View all' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
   it('shows policy names and versions with read-only policy view fields', () => {
@@ -127,7 +130,7 @@ describe('assignment review evidence', () => {
     expect(screen.queryByRole('button', { name: /edit|service details/i })).not.toBeInTheDocument();
   });
 
-  it('collapses evidence tables independently while keeping totals, policies and View all available', async () => {
+  it('collapses evidence tables independently while keeping totals and policies available', async () => {
     mount();
     const heads = screen.getByRole('button', { name: 'Collapse fee breakdown' });
     const schedule = screen.getByRole('button', { name: 'Collapse installment schedule' });
@@ -154,7 +157,6 @@ describe('assignment review evidence', () => {
     );
     expect(screen.getByText('Total to assign')).toBeVisible();
     expect(screen.getByText('School collection · v2')).toBeVisible();
-    expect(screen.getByRole('button', { name: 'View all' })).toBeEnabled();
     const expand = screen.getByRole('button', { name: 'Expand fee breakdown' });
     expect(expand).toHaveAttribute('aria-expanded', 'false');
     expect(document.getElementById(expand.getAttribute('aria-controls')!)).toBeInTheDocument();
@@ -168,48 +170,14 @@ describe('assignment review evidence', () => {
     );
   });
 
-  it('opens installment evidence with its original information controls and tooltips', async () => {
-    mount();
-    const viewAll = screen.getByRole('button', { name: 'View all' });
-    expect(viewAll).toHaveClass('MuiLink-root');
-    expect(viewAll).not.toHaveClass('MuiButton-root');
-    fireEvent.click(viewAll);
-    const dialog = within(screen.getByRole('dialog'));
-    const shareHeader = within(dialog.getByRole('columnheader', { name: /Share/ }));
-    expect(shareHeader.getAllByText('Share')).toHaveLength(1);
-    expect(dialog.getByRole('button', { name: 'About installment shares' })).toBeVisible();
-    expect(dialog.getByRole('button', { name: 'About installment demand dates' })).toBeVisible();
-    expect(dialog.getByRole('button', { name: 'About installment due dates' })).toBeVisible();
-    expect(dialog.getByRole('button', { name: 'About installment obligations' })).toBeVisible();
-    const explanation = dialog.getByRole('button', {
-      name: 'Tuition Installment 1 calculation details',
-    });
-    act(() => explanation.focus());
-    expect(await screen.findByRole('tooltip')).toHaveTextContent('Reviewed service charge');
-  });
-
-  it('closes installment evidence without discarding the parent assignment form', async () => {
-    const confirm = vi.fn();
-    vi.stubGlobal('confirm', confirm);
-    mount(preview, false, true);
-    fireEvent.click(screen.getByRole('button', { name: 'View all' }));
-    expect(screen.getByRole('dialog')).toHaveTextContent('Installment details');
-    fireEvent.click(screen.getByRole('button', { name: 'close' }));
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-    expect(confirm).not.toHaveBeenCalled();
-    vi.unstubAllGlobals();
-  });
-
   it('preserves saved balances and does not invent legacy schedule evidence', () => {
     mount({ ...preview, calculationVersion: 'LegacyUnknown' }, true);
     expect(screen.queryByText('Before service adjustment')).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: 'Coverage amount' })).not.toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: 'Recorded Amount' })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'View all' }));
     const schedule = within(
-      screen.getByRole('table', { name: 'Assigned fee installments and balances table' })
+      screen.getByRole('table', { name: 'Assignment installment schedule table' })
     );
-    expect(schedule.getAllByText('Unknown')).toHaveLength(12);
     expect(schedule.getByRole('columnheader', { name: 'Paid' })).toBeInTheDocument();
     expect(schedule.getByRole('columnheader', { name: 'Outstanding' })).toBeInTheDocument();
     expect(schedule.getAllByText('₹ 30')).toHaveLength(12);

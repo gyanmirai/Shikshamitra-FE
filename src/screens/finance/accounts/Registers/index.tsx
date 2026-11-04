@@ -430,7 +430,7 @@ function RegisterContent({
             page={page - 1}
             rowsPerPage={pageSize}
             searchTerm={search}
-            searchFieldProps={{ placeholder: 'Search...' }}
+            searchFieldProps={{ placeholder: 'Search' }}
             totalCount={query.isError ? 0 : (query.currentData?.totalCount ?? 0)}
             onServerPagination={(nextPage, size) => {
               setPage(nextPage);

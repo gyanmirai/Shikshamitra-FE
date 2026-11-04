@@ -74,6 +74,7 @@ const ViewReceipt: React.FC<ViewReceiptProps> = ({ dialogValue, onClose }) => {
                   label: 'Month',
                 },
                 {
+                  cellSx: { textAlign: 'right' as const },
                   id: 'amount',
                   label: 'Amount',
                 },

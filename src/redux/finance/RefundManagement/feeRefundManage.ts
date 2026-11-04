@@ -2,6 +2,7 @@ import type { IFeeRefundApiPayload } from 'src/screens/finance/feeRefund/NewRefu
 
 import { financeModuleType } from 'src/redux/tagTypes';
 import { FeeRefundStatusType } from 'src/enums/feeRefund-status-type';
+import { getDownloadFileName } from 'src/utils/get-download-file-name';
 
 import { financeModuleApi } from '../financeModuleApi';
 
@@ -272,6 +273,19 @@ const refundRequestInvalidations = (result: FeeRefundRequestDto | undefined, err
 
 export const feeRefundApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
+    downloadRefundReceiptPdf: builder.mutation<{ blob: Blob; fileName: string }, string>({
+      query: (id) => ({
+        url: `/fee-refunds/${id}/receipt/pdf`,
+        method: 'GET',
+        responseHandler: (response) => response.blob(),
+      }),
+      transformResponse: (blob: Blob, meta) => ({
+        blob,
+        fileName:
+          getDownloadFileName(meta?.response?.headers.get('content-disposition') ?? null) ??
+          'Refund-Receipt.pdf',
+      }),
+    }),
     getFeeRefunds: builder.query<PagedRefundResult, GetFeeRefundsInput>({
       query: (params) => ({
         url: '/fee-refunds',
@@ -506,6 +520,7 @@ export const feeRefundApi = financeModuleApi.injectEndpoints({
 });
 
 export const {
+  useDownloadRefundReceiptPdfMutation,
   useRecordRefundPayoutMutation,
   useConfirmRefundPayoutMutation,
   useFailRefundPayoutMutation,

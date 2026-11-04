@@ -78,10 +78,10 @@ export interface AdjustmentFormValues {
 
 export interface IAdjustmentTableProps {
   primaryAction?: React.ReactNode;
-  activeTab: import('../enums/adjustment.enum').AdjustmentTabEnum;
-  onTabChange: (tab: import('../enums/adjustment.enum').AdjustmentTabEnum) => void;
-  tabCounts: Record<import('../enums/adjustment.enum').AdjustmentTabEnum, number>;
-  onCreateAdjustment: () => void;
+  activeTab?: import('../enums/adjustment.enum').AdjustmentTabEnum;
+  onTabChange?: (tab: import('../enums/adjustment.enum').AdjustmentTabEnum) => void;
+  tabCounts?: Record<import('../enums/adjustment.enum').AdjustmentTabEnum, number>;
+  onCreateAdjustment?: () => void;
   onView: (row: AdjustmentRequest) => void;
   onApprove?: (row: AdjustmentRequest) => void;
   onReject?: (row: AdjustmentRequest) => void;
@@ -90,7 +90,8 @@ export interface IAdjustmentTableProps {
 
 export interface IAdjustmentFormProps {
   onCancel: (e: any, isSubmit?: boolean) => void;
-  onSubmit: (values: IAdjustmentFullFormValues) => void;
+  onSubmit: (values: IAdjustmentFullFormValues) => void | Promise<void>;
+  onBusyChange?: (busy: boolean) => void;
   defaultBoardId?: string;
   defaultMediumId?: string;
   defaultStandardId?: string;
@@ -115,5 +116,6 @@ export interface IAdjustmentViewProps {
 
 export interface IAdjustmentApproveRejectProps {
   mode: 'Approve' | 'Reject' | string;
-  onClose: (e: any, isSubmit?: boolean, notes?: string) => void;
+  onClose: (e: unknown, isSubmit?: boolean, notes?: string) => void | Promise<void>;
+  loading?: boolean;
 }

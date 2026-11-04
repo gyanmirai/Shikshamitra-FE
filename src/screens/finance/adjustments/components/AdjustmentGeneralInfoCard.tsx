@@ -1,5 +1,6 @@
 import { FinanceFieldSkeleton } from 'src/screens/finance/components/FinanceFormSkeleton';
 import type { RootState } from 'src/redux/store';
+import type { FormikProps } from 'formik';
 
 import { useSelector } from 'react-redux';
 import { useMemo, useState, useEffect } from 'react';
@@ -9,8 +10,11 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useLazyGetStudentsByDivisionQuery } from 'src/redux/student';
 import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
+import type { IAdjustmentFullFormValues } from '../types/adjustmentFormValues';
 
-const AdjustmentGeneralInfoCard: React.FC<{ formik: any }> = ({ formik }) => {
+const AdjustmentGeneralInfoCard: React.FC<{ formik: FormikProps<IAdjustmentFullFormValues> }> = ({
+  formik,
+}) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const { values, touched, errors, setFieldValue } = formik;
 
@@ -18,14 +22,17 @@ const AdjustmentGeneralInfoCard: React.FC<{ formik: any }> = ({ formik }) => {
   const [mediums, setMediums] = useState<any[]>([]);
   const [allDivisions, setAllDivisions] = useState<any[]>([]);
 
-  const [getClassByMedium, { data: classes, isLoading: classLoading }] = useQueryAndMutation({
+  const [
+    getClassByMedium,
+    { currentData: classes, isLoading: classLoading, isFetching: classFetching },
+  ] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetClassByMediumQuery,
   });
 
   const [
     getStudents,
-    { data: studentsData, isLoading: studentLoading, isFetching: studentFetching },
+    { currentData: studentsData, isLoading: studentLoading, isFetching: studentFetching },
   ] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetStudentsByDivisionQuery,
@@ -77,10 +84,12 @@ const AdjustmentGeneralInfoCard: React.FC<{ formik: any }> = ({ formik }) => {
   return (
     <Grid container spacing={2}>
       {/* Board */}
-      <Grid size={{ xs: 6, md: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
         <ShakingTextField error={!!(touched.boardId && errors.boardId)}>
           <CustomSelect
-            label="Board *"
+            required
+            name="boardId"
+            label="Board"
             options={boards}
             labelKey="name"
             valueKey="id"
@@ -102,10 +111,12 @@ const AdjustmentGeneralInfoCard: React.FC<{ formik: any }> = ({ formik }) => {
       </Grid>
 
       {/* Medium */}
-      <Grid size={{ xs: 6, md: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
         <ShakingTextField error={!!(touched.mediumId && errors.mediumId)}>
           <CustomSelect
-            label="Medium *"
+            required
+            label="Medium"
+            name="mediumId"
             disabled={!values.boardId}
             options={mediums}
             labelKey="name"
@@ -127,13 +138,15 @@ const AdjustmentGeneralInfoCard: React.FC<{ formik: any }> = ({ formik }) => {
       </Grid>
 
       {/* Class */}
-      <Grid size={{ xs: 6, md: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
         <ShakingTextField error={!!(touched.standardId && errors.standardId)}>
           <CustomSelect
-            label="Class *"
-            disabled={!values.mediumId}
+            required
+            label="Class"
+            name="standardId"
+            disabled={!values.mediumId || classLoading || classFetching}
             options={classes || []}
-            isLoading={classLoading}
+            isLoading={classLoading || classFetching}
             labelKey="name"
             valueKey="id"
             value={values.standardId}
@@ -152,10 +165,12 @@ const AdjustmentGeneralInfoCard: React.FC<{ formik: any }> = ({ formik }) => {
       </Grid>
 
       {/* Division */}
-      <Grid size={{ xs: 6, md: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
         <ShakingTextField error={!!(touched.divisionId && errors.divisionId)}>
           <CustomSelect
-            label="Division *"
+            required
+            label="Division"
+            name="divisionId"
             disabled={!values.standardId}
             options={allDivisions}
             labelKey="name"
@@ -203,7 +218,9 @@ const AdjustmentGeneralInfoCard: React.FC<{ formik: any }> = ({ formik }) => {
                 <TextField
                   {...params}
                   size="small"
-                  label="Student *"
+                  required
+                  label="Student"
+                  name="studentId"
                   fullWidth
                   error={!!(touched.studentId && errors.studentId)}
                   helperText={(touched.studentId && errors.studentId) as string}
@@ -211,26 +228,6 @@ const AdjustmentGeneralInfoCard: React.FC<{ formik: any }> = ({ formik }) => {
               )}
             />
           </FinanceFieldSkeleton>
-        </ShakingTextField>
-      </Grid>
-
-      {/* Remarks */}
-      <Grid size={{ xs: 12 }}>
-        <ShakingTextField error={!!(touched.remarks && errors.remarks)}>
-          <TextField
-            fullWidth
-            multiline
-            rows={3}
-            label="Remarks *"
-            name="remarks"
-            placeholder="Provide clear remarks for the adjustment..."
-            value={values.remarks}
-            onChange={(e) => setFieldValue('remarks', e.target.value)}
-            onBlur={(e) => setFieldValue('remarks', e.target.value)}
-            error={!!(touched.remarks && errors.remarks)}
-            helperText={(touched.remarks && errors.remarks) as string}
-            size="small"
-          />
         </ShakingTextField>
       </Grid>
     </Grid>

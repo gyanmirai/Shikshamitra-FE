@@ -189,6 +189,7 @@ const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
         noDataText="No Fee Structure data found"
         columns={columns}
         data={tableData}
+        searchFieldProps={{ placeholder: 'Search' }}
       />
     </Stack>
   );

@@ -68,8 +68,10 @@ describe('policy prerequisite lifecycle', () => {
     mocks.routing = { incomeCategories: [], expenseCategories: [], bankAccounts: [] };
     mocks.save.mockReturnValue({ unwrap: () => Promise.resolve({}) });
   });
-  it('guards selected-head refund submit, then permits an all-head draft without clearing entered values', async () => {
-    const { result } = renderHook(() => useRefundPolicyForm({ open: true, onClose: vi.fn() }));
+  it('keeps the existing refund setup guard until fee heads are configured without clearing entered values', async () => {
+    const { result, rerender } = renderHook(() =>
+      useRefundPolicyForm({ open: true, onClose: vi.fn() })
+    );
     await act(async () => {
       await result.current.formik.setValues({
         ...result.current.formik.values,
@@ -95,9 +97,16 @@ describe('policy prerequisite lifecycle', () => {
     await act(async () => {
       await result.current.handleCustomSubmit('Draft');
     });
+    expect(mocks.save).not.toHaveBeenCalled();
+    expect(result.current.prerequisites).toEqual([{ key: 'fee-head' }]);
+    mocks.heads = [{ id: 'tuition', name: 'Tuition' }];
+    rerender();
+    await act(async () => {
+      await result.current.handleCustomSubmit('Draft');
+    });
     expect(mocks.save).toHaveBeenCalledOnce();
   });
-  it('guards enabled late fees with no heads and allows turning them off', async () => {
+  it('permits common late fees without fee heads and preserves the draft when they are disabled', async () => {
     const { result } = renderHook(() => useCollectionPolicyForm({ open: true, onClose: vi.fn() }));
     await act(async () => {
       await result.current.formik.setValues({
@@ -105,20 +114,27 @@ describe('policy prerequisite lifecycle', () => {
         policyName: 'Collection terms',
         enableLateFee: true,
         flatAmount: 10,
+        lateFeeApplyOnFeeHeads: ['obsolete'],
+        feeHeadOverrides: [{ feeHeadId: 'obsolete', overrideMode: 'NoLateFee', lateFeeRule: null }],
       });
     });
-    expect(result.current.prerequisites).toEqual([{ key: 'fee-head' }]);
-    await act(async () => {
-      await result.current.handleCustomSubmit('Draft');
-    });
-    expect(mocks.save).not.toHaveBeenCalled();
+    expect(result.current.prerequisites).toEqual([]);
     await act(async () => {
       await result.current.formik.setFieldValue('enableLateFee', false);
+    });
+    expect(result.current.formik.values.policyName).toBe('Collection terms');
+    expect(result.current.prerequisites).toEqual([]);
+    await act(async () => {
+      await result.current.formik.setFieldValue('enableLateFee', true);
     });
     await act(async () => {
       await result.current.handleCustomSubmit('Draft');
     });
     expect(mocks.save).toHaveBeenCalledOnce();
+    expect(mocks.save).toHaveBeenCalledWith(
+      expect.objectContaining({ lateFeeApplyOnFeeHeads: [], feeHeadOverrides: [] })
+    );
+    expect(mocks.refetchHeads).not.toHaveBeenCalled();
   });
   it('refreshes proration heads without resetting policy identity or erasing existing rules', async () => {
     mocks.detail = {

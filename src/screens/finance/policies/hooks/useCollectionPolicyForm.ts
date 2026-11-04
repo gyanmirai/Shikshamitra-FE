@@ -12,7 +12,6 @@ import { useFormik, setNestedObjectValues } from 'formik';
 import { roundUpWithinAmount } from 'src/utils/whole-rupee-amount';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
-import { useGetActiveFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
 import { useGetFinanceRoutingOptionsQuery } from 'src/redux/finance/financeRoutingApi';
 import {
   useGetCollectionPoliciesQuery,
@@ -63,7 +62,7 @@ const getInitialValues = (
 
     enableLateFee: data?.enableLateFee ?? false,
     gracePeriodDays: data?.gracePeriodDays ?? 0,
-    lateFeeApplyOnFeeHeads: data?.lateFeeApplyOnFeeHeads || [],
+    lateFeeApplyOnFeeHeads: [],
     lateFeeType: data?.lateFeeType || 'Flat',
     flatAmount: formulaValue(data?.flatAmount, ['Flat']),
     percentage: formulaValue(data?.percentage, ['Percentage', 'Compound']),
@@ -73,7 +72,7 @@ const getInitialValues = (
     amountPerMonth: formulaValue(data?.amountPerMonth, ['PerMonth']),
     compoundFrequency: data?.compoundFrequency || 'Daily',
     escalationRules: data?.escalationRules || [],
-    feeHeadOverrides: data?.feeHeadOverrides || [],
+    feeHeadOverrides: [],
     roundingMethod: 'RoundUp',
     maximumLateFeeAmount: data?.maximumLateFeeAmount ?? null,
     maximumChargingDays: data?.maximumChargingDays ?? null,
@@ -136,12 +135,6 @@ const validationSchema = Yup.object().shape({
     is: true,
     then: (s) => s.required('Grace Period is required'),
   }),
-  lateFeeApplyOnFeeHeads: Yup.array()
-    .of(Yup.string())
-    .when('enableLateFee', {
-      is: true,
-      then: (s) => s.min(1, 'Select at least one Fee Head'),
-    }),
   lateFeeType: Yup.string().when('enableLateFee', {
     is: true,
     then: (s) => s.required('Calculation Type is required'),
@@ -245,23 +238,15 @@ export function useCollectionPolicyForm({
   const unsavedChangesDialog = useBoolean();
   const effectiveAcademicYearId = academicYearId || currentYear?.id || '';
 
-  // Collection policies are academic-year scoped, so selectors must use the complete,
-  // unpaginated active lookup rather than the fee-head administration list.
-  const feeHeadsQuery = useGetActiveFeeHeadsQuery(effectiveAcademicYearId, {
-    skip: !open || !effectiveAcademicYearId,
-  });
-  const { currentData: feeHeadsData } = feeHeadsQuery;
   const routingQuery = useGetFinanceRoutingOptionsQuery(
     { academicYearId: effectiveAcademicYearId, operation: 'collection-policy' },
     { skip: !open || !effectiveAcademicYearId }
   );
   const refreshPrerequisites = () => {
     if (!open || !effectiveAcademicYearId) return;
-    feeHeadsQuery.refetch();
     routingQuery.refetch();
   };
   useRefreshFinancePrerequisites(refreshPrerequisites, open && Boolean(effectiveAcademicYearId));
-  const feeHeads = useMemo(() => feeHeadsData || [], [feeHeadsData]);
 
   // Load the current academic-year default so the form can explain that saving
   // this selection will transfer the default designation to the new policy.
@@ -318,7 +303,6 @@ export function useCollectionPolicyForm({
       v.policyName.trim().length <= 100 &&
       financeNameSchema('Collection Policy Name').isValidSync(v.policyName);
     const graceValid = !v.enableLateFee || validCollectionNumber(v.gracePeriodDays, 'days');
-    const headsValid = !v.enableLateFee || v.lateFeeApplyOnFeeHeads.length >= 1;
 
     let lateFeeValid = true;
     if (v.enableLateFee) {
@@ -374,20 +358,13 @@ export function useCollectionPolicyForm({
       v.maximumChargingDays === null;
 
     const isReadyToPublish =
-      nameValid &&
-      graceValid &&
-      headsValid &&
-      capsValid &&
-      lateFeeValid &&
-      incomeHeadValid &&
-      slabValid;
+      nameValid && graceValid && capsValid && lateFeeValid && incomeHeadValid && slabValid;
 
     return {
       numericValid,
       capsValid,
       nameValid,
       graceValid,
-      headsValid,
       lateFeeValid,
       incomeHeadValid,
       slabValid,
@@ -400,11 +377,8 @@ export function useCollectionPolicyForm({
   const handleCustomSubmit = async (overrideStatus: 'Draft' | 'Active') => {
     if (
       isSaving ||
-      collectionPolicyPrerequisites(
-        { ...formik.values, status: overrideStatus },
-        feeHeadsQuery,
-        routingQuery
-      ).length
+      collectionPolicyPrerequisites({ ...formik.values, status: overrideStatus }, routingQuery)
+        .length
     )
       return;
 
@@ -429,6 +403,8 @@ export function useCollectionPolicyForm({
     try {
       const payload = {
         ...formik.values,
+        lateFeeApplyOnFeeHeads: [],
+        feeHeadOverrides: [],
         policyName: normalizePolicyName(formik.values.policyName),
         status: overrideStatus,
         isDefault: overrideStatus === 'Active' ? formik.values.isDefault : false,
@@ -587,10 +563,8 @@ export function useCollectionPolicyForm({
 
   return {
     formik,
-    prerequisites: collectionPolicyPrerequisites(formik.values, feeHeadsQuery, routingQuery),
+    prerequisites: collectionPolicyPrerequisites(formik.values, routingQuery),
     refreshPrerequisites,
-    feeHeads,
-    isFeeHeadsLoading: feeHeadsQuery.isFetching && !isSaving && !formik.isSubmitting,
     isSaving,
     unsavedChangesDialog,
     checks,

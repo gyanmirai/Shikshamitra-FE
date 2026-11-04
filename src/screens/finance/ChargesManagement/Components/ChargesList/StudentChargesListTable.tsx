@@ -108,6 +108,7 @@ const ViewStudentAllCharges = ({ data }: { data: IStudentChargeData }) => {
             ),
           },
           {
+            cellSx: { textAlign: 'right' as const },
             id: 'amount',
             label: 'Amount',
             align: 'left',
@@ -166,6 +167,7 @@ const ViewStudentAllCharges = ({ data }: { data: IStudentChargeData }) => {
           },
         ]}
         data={tableData || []}
+        searchFieldProps={{ placeholder: 'Search' }}
       />
     </Scrollbar>
   );

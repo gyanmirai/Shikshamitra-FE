@@ -365,7 +365,7 @@ export default function StructureScheduleDialog({
                     align: 'left',
                     isSort: false,
                     isFilter: false,
-                    cellSx: { fontVariantNumeric: 'tabular-nums' },
+                    cellSx: { textAlign: 'right' as const, fontVariantNumeric: 'tabular-nums' },
                     render: (_value, row) =>
                       line.isVariable ? (
                         <Typography variant="caption" color="text.secondary">

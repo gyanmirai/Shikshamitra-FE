@@ -11,9 +11,11 @@ import { buildChapterMultipartPayload } from '../chapterMultipartPayload';
 
 import type { IChapter, IChapterFormValues } from '../type';
 
-vi.mock('@iconify/react', async () => {
+vi.mock('@iconify/react', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@iconify/react')>();
   const { forwardRef } = await import('react');
   return {
+    ...actual,
     disableCache: () => {},
     Icon: forwardRef<SVGSVGElement>((_, ref) => <svg ref={ref} />),
   };

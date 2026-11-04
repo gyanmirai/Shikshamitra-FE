@@ -3,19 +3,24 @@
 import type { RootState } from 'src/redux/store';
 
 import { useFormik } from 'formik';
-import { motion } from 'framer-motion';
-import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Box, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
+import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
-import { useTheme } from '@mui/material/styles';
+import { formatNumber } from 'src/utils/formate_number';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { Iconify } from 'src/components/iconify';
-import React, { useMemo, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
-import { formatCurrency } from 'src/utils/cureencyFormater';
+import { FormBusyRegion } from 'src/components/form-busy-region';
+import { FormSectionCard } from 'src/components/form-section-card';
+import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { Box, Chip, Paper, Stack, Button, Divider, Typography } from '@mui/material';
 import { useGetAdjustmentEligibilityQuery } from 'src/redux/finance/adjustments/adjustmentApi';
+import type { IAdjustmentFullFormValues } from '../types/adjustmentFormValues';
+import type { IAdjustmentFormProps } from '../types/adjustment.types';
+import type { RefundFormik } from '../../feeRefund/NewRefundForm/types';
 
 import AdjustmentGeneralInfoCard from './AdjustmentGeneralInfoCard';
 import FeeHeadRefundTable from '../../feeRefund/NewRefundForm/FeeHeadRefundTable';
@@ -24,53 +29,56 @@ import {
   buildAdjustmentValidationSchema,
 } from '../types/adjustmentFormValues';
 
-import type { IAdjustmentFormProps } from '../types/adjustment.types';
-import type { IAdjustmentFullFormValues } from '../types/adjustmentFormValues';
-
-const AdjustmentForm: React.FC<
-  IAdjustmentFormProps & { hideStudentInfoForm?: boolean; initialData?: any }
-> = ({
+export default function AdjustmentForm({
   onCancel,
   onSubmit,
+  onBusyChange,
   hideStudentInfoForm = false,
   initialData,
   defaultBoardId = '',
   defaultMediumId = '',
   defaultStandardId = '',
   defaultDivisionId = '',
-}) => {
-  const theme = useTheme();
+}: IAdjustmentFormProps & {
+  hideStudentInfoForm?: boolean;
+  initialData?: Partial<IAdjustmentFullFormValues>;
+}) {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-
-  const formik = useFormik<IAdjustmentFullFormValues>({
-    initialValues: buildAdjustmentInitialValues({
+  const [initialValues] = useState(() =>
+    buildAdjustmentInitialValues({
       boardId: defaultBoardId,
       mediumId: defaultMediumId,
       standardId: defaultStandardId,
       divisionId: defaultDivisionId,
-      ...initialData, // Pre-fill form with student fee structure details
-    }),
+      ...initialData,
+    })
+  );
+  const previousYear = useRef(currentYear?.id);
+  const formik = useFormik<IAdjustmentFullFormValues>({
+    initialValues,
     validationSchema: buildAdjustmentValidationSchema(hideStudentInfoForm),
-    enableReinitialize: true,
-    validateOnBlur: true,
-    validateOnChange: true,
     onSubmit: async (values, helpers) => {
       if (!canSubmitAdjustment) return;
       try {
-        onSubmit(values as any);
+        await onSubmit(values);
         helpers.resetForm();
-        onCancel?.(new MouseEvent('click') as any, true);
-      } catch {
-        shikshaMitraToast.error({ message: 'Failed to submit adjustment request.' });
+        onCancel(null, true);
+      } catch (error) {
+        shikshaMitraToast.error({
+          message: parseApiProblemDetail(error).detail || 'Failed to submit adjustment request.',
+        });
       }
     },
   });
-
-  const { values, touched, errors, setFieldValue } = formik;
   const eligibility = useGetAdjustmentEligibilityQuery(
-    { studentId: String(values.studentId), academicYearId: currentYear?.id ?? '' },
-    { skip: !values.studentId || !currentYear?.id }
+    { studentId: String(formik.values.studentId), academicYearId: currentYear?.id ?? '' },
+    { skip: !formik.values.studentId || !currentYear?.id }
   );
+  const selectedMonths = useMemo(
+    () => formik.values.feeHeadRefunds.flatMap((head) => head.months),
+    [formik.values.feeHeadRefunds]
+  );
+  const totalAmount = selectedMonths.reduce((sum, month) => sum + (Number(month.amount) || 0), 0);
   const canSubmitAdjustment = Boolean(
     eligibility.currentData &&
     !eligibility.isFetching &&
@@ -78,164 +86,135 @@ const AdjustmentForm: React.FC<
     eligibility.currentData.totalAdjustable > 0 &&
     eligibility.currentData.feeHeads.some((head) =>
       head.months.some((month) => month.adjustable > 0)
+    ) &&
+    selectedMonths.length > 0 &&
+    selectedMonths.every(
+      (month) =>
+        month.dueFeeId && /^\d+(\.\d{1,2})?$/.test(String(month.amount)) && Number(month.amount) > 0
     )
   );
-  console.log('errie----', errors);
-  // ── Derived totals for sticky footer ────────────────────────────────────────
-  const { totalSelectedMonths, totalAdjustmentAmount } = useMemo(() => {
-    let months = 0;
-    let total = 0;
-    (values.feeHeadRefunds || []).forEach((fh) => {
-      fh.months.forEach((m) => {
-        months += 1;
-        total += Number(m.amount) || 0;
-      });
-    });
-    return { totalSelectedMonths: months, totalAdjustmentAmount: total };
-  }, [values.feeHeadRefunds]);
+  const showRemarksError = Boolean(
+    (formik.touched.remarks || formik.submitCount > 0) && formik.errors.remarks
+  );
+  const { resetForm } = formik;
+
   useEffect(() => {
-    formik.resetForm();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentYear?.id]);
+    onBusyChange?.(formik.isSubmitting);
+    return () => onBusyChange?.(false);
+  }, [formik.isSubmitting, onBusyChange]);
+  useEffect(() => {
+    if (previousYear.current !== currentYear?.id) {
+      previousYear.current = currentYear?.id;
+      resetForm({ values: buildAdjustmentInitialValues() });
+    }
+  }, [currentYear?.id, resetForm]);
+
   return (
     <Box
-      component={motion.div}
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-      display="flex"
-      flexDirection="column"
-      height="100%"
+      component="form"
+      onSubmit={formik.handleSubmit}
+      sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}
     >
-      {/* ── Scrollable content ── */}
       <Scrollbar fillContent sx={{ flex: 1, minHeight: 0 }}>
-        <Box sx={{ p: { xs: 1, md: 2 }, pb: 1, flex: 1, display: 'flex', flexDirection: 'column' }}>
-          <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-            {!hideStudentInfoForm && (
-              <Paper
-                variant="outlined"
-                sx={{
-                  p: 1.5,
-                  mb: 1.5,
-                  borderRadius: 2,
-                  transition: 'box-shadow 0.2s ease',
-                  '&:hover': { boxShadow: 4 },
-                }}
-              >
-                <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
-                  <Iconify
-                    icon="solar:users-group-rounded-bold-duotone"
-                    width={18}
-                    sx={{ color: 'primary.main' }}
+        <Box sx={{ p: 2, minWidth: 0 }}>
+          <FormBusyRegion busy={formik.isSubmitting} label="Submitting adjustment…">
+            <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
+              <Stack spacing={2}>
+                {!hideStudentInfoForm && (
+                  <FormSectionCard
+                    title="Student Information"
+                    icon={GlobalIcons.assigned}
+                    descriptionTooltip="Choose the student's board, medium, class and division for the current academic year, then select the student."
+                  >
+                    <AdjustmentGeneralInfoCard formik={formik} />
+                  </FormSectionCard>
+                )}
+                <FormSectionCard
+                  title="Adjustment Information"
+                  icon={GlobalIcons.notebook}
+                  descriptionTooltip="Record the reason for moving the selected fee balance to other eligible outstanding fees. This request does not make a cash payout."
+                >
+                  <ShakingTextField error={showRemarksError}>
+                    <TextField
+                      required
+                      fullWidth
+                      size="small"
+                      multiline
+                      minRows={3}
+                      name="remarks"
+                      label="Remarks"
+                      value={formik.values.remarks}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      error={showRemarksError}
+                      helperText={showRemarksError ? formik.errors.remarks : undefined}
+                    />
+                  </ShakingTextField>
+                </FormSectionCard>
+                <FormSectionCard
+                  title="Source Fee Lines"
+                  icon={GlobalIcons.receiptIcon}
+                  descriptionTooltip="Select eligible fee installments and enter the amount requested from each source. Availability is checked for the selected student and academic year."
+                >
+                  {/* The shared selector supports adjustment mode using this common form-value subset. */}
+                  <FeeHeadRefundTable
+                    compact
+                    mode="adjustment"
+                    formik={formik as unknown as RefundFormik}
+                    showError={Boolean(
+                      (formik.touched.feeHeadRefunds || formik.submitCount > 0) &&
+                      typeof formik.errors.feeHeadRefunds === 'string'
+                    )}
+                    errorMessage={
+                      typeof formik.errors.feeHeadRefunds === 'string'
+                        ? formik.errors.feeHeadRefunds
+                        : undefined
+                    }
                   />
-                  <Box>
-                    <Typography variant="subtitle2" fontWeight={700}>
-                      Student Information
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Select board, class, and student to proceed
-                    </Typography>
-                  </Box>
-                </Stack>
-                <Divider sx={{ mb: 2 }} />
-                <AdjustmentGeneralInfoCard formik={formik} />
-              </Paper>
-            )}
-
-            {/* ── Fee Head-wise Details (same as refund) ── */}
-            <FeeHeadRefundTable
-              formik={formik as any}
-              mode="adjustment"
-              showError={
-                !!(formik.touched.feeHeadRefunds && formik.errors.feeHeadRefunds) &&
-                typeof formik.errors.feeHeadRefunds === 'string'
-              }
-              errorMessage={
-                typeof formik.errors.feeHeadRefunds === 'string'
-                  ? (formik.errors.feeHeadRefunds as string)
-                  : undefined
-              }
-            />
-          </BackPopUpChecked>
+                </FormSectionCard>
+              </Stack>
+            </BackPopUpChecked>
+          </FormBusyRegion>
         </Box>
       </Scrollbar>
-
-      {/* ── Sticky Finance Action Bar ── */}
-      <Box
+      <DialogActions
         sx={{
-          flexShrink: 0,
-          borderTop: `1px solid ${theme.palette.divider}`,
-          // bgcolor: alpha(theme.palette.background.paper, 0.92),
-          backdropFilter: 'blur(12px)',
-          px: { xs: 2, md: 3 },
+          px: 2,
           py: 1.5,
+          borderTop: 1,
+          borderColor: 'divider',
+          flexShrink: 0,
+          flexWrap: 'wrap',
+          gap: 1,
         }}
       >
-        <Box
-          display="flex"
-          alignItems="center"
-          justifyContent="space-between"
-          flexWrap="wrap"
-          gap={1}
+        <Typography variant="body2" color="text.secondary" sx={{ mr: 'auto' }}>
+          {selectedMonths.length
+            ? `${selectedMonths.length} installment${selectedMonths.length === 1 ? '' : 's'} selected · ${formatNumber(totalAmount, 'INR', { fractionDigits: 2 })}`
+            : 'No installments selected'}
+        </Typography>
+        <Button
+          type="button"
+          variant="outlined"
+          color="inherit"
+          size="small"
+          disabled={formik.isSubmitting}
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          onClick={(event) => onCancel(event, false)}
         >
-          <Box display="flex" alignItems="center" gap={1} flexWrap="wrap">
-            {totalSelectedMonths > 0 ? (
-              <>
-                <Chip
-                  size="small"
-                  label={`${totalSelectedMonths} month${totalSelectedMonths !== 1 ? 's' : ''} selected`}
-                  color="warning"
-                  variant="soft"
-                  icon={<Iconify icon="solar:calendar-bold" width={14} />}
-                />
-                {totalAdjustmentAmount > 0 && (
-                  <Box display="flex" alignItems="center" gap={1}>
-                    <Typography variant="caption" color="text.secondary">
-                      Adjustment Amount:
-                    </Typography>
-                    <Typography variant="subtitle2" fontWeight={800} color="warning.main">
-                      {formatCurrency(totalAdjustmentAmount)}
-                    </Typography>
-                  </Box>
-                )}
-              </>
-            ) : (
-              <Typography variant="caption" color="text.disabled" sx={{ fontStyle: 'italic' }}>
-                No months selected yet
-              </Typography>
-            )}
-          </Box>
-
-          <Box display="flex" alignItems="center" gap={1}>
-            <Divider
-              orientation="vertical"
-              flexItem
-              sx={{ display: { xs: 'none', sm: 'block' } }}
-            />
-            <Button
-              variant="outlined"
-              color="inherit"
-              size="small"
-              startIcon={<Iconify icon={GlobalIcons.cancel} />}
-              onClick={(e) => onCancel?.(e, false)}
-            >
-              Cancel
-            </Button>
-            <LoadingButton
-              type="submit"
-              variant="contained"
-              size="small"
-              disabled={!canSubmitAdjustment}
-              startIcon={<Iconify icon="mdi:tune-variant" />}
-              onClick={() => formik.handleSubmit()}
-            >
-              Submit
-            </LoadingButton>
-          </Box>
-        </Box>
-      </Box>
+          Cancel
+        </Button>
+        <LoadingButton
+          type="submit"
+          variant="contained"
+          size="small"
+          loading={formik.isSubmitting}
+          disabled={!canSubmitAdjustment}
+          startIcon={<Iconify icon={GlobalIcons.submit} />}
+        >
+          Submit
+        </LoadingButton>
+      </DialogActions>
     </Box>
   );
-};
-
-export default AdjustmentForm;
+}

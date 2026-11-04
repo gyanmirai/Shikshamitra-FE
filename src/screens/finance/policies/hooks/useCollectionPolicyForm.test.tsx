@@ -55,13 +55,54 @@ vi.mock('src/redux/customQueryAndMutation', () => ({
 }));
 
 describe('useCollectionPolicyForm submission validation', () => {
+  it('saves a common late-fee rule without fee heads or per-head overrides', async () => {
+    const { result } = renderHook(() =>
+      useCollectionPolicyForm({
+        open: true,
+        onClose: vi.fn(),
+        academicYearId: 'year',
+        editData: {
+          id: 'legacy-policy',
+          policyName: 'Common late fees',
+          status: 'Draft',
+          enableLateFee: true,
+          flatAmount: 100,
+          lateFeeType: 'Flat',
+          lateFeeApplyOnFeeHeads: ['historical-head'],
+          feeHeadOverrides: [{ feeHeadId: 'historical-head', overrideMode: 'NoLateFee' }],
+        } as never,
+      })
+    );
+    expect(result.current.formik.values.lateFeeApplyOnFeeHeads).toEqual([]);
+    expect(result.current.formik.values.feeHeadOverrides).toEqual([]);
+    expect(result.current.prerequisites).toEqual([]);
+    await act(async () => {
+      await result.current.handleCustomSubmit('Draft');
+    });
+    expect(mocks.updatePolicy).toHaveBeenCalledWith({
+      id: 'legacy-policy',
+      body: expect.objectContaining({
+        enableLateFee: true,
+        flatAmount: 100,
+        lateFeeApplyOnFeeHeads: [],
+        feeHeadOverrides: [],
+      }),
+    });
+  });
+
   it('rejects a loaded policy name with special characters before saving', async () => {
-    const { result } = renderHook(() => useCollectionPolicyForm({
-      open: true, onClose: vi.fn(), academicYearId: 'year',
-      editData: { id: 'policy', policyName: 'Old@Policy', status: 'Draft' } as never,
-    }));
+    const { result } = renderHook(() =>
+      useCollectionPolicyForm({
+        open: true,
+        onClose: vi.fn(),
+        academicYearId: 'year',
+        editData: { id: 'policy', policyName: 'Old@Policy', status: 'Draft' } as never,
+      })
+    );
     expect(result.current.checks.nameValid).toBe(false);
-    await act(async () => { await result.current.handleCustomSubmit('Draft'); });
+    await act(async () => {
+      await result.current.handleCustomSubmit('Draft');
+    });
     expect(result.current.formik.errors.policyName).toBe(
       'Collection Policy Name can only contain letters, numbers, and spaces'
     );

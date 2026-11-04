@@ -127,7 +127,7 @@ const PaymentTerm = () => {
   const canClone = hasGrantedPermission(permissions, paymentTermPermissions.clone);
   const canDelete = hasGrantedPermission(permissions, paymentTermPermissions.delete);
   const targetAcademicYearId = currentYear?.id ?? '';
-  const yearsQuery = useGetYearQuery(undefined, { skip: !canClone });
+  const yearsQuery = useGetYearQuery(undefined, { skip: !canClone || !cloneDialog.value });
   const { sources: cloneSourceYears, previousYear } = useMemo(
     () => getCloneAcademicYears(yearsQuery.data?.items ?? [], currentYear),
     [yearsQuery.data?.items, currentYear]

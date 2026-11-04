@@ -388,6 +388,7 @@ const FinanceChargeCategory = () => {
         searchTerm={queryParams.search}
         onServerPagination={handleServerPagination}
         onServerSearch={handleServerSearch}
+        searchFieldProps={{ placeholder: 'Search' }}
       />
 
       {/* Add/Edit Dialog */}

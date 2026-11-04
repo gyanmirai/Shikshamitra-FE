@@ -412,7 +412,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
   if (!studentId)
     return (
       <Typography variant="body2" color="text.secondary">
-        Select a student to load refundable fees.
+        {isAdj ? 'Select a student to load adjustment sources.' : 'Select a student to load refundable fees.'}
       </Typography>
     );
   if (isLoading || isFetching) return <RefundTableSkeleton compact={compact} />;
@@ -438,7 +438,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
     const { detail, errorCode } = parseApiProblemDetail(eligibilityError);
     const message =
       detail === 'Something went wrong' || detail === 'One or more business rules were violated.'
-        ? 'Unable to check refund eligibility. Please try again.'
+        ? `Unable to check ${isAdj ? 'adjustment' : 'refund'} eligibility. Please try again.`
         : detail;
     const isBusinessRule =
       typeof errorCode === 'string' &&

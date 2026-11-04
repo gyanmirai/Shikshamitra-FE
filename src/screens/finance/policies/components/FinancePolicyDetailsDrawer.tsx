@@ -500,7 +500,7 @@ export default function FinancePolicyDetailsDrawer({
                                           <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
                                             {slab.calculationType}
                                           </TableCell>
-                                          <TableCell
+                                          <TableCell align="right"
                                             sx={{ fontSize: '12px', fontWeight: 600, py: 0.75 }}
                                           >
                                             {slab.calculationType === 'Flat'

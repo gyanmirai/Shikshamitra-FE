@@ -27,7 +27,13 @@ export default function CashReceiptTable({ queryParams }: {
           { id: 'studentName', label: 'Student', minWidth: 180 },
           { id: 'receiptScope', label: 'Receipt Covers', minWidth: 130 },
           { id: 'paymentMethodLabel', label: 'Payment Method', minWidth: 130 },
-          { id: 'amount', label: 'Amount Paid', minWidth: 140, render: (value: number) => formatNumber(value, 'INR') },
+          {
+            id: 'amount',
+            label: 'Amount Paid',
+            minWidth: 140,
+            cellSx: { textAlign: 'right' as const },
+            render: (value: number) => formatNumber(value, 'INR'),
+          },
           { id: 'receiptDate', label: 'Receipt Date', minWidth: 130 },
           { id: 'statusLabel', label: 'Status', minWidth: 170 },
         ].map((column) => ({ ...column, isSort: false, isFilter: false }))}
@@ -36,6 +42,7 @@ export default function CashReceiptTable({ queryParams }: {
         {...tableProps}
         totalCount={data?.totalCount ?? 0}
         noDataText="No cash receipts for the selected month"
+        searchFieldProps={{ placeholder: 'Search' }}
       />
     </Box>
   );

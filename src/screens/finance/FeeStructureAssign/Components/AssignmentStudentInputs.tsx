@@ -69,7 +69,7 @@ export default function AssignmentStudentInputs({
   const usesTransport = request.servicePeriods.some((p) => p.source === 'TransportService');
   const transport = useAssignmentTransportSourcesQuery(
     { studentId: request.studentId, academicYearId: request.academicYearId },
-    { skip: !usesTransport }
+    { skip: !usesTransport || !allowTransportSource }
   );
   const updatePeriod = (period: AssignmentServicePeriod) =>
     onChange({
@@ -399,13 +399,15 @@ export default function AssignmentStudentInputs({
                                       : 'Academic year dates are unavailable.',
                                   },
                                 ]),
-                            ...(allowTransportSource &&
+                            ...((allowTransportSource || period.source === 'TransportService') &&
                             head.supportsTransportSource &&
                             !head.isVariable
                               ? [
                                   {
                                     value: 'TransportService',
-                                    label: 'Transport service',
+                                    label: allowTransportSource
+                                      ? 'Transport service'
+                                      : 'Saved transport service',
                                     description:
                                       'Use the service dates from the selected verified transport record.',
                                   },
@@ -454,7 +456,15 @@ export default function AssignmentStudentInputs({
                           {fDate(period.startDate)} – {fDate(period.endDate)}
                         </Typography>
                       )}
-                      {period.source === 'TransportService' && (
+                      {period.source === 'TransportService' && !allowTransportSource && (
+                        <Typography variant="body2" color="text.secondary">
+                          Each student keeps their saved transport dates.
+                          {period.startDate &&
+                            period.endDate &&
+                            ` ${fDate(period.startDate)} – ${fDate(period.endDate)}`}
+                        </Typography>
+                      )}
+                      {period.source === 'TransportService' && allowTransportSource && (
                         <>
                           <CustomSelect
                             size="small"

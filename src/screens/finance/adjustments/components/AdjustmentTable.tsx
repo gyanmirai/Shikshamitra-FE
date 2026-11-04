@@ -6,10 +6,10 @@ import type { IParams } from 'src/components/customizabaleTable/types';
 
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
-import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
+import { formatNumber } from 'src/utils/formate_number';
 import { financePermissions } from 'src/constants/finance-menu';
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import React, { useMemo, useRef, useEffect, useCallback } from 'react';
 import { Box, Tab, Card, Tabs, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -31,9 +31,10 @@ import {
 } from '../constants/adjustmentOptions';
 
 import type { IAdjustmentTableProps } from '../types/adjustment.types';
+import { useAdjustmentWorklistQuery } from '../hooks/useAdjustmentWorklistQuery';
 
 const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
-  activeTab,
+  activeTab = AdjustmentTabEnum.Pending,
   onTabChange,
   tabCounts,
   onView,
@@ -44,6 +45,7 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
 }) => {
   const access = useFinancePermissions(financePermissions.fees.adjustment);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const currentUserId = useSelector((state: RootState) => state.auth.user?.sub);
 
   const localFilters = useFinanceAcademicFilters();
   const filters = academicFilters || localFilters;
@@ -68,21 +70,23 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
     classesLoading,
   } = filters;
 
-  const tabs = useTabs(activeTab);
-  const scope = JSON.stringify([currentYear?.id, filterPayload, tabs.value]);
-  const [tableQuery, setTableQuery] = useState({
-    scope,
-    page: 0,
-    pageSize: 10,
-    search: '',
-    filters: [] as IParams['filters'],
-  });
-  const page = tableQuery.scope === scope ? tableQuery.page : 0;
+  const [tableQuery, setTableQuery] = useAdjustmentWorklistQuery(activeTab);
+  const tabs = { value: tableQuery.tab };
+  const scope = JSON.stringify([currentYear?.id, filterPayload]);
+  const previousScope = useRef<string | null>(null);
+  const page =
+    previousScope.current !== null && previousScope.current !== scope ? 0 : tableQuery.page;
   useEffect(() => {
-    setTableQuery((previous) =>
-      previous.scope === scope ? previous : { ...previous, scope, page: 0 }
-    );
-  }, [scope]);
+    if (!isReady) return;
+    if (
+      previousScope.current !== null &&
+      previousScope.current !== scope &&
+      tableQuery.page !== 0
+    ) {
+      setTableQuery((previous) => ({ ...previous, page: 0 }), true);
+    }
+    previousScope.current = scope;
+  }, [scope, isReady, tableQuery.page, setTableQuery]);
 
   const listParams = useMemo(() => {
     if (!isReady || !filterPayload || !currentYear?.id) return null;
@@ -106,12 +110,23 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
       return { ...base, status: 1 };
     }
     return { ...base, completedOnly: true };
-  }, [currentYear?.id, filterPayload, isReady, tabs.value, page, tableQuery.pageSize, tableQuery.search, tableQuery.filters]);
+  }, [
+    currentYear?.id,
+    filterPayload,
+    isReady,
+    tabs.value,
+    page,
+    tableQuery.pageSize,
+    tableQuery.search,
+    tableQuery.filters,
+  ]);
 
   const {
-    data: applicationsData,
+    currentData: applicationsData,
     isLoading,
     isFetching,
+    isError,
+    refetch,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAdjustmentApplicationsQuery,
@@ -123,33 +138,46 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
     () => (applicationsData?.items ?? []).map(mapAdjustmentApplicationItem),
     [applicationsData?.items]
   );
+  const counts = {
+    [AdjustmentTabEnum.Pending]:
+      applicationsData?.pendingCount ?? tabCounts?.[AdjustmentTabEnum.Pending] ?? 0,
+    [AdjustmentTabEnum.Approved]:
+      applicationsData?.appliedCount != null || applicationsData?.partiallyAppliedCount != null
+        ? (applicationsData.appliedCount ?? 0) + (applicationsData.partiallyAppliedCount ?? 0)
+        : (tabCounts?.[AdjustmentTabEnum.Approved] ?? 0),
+    [AdjustmentTabEnum.Rejected]:
+      applicationsData?.rejectedCount ?? tabCounts?.[AdjustmentTabEnum.Rejected] ?? 0,
+  };
 
   const renderActions = useCallback(
     (params: { row: any }) => {
       const { row } = params;
       const isPending = row.status === AdjustmentStatusEnum.Pending;
+      const isPartial = row.status === AdjustmentStatusEnum.PartiallyApplied;
+      const canDecide = access.canAdd && !!currentUserId && row.requestedByUserId !== currentUserId;
       return (
         <AdaptiveThreeDotsActions
-          directActionLimit={3}
+          directActionLimit={2}
+          moreLabel={`More adjustment actions for ${row.studentName}`}
           placement="right-top"
           actions={[
-            ...(access.canAdd && isPending && onApprove
+            ...(canDecide && (isPending || isPartial) && onApprove
               ? [
                   {
                     id: 'approve',
-                    label: 'Approve',
+                    label: `${isPartial ? 'Apply remaining' : 'Approve'} for ${row.studentName}`,
                     icon: 'mdi:approve',
                     color: 'success.main',
                     onClick: () => onApprove?.(row),
                   },
                 ]
               : []),
-            ...(access.canAdd && isPending && onReject
+            ...(canDecide && isPending && onReject
               ? [
                   {
                     id: 'reject',
-                    label: 'Reject',
-                    icon: 'entypo:cross',
+                    label: `Reject for ${row.studentName}`,
+                    icon: 'mdi:close',
                     color: 'error.main',
                     onClick: () => onReject?.(row),
                   },
@@ -159,13 +187,13 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
         />
       );
     },
-    [access.canAdd, onApprove, onReject]
+    [access.canAdd, currentUserId, onApprove, onReject]
   );
 
   return (
-    <>
-      <Card sx={{ boxShadow: 'var(--shadows-4)', p: 1, mb: 1 }}>
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+      <Card sx={{ p: 1, mb: 1, flexShrink: 0 }}>
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
           <FinanceAcademicContextFilter
             boards={boards}
             mediums={mediums}
@@ -193,20 +221,25 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
           variant="scrollable"
           value={tabs.value}
           onChange={(_e, value) => {
-            tabs.onChange(_e, value);
-            onTabChange(value as AdjustmentTabEnum);
+            setTableQuery((previous) => ({
+              ...previous,
+              tab: value,
+              page: 0,
+              filters: previous.filters.filter((filter) => filter.column !== 'status'),
+            }));
+            onTabChange?.(value as AdjustmentTabEnum);
           }}
-          sx={{ '& .MuiTabs-flexContainer': { gap: 2 } }}
+          aria-label="Adjustment status"
+          sx={{ '& .MuiTabs-flexContainer': { gap: 2 }, px: 1 }}
         >
           {ADJUSTMENT_TABS.map((tab) => (
             <Tab
               key={tab.value}
               value={tab.value}
-              sx={{ fontSize: '12px' }}
               label={
                 <Box display="flex" justifyContent="center" gap={1} alignItems="center">
                   {tab.label}
-                  <Label color={tab.color as LabelColor}>{tabCounts[tab.value] ?? 0}</Label>
+                  <Label color={tab.color as LabelColor}>{counts[tab.value]}</Label>
                 </Box>
               }
             />
@@ -214,161 +247,187 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
         </Tabs>
       </FinanceListActionRow>
 
-      <CustomizableTable
-        getRowAction={(row) =>
-          access.canView
-            ? {
-                label: `Open ${row.studentName || 'record'}`,
-                onClick: () => {
-                  onView(row as Parameters<typeof onView>[0]);
-                },
-              }
-            : undefined
-        }
-        tableId="adjustment-table"
-        tableTitle="Fee adjustments"
-        serverSidePagination
-        serverSideSearch
-        serverSideFilter
-        page={page}
-        rowsPerPage={tableQuery.pageSize}
-        searchTerm={tableQuery.search}
-        filters={tableQuery.filters}
-        totalCount={applicationsData?.totalCount ?? 0}
-        maxServerRowsPerPage={100}
-        exportLabel="Export current page"
-        exportScope="loaded"
-        onServerPagination={(nextPage, pageSize) =>
-          setTableQuery((previous) => ({ ...previous, scope, page: nextPage - 1, pageSize }))
-        }
-        onServerSearch={(search) =>
-          setTableQuery((previous) => ({ ...previous, scope, page: 0, search }))
-        }
-        onServerFilter={(nextFilters) =>
-          setTableQuery((previous) => ({ ...previous, scope, page: 0, filters: nextFilters }))
-        }
-        onClearCriteria={() =>
-          setTableQuery((previous) => ({ ...previous, scope, page: 0, search: '', filters: [] }))
-        }
-        isLoading={isLoading || isFetching}
-        noDataText={<>No adjustment records found.</>}
-        columns={[
-          {
-            stickyPosition: 'left',
-            id: 'studentName',
-            isSort: false,
-            label: 'Name(Gr No.)',
-            align: 'left',
-            width: 150,
-            minWidth: 150,
-            maxWidth: 220,
-            sticky: true,
-            render: (value, row) => (
-              <Typography variant="caption" fontSize="13px">
-                {value || '-'} {row.studentGrNo && `(${row.studentGrNo})`}
-              </Typography>
-            ),
-          },
-          {
-            id: 'className',
-            isSort: false,
-            label: 'Class/Div',
-            align: 'left',
-            width: 130,
-            minWidth: 80,
-            maxWidth: 150,
-            render: (_v: any, row: any) =>
-              row.className && row.divisionName
-                ? `${row.className} / ${row.divisionName}`
-                : row.className || '-',
-          },
-          {
-            id: 'rollNumber',
-            isSort: false,
-            label: 'Roll No.',
-            align: 'left',
-            isFilter: true,
-            filterType: 'string',
-            width: 100,
-            minWidth: 100,
-            maxWidth: 130,
-          },
-          {
-            id: 'adjustmentAmount',
-            isSort: false,
-            label: 'Adj. Amount',
-            align: 'left',
-            isFilter: true,
-            filterType: 'number' as any,
-            width: 130,
-            minWidth: 110,
-            maxWidth: 160,
-            render: (value: any) => (value != null ? `₹ ${Number(value).toLocaleString()}` : '-'),
-          },
-          {
-            id: 'requestedBy',
-            isSort: false,
-            label: 'Requested By',
-            align: 'left',
-            width: 140,
-            minWidth: 120,
-            maxWidth: 170,
-          },
-          {
-            id: 'createdAt',
-            isSort: false,
-            label: 'Requested Date',
-            align: 'left',
-            isFilter: true,
-            filterType: 'date' as any,
-            width: 180,
-            minWidth: 130,
-            maxWidth: 180,
-            render: (value: any) => (
-              <Typography variant="caption" fontSize="13px">
-                {value ? dayjs(value).format('DD-MM-YYYY') : '-'}
-              </Typography>
-            ),
-          },
-          {
-            stickyPosition: 'right',
-            id: 'status',
-            isSort: false,
-            label: 'Status',
-            align: 'left',
-            isFilter: true,
-            filterType: 'string',
-            width: 110,
-            minWidth: 90,
-            maxWidth: 140,
-            sticky: true,
-            render: (value: any) => {
-              const statusKey = value as keyof typeof ADJUSTMENT_STATUS_COLORS;
-              const color = (ADJUSTMENT_STATUS_COLORS[statusKey] ?? 'default') as LabelColor;
-              return (
-                <Label color={color}>
-                  {typeof value === 'number' ? formatAdjustmentStatusLabel(value) : value}
-                </Label>
-              );
+      <Box sx={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+        <CustomizableTable
+          getRowAction={(row) =>
+            access.canView
+              ? {
+                  label: `Open ${row.studentName || 'record'}`,
+                  onClick: () => {
+                    onView(row as Parameters<typeof onView>[0]);
+                  },
+                }
+              : undefined
+          }
+          tableId="adjustment-table"
+          tableTitle="Fee adjustments"
+          serverSidePagination
+          serverSideSearch
+          serverSideFilter
+          page={page}
+          rowsPerPage={tableQuery.pageSize}
+          searchTerm={tableQuery.search}
+          filters={tableQuery.filters}
+          totalCount={applicationsData?.totalCount ?? 0}
+          maxServerRowsPerPage={100}
+          exportLabel="Export current page"
+          exportScope="loaded"
+          onServerPagination={(nextPage, pageSize) =>
+            setTableQuery((previous) => ({ ...previous, scope, page: nextPage - 1, pageSize }))
+          }
+          onServerSearch={(search) =>
+            setTableQuery((previous) => ({ ...previous, scope, page: 0, search }))
+          }
+          onServerFilter={(nextFilters) =>
+            setTableQuery((previous) => ({ ...previous, scope, page: 0, filters: nextFilters }))
+          }
+          onClearCriteria={() =>
+            setTableQuery((previous) => ({ ...previous, scope, page: 0, search: '', filters: [] }))
+          }
+          isLoading={isLoading || (isFetching && !applicationsData)}
+          isRefreshing={Boolean(applicationsData && isFetching && !isLoading)}
+          error={isError ? { message: 'Could not load adjustments. Please try again.' } : undefined}
+          onRetry={refetch}
+          wrapperProps={{ sx: { flex: 1, minHeight: 0, width: 1 } }}
+          tableContainerProps={{ sx: { height: 1 } }}
+          noDataText={
+            listParams
+              ? 'No adjustment records found.'
+              : 'Select an academic context to load adjustments.'
+          }
+          columns={[
+            {
+              stickyPosition: 'left',
+              id: 'studentName',
+              isSort: false,
+              label: 'Student (GR No.)',
+              isFilter: true,
+              filterType: 'string',
+              align: 'left',
+              width: 150,
+              minWidth: 150,
+              maxWidth: 220,
+              sticky: true,
+              render: (value, row) => (
+                <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
+                  {value || '—'}{' '}
+                  {row.studentGrNo && (
+                    <Box component="span" sx={{ display: 'block', color: 'text.secondary' }}>
+                      ({row.studentGrNo})
+                    </Box>
+                  )}
+                </Typography>
+              ),
             },
-          },
-          {
-            stickyPosition: 'right',
-            excludeFromExport: true,
-            id: 'actions',
-            label: 'Actions',
-            isFilter: false,
-            isSort: false,
-            align: 'left',
-            width: 140,
-            minWidth: 120,
-            sticky: true,
-            render: (_v: any, row: any) => renderActions({ row }),
-          },
-        ]}
-        data={data}
-      />
-    </>
+            {
+              id: 'className',
+              isSort: false,
+              label: 'Class / Division',
+              isFilter: true,
+              filterType: 'string',
+              align: 'left',
+              width: 130,
+              minWidth: 80,
+              maxWidth: 150,
+              render: (_v: any, row: any) =>
+                row.className && row.divisionName
+                  ? `${row.className} / ${row.divisionName}`
+                  : row.className || '-',
+            },
+            {
+              id: 'rollNumber',
+              isSort: false,
+              label: 'Roll no.',
+              align: 'left',
+              isFilter: true,
+              filterType: 'string',
+              width: 100,
+              minWidth: 100,
+              maxWidth: 130,
+            },
+            {
+              cellSx: { textAlign: 'right' as const },
+              id: 'adjustmentAmount',
+              isSort: false,
+              label: 'Requested amount',
+              align: 'left',
+              isFilter: true,
+              filterType: 'number',
+              valueType: 'money',
+              width: 130,
+              minWidth: 110,
+              maxWidth: 160,
+              render: (value: number | null) =>
+                value == null ? '—' : formatNumber(value, 'INR', { fractionDigits: 2 }),
+            },
+            {
+              id: 'requestedBy',
+              isSort: false,
+              label: 'Requested by',
+              isFilter: true,
+              filterType: 'string',
+              align: 'left',
+              width: 140,
+              minWidth: 120,
+              maxWidth: 170,
+            },
+            {
+              id: 'createdAt',
+              isSort: false,
+              label: 'Requested on',
+              align: 'left',
+              isFilter: true,
+              filterType: 'date',
+              width: 180,
+              minWidth: 130,
+              maxWidth: 180,
+              render: (value: any) => (
+                <Typography variant="body2">
+                  {value ? dayjs(value).format('DD-MM-YYYY') : '-'}
+                </Typography>
+              ),
+            },
+            {
+              stickyPosition: 'right',
+              id: 'status',
+              isSort: false,
+              label: 'Status',
+              align: 'left',
+              isFilter: true,
+              filterType: 'string',
+              width: 110,
+              minWidth: 90,
+              maxWidth: 140,
+              sticky: true,
+              render: (value: any) => {
+                const statusKey = value as keyof typeof ADJUSTMENT_STATUS_COLORS;
+                const color = (ADJUSTMENT_STATUS_COLORS[statusKey] ?? 'default') as LabelColor;
+                return (
+                  <Label color={color}>
+                    {typeof value === 'number' ? formatAdjustmentStatusLabel(value) : value}
+                  </Label>
+                );
+              },
+            },
+            {
+              stickyPosition: 'right',
+              excludeFromExport: true,
+              id: 'actions',
+              label: 'Actions',
+              isFilter: false,
+              isSort: false,
+              align: 'left',
+              width: 140,
+              minWidth: 120,
+              sticky: true,
+              render: (_v: any, row: any) => renderActions({ row }),
+            },
+          ]}
+          data={data}
+          searchFieldProps={{ placeholder: 'Search' }}
+        />
+      </Box>
+    </Box>
   );
 };
 

@@ -181,7 +181,7 @@ const FeeLedgerFilterBar = ({
         <Button
           size="small"
           variant="outlined"
-          color={filtersOpen || activeFilterCount ? 'primary' : 'inherit'}
+          color="inherit"
           startIcon={<Iconify icon="solar:filter-linear" width={18} />}
           endIcon={
             <Iconify

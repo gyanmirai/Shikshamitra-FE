@@ -67,3 +67,97 @@ it('keeps confirmed optional selections and head amounts owned by each admission
     },
   ]);
 });
+
+it('preserves correction identities and student-specific verified periods while sharing optional fees', () => {
+  const candidate = {
+    id: 'structure',
+    heads: [{ feeHeadId: 'bus', isOptional: true }],
+  } as AssignmentCandidate;
+  const current: AssignmentRequest = {
+    studentId: 'second',
+    academicYearId: 'year',
+    standardFeeStructureId: 'structure',
+    editAssignmentId: 'second-assignment',
+    assignmentConcurrencyStamp: 'second-stamp',
+    selectedOptionalFeeHeadIds: [],
+    feeHeadDetails: [],
+    servicePeriods: [
+      { feeHeadId: 'bus', source: 'TransportService', sourceReferenceId: 'second-route' },
+    ],
+  };
+  const common: AssignmentRequest = {
+    ...current,
+    studentId: 'first',
+    editAssignmentId: 'first-assignment',
+    assignmentConcurrencyStamp: 'first-stamp',
+    selectedOptionalFeeHeadIds: ['bus'],
+    editReason: 'Correct fees',
+    servicePeriods: [
+      { feeHeadId: 'bus', source: 'TransportService', sourceReferenceId: 'first-route' },
+    ],
+  };
+  const context = {
+    status: 'Assigned',
+    studentId: 'second',
+    structureId: 'structure',
+    selectedOptionalFeeHeadIds: [],
+  } as unknown as AssignmentContext;
+  expect(mergeAssignmentInputs(common, current, candidate, context)).toMatchObject({
+    studentId: 'second',
+    editAssignmentId: 'second-assignment',
+    assignmentConcurrencyStamp: 'second-stamp',
+    selectedOptionalFeeHeadIds: ['bus'],
+    editReason: 'Correct fees',
+    servicePeriods: [{ feeHeadId: 'bus', sourceReferenceId: 'second-route' }],
+  });
+});
+
+it('retains each saved verified period when another student has an academic-year period', () => {
+  const candidate = {
+    id: 'structure',
+    heads: [{ feeHeadId: 'bus', isOptional: true }],
+  } as AssignmentCandidate;
+  const current: AssignmentRequest = {
+    studentId: 'second',
+    academicYearId: 'year',
+    standardFeeStructureId: 'structure',
+    editAssignmentId: 'second-assignment',
+    assignmentConcurrencyStamp: 'second-stamp',
+    selectedOptionalFeeHeadIds: ['bus'],
+    feeHeadDetails: [],
+    servicePeriods: [
+      { feeHeadId: 'bus', source: 'TransportService', sourceReferenceId: 'second-route' },
+    ],
+  };
+  const previous: AssignmentRequest = {
+    ...current,
+    studentId: 'first',
+    servicePeriods: [{ feeHeadId: 'bus', source: 'AcademicYear' }],
+  };
+  const changed: AssignmentRequest = {
+    ...previous,
+    policies: [{ family: 'collection', versionId: 'shared' }],
+  };
+  const context = { status: 'Assigned', structureId: 'structure' } as AssignmentContext;
+  expect(
+    mergeAssignmentInputs(changed, current, candidate, context, previous).servicePeriods
+  ).toEqual(current.servicePeriods);
+  const manual: AssignmentRequest = {
+    ...changed,
+    servicePeriods: [
+      {
+        feeHeadId: 'bus',
+        source: 'ManualOverride',
+        startDate: '2026-08-01',
+        endDate: '2027-03-31',
+        reason: 'Update service dates',
+      },
+    ],
+  };
+  expect(
+    mergeAssignmentInputs(manual, current, candidate, context, previous).servicePeriods
+  ).toEqual(manual.servicePeriods);
+  expect(
+    mergeAssignmentInputs(manual, previous, candidate, context, previous).servicePeriods
+  ).toEqual(manual.servicePeriods);
+});

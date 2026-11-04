@@ -227,6 +227,7 @@ const ExpenseTrackingNotificationManagement = ({ dialog, setIsViewMode }: any) =
               },
             },
           ]}
+          searchFieldProps={{ placeholder: 'Search' }}
         />
       )}
     </Box>

@@ -57,6 +57,7 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
         filterType: 'string',
       },
       {
+        cellSx: { textAlign: 'right' as const },
         id: 'amount',
         label: 'Amount',
         align: 'left',
@@ -162,6 +163,7 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
       }
       columns={columns}
       data={data || []}
+      searchFieldProps={{ placeholder: 'Search' }}
     />
   );
 };

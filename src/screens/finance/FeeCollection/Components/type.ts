@@ -98,6 +98,10 @@ export interface IFeeCharge {
   amount: number;
   total?: number;
   dueDate?: string;
+  lateFeeAppliedFromDate?: string;
+  lateFeeAppliedThroughDate?: string;
+  lateFeeAppliedIntervals?: { fromDate: string; throughDate: string }[];
+  lateFeeAppliedDays?: number;
   paid?: number;
   reconciliationAmount?: number;
   waivedAmount?: number;
@@ -187,6 +191,7 @@ export interface MonthWiseFeeItem {
   withdrawalProrationCredit?: number;
   withdrawalProrationExplanation?: string | null;
   paid: number;
+  adjustmentCreditAmount?: number;
   due: number;
   collectionAmount?: number;
   roundingAmount?: number;
@@ -225,6 +230,7 @@ export interface FeeHeadWiseFeeItem {
   withdrawalProrationCredit?: number;
   withdrawalProrationExplanation?: string | null;
   paid: number;
+  adjustmentCreditAmount?: number;
   due: number;
   collectionAmount?: number;
   roundingAmount?: number;
@@ -264,6 +270,7 @@ export interface SelectedItem {
   dueAmount: number;
   /** Financially accurate original outstanding decimal amount. */
   originalDueAmount?: number;
+  adjustmentCreditAmount?: number;
   /** Identifiable Rounding Adjustment / Round Off difference (dueAmount - originalDueAmount). */
   roundingAdjustment?: number;
   /** Net late fee currently collectible after approved waivers. */

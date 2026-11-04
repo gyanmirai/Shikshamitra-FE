@@ -100,6 +100,7 @@ const WalletTable = ({
         ),
       },
       {
+        cellSx: { textAlign: 'right' as const },
         id: 'amount',
         label: 'Amount',
         minWidth: '120px',
@@ -294,6 +295,7 @@ const WalletTable = ({
         data={data}
         isLoading={isLoading || isFetching}
         noDataText={<>No Wallet/Prepaid Card Data Found</>}
+        searchFieldProps={{ placeholder: 'Search' }}
       />
       <CustomDialog
         open={isDialog.value}

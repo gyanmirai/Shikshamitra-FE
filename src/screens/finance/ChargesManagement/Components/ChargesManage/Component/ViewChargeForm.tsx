@@ -49,6 +49,7 @@ const ChargeDetailsCard: React.FC<Props> = ({
       { id: 'standardName', label: 'Class', align: 'left' },
       { id: 'divisionName', label: 'Division', align: 'left' },
       {
+        cellSx: { textAlign: 'right' as const },
         id: 'collectedAmount',
         label: 'Collected',
         align: 'left',
@@ -56,6 +57,7 @@ const ChargeDetailsCard: React.FC<Props> = ({
         render: (value) => formatNumber(value, 'INR'),
       },
       {
+        cellSx: { textAlign: 'right' as const },
         id: 'waivedAmount',
         label: 'Waived',
         align: 'left',
@@ -63,6 +65,7 @@ const ChargeDetailsCard: React.FC<Props> = ({
         render: (value) => formatNumber(value, 'INR'),
       },
       {
+        cellSx: { textAlign: 'right' as const },
         id: 'outstandingAmount',
         label: 'Outstanding',
         align: 'left',
@@ -172,6 +175,7 @@ const ChargeDetailsCard: React.FC<Props> = ({
                   noDataText="No students found"
                   wrapperProps={{ sx: { height: 'auto', flex: 'unset' } }}
                   tableContainerProps={{ sx: { height: 'auto' } }}
+                  searchFieldProps={{ placeholder: 'Search' }}
                 />
               </DetailSection>
             )}

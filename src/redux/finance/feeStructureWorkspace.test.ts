@@ -18,6 +18,31 @@ vi.mock('./financeModuleApi', () => ({
 }));
 
 describe('Fee Structure workspace API', () => {
+  it('bounds copy-source requests while retaining class order and every saved structure', async () => {
+    let active = 0;
+    let peak = 0;
+    const classes = Array.from({ length: 12 }, (_, index) => ({
+      id: String(index),
+      name: `Class ${index}`,
+    }));
+    const baseQuery = vi.fn(async ({ params }) => {
+      active += 1;
+      peak = Math.max(peak, active);
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      active -= 1;
+      return { data: { standardFeeStructures: [{ id: `${params.standardId}-structure` }] } };
+    });
+    const result = await endpoints.getStructureCopySources.queryFn(
+      { feeStructureMetadataId: 'metadata', classes },
+      {},
+      {},
+      baseQuery
+    );
+    expect(peak).toBeLessThanOrEqual(4);
+    expect(baseQuery).toHaveBeenCalledTimes(12);
+    expect(result.data.map((item: any) => item.standardId)).toEqual(classes.map((item) => item.id));
+  });
+
   it('checks only the selected source policies within the current metadata and target class', () => {
     expect(
       endpoints.getStructureCopyPolicies.query({

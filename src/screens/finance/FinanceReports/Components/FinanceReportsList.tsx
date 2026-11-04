@@ -108,6 +108,7 @@ const FinanceReportsList = () => {
               <Typography variant="subtitle2">No report requested in this session</Typography>
             </Box>
           }
+          searchFieldProps={{ placeholder: 'Search' }}
         />
       </Box>
 

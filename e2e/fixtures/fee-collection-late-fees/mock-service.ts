@@ -44,6 +44,9 @@ function initialLedger(): FeeLedgerMonth[] {
 }
 
 function initialCharges(): ChargeDetail[] {
+  const dueDates = new Map(
+    initialLedger().flatMap((group) => group.items.map((item) => [item.dueFeeId, item.dueDate] as const))
+  );
   return [
     ['tuition-0', 'Class 3 Tuition Fee (Jun 2026)'],
     ['tuition-1', 'Class 3 Tuition Fee (Jul 2026)'],
@@ -53,6 +56,16 @@ function initialCharges(): ChargeDetail[] {
     // Canonical system-generated charge identity is its source DueFee ID.
     chargeId: sourceId, sourceType: 'LateFee', sourceId,
     name: `Late Fee - ${name}`, isSystemGenerated: true,
+    dueDate: dueDates.get(sourceId),
+    ...(sourceId === 'tuition-0'
+      ? {
+          lateFeeAppliedIntervals: [
+            { fromDate: '2026-06-08', throughDate: '2026-06-09' },
+            { fromDate: '2026-06-12', throughDate: '2026-06-14' },
+          ],
+          lateFeeAppliedDays: 5,
+        }
+      : {}),
     amount: 100, paidAmount: 0, pendingAmount: 100, waivedAmount: 0, canWaive: true,
     explanation: 'Synthetic assessed late-fee obligation supplied by the API contract.', status: 0,
   }));

@@ -31,6 +31,17 @@ import { useFinancePermissions } from '../../hooks/useFinancePermissions';
 
 import type { IFeeData, IFeeTableProps } from './type';
 
+const FEE_COLLECTION_AMOUNT_COLUMNS = [
+  'totalFees',
+  'totalConcessionAmount',
+  'refundAmount',
+  'paidFees',
+  'pendingFees',
+  'totalCharges',
+  'paidCharges',
+  'pendingCharges',
+] as const;
+
 const FeeCollectionTable: React.FC<IFeeTableProps> = ({
   onAddFee,
   onCollectFee,
@@ -152,11 +163,27 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
         pendingFees: item.pendingFees ?? 0,
         overdueFees: item.overdueFees ?? 0,
         totalConcessionAmount: item.totalConcessionAmount ?? 0,
+        refundAmount: item.refundAmount ?? 0,
         totalCharges: item.totalCharges ?? 0,
         paidCharges: item.paidCharges,
         pendingCharges: item.pendingCharges ?? 0,
       })),
     [feeCollectionData?.items]
+  );
+
+  const summaryRow = useMemo(
+    () => ({
+      label: 'Total (displayed rows)',
+      values: Object.fromEntries(
+        FEE_COLLECTION_AMOUNT_COLUMNS.map((column) => {
+          const rows = tableData ?? [];
+          if (rows.some((row) => row[column] == null)) return [column, '—'];
+          const total = rows.reduce((sum, row) => sum + Number(row[column] ?? 0), 0);
+          return [column, formatNumber(total, 'INR')];
+        })
+      ),
+    }),
+    [tableData]
   );
   return (
     <>
@@ -198,6 +225,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
           }
           tableId="fee-collection-table"
           tableTitle="Collections"
+          summaryRow={summaryRow}
           wrapperProps={{ sx: { flex: 1, minHeight: 0 } }}
           tableContainerProps={{ sx: { height: 1 } }}
           noDataText="No students found in this academic scope"
@@ -262,6 +290,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               maxWidth: 150,
             },
             {
+              cellSx: { textAlign: 'right' as const },
               id: 'totalFees',
               label: 'Total Fees',
               align: 'left',
@@ -273,6 +302,33 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               render: (value: any) => formatNumber(value ?? 0, 'INR'),
             },
             {
+              cellSx: { textAlign: 'right' as const },
+              id: 'totalConcessionAmount',
+              label: 'Total Concession Amount',
+              align: 'left',
+              isFilter: true,
+              filterType: 'number',
+              width: 190,
+              minWidth: 150,
+              maxWidth: 210,
+              render: (value: any) => formatNumber(value ?? 0, 'INR'),
+            },
+            {
+              cellSx: { textAlign: 'right' as const },
+              id: 'refundAmount',
+              label: 'Refund Amount',
+              align: 'left',
+              isFilter: true,
+              isSort: true,
+              filterType: 'number',
+              valueType: 'money',
+              width: 150,
+              minWidth: 130,
+              maxWidth: 180,
+              render: (value: any) => formatNumber(value ?? 0, 'INR'),
+            },
+            {
+              cellSx: { textAlign: 'right' as const },
               id: 'paidFees',
               label: 'Paid Fees',
               align: 'left',
@@ -284,6 +340,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               render: (value: any) => formatNumber(value ?? 0, 'INR'),
             },
             {
+              cellSx: { textAlign: 'right' as const },
               id: 'pendingFees',
               label: 'Pending Fees',
               filterType: 'number',
@@ -292,17 +349,6 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               width: 140,
               minWidth: 120,
               maxWidth: 170,
-              render: (value: any) => formatNumber(value ?? 0, 'INR'),
-            },
-            {
-              id: 'totalConcessionAmount',
-              label: 'Total Concession Amount',
-              align: 'left',
-              isFilter: true,
-              filterType: 'number',
-              width: 190,
-              minWidth: 150,
-              maxWidth: 210,
               render: (value: any) => formatNumber(value ?? 0, 'INR'),
             },
             {
@@ -425,6 +471,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
             },
           ]}
           data={tableData || []}
+          searchFieldProps={{ placeholder: 'Search' }}
         />
       ) : (
         <EmptyContent title="Please select board and medium to view fee collection data." />

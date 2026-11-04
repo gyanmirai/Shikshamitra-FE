@@ -224,6 +224,7 @@ const FinanceBudgetSubCategorySettings = () => {
           },
         ]}
         data={data || []}
+        searchFieldProps={{ placeholder: 'Search' }}
       />
 
       {/* Add/Edit Dialog */}

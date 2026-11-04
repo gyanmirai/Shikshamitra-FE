@@ -31,7 +31,24 @@ export default function AssignmentDrawer({
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const [busy, setBusy] = useState(false);
   const [confirmClose, setConfirmClose] = useState(false);
-  const selectionKey = `${academicYearId}-${students[0]?.studentId}`;
+  const selectionKey = `${academicYearId}-${students.map((student) => student.studentId).join(',')}-${editAssignedPolicies}`;
+  const [editMode, setEditMode] = useState<{ key: string; editing: boolean }>();
+  const structureEditing =
+    editMode?.key === selectionKey
+      ? editMode.editing
+      : editAssignedPolicies &&
+        students.length > 0 &&
+        students.every((student) => student.canEditStructure);
+  const resolveEditMode = useCallback(
+    (editing: boolean) => {
+      setEditMode((previous) =>
+        previous?.key === selectionKey && previous.editing === editing
+          ? previous
+          : { key: selectionKey, editing }
+      );
+    },
+    [selectionKey]
+  );
   const [resolved, setResolved] = useState<{
     key: string;
     status: IFeeStructureData['assignmentState'];
@@ -59,7 +76,9 @@ export default function AssignmentDrawer({
       : status === 'NeedsAttention'
         ? 'Review Fee Assignment'
         : students.length > 1
-          ? 'Bulk Assign Fee Structure'
+          ? editAssignedPolicies
+            ? 'Bulk Edit Fee Structures'
+            : 'Bulk Assign Fee Structure'
           : 'Assign Fee Structure';
   const title =
     students.length === 1 && students[0].studentName
@@ -83,9 +102,10 @@ export default function AssignmentDrawer({
             'aria-label': title,
             'aria-modal': true,
             sx: {
-              width: viewing
-                ? { xs: '100%', sm: 'min(760px, 92vw)' }
-                : { xs: '100%', md: students.length > 1 ? 1200 : 960 },
+              width:
+                viewing && !structureEditing
+                  ? { xs: '100%', sm: 'min(760px, 92vw)' }
+                  : { xs: '100%', md: students.length > 1 ? 1200 : 960 },
               maxWidth: '100%',
               overflow: 'hidden',
             },
@@ -118,6 +138,7 @@ export default function AssignmentDrawer({
               onClose={requestClose}
               onBusyChange={setBusy}
               onContextResolved={resolveContext}
+              onStructureEditResolved={resolveEditMode}
             />
           )}
         </Box>
@@ -125,12 +146,20 @@ export default function AssignmentDrawer({
       <ConfirmDialog
         open={confirmClose}
         onClose={() => setConfirmClose(false)}
-        title={editAssignedPolicies ? 'Discard policy changes?' : 'Discard unassigned changes?'}
+        title={
+          structureEditing
+            ? 'Discard fee assignment changes?'
+            : editAssignedPolicies
+              ? 'Discard policy changes?'
+              : 'Discard unassigned changes?'
+        }
         icon="warning"
         content={
-          editAssignedPolicies
-            ? 'Your unsaved policy selections and reason will be discarded.'
-            : 'Your unassigned changes will be discarded. Committed assignments will be preserved.'
+          structureEditing
+            ? 'Your unsaved fee assignment changes and reason will be discarded.'
+            : editAssignedPolicies
+              ? 'Your unsaved policy selections and reason will be discarded.'
+              : 'Your unassigned changes will be discarded. Committed assignments will be preserved.'
         }
         action={
           <Button

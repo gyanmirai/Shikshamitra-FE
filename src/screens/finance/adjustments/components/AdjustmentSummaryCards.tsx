@@ -1,60 +1,46 @@
-import React from 'react';
-import { formatCurrency } from 'src/utils/cureencyFormater';
-import { Box, Card, Divider, Typography } from '@mui/material';
-
+import { GlobalIcons } from 'src/utils/icons';
+import { formatNumber } from 'src/utils/formate_number';
+import { DetailGrid, DetailField } from 'src/components/detail-view';
+import { FormSectionCard } from 'src/components/form-section-card';
 import type { AdjustmentApplySummary } from '../types/adjustmentApply.types';
+import type { AdjustmentRequest } from '../types/adjustment.types';
 
-const AdjustmentSummaryCards = ({ summary }: { summary: AdjustmentApplySummary }) => {
-  const cards = [
-    {
-      label: 'Approved Adjustment Amount',
-      value: formatCurrency(summary.approvedAdjustmentAmount),
-    },
-    {
-      label: 'Total Pending Fees',
-      value: formatCurrency(summary.totalPendingFees),
-    },
-    {
-      label: 'Applied Adjustment Amount',
-      value: formatCurrency(summary.totalAppliedAmount),
-    },
-    {
-      label: 'Remaining Adjustment Balance',
-      value: formatCurrency(summary.remainingAdjustmentBalance),
-    },
+export default function AdjustmentSummaryCards({
+  summary,
+  adjustment,
+}: {
+  summary: AdjustmentApplySummary;
+  adjustment?: AdjustmentRequest;
+}) {
+  const fields = [
+    { label: 'Adjustment balance', value: summary.approvedAdjustmentAmount },
+    { label: 'Pending fees', value: summary.totalPendingFees },
+    { label: 'Applicable adjustment', value: summary.totalAppliedAmount },
+    { label: 'Remaining adjustment', value: summary.remainingAdjustmentBalance },
   ];
-
   return (
-    <Card sx={{ boxShadow: 'var(--shadows-10)', borderRadius: 2, overflow: 'hidden' }}>
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'stretch' }}>
-        {cards.map((item, idx, arr) => (
-          <React.Fragment key={item.label}>
-            <Box sx={{ flex: '1 1 180px', px: 3, py: 2 }}>
-              <Typography
-                variant="overline"
-                sx={{
-                  color: 'text.secondary',
-                  display: 'block',
-                  letterSpacing: 1.5,
-                  fontSize: '0.65rem',
-                  lineHeight: 1.4,
-                }}
-              >
-                {item.label}
-              </Typography>
-              <Typography
-                variant="subtitle2"
-                sx={{ fontWeight: 700, mt: 0.5, fontVariantNumeric: 'tabular-nums' }}
-              >
-                {item.value}
-              </Typography>
-            </Box>
-            {idx < arr.length - 1 && <Divider orientation="vertical" flexItem />}
-          </React.Fragment>
+    <FormSectionCard
+      sx={{ containerType: 'inline-size', minWidth: 0 }}
+      title="Adjustment Information"
+      icon={GlobalIcons.notebook}
+      descriptionTooltip="The available request balance, current outstanding fees and the effect of the allocation being reviewed. Remaining adjustment may be applied in a later batch."
+    >
+      <DetailGrid desktopColumns={4}>
+        {fields.map((field) => (
+          <DetailField
+            key={field.label}
+            label={field.label}
+            value={formatNumber(field.value, 'INR', { fractionDigits: 2 })}
+          />
         ))}
-      </Box>
-    </Card>
+        {(adjustment?.remarks || adjustment?.reason) && (
+          <DetailField
+            label="Remarks"
+            value={adjustment.remarks || adjustment.reason}
+            fullWidth
+          />
+        )}
+      </DetailGrid>
+    </FormSectionCard>
   );
-};
-
-export default AdjustmentSummaryCards;
+}

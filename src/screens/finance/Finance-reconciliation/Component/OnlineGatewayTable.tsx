@@ -97,6 +97,7 @@ const OnlineGatewayTable = ({
         ),
       },
       {
+        cellSx: { textAlign: 'right' as const },
         id: 'amount',
         label: 'Amount',
         minWidth: '120px',
@@ -116,6 +117,7 @@ const OnlineGatewayTable = ({
         filterType: 'date',
       },
       {
+        cellSx: { textAlign: 'right' as const },
         id: 'amountPaid',
         label: 'Amount Paid',
         minWidth: '130px',
@@ -325,6 +327,7 @@ const OnlineGatewayTable = ({
         data={data}
         isLoading={isLoading || isFetching}
         noDataText={<>No Online Payment Gateway Data Found</>}
+        searchFieldProps={{ placeholder: 'Search' }}
       />
       <CustomDialog
         open={isDialog.value}

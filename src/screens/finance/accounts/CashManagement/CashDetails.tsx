@@ -250,6 +250,7 @@ export default function CashDetails({
                   columns={[
                     { id: 'name', label: 'Purpose' },
                     {
+                      cellSx: { textAlign: 'right' as const },
                       id: 'amount',
                       label: 'Paid',
                       filterType: 'number',
@@ -267,6 +268,7 @@ export default function CashDetails({
                   showToolbar={false}
                   isPagination={false}
                   noDataText="No cash expenses recorded."
+                  searchFieldProps={{ placeholder: 'Search' }}
                 />
               </DetailSection>
             </>

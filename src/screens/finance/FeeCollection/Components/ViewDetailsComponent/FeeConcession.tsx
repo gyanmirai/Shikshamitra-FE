@@ -81,6 +81,7 @@ const FeeConcession = ({ student }: { student: IStudentFee | null }) => {
             ),
         },
         {
+          cellSx: { textAlign: 'right' as const },
           id: 'amount',
           label: 'Amount',
           align: 'left',
@@ -103,6 +104,7 @@ const FeeConcession = ({ student }: { student: IStudentFee | null }) => {
         },
       ]}
       data={feeConcessionData || []}
+      searchFieldProps={{ placeholder: 'Search' }}
     />
   );
 };

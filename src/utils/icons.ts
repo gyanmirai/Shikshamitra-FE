@@ -7,6 +7,7 @@ export const GlobalIcons = {
   building: 'solar:buildings-2-linear',
   floors: 'solar:layers-linear',
   moveUp: 'eva:arrow-upward-fill',
+  expandMore: 'mdi:chevron-down',
   moveDown: 'eva:arrow-downward-fill',
   back: 'eva:arrow-back-fill',
   exit: 'mdi:exit-to-app',

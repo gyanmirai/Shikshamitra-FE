@@ -270,6 +270,8 @@ export interface ICollectionPolicy extends Omit<
   gracePeriodDays: number;
   allocationBasis?: CollectionAllocationBasis;
   receiptGrouping?: 'Combined' | 'Separate';
+  /** New versions use one common late-fee rule; absent on legacy snapshots. */
+  applyLateFeeToAllFeeHeads?: boolean;
   lateFeeApplyOnFeeHeads: string[];
   lateFeeType: 'Flat' | 'Percentage' | 'PerDay' | 'PerWeek' | 'PerMonth' | 'Compound' | 'Slab';
   flatAmount: number | null;

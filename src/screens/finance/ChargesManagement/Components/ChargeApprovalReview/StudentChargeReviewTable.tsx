@@ -119,7 +119,7 @@ const StudentChargeReviewTable: React.FC<IStudentChargeReviewTableProps> = ({
         serverSideSearch={Boolean(onSearchChange)}
         onServerSearch={onSearchChange}
         searchFieldProps={{
-          placeholder: 'Search by name, GR number, or roll number...',
+          placeholder: 'Search',
         }}
         noDataText="No students found"
         wrapperProps={{

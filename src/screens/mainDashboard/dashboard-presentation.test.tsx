@@ -7,7 +7,8 @@ import { DashboardWidgetCard } from './dashboard-widget-card';
 
 import type { DashboardDataContract } from './dashboard-types';
 
-vi.mock('@iconify/react', () => ({ Icon: 'svg', disableCache: vi.fn() }));
+vi.mock('@iconify/react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@iconify/react')>()), Icon: 'svg', disableCache: vi.fn() }));
 
 const data: DashboardDataContract = {
   dashboardTemplate: 'leadership',

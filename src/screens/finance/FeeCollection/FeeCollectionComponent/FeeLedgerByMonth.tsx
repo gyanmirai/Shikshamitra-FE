@@ -25,7 +25,8 @@ export interface ByMonthViewProps {
     itemYear?: number,
     dueFeeId?: string,
     installmentLabel?: string,
-    lateFeeAmount?: number
+    lateFeeAmount?: number,
+    adjustmentCreditAmount?: number
   ) => void;
   onToggleGroup: (group: MonthWiseGroup) => void;
 }
@@ -43,7 +44,8 @@ interface MonthGroupProps {
     itemYear?: number,
     dueFeeId?: string,
     installmentLabel?: string,
-    lateFeeAmount?: number
+    lateFeeAmount?: number,
+    adjustmentCreditAmount?: number
   ) => void;
   onToggleGroup: (group: MonthWiseGroup) => void;
 }
@@ -188,7 +190,8 @@ const MonthGroup = ({
                           group.year,
                           item.dueFeeId,
                           item.installmentLabel,
-                          item.lateFeeAmount
+                          item.lateFeeAmount,
+                          item.adjustmentCreditAmount
                         )
                     : undefined
                 }
@@ -205,7 +208,8 @@ const MonthGroup = ({
                     group.year,
                     item.dueFeeId,
                     item.installmentLabel,
-                    item.lateFeeAmount
+                    item.lateFeeAmount,
+                    item.adjustmentCreditAmount
                   )
                 }
               />

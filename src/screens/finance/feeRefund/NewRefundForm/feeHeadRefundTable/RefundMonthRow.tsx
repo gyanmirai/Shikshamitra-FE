@@ -46,7 +46,7 @@ export default function RefundAmountField({
         helperText={
           showInputError
             ? Number(refundValue) > refundable
-              ? `Max ${formatNumber(refundable, 'INR')}`
+              ? `Max ${formatNumber(refundable, 'INR', { fractionDigits: isAdj ? 2 : 0 })}`
               : refundValue === ''
                 ? 'Required'
                 : 'Enter an amount above zero'

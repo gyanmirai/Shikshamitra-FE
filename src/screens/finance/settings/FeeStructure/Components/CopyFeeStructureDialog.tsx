@@ -24,6 +24,7 @@ import {
 
 import { structureError } from '../feeStructureModel';
 import { availableCopyName, copyStructureCandidate } from '../copyFeeStructure';
+import { FinanceFieldSkeleton } from '../../../components/FinanceFormSkeleton';
 
 interface Props {
   feeStructureMetadataId: string;
@@ -216,35 +217,39 @@ export default function CopyFeeStructureDialog({
                   icon={GlobalIcons.copy}
                   descriptionTooltip="Choose a saved structure under its class. Only classes in the current medium are listed."
                 >
-                  <ShakingTextField error={sourceError}>
-                    <CustomSelect
-                      name="sourceId"
-                      label="Source fee structure"
-                      required
-                      isSearch
-                      groupKey="group"
-                      optionDescriptionKey="description"
-                      options={options}
-                      value={formik.values.sourceId}
-                      isLoading={sources.isLoading}
-                      disabled={busy || sources.isFetching || sources.isError || !options.length}
-                      onBlur={() => formik.setFieldTouched('sourceId', true)}
-                      onChange={(value) => {
-                        const source = sources.currentData?.find(
-                          (item) => item.structure.id === value
-                        );
-                        formik.setValues({
-                          sourceId: String(value),
-                          name: source
-                            ? availableCopyName(source.structure.name, existingNames)
-                            : '',
-                        });
-                        setError('');
-                      }}
-                      error={sourceError}
-                      helperText={sourceError ? formik.errors.sourceId : undefined}
-                    />
-                  </ShakingTextField>
+                  <FinanceFieldSkeleton
+                    loading={sources.isFetching}
+                    label="Loading source fee structures"
+                  >
+                    <ShakingTextField error={sourceError}>
+                      <CustomSelect
+                        name="sourceId"
+                        label="Source fee structure"
+                        required
+                        isSearch
+                        groupKey="group"
+                        optionDescriptionKey="description"
+                        options={options}
+                        value={formik.values.sourceId}
+                        disabled={busy || sources.isError || !options.length}
+                        onBlur={() => formik.setFieldTouched('sourceId', true)}
+                        onChange={(value) => {
+                          const source = sources.currentData?.find(
+                            (item) => item.structure.id === value
+                          );
+                          formik.setValues({
+                            sourceId: String(value),
+                            name: source
+                              ? availableCopyName(source.structure.name, existingNames)
+                              : '',
+                          });
+                          setError('');
+                        }}
+                        error={sourceError}
+                        helperText={sourceError ? formik.errors.sourceId : undefined}
+                      />
+                    </ShakingTextField>
+                  </FinanceFieldSkeleton>
                   <ShakingTextField error={nameError}>
                     <TextField
                       name="name"

@@ -23,6 +23,7 @@ export interface AdjustmentApplyItem {
   pendingAmount: number;
   adjustableAmount: number;
   appliedAmount: number;
+  amountDraft?: string;
   finalPendingAmount: number;
   isSelected: boolean;
 }

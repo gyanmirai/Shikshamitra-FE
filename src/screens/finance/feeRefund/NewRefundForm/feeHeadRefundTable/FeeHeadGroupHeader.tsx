@@ -88,7 +88,7 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
               indeterminate={isPartialSelected}
               disabled={!hasSelectable}
               inputProps={{
-                'aria-label': `Select refundable installments for ${feeHead.feeHeadName}`,
+                'aria-label': `Select ${isAdj ? 'adjustable' : 'refundable'} installments for ${feeHead.feeHeadName}`,
               }}
               onChange={onCheckboxToggle}
               onClick={(e) => e.stopPropagation()}
@@ -157,7 +157,9 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
                   variant="body2"
                   sx={{ fontVariantNumeric: 'tabular-nums' }}
                 >
-                  {formatNumber(totalRefundInput, 'INR')}
+                  {formatNumber(totalRefundInput, 'INR', {
+                    fractionDigits: mode === 'adjustment' ? 2 : 0,
+                  })}
                 </Typography>
               )}
             </Box>

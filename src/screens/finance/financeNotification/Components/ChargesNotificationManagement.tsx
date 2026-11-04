@@ -269,6 +269,7 @@ const ChargesNotificationManagement = ({ dialog, setIsViewMode }: any) => {
               },
             },
           ]}
+          searchFieldProps={{ placeholder: 'Search' }}
         />
       )}
     </Box>
