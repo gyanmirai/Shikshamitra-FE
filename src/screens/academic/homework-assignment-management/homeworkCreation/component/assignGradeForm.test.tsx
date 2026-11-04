@@ -117,8 +117,20 @@ describe('homework approved evaluation navigation', () => {
         ...baseProps.data!,
         ...{
           submissionAttachments: [
-            { id: 'photo', name: 'work.jpg', url: '/api/files/photo.jpg', contentType: 'image/jpeg', size: 120 },
-            { id: 'pdf', name: 'answers.pdf', url: '/api/files/answers.pdf', contentType: 'application/pdf', size: 240 },
+            {
+              id: 'photo',
+              name: 'work.jpg',
+              url: '/api/files/photo.jpg',
+              contentType: 'image/jpeg',
+              size: 120,
+            },
+            {
+              id: 'pdf',
+              name: 'answers.pdf',
+              url: '/api/files/answers.pdf',
+              contentType: 'application/pdf',
+              size: 240,
+            },
           ],
         },
       },
@@ -155,14 +167,21 @@ describe('homework approved evaluation navigation', () => {
         }
       ),
       http.get('*/api/auth/session', () => HttpResponse.json(null)),
-      http.get('*/api/files/photo.jpg', () => new HttpResponse(new Uint8Array([255, 216, 255]), {
-        headers: { 'Content-Type': 'image/jpeg' },
-      })),
+      http.get(
+        '*/api/files/photo.jpg',
+        () =>
+          new HttpResponse(new Uint8Array([255, 216, 255]), {
+            headers: { 'Content-Type': 'image/jpeg' },
+          })
+      ),
       http.get('*/api/academic/rubrics', () => HttpResponse.json([rubric])),
-      http.get('*/api/academic/rubrics/rubric-1/evaluations/submission/:submissionId', ({ request }) => {
-        const studentId = new URL(request.url).searchParams.get('studentId') || 'student-1';
-        return HttpResponse.json(evaluation(studentId, studentId === 'student-1' ? 2 : 0));
-      }),
+      http.get(
+        '*/api/academic/rubrics/rubric-1/evaluations/submission/:submissionId',
+        ({ request }) => {
+          const studentId = new URL(request.url).searchParams.get('studentId') || 'student-1';
+          return HttpResponse.json(evaluation(studentId, studentId === 'student-1' ? 2 : 0));
+        }
+      ),
       http.post('*/api/academic/rubrics/*', ({ request }) => {
         writes.push(request.url);
         return HttpResponse.json(evaluation('student-1', 0));
@@ -177,15 +196,20 @@ describe('homework approved evaluation navigation', () => {
   it('disables approved scores, comments, feedback and updates, then advances without any write or required feedback validation', async () => {
     renderForm();
     await screen.findByText(/This evaluation is approved and locked/);
-    expect(screen.getByRole('spinbutton', { name: 'Points earned' })).toBeDisabled();
-    expect(screen.queryByRole('textbox', { name: 'Understanding Feedback' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('spinbutton', { name: 'Points earned' })).not.toBeInTheDocument();
+    expect(await screen.findByText('4 / 4')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('textbox', { name: 'Understanding Feedback' })
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByRole('textbox', { name: 'Overall rubric feedback (optional)' })
     ).not.toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Feedback *' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Quick Templates' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Quick templates' })).toBeDisabled();
     expect(screen.getByRole('button', { name: /^Submit$/ })).toBeDisabled();
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Submit & Next' })).toBeEnabled());
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Submit & Next' })).toBeEnabled()
+    );
     fireEvent.click(screen.getByRole('button', { name: 'Submit & Next' }));
     expect(baseProps.onNext).toHaveBeenCalledOnce();
     expect(writes).toEqual([]);
@@ -196,6 +220,25 @@ describe('homework approved evaluation navigation', () => {
     renderForm({ ...baseProps, hasNext: false });
     await screen.findByText(/This evaluation is approved and locked/);
     expect(screen.getByRole('button', { name: 'Submit & Next' })).toBeDisabled();
+    expect(writes).toEqual([]);
+  });
+
+  it('reviews saved rubric and teacher feedback and navigates without mutations', async () => {
+    renderForm({
+      ...baseProps,
+      isEdit: false,
+      data: { ...baseProps.data!, feedback: 'Review the core concepts.' },
+    });
+    expect(await screen.findByText('Clear explanation')).toBeInTheDocument();
+    expect(screen.getByText('Good work')).toBeInTheDocument();
+    expect(screen.getByText('Review the core concepts.')).toBeInTheDocument();
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Teacher Feedback & Remarks information' })
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    expect(baseProps.onNext).toHaveBeenCalledOnce();
     expect(writes).toEqual([]);
   });
 
@@ -271,7 +314,9 @@ describe('homework approved evaluation navigation', () => {
     );
     fireEvent.click(screen.getByRole('button', { name: 'Submit & Next' }));
     await screen.findByText('Next Student');
-    await waitFor(() => expect(screen.getByRole('spinbutton', { name: 'Points earned' })).toBeEnabled());
+    await waitFor(() =>
+      expect(screen.getByRole('spinbutton', { name: 'Points earned' })).toBeEnabled()
+    );
     expect(screen.getByRole('textbox', { name: 'Feedback *' })).toBeEnabled();
     expect(screen.getByRole('button', { name: /^Update$/ })).toBeEnabled();
     expect(writes).toEqual([]);

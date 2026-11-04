@@ -35,6 +35,7 @@ import useElectiveAssignmentState from './hooks/useElectiveAssignmentState';
 import useAutoSelectElectiveGroup from './hooks/useAutoSelectElectiveGroup';
 import ElectiveAssignmentActions from './components/ElectiveAssignmentActions';
 import { buildElectiveAssignmentUpdates } from './utils/buildElectiveAssignmentUpdates';
+import LockedElectiveCorrectionDialog from './components/LockedElectiveCorrectionDialog';
 
 import type { StudentElectiveRow } from './types';
 
@@ -49,6 +50,7 @@ const AssignElectiveSubject = () => {
   const [electiveGroupId, setElectiveGroupId] = useState<string>('');
 
   const [students, setStudents] = useState<StudentElectiveRow[]>([]);
+  const [correctionStudent, setCorrectionStudent] = useState<StudentElectiveRow | null>(null);
 
   const resetDialog = useBoolean();
   const saveDialog = useBoolean();
@@ -373,6 +375,13 @@ const AssignElectiveSubject = () => {
 
           {/* TABLE */}
           <ElectiveAssignmentTable
+            onCorrectLocked={canAdd && assignmentData?.canCorrectLockedAssignments ? (student) => {
+              if (hasUnsavedChanges) {
+                shikshaMitraToast.error({ message: 'Save or discard your draft changes before correcting a locked assignment.' });
+                return;
+              }
+              setCorrectionStudent(student);
+            } : undefined}
             students={filteredStudents}
             isLoading={isElectiveLoading || isElectiveFetching}
             isLocked={isLocked || !canAdd}
@@ -488,6 +497,16 @@ const AssignElectiveSubject = () => {
       />
 
       {navigationConfirmation}
+      {correctionStudent && canAdd && assignmentData?.canCorrectLockedAssignments && (
+        <LockedElectiveCorrectionDialog student={correctionStudent}
+          context={{ academicMediumId: medium?.id ?? '', classId: classes, divisionId: division, electiveGroupId }}
+          onClose={() => setCorrectionStudent(null)}
+          onSaved={() => {
+            setCorrectionStudent(null);
+            shikshaMitraToast.success({ message: 'Locked elective assignment updated.' });
+            refetchElectives();
+          }} />
+      )}
     </Box>
   );
 };

@@ -6,6 +6,11 @@ import { buildAuditSummary } from './auditSummary';
 import type { AuditLog } from '../types/auditLogs.types';
 
 describe('calendar activity summary', () => {
+  it('reports absent risk and impact as unavailable rather than measured zeros', () => {
+    const result = buildAuditSummary([{ actionLabel: 'Day added' } as AuditLog]);
+    expect(result.text).toContain('Risk assessment not recorded');
+    expect(result.text).toContain('Impact not recorded');
+  });
   it('reports an empty result without fabricated activity or recommendations', () => {
     const summary = buildAuditSummary([]);
     expect(summary.text).toContain('No audit records');

@@ -1,6 +1,20 @@
 module: Academic
 generatedAt: 2026-07-29
 scenarios:
+  - id: ACM-INSIGHTS-LOADING-CACHE-001
+    module: Academic
+    submodule: Dashboard
+    title: Academic dashboard uses content-shaped responsive skeletons, preserves cards during refresh and reuses fresh scoped data on return
+    risk: medium
+    priority: P1
+    type: [functional, regression, responsive, accessibility]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/academic/dashboard]
+    automated: true
+    automationFile: e2e/academic/academic-dashboard-loading.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-dashboard', '@regression', '@responsive', '@accessibility']
   - id: ACM-LECTURE-UI-001
     module: Academic
     submodule: Lecture Slots

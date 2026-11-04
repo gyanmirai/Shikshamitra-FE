@@ -4,6 +4,7 @@ import type { RootState } from 'src/redux/store';
 import type { Medium, Division, Standards, Organization } from 'src/types/school';
 import type { AssignmentV2Dto } from 'src/redux/academicAPI/HomeworkAssignmentApi/contracts';
 
+import { createPortal } from 'react-dom';
 import { useSelector } from 'react-redux';
 import React, { useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
@@ -12,7 +13,6 @@ import { EmptyContent } from 'src/components/empty-content';
 import { Box, TextField, Autocomplete } from '@mui/material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { AcademicInsights } from 'src/screens/academic/components/academic-insights';
-import { useGetAssignmentSubmissionsQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/AssignmentAssessmentAndFeedbackApi';
 import { useGetAssignmentsQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/assignment-api';
 import {
   AssignmentStatus,
@@ -20,14 +20,15 @@ import {
   ASSIGNMENT_SUBMISSION_TYPE_LABELS,
 } from 'src/enums/assignment';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
+import { useGetAssignmentSubmissionsQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/AssignmentAssessmentAndFeedbackApi';
 
-import { StudentSubmissions } from '../assignmentCreation/studentSubmission/studentSubmission';
 import { dedupeEvaluationRows, getEvaluationSummary } from './evaluationWorkspaceUi';
+import { StudentSubmissions } from '../assignmentCreation/studentSubmission/studentSubmission';
 import { SubjectAssignmentStatus } from '../../curriculum-management/subjectAssignment/enum/subjectType';
 
 import type { MarksFeedbackTabProps } from './index';
 
-const AssignmentMarksAndFeedback = (props: MarksFeedbackTabProps) => {
+const AssignmentMarksAndFeedback = ({ actionsContainer }: MarksFeedbackTabProps) => {
   // State to store selected assignment data
   const [selectedAssignment, setSelectedAssignment] = useState<any>(null);
   // Dialog state for modal/popup control
@@ -78,7 +79,7 @@ const AssignmentMarksAndFeedback = (props: MarksFeedbackTabProps) => {
   const selectedDivisionData = allDivision.find((d) => d.id === division);
 
   const {
-    data: subjectOptionsData,
+    currentData: subjectOptionsData,
     isLoading: isSubjectOptionsLoading,
     isFetching: isSubjectOptionsFetching,
   } = useQueryAndMutation({
@@ -89,7 +90,7 @@ const AssignmentMarksAndFeedback = (props: MarksFeedbackTabProps) => {
   });
 
   const {
-    data: assignmentData,
+    currentData: assignmentData,
     isLoading: isAssignmentDataLoading,
     isFetching: isAssignmentDataFetching,
   } = useQueryAndMutation({
@@ -119,7 +120,7 @@ const AssignmentMarksAndFeedback = (props: MarksFeedbackTabProps) => {
       })) || [];
 
   const {
-    data: assignmentSubmissions,
+    currentData: assignmentSubmissions,
     isLoading: areInsightsLoading,
     isFetching: areInsightsFetching,
   } = useQueryAndMutation({
@@ -144,17 +145,21 @@ const AssignmentMarksAndFeedback = (props: MarksFeedbackTabProps) => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', flex: 1, minHeight: 0 }}>
       <Box
-        display="flex"
         sx={{
-          borderRadius: '8px',
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: 'minmax(0, 1fr)',
+            sm: 'repeat(2, minmax(0, 1fr))',
+            md: 'repeat(4, minmax(0, 1fr))',
+          },
+          flexShrink: 0,
+          borderRadius: 1,
           bgcolor: 'background.paper',
           boxShadow: 'var(--shadows-3)',
           mt: 1,
           p: 1,
           gap: 1,
           mb: 1,
-          alignItems: 'center',
-          flexWrap: 'wrap',
         }}
       >
         {' '}
@@ -162,19 +167,32 @@ const AssignmentMarksAndFeedback = (props: MarksFeedbackTabProps) => {
           options={allClass}
           label="Class"
           value={classes}
-          onChange={(val) => setClass(val as string)}
+          onChange={(val) => {
+            setClass(val as string);
+            setDivision('');
+            setSubject('');
+            setSubjectSelectValue('');
+            setAssignmentTitle('');
+            setSelectedAssignment(null);
+            setActiveFilter('all');
+          }}
           labelKey="name"
           valueKey="id"
-          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
+          formControlProps={{ sx: { minWidth: 0, width: 1 } }}
         />
         <CustomSelect
           options={allDivision}
           label="Division"
           value={division}
-          onChange={(val) => setDivision(val as string)}
+          onChange={(val) => {
+            setDivision(val as string);
+            setAssignmentTitle('');
+            setSelectedAssignment(null);
+            setActiveFilter('all');
+          }}
           labelKey="name"
           valueKey="id"
-          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
+          formControlProps={{ sx: { minWidth: 0, width: 1 } }}
           disabled={!classes}
         />
         <CustomSelect
@@ -210,10 +228,13 @@ const AssignmentMarksAndFeedback = (props: MarksFeedbackTabProps) => {
             const resolvedSubjectId = strVal.includes('::') ? strVal.split('::')[1] : strVal;
             setSubjectSelectValue(strVal);
             setSubject(resolvedSubjectId);
+            setAssignmentTitle('');
+            setSelectedAssignment(null);
+            setActiveFilter('all');
           }}
           labelKey="label"
           valueKey="value"
-          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
+          formControlProps={{ sx: { minWidth: 0, width: 1 } }}
           disabled={!division}
         />
         <CustomTooltip
@@ -221,6 +242,7 @@ const AssignmentMarksAndFeedback = (props: MarksFeedbackTabProps) => {
           title={selectedAssignment ? `${selectedAssignment.label}` : undefined}
         >
           <Autocomplete
+            sx={{ minWidth: 0, width: 1 }}
             options={assignmentOptions}
             getOptionLabel={(option: any) => option.label || ''}
             isOptionEqualToValue={(option, value) => option.id === value.id}
@@ -235,85 +257,88 @@ const AssignmentMarksAndFeedback = (props: MarksFeedbackTabProps) => {
             renderInput={(params) => (
               <TextField
                 {...params}
-                label="Assignment Title"
+                label="Assignment title"
                 size="small"
                 fullWidth
-                sx={{ minWidth: '248px', width: '100%' }}
                 disabled={!subject}
               />
             )}
           />
         </CustomTooltip>
-        {assignmentTitle && (
-          <AcademicInsights
-            title="Assignment evaluation insights"
-            description={`Submission and feedback for ${selectedAssignment?.title || 'the selected assignment'}.`}
-            isLoading={areInsightsLoading || areInsightsFetching}
-            buttonSx={{ ml: 'auto', mb: 0 }}
-            chart={{
-              title: 'Evaluation status overview',
-              description: 'Students by evaluation status for the selected assignment.',
-              categories: ['Needs review', 'Reviewed', 'Not submitted'],
-              values: [
-                insightsSummary.needsReview,
-                insightsSummary.reviewed,
-                insightsSummary.notSubmitted,
-              ],
-              seriesName: 'Students',
-            }}
-            metrics={[
-              {
-                id: 'students',
-                label: 'Students',
-                value: insightsSummary.totalStudents,
-                icon: 'solar:users-group-rounded-bold',
-                selected: activeFilter === 'all',
-                onClick: () => setActiveFilter('all'),
-              },
-              {
-                id: 'submitted',
-                label: 'Submitted',
-                value: insightsSummary.submitted,
-                icon: 'solar:inbox-in-bold',
-                selected: activeFilter === 'submitted',
-                onClick: () => setActiveFilter('submitted'),
-              },
-              {
-                id: 'needs-review',
-                label: 'Needs review',
-                value: insightsSummary.needsReview,
-                icon: 'solar:clipboard-check-bold',
-                selected: activeFilter === 'needsReview',
-                onClick: () => setActiveFilter('needsReview'),
-              },
-              {
-                id: 'reviewed',
-                label: 'Reviewed',
-                value: insightsSummary.reviewed,
-                icon: 'solar:check-circle-bold',
-                selected: activeFilter === 'reviewed',
-                onClick: () => setActiveFilter('reviewed'),
-              },
-              {
-                id: 'not-submitted',
-                label: 'Not submitted',
-                value: insightsSummary.notSubmitted,
-                icon: 'solar:clock-circle-bold',
-                selected: activeFilter === 'notSubmitted',
-                onClick: () => setActiveFilter('notSubmitted'),
-              },
-              {
-                id: 'average-marks',
-                label: 'Average marks',
-                value: insightsSummary.averageMarks ?? '-',
-                icon: 'solar:chart-2-bold',
-              },
-            ]}
-          />
-        )}
+        {assignmentTitle &&
+          actionsContainer &&
+          createPortal(
+            <AcademicInsights
+              title="Assignment evaluation insights"
+              description={`Submission and feedback for ${selectedAssignment?.title || 'the selected assignment'}.`}
+              isLoading={areInsightsLoading || areInsightsFetching}
+              buttonSx={{ mb: 0 }}
+              chart={{
+                title: 'Evaluation status overview',
+                description: 'Students by evaluation status for the selected assignment.',
+                categories: ['Needs review', 'Reviewed', 'Not submitted'],
+                values: [
+                  insightsSummary.needsReview,
+                  insightsSummary.reviewed,
+                  insightsSummary.notSubmitted,
+                ],
+                seriesName: 'Students',
+              }}
+              metrics={[
+                {
+                  id: 'students',
+                  label: 'Students',
+                  value: insightsSummary.totalStudents,
+                  icon: 'solar:users-group-rounded-bold',
+                  selected: activeFilter === 'all',
+                  onClick: () => setActiveFilter('all'),
+                },
+                {
+                  id: 'submitted',
+                  label: 'Submitted',
+                  value: insightsSummary.submitted,
+                  icon: 'solar:inbox-in-bold',
+                  selected: activeFilter === 'submitted',
+                  onClick: () => setActiveFilter('submitted'),
+                },
+                {
+                  id: 'needs-review',
+                  label: 'Needs review',
+                  value: insightsSummary.needsReview,
+                  icon: 'solar:clipboard-check-bold',
+                  selected: activeFilter === 'needsReview',
+                  onClick: () => setActiveFilter('needsReview'),
+                },
+                {
+                  id: 'reviewed',
+                  label: 'Reviewed',
+                  value: insightsSummary.reviewed,
+                  icon: 'solar:check-circle-bold',
+                  selected: activeFilter === 'reviewed',
+                  onClick: () => setActiveFilter('reviewed'),
+                },
+                {
+                  id: 'not-submitted',
+                  label: 'Not submitted',
+                  value: insightsSummary.notSubmitted,
+                  icon: 'solar:clock-circle-bold',
+                  selected: activeFilter === 'notSubmitted',
+                  onClick: () => setActiveFilter('notSubmitted'),
+                },
+                {
+                  id: 'average-marks',
+                  label: 'Average marks',
+                  value: insightsSummary.averageMarks ?? '-',
+                  icon: 'solar:chart-2-bold',
+                },
+              ]}
+            />,
+            actionsContainer
+          )}
       </Box>
       {assignmentTitle ? (
         <StudentSubmissions
+          key={`${classes}:${division}:${subject}:${assignmentTitle}`}
           selectedClass={classes}
           selectedDivision={division}
           selectedSubject={subject}

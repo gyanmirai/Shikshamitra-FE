@@ -79,6 +79,7 @@ export const GlobalIcons = {
   refresh: 'mdi:refresh',
   history: 'mdi:history',
   notebook: 'solar:notebook-bold',
+  feedback: 'solar:chat-round-dots-bold',
   clock: 'solar:clock-circle-bold',
 };
 

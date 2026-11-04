@@ -1,5 +1,6 @@
 'use client';
 
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
 import { Box, Stack, Typography } from '@mui/material';
@@ -68,24 +69,9 @@ const AuditActionBadge = ({ action, variant = 'chip' }: Props) => {
   }
 
   return (
-    <Stack
-      direction="row"
-      alignItems="center"
-      gap={1}
-      sx={{
-        px: 1,
-        py: 0.5,
-        borderRadius: 1.5,
-        backgroundColor: alpha(color, 0.08),
-        border: `1px solid ${alpha(color, 0.18)}`,
-        width: 'fit-content',
-      }}
-    >
-      <Iconify icon={meta.icon} width={14} sx={{ color }} />
-      <Typography variant="caption" fontWeight={700} sx={{ color }}>
-        {label}
-      </Typography>
-    </Stack>
+    <Label variant="soft" color={meta.colorKey} startIcon={<Iconify icon={meta.icon} width={16} />}>
+      {label.charAt(0) + label.slice(1).toLowerCase()}
+    </Label>
   );
 };
 

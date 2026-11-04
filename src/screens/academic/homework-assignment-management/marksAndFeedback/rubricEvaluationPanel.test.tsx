@@ -70,4 +70,57 @@ describe('RubricEvaluationPanel', () => {
 
     expect(retryEvaluation).toHaveBeenCalledOnce();
   });
+
+  it('shows saved scores and explicit empty feedback without form controls in review mode', () => {
+    vi.mocked(useRubricEvaluation).mockReturnValue({
+      setRemarks: vi.fn(),
+      setCriterionMarks: vi.fn(),
+      setCriterionComments: vi.fn(),
+      createDefaultRubric: vi.fn(),
+      save: vi.fn(),
+      isCreating: false,
+      isPublishing: false,
+      retryEvaluation,
+      activeRubric: {
+        ...rubric,
+        totalMarks: 6,
+        criteria: [
+          {
+            id: 'accuracy',
+            rubricId: rubric.id,
+            title: 'Accuracy',
+            points: 6,
+            isRequired: true,
+            displayOrder: 1,
+          },
+        ],
+      },
+      criterionValues: { accuracy: { marks: '0', comments: '' } },
+      remarks: '',
+      totalMarks: 0,
+      isLocked: true,
+      isLoading: false,
+      hasEvaluationError: false,
+    });
+    render(
+      <RubricEvaluationPanel
+        mode="homework"
+        standardId="class"
+        subjectId="subject"
+        taskId="task"
+        readOnly
+        compactLayout
+      />
+    );
+
+    expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    expect(screen.getByText('0 / 6')).toBeInTheDocument();
+    expect(screen.getByText('No criterion feedback recorded.')).toBeInTheDocument();
+    expect(screen.getByText('No overall rubric feedback recorded.')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Rubric Assessment information' })
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Score Summary information' })).toBeInTheDocument();
+  });
 });

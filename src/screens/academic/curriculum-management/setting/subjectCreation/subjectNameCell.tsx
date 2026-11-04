@@ -1,9 +1,7 @@
-import { Box, Chip, Stack, Avatar, Typography } from '@mui/material';
-import { alpha } from '@mui/material/styles';
+import { Box, Stack, Typography } from '@mui/material';
+import CustomTooltip from 'src/components/custom-tooltip';
 
-import { Iconify } from 'src/components/iconify';
-
-import { getSubjectIcon, type ISubject } from './type';
+import type { ISubject } from './type';
 
 const SubjectNameCell = ({ value, subject }: { value: string; subject: ISubject }) => {
   const displayName = subject.displayName || value;
@@ -13,40 +11,23 @@ const SubjectNameCell = ({ value, subject }: { value: string; subject: ISubject 
       sx={{
         display: 'flex',
         alignItems: 'center',
-        gap: 1.5,
-        py: 0.25,
+        gap: 1,
         minWidth: 0,
       }}
     >
-      <Avatar
-        sx={(theme) => {
-          const avatarColor = subject.color || theme.palette.primary.main;
-
-          return {
-            width: 38,
-            height: 38,
-            flex: '0 0 38px',
-            bgcolor: avatarColor,
-            color: theme.palette.getContrastText(avatarColor),
-            fontSize: 12,
-            fontWeight: 700,
-            letterSpacing: 0,
-            boxShadow: `0 0 0 4px ${alpha(avatarColor, 0.12)}`,
-          };
+      <Box
+        component="span"
+        aria-hidden="true"
+        sx={{
+          width: 3,
+          height: 20,
+          flexShrink: 0,
+          borderRadius: 0.5,
+          bgcolor: subject.color || 'primary.main',
         }}
-      >
-        {subject.icon ? (
-          <Iconify
-            icon={getSubjectIcon(subject.icon)}
-            width={18}
-            height={18}
-          />
-        ) : (
-          value.slice(0, 2).toUpperCase()
-        )}
-      </Avatar>
+      />
 
-      <Stack spacing={0.5} sx={{ flex: 1, minWidth: 0 }}>
+      <Stack spacing={0.25} sx={{ flex: 1, minWidth: 0 }}>
         <Typography
           variant="subtitle2"
           sx={{
@@ -60,25 +41,19 @@ const SubjectNameCell = ({ value, subject }: { value: string; subject: ISubject 
         >
           {value}
         </Typography>
-        <Chip
-          size="small"
-          variant="soft"
-          label={`Display: ${displayName}`}
-          sx={{
-            alignSelf: 'flex-start',
-            maxWidth: '100%',
-            height: 22,
-            borderRadius: 0.75,
-            color: 'text.secondary',
-            bgcolor: 'action.hover',
-            '& .MuiChip-label': {
-              px: 0.75,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            },
-          }}
-        />
+        {displayName !== value && (
+          <CustomTooltip title={`Display: ${displayName}`} arrow>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              noWrap
+              tabIndex={0}
+              sx={{ '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main' } }}
+            >
+              Display: {displayName}
+            </Typography>
+          </CustomTooltip>
+        )}
       </Stack>
     </Box>
   );

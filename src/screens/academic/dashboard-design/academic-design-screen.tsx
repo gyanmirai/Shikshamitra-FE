@@ -6,13 +6,13 @@ import { EmptyContent } from 'src/components/empty-content';
 import { AcademicDesignHeader } from './academic-design-header';
 import { AcademicDesignSections } from './academic-design-sections';
 import { AcademicDesignOverview } from './academic-design-overview';
-import { useAcademicInsights } from '../insights/use-academic-insights';
 import { orderDesignAreas, getDesignOverview } from './academic-design-model';
 import { getAcademicInsightsDisplayAreas } from '../insights/academic-insights-model';
 import { AcademicInsightsRequestState } from '../insights/components/academic-insights-request-state';
 
-export default function AcademicDesignScreen() {
-  const query = useAcademicInsights();
+import type { useAcademicInsights } from '../insights/use-academic-insights';
+
+export default function AcademicDesignScreen({ query }: { query: ReturnType<typeof useAcademicInsights> }) {
   const { data } = query;
   const areas = data ? orderDesignAreas(getAcademicInsightsDisplayAreas(data, query.permissions), data.role) : [];
   const metrics = data ? getDesignOverview(areas, data.role) : [];

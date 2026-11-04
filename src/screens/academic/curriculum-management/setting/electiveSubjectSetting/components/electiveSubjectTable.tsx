@@ -8,12 +8,9 @@ import dayjs from 'dayjs';
 import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import { alpha, useTheme } from '@mui/material/styles';
-import CustomTooltip from 'src/components/custom-tooltip';
+import { Box, Button, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, Chip, Stack, Avatar, Button, Typography } from '@mui/material';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { useGetElectiveGroupsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Elective-GroupApi';
 import {
@@ -21,6 +18,8 @@ import {
   TimetableSettingsSummaryCards,
 } from 'src/screens/academic/components/AcademicSummaryInsights';
 
+import ElectiveGroupNameCell from './ElectiveGroupNameCell';
+import ElectiveGroupSubjectsCell from './ElectiveGroupSubjectsCell';
 import { getElectiveSubjectTableActions } from './electiveSubjectTableActions';
 
 import type { IElectiveSubject, IElectiveSubjectTableProps } from '../type';
@@ -40,7 +39,6 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
   canView = true,
   canDelete = true,
 }) => {
-  const theme = useTheme();
   const { currentMedium } = useSelector((state: RootState) => state.globalState);
   const {
     data: electiveGroupData,
@@ -116,7 +114,9 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
         id: 'name',
         label: 'Elective Group',
         align: 'left',
-        minWidth: 260,
+        width: 320,
+        minWidth: 320,
+        maxWidth: 320,
         sticky: true,
         stickyPosition: 'left',
         headerSx: {
@@ -125,38 +125,7 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
         cellSx: {
           boxShadow: '2px 0 5px -2px rgba(0, 0, 0, 0.12)',
         },
-        render: (value, row) => {
-          const groupColor = row.color || theme.palette.primary.main;
-          return (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-              <Avatar
-                sx={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 1.5,
-                  bgcolor: alpha(groupColor, 0.14),
-                  color: groupColor,
-                  border: `1px solid ${alpha(groupColor, 0.28)}`,
-                }}
-              >
-                <Iconify icon="solar:layers-bold" width={18} height={18} />
-              </Avatar>
-              <Box sx={{ minWidth: 0 }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600, fontSize: '13px' }} noWrap>
-                  {value}
-                </Typography>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  noWrap
-                  sx={{ display: 'block' }}
-                >
-                  {row.description || `${row.subjects?.length || 0} subjects`}
-                </Typography>
-              </Box>
-            </Box>
-          );
-        },
+        render: (_value, row) => <ElectiveGroupNameCell group={row as IElectiveSubject} />,
       },
       {
         id: 'groupType',
@@ -177,58 +146,9 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
         minWidth: 260,
         isFilter: true,
         isSort: false,
-        render: (value) => {
-          const subjects = (value || []) as IElectiveSubject['subjects'];
-          const visibleSubjects = subjects.slice(0, 3);
-          const hiddenCount = Math.max(subjects.length - visibleSubjects.length, 0);
-          return (
-            <CustomTooltip
-              arrow
-              placement="top"
-              title={subjects.map((subject) => subject.name).join(', ')}
-            >
-              <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap alignItems="center">
-                {visibleSubjects.map((subject) => {
-                  const sColor =
-                    subject.color || subject.subjectColor || theme.palette.primary.main;
-                  return (
-                    <Chip
-                      key={subject.id || subject.name}
-                      size="small"
-                      label={subject.name}
-                      variant="outlined"
-                      sx={{
-                        height: 24,
-                        fontSize: '11.5px',
-                        bgcolor: alpha(sColor, 0.08),
-                        borderColor: alpha(sColor, 0.24),
-                        fontWeight: 500,
-                      }}
-                      avatar={
-                        <Box
-                          component="span"
-                          sx={{
-                            width: 8,
-                            height: 8,
-                            borderRadius: '50%',
-                            bgcolor: sColor,
-                          }}
-                        />
-                      }
-                    />
-                  );
-                })}
-                {hiddenCount > 0 && (
-                  <Chip
-                    size="small"
-                    label={`+${hiddenCount} more`}
-                    sx={{ height: 24, fontSize: '11.5px', fontWeight: 600 }}
-                  />
-                )}
-              </Stack>
-            </CustomTooltip>
-          );
-        },
+        render: (value) => (
+          <ElectiveGroupSubjectsCell subjects={(value || []) as IElectiveSubject['subjects']} />
+        ),
       },
       {
         id: 'usedInClassesCount',
@@ -331,17 +251,7 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
         },
       },
     ],
-    [
-      canAdd,
-      canDelete,
-      canView,
-      onArchive,
-      onDelete,
-      onEdit,
-      onRestore,
-      onViewUsage,
-      theme.palette.primary.main,
-    ]
+    [canAdd, canDelete, canView, onArchive, onDelete, onEdit, onRestore, onViewUsage]
   );
 
   return (
