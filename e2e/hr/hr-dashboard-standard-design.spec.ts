@@ -110,6 +110,17 @@ async function mockDashboard(
 ) {
   const permissions = options.permissions || fullPermissions;
   const has = (name: string) => permissions.includes(name);
+  // Keep the dashboard fixture independent of the real school's setup readiness.
+  await page.route('**/api/hr/setup-readiness**', (route) =>
+    route.fulfill({
+      json: {
+        academicYearId: academicYear.id,
+        isReady: true,
+        availableYears: [academicYear],
+        checks: [],
+      },
+    })
+  );
   const population = options.empty
     ? []
     : options.normal
@@ -580,7 +591,10 @@ test.describe('HR module overview dashboard', () => {
   for (const width of [390, 768, 1366, 1440]) {
     for (const mode of ['light', 'dark']) {
       test(`${mode} layout at ${width}px @visual @accessibility`, async ({ page }) => {
-        await page.setViewportSize({ width, height: 844 });
+        await page.setViewportSize({
+          width,
+          height: width === 768 ? 1024 : width >= 1200 ? 900 : 844,
+        });
         await page.addInitScript((themeMode) => {
           localStorage.setItem('theme-mode', themeMode);
           localStorage.setItem('app-settings', JSON.stringify({ colorScheme: themeMode }));
@@ -608,6 +622,9 @@ test.describe('HR module overview dashboard', () => {
         const rowPositions = new Set(moduleBounds.map((bounds) => Math.round(bounds!.y)));
         expect(rowPositions.size).toBe(width >= 1200 ? 1 : width >= 600 ? 2 : 4);
         for (const module of await modules.all()) {
+          expect(
+            await module.evaluate((element) => element.scrollWidth <= element.clientWidth)
+          ).toBe(true);
           expect(await module.evaluate((element) => getComputedStyle(element).boxShadow)).toBe(
             'none'
           );
@@ -643,6 +660,18 @@ test.describe('HR module overview dashboard', () => {
           path: `.artifacts/hr-module-${mode}-${width}.png`,
           fullPage: true,
         });
+        await page
+          .getByRole('region', { name: 'Seven-day staff attendance' })
+          .scrollIntoViewIfNeeded();
+        const attendanceRegion = page.getByRole('region', { name: 'Seven-day staff attendance' });
+        await expect(attendanceRegion.getByRole('definition')).toHaveCount(6);
+        const attendanceTiles = attendanceRegion.locator('dl > div');
+        expect(
+          await attendanceTiles.evaluateAll((tiles) =>
+            tiles.every((tile) => tile.scrollWidth <= tile.clientWidth)
+          )
+        ).toBe(true);
+        await page.screenshot({ path: `.artifacts/hr-attendance-${mode}-${width}.png` });
       });
     }
   }

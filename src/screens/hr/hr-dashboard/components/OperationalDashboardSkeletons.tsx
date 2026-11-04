@@ -34,25 +34,32 @@ export function AttendanceSkeleton() {
           <DashboardSkeleton key={day} width="7%" height="70%" />
         ))}
       </Box>
-      <Stack
-        direction="row"
-        flexWrap="wrap"
-        useFlexGap
-        columnGap={2}
-        rowGap={0.75}
-        sx={{ pt: 1.5 }}
+      <Box
+        sx={{
+          pt: 1.5,
+          display: 'grid',
+          gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', sm: 'repeat(3, minmax(0, 1fr))' },
+          gap: 1,
+        }}
       >
         {Object.entries(dailyStatus)
           .filter(([key]) => key !== 'Present')
           .map(([key, { label }]) => (
-            <Stack key={key} direction="row" spacing={0.5} alignItems="center">
+            <Stack
+              key={key}
+              direction="row"
+              spacing={1}
+              alignItems="center"
+              justifyContent="space-between"
+              sx={{ px: 1, py: 0.75, bgcolor: 'background.neutral', borderRadius: 1 }}
+            >
               <Typography variant="caption" color="text.secondary">
                 {label}:
               </Typography>
-              <DashboardSkeleton width={20} height={18} />
+              <DashboardSkeleton width={20} height={22} />
             </Stack>
           ))}
-      </Stack>
+      </Box>
       <DashboardSkeleton width="65%" height={18} sx={{ mt: 1 }} />
     </Box>
   );
@@ -68,7 +75,14 @@ export function PayrollSkeleton() {
           staff reviewed or locked
         </Typography>
       </Box>
-      <Box sx={{ minHeight: { xs: 72, sm: 50 } }}>
+      <Box
+        sx={{
+          minHeight: { xs: 72, sm: 50 },
+          p: 1.5,
+          borderRadius: 1,
+          bgcolor: 'background.neutral',
+        }}
+      >
         <DashboardSkeleton width={110} height={24} />
         <DashboardSkeleton variant="text" width="85%" height={22} sx={{ mt: 0.5 }} />
       </Box>
