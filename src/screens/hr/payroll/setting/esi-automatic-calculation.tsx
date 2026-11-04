@@ -16,7 +16,15 @@ export function EsiAutomaticCalculation({ rules }: Props) {
         {esiRequestError(rules.error, 'Statutory rates could not be loaded. Retry to check again.')}
       </Alert>
     );
-  if (!rules.data) return <Skeleton aria-label="Loading statutory rates" />;
+  if (!rules.data)
+    return (
+      <Skeleton
+        variant="text"
+        width={280}
+        sx={{ maxWidth: '100%' }}
+        aria-label="Loading statutory rates"
+      />
+    );
   const rule = rules.data;
   return (
     <Stack spacing={1}>

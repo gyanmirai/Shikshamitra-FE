@@ -1,6 +1,42 @@
 /* eslint-disable no-restricted-syntax */
 import { test, expect } from '@playwright/test';
 
+for (const theme of ['light', 'dark']) {
+  for (const viewport of [
+    { width: 1440, height: 900 },
+    { width: 768, height: 1024 },
+    { width: 390, height: 844 },
+  ]) {
+    test(`ESIC footer fills the workspace and stays reachable: ${theme} ${viewport.width}px`, async ({
+      page,
+    }) => {
+      await page.setViewportSize(viewport);
+      await page.goto(
+        `/hr/payroll/setting/statutory-schemes?scenario=esic-settings&theme=${theme}`
+      );
+      const footer = page.getByRole('group', { name: 'ESIC form actions' });
+      await expect(footer).toBeVisible();
+      await expect
+        .poll(async () =>
+          Math.round((await footer.boundingBox())!.y + (await footer.boundingBox())!.height)
+        )
+        .toBe(viewport.height - 17);
+      await page.getByRole('button', { name: 'Registration details', exact: true }).click();
+      await expect(page.getByLabel('Coverage start date')).toBeVisible();
+      const body = page.getByRole('region', { name: 'ESIC school settings' });
+      await body.hover();
+      await page.mouse.wheel(0, 2000);
+      await expect(page.getByRole('button', { name: 'Save', exact: true })).toBeInViewport();
+      expect(
+        await page.evaluate(() => ({
+          horizontalOverflow: document.documentElement.scrollWidth > window.innerWidth,
+          verticalOverflow: document.documentElement.scrollHeight > window.innerHeight,
+        }))
+      ).toEqual({ horizontalOverflow: false, verticalOverflow: false });
+    });
+  }
+}
+
 // Actual production components and clients, synthetic API responses only.
 // Real save guards, transaction and payroll rules are covered by the HTTP/PostgreSQL suites.
 for (const width of [1440, 390]) {

@@ -55,7 +55,7 @@ import {
 
 // One contained workspace owns the scroll body and its stable action footer.
 const settingsWorkspaceSx = {
-  flex: '0 1 auto',
+  flex: '1 1 0%',
   maxHeight: '100%',
   minHeight: 0,
   minWidth: 0,
@@ -297,7 +297,6 @@ function ConfigurationForm({ settings }: { settings: EsiConfigurationSettings })
                 sx={{ minWidth: 0, flexShrink: 0 }}
                 titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
                 descriptionTooltip={esiCalculationHelp(rules.data)}
-                actionFullWidthOnMobile
                 action={
                   settings.history.length > 0 && (
                     <Button
@@ -344,10 +343,11 @@ function ConfigurationForm({ settings }: { settings: EsiConfigurationSettings })
                         </Typography>
                       </Box>
                       <Stack
-                        direction={{ xs: 'column', sm: 'row' }}
+                        direction="row"
+                        useFlexGap
                         spacing={0.5}
                         alignItems="center"
-                        sx={{ flexShrink: 0, alignSelf: 'center' }}
+                        sx={{ flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: '45%' }}
                       >
                         <Switch
                           name="enabled"
@@ -423,6 +423,13 @@ function ConfigurationForm({ settings }: { settings: EsiConfigurationSettings })
                           disabled={busy}
                           aria-expanded={registrationOpen}
                           aria-controls="esi-coverage-details"
+                          startIcon={
+                            <Iconify
+                              icon={GlobalIcons.expandMore}
+                              width={18}
+                              sx={{ transform: registrationOpen ? 'rotate(180deg)' : undefined }}
+                            />
+                          }
                           onClick={() => setRegistrationOpen(!registrationOpen)}
                         >
                           {registrationOpen ? 'Hide registration details' : 'Registration details'}
