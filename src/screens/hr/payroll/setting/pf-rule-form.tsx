@@ -1,7 +1,7 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
 import type { FormEvent } from 'react';
+import type { RootState } from 'src/redux/store';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
