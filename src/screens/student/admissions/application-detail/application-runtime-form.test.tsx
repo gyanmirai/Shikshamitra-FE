@@ -60,6 +60,60 @@ const section = (id: string, name: string, stepId: string, order: number) => ({
   fields: [{ id: `${id}-field`, code: id, label: `${name} answer`, fieldType: 0, required: false }],
 });
 
+it('renders frozen Inquiry context once in its source section order without editing or validating its answers', () => {
+  const onChange = vi.fn();
+  const source = section('source', 'Source Inquiry details', 'personal', 0);
+  const name = {
+    ...source.fields[0],
+    id: 'name',
+    code: 'NAME',
+    label: 'First name',
+    displayOrder: 0,
+    readOnly: false,
+  };
+  const relationship = {
+    ...name,
+    id: 'role',
+    code: 'ROLE',
+    label: 'Relationship to student',
+    displayOrder: 1,
+    readOnly: true,
+    bindingKey: 'Inquiry.ParentRelationship',
+  };
+  const local = {
+    ...section('local', 'Registration details', 'personal', 1),
+    fields: [{ ...name, id: 'dob', code: 'DOB', label: 'Date of birth' }],
+  };
+  renderForm({
+    onChange,
+    values: { NAME: 'Riya', ROLE: 'tampered', DOB: '2018-01-01' },
+    form: {
+      formVersion: 1,
+      status: 0,
+      academicYearId: 'year',
+      definition: {
+        name: 'Registration',
+        layoutType: 0,
+        fieldsPerRow: 2,
+        sections: [{ ...source, fieldsPerRow: 3, fields: [name] }, local],
+      },
+      inquiryContextSections: [{ ...source, fieldsPerRow: 3, fields: [relationship] }],
+      inquiryContextValues: [{ fieldCode: 'ROLE', valueJson: '"mother"' }],
+    } as Props['form'],
+  });
+  expect(screen.getAllByText('Source Inquiry details')).toHaveLength(1);
+  const role = screen.getByRole('textbox', { name: 'Relationship to student' });
+  expect(role).toBeDisabled();
+  expect(role).toHaveValue('mother');
+  expect(screen.getAllByRole('textbox').map((input) => input.getAttribute('aria-label'))).toEqual([
+    'First name',
+    'Relationship to student',
+    'Date of birth',
+  ]);
+  fireEvent.change(role, { target: { value: 'father' } });
+  expect(onChange).not.toHaveBeenCalled();
+});
+
 it('uses the source Inquiry label for an inherited field backend validation message', () => {
   renderForm({
     form: {
@@ -356,9 +410,9 @@ describe('application form step navigation', () => {
       showSaveDraft: false,
     } as Partial<Props>);
     expect(screen.getByRole('textbox', { name: 'Basic details answer' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: 'Save corrections' })).toBeEnabled();
-    expect(screen.queryByRole('button', { name: 'Submit application' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Reopen form' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save Corrections' })).toBeEnabled();
+    expect(screen.queryByRole('button', { name: 'Submit Application' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Reopen Form' })).not.toBeInTheDocument();
   });
   it.each([2, 3, 9, 10, 11])(
     'cannot unlock terminal application status %s with correction mode',
@@ -381,7 +435,7 @@ describe('application form step navigation', () => {
         showSaveDraft: false,
       } as Partial<Props>);
       expect(screen.getByRole('textbox', { name: 'Basic details answer' })).toBeDisabled();
-      expect(screen.queryByRole('button', { name: 'Save corrections' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Save Corrections' })).not.toBeInTheDocument();
     }
   );
   it('keeps field validation beside fields without a duplicate top banner and keeps API errors visible by the footer', () => {
@@ -442,10 +496,10 @@ describe('application form step navigation', () => {
         },
       } as Props['form'],
     });
-    const photo = within(screen.getByLabelText('Profile photos')).getByRole('textbox', {
+    const photo = within(screen.getByLabelText('Profile Photos')).getByRole('textbox', {
       name: 'Student photo',
     });
-    const answer = within(screen.getByLabelText('Form fields')).getByRole('textbox', {
+    const answer = within(screen.getByLabelText('Form Fields')).getByRole('textbox', {
       name: 'Basic details answer',
     });
     fireEvent.change(answer, { target: { value: 'Retained name' } });
@@ -461,7 +515,7 @@ describe('application form step navigation', () => {
     const submit = vi.fn();
     renderForm({ compact: true, onSave: save, onSubmit: submit });
     expect(screen.queryByRole('button', { name: 'Next' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Submit application' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Submit Application' })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Save' }));
     expect(save).toHaveBeenCalledOnce();
     expect(screen.getByText('Basic details')).toBeVisible();
@@ -469,7 +523,7 @@ describe('application form step navigation', () => {
     expect(save).toHaveBeenCalledTimes(2);
     expect(screen.queryByRole('button', { name: 'Save & Next' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Next' })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Submit application' }));
+    await user.click(screen.getByRole('button', { name: 'Submit Application' }));
     expect(submit).toHaveBeenCalledOnce();
   });
 
@@ -483,10 +537,10 @@ describe('application form step navigation', () => {
       } as Props['form'],
       beforeActions: <div>Staff verification</div>,
     });
-    expect(screen.queryByRole('navigation', { name: 'Form steps' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: 'Form Steps' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Previous' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Save & Next' })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Submit application' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Submit Application' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled();
     expect(screen.getByText('Staff verification')).toBeVisible();
   });
@@ -509,7 +563,7 @@ describe('application form step navigation', () => {
     expect(save).toHaveBeenCalledOnce();
     await act(async () => finishSave(true));
     expect(screen.getByRole('textbox', { name: 'Health details answer' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: 'Submit application' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Submit Application' })).toBeEnabled();
   });
 
   it('keeps historical review read-only while allowing navigation through the configured form sections', async () => {
@@ -532,10 +586,10 @@ describe('application form step navigation', () => {
     renderForm({ compact: true });
     expect(screen.queryByText('Admission application · v1')).not.toBeInTheDocument();
     expect(
-      screen.getByRole('navigation', { name: 'Form steps' }).querySelector('.MuiStepper-horizontal')
+      screen.getByRole('navigation', { name: 'Form Steps' }).querySelector('.MuiStepper-horizontal')
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('navigation', { name: 'Form steps' }).querySelector('[data-simplebar]')
+      screen.getByRole('navigation', { name: 'Form Steps' }).querySelector('[data-simplebar]')
     ).toBeInTheDocument();
     await user.type(screen.getByRole('textbox', { name: 'Basic details answer' }), 'Saved student');
     await user.click(screen.getByRole('button', { name: 'Save & Next' }));
@@ -545,7 +599,7 @@ describe('application form step navigation', () => {
       'Saved student'
     );
     expect(screen.getAllByRole('button', { name: 'Save' })).toHaveLength(1);
-    expect(screen.queryByRole('button', { name: 'Submit application' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Submit Application' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Save & Next' })).toHaveClass('MuiButton-sizeSmall');
   }, 15000);
 
@@ -567,7 +621,7 @@ describe('application form step navigation', () => {
     expect(calls).toEqual(['basic', 'contact', 'save']);
     expect(screen.getByText('Health details')).toBeVisible();
     expect(screen.queryByRole('button', { name: 'Save & Next' })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Submit application' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Submit Application' })).toBeEnabled();
   });
 
   it('preserves the active section and its answers when Save & Next cannot persist', async () => {

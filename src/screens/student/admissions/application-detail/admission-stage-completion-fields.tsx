@@ -22,7 +22,7 @@ export function EntranceExamCompletionFields({
           fullWidth
           size="small"
           type="datetime-local"
-          label="Exam date and time *"
+          label="Exam Date and Time *"
           inputRef={scheduledAtInputRef}
           slotProps={{ inputLabel: { shrink: true } }}
           {...formik.getFieldProps('scheduledAt')}
@@ -40,7 +40,7 @@ export function EntranceExamCompletionFields({
             fullWidth
             size="small"
             type="number"
-            label={`${field === 'totalMarks' ? 'Total' : field === 'passingMarks' ? 'Pass' : 'Obtained'} marks *`}
+            label={`${field === 'totalMarks' ? 'Total' : field === 'passingMarks' ? 'Pass' : 'Obtained'} Marks *`}
             {...formik.getFieldProps(field)}
             error={Boolean(formik.touched[field] && formik.errors[field])}
             helperText={formik.touched[field] && formik.errors[field]}
@@ -54,8 +54,8 @@ export function EntranceExamCompletionFields({
           severity={passed ? 'success' : 'info'}
         >
           {passed
-            ? 'Passing result — the workflow can continue.'
-            : 'Enter passing marks to continue.'}
+            ? 'Passing Result — the Workflow Can Continue.'
+            : 'Enter Passing Marks to Continue.'}
         </StudentFeedback>
       </Grid>
     </Grid>
@@ -72,7 +72,7 @@ export function PhysicalFormCompletionFields({
       <Grid size={{ xs: 12 }}>
         <FormControlLabel
           control={<Checkbox {...formik.getFieldProps('issued')} checked={formik.values.issued} />}
-          label="Physical registration form issued/taken *"
+          label="Physical Registration Form Issued/Taken *"
         />
         {formik.touched.issued && formik.errors.issued && (
           <Typography variant="caption" color="error">
@@ -84,8 +84,8 @@ export function PhysicalFormCompletionFields({
         <TextField
           fullWidth
           size="small"
-          label="Form reference"
-          placeholder="For example, PHY-2026-0002"
+          label="Form Reference"
+          placeholder="For Example, PHY-2026-0002"
           {...formik.getFieldProps('formReference')}
           error={Boolean(formik.touched.formReference && formik.errors.formReference)}
           helperText={formik.touched.formReference && formik.errors.formReference}

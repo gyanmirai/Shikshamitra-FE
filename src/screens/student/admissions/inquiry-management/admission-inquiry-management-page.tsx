@@ -43,7 +43,7 @@ export function AdmissionInquiryManagementPage({
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: 1, minHeight: 0 }}>
       <CustomBreadcrumbs
-        heading="Edit inquiry"
+        heading="Edit Inquiry"
         description={`${formatAdmissionReference(current.inquiryNumber)} · ${current.applicantName}`}
         isBack
         onBack={close}
@@ -57,7 +57,7 @@ export function AdmissionInquiryManagementPage({
                 ? studentPaths.enrollment.pipeline
                 : studentPaths.enrollment.inquiries,
           },
-          { name: 'Edit inquiry' },
+          { name: 'Edit Inquiry' },
         ]}
       />
       <Paper
@@ -73,7 +73,7 @@ export function AdmissionInquiryManagementPage({
         }}
       >
         {(query.isLoading || detail.isLoading) && (
-          <Stack spacing={2} sx={{ p: 2 }} aria-label="Loading inquiry form" aria-busy="true">
+          <Stack spacing={2} sx={{ p: 2 }} aria-label="Loading Inquiry Form" aria-busy="true">
             <Skeleton variant="rounded" height={84} />
             <Skeleton variant="rounded" height={280} />
           </Stack>
@@ -106,7 +106,7 @@ export function AdmissionInquiryManagementPage({
             readOnly={readOnly}
             onDraftChange={setDraft}
             onCancel={close}
-            title="Admission interest"
+            title="Admission Interest"
             fullHeight
           />
         )}
@@ -115,7 +115,7 @@ export function AdmissionInquiryManagementPage({
         open={discard.value}
         onClose={discard.onFalse}
         icon="warning"
-        title="Discard changes?"
+        title="Discard Changes?"
         content="Your unsaved inquiry form changes will be lost."
         action={
           <Button

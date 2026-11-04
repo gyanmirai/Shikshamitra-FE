@@ -43,7 +43,7 @@ it('searches on Enter without saving the containing form or losing its assigned 
     </form>
   );
   await waitFor(() => expect(screen.getByRole('combobox')).toHaveTextContent('Asha Shah (asha)'));
-  await user.click(screen.getByRole('textbox', { name: 'Find a reviewer' }));
+  await user.click(screen.getByRole('textbox', { name: 'Find a Reviewer' }));
   await user.paste('bob');
   await user.keyboard('{Enter}');
   await waitFor(() => expect(filters).toEqual(['', 'bob']));

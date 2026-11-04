@@ -63,7 +63,7 @@ export function WorkflowTemplateSelector({
   return (
     <RadioGroup
       name="starterJourney"
-      aria-label="Workflow starting point"
+      aria-label="Workflow Starting Point"
       value={value ?? ''}
       onChange={(event) => onChange(event.target.value as WorkflowStarterId)}
     >
@@ -128,7 +128,7 @@ export function WorkflowTemplateSelector({
                         )}
                         {'inquiryLinked' in template && template.inquiryLinked && (
                           <Label color="info" variant="soft">
-                            Inquiry linked
+                            Inquiry Linked
                           </Label>
                         )}
                       </Stack>
@@ -149,12 +149,12 @@ export function WorkflowTemplateSelector({
                         <Chip
                           size="small"
                           variant="outlined"
-                          label={`${template.stages.length} stages`}
+                          label={`${template.stages.length} Stages`}
                         />
                         <Chip
                           size="small"
                           variant="outlined"
-                          label={`${Math.max(template.stages.length - 1, 0)} routes`}
+                          label={`${Math.max(template.stages.length - 1, 0)} Routes`}
                         />
                       </Stack>
                     )}

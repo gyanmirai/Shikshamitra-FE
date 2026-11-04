@@ -16,7 +16,17 @@ describe('admission form preview navigation', () => {
       page: 2,
       rowsPerPage: 25,
       search: 'Fresh & current',
-      filters: [{ column: 'status', type: 'equals', value: 1, valueType: 'enum', label: 'Status' }],
+      filters: [
+        { column: 'status', type: 'equals', value: 1, valueType: 'enum', label: 'Status' },
+        {
+          column: 'purpose',
+          type: 'equals',
+          value: 0,
+          valueType: 'enum',
+          label: 'Form type',
+          displayValue: 'Inquiry',
+        },
+      ],
     };
     const origin = getAdmissionFormListReturnUrl(state);
     const preview = new URL(getAdmissionFormPreviewUrl('form/1', origin), 'https://school.test');

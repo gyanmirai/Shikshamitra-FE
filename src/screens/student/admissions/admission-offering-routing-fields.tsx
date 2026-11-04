@@ -37,7 +37,7 @@ export function AdmissionOfferingRoutingFields({
       <Grid size={12}>
         <ShakingTextField error={typeFeedback.error}>
           <CustomSelect
-            label="Admission type"
+            label="Admission Type"
             required
             name="track"
             labelId={typeLabelId}

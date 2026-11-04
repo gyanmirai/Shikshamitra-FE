@@ -57,7 +57,7 @@ export function AdmissionInquiryConfirmOffering({
       <Stack spacing={2}>
         <Box>
           <Typography variant="subtitle1" component="h3">
-            Confirm the admission offering
+            Confirm the Admission Offering
           </Typography>
           <Typography variant="body2" color="text.secondary">
             Choose the class and admission track agreed with the family. This applies the inquiry
@@ -80,8 +80,8 @@ export function AdmissionInquiryConfirmOffering({
             <TextField
               {...params}
               size="small"
-              label="Class offering"
-              placeholder="Search by class or offering code"
+              label="Class Offering"
+              placeholder="Search by Class or Offering Code"
             />
           )}
         />
@@ -113,7 +113,7 @@ export function AdmissionInquiryConfirmOffering({
             disabled={!selected}
             onClick={save}
           >
-            Confirm offering
+            Confirm Offering
           </LoadingButton>
         </Stack>
       </Stack>

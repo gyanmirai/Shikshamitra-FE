@@ -12,6 +12,7 @@ import { defaultSettings } from 'src/components/settings';
 import { vi, it, expect, describe, beforeEach } from 'vitest';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { expectStudentErrorToast } from 'src/test/student-toast-test-fixture';
 
 import AdmissionFeeSelectionPanel from './admission-fee-selection-panel';
 import { ADMISSION_FEE_COLLECTION_PERMISSIONS } from './admission-fee-collection-permissions';
@@ -33,15 +34,6 @@ vi.mock('src/components/iconify', () => ({ Iconify: () => <span aria-hidden /> }
 vi.mock('react-redux', () => ({
   useSelector: () => permissions,
   useDispatch: () => mocks.dispatch,
-}));
-vi.mock('src/components/toast', () => ({
-  shikshaMitraToast: {
-    error: vi.fn(),
-    warning: vi.fn(),
-    info: vi.fn(),
-    dismiss: vi.fn(),
-    success: vi.fn(),
-  },
 }));
 vi.mock('./admission-fee-collection-panel', () => ({
   default: ({
@@ -210,10 +202,10 @@ describe('AdmissionFeeSelectionPanel', () => {
       onContinue,
     });
     expect(screen.getByText('Class one fees · Revision 2')).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Change fee structure' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Change Fee Structure' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled();
     expect(screen.getByLabelText('Selected fee heads')).toBeVisible();
-    expect(screen.getByLabelText('Selection summary')).toBeVisible();
+    expect(screen.getByLabelText('Selection Summary')).toBeVisible();
     expect(onContinue).not.toHaveBeenCalled();
   });
   it('refreshes both the selected structure and the application collection summary', () => {
@@ -225,13 +217,13 @@ describe('AdmissionFeeSelectionPanel', () => {
       api.util.invalidateTags([{ type: financeModuleType.feeCollection, id: 'application-1' }])
     );
   });
-  it('uses a section skeleton during selection refresh and restores cached selection on failure with retry', () => {
+  it('uses a section skeleton during refresh and recovers a failed cached selection through Refresh', async () => {
     setRead(selected, { isFetching: true });
     const view = renderPanel({ compact: true });
-    expect(screen.getByRole('status', { name: 'Refreshing fee structure' })).toBeVisible();
+    expect(screen.getByRole('status', { name: 'Refreshing Fee Structure' })).toBeVisible();
     expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
     expect(screen.queryByText('Class one fees · Revision 2')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Change fee structure' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Change Fee Structure' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Test collection dialog' })).toBeDisabled();
     setRead(selected, { isError: true });
     view.rerender(
@@ -240,21 +232,39 @@ describe('AdmissionFeeSelectionPanel', () => {
       </ThemeProvider>
     );
     expect(
-      screen.queryByRole('status', { name: 'Refreshing fee structure' })
+      screen.queryByRole('status', { name: 'Refreshing Fee Structure' })
     ).not.toBeInTheDocument();
     expect(screen.getByText('Class one fees · Revision 2')).toBeVisible();
-    expect(screen.getByText(/Fee structure details could not be refreshed/)).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Change fee structure' })).toBeDisabled();
-    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    await expectStudentErrorToast(
+      'Fee structure details could not be refreshed. Your unsaved selection is preserved. Retry before saving or confirming.'
+    );
+    expect(
+      screen.queryByText(/Fee structure details could not be refreshed/)
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Change Fee Structure' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Test collection dialog' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /^Refresh$/ })).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', { name: /^Refresh$/ }));
     expect(mocks.refetch).toHaveBeenCalledOnce();
+    setRead(selected);
+    view.rerender(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <AdmissionFeeSelectionPanel applicationId="application-1" compact />
+      </ThemeProvider>
+    );
+    expect(screen.getByText('Class one fees · Revision 2')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Change Fee Structure' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Test collection dialog' })).toBeEnabled();
+    expect(mocks.save).not.toHaveBeenCalled();
   });
 
   it('preserves optional-head drafts while candidate and parent selection queries refresh', async () => {
     setRead(selected);
     const view = renderPanel({ compact: true });
-    fireEvent.click(screen.getByRole('button', { name: 'Change fee structure' }));
-    const structureSelect = screen.getByRole('combobox', { name: 'Fee structure *' });
-    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Optional fee heads' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Change Fee Structure' }));
+    const structureSelect = screen.getByRole('combobox', { name: 'Fee Structure *' });
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Optional Fee Heads' }));
     fireEvent.click(screen.getByRole('option', { name: /Transport/ }));
     fireEvent.keyDown(screen.getByRole('listbox'), { key: 'Escape' });
     mocks.candidates.mockReturnValue({
@@ -272,12 +282,12 @@ describe('AdmissionFeeSelectionPanel', () => {
         </ThemeProvider>
       );
     rerender();
-    expect(screen.getByRole('status', { name: 'Loading published fee structures' })).toBeVisible();
+    expect(screen.getByRole('status', { name: 'Loading Published Fee Structures' })).toBeVisible();
     expect(
-      screen.queryByRole('status', { name: 'Refreshing fee structure' })
+      screen.queryByRole('status', { name: 'Refreshing Fee Structure' })
     ).not.toBeInTheDocument();
     expect(structureSelect).not.toBeVisible();
-    expect(screen.getByRole('button', { name: 'Confirm fee structure' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Confirm Fee Structure' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled();
     expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
     mocks.candidates.mockReturnValue({
@@ -289,11 +299,11 @@ describe('AdmissionFeeSelectionPanel', () => {
     });
     setRead(selected);
     rerender();
-    expect(screen.getByRole('combobox', { name: 'Fee structure *' })).toBe(structureSelect);
-    expect(screen.getByRole('combobox', { name: 'Optional fee heads' })).toHaveTextContent(
+    expect(screen.getByRole('combobox', { name: 'Fee Structure *' })).toBe(structureSelect);
+    expect(screen.getByRole('combobox', { name: 'Optional Fee Heads' })).toHaveTextContent(
       'Transport'
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm fee structure' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm Fee Structure' }));
     await waitFor(() =>
       expect(mocks.save).toHaveBeenCalledWith({
         applicationId: 'application-1',
@@ -315,26 +325,26 @@ describe('AdmissionFeeSelectionPanel', () => {
   it('opens selection explicitly and summarizes optional heads without calculating dues', async () => {
     renderPanel({ compact: true });
     expect(mocks.candidates).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole('button', { name: 'Select fee structure' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Select Fee Structure' }));
     await waitFor(() =>
-      expect(screen.getByRole('combobox', { name: 'Fee structure *' })).toHaveTextContent(
+      expect(screen.getByRole('combobox', { name: 'Fee Structure *' })).toHaveTextContent(
         'Class one fees'
       )
     );
-    expect(screen.getByLabelText('Mandatory fee heads')).toHaveTextContent('Tuition');
-    expect(screen.getByLabelText('Selection summary')).toHaveTextContent(
+    expect(screen.getByLabelText('Mandatory Fee Heads')).toHaveTextContent('Tuition');
+    expect(screen.getByLabelText('Selection Summary')).toHaveTextContent(
       'Selected optional heads0'
     );
-    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Optional fee heads' }));
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Optional Fee Heads' }));
     fireEvent.click(screen.getByRole('option', { name: /Transport/ }));
     fireEvent.keyDown(screen.getByRole('listbox'), { key: 'Escape' });
-    expect(screen.getByLabelText('Selection summary')).toHaveTextContent(
+    expect(screen.getByLabelText('Selection Summary')).toHaveTextContent(
       'Selected optional heads1'
     );
     expect(screen.queryByText(/Configured total/)).not.toBeInTheDocument();
-    expect(screen.queryByText(/Finance calculates dues/)).not.toBeInTheDocument();
-    fireEvent.mouseOver(screen.getByRole('button', { name: 'About Selection summary' }));
-    expect(await screen.findByRole('tooltip')).toHaveTextContent(/Finance calculates dues/);
+    expect(screen.queryByText(/Finance Calculates Dues/)).not.toBeInTheDocument();
+    fireEvent.mouseOver(screen.getByRole('button', { name: 'About Selection Summary' }));
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(/Finance Calculates Dues/);
   });
 
   it('reports readiness and the concurrency stamp to the shared page footer without a duplicate action', () => {
@@ -348,7 +358,7 @@ describe('AdmissionFeeSelectionPanel', () => {
       concurrencyStamp: 'stamp-1',
     });
     expect(screen.queryByRole('button', { name: 'Continue' })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Change fee structure' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Change Fee Structure' }));
     expect(onReadinessChange).toHaveBeenLastCalledWith({
       stageId: 'payment',
       canComplete: false,
@@ -382,7 +392,7 @@ describe('AdmissionFeeSelectionPanel', () => {
       expect(onReadinessChange).toHaveBeenLastCalledWith(
         expect.objectContaining({ canComplete: false })
       );
-      fireEvent.click(screen.getByRole('button', { name: 'Collect later in Onboarding' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Collect Later in Onboarding' }));
       expect(onCollectLater).toHaveBeenCalledOnce();
       expect(mocks.save).not.toHaveBeenCalled();
       expect(mocks.confirm).not.toHaveBeenCalled();
@@ -399,8 +409,8 @@ describe('AdmissionFeeSelectionPanel', () => {
     expect(onReadinessChange).toHaveBeenLastCalledWith(
       expect.objectContaining({ canComplete: false })
     );
-    expect(screen.getByRole('button', { name: 'Collect later in Onboarding' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Change fee structure' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Collect Later in Onboarding' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Change Fee Structure' })).toBeDisabled();
   });
 
   it('retains reason-based deferral without Finance collection visibility', () => {
@@ -412,7 +422,7 @@ describe('AdmissionFeeSelectionPanel', () => {
     expect(
       screen.queryByRole('button', { name: 'Test collection dialog' })
     ).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Collect later in Onboarding' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Collect Later in Onboarding' }));
     expect(onCollectLater).toHaveBeenCalledOnce();
     expect(mocks.save).not.toHaveBeenCalled();
   });
@@ -430,7 +440,7 @@ describe('AdmissionFeeSelectionPanel', () => {
     renderPanel({ readOnly: true, onCollectLater: vi.fn() });
     expect(screen.getByText('Parent will pay after confirmation.')).toBeVisible();
     expect(
-      screen.queryByRole('button', { name: 'Collect later in Onboarding' })
+      screen.queryByRole('button', { name: 'Collect Later in Onboarding' })
     ).not.toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: 'Test collection dialog' })
@@ -448,10 +458,10 @@ describe('AdmissionFeeSelectionPanel', () => {
         refetch: mocks.refetch,
       });
       render(<FeeSelectionWorkspace />);
-      fireEvent.click(screen.getByRole('button', { name: 'Select fee structure' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Select Fee Structure' }));
       if (candidateState === 'available') {
         await waitFor(() =>
-          expect(screen.getByRole('combobox', { name: 'Fee structure *' })).toHaveTextContent(
+          expect(screen.getByRole('combobox', { name: 'Fee Structure *' })).toHaveTextContent(
             'Class one fees'
           )
         );
@@ -460,20 +470,22 @@ describe('AdmissionFeeSelectionPanel', () => {
       expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled();
       expect(screen.getByRole('button', { name: 'Continue admission' })).toBeDisabled();
       if (candidateState === 'empty') {
-        expect(screen.getByText('No matching fee structure')).toBeVisible();
+        expect(screen.getByText('No Matching Fee Structure')).toBeVisible();
         expect(
-          screen.queryByRole('button', { name: 'Confirm fee structure' })
+          screen.queryByRole('button', { name: 'Confirm Fee Structure' })
         ).not.toBeInTheDocument();
-        fireEvent.click(screen.getByRole('button', { name: 'Check again' }));
+        fireEvent.click(screen.getByRole('button', { name: 'Check Again' }));
         expect(mocks.refetch).toHaveBeenCalledOnce();
       }
       if (candidateState === 'error') {
-        fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
-        expect(mocks.refetch).toHaveBeenCalledOnce();
+        await expectStudentErrorToast('Published fee structures could not be loaded.');
+        expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Confirm Fee Structure' })).toBeDisabled();
+        expect(mocks.refetch).not.toHaveBeenCalled();
       }
       if (candidateState !== 'available') {
         fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
-        expect(screen.getByRole('button', { name: 'Select fee structure' })).toBeEnabled();
+        expect(screen.getByRole('button', { name: 'Select Fee Structure' })).toBeEnabled();
       }
       expect(mocks.save).not.toHaveBeenCalled();
     }
@@ -488,17 +500,17 @@ describe('AdmissionFeeSelectionPanel', () => {
     );
     const onEditorStateChange = vi.fn();
     renderPanel({ onEditorStateChange });
-    fireEvent.click(screen.getByRole('button', { name: 'Select fee structure' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Select Fee Structure' }));
     await waitFor(() =>
-      expect(screen.getByRole('combobox', { name: 'Fee structure *' })).toHaveTextContent(
+      expect(screen.getByRole('combobox', { name: 'Fee Structure *' })).toHaveTextContent(
         'Class one fees'
       )
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm fee structure' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm Fee Structure' }));
     await waitFor(() =>
       expect(onEditorStateChange).toHaveBeenLastCalledWith({ dirty: true, busy: true })
     );
-    expect(screen.getByRole('status', { name: 'Saving fee structure' })).toBeVisible();
+    expect(screen.getByRole('status', { name: 'Saving Fee Structure' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Saving…' })).toBeDisabled();
     expect(mocks.save).toHaveBeenCalledOnce();
@@ -507,18 +519,18 @@ describe('AdmissionFeeSelectionPanel', () => {
     await waitFor(() =>
       expect(onEditorStateChange).toHaveBeenLastCalledWith({ dirty: true, busy: false })
     );
-    expect(screen.queryByRole('status', { name: 'Saving fee structure' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('status', { name: 'Saving Fee Structure' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: 'Confirm fee structure' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Confirm Fee Structure' })).toBeEnabled();
   });
 
   it('locks paid selections while the shared collection panel handles remaining dues', async () => {
     setRead({ ...selected, isLocked: true, canEdit: false });
     renderPanel({ compact: true });
     expect(screen.queryByText(/Payment has been recorded/)).not.toBeInTheDocument();
-    fireEvent.mouseOver(screen.getByRole('button', { name: 'Fee selection details' }));
+    fireEvent.mouseOver(screen.getByRole('button', { name: 'Fee Selection Details' }));
     expect(await screen.findByRole('tooltip')).toHaveTextContent(/Payment has been recorded/);
-    expect(screen.queryByRole('button', { name: 'Change fee structure' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Change Fee Structure' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /waive|refund/i })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Test collection dialog' })).toBeEnabled();
   });
@@ -526,7 +538,7 @@ describe('AdmissionFeeSelectionPanel', () => {
     setRead(selected);
     renderPanel({ compact: true, readOnly: true, canContinue: true, onContinue: vi.fn() });
     expect(screen.getByText('Class one fees · Revision 2')).toBeVisible();
-    expect(screen.queryByRole('button', { name: 'Change fee structure' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Change Fee Structure' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Continue' })).not.toBeInTheDocument();
     expect(mocks.candidates).not.toHaveBeenCalled();
   });
@@ -534,22 +546,37 @@ describe('AdmissionFeeSelectionPanel', () => {
     permissions = [];
     const { unmount } = renderPanel();
     expect(mocks.read).toHaveBeenCalledWith('application-1', { skip: true });
-    expect(screen.queryByRole('region', { name: 'Fee structure' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Fee Structure' })).not.toBeInTheDocument();
     unmount();
     permissions = [{ name: 'Students.Admissions.Applications.View', isGranted: true }];
     setRead({ ...base, available: false, canEdit: false });
     renderPanel();
-    expect(screen.queryByText('Fee structure')).not.toBeInTheDocument();
+    expect(screen.queryByText('Fee Structure')).not.toBeInTheDocument();
   });
-  it('shows a local loading state and retries errors', () => {
+  it('shows local loading, announces read errors, and recovers from a successful selection read', async () => {
     setRead(undefined, { isLoading: true });
-    const { unmount } = renderPanel();
-    expect(screen.getByLabelText('Loading fee structure')).toBeInTheDocument();
-    unmount();
+    const view = renderPanel();
+    expect(screen.getByLabelText('Loading Fee Structure')).toBeInTheDocument();
     setRead(undefined, { isError: true });
-    renderPanel();
-    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
-    expect(mocks.refetch).toHaveBeenCalledOnce();
+    const rerender = () =>
+      view.rerender(
+        <ThemeProvider theme={createTheme(defaultSettings)}>
+          <AdmissionFeeSelectionPanel applicationId="application-1" />
+        </ThemeProvider>
+      );
+    rerender();
+    await expectStudentErrorToast('Fee structure details could not be loaded.');
+    expect(
+      screen.queryByText('Fee structure details could not be loaded.')
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Select Fee Structure' })).not.toBeInTheDocument();
+    expect(mocks.refetch).not.toHaveBeenCalled();
+    expect(mocks.save).not.toHaveBeenCalled();
+    setRead(selected);
+    rerender();
+    expect(screen.getByText('Class one fees · Revision 2')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Change Fee Structure' })).toBeEnabled();
   });
   it('loads published candidates only when the editor is opened and explains missing setup', () => {
     mocks.candidates.mockReturnValue({
@@ -560,12 +587,12 @@ describe('AdmissionFeeSelectionPanel', () => {
     });
     renderPanel();
     expect(mocks.candidates).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole('button', { name: 'Select fee structure' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Select Fee Structure' }));
     expect(mocks.candidates).toHaveBeenCalledWith('application-1', {
       refetchOnMountOrArgChange: true,
     });
-    expect(screen.getByText('No matching fee structure')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Confirm fee structure' })).not.toBeInTheDocument();
+    expect(screen.getByText('No Matching Fee Structure')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Confirm Fee Structure' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Open Finance' })).not.toBeInTheDocument();
   });
   it('keeps Finance navigation removed even with Fee Structure View access and retains retry', () => {
@@ -578,10 +605,10 @@ describe('AdmissionFeeSelectionPanel', () => {
       refetch: mocks.refetch,
     });
     renderPanel({ compact: true });
-    fireEvent.click(screen.getByRole('button', { name: 'Select fee structure' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Select Fee Structure' }));
     expect(screen.queryByRole('link', { name: 'Open Finance' })).not.toBeInTheDocument();
     expect(screen.queryByText(/Ask Finance to publish/)).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Check again' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Check Again' }));
     expect(mocks.refetch).toHaveBeenCalledOnce();
     expect(mocks.save).not.toHaveBeenCalled();
   });
@@ -590,13 +617,13 @@ describe('AdmissionFeeSelectionPanel', () => {
       data: { detail: 'The application changed. Reload before saving.' },
     });
     renderPanel();
-    fireEvent.click(screen.getByRole('button', { name: 'Select fee structure' }));
-    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Fee structure *' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Select Fee Structure' }));
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Fee Structure *' }));
     fireEvent.click(screen.getByRole('option', { name: 'Class one fees · Revision 2' }));
-    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Optional fee heads' }));
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Optional Fee Heads' }));
     fireEvent.click(screen.getByRole('option', { name: /Transport/ }));
     fireEvent.keyDown(screen.getByRole('listbox'), { key: 'Escape' });
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm fee structure' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm Fee Structure' }));
     await waitFor(() =>
       expect(mocks.save).toHaveBeenCalledWith({
         applicationId: 'application-1',
@@ -608,14 +635,14 @@ describe('AdmissionFeeSelectionPanel', () => {
     expect(
       await screen.findByText('The application changed. Reload before saving.')
     ).toBeInTheDocument();
-    expect(screen.getByRole('combobox', { name: 'Fee structure *' })).toHaveTextContent(
+    expect(screen.getByRole('combobox', { name: 'Fee Structure *' })).toHaveTextContent(
       'Class one fees'
     );
     mocks.unwrap.mockResolvedValue(selected);
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm fee structure' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm Fee Structure' }));
     await waitFor(() =>
       expect(
-        screen.queryByRole('button', { name: 'Confirm fee structure' })
+        screen.queryByRole('button', { name: 'Confirm Fee Structure' })
       ).not.toBeInTheDocument()
     );
   });
@@ -624,9 +651,9 @@ describe('AdmissionFeeSelectionPanel', () => {
     renderPanel();
     expect(screen.getByText('Class one fees · Revision 2')).toBeInTheDocument();
     expect(screen.queryByText(/Payment has been recorded/)).not.toBeInTheDocument();
-    fireEvent.mouseOver(screen.getByRole('button', { name: 'Fee selection details' }));
+    fireEvent.mouseOver(screen.getByRole('button', { name: 'Fee Selection Details' }));
     expect(await screen.findByRole('tooltip')).toHaveTextContent(/Payment has been recorded/);
-    expect(screen.queryByRole('button', { name: 'Change fee structure' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Change Fee Structure' })).not.toBeInTheDocument();
     expect(mocks.candidates).not.toHaveBeenCalled();
   });
   it('shows server confirmation blockers and does not expose an unauthorized confirmation', () => {
@@ -639,13 +666,13 @@ describe('AdmissionFeeSelectionPanel', () => {
     renderPanel({ mode: 'onboarding', canConfirm: false });
     expect(screen.getByText('Finance assignment uses another structure.')).toBeInTheDocument();
     expect(
-      screen.queryByRole('button', { name: 'Confirm admission fee selection' })
+      screen.queryByRole('button', { name: 'Confirm Admission Fee Selection' })
     ).not.toBeInTheDocument();
   });
   it('confirms the saved application choice in Onboarding without saving or changing fees', async () => {
     setRead({ ...selected, canEdit: false, canConfirmOnboarding: true });
     renderPanel({ mode: 'onboarding' });
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm admission fee selection' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm Admission Fee Selection' }));
     await waitFor(() =>
       expect(mocks.confirm).toHaveBeenCalledWith({
         applicationId: 'application-1',
@@ -658,26 +685,59 @@ describe('AdmissionFeeSelectionPanel', () => {
   it('requires application manage permission even when the backend reports an editable stage', () => {
     permissions = [{ name: 'Students.Admissions.Applicants.View', isGranted: true }];
     renderPanel();
-    expect(screen.queryByRole('button', { name: 'Select fee structure' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Select Fee Structure' })).not.toBeInTheDocument();
   });
-  it('disables saving while candidates load and lets staff retry failed candidate reads', () => {
+  it('blocks saving during candidate loading and failure, then saves after candidate recovery', async () => {
     mocks.candidates.mockReturnValue({ isLoading: true, isFetching: true });
-    const { unmount } = renderPanel();
-    fireEvent.click(screen.getByRole('button', { name: 'Select fee structure' }));
-    expect(screen.getByRole('button', { name: 'Confirm fee structure' })).toBeDisabled();
-    unmount();
+    const view = renderPanel();
+    fireEvent.click(screen.getByRole('button', { name: 'Select Fee Structure' }));
+    expect(screen.getByRole('button', { name: 'Confirm Fee Structure' })).toBeDisabled();
+    const rerender = () =>
+      view.rerender(
+        <ThemeProvider theme={createTheme(defaultSettings)}>
+          <AdmissionFeeSelectionPanel applicationId="application-1" />
+        </ThemeProvider>
+      );
     mocks.candidates.mockReturnValue({ isError: true, refetch: mocks.refetch });
-    renderPanel();
-    fireEvent.click(screen.getByRole('button', { name: 'Select fee structure' }));
-    expect(screen.getByText('Published fee structures could not be loaded.')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
-    expect(mocks.refetch).toHaveBeenCalledOnce();
+    rerender();
+    await expectStudentErrorToast('Published fee structures could not be loaded.');
+    expect(
+      screen.queryByText('Published fee structures could not be loaded.')
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Confirm Fee Structure' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled();
+    expect(mocks.refetch).not.toHaveBeenCalled();
+    expect(mocks.save).not.toHaveBeenCalled();
+    mocks.candidates.mockReturnValue({
+      currentData: [candidate],
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+      refetch: mocks.refetch,
+    });
+    rerender();
+    await waitFor(() =>
+      expect(screen.getByRole('combobox', { name: 'Fee Structure *' })).toHaveTextContent(
+        'Class one fees'
+      )
+    );
+    expect(screen.getByRole('button', { name: 'Confirm Fee Structure' })).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm Fee Structure' }));
+    await waitFor(() =>
+      expect(mocks.save).toHaveBeenCalledExactlyOnceWith({
+        applicationId: 'application-1',
+        concurrencyStamp: 'stamp-1',
+        structureId: 'structure-1',
+        optionalHeadIds: [],
+      })
+    );
   });
   it('guards cancellation and signals unsaved application navigation after a selection changes', async () => {
     const onEditorStateChange = vi.fn();
     renderPanel({ onEditorStateChange });
-    fireEvent.click(screen.getByRole('button', { name: 'Select fee structure' }));
-    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Fee structure *' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Select Fee Structure' }));
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Fee Structure *' }));
     fireEvent.click(screen.getByRole('option', { name: 'Class one fees · Revision 2' }));
     await waitFor(() =>
       expect(mocks.dispatch).toHaveBeenCalledWith(
@@ -687,10 +747,10 @@ describe('AdmissionFeeSelectionPanel', () => {
     expect(onEditorStateChange).toHaveBeenLastCalledWith({ dirty: true, busy: false });
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(
-      await screen.findByRole('dialog', { name: 'Discard unsaved changes?' })
+      await screen.findByRole('dialog', { name: 'Discard Unsaved Changes?' })
     ).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
-    expect(screen.queryByRole('combobox', { name: 'Fee structure *' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Discard Changes' }));
+    expect(screen.queryByRole('combobox', { name: 'Fee Structure *' })).not.toBeInTheDocument();
     expect(mocks.save).not.toHaveBeenCalled();
     expect(onEditorStateChange).toHaveBeenLastCalledWith({ dirty: false, busy: false });
   });
@@ -701,10 +761,10 @@ describe('AdmissionFeeSelectionPanel', () => {
       isFetching: false,
     });
     renderPanel();
-    fireEvent.click(screen.getByRole('button', { name: 'Select fee structure' }));
-    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Fee structure *' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Select Fee Structure' }));
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Fee Structure *' }));
     fireEvent.click(screen.getByRole('option', { name: 'Class one fees · Revision 2' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm fee structure' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm Fee Structure' }));
     expect(
       await screen.findByText(
         'Select at least one optional fee head. This structure has no mandatory heads.'
@@ -712,12 +772,12 @@ describe('AdmissionFeeSelectionPanel', () => {
     ).toBeInTheDocument();
     expect(mocks.save).not.toHaveBeenCalled();
   });
-  it('preserves unsaved choices when a background read fails and allows saving after retry', async () => {
+  it('preserves unsaved choices after a background read failure and saves after query recovery', async () => {
     const { rerender } = renderPanel();
-    fireEvent.click(screen.getByRole('button', { name: 'Select fee structure' }));
-    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Fee structure *' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Select Fee Structure' }));
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Fee Structure *' }));
     fireEvent.click(screen.getByRole('option', { name: 'Class one fees · Revision 2' }));
-    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Optional fee heads' }));
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Optional Fee Heads' }));
     fireEvent.click(screen.getByRole('option', { name: /Transport/ }));
     fireEvent.keyDown(screen.getByRole('listbox'), { key: 'Escape' });
     const refresh = () =>
@@ -728,19 +788,24 @@ describe('AdmissionFeeSelectionPanel', () => {
       );
     setRead(base, { isError: true });
     refresh();
-    expect(screen.getByText(/Your unsaved selection is preserved/)).toBeInTheDocument();
-    expect(screen.getByRole('combobox', { name: 'Fee structure *' })).toHaveTextContent(
+    await expectStudentErrorToast(
+      'Fee structure details could not be refreshed. Your unsaved selection is preserved. Retry before saving or confirming.'
+    );
+    expect(screen.queryByText(/Your unsaved selection is preserved/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'Fee Structure *' })).toHaveTextContent(
       'Class one fees'
     );
-    expect(screen.getByRole('combobox', { name: 'Optional fee heads' })).toHaveTextContent(
+    expect(screen.getByRole('combobox', { name: 'Optional Fee Heads' })).toHaveTextContent(
       'Transport'
     );
-    expect(screen.getByRole('button', { name: 'Confirm fee structure' })).toBeDisabled();
-    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
-    expect(mocks.refetch).toHaveBeenCalledOnce();
+    expect(screen.getByRole('button', { name: 'Confirm Fee Structure' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /^Refresh$/ })).toBeDisabled();
+    expect(mocks.refetch).not.toHaveBeenCalled();
+    expect(mocks.save).not.toHaveBeenCalled();
     setRead(base);
     refresh();
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm fee structure' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm Fee Structure' }));
     await waitFor(() =>
       expect(mocks.save).toHaveBeenCalledWith({
         applicationId: 'application-1',
@@ -756,12 +821,12 @@ describe('AdmissionFeeSelectionPanel', () => {
     });
     setRead({ ...selected, canEdit: false, canConfirmOnboarding: true });
     renderPanel({ mode: 'onboarding' });
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm admission fee selection' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm Admission Fee Selection' }));
     expect(
       await screen.findByText('Finance assignment has changed. Review again.')
     ).toBeInTheDocument();
     expect(screen.getByText('Class one fees · Revision 2')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Confirm admission fee selection' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Confirm Admission Fee Selection' })).toBeEnabled();
   });
 });
 
@@ -778,7 +843,7 @@ describe('Payment fee structure confirmation', () => {
     setRead({ ...base, isRequired: true });
     const view = renderPanel({ canContinue: true, onContinue });
     expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled();
-    expect(screen.queryByRole('button', { name: 'Record payment' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Record Payment' })).not.toBeInTheDocument();
     view.unmount();
     setRead(selected);
     renderPanel({ canContinue: true, onContinue });
@@ -811,7 +876,7 @@ describe('Payment fee structure confirmation', () => {
     });
     renderPanel({ canContinue: true, onContinue: vi.fn(), onCollectLater: vi.fn() });
     expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Collect later in Onboarding' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Collect Later in Onboarding' })).toBeEnabled();
     expect(
       screen.getByText('Record a confirmed fee payment in Finance before continuing.')
     ).toBeVisible();
@@ -836,7 +901,7 @@ describe('Payment fee structure confirmation', () => {
     renderPanel({ canContinue: true, onContinue: vi.fn(), onCollectLater: vi.fn() });
     expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled();
     expect(
-      screen.queryByRole('button', { name: 'Collect later in Onboarding' })
+      screen.queryByRole('button', { name: 'Collect Later in Onboarding' })
     ).not.toBeInTheDocument();
   });
 });

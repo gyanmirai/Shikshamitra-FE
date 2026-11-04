@@ -1,13 +1,18 @@
+import { useState } from 'react';
 import { Provider } from 'react-redux';
+import { api } from 'src/redux/service';
 import { http, HttpResponse } from 'msw';
+import { mswServer } from 'src/test/mswServer';
 import { configureStore } from '@reduxjs/toolkit';
-import { it, vi, expect, beforeEach, afterEach } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { it, vi, expect, afterEach, beforeEach } from 'vitest';
+import { clearCachedAuthSession } from 'src/redux/session-cache';
 import { act, render, screen, waitFor, cleanup, fireEvent } from '@testing-library/react';
 
-import { api } from 'src/redux/service';
-import { mswServer } from 'src/test/mswServer';
-import { clearCachedAuthSession } from 'src/redux/session-cache';
-
+import AdmissionRuntimeField from './admission-runtime-field';
+import { dependentAdmissionFieldValues } from './admission-field-dependencies';
+import { addAcademicClassSelector } from './form-dialog/academic-class-selector';
+import { getBlankAdmissionFormInitialValues } from './form-dialog/form-dialog-model';
 import { AdmissionMasterDataRuntimeField } from './admission-master-data-runtime-field';
 
 vi.hoisted(() => {
@@ -50,6 +55,53 @@ const view = (standardId: string) => (
 );
 const url = '*/api/student/enrollment/admissions/forms/metadata/options';
 const choices = (label: string) => [{ value: label, label, displayOrder: 0, isActive: true }];
+
+it('queries the explicit Board → Medium → Class group, resets descendants and restores saved answers without duplicate companions', async () => {
+  const reads: {source: string | null; parent: string | null; year: string | null}[] = [];
+  mswServer.use(http.get(url, ({ request }) => {
+    const params = new URL(request.url).searchParams;
+    const source = params.get('sourceKey'); const parent = params.get('parentId');
+    reads.push({source, parent, year: params.get('academicYearId')});
+    const options = source === 'EducationBoards' ? [...choices('board-a'), ...choices('board-b')]
+      : source === 'EducationMediums' ? choices(parent === 'board-a' ? 'medium-a' : 'medium-b')
+        : choices(parent === 'medium-a' ? 'class-a' : 'class-b');
+    return HttpResponse.json({data: options});
+  }));
+  const academicFields = addAcademicClassSelector(getBlankAdmissionFormInitialValues(0), null).form.sections
+    .flatMap(section => section.fields).filter(item => item.optionsJson?.includes('"source"'));
+  let saved = {BOARD: 'board-a', MEDIUM: 'medium-a', CLASS: 'class-a'} as Record<string, string>;
+  function Form() {
+    const [values, setValues] = useState(saved);
+    return <>{academicFields.map(item => <AdmissionRuntimeField key={item.id} field={item} value={values[item.code] || ''}
+      formValues={values} disabled={false} onChange={next => setValues(current => {
+        saved = {...current, [item.code]: next, ...dependentAdmissionFieldValues(academicFields, item.code, current)};
+        return saved;
+      })} />)}<output data-testid="academic-values">{JSON.stringify(values)}</output></>;
+  }
+  const tree = () => <Provider store={store}><Form /></Provider>;
+  const rendered = render(tree());
+  const user = userEvent.setup();
+  await waitFor(() => expect(screen.getByRole('combobox', {name: 'Class'})).not.toHaveAttribute('aria-disabled', 'true'));
+  expect(screen.getAllByRole('combobox')).toHaveLength(3);
+  await user.click(screen.getByRole('combobox', {name: 'Board'}));
+  await user.click(await screen.findByRole('option', {name: 'board-b'}));
+  expect(saved).toEqual({BOARD: 'board-b', MEDIUM: '', CLASS: ''});
+  expect(screen.getByRole('combobox', {name: 'Class'})).toHaveAttribute('aria-disabled', 'true');
+  await waitFor(() => expect(screen.getByRole('combobox', {name: 'Medium'})).not.toHaveAttribute('aria-disabled', 'true'));
+  await user.click(screen.getByRole('combobox', {name: 'Medium'}));
+  await user.click(await screen.findByRole('option', {name: 'medium-b'}));
+  await waitFor(() => expect(screen.getByRole('combobox', {name: 'Class'})).not.toHaveAttribute('aria-disabled', 'true'));
+  await user.click(screen.getByRole('combobox', {name: 'Class'}));
+  await user.click(await screen.findByRole('option', {name: 'class-b'}));
+  expect(saved).toEqual({BOARD: 'board-b', MEDIUM: 'medium-b', CLASS: 'class-b'});
+  expect(reads).toContainEqual({source: 'EducationBoards', parent: null, year: 'year'});
+  expect(reads).toContainEqual({source: 'EducationMediums', parent: 'board-b', year: 'year'});
+  expect(reads).toContainEqual({source: 'StandardsByMedium', parent: 'medium-b', year: 'year'});
+  rendered.unmount();
+  render(tree());
+  await waitFor(() => expect(screen.getByRole('combobox', {name: 'Class'})).toHaveTextContent('class-b'));
+  expect(screen.getAllByRole('combobox')).toHaveLength(3);
+});
 
 it('refreshes a previously empty class after switching A → B → A', async () => {
   const reads: string[] = [];

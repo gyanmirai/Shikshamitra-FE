@@ -45,7 +45,7 @@ export function WorkflowTransitionConditionFields({
           <TextField
             fullWidth
             size="small"
-            label="Application field *"
+            label="Application Field *"
             disabled={readOnly}
             {...formik.getFieldProps('conditionField')}
             error={Boolean(formik.touched.conditionField && formik.errors.conditionField)}
@@ -56,7 +56,7 @@ export function WorkflowTransitionConditionFields({
             fullWidth
             size="small"
             isSearch
-            label="Application field *"
+            label="Application Field *"
             disabled={readOnly}
             value={formik.values.conditionField}
             options={fields.map(({ value, label }) => ({ value, label }))}
@@ -93,7 +93,7 @@ export function WorkflowTransitionConditionFields({
             setAdvanced(!useAdvanced);
           }}
         >
-          {useAdvanced ? 'Choose a form answer' : 'Use a saved field code (advanced)'}
+          {useAdvanced ? 'Choose a Form Answer' : 'Use a Saved Field Code (Advanced)'}
         </Button>
       )}
       {useAdvanced && (
@@ -117,7 +117,7 @@ export function WorkflowTransitionConditionFields({
             ? [
                 {
                   value: formik.values.conditionOperator,
-                  label: `${formik.values.conditionOperator} (saved comparison)`,
+                  label: `${formik.values.conditionOperator} (Saved Comparison)`,
                 },
               ]
             : []),

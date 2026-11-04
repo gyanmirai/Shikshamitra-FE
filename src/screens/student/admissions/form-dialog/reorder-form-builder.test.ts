@@ -71,7 +71,7 @@ describe('form builder reordering', () => {
     expect(setFieldValue).not.toHaveBeenCalled();
   });
 
-  it('does not move a locked Inquiry identity field through a direct reorder request', () => {
+  it('moves a core Inquiry identity field without unlocking its structure', () => {
     const values = getBlankAdmissionFormInitialValues(0);
     const section = values.sections[0];
     const target = newField(section.id, 3);
@@ -86,8 +86,57 @@ describe('form builder reordering', () => {
       { values, setFieldValue },
       selectField
     );
+    expect(setFieldValue).toHaveBeenCalled();
+    expect(selectField).toHaveBeenCalledWith(section.id, section.fields[0].id);
+  });
+  it.each([
+    { isRepeatable: true },
+    { visibilityRuleJson: '{"field":"X","operator":"isNotEmpty"}' },
+    { stepVisibilityRuleJson: '{"field":"X","operator":"isNotEmpty"}' },
+  ])('keeps core fields out of inaccessible sections: %o', (settings) => {
+    const values = getBlankAdmissionFormInitialValues(0);
+    const source = values.sections[0];
+    const target = {
+      id: 'target',
+      code: 'TARGET',
+      name: 'Target',
+      displayOrder: 1,
+      fields: [],
+      ...settings,
+    };
+    values.sections.push(target);
+    const setFieldValue = vi.fn();
+    reorderFormBuilder(
+      {
+        active: { id: `field:${source.id}:${source.fields[0].id}` },
+        over: { id: 'section:target' },
+      },
+      { values, setFieldValue },
+      vi.fn()
+    );
     expect(setFieldValue).not.toHaveBeenCalled();
-    expect(selectField).not.toHaveBeenCalled();
+  });
+  it('moves a core field to an empty always-visible section', () => {
+    const values = getBlankAdmissionFormInitialValues(0);
+    const source = values.sections[0];
+    values.sections.push({
+      id: 'target',
+      code: 'TARGET',
+      name: 'Target',
+      displayOrder: 1,
+      fields: [],
+    });
+    const setFieldValue = vi.fn();
+    reorderFormBuilder(
+      {
+        active: { id: `field:${source.id}:${source.fields[0].id}` },
+        over: { id: 'section:target' },
+      },
+      { values, setFieldValue },
+      vi.fn()
+    );
+    expect(setFieldValue).toHaveBeenCalled();
+    expect(setFieldValue.mock.calls[0][1][1].fields[0].sectionId).toBe('target');
   });
   it.each([
     ['a', 'b', ['b', 'a', 'c']],

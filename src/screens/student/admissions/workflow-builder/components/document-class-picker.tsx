@@ -79,7 +79,7 @@ export function DocumentClassPicker({
         size="small"
         value={activeBoard || 'all'}
         options={[
-          { value: 'all', label: 'All boards' },
+          { value: 'all', label: 'All Boards' },
           ...boards.map((item) => ({ value: item, label: item })),
         ]}
         onChange={(next) => setBoard(next === 'all' ? '' : String(next))}
@@ -143,10 +143,10 @@ export function DocumentClassPicker({
           >
             <Stack direction="row" alignItems="center" justifyContent="space-between">
               <Typography id={titleId} variant="subtitle1">
-                Select classes
+                Select Classes
               </Typography>
               <Typography variant="caption" color="text.secondary" aria-live="polite">
-                {value.length} selected
+                {value.length} Selected
               </Typography>
             </Stack>
             <TextField
@@ -154,8 +154,8 @@ export function DocumentClassPicker({
               autoFocus
               fullWidth
               size="small"
-              label="Search classes"
-              placeholder="Class or medium"
+              label="Search Classes"
+              placeholder="Class or Medium"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               slotProps={{
@@ -172,7 +172,7 @@ export function DocumentClassPicker({
           <Scrollbar sx={{ minHeight: 0, maxHeight: 320 }}>
             <Box sx={{ p: 1 }}>
               <Typography variant="overline" color="text.secondary" sx={{ px: 1 }}>
-                {activeBoard ? `${activeBoard} classes` : 'All boards'}
+                {activeBoard ? `${activeBoard} classes` : 'All Boards'}
               </Typography>
               {visible.map((item) => (
                 <FormControlLabel
@@ -217,8 +217,8 @@ export function DocumentClassPicker({
               {visible.length === 0 && (
                 <Typography role="status" variant="body2" color="text.secondary" sx={{ p: 2 }}>
                   {query
-                    ? 'No matching classes. Try another search or board.'
-                    : 'No classes are available. Add classes in Institute Setup.'}
+                    ? 'No Matching Classes. Try Another Search or Board.'
+                    : 'No Classes Are Available. Add Classes in Institute Setup.'}
                 </Typography>
               )}
               {missing.map((id) => (
@@ -226,7 +226,7 @@ export function DocumentClassPicker({
                   key={id}
                   sx={{ m: 0, width: 1 }}
                   control={<Checkbox size="small" checked onChange={() => toggle(id)} />}
-                  label="Unavailable class (remove or replace)"
+                  label="Unavailable Class (Remove or Replace)"
                 />
               ))}
             </Box>

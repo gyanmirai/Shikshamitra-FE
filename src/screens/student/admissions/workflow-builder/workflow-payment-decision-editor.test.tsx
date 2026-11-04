@@ -76,14 +76,14 @@ describe('Finance fee confirmation and admission decision setup', () => {
     expect(
       screen.queryByRole('switch', { name: 'Allow collection later in Onboarding' })
     ).not.toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Stage details' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Stage behavior' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Stage Details' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Stage Behavior' })).toBeInTheDocument();
     expect(screen.queryByText(/not available in this environment/)).not.toBeInTheDocument();
     expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument();
-    expect(screen.queryByRole('textbox', { name: /Purpose code/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: /Purpose Code/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('spinbutton', { name: /Amount/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Next' })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
+    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(JSON.parse(onSave.mock.calls[0][0].configurationJson)).toEqual({
       extension: 'preserve',
@@ -91,20 +91,20 @@ describe('Finance fee confirmation and admission decision setup', () => {
   });
   it('keeps Admission Decision terminal behavior on the same page', async () => {
     const { user, onSave } = setup(7);
-    expect(screen.getByRole('heading', { name: 'Stage details' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Stage behavior' })).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: 'Advanced settings' })).not.toBeInTheDocument();
-    expect(screen.getByRole('switch', { name: 'End of journey' })).toBeChecked();
+    expect(screen.getByRole('heading', { name: 'Stage Details' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Stage Behavior' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Advanced Settings' })).not.toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: 'End Of Journey' })).toBeChecked();
     expect(screen.queryByRole('button', { name: 'Next' })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
+    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(onSave.mock.calls[0][0]).toMatchObject({ stageType: 7, isTerminalStage: true });
   });
   it('shows Payment read-only and closes without saving', async () => {
     const { user, onSave, onClose } = setup(4, true);
-    expect(screen.getByRole('textbox', { name: 'Stage name *' })).toBeDisabled();
+    expect(screen.getByRole('textbox', { name: 'Stage Name *' })).toBeDisabled();
     expect(screen.queryByRole('heading', { name: 'Payment Completion' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Apply changes' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Apply Changes' })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Close' }));
     expect(onClose).toHaveBeenCalledOnce();
     expect(onSave).not.toHaveBeenCalled();

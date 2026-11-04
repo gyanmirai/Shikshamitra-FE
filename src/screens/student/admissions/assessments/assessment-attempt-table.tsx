@@ -45,7 +45,7 @@ const outcomeLabels = {
   passed: 'Passed',
   failed: 'Failed',
   absent: 'Absent',
-  retake: 'Retake allowed',
+  retake: 'Retake Allowed',
   waived: 'Waived',
 };
 const attendanceLabels = { pending: 'Pending', present: 'Present', absent: 'Absent' };
@@ -122,10 +122,10 @@ export function AssessmentAttemptTable({
           <Typography variant="body2">
             {row.sessionName ||
               (row.sessionId
-                ? 'Scheduled session'
+                ? 'Scheduled Session'
                 : assessment.policy
-                  ? 'No session required'
-                  : 'No scheduled session')}
+                  ? 'No Session Required'
+                  : 'No Scheduled Session')}
           </Typography>
         </Stack>
       ),
@@ -146,7 +146,7 @@ export function AssessmentAttemptTable({
                 key={value}
                 size="small"
                 variant="outlined"
-                aria-label={`Mark attempt ${row.attemptNumber} ${value}`}
+                aria-label={`Mark Attempt ${row.attemptNumber} ${attendanceLabels[value]}`}
                 aria-pressed={row.attendance === value}
                 disabled={disabled || quick.formik.dirty}
                 onClick={() => quick.recordAttendance(value)}
@@ -271,15 +271,15 @@ export function AssessmentAttemptTable({
                 size="small"
                 variant="contained"
                 loading={quick.formik.isSubmitting}
-                aria-label={`Save result for attempt ${row.attemptNumber}`}
+                aria-label={`Save Result for Attempt ${row.attemptNumber}`}
                 disabled={disabled || !quick.canRecordResult}
               >
-                {quick.profile ? 'Submit result' : 'Save'}
+                {quick.profile ? 'Submit Result' : 'Save'}
               </LoadingButton>
             )}
             {actions.length > 0 && (
               <ThreeDotsActions
-                moreLabel={`More actions for attempt ${row.attemptNumber}`}
+                moreLabel={`More Actions for Attempt ${row.attemptNumber}`}
                 placement={narrow ? 'bottom-right' : 'top-right'}
                 sx={{
                   justifyContent: 'flex-start',
@@ -299,9 +299,9 @@ export function AssessmentAttemptTable({
                       }}
                     >
                       {action === 'attendance'
-                        ? 'Record attendance with notes'
+                        ? 'Record Attendance with Notes'
                         : action === 'result'
-                          ? 'Record result with notes'
+                          ? 'Record Result with Notes'
                           : assessmentActionLabels[action]}
                     </MenuItem>
                   ))
@@ -316,7 +316,7 @@ export function AssessmentAttemptTable({
   return (
     <CustomizableTable
       tableId={`admission-assessment-attempts-${assessment.applicationId}-${assessment.stageInstanceId}`}
-      tableTitle="Assessment attempts"
+      tableTitle="Assessment Attempts"
       columns={readOnly ? columns.filter((column) => column.id !== 'actions') : columns}
       data={rows}
       isSearch={false}
@@ -324,7 +324,7 @@ export function AssessmentAttemptTable({
       isPagination={false}
       isShowedDense={false}
       wrapperProps={{ sx: { minWidth: 0, minHeight: 0 } }}
-      tableContainerProps={{ 'aria-label': 'Assessment attempts', sx: { minWidth: 0 } }}
+      tableContainerProps={{ 'aria-label': 'Assessment Attempts', sx: { minWidth: 0 } }}
     />
   );
 }

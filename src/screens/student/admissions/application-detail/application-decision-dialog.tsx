@@ -50,7 +50,7 @@ export function ApplicationDecisionDialog({
       open={open}
       onClose={onClose}
       title={ADMISSION_DECISION_ACTION_LABELS[action]}
-      titleInfo={`This decision is recorded in the application history for ${formatAdmissionReference(current.applicationNumber)}.`}
+      titleInfo={`This Decision Is Recorded in the Application History For ${formatAdmissionReference(current.applicationNumber)}.`}
       maxWidth="sm"
       dirty={formik.dirty}
       busy={isBusy}
@@ -65,7 +65,7 @@ export function ApplicationDecisionDialog({
       )}
     >
       <DialogScrollContent>
-        <FormBusyRegion busy={isBusy} label="Recording admission decision…">
+        <FormBusyRegion busy={isBusy} label="Recording Admission Decision…">
           <Stack spacing={2}>
             <ReviewRecoveryAlert
               context="application"
@@ -90,7 +90,7 @@ export function ApplicationDecisionDialog({
               multiline
               minRows={3}
               size="small"
-              label={requiresReason ? 'Reason *' : 'Reason (optional)'}
+              label={requiresReason ? 'Reason *' : 'Reason (Optional)'}
               {...formik.getFieldProps('reason')}
               error={Boolean(formik.touched.reason && formik.errors.reason)}
               helperText={formik.touched.reason && formik.errors.reason}

@@ -63,14 +63,14 @@ export function FormBuilderFieldLibraryDrawer({
         >
           <Box sx={{ minWidth: 0 }}>
             <Typography id="admission-form-field-library-title" variant="h6">
-              Add a field
+              Add a Field
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Choose the information applicants should provide
+              Choose the Information Applicants Should Provide
               {targetLabel ? ` in ${targetLabel}` : ''}. Add as many fields as you need, then close.
             </Typography>
           </Box>
-          <IconButton aria-label="Close field library" onClick={onClose}>
+          <IconButton aria-label="Close Field Library" onClick={onClose}>
             <Iconify icon="mdi:close" />
           </IconButton>
         </Stack>

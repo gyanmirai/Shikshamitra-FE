@@ -101,7 +101,7 @@ export function AdmissionOfferingTable(props: Props) {
           checked={selectedCount > 0 && selectedCount === selection.eligibleIds.length}
           indeterminate={selectedCount > 0 && selectedCount < selection.eligibleIds.length}
           disabled={selection.disabled || selection.eligibleIds.length === 0}
-          inputProps={{ 'aria-label': 'Select all eligible offerings on this page' }}
+          inputProps={{ 'aria-label': 'Select All Eligible Offerings on This Page' }}
           onChange={(_, checked) => selection.onToggleAll(checked)}
           onClick={(event) => event.stopPropagation()}
         />
@@ -112,7 +112,7 @@ export function AdmissionOfferingTable(props: Props) {
           sx={{ width: 44, height: 44 }}
           checked={selection.selectedIds.includes(row.id)}
           disabled={selection.disabled || !selection.eligibleIds.includes(row.id)}
-          inputProps={{ 'aria-label': `Select ${row.name || row.code} for activation` }}
+          inputProps={{ 'aria-label': `Select ${row.name || row.code} For Activation` }}
           onChange={(_event, checked) =>
             selection.onToggle(row as AdmissionOfferingListItem, checked)
           }
@@ -135,7 +135,7 @@ export function AdmissionOfferingTable(props: Props) {
   return (
     <CustomizableTable
       tableId="admission-offerings"
-      tableTitle="Admission offerings"
+      tableTitle="Admission Offerings"
       columns={columns}
       data={rows}
       handleRowClick={(row) => onView(row as AdmissionOfferingListItem)}
@@ -196,12 +196,12 @@ export function AdmissionOfferingTable(props: Props) {
           <Box component="span" sx={{ typography: 'body2', color: 'text.secondary' }}>
             {prerequisite ||
               (filteredEmpty
-                ? 'No admission offerings match the selected filters.'
-                : 'No admission offering has been configured.')}
+                ? 'No Admission Offerings Match the Selected Filters.'
+                : 'No Admission Offering Has Been Configured.')}
           </Box>
           {!prerequisite && filteredEmpty && onClearFilters && (
             <Button size="small" color="inherit" onClick={onClearFilters}>
-              Clear filters
+              Clear Filters
             </Button>
           )}
         </Box>

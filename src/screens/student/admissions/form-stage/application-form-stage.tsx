@@ -47,7 +47,7 @@ export function ApplicationFormStage({
       disabled={busy}
       onClick={() => setAction({ type: 'correction' })}
     >
-      Request correction
+      Request Correction
     </Button>
   );
   const completionAction = showCompletionAction && canAdvance && summary && !query.isError && (
@@ -59,14 +59,14 @@ export function ApplicationFormStage({
       loadingPosition="end"
       onClick={onComplete}
     >
-      Continue admission
+      Continue Admission
     </Button>
   );
   const reasonDialog = action && summary && (
     <FormStageReasonDialog
       title="Request Form Correction"
       description="The application returns to draft and the applicant must resubmit the corrected form."
-      confirmLabel="Request correction"
+      confirmLabel="Request Correction"
       busy={busy}
       onClose={() => setAction(null)}
       onSubmit={(reason) => submitReason(reason).then(() => undefined)}
@@ -78,7 +78,7 @@ export function ApplicationFormStage({
     return (
       <>
         {loading ? (
-          <Stack role="status" aria-label="Loading Form stage" direction="row" spacing={1}>
+          <Stack role="status" aria-label="Loading Form Stage" direction="row" spacing={1}>
             <Skeleton variant="rounded" width={140} height={30} />
           </Stack>
         ) : error ? (
@@ -101,17 +101,17 @@ export function ApplicationFormStage({
           <div>
             <Typography variant="h6">{stage.name}</Typography>
             <Typography variant="body2" color="text.secondary">
-              Managed application form
+              Managed Application Form
             </Typography>
           </div>
           {!loading && !error && summary && (
             <Label color={summary.canComplete ? 'success' : summary.isOverdue ? 'error' : 'info'}>
-              {summary.canComplete ? 'Ready' : summary.isOverdue ? 'Overdue' : 'In progress'}
+              {summary.canComplete ? 'Ready' : summary.isOverdue ? 'Overdue' : 'In Progress'}
             </Label>
           )}
         </Stack>
         {loading ? (
-          <Stack spacing={1} role="status" aria-label="Loading Form stage">
+          <Stack spacing={1} role="status" aria-label="Loading Form Stage">
             <Skeleton width="50%" />
             <Skeleton width="75%" />
             <Skeleton variant="rounded" width={140} height={30} />

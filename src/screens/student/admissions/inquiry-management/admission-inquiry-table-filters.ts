@@ -21,7 +21,7 @@ export const ADMISSION_INQUIRY_FILTER_QUERY_PARAMS: Record<string, string> = {
 const FILTER_LABELS: Record<string, string> = {
   inquiryNumber: 'Inquiry',
   applicantName: 'Applicant',
-  admissionOfferingId: 'Admission interest',
+  admissionOfferingId: 'Admission Interest',
   standardName: 'Class',
   normalizedPhone: 'Phone',
   email: 'Email',

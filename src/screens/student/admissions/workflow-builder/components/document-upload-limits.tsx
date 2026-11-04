@@ -21,7 +21,7 @@ export function DocumentUploadLimits({
             multiple
             size="small"
             fullWidth
-            label="Allowed file formats"
+            label="Allowed File Formats"
             value={values.allowedExtensions}
             options={DOCUMENT_FORMATS.map((value) => ({ value, label: value.toUpperCase() }))}
             renderValue={(selected) => (
@@ -46,7 +46,7 @@ export function DocumentUploadLimits({
             prefix=""
             suffix=" MB"
             decimalScale={0}
-            label="Maximum file size"
+            label="Maximum File Size"
             name="maxFileSizeMb"
             value={values.maxFileSizeMb}
             onBlur={formik.handleBlur}

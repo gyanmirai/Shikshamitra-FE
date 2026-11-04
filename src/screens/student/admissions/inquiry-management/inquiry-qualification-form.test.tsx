@@ -66,10 +66,10 @@ it('offers three statuses and saves Interested without starting an application',
   expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([
     'Pending',
     'Interested',
-    'Not interested',
+    'Not Interested',
   ]);
   fireEvent.change(screen.getByRole('combobox', { name: 'Status' }), { target: { value: '2' } });
-  await user.click(screen.getByRole('button', { name: 'Save status' }));
+  await user.click(screen.getByRole('button', { name: 'Save Status' }));
   await waitFor(() =>
     expect(mocks.update).toHaveBeenCalledWith({
       id: 'inquiry-1',
@@ -96,7 +96,7 @@ it('explains a status concurrency conflict without discarding the selected statu
   });
   render(<InquiryQualificationForm value={management} inquiry={inquiry} />);
   fireEvent.change(screen.getByRole('combobox', { name: 'Status' }), { target: { value: '2' } });
-  await user.click(screen.getByRole('button', { name: 'Save status' }));
+  await user.click(screen.getByRole('button', { name: 'Save Status' }));
   await waitFor(() =>
     expect(mocks.error).toHaveBeenCalledWith({
       message:
@@ -118,7 +118,7 @@ it('replaces an unhelpful generic business-rule message with status-specific rec
   });
   render(<InquiryQualificationForm value={management} inquiry={inquiry} />);
   fireEvent.change(screen.getByRole('combobox', { name: 'Status' }), { target: { value: '2' } });
-  await user.click(screen.getByRole('button', { name: 'Save status' }));
+  await user.click(screen.getByRole('button', { name: 'Save Status' }));
   await waitFor(() =>
     expect(mocks.error).toHaveBeenCalledWith({
       message: 'Unable to update inquiry status. Refresh the inquiry and try again.',
@@ -130,14 +130,14 @@ it('requires a reason for Not interested before persisting', async () => {
   const user = userEvent.setup();
   render(<InquiryQualificationForm value={management} inquiry={inquiry} />);
   fireEvent.change(screen.getByRole('combobox', { name: 'Status' }), { target: { value: '6' } });
-  await user.click(screen.getByRole('button', { name: 'Save status' }));
+  await user.click(screen.getByRole('button', { name: 'Save Status' }));
   expect(await screen.findByText('Enter a reason for this status change')).toBeInTheDocument();
   expect(mocks.update).not.toHaveBeenCalled();
   await user.type(
-    screen.getByRole('textbox', { name: 'Status change reason *' }),
+    screen.getByRole('textbox', { name: 'Status Change Reason *' }),
     'Family changed plans'
   );
-  await user.click(screen.getByRole('button', { name: 'Save status' }));
+  await user.click(screen.getByRole('button', { name: 'Save Status' }));
   await waitFor(() =>
     expect(mocks.update).toHaveBeenCalledWith({
       id: 'inquiry-1',

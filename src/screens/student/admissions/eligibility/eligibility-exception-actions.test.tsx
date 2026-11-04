@@ -3,6 +3,7 @@ import { http, HttpResponse } from 'msw';
 import { mswServer } from 'src/test/mswServer';
 import userEvent from '@testing-library/user-event';
 import { screen, within, waitFor } from '@testing-library/react';
+import { expectStudentErrorToast } from 'src/test/student-toast-test-fixture';
 import {
   eligibilityPath,
   eligibilitySummary,
@@ -44,16 +45,17 @@ it('requires an exception reason, retains it after failure, and keeps the captur
   renderEligibilityUi(
     <ApplicationEligibilityPanel applicationId="application-1" stage={eligibilityStage} />
   );
-  await user.click(await screen.findByRole('button', { name: 'Request an exception' }));
+  await user.click(await screen.findByRole('button', { name: 'Request an Exception' }));
   const dialog = within(screen.getByRole('dialog'));
-  await user.click(dialog.getByRole('button', { name: 'Request an exception' }));
+  await user.click(dialog.getByRole('button', { name: 'Request an Exception' }));
   expect(await dialog.findByText('Give a reason for this decision')).toBeInTheDocument();
   expect(requests).toHaveLength(0);
   await user.click(dialog.getByLabelText('Reason *'));
   await user.paste('Please review the transfer circumstances.');
-  await user.click(dialog.getByRole('button', { name: 'Request an exception' }));
+  await user.click(dialog.getByRole('button', { name: 'Request an Exception' }));
   expect(await dialog.findByText(/Application changed/)).toBeInTheDocument();
-  expect(await screen.findByText('Unable to load this enrollment data.')).toBeInTheDocument();
+  await expectStudentErrorToast('Unable to load this enrollment data.');
+  expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
   expect(dialog.getByLabelText('Reason *')).toHaveValue(
     'Please review the transfer circumstances.'
   );
@@ -82,11 +84,11 @@ it('records an independent reviewer decision with a reason and the scoped except
   renderEligibilityUi(
     <ApplicationEligibilityPanel applicationId="application-1" stage={eligibilityStage} />
   );
-  await user.click(await screen.findByRole('button', { name: 'Decline exception' }));
+  await user.click(await screen.findByRole('button', { name: 'Decline Exception' }));
   const dialog = within(screen.getByRole('dialog'));
   await user.click(dialog.getByLabelText('Reason *'));
   await user.paste('The configured minimum applies to this application.');
-  await user.click(dialog.getByRole('button', { name: 'Decline exception' }));
+  await user.click(dialog.getByRole('button', { name: 'Decline Exception' }));
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   expect(body).toEqual({
     concurrencyStamp: 'application-stamp',
@@ -113,10 +115,10 @@ it('hides review actions from the requester even with general review permission'
   renderEligibilityUi(
     <ApplicationEligibilityPanel applicationId="application-1" stage={eligibilityStage} />
   );
-  expect(await screen.findByText('Pending review')).toBeInTheDocument();
+  expect(await screen.findByText('Pending Review')).toBeInTheDocument();
   expect(
     screen.getByText('A different authorized reviewer must decide this exception.')
   ).toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: 'Approve exception' })).not.toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: 'Decline exception' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Approve Exception' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Decline Exception' })).not.toBeInTheDocument();
 });

@@ -27,13 +27,13 @@ export function EligibilityCriterionResults({
                 {criterion.outcome === 'passed'
                   ? 'Passed'
                   : criterion.outcome === 'failed'
-                    ? 'Not met'
-                    : 'Information needed'}
+                    ? 'Not Met'
+                    : 'Information Needed'}
               </Label>
             </Stack>
             <Typography variant="body2">Expected: {criterion.expected}</Typography>
             <Typography variant="body2">
-              Recorded value: {criterion.actual || 'Not provided'}
+              Recorded Value: {criterion.actual || 'Not Provided'}
             </Typography>
             <Typography variant="caption" color="text.secondary">
               Source: {criterion.source}

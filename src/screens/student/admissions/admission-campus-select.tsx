@@ -39,7 +39,7 @@ export function AdmissionCampusSelect({
       size="small"
       label={label}
       loadingLabel={`Loading ${label.toLowerCase()}`}
-      placeholder="Search campus name or code"
+      placeholder="Search Campus Name or Code"
       value={value}
       fetchOptions={fetchOptions}
       minChars={0}

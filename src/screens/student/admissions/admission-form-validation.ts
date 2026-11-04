@@ -143,6 +143,16 @@ function createFieldSchema(
     ) {
       return this.createError({ message: `${field.label} must be a valid email address.` });
     }
+    if (
+      field.fieldType === 4 &&
+      config.format === 'phone' &&
+      config.regex === '^[6-9][0-9]{9}$' &&
+      !/^[6-9][0-9]{9}$/.test(text)
+    ) {
+      return this.createError({
+        message: `${field.label} must be a valid 10-digit Indian mobile number.`,
+      });
+    }
     if (field.fieldType === 4 && !/^\+?[0-9 ()-]{7,20}$/.test(text)) {
       return this.createError({ message: `${field.label} must be a valid phone number.` });
     }

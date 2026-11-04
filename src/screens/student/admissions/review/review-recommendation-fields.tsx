@@ -17,7 +17,7 @@ export function ReviewRecommendationFields({ formik }: { formik: FormikProps<Rev
         onChange={(event) => formik.setFieldValue('recommendation', event.target.value || null)}
         disabled={formik.isSubmitting}
       >
-        <MenuItem value="">Choose a recommendation</MenuItem>
+        <MenuItem value="">Choose a Recommendation</MenuItem>
         {Object.entries(recommendationLabels).map(([value, label]) => (
           <MenuItem key={value} value={value}>
             {label}
@@ -29,7 +29,7 @@ export function ReviewRecommendationFields({ formik }: { formik: FormikProps<Rev
         multiline
         minRows={3}
         size="small"
-        label="Recommendation reason"
+        label="Recommendation Reason"
         {...formik.getFieldProps('reason')}
         disabled={formik.isSubmitting}
         error={Boolean(formik.touched.reason && formik.errors.reason)}
@@ -43,7 +43,7 @@ export function ReviewRecommendationFields({ formik }: { formik: FormikProps<Rev
         multiline
         minRows={2}
         size="small"
-        label="Review notes"
+        label="Review Notes"
         {...formik.getFieldProps('notes')}
         disabled={formik.isSubmitting}
         error={Boolean(formik.touched.notes && formik.errors.notes)}

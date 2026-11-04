@@ -42,11 +42,11 @@ export function WorkflowAssessmentSettings({ formik, available, readOnly }: Prop
     <Stack spacing={2}>
       <FormSectionCard
         icon="mdi:clipboard-text-outline"
-        title="Assessment setup"
+        title="Assessment Setup"
         descriptionTooltip={
           enabled
-            ? `Staff must record an outcome.${policy.schedulingEnabled ? ' Book an exam session first in Assessments.' : ' No exam session or booking is required.'}${policy.attendanceRequired ? ' Record attendance.' : ''}${policy.scoringEnabled ? ' Enter marks unless the applicant is absent.' : ''} Failed, absent and retake outcomes cannot use the usual next step. Staff can arrange an allowed retake or end the journey as Withdrawn. Authorized staff can waive the assessment with a reason.`
-            : 'Staff complete this stage using the existing workflow controls. Choose a result or exam process to use separate assessment records.'
+            ? `Staff Must Record an Outcome.${policy.schedulingEnabled ? ' Book an exam session first in Assessments.' : ' No exam session or booking is required.'}${policy.attendanceRequired ? ' Record attendance.' : ''}${policy.scoringEnabled ? ' Enter marks unless the applicant is absent.' : ''} Failed, Absent and Retake Outcomes Cannot Use the Usual Next Step. Staff Can Arrange an Allowed Retake or End the Journey as Withdrawn. Authorized Staff Can Waive the Assessment with a Reason.`
+            : 'Staff Complete This Stage Using the Existing Workflow Controls. Choose a Result or Exam Process to Use Separate Assessment Records.'
         }
       >
         <Stack spacing={2}>

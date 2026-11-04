@@ -10,7 +10,7 @@ export function WorkflowSettingLabel({ label, help }: { label: string; help: str
         <IconButton
           type="button"
           size="small"
-          aria-label={`${label} information`}
+          aria-label={`${label} Information`}
           onClick={(event) => {
             event.preventDefault();
             event.stopPropagation();

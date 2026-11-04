@@ -40,10 +40,10 @@ function SwitchRow({ label, description, checked, disabled, onChange }: SwitchRo
 export function FormStageBehaviorSettings({ policy, disabled, onChange }: Props) {
   return (
     <Stack spacing={2}>
-      <FormSectionCard title="Advanced submission settings" icon="mdi:tune">
+      <FormSectionCard title="Advanced Submission Settings" icon="mdi:tune">
         <Stack spacing={1.5}>
           <SwitchRow
-            label="Allow corrections"
+            label="Allow Corrections"
             description="Let applicants make corrections after review."
             checked={policy.allowCorrectionRequests}
             disabled={disabled}

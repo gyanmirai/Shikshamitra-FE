@@ -57,15 +57,15 @@ describe('server application number preview', () => {
       .mockResolvedValue({ nextNumber: 'APP-2026-000052', nextSequence: 52 });
     render(<AdmissionNumberingPreview values={values} onPreview={onPreview} />);
     await waitFor(() => expect(shikshaMitraToast.error).toHaveBeenCalled());
-    expect(screen.queryByRole('button', { name: 'Retry preview' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Retry Preview' })).not.toBeInTheDocument();
     const notice = render(
       <div role="alert">{vi.mocked(shikshaMitraToast.error).mock.lastCall![0].message}</div>
     );
     expect(await screen.findByText('Preview temporarily unavailable')).toBeVisible();
-    fireEvent.click(screen.getByRole('button', { name: 'Retry preview' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Retry Preview' }));
     notice.unmount();
     expect(await screen.findByText('APP-2026-000051')).toBeVisible();
-    fireEvent.click(screen.getByRole('button', { name: 'Refresh preview' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh Preview' }));
     expect(await screen.findByText('APP-2026-000052')).toBeVisible();
   });
   it('does not request a number for an invalid draft or a missing required academic year', async () => {

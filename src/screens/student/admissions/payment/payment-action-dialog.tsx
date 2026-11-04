@@ -9,7 +9,7 @@ export type PaymentAction = 'record' | 'waive' | 'verify' | 'reject' | 'reverse'
 export type PaymentActionValue = { amount: number; method: AdmissionPaymentMethod; reference: string; reason: string };
 type Props = { action: PaymentAction; state: AdmissionPaymentStage; busy: boolean; onClose: () => void; onSubmit: (value: PaymentActionValue) => void };
 
-const titles = { record: 'Record payment', waive: 'Waive payment', verify: 'Verify payment', reject: 'Reject payment', reverse: 'Reverse payment' };
+const titles = { record: 'Record Payment', waive: 'Waive Payment', verify: 'Verify Payment', reject: 'Reject Payment', reverse: 'Reverse Payment' };
 export function PaymentActionDialog({ action, state, busy, onClose, onSubmit }: Props) {
   const allowed = STAFF_PAYMENT_METHODS.filter((item) => state.policy?.acceptedMethods.includes(item.value));
   const availableAmount = state.outstandingAmount - state.pendingAmount;
@@ -33,17 +33,17 @@ export function PaymentActionDialog({ action, state, busy, onClose, onSubmit }: 
           <TextField size="small" type="number" label={`Amount (${state.currency}) *`} value={value.amount}
             inputProps={{ min: 0.01, max: availableAmount, step: 0.01 }}
             onChange={(event) => setValue({ ...value, amount: Number(event.target.value) })} />
-          <TextField select size="small" label="Payment method *" value={value.method}
+          <TextField select size="small" label="Payment Method *" value={value.method}
             onChange={(event) => setValue({ ...value, method: event.target.value as AdmissionPaymentMethod })}>
             {allowed.map((item) => <MenuItem key={item.value} value={item.value}>{item.label}</MenuItem>)}
           </TextField>
-          {value.method !== 'cash' && <TextField size="small" label="Transaction reference *" value={value.reference}
+          {value.method !== 'cash' && <TextField size="small" label="Transaction Reference *" value={value.reference}
             onChange={(event) => setValue({ ...value, reference: event.target.value })} />}
           <TextField size="small" multiline minRows={2} label="Notes" value={value.reason}
             onChange={(event) => setValue({ ...value, reason: event.target.value })} />
         </> : <>
-          <DialogContentText>{action === 'verify' ? 'Confirm that the payment evidence matches the school record.' : 'This creates a permanent financial control record.'}</DialogContentText>
-          <TextField size="small" multiline minRows={3} label={reasonRequired ? 'Reason *' : 'Verification note'} value={value.reason}
+          <DialogContentText>{action === 'verify' ? 'Confirm That the Payment Evidence Matches the School Record.' : 'This Creates a Permanent Financial Control Record.'}</DialogContentText>
+          <TextField size="small" multiline minRows={3} label={reasonRequired ? 'Reason *' : 'Verification Note'} value={value.reason}
             inputProps={{ maxLength: 1024 }} onChange={(event) => setValue({ ...value, reason: event.target.value })} />
         </>}
       </DialogContent>

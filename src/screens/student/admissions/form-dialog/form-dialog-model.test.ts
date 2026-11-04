@@ -19,16 +19,18 @@ describe('admission form field codes', () => {
     expect(form.layoutType).toBe(0);
     expect(form.sections).toHaveLength(1);
     expect(form.sections[0].fields.map((field) => field.bindingKey)).toEqual([
-      'Applicant.Name',
+      'Applicant.FirstName',
+      'Applicant.LastName',
       'Guardian.FirstName',
       'Guardian.Mobile',
+      'Guardian.Email',
       'Inquiry.ParentRelationship',
     ]);
-    expect(form.sections[0].fields.every((field) => field.required && !field.readOnly)).toBe(true);
+    expect(form.sections[0].fields.every((field) => field.required === (field.bindingKey !== 'Applicant.LastName') && !field.readOnly)).toBe(true);
   });
 
-  it('keeps a blank Registration empty', () => {
-    expect(getBlankAdmissionFormInitialValues(1).sections[0].fields).toEqual([]);
+  it('starts Registration with required identity/contact fields and DOB/gender', () => {
+    expect(getBlankAdmissionFormInitialValues(1).sections[0].fields).toHaveLength(7);
   });
 
   it('generates a unique field sequence across every step', () => {

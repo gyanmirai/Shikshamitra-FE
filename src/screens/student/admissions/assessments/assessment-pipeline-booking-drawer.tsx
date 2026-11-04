@@ -231,7 +231,7 @@ export function AssessmentPipelineBookingDrawer({
               <IconButton
                 size="small"
                 disabled={locked}
-                aria-label="Back to booking"
+                aria-label="Back to Booking"
                 onClick={() => requestNavigation('book')}
               >
                 <Iconify icon="mdi:arrow-left" />
@@ -240,13 +240,13 @@ export function AssessmentPipelineBookingDrawer({
             <Typography id={titleId} variant="h6" sx={{ flex: 1 }}>
               <AdmissionDialogTitle
                 title={title}
-                helpText="Book an available session or create a slot for this student. Room availability and assessment eligibility are checked before booking."
+                helpText="Book an Available Session or Create a Slot for This Student. Room Availability and Assessment Eligibility Are Checked Before Booking."
               />
             </Typography>
             <IconButton
               size="small"
               disabled={locked}
-              aria-label="Close assessment booking"
+              aria-label="Close Assessment Booking"
               onClick={() => requestNavigation('close')}
             >
               <Iconify icon="mdi:close" />
@@ -258,8 +258,8 @@ export function AssessmentPipelineBookingDrawer({
               busy={busy}
               label={
                 mode === 'book'
-                  ? 'Booking assessment slot…'
-                  : 'Creating and booking assessment slot…'
+                  ? 'Booking Assessment Slot…'
+                  : 'Creating and Booking Assessment Slot…'
               }
             >
               <Stack spacing={2} sx={{ p: 2 }}>

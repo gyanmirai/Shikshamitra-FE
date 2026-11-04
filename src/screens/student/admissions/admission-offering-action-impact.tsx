@@ -12,7 +12,7 @@ export function AdmissionOfferingActionImpact({ action, offering }: Props) {
   if (action === 'delete') {
     return (
       <Typography variant="body2">
-        This will permanently delete “{offering.name || offering.code}”. This action cannot be
+        This Will Permanently Delete “{offering.name || offering.code}”. This action cannot be
         undone.
       </Typography>
     );
@@ -21,7 +21,7 @@ export function AdmissionOfferingActionImpact({ action, offering }: Props) {
   if (action === 'activate') {
     return (
       <Typography variant="body2">
-        Are you sure you want to activate “<strong>{offering.name || offering.code}</strong>”? This
+        Are You Sure You Want to Activate “<strong>{offering.name || offering.code}</strong>”? This
         offering will become active for student applications.
       </Typography>
     );
@@ -34,7 +34,7 @@ export function AdmissionOfferingActionImpact({ action, offering }: Props) {
   const impact = {
     deactivate: {
       severity: 'warning' as const,
-      title: 'New inquiries and applications will stop immediately',
+      title: 'New Inquiries and Applications Will Stop Immediately',
       message: `${applications} already linked to this offering will remain available for processing.`,
     },
   }[action];
@@ -46,11 +46,11 @@ export function AdmissionOfferingActionImpact({ action, offering }: Props) {
           {offering.name || offering.code} · {offering.standardName}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          {offering.campusName || 'All campuses'} · {offering.boardName} · {offering.mediumName} ·{' '}
+          {offering.campusName || 'All Campuses'} · {offering.boardName} · {offering.mediumName} ·{' '}
           {offering.stageName}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Current usage: {applications}
+          Current Usage: {applications}
         </Typography>
       </Stack>
       <StudentFeedback

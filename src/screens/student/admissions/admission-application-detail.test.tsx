@@ -275,14 +275,14 @@ describe('approval finalization handoff', () => {
     detailState.canEndJourney = false;
     detailState.workflowQuery.data.status = 2;
     const view = render(<AdmissionApplicationDetailScreen />);
-    expect(screen.getByRole('button', { name: 'Resume admission' })).toBeEnabled();
-    expect(screen.queryByRole('button', { name: 'Continue admission' })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Resume admission' }));
+    expect(screen.getByRole('button', { name: 'Resume Admission' })).toBeEnabled();
+    expect(screen.queryByRole('button', { name: 'Continue Admission' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Resume Admission' }));
     expect(screen.getByRole('dialog', { name: 'Resume Admission' })).toBeVisible();
     view.unmount();
     detailState.canEdit = false;
     render(<AdmissionApplicationDetailScreen />);
-    expect(screen.queryByRole('button', { name: 'Resume admission' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Resume Admission' })).not.toBeInTheDocument();
   });
   beforeEach(() => {
     push.mockReset();
@@ -400,6 +400,66 @@ const loadPaymentDetail = () => {
 };
 
 describe('AdmissionApplicationDetailScreen', () => {
+  it.each([1, 4, 6])(
+    'opens corrections from a completed registration stage without reopening status %s',
+    (status) => {
+      loadPaymentDetail();
+      detailState.applicationQuery.data.status = status;
+      detailState.formQuery.data.canCorrectForm = true;
+      detailState.workflowQuery.data.stages.unshift({
+        id: 'form',
+        name: 'Registration Form',
+        stageType: 1,
+        displayOrder: 0,
+        status: 2,
+      });
+      render(<AdmissionApplicationDetailScreen />);
+      fireEvent.click(screen.getByRole('button', { name: 'Admission Journey' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Registration Form' }));
+      expect(screen.getByTestId('runtime-form')).toHaveAttribute('data-read-only', 'true');
+      fireEvent.click(screen.getByRole('button', { name: 'Edit Application Form' }));
+      expect(screen.getByRole('dialog', { name: 'Edit Application Form' })).toHaveAttribute(
+        'data-application-id',
+        'application-1'
+      );
+      expect(screen.getByRole('button', { name: 'Admission Journey' })).toBeDisabled();
+      fireEvent.click(screen.getByRole('button', { name: 'Save correction' }));
+      expect(detailState.applicationQuery.refetch).toHaveBeenCalled();
+      expect(detailState.formQuery.refetch).toHaveBeenCalled();
+      expect(detailState.workflowQuery.refetch).toHaveBeenCalled();
+      expect(detailState.applicationQuery.data.status).toBe(status);
+      expect(detailState.applicationQuery.data.applicationNumber).toBe('APP/2026/001');
+      expect(detailState.workflowQuery.data.currentStageInstanceId).toBe('payment');
+      expect(detailState.reopenApplication).not.toHaveBeenCalled();
+      expect(detailState.submitApplication).not.toHaveBeenCalled();
+      expect(detailState.advance).not.toHaveBeenCalled();
+    }
+  );
+
+  it.each([
+    { status: 6, canEdit: false, capability: true },
+    { status: 6, canEdit: true, capability: false },
+    { status: 11, canEdit: true, capability: true },
+    { status: 2, canEdit: true, capability: true },
+  ])('keeps stage corrections unavailable when blocked: %s', ({ status, canEdit, capability }) => {
+    loadPaymentDetail();
+    detailState.applicationQuery.data.status = status;
+    detailState.canEdit = canEdit;
+    detailState.formQuery.data.canCorrectForm = capability;
+    detailState.workflowQuery.data.stages.unshift({
+      id: 'form',
+      name: 'Registration Form',
+      stageType: 1,
+      displayOrder: 0,
+      status: 2,
+    });
+    render(<AdmissionApplicationDetailScreen />);
+    fireEvent.click(screen.getByRole('button', { name: 'Admission Journey' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Registration Form' }));
+    expect(screen.queryByRole('button', { name: 'Edit Application Form' })).not.toBeInTheDocument();
+    expect(screen.getByTestId('runtime-form')).toHaveAttribute('data-read-only', 'true');
+  });
+
   it('opens an approved record correction, locks parent navigation and refreshes the same application after saving', () => {
     loadPaymentDetail();
     detailState.applicationQuery.data.status = 6;
@@ -408,18 +468,18 @@ describe('AdmissionApplicationDetailScreen', () => {
     detailState.formQuery.refetch = formRefetch;
     detailState.workflowQuery.refetch = workflowRefetch;
     render(<AdmissionApplicationDetailScreen />);
-    fireEvent.click(screen.getByRole('button', { name: 'Admission journey' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Admission Journey' }));
     fireEvent.click(screen.getByRole('menuitem', { name: 'Review Application Form' }));
     expect(screen.getByTestId('runtime-form')).toHaveAttribute('data-read-only', 'true');
-    fireEvent.click(screen.getByRole('button', { name: 'Edit application form' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Application Form' }));
     expect(screen.getByRole('dialog', { name: 'Edit Application Form' })).toHaveAttribute(
       'data-application-id',
       'application-1'
     );
     expect(screen.getByRole('button', { name: 'Back' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Admission journey' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Admission Journey' })).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: 'Current Step' }));
-    expect(screen.getByText('Application record')).toBeInTheDocument();
+    expect(screen.getByText('Application Record')).toBeInTheDocument();
     expect(detailState.discardUnsavedAnswers).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Save correction' }));
     expect(applicationRefetch).toHaveBeenCalledOnce();
@@ -446,10 +506,10 @@ describe('AdmissionApplicationDetailScreen', () => {
       detailState.canEdit = canEdit;
       detailState.formQuery.data.canCorrectForm = capability;
       render(<AdmissionApplicationDetailScreen />);
-      fireEvent.click(screen.getByRole('button', { name: 'Admission journey' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Admission Journey' }));
       fireEvent.click(screen.getByRole('menuitem', { name: 'Review Application Form' }));
       expect(
-        screen.queryByRole('button', { name: 'Edit application form' })
+        screen.queryByRole('button', { name: 'Edit Application Form' })
       ).not.toBeInTheDocument();
       expect(screen.getByTestId('runtime-form')).toHaveAttribute('data-read-only', 'true');
     }
@@ -482,7 +542,7 @@ describe('AdmissionApplicationDetailScreen', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Change fee selection' }));
       detailState[queryName].isFetching = true;
       rerender(<AdmissionApplicationDetailScreen />);
-      expect(screen.getByRole('status', { name: 'Refreshing application status' })).toBeVisible();
+      expect(screen.getByRole('status', { name: 'Refreshing Application Status' })).toBeVisible();
       expect(screen.getByText('Test applicant')).toBeVisible();
       expect(screen.getByText('Fee selection editor')).toBe(editor);
       expect(
@@ -492,7 +552,7 @@ describe('AdmissionApplicationDetailScreen', () => {
       detailState[queryName].isFetching = false;
       rerender(<AdmissionApplicationDetailScreen />);
       expect(
-        screen.queryByRole('status', { name: 'Refreshing application status' })
+        screen.queryByRole('status', { name: 'Refreshing Application Status' })
       ).not.toBeInTheDocument();
       expect(screen.getByText('Fee selection editor')).toBe(editor);
     }
@@ -512,13 +572,13 @@ describe('AdmissionApplicationDetailScreen', () => {
     expect(screen.queryByRole('button', { name: 'Back' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'More' })).not.toBeInTheDocument();
     expect(screen.queryByTestId('counsellor-control')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Focus mode' }));
-    expect(screen.getByRole('button', { name: 'Exit focus mode' })).toHaveAttribute(
+    fireEvent.click(screen.getByRole('button', { name: 'Focus Mode' }));
+    expect(screen.getByRole('button', { name: 'Exit Focus Mode' })).toHaveAttribute(
       'aria-pressed',
       'true'
     );
     expect(screen.getByTestId('admission-application-workspace')).toBe(workspace);
-    fireEvent.click(screen.getByRole('button', { name: 'Exit focus mode' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Exit Focus Mode' }));
     expect(screen.getByTestId('admission-application-workspace')).toBe(workspace);
     expect(detailState.discardUnsavedAnswers).not.toHaveBeenCalled();
     expect(detailState.save).not.toHaveBeenCalled();
@@ -541,7 +601,7 @@ describe('AdmissionApplicationDetailScreen', () => {
     ).toBeInTheDocument();
     expect(onClose).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
-    expect(screen.getByRole('button', { name: 'Focus mode' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Focus Mode' })).toBeInTheDocument();
     expect(detailState.discardUnsavedAnswers).not.toHaveBeenCalled();
   });
   it('hands a decision-phase case back to Applications instead of keeping it in the Pipeline drawer', () => {
@@ -574,8 +634,8 @@ describe('AdmissionApplicationDetailScreen', () => {
     loadPaymentDetail();
     detailState.formQuery = query({ isLoading: true });
     render(<AdmissionApplicationDetailScreen />);
-    expect(screen.getByRole('button', { name: 'Admission journey' })).toBeEnabled();
-    fireEvent.click(screen.getByRole('button', { name: 'Admission journey' }));
+    expect(screen.getByRole('button', { name: 'Admission Journey' })).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Admission Journey' }));
     expect(screen.getByRole('button', { name: 'Fee structure confirmation' })).toBeEnabled();
   });
 
@@ -584,9 +644,9 @@ describe('AdmissionApplicationDetailScreen', () => {
     detailState.workflowQuery.data.stages[0].stageType = 1;
     detailState.formQuery = query({ isLoading: true });
     render(<AdmissionApplicationDetailScreen />);
-    expect(screen.getByRole('status', { name: 'Loading admission form' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Admission journey' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Admission journey' })).toBeEnabled();
+    expect(screen.getByRole('status', { name: 'Loading Admission Form' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Admission Journey' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Admission Journey' })).toBeEnabled();
   });
 
   it('keeps stage content accessible during a write instead of covering action feedback with a workspace overlay', () => {
@@ -596,7 +656,7 @@ describe('AdmissionApplicationDetailScreen', () => {
     expect(screen.getByText('Fee selection editor')).toBeVisible();
     expect(screen.queryByRole('status', { name: 'Updating application…' })).not.toBeInTheDocument();
     expect(screen.getByText('Fee selection editor').closest('fieldset')).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Admission journey' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Admission Journey' })).toBeDisabled();
   });
 
   it('shows loading instead of empty history while the on-demand history request is pending', () => {
@@ -605,9 +665,9 @@ describe('AdmissionApplicationDetailScreen', () => {
     detailState.formHistoryQuery = query({ isLoading: true });
     render(<AdmissionApplicationDetailScreen />);
     fireEvent.click(screen.getByRole('button', { name: 'Application History' }));
-    expect(screen.getByLabelText('Loading application history')).toBeInTheDocument();
+    expect(screen.getByLabelText('Loading Application History')).toBeInTheDocument();
     expect(
-      screen.queryByText('No application history has been recorded yet.')
+      screen.queryByText('No Application History has been recorded yet.')
     ).not.toBeInTheDocument();
   });
 
@@ -633,9 +693,9 @@ describe('AdmissionApplicationDetailScreen', () => {
     });
     render(<AdmissionApplicationDetailScreen />);
     expect(offeringContext).toHaveBeenCalledWith('actual-offering', { skip: false });
-    expect(screen.getByLabelText('Application academic context')).toHaveTextContent('Class 1');
-    expect(screen.getByLabelText('Application academic context')).toHaveTextContent('CBSE');
-    expect(screen.getByLabelText('Application academic context')).toHaveTextContent('English');
+    expect(screen.getByLabelText('Application Academic Context')).toHaveTextContent('Class 1');
+    expect(screen.getByLabelText('Application Academic Context')).toHaveTextContent('CBSE');
+    expect(screen.getByLabelText('Application Academic Context')).toHaveTextContent('English');
   });
 
   it('keeps application access without issuing an unauthorized Offering context read', () => {
@@ -647,8 +707,8 @@ describe('AdmissionApplicationDetailScreen', () => {
     });
     render(<AdmissionApplicationDetailScreen />);
     expect(offeringContext).toHaveBeenCalledWith('actual-offering', { skip: true });
-    expect(screen.getByLabelText('Application academic context')).toHaveTextContent('Class 1');
-    expect(screen.getByRole('button', { name: 'Admission journey' })).toBeEnabled();
+    expect(screen.getByLabelText('Application Academic Context')).toHaveTextContent('Class 1');
+    expect(screen.getByRole('button', { name: 'Admission Journey' })).toBeEnabled();
     expect(screen.queryByText('Cached board')).not.toBeInTheDocument();
     expect(screen.queryByText('Cached medium')).not.toBeInTheDocument();
   });
@@ -658,12 +718,12 @@ describe('AdmissionApplicationDetailScreen', () => {
     detailState.applicationQuery.data.applicantId = 'applicant-1';
     detailState.hasUnsavedAnswers = true;
     render(<AdmissionApplicationDetailScreen />);
-    fireEvent.click(screen.getByRole('button', { name: 'Notes & Follow-ups' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Notes & Follow-Ups' }));
     expect(screen.getByRole('dialog', { name: 'Notes & Follow-ups' })).toBeInTheDocument();
     expect(detailState.discardUnsavedAnswers).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Start saving note' }));
     expect(screen.getByRole('button', { name: 'Back' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Admission journey' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Admission Journey' })).toBeDisabled();
   });
 
   it('does not expose applicant notes without canonical applicant view access', () => {
@@ -671,7 +731,7 @@ describe('AdmissionApplicationDetailScreen', () => {
     loadPaymentDetail();
     detailState.applicationQuery.data.applicantId = 'applicant-1';
     render(<AdmissionApplicationDetailScreen />);
-    expect(screen.queryByRole('button', { name: 'Notes & Follow-ups' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Notes & Follow-Ups' })).not.toBeInTheDocument();
   });
 
   it('keeps the current draft form read-only without application management access', () => {
@@ -708,7 +768,7 @@ describe('AdmissionApplicationDetailScreen', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Start saving fee selection' }));
     expect(screen.getByRole('button', { name: 'Back' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Back' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Admission journey' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Admission Journey' })).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: 'Back' }));
     expect(onClose).not.toHaveBeenCalled();
   });
@@ -721,7 +781,7 @@ describe('AdmissionApplicationDetailScreen', () => {
 
     render(<AdmissionApplicationDetailScreen />);
 
-    expect(screen.getByRole('status', { name: 'Loading application details' })).toBeInTheDocument();
+    expect(screen.getByRole('status', { name: 'Loading Application Details' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Back' })).toBeDisabled();
   });
 
@@ -787,11 +847,11 @@ describe('AdmissionApplicationDetailScreen', () => {
     };
 
     render(<AdmissionApplicationDetailScreen />);
-    fireEvent.click(screen.getByRole('button', { name: 'Admission journey' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Admission Journey' }));
     fireEvent.click(screen.getByRole('menuitem', { name: 'Review Application Form' }));
 
     expect(screen.getByText('Runtime application form')).toBeInTheDocument();
-    expect(screen.getByText('Application record')).toBeInTheDocument();
+    expect(screen.getByText('Application Record')).toBeInTheDocument();
   });
   it('keeps unsaved fee selection mounted when a local section change is cancelled, then permits explicit discard', async () => {
     loadPaymentDetail();
@@ -806,21 +866,21 @@ describe('AdmissionApplicationDetailScreen', () => {
     expect(
       await screen.findByRole('region', { name: 'Fee structure confirmation' })
     ).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Admission journey' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Admission Journey' }));
     fireEvent.click(screen.getByRole('menuitem', { name: 'Review Application Form' }));
     expect(
       screen.getByRole('dialog', { name: 'Discard Unsaved Fee Selection?' })
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
-    expect(await screen.findByText('Application record')).toBeInTheDocument();
+    expect(await screen.findByText('Application Record')).toBeInTheDocument();
     expect(screen.queryByText('Fee selection editor')).not.toBeInTheDocument();
   });
   it('blocks local section changes and review shortcuts while the fee selection is saving', () => {
     loadPaymentDetail();
     render(<AdmissionApplicationDetailScreen />);
     fireEvent.click(screen.getByRole('button', { name: 'Start saving fee selection' }));
-    expect(screen.getByRole('button', { name: 'Admission journey' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Admission journey' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Admission Journey' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Admission Journey' })).toBeDisabled();
     expect(screen.getByRole('region', { name: 'Fee structure confirmation' })).toBeInTheDocument();
     expect(
       screen.queryByRole('dialog', { name: 'Discard Unsaved Fee Selection?' })
@@ -830,7 +890,7 @@ describe('AdmissionApplicationDetailScreen', () => {
     loadPaymentDetail();
     render(<AdmissionApplicationDetailScreen />);
     fireEvent.click(screen.getByRole('button', { name: 'Enter inline result' }));
-    expect(screen.getByRole('button', { name: 'Continue admission' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Continue Admission' })).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: 'Back' }));
     expect(
       screen.getByRole('dialog', { name: 'Discard Unsaved Application Changes?' })
@@ -848,12 +908,12 @@ describe('Application save navigation locks', () => {
       loadPaymentDetail();
       detailState[state].isLoading = true;
       const { rerender } = render(<AdmissionApplicationDetailScreen />);
-      expect(screen.getByRole('button', { name: 'Admission journey' })).toBeDisabled();
-      fireEvent.click(screen.getByRole('button', { name: 'Admission journey' }));
+      expect(screen.getByRole('button', { name: 'Admission Journey' })).toBeDisabled();
+      fireEvent.click(screen.getByRole('button', { name: 'Admission Journey' }));
       expect(detailState.advance).not.toHaveBeenCalled();
       detailState[state].isLoading = false;
       rerender(<AdmissionApplicationDetailScreen />);
-      expect(screen.getByRole('button', { name: 'Admission journey' })).toBeEnabled();
+      expect(screen.getByRole('button', { name: 'Admission Journey' })).toBeEnabled();
     }
   );
 });
@@ -874,14 +934,14 @@ describe('Applicant 360 full-page workspace', () => {
     render(<AdmissionApplicationDetailScreen />);
     expect(screen.getByTestId('runtime-form')).toHaveAttribute('data-read-only', 'true');
     fireEvent.click(screen.getByRole('button', { name: 'Application History' }));
-    expect(screen.getByText('Admission journey ended')).toBeInTheDocument();
+    expect(screen.getByText('Admission Journey Ended')).toBeInTheDocument();
     expect(screen.getByText('Parent selected another school')).toBeInTheDocument();
     expect(screen.getByText(/10 Oct 2026/)).toBeInTheDocument();
     expect(
-      screen.queryByText('No application history has been recorded yet.')
+      screen.queryByText('No Application History has been recorded yet.')
     ).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Continue admission' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Resume admission' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Continue Admission' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Resume Admission' })).not.toBeInTheDocument();
   });
 
   it('permits editing a future draft form without submitting it or advancing the real current stage', () => {
@@ -895,11 +955,11 @@ describe('Applicant 360 full-page workspace', () => {
       status: 0,
     });
     render(<AdmissionApplicationDetailScreen />);
-    fireEvent.click(screen.getByRole('button', { name: 'Admission journey' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Admission Journey' }));
     fireEvent.click(screen.getByRole('button', { name: 'Registration form' }));
     expect(screen.getByTestId('runtime-form')).toHaveAttribute('data-read-only', 'false');
     expect(screen.getByTestId('runtime-form')).toHaveAttribute('data-can-submit', 'false');
-    expect(screen.getByRole('button', { name: 'Continue admission' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Continue Admission' })).toBeDisabled();
     expect(detailState.workflowQuery.data.currentStageInstanceId).toBe('payment');
     expect(detailState.advance).not.toHaveBeenCalled();
   });
@@ -908,11 +968,11 @@ describe('Applicant 360 full-page workspace', () => {
     loadPaymentDetail();
     render(<AdmissionApplicationDetailScreen />);
     const end = screen.getByRole('button', { name: 'End Journey' });
-    const next = screen.getByRole('button', { name: 'Continue admission' });
+    const next = screen.getByRole('button', { name: 'Continue Admission' });
     expect(end.parentElement).toBe(next.parentElement);
     expect(end).toHaveClass('MuiButton-sizeSmall');
     expect(next).toHaveClass('MuiButton-sizeSmall');
-    expect(screen.queryByText('Next action')).not.toBeInTheDocument();
+    expect(screen.queryByText('Next Action')).not.toBeInTheDocument();
     fireEvent.click(end);
     expect(screen.getByRole('dialog', { name: 'End Admission Journey' })).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: /Reason/ })).toBeRequired();
@@ -930,8 +990,8 @@ describe('Applicant 360 full-page workspace', () => {
     detailState.workflowQuery.data.stages[0].stageType = 11;
     detailState.hasUnsavedAnswers = true;
     render(<AdmissionApplicationDetailScreen />);
-    fireEvent.click(screen.getByRole('button', { name: 'Continue admission' }));
-    expect(screen.getByRole('button', { name: 'Continue admission' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Continue Admission' }));
+    expect(screen.getByRole('button', { name: 'Continue Admission' })).toBeDisabled();
     expect(detailState.advance).not.toHaveBeenCalled();
   });
   it('replaces counsellor and More with named icon actions and keeps history available', () => {
@@ -939,7 +999,7 @@ describe('Applicant 360 full-page workspace', () => {
     render(<AdmissionApplicationDetailScreen />);
     expect(screen.queryByTestId('counsellor-control')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'More' })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Admission journey' })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: 'Admission Journey' })).toHaveAttribute(
       'aria-expanded',
       'false'
     );
@@ -986,16 +1046,16 @@ describe('Applicant 360 full-page workspace', () => {
       status: 0,
     });
     render(<AdmissionApplicationDetailScreen />);
-    fireEvent.click(screen.getByRole('button', { name: 'Admission journey' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Admission Journey' }));
     expect(screen.getByRole('button', { name: 'Document verification' })).toBeEnabled();
     fireEvent.click(screen.getByRole('button', { name: 'Application form' }));
     expect(screen.getByTestId('runtime-form')).toHaveAttribute('data-read-only', 'true');
     expect(detailState.workflowQuery.data.currentStageInstanceId).toBe('payment');
     expect(detailState.advance).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole('button', { name: 'Admission journey' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Admission Journey' }));
     fireEvent.click(screen.getByRole('button', { name: 'Document verification' }));
     expect(screen.getByRole('region', { name: 'Document verification' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Continue admission' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Continue Admission' })).toBeDisabled();
   });
 });
 

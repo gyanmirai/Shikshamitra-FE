@@ -51,7 +51,7 @@ describe('WorkflowRuntimeAnalytics', () => {
 
     expect(screen.getByText('Application review')).toBeInTheDocument();
     expect(screen.getAllByText('60%')).toHaveLength(2);
-    expect(screen.getByText('Average journey time: Not available yet')).toBeInTheDocument();
-    expect(screen.getByText('Average stage time: 2.0 days')).toBeInTheDocument();
+    expect(screen.getByText('Average Journey Time: Not available yet')).toBeInTheDocument();
+    expect(screen.getByText('Average Stage Time: 2.0 days')).toBeInTheDocument();
   });
 });

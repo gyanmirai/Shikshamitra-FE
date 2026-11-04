@@ -41,7 +41,7 @@ export function WorkflowTransitionList({
       <Stack direction="row" alignItems="center" justifyContent="space-between">
         <Box>
           <Typography id="workflow-transitions-heading" variant="subtitle1" fontWeight={700}>
-            Next steps
+            Next Steps
           </Typography>
           <Typography variant="caption" color="text.secondary">
             Choose the usual next step and any special outcomes for each stage.
@@ -54,14 +54,14 @@ export function WorkflowTransitionList({
             onClick={onAdd}
             disabled={stages.length < 2}
           >
-            Add next step
+            Add Next Step
           </Button>
         )}
       </Stack>
       {transitions.length === 0 && (
         <EmptyContent
           filled
-          title={stages.length < 2 ? 'Add stages before routes' : 'Connect the journey'}
+          title={stages.length < 2 ? 'Add Stages Before Routes' : 'Connect the Journey'}
           description={
             stages.length < 2
               ? 'Create at least two stages. You can then define how an applicant moves from one stage to the next.'
@@ -76,7 +76,7 @@ export function WorkflowTransitionList({
                 onClick={onAdd}
                 sx={{ mt: 2, minHeight: 44 }}
               >
-                Choose first next step
+                Choose First Next Step
               </Button>
             ) : undefined
           }
@@ -106,10 +106,10 @@ export function WorkflowTransitionList({
                 </Stack>
                 <Typography variant="caption" color="text.secondary">
                   {transition.isDefault
-                    ? 'Default route'
+                    ? 'Default Route'
                     : transition.conditionRuleJson
-                      ? 'Conditional route'
-                      : 'Unconditional route'}{' '}
+                      ? 'Conditional Route'
+                      : 'Unconditional Route'}{' '}
                   · Priority {transition.priority}
                 </Typography>
               </Box>

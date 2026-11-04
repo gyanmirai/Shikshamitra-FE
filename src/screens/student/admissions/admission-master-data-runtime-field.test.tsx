@@ -55,6 +55,28 @@ const props = () => ({
 });
 
 describe('Institute Setup runtime choices', () => {
+  it('keeps legacy Medium outside menus, clears its class on medium change and restores the saved hierarchy', () => {
+    mocks.result = { currentData: [
+      { value: 'english-1', label: 'Class 1', isActive: true, boardId: 'cbse', boardLabel: 'CBSE', mediumId: 'english', mediumLabel: 'English' },
+      { value: 'hindi-1', label: 'Class 1', isActive: true, boardId: 'cbse', boardLabel: 'CBSE', mediumId: 'hindi', mediumLabel: 'Hindi' },
+    ], isFetching: false, isError: false };
+    const input = { ...props(), value: 'english-1', field: {...props().field, code: 'CLASS_INTERESTED', label: 'Class interested in', optionsJson: '{"source":"Standards"}'} };
+    const view = render(<AdmissionMasterDataRuntimeField {...input} formValues={{}} />);
+    expect(screen.getByRole('combobox', {name: 'Medium'})).toHaveValue('english');
+    fireEvent.change(screen.getByRole('combobox', {name: 'Medium'}), {target: {value: 'hindi'}});
+    expect(input.onChange).toHaveBeenLastCalledWith('');
+    view.rerender(<AdmissionMasterDataRuntimeField {...input} value="" formValues={{}} />);
+    expect(screen.getByRole('combobox', {name: 'Medium'})).toHaveValue('hindi');
+    expect(screen.getAllByRole('option', {name: 'Class 1'})).toHaveLength(1);
+  });
+  it('loads scoped education boards without requiring a parent and renders only its own question', () => {
+    mocks.result = { currentData: [{value: 'board', label: 'CBSE', isActive: true}], isFetching: false, isError: false };
+    const input = props();
+    render(<AdmissionMasterDataRuntimeField {...input} formValues={{}} field={{...input.field, code: 'BOARD', label: 'Board', optionsJson: '{"source":"EducationBoards"}'}} />);
+    expect(mocks.query).toHaveBeenLastCalledWith(expect.objectContaining({sourceKey: 'EducationBoards', academicYearId: 'year-1'}), expect.objectContaining({skip: false}));
+    expect(screen.getByRole('combobox', {name: 'Board'})).not.toBeDisabled();
+    expect(screen.getAllByRole('combobox')).toHaveLength(1);
+  });
   it('loads current configured classes for a class-interest question and saves the selected record ID', () => {
     mocks.result = {
       currentData: [

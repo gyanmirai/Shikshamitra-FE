@@ -150,8 +150,8 @@ export function ApplicationCounsellorCard({
               size="small"
               label={
                 application.assignedCounsellorId
-                  ? 'Change journey counsellor'
-                  : 'Assign journey counsellor'
+                  ? 'Change Journey Counsellor'
+                  : 'Assign Journey Counsellor'
               }
               name="counsellorId"
               value={formik.values.counsellorId}
@@ -165,13 +165,13 @@ export function ApplicationCounsellorCard({
               }
             >
               <MenuItem value="" disabled>
-                Select journey counsellor
+                Select Journey Counsellor
               </MenuItem>
               {application.assignedCounsellorId &&
                 !isEligibleCounsellor(application.assignedCounsellorId) && (
                   <MenuItem value={application.assignedCounsellorId} disabled>
-                    {application.assignedCounsellorName || 'Current counsellor'} (no longer
-                    eligible)
+                    {application.assignedCounsellorName || 'Current Counsellor'} (No Longer
+                    Eligible)
                   </MenuItem>
                 )}
               {(eligibleCounsellors ?? []).map((item) => (
@@ -187,7 +187,7 @@ export function ApplicationCounsellorCard({
             <TextField
               fullWidth
               size="small"
-              label="Reason for change (optional)"
+              label="Reason for Change (Optional)"
               disabled={disabled || assignment.isLoading}
               name="reason"
               value={formik.values.reason}
@@ -218,7 +218,7 @@ export function ApplicationCounsellorCard({
         formik.values.counsellorId === application.assignedCounsellorId
       }
     >
-      {application.assignedCounsellorId ? 'Change owner' : 'Assign owner'}
+      {application.assignedCounsellorId ? 'Change Owner' : 'Assign Owner'}
     </LoadingButton>
   );
   const closeHeaderEditor = () => {
@@ -242,7 +242,7 @@ export function ApplicationCounsellorCard({
             </Typography>
             <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
               {application.assignedCounsellorName ||
-                (application.assignedCounsellorId ? 'Assigned counsellor' : 'Not assigned')}
+                (application.assignedCounsellorId ? 'Assigned Counsellor' : 'Not Assigned')}
             </Typography>
           </Box>
           {renderHeaderAction
@@ -257,8 +257,8 @@ export function ApplicationCounsellorCard({
                   variant="outlined"
                   aria-label={
                     application.assignedCounsellorId
-                      ? 'Change journey counsellor'
-                      : 'Assign journey counsellor'
+                      ? 'Change Journey Counsellor'
+                      : 'Assign Journey Counsellor'
                   }
                   disabled={disabled || assignment.isLoading}
                   onClick={() => setEditing(true)}
@@ -277,7 +277,7 @@ export function ApplicationCounsellorCard({
                 ? 'Change Journey Counsellor'
                 : 'Assign Journey Counsellor'
             }
-            titleInfo="The journey counsellor follows this application through onboarding."
+            titleInfo="The Journey Counsellor Follows This Application Through Onboarding."
             maxWidth="sm"
             hasUnsavedChanges={formik.dirty}
             disableClose={disabled || assignment.isLoading}
@@ -285,7 +285,7 @@ export function ApplicationCounsellorCard({
           >
             <Stack component="form" onSubmit={formik.handleSubmit}>
               <DialogScrollContent>
-                <FormBusyRegion busy={assignment.isLoading} label="Assigning journey counsellor...">
+                <FormBusyRegion busy={assignment.isLoading} label="Assigning Journey Counsellor...">
                   {assignmentFields}
                 </FormBusyRegion>
               </DialogScrollContent>
@@ -333,11 +333,11 @@ export function ApplicationCounsellorCard({
               )}
               <Box sx={{ minWidth: 0 }}>
                 <Typography variant="subtitle2" color="text.secondary">
-                  {compact ? 'Counsellor' : 'Journey counsellor'}
+                  {compact ? 'Counsellor' : 'Journey Counsellor'}
                 </Typography>
                 <Typography variant={compact ? 'body2' : 'h6'} sx={{ overflowWrap: 'anywhere' }}>
                   {application.assignedCounsellorName ||
-                    (application.assignedCounsellorId ? 'Assigned counsellor' : 'Not assigned')}
+                    (application.assignedCounsellorId ? 'Assigned Counsellor' : 'Not Assigned')}
                 </Typography>
                 {!compact && (
                   <Typography variant="body2" color="text.secondary">
@@ -360,8 +360,8 @@ export function ApplicationCounsellorCard({
                     ? 'Cancel'
                     : 'Change'
                   : editing
-                    ? 'Cancel change'
-                    : 'Change counsellor'}
+                    ? 'Cancel Change'
+                    : 'Change Counsellor'}
               </Button>
             )}
           </Stack>

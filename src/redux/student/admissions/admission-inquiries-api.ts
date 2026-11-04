@@ -55,6 +55,7 @@ export type AdmissionInquiryStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 export type AdmissionInquirySource = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
 export type AdmissionInquiryWorkQueue = 1 | 2 | 3 | 4;
 export type AdmissionInquiry = {
+  siblingFamilyConfirmed?: boolean;
   parentRelationship?: AdmissionParentRelationship | null;
   primaryContactRelationship?: 'father' | 'mother' | 'guardian' | null;
   guardianResponsibilityConfirmed?: boolean;
@@ -240,6 +241,20 @@ export type UpdateAdmissionInquiry = {
   status?: 0 | 2 | 6;
   statusReason?: string;
 };
+export type ConfirmAdmissionInquiryFamily = {
+  existingFamilyId: string;
+  existingParentApplicantId: string;
+  parentRelationship: AdmissionParentRelationship;
+  concurrencyStamp: string;
+};
+export type AdmissionInquiryDuplicateInput = {
+  admissionCycleId: string;
+  guardianPhone: string;
+  guardianEmail?: string;
+  parentContacts?: AdmissionParentContact[];
+  applicantName: string;
+  applicantDateOfBirth?: string;
+};
 export type AdmissionInquiryTimelineItem = {
   id: string;
   activityType: string;
@@ -300,7 +315,9 @@ export const admissionInquiriesApi = api.injectEndpoints({
       query: (id) => `/student/enrollment/admissions/inquiries/${id}`,
       transformResponse: (response: Result<AdmissionInquiry> | AdmissionInquiry) =>
         unwrap(response),
-      providesTags: [studentAdmissionsCrmType.admissionInquiry],
+      providesTags: (_result, _error, id) => [
+        { type: studentAdmissionsCrmType.admissionInquiry, id },
+      ],
     }),
     getAdmissionInquiries: builder.query<
       { totalCount: number; items: AdmissionInquiry[] },
@@ -315,7 +332,7 @@ export const admissionInquiriesApi = api.injectEndpoints({
           | Result<{ totalCount: number; items: AdmissionInquiry[] }>
           | { totalCount: number; items: AdmissionInquiry[] }
       ) => unwrap(response),
-      providesTags: [studentAdmissionsCrmType.admissionInquiry],
+      providesTags: [{ type: studentAdmissionsCrmType.admissionInquiry, id: 'LIST' }],
     }),
     markAdmissionInquiryContacted: builder.mutation<AdmissionInquiry, string>({
       query: (id) => ({
@@ -365,12 +382,34 @@ export const admissionInquiriesApi = api.injectEndpoints({
         unwrap(response),
       invalidatesTags: inquiryMutationTags,
     }),
+    confirmAdmissionInquiryFamily: builder.mutation<
+      AdmissionInquiry,
+      { id: string; body: ConfirmAdmissionInquiryFamily }
+    >({
+      query: ({ id, body }) => ({
+        url: `/student/enrollment/admissions/inquiries/${id}/confirm-family`,
+        method: 'POST',
+        body,
+      }),
+      transformResponse: (response: Result<AdmissionInquiry> | AdmissionInquiry) =>
+        unwrap(response),
+      invalidatesTags: (_result, error, { id }) =>
+        error
+          ? []
+          : [
+              { type: studentAdmissionsCrmType.admissionInquiry, id },
+              { type: studentAdmissionsCrmType.admissionInquiry, id: 'LIST' },
+              studentAdmissionsCrmType.admissionApplicant,
+            ],
+    }),
     getAdmissionInquiryTimeline: builder.query<AdmissionInquiryTimelineItem[], string>({
       query: (id) => `/student/enrollment/admissions/inquiries/${id}/timeline`,
       transformResponse: (
         response: Result<AdmissionInquiryTimelineItem[]> | AdmissionInquiryTimelineItem[]
       ) => unwrap(response),
-      providesTags: [studentAdmissionsCrmType.admissionInquiry],
+      providesTags: (_result, _error, id) => [
+        { type: studentAdmissionsCrmType.admissionInquiry, id },
+      ],
     }),
     exportAdmissionInquiries: builder.query<Blob, AdmissionInquiryListInput>({
       query: (params) => ({
@@ -381,14 +420,7 @@ export const admissionInquiriesApi = api.injectEndpoints({
     }),
     checkAdmissionInquiryDuplicates: builder.mutation<
       DuplicateMatch[],
-      {
-        admissionCycleId: string;
-        guardianPhone: string;
-        guardianEmail?: string;
-        parentContacts?: AdmissionParentContact[];
-        applicantName: string;
-        applicantDateOfBirth?: string;
-      }
+      AdmissionInquiryDuplicateInput
     >({
       query: (body) => ({
         url: '/student/enrollment/admissions/inquiries/duplicate-check',
@@ -459,12 +491,14 @@ export const {
   useGetAdmissionInquiryCaptureCatalogueQuery,
   useLazyGetAdmissionInquiryCaptureCatalogueQuery,
   useGetAdmissionInquiryQuery,
+  useLazyGetAdmissionInquiryQuery,
   useGetAdmissionInquiriesQuery,
   useLazyExportAdmissionInquiriesQuery,
   useMarkAdmissionInquiryContactedMutation,
   useCreateAdmissionInquiryMutation,
   useUpdateAdmissionInquiryMutation,
   useConfirmAdmissionInquiryOfferingMutation,
+  useConfirmAdmissionInquiryFamilyMutation,
   useGetAdmissionInquiryTimelineQuery,
   useCheckAdmissionInquiryDuplicatesMutation,
   useGetAdmissionInquiryAssignableCounsellorsQuery,

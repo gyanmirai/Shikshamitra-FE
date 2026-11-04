@@ -35,7 +35,7 @@ it('confirms discarding an exception reason without clearing the parent applicat
     <ApplicationEligibilityPanel applicationId="application-1" stage={eligibilityStage} />
   );
   store.dispatch(setIsChanges(true));
-  await user.click(await screen.findByRole('button', { name: 'Request an exception' }));
+  await user.click(await screen.findByRole('button', { name: 'Request an Exception' }));
   const dialog = within(screen.getByRole('dialog'));
   await user.click(dialog.getByLabelText('Reason *'));
   await user.paste('Preserve my explanation until I choose to discard it.');

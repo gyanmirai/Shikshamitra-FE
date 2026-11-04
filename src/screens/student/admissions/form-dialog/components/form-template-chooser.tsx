@@ -26,26 +26,26 @@ const STARTERS: Array<{
 }> = [
   {
     id: 'blank',
-    title: 'Blank form',
+    title: 'Blank Form',
     description: 'Start small and add only the fields your school needs.',
     detail: 'Includes an empty section ready for student fields.',
-    action: 'Start blank',
+    action: 'Start Blank',
     icon: 'mdi:file-outline',
   },
   {
     id: 'admission-application',
-    title: 'Registration form',
+    title: 'Registration Form',
     description: 'Start with the recommended registration form for most schools.',
     detail: 'Includes student, guardian, address, academic history, and declaration sections.',
-    action: 'Use recommended',
+    action: 'Use Recommended',
     icon: 'mdi:file-document-edit-outline',
   },
   {
     id: 'admission-inquiry',
-    title: 'Inquiry form',
+    title: 'Inquiry Form',
     description: 'Start with the details needed for an admission inquiry.',
     detail: 'Includes applicant and guardian contact details.',
-    action: 'Use inquiry form',
+    action: 'Use Inquiry Form',
     icon: 'mdi:account-question-outline',
   },
 ];
@@ -58,7 +58,7 @@ export function FormTemplateChooser({ purpose, selectedStarter, onSelect }: Prop
   );
   return (
     <Stack spacing={1.5}>
-      <Typography variant="h6">Start with a form</Typography>
+      <Typography variant="h6">Start with a Form</Typography>
 
       <Box
         sx={{

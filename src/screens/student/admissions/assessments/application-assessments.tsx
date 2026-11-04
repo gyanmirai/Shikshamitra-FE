@@ -70,9 +70,9 @@ export function ApplicationAssessments({ stages, currentStage, selectedStageId, 
         >
           <AccordionSummary expandIcon={<Iconify icon="mdi:chevron-down" />}>
             <Stack>
-              <Typography variant="subtitle2">{stage.name} · Assessment history</Typography>
+              <Typography variant="subtitle2">{stage.name} · Assessment History</Typography>
               <Typography variant="caption" color="text.secondary">
-                {STAGE_STATUS_LABELS[stage.status] ?? 'Previous step'}
+                {STAGE_STATUS_LABELS[stage.status] ?? 'Previous Step'}
                 {stage.completedAt ? ` · ${dayjs(stage.completedAt).format('DD MMM YYYY')}` : ''}
               </Typography>
             </Stack>

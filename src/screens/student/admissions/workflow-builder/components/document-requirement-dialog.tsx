@@ -108,9 +108,9 @@ export function DocumentRequirementDialog({
           sx={{ px: 2, py: 1.5 }}
         >
           <Typography id="document-requirement-title" variant="subtitle1">
-            Configure document requirement
+            Configure Document Requirement
           </Typography>
-          <IconButton size="small" aria-label="Close document requirement" onClick={requestClose}>
+          <IconButton size="small" aria-label="Close Document Requirement" onClick={requestClose}>
             <Iconify icon="mdi:close" />
           </IconButton>
         </Stack>
@@ -130,7 +130,7 @@ export function DocumentRequirementDialog({
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <FormControlLabel
-                label="Required document"
+                label="Required Document"
                 sx={{
                   m: 0,
                   width: 1,
@@ -140,7 +140,7 @@ export function DocumentRequirementDialog({
                 control={
                   <Switch
                     size="small"
-                    slotProps={{ input: { 'aria-label': 'Required document' } }}
+                    slotProps={{ input: { 'aria-label': 'Required Document' } }}
                     checked={formik.values.requirement === 'required'}
                     onChange={(_, checked) =>
                       formik.setValues({
@@ -173,7 +173,7 @@ export function DocumentRequirementDialog({
           Cancel
         </Button>
         <Button size="small" variant="contained" type="submit">
-          Save requirement
+          Save Requirement
         </Button>
       </Stack>
     </Box>
@@ -198,7 +198,7 @@ export function DocumentRequirementDialog({
         <CustomDialog
           open
           hasForm={false}
-          title="Configure document requirement"
+          title="Configure Document Requirement"
           handleClose={requestClose}
           maxWidth="sm"
           guardUnsavedChanges={false}
@@ -209,11 +209,11 @@ export function DocumentRequirementDialog({
       <ConfirmDialog
         open={discard.value}
         onClose={discard.onFalse}
-        title="Discard document changes?"
+        title="Discard Document Changes?"
         content="Your changes to this requirement have not been saved."
         action={
           <Button size="small" color="error" variant="contained" onClick={onClose}>
-            Discard changes
+            Discard Changes
           </Button>
         }
       />

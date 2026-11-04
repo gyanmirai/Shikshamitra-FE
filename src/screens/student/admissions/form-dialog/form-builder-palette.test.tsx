@@ -23,6 +23,13 @@ const source = {
 };
 
 describe('Inquiry question palette', () => {
+  it('offers a Class selector under Admission preferences and sends the group preset', async () => {
+    const onAddField = vi.fn();
+    render(<ThemeProvider theme={createTheme(defaultSettings)}><FormBuilderPalette purpose={0} systemFields={[]} onAddField={onAddField} /></ThemeProvider>);
+    await userEvent.click(screen.getByRole('button', {name: /Admission preferences/}));
+    await userEvent.click(screen.getByRole('button', {name: 'Add Class Selector'}));
+    expect(onAddField).toHaveBeenCalledWith(6, undefined, expect.objectContaining({key: 'class-selector'}));
+  });
   it.each([0, 1] as AdmissionFormPurpose[])(
     'keeps optional Inquiry questions purpose-scoped: %s',
     async (purpose) => {

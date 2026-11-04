@@ -205,8 +205,8 @@ export default function AdmissionInquiriesScreen() {
       }}
     >
       <CustomBreadcrumbs
-        heading="Admission inquiries"
-        description="Capture open-admission inquiries, edit their forms, and record follow-up notes separately."
+        heading="Admission Inquiries"
+        description="Capture Open-admission Inquiries, Edit Their Forms, and Record Follow-up Notes Separately."
         slotProps={{
           action: { alignSelf: { xs: 'flex-end', md: 'center' }, maxWidth: '100%' },
           heading: {},
@@ -222,7 +222,7 @@ export default function AdmissionInquiriesScreen() {
           <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" justifyContent="flex-end">
             {canManage && (
               <Button
-                aria-label="New inquiry"
+                aria-label="Create Inquiry"
                 size="small"
                 variant="contained"
                 startIcon={<Iconify icon="mdi:plus" />}
@@ -240,7 +240,7 @@ export default function AdmissionInquiriesScreen() {
                 }}
               >
                 <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-                  New inquiry
+                  Inquiry
                 </Box>
               </Button>
             )}
@@ -275,10 +275,10 @@ export default function AdmissionInquiriesScreen() {
           flexDirection: 'column',
         }}
       >
-        {handoff.moving && <LinearProgress aria-label="Moving inquiry to the next stage" />}
+        {handoff.moving && <LinearProgress aria-label="Moving Inquiry to the Next Stage" />}
         <CustomizableTable
           tableId="admission-inquiries"
-          tableTitle="Admission inquiries"
+          tableTitle="Admission Inquiries"
           wrapperProps={{ sx: { height: 1, flex: 1, minHeight: 0, minWidth: 0 } }}
           tableContainerProps={{ sx: { height: 1 } }}
           columns={columns}
@@ -350,17 +350,17 @@ export default function AdmissionInquiriesScreen() {
             };
           }}
           searchFieldProps={{
-            placeholder: 'Search by applicant, inquiry no. or phone',
-            inputProps: { 'aria-label': 'Search admission inquiries' },
+            placeholder: 'Search by Applicant, Inquiry No. or Phone',
+            inputProps: { 'aria-label': 'Search Admission Inquiries' },
           }}
           noDataText={
             skipList
-              ? 'Select an available academic year, Board and Medium to view inquiries'
+              ? 'Select an Available Academic Year, Board and Medium to View Inquiries'
               : search || tableFilters.length
-                ? 'No inquiries match the selected search or filters'
+                ? 'No Inquiries Match the Selected Search or Filters'
                 : dashboardFollowUps
-                  ? 'No inquiry follow-ups are due in this scope'
-                  : 'No inquiries awaiting admission handoff'
+                  ? 'No Inquiry Follow-Ups Are Due in This Scope'
+                  : 'No Inquiries Awaiting Admission Handoff'
           }
         />
       </Box>
@@ -372,7 +372,7 @@ export default function AdmissionInquiriesScreen() {
           maxWidth="md"
           hasForm={false}
           guardUnsavedChanges={false}
-          title={`Handling history: ${historyInquiry.applicantName}`}
+          title={`Handling History: ${historyInquiry.applicantName}`}
           handleClose={() => setHistoryInquiry(null)}
         >
           <DialogScrollContent>

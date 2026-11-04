@@ -27,9 +27,9 @@ describe('admission section field layout', () => {
         screen.getAllByRole('textbox').map((input) => input.getAttribute('aria-label'))
       ).toEqual(['PHOTO', 'NAME', 'NOTES']);
       expect(
-        within(screen.getByLabelText('Profile photos')).getByRole('textbox', { name: 'PHOTO' })
+        within(screen.getByLabelText('Profile Photos')).getByRole('textbox', { name: 'PHOTO' })
       ).toBeVisible();
-      expect(within(screen.getByLabelText('Form fields')).getAllByRole('textbox')).toHaveLength(2);
+      expect(within(screen.getByLabelText('Form Fields')).getAllByRole('textbox')).toHaveLength(2);
       expect(fields.map((field) => field.code)).toEqual(['NAME', 'NOTES', 'PHOTO']);
     }
   );
@@ -42,7 +42,7 @@ describe('admission section field layout', () => {
         renderField={(field) => <input aria-label={field.code} readOnly value={field.code} />}
       />
     );
-    expect(screen.queryByLabelText('Profile photos')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Profile Photos')).not.toBeInTheDocument();
     expect(screen.getAllByRole('textbox').map((input) => input.getAttribute('aria-label'))).toEqual(
       ['NAME', 'NOTES']
     );
@@ -57,12 +57,12 @@ describe('admission section field layout', () => {
       />
     );
     expect(
-      within(screen.getByLabelText('Profile photos'))
+      within(screen.getByLabelText('Profile Photos'))
         .getAllByRole('textbox')
         .map((input) => input.getAttribute('aria-label'))
     ).toEqual(['PHOTO', 'GUARDIAN_PHOTO']);
     expect(
-      within(screen.getByLabelText('Form fields'))
+      within(screen.getByLabelText('Form Fields'))
         .getAllByRole('textbox')
         .map((input) => input.getAttribute('aria-label'))
     ).toEqual(['NAME', 'NOTES']);

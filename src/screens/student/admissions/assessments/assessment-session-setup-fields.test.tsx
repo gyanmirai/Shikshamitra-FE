@@ -96,26 +96,26 @@ function Fields({
 it('reuses room and schedule fields in Pipeline without editable class or stage selectors', () => {
   render(<Fields identityLocked={false} pipeline />);
   expect(screen.queryByRole('combobox', { name: 'Classes' })).not.toBeInTheDocument();
-  expect(screen.queryByRole('combobox', { name: /Select assessment/ })).not.toBeInTheDocument();
+  expect(screen.queryByRole('combobox', { name: /Select Assessment/ })).not.toBeInTheDocument();
   expect(screen.getByLabelText('Date')).toBeInTheDocument();
-  expect(screen.getByLabelText('Starts at')).toBeDisabled();
-  expect(screen.getByRole('combobox', { name: /Institute room/ })).toBeInTheDocument();
+  expect(screen.getByLabelText('Starts At')).toBeDisabled();
+  expect(screen.getByRole('combobox', { name: /Institute Room/ })).toBeInTheDocument();
 });
 it('locks existing session identity before the first booking without disabling ordinary details', async () => {
   render(<Fields identityLocked />);
   await waitFor(() => expect(screen.queryByRole('progressbar')).not.toBeInTheDocument());
-  expect(screen.getByRole('combobox', { name: 'Assessment type' })).toBeDisabled();
+  expect(screen.getByRole('combobox', { name: 'Assessment Type' })).toBeDisabled();
   expect(screen.getByRole('combobox', { name: 'Classes' })).toBeDisabled();
-  expect(screen.queryByRole('combobox', { name: /Select assessment/ })).not.toBeInTheDocument();
-  expect(screen.getByRole('textbox', { name: /Session name/ })).toBeEnabled();
-  expect(screen.getByLabelText('Starts at')).toBeEnabled();
+  expect(screen.queryByRole('combobox', { name: /Select Assessment/ })).not.toBeInTheDocument();
+  expect(screen.getByRole('textbox', { name: /Session Name/ })).toBeEnabled();
+  expect(screen.getByLabelText('Starts At')).toBeEnabled();
 });
 it('permits selecting type and Offering/stage identity for a new unbooked session', async () => {
   render(<Fields identityLocked={false} />);
   await waitFor(() => expect(screen.queryByRole('progressbar')).not.toBeInTheDocument());
-  expect(screen.getByRole('combobox', { name: 'Assessment type' })).toBeEnabled();
+  expect(screen.getByRole('combobox', { name: 'Assessment Type' })).toBeEnabled();
   expect(screen.getByRole('combobox', { name: 'Classes' })).toBeEnabled();
-  expect(screen.queryByRole('combobox', { name: /Select assessment/ })).not.toBeInTheDocument();
+  expect(screen.queryByRole('combobox', { name: /Select Assessment/ })).not.toBeInTheDocument();
 });
 
 it.each([false, true])(
@@ -133,13 +133,13 @@ it.each([false, true])(
     const { rerender } = render(<Fields identityLocked={false} pipeline={pipeline} />);
     await waitFor(() => expect(screen.queryByRole('progressbar')).not.toBeInTheDocument());
     rerender(<Fields identityLocked={false} roomOptions={[room]} pipeline={pipeline} />);
-    const input = screen.getByRole('combobox', { name: 'Institute room' });
+    const input = screen.getByRole('combobox', { name: 'Institute Room' });
     fireEvent.change(input, { target: { value: 'Main Academic' } });
     fireEvent.focus(input);
-    const option = await screen.findByRole('option', { name: 'A002 Ground Floor 40 seats' });
+    const option = await screen.findByRole('option', { name: 'A002 Ground Floor 40 Seats' });
     fireEvent.click(option);
     await waitFor(() => expect(input).toHaveValue('A002'));
-    expect(screen.getByLabelText(pipeline ? 'Capacity' : 'Session capacity')).toHaveValue('40');
+    expect(screen.getByLabelText(pipeline ? 'Capacity' : 'Session Capacity')).toHaveValue('40');
     expect(screen.getByText('Main Academic Block / Ground Floor')).toBeInTheDocument();
   }
 );
@@ -149,11 +149,11 @@ it.each([false, true])(
   async (pipeline) => {
     render(<Fields identityLocked={false} pipeline={pipeline} scheduled />);
     await waitFor(() => expect(screen.queryByRole('progressbar')).not.toBeInTheDocument());
-    fireEvent.blur(screen.getByLabelText('Starts at'));
+    fireEvent.blur(screen.getByLabelText('Starts At'));
     await waitFor(() =>
       expect(screen.getByTestId('schedule-touched')).toHaveTextContent('"startsAt":true')
     );
-    fireEvent.blur(screen.getByLabelText('Ends at'));
+    fireEvent.blur(screen.getByLabelText('Ends At'));
     await waitFor(() =>
       expect(screen.getByTestId('schedule-touched')).toHaveTextContent('"endsAt":true')
     );

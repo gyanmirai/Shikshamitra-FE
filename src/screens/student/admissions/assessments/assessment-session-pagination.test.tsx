@@ -45,10 +45,16 @@ function PaginationHarness({
   surface,
   initialPage = 0,
   onPage,
+  onSelect = vi.fn(),
+  canManage = false,
+  onEdit = vi.fn(),
 }: {
   surface: 'preview' | 'manage';
   initialPage?: number;
   onPage: (page: number, size: number) => void;
+  onSelect?: (session: { id: string }) => void;
+  canManage?: boolean;
+  onEdit?: (session: { id: string }) => void;
 }) {
   const [page, setPage] = useState(initialPage);
   const [pageSize, setPageSize] = useState(25);
@@ -105,9 +111,9 @@ function PaginationHarness({
       page={page}
       pageSize={pageSize}
       isLoading={false}
-      canManage={false}
-      onSelect={vi.fn()}
-      onEdit={vi.fn()}
+      canManage={canManage}
+      onSelect={onSelect}
+      onEdit={onEdit}
       onCancel={vi.fn()}
       onPage={changePage}
       onSearch={vi.fn()}
@@ -125,10 +131,44 @@ it('shows session classes and room as scan-friendly columns', () => {
   renderSurface(<PaginationHarness surface="manage" onPage={vi.fn()} />);
   expect(screen.getByRole('columnheader', { name: 'Classes' })).toBeVisible();
   expect(screen.getByRole('columnheader', { name: 'Room' })).toBeVisible();
-  expect(screen.getByRole('table', { name: 'Assessment sessions table' })).toBeVisible();
+  expect(screen.getByRole('table', { name: 'Assessment Sessions table' })).toBeVisible();
   expect(screen.getByText('Class 1')).toBeVisible();
   expect(screen.getByText('Exam room')).toBeVisible();
   expect(screen.getByRole('button', { name: 'Export' })).toBeVisible();
+});
+
+it.each(['click', 'Enter', ' '] as const)(
+  'lets a read-only user view a session with row %s',
+  async (action) => {
+    const onSelect = vi.fn();
+    renderSurface(<PaginationHarness surface="manage" onPage={vi.fn()} onSelect={onSelect} />);
+    const row = screen.getByRole('row', { name: 'View Session QA Exam' });
+    expect(screen.queryByTestId('table-action-view')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Edit QA Exam' })).not.toBeInTheDocument();
+    if (action === 'click') await userEvent.click(row);
+    else {
+      row.focus();
+      await userEvent.keyboard(action === 'Enter' ? '{Enter}' : ' ');
+    }
+    expect(onSelect).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ id: 'session' }));
+  }
+);
+
+it('keeps editing separate from row viewing', async () => {
+  const onSelect = vi.fn();
+  const onEdit = vi.fn();
+  renderSurface(
+    <PaginationHarness
+      surface="manage"
+      onPage={vi.fn()}
+      onSelect={onSelect}
+      onEdit={onEdit}
+      canManage
+    />
+  );
+  await userEvent.click(screen.getByRole('button', { name: 'Edit QA Exam' }));
+  expect(onEdit).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ id: 'session' }));
+  expect(onSelect).not.toHaveBeenCalled();
 });
 
 it.each(['preview', 'manage'] as const)(

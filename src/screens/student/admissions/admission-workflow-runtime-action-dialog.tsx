@@ -61,7 +61,7 @@ export function AdmissionWorkflowRuntimeActionDialog({
     <CustomDialog
       open={open}
       handleClose={onClose}
-      title={isOverride ? 'Override workflow transition' : 'Skip current stage'}
+      title={isOverride ? 'Override Workflow Transition' : 'Skip Current Stage'}
       maxWidth="sm"
     >
       <DialogScrollContent onSubmit={() => formik.handleSubmit()}>
@@ -73,8 +73,8 @@ export function AdmissionWorkflowRuntimeActionDialog({
             icon={<Iconify icon="mdi:alert-outline" />}
           >
             {isOverride
-              ? 'This privileged action bypasses normal transition conditions and is permanently audited.'
-              : 'Skipping is allowed only for stages configured for manual skip and is permanently audited.'}
+              ? 'This Privileged Action Bypasses Normal Transition Conditions and Is Permanently Audited.'
+              : 'Skipping Is Allowed Only for Stages Configured for Manual Skip and Is Permanently Audited.'}
           </StudentFeedback>
           {isOverride && (
             <ShakingTextField
@@ -87,7 +87,7 @@ export function AdmissionWorkflowRuntimeActionDialog({
                 fullWidth
                 autoFocus
                 size="small"
-                label="Destination stage *"
+                label="Destination Stage *"
                 {...formik.getFieldProps('transitionDefinitionId')}
                 error={Boolean(
                   formik.touched.transitionDefinitionId && formik.errors.transitionDefinitionId
@@ -140,7 +140,7 @@ export function AdmissionWorkflowRuntimeActionDialog({
           }
           onClick={() => formik.handleSubmit()}
         >
-          {isOverride ? 'Override transition' : 'Skip stage'}
+          {isOverride ? 'Override Transition' : 'Skip Stage'}
         </LoadingButton>
       </DialogActions>
     </CustomDialog>

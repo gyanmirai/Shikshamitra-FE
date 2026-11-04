@@ -92,7 +92,7 @@ it('switches review field translations independently of headings without modifyi
   mountReview(values);
   await user.type(screen.getByRole('textbox', { name: 'Student name' }), 'QA student');
   const checkLanguage = async (language: string, label: string, placeholder: string) => {
-    await user.click(screen.getByRole('combobox', { name: 'Form language' }));
+    await user.click(screen.getByRole('combobox', { name: 'Form Language' }));
     await user.click(within(screen.getByRole('listbox')).getByRole('option', { name: language }));
     expect(screen.getByRole('textbox', { name: label })).toHaveValue('QA student');
     expect(screen.getByRole('textbox', { name: label })).toHaveAttribute(
@@ -131,9 +131,9 @@ it('provides a preview without edit, delete, or field settings actions and shows
   mountReview(values);
   expect(screen.getByRole('heading', { name: 'School application' })).toBeVisible();
   expect(screen.queryByText(values.description)).not.toBeInTheDocument();
-  await user.hover(screen.getByRole('button', { name: 'About this admission form' }));
+  await user.hover(screen.getByRole('button', { name: 'About This Admission Form' }));
   expect(await screen.findByRole('tooltip')).toHaveTextContent(values.description);
-  expect(screen.queryByRole('button', { name: /Edit|Delete|Actions for/ })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: /Edit|Delete|Actions For/ })).not.toBeInTheDocument();
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   expect(screen.queryByText(/Use Edit to change/)).not.toBeInTheDocument();
   expect(definition()).toEqual(values);
@@ -154,7 +154,7 @@ it('navigates steps in the card while preserving preview entries and the definit
     stepDisplayOrder: 1,
   });
   mountReview(values);
-  expect(screen.getByRole('complementary', { name: 'Form step navigation' })).toBeVisible();
+  expect(screen.getByRole('complementary', { name: 'Form Step Navigation' })).toBeVisible();
   await user.type(screen.getByRole('textbox', { name: 'Student name' }), 'Preview student');
   await user.click(screen.getByRole('button', { name: 'Location' }));
   expect(screen.getByRole('textbox', { name: 'Town' })).toBeVisible();
@@ -174,7 +174,7 @@ it('shows publishing issues without opening an editor from review', async () => 
   expect(
     screen.queryByRole('button', { name: 'Student name needs a custom binding key.' })
   ).not.toBeInTheDocument();
-  expect(screen.queryByRole('dialog', { name: 'Field settings' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('dialog', { name: 'Field Settings' })).not.toBeInTheDocument();
   expect(definition()).toEqual(values);
 });
 
@@ -198,7 +198,7 @@ it('puts a later profile photo in the left rail and preserves preview answers an
 
   const photo = screen.getByRole('button', { name: 'Choose student photo' });
   const name = screen.getByRole('textbox', { name: 'Student name' });
-  expect(screen.getByLabelText('Profile photos')).toContainElement(photo);
+  expect(screen.getByLabelText('Profile Photos')).toContainElement(photo);
   expect(photo.compareDocumentPosition(name)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
   await user.type(name, 'Preview student');
   expect(name).toHaveValue('Preview student');

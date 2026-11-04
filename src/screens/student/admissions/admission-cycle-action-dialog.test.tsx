@@ -83,7 +83,7 @@ describe('admission cycle publish confirmation', () => {
     expect(screen.queryByText('RTE')).not.toBeInTheDocument();
     expect(screen.queryByText(/CYCLE_INTERNAL_123/)).not.toBeInTheDocument();
     expect(screen.getByText(/Applications are accepted only during/)).toBeVisible();
-    expect(screen.queryByText('This cycle is ready to publish.')).not.toBeInTheDocument();
+    expect(screen.queryByText('This cycle is ready to Publish.')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Publish' })).toBeEnabled();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
@@ -180,7 +180,7 @@ describe('admission cycle delete confirmation', () => {
   it('shows loading and the cycle name without its internal code', () => {
     renderDelete();
 
-    expect(screen.getByRole('status')).toHaveTextContent('Checking linked offerings');
+    expect(screen.getByRole('status')).toHaveTextContent('Checking Linked Offerings');
     expect(screen.getByRole('button', { name: 'Delete' })).toBeDisabled();
     expect(screen.getByText(/RTE/)).toBeInTheDocument();
     expect(screen.queryByText(/CYCLE_INTERNAL_123/)).not.toBeInTheDocument();
@@ -283,14 +283,14 @@ describe('admission cycle close confirmation', () => {
     expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
     expect(screen.queryByText(/CYCLE_INTERNAL_123/)).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Close cycle' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Close Cycle' })).toBeEnabled();
   });
 
   it('sends the staff confirmation and audit reason with the current concurrency stamp', async () => {
     const onConfirm = vi.fn().mockResolvedValue(undefined);
     renderClose(onConfirm);
 
-    await userEvent.click(screen.getByRole('button', { name: 'Close cycle' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Close Cycle' }));
     expect(onConfirm).toHaveBeenCalledWith({
       concurrencyStamp: cycle.concurrencyStamp,
       reason: 'Admission cycle closed by staff confirmation.',
@@ -303,7 +303,7 @@ describe('admission cycle close confirmation', () => {
     const onConfirm = vi.fn().mockResolvedValue(undefined);
     renderClose(onConfirm);
 
-    await userEvent.click(screen.getByRole('button', { name: 'Close cycle' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Close Cycle' }));
     expect(onConfirm).toHaveBeenCalledWith(
       expect.objectContaining({ confirmActiveOfferings: false })
     );
@@ -314,7 +314,7 @@ describe('admission cycle close confirmation', () => {
     renderClose();
 
     expect(screen.getByRole('status')).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Close cycle' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Close Cycle' })).toBeDisabled();
   });
 
   it('keeps Close cycle disabled for an error or a response for a different cycle', () => {
@@ -326,13 +326,13 @@ describe('admission cycle close confirmation', () => {
         message: 'Could not check linked records. Close this dialog and try again.',
       })
     );
-    expect(screen.getByRole('button', { name: 'Close cycle' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Close Cycle' })).toBeDisabled();
   });
 
   it('locks Close cycle and Cancel during submission', () => {
     renderClose(vi.fn(), true);
 
-    expect(screen.getByRole('button', { name: 'Close cycle' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Close Cycle' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
   });
 });

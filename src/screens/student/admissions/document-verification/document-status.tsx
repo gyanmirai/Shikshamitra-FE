@@ -3,11 +3,11 @@ import type { DocumentStatus } from 'src/redux/student/admissions/admission-docu
 import { Label } from 'src/components/label';
 
 export const documentStatusLabels: Record<DocumentStatus, string> = {
-  notRequired: 'Not applicable',
+  notRequired: 'Not Applicable',
   missing: 'Missing',
-  pendingReview: 'Pending review',
+  pendingReview: 'Pending Review',
   accepted: 'Accepted',
-  rejected: 'Needs resubmission',
+  rejected: 'Needs Resubmission',
   waived: 'Waived',
 };
 export function DocumentStatusLabel({ status }: { status: DocumentStatus }) {

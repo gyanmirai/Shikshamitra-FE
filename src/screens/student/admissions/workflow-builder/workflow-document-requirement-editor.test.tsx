@@ -54,27 +54,27 @@ const json = (change = {}) =>
 describe('compact document requirement editor', { timeout: 15000 }, () => {
   it('opens standard documents in the same popover and preserves preset references through editing', async () => {
     const { user, onSave } = await setupDocumentEditor();
-    await chooseDocumentOption(user, 'Add a standard document', 'Birth certificate');
+    await chooseDocumentOption(user, 'Add a Standard Document', 'Birth Certificate');
     const requirementDialog = screen.getByRole('dialog', {
-      name: 'Configure document requirement',
+      name: 'Configure Document Requirement',
     });
     expect(requirementDialog.closest('.MuiPopover-root')).toBeInTheDocument();
     const dialog = within(requirementDialog);
-    expect(dialog.getByRole('textbox', { name: 'Document name *' })).toHaveValue(
+    expect(dialog.getByRole('textbox', { name: 'Document Name *' })).toHaveValue(
       'Birth certificate'
     );
-    await user.click(dialog.getByRole('button', { name: 'Save requirement' }));
+    await user.click(dialog.getByRole('button', { name: 'Save Requirement' }));
     await user.click(await screen.findByRole('button', { name: 'Edit Birth certificate' }));
-    const editor = within(screen.getByRole('dialog', { name: 'Configure document requirement' }));
-    await user.type(editor.getByRole('textbox', { name: 'Instructions (optional)' }), 'Clear scan');
-    await user.click(editor.getByRole('button', { name: 'Save requirement' }));
+    const editor = within(screen.getByRole('dialog', { name: 'Configure Document Requirement' }));
+    await user.type(editor.getByRole('textbox', { name: 'Instructions (Optional)' }), 'Clear scan');
+    await user.click(editor.getByRole('button', { name: 'Save Requirement' }));
     await user.click(await screen.findByRole('button', { name: 'Remove Birth certificate' }));
     const confirmation = within(
-      screen.getByRole('dialog', { name: 'Remove document requirement?' })
+      screen.getByRole('dialog', { name: 'Remove Document Requirement?' })
     );
     await user.click(confirmation.getByRole('button', { name: 'Cancel' }));
     expect(screen.getByText('Clear scan')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
+    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(
       JSON.parse(onSave.mock.calls[0][0].configurationJson).documentVerification.requirements
@@ -93,9 +93,9 @@ describe('compact document requirement editor', { timeout: 15000 }, () => {
     );
     const { user, onSave } = await setupDocumentEditor(json());
     await user.click(screen.getByRole('button', { name: 'Edit Birth certificate' }));
-    await chooseDocumentOption(user, 'Applies to classes', 'Selected classes');
-    const dialog = within(screen.getByRole('dialog', { name: 'Configure document requirement' }));
-    await user.click(dialog.getByRole('button', { name: 'Save requirement' }));
+    await chooseDocumentOption(user, 'Applies to Classes', 'Selected Classes');
+    const dialog = within(screen.getByRole('dialog', { name: 'Configure Document Requirement' }));
+    await user.click(dialog.getByRole('button', { name: 'Save Requirement' }));
     expect(
       await dialog.findByText('Select at least one class, or choose all classes')
     ).toBeInTheDocument();
@@ -103,20 +103,20 @@ describe('compact document requirement editor', { timeout: 15000 }, () => {
     await user.click(await screen.findByRole('option', { name: 'CBSE' }));
     await waitFor(() => expect(screen.queryByRole('listbox')).not.toBeInTheDocument());
     await user.click(dialog.getByRole('combobox', { name: 'Classes' }));
-    const picker = within(await screen.findByRole('dialog', { name: 'Select classes' }));
-    await user.type(picker.getByRole('textbox', { name: 'Search classes' }), 'Class 10');
+    const picker = within(await screen.findByRole('dialog', { name: 'Select Classes' }));
+    await user.type(picker.getByRole('textbox', { name: 'Search Classes' }), 'Class 10');
     await user.click(picker.getByRole('checkbox', { name: /Class 10/ }));
     await user.click(picker.getByRole('button', { name: 'Done' }));
     await waitFor(() =>
-      expect(screen.queryByRole('dialog', { name: 'Select classes' })).not.toBeInTheDocument()
+      expect(screen.queryByRole('dialog', { name: 'Select Classes' })).not.toBeInTheDocument()
     );
-    await user.click(dialog.getByRole('button', { name: 'Save requirement' }));
+    await user.click(dialog.getByRole('button', { name: 'Save Requirement' }));
     await waitFor(() =>
       expect(
-        screen.queryByRole('dialog', { name: 'Configure document requirement' })
+        screen.queryByRole('dialog', { name: 'Configure Document Requirement' })
       ).not.toBeInTheDocument()
     );
-    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
+    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(
       JSON.parse(onSave.mock.calls[0][0].configurationJson).documentVerification.requirements[0]
@@ -126,14 +126,14 @@ describe('compact document requirement editor', { timeout: 15000 }, () => {
   it('creates two custom requirements with server-generated references and optional/required toggles', async () => {
     const { user, onSave } = await setupDocumentEditor();
     const addRequirement = async (name: string) => {
-      await user.click(screen.getByRole('button', { name: 'Add custom document' }));
-      const dialog = within(screen.getByRole('dialog', { name: 'Configure document requirement' }));
+      await user.click(screen.getByRole('button', { name: 'Add Custom Document' }));
+      const dialog = within(screen.getByRole('dialog', { name: 'Configure Document Requirement' }));
       expect(
         screen
-          .getByRole('dialog', { name: 'Configure document requirement' })
+          .getByRole('dialog', { name: 'Configure Document Requirement' })
           .closest('.MuiPopover-root')
       ).toBeInTheDocument();
-      expect(dialog.getByRole('button', { name: 'Save requirement' })).toHaveClass(
+      expect(dialog.getByRole('button', { name: 'Save Requirement' })).toHaveClass(
         'MuiButton-sizeSmall'
       );
       expect(dialog.queryByRole('textbox', { name: 'Document code *' })).not.toBeInTheDocument();
@@ -141,24 +141,24 @@ describe('compact document requirement editor', { timeout: 15000 }, () => {
         dialog.queryByRole('combobox', { name: 'Evidence to collect' })
       ).not.toBeInTheDocument();
       expect(
-        dialog.getByRole('combobox', { name: 'Student document category (optional)' })
+        dialog.getByRole('combobox', { name: 'Student Document Category (Optional)' })
       ).toBeInTheDocument();
       expect(
-        dialog.getByRole('button', { name: 'Student document category information' })
+        dialog.getByRole('button', { name: 'Student Document Category Information' })
       ).toBeInTheDocument();
-      await user.type(dialog.getByRole('textbox', { name: 'Document name *' }), name);
+      await user.type(dialog.getByRole('textbox', { name: 'Document Name *' }), name);
       if (name === 'Address evidence')
-        await user.click(dialog.getByRole('switch', { name: 'Required document' }));
-      await user.click(dialog.getByRole('button', { name: 'Save requirement' }));
+        await user.click(dialog.getByRole('switch', { name: 'Required Document' }));
+      await user.click(dialog.getByRole('button', { name: 'Save Requirement' }));
       await waitFor(() =>
         expect(
-          screen.queryByRole('dialog', { name: 'Configure document requirement' })
+          screen.queryByRole('dialog', { name: 'Configure Document Requirement' })
         ).not.toBeInTheDocument()
       );
     };
     await addRequirement('Transfer proof');
     await addRequirement('Address evidence');
-    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
+    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(
       JSON.parse(onSave.mock.calls[0][0].configurationJson).documentVerification.requirements
@@ -170,23 +170,23 @@ describe('compact document requirement editor', { timeout: 15000 }, () => {
   it('uses a shared discard dialog and preserves unsaved values when cancellation is declined', async () => {
     const { user } = await setupDocumentEditor(json());
     await user.click(screen.getByRole('button', { name: 'Edit Birth certificate' }));
-    const dialog = screen.getByRole('dialog', { name: 'Configure document requirement' });
+    const dialog = screen.getByRole('dialog', { name: 'Configure Document Requirement' });
     await user.type(
-      within(dialog).getByRole('textbox', { name: 'Instructions (optional)' }),
+      within(dialog).getByRole('textbox', { name: 'Instructions (Optional)' }),
       'Bring a clear scan'
     );
     await user.click(within(dialog).getByRole('button', { name: 'Cancel' }));
-    const discard = screen.getByRole('dialog', { name: 'Discard document changes?' });
+    const discard = screen.getByRole('dialog', { name: 'Discard Document Changes?' });
     await user.click(within(discard).getByRole('button', { name: 'Cancel' }));
-    expect(within(dialog).getByRole('textbox', { name: 'Instructions (optional)' })).toHaveValue(
+    expect(within(dialog).getByRole('textbox', { name: 'Instructions (Optional)' })).toHaveValue(
       'Bring a clear scan'
     );
   });
   it('validates custom requirement names before saving', async () => {
     const { user, onSave } = await setupDocumentEditor();
-    await user.click(screen.getByRole('button', { name: 'Add custom document' }));
-    const dialog = within(screen.getByRole('dialog', { name: 'Configure document requirement' }));
-    await user.click(dialog.getByRole('button', { name: 'Save requirement' }));
+    await user.click(screen.getByRole('button', { name: 'Add Custom Document' }));
+    const dialog = within(screen.getByRole('dialog', { name: 'Configure Document Requirement' }));
+    await user.click(dialog.getByRole('button', { name: 'Save Requirement' }));
     expect(await dialog.findByText('Document name is required')).toBeInTheDocument();
     expect(onSave).not.toHaveBeenCalled();
   });

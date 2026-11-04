@@ -50,7 +50,7 @@ export function DocumentActionDialog({
       title={title}
       titleInfo={
         action === 'reject'
-          ? 'Give a reason so admissions staff can provide a corrected document.'
+          ? 'Give a Reason So Admissions Staff Can Provide a Corrected Document.'
           : undefined
       }
       maxWidth="sm"

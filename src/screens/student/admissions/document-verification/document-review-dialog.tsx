@@ -78,7 +78,7 @@ export function DocumentReviewDialog({
       <CustomDialog
         open
         title={`${current.name} · Document Review`}
-        titleInfo="Review the latest evidence before approving it. Reject requests a replacement and requires a reason."
+        titleInfo="Review the Latest Evidence Before Approving It. Reject Requests a Replacement and Requires a Reason."
         handleClose={onClose}
         hasUnsavedChanges={false}
         disableClose={formik.isSubmitting || Boolean(action)}
@@ -113,7 +113,7 @@ export function DocumentReviewDialog({
                 sx={{ flex: 1, minWidth: 0, overflowWrap: 'anywhere' }}
               >
                 {latest
-                  ? `${latest.fileName || (latest.kind === 'original' ? 'Physical original recorded' : 'Requirement waived')} · Version ${latest.versionNumber}`
+                  ? `${latest.fileName || (latest.kind === 'original' ? 'Physical Original Recorded' : 'Requirement Waived')} · Version ${latest.versionNumber}`
                   : current.name}
               </Typography>
               <Typography variant="caption" color="text.secondary">
@@ -149,7 +149,7 @@ export function DocumentReviewDialog({
                 />
               ) : (
                 <EmptyContent
-                  title={file ? 'Preview unavailable' : 'No document uploaded'}
+                  title={file ? 'Preview Unavailable' : 'No Document Uploaded'}
                   description={
                     file
                       ? 'File access is unavailable for this evidence.'
@@ -176,7 +176,7 @@ export function DocumentReviewDialog({
                       onClick={() => chooseAction(item)}
                     >
                       {item === 'upload' && file
-                        ? 'Upload replacement'
+                        ? 'Upload Replacement'
                         : documentReviewActionLabels[item]}
                     </Button>
                   ))}
@@ -195,7 +195,7 @@ export function DocumentReviewDialog({
               >
                 <AccordionSummary expandIcon={<Iconify icon="mdi:chevron-down" />}>
                   <Typography variant="subtitle2">
-                    Evidence history ({current.evidence.length})
+                    Evidence History ({current.evidence.length})
                   </Typography>
                 </AccordionSummary>
                 <AccordionDetails>
@@ -251,7 +251,7 @@ export function DocumentReviewDialog({
           {...snapshot}
           action={action}
           title={action === 'reject' ? 'Reject Document' : undefined}
-          submitLabel={action === 'reject' ? 'Reject document' : undefined}
+          submitLabel={action === 'reject' ? 'Reject Document' : undefined}
           canSubmit={actions.includes(action) && !disabled && permissions.view}
           onClose={() => setAction(null)}
           onSuccess={onClose}

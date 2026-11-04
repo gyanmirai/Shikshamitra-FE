@@ -133,7 +133,7 @@ export function AdmissionFeeSelectionEditor({
         {loadingCandidates && (
           <Stack
             role="status"
-            aria-label="Loading published fee structures"
+            aria-label="Loading Published Fee Structures"
             aria-busy
             spacing={1.5}
           >
@@ -172,7 +172,7 @@ export function AdmissionFeeSelectionEditor({
                   sx={{ color: 'text.disabled' }}
                 />
                 <Typography component="span" variant="subtitle2" color="text.primary">
-                  No matching fee structure
+                  No Matching Fee Structure
                 </Typography>
               </Stack>
             }
@@ -204,9 +204,9 @@ export function AdmissionFeeSelectionEditor({
                 minWidth: 0,
               }}
             >
-              <Typography variant="subtitle2">Select fee structure</Typography>
+              <Typography variant="subtitle2">Select Fee Structure</Typography>
               <CustomSelect
-                label="Fee structure *"
+                label="Fee Structure *"
                 isSearch
                 value={formik.values.structureId}
                 disabled={disabled || busy || candidates.isFetching}
@@ -227,10 +227,10 @@ export function AdmissionFeeSelectionEditor({
               />
               {chosen && (
                 <>
-                  <Typography variant="subtitle2">Mandatory fee heads</Typography>
+                  <Typography variant="subtitle2">Mandatory Fee Heads</Typography>
                   {chosen.heads.some((head) => !head.isOptional) ? (
                     <AdmissionFeeHeads
-                      label="Mandatory fee heads"
+                      label="Mandatory Fee Heads"
                       heads={chosen.heads.filter((head) => !head.isOptional)}
                       currency={state.currency}
                     />
@@ -241,7 +241,7 @@ export function AdmissionFeeSelectionEditor({
                   )}
                   {chosen.heads.some((head) => head.isOptional) && (
                     <CustomSelect
-                      label="Optional fee heads"
+                      label="Optional Fee Heads"
                       multiple
                       isSearch
                       value={formik.values.optionalHeadIds}
@@ -283,7 +283,7 @@ export function AdmissionFeeSelectionEditor({
                 sx={{ p: 2, border: 1, borderColor: 'divider', borderRadius: 1.5 }}
                 spacing={1}
               >
-                <Typography variant="subtitle2">Selection summary</Typography>
+                <Typography variant="subtitle2">Selection Summary</Typography>
                 <Typography variant="body2" color="text.secondary">
                   Select a published fee structure to review its fee heads.
                 </Typography>
@@ -322,7 +322,7 @@ export function AdmissionFeeSelectionEditor({
               onClick={() => candidates.refetch()}
               startIcon={<Iconify icon="mdi:refresh" width={16} />}
             >
-              {candidates.isFetching ? 'Checking…' : 'Check again'}
+              {candidates.isFetching ? 'Checking…' : 'Check Again'}
             </Button>
           ) : (
             <Button
@@ -338,7 +338,7 @@ export function AdmissionFeeSelectionEditor({
                 !candidates.currentData?.length
               }
             >
-              {busy ? 'Saving…' : 'Confirm fee structure'}
+              {busy ? 'Saving…' : 'Confirm Fee Structure'}
             </Button>
           )}
         </Stack>
@@ -346,12 +346,12 @@ export function AdmissionFeeSelectionEditor({
       <ConfirmDialog
         open={discard}
         onClose={() => setDiscard(false)}
-        title="Discard unsaved changes?"
+        title="Discard Unsaved Changes?"
         icon="warning"
         content="Your saved fee selection remains available. Unsaved changes will be discarded."
         action={
           <Button size="small" color="error" variant="contained" disabled={busy} onClick={onClose}>
-            Discard changes
+            Discard Changes
           </Button>
         }
       />
@@ -366,7 +366,7 @@ export function AdmissionFeeSelectionEditor({
             zIndex: 1,
           }}
           role="status"
-          aria-label="Saving fee structure"
+          aria-label="Saving Fee Structure"
         >
           <CircularProgress size={24} />
         </Box>

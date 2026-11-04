@@ -63,15 +63,15 @@ export function FormInheritancePanel() {
     <FormSectionCard
       title="Reuse Inquiry Questions"
       icon="mdi:link-variant"
-      descriptionTooltip="Questions follow each applicant's linked Inquiry form. Offering and workflow setup control the connections."
+      descriptionTooltip="Questions Follow Each Applicant's Linked Inquiry Form. Offering and Workflow Setup Control the Connections."
       sx={{ m: 1, flexShrink: 0, minWidth: 0 }}
       contentSpacing={1.5}
       action={
         enabled && (
-          <CustomTooltip title="More options">
+          <CustomTooltip title="More Options">
             <IconButton
               size="small"
-              aria-label="More options"
+              aria-label="More Options"
               aria-haspopup="menu"
               aria-expanded={Boolean(menuAnchor)}
               aria-controls={menuAnchor ? 'inquiry-question-options' : undefined}
@@ -87,7 +87,7 @@ export function FormInheritancePanel() {
       <FormControlLabel
         sx={{ m: 0, justifyContent: 'space-between', gap: 1 }}
         labelPlacement="start"
-        label="Include Inquiry questions in Registration"
+        label="Include Inquiry Questions in Registration"
         control={
           <Switch
             size="small"
@@ -107,7 +107,7 @@ export function FormInheritancePanel() {
             </Typography>
           )}
           {inheritance.connectionsLoading && (
-            <LinearProgress aria-label="Loading retained Inquiry versions" />
+            <LinearProgress aria-label="Loading Retained Inquiry Versions" />
           )}
           {inheritance.hasMoreConnections && (
             <Button
@@ -116,10 +116,10 @@ export function FormInheritancePanel() {
               disabled={inheritance.connectionsLoading || formik.isSubmitting}
               onClick={inheritance.loadMoreConnections}
             >
-              Load more Inquiry versions
+              Load More Inquiry Versions
             </Button>
           )}
-          {inheritance.loading && <LinearProgress aria-label="Checking Inquiry questions" />}
+          {inheritance.loading && <LinearProgress aria-label="Checking Inquiry Questions" />}
           {inheritance.preview && !inheritance.loading && !inheritance.failed && (
             <>
               <Typography
@@ -128,8 +128,8 @@ export function FormInheritancePanel() {
                 role="status"
               >
                 {inheritance.preview.isValid
-                  ? 'Questions ready to use'
-                  : 'Review the question issues before allowing these questions.'}
+                  ? 'Questions Ready to Use'
+                  : 'Review the Question Issues Before Allowing These Questions.'}
               </Typography>
               {inheritance.preview.issues.map((issue, index) => (
                 <Typography key={`${issue.code}-${index}`} variant="caption" color="error.main">
@@ -149,7 +149,7 @@ export function FormInheritancePanel() {
                   }
                   onClick={inheritance.approve}
                 >
-                  Allow these questions
+                  Allow These Questions
                 </Button>
               )}
               {inheritance.approved && inheritance.preview.isValid && (
@@ -180,7 +180,7 @@ export function FormInheritancePanel() {
                 disabled={!canCheck}
                 onClick={inheritance.refresh}
               >
-                Check again
+                Check Again
               </Button>
             </Stack>
           )}
@@ -197,7 +197,7 @@ export function FormInheritancePanel() {
                 inheritance.refresh();
               }}
             >
-              Check again
+              Check Again
             </MenuItem>
             <MenuItem
               disabled={!selectedPolicy || !hasOverrides || formik.isSubmitting}
@@ -206,7 +206,7 @@ export function FormInheritancePanel() {
                 setResetSourceId(selectedPolicy!.inquiryFormDefinitionId);
               }}
             >
-              Reset question adjustments
+              Reset Question Adjustments
             </MenuItem>
           </Menu>
           <ConfirmDialog
@@ -228,7 +228,7 @@ export function FormInheritancePanel() {
                   setResetSourceId(null);
                 }}
               >
-                Reset adjustments
+                Reset Adjustments
               </Button>
             }
           />
@@ -258,7 +258,7 @@ export function InheritedFieldDrawer() {
             Inquiry Question Settings
           </Typography>
           <IconButton
-            aria-label="Close inherited field settings"
+            aria-label="Close Inherited Field Settings"
             onClick={() => inheritance.selectField(null)}
           >
             <Iconify icon="mdi:close" />
@@ -331,7 +331,7 @@ export function InheritedFieldSettings({
       <FormSectionCard
         title="Source"
         icon="mdi:link-variant"
-        descriptionTooltip="Inherited definitions are managed in the source Inquiry. Preview opens separately and preserves this draft."
+        descriptionTooltip="Inherited Definitions Are Managed in the Source Inquiry. Preview Opens Separately and Preserves This Draft."
       >
         <Typography variant="body2">{sourceName}</Typography>
         <Button
@@ -344,7 +344,7 @@ export function InheritedFieldSettings({
           variant="outlined"
           endIcon={<Iconify icon="mdi:open-in-new" />}
         >
-          Open Inquiry form
+          Open Inquiry Form
         </Button>
         {inheritance && !inheritance.canViewSources && (
           <Typography variant="caption" color="text.secondary">
@@ -355,11 +355,11 @@ export function InheritedFieldSettings({
       <FormSectionCard
         title="Basic Settings"
         icon="mdi:form-textbox"
-        descriptionTooltip="Question labels, types, options, requirements, rules and placement are managed in Inquiry. Registration applicants can correct their prefilled answers."
+        descriptionTooltip="Question Labels, Types, Options, Requirements, Rules and Placement Are Managed in Inquiry. Registration Applicants Can Correct Their Prefilled Answers."
       >
-        <TextField label="Field label" value={field.label} disabled fullWidth size="small" />
+        <TextField label="Field Label" value={field.label} disabled fullWidth size="small" />
         <TextField
-          label="Field type"
+          label="Field Type"
           value={FIELD_TYPES.find(([, type]) => type === field.fieldType)?.[0] ?? 'Field'}
           disabled
           fullWidth
@@ -373,30 +373,30 @@ export function InheritedFieldSettings({
         <FormControlLabel
           labelPlacement="start"
           sx={{ m: 0, justifyContent: 'space-between', gap: 1 }}
-          label="Required during Registration"
+          label="Required During Registration"
           control={<Switch size="small" checked={required} disabled />}
         />
         <Typography variant="caption" color="text.secondary">
           {capturedReference
-            ? 'The captured Inquiry answer is a read-only reference.'
+            ? 'The Captured Inquiry Answer Is a Read-only Reference.'
             : required
-              ? 'Required by the source Inquiry.'
-              : 'Optional in the source Inquiry.'}
+              ? 'Required by the Source Inquiry.'
+              : 'Optional in the Source Inquiry.'}
         </Typography>
       </FormSectionCard>
       {!!mappingCandidates.length && (
         <FormSectionCard
           title="Question Mapping"
           icon="mdi:link-variant"
-          descriptionTooltip="Choose an existing Registration question only when it asks for the same information. Names alone do not establish a match."
+          descriptionTooltip="Choose an Existing Registration Question Only When It Asks for the Same Information. Names Alone Do Not Establish a Match."
         >
           <CustomSelect
-            label="Same question in Registration"
+            label="Same Question in Registration"
             size="small"
             value={mappedTo}
             disabled={formik.isSubmitting || !policy}
             options={[
-              { value: '', label: 'Keep as a distinct source question' },
+              { value: '', label: 'Keep as a Distinct Source Question' },
               ...mappingCandidates.map((candidate) => ({
                 value: candidate.code,
                 label: candidate.label,
@@ -423,7 +423,7 @@ export function InheritedFieldSettings({
         disabled
         startIcon={<Iconify icon="mdi:lock-outline" />}
       >
-        Delete field
+        Delete Field
       </Button>
       <Typography variant="caption" color="text.secondary">
         Inherited fields are managed in Inquiry.

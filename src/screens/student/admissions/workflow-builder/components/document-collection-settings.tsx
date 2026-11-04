@@ -22,23 +22,23 @@ export function DocumentCollectionSettings({
   return (
     <FormSectionCard
       icon="mdi:upload-outline"
-      title="When to collect documents"
-      descriptionTooltip="Uploads collected during the selected form are reused here. Verification and waivers happen in this document stage."
+      title="When to Collect Documents"
+      descriptionTooltip="Uploads Collected During the Selected Form Are Reused Here. Verification and Waivers Happen in This Document Stage."
     >
       <CustomSelect
         size="small"
         fullWidth
-        label="Start collecting"
+        label="Start Collecting"
         disabled={disabled}
         value={policy.collectionFormStageCode ?? '__verification'}
         options={[
-          { value: '__verification', label: 'During document verification' },
+          { value: '__verification', label: 'During Document Verification' },
           ...forms.map((stage) => ({ value: stage.code, label: `During ${stage.name}` })),
           ...(missing
             ? [
                 {
                   value: policy.collectionFormStageCode!,
-                  label: 'Selected Form stage is unavailable',
+                  label: 'Selected Form Stage Is Unavailable',
                 },
               ]
             : []),

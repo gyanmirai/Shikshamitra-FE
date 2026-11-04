@@ -67,7 +67,7 @@ beforeEach(() => {
 
 it('loads published Inquiry forms on enabling reuse in a new Registration without typing', async () => {
   setup();
-  fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Preview using Inquiry form' }));
+  fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Preview Using Inquiry Form' }));
   expect(await screen.findByRole('option', { name: 'Admission inquiry · v1' })).toBeVisible();
   expect(requests.forms).toHaveBeenCalledWith({
     purpose: 0,
@@ -84,7 +84,7 @@ it('loads again after reuse is disabled and re-enabled without resetting the for
   fireEvent.click(screen.getByRole('button', { name: 'Toggle Inquiry' }));
   expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Toggle Inquiry' }));
-  fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Preview using Inquiry form' }));
+  fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Preview Using Inquiry Form' }));
   expect(await screen.findByRole('option', { name: 'Admission inquiry · v1' })).toBeVisible();
   expect(requests.forms).toHaveBeenCalledTimes(2);
 });
@@ -96,7 +96,7 @@ it('offers retry when the initial published Inquiry request fails', async () => 
     },
   }));
   setup();
-  fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Preview using Inquiry form' }));
+  fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Preview Using Inquiry Form' }));
   expect(await screen.findByText('Failed to load results')).toBeVisible();
   fireEvent.click(screen.getByRole('button', { name: 'Retry results' }));
   expect(await screen.findByRole('option', { name: 'Admission inquiry · v1' })).toBeVisible();
@@ -105,7 +105,7 @@ it('offers retry when the initial published Inquiry request fails', async () => 
 it('does not request published Inquiry forms without View permission', async () => {
   requests.permissions = [];
   setup();
-  fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Preview using Inquiry form' }));
+  fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Preview Using Inquiry Form' }));
   expect(await screen.findByText('No saved Inquiry forms')).toBeVisible();
   expect(requests.forms).not.toHaveBeenCalled();
 });
@@ -113,7 +113,7 @@ it('does not request published Inquiry forms without View permission', async () 
 it('preserves the search across ordinary draft edits and reloads the list when cleared', async () => {
   setup();
   await waitFor(() => expect(requests.forms).toHaveBeenCalledOnce());
-  const input = screen.getByRole('combobox', { name: 'Preview using Inquiry form' });
+  const input = screen.getByRole('combobox', { name: 'Preview Using Inquiry Form' });
   fireEvent.focus(input);
   fireEvent.change(input, { target: { value: 'Admission' } });
   await waitFor(() =>

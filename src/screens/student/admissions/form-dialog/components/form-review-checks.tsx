@@ -26,12 +26,12 @@ export function FormReviewChecks({ form, onEditFields }: Props) {
           <Typography variant="subtitle1">
             {issues.length
               ? `${issues.length} ${issues.length === 1 ? 'item' : 'items'} to review before publishing`
-              : 'Form checks passed'}
+              : 'Form Checks Passed'}
           </Typography>
           <Typography variant="body2" color="text.secondary">
             {issues.length
-              ? 'Review these items before publishing. Your form stays private when saved as a draft.'
-              : 'No issues found in this review. The form will be checked again before publishing.'}
+              ? 'Review These Items Before Publishing. Your Form Stays Private When Saved as a Draft.'
+              : 'No Issues Found in This Review. The Form Will Be Checked Again Before Publishing.'}
           </Typography>
         </Box>
       </Stack>
@@ -53,7 +53,7 @@ export function FormReviewChecks({ form, onEditFields }: Props) {
             sx={{ mt: 1, minHeight: 44 }}
             startIcon={<Iconify icon="mdi:arrow-left" />}
           >
-            Return to builder
+            Return to Builder
           </Button>
         </>
       )}

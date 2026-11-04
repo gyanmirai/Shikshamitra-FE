@@ -62,14 +62,14 @@ export function AdmissionOfferingRowActions({ row, ...actions }: Props) {
   if (!row.isActive && actions.canActivate && !activationAllowed && actions.canEdit)
     rowActions.push({
       id: 'complete-setup',
-      label: `Complete setup for to activate`,
+      label: 'Resolve Activation Issues',
       icon: 'mdi:clipboard-edit-outline',
-      onClick: () => actions.onEdit(row),
+      onClick: () => actions.onToggleActive(row),
     });
   if (!row.isActive && actions.canActivate && !activationAllowed && !actions.canEdit)
     rowActions.push({
       id: 'activation-blocked',
-      label: 'Activation blocked by incomplete setup',
+      label: 'Activation Blocked by Incomplete Setup',
       icon: 'mdi:alert-circle-outline',
       disabled: true,
       onClick: () => {},
@@ -78,7 +78,7 @@ export function AdmissionOfferingRowActions({ row, ...actions }: Props) {
   return (
     <AdaptiveThreeDotsActions
       placement="right-top"
-      moreLabel={`More actions`}
+      moreLabel="More Actions"
       mobileDirectActionLimit={0}
       sx={{
         gap: 0,

@@ -1,8 +1,11 @@
 import { vi, it, expect, describe } from 'vitest';
 import { renderWithProviders } from 'src/test/test-utils';
-import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor, fireEvent } from '@testing-library/react';
 
 import { WorkflowGovernanceActionDialog } from './components/workflow-governance-action-dialog';
+
+// Governance validation does not depend on remote decorative icon downloads.
+vi.mock('src/components/iconify', () => ({ Iconify: () => <span aria-hidden /> }));
 
 describe('WorkflowGovernanceActionDialog', () => {
   it('requires an approver and reason before submitting a workflow', async () => {
@@ -18,17 +21,17 @@ describe('WorkflowGovernanceActionDialog', () => {
       />
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Submit for approval' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Submit for Approval' }));
     expect(await screen.findByText('Select an approver.')).toBeInTheDocument();
     expect(screen.getByText('Enter a reason before continuing.')).toBeInTheDocument();
     expect(onConfirm).not.toHaveBeenCalled();
 
-    fireEvent.change(screen.getByLabelText(/Change reason/), {
+    fireEvent.change(screen.getByLabelText(/Change Reason/), {
       target: { value: 'New admission route for the next intake.' },
     });
     fireEvent.mouseDown(screen.getByLabelText(/Approver/));
     fireEvent.click(await screen.findByRole('option', { name: 'School checker' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Submit for approval' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Submit for Approval' }));
 
     await waitFor(() =>
       expect(onConfirm).toHaveBeenCalledWith({

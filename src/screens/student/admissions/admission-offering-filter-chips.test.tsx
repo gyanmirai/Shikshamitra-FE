@@ -59,7 +59,11 @@ vi.mock('src/redux/academicOrganizationOptions/academicOrganizationOptionsApi', 
 }));
 vi.mock('src/redux/class/classApi', () => ({
   useGetClassByMediumQuery: () => ({
-    currentData: [{ id: 'class-5', name: 'Class 5', educationMediumStageId: 'stage-2' }],
+    currentData: [
+      { id: 'class-5', name: 'Class 5', educationMediumStageId: 'stage-2' },
+      { id: 'class-6', name: 'Class 6', educationMediumStageId: 'stage-2' },
+      { id: 'class-7', name: 'Class 7', educationMediumStageId: 'stage-2' },
+    ],
   }),
 }));
 vi.mock('./use-admission-offering-actions', () => ({
@@ -138,6 +142,31 @@ describe('Offering compulsory academic context and removable filter chips', () =
       }),
       { skip: false }
     );
+  });
+
+  it('summarizes multiple selected classes while preserving the API IDs', () => {
+    mocks.query += '&standard=class-5,class-6';
+    render(<OfferingFiltersHarness />);
+
+    expect(screen.getByRole('button', { name: /Class → Equals → 2 selected/ })).toBeVisible();
+    expect(screen.queryByText('Class 5, Class 6')).not.toBeInTheDocument();
+    expect(mocks.getOfferings).toHaveBeenLastCalledWith(
+      expect.objectContaining({ standardIds: ['class-5', 'class-6'] }),
+      { skip: false }
+    );
+  });
+
+  it('summarizes all explicitly selected classes and removes the entire criterion together', async () => {
+    const user = userEvent.setup();
+    mocks.query += '&standard=class-5,class-6,class-7';
+    render(<OfferingFiltersHarness />);
+
+    await user.click(screen.getByRole('button', { name: /Class → Equals → All \(3\)/ }));
+    await user.keyboard('{Delete}');
+    expect(screen.queryByText('Active Filters:')).not.toBeInTheDocument();
+    expect(readLastUrl().get('standard')).toBeNull();
+    expect(readLastUrl().get('board')).toBe('board-2');
+    expect(readLastUrl().get('medium')).toBe('medium-2');
   });
 
   it('clears every removable chip permanently and retains selected context, search and sorting', async () => {

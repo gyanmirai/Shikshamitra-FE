@@ -40,7 +40,7 @@ export function EligibilityCriteriaList({
     <Stack spacing={1}>
       {criteria.length >= 25 && (
         <Typography variant="caption" color="text.secondary">
-          {criteria.length} of 30 criteria
+          {criteria.length} Of 30 Criteria
         </Typography>
       )}
       {!criteria.length && (
@@ -107,7 +107,7 @@ export function EligibilityCriteriaList({
                   aria-label={`${readOnly ? 'View' : 'Edit'} ${criterion.name}`}
                   onClick={() => setEditing({ index, value: criterion })}
                 >
-                  {readOnly ? 'View criterion' : 'Edit criterion'}
+                  {readOnly ? 'View Criterion' : 'Edit Criterion'}
                 </Button>
                 {!readOnly && (
                   <Button
@@ -126,7 +126,7 @@ export function EligibilityCriteriaList({
       })}
       {!readOnly && (
         <Button size="small" variant="outlined" disabled={criteria.length >= 30} onClick={add}>
-          Add eligibility criterion
+          Add Eligibility Criterion
         </Button>
       )}
       {editing && (
@@ -150,7 +150,7 @@ export function EligibilityCriteriaList({
       <ConfirmDialog
         open={removing !== null}
         onClose={() => setRemoving(null)}
-        title="Remove eligibility criterion?"
+        title="Remove Eligibility Criterion?"
         content="This changes the current draft. Existing application evaluations remain available."
         action={
           <Button
@@ -161,7 +161,7 @@ export function EligibilityCriteriaList({
               setRemoving(null);
             }}
           >
-            Remove criterion
+            Remove Criterion
           </Button>
         }
       />

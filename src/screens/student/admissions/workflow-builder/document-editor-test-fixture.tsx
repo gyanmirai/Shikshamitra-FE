@@ -85,7 +85,7 @@ export async function renderDocumentEditor(
       </ThemeProvider>
     </Provider>
   );
-  await screen.findByRole('button', { name: readOnly ? 'Close' : 'Apply changes' });
+  await screen.findByRole('button', { name: readOnly ? 'Close' : 'Apply Changes' });
   return { onSave, onClose, store };
 }
 const stores: ReturnType<typeof createEditorStore>[] = [];

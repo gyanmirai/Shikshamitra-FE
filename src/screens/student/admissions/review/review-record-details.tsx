@@ -19,12 +19,12 @@ export function ReviewRecordDetails({
         <Typography variant="subtitle2">
           Record {record.sequenceNumber} ·{' '}
           {record.status === 'assignment'
-            ? 'Assignment updated'
+            ? 'Assignment Updated'
             : record.status === 'submitted'
-              ? 'Recommendation submitted'
-              : 'Draft saved'}
+              ? 'Recommendation Submitted'
+              : 'Draft Saved'}
         </Typography>
-        {record.isStale && <Chip size="small" color="warning" label="Evidence changed" />}
+        {record.isStale && <Chip size="small" color="warning" label="Evidence Changed" />}
       </Stack>
       <Typography variant="caption" color="text.secondary">
         Recorded {dayjs(record.recordedAt).format('DD MMM YYYY, h:mm A')} · By {record.recordedBy}
@@ -46,21 +46,21 @@ export function ReviewRecordDetails({
       )}
       {record.checklist.map((item) => (
         <Typography key={item.code} variant="body2">
-          {item.checked ? 'Confirmed' : 'Not confirmed'} · {item.name}
-          {item.required ? ' (required)' : ''}
+          {item.checked ? 'Confirmed' : 'Not Confirmed'} · {item.name}
+          {item.required ? ' (Required)' : ''}
           {item.notes ? ` · ${item.notes}` : ''}
         </Typography>
       ))}
       <Typography variant="body2" color="text.secondary">
-        Assigned to {record.assignedReviewerName || 'Unassigned'} ·{' '}
-        {record.dueAt ? `Due ${dayjs(record.dueAt).format('DD MMM YYYY, h:mm A')}` : 'No deadline'}
+        Assigned To {record.assignedReviewerName || 'Unassigned'} ·{' '}
+        {record.dueAt ? `Due ${dayjs(record.dueAt).format('DD MMM YYYY, h:mm A')}` : 'No Deadline'}
       </Typography>
       {record.decision && (
         <Stack spacing={0.5} sx={{ borderLeft: 3, borderColor: 'primary.main', pl: 1.5 }}>
           <Typography variant="subtitle2">
             Decision:{' '}
             {record.decision.decision === 'requestCorrection'
-              ? 'Corrections requested'
+              ? 'Corrections Requested'
               : record.decision.decision === 'approve'
                 ? 'Approved'
                 : record.decision.decision === 'reject'

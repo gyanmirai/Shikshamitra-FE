@@ -28,7 +28,7 @@ export function FormBuilderUnitActions({
     <>
       <ThreeDotsActions
         placement="top-right"
-        moreLabel={`Actions for ${name} ${unit}`}
+        moreLabel={`Actions For ${name} ${unit}`}
         sx={{ flexShrink: 0, '& .MuiIconButton-root': { width: 44, height: 44 } }}
         actions={({ popover }) => (
           <>

@@ -8,7 +8,7 @@ export function WorkflowPreservedCondition({ json }: { json: string }) {
         This saved condition uses a format this editor cannot change. Its rule is preserved when you
         save the route details.
       </StudentFeedback>
-      <Typography variant="subtitle2">Saved condition</Typography>
+      <Typography variant="subtitle2">Saved Condition</Typography>
       <Box
         component="pre"
         sx={{

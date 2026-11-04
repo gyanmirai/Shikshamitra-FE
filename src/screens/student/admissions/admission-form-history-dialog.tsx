@@ -27,11 +27,12 @@ import {
 
 type Props = {
   form: AdmissionForm | null;
+  canRestore: boolean;
   onClose: () => void;
   onRestoreVersion: (id: string) => Promise<unknown>;
 };
 
-export function AdmissionFormHistoryDialog({ form, onClose, onRestoreVersion }: Props) {
+export function AdmissionFormHistoryDialog({ form, canRestore, onClose, onRestoreVersion }: Props) {
   const audit = useGetAdmissionFormAuditQuery(form?.id ?? '', { skip: !form });
   const versions = useGetAdmissionFormVersionsQuery(form?.id ?? '', { skip: !form });
   const [compare, comparison] = useLazyCompareAdmissionFormVersionsQuery();
@@ -45,7 +46,7 @@ export function AdmissionFormHistoryDialog({ form, onClose, onRestoreVersion }: 
   }, [form?.id]);
 
   const restoreVersion = async () => {
-    if (!selectedVersion || restoring) return;
+    if (!canRestore || !selectedVersion || restoring) return;
     setRestoring(true);
     setRestoreError(null);
     try {
@@ -74,7 +75,8 @@ export function AdmissionFormHistoryDialog({ form, onClose, onRestoreVersion }: 
     <CustomDialog
       open={Boolean(form)}
       handleClose={onClose}
-      title={`History & versions · ${form?.name ?? ''}`}
+      title={`History & Versions · ${form?.name ?? ''}`}
+      titleInfo="Compare form versions and review their history. Restoring creates a new draft; saved inquiries and applications keep their original versions."
       hasForm={false}
       guardUnsavedChanges={false}
       disableClose={restoring}
@@ -85,17 +87,21 @@ export function AdmissionFormHistoryDialog({ form, onClose, onRestoreVersion }: 
         <Stack spacing={2}>
           <FormSectionCard
             icon="mdi:compare"
-            title="Compare versions"
-            description="Review structural changes or restore an older version as a new editable draft."
+            title="Compare Versions"
+            description={
+              canRestore
+                ? 'Review structural changes or restore an older version as a new editable draft.'
+                : 'Review structural changes between saved versions.'
+            }
           >
             {versionsLoading ? (
-              <Skeleton variant="rounded" height={40} aria-label="Loading form versions" />
+              <Skeleton variant="rounded" height={40} aria-label="Loading Form Versions" />
             ) : versions.isError ? (
               <StudentFeedback
                 notificationKey="STU-0062"
                 presentation="toast"
                 severity="error"
-                action={
+                toastAction={
                   <Button size="small" onClick={() => versions.refetch()}>
                     Retry
                   </Button>
@@ -110,7 +116,7 @@ export function AdmissionFormHistoryDialog({ form, onClose, onRestoreVersion }: 
                 alignItems={{ sm: 'center' }}
               >
                 <CustomSelect
-                  label="Compare with"
+                  label="Compare With"
                   value={selectedVersion}
                   options={comparableVersions.map((version) => ({
                     value: version.id,
@@ -134,21 +140,31 @@ export function AdmissionFormHistoryDialog({ form, onClose, onRestoreVersion }: 
                       !(comparisonMatchesSelection && comparison.isError)
                     )
                   }
-                  sx={{ alignSelf: { xs: 'flex-start', sm: 'auto' } }}
+                  sx={{
+                    alignSelf: { xs: 'flex-start', sm: 'auto' },
+                    flexShrink: 0,
+                    whiteSpace: 'nowrap',
+                  }}
                 >
                   Compare
                 </LoadingButton>
-                <LoadingButton
-                  variant="outlined"
-                  size="small"
-                  startIcon={<Iconify icon="mdi:restore" />}
-                  disabled={!selectedVersion || comparison.isFetching}
-                  loading={restoring}
-                  onClick={restoreVersion}
-                  sx={{ alignSelf: { xs: 'flex-start', sm: 'auto' } }}
-                >
-                  Restore as new draft
-                </LoadingButton>
+                {canRestore && (
+                  <LoadingButton
+                    variant="outlined"
+                    size="small"
+                    startIcon={<Iconify icon="mdi:restore" />}
+                    disabled={!selectedVersion || comparison.isFetching}
+                    loading={restoring}
+                    onClick={restoreVersion}
+                    sx={{
+                      alignSelf: { xs: 'flex-start', sm: 'auto' },
+                      flexShrink: 0,
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    Restore as New Draft
+                  </LoadingButton>
+                )}
               </Stack>
             ) : (
               <Typography variant="body2" color="text.secondary">
@@ -165,11 +181,7 @@ export function AdmissionFormHistoryDialog({ form, onClose, onRestoreVersion }: 
               </StudentFeedback>
             )}
             {comparisonMatchesSelection && comparison.isError && (
-              <StudentFeedback
-                notificationKey="STU-0064"
-                presentation="toast"
-                severity="error"
-              >
+              <StudentFeedback notificationKey="STU-0064" presentation="toast" severity="error">
                 Unable to compare these versions. Select Compare to try again.
               </StudentFeedback>
             )}
@@ -179,8 +191,8 @@ export function AdmissionFormHistoryDialog({ form, onClose, onRestoreVersion }: 
               comparison.data &&
               (comparison.data.changes.length ? (
                 <List dense disablePadding>
-                  {comparison.data.changes.map((change) => (
-                    <ListItem key={change} disableGutters>
+                  {comparison.data.changes.map((change, index) => (
+                    <ListItem key={`${index}:${change}`} disableGutters>
                       <ListItemText primary={change} />
                     </ListItem>
                   ))}
@@ -193,7 +205,7 @@ export function AdmissionFormHistoryDialog({ form, onClose, onRestoreVersion }: 
           </FormSectionCard>
           <FormSectionCard icon="mdi:history" title="Activity">
             {auditLoading ? (
-              <Stack spacing={1} aria-label="Loading form activity">
+              <Stack spacing={1} aria-label="Loading Form Activity">
                 <Skeleton variant="rounded" height={48} />
                 <Skeleton variant="rounded" height={48} />
                 <Skeleton variant="rounded" height={48} />
@@ -203,7 +215,7 @@ export function AdmissionFormHistoryDialog({ form, onClose, onRestoreVersion }: 
                 notificationKey="STU-0065"
                 presentation="toast"
                 severity="error"
-                action={
+                toastAction={
                   <Button size="small" onClick={() => audit.refetch()}>
                     Retry
                   </Button>
@@ -219,7 +231,7 @@ export function AdmissionFormHistoryDialog({ form, onClose, onRestoreVersion }: 
                       primary={entry.action.replace(/([a-z])([A-Z])/g, '$1 $2')}
                       primaryTypographyProps={{ variant: 'body2', fontWeight: 600 }}
                       secondaryTypographyProps={{ variant: 'caption' }}
-                      secondary={`${fDateTime(entry.occurredAt)} · Version ${entry.version}${entry.comment ? ` · ${entry.comment}` : ''}`}
+                      secondary={`${fDateTime(entry.occurredAt)} · version ${entry.version}${entry.comment ? ` · ${entry.comment}` : ''}`}
                     />
                   </ListItem>
                 ))}

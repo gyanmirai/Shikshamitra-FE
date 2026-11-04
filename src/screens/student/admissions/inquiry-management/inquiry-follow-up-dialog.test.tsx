@@ -130,7 +130,7 @@ const management = {
 } as unknown as AdmissionInquiryManagement;
 const future = dayjs().add(3, 'day').startOf('day');
 const changeReminder = () =>
-  fireEvent.change(screen.getByLabelText('Next reminder date'), {
+  fireEvent.change(screen.getByLabelText('Next Reminder Date'), {
     target: { value: future.format('YYYY-MM-DD') },
   });
 
@@ -169,7 +169,7 @@ it('shows notes and exactly three statuses, then saves one atomic Interested fol
   expect(screen.getAllByRole('option').map((item) => item.textContent)).toEqual([
     'Pending',
     'Interested',
-    'Not interested',
+    'Not Interested',
   ]);
   expect(screen.queryByRole('button', { name: /Move/i })).not.toBeInTheDocument();
   await user.type(screen.getByRole('textbox', { name: 'Notes' }), '  Parent wants to proceed  ');
@@ -238,7 +238,7 @@ it('prefills the active reminder when the detail response has no queue projectio
   };
   render(<InquiryFollowUpDialog inquiry={inquiry} onClose={mocks.close} />);
   await waitFor(() =>
-    expect(screen.getByLabelText('Next reminder date')).toHaveValue(future.format('YYYY-MM-DD'))
+    expect(screen.getByLabelText('Next Reminder Date')).toHaveValue(future.format('YYYY-MM-DD'))
   );
 });
 
@@ -252,7 +252,7 @@ it('uses the offset-safe reminder projection ahead of legacy scheduled timestamp
   };
   render(<InquiryFollowUpDialog inquiry={inquiry} onClose={mocks.close} />);
   await waitFor(() =>
-    expect(screen.getByLabelText('Next reminder date')).toHaveValue(future.format('YYYY-MM-DD'))
+    expect(screen.getByLabelText('Next Reminder Date')).toHaveValue(future.format('YYYY-MM-DD'))
   );
 });
 
@@ -271,7 +271,7 @@ it('waits for both opening GETs before using defaults and preserves edits on lat
   };
   const view = render(<InquiryFollowUpDialog inquiry={inquiry} onClose={mocks.close} />);
   expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
-  expect(screen.getByLabelText('Next reminder date')).toHaveValue('');
+  expect(screen.getByLabelText('Next Reminder Date')).toHaveValue('');
 
   // Inquiry finishes first; the old management cache must not initialize the form.
   mocks.detail = {
@@ -281,7 +281,7 @@ it('waits for both opening GETs before using defaults and preserves edits on lat
   };
   view.rerender(<InquiryFollowUpDialog inquiry={inquiry} onClose={mocks.close} />);
   expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
-  expect(screen.getByLabelText('Next reminder date')).toHaveValue('');
+  expect(screen.getByLabelText('Next Reminder Date')).toHaveValue('');
 
   mocks.management = {
     ...mocks.management,
@@ -291,13 +291,13 @@ it('waits for both opening GETs before using defaults and preserves edits on lat
   view.rerender(<InquiryFollowUpDialog inquiry={inquiry} onClose={mocks.close} />);
   await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled());
   expect(screen.getByRole('combobox', { name: 'Status' })).toHaveValue('2');
-  expect(screen.getByLabelText('Next reminder date')).toHaveValue(
+  expect(screen.getByLabelText('Next Reminder Date')).toHaveValue(
     freshReminder.format('YYYY-MM-DD')
   );
   expect(mocks.refetch).not.toHaveBeenCalled();
 
   await user.type(screen.getByRole('textbox', { name: 'Notes' }), 'Keep this draft after refresh');
-  fireEvent.change(screen.getByLabelText('Next reminder date'), {
+  fireEvent.change(screen.getByLabelText('Next Reminder Date'), {
     target: { value: editedReminder.format('YYYY-MM-DD') },
   });
   mocks.detail = {
@@ -315,24 +315,62 @@ it('waits for both opening GETs before using defaults and preserves edits on lat
     'Keep this draft after refresh'
   );
   expect(screen.getByRole('combobox', { name: 'Status' })).toHaveValue('2');
-  expect(screen.getByLabelText('Next reminder date')).toHaveValue(
+  expect(screen.getByLabelText('Next Reminder Date')).toHaveValue(
     editedReminder.format('YYYY-MM-DD')
   );
 });
 
 it.each(['management', 'inquiry'])(
-  'blocks writes and offers retry when the %s stamp is missing',
+  'blocks writes and announces a missing %s stamp, then recovers from fresh query data',
   async (missing) => {
     const user = userEvent.setup();
     if (missing === 'management')
       mocks.management.currentData = { ...management, concurrencyStamp: '' };
     else mocks.detail.currentData = { ...inquiry, concurrencyStamp: '' };
-    render(<InquiryFollowUpDialog inquiry={inquiry} onClose={mocks.close} />);
-    expect(screen.getByText('Follow-up notes could not be loaded.')).toBeVisible();
+    const view = render(<InquiryFollowUpDialog inquiry={inquiry} onClose={mocks.close} />);
+    await waitFor(() =>
+      expect(mocks.error).toHaveBeenCalledExactlyOnceWith({
+        message: 'Follow-up notes could not be loaded.',
+        alertProps: expect.any(Function),
+      })
+    );
+    const toastProps = mocks.error.mock.calls[0][0].alertProps('load-error');
+    expect(toastProps.action).toBeUndefined();
+    expect(toastProps.onClose).toEqual(expect.any(Function));
+    expect(screen.queryByText('Follow-up notes could not be loaded.')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
-    await user.click(screen.getByRole('button', { name: 'Retry' }));
-    expect(mocks.refetch).toHaveBeenCalledOnce();
+    expect(screen.getByRole('textbox', { name: 'Notes' })).toBeDisabled();
     expect(mocks.record).not.toHaveBeenCalled();
+
+    const reloadStamp = Date.now() + 120_000;
+    mocks.management = {
+      ...mocks.management,
+      currentData: { ...management, concurrencyStamp: 'management-refreshed' },
+      fulfilledTimeStamp: reloadStamp,
+    };
+    mocks.detail = {
+      ...mocks.detail,
+      currentData: { ...inquiry, concurrencyStamp: 'inquiry-refreshed' },
+      fulfilledTimeStamp: reloadStamp + 1,
+    };
+    view.rerender(<InquiryFollowUpDialog inquiry={inquiry} onClose={mocks.close} />);
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled());
+    expect(screen.getByText('Parent asked about campus visit.')).toBeVisible();
+    await user.type(screen.getByRole('textbox', { name: 'Notes' }), 'Parent wants another call');
+    changeReminder();
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+    await waitFor(() =>
+      expect(mocks.record).toHaveBeenCalledExactlyOnceWith({
+        inquiryId: inquiry.id,
+        concurrencyStamp: 'management-refreshed',
+        inquiryConcurrencyStamp: 'inquiry-refreshed',
+        note: 'Parent wants another call',
+        status: 0,
+        reminderAt: future.toISOString(),
+      })
+    );
+    expect(mocks.refetch).not.toHaveBeenCalled();
   }
 );
 
@@ -346,7 +384,7 @@ it('blocks empty notes and requires a future reminder for Pending', async () => 
   expect(await screen.findByText('Notes are required')).toBeVisible();
   expect(screen.getByText('Next reminder date is required')).toBeVisible();
   await user.type(screen.getByRole('textbox', { name: 'Notes' }), 'Call again');
-  fireEvent.change(screen.getByLabelText('Next reminder date'), {
+  fireEvent.change(screen.getByLabelText('Next Reminder Date'), {
     target: { value: dayjs().format('YYYY-MM-DD') },
   });
   await user.click(screen.getByRole('button', { name: 'Submit' }));
@@ -360,7 +398,7 @@ it('saves Not interested without a reminder and clears any previously chosen dat
   await user.type(screen.getByRole('textbox', { name: 'Notes' }), 'Family chose another school');
   changeReminder();
   fireEvent.change(screen.getByRole('combobox', { name: 'Status' }), { target: { value: '6' } });
-  expect(screen.getByLabelText('Next reminder date')).toBeDisabled();
+  expect(screen.getByLabelText('Next Reminder Date')).toBeDisabled();
   await user.click(screen.getByRole('button', { name: 'Submit' }));
   await waitFor(() =>
     expect(mocks.record).toHaveBeenCalledWith(
@@ -432,13 +470,9 @@ it('preserves failed drafts and selected status across refetch while using fresh
 it('preserves the draft and shows a plain error for a failed network request', async () => {
   const user = userEvent.setup();
   mocks.record.mockReturnValueOnce({
-    unwrap: () =>
-      Promise.reject(
-        Object.assign(new Error('Network error'), {
-          status: 'FETCH_ERROR',
-          error: 'TypeError: Failed to fetch',
-        })
-      ),
+    // RTK Query rejects with a structured FetchBaseQueryError rather than an Error instance.
+    // eslint-disable-next-line prefer-promise-reject-errors
+    unwrap: () => Promise.reject({ status: 'FETCH_ERROR', error: 'TypeError: Failed to fetch' }),
   });
   render(<InquiryFollowUpDialog inquiry={inquiry} onClose={mocks.close} />);
   await user.type(screen.getByRole('textbox', { name: 'Notes' }), 'Keep this note');
@@ -450,7 +484,12 @@ it('preserves the draft and shows a plain error for a failed network request', a
     })
   );
   expect(mocks.error).toHaveBeenCalledOnce();
+  expect(
+    screen.getByText('Unable to save the follow-up. Your draft is preserved; try again.')
+  ).toBeVisible();
   expect(screen.getByRole('textbox', { name: 'Notes' })).toHaveValue('Keep this note');
+  expect(screen.getByLabelText('Next Reminder Date')).toHaveValue(future.format('YYYY-MM-DD'));
+  expect(screen.getByRole('combobox', { name: 'Status' })).toHaveValue('0');
   expect(mocks.close).not.toHaveBeenCalled();
 });
 
@@ -459,10 +498,10 @@ it('uses the shared discard dialog instead of native confirmation for unsaved no
   render(<InquiryFollowUpDialog inquiry={inquiry} onClose={mocks.close} />);
   await user.type(screen.getByRole('textbox', { name: 'Notes' }), 'Draft note');
   await user.click(screen.getByRole('button', { name: /^Cancel$/ }));
-  expect(screen.getByRole('dialog', { name: 'Discard unsaved changes?' })).toBeVisible();
+  expect(screen.getByRole('dialog', { name: 'Discard Unsaved Changes?' })).toBeVisible();
   expect(mocks.shell).toHaveBeenLastCalledWith({ guardUnsavedChanges: false });
   expect(mocks.close).not.toHaveBeenCalled();
-  await user.click(screen.getByRole('button', { name: 'Discard changes' }));
+  await user.click(screen.getByRole('button', { name: 'Discard Changes' }));
   expect(mocks.close).toHaveBeenCalledOnce();
 });
 
@@ -487,30 +526,83 @@ it('locks inputs, cancel and close while the atomic save is pending', async () =
   await waitFor(() => expect(mocks.close).toHaveBeenCalledOnce());
 });
 
-it('blocks submit while loading or when queries fail and provides retry', async () => {
+it('blocks submit during loading and query failure, then recovers without losing the draft', async () => {
   const user = userEvent.setup();
-  mocks.detail = { ...mocks.detail, isFetching: true };
   const view = render(<InquiryFollowUpDialog inquiry={inquiry} onClose={mocks.close} />);
+  await user.type(screen.getByRole('textbox', { name: 'Notes' }), 'Keep this note during refresh');
+  changeReminder();
+  mocks.detail = { ...mocks.detail, isFetching: true };
+  view.rerender(<InquiryFollowUpDialog inquiry={inquiry} onClose={mocks.close} />);
   expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
   mocks.detail = { ...mocks.detail, isFetching: false, isError: true };
   view.rerender(<InquiryFollowUpDialog inquiry={inquiry} onClose={mocks.close} />);
-  expect(screen.getByText('Follow-up notes could not be loaded.')).toBeVisible();
-  await user.click(screen.getByRole('button', { name: 'Retry' }));
-  expect(mocks.refetch).toHaveBeenCalledOnce();
+  await waitFor(() =>
+    expect(mocks.error).toHaveBeenCalledExactlyOnceWith({
+      message: 'Follow-up notes could not be loaded.',
+      alertProps: expect.any(Function),
+    })
+  );
+  expect(mocks.error.mock.calls[0][0].alertProps('load-error').action).toBeUndefined();
+  expect(screen.queryByText('Follow-up notes could not be loaded.')).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+  expect(screen.getByRole('textbox', { name: 'Notes' })).toHaveValue(
+    'Keep this note during refresh'
+  );
   expect(mocks.record).not.toHaveBeenCalled();
+  mocks.detail = { ...mocks.detail, isError: false };
+  view.rerender(<InquiryFollowUpDialog inquiry={inquiry} onClose={mocks.close} />);
+  expect(screen.getByRole('textbox', { name: 'Notes' })).toHaveValue(
+    'Keep this note during refresh'
+  );
+  expect(screen.getByLabelText('Next Reminder Date')).toHaveValue(future.format('YYYY-MM-DD'));
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled());
+  await user.click(screen.getByRole('button', { name: 'Submit' }));
+  await waitFor(() =>
+    expect(mocks.record).toHaveBeenCalledExactlyOnceWith({
+      inquiryId: inquiry.id,
+      concurrencyStamp: management.concurrencyStamp,
+      inquiryConcurrencyStamp: inquiry.concurrencyStamp,
+      note: 'Keep this note during refresh',
+      status: 0,
+      reminderAt: future.toISOString(),
+    })
+  );
+  expect(mocks.refetch).not.toHaveBeenCalled();
 });
 
-it.each(['transferred', 'duplicate', 'permission', 'counsellor'])(
+it.each(['transferred', 'duplicate', 'permission'])(
   'keeps %s inquiries read-only while showing history',
   (reason) => {
     if (reason === 'transferred') mocks.detail.currentData = { ...inquiry, isTransferred: true };
     if (reason === 'duplicate') mocks.detail.currentData = { ...inquiry, isDuplicate: true };
     if (reason === 'permission') mocks.permissions = [];
-    if (reason === 'counsellor')
-      mocks.detail.currentData = { ...inquiry, assignedCounsellorId: 'other-user' };
     render(<InquiryFollowUpDialog inquiry={inquiry} onClose={mocks.close} />);
     expect(screen.getByText('Parent asked about campus visit.')).toBeVisible();
     expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
     expect(screen.getByRole('textbox', { name: 'Notes' })).toBeDisabled();
   }
 );
+
+it('allows permitted staff to follow up an inquiry assigned to another counsellor', async () => {
+  const user = userEvent.setup();
+  mocks.detail.currentData = { ...inquiry, assignedCounsellorId: 'other-user' };
+  render(<InquiryFollowUpDialog inquiry={inquiry} onClose={mocks.close} />);
+  expect(screen.getByText('Parent asked about campus visit.')).toBeVisible();
+  expect(screen.getByRole('textbox', { name: 'Notes' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled();
+  await user.type(screen.getByRole('textbox', { name: 'Notes' }), 'Parent confirmed interest');
+  changeReminder();
+  await user.click(screen.getByRole('button', { name: 'Submit' }));
+  await waitFor(() =>
+    expect(mocks.record).toHaveBeenCalledExactlyOnceWith({
+      inquiryId: inquiry.id,
+      concurrencyStamp: management.concurrencyStamp,
+      inquiryConcurrencyStamp: inquiry.concurrencyStamp,
+      note: 'Parent confirmed interest',
+      status: 0,
+      reminderAt: future.toISOString(),
+    })
+  );
+  await waitFor(() => expect(mocks.close).toHaveBeenCalledOnce());
+});

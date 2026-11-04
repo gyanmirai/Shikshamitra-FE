@@ -125,7 +125,7 @@ export function DocumentRequirementTable({
       // A changed visible checklist must not retain an out-of-range page or stale criteria.
       key={requirements.map((item) => item.code).join('|')}
       tableId={`admission-document-requirements-${summary.applicationId}-${summary.stageInstanceId}`}
-      tableTitle="Document requirements"
+      tableTitle="Document Requirements"
       exportLabel="Export"
       columns={columns}
       data={data}
@@ -134,15 +134,15 @@ export function DocumentRequirementTable({
       rowsPerPageOptions={[10, 25, 100]}
       isFilter
       searchFieldProps={{
-        placeholder: 'Search documents...',
-        inputProps: { 'aria-label': 'Search documents' },
+        placeholder: 'Search Documents...',
+        inputProps: { 'aria-label': 'Search Documents' },
       }}
       tableContainerProps={{
-        'aria-label': 'Admission document requirements',
+        'aria-label': 'Admission Document Requirements',
         sx: { minWidth: 0, height: 1 },
       }}
       wrapperProps={{ sx: { minWidth: 0, minHeight: 0, flex: 1 } }}
-      noDataText="No applicable document requirements."
+      noDataText="No Applicable Document Requirements."
     />
   );
 }

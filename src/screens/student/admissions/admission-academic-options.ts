@@ -50,6 +50,8 @@ export function academicOptionsJson(field: AcademicField): string | null | undef
 export function isInstituteAcademicSource(optionsJson?: string | null) {
   const source = parseRuntimeOptionsSource(optionsJson)?.source;
   return [
+    'EducationBoards',
+    'EducationMediums',
     'Standards',
     'StandardsByMedium',
     'StandardsByMediumStage',

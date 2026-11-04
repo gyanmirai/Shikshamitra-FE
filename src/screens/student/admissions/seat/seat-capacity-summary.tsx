@@ -9,7 +9,7 @@ export function SeatCapacitySummary({ state }: { state: AdmissionSeatStage }) {
     <Stack spacing={1.25}>
       <Stack direction="row" justifyContent="space-between" gap={2}>
         <Box><Typography variant="h4">{state.remainingCapacity}</Typography>
-          <Typography variant="caption" color="text.secondary">Seats available</Typography></Box>
+          <Typography variant="caption" color="text.secondary">Seats Available</Typography></Box>
         <Stack direction="row" spacing={3} textAlign="right">
           <Box><Typography variant="subtitle1">{state.reservedCount}</Typography><Typography variant="caption" color="text.secondary">Reserved</Typography></Box>
           <Box><Typography variant="subtitle1">{state.confirmedCount}</Typography><Typography variant="caption" color="text.secondary">Confirmed</Typography></Box>

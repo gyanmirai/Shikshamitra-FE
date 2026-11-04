@@ -21,6 +21,9 @@ const mocks = vi.hoisted(() => ({
   editingId: null as string | null,
   editing: undefined as AdmissionForm | undefined,
   dialogProps: vi.fn(),
+  restoreEntry: undefined as AdmissionForm | undefined,
+  requestLifecycle: vi.fn(),
+  replace: vi.fn(),
   result: {
     currentData: undefined as { items: AdmissionForm[]; totalCount: number } | undefined,
     data: undefined as { items: AdmissionForm[]; totalCount: number } | undefined,
@@ -36,9 +39,14 @@ const mocks = vi.hoisted(() => ({
 vi.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(`view=${mocks.view}&${mocks.criteria}`),
   usePathname: () => '/student/admissions/settings/forms',
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),
+  useRouter: () => ({ push: vi.fn(), replace: mocks.replace, prefetch: vi.fn() }),
 }));
 vi.mock('src/redux/student/admissions/admission-forms-api', () => ({
+  useGetAdmissionFormQuery: () => ({
+    currentData: mocks.restoreEntry,
+    isFetching: false,
+    isError: false,
+  }),
   useGetAdmissionFormsQuery: (args: unknown, options?: unknown) => {
     mocks.query(args, options);
     return mocks.result;
@@ -90,6 +98,14 @@ vi.mock('./admission-form-dialog', () => ({
 vi.mock('./admission-form-clone-dialog', () => ({ AdmissionFormCloneDialog: () => null }));
 vi.mock('./admission-form-publish-dialog', () => ({ AdmissionFormPublishDialog: () => null }));
 vi.mock('./admission-form-history-dialog', () => ({ AdmissionFormHistoryDialog: () => null }));
+vi.mock('./form-list/use-form-lifecycle-actions', () => ({
+  useFormLifecycleActions: () => ({
+    pending: null,
+    request: mocks.requestLifecycle,
+    close: vi.fn(),
+    confirm: vi.fn(),
+  }),
+}));
 
 [
   'mdi:plus',
@@ -150,6 +166,18 @@ const renderScreen = () => {
 };
 
 describe('Admission forms list workspace', () => {
+  it('opens the requested archived form for review and consumes the one-time restore link', async () => {
+    mocks.restoreEntry = { ...form, status: 2 };
+    mocks.criteria = 'restoreForm=form-1&search=Fresh';
+    renderScreen();
+    await waitFor(() =>
+      expect(mocks.requestLifecycle).toHaveBeenCalledExactlyOnceWith('restore', mocks.restoreEntry)
+    );
+    expect(mocks.replace).toHaveBeenCalledWith(
+      '/student/admissions/settings/forms?view=inquiry&search=Fresh',
+      { scroll: false }
+    );
+  });
   afterEach(async () => {
     cleanup();
     // StudentFeedback releases shared toast deduplication after unmount.
@@ -164,6 +192,7 @@ describe('Admission forms list workspace', () => {
     mocks.canManage = true;
     mocks.editingId = null;
     mocks.editing = undefined;
+    mocks.restoreEntry = undefined;
     Object.assign(mocks.result, {
       data: { items: [form], totalCount: 26 },
       currentData: { items: [form], totalCount: 26 },
@@ -179,15 +208,15 @@ describe('Admission forms list workspace', () => {
       mocks.view = view;
       mocks.result.currentData = { items: [form, registrationForm], totalCount: 2 };
       renderScreen();
-      expect(screen.getByRole('heading', { name: 'Admission forms' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Admission Forms' })).toBeInTheDocument();
       expect(screen.queryByRole('tab')).not.toBeInTheDocument();
-      expect(screen.getByRole('table', { name: 'Admission forms table' })).toBeInTheDocument();
+      expect(screen.getByRole('table', { name: 'Admission Forms table' })).toBeInTheDocument();
       expect(screen.getByText('Fresh inquiry')).toBeInTheDocument();
       expect(screen.getByText('Fresh registration')).toBeInTheDocument();
-      expect(screen.getByRole('columnheader', { name: 'Form type' })).toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: 'Form Type' })).toBeInTheDocument();
       expect(screen.getByRole('cell', { name: 'Inquiry' })).toBeInTheDocument();
       expect(screen.getByRole('cell', { name: 'Registration' })).toBeInTheDocument();
-      fireEvent.click(screen.getByRole('button', { name: 'Add form' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Add Form' }));
       expect(mocks.create).toHaveBeenCalledWith(0);
       expect(mocks.query.mock.lastCall![0]).not.toHaveProperty('purpose');
       expect(screen.queryByRole('button', { name: 'Filter Purpose' })).not.toBeInTheDocument();
@@ -242,9 +271,78 @@ describe('Admission forms list workspace', () => {
     renderScreen();
     expect(screen.getByText('Fresh inquiry')).toBeInTheDocument();
     expect(
-      screen.getByRole('progressbar', { name: 'Refreshing Admission forms' })
+      screen.getByRole('progressbar', { name: 'Refreshing Admission Forms' })
     ).toBeInTheDocument();
     expect(document.querySelector('.MuiSkeleton-root')).not.toBeInTheDocument();
+  });
+
+  it('filters form types on the server, resets paging, and clears back to all types', async () => {
+    mocks.criteria = 'page=2&search=Fresh';
+    renderScreen();
+    const typeFilter = screen.getByRole('combobox', { name: 'Form Type' });
+    expect(screen.getByRole('region', { name: 'Admission Form Filters' })).toContainElement(
+      typeFilter
+    );
+    expect(typeFilter).toHaveTextContent('All Types');
+    fireEvent.mouseDown(typeFilter);
+    fireEvent.click(await screen.findByRole('option', { name: 'Inquiry' }));
+    await waitFor(() =>
+      expect(mocks.query.mock.lastCall![0]).toMatchObject({
+        purpose: 0,
+        search: 'Fresh',
+        skipCount: 0,
+        maxResultCount: 10,
+      })
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Go to next page' }));
+    await waitFor(() =>
+      expect(mocks.query.mock.lastCall![0]).toMatchObject({ purpose: 0, skipCount: 10 })
+    );
+    fireEvent.mouseDown(typeFilter);
+    fireEvent.click(await screen.findByRole('option', { name: 'Registration' }));
+    await waitFor(() =>
+      expect(mocks.query.mock.lastCall![0]).toMatchObject({ purpose: 1, skipCount: 0 })
+    );
+    fireEvent.click(screen.getByText('Fresh inquiry'));
+    const returnUrl = new URL(mocks.preview.mock.lastCall![1], 'https://school.test');
+    expect(JSON.parse(returnUrl.searchParams.get('columns')!)).toContainEqual(
+      expect.objectContaining({ column: 'purpose', value: 1 })
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Clear (1)' }));
+    await waitFor(() => expect(mocks.query.mock.lastCall![0]).not.toHaveProperty('purpose'));
+    expect(typeFilter).toHaveTextContent('All Types');
+    expect(mocks.query.mock.lastCall![0]).toMatchObject({ search: 'Fresh', skipCount: 0 });
+  });
+
+  it('restores type and status together and displays the server-filtered rows and count', async () => {
+    mocks.criteria = new URLSearchParams({
+      columns: JSON.stringify([
+        { column: 'status', type: 'equals', value: 1, valueType: 'enum', label: 'Status' },
+        {
+          column: 'purpose',
+          type: 'equals',
+          value: 1,
+          valueType: 'enum',
+          label: 'Form type',
+          displayValue: 'Registration',
+        },
+      ]),
+    }).toString();
+    mocks.result.currentData = { items: [registrationForm], totalCount: 1 };
+    renderScreen();
+    const typeFilter = screen.getByRole('combobox', { name: 'Form Type' });
+    expect(typeFilter).toHaveTextContent('Registration');
+    expect(screen.getByText('Fresh registration')).toBeInTheDocument();
+    expect(screen.queryByText('Fresh inquiry')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Go to next page' })).toBeDisabled();
+    expect(screen.getByText('1–1 of 1')).toBeInTheDocument();
+    fireEvent.mouseDown(typeFilter);
+    fireEvent.click(await screen.findByRole('option', { name: 'All Types' }));
+    await waitFor(() => {
+      expect(mocks.query.mock.lastCall![0]).not.toHaveProperty('purpose');
+      expect(mocks.query.mock.lastCall![0]).toMatchObject({ status: 1, skipCount: 0 });
+    });
+    expect(screen.getByRole('button', { name: 'Clear (1)' })).toBeInTheDocument();
   });
 
   it('uses table skeletons for a new scope instead of exposing data from the previous query', () => {
@@ -253,7 +351,7 @@ describe('Admission forms list workspace', () => {
     renderScreen();
     expect(screen.queryByText('Fresh inquiry')).not.toBeInTheDocument();
     expect(document.querySelector('.MuiSkeleton-root')).toBeInTheDocument();
-    expect(screen.queryByText(/No admission forms/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/No Admission Forms/)).not.toBeInTheDocument();
   });
 
   it('does not show successful empty data after an API failure', async () => {
@@ -265,7 +363,7 @@ describe('Admission forms list workspace', () => {
       )
     );
     expect(
-      screen.queryByText('No admission forms configured yet. Create a draft to begin.')
+      screen.queryByText('No Admission Forms Configured Yet. Create a Draft to Begin.')
     ).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /retry|reload/i })).not.toBeInTheDocument();
   });
@@ -311,7 +409,7 @@ describe('Admission forms list workspace', () => {
   it('keeps viewing and utilities available when managing forms is not granted', () => {
     mocks.canManage = false;
     renderScreen();
-    expect(screen.getByRole('button', { name: 'Add form' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Add Form' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Columns' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Export' })).toBeInTheDocument();
     fireEvent.click(screen.getByText('Fresh inquiry'));

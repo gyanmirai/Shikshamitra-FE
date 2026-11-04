@@ -35,7 +35,7 @@ export function ApplicationEligibility({
           onChange={(_, open) => setExpanded(open ? stage.id : null)}
         >
           <AccordionSummary expandIcon={<Iconify icon="mdi:chevron-down" />}>
-            <Typography variant="subtitle2">{stage.name} · Eligibility history</Typography>
+            <Typography variant="subtitle2">{stage.name} · Eligibility History</Typography>
           </AccordionSummary>
           <AccordionDetails>
             {expanded === stage.id && (

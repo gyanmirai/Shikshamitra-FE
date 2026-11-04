@@ -8,8 +8,8 @@ const ACTIVE_POST_SUBMISSION_STATUSES = new Set<AdmissionApplicationStatus>([1, 
 const RECORDED_DECISION_STATUSES = new Set<AdmissionApplicationStatus>([3, 6]);
 
 export const STAGE_STATUS_LABELS: Record<number, string> = {
-  0: 'Not started',
-  1: 'Current step',
+  0: 'Not Started',
+  1: 'Current Step',
   2: 'Completed',
   3: 'Skipped',
   4: 'Failed',
@@ -122,12 +122,12 @@ export function canCompleteStageFromProgress(
 }
 
 export function getStageActionLabel(stage?: AdmissionApplicationStage) {
-  if (!stage) return 'Complete current step';
+  if (!stage) return 'Complete Current Step';
   if (stage.stageType === 2 || stage.code === 'ENTRANCE_EXAM_PASSED') {
-    return 'Record entrance exam result';
+    return 'Record Entrance Exam Result';
   }
-  if (stage.code === 'PHYSICAL_FORM_ISSUED') return 'Confirm physical form issued';
-  if (isApprovalStage(stage)) return 'Finish admission workflow';
+  if (stage.code === 'PHYSICAL_FORM_ISSUED') return 'Confirm Physical Form Issued';
+  if (isApprovalStage(stage)) return 'Finish Admission Workflow';
   return `Complete ${stage.name}`;
 }
 

@@ -5,7 +5,7 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { vi, it, expect, describe, beforeEach } from 'vitest';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { render, screen, cleanup, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, within, cleanup, waitFor, fireEvent } from '@testing-library/react';
 import { useGetAdmissionInquiryManagementQuery } from 'src/redux/student/admissions/admission-inquiry-management-api';
 import {
   useGetAdmissionInquiryQuery,
@@ -19,6 +19,7 @@ import { AdmissionInquiryManagementPage } from './inquiry-management/admission-i
 
 const push = vi.fn();
 const update = vi.fn();
+const familyRequests = vi.hoisted(() => ({ lookup: vi.fn(), confirm: vi.fn(), refresh: vi.fn() }));
 const { loadOfferingChoices } = vi.hoisted(() => ({
   loadOfferingChoices: () => ({ unwrap: () => Promise.resolve({ totalCount: 0, items: [] }) }),
 }));
@@ -44,15 +45,20 @@ vi.mock('src/redux/student/admissions/admission-inquiries-api', () => ({
   useUpdateAdmissionInquiryMutation: vi.fn(),
   useGetAdmissionInquiryCaptureContextQuery: vi.fn(),
   useGetAdmissionInquiryCaptureCatalogueQuery: vi.fn(),
+  useCheckAdmissionInquiryDuplicatesMutation: () => [familyRequests.lookup, { isLoading: false }],
+  useConfirmAdmissionInquiryFamilyMutation: () => [familyRequests.confirm, { isLoading: false }],
+  useLazyGetAdmissionInquiryQuery: () => [familyRequests.refresh],
 }));
 vi.mock('src/redux/student/admissions/admission-inquiry-management-api', () => ({
   useGetAdmissionInquiryManagementQuery: vi.fn(),
 }));
 
 vi.mock('react-redux', () => ({
+  useDispatch: () => vi.fn(),
   useSelector: (select: (state: unknown) => unknown) =>
     select({
       globalState: { currentYear: { id: 'year-1' } },
+      confirmPopup: { isChanges: false },
       auth: { permissions: [{ name: 'Students.Admissions.Inquiries.Add', isGranted: true }] },
     }),
 }));
@@ -251,6 +257,128 @@ const inquiry = {
 } as AdmissionInquiry;
 
 describe('Edit inquiry page', () => {
+  it('refreshes a server-rejected target stamp without prop injection or a parent PUT, then explicitly confirms the clean inquiry', async () => {
+    const pending = { ...inquiry, applicantId: 'target-child', status: 0 as const };
+    vi.mocked(useGetAdmissionInquiryQuery).mockReturnValue({
+      data: pending,
+      isLoading: false,
+      isError: false,
+    } as unknown as ReturnType<typeof useGetAdmissionInquiryQuery>);
+    familyRequests.lookup.mockReturnValue({
+      unwrap: async () => [
+        {
+          applicantId: 'source-child',
+          familyId: 'family',
+          applicantName: 'Existing child',
+          existingInquiryNumber: 'INQ-A',
+          parents: [
+            {
+              sourceApplicantId: 'source-child',
+              relationship: 'mother',
+              name: 'Saved mother',
+              firstName: 'Saved',
+            },
+          ],
+        },
+      ],
+    });
+    familyRequests.confirm.mockReturnValue({
+      unwrap: async () => ({
+        ...pending,
+        siblingFamilyConfirmed: true,
+        concurrencyStamp: 'family-saved',
+      }),
+    });
+    familyRequests.confirm.mockReturnValueOnce({
+      unwrap: async () => {
+        throw Object.assign(new Error('Conflict'), {
+          data: { detail: 'The inquiry changed on the server.' },
+        });
+      },
+    });
+    familyRequests.refresh.mockReturnValue({
+      unwrap: async () => ({ ...pending, concurrencyStamp: 'server-B' }),
+    });
+    render(<AdmissionInquiryEditPage />);
+    const notes = screen.getByRole('textbox', { name: 'Family notes' });
+    fireEvent.click(await screen.findByRole('button', { name: 'Confirm Siblings' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Confirm Sibling Family' });
+    expect(notes).toBeDisabled();
+    fireEvent.mouseDown(await within(dialog).findByRole('combobox', { name: /Existing Child/ }));
+    fireEvent.click(await screen.findByRole('option', { name: /Existing child/ }));
+    fireEvent.mouseDown(within(dialog).getByRole('combobox', { name: /Saved Parent/ }));
+    fireEvent.click(await screen.findByRole('option', { name: /Mother.*Saved mother/ }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Confirm Family' }));
+    await screen.findByText('The inquiry changed on the server.');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Reload Matches' }));
+    await waitFor(() => expect(familyRequests.refresh).toHaveBeenCalledWith('inquiry-1', false));
+    await waitFor(() => expect(familyRequests.lookup).toHaveBeenCalledTimes(2));
+    expect(screen.queryByText('Sibling Confirmed')).not.toBeInTheDocument();
+    expect(update).not.toHaveBeenCalled();
+    fireEvent.mouseDown(await within(dialog).findByRole('combobox', { name: /Existing Child/ }));
+    fireEvent.click(await screen.findByRole('option', { name: /Existing child/ }));
+    fireEvent.mouseDown(within(dialog).getByRole('combobox', { name: /Saved Parent/ }));
+    fireEvent.click(await screen.findByRole('option', { name: /Mother.*Saved mother/ }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Confirm Family' }));
+    await screen.findByText('Sibling Confirmed');
+    expect(familyRequests.confirm).toHaveBeenCalledTimes(2);
+    expect(familyRequests.confirm.mock.calls[0][0].body.concurrencyStamp).toBe('stamp-1');
+    expect(familyRequests.confirm.mock.calls[1][0].body.concurrencyStamp).toBe('server-B');
+    expect(update).not.toHaveBeenCalled();
+    expect(screen.getByRole('textbox', { name: 'Family notes' })).toHaveValue('Existing note');
+    expect(screen.getByRole('button', { name: 'Save Changes' })).toBeDisabled();
+  });
+  it('offers confirmation only while the pending inquiry draft is clean and disables it without losing typed answers', async () => {
+    vi.mocked(useGetAdmissionInquiryQuery).mockReturnValue({
+      data: { ...inquiry, applicantId: 'target-child', status: 0 },
+      isLoading: false,
+      isError: false,
+    } as unknown as ReturnType<typeof useGetAdmissionInquiryQuery>);
+    render(<AdmissionInquiryEditPage />);
+    const confirm = await screen.findByRole('button', { name: 'Confirm Siblings' });
+    expect(confirm).toBeEnabled();
+    expect(familyRequests.lookup).not.toHaveBeenCalled();
+    fireEvent.change(screen.getByRole('textbox', { name: 'Family notes' }), {
+      target: { value: 'Unsaved note preserved' },
+    });
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Confirm Siblings' })).toBeDisabled()
+    );
+    expect(screen.getByRole('textbox', { name: 'Family notes' })).toHaveValue(
+      'Unsaved note preserved'
+    );
+    expect(familyRequests.confirm).not.toHaveBeenCalled();
+  });
+  it('focuses the empty required parent email after saving and does not update the inquiry', async () => {
+    const saved = structuredClone(inquiry);
+    const section = saved.formDefinition!.sections[0];
+    section.fields.push({
+      ...section.fields[0],
+      id: 'parent-email',
+      code: 'PARENT_EMAIL',
+      label: 'Parent email',
+      bindingKey: 'Guardian.Email',
+      fieldType: 3,
+      displayOrder: 4,
+    });
+    saved.formValues!.push({ fieldCode: 'PARENT_EMAIL', valueJson: '"parent@example.com"' });
+    vi.mocked(useGetAdmissionInquiryQuery).mockReturnValue({
+      data: saved,
+      isLoading: false,
+      isError: false,
+    } as unknown as ReturnType<typeof useGetAdmissionInquiryQuery>);
+    const user = userEvent.setup();
+    render(<AdmissionInquiryEditPage />);
+    const email = screen.getByRole('textbox', { name: 'Parent email' });
+    expect(email).toHaveValue('parent@example.com');
+    await user.clear(email);
+    await user.click(screen.getByRole('button', { name: 'Save Changes' }));
+    expect(await screen.findByText('Parent email is required.')).toBeVisible();
+    await waitFor(() => expect(email).toHaveFocus());
+    expect(email).toHaveValue('');
+    expect(update).not.toHaveBeenCalled();
+  });
+
   it('synchronizes saved Inquiry addresses and retains the checkbox and copied values on reopening', async () => {
     const addressFields = [
       {
@@ -317,7 +445,7 @@ describe('Edit inquiry page', () => {
     await waitFor(() =>
       expect(screen.getByRole('textbox', { name: 'Permanent street' })).toHaveValue('Updated road')
     );
-    await userEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Save Changes' }));
     await waitFor(() =>
       expect(update).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -393,7 +521,7 @@ describe('Edit inquiry page', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Family notes' }), {
       target: { value: 'Updated legacy note' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save Changes' }));
     await waitFor(() =>
       expect(update).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -445,7 +573,7 @@ describe('Edit inquiry page', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Family notes' }), {
       target: { value: 'Updated note' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save Changes' }));
     await waitFor(() =>
       expect(update).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -481,7 +609,7 @@ describe('Edit inquiry page', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Guardian name' }), {
       target: { value: 'Meera Shah' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save Changes' }));
     await waitFor(() =>
       expect(update).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -545,7 +673,7 @@ describe('Edit inquiry page', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Mother mobile' }), {
       target: { value: '9876543211' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save Changes' }));
     await waitFor(() =>
       expect(update).toHaveBeenCalledWith(
         expect.objectContaining({ body: expect.objectContaining({ phone: '9876543211' }) })
@@ -594,7 +722,7 @@ describe('Edit inquiry page', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Mother mobile' }), {
       target: { value: '9876543211' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save Changes' }));
     await waitFor(() =>
       expect(update).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -696,7 +824,7 @@ describe('Edit inquiry page', () => {
       </LocalizationProvider>
     );
     expect(screen.getByText('Age: 4y 3m · Minimum: 5y')).toBeVisible();
-    await userEvent.hover(screen.getByLabelText('Date of birth information'));
+    await userEvent.hover(screen.getByLabelText('Date of birth Information'));
     const ageDetails = await screen.findByRole('tooltip');
     expect(ageDetails).toHaveTextContent('Enter the date from the birth certificate.');
     expect(ageDetails).toHaveTextContent(/academic year start.*01-04-2026/);
@@ -708,8 +836,8 @@ describe('Edit inquiry page', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Family notes' }), {
       target: { value: 'QA age warning is advisory' },
     });
-    expect(screen.getByRole('button', { name: 'Save changes' })).toBeEnabled();
-    fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+    expect(screen.getByRole('button', { name: 'Save Changes' })).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Save Changes' }));
     await waitFor(() =>
       expect(update).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -751,14 +879,14 @@ describe('Edit inquiry page', () => {
       isError: false,
     } as unknown as ReturnType<typeof useGetAdmissionInquiryQuery>);
     render(<AdmissionInquiryEditPage />);
-    expect(screen.getByText('Original inquiry · Version 1')).toBeVisible();
-    expect(screen.getByRole('combobox', { name: 'Form language' })).toHaveTextContent('Gujarati');
+    expect(screen.getByText('Original inquiry · version 1')).toBeVisible();
+    expect(screen.getByRole('combobox', { name: 'Form Language' })).toHaveTextContent('Gujarati');
     expect(screen.getByRole('textbox', { name: 'વિદ્યાર્થીનું નામ' })).toHaveValue('Riya Shah');
-    await user.click(screen.getByRole('combobox', { name: 'Form language' }));
+    await user.click(screen.getByRole('combobox', { name: 'Form Language' }));
     await user.click(screen.getByRole('option', { name: 'Hindi' }));
     await user.clear(screen.getByRole('textbox', { name: 'विद्यार्थी का नाम' }));
     await user.type(screen.getByRole('textbox', { name: 'विद्यार्थी का नाम' }), 'QA updated');
-    await user.click(screen.getByRole('button', { name: 'Save changes' }));
+    await user.click(screen.getByRole('button', { name: 'Save Changes' }));
     await waitFor(() =>
       expect(update).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -776,16 +904,16 @@ describe('Edit inquiry page', () => {
   it('shows editable details and saves with the current concurrency stamp', async () => {
     render(<AdmissionInquiryEditPage />);
 
-    expect(screen.getByRole('heading', { name: 'Edit inquiry' })).toBeInTheDocument();
-    expect(screen.getByText('Original inquiry · Version 1')).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: 'Form history' })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Edit Inquiry' })).toBeInTheDocument();
+    expect(screen.getByText('Original inquiry · version 1')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Form History' })).not.toBeInTheDocument();
     expect(screen.queryByRole('combobox', { name: 'Status' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Schedule follow-up' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Schedule Follow-Up' })).not.toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Family notes' })).toHaveValue('Existing note');
     fireEvent.change(screen.getByRole('textbox', { name: 'Applicant name' }), {
       target: { value: 'Riya S' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save Changes' }));
     await waitFor(() =>
       expect(update).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -807,15 +935,15 @@ describe('Edit inquiry page', () => {
     const close = vi.fn();
     render(<AdmissionInquiryManagementPage inquiry={inquiry} onClose={close} />);
 
-    expect(screen.queryByRole('heading', { name: 'Form history' })).not.toBeInTheDocument();
-    expect(screen.getByText('Original inquiry · Version 1')).toBeVisible();
+    expect(screen.queryByRole('heading', { name: 'Form History' })).not.toBeInTheDocument();
+    expect(screen.getByText('Original inquiry · version 1')).toBeVisible();
     const name = screen.getByRole('textbox', { name: 'Applicant name' });
     await user.clear(name);
     await user.type(name, 'Unsaved inquiry edit');
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(close).not.toHaveBeenCalled();
     expect(name).toHaveValue('Unsaved inquiry edit');
-    expect(await screen.findByRole('dialog', { name: 'Discard changes?' })).toBeVisible();
+    expect(await screen.findByRole('dialog', { name: 'Discard Changes?' })).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Discard' }));
     expect(close).toHaveBeenCalledOnce();
     expect(update).not.toHaveBeenCalled();
@@ -833,7 +961,7 @@ describe('Edit inquiry page', () => {
     } as unknown as ReturnType<typeof useGetAdmissionInquiryQuery>);
     rerender(<AdmissionInquiryEditPage />);
     expect(screen.getByRole('textbox', { name: 'Applicant name' })).toHaveValue('Riya Updated');
-    fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save Changes' }));
     await waitFor(() =>
       expect(update).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -855,7 +983,7 @@ describe('Edit inquiry page', () => {
     render(<AdmissionInquiryEditPage />);
     expect(screen.getByText(/original attached inquiry form is unavailable/i)).toBeInTheDocument();
     expect(screen.queryByRole('textbox', { name: 'Applicant name' })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Save changes' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Save Changes' })).toBeDisabled();
   });
 
   it('respects the application lock and returns to the pipeline filter', () => {
@@ -870,7 +998,7 @@ describe('Edit inquiry page', () => {
       screen.getByText(/read-only because its application has already started/)
     ).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Applicant name' })).toBeDisabled();
-    expect(screen.queryByRole('button', { name: 'Save changes' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Save Changes' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /back/i }));
     expect(push).toHaveBeenCalledWith('/student/admissions/pipeline?view=active');
   });

@@ -1,9 +1,9 @@
 import type { AdmissionDecisionAction } from './use-admission-application-decisions';
 
 export const ADMISSION_DECISION_ACTION_LABELS: Record<AdmissionDecisionAction, string> = {
-  approve: 'Approve application',
-  reject: 'Reject application',
-  waitlist: 'Waitlist application',
+  approve: 'Approve Application',
+  reject: 'Reject Application',
+  waitlist: 'Waitlist Application',
 };
 
 export const admissionDecisionRequiresReason = (action: AdmissionDecisionAction | null) =>

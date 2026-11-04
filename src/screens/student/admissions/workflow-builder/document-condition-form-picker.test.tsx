@@ -34,11 +34,11 @@ describe('published form condition choices', { timeout: 15000 }, () => {
     const user = userEvent.setup();
     renderDocumentUi(<Picker />);
     expect(requests).toEqual([]);
-    await chooseDocumentOption(user, 'Published form for answer choices', 'Registration · v2');
+    await chooseDocumentOption(user, 'Published Form for Answer Choices', 'Registration · v2');
     await waitFor(() => expect(requests).toEqual(['form-a']));
-    await user.click(screen.getByRole('combobox', { name: 'Applicant answer or fact' }));
-    expect(screen.queryByRole('option', { name: /Information only/ })).not.toBeInTheDocument();
-    expect(screen.queryByRole('option', { name: 'Inquiry status' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('combobox', { name: 'Applicant Answer or Fact' }));
+    expect(screen.queryByRole('option', { name: /Information Only/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: 'Inquiry Status' })).not.toBeInTheDocument();
     expect(screen.queryByRole('option', { name: 'Inquiry source' })).not.toBeInTheDocument();
     await user.click(await screen.findByRole('option', { name: 'Previous school (Registration)' }));
     expect(screen.getByRole('status')).toHaveTextContent('application.PREVIOUS_SCHOOL');
@@ -60,8 +60,8 @@ describe('published form condition choices', { timeout: 15000 }, () => {
       />
     );
     expect(change).not.toHaveBeenCalled();
-    expect(screen.queryByRole('combobox', { name: 'Applicant answer or fact' })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Replace inquiry condition' }));
+    expect(screen.queryByRole('combobox', { name: 'Applicant Answer or Fact' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Replace Inquiry Condition' }));
     expect(change).toHaveBeenCalledWith(JSON.stringify({ field: '', operator: 'Equals', value: '' }));
   });
 
@@ -73,7 +73,7 @@ describe('published form condition choices', { timeout: 15000 }, () => {
         onChange={vi.fn()}
       />
     );
-    await user.click(screen.getByRole('combobox', { name: 'Published form for answer choices' }));
+    await user.click(screen.getByRole('combobox', { name: 'Published Form for Answer Choices' }));
     expect(screen.queryByRole('option', { name: /Fair inquiry/ })).not.toBeInTheDocument();
     expect(screen.getByRole('option', { name: 'Registration · v2' })).toBeInTheDocument();
   });
@@ -97,14 +97,14 @@ describe('published form condition choices', { timeout: 15000 }, () => {
         onChange={change}
       />
     );
-    expect(screen.queryByRole('textbox', { name: 'Comparison value' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: 'Comparison Value' })).not.toBeInTheDocument();
     expect(screen.getByText(/explicitly saved blank/)).toBeInTheDocument();
-    await chooseDocumentOption(user, 'Published form for answer choices', 'Registration · v2');
+    await chooseDocumentOption(user, 'Published Form for Answer Choices', 'Registration · v2');
     await user.click(await screen.findByRole('button', { name: 'Retry' }));
     await waitFor(() => expect(requests).toBe(2));
     expect(change).not.toHaveBeenCalled();
     await waitFor(() =>
-      expect(screen.getByRole('combobox', { name: 'Applicant answer or fact' })).toHaveValue(
+      expect(screen.getByRole('combobox', { name: 'Applicant Answer or Fact' })).toHaveValue(
         'Previous school (Registration)'
       )
     );

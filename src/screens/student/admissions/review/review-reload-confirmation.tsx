@@ -16,12 +16,12 @@ export function ReviewReloadConfirmation({
     <ConfirmDialog
       open={open}
       onClose={onCancel}
-      title={`Reload the latest ${context}?`}
+      title={`Reload the Latest ${context}?`}
       icon="warning"
       content={`This replaces your unsaved edits with the latest saved ${context} and its current state. Cancel to keep editing.`}
       action={
         <Button variant="contained" color="warning" onClick={onConfirm}>
-          Discard edits and reload
+          Discard Edits and Reload
         </Button>
       }
     />

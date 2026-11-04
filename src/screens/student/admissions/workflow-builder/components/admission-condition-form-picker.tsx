@@ -55,7 +55,7 @@ export function AdmissionConditionFormPicker({
             size="small"
             onClick={() => onChange(JSON.stringify(emptyCondition()))}
           >
-            Replace inquiry condition
+            Replace Inquiry Condition
           </Button>
         )}
       </Stack>
@@ -66,13 +66,13 @@ export function AdmissionConditionFormPicker({
       <CustomSelect
         size="small"
         fullWidth
-        label="Published form for answer choices"
+        label="Published Form for Answer Choices"
         value={formId}
         disabled={readOnly}
         options={[
           {
             value: '',
-            label: strictTypes ? 'Choose a published form' : 'Enter a known field directly',
+            label: strictTypes ? 'Choose a Published Form' : 'Enter a Known Field Directly',
           },
           ...forms
             .filter((form) => form.status === 1 && form.purpose !== 0)
@@ -87,7 +87,7 @@ export function AdmissionConditionFormPicker({
             : 'Choose the published form used for this answer source. This changes suggestions only; saved conditions stay unchanged.'
         }
       />
-      {formId && query.isFetching && <LinearProgress aria-label="Loading published form fields" />}
+      {formId && query.isFetching && <LinearProgress aria-label="Loading Published Form Fields" />}
       {formId && query.isError && (
         <StudentFeedback
           notificationKey="STU-0502"
@@ -100,8 +100,8 @@ export function AdmissionConditionFormPicker({
           }
         >
           {strictTypes
-            ? 'Fields for the selected form could not load. Retry before configuring this criterion.'
-            : 'Fields for the selected form could not load. Retry or enter a known field directly.'}
+            ? 'Fields for the Selected Form Could Not Load. Retry Before Configuring This Criterion.'
+            : 'Fields for the Selected Form Could Not Load. Retry or Enter a Known Field Directly.'}
         </StudentFeedback>
       )}
       {detail &&

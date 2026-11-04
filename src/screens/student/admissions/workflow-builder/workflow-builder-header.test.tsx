@@ -60,7 +60,7 @@ describe('WorkflowBuilderHeader', () => {
       </WorkflowBuilderHeader>,
       { wrapper: Wrapper }
     );
-    const workspace = screen.getByRole('region', { name: 'Workflow journey workspace' });
+    const workspace = screen.getByRole('region', { name: 'Workflow Journey Workspace' });
     expect(workspace).toHaveClass('MuiCard-root');
     expect(workspace).toContainElement(screen.getByText('Setup progress'));
     expect(workspace).toContainElement(screen.getByText('Journey content'));
@@ -84,7 +84,7 @@ describe('WorkflowBuilderHeader', () => {
       { wrapper: Wrapper }
     );
     expect(
-      screen.getByText(/Workflow Add permission is required to add stages/i)
+      screen.getByText(/Workflow Add permission is Required to add Stages/i)
     ).toBeInTheDocument();
   });
 });
@@ -97,12 +97,12 @@ describe('WorkflowLifecycleActions', () => {
       <WorkflowLifecycleActions {...actions} onSave={onSave} onPublish={onPublish} />,
       { wrapper: Wrapper }
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save Draft' }));
     fireEvent.click(screen.getByRole('button', { name: 'Publish' }));
     expect(onSave).toHaveBeenCalledOnce();
     expect(onPublish).toHaveBeenCalledOnce();
     rerender(<WorkflowLifecycleActions {...actions} validating />);
-    expect(screen.getByRole('button', { name: 'Save draft' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Save Draft' })).toBeDisabled();
     expect(screen.getByRole('button', { name: /Publish/ })).toBeDisabled();
   });
 
@@ -111,11 +111,11 @@ describe('WorkflowLifecycleActions', () => {
       <WorkflowLifecycleActions {...actions} dirty={false} canPublish={false} />,
       { wrapper: Wrapper }
     );
-    expect(screen.getByRole('button', { name: 'Save draft' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Save Draft' })).toBeDisabled();
     expect(screen.queryByRole('button', { name: 'Publish' })).not.toBeInTheDocument();
     rerender(<WorkflowLifecycleActions {...actions} readOnly canPublish={false} />);
     expect(
-      screen.queryByRole('group', { name: 'Workflow lifecycle actions' })
+      screen.queryByRole('group', { name: 'Workflow Lifecycle Actions' })
     ).not.toBeInTheDocument();
   });
 

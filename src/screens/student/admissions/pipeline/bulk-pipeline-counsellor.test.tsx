@@ -1,6 +1,7 @@
 import { vi, it, expect, describe } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { screen, waitFor, fireEvent } from '@testing-library/react';
+import { expectStudentErrorToast } from 'src/test/student-toast-test-fixture';
 
 import { BulkPipelineCounsellor } from './bulk-pipeline-counsellor';
 import { renderDocumentUi } from '../document-verification/document-ui-test-fixture';
@@ -40,7 +41,7 @@ describe('Pipeline bulk counsellor UI', () => {
     const user = userEvent.setup();
     renderDocumentUi(<BulkPipelineCounsellor assignment={assignment} disabled={false} />);
     expect(screen.getByRole('status')).toHaveTextContent('2 admissions selected on this page');
-    await user.click(screen.getByRole('button', { name: 'Assign / change counsellor' }));
+    await user.click(screen.getByRole('button', { name: 'Assign / Change Counsellor' }));
     expect(assignment.requestAssignment).toHaveBeenCalledOnce();
   });
 
@@ -48,14 +49,14 @@ describe('Pipeline bulk counsellor UI', () => {
     const assignment = { ...state(), dialogOpen: true };
     const user = userEvent.setup();
     renderDocumentUi(<BulkPipelineCounsellor assignment={assignment} disabled={false} />);
-    expect(screen.getByRole('dialog', { name: 'Assign / change counsellor' })).toBeVisible();
+    expect(screen.getByRole('dialog', { name: 'Assign / Change Counsellor' })).toBeVisible();
     expect(
       screen.getByText(/If an inquiry is linked, it and its scheduled follow-ups/)
     ).toBeVisible();
     expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
     await user.click(screen.getByRole('combobox', { name: 'Counsellor' }));
     await user.click(screen.getByRole('option', { name: 'Jay Dalia' }));
-    fireEvent.change(screen.getByRole('textbox', { name: 'Reason for change (optional)' }), {
+    fireEvent.change(screen.getByRole('textbox', { name: 'Reason for Change (Optional)' }), {
       target: { value: 'Coverage change' },
     });
     await user.click(screen.getByRole('button', { name: 'Submit' }));
@@ -75,23 +76,22 @@ describe('Pipeline bulk counsellor UI', () => {
       />
     );
     expect(
-      screen.getByText('No counsellor has access to all selected admissions.', { exact: false })
+      screen.getByText('No Counsellor has access to all Selected Admissions.', { exact: false })
     ).toBeVisible();
     expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled();
   });
 
-  it('shows the options failure with retry and prevents submission', async () => {
+  it('announces the options failure without a page retry row and prevents submission', async () => {
     const assignment = {
       ...state(),
       dialogOpen: true,
       optionsError: 'Eligible staff could not be loaded.',
     };
-    const user = userEvent.setup();
-    renderDocumentUi(<BulkPipelineCounsellor assignment={assignment} disabled={false} />);
-    expect(screen.getByText('Eligible staff could not be loaded.', { exact: false })).toBeVisible();
-    await user.click(screen.getByRole('button', { name: 'Retry' }));
-    expect(assignment.reloadOptions).toHaveBeenCalledOnce();
+    await renderDocumentUi(<BulkPipelineCounsellor assignment={assignment} disabled={false} />);
+    await expectStudentErrorToast('Eligible staff could not be loaded.');
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+    expect(assignment.reloadOptions).not.toHaveBeenCalled();
     expect(screen.getByRole('combobox', { name: 'Counsellor' })).toHaveAttribute(
       'aria-disabled',
       'true'
@@ -115,7 +115,7 @@ describe('Pipeline bulk counsellor UI', () => {
       'aria-disabled',
       'true'
     );
-    expect(screen.getByRole('status')).toHaveTextContent('Assigning 1 of 2 admissions');
+    expect(screen.getByRole('status')).toHaveTextContent('Assigning 1 Of 2 Admissions');
   });
 
   it('keeps partial failure reasons and selected failures available for retry', () => {
@@ -135,7 +135,7 @@ describe('Pipeline bulk counsellor UI', () => {
       })
     ).toBeVisible();
     expect(screen.getByText('Kabir Shah: Another user changed this admission.')).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Assign / change counsellor' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Assign / Change Counsellor' })).toBeEnabled();
   });
 
   it('guards a dirty ownership form using the existing discard dialog', async () => {
@@ -143,12 +143,12 @@ describe('Pipeline bulk counsellor UI', () => {
     const user = userEvent.setup();
     renderDocumentUi(<BulkPipelineCounsellor assignment={assignment} disabled={false} />);
     await user.type(
-      screen.getByRole('textbox', { name: 'Reason for change (optional)' }),
+      screen.getByRole('textbox', { name: 'Reason for Change (Optional)' }),
       'Pending reason'
     );
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(assignment.closeDialog).not.toHaveBeenCalled();
-    expect(screen.getByRole('dialog', { name: 'Discard counsellor change?' })).toBeVisible();
+    expect(screen.getByRole('dialog', { name: 'Discard Counsellor Change?' })).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Discard changes' }));
     expect(assignment.closeDialog).toHaveBeenCalledOnce();
   });
@@ -165,6 +165,6 @@ describe('Pipeline bulk counsellor UI', () => {
 
   it('disables bulk initiation during an external table loading/error state', () => {
     renderDocumentUi(<BulkPipelineCounsellor assignment={state()} disabled />);
-    expect(screen.getByRole('button', { name: 'Assign / change counsellor' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Assign / Change Counsellor' })).toBeDisabled();
   });
 });

@@ -9,7 +9,7 @@ import type { WorkflowTransitionFormValues } from '../workflow-transition-form';
 const routes = [
   {
     value: 'verified',
-    label: 'Required documents resolved',
+    label: 'Required Documents Resolved',
     field: 'documents.status',
     operator: 'Equals',
     expected: 'verified',
@@ -54,13 +54,13 @@ export function WorkflowDocumentRoute({
       <CustomSelect
         size="small"
         fullWidth
-        label="Continue after document review"
+        label="Continue After Document Review"
         value={getDocumentRoute(values)}
         disabled={readOnly}
         options={[
-          { value: 'default', label: 'Required documents resolved (default route)' },
+          { value: 'default', label: 'Required Documents Resolved (Default Route)' },
           ...routes.map(({ value, label }) => ({ value, label })),
-          { value: 'custom', label: 'Another condition' },
+          { value: 'custom', label: 'Another Condition' },
         ]}
         onChange={(value) => selectRoute(String(value))}
       />

@@ -35,7 +35,13 @@ vi.mock('./components/form-builder-live-preview', () => ({
 }));
 
 function renderInheritedBuilder(
-  overrides: { loading?: boolean; failed?: boolean; valid?: boolean; sourceLayout?: 0 | 1 } = {}
+  overrides: {
+    loading?: boolean;
+    failed?: boolean;
+    valid?: boolean;
+    sourceLayout?: 0 | 1;
+    context?: boolean;
+  } = {}
 ) {
   const base = getBlankAdmissionFormInitialValues(1);
   base.layoutType = 0;
@@ -75,6 +81,28 @@ function renderInheritedBuilder(
       selectField: state.selectField,
       preview: {
         isValid: overrides.valid ?? true,
+        inquiryContextSections: overrides.context
+          ? [
+              {
+                ...sourceSection,
+                fields: [
+                  {
+                    ...sourceField,
+                    id: 'source-role',
+                    code: 'ROLE',
+                    label: 'Relationship to student',
+                    readOnly: true,
+                    displayOrder: 1,
+                    inheritedFrom: {
+                      ...sourceField.inheritedFrom,
+                      sourceFieldCode: 'ROLE',
+                      fieldIdentity: 'system:INQUIRY.PARENTRELATIONSHIP',
+                    },
+                  },
+                ],
+              },
+            ]
+          : [],
         definition: {
           ...base,
           layoutType: overrides.sourceLayout ?? base.layoutType,
@@ -114,13 +142,24 @@ function renderInheritedBuilder(
 }
 
 describe('Registration effective canvas integration', () => {
+  it('shows source context in its original section and keeps it out of the editable draft', async () => {
+    const { base } = renderInheritedBuilder({ context: true });
+    expect(screen.getAllByRole('heading', { name: 'Published Inquiry section' })).toHaveLength(1);
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Relationship to student Field' }));
+    expect(state.selectField).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'source-role', readOnly: true })
+    );
+    expect(JSON.parse(screen.getByTestId('base-form').textContent!).sections).toEqual(
+      base.sections
+    );
+  });
   it('opens the selected Inquiry step with its own grid while the single-page base remains unchanged', () => {
     renderInheritedBuilder({ sourceLayout: 1 });
     expect(screen.getByRole('button', { name: 'Inquiry step' })).toBeVisible();
     expect(screen.getByRole('heading', { name: 'Published Inquiry section' })).toBeVisible();
     expect(screen.queryByRole('heading', { name: 'Student Details' })).not.toBeInTheDocument();
     expect(
-      screen.queryByRole('button', { name: 'Actions for Registration page step' })
+      screen.queryByRole('button', { name: 'Actions For Registration page step' })
     ).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
     const view = JSON.parse(screen.getByTestId('preview-form').textContent!);
@@ -130,21 +169,21 @@ describe('Registration effective canvas integration', () => {
   });
   it('offers Add step on a single-page draft and retains its content after converting', async () => {
     const { base } = renderInheritedBuilder();
-    expect(screen.queryByRole('navigation', { name: 'Form steps' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: 'Form Steps' })).not.toBeInTheDocument();
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Add step' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Add Step' }));
     });
     const saved = JSON.parse(screen.getByTestId('base-form').textContent!);
     expect(saved.layoutType).toBe(1);
     expect(saved.sections).toHaveLength(base.sections.length + 1);
     expect(saved.sections[0].id).toBe(base.sections[0].id);
-    expect(screen.getByRole('navigation', { name: 'Form steps' })).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Add step' })).toBeVisible();
+    expect(screen.getByRole('navigation', { name: 'Form Steps' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Add Step' })).toBeVisible();
   });
   it('allows a valid source preview before approval and applies current grid changes without copying source questions', async () => {
-    const { sourceField } = renderInheritedBuilder();
+    const { base, sourceField } = renderInheritedBuilder();
     expect(screen.getByRole('heading', { name: 'Published Inquiry section' })).toBeVisible();
-    fireEvent.click(screen.getByRole('button', { name: 'Grid layout' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Grid Layout' }));
     await act(async () => {
       fireEvent.click(screen.getByRole('menuitem', { name: '4 columns' }));
     });
@@ -156,7 +195,7 @@ describe('Registration effective canvas integration', () => {
     expect(values.sections[0].fields[0]).toEqual(sourceField);
     const saved = JSON.parse(screen.getByTestId('base-form').textContent!);
     expect(saved.sections).toHaveLength(1);
-    expect(saved.sections[0].fields).toEqual([]);
+    expect(saved.sections[0].fields).toEqual(base.sections[0].fields);
     expect(saved.inheritance.sources).toEqual([]);
   });
 
@@ -174,20 +213,20 @@ describe('Registration effective canvas integration', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
     expect(screen.getByTestId('preview-form')).toBeVisible();
     source.loading = true;
-    fireEvent.click(screen.getByRole('button', { name: 'Grid layout' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Grid Layout' }));
     await act(async () => {
       fireEvent.click(screen.getByRole('menuitem', { name: '3 columns' }));
     });
     expect(screen.queryByTestId('preview-form')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Back to builder' })).toBeEnabled();
-    fireEvent.click(screen.getByRole('button', { name: 'Back to builder' }));
+    expect(screen.getByRole('button', { name: 'Back to Builder' })).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Back to Builder' }));
     expect(screen.getByRole('heading', { name: 'Published Inquiry section' })).toBeVisible();
   });
 
   it('routes a source question to its locked Inquiry settings', async () => {
     const { sourceField } = renderInheritedBuilder();
-    fireEvent.click(screen.getByRole('button', { name: 'Edit Source visit date field' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Source visit date Field' }));
     expect(state.selectField).toHaveBeenCalledWith(sourceField);
-    expect(screen.queryByRole('textbox', { name: 'Field label' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: 'Field Label' })).not.toBeInTheDocument();
   });
 });

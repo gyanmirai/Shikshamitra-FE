@@ -40,14 +40,14 @@ function AgeBound({
   };
   return (
     <Stack spacing={0.5}>
-      <Typography variant="subtitle2">{label} (optional)</Typography>
+      <Typography variant="subtitle2">{label} (Optional)</Typography>
       <Grid container spacing={1}>
         <Grid size={{ xs: 6 }}>
           <TextField
             fullWidth
             size="small"
             type="number"
-            label={`${label} years`}
+            label={`${label} Years`}
             disabled={readOnly}
             value={months == null ? '' : Math.floor(months / 12)}
             onChange={(event) => change(event.target.value, 'years')}
@@ -59,7 +59,7 @@ function AgeBound({
             fullWidth
             size="small"
             type="number"
-            label={`${label} months`}
+            label={`${label} Months`}
             disabled={readOnly}
             value={months == null ? '' : months % 12}
             onChange={(event) => change(event.target.value, 'months')}
@@ -80,19 +80,19 @@ export function EligibilityAgeFields({ value, onChange, readOnly }: Props) {
   return (
     <Stack spacing={1.5}>
       <AgeBound
-        label="Minimum age"
+        label="Minimum Age"
         months={value.minAgeMonths}
         readOnly={readOnly}
         onChange={(minAgeMonths) => onChange({ ...value, minAgeMonths })}
       />
       <AgeBound
-        label="Maximum age"
+        label="Maximum Age"
         months={value.maxAgeMonths}
         readOnly={readOnly}
         onChange={(maxAgeMonths) => onChange({ ...value, maxAgeMonths })}
       />
       <DatePicker
-        label="Age cutoff date *"
+        label="Age Cutoff Date *"
         format={ADMISSION_DATE_FORMAT}
         enableAccessibleFieldDOMStructure={false}
         value={value.cutoffDate ? dayjs(value.cutoffDate) : null}

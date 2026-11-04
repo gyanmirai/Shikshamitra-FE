@@ -6,6 +6,7 @@ import type {
   AdmissionOffering,
   AdmissionOfferingListItem,
   AdmissionOfferingWriteInput,
+  AdmissionOfferingValidationError,
 } from 'src/redux/student/admissions/admission-offerings-api';
 
 import { useRef, useState } from 'react';
@@ -22,8 +23,12 @@ import {
   useDeactivateAdmissionOfferingMutation,
 } from 'src/redux/student/admissions/admission-offerings-api';
 
+import { getAdmissionFormAccess } from './form-access';
+import { getAdmissionWorkflowAccess } from './workflow-access';
 import { getAdmissionApiError } from './admission-offering-model';
+import { readOfferingConfigurationErrors } from './admission-offering-recovery';
 import { getAdmissionOfferingPermissions } from './admission-offering-permissions';
+import { getOfferingConfigurationAccess } from './admission-offering-configuration-access';
 
 export type OfferingDialogMode = 'create' | 'edit' | 'clone';
 export type PendingOfferingAction = {
@@ -52,6 +57,7 @@ export function useAdmissionOfferingActions(
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [bulkOpen, setBulkOpen] = useState(initialBulkOpen);
   const [pendingAction, setPendingAction] = useState<PendingOfferingAction>(null);
+  const [activationErrors, setActivationErrors] = useState<AdmissionOfferingValidationError[]>([]);
   const commandBusy = useBoolean();
   const commandLock = useRef(false);
   const permissions = getAdmissionOfferingPermissions(granted);
@@ -153,6 +159,10 @@ export function useAdmissionOfferingActions(
     commandBusy.onTrue();
     try {
       const detail = await loadOffering(pendingAction.row.id).unwrap();
+      if (pendingAction.type === 'activate' && detail.configuration?.isValid === false) {
+        setActivationErrors(detail.configuration.errors);
+        return;
+      }
       const input = { id: detail.id, concurrencyStamp: detail.concurrencyStamp };
       if (pendingAction.type === 'activate') await activateOffering(input).unwrap();
       if (pendingAction.type === 'deactivate') await deactivateOffering(input).unwrap();
@@ -160,9 +170,13 @@ export function useAdmissionOfferingActions(
       shikshaMitraToast.success({ message: `Offering ${pendingAction.type}d successfully` });
       setPendingAction(null);
     } catch (error) {
-      shikshaMitraToast.error({
-        message: getAdmissionApiError(error, 'Unable to update the offering.'),
-      });
+      const errors =
+        pendingAction.type === 'activate' ? readOfferingConfigurationErrors(error) : [];
+      if (errors.length) setActivationErrors(errors);
+      else
+        shikshaMitraToast.error({
+          message: getAdmissionApiError(error, 'Unable to update the offering.'),
+        });
     } finally {
       commandLock.current = false;
       commandBusy.onFalse();
@@ -179,6 +193,16 @@ export function useAdmissionOfferingActions(
     detailsOpen,
     bulkOpen,
     pendingAction,
+    activationErrors,
+    formAccess: getAdmissionFormAccess(granted),
+    workflowAccess: getAdmissionWorkflowAccess(granted),
+    editBlockedOffering: () => {
+      if (!pendingAction || commandLock.current || !permissions.edit) return undefined;
+      const { row } = pendingAction;
+      setPendingAction(null);
+      setActivationErrors([]);
+      return openDetailed('edit', row);
+    },
     loadingDetail: detailState.isFetching,
     saving: createState.isLoading || updateState.isLoading || cloneState.isLoading,
     commanding:
@@ -194,6 +218,17 @@ export function useAdmissionOfferingActions(
       setDialogMode('create');
     },
     openDetailed,
+    deactivateFromEditor: () => {
+      if (
+        !selected ||
+        !permissions.deactivate ||
+        commandLock.current ||
+        !getOfferingConfigurationAccess(selected).canDeactivateToEdit
+      )
+        return;
+      setActivationErrors([]);
+      setPendingAction({ type: 'deactivate', row: selected });
+    },
     closeDialog: () => {
       detailRequest.current += 1;
       editRow.current = null;
@@ -207,11 +242,36 @@ export function useAdmissionOfferingActions(
     },
     openBulk: () => setBulkOpen(true),
     closeBulk: () => setBulkOpen(false),
-    requestAction: (row: AdmissionOfferingListItem) =>
-      setPendingAction({ type: row.isActive ? 'deactivate' : 'activate', row }),
+    requestAction: (row: AdmissionOfferingListItem) => {
+      if (commandLock.current) return;
+      setActivationErrors([]);
+      setPendingAction({ type: row.isActive ? 'deactivate' : 'activate', row });
+      if (!row.isActive && !row.canActivate && row.configurationStatus === 0) {
+        commandLock.current = true;
+        commandBusy.onTrue();
+        (async () => {
+          try {
+            const latest = await loadOffering(row.id).unwrap();
+            setActivationErrors(
+              latest.configuration?.isValid === false ? latest.configuration.errors : []
+            );
+          } catch (error) {
+            shikshaMitraToast.error({
+              message: getAdmissionApiError(error, 'Unable to check offering requirements.'),
+            });
+          } finally {
+            commandLock.current = false;
+            commandBusy.onFalse();
+          }
+        })();
+      }
+    },
     requestDelete: (row: AdmissionOfferingListItem) => setPendingAction({ type: 'delete', row }),
     cancelAction: () => {
-      if (!commandLock.current) setPendingAction(null);
+      if (!commandLock.current) {
+        setPendingAction(null);
+        setActivationErrors([]);
+      }
     },
     confirmAction,
     save,

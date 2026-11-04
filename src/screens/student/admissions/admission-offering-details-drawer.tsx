@@ -172,10 +172,10 @@ export function AdmissionOfferingDetailsDrawer({ open, offering, canManage, onCl
         >
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography variant="overline" color="text.secondary">
-              Admission offering
+              Admission Offering
             </Typography>
             <Typography id="admission-offering-details-title" variant="h6" component="h2">
-              {offering?.name || offering?.code || 'Offering details'}
+              {offering?.name || offering?.code || 'Offering Details'}
             </Typography>
             {offering && (
               <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
@@ -190,7 +190,7 @@ export function AdmissionOfferingDetailsDrawer({ open, offering, canManage, onCl
             )}
           </Box>
           <IconButton
-            aria-label="Close admission offering details"
+            aria-label="Close Admission Offering Details"
             onClick={requestClose}
             disabled={updateState.isLoading}
             sx={{ width: 44, height: 44, mt: -0.5, mr: -1 }}
@@ -203,9 +203,9 @@ export function AdmissionOfferingDetailsDrawer({ open, offering, canManage, onCl
         <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
           {offering && (
             <Stack spacing={3} sx={{ px: { xs: 2, sm: 3 }, py: 2.5 }}>
-              <Box component="section" aria-label="Academic scope">
+              <Box component="section" aria-label="Academic Scope">
                 <Typography variant="subtitle1" sx={{ mb: 1.5 }}>
-                  Academic scope
+                  Academic Scope
                 </Typography>
                 <Grid container spacing={2.5}>
                   <Grid size={{ xs: 6 }}>
@@ -213,7 +213,7 @@ export function AdmissionOfferingDetailsDrawer({ open, offering, canManage, onCl
                   </Grid>
                   <Grid size={{ xs: 6 }}>
                     <DetailItem
-                      label="Admission track"
+                      label="Admission Track"
                       value={admissionTrackLabels[offering.track]}
                     />
                   </Grid>
@@ -224,11 +224,11 @@ export function AdmissionOfferingDetailsDrawer({ open, offering, canManage, onCl
                     <DetailItem label="Medium" value={offering.mediumName} />
                   </Grid>
                   <Grid size={{ xs: 6 }}>
-                    <DetailItem label="School level" value={offering.stageName} />
+                    <DetailItem label="School Level" value={offering.stageName} />
                   </Grid>
                   <Grid size={{ xs: 6 }}>
                     <DetailItem
-                      label="Entry mode"
+                      label="Entry Mode"
                       value={admissionEntryModeLabels[offering.entryMode]}
                     />
                   </Grid>
@@ -241,9 +241,9 @@ export function AdmissionOfferingDetailsDrawer({ open, offering, canManage, onCl
               </Box>
 
               <Divider />
-              <Box component="section" aria-label="Admission window">
+              <Box component="section" aria-label="Admission Window">
                 <Typography variant="subtitle1" sx={{ mb: 1.5 }}>
-                  Admission window
+                  Admission Window
                 </Typography>
                 <Grid container spacing={2.5}>
                   <Grid size={{ xs: 6 }}>
@@ -265,9 +265,9 @@ export function AdmissionOfferingDetailsDrawer({ open, offering, canManage, onCl
               </Box>
 
               <Divider />
-              <Box component="section" aria-label="Process and forms">
+              <Box component="section" aria-label="Process and Forms">
                 <Typography variant="subtitle1" sx={{ mb: 1.5 }}>
-                  Process and forms
+                  Process and Forms
                 </Typography>
                 <Grid container spacing={2.5}>
                   <Grid size={{ xs: 12 }}>
@@ -276,29 +276,29 @@ export function AdmissionOfferingDetailsDrawer({ open, offering, canManage, onCl
                       value={
                         offering.workflowName
                           ? `${offering.workflowName} v${offering.workflowVersion}`
-                          : 'Not configured'
+                          : 'Not Configured'
                       }
                     />
                   </Grid>
                   {offering.entryMode === 0 && (
                     <Grid size={{ xs: 12, sm: 6 }}>
                       <DetailItem
-                        label="Inquiry form"
+                        label="Inquiry Form"
                         value={
                           offering.inquiryFormName
                             ? `${offering.inquiryFormName} v${offering.inquiryFormVersion}`
-                            : 'Not configured'
+                            : 'Not Configured'
                         }
                       />
                     </Grid>
                   )}
                   <Grid size={{ xs: 12, sm: 6 }}>
                     <DetailItem
-                      label="Application form"
+                      label="Application Form"
                       value={
                         offering.applicationFormName
                           ? `${offering.applicationFormName} v${offering.applicationFormVersion}`
-                          : 'Not configured'
+                          : 'Not Configured'
                       }
                     />
                   </Grid>
@@ -306,7 +306,7 @@ export function AdmissionOfferingDetailsDrawer({ open, offering, canManage, onCl
               </Box>
 
               <Divider />
-              <Box component="section" aria-label="Admission capacity">
+              <Box component="section" aria-label="Admission Capacity">
                 <Stack
                   direction={{ xs: 'column', sm: 'row' }}
                   alignItems={{ sm: 'center' }}
@@ -315,7 +315,7 @@ export function AdmissionOfferingDetailsDrawer({ open, offering, canManage, onCl
                   sx={{ mb: 1.5 }}
                 >
                   <Box>
-                    <Typography variant="subtitle1">Admission capacity</Typography>
+                    <Typography variant="subtitle1">Admission Capacity</Typography>
                     <Typography variant="caption" color="text.secondary">
                       Room seats are shared across admission tracks.
                     </Typography>
@@ -329,7 +329,7 @@ export function AdmissionOfferingDetailsDrawer({ open, offering, canManage, onCl
                       disabled={!capacity && (capacityQuery.isLoading || capacityQuery.isError)}
                       sx={{ flexShrink: 0 }}
                     >
-                      Assign class rooms
+                      Assign Class Rooms
                     </Button>
                   )}
                 </Stack>
@@ -362,14 +362,14 @@ export function AdmissionOfferingDetailsDrawer({ open, offering, canManage, onCl
                       <DetailItem label="Occupied" value={capacity.occupiedCount} />
                     </Grid>
                     <Grid size={{ xs: 4 }}>
-                      <DetailItem label="Total seats" value={capacity.capacity} />
+                      <DetailItem label="Total Seats" value={capacity.capacity} />
                     </Grid>
                   </Grid>
                 )}
                 {capacity?.rooms.length ? (
                   <Box sx={{ mt: 2 }}>
                     <Typography variant="caption" color="text.secondary">
-                      Assigned rooms
+                      Assigned Rooms
                     </Typography>
                     <Stack
                       component="ul"
@@ -386,7 +386,7 @@ export function AdmissionOfferingDetailsDrawer({ open, offering, canManage, onCl
                         >
                           <Typography variant="body2">{room.roomName}</Typography>
                           <Typography variant="body2" color="text.secondary" sx={{ flexShrink: 0 }}>
-                            {room.capacity} seats
+                            {room.capacity} Seats
                           </Typography>
                         </Stack>
                       ))}
@@ -435,7 +435,7 @@ export function AdmissionOfferingDetailsDrawer({ open, offering, canManage, onCl
                       renderInput={(params) => (
                         <TextField
                           {...params}
-                          label="Rooms for this class"
+                          label="Rooms for This Class"
                           size="small"
                           helperText="Capacity is calculated from these rooms. The same rooms serve General and RTE offerings."
                         />
@@ -446,9 +446,9 @@ export function AdmissionOfferingDetailsDrawer({ open, offering, canManage, onCl
               </Box>
 
               <Divider />
-              <Box component="section" aria-label="Configuration readiness">
+              <Box component="section" aria-label="Configuration Readiness">
                 <Typography variant="subtitle1" sx={{ mb: 1.5 }}>
-                  Configuration readiness
+                  Configuration Readiness
                 </Typography>
                 <AdmissionOfferingReadiness result={offering.configuration} />
               </Box>
@@ -481,7 +481,7 @@ export function AdmissionOfferingDetailsDrawer({ open, offering, canManage, onCl
                 startIcon={<Iconify icon="mdi:content-save-outline" />}
                 onClick={saveRooms}
               >
-                Save rooms
+                Save Rooms
               </Button>
             </>
           ) : (
@@ -499,11 +499,11 @@ export function AdmissionOfferingDetailsDrawer({ open, offering, canManage, onCl
       <ConfirmDialog
         open={Boolean(discardTarget)}
         onClose={() => setDiscardTarget(null)}
-        title="Discard room changes?"
+        title="Discard Room Changes?"
         content="Your changes to the assigned rooms have not been saved."
         action={
           <Button variant="contained" size="small" color="error" onClick={discardChanges}>
-            Discard changes
+            Discard Changes
           </Button>
         }
       />

@@ -3,6 +3,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings';
 import { vi, it, expect, describe, beforeEach } from 'vitest';
+import { expectStudentErrorToast } from 'src/test/student-toast-test-fixture';
 import { render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import { ApplicationFollowUps } from './application-follow-ups';
@@ -95,13 +96,13 @@ describe('application follow-ups', () => {
       skip: false,
       refetchOnMountOrArgChange: true,
     });
-    fireEvent.change(screen.getByLabelText('Next follow-up *'), {
+    fireEvent.change(screen.getByLabelText('Next Follow-Up *'), {
       target: { value: '2026-10-09T10:00' },
     });
     fireEvent.change(screen.getByLabelText('Purpose *'), {
       target: { value: ' Discuss documents ' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Schedule follow-up' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Schedule Follow-Up' }));
     await waitFor(() =>
       expect(mocks.schedule).toHaveBeenCalledWith({
         applicationId: 'application-1',
@@ -114,7 +115,7 @@ describe('application follow-ups', () => {
 
   it('completes a follow-up using inquiry and follow-up concurrency stamps', async () => {
     render(<ApplicationFollowUps applicationId="application-1" />);
-    fireEvent.change(screen.getByLabelText('Completion or cancellation note *'), {
+    fireEvent.change(screen.getByLabelText('Completion or Cancellation Note *'), {
       target: { value: 'Parent confirmed' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Complete' }));
@@ -133,30 +134,38 @@ describe('application follow-ups', () => {
     mocks.query.mockReturnValue(query({ currentData: { ...value, canManageFollowUps: false } }));
     render(<ApplicationFollowUps applicationId="application-1" />);
     expect(screen.getByText('Call parent')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Schedule follow-up' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Schedule Follow-Up' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Complete' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Cancel' })).not.toBeInTheDocument();
   });
 
-  it('withholds stale follow-up controls on query failure and offers retry', () => {
+  it('withholds stale controls on failure and restores them after a current read', async () => {
     mocks.query.mockReturnValue(query({ isError: true }));
-    render(<ApplicationFollowUps applicationId="application-1" />);
-    expect(
-      screen.getByText('Unable to load application follow-ups', { exact: false })
-    ).toBeVisible();
+    const view = render(<ApplicationFollowUps applicationId="application-1" />);
+    await expectStudentErrorToast(
+      'Unable to Load Application Follow-ups. Retry to View the Latest Information.'
+    );
     expect(screen.queryByText('Call parent')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
-    expect(mocks.refetch).toHaveBeenCalledOnce();
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+    expect(mocks.refetch).not.toHaveBeenCalled();
+    mocks.query.mockReturnValue(query());
+    view.rerender(<ApplicationFollowUps applicationId="application-1" />);
+    expect(screen.getByText('Call parent')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Complete' })).toBeDisabled();
+    fireEvent.change(screen.getByLabelText('Completion or Cancellation Note *'), {
+      target: { value: 'Parent confirmed recovery' },
+    });
+    expect(screen.getByRole('button', { name: 'Complete' })).toBeEnabled();
   });
 
   it('locks controls while refreshing the current inquiry concurrency stamp', () => {
     mocks.query.mockReturnValue(query({ isFetching: true }));
     render(<ApplicationFollowUps applicationId="application-1" />);
     expect(screen.getByLabelText('Purpose *')).toBeDisabled();
-    expect(screen.getByLabelText('Completion or cancellation note *')).toBeDisabled();
+    expect(screen.getByLabelText('Completion or Cancellation Note *')).toBeDisabled();
   });
 
-  it('shows a missing source reason without suggesting an ineffective retry', () => {
+  it('announces a missing source reason without suggesting an ineffective retry', async () => {
     mocks.query.mockReturnValue(
       query({
         isError: true,
@@ -167,13 +176,11 @@ describe('application follow-ups', () => {
       })
     );
     render(<ApplicationFollowUps applicationId="application-1" />);
-    expect(
-      screen.getByText('The linked source inquiry no longer exists.', { exact: false })
-    ).toBeVisible();
+    await expectStudentErrorToast('The linked source inquiry no longer exists.');
     expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
   });
 
-  it('keeps the business error reason visible when a linked source was removed', () => {
+  it('announces the business error reason when a linked source was removed', async () => {
     mocks.query.mockReturnValue(
       query({
         isError: true,
@@ -189,7 +196,9 @@ describe('application follow-ups', () => {
       })
     );
     render(<ApplicationFollowUps applicationId="application-1" />);
-    expect(screen.getByText('The source inquiry is unavailable.', { exact: false })).toBeVisible();
+    await expectStudentErrorToast(
+      'The source inquiry is unavailable. Continue admission work in the application; follow-ups require its linked inquiry.'
+    );
     expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
   });
 
@@ -203,11 +212,11 @@ describe('application follow-ups', () => {
         ),
     });
     render(<ApplicationFollowUps applicationId="application-1" />);
-    fireEvent.change(screen.getByLabelText('Next follow-up *'), {
+    fireEvent.change(screen.getByLabelText('Next Follow-Up *'), {
       target: { value: '2026-10-09T10:00' },
     });
     fireEvent.change(screen.getByLabelText('Purpose *'), { target: { value: 'Retry call' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Schedule follow-up' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Schedule Follow-Up' }));
     await waitFor(() =>
       expect(mocks.error).toHaveBeenCalledWith({ message: 'The inquiry changed.' })
     );
@@ -221,21 +230,21 @@ describe('application follow-ups', () => {
       </ThemeProvider>
     );
     expect(screen.getByLabelText('Purpose *')).not.toBeVisible();
-    const trigger = screen.getByRole('button', { name: 'Schedule follow-up' });
+    const trigger = screen.getByRole('button', { name: 'Schedule Follow-Up' });
     expect(trigger).toHaveAttribute('aria-expanded', 'false');
     fireEvent.click(trigger);
-    const dialog = screen.getByRole('dialog', { name: 'Schedule follow-up' });
+    const dialog = screen.getByRole('dialog', { name: 'Schedule Follow-Up' });
     expect(within(dialog).getByLabelText('Purpose *')).toBeVisible();
     expect(trigger).toHaveAttribute('aria-expanded', 'true');
     expect(within(dialog).getByRole('button', { name: 'Schedule' })).toBeDisabled();
     fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
     expect(screen.getByText('Call parent')).not.toBeVisible();
-    const history = screen.getByRole('button', { name: 'Follow-up history' });
+    const history = screen.getByRole('button', { name: 'Follow-Up History' });
     expect(history).toHaveAttribute('aria-expanded', 'false');
     fireEvent.click(history);
     await waitFor(() => expect(screen.getByText('Call parent')).toBeVisible());
     expect(history).toHaveAttribute('aria-expanded', 'true');
-    fireEvent.change(screen.getByLabelText('Completion or cancellation note *'), {
+    fireEvent.change(screen.getByLabelText('Completion or Cancellation Note *'), {
       target: { value: 'Parent requested a new date' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
@@ -258,7 +267,7 @@ describe('application follow-ups', () => {
       </ThemeProvider>
     );
     expect(screen.queryByLabelText('Purpose *')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Follow-up history' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Follow-Up History' }));
     await waitFor(() => expect(screen.getByText('Call parent')).toBeVisible());
     expect(screen.queryByRole('button', { name: 'Complete' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Cancel' })).not.toBeInTheDocument();
@@ -282,8 +291,8 @@ describe('application follow-ups', () => {
       </ThemeProvider>
     );
     const view = render(content());
-    fireEvent.click(screen.getByRole('button', { name: 'Schedule follow-up' }));
-    fireEvent.change(screen.getByLabelText('Next follow-up *'), {
+    fireEvent.click(screen.getByRole('button', { name: 'Schedule Follow-Up' }));
+    fireEvent.change(screen.getByLabelText('Next Follow-Up *'), {
       target: { value: '2026-10-10T10:00' },
     });
     fireEvent.change(screen.getByLabelText('Purpose *'), {
@@ -321,10 +330,10 @@ describe('application follow-ups', () => {
         <ApplicationFollowUps applicationId="application-1" compact />
       </ThemeProvider>
     );
-    const trigger = screen.getByRole('button', { name: 'Schedule follow-up' });
+    const trigger = screen.getByRole('button', { name: 'Schedule Follow-Up' });
     fireEvent.click(trigger);
-    const dialog = screen.getByRole('dialog', { name: 'Schedule follow-up' });
-    fireEvent.change(within(dialog).getByLabelText('Next follow-up *'), {
+    const dialog = screen.getByRole('dialog', { name: 'Schedule Follow-Up' });
+    fireEvent.change(within(dialog).getByLabelText('Next Follow-Up *'), {
       target: { value: '2026-10-11T10:00' },
     });
     fireEvent.change(within(dialog).getByLabelText('Purpose *'), {

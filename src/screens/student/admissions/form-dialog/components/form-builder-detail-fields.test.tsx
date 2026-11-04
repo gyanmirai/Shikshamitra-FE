@@ -19,7 +19,7 @@ describe('FormBuilderDetailFields', () => {
         </Formik>
       </ThemeProvider>
     );
-    await user.click(screen.getByRole('combobox', { name: 'Applicant languages *' }));
+    await user.click(screen.getByRole('combobox', { name: 'Applicant Languages *' }));
     const choices = within(screen.getByRole('listbox'));
     expect(choices.getAllByRole('option').map((option) => option.textContent)).toEqual([
       'English',
@@ -29,18 +29,18 @@ describe('FormBuilderDetailFields', () => {
     await user.click(choices.getByRole('option', { name: 'Gujarati' }));
     await user.click(choices.getByRole('option', { name: 'Hindi' }));
     await user.keyboard('{Escape}');
-    await user.click(screen.getByRole('combobox', { name: /Default language/ }));
+    await user.click(screen.getByRole('combobox', { name: /Default Language/ }));
     expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([
       'English',
       'Gujarati',
       'Hindi',
     ]);
     await user.click(screen.getByRole('option', { name: 'Gujarati' }));
-    expect(screen.getByRole('combobox', { name: /Default language/ })).toHaveTextContent(
+    expect(screen.getByRole('combobox', { name: /Default Language/ })).toHaveTextContent(
       'Gujarati'
     );
     await user.click(screen.getByRole('button', { name: 'Gujarati' }).querySelector('svg')!);
-    expect(screen.getByRole('combobox', { name: /Default language/ })).toHaveTextContent('English');
+    expect(screen.getByRole('combobox', { name: /Default Language/ })).toHaveTextContent('English');
   });
   it('keeps empty labels inside their fields until focus and omits the duplicate grid setting', async () => {
     const user = userEvent.setup();
@@ -53,18 +53,18 @@ describe('FormBuilderDetailFields', () => {
       </ThemeProvider>
     );
 
-    const nameLabel = screen.getByText('Form name *', { selector: 'label' });
-    const descriptionLabel = screen.getByText('Description (optional)', { selector: 'label' });
+    const nameLabel = screen.getByText('Form Name *', { selector: 'label' });
+    const descriptionLabel = screen.getByText('Description (Optional)', { selector: 'label' });
 
     expect(nameLabel).not.toHaveClass('MuiInputLabel-shrink');
     expect(descriptionLabel).not.toHaveClass('MuiInputLabel-shrink');
     expect(screen.queryByRole('combobox', { name: /Fields per row/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('combobox', { name: /Form purpose/i })).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('textbox', { name: 'Form name *' }));
+    await user.click(screen.getByRole('textbox', { name: 'Form Name *' }));
     expect(nameLabel).toHaveClass('MuiInputLabel-shrink');
 
-    await user.click(screen.getByRole('textbox', { name: 'Description (optional)' }));
+    await user.click(screen.getByRole('textbox', { name: 'Description (Optional)' }));
     expect(nameLabel).not.toHaveClass('MuiInputLabel-shrink');
     expect(descriptionLabel).toHaveClass('MuiInputLabel-shrink');
   });

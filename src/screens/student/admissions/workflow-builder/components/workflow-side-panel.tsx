@@ -14,11 +14,11 @@ import { WorkflowPanelContent } from './workflow-panel-content';
 import type { WorkflowSidePanel } from '../workflow-builder-types';
 
 const TITLES: Record<Exclude<WorkflowSidePanel, null>, string> = {
-  preview: 'Workflow preview',
-  simulation: 'Test workflow routes',
-  versions: 'Version history',
-  usage: 'Workflow usage',
-  governance: 'Governance history',
+  preview: 'Workflow Preview',
+  simulation: 'Test Workflow Routes',
+  versions: 'Version History',
+  usage: 'Workflow Usage',
+  governance: 'Governance History',
 };
 
 const DESCRIPTIONS: Record<Exclude<WorkflowSidePanel, null>, string> = {
@@ -90,7 +90,7 @@ export function WorkflowSidePanel({
           )}
         </Box>
         <IconButton
-          aria-label="Close panel"
+          aria-label="Close Panel"
           onClick={onClose}
           sx={{ width: 44, height: 44, flexShrink: 0 }}
         >
@@ -100,7 +100,7 @@ export function WorkflowSidePanel({
       <Divider />
       <Box
         component="section"
-        aria-label={panel ? `${TITLES[panel]} content` : 'Workflow panel content'}
+        aria-label={panel ? `${TITLES[panel]} Content` : 'Workflow Panel Content'}
         sx={{ flex: 1, minHeight: 0, overflowY: 'auto', px: 2.5, py: 2 }}
       >
         <Stack spacing={1.5}>

@@ -48,15 +48,15 @@ describe('ApplicationCurrentTask', () => {
       </ThemeProvider>
     );
 
-    expect(screen.getByText('Current step')).toBeInTheDocument();
+    expect(screen.getByText('Current Step')).toBeInTheDocument();
 
-    const reviewButton = screen.getByText('Review application form').closest('button');
+    const reviewButton = screen.getByText('Review Application Form').closest('button');
     expect(reviewButton).not.toBeNull();
     fireEvent.click(reviewButton!);
     expect(onReviewForm).toHaveBeenCalledOnce();
 
     fireEvent.click(screen.getByRole('button', { name: 'Complete Documents verified' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Skip this step' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Skip This Step' }));
     expect(onAdvance).toHaveBeenCalledOnce();
     expect(onSkip).toHaveBeenCalledOnce();
   });
@@ -66,17 +66,17 @@ it.each([
   {
     requireSectionVerification: true,
     autoAdvanceOnSubmit: true,
-    expected: 'The form automatically advances this journey after a successful submission.',
+    expected: 'The Form Automatically Advances This Journey After a Successful Submission.',
   },
   {
     requireSectionVerification: false,
     autoAdvanceOnSubmit: true,
-    expected: 'The form automatically advances this journey after a successful submission.',
+    expected: 'The Form Automatically Advances This Journey After a Successful Submission.',
   },
   {
     requireSectionVerification: false,
     autoAdvanceOnSubmit: false,
-    expected: 'After successful submission, use Continue to finish this step.',
+    expected: 'After Successful Submission, Use Continue to Finish This Step.',
   },
 ])('explains authoritative Form continuation rules: %j', ({ expected, ...formPolicy }) => {
   render(
@@ -101,6 +101,6 @@ it.each([
   );
   expect(screen.getByText(expected)).toBeInTheDocument();
   expect(
-    screen.queryByText(/required verification|sections are verified/i)
+    screen.queryByText(/Required verification|Sections are verified/i)
   ).not.toBeInTheDocument();
 });

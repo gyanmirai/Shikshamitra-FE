@@ -120,9 +120,9 @@ export function AdmissionCycleCapacityDialog({ cycle, canManage, onClose }: Prop
       handleClose={onClose}
       title={
         <AdmissionDialogTitle
-          title="Capacity & reservations"
-          helpText="Capacity is controlled per offering. Reservation, confirmation and waitlist counts come from the live admission journey and are enforced by its Seat stage."
-          helpLabel="About capacity and reservations"
+          title="Capacity & Reservations"
+          helpText="Capacity Is Controlled Per Offering. Reservation, Confirmation and Waitlist Counts Come From the Live Admission Journey and Are Enforced by Its Seat Stage."
+          helpLabel="About Capacity and Reservations"
         />
       }
       maxWidth="md"
@@ -140,7 +140,7 @@ export function AdmissionCycleCapacityDialog({ cycle, canManage, onClose }: Prop
           {isLoading && (
             <Stack direction="row" spacing={1} alignItems="center" role="status">
               <CircularProgress size={20} />
-              <Typography variant="body2">Loading capacity…</Typography>
+              <Typography variant="body2">Loading Capacity…</Typography>
             </Stack>
           )}
           {isError && (
@@ -213,8 +213,8 @@ export function AdmissionCycleCapacityDialog({ cycle, canManage, onClose }: Prop
               {isReadOnly && data.offeringCount > 0 && (
                 <StudentFeedback notificationKey="STU-0038" presentation="inline" severity="info">
                   {canManage
-                    ? 'Closed or archived admission periods are read-only.'
-                    : 'You can view capacity, but you do not have permission to change it.'}
+                    ? 'Closed or Archived Admission Periods Are Read-only.'
+                    : 'You Can View Capacity, but You Do Not Have Permission to Change It.'}
                 </StudentFeedback>
               )}
 
@@ -223,7 +223,7 @@ export function AdmissionCycleCapacityDialog({ cycle, canManage, onClose }: Prop
                   <Stack spacing={1.5}>
                     <Box>
                       <Typography variant="subtitle2">
-                        Set capacity for {editing.offeringName}
+                        Set Capacity For {editing.offeringName}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
                         {occupied} seats are currently reserved or confirmed. Capacity cannot be
@@ -236,7 +236,7 @@ export function AdmissionCycleCapacityDialog({ cycle, canManage, onClose }: Prop
                         required
                         size="small"
                         type="number"
-                        label="Seat capacity"
+                        label="Seat Capacity"
                         value={capacity}
                         error={capacityError}
                         helperText={
@@ -252,7 +252,7 @@ export function AdmissionCycleCapacityDialog({ cycle, canManage, onClose }: Prop
                         required
                         fullWidth
                         size="small"
-                        label="Reason for change"
+                        label="Reason for Change"
                         value={reason}
                         inputProps={{ maxLength: 512 }}
                         onChange={(event) => setReason(event.target.value)}
@@ -263,7 +263,7 @@ export function AdmissionCycleCapacityDialog({ cycle, canManage, onClose }: Prop
                         Cancel
                       </Button>
                       <Button variant="contained" disabled={!canSave} onClick={save}>
-                        {isSaving ? 'Saving…' : 'Save capacity'}
+                        {isSaving ? 'Saving…' : 'Save Capacity'}
                       </Button>
                     </Stack>
                   </Stack>
@@ -278,7 +278,7 @@ export function AdmissionCycleCapacityDialog({ cycle, canManage, onClose }: Prop
                 </StudentFeedback>
               ) : (
                 <TableContainer sx={{ border: 1, borderColor: 'divider', borderRadius: 1 }}>
-                  <Table size="small" aria-label={`Capacity for ${cycle.name}`}>
+                  <Table size="small" aria-label={`Capacity For ${cycle.name}`}>
                     <TableHead>
                       <TableRow>
                         <TableCell>Offering</TableCell>
@@ -307,15 +307,15 @@ export function AdmissionCycleCapacityDialog({ cycle, canManage, onClose }: Prop
                                 <Chip size="small" label="Inactive" variant="outlined" />
                               )}
                               {!row.isSeatManaged && (
-                                <Chip size="small" label="No Seat stage" variant="outlined" />
+                                <Chip size="small" label="No Seat Stage" variant="outlined" />
                               )}
                               {row.isOverCapacity && (
-                                <Chip size="small" color="error" label="Over capacity" />
+                                <Chip size="small" color="error" label="Over Capacity" />
                               )}
                             </Stack>
                           </TableCell>
                           <TableCell align="right">
-                            {row.isConfigured ? row.capacity : 'Not set'}
+                            {row.isConfigured ? row.capacity : 'Not Set'}
                           </TableCell>
                           <TableCell align="right">{row.reservedCount}</TableCell>
                           <TableCell align="right">{row.confirmedCount}</TableCell>
@@ -328,14 +328,14 @@ export function AdmissionCycleCapacityDialog({ cycle, canManage, onClose }: Prop
                               title={
                                 row.isSeatManaged
                                   ? ''
-                                  : 'Assign a published Admission Stage workflow with a Seat stage first.'
+                                  : 'Assign a Published Admission Stage Workflow with a Seat Stage First.'
                               }
                             >
                               <span>
                                 <Button
                                   size="small"
                                   disabled={isReadOnly || isSaving || !row.isSeatManaged}
-                                  aria-label={`${row.isConfigured ? 'Change' : 'Set'} capacity for ${row.offeringName}`}
+                                  aria-label={`${row.isConfigured ? 'Change' : 'Set'} Capacity For ${row.offeringName}`}
                                   onClick={() => startEdit(row)}
                                 >
                                   {row.isConfigured ? 'Change' : 'Set'}
@@ -351,7 +351,7 @@ export function AdmissionCycleCapacityDialog({ cycle, canManage, onClose }: Prop
               )}
               {isFetching && !isLoading && (
                 <Typography variant="caption" color="text.secondary" role="status">
-                  Refreshing live counts…
+                  Refreshing Live Counts…
                 </Typography>
               )}
             </>

@@ -3,11 +3,11 @@ import * as Yup from 'yup';
 export type DocumentAction = 'upload' | 'original' | 'accept' | 'reject' | 'waive';
 export type DocumentActionValues = { file: File | null; notes: string };
 export const documentActionLabels: Record<DocumentAction, string> = {
-  upload: 'Upload document',
-  original: 'Record physical original',
-  accept: 'Accept document',
-  reject: 'Request replacement',
-  waive: 'Waive requirement',
+  upload: 'Upload Document',
+  original: 'Record Physical Original',
+  accept: 'Accept Document',
+  reject: 'Request Replacement',
+  waive: 'Waive Requirement',
 };
 export function documentActionSchema(
   action: DocumentAction,

@@ -19,7 +19,7 @@ describe('Admission Form Builder custom field palette', () => {
       </ThemeProvider>
     );
     fireEvent.change(screen.getByLabelText('Question'), { target: { value: 'Interested Class' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Add custom field' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add Custom Field' }));
     expect(onAddField).toHaveBeenCalledWith(
       6,
       undefined,
@@ -51,11 +51,11 @@ describe('Admission Form Builder custom field palette', () => {
       </ThemeProvider>
     );
     fireEvent.change(screen.getByLabelText('Question'), { target: { value: 'fname' } });
-    expect(screen.getByRole('button', { name: 'Add custom field' })).toBeDisabled();
-    fireEvent.click(screen.getByRole('button', { name: 'Go to existing field' }));
+    expect(screen.getByRole('button', { name: 'Add Custom Field' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Go to Existing Field' }));
     expect(onAddField).toHaveBeenLastCalledWith(0, 'Applicant.FirstName');
-    fireEvent.click(screen.getByRole('button', { name: 'Different question' }));
-    expect(screen.getByRole('button', { name: 'Add custom field' })).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Different Question' }));
+    expect(screen.getByRole('button', { name: 'Add Custom Field' })).toBeEnabled();
   });
   it('collects choices while creating the question without a second settings visit', () => {
     const onAddField = vi.fn();
@@ -67,11 +67,11 @@ describe('Admission Form Builder custom field palette', () => {
     fireEvent.change(screen.getByLabelText('Question'), {
       target: { value: 'Preferred activity' },
     });
-    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Answer type' }));
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Answer Type' }));
     fireEvent.click(screen.getByRole('option', { name: 'Select' }));
-    expect(screen.getByRole('button', { name: 'Add custom field' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Add Custom Field' })).toBeDisabled();
     fireEvent.change(screen.getByLabelText('Choices'), { target: { value: 'Art\nMusic' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Add custom field' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add Custom Field' }));
     expect(onAddField).toHaveBeenLastCalledWith(
       6,
       undefined,
@@ -99,7 +99,7 @@ describe('Admission Form Builder custom field palette', () => {
         />
       </ThemeProvider>
     );
-    expect(screen.getByRole('button', { name: 'Add custom field' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Add Custom Field' })).toBeDisabled();
     fireEvent.change(screen.getByLabelText('Question'), { target: { value: 'Blood group' } });
     fireEvent.click(screen.getByRole('button', { name: 'Add Blood group' }));
     expect(onAddField).toHaveBeenLastCalledWith(6, 'Medical.BloodGroup');
@@ -107,7 +107,7 @@ describe('Admission Form Builder custom field palette', () => {
       target: { value: 'Preferred activity' },
     });
     fireEvent.click(screen.getByLabelText('Required'));
-    fireEvent.click(screen.getByRole('button', { name: 'Add custom field' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add Custom Field' }));
     expect(onAddField).toHaveBeenLastCalledWith(
       0,
       undefined,
@@ -122,7 +122,7 @@ describe('Admission Form Builder custom field palette', () => {
       </ThemeProvider>
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'More field formats' }));
+    fireEvent.click(screen.getByRole('button', { name: 'More Field Formats' }));
 
     CREATABLE_FIELD_TYPES.forEach(([label, fieldType]) => {
       fireEvent.click(screen.getByRole('button', { name: `Add ${label}` }));
@@ -139,7 +139,7 @@ describe('Admission Form Builder custom field palette', () => {
       </ThemeProvider>
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'More field formats' }));
+    fireEvent.click(screen.getByRole('button', { name: 'More Field Formats' }));
 
     CUSTOM_FIELD_PRESETS.forEach((preset) => {
       fireEvent.click(screen.getByRole('button', { name: `Add ${preset.label}` }));

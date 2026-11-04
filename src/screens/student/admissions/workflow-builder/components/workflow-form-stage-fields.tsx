@@ -30,14 +30,14 @@ export function WorkflowFormStageFields(props: Props) {
     <Stack spacing={2} sx={{ p: 2 }}>
       <>
         <FormSectionCard
-          title="Stage details"
+          title="Stage Details"
           icon="mdi:file-document-outline"
-          descriptionTooltip="Choose the stage type, its name and the published form version applicants will complete. The selected form version is frozen with the workflow."
+          descriptionTooltip="Choose the Stage Type, Its Name and the Published Form Version Applicants Will Complete. The Selected Form Version Is Frozen with the Workflow."
         >
           <WorkflowFormStageBasics {...props} />
         </FormSectionCard>
 
-        <FormSectionCard title="Form completion" icon="mdi:file-check-outline">
+        <FormSectionCard title="Form Completion" icon="mdi:file-check-outline">
           <WorkflowFormSettings
             formik={formik}
             forms={forms}

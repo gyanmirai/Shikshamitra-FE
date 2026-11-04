@@ -120,7 +120,7 @@ function OpenFormCorrection({
     <ApplicationFormCorrectionFrame onClose={onClose}>
       <Stack spacing={2} useFlexGap sx={{ flex: 1, minHeight: 0 }}>
         {loading ? (
-          <Stack role="status" aria-label="Loading application form">
+          <Stack role="status" aria-label="Loading Application Form">
             <Skeleton height={48} />
             <Skeleton height={96} />
             <Skeleton height={48} />
@@ -129,10 +129,10 @@ function OpenFormCorrection({
           <>
             <Typography variant="body2" color="text.secondary">
               {!permitted
-                ? 'You do not have permission to correct this application.'
+                ? 'You Do Not Have Permission to Correct This Application.'
                 : failed
-                  ? 'The application form could not be loaded.'
-                  : 'The application form is unavailable.'}
+                  ? 'The Application Form Could Not Be Loaded.'
+                  : 'The Application Form Is Unavailable.'}
             </Typography>
             {permitted && (
               <Button

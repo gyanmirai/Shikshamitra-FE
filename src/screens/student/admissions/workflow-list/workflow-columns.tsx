@@ -78,7 +78,7 @@ export function createWorkflowColumns(
     },
     {
       id: 'offeringCount',
-      label: 'Used by offerings',
+      label: 'Used by Offerings',
       filterType: 'number' as const,
       filterStep: 1,
       minWidth: 150,
@@ -88,7 +88,7 @@ export function createWorkflowColumns(
     },
     {
       id: 'lastModificationTime',
-      label: 'Last modified',
+      label: 'Last Modified',
       filterType: 'date' as const,
       minWidth: 170,
       isFilter: true,
@@ -104,7 +104,7 @@ export function createWorkflowColumns(
     },
     {
       id: 'publishedAt',
-      label: 'Published at',
+      label: 'Published At',
       filterType: 'date' as const,
       minWidth: 170,
       isFilter: true,

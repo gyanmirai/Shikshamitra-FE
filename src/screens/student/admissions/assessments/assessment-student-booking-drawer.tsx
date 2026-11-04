@@ -66,12 +66,12 @@ export function AssessmentStudentBookingDrawer(props: StudentBookingProps) {
             <Typography id={titleId} variant="h6">
               <AdmissionDialogTitle
                 title="Book Session"
-                helpText="Book the selected students into a session. Room availability and eligibility are checked before confirmation."
+                helpText="Book the Selected Students Into a Session. Room Availability and Eligibility Are Checked Before Confirmation."
               />
             </Typography>
             <IconButton
               size="small"
-              aria-label="Close student booking"
+              aria-label="Close Student Booking"
               disabled={locked}
               onClick={() => data.navigate()}
             >
@@ -80,7 +80,7 @@ export function AssessmentStudentBookingDrawer(props: StudentBookingProps) {
           </Stack>
           <Divider />
           <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
-            <FormBusyRegion busy={locked} label="Checking and booking selected students…">
+            <FormBusyRegion busy={locked} label="Checking and Booking Selected Students…">
               <Stack spacing={2} sx={{ p: { xs: 2, sm: 3 } }}>
                 <FormSectionCard
                   icon={GlobalIcons.calendar}
@@ -90,7 +90,7 @@ export function AssessmentStudentBookingDrawer(props: StudentBookingProps) {
                       <Label>{count}</Label>
                     </Stack>
                   }
-                  descriptionTooltip="Only these students will be booked. Remove unavailable students explicitly before confirming."
+                  descriptionTooltip="Only These Students Will Be Booked. Remove Unavailable Students Explicitly Before Confirming."
                 >
                   <Stack divider={<Divider />}>
                     {data.rows.map((row) => {
@@ -133,7 +133,7 @@ export function AssessmentStudentBookingDrawer(props: StudentBookingProps) {
                               color={reason ? 'warning' : item && !reason ? 'success' : 'default'}
                             >
                               {existingBooking
-                                ? 'Already booked'
+                                ? 'Already Booked'
                                 : reason
                                   ? 'Unavailable'
                                   : item
@@ -146,10 +146,10 @@ export function AssessmentStudentBookingDrawer(props: StudentBookingProps) {
                                 variant="outlined"
                                 color="inherit"
                                 disabled={locked || data.retryPending}
-                                aria-label={`View booking for ${row.applicantName}`}
+                                aria-label={`View Booking For ${row.applicantName}`}
                                 onClick={() => onViewBooking(row)}
                               >
-                                View booking
+                                View Booking
                               </Button>
                             )}
                             <IconButton
@@ -189,12 +189,12 @@ export function AssessmentStudentBookingDrawer(props: StudentBookingProps) {
                   <FormSectionCard
                     title="Available Sessions"
                     icon={GlobalIcons.calendar}
-                    descriptionTooltip="Choose a session for the selected students."
+                    descriptionTooltip="Choose a Session for the Selected Students."
                   >
                     <TextField
                       size="small"
                       fullWidth
-                      label="Search sessions"
+                      label="Search Sessions"
                       value={data.search}
                       disabled={locked || data.retryPending}
                       onChange={(event) => {
@@ -218,7 +218,7 @@ export function AssessmentStudentBookingDrawer(props: StudentBookingProps) {
                         Unable to load sessions.
                       </StudentFeedback>
                     ) : (
-                      <Stack spacing={1} role="radiogroup" aria-label="Available sessions">
+                      <Stack spacing={1} role="radiogroup" aria-label="Available Sessions">
                         {data.available.map((session) => {
                           const reason = data.sessionReason(session);
                           return (
@@ -276,8 +276,8 @@ export function AssessmentStudentBookingDrawer(props: StudentBookingProps) {
                                 </Typography>
                               ) : (
                                 <Label>
-                                  {Math.max(0, session.capacity - session.bookedCount)} seats /
-                                  slots
+                                  {Math.max(0, session.capacity - session.bookedCount)} Seats /
+                                  Slots
                                 </Label>
                               )}
                             </Box>
@@ -345,7 +345,7 @@ export function AssessmentStudentBookingDrawer(props: StudentBookingProps) {
                 )}
                 {data.review?.canConfirm && (
                   <Typography role="status" variant="body2" color="text.secondary">
-                    {count} {count === 1 ? 'student' : 'students'} ready to book
+                    {count} {count === 1 ? 'Student' : 'Students'} Ready to Book
                   </Typography>
                 )}
               </Stack>

@@ -59,6 +59,12 @@ export function readAdmissionFormListReturnState(
                 filter.type === 'equals' &&
                 [0, 1, 2].includes(Number(filter.value))
               );
+            if (filter.column === 'purpose')
+              return (
+                filter.valueType === 'enum' &&
+                filter.type === 'equals' &&
+                [0, 1].includes(filter.value)
+              );
             if (
               !['version', 'sectionCount'].includes(filter.column) ||
               filter.valueType !== 'number' ||

@@ -1,12 +1,16 @@
 import type { FormikProps } from 'formik';
 
+import { Iconify } from 'src/components/iconify';
 import { Grid, TextField, Typography } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { useGetAdmissionFormQuery } from 'src/redux/student/admissions/admission-forms-api';
 
-import { AdmissionDefinitionSelect } from './admission-definition-select';
 import { AdmissionOfferingRoutingFields } from './admission-offering-routing-fields';
+import {
+  AdmissionDefinitionSelect,
+  getAdmissionDefinitionLabel,
+} from './admission-definition-select';
 import {
   type AdmissionOfferingFormValues,
   isAdmissionOfferingConfigurationIncomplete,
@@ -29,6 +33,7 @@ type Props = {
   hideConfigurationWarning?: boolean;
   onDismissConfigurationWarning?: () => void;
   routingLocked?: boolean;
+  configurationLocked?: boolean;
 };
 
 export function AdmissionOfferingConfigurationFields({
@@ -43,18 +48,19 @@ export function AdmissionOfferingConfigurationFields({
   hideConfigurationWarning = false,
   onDismissConfigurationWarning,
   routingLocked = false,
+  configurationLocked = false,
 }: Props) {
   const missingPublishedConfiguration = isAdmissionOfferingConfigurationIncomplete(formik.values);
   const startsWithInquiry = formik.values.entryMode !== 1;
   const configurationFieldSize = twoColumnLayout ? { xs: 12, sm: 6 } : 12;
   const inquiryForm = useGetAdmissionFormQuery(formik.values.inquiryFormDefinitionId ?? '', {
-    skip: !formik.values.inquiryFormDefinitionId,
+    skip: configurationLocked || !formik.values.inquiryFormDefinitionId,
   });
   return (
     <Grid container spacing={compact ? 1 : 1.5}>
       {!compact && (
         <Grid size={12}>
-          <Typography variant="subtitle2">Admission configuration</Typography>
+          <Typography variant="subtitle2">Admission Configuration</Typography>
         </Grid>
       )}
       {missingPublishedConfiguration && !hideConfigurationWarning && (
@@ -66,7 +72,7 @@ export function AdmissionOfferingConfigurationFields({
             onClose={onDismissConfigurationWarning}
           >
             Select a published workflow
-            {startsWithInquiry ? ', plus an inquiry form' : ''} before activating this Offering. You
+            {startsWithInquiry ? ', Plus an Inquiry Form' : ''} before activating this Offering. You
             may save it as inactive while configuration is incomplete.
           </StudentFeedback>
         </Grid>
@@ -74,7 +80,7 @@ export function AdmissionOfferingConfigurationFields({
       <Grid size={12}>
         <AdmissionOfferingRoutingFields
           values={formik.values}
-          locked={routingLocked}
+          locked={routingLocked || configurationLocked}
           onChange={({ track, entryMode }) => {
             formik.setValues({
               ...formik.values,
@@ -104,7 +110,7 @@ export function AdmissionOfferingConfigurationFields({
           <TextField
             fullWidth
             size="small"
-            label="Offering name *"
+            label="Offering Name *"
             {...formik.getFieldProps('name')}
             error={formik.touched.name && Boolean(formik.errors.name)}
             helperText={
@@ -123,7 +129,7 @@ export function AdmissionOfferingConfigurationFields({
             <TextField
               fullWidth
               size="small"
-              label="Offering code *"
+              label="Offering Code *"
               {...formik.getFieldProps('code')}
               error={formik.touched.code && Boolean(formik.errors.code)}
               helperText={
@@ -138,35 +144,67 @@ export function AdmissionOfferingConfigurationFields({
         </Grid>
       )}
       <Grid size={configurationFieldSize}>
-        <AdmissionDefinitionSelect
-          label="Published workflow"
-          valueId={formik.values.workflowDefinitionId ?? null}
-          initialOption={initialWorkflow}
-          fetchOptions={fetchWorkflows}
-          onChange={(id) => {
-            formik.setFieldValue('workflowDefinitionId', id);
-            formik.setFieldValue('applicationFormDefinitionId', null);
-          }}
-          noOptionsText="No published workflows found"
-          helperText={
-            compact ? undefined : 'Application form comes from the workflow’s Form stage.'
-          }
-        />
+        {configurationLocked ? (
+          <TextField
+            fullWidth
+            size="small"
+            label="Published Workflow"
+            disabled
+            value={
+              initialWorkflow?.name
+                ? getAdmissionDefinitionLabel(initialWorkflow)
+                : 'Not configured'
+            }
+            slotProps={{ input: { endAdornment: <Iconify icon="mdi:lock-outline" aria-hidden /> } }}
+          />
+        ) : (
+          <AdmissionDefinitionSelect
+            label="Published Workflow"
+            valueId={formik.values.workflowDefinitionId ?? null}
+            initialOption={initialWorkflow}
+            fetchOptions={fetchWorkflows}
+            onChange={(id) => {
+              formik.setFieldValue('workflowDefinitionId', id);
+              formik.setFieldValue('applicationFormDefinitionId', null);
+            }}
+            noOptionsText="No published workflows found"
+            helperText={
+              compact ? undefined : 'Application form comes from the workflow’s Form stage.'
+            }
+          />
+        )}
       </Grid>
       {startsWithInquiry && (
         <Grid size={configurationFieldSize}>
-          <AdmissionDefinitionSelect
-            label="Published inquiry form"
-            valueId={formik.values.inquiryFormDefinitionId ?? null}
-            initialOption={
-              inquiryForm.data?.id === formik.values.inquiryFormDefinitionId
-                ? inquiryForm.data
-                : initialInquiryForm
-            }
-            fetchOptions={fetchInquiryForms}
-            onChange={(value) => formik.setFieldValue('inquiryFormDefinitionId', value)}
-            noOptionsText="No published forms found"
-          />
+          {configurationLocked ? (
+            <TextField
+              fullWidth
+              size="small"
+              label="Published Inquiry Form"
+              disabled
+              value={
+                initialInquiryForm?.name
+                  ? getAdmissionDefinitionLabel(initialInquiryForm)
+                  : 'Not configured'
+              }
+              slotProps={{
+                input: { endAdornment: <Iconify icon="mdi:lock-outline" aria-hidden /> },
+              }}
+            />
+          ) : (
+            <AdmissionDefinitionSelect
+              label="Published Inquiry Form"
+              valueId={formik.values.inquiryFormDefinitionId ?? null}
+              initialOption={
+                inquiryForm.data?.id === formik.values.inquiryFormDefinitionId
+                  ? inquiryForm.data
+                  : initialInquiryForm
+              }
+              fetchOptions={fetchInquiryForms}
+              onChange={(value) => formik.setFieldValue('inquiryFormDefinitionId', value)}
+              noOptionsText="No published forms found"
+            />
+          )}
         </Grid>
       )}
 

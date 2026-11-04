@@ -48,13 +48,13 @@ describe('FormBuilderSectionLibraryDrawer', () => {
     const props = renderDrawer();
 
     expect(screen.getByText(/beside Student details/i)).toBeInTheDocument();
-    await user.type(screen.getByLabelText('Search section templates'), 'transport');
+    await user.type(screen.getByLabelText('Search Section Templates'), 'transport');
     await user.click(screen.getByRole('button', { name: /Transport requirement/i }));
 
     expect(screen.getByText('Service required')).toBeInTheDocument();
     expect(screen.getByText('Preferred pickup stop')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Add section' }));
+    await user.click(screen.getByRole('button', { name: 'Add Section' }));
     expect(props.onAddSection).toHaveBeenCalledWith('transport-requirement');
     expect(props.onClose).toHaveBeenCalledOnce();
   });

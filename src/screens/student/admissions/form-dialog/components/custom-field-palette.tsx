@@ -69,7 +69,7 @@ export function CustomFieldPalette({ onAddField, systemFields = [], usedBindings
   return (
     <Scrollbar
       fillContent
-      aria-label="Custom fields"
+      aria-label="Custom Fields"
       sx={{
         flex: 1,
         minHeight: 0,
@@ -91,7 +91,7 @@ export function CustomFieldPalette({ onAddField, systemFields = [], usedBindings
         {suggestions.length > 0 && (
           <Stack spacing={0.5}>
             <Typography variant="caption" color="text.secondary">
-              Existing Student fields
+              Existing Student Fields
             </Typography>
             {suggestions.map((field) => (
               <PaletteFieldButton
@@ -119,10 +119,10 @@ export function CustomFieldPalette({ onAddField, systemFields = [], usedBindings
                 variant="outlined"
                 onClick={() => onAddField(alias.fieldType, alias.key)}
               >
-                Go to existing field
+                Go to Existing Field
               </Button>
               <Button size="small" onClick={() => setConfirmedDifferent(normalized)}>
-                Different question
+                Different Question
               </Button>
             </Stack>
           </Stack>
@@ -131,7 +131,7 @@ export function CustomFieldPalette({ onAddField, systemFields = [], usedBindings
           select
           size="small"
           fullWidth
-          label="Answer type"
+          label="Answer Type"
           value={answerType}
           disabled={isClassInterest}
           onChange={(event) => setType(Number(event.target.value) as AdmissionFormFieldType)}
@@ -167,6 +167,7 @@ export function CustomFieldPalette({ onAddField, systemFields = [], usedBindings
           label={<Typography variant="body2">Required</Typography>}
         />
         <Button
+          aria-label="Add Custom Field"
           fullWidth
           size="small"
           variant="contained"
@@ -191,7 +192,7 @@ export function CustomFieldPalette({ onAddField, systemFields = [], usedBindings
             setConfirmedDifferent(null);
           }}
         >
-          Add custom field
+          Custom Field
         </Button>
         <Button
           fullWidth
@@ -203,12 +204,12 @@ export function CustomFieldPalette({ onAddField, systemFields = [], usedBindings
           sx={{ justifyContent: 'space-between' }}
           onClick={() => setShowTypes((value) => !value)}
         >
-          More field formats
+          More Field Formats
         </Button>
         <Collapse id={formatsId} in={showTypes}>
           <Stack spacing={1}>
             <Typography variant="overline" color="text.secondary">
-              Ready to use
+              Ready to Use
             </Typography>
             {CUSTOM_FIELD_PRESETS.map((preset) => (
               <PaletteFieldButton
@@ -220,7 +221,7 @@ export function CustomFieldPalette({ onAddField, systemFields = [], usedBindings
               />
             ))}
             <Typography variant="overline" color="text.secondary" sx={{ pt: 1 }}>
-              Basic field types
+              Basic Field Types
             </Typography>
             {CREATABLE_FIELD_TYPES.map(([typeLabel, value]) => (
               <PaletteFieldButton

@@ -44,7 +44,7 @@ export function FormBuilderSectionFields({
     : formik;
   const removeField = (fieldId: string) => {
     const field = formik.values.sections[sectionIndex].fields.find((item) => item.id === fieldId);
-    if (!field || field.inheritedFrom || isLockedInquiryField(formik.values.purpose, field)) return;
+    if (!field || field.inheritedFrom || isLockedInquiryField(formik.values.purpose, field, formik.values.coreFieldPolicyVersion)) return;
     formik.setFieldValue(
       `sections[${sectionIndex}].fields`,
       formik.values.sections[sectionIndex].fields.filter((item) => item.id !== fieldId)
@@ -96,7 +96,7 @@ export function FormBuilderSectionFields({
           }}
         >
           <Iconify icon="mdi:form-textbox" width={28} sx={{ mb: 0.5, color: 'text.disabled' }} />
-          <Typography variant="subtitle2">Add your first field</Typography>
+          <Typography variant="subtitle2">Add Your First Field</Typography>
           <Typography variant="caption" color="text.secondary">
             Select this section heading, then choose Student fields or Custom fields from Add
             fields.

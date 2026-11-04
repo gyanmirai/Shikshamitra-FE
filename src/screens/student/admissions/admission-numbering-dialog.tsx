@@ -162,7 +162,7 @@ export function AdmissionNumberingFormDialog({
       maxWidth="sm"
       hasForm={false}
       title="Application Numbering"
-      titleInfo="Set school-wide automatic application numbers. New formats apply to future registrations; existing numbers stay unchanged."
+      titleInfo="Set School-Wide Automatic Application Numbers. New Formats Apply to Future Registrations; Existing Numbers Stay Unchanged."
       handleClose={close}
       disableClose={busy}
       guardUnsavedChanges={false}
@@ -196,7 +196,7 @@ export function AdmissionNumberingFormDialog({
               </StudentFeedback>
             )}
             {!settings ? (
-              <Stack spacing={2} aria-label={loading ? 'Loading numbering settings' : undefined}>
+              <Stack spacing={2} aria-label={loading ? 'Loading Numbering Settings' : undefined}>
                 {[0, 1, 2].map(
                   (key) => loading && <Skeleton key={key} variant="rounded" height={100} />
                 )}
@@ -205,9 +205,9 @@ export function AdmissionNumberingFormDialog({
               <>
                 <Stack direction="row" justifyContent="space-between" spacing={2}>
                   <Typography variant="body2" color="text.secondary">
-                    Applies to
+                    Applies To
                   </Typography>
-                  <Typography variant="body2">All admission offerings</Typography>
+                  <Typography variant="body2">All Admission Offerings</Typography>
                 </Stack>
                 <Box
                   component="fieldset"
@@ -223,7 +223,7 @@ export function AdmissionNumberingFormDialog({
                     <FormSectionCard
                       icon={GlobalIcons.doc}
                       title="Number Format"
-                      descriptionTooltip="Choose the format for future applications. Academic year comes from the offering's admission period, not today's date."
+                      descriptionTooltip="Choose the Format for Future Applications. Academic Year Comes From the Offering's Admission Period, Not Today's Date."
                     >
                       <Grid container spacing={2}>
                         <Grid size={{ xs: 12, sm: 6 }}>
@@ -258,13 +258,13 @@ export function AdmissionNumberingFormDialog({
                           {select('separator', 'Separator', [
                             { value: '/', label: '/' },
                             { value: '-', label: '-' },
-                            { value: '', label: 'No separator' },
+                            { value: '', label: 'No Separator' },
                           ])}
                         </Grid>
                         <Grid size={{ xs: 12, sm: 6 }}>
                           {select(
                             'digits',
-                            'Number of digits',
+                            'Number Of Digits',
                             Array.from({ length: 12 }, (_, index) => ({
                               value: index + 1,
                               label: String(index + 1),
@@ -274,7 +274,7 @@ export function AdmissionNumberingFormDialog({
                         <Grid size={{ xs: 12, sm: 6 }}>
                           <ShakingTextField error={Boolean(fieldError('startingNumber'))}>
                             <TextField
-                              label="Starting number"
+                              label="Starting Number"
                               required
                               fullWidth
                               size="small"
@@ -298,7 +298,7 @@ export function AdmissionNumberingFormDialog({
                 <FormSectionCard
                   icon={GlobalIcons.eye}
                   title="Number Preview"
-                  descriptionTooltip="The next available number from the school counter for this format. Preview does not reserve it; another registration can use it first."
+                  descriptionTooltip="The Next Available Number From the School Counter for This Format. Preview Does Not Reserve It; Another Registration Can Use It First."
                 >
                   <AdmissionNumberingPreview
                     values={formik.values}
@@ -337,13 +337,13 @@ export function AdmissionNumberingFormDialog({
       </Box>
       <ConfirmDialog
         open={discard}
-        cancelText="Keep editing"
+        cancelText="Keep Editing"
         onClose={() => setDiscard(false)}
-        title="Discard unsaved changes?"
+        title="Discard Unsaved Changes?"
         content="Your application numbering changes have not been saved."
         action={
           <Button variant="contained" color="error" onClick={onClose}>
-            Discard changes
+            Discard Changes
           </Button>
         }
       />

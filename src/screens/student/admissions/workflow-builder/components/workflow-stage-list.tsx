@@ -107,18 +107,18 @@ export function WorkflowStageList({
             </Typography>
             <Stack direction="row" alignItems="center">
               <Label color="info" variant="outlined">
-                After inquiry
+                After Inquiry
               </Label>
               <InfoTooltipIcon
-                label="About the admission journey after inquiry"
-                title="Configure the stages applicants follow after inquiry, through to admission finalization. These stages appear in Applicant 360."
+                label="About the Admission Journey After Inquiry"
+                title="Configure the Stages Applicants Follow After Inquiry, Through to Admission Finalization. These Stages Appear in Applicant 360."
               />
             </Stack>
           </Stack>
         </Box>
         {!readOnly && (
           <Stack direction="row" spacing={1} alignItems="center" justifyContent="flex-end">
-            <Stack role="group" aria-label="Journey edit history" direction="row" spacing={0.5}>
+            <Stack role="group" aria-label="Journey Edit History" direction="row" spacing={0.5}>
               <CustomTooltip title="Undo">
                 <span>
                   <IconButton
@@ -158,6 +158,7 @@ export function WorkflowStageList({
             </Stack>
             {stages.length > 0 && (
               <Button
+                aria-label="Add Stage"
                 size="small"
                 variant="contained"
                 startIcon={<Iconify icon="mdi:plus" />}
@@ -170,7 +171,7 @@ export function WorkflowStageList({
                   '&:hover': { bgcolor: 'text.secondary' },
                 }}
               >
-                Add stage
+                Stage
               </Button>
             )}
           </Stack>
@@ -186,10 +187,11 @@ export function WorkflowStageList({
           <Box sx={{ p: 2 }}>
             <EmptyContent
               filled
-              title="Build the admission journey"
+              title="Build the Admission Journey"
               action={
                 !readOnly ? (
                   <Button
+                    aria-label="Add Stage"
                     size="small"
                     variant="contained"
                     startIcon={<Iconify icon="mdi:plus" />}
@@ -202,7 +204,7 @@ export function WorkflowStageList({
                       '&:hover': { bgcolor: 'text.secondary' },
                     }}
                   >
-                    Add stage
+                    Stage
                   </Button>
                 ) : undefined
               }
@@ -215,7 +217,7 @@ export function WorkflowStageList({
           <Box sx={{ minWidth: 0, p: { xs: 1, sm: 2 }, pb: { xs: 1, sm: 1.5 } }}>
             <Stack
               component="ol"
-              aria-label="Journey stage sequence"
+              aria-label="Journey Stage Sequence"
               spacing={1.25}
               sx={{
                 position: 'relative',
@@ -272,7 +274,7 @@ export function WorkflowStageList({
         {stages.length > 0 ? (
           <Stack
             role="status"
-            aria-label="Journey validation summary"
+            aria-label="Journey Validation Summary"
             direction="row"
             spacing={1}
             useFlexGap
@@ -290,12 +292,12 @@ export function WorkflowStageList({
               fontWeight={600}
               color={journeyReady ? 'success.main' : 'warning.main'}
             >
-              {journeyReady ? 'Journey connected' : 'Journey needs attention'}
+              {journeyReady ? 'Journey Connected' : 'Journey Needs Attention'}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              · {stages.length} stages · {transitions.length} routes
+              · {stages.length} Stages · {transitions.length} Routes
             </Typography>
-            {dirty && <Label color="warning">Unsaved changes</Label>}
+            {dirty && <Label color="warning">Unsaved Changes</Label>}
           </Stack>
         ) : (
           <Box />

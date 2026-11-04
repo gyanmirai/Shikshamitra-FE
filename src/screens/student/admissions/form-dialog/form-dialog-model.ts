@@ -233,6 +233,7 @@ export function getAdmissionFormInitialValues(
   const sectionId = editing?.sections[0]?.id ?? crypto.randomUUID();
   const stepId = editing?.sections[0]?.stepId ?? crypto.randomUUID();
   const initialValues = ensureAdmissionCustomFieldIdentities({
+    coreFieldPolicyVersion: editing?.coreFieldPolicyVersion,
     name: editing?.name ?? '',
     code: editing?.code ?? '',
     description: editing?.description ?? '',

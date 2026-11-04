@@ -103,7 +103,7 @@ export function AdmissionInquiryDuplicateMatches({
       aria-controls={separateFamilyId}
       onClick={() => setShowSeparateFamily((value) => !value)}
     >
-      Different family?
+      Different Family?
     </Button>
   );
   const reviewContent =
@@ -111,12 +111,12 @@ export function AdmissionInquiryDuplicateMatches({
       <FormSectionCard
         title={presentation === 'dialog' ? 'Match Details' : reviewTitle}
         icon={GlobalIcons.family}
-        descriptionTooltip="Review the saved parent before adding this child as a sibling. A contact match does not link the family automatically."
+        descriptionTooltip="Review the Saved Parent Before Adding This Child as a Sibling. A Contact Match Does Not Link the Family Automatically."
         sx={{ minWidth: 0 }}
       >
         {applicantName && (
           <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
-            New inquiry: {applicantName}
+            New Inquiry: {applicantName}
           </Typography>
         )}
         {matches.map((match, index) => {
@@ -153,13 +153,13 @@ export function AdmissionInquiryDuplicateMatches({
                         match.dateOfBirth ? `DOB: ${fDate(match.dateOfBirth.slice(0, 10))}` : null,
                       ]
                         .filter(Boolean)
-                        .join(' · ') || 'Existing family'}
+                        .join(' · ') || 'Existing Family'}
                     </Typography>
                   </Box>
                 </Stack>
                 <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
                   <Label color={duplicate || !canLink ? 'warning' : 'info'}>
-                    {duplicate ? 'Possible duplicate' : canLink ? 'Contact match' : 'Review needed'}
+                    {duplicate ? 'Possible Duplicate' : canLink ? 'Contact Match' : 'Review Needed'}
                   </Label>
                   {match.existingInquiryId && (
                     <Button
@@ -171,7 +171,7 @@ export function AdmissionInquiryDuplicateMatches({
                       startIcon={<Iconify icon={GlobalIcons.eye} width={18} />}
                       onClick={() => onOpenExisting(match.existingInquiryId!)}
                     >
-                      {duplicate ? 'Open existing inquiry' : 'Open inquiry'}
+                      {duplicate ? 'Open Existing Inquiry' : 'Open Inquiry'}
                     </Button>
                   )}
                 </Stack>
@@ -197,15 +197,15 @@ export function AdmissionInquiryDuplicateMatches({
                       )
                     }
                   >
-                    Different child? Review family
+                    Different Child? Review Family
                   </Button>
                 </Stack>
               )}
               {!canLink && (
                 <Typography variant="body2" color="text.secondary">
                   {match.canLinkFamily === false && match.guardianPhone === guardianPhone
-                    ? 'This family is not available for linking. Review the existing inquiry or create a separate family.'
-                    : 'Parent contact details do not match. Check the email or mobile before adding a sibling.'}
+                    ? 'This Family Is Not Available for Linking. Review the Existing Inquiry or Create a Separate Family.'
+                    : 'Parent Contact Details Do Not Match. Check the Email or Mobile Before Adding a Sibling.'}
                 </Typography>
               )}
               {reviewSibling && (
@@ -247,7 +247,7 @@ export function AdmissionInquiryDuplicateMatches({
                 size="small"
                 multiline
                 minRows={2}
-                label="Reason for creating a separate family"
+                label="Reason for Creating a Separate Family"
                 required
                 value={overrideReason}
                 disabled={busy}
@@ -267,7 +267,7 @@ export function AdmissionInquiryDuplicateMatches({
                   if (!busy && overrideReason.trim()) onCreateSeparate();
                 }}
               >
-                Create separate family
+                Create Separate Family
               </Button>
             </Stack>
           </Stack>
@@ -299,7 +299,7 @@ export function AdmissionInquiryDuplicateMatches({
           open={Boolean(matches.length) && dismissedReview !== reviewSession}
           handleClose={closeReview}
           title={reviewTitle}
-          titleInfo="Review the existing inquiry or explicitly confirm the saved parent before adding a sibling."
+          titleInfo="Review the Existing Inquiry or Explicitly Confirm the Saved Parent Before Adding a Sibling."
           maxWidth="sm"
           hasForm={false}
           guardUnsavedChanges={false}
@@ -315,7 +315,7 @@ export function AdmissionInquiryDuplicateMatches({
               onClick={closeReview}
               startIcon={<Iconify icon={GlobalIcons.cancel} width={18} />}
             >
-              Back to form
+              Back to Form
             </Button>
           </DialogActions>
         </CustomDialog>

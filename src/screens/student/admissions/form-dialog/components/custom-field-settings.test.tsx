@@ -60,11 +60,11 @@ const currentField = () => JSON.parse(screen.getByTestId('field-json').textConte
 
 function expectTechnicalEditorsHidden() {
   expect(screen.queryByRole('tab', { name: 'Data' })).not.toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: /Advanced rules/ })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: /Advanced Rules/ })).not.toBeInTheDocument();
   expect(screen.queryByRole('textbox', { name: 'Validation JSON' })).not.toBeInTheDocument();
-  expect(screen.queryByRole('textbox', { name: 'Required rule JSON' })).not.toBeInTheDocument();
-  expect(screen.queryByRole('textbox', { name: 'Field code' })).not.toBeInTheDocument();
-  expect(screen.queryByRole('combobox', { name: 'Save answer to' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('textbox', { name: 'Required Rule JSON' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('textbox', { name: 'Field Code' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('combobox', { name: 'Save Answer To' })).not.toBeInTheDocument();
 }
 
 describe('Admission Form Builder custom field settings', () => {
@@ -74,15 +74,15 @@ describe('Admission Form Builder custom field settings', () => {
     renderSettings(0, undefined, {}, [date]);
     const before = currentField();
     await user.click(screen.getByRole('tab', { name: 'Rules' }));
-    const selector = screen.getByRole('combobox', { name: /Show field when/ });
-    expect(selector).toHaveTextContent('Always visible');
+    const selector = screen.getByRole('combobox', { name: /Show Field When/ });
+    expect(selector).toHaveTextContent('Always Visible');
     expect(currentField()).toEqual(before);
     await user.click(selector);
     await user.click(screen.getByRole('option', { name: 'Date of birth' }));
     expect(JSON.parse(currentField().visibilityRuleJson).field).toBe('DATE_OF_BIRTH');
     await user.click(selector);
-    await user.click(screen.getByRole('option', { name: 'Always visible' }));
-    expect(selector).toHaveTextContent('Always visible');
+    await user.click(screen.getByRole('option', { name: 'Always Visible' }));
+    expect(selector).toHaveTextContent('Always Visible');
     expect(currentField()).toEqual(before);
     expect(screen.queryByRole('combobox', { name: 'Condition' })).not.toBeInTheDocument();
   });
@@ -91,11 +91,11 @@ describe('Admission Form Builder custom field settings', () => {
     const user = userEvent.setup();
     renderSettings(0);
     await user.click(screen.getByRole('tab', { name: 'Rules' }));
-    const selector = screen.getByRole('combobox', { name: /Show field when/ });
-    expect(selector).toHaveTextContent('Always visible');
+    const selector = screen.getByRole('combobox', { name: /Show Field When/ });
+    expect(selector).toHaveTextContent('Always Visible');
     await user.click(selector);
     expect(screen.getAllByRole('option')).toHaveLength(1);
-    expect(screen.getByRole('option', { name: 'Always visible' })).toBeVisible();
+    expect(screen.getByRole('option', { name: 'Always Visible' })).toBeVisible();
   });
 
   it.each(CREATABLE_FIELD_TYPES)(
@@ -105,15 +105,15 @@ describe('Admission Form Builder custom field settings', () => {
       renderSettings(fieldType);
 
       expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual(['Basic', 'Rules']);
-      expect(screen.getByText('Basic settings')).toBeVisible();
-      expect(screen.getByText('More options')).toBeVisible();
+      expect(screen.getByText('Basic Settings')).toBeVisible();
+      expect(screen.getByText('More Options')).toBeVisible();
       expect(screen.getByRole('tabpanel', { name: 'Basic' })).toBeVisible();
       expectTechnicalEditorsHidden();
 
-      const fieldLabel = screen.getByRole('textbox', { name: 'Field label' });
+      const fieldLabel = screen.getByRole('textbox', { name: 'Field Label' });
       fireEvent.change(fieldLabel, { target: { value: 'School question' } });
       expect(currentField().label).toBe('School question');
-      fireEvent.change(screen.getByRole('textbox', { name: 'Help text (optional)' }), {
+      fireEvent.change(screen.getByRole('textbox', { name: 'Help Text (Optional)' }), {
         target: { value: 'Ask the school office if unsure.' },
       });
       expect(currentField().helpText).toBe('Ask the school office if unsure.');
@@ -122,28 +122,28 @@ describe('Admission Form Builder custom field settings', () => {
         target: { value: 'Enter answer' },
       });
       expect(currentField().placeholder).toBe('Enter answer');
-      fireEvent.change(screen.getByRole('textbox', { name: 'Default value' }), {
+      fireEvent.change(screen.getByRole('textbox', { name: 'Default Value' }), {
         target: { value: 'School default' },
       });
       expect(currentField().defaultValue).toBe('School default');
 
       if (fieldType === 12) {
-        expect(screen.queryByRole('switch', { name: /Required field/ })).not.toBeInTheDocument();
+        expect(screen.queryByRole('switch', { name: /Required Field/ })).not.toBeInTheDocument();
       } else {
-        await user.click(screen.getByRole('switch', { name: /Read-only/ }));
+        await user.click(screen.getByRole('switch', { name: /Read-Only/ }));
         expect(currentField().readOnly).toBe(true);
-        await user.click(screen.getByRole('switch', { name: /Required field/ }));
+        await user.click(screen.getByRole('switch', { name: /Required Field/ }));
         expect(currentField().required).toBe(true);
       }
 
-      expect(Boolean(screen.queryByText('Answer options'))).toBe(
+      expect(Boolean(screen.queryByText('Answer Options'))).toBe(
         fieldType === 6 || fieldType === 7 || fieldType === 8
       );
 
       await user.click(screen.getByRole('tab', { name: 'Rules' }));
-      expect(screen.getByText('Visibility conditions')).toBeVisible();
+      expect(screen.getByText('Visibility Conditions')).toBeVisible();
       expect(screen.getByRole('tabpanel', { name: 'Rules' })).toBeVisible();
-      expect(screen.getByRole('combobox', { name: 'Show field when' })).toBeVisible();
+      expect(screen.getByRole('combobox', { name: 'Show Field When' })).toBeVisible();
       expectTechnicalEditorsHidden();
       expect(currentField().label).toBe('School question');
       expect(currentField().placeholder).toBe('Enter answer');
@@ -157,14 +157,14 @@ describe('Admission Form Builder custom field settings', () => {
       const user = userEvent.setup();
       renderSettings(preset.fieldType, preset);
 
-      expect(screen.getByRole('textbox', { name: 'Field label' })).toHaveValue(preset.label);
+      expect(screen.getByRole('textbox', { name: 'Field Label' })).toHaveValue(preset.label);
       expect(JSON.parse(currentField().validationJson)).toEqual(preset.validation);
       await user.click(screen.getByRole('tab', { name: 'Rules' }));
       expectTechnicalEditorsHidden();
       expect(JSON.parse(currentField().validationJson)).toEqual(preset.validation);
       if (preset.key === 'state' || preset.key === 'city') {
-        expect(screen.getByText('Location dependency')).toBeVisible();
-        expect(screen.getByRole('combobox', { name: 'Country field' })).toBeVisible();
+        expect(screen.getByText('Location Dependency')).toBeVisible();
+        expect(screen.getByRole('combobox', { name: 'Country Field' })).toBeVisible();
       }
     }
   );
@@ -181,15 +181,15 @@ describe('Admission Form Builder custom field settings', () => {
     };
     const country = { ...newField('section-1', 1, 0), code: 'COUNTRY', label: 'Country' };
     renderSettings(0, undefined, stored, [country]);
-    fireEvent.change(screen.getByRole('textbox', { name: 'Field label' }), {
+    fireEvent.change(screen.getByRole('textbox', { name: 'Field Label' }), {
       target: { value: 'Identity number' },
     });
-    await user.click(screen.getByRole('switch', { name: /Required field/ }));
+    await user.click(screen.getByRole('switch', { name: /Required Field/ }));
     await user.click(screen.getByRole('tab', { name: 'Rules' }));
     expectTechnicalEditorsHidden();
-    await user.click(screen.getByRole('combobox', { name: 'Show field when' }));
+    await user.click(screen.getByRole('combobox', { name: 'Show Field When' }));
     await user.click(screen.getByRole('option', { name: 'Country' }));
-    fireEvent.change(screen.getByRole('textbox', { name: 'Answer to match' }), {
+    fireEvent.change(screen.getByRole('textbox', { name: 'Answer to Match' }), {
       target: { value: 'India' },
     });
     expect(JSON.parse(currentField().visibilityRuleJson)).toEqual({
@@ -198,7 +198,7 @@ describe('Admission Form Builder custom field settings', () => {
       value: 'India',
     });
     expect(currentField()).toMatchObject({ ...stored, label: 'Identity number', required: true });
-    await user.click(screen.getByRole('button', { name: 'Clear condition' }));
+    await user.click(screen.getByRole('button', { name: 'Clear Condition' }));
     expect(currentField().visibilityRuleJson).toBeUndefined();
     expect(currentField()).toMatchObject(stored);
   });
@@ -209,17 +209,17 @@ describe('Admission Form Builder custom field settings', () => {
       visibilityRuleJson: '{"field":"REMOVED_FIELD","operator":"Equals","value":"Yes"}',
     });
     await user.click(screen.getByRole('tab', { name: 'Rules' }));
-    expect(screen.getByRole('combobox', { name: 'Show field when' })).toHaveTextContent(
-      'REMOVED_FIELD (field not found)'
+    expect(screen.getByRole('combobox', { name: 'Show Field When' })).toHaveTextContent(
+      'REMOVED_FIELD (Field Not Found)'
     );
-    expect(screen.getByRole('textbox', { name: 'Answer to match' })).toHaveValue('Yes');
+    expect(screen.getByRole('textbox', { name: 'Answer to Match' })).toHaveValue('Yes');
     await user.click(screen.getByRole('combobox', { name: 'Condition' }));
     await user.click(screen.getByRole('option', { name: 'is not empty' }));
     expect(JSON.parse(currentField().visibilityRuleJson)).toMatchObject({
       field: 'REMOVED_FIELD',
       operator: 'IsNotEmpty',
     });
-    expect(screen.queryByRole('textbox', { name: 'Answer to match' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: 'Answer to Match' })).not.toBeInTheDocument();
   });
 
   it('preserves unsupported visibility rules until the user explicitly replaces them', async () => {
@@ -230,22 +230,22 @@ describe('Admission Form Builder custom field settings', () => {
     await user.click(screen.getByRole('tab', { name: 'Rules' }));
     expect(screen.getByText('It has not been changed.', { exact: false })).toBeVisible();
     expect(currentField().visibilityRuleJson).toBe(savedRule);
-    expect(screen.getByRole('textbox', { name: 'Compatibility rule' })).toHaveValue(savedRule);
+    expect(screen.getByRole('textbox', { name: 'Compatibility Rule' })).toHaveValue(savedRule);
     expectTechnicalEditorsHidden();
     await user.click(screen.getByRole('tab', { name: 'Basic' }));
-    fireEvent.change(screen.getByRole('textbox', { name: 'Field label' }), {
+    fireEvent.change(screen.getByRole('textbox', { name: 'Field Label' }), {
       target: { value: 'Travel details' },
     });
     await user.click(screen.getByRole('tab', { name: 'Rules' }));
     expect(currentField().visibilityRuleJson).toBe(savedRule);
-    await user.click(screen.getByRole('button', { name: 'Replace with simple condition' }));
+    await user.click(screen.getByRole('button', { name: 'Replace with Simple Condition' }));
     expect(JSON.parse(currentField().visibilityRuleJson)).toEqual({
       field: 'COUNTRY',
       operator: 'Equals',
       value: '',
     });
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-    expect(screen.getByRole('textbox', { name: 'Answer to match' })).toBeVisible();
+    expect(screen.getByRole('textbox', { name: 'Answer to Match' })).toBeVisible();
   });
 
   it('changes the custom answer type without modifying hidden stored field metadata', async () => {
@@ -258,7 +258,7 @@ describe('Admission Form Builder custom field settings', () => {
       requiredRuleJson: '{"field":"COUNTRY","operator":"IsNotEmpty"}',
     };
     renderSettings(0, undefined, stored);
-    await user.click(screen.getByRole('combobox', { name: 'Field type' }));
+    await user.click(screen.getByRole('combobox', { name: 'Field Type' }));
     await user.click(screen.getByRole('option', { name: 'Textarea' }));
     expect(currentField()).toMatchObject({ ...stored, fieldType: 1 });
     expectTechnicalEditorsHidden();
@@ -284,7 +284,7 @@ describe('Admission Form Builder custom field settings', () => {
       [country]
     );
     await user.click(screen.getByRole('tab', { name: 'Rules' }));
-    await user.click(screen.getByRole('combobox', { name: 'Country field' }));
+    await user.click(screen.getByRole('combobox', { name: 'Country Field' }));
     await user.click(screen.getByRole('option', { name: 'Current country' }));
     expect(JSON.parse(currentField().validationJson)).toEqual({
       format: 'state',

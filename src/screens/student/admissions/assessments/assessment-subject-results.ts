@@ -10,9 +10,9 @@ import { sumDecimal } from 'src/utils/sum-decimal';
 export type AssessmentSubjectValues = Record<string, string>;
 
 export const assessmentPassRuleLabels = {
-  overall: 'Overall passing marks',
-  everySubject: 'Pass every subject',
-  both: 'Overall and every subject',
+  overall: 'Overall Passing Marks',
+  everySubject: 'Pass Every Subject',
+  both: 'Overall and Every Subject',
 };
 
 export function assessmentResultProfile(

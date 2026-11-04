@@ -138,10 +138,10 @@ describe('Bulk offering step navigation', () => {
       </ThemeProvider>
     );
     expect(
-      (screen.getByRole('combobox', { name: 'Admission cycle *' }) as HTMLInputElement).value
+      (screen.getByRole('combobox', { name: 'Admission Cycle *' }) as HTMLInputElement).value
     ).toContain('Table cycle');
     await user.click(screen.getByRole('button', { name: 'Select Class 1' }));
-    await user.click(screen.getByRole('combobox', { name: 'Admission cycle *' }));
+    await user.click(screen.getByRole('combobox', { name: 'Admission Cycle *' }));
     await user.keyboard('{ArrowDown}');
     await user.click(await screen.findByRole('option', { name: /Second cycle/ }));
     expect(onCycleChange).toHaveBeenCalledWith(second);
@@ -156,7 +156,7 @@ describe('Bulk offering step navigation', () => {
       </ThemeProvider>
     );
     expect(
-      (screen.getByRole('combobox', { name: 'Admission cycle *' }) as HTMLInputElement).value
+      (screen.getByRole('combobox', { name: 'Admission Cycle *' }) as HTMLInputElement).value
     ).toContain('Second cycle');
     expect(screen.getByTestId('chosen-classes')).toHaveTextContent('["class-1"]');
   });
@@ -189,7 +189,7 @@ describe('Bulk offering step navigation', () => {
         <BulkAdmissionOfferingDialog open cycle={cycle} onClose={vi.fn()} />
       </ThemeProvider>
     );
-    await user.click(screen.getByRole('combobox', { name: 'Admission cycle *' }));
+    await user.click(screen.getByRole('combobox', { name: 'Admission Cycle *' }));
     await user.keyboard('{ArrowDown}');
     await user.click(await screen.findByRole('option', { name: /School admission/ }));
     await user.click(screen.getByRole('button', { name: 'Select Class 1' }));
@@ -197,18 +197,18 @@ describe('Bulk offering step navigation', () => {
       expect(screen.getByTestId('configured-classes')).toHaveTextContent('["class-1"]')
     );
     await waitFor(() => expect(screen.getByTestId('chosen-classes')).toHaveTextContent('[]'));
-    await user.click(screen.getByRole('combobox', { name: /Admission type/ }));
+    await user.click(screen.getByRole('combobox', { name: /Admission Type/ }));
     await user.click(screen.getByRole('option', { name: 'RTE' }));
     expect(screen.queryByRole('combobox', { name: /Starts with/ })).not.toBeInTheDocument();
-    expect(screen.queryByRole('combobox', { name: 'Inquiry form' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Inquiry Form' })).not.toBeInTheDocument();
     await waitFor(() => expect(screen.getByTestId('configured-classes')).toHaveTextContent('[]'));
     expect(mocks.classLookup).toHaveBeenLastCalledWith(
       expect.objectContaining({ admissionCycleId: cycle.id, track: 1 }),
       expect.objectContaining({ skip: false })
     );
     await user.click(screen.getByRole('button', { name: 'Select Class 1' }));
-    await user.click(screen.getByRole('button', { name: 'Preview offerings' }));
-    await screen.findByRole('heading', { name: 'Preview offerings' });
+    await user.click(screen.getByRole('button', { name: 'Preview Offerings' }));
+    await screen.findByRole('heading', { name: 'Preview Offerings' });
     expect(mocks.preview).toHaveBeenLastCalledWith(
       expect.objectContaining({
         admissionCycle: cycle,
@@ -219,17 +219,17 @@ describe('Bulk offering step navigation', () => {
         inquiryIntakeProfileId: '',
       })
     );
-    expect(screen.getByText('RTE · Direct registration')).toBeVisible();
+    expect(screen.getByText('RTE · Direct Registration')).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Back' }));
-    expect(screen.getByRole('combobox', { name: /Admission type/ })).toHaveTextContent('RTE');
+    expect(screen.getByRole('combobox', { name: /Admission Type/ })).toHaveTextContent('RTE');
     expect(screen.getByTestId('chosen-classes')).toHaveTextContent('["class-1"]');
-    await user.click(screen.getByRole('combobox', { name: /Admission type/ }));
+    await user.click(screen.getByRole('combobox', { name: /Admission Type/ }));
     await user.click(screen.getByRole('option', { name: 'General' }));
     await waitFor(() =>
       expect(screen.getByTestId('configured-classes')).toHaveTextContent('["class-1"]')
     );
     expect(screen.getByTestId('chosen-classes')).toHaveTextContent('[]');
-    expect(screen.getByRole('combobox', { name: 'Inquiry form' })).toBeVisible();
+    expect(screen.getByRole('combobox', { name: 'Inquiry Form' })).toBeVisible();
     expect(mocks.create).not.toHaveBeenCalled();
   }, 20000);
   it('checks the selected cycle and removes newly configured classes after changing it', async () => {
@@ -256,7 +256,7 @@ describe('Bulk offering step navigation', () => {
     );
     const view = render(content);
     const selectCycle = async (name: RegExp) => {
-      await user.click(screen.getByRole('combobox', { name: 'Admission cycle *' }));
+      await user.click(screen.getByRole('combobox', { name: 'Admission Cycle *' }));
       await user.keyboard('{ArrowDown}');
       await user.click(await screen.findByRole('option', { name }));
     };
@@ -280,7 +280,7 @@ describe('Bulk offering step navigation', () => {
       </ThemeProvider>
     );
     await waitFor(() =>
-      expect(screen.getByRole('button', { name: 'Preview offerings' })).toBeDisabled()
+      expect(screen.getByRole('button', { name: 'Preview Offerings' })).toBeDisabled()
     );
     expect(screen.getByTestId('chosen-classes')).toHaveTextContent('["class-1"]');
     mocks.classQueryState.isFetching = false;
@@ -291,7 +291,7 @@ describe('Bulk offering step navigation', () => {
       expect.objectContaining({ admissionCycleId: second.id }),
       expect.objectContaining({ skip: false })
     );
-    await user.click(screen.getByRole('button', { name: 'Preview offerings' }));
+    await user.click(screen.getByRole('button', { name: 'Preview Offerings' }));
     expect(mocks.preview).not.toHaveBeenCalled();
     expect(mocks.create).not.toHaveBeenCalled();
   }, 20000);
@@ -314,40 +314,40 @@ describe('Bulk offering step navigation', () => {
         <BulkAdmissionOfferingDialog open cycle={cycle} onClose={() => undefined} />
       </ThemeProvider>
     );
-    await user.click(screen.getByRole('button', { name: 'Preview offerings' }));
-    expect(screen.queryByText('Admission cycle is required')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Preview Offerings' }));
+    expect(screen.queryByText('Admission Cycle is Required')).not.toBeInTheDocument();
     expect(
-      (screen.getByRole('combobox', { name: 'Admission cycle *' }) as HTMLInputElement).value
+      (screen.getByRole('combobox', { name: 'Admission Cycle *' }) as HTMLInputElement).value
     ).toContain('General Admission');
     expect(mocks.preview).not.toHaveBeenCalled();
-    await user.click(screen.getByRole('combobox', { name: 'Admission cycle *' }));
+    await user.click(screen.getByRole('combobox', { name: 'Admission Cycle *' }));
     await user.keyboard('{ArrowDown}');
     await user.click(await screen.findByRole('option', { name: /General Admission/ }));
     await waitFor(() =>
-      expect(screen.queryByText('Admission cycle is required')).not.toBeInTheDocument()
+      expect(screen.queryByText('Admission Cycle is Required')).not.toBeInTheDocument()
     );
     await user.click(screen.getByRole('button', { name: 'Select Class 1' }));
-    await user.click(screen.getByRole('combobox', { name: 'Published workflow' }));
+    await user.click(screen.getByRole('combobox', { name: 'Published Workflow' }));
     await user.keyboard('{ArrowDown}');
     await user.click(await screen.findByRole('option', { name: 'School workflow · v1' }));
-    await user.click(screen.getByRole('combobox', { name: 'Inquiry form' }));
+    await user.click(screen.getByRole('combobox', { name: 'Inquiry Form' }));
     await user.keyboard('{ArrowDown}');
     await user.click(await screen.findByRole('option', { name: 'School inquiry · v2' }));
 
-    await user.click(screen.getByRole('button', { name: 'Preview offerings' }));
-    await screen.findByRole('heading', { name: 'Preview offerings' });
-    expect(screen.queryByRole('combobox', { name: 'Published workflow' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Preview Offerings' }));
+    await screen.findByRole('heading', { name: 'Preview Offerings' });
+    expect(screen.queryByRole('combobox', { name: 'Published Workflow' })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Back' }));
-    expect(screen.getByRole('combobox', { name: 'Published workflow' })).toHaveValue(
+    expect(screen.getByRole('combobox', { name: 'Published Workflow' })).toHaveValue(
       'School workflow · v1'
     );
-    expect(screen.getByRole('combobox', { name: 'Inquiry form' })).toHaveValue(
+    expect(screen.getByRole('combobox', { name: 'Inquiry Form' })).toHaveValue(
       'School inquiry · v2'
     );
     expect(
-      screen.queryByRole('combobox', { name: 'Intake & assignment setup (optional)' })
+      screen.queryByRole('combobox', { name: 'Intake & Assignment Setup (optional)' })
     ).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Preview offerings' }));
+    await user.click(screen.getByRole('button', { name: 'Preview Offerings' }));
     await waitFor(() => expect(mocks.preview).toHaveBeenCalledTimes(2));
     expect(mocks.preview).toHaveBeenLastCalledWith(
       expect.objectContaining({
@@ -393,7 +393,7 @@ describe('Bulk offering step navigation', () => {
       </ThemeProvider>
     );
     const selectCycle = async (name: RegExp) => {
-      await user.click(screen.getByRole('combobox', { name: 'Admission cycle *' }));
+      await user.click(screen.getByRole('combobox', { name: 'Admission Cycle *' }));
       await user.keyboard('{ArrowDown}');
       await user.click(await screen.findByRole('option', { name }));
     };
@@ -408,24 +408,24 @@ describe('Bulk offering step navigation', () => {
       })
     );
     await user.click(screen.getByRole('button', { name: 'Select Class 1' }));
-    await user.click(screen.getByRole('combobox', { name: 'Published workflow' }));
+    await user.click(screen.getByRole('combobox', { name: 'Published Workflow' }));
     await user.keyboard('{ArrowDown}');
     await user.click(await screen.findByRole('option', { name: 'School workflow · v1' }));
-    await user.click(screen.getByRole('button', { name: 'Preview offerings' }));
-    await screen.findByRole('heading', { name: 'Preview offerings' });
+    await user.click(screen.getByRole('button', { name: 'Preview Offerings' }));
+    await screen.findByRole('heading', { name: 'Preview Offerings' });
     expect(mocks.preview).toHaveBeenLastCalledWith(
       expect.objectContaining({ admissionCycle: second })
     );
     expect(screen.getByRole('heading', { name: 'Second cycle' })).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Back' }));
-    await user.click(screen.getByRole('combobox', { name: 'Admission cycle *' }));
+    await user.click(screen.getByRole('combobox', { name: 'Admission Cycle *' }));
     await user.keyboard('{Escape}');
     await selectCycle(/Third cycle/);
     expect(mocks.clearPreview).toHaveBeenCalled();
-    expect(screen.getByRole('combobox', { name: 'Published workflow' })).toHaveValue(
+    expect(screen.getByRole('combobox', { name: 'Published Workflow' })).toHaveValue(
       'School workflow · v1'
     );
-    await user.click(screen.getByRole('combobox', { name: 'Admission cycle *' }));
+    await user.click(screen.getByRole('combobox', { name: 'Admission Cycle *' }));
     await user.keyboard('{ArrowDown}');
     await screen.findByRole('option', { name: /First cycle/ });
     await waitFor(() =>
@@ -437,7 +437,7 @@ describe('Bulk offering step navigation', () => {
       screen.queryByRole('option', { name: /Draft cycle|Ended cycle|Other year/ })
     ).not.toBeInTheDocument();
     await user.keyboard('{Escape}');
-    await user.click(screen.getByRole('button', { name: 'Preview offerings' }));
+    await user.click(screen.getByRole('button', { name: 'Preview Offerings' }));
     await waitFor(() => expect(mocks.preview).toHaveBeenCalledTimes(2));
     expect(mocks.preview).toHaveBeenLastCalledWith(
       expect.objectContaining({
@@ -474,7 +474,7 @@ describe('Bulk offering step navigation', () => {
         <BulkAdmissionOfferingDialog open cycle={cycle} onClose={() => undefined} />
       </ThemeProvider>
     );
-    await user.click(screen.getByRole('combobox', { name: 'Admission cycle *' }));
+    await user.click(screen.getByRole('combobox', { name: 'Admission Cycle *' }));
     expect(await screen.findByRole('button', { name: 'Retry results' })).toBeVisible();
     await waitFor(() => expect(mocks.loadCycles).toHaveBeenCalled());
     mocks.loadCycles.mockClear();
@@ -482,7 +482,7 @@ describe('Bulk offering step navigation', () => {
     mocks.loadCycles.mockReturnValue({ unwrap: async () => ({ items: [cycle], totalCount: 1 }) });
     await user.click(screen.getByRole('button', { name: 'Retry results' }));
     await waitFor(() => expect(mocks.loadCycles).toHaveBeenCalled());
-    await user.click(screen.getByRole('combobox', { name: 'Admission cycle *' }));
+    await user.click(screen.getByRole('combobox', { name: 'Admission Cycle *' }));
     await user.keyboard('{ArrowDown}');
     expect(await screen.findByRole('option', { name: /General Admission/ })).toBeVisible();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
@@ -513,15 +513,15 @@ describe('Bulk offering step navigation', () => {
         <BulkAdmissionOfferingDialog open cycle={cycle} onClose={vi.fn()} />
       </ThemeProvider>
     );
-    await user.click(screen.getByRole('combobox', { name: 'Admission cycle *' }));
+    await user.click(screen.getByRole('combobox', { name: 'Admission Cycle *' }));
     await user.keyboard('{ArrowDown}');
     await user.click(await screen.findByRole('option', { name: /General Admission/ }));
     await user.click(screen.getByRole('button', { name: 'Select Class 1' }));
-    await user.click(screen.getByRole('button', { name: 'Preview offerings' }));
-    await screen.findByRole('heading', { name: 'Preview offerings' });
-    expect(screen.getByRole('button', { name: 'Create 1 offering' })).toBeDisabled();
-    await user.click(screen.getByRole('button', { name: 'Edit selection' }));
-    const inquiry = screen.getByRole('combobox', { name: 'Inquiry form' });
+    await user.click(screen.getByRole('button', { name: 'Preview Offerings' }));
+    await screen.findByRole('heading', { name: 'Preview Offerings' });
+    expect(screen.getByRole('button', { name: 'Create 1 Offering' })).toBeDisabled();
+    await user.click(screen.getByRole('button', { name: 'Edit Selection' }));
+    const inquiry = screen.getByRole('combobox', { name: 'Inquiry Form' });
     expect(
       within(inquiry.closest('.MuiFormControl-root')! as HTMLElement).getByText(
         'Before activation: Published Inquiry Form is required.'

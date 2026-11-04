@@ -19,7 +19,7 @@ describe('AdmissionOfferingActionImpact', () => {
   it('explains that deactivation stops new intake without removing existing applications', () => {
     render(<AdmissionOfferingActionImpact action="deactivate" offering={offering} />);
 
-    expect(screen.getByText('New inquiries and applications will stop immediately')).toBeVisible();
+    expect(screen.getByText('New Inquiries and Applications Will Stop Immediately')).toBeVisible();
     expect(screen.getByText(/12 applications already linked/)).toBeVisible();
   });
 
@@ -31,7 +31,7 @@ describe('AdmissionOfferingActionImpact', () => {
       />
     );
 
-    expect(screen.getByText(/permanently delete “General intake”/)).toBeVisible();
+    expect(screen.getByText(/Permanently Delete “General intake”/)).toBeVisible();
     expect(screen.getByText(/This action cannot be undone/)).toBeVisible();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     expect(
@@ -42,7 +42,7 @@ describe('AdmissionOfferingActionImpact', () => {
   it('uses the offering code when no name is available', () => {
     render(<AdmissionOfferingActionImpact action="delete" offering={offering} />);
 
-    expect(screen.getByText(/permanently delete “ADM-GRADE-5”/)).toBeVisible();
+    expect(screen.getByText(/Permanently Delete “ADM-GRADE-5”/)).toBeVisible();
   });
 
   it('highlights the activation target and explains the application consequence', () => {
@@ -51,7 +51,7 @@ describe('AdmissionOfferingActionImpact', () => {
     const target = screen.getByText('ADM-GRADE-5', { selector: 'strong' });
     expect(target).toBeVisible();
     expect(target.parentElement).toHaveTextContent(
-      'Are you sure you want to activate “ADM-GRADE-5”? This offering will become active for student applications.'
+      'Are You Sure You Want to Activate “ADM-GRADE-5”? This offering will become active for student applications.'
     );
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     expect(

@@ -55,12 +55,12 @@ export function InquiryFollowUpScheduler({
       }}
       sx={{ minWidth: 0 }}
     >
-      <FormBusyRegion busy={scheduling} label="Scheduling follow-up…">
+      <FormBusyRegion busy={scheduling} label="Scheduling Follow-Up…">
         {onClose && (
           <Stack direction="row" spacing={1} alignItems="center" sx={{ p: 2, pb: 0 }}>
             <Iconify icon="mdi:calendar-clock-outline" width={20} />
             <Typography id={titleId} variant="subtitle1">
-              Schedule follow-up
+              Schedule Follow-Up
             </Typography>
           </Stack>
         )}
@@ -76,7 +76,7 @@ export function InquiryFollowUpScheduler({
             )}
             <DateTimePicker
               desktopModeMediaQuery={theme.breakpoints.up('sm')}
-              label="Next follow-up"
+              label="Next Follow-Up"
               format={ADMISSION_DATE_TIME_FORMAT}
               value={scheduledAt}
               disabled={locked}
@@ -124,7 +124,7 @@ export function InquiryFollowUpScheduler({
             loading={scheduling}
             disabled={locked || dateError || !purpose.trim() || !scheduledAt?.isValid()}
           >
-            {onClose ? 'Schedule' : 'Schedule follow-up'}
+            {onClose ? 'Schedule' : 'Schedule Follow-Up'}
           </LoadingButton>
         </Stack>
       </FormBusyRegion>

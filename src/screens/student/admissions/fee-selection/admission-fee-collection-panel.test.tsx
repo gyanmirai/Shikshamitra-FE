@@ -240,10 +240,10 @@ function editableDate() {
 it('previews the date without writing, then confirms it before preparing fees', async () => {
   editableDate();
   renderPanel({ stretch: true });
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Collect fees' })).toBeEnabled());
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Collect Fees' })).toBeEnabled());
   expect(mocks.saveDate).not.toHaveBeenCalled();
   expect(mocks.prepare).not.toHaveBeenCalled();
-  fireEvent.click(screen.getByRole('button', { name: 'Collect fees' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Collect Fees' }));
   await waitFor(() => expect(mocks.prepare).toHaveBeenCalledTimes(1));
   expect(mocks.saveDate).toHaveBeenCalledWith({
     applicationId: 'application-1',
@@ -261,8 +261,8 @@ it('preserves the selected date and blocks fee preparation if date confirmation 
     data: { detail: 'Joining date changed. Refresh and retry.' },
   });
   renderPanel();
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Collect fees' })).toBeEnabled());
-  fireEvent.click(screen.getByRole('button', { name: 'Collect fees' }));
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Collect Fees' })).toBeEnabled());
+  fireEvent.click(screen.getByRole('button', { name: 'Collect Fees' }));
   await screen.findByText('Joining date changed. Refresh and retry.');
   expect(mocks.prepare).not.toHaveBeenCalled();
 });
@@ -297,7 +297,7 @@ it('retires a previous proration result when the new date preview has no reducti
     isError: false,
   });
   renderPanel();
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Collect fees' })).toBeEnabled());
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Collect Fees' })).toBeEnabled());
   expect(screen.queryByText('Previous date policy · v1')).not.toBeInTheDocument();
 });
 
@@ -305,7 +305,7 @@ it('skips financial reads and renders no collection controls without exact Finan
   permissions = [{ name: 'Students.Onboarding.Add', isGranted: true }];
   renderPanel();
   expect(mocks.summary).toHaveBeenCalledWith('application-1', { skip: true });
-  expect(screen.queryByRole('button', { name: 'Collect fees' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Collect Fees' })).not.toBeInTheDocument();
   expect(mocks.prepare).not.toHaveBeenCalled();
 });
 
@@ -351,8 +351,8 @@ it.each(['summary', 'selection'])(
     };
     mocks.summary.mockReturnValue(refreshed);
     const view = renderPanel({ refreshing: source === 'selection' });
-    expect(screen.getByRole('button', { name: 'Collect fees' })).toBeDisabled();
-    expect(screen.getByRole('status', { name: 'Refreshing fee collection' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Collect Fees' })).toBeDisabled();
+    expect(screen.getByRole('status', { name: 'Refreshing Fee Collection' })).toBeVisible();
     expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
     expect(screen.getByText('Fee balance').nextElementSibling).not.toBeVisible();
     expect(screen.getByText('FEE-0001')).not.toBeVisible();
@@ -363,9 +363,9 @@ it.each(['summary', 'selection'])(
         <AdmissionFeeCollectionPanel applicationId="application-1" />
       </ThemeProvider>
     );
-    expect(screen.getByRole('button', { name: 'Collect fees' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Collect Fees' })).toBeEnabled();
     expect(
-      screen.queryByRole('status', { name: 'Refreshing fee collection' })
+      screen.queryByRole('status', { name: 'Refreshing Fee Collection' })
     ).not.toBeInTheDocument();
     expect(screen.getByText('Fee balance').nextElementSibling).toHaveTextContent('6,000');
     expect(screen.getByText('FEE-0001')).toBeVisible();
@@ -382,7 +382,7 @@ it('does not flash a completed-empty payment state while initial data or cached 
   };
   mocks.summary.mockReturnValue(pending);
   const view = renderPanel({ stretch: true });
-  expect(screen.getByRole('status', { name: 'Loading fee collection' })).toBeVisible();
+  expect(screen.getByRole('status', { name: 'Loading Fee Collection' })).toBeVisible();
   expect(screen.queryByText('No payments recorded yet.')).not.toBeInTheDocument();
   expect(screen.queryByText('₹0')).not.toBeInTheDocument();
   mocks.summary.mockReturnValue({
@@ -395,9 +395,9 @@ it('does not flash a completed-empty payment state while initial data or cached 
       <AdmissionFeeCollectionPanel applicationId="application-1" stretch />
     </ThemeProvider>
   );
-  expect(screen.getByRole('status', { name: 'Refreshing fee collection' })).toBeVisible();
+  expect(screen.getByRole('status', { name: 'Refreshing Fee Collection' })).toBeVisible();
   expect(screen.getByText('No payments recorded yet.')).not.toBeVisible();
-  expect(screen.getByRole('button', { name: 'Collect fees' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Collect Fees' })).toBeDisabled();
   expect(mocks.prepare).not.toHaveBeenCalled();
 });
 
@@ -432,7 +432,7 @@ it.each([false, true])(
     expect(screen.getByText('Settled')).toBeVisible();
     expect(screen.getByText('Fee balance').nextElementSibling).toHaveTextContent('₹0');
     expect(screen.getByLabelText('Fee receipts')).toHaveTextContent('FEE-0001');
-    expect(screen.queryByRole('button', { name: 'Collect fees' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Collect Fees' })).not.toBeInTheDocument();
     expect(screen.queryByText('Collection form')).not.toBeInTheDocument();
     expect(
       screen.queryByText('Charges and late fees are shown separately in the collection form.')
@@ -453,7 +453,7 @@ it('keeps collection available when Finance reports unsettled charges despite ze
     isFetching: false,
   });
   renderPanel();
-  expect(screen.getByRole('button', { name: 'Collect fees' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: 'Collect Fees' })).toBeEnabled();
   expect(screen.queryByText('Settled')).not.toBeInTheDocument();
 });
 
@@ -475,7 +475,7 @@ it('confirms a Finance-verified zero fee structure without opening or creating a
   });
   const onOpenChange = vi.fn();
   renderPanel({ onOpenChange });
-  fireEvent.click(screen.getByRole('button', { name: 'Confirm no payment due' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Confirm No Payment Due' }));
   await waitFor(() => expect(mocks.refetch).toHaveBeenCalledOnce());
   expect(onOpenChange).toHaveBeenLastCalledWith(false);
   expect(screen.queryByText('Collection form')).not.toBeInTheDocument();
@@ -504,12 +504,12 @@ it('keeps unknown balances distinct from zero and preserves collection prerequis
     stretch: true,
     footerAction: <button type="button">Collect later in Onboarding</button>,
   });
-  expect(screen.getAllByLabelText('Not calculated')).toHaveLength(2);
+  expect(screen.getAllByLabelText('Not Calculated')).toHaveLength(2);
   expect(screen.getByText('Confirmed payments').nextElementSibling).toHaveTextContent('₹0');
   expect(
     screen.getByText('Confirm a published fee structure before collecting fees.')
   ).toBeVisible();
-  expect(screen.getByRole('button', { name: 'Collect fees' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Collect Fees' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Collect later in Onboarding' })).toBeEnabled();
   expect(mocks.prepare).not.toHaveBeenCalled();
 });
@@ -539,7 +539,7 @@ it.each(['loading', 'error'])(
 
 it('preserves an open Finance form while blocking a new payment when parent fee details become unavailable', async () => {
   const view = renderPanel();
-  fireEvent.click(screen.getByRole('button', { name: 'Collect fees' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Collect Fees' }));
   await screen.findByText('Collection form');
   const mountedForm = screen.getByText('Collection form');
   view.rerender(
@@ -562,7 +562,7 @@ it('keeps the parent interaction lock when the open callback changes identity', 
   const first = vi.fn();
   const latest = vi.fn();
   const view = renderPanel({ onOpenChange: first });
-  fireEvent.click(screen.getByRole('button', { name: 'Collect fees' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Collect Fees' }));
   await screen.findByText('Collection form');
   expect(first).toHaveBeenLastCalledWith(true);
   view.rerender(
@@ -580,7 +580,7 @@ it.each(['parent', 'settled'])(
   'allows only the previously submitted key to retry while %s blocks new payments',
   async (blocker) => {
     const view = renderPanel();
-    fireEvent.click(screen.getByRole('button', { name: 'Collect fees' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Collect Fees' }));
     await screen.findByText('Collection form');
     const input = {
       academicYearId: 'application-year',
@@ -618,7 +618,7 @@ it.each(['parent', 'settled'])(
 it('gives view-only staff a clear disabled action and omits protected receipt references', () => {
   permissions = [{ name: ADMISSION_FEE_COLLECTION_PERMISSIONS.view, isGranted: true }];
   renderPanel();
-  expect(screen.getByRole('button', { name: 'Collect fees' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Collect Fees' })).toBeDisabled();
   expect(screen.getByText(/authorized fee collection user/)).toBeVisible();
   expect(screen.queryByText('FEE-0001')).not.toBeInTheDocument();
 });
@@ -626,7 +626,7 @@ it('gives view-only staff a clear disabled action and omits protected receipt re
 it('prepares only on explicit open, prevents repeated prepare clicks and passes real academic context without fake Student', async () => {
   const onOpenChange = vi.fn();
   renderPanel({ onOpenChange });
-  const button = screen.getByRole('button', { name: 'Collect fees' });
+  const button = screen.getByRole('button', { name: 'Collect Fees' });
   fireEvent.click(button);
   fireEvent.click(button);
   await screen.findByRole('dialog', { name: 'Collect Fees · Kabir Shah' });
@@ -665,11 +665,11 @@ it('preserves the collection entry point after prepare fails and allows a safe r
   });
   const onOpenChange = vi.fn();
   renderPanel({ onOpenChange });
-  fireEvent.click(screen.getByRole('button', { name: 'Collect fees' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Collect Fees' }));
   await screen.findByText('Fee configuration is incomplete.');
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   expect(onOpenChange).toHaveBeenLastCalledWith(false);
-  fireEvent.click(screen.getByRole('button', { name: 'Collect fees' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Collect Fees' }));
   await screen.findByRole('dialog');
   expect(mocks.prepare).toHaveBeenCalledTimes(2);
 });
@@ -677,14 +677,14 @@ it('preserves the collection entry point after prepare fails and allows a safe r
 it('prevents collection from stale error data and offers refresh', () => {
   mocks.summary.mockReturnValue({ currentData: summary, isError: true, refetch: mocks.refetch });
   renderPanel();
-  expect(screen.getByRole('button', { name: 'Collect fees' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Collect Fees' })).toBeDisabled();
   fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
   expect(mocks.refetch).toHaveBeenCalledOnce();
 });
 
 it('keeps the modal close action unavailable while the reused Finance form is saving', async () => {
   renderPanel();
-  fireEvent.click(screen.getByRole('button', { name: 'Collect fees' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Collect Fees' }));
   await screen.findByRole('dialog');
   fireEvent.click(screen.getByRole('button', { name: 'Start saving' }));
   expect(screen.getByRole('button', { name: /Close/i })).toBeDisabled();
@@ -716,33 +716,46 @@ it.each([null, 'existing-unspent-account'])(
       refetch: mocks.refetch,
     });
     renderPanel();
-    fireEvent.click(screen.getByRole('button', { name: 'Collect fees' }));
-    await screen.findByRole('dialog', { name: 'Set variable fee amounts · Kabir Shah' });
+    fireEvent.click(screen.getByRole('button', { name: 'Collect Fees' }));
+    await screen.findByRole('dialog', { name: 'Set Variable Fee Amounts · Kabir Shah' });
     expect(mocks.prepare).not.toHaveBeenCalled();
     const description =
-      'Enter amounts for the variable fee heads configured in Finance. Finance will calculate the installments before collection.';
+      'Enter Amounts for the Variable Fee Heads Configured in Finance. Finance Will Calculate the Installments Before Collection.';
     expect(screen.queryByText(description)).not.toBeInTheDocument();
     const dialogHelp = screen.getByRole('button', {
-      name: 'Set variable fee amounts · Kabir Shah information',
+      name: 'Set Variable Fee Amounts · Kabir Shah information',
     });
-    act(() => dialogHelp.focus());
-    expect(await screen.findByRole('tooltip')).toHaveTextContent(description);
-    act(() => dialogHelp.blur());
-    await waitFor(() => expect(screen.queryByRole('tooltip')).not.toBeInTheDocument());
-    const amountHelp = screen.getByRole('button', { name: 'About Transport amount' });
-    act(() => amountHelp.focus());
-    expect(await screen.findByRole('tooltip')).toHaveTextContent(
-      'Full coverage amount; installments follow the Finance payment term.'
-    );
-    act(() => amountHelp.blur());
-    await waitFor(() => expect(screen.queryByRole('tooltip')).not.toBeInTheDocument());
-    fireEvent.click(screen.getByRole('button', { name: 'Continue to collection' }));
+    // CustomTooltip has a 150ms leave delay and an 800ms fade. Advance its real
+    // timers explicitly instead of racing Testing Library's default 1000ms wait.
+    vi.useFakeTimers();
+    try {
+      act(() => dialogHelp.focus());
+      await act(() => vi.advanceTimersByTimeAsync(1000));
+      expect(screen.getByRole('tooltip')).toHaveTextContent(description);
+      act(() => dialogHelp.blur());
+      await act(() => vi.advanceTimersByTimeAsync(150));
+      await act(() => vi.advanceTimersByTimeAsync(800));
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+      const amountHelp = screen.getByRole('button', { name: 'About Transport Amount' });
+      act(() => amountHelp.focus());
+      await act(() => vi.advanceTimersByTimeAsync(1000));
+      expect(screen.getByRole('tooltip')).toHaveTextContent(
+        'Full Coverage Amount; Installments Follow the Finance Payment Term.'
+      );
+      act(() => amountHelp.blur());
+      await act(() => vi.advanceTimersByTimeAsync(150));
+      await act(() => vi.advanceTimersByTimeAsync(800));
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+    fireEvent.click(screen.getByRole('button', { name: 'Continue to Collection' }));
     expect(await screen.findByText('Enter the total fee for this Fee Head.')).toBeVisible();
     expect(mocks.prepare).not.toHaveBeenCalled();
-    fireEvent.change(screen.getByRole('textbox', { name: /Transport total for term coverage/ }), {
+    fireEvent.change(screen.getByRole('textbox', { name: /Transport Total for Term Coverage/ }), {
       target: { value: '1250.75' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Continue to collection' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Continue to Collection' }));
     await screen.findByRole('dialog', { name: 'Collect Fees · Kabir Shah' });
     expect(mocks.prepare).toHaveBeenCalledWith({
       applicationId: 'application-1',
@@ -779,11 +792,11 @@ it('waits for the exact variable amount preview before confirming date and prepa
     isError: false,
   });
   renderPanel();
-  fireEvent.click(screen.getByRole('button', { name: 'Collect fees' }));
-  await screen.findByRole('dialog', { name: 'Set variable fee amounts · Kabir Shah' });
-  const next = screen.getByRole('button', { name: 'Continue to collection' });
+  fireEvent.click(screen.getByRole('button', { name: 'Collect Fees' }));
+  await screen.findByRole('dialog', { name: 'Set Variable Fee Amounts · Kabir Shah' });
+  const next = screen.getByRole('button', { name: 'Continue to Collection' });
   expect(next).toBeDisabled();
-  fireEvent.change(screen.getByRole('textbox', { name: /Transport total for term coverage/ }), {
+  fireEvent.change(screen.getByRole('textbox', { name: /Transport Total for Term Coverage/ }), {
     target: { value: '1250.75' },
   });
   expect(next).toBeDisabled();

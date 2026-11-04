@@ -44,7 +44,7 @@ export function ReviewChecklistDialog({
       open
       hasForm={false}
       guardUnsavedChanges={formik.dirty}
-      title="Configure review checklist item"
+      title="Configure Review Checklist Item"
       handleClose={onClose}
       maxWidth="sm"
     >
@@ -61,7 +61,7 @@ export function ReviewChecklistDialog({
             <TextField
               fullWidth
               size="small"
-              label="Checklist item name *"
+              label="Checklist Item Name *"
               {...formik.getFieldProps('name')}
               error={Boolean(formik.touched.name && formik.errors.name)}
               helperText={formik.touched.name && formik.errors.name}
@@ -69,13 +69,13 @@ export function ReviewChecklistDialog({
             <TextField
               fullWidth
               size="small"
-              label="Checklist code *"
+              label="Checklist Code *"
               {...formik.getFieldProps('code')}
               error={Boolean(formik.touched.code && formik.errors.code)}
               helperText={formik.touched.code && formik.errors.code}
             />
             <FormControlLabel
-              label="Required before submitting a recommendation"
+              label="Required Before Submitting a Recommendation"
               control={
                 <Switch
                   size="small"
@@ -95,7 +95,7 @@ export function ReviewChecklistDialog({
             Cancel
           </Button>
           <Button size="small" variant="contained" type="submit">
-            Save checklist item
+            Save Checklist Item
           </Button>
         </DialogActions>
       </Box>

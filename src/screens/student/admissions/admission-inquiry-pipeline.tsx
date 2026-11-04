@@ -210,7 +210,7 @@ export default function AdmissionInquiryPipelineScreen() {
     >
       <CustomBreadcrumbs
         heading="Pipeline"
-        description="Continue active admissions and follow up with families."
+        description="Continue Active Admissions and Follow Up with Families."
         links={[
           { name: 'Student', href: studentPaths.dashboard },
           { name: 'Admissions', href: studentPaths.enrollment.root },
@@ -231,7 +231,7 @@ export default function AdmissionInquiryPipelineScreen() {
 
               variant="outlined"
             >
-              Open applications
+              Open Applications
             </Button>
           )
         }
@@ -288,7 +288,7 @@ export default function AdmissionInquiryPipelineScreen() {
           >
             <CustomizableTable
               tableId="admission-application-pipeline"
-              tableTitle="Active admissions"
+              tableTitle="Active Admissions"
               exportLabel="Export"
               wrapperProps={{ sx: { height: 1, flex: 1, minHeight: 0, minWidth: 0 } }}
               tableContainerProps={{ sx: { height: 1 } }}
@@ -382,19 +382,19 @@ export default function AdmissionInquiryPipelineScreen() {
                 },
               })}
               searchFieldProps={{
-                placeholder: 'Search applicant, application, inquiry or phone',
+                placeholder: 'Search Applicant, Application, Inquiry or Phone',
                 inputProps: { 'aria-label': 'Search Pipeline' },
               }}
               noDataText={
                 !academic.academicYearId
-                  ? 'Select an academic year to view Pipeline'
+                  ? 'Select an Academic Year to View Pipeline'
                   : !academic.boardId || !academic.mediumId
-                    ? 'Select an available Board and Medium to view Pipeline'
+                    ? 'Select an Available Board and Medium to View Pipeline'
                     : hasFilters
-                      ? 'No active admissions match these filters'
+                      ? 'No Active Admissions Match These Filters'
                       : myCases
-                        ? 'You have no active admission cases'
-                        : 'No active admissions. Move an Interested inquiry to the next stage to start.'
+                        ? 'You Have No Active Admission Cases'
+                        : 'No Active Admissions. Move an Interested Inquiry to the Next Stage to Start.'
               }
             />
           </Box>

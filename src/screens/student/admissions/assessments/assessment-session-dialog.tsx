@@ -52,7 +52,7 @@ export function AssessmentSessionDialog({ scope, session, onClose, onSave }: Pro
       disableClose={formik.isSubmitting}
       maxWidth="sm"
       title={session ? 'Edit Assessment Session' : 'Create Assessment Session'}
-      titleInfo={`Set the session time, location, and capacity for ${assessmentScopeLabel(scope)}.`}
+      titleInfo={`Set the Session Time, Location, and Capacity For ${assessmentScopeLabel(scope)}.`}
     >
       <DialogScrollContent>
         {error && (
@@ -95,7 +95,7 @@ export function AssessmentSessionDialog({ scope, session, onClose, onSave }: Pro
           disabled={formik.isSubmitting}
           startIcon={<Iconify icon="mdi:content-save-outline" />}
         >
-          {formik.isSubmitting ? 'Saving…' : 'Save session'}
+          {formik.isSubmitting ? 'Saving…' : 'Save Session'}
         </Button>
       </DialogActions>
     </CustomDialog>

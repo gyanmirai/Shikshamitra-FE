@@ -5,7 +5,7 @@ import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { vi, it, expect, describe, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import { defaultSettings } from 'src/components/settings/config-settings';
 
 import { AdmissionOfferingEditDrawer } from './admission-offering-edit-drawer';
@@ -126,8 +126,8 @@ describe('Offering edit drawer experience', () => {
   it('opens a locked loading shell, then announces the detail failure through the standard toast', async () => {
     const retry = vi.fn();
     const view = show({ offering: null, loadingDetail: true });
-    expect(screen.getByRole('status', { name: 'Loading admission offering' })).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Close admission offering' })).toBeDisabled();
+    expect(screen.getByRole('status', { name: 'Loading Admission Offering' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Close Admission Offering' })).toBeDisabled();
     expect(screen.queryByRole('button', { name: 'Continue' })).not.toBeInTheDocument();
     view.rerender(
       <ThemeProvider theme={createTheme(defaultSettings)}>
@@ -148,16 +148,25 @@ describe('Offering edit drawer experience', () => {
     expect(screen.queryByText('Unable to load offering')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Continue' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('textbox', { name: 'Offering name *' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: 'Offering Name *' })).not.toBeInTheDocument();
     expect(retry).not.toHaveBeenCalled();
-    expect(screen.getByRole('button', { name: 'Close admission offering' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Close Admission Offering' })).toBeEnabled();
   });
   it('merges class and configuration, shows cycle below two steps and preserves choices after Preview/Back', async () => {
     const user = userEvent.setup();
-    show();
-    expect(screen.getByRole('region', { name: 'Admission offering editor' })).toBeVisible();
+    show({
+      offering: {
+        ...offering,
+        isActive: false,
+        applicationCount: 0,
+        inquiryCount: 0,
+        hasConfigurationUsage: false,
+        canEditConfiguration: true,
+      },
+    });
+    expect(screen.getByRole('region', { name: 'Admission Offering Editor' })).toBeVisible();
     expect(
-      screen.getByRole('button', { name: 'Class and academic scope information' })
+      screen.getByRole('button', { name: 'Class and Academic Scope information' })
     ).toBeVisible();
     expect(screen.queryByText('INTERNAL-CYCLE-CODE')).not.toBeInTheDocument();
     expect(
@@ -167,14 +176,14 @@ describe('Offering edit drawer experience', () => {
       'aria-disabled',
       'true'
     );
-    expect(screen.getByRole('textbox', { name: 'Offering name *' })).toBeVisible();
-    expect(screen.queryByRole('textbox', { name: 'Offering code *' })).not.toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Offering Name *' })).toBeVisible();
+    expect(screen.queryByRole('textbox', { name: 'Offering Code *' })).not.toBeInTheDocument();
     expect(screen.queryByText(offering.code)).not.toBeInTheDocument();
-    expect(screen.queryByRole('combobox', { name: 'Campus (optional)' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Campus (Optional)' })).not.toBeInTheDocument();
     expect(
       screen.queryByRole('checkbox', { name: 'Use Admission Cycle dates' })
     ).not.toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: 'Admission window' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Admission Window' })).not.toBeInTheDocument();
     const configureStep = screen.getByRole('button', { name: 'Step 1: Configure' });
     const cycleHeading = screen.getByRole('heading', { name: cycle.name });
     expect(configureStep.compareDocumentPosition(cycleHeading)).toBe(
@@ -185,54 +194,143 @@ describe('Offering edit drawer experience', () => {
     expect(
       screen.getByRole('button', { name: 'Continue' }).querySelector('.MuiButton-endIcon')
     ).not.toBeNull();
-    expect(screen.queryByText(/Academic identity is locked/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Academic Identity Is Locked/)).not.toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: 'Board *' })).toHaveAttribute(
       'aria-disabled',
       'true'
     );
-    expect(screen.getByRole('button', { name: 'Configure offering information' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Configure Offering information' })).toBeVisible();
     expect(screen.queryByText(/A clear name shown/)).not.toBeInTheDocument();
     expect(
-      screen.queryByText('Application form comes from the workflow’s Form stage.')
+      screen.queryByText('Application Form Comes From the Workflow’s Form Stage.')
     ).not.toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-    await user.click(screen.getByRole('combobox', { name: 'Published workflow' }));
+    await user.click(screen.getByRole('combobox', { name: 'Published Workflow' }));
     await user.keyboard('{ArrowDown}');
     await user.click(await screen.findByRole('option', { name: 'Another workflow · v1' }));
     await user.click(screen.getByRole('button', { name: 'Continue' }));
-    expect(await screen.findByRole('heading', { name: 'Preview offering' })).toBeVisible();
+    expect(await screen.findByRole('heading', { name: 'Preview Offering' })).toBeVisible();
     expect(screen.queryByText(offering.code)).not.toBeInTheDocument();
     expect(screen.getByText('Class 1', { selector: 'p' })).toBeVisible();
-    expect(screen.queryByRole('combobox', { name: 'Published workflow' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Published Workflow' })).not.toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Back' }));
-    expect(screen.getByRole('combobox', { name: 'Published workflow' })).toHaveValue(
+    expect(screen.getByRole('combobox', { name: 'Published Workflow' })).toHaveValue(
       'Another workflow · v1'
     );
-    expect(screen.getByRole('textbox', { name: 'Offering name *' })).toHaveValue(offering.name);
+    expect(screen.getByRole('textbox', { name: 'Offering Name *' })).toHaveValue(offering.name);
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     expect(mocks.save).not.toHaveBeenCalled();
   }, 20000);
   it('keeps field errors and blocks invalid advancement despite compact helper text', async () => {
     const user = userEvent.setup();
     show();
-    await user.clear(screen.getByRole('textbox', { name: 'Offering name *' }));
+    await user.clear(screen.getByRole('textbox', { name: 'Offering Name *' }));
     await user.click(screen.getByRole('button', { name: 'Continue' }));
     expect(await screen.findByText('Offering name is required')).toBeVisible();
     expect(mocks.validate).not.toHaveBeenCalled();
     expect(mocks.save).not.toHaveBeenCalled();
+  });
+  it.each([true, false])(
+    'locks used workflow and forms while retaining operational edits (active=%s)',
+    async (isActive) => {
+      const user = userEvent.setup();
+      show({
+        offering: {
+          ...offering,
+          isActive,
+          inquiryCount: 12,
+          hasConfigurationUsage: true,
+          canEditConfiguration: false,
+        },
+      });
+      expect(screen.getByRole('textbox', { name: 'Published Workflow' })).toBeDisabled();
+      expect(screen.getByRole('textbox', { name: 'Published Inquiry Form' })).toBeDisabled();
+      expect(
+        screen.queryByRole('combobox', { name: 'Published Workflow' })
+      ).not.toBeInTheDocument();
+      expect(screen.getByRole('textbox', { name: 'Offering Name *' })).toBeEnabled();
+      expect(screen.getByText('Locked')).toBeVisible();
+      expect(screen.queryByRole('button', { name: 'Deactivate offering' })).not.toBeInTheDocument();
+      await user.hover(screen.getByRole('button', { name: 'Configure Offering information' }));
+      expect(await screen.findByRole('tooltip')).toHaveTextContent(
+        'Deactivating this offering will not unlock the setup.'
+      );
+      await user.unhover(screen.getByRole('button', { name: 'Configure Offering information' }));
+      await user.click(screen.getByRole('textbox', { name: 'Offering Name *' }));
+      await user.click(screen.getByRole('button', { name: 'Continue' }));
+      await user.click(await screen.findByRole('button', { name: 'Save Changes' }));
+      expect(mocks.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          workflowDefinitionId: offering.workflowDefinitionId,
+          inquiryFormDefinitionId: offering.inquiryFormDefinitionId,
+        })
+      );
+    }
+  );
+
+  it('opens the existing deactivation flow only for an unused active offering with permission', async () => {
+    const onDeactivate = vi.fn();
+    show({
+      offering: {
+        ...offering,
+        applicationCount: 0,
+        inquiryCount: 0,
+        hasConfigurationUsage: false,
+        canEditConfiguration: false,
+      },
+      onDeactivate,
+    });
+    expect(screen.getByRole('textbox', { name: 'Published Workflow' })).toBeDisabled();
+    await userEvent.click(screen.getByRole('button', { name: 'Deactivate offering' }));
+    expect(onDeactivate).toHaveBeenCalledOnce();
+    expect(props.onClose).toHaveBeenCalled();
+    expect(mocks.save).not.toHaveBeenCalled();
+  });
+
+  it('does not expose deactivation without permission and fails closed without setup metadata', async () => {
+    await act(async () => {
+      show({ offering: { ...offering, applicationCount: 0 } });
+    });
+    expect(screen.getByRole('textbox', { name: 'Published Workflow' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Deactivate offering' })).not.toBeInTheDocument();
+  });
+
+  it('keeps the draft when deactivation discard is cancelled', async () => {
+    const user = userEvent.setup();
+    const onDeactivate = vi.fn();
+    const confirm = vi.fn(() => false);
+    vi.stubGlobal('confirm', confirm);
+    show({
+      offering: {
+        ...offering,
+        applicationCount: 0,
+        inquiryCount: 0,
+        hasConfigurationUsage: false,
+        canEditConfiguration: false,
+      },
+      onDeactivate,
+    });
+    await user.clear(screen.getByRole('textbox', { name: 'Offering Name *' }));
+    await user.type(screen.getByRole('textbox', { name: 'Offering Name *' }), 'Unsaved name');
+    await user.click(screen.getByRole('button', { name: 'Deactivate offering' }));
+    expect(confirm).toHaveBeenCalledOnce();
+    expect(onDeactivate).not.toHaveBeenCalled();
+    expect(props.onClose).not.toHaveBeenCalled();
+    expect(screen.getByRole('textbox', { name: 'Offering Name *' })).toHaveValue('Unsaved name');
+    vi.unstubAllGlobals();
   });
   it('keeps blocking readiness errors visible and prevents saving an active offering', async () => {
     mocks.valid = false;
     const user = userEvent.setup();
     show();
     await user.click(screen.getByRole('button', { name: 'Continue' }));
-    await screen.findByRole('heading', { name: 'Preview offering' });
-    expect(screen.getByText('Configuration incomplete')).toBeVisible();
+    await screen.findByRole('heading', { name: 'Preview Offering' });
+    expect(screen.getByText('Configuration Incomplete')).toBeVisible();
     expect(screen.getByText('Select a published workflow')).toBeVisible();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Save changes' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Save Changes' })).toBeDisabled();
     expect(mocks.save).not.toHaveBeenCalled();
   });
   it('uses cycle dates while preserving hidden code, campus and activation state through Preview and Save', async () => {
@@ -247,7 +345,7 @@ describe('Offering edit drawer experience', () => {
       },
     });
     await user.click(screen.getByRole('button', { name: 'Continue' }));
-    await screen.findByRole('heading', { name: 'Preview offering' });
+    await screen.findByRole('heading', { name: 'Preview Offering' });
     expect(mocks.validate).toHaveBeenCalledWith(
       expect.objectContaining({
         code: offering.code,
@@ -258,7 +356,7 @@ describe('Offering edit drawer experience', () => {
         closeDate: null,
       })
     );
-    await user.click(screen.getByRole('button', { name: 'Save changes' }));
+    await user.click(screen.getByRole('button', { name: 'Save Changes' }));
     await waitFor(() => expect(mocks.save).toHaveBeenCalledOnce());
     expect(mocks.save).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -275,8 +373,8 @@ describe('Offering edit drawer experience', () => {
     mocks.valid = false;
     show({ offering: { ...offering, isActive: false } });
     await userEvent.click(screen.getByRole('button', { name: 'Continue' }));
-    await screen.findByRole('heading', { name: 'Preview offering' });
-    expect(screen.getByRole('button', { name: 'Save changes' })).toBeEnabled();
+    await screen.findByRole('heading', { name: 'Preview Offering' });
+    expect(screen.getByRole('button', { name: 'Save Changes' })).toBeEnabled();
   });
   it('announces option-load errors through the standard toast while blocking Continue', async () => {
     mocks.queryFailed = true;
@@ -301,8 +399,8 @@ describe('Offering edit drawer experience', () => {
     show();
     await userEvent.click(screen.getByRole('button', { name: 'Continue' }));
     await waitFor(() => expect(mocks.validate).toHaveBeenCalledOnce());
-    expect(screen.getByRole('textbox', { name: 'Offering name *' })).toBeVisible();
-    expect(screen.queryByRole('heading', { name: 'Preview offering' })).not.toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Offering Name *' })).toBeVisible();
+    expect(screen.queryByRole('heading', { name: 'Preview Offering' })).not.toBeInTheDocument();
     expect(mocks.save).not.toHaveBeenCalled();
   });
 });

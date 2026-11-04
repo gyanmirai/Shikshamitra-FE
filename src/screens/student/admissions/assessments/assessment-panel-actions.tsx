@@ -54,11 +54,11 @@ export function AssessmentPanelActions({
             onClick={() => onAction(action)}
           >
             {compact && action === 'waive'
-              ? 'Waive assessment'
+              ? 'Waive Assessment'
               : action === 'book' && assessment.policy.schedulingEnabled
                 ? compact
                   ? 'Book Assessment Slot'
-                  : 'Book session'
+                  : 'Book Session'
                 : assessmentActionLabels[action]}
           </Button>
         ))}
@@ -69,7 +69,7 @@ export function AssessmentPanelActions({
           disabled={disabled || !assessment.canComplete}
           onClick={() => onComplete()}
         >
-          Complete assessment step
+          Complete Assessment Step
         </Button>
       )}
     </Stack>

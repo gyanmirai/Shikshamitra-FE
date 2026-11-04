@@ -12,6 +12,7 @@ vi.mock('src/redux/student/admissions/admission-forms-api', () => ({
 
 it('makes a section check actionable and closes the checks popover after selecting its exact target', async () => {
   const form = getBlankAdmissionFormInitialValues();
+  form.sections[0].fields = [];
   form.sections[0].stepId = 'empty-step';
   const onSelectIssue = vi.fn();
   render(<FormValidationPanel form={form} onSelectIssue={onSelectIssue} />);

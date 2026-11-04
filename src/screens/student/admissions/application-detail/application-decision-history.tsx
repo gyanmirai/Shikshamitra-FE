@@ -50,7 +50,7 @@ export function ApplicationDecisionHistory({
 
   return (
     <Stack spacing={0.75} sx={{ mt: compact ? 0 : 2, overflowWrap: 'anywhere' }}>
-      {!compact && <Typography variant="subtitle2">Decision history</Typography>}
+      {!compact && <Typography variant="subtitle2">Decision History</Typography>}
       {data.slice(0, 5).map((item) => (
         <Typography key={item.id} variant="caption" color="text.secondary">
           {getAdmissionApplicationStatusLabel(item.status)} ·{' '}

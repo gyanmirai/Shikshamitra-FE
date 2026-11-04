@@ -42,31 +42,31 @@ it('keeps edits and captured stamp after a conflict; reload requires explicit di
     />
   );
   const dialog = within(screen.getByRole('dialog'));
-  await user.clear(dialog.getByLabelText('Recommendation reason'));
-  await user.type(dialog.getByLabelText('Recommendation reason'), 'My checked evidence.');
-  await user.click(dialog.getByRole('button', { name: 'Submit recommendation' }));
+  await user.clear(dialog.getByLabelText('Recommendation Reason'));
+  await user.type(dialog.getByLabelText('Recommendation Reason'), 'My checked evidence.');
+  await user.click(dialog.getByRole('button', { name: 'Submit Recommendation' }));
   expect(await dialog.findByText(/Your edits are still here/)).toBeInTheDocument();
-  expect(dialog.getByLabelText('Recommendation reason')).toHaveValue('My checked evidence.');
+  expect(dialog.getByLabelText('Recommendation Reason')).toHaveValue('My checked evidence.');
   expect(submitted).toMatchObject({
     concurrencyStamp: 'application-stamp',
     reason: 'My checked evidence.',
   });
   expect(onClose).not.toHaveBeenCalled();
-  await user.click(dialog.getByRole('button', { name: 'Reload latest review' }));
+  await user.click(dialog.getByRole('button', { name: 'Reload Latest review' }));
   const confirmation = within(
-    await screen.findByRole('dialog', { name: 'Reload the latest review?' })
+    await screen.findByRole('dialog', { name: 'Reload the Latest review?' })
   );
   await user.click(confirmation.getByRole('button', { name: 'Cancel' }));
   expect(onReload).not.toHaveBeenCalled();
-  await user.click(dialog.getByRole('button', { name: 'Reload latest review' }));
+  await user.click(dialog.getByRole('button', { name: 'Reload Latest review' }));
   await user.click(
-    within(await screen.findByRole('dialog', { name: 'Reload the latest review?' })).getByRole(
+    within(await screen.findByRole('dialog', { name: 'Reload the Latest review?' })).getByRole(
       'button',
-      { name: 'Discard edits and reload' }
+      { name: 'Discard Edits and Reload' }
     )
   );
   await waitFor(() =>
-    expect(dialog.getByLabelText('Recommendation reason')).toHaveValue('New saved reason')
+    expect(dialog.getByLabelText('Recommendation Reason')).toHaveValue('New saved reason')
   );
   expect(onReload).toHaveBeenCalledOnce();
   expect(dialog.queryByText(/Your edits are still here/)).not.toBeInTheDocument();
@@ -79,14 +79,14 @@ it('protects unsaved notes when closing without leaking the page-wide dirty guar
     <ReviewEditorDialog summary={reviewSummary} onClose={onClose} onReload={vi.fn()} />
   );
   const dialog = within(screen.getByRole('dialog'));
-  await user.type(dialog.getByLabelText('Review notes'), 'Still reviewing.');
+  await user.type(dialog.getByLabelText('Review Notes'), 'Still reviewing.');
   await user.click(dialog.getByRole('button', { name: 'close' }));
   const confirmation = within(
-    await screen.findByRole('dialog', { name: 'Discard unsaved changes?' })
+    await screen.findByRole('dialog', { name: 'Discard Unsaved Changes?' })
   );
   await user.click(confirmation.getByRole('button', { name: 'Cancel' }));
   expect(onClose).not.toHaveBeenCalled();
-  expect(dialog.getByLabelText('Review notes')).toHaveValue('Still reviewing.');
+  expect(dialog.getByLabelText('Review Notes')).toHaveValue('Still reviewing.');
 });
 
 it('preserves edits when an explicitly confirmed reload itself fails', async () => {
@@ -100,17 +100,17 @@ it('preserves edits when an explicitly confirmed reload itself fails', async () 
     />
   );
   const dialog = within(screen.getByRole('dialog'));
-  await user.type(dialog.getByLabelText('Review notes'), 'Keep this note.');
-  await user.click(dialog.getByRole('button', { name: 'Submit recommendation' }));
-  await user.click(await dialog.findByRole('button', { name: 'Reload latest review' }));
+  await user.type(dialog.getByLabelText('Review Notes'), 'Keep this note.');
+  await user.click(dialog.getByRole('button', { name: 'Submit Recommendation' }));
+  await user.click(await dialog.findByRole('button', { name: 'Reload Latest review' }));
   await user.click(
-    within(await screen.findByRole('dialog', { name: 'Reload the latest review?' })).getByRole(
+    within(await screen.findByRole('dialog', { name: 'Reload the Latest review?' })).getByRole(
       'button',
-      { name: 'Discard edits and reload' }
+      { name: 'Discard Edits and Reload' }
     )
   );
   expect(
     await dialog.findByText('Unable to reload the review. Your edits are still here. Try again.')
   ).toBeInTheDocument();
-  expect(dialog.getByLabelText('Review notes')).toHaveValue(`${reviewRecord.notes}Keep this note.`);
+  expect(dialog.getByLabelText('Review Notes')).toHaveValue(`${reviewRecord.notes}Keep this note.`);
 });

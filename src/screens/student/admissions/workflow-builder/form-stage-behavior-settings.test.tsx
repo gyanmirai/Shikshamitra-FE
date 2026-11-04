@@ -35,7 +35,7 @@ describe('Form submission behavior', () => {
     }
     renderDocumentUi(<Settings />);
     expect(screen.queryByRole('switch', { name: 'Allow late submission' })).not.toBeInTheDocument();
-    const toggle = screen.getByRole('switch', { name: 'Allow corrections' });
+    const toggle = screen.getByRole('switch', { name: 'Allow Corrections' });
     expect(toggle).toBeEnabled();
     expect(toggle).not.toBeChecked();
     const user = userEvent.setup();
@@ -70,7 +70,7 @@ describe('Form submission behavior', () => {
       />
     );
     expect(screen.queryByRole('switch', { name: 'Allow late submission' })).not.toBeInTheDocument();
-    expect(screen.getByRole('switch', { name: 'Allow corrections' })).toBeDisabled();
+    expect(screen.getByRole('switch', { name: 'Allow Corrections' })).toBeDisabled();
     expect(changed).not.toHaveBeenCalled();
   });
 });

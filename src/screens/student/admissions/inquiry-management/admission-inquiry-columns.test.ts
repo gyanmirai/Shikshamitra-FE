@@ -56,12 +56,12 @@ describe('inquiryWorkState', () => {
           nextFollowUpAt: '2026-09-15T10:00:00Z',
         })
       ).label
-    ).toBe('Follow-up overdue');
+    ).toBe('Follow-Up Overdue');
   });
 
   it('shows first-contact work even when no SLA deadline is configured', () => {
     expect(inquiryWorkState(inquiry({ needsFirstContact: true })).label).toBe(
-      'Awaiting first contact'
+      'Awaiting First Contact'
     );
   });
 
@@ -73,7 +73,7 @@ describe('inquiryWorkState', () => {
           qualificationOutcome: 1,
         })
       ).label
-    ).toBe('Managed inquiry');
+    ).toBe('Managed Inquiry');
   });
 });
 
@@ -90,7 +90,7 @@ describe('admission inquiry columns', () => {
     expect(moving.find((action) => action.id === 'move')).toMatchObject({
       loading: true,
       disabled: true,
-      tooltip: 'Moving inquiry…',
+      tooltip: 'Moving Inquiry…',
     });
     expect(moving.every((action) => action.disabled)).toBe(true);
     expect(
@@ -130,7 +130,7 @@ describe('admission inquiry columns', () => {
     });
     expect(columns.slice(-2).map((column) => column.id)).toEqual(['status', 'actions']);
     expect(columns.slice(-2).every((column) => column.stickyPosition === 'right')).toBe(true);
-    expect(columns.find((column) => column.id === 'status')?.stickyOnMobile).not.toBe(false);
+    expect(columns.find((column) => column.id === 'status')?.stickyOnMobile).toBe(false);
     expect(columns.find((column) => column.id === 'actions')?.stickyOnMobile).not.toBe(false);
     expect(columns.find((column) => column.id === 'actions')).toMatchObject({
       width: 152,

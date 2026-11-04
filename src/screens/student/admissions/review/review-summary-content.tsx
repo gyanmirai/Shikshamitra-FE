@@ -38,7 +38,7 @@ export function ReviewSummaryContent({
         <Typography variant="body2" color="text.secondary">
           {summary.dueAt
             ? `Due ${dayjs(summary.dueAt).format('DD MMM YYYY, h:mm A')}`
-            : 'No deadline'}
+            : 'No Deadline'}
         </Typography>
       </Stack>
       {summary.isStale && (
@@ -70,7 +70,7 @@ export function ReviewSummaryContent({
           {summary.policy.reviewerRole ? `Reviewer role: ${summary.policy.reviewerRole}. ` : ''}
           {summary.policy.approverRole ? `Decision role: ${summary.policy.approverRole}. ` : ''}
           {summary.policy.requireIndependentApprover
-            ? 'The final decision must be made by someone other than the recommending reviewer.'
+            ? 'The Final Decision Must Be Made by Someone Other Than the Recommending Reviewer.'
             : ''}
         </Typography>
       )}
@@ -86,23 +86,23 @@ export function ReviewSummaryContent({
         {((permissions.edit && summary.canSaveDraft) ||
           (permissions.submit && summary.canSubmit)) && (
           <Button variant="contained" disabled={disabled} onClick={() => onAction('edit')}>
-            Review and recommend
+            Review and Recommend
           </Button>
         )}
         {permissions.assign && summary.canAssign && (
           <Button variant="outlined" disabled={disabled} onClick={() => onAction('assign')}>
-            Assign reviewer
+            Assign Reviewer
           </Button>
         )}
         {permissions.decide && permissions.reopen && summary.canRequestCorrection && (
           <Button variant="outlined" disabled={disabled} onClick={() => onAction('correct')}>
-            Request corrections
+            Request Corrections
           </Button>
         )}
       </Stack>
       <Typography variant="body2">
         A recommendation does not approve or reject this application. Use the authorized actions in{' '}
-        <Link href="#admission-decision">Admission decision</Link> to record the final decision.
+        <Link href="#admission-decision">Admission Decision</Link> to record the final decision.
       </Typography>
       <ReviewHistory applicationId={summary.applicationId} stageId={summary.stageId} />
     </Stack>

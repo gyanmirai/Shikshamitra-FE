@@ -301,7 +301,7 @@ export function AssessmentBatchDialog({
         </Stack>
       ),
     },
-    { id: 'stageName', label: 'Assessment stage', isSort: false, minWidth: 150 },
+    { id: 'stageName', label: 'Assessment Stage', isSort: false, minWidth: 150 },
   ];
   if (action !== 'continue')
     columns.push({
@@ -421,7 +421,7 @@ export function AssessmentBatchDialog({
     });
   columns.push({
     id: 'saved',
-    label: 'Save status',
+    label: 'Save Status',
     isSort: false,
     minWidth: 180,
     render: (_, row) => {
@@ -429,7 +429,7 @@ export function AssessmentBatchDialog({
       return result ? (
         <Stack>
           <Label color={result.success ? 'success' : 'warning'}>
-            {result.success ? (result.draft ? 'Draft saved' : 'Saved') : 'Needs retry'}
+            {result.success ? (result.draft ? 'Draft Saved' : 'Saved') : 'Needs Retry'}
           </Label>
           {!result.success && <Typography variant="caption">{result.message}</Typography>}
         </Stack>
@@ -453,10 +453,10 @@ export function AssessmentBatchDialog({
         title={titles[action]}
         titleInfo={
           action === 'continue'
-            ? 'Each application is checked again and follows its own configured workflow.'
+            ? 'Each Application Is Checked Again and Follows Its Own Configured Workflow.'
             : action === 'attendance'
-              ? 'Only entered rows are saved. Unedited attendance stays pending.'
-              : 'Only entered rows are saved. Unedited results stay pending.'
+              ? 'Only Entered Rows Are Saved. Unedited Attendance Stays Pending.'
+              : 'Only Entered Rows Are Saved. Unedited Results Stay Pending.'
         }
         maxWidth="lg"
         handleClose={onClose}
@@ -475,7 +475,7 @@ export function AssessmentBatchDialog({
                 {error}
               </StudentFeedback>
             )}
-            {busy && <LinearProgress aria-label="Saving assessment batch" />}
+            {busy && <LinearProgress aria-label="Saving Assessment Batch" />}
             {!!saved && (
               <StudentFeedback notificationKey="STU-0248" presentation="inline" severity="success">
                 {saved} saved. Successful rows will not be submitted again.
@@ -483,7 +483,7 @@ export function AssessmentBatchDialog({
             )}
             <FormBusyRegion
               busy={busy}
-              label={action === 'continue' ? 'Continuing applicants…' : 'Saving assessment batch…'}
+              label={action === 'continue' ? 'Continuing Applicants…' : 'Saving Assessment Batch…'}
             >
               <Stack spacing={2}>
                 {groups.map((group, index) => (
@@ -524,7 +524,7 @@ export function AssessmentBatchDialog({
               disabled={busy || !pendingRows.length}
               onClick={() => submit(true)}
             >
-              Save drafts
+              Save Drafts
             </Button>
           )}
           <SubmitButton

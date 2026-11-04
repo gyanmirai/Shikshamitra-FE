@@ -75,7 +75,7 @@ export function AdmissionInquiryAssignmentDialog({
     <CustomDialog
       open
       maxWidth="xs"
-      title="Change counsellor"
+      title="Change Counsellor"
       handleClose={onClose}
       disableClose={assignmentState.isLoading}
     >
@@ -121,7 +121,7 @@ export function AdmissionInquiryAssignmentDialog({
           minRows={2}
           size="small"
           name="reason"
-          label="Transfer reason"
+          label="Transfer Reason"
           value={formik.values.reason}
           onChange={formik.handleChange}
           onBlur={formik.handleBlur}
@@ -155,7 +155,7 @@ export function AdmissionInquiryAssignmentDialog({
           startIcon={<Iconify icon="mdi:account-arrow-right-outline" />}
           onClick={() => formik.handleSubmit()}
         >
-          Change counsellor
+          Change Counsellor
         </LoadingButton>
       </DialogActions>
     </CustomDialog>

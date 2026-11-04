@@ -139,8 +139,8 @@ export function AdmissionCycleDialog({
       title={
         <AdmissionDialogTitle
           title={editingCycle ? 'Edit Admission Cycle' : 'Create Admission Cycle'}
-          helpText="Save the cycle as a draft first. Applicants can apply only after it is published and while the application window is open."
-          helpLabel="Admission cycle information"
+          helpText="Save the Cycle as a Draft First. Applicants Can Apply Only After It Is Published and While the Application Window Is Open."
+          helpLabel="Admission Cycle Information"
         />
       }
       maxWidth="sm"
@@ -153,7 +153,7 @@ export function AdmissionCycleDialog({
                 fullWidth
                 size="small"
                 required
-                label="Cycle name"
+                label="Cycle Name"
                 {...formik.getFieldProps('name')}
                 error={Boolean(formik.touched.name && formik.errors.name)}
                 helperText={formik.touched.name ? formik.errors.name : undefined}
@@ -168,7 +168,7 @@ export function AdmissionCycleDialog({
               }
             >
               <CustomSelect
-                label="Academic year"
+                label="Academic Year"
                 name="academicYearId"
                 value={formik.values.academicYearId}
                 options={academicYears.map((year) => ({ value: year.id, label: year.name }))}
@@ -189,8 +189,8 @@ export function AdmissionCycleDialog({
                 disabled={saving}
                 noOptionsMessage={
                   academicYearsError
-                    ? 'Unable to load academic years. Please close and try again.'
-                    : 'No academic years available'
+                    ? 'Unable to Load Academic Years. Please Close and Try Again.'
+                    : 'No Academic Years Available'
                 }
               />
             </ShakingTextField>
@@ -202,7 +202,7 @@ export function AdmissionCycleDialog({
               minRows={2}
               maxRows={4}
               size="small"
-              label="Description (optional)"
+              label="Description (Optional)"
               placeholder="Internal purpose or audience, e.g. Nursery to Grade 9"
               slotProps={{ inputLabel: { shrink: true } }}
               {...formik.getFieldProps('description')}
@@ -214,7 +214,7 @@ export function AdmissionCycleDialog({
           <Grid size={{ xs: 12, sm: 6 }}>
             <ShakingTextField error={Boolean(formik.touched.startDate && formik.errors.startDate)}>
               <DatePicker
-                label="Applications open"
+                label="Applications Open"
                 format={ADMISSION_DATE_FORMAT}
                 value={formik.values.startDate ? dayjs(formik.values.startDate) : null}
                 onChange={async (value) => {
@@ -241,7 +241,7 @@ export function AdmissionCycleDialog({
           <Grid size={{ xs: 12, sm: 6 }}>
             <ShakingTextField error={Boolean(formik.touched.endDate && formik.errors.endDate)}>
               <DatePicker
-                label="Applications close"
+                label="Applications Close"
                 format={ADMISSION_DATE_FORMAT}
                 value={formik.values.endDate ? dayjs(formik.values.endDate) : null}
                 onChange={async (value) => {
@@ -285,14 +285,14 @@ export function AdmissionCycleDialog({
           loading={saving}
           onClick={() => formik.handleSubmit()}
         >
-          Save as draft
+          Save as Draft
         </LoadingButton>
       </DialogActions>
       <ConfirmDialog
         open={confirmDiscard}
         onClose={() => setConfirmDiscard(false)}
         icon="warning"
-        title="Discard unsaved changes?"
+        title="Discard Unsaved Changes?"
         content="The changes made to this admission cycle have not been saved."
         action={
           <LoadingButton

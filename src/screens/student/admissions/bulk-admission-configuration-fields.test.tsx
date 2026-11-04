@@ -19,7 +19,7 @@ import {
 import type { BulkOfferingValues } from './bulk-admission-offering-model';
 import type { BulkOfferingFieldIssues } from './bulk-admission-offering-validation';
 
-const mocks = vi.hoisted(() => ({ isError: false, refetch: vi.fn() }));
+const mocks = vi.hoisted(() => ({ isError: false, refetch: vi.fn(), query: vi.fn() }));
 const setup = {
   id: 'setup-1',
   name: 'School intake',
@@ -27,11 +27,10 @@ const setup = {
   counsellorAssignmentProfileId: 'assignment-profile-1',
 } as AdmissionIntakeSetup;
 vi.mock('src/redux/student/admissions/admission-intake-profiles-api', () => ({
-  useGetAdmissionIntakeSetupsQuery: () => ({
-    data: [setup],
-    isError: mocks.isError,
-    refetch: mocks.refetch,
-  }),
+  useGetAdmissionIntakeSetupsQuery: () => {
+    mocks.query();
+    return { data: [setup], isError: mocks.isError, refetch: mocks.refetch };
+  },
 }));
 
 const cycle = { id: 'cycle-1', status: 1, windowStatus: 1 } as AdmissionCycle;
@@ -74,6 +73,7 @@ function show(values: Partial<BulkOfferingValues> = {}, fieldIssues: BulkOfferin
             <output data-testid="payload">
               {JSON.stringify(toBulkOfferingInput(formik.values, [], true))}
             </output>
+            <output data-testid="draft">{JSON.stringify(formik.values)}</output>
           </>
         )}
       </Formik>
@@ -85,100 +85,97 @@ describe('Bulk offering configuration', () => {
   beforeEach(() => {
     mocks.isError = false;
     mocks.refetch.mockClear();
+    mocks.query.mockClear();
   });
 
   it('has no admission window or date controls and always sends cycle-date inheritance', () => {
     show({ useCycleDates: false, openDate: null, closeDate: null });
-    expect(screen.queryByRole('combobox', { name: 'Admission window' })).not.toBeInTheDocument();
-    expect(screen.queryByLabelText(/Applications open/)).not.toBeInTheDocument();
-    expect(screen.queryByLabelText(/Applications close/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Admission Window' })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Applications Open/)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Applications Close/)).not.toBeInTheDocument();
     expect(screen.getByTestId('payload')).toHaveTextContent('"useCycleDates":true');
     expect(screen.getByTestId('payload')).toHaveTextContent('"openDate":null');
     expect(screen.getByTestId('payload')).toHaveTextContent('"closeDate":null');
   });
 
-  it('omits Inquiry for RTE and applies only the counsellor-routing part of an intake setup', async () => {
-    const user = userEvent.setup();
-    show({ track: 1, entryMode: 1, isActive: true, workflowDefinitionId: 'workflow-1' });
-    expect(screen.queryByRole('combobox', { name: 'Inquiry form' })).not.toBeInTheDocument();
-    await user.click(
-      screen.getByRole('combobox', { name: 'Intake & assignment setup (optional)' })
-    );
-    await user.click(screen.getByRole('option', { name: 'School intake' }));
-    await waitFor(() => {
-      expect(screen.getByTestId('payload')).toHaveTextContent('"track":1');
-      expect(screen.getByTestId('payload')).toHaveTextContent('"entryMode":1');
-      expect(screen.getByTestId('payload')).toHaveTextContent('"inquiryIntakeProfileId":null');
-      expect(screen.getByTestId('payload')).toHaveTextContent('"inquiryFormDefinitionId":null');
-      expect(screen.getByTestId('payload')).toHaveTextContent(
-        '"counsellorAssignmentProfileId":"assignment-profile-1"'
-      );
+  it('omits Inquiry and retired setup controls for RTE and sends no routing profiles', () => {
+    show({
+      track: 1,
+      entryMode: 1,
+      isActive: true,
+      workflowDefinitionId: 'workflow-1',
+      inquiryIntakeProfileId: setup.inquiryIntakeProfileId,
+      counsellorAssignmentProfileId: setup.counsellorAssignmentProfileId,
     });
+    expect(screen.queryByRole('combobox', { name: 'Inquiry Form' })).not.toBeInTheDocument();
     expect(
-      screen.getByRole('combobox', { name: 'Intake & assignment setup (optional)' })
-    ).toHaveTextContent('School intake');
+      screen.queryByRole('combobox', { name: 'Intake & Assignment Setup (optional)' })
+    ).not.toBeInTheDocument();
+    expect(JSON.parse(screen.getByTestId('payload').textContent!)).toMatchObject({
+      track: 1,
+      entryMode: 1,
+      workflowDefinitionId: 'workflow-1',
+      inquiryIntakeProfileId: null,
+      inquiryFormDefinitionId: null,
+      counsellorAssignmentProfileId: null,
+    });
+    expect(mocks.query).not.toHaveBeenCalled();
   });
 
-  it('displays manual assignment initially and after clearing a setup, while sending both profiles as null', async () => {
-    const user = userEvent.setup();
+  it('defaults both routing profiles to null without requesting retired setup options', () => {
     show();
-    const select = screen.getByRole('combobox', { name: 'Intake & assignment setup (optional)' });
-    expect(select).toHaveTextContent('No setup — manual assignment');
-    await user.click(select);
-    await user.click(screen.getByRole('option', { name: 'School intake' }));
-    await waitFor(() =>
-      expect(screen.getByTestId('payload')).toHaveTextContent(
-        '"counsellorAssignmentProfileId":"assignment-profile-1"'
-      )
-    );
-    await user.click(select);
-    await user.click(screen.getByRole('option', { name: 'No setup — manual assignment' }));
-    await waitFor(() => {
-      expect(select).toHaveTextContent('No setup — manual assignment');
-      expect(screen.getByTestId('payload')).toHaveTextContent('"inquiryIntakeProfileId":null');
-      expect(screen.getByTestId('payload')).toHaveTextContent(
-        '"counsellorAssignmentProfileId":null'
-      );
+    expect(screen.getAllByRole('combobox').map((field) => field.getAttribute('name'))).toEqual([
+      'workflowDefinitionId',
+      'inquiryFormDefinitionId',
+    ]);
+    expect(JSON.parse(screen.getByTestId('payload').textContent!)).toMatchObject({
+      inquiryIntakeProfileId: null,
+      counsellorAssignmentProfileId: null,
     });
     expect(screen.getByTestId('payload')).not.toHaveTextContent('__manual__');
+    expect(mocks.query).not.toHaveBeenCalled();
   });
 
-  it('preserves legacy profiles until an explicit manual-assignment choice', async () => {
-    const user = userEvent.setup();
+  it('preserves legacy profile values in the draft but clears counsellor routing in the payload', () => {
     show({
       inquiryIntakeProfileId: 'legacy-inquiry',
       counsellorAssignmentProfileId: 'legacy-assignment',
     });
-    const select = screen.getByRole('combobox', { name: 'Intake & assignment setup (optional)' });
-    expect(select).toHaveTextContent('Legacy profile selection');
-    expect(screen.getByTestId('payload')).toHaveTextContent('legacy-assignment');
-    await user.click(select);
-    await user.click(screen.getByRole('option', { name: 'No setup — manual assignment' }));
-    await waitFor(() => expect(select).toHaveTextContent('No setup — manual assignment'));
-    expect(screen.getByTestId('payload')).not.toHaveTextContent('legacy-assignment');
+    expect(JSON.parse(screen.getByTestId('draft').textContent!)).toMatchObject({
+      inquiryIntakeProfileId: 'legacy-inquiry',
+      counsellorAssignmentProfileId: 'legacy-assignment',
+    });
+    expect(JSON.parse(screen.getByTestId('payload').textContent!)).toMatchObject({
+      inquiryIntakeProfileId: 'legacy-inquiry',
+      counsellorAssignmentProfileId: null,
+    });
+    expect(mocks.query).not.toHaveBeenCalled();
   });
 
-  it('can clear a preselected combined setup and keep manual assignment visibly selected', async () => {
+  it('serializes a preselected combined setup without restoring the retired setup selector', () => {
     show({
       inquiryIntakeProfileId: setup.inquiryIntakeProfileId,
       counsellorAssignmentProfileId: setup.counsellorAssignmentProfileId,
     });
-    const user = userEvent.setup();
-    const select = screen.getByRole('combobox', { name: 'Intake & assignment setup (optional)' });
-    expect(select).toHaveTextContent('School intake');
-    await user.click(select);
-    await user.click(screen.getByRole('option', { name: 'No setup — manual assignment' }));
-    await waitFor(() => expect(select).toHaveTextContent('No setup — manual assignment'));
-    expect(screen.getByTestId('payload')).toHaveTextContent('"inquiryIntakeProfileId":null');
-    expect(screen.getByTestId('payload')).toHaveTextContent('"counsellorAssignmentProfileId":null');
-    expect(screen.queryByText('Legacy profile selection')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('combobox', { name: 'Intake & Assignment Setup (optional)' })
+    ).not.toBeInTheDocument();
+    expect(JSON.parse(screen.getByTestId('payload').textContent!)).toMatchObject({
+      inquiryIntakeProfileId: 'inquiry-profile-1',
+      counsellorAssignmentProfileId: null,
+    });
+    expect(JSON.parse(screen.getByTestId('draft').textContent!)).toMatchObject({
+      inquiryIntakeProfileId: 'inquiry-profile-1',
+      counsellorAssignmentProfileId: 'assignment-profile-1',
+    });
+    expect(mocks.query).not.toHaveBeenCalled();
   });
 
   it('marks activation-required fields and shows validation directly below each invalid field', async () => {
     show({ isActive: true });
     await userEvent.setup().click(screen.getByRole('button', { name: 'Validate configuration' }));
-    const workflow = screen.getByRole('combobox', { name: 'Published workflow' });
-    const inquiry = screen.getByRole('combobox', { name: 'Inquiry form' });
+    const workflow = screen.getByRole('combobox', { name: 'Published Workflow' });
+    const inquiry = screen.getByRole('combobox', { name: 'Inquiry Form' });
     expect(
       workflow.closest('.MuiFormControl-root')?.querySelector('.MuiInputLabel-asterisk')
     ).toHaveTextContent('*');
@@ -216,8 +213,8 @@ describe('Bulk offering configuration', () => {
         },
       }
     );
-    const inquiry = screen.getByRole('combobox', { name: 'Inquiry form' });
-    const workflow = screen.getByRole('combobox', { name: 'Published workflow' });
+    const inquiry = screen.getByRole('combobox', { name: 'Inquiry Form' });
+    const workflow = screen.getByRole('combobox', { name: 'Published Workflow' });
     expect(inquiry).not.toBeRequired();
     expect(
       within(inquiry.closest('.MuiFormControl-root')! as HTMLElement).getByText(
@@ -232,14 +229,18 @@ describe('Bulk offering configuration', () => {
     expect(workflow).toHaveAttribute('aria-invalid', 'true');
   });
 
-  it('keeps setup-load failure actionable without hiding the optional manual choice', async () => {
+  it('keeps workflow and inquiry configuration independent of retired setup lookup failures', () => {
     mocks.isError = true;
     show();
-    expect(
-      screen.getByRole('combobox', { name: 'Intake & assignment setup (optional)' })
-    ).toHaveTextContent('No setup — manual assignment');
-    expect(screen.getByText('Unable to load admission intake setups.')).toBeVisible();
-    await userEvent.setup().click(screen.getByRole('button', { name: 'Retry intake setups' }));
-    expect(mocks.refetch).toHaveBeenCalledOnce();
+    expect(screen.getByRole('combobox', { name: 'Published Workflow' })).toBeEnabled();
+    expect(screen.getByRole('combobox', { name: 'Inquiry Form' })).toBeEnabled();
+    expect(screen.queryByText('Unable to load Admission intake setups.')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Retry intake setups' })).not.toBeInTheDocument();
+    expect(JSON.parse(screen.getByTestId('payload').textContent!)).toMatchObject({
+      inquiryIntakeProfileId: null,
+      counsellorAssignmentProfileId: null,
+    });
+    expect(mocks.query).not.toHaveBeenCalled();
+    expect(mocks.refetch).not.toHaveBeenCalled();
   });
 });

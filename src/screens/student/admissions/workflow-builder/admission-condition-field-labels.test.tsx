@@ -51,8 +51,8 @@ describe('contextual applicant answer choices', { timeout: 15000 }, () => {
       );
       const user = userEvent.setup();
       renderDocumentUi(<Picker mode={mode} source={source} />);
-      await chooseDocumentOption(user, 'Published form for answer choices', 'Registration · v2');
-      const field = screen.getByRole('combobox', { name: 'Applicant answer or fact' });
+      await chooseDocumentOption(user, 'Published Form for Answer Choices', 'Registration · v2');
+      const field = screen.getByRole('combobox', { name: 'Applicant Answer or Fact' });
       await waitFor(() => expect(field).toBeEnabled());
       await user.click(field);
       const label = mode === 'document' ? 'Full Name (Registration)' : 'Full Name';

@@ -53,7 +53,8 @@ export function InheritedFormSections() {
   if (!inheritance?.enabled || !inheritance.preview) return null;
   const effectiveForm = getInheritancePreviewValues(
     inheritance.formik.values,
-    inheritance.preview.definition
+    inheritance.preview.definition,
+    inheritance.preview.inquiryContextSections
   );
   return (
     <Stack spacing={1}>

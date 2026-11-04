@@ -81,7 +81,7 @@ describe('workflow transition safety', () => {
       [],
       [...stages, { ...stages[2], id: 'retired', name: 'Offer', stageType: 8 }]
     );
-    await user.click(screen.getByRole('combobox', { name: 'Continue to *' }));
+    await user.click(screen.getByRole('combobox', { name: 'Continue To *' }));
     expect(screen.queryByRole('option', { name: 'Offer' })).not.toBeInTheDocument();
     await user.keyboard('{Escape}');
   });
@@ -89,9 +89,9 @@ describe('workflow transition safety', () => {
     const user = userEvent.setup();
     const onSave = renderDrawer(null);
 
-    expect(screen.getByRole('region', { name: 'Next-step configuration' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Next-Step Configuration' })).toBeInTheDocument();
     expect(screen.getByText('This is the default route', { exact: false })).toBeVisible();
-    await user.click(screen.getByRole('button', { name: 'Save path' }));
+    await user.click(screen.getByRole('button', { name: 'Save Path' }));
 
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(onSave.mock.calls[0][0]).toMatchObject({
@@ -112,7 +112,7 @@ describe('workflow transition safety', () => {
     };
     const onSave = renderDrawer(null, [existing]);
 
-    await user.click(screen.getByRole('button', { name: 'Save path' }));
+    await user.click(screen.getByRole('button', { name: 'Save Path' }));
 
     expect(await screen.findByText('This stage already has a default route')).toBeInTheDocument();
     expect(onSave).not.toHaveBeenCalled();
@@ -138,7 +138,7 @@ describe('workflow transition safety', () => {
     };
     const onSave = renderDrawer(current, [current, other]);
 
-    await user.click(screen.getByRole('button', { name: 'Save path' }));
+    await user.click(screen.getByRole('button', { name: 'Save Path' }));
 
     expect(
       await screen.findByText('Use a unique priority for each conditional route from this stage')

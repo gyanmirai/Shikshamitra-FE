@@ -83,7 +83,7 @@ export function BulkAdmissionOfferingPreview({
   const columns: IColumn[] = [
     {
       id: 'code',
-      label: 'Class / offering code',
+      label: 'Class / Offering Code',
       isSort: false,
       isFilter: false,
       cellSx: { verticalAlign: 'top' },
@@ -92,7 +92,7 @@ export function BulkAdmissionOfferingPreview({
         return (
           <Stack spacing={0.5} sx={{ minWidth: 0, overflowWrap: 'anywhere' }}>
             <Typography variant="subtitle2">
-              {standardNameById[item.standardId] || 'Selected class'}
+              {standardNameById[item.standardId] || 'Selected Class'}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               {item.code}
@@ -135,7 +135,7 @@ export function BulkAdmissionOfferingPreview({
       cellSx: { verticalAlign: 'top' },
       render: (canSaveInactive: boolean) => (
         <Label color={canSaveInactive ? 'success' : 'error'}>
-          {canSaveInactive ? 'Ready to create' : 'Cannot create'}
+          {canSaveInactive ? 'Ready to Create' : 'Cannot Create'}
         </Label>
       ),
     },
@@ -144,12 +144,12 @@ export function BulkAdmissionOfferingPreview({
   return (
     <FormSectionCard
       icon="mdi:clipboard-check-outline"
-      title="Preview offerings"
-      descriptionTooltip="Review each class before creating the batch. Offerings are saved as Inactive; activation remains a separate action."
+      title="Preview Offerings"
+      descriptionTooltip="Review Each Class Before Creating the Batch. Offerings Are Saved as Inactive; Activation Remains a Separate Action."
       action={
         items.length ? (
           <Label>
-            {items.length} class{items.length === 1 ? '' : 'es'}
+            {items.length} Class{items.length === 1 ? '' : 'es'}
           </Label>
         ) : undefined
       }
@@ -173,15 +173,15 @@ export function BulkAdmissionOfferingPreview({
                   ? `${items.length} offering${items.length === 1 ? '' : 's'} ready to create`
                   : blockedCount
                     ? `${blockedCount} of ${items.length} ${items.length === 1 ? 'class needs' : 'classes need'} changes`
-                    : 'This batch cannot be created yet'}
+                    : 'This Batch Cannot Be Created Yet'}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 {admissionTrackLabels[track]} · {admissionEntryModeLabels[entryMode]}
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                 {canCreate
-                  ? 'One offering per class will be saved as Inactive. Activate it from the offering list when ready.'
-                  : 'Nothing will be created until all class issues are resolved.'}
+                  ? 'One Offering Per Class Will Be Saved as Inactive. Activate It From the Offering List When Ready.'
+                  : 'Nothing Will Be Created Until All Class Issues Are Resolved.'}
               </Typography>
             </Box>
             {onEdit && (
@@ -193,14 +193,14 @@ export function BulkAdmissionOfferingPreview({
                 onClick={onEdit}
                 sx={{ flexShrink: 0, alignSelf: { xs: 'flex-start', sm: 'center' } }}
               >
-                Edit selection
+                Edit Selection
               </Button>
             )}
           </Stack>
 
           {configurationIssues.length > 0 && (
             <Box sx={{ p: 1.5, borderRadius: 1, bgcolor: 'background.neutral' }}>
-              <Typography variant="subtitle2">Configuration checks</Typography>
+              <Typography variant="subtitle2">Configuration Checks</Typography>
               <Stack spacing={1} sx={{ mt: 1 }}>
                 {configurationIssues.map(([field, issue]) => (
                   <Box key={field}>
@@ -212,7 +212,7 @@ export function BulkAdmissionOfferingPreview({
                       color={issue.blocking ? 'error.main' : 'text.secondary'}
                       sx={{ whiteSpace: 'pre-line', overflowWrap: 'anywhere' }}
                     >
-                      {issue.blocking ? '' : 'Before activation: '}
+                      {issue.blocking ? '' : 'Before Activation: '}
                       {issue.message}
                     </Typography>
                   </Box>
@@ -223,7 +223,7 @@ export function BulkAdmissionOfferingPreview({
 
           {sharedMessages.length > 0 && (
             <Box sx={{ p: 1.5, borderRadius: 1, bgcolor: 'background.neutral' }}>
-              <Typography variant="subtitle2">Other checks</Typography>
+              <Typography variant="subtitle2">Other Checks</Typography>
               <Box component="ul" sx={{ mt: 0.5, mb: 0, pl: 2.5 }}>
                 {sharedMessages.map((message) => (
                   <Typography
@@ -243,7 +243,7 @@ export function BulkAdmissionOfferingPreview({
           {/* Embedded review: the drawer body owns vertical scrolling; every class stays visible. */}
           <CustomizableTable
             tableId="bulk-admission-offering-preview"
-            tableTitle="Offerings to create"
+            tableTitle="Offerings to Create"
             columns={columns}
             data={rows}
             showToolbar={false}

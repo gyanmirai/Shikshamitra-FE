@@ -34,7 +34,7 @@ export function WorkflowStageBasics({ formik, metadata, stageTypes, readOnly, is
           <TextField
             fullWidth
             size="small"
-            label="Stage name *"
+            label="Stage Name *"
             disabled={readOnly}
             {...formik.getFieldProps('name')}
             error={Boolean(formik.touched.name && formik.errors.name)}
@@ -45,7 +45,7 @@ export function WorkflowStageBasics({ formik, metadata, stageTypes, readOnly, is
       {metadata && (!metadata.isRuntimeReady || metadata.isDeprecated) && (
         <StudentFeedback notificationKey="STU-0581" presentation="persistent" severity="error">
           {metadata.replacementGuidance ||
-            'This existing stage is not available for new workflows. Replace it before publishing a new version.'}
+            'This Existing Stage Is Not Available for New Workflows. Replace It Before Publishing a New Version.'}
         </StudentFeedback>
       )}
     </Stack>

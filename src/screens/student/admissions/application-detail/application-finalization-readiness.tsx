@@ -40,7 +40,7 @@ export function ApplicationFinalizationReadiness({
   return (
     <>
       {loading && (
-        <Stack spacing={1} role="status" aria-label="Loading finalization readiness">
+        <Stack spacing={1} role="status" aria-label="Loading Finalization Readiness">
           <Skeleton variant="rounded" height={40} />
           <Skeleton variant="rounded" height={160} />
         </Stack>
@@ -88,7 +88,7 @@ export function ApplicationFinalizationReadiness({
       {!loading && !hasError && Boolean(preview?.items.length) && (
         <Stack spacing={1}>
           <Typography variant="subtitle1" component="h3">
-            Finalization checks
+            Finalization Checks
           </Typography>
           <Divider />
           <Box component="ul" sx={{ m: 0, p: 0, listStyle: 'none', display: 'grid', gap: 1 }}>
@@ -133,7 +133,7 @@ export function ApplicationFinalizationReadiness({
                     }}
                   />
                   <Typography variant="body2" sx={{ fontWeight: 600, minWidth: 0, flex: 1 }}>
-                    {item.key === 'identity' && !item.passed ? 'Core identity' : item.label}
+                    {item.key === 'identity' && !item.passed ? 'Core Identity' : item.label}
                   </Typography>
                   <Label
                     color={
@@ -145,7 +145,7 @@ export function ApplicationFinalizationReadiness({
                     }
                     sx={{ flexShrink: 0 }}
                   >
-                    {item.passed ? 'Ready' : 'Needs attention'}
+                    {item.passed ? 'Ready' : 'Needs Attention'}
                   </Label>
                 </Stack>
                 {(!item.passed || item.detail !== 'Ready') && (
@@ -167,7 +167,7 @@ export function ApplicationFinalizationReadiness({
                     color="inherit"
                     sx={{ mt: 0.5, ml: 3.75 }}
                   >
-                    Repair applicant identity
+                    Repair Applicant Identity
                   </Button>
                 )}
               </Box>
@@ -181,11 +181,11 @@ export function ApplicationFinalizationReadiness({
         preview.possibleMatches.length > 0 &&
         !preview.linkedStudentId && (
           <Stack spacing={1}>
-            <Typography variant="subtitle2">Resolve possible Student matches</Typography>
+            <Typography variant="subtitle2">Resolve Possible Student Matches</Typography>
             <RadioGroup
               value={identityChoice}
               onChange={(event) => onIdentityChoice(event.target.value)}
-              aria-label="Student identity"
+              aria-label="Student Identity"
               sx={{
                 '& .MuiFormControlLabel-root': { mx: 0, py: 0.25 },
                 '& .MuiFormControlLabel-label': { typography: 'body2', overflowWrap: 'anywhere' },
@@ -204,7 +204,7 @@ export function ApplicationFinalizationReadiness({
                 disabled={disabled}
                 value="new"
                 control={<Radio size="small" />}
-                label="None match — create a new Student identity"
+                label="None Match — Create a New Student Identity"
               />
             </RadioGroup>
             <Typography variant="caption" color="text.secondary">

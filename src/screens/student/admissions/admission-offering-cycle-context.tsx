@@ -21,11 +21,11 @@ export function AdmissionOfferingCycleContext({ cycle, showCode = true }: Props)
         <Stack spacing={0.25}>
           <Typography variant="subtitle2">{cycle.name}</Typography>
           <Typography variant="body2" color="text.secondary">
-            {cycle.academicYearName || 'Academic year'}
+            {cycle.academicYearName || 'Academic Year'}
             {showCode && ` · ${cycle.code}`}
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            Cycle window: {formatDateOnly(cycle.startDate, 'DD MMM YYYY')} –{' '}
+            Cycle Window: {formatDateOnly(cycle.startDate, 'DD MMM YYYY')} –{' '}
             {formatDateOnly(cycle.endDate, 'DD MMM YYYY')}
           </Typography>
         </Stack>

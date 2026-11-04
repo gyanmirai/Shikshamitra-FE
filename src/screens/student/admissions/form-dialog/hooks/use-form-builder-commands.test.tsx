@@ -11,6 +11,7 @@ import { render, screen } from '@testing-library/react';
 
 import { getAdmissionFormStepGroups } from '../form-step-groups';
 import { useFormBuilderCommands } from './use-form-builder-commands';
+import { addAcademicClassSelector } from '../academic-class-selector';
 import { getBlankAdmissionFormInitialValues } from '../form-dialog-model';
 import { getSystemAdmissionFormTemplate } from '../admission-form-template-catalog';
 
@@ -169,6 +170,22 @@ function renderCommands(empty = false) {
 }
 
 describe('useFormBuilderCommands', () => {
+  it('keeps the final class-applied question separate from a requested class-interest question', async () => {
+    const form = getBlankAdmissionFormInitialValues(0);
+    const prototype = form.sections[0].fields[0];
+    form.sections[0].fields.push({...prototype, id: 'applied-class', code: 'CLASS_APPLYING_FOR', label: 'Class applying for', bindingType: 1, bindingKey: 'CLASS_APPLYING_FOR', fieldType: 6, optionsJson: '{"source":"Standards"}'});
+    const count = form.sections[0].fields.length;
+    render(<Formik initialValues={form} onSubmit={() => undefined}>{formik => <Commands formik={formik} selectedSectionId={form.sections[0].id} />}</Formik>);
+    await userEvent.click(screen.getByRole('button', {name: 'Add class interest'}));
+    expect(JSON.parse(screen.getByTestId('fields').textContent!)).toHaveLength(count + 1);
+  });
+  it('reuses an explicit class group when a custom class-interest alias is requested', async () => {
+    const {form} = addAcademicClassSelector(getBlankAdmissionFormInitialValues(0), null);
+    const initialCount = form.sections.flatMap(section => section.fields).length;
+    render(<Formik initialValues={form} onSubmit={() => undefined}>{formik => <Commands formik={formik} selectedSectionId={form.sections[0].id} />}</Formik>);
+    await userEvent.click(screen.getByRole('button', {name: 'Add class interest'}));
+    expect(JSON.parse(screen.getByTestId('fields').textContent!)).toHaveLength(initialCount);
+  });
   it('reuses the starter class question instead of adding the custom alias', async () => {
     const form = getSystemAdmissionFormTemplate('admission-inquiry');
     render(
@@ -204,11 +221,12 @@ describe('useFormBuilderCommands', () => {
       </Formik>
     );
     await userEvent.click(screen.getByRole('button', { name: 'Add class interest' }));
-    expect(JSON.parse(screen.getByTestId('fields').textContent!)).toHaveLength(0);
+    expect(JSON.parse(screen.getByTestId('fields').textContent!)).toHaveLength(7);
     expect(onSelectInherited).toHaveBeenCalledWith(source);
   });
   it('does not add an Inquiry question twice through individual and whole-pack actions', async () => {
     const initialValues = getBlankAdmissionFormInitialValues(1);
+    initialValues.sections[0].fields = [];
     const field: AdmissionFormField = {
       ...getSystemAdmissionFormTemplate('admission-application').sections[0].fields[3],
       inheritedFrom: {
@@ -271,7 +289,7 @@ describe('useFormBuilderCommands', () => {
     });
     expect(saved.sections[2].stepId).not.toBe(saved.sections[0].stepId);
   });
-  it('keeps the generated Student name when adding individual or packed profile fields', async () => {
+  it('keeps generated first/last names unique when adding individual or packed profile fields', async () => {
     const user = userEvent.setup();
     const initialValues = getBlankAdmissionFormInitialValues(0);
     render(
@@ -280,19 +298,19 @@ describe('useFormBuilderCommands', () => {
       </Formik>
     );
     await user.click(screen.getByRole('button', { name: 'Add separate name' }));
-    expect(JSON.parse(screen.getByTestId('fields').textContent!)).toHaveLength(4);
+    expect(JSON.parse(screen.getByTestId('fields').textContent!)).toHaveLength(6);
     await user.click(screen.getByRole('button', { name: 'Add names pack' }));
     const fields = JSON.parse(screen.getByTestId('fields').textContent!) as {
       bindingKey: string;
     }[];
-    expect(fields).toHaveLength(5);
+    expect(fields).toHaveLength(8);
     expect(
       fields.filter((field) =>
         ['Applicant.FirstName', 'Applicant.MiddleName', 'Applicant.LastName'].includes(
           field.bindingKey
         )
       )
-    ).toEqual([]);
+    ).toHaveLength(3);
     expect(fields.some((field) => field.bindingKey === 'Applicant.DateOfBirth')).toBe(true);
     expect(
       fields.filter((field) => field.bindingKey === 'Inquiry.ParentRelationship')

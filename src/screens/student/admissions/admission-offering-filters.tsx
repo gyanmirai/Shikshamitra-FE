@@ -9,10 +9,7 @@ import { Grid, Paper, Button } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { useGetClassByMediumQuery } from 'src/redux/class/classApi';
-import {
-  readAcademicFilterIds,
-  academicMultipleFilterValue,
-} from 'src/utils/student-academic-filter-query';
+import { readAcademicFilterIds } from 'src/utils/student-academic-filter-query';
 import { useGetAcademicOrganizationOptionsQuery } from 'src/redux/academicOrganizationOptions/academicOrganizationOptionsApi';
 
 import { getAdmissionHierarchyOptions } from './admission-hierarchy-options';
@@ -52,6 +49,9 @@ export function AdmissionOfferingFilters({
   const standards = ((standardsQuery.currentData ?? []) as Standards[]).filter(
     (item) => !values.stageId || item.educationMediumStageId === values.stageId
   );
+  const selectedClassIds = readAcademicFilterIds(values.standardId);
+  const allClassesSelected =
+    standards.length > 0 && standards.every((item) => selectedClassIds.includes(item.id));
 
   useEffect(() => {
     if (!hierarchyQuery.currentData) return;
@@ -84,7 +84,7 @@ export function AdmissionOfferingFilters({
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <CustomSelect
             options={cycleOptions}
-            label="Admission cycle"
+            label="Admission Cycle"
             labelKey="name"
             valueKey="id"
             value={cycle?.id ?? ''}
@@ -141,19 +141,32 @@ export function AdmissionOfferingFilters({
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <CustomSelect
             multiple
-            options={[{ id: ALL_FILTER_VALUE, name: 'All classes' }, ...standards]}
+            allowSelectAll
+            options={standards}
             label="Class"
             labelKey="name"
             valueKey="id"
-            value={
-              readAcademicFilterIds(values.standardId).length
-                ? readAcademicFilterIds(values.standardId)
-                : [ALL_FILTER_VALUE]
+            value={selectedClassIds.length ? selectedClassIds : [ALL_FILTER_VALUE]}
+            renderValue={() =>
+              !selectedClassIds.length || allClassesSelected
+                ? `All classes${standards.length ? ` (${standards.length})` : ''}`
+                : `${selectedClassIds.length} selected`
             }
+            MenuProps={{
+              PaperProps: { sx: { maxHeight: 360, maxWidth: 'calc(100% - 32px)' } },
+              MenuListProps: {
+                sx: {
+                  display: 'grid',
+                  gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))' },
+                  '& [data-select-all]': { gridColumn: '1 / -1' },
+                  '& .MuiMenuItem-root': { whiteSpace: 'normal' },
+                },
+              },
+            }}
             isLoading={standardsQuery.isFetching && Boolean(values.mediumId)}
             disabled={!values.mediumId || standardsQuery.isError}
-            onChange={(id) =>
-              onChange({ standardId: academicMultipleFilterValue(values.standardId, id) })
+            onChange={(ids) =>
+              onChange({ standardId: ids.filter((id) => id !== ALL_FILTER_VALUE).join(',') })
             }
           />
         </Grid>

@@ -71,7 +71,7 @@ export const eligibilityFormDetail: AdmissionForm = {
         {
           id: 'marks',
           code: 'PERCENTAGE',
-          label: 'Previous marks',
+          label: 'Previous Marks',
           fieldType: 2,
           bindingType: 1,
           required: true,
@@ -81,7 +81,7 @@ export const eligibilityFormDetail: AdmissionForm = {
         {
           id: 'note',
           code: 'NOTE',
-          label: 'Information only',
+          label: 'Information Only',
           fieldType: 12,
           bindingType: 1,
           required: false,

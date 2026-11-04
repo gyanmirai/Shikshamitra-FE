@@ -18,7 +18,7 @@ export function FormBuilderDetailFields({
           <TextField
             fullWidth
             size="small"
-            label="Form name *"
+            label="Form Name *"
             {...formik.getFieldProps('name')}
             error={Boolean(formik.touched.name && formik.errors.name)}
             helperText={formik.touched.name && formik.errors.name}
@@ -30,19 +30,19 @@ export function FormBuilderDetailFields({
           select
           fullWidth
           size="small"
-          label="Form layout *"
+          label="Form Layout *"
           value={formik.values.layoutType}
           onChange={(event) => formik.setFieldValue('layoutType', Number(event.target.value))}
         >
-          <MenuItem value={0}>Single page</MenuItem>
-          <MenuItem value={1}>Step by step</MenuItem>
+          <MenuItem value={0}>Single Page</MenuItem>
+          <MenuItem value={1}>Step by Step</MenuItem>
         </TextField>
       </Grid>
       <Grid size={{ xs: 12 }}>
         <TextField
           fullWidth
           size="small"
-          label="Description (optional)"
+          label="Description (Optional)"
           multiline
           minRows={1}
           {...formik.getFieldProps('description')}
@@ -73,7 +73,7 @@ export function FormBuilderDetailFields({
             }
           }}
           renderInput={(params) => (
-            <TextField {...params} size="small" label="Applicant languages *" />
+            <TextField {...params} size="small" label="Applicant Languages *" />
           )}
         />
       </Grid>
@@ -82,7 +82,7 @@ export function FormBuilderDetailFields({
           select
           fullWidth
           size="small"
-          label="Default language *"
+          label="Default Language *"
           value={formik.values.defaultLanguage}
           onChange={(event) => formik.setFieldValue('defaultLanguage', event.target.value)}
         >

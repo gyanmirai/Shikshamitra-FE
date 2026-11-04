@@ -114,25 +114,25 @@ function SeatStageContent({
     {
       show: canWrite && state.canReserve,
       action: 'reserve' as const,
-      label: state.status === 'waitlisted' ? 'Promote to reservation' : 'Reserve seat',
+      label: state.status === 'waitlisted' ? 'Promote to Reservation' : 'Reserve Seat',
       icon: 'mdi:seat-outline',
     },
     {
       show: canWrite && state.canConfirm,
       action: 'confirm' as const,
-      label: 'Confirm seat',
+      label: 'Confirm Seat',
       icon: 'mdi:seat-passenger',
     },
     {
       show: canWrite && state.canRenew,
       action: 'renew' as const,
-      label: 'Renew hold',
+      label: 'Renew Hold',
       icon: 'mdi:clock-plus-outline',
     },
     {
       show: canWrite && state.canJoinWaitlist,
       action: 'waitlist' as const,
-      label: 'Add to waitlist',
+      label: 'Add to Waitlist',
       icon: 'mdi:account-clock-outline',
     },
     {
@@ -144,7 +144,7 @@ function SeatStageContent({
     {
       show: canWrite && state.canManageCapacity,
       action: 'capacity' as const,
-      label: 'Change capacity',
+      label: 'Change Capacity',
       icon: 'mdi:counter',
     },
   ];
@@ -154,9 +154,9 @@ function SeatStageContent({
         <Stack spacing={2}>
           <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" gap={1}>
             <Stack>
-              <Typography variant="h6">Admission seat allocation</Typography>
+              <Typography variant="h6">Admission Seat Allocation</Typography>
               <Typography variant="body2" color="text.secondary">
-                Offering capacity and applicant reservation
+                Offering Capacity and Applicant Reservation
               </Typography>
             </Stack>
             <Chip
@@ -220,7 +220,7 @@ function SeatStageContent({
           </Stack>
           <Divider />
           <Stack>
-            <Typography variant="subtitle2">Seat history</Typography>
+            <Typography variant="subtitle2">Seat History</Typography>
             <SeatHistory events={state.events} />
           </Stack>
         </Stack>

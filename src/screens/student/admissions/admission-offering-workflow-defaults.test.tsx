@@ -60,7 +60,7 @@ describe('Offering workflow form ownership', () => {
         <Form />
       </ThemeProvider>
     );
-    await user.click(screen.getByRole('combobox', { name: 'Published workflow' }));
+    await user.click(screen.getByRole('combobox', { name: 'Published Workflow' }));
     await user.click(await screen.findByRole('option', { name: 'Grade 1 Admission · v1' }));
     await waitFor(() =>
       expect(JSON.parse(screen.getByTestId('selected-forms').textContent ?? '{}')).toEqual({
@@ -70,11 +70,11 @@ describe('Offering workflow form ownership', () => {
         entryMode: 0,
       })
     );
-    expect(screen.getByRole('combobox', { name: 'Published inquiry form' })).toHaveValue(
+    expect(screen.getByRole('combobox', { name: 'Published Inquiry Form' })).toHaveValue(
       'Parent inquiry · v1'
     );
-    expect(screen.queryByRole('combobox', { name: /application form/i })).not.toBeInTheDocument();
-    expect(screen.queryByLabelText(/Admission track|Entry mode/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: /Application Form/i })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Admission Track|Entry Mode/)).not.toBeInTheDocument();
   });
   it('preserves a historic registration entry mode when editing its workflow', async () => {
     const user = userEvent.setup();
@@ -83,7 +83,7 @@ describe('Offering workflow form ownership', () => {
         <Form entryMode={1} />
       </ThemeProvider>
     );
-    await user.click(screen.getByRole('combobox', { name: 'Published workflow' }));
+    await user.click(screen.getByRole('combobox', { name: 'Published Workflow' }));
     await user.click(await screen.findByRole('option', { name: 'Grade 1 Admission · v1' }));
     await waitFor(() =>
       expect(JSON.parse(screen.getByTestId('selected-forms').textContent ?? '{}')).toEqual({
@@ -94,7 +94,7 @@ describe('Offering workflow form ownership', () => {
       })
     );
     expect(
-      screen.queryByRole('combobox', { name: 'Published inquiry form' })
+      screen.queryByRole('combobox', { name: 'Published Inquiry Form' })
     ).not.toBeInTheDocument();
   });
 });

@@ -35,14 +35,14 @@ export function EligibilitySourceStageFields({
       <CustomSelect
         fullWidth
         size="small"
-        label={assessment ? 'Earlier assessment stage *' : 'Earlier document stage *'}
+        label={assessment ? 'Earlier Assessment Stage *' : 'Earlier Document Stage *'}
         disabled={readOnly}
         value={value.sourceStageCode ?? ''}
         options={[
-          { value: '', label: 'Choose a stage' },
+          { value: '', label: 'Choose a Stage' },
           ...options.map((stage) => ({ value: stage.code, label: stage.name })),
           ...(selectedMissing
-            ? [{ value: value.sourceStageCode!, label: 'Selected source stage is unavailable' }]
+            ? [{ value: value.sourceStageCode!, label: 'Selected Source Stage Is Unavailable' }]
             : []),
         ]}
         onChange={(sourceStageCode) =>
@@ -51,7 +51,7 @@ export function EligibilitySourceStageFields({
       />
       {!options.length && (
         <StudentFeedback notificationKey="STU-0518" presentation="inline" severity="info">
-          Add and configure an earlier {assessment ? 'assessment' : 'document verification'} stage
+          Add and configure an earlier {assessment ? 'Assessment' : 'Document Verification'} stage
           before using this check.
         </StudentFeedback>
       )}
@@ -70,12 +70,12 @@ export function EligibilitySourceStageFields({
         <CustomSelect
           fullWidth
           size="small"
-          label="Required assessment outcome"
+          label="Required Assessment Outcome"
           value={value.requiredOutcome ?? 'passed'}
           disabled={readOnly}
           options={[
             { value: 'passed', label: 'Passed' },
-            { value: 'waived', label: 'Waiver approved' },
+            { value: 'waived', label: 'Waiver Approved' },
           ]}
           onChange={(outcome) =>
             onChange({
@@ -91,7 +91,7 @@ export function EligibilitySourceStageFields({
           fullWidth
           size="small"
           type="number"
-          label="Minimum score percentage (optional)"
+          label="Minimum Score Percentage (Optional)"
           disabled={readOnly}
           value={value.minimumPercentage ?? ''}
           onChange={(event) =>

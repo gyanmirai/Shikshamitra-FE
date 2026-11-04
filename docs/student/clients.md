@@ -3,7 +3,7 @@ module: student
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-11-01
+updated_on: 2026-11-03
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -11,6 +11,10 @@ audience: humans-and-agents
 # Find Student Enrollment Admissions clients
 
 TL;DR: the individual Enrollment Admissions CRM project uses focused RTK Query clients under `src/redux/student/admissions` and invalidates the shared Student Admissions cache tags after mutations.
+
+## Admission form lifecycle
+
+`admission-forms-api.ts` exposes on-demand `getAdmissionFormArchiveImpact` and the existing archive plus new restore commands. The lifecycle confirmation uses the verified impact concurrency stamp, retains the decision after refusal, and blocks duplicate commands and closing during a write. Successful archive, restore and publish invalidate both Admission Form and Admission Offering tags so subscribed form history, offering availability, inquiry catalogue and capture context refresh. Failed writes keep cached state. Offering configuration errors retain form/workflow identifiers for permission-aware recovery links; `restoreForm` on the forms route opens the current archived form's restoration confirmation without submitting automatically. Backend contracts remain owned by the [Student API](../../../Shikshamitra-BE/docs/modules/student/api.md).
 
 ## House Management client
 
@@ -79,6 +83,8 @@ Workflow advance accepts `deferFeeCollection: true` with the required trimmed `r
 
 ## Subject-wise Assessment clients
 
+Session row click and Enter/Space in `assessment-sessions-panel.tsx` use the existing table row-action API and `onSelect` callback; the action selects that session in the Student worklist without changing booking or management requests.
+
 Successful roster refreshes reconcile selected students by both application and stage identity before opening booking/bulk actions. Refreshed capabilities replace old selected snapshots; disappeared, inactive or unconfigured rows leave selection. Loading, failed and paused reads retain the selection until current evidence is available.
 
 `assessment-sessions-panel.tsx` owns the Session worklist and `assessment-session-setup-drawer.tsx` creates/edits sessions without assigning students. `assessment-student-booking-drawer.tsx` and `use-assessment-student-booking.ts` own Student selection and existing-session booking only. Student is first/default; Session/Student URL state controls active-panel reads, with independent search/paging. Required Board/Medium gate list reads; linked scope/session hierarchy restores atomically without clearing link identity. Known booked selections show existing details and skip booking-preview/confirmation reads until eligible students remain. Both Export controls retain loaded-page semantics. Pipeline retains its separate Add Slot/Create & Book flow. `admission-assessment-planning-api.ts` sends optional `stageInstanceIds` to preview; selected rows retain their exact application/stage identity and use fresh server stamps. Confirmation reuses the existing atomic endpoint and cache tags. Uncertain responses replay the exact durable command; no confirmed payment or admission transition is performed by booking.
@@ -115,9 +121,11 @@ The selected class/division must still belong to the current lookup result; hier
 
 ## Academic filter requests
 
+Offering Class uses the shared `CustomSelect` with a count/all summary and Select All checklist; multi-class table chips summarize the same criterion without changing its URL-backed class IDs or server request.
+
 Offering table criteria exclude compulsory Board/Medium context; removing optional criteria preserves those query parameters. Form builder checks reuse the existing System-field catalogue query only for linked fields, share the RTK Query cache, and keep unavailable checks distinct from a valid form. No backend validation or publish endpoint changes are introduced.
 
-Class and Division form choices use Institute Setup records through `admission-forms-api.ts` and `admission-master-data-runtime-field.tsx`. The supported academic descriptors are `Standards`, `StandardsByMedium`, `StandardsByMediumStage`, and `DivisionsByStandard`. Requests include the owning academic year and parent ID; `parentField` changes clear dependent selections, including only the affected repeatable row. API failures use the standard error toast and disable the affected field. Academic cache tags refresh choices after Institute Setup changes. Known older template Class/Division codes resolve live choices without rewriting their frozen definitions; saved historical labels remain displayable as disabled values. Public Inquiry receives resolved academic choices from its token-authorized context and does not call the authenticated options API.
+Class and Division form choices use Institute Setup records through `admission-forms-api.ts` and `admission-master-data-runtime-field.tsx`. The supported academic descriptors are `EducationBoards`, `EducationMediums`, `Standards`, `StandardsByMedium`, `StandardsByMediumStage`, and `DivisionsByStandard`. Requests include the owning academic year and parent ID; `parentField` changes clear dependent selections, including only the affected repeatable row. API failures use the standard error toast and disable the affected field. Academic cache tags refresh choices after Institute Setup changes. Known older template Class/Division codes resolve live choices without rewriting their frozen definitions; saved historical labels remain displayable as disabled values. Public Inquiry receives resolved academic choices from its token-authorized context and does not call the authenticated options API. Its additive `optionsSourceJson` preserves source/parent codes while `optionsJson` remains an offering-bounded array; `public-academic-field.tsx` uses these supplied values through shared searchable selects and scrolling, with parent validation and descendant resets. Missing metadata and legacy single-Class arrays retain the existing renderer.
 
 `src/hooks/use-student-academic-scope.ts` reads the logged-in staff hierarchy through `userScopeApi`, merges it with Academic board data and prunes the selected year's descendants with `getScopedAcademicData`. Local `board`/`medium` query parameters select among authorized options; invalid selections and failed scope reads expose no hierarchy. Attendance, legacy management, certificates, ID cards and profile selectors consume this hook. The global Student header continues to show the year only. `src/layouts/components/global-academic-search/student-academic-years.ts` excludes unassigned year nodes returned for the scope editor, retaining explicit year-wide scope and authorized board ancestry. Student entry selects an authorized year when the current calendar year is outside scope; other module selectors keep their existing behavior.
 
@@ -138,11 +146,13 @@ clearing the table's search/criteria preserves the selected academic year. The s
 criteria across the authorized result set before counting and paging; no loaded-page filtering
 or common-component change is introduced. See the [backend contract](../../../Shikshamitra-BE/docs/modules/student/api.md#admission-cycle-endpoints).
 
-Offering Edit opens its drawer before the existing lazy detail GET finishes. Detail loading/error/Retry belongs to that drawer, not to list loading; retry requests the same Offering ID. A request token discards late responses after close or a newer selection. Editing uses the latest returned detail and concurrency stamp; no endpoint, write payload, permission or backend lifecycle rule is changed. Academic-option failures expose Retry through the existing query refetches.
+Offering Edit opens its drawer before the existing lazy detail GET finishes. Detail loading/error/Retry belongs to that drawer, not to list loading; retry requests the same Offering ID. A request token discards late responses after close or a newer selection. Editing uses the latest returned detail and concurrency stamp. The endpoint, write payload and action permissions are retained; setup editing additionally follows the backend lifecycle lock. Academic-option failures expose Retry through the existing query refetches.
 
 The two-step edit UI reuses the same readiness and update operations. Continue validates academic identity and configuration together before Preview. Offering code, Campus and admission-window inputs are no longer rendered in Edit. The stored code is still validated and submitted unchanged, but is also omitted from Edit Preview; existing Campus assignments are preserved. The edit-only two-column configuration layout changes no field handlers or API requests. Create, edit, clone and bulk surfaces omit the Admission window dropdown and custom-date inputs. Preview and write payloads always send `useCycleDates: true`, `openDate: null` and `closeDate: null`, so the backend resolves the selected cycle's current dates instead of a copied snapshot. Editing and saving a legacy custom-date Offering changes it to cycle-date inheritance; no bulk migration, code regeneration, campus clearing or extra lookup endpoint is introduced. Clone inherits the target cycle's dates rather than the source's overrides. Generic backend create/update date-override compatibility remains available for other consumers.
 
 Offering writes retain the existing RTK Query client. The backend resolves the Application form from the selected workflow; new UI writes omit a separate Application form choice. Admission type determines the new offering's entry route: General sends Inquiry-first, special types send Direct registration. There is no separate Starts with control. Direct writes omit Inquiry form/intake references and assignment profile references. Bulk input no longer needs a shared school-level ID: each selected class supplies its own academic path at the backend. Edit and clone retain saved track/entry metadata unless the type is changed; used routing cannot be changed.
+
+Offering detail additionally supplies `inquiryCount`, historical `hasConfigurationUsage` and authoritative `canEditConfiguration`. The edit drawer's access model consumes these with active status/application count and fails closed when an older server omits metadata. Workflow/form values remain in the existing update payload while controls are locked; the backend independently enforces unchanged references. Locked selectors do not fetch selectable definitions. The existing Deactivate confirmation reloads the latest detail/concurrency stamp. No new endpoint, polling, dependency or permission is added.
 
 Offering list, detail and availability reads provide the existing Admission Cycle tag as well as the Offering tag. Cycle mutations therefore refresh subscribed dates and availability through the standard RTK Query invalidation mechanism; no polling, extra endpoint or Offering write is added. Configured-class identity and room-capacity reads retain their existing independent cache tags.
 
@@ -154,7 +164,12 @@ Validation focuses the first invalid field; failed registration/family requests 
 
 ## Confirmed parent and sibling clients
 
+Public Inquiry uses `public-inquiry-schema.ts` to omit school-sibling controls before rendering, validation, draft retention and submission. Single-parent child and unrelated configured questions remain. Omitted-field conditions retain the existing rule evaluator's empty/false semantics. The public transport keeps an optional request ID stable for an unchanged retry; unavailable browser UUID support falls back to the backend's legacy retry handling. No authenticated StudentSiblings options request is mounted by this public form.
+
+The existing Application Form response adds optional `autoFilledFieldCodes` and `familyPrefill` metadata. `use-application-detail.ts` renders the backend's configured values directly and includes writable projected answers in the normal Save/Save & Next PATCH. Optional request `autoFilledFieldCodes` identifies only untouched projections; edited or cleared answers remain ordinary authored values. Same-record refresh preserves unsaved edits and saved clears, and application switches discard another record's retained query data. Missing metadata retains changed-only saves. The runtime shows a compact Sibling confirmed label without a copy button, review dialog or extra family read.
+
 `admission-parent-family-types.ts` shares Father/Mother contact and selected-parent request types between Inquiry and Direct Registration.
+`inquiry-management/inquiry-family-confirmation.tsx` adds staff confirmation for an already-saved pending inquiry. It uses the existing duplicate-check mutation only on explicit open/reload, then posts the selected family, source applicant, explicit Father/Mother relationship and target stamp through `confirmAdmissionInquiryFamily`. Success consumes the returned inquiry and optional `siblingFamilyConfirmed` flag. Target detail/timeline and list tags refresh; source detail is not refetched. Read or mutation failures preserve the selection and invalidate nothing. Dirty/busy, stale target and no-permission states cannot submit; the contextual dialog does not submit the underlying Inquiry form.
 Inquiry duplicate checks add `parentContacts`; Direct Registration family checks add `guardianEmail` alongside the retained mobile field.
 Match responses expose saved parent candidates identified by `sourceApplicantId` and nullable relationship, plus email/mobile match flags.
 The owning forms send `existingFamilyId`, `existingParentApplicantId` and explicit `parentRelationship` only after staff confirms Add sibling; autofill uses that saved parent contact and does not replace the other parent's authored answers.
@@ -231,18 +246,28 @@ New Inquiry keeps the academic-year `capture-catalogue` subscription for period/
 
 ### Admission form list
 
-`admission-forms.tsx` keeps Inquiry/Registration in one list with a Form type column. The new-form
-wizard selects the type before starter templates. `form-list/form-column-filters.ts` serializes Form name, Version
-and Sections criteria into the existing list request's `columnFilters`; Status retains its scalar
-parameter and replaces the previous status choice. The server filters before count/paging.
-Search/filter changes reset the page. One unified request lists Inquiry and Registration forms;
-legacy `view` parameters do not restrict the form type. Preview return restores table criteria.
+`admission-forms.tsx` keeps Inquiry/Registration in one list with a Form type column and a separate filter row above `CustomizableTable`: All types, Inquiry or Registration.
+`form-list/form-list-query.ts` maps its shared `purpose` criterion to the existing scalar list parameter; All types omits that parameter.
+`form-list/form-column-filters.ts` serializes Form name, Version and Sections criteria into `columnFilters`; Status retains its scalar parameter.
+The server filters before count/paging, and search/filter changes reset the page without clearing unrelated criteria.
+Legacy `view` parameters do not restrict the form type; preview return restores search, type and other criteria, page and page size.
 The list uses `currentData` to avoid rows from another query scope, retains safe rows while
 refreshing or after a refresh failure, and prevents a failed first request from showing a
 successful empty state. Existing utilities, row actions, permissions and form-builder commands
 remain in their current components. See the [backend form contract](../../../Shikshamitra-BE/docs/modules/student/api.md#application-form-runtime).
 
-`form-dialog/inquiry-default-fields.ts` materializes three required System controls for new Inquiry blank/starter forms. Reserved generated codes identify builder-owned controls across the existing save/read DTOs; no API property or runtime `readOnly` change is involved. Field settings, delete/reorder handlers and parent section/step delete actions protect those defaults. Generated controls carry Gujarati/Hindi copy, rehydrated when editing a generated definition so later language additions remain usable. Authored legacy fields are not retroactively relabelled, locked or injected on read.
+`src/redux/student/admissions/admission-forms-api.ts` carries nullable `coreFieldPolicyVersion` on form reads and writes.
+`src/screens/student/admissions/form-dialog/inquiry-default-fields.ts` materializes new core fields and resolves structural locks from that version plus canonical bindings, independently of editable labels, translations and codes.
+Blank/template creation, school-form reuse and new-purpose/inheritance transitions preserve unrelated questions; historical definitions are not upgraded on read.
+The Offering list/detail projection carries the selected Registration form's policy version so direct entry can require the new parent email without another Forms read or permission.
+
+`src/screens/student/admissions/form-dialog/academic-class-selector.ts` adds or reuses the linked `EducationBoards` → `EducationMediums` → `StandardsByMedium` controls through the existing options client and `parentField` dependencies.
+Option metadata includes Board and Medium IDs/labels for restoring and filtering saved Class IDs; display labels are not option identity.
+Existing `Standards` questions retain their compatible runtime path, while effective Inquiry controls remain source-owned in Registration.
+The saved-form preview reads the exact approved source through `GET forms/{id}/inheritance-preview?inquiryFormDefinitionId=...` with Forms View; it does not call the draft composition mutation.
+Source-name discovery follows the existing Forms View capability (the backend View Usage alias), pages through scoped metadata, and never expands the saved approval set.
+`src/screens/student/admissions/inquiry-context-presentation.ts` merges source context into its original sections for display only; frozen context answers stay outside editable Registration values and validation.
+See the [backend form contract](../../../Shikshamitra-BE/docs/modules/student/api.md#application-form-runtime) for enforcement and historical-data boundaries.
 
 ### Admissions list consistency
 

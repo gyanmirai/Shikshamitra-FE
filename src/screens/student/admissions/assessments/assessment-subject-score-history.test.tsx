@@ -27,6 +27,6 @@ it('shows frozen subject labels, zero marks and pending drafts without creating 
   expect(screen.getByText('English at exam')).toBeVisible();
   expect(screen.getByText('0 / 50')).toBeVisible();
   expect(screen.getByText('Pending / 50')).toBeVisible();
-  expect(screen.getByText('Draft result · not submitted')).toBeVisible();
+  expect(screen.getByText('Draft Result · Not Submitted')).toBeVisible();
   expect(screen.queryByText('Passed')).not.toBeInTheDocument();
 });

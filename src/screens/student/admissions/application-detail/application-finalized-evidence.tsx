@@ -35,12 +35,12 @@ export function ApplicationFinalizedEvidence({
   return (
     <Paper
       component="section"
-      aria-label="Admission evidence"
+      aria-label="Admission Evidence"
       variant="outlined"
       sx={{ p: 1.5, minWidth: 0, boxShadow: 'none' }}
     >
       <Typography variant="subtitle1" component="h3">
-        Admission evidence
+        Admission Evidence
       </Typography>
       <Divider sx={{ my: 1.5 }} />
       <Box
@@ -53,7 +53,7 @@ export function ApplicationFinalizedEvidence({
         <Stack spacing={0.5} sx={{ minWidth: 0 }}>
           <Stack direction="row" alignItems="center" spacing={0.75}>
             <Iconify icon="mdi:receipt-text-outline" width={20} />
-            <Typography variant="subtitle2">Fee structure</Typography>
+            <Typography variant="subtitle2">Fee Structure</Typography>
           </Stack>
           {feeQuery.isLoading || (feeQuery.isFetching && !fee) ? (
             <Skeleton height={32} />
@@ -76,8 +76,8 @@ export function ApplicationFinalizedEvidence({
                 {fee.selection
                   ? `${fee.selection.structureName} · Revision ${fee.selection.revisionNumber}`
                   : fee.available
-                    ? 'No fee structure selected.'
-                    : 'No fee confirmation stage configured.'}
+                    ? 'No Fee Structure Selected.'
+                    : 'No Fee Confirmation Stage Configured.'}
               </Typography>
               <Label
                 color={
@@ -90,8 +90,8 @@ export function ApplicationFinalizedEvidence({
                     ? 'Confirmed'
                     : 'Selected'
                   : fee.available
-                    ? 'Not confirmed'
-                    : 'Not configured'}
+                    ? 'Not Confirmed'
+                    : 'Not Configured'}
               </Label>
             </>
           )}
@@ -113,12 +113,12 @@ export function ApplicationFinalizedEvidence({
           </Stack>
           <Typography variant="body2" color="text.secondary">
             {documentCompleted
-              ? 'Document verification stages completed.'
+              ? 'Document Verification Stages Completed.'
               : documentSkipped
-                ? 'Document verification includes a skipped stage.'
+                ? 'Document Verification Includes a Skipped Stage.'
                 : documents.length
-                  ? 'Review the saved document stage outcomes.'
-                  : 'No document verification stage recorded.'}
+                  ? 'Review the Saved Document Stage Outcomes.'
+                  : 'No Document Verification Stage Recorded.'}
           </Typography>
           {documents.map((stage) => (
             <Stack
@@ -151,18 +151,18 @@ export function ApplicationFinalizedEvidence({
         >
           <Stack direction="row" alignItems="center" spacing={0.75}>
             <Iconify icon="mdi:account-check-outline" width={20} />
-            <Typography variant="subtitle2">Guardian contact</Typography>
+            <Typography variant="subtitle2">Guardian Contact</Typography>
           </Stack>
           <Typography variant="body2" color="text.secondary">
             {finalizationRecorded
-              ? 'Verification confirmed during finalization.'
-              : 'Finalization verification record unavailable.'}
+              ? 'Verification Confirmed During Finalization.'
+              : 'Finalization Verification Record Unavailable.'}
           </Typography>
           <Label
             color={finalizationRecorded ? 'success' : 'default'}
             sx={{ alignSelf: 'flex-start' }}
           >
-            {finalizationRecorded ? 'Verified' : 'Not recorded'}
+            {finalizationRecorded ? 'Verified' : 'Not Recorded'}
           </Label>
         </Stack>
       </Box>

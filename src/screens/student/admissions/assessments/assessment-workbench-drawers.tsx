@@ -90,12 +90,12 @@ export function AssessmentInsightsDrawer({
   onClose: () => void;
 }) {
   return (
-    <WorkbenchDrawer title="Assessment insights" onClose={onClose}>
+    <WorkbenchDrawer title="Assessment Insights" onClose={onClose}>
       <Stack spacing={2}>
         <Typography variant="body2" color="text.secondary">
           {scope
             ? `${scope.offeringName} · ${scope.stageName}`
-            : 'All allowed offerings and stages'}
+            : 'All Allowed Offerings and Stages'}
           {sessionName ? ` · ${sessionName}` : ''}. Counts use the current session and applicant
           search.
         </Typography>
@@ -145,7 +145,7 @@ export function AssessmentApplicantDrawer({
     { refetchOnMountOrArgChange: true }
   );
   return (
-    <WorkbenchDrawer title="Assessment details" onClose={onClose}>
+    <WorkbenchDrawer title="Assessment Details" onClose={onClose}>
       <Stack spacing={2}>
         <Box>
           <Typography variant="subtitle1">{row.applicantName}</Typography>
@@ -161,7 +161,7 @@ export function AssessmentApplicantDrawer({
             href={`${studentPaths.enrollment.applications}/${row.applicationId}?returnTo=${encodeURIComponent(returnUrl)}`}
             startIcon={<Iconify icon="mdi:open-in-new" />}
           >
-            Open application
+            Open Application
           </Button>
         )}
         {query.isError ? (
@@ -184,7 +184,7 @@ export function AssessmentApplicantDrawer({
                 {query.currentData.blockers.join(' ')}
               </StudentFeedback>
             )}
-            <Typography variant="subtitle2">Attempt history</Typography>
+            <Typography variant="subtitle2">Attempt History</Typography>
             {query.currentData.attempts.length ? (
               <AssessmentAttemptHistory attempts={query.currentData.attempts} />
             ) : (

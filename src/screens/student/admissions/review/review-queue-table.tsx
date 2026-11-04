@@ -41,7 +41,7 @@ export function ReviewQueueTable({
       ),
     },
     { id: 'applicantName', label: 'Applicant', minWidth: 180, isSort: false },
-    { id: 'stageName', label: 'Review stage', minWidth: 170, isSort: false },
+    { id: 'stageName', label: 'Review Stage', minWidth: 170, isSort: false },
     {
       id: 'assignedReviewerName',
       label: 'Reviewer',
@@ -57,7 +57,7 @@ export function ReviewQueueTable({
       render: (value, row) => (
         <Stack direction="row" gap={0.5} flexWrap="wrap">
           <Chip size="small" label={reviewStatusLabels[value as ReviewStatus] ?? String(value)} />
-          {row.isStale && <Chip size="small" color="warning" label="Evidence changed" />}
+          {row.isStale && <Chip size="small" color="warning" label="Evidence Changed" />}
         </Stack>
       ),
     },
@@ -68,7 +68,7 @@ export function ReviewQueueTable({
       isSort: false,
       render: (value, row) => (
         <Stack spacing={0.5} alignItems="flex-start">
-          {value ? dayjs(String(value)).format('DD MMM YYYY, h:mm A') : 'No deadline'}
+          {value ? dayjs(String(value)).format('DD MMM YYYY, h:mm A') : 'No Deadline'}
           {row.isOverdue && <Chip size="small" color="warning" label="Overdue" />}
         </Stack>
       ),
@@ -77,7 +77,7 @@ export function ReviewQueueTable({
   return (
     <CustomizableTable
       tableId="admission-review-queue"
-      tableTitle="Application reviews"
+      tableTitle="Application Reviews"
       columns={columns}
       data={items}
       isLoading={loading}
@@ -92,7 +92,7 @@ export function ReviewQueueTable({
       maxServerRowsPerPage={50}
       wrapperProps={{ sx: { height: 1 } }}
       tableContainerProps={{ sx: { height: 1 } }}
-      noDataText="No reviews match these filters."
+      noDataText="No Reviews Match These Filters."
     />
   );
 }

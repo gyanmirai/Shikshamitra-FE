@@ -50,25 +50,25 @@ it('starts fresh after assignment and requires the reviewer’s own rationale an
     />
   );
   const dialog = within(screen.getByRole('dialog'));
-  expect(dialog.getByLabelText('Recommendation reason')).toHaveValue('');
-  expect(dialog.getByLabelText('Review notes')).toHaveValue('');
+  expect(dialog.getByLabelText('Recommendation Reason')).toHaveValue('');
+  expect(dialog.getByLabelText('Review Notes')).toHaveValue('');
   expect(dialog.getByRole('checkbox', { name: 'Identity confirmed *' })).not.toBeChecked();
   expect(dialog.getByLabelText('Notes: Identity confirmed')).toHaveValue('');
-  expect(dialog.queryByText('Recommend approval')).not.toBeInTheDocument();
+  expect(dialog.queryByText('Recommend Approval')).not.toBeInTheDocument();
   expect(dialog.queryByText('Reassigned because of staff leave.')).not.toBeInTheDocument();
   await user.click(dialog.getByRole('combobox', { name: 'Recommendation' }));
-  await user.click(await screen.findByRole('option', { name: 'Recommend approval' }));
+  await user.click(await screen.findByRole('option', { name: 'Recommend Approval' }));
   await user.click(dialog.getByRole('checkbox', { name: 'Identity confirmed *' }));
-  await user.click(dialog.getByRole('button', { name: 'Submit recommendation' }));
+  await user.click(dialog.getByRole('button', { name: 'Submit Recommendation' }));
   expect(
     await dialog.findByText('Explain the reason for your recommendation.')
   ).toBeInTheDocument();
   expect(requests).toHaveLength(0);
   await user.type(
-    dialog.getByLabelText('Recommendation reason'),
+    dialog.getByLabelText('Recommendation Reason'),
     'I checked the current evidence.'
   );
-  await user.click(dialog.getByRole('button', { name: 'Submit recommendation' }));
+  await user.click(dialog.getByRole('button', { name: 'Submit Recommendation' }));
   await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
   expect(requests).toEqual([
     {

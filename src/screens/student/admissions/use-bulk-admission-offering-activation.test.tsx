@@ -235,6 +235,7 @@ describe('Bulk admission offering activation', () => {
     selectAndRequest(hook);
     await act(async () => hook.result.current.confirmActivation());
     expect(hook.result.current.selectedIds).toEqual(['second']);
+    expect(hook.result.current.confirmationOpen).toBe(true);
     expect(hook.result.current.failures).toEqual([
       { id: 'second', name: 'Offering second', message: 'Publish the form first.' },
     ]);
@@ -254,6 +255,67 @@ describe('Bulk admission offering activation', () => {
     expect(hook.result.current.selectedIds).toEqual([]);
     expect(hook.result.current.failures).toEqual([]);
     expect(mocks.success).toHaveBeenCalledWith({ message: '1 selected offering is active.' });
+  });
+
+  it('retains failed selections after readiness refetch and retries using repaired fresh details', async () => {
+    mocks.load.mockReturnValueOnce(
+      query(
+        detail('first', {
+          configuration: {
+            isValid: false,
+            status: 0,
+            errors: [
+              { code: 'ApplicationFormIdentityIncomplete', message: 'Make Gender required.' },
+            ],
+          },
+        })
+      )
+    );
+    const hook = render({ rows: [rows[0]] });
+    selectAndRequest(hook);
+    await act(async () => hook.result.current.confirmActivation());
+    hook.rerender({
+      ...options,
+      rows: [offering('first', { canActivate: false, configurationStatus: 0 })],
+    });
+    expect(hook.result.current.selectedIds).toEqual(['first']);
+    expect(hook.result.current.selectedRows).toHaveLength(1);
+    expect(hook.result.current.confirmationOpen).toBe(true);
+    act(() => hook.result.current.cancelActivation());
+    act(() => hook.result.current.requestActivation());
+    expect(hook.result.current.confirmationOpen).toBe(true);
+    await act(async () => hook.result.current.confirmActivation());
+    expect(mocks.load).toHaveBeenCalledTimes(2);
+    expect(mocks.activate).toHaveBeenCalledOnce();
+    expect(hook.result.current.failures).toEqual([]);
+  });
+
+  it('does not issue activation when fresh detail identifies a configuration blocker', async () => {
+    mocks.load.mockImplementation((id: string) =>
+      query(
+        detail(id, {
+          configuration: {
+            isValid: false,
+            status: 0,
+            errors: [
+              {
+                code: 'ApplicationFormIdentityIncomplete',
+                message: 'Make Gender required.',
+                formDefinitionId: 'form-1',
+              },
+            ],
+          },
+        })
+      )
+    );
+    const hook = render();
+    selectAndRequest(hook);
+    await act(async () => hook.result.current.confirmActivation());
+    expect(mocks.activate).not.toHaveBeenCalled();
+    expect(hook.result.current.confirmationOpen).toBe(true);
+    expect(hook.result.current.failures[0].configurationErrors).toMatchObject([
+      { formDefinitionId: 'form-1', message: 'Make Gender required.' },
+    ]);
   });
 
   it('continues after detail failures and retains failures with one overall error', async () => {

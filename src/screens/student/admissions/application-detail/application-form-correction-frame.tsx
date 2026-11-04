@@ -41,8 +41,8 @@ export function ApplicationFormCorrectionFrame({
         <Typography id={titleId} component="h2" variant="h6">
           Edit Application Form
         </Typography>
-        <CustomTooltip title="Correct the saved registration form before finalization. Approval, application number and payment history are retained.">
-          <IconButton size="small" aria-label="About application corrections">
+        <CustomTooltip title="Correct the Saved Registration Form Before Finalization. Approval, Application Number and Payment History Are Retained.">
+          <IconButton size="small" aria-label="About Application Corrections">
             <Iconify icon={GlobalIcons.info} color="info.main" />
           </IconButton>
         </CustomTooltip>

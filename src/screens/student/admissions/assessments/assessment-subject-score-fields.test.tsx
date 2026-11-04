@@ -26,7 +26,7 @@ it('keeps fine decimal subject scores unchanged while editing and displays an ex
     />
   );
   expect(screen.getByRole('textbox', { name: /English/ })).toHaveValue('0.005');
-  expect(screen.getByText('Total entered: 0.01 / 0.02')).toBeVisible();
+  expect(screen.getByText('Total Entered: 0.01 / 0.02')).toBeVisible();
   fireEvent.change(screen.getByRole('textbox', { name: /English/ }), {
     target: { value: '0.006' },
   });

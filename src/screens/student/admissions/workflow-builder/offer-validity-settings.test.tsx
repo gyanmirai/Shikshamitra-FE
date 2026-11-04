@@ -14,11 +14,11 @@ function Fixture() {
 describe('Offer fixed expiry settings',()=>{
   it('updates the fixed limits with the default so valid edits can still be saved',async()=>{
     const user=userEvent.setup();render(<Fixture/>);
-    await user.clear(screen.getByRole('textbox',{name:'Default validity (days) *'}));
-    await user.type(screen.getByRole('textbox',{name:'Default validity (days) *'}),'21');
+    await user.clear(screen.getByRole('textbox',{name:'Default Validity (Days) *'}));
+    await user.type(screen.getByRole('textbox',{name:'Default Validity (Days) *'}),'21');
     const policy=JSON.parse(screen.getByTestId('policy').textContent!);
     expect(policy).toMatchObject({validityDays:21,minimumValidityDays:21,maximumValidityDays:21});
     expect(getAdmissionOfferConfigurationError(JSON.stringify({offer:policy}))).toBeUndefined();
-    expect(screen.queryByRole('textbox',{name:'Minimum validity (days) *'})).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox',{name:'Minimum Validity (Days) *'})).not.toBeInTheDocument();
   });
 });

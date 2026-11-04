@@ -246,7 +246,7 @@ it('requires discard confirmation before closing an edited session', async () =>
   await userEvent.click(screen.getByRole('button', { name: 'Fill session details' }));
   await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
   expect(options.onClose).not.toHaveBeenCalled();
-  await userEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Discard Changes' }));
   expect(options.onClose).toHaveBeenCalledOnce();
 });
 it('does not confirm when permission is revoked while availability is loading', async () => {

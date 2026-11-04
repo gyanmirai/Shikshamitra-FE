@@ -4,8 +4,8 @@ import { formatDateOnly } from 'src/utils/date-only';
 
 const columnLabels: Record<string, string> = {
   name: 'Cycle',
-  startDate: 'Start date',
-  endDate: 'End date',
+  startDate: 'Start Date',
+  endDate: 'End Date',
   linkedOfferingCount: 'Offerings',
   applicationCount: 'Applications',
 };

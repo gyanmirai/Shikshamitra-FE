@@ -44,7 +44,7 @@ export function AdmissionSectionFields<T extends Field>({
     <Grid component={FormFieldSpacing} size={{ xs: 12 }} sx={{ minWidth: 0 }}>
       <Grid container spacing={spacing} alignItems="flex-start">
         {!!photos.length && (
-          <Grid size={{ xs: 12, md: 3, lg: 2.4 }} aria-label="Profile photos" sx={{ minWidth: 0 }}>
+          <Grid size={{ xs: 12, md: 3, lg: 2.4 }} aria-label="Profile Photos" sx={{ minWidth: 0 }}>
             <Stack spacing={spacing} alignItems={{ xs: 'flex-start', md: 'center' }}>
               {photos.map((field) => (
                 <Box key={field.code}>{renderField(field)}</Box>
@@ -55,7 +55,7 @@ export function AdmissionSectionFields<T extends Field>({
         {!!ordinaryFields.length && (
           <Grid
             size={{ xs: 12, md: photos.length ? 9 : 12, lg: photos.length ? 9.6 : 12 }}
-            aria-label="Form fields"
+            aria-label="Form Fields"
             sx={{ minWidth: 0 }}
           >
             <Box

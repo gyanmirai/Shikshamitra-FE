@@ -7,6 +7,7 @@ import { useState, useCallback } from 'react';
 import { mswServer } from 'src/test/mswServer';
 import userEvent from '@testing-library/user-event';
 import { screen, cleanup, waitFor } from '@testing-library/react';
+import { expectStudentErrorToast } from 'src/test/student-toast-test-fixture';
 
 import { ApplicationCounsellorCard } from './application-counsellor-card';
 import { renderDocumentUi } from '../document-verification/document-ui-test-fixture';
@@ -42,11 +43,11 @@ it('saves a scoped counsellor assignment with the application concurrency stamp'
   ]);
 
   await waitFor(() =>
-    expect(screen.getByRole('combobox', { name: 'Assign journey counsellor' })).toBeEnabled()
+    expect(screen.getByRole('combobox', { name: 'Assign Journey Counsellor' })).toBeEnabled()
   );
-  await user.click(screen.getByRole('combobox', { name: 'Assign journey counsellor' }));
+  await user.click(screen.getByRole('combobox', { name: 'Assign Journey Counsellor' }));
   await user.click(screen.getByRole('option', { name: 'Counsellor One' }));
-  await user.click(screen.getByRole('button', { name: 'Assign owner' }));
+  await user.click(screen.getByRole('button', { name: 'Assign Owner' }));
   await waitFor(() =>
     expect(sent).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -72,7 +73,7 @@ it('shows ownership without offering assignment controls to a view-only user', (
   expect(screen.getByText('Counsellor One')).toBeInTheDocument();
   expect(screen.getByText(/The journey counsellor follows this application/)).toBeInTheDocument();
   expect(
-    screen.queryByRole('combobox', { name: 'Change journey counsellor' })
+    screen.queryByRole('combobox', { name: 'Change Journey Counsellor' })
   ).not.toBeInTheDocument();
 });
 
@@ -91,13 +92,13 @@ it('keeps an assigned counsellor compact until the user chooses to change it', a
 
   expect(screen.getByText('Counsellor One')).toBeInTheDocument();
   expect(
-    screen.queryByRole('combobox', { name: 'Change journey counsellor' })
+    screen.queryByRole('combobox', { name: 'Change Journey Counsellor' })
   ).not.toBeInTheDocument();
 
-  await user.click(screen.getByRole('button', { name: 'Change counsellor' }));
+  await user.click(screen.getByRole('button', { name: 'Change Counsellor' }));
 
-  expect(screen.getByRole('combobox', { name: 'Change journey counsellor' })).toBeInTheDocument();
-  expect(screen.getByRole('textbox', { name: 'Reason for change (optional)' })).toBeInTheDocument();
+  expect(screen.getByRole('combobox', { name: 'Change Journey Counsellor' })).toBeInTheDocument();
+  expect(screen.getByRole('textbox', { name: 'Reason for Change (Optional)' })).toBeInTheDocument();
 });
 
 it('uses compact ownership without repeating guidance and keeps the assignment form reachable', async () => {
@@ -123,7 +124,7 @@ it('uses compact ownership without repeating guidance and keeps the assignment f
     screen.queryByText(/The journey counsellor follows this application/)
   ).not.toBeInTheDocument();
   await userEvent.click(screen.getByRole('button', { name: 'Change' }));
-  expect(screen.getByRole('combobox', { name: 'Change journey counsellor' })).toBeVisible();
+  expect(screen.getByRole('combobox', { name: 'Change Journey Counsellor' })).toBeVisible();
 });
 
 it('locks compact counsellor form controls while the workspace is busy', () => {
@@ -135,12 +136,12 @@ it('locks compact counsellor form controls while the workspace is busy', () => {
   renderDocumentUi(<ApplicationCounsellorCard compact disabled application={application} />, [
     'Students.Admissions.Applications.Add',
   ]);
-  expect(screen.getByRole('combobox', { name: 'Assign journey counsellor' })).toHaveAttribute(
+  expect(screen.getByRole('combobox', { name: 'Assign Journey Counsellor' })).toHaveAttribute(
     'aria-disabled',
     'true'
   );
-  expect(screen.getByRole('textbox', { name: 'Reason for change (optional)' })).toBeDisabled();
-  expect(screen.getByRole('button', { name: 'Assign owner' })).toBeDisabled();
+  expect(screen.getByRole('textbox', { name: 'Reason for Change (Optional)' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Assign Owner' })).toBeDisabled();
 });
 
 it('reports a pending counsellor save and lets it finish while the workspace is locked', async () => {
@@ -184,25 +185,25 @@ it('reports a pending counsellor save and lets it finish while the workspace is 
   renderDocumentUi(<Workspace />, ['Students.Admissions.Applications.Add']);
   const user = userEvent.setup();
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-  await user.click(screen.getByRole('button', { name: 'Assign journey counsellor' }));
+  await user.click(screen.getByRole('button', { name: 'Assign Journey Counsellor' }));
   await waitFor(() =>
-    expect(screen.getByRole('combobox', { name: 'Assign journey counsellor' })).not.toHaveAttribute(
+    expect(screen.getByRole('combobox', { name: 'Assign Journey Counsellor' })).not.toHaveAttribute(
       'aria-disabled',
       'true'
     )
   );
-  await user.click(screen.getByRole('combobox', { name: 'Assign journey counsellor' }));
+  await user.click(screen.getByRole('combobox', { name: 'Assign Journey Counsellor' }));
   await user.click(screen.getByRole('option', { name: 'Counsellor One' }));
-  await user.click(screen.getByRole('button', { name: 'Assign owner' }));
+  await user.click(screen.getByRole('button', { name: 'Assign Owner' }));
   await waitFor(() => expect(sent).toHaveBeenCalledOnce());
   await waitFor(() => expect(onBusyChange).toHaveBeenLastCalledWith(true));
-  expect(screen.getByRole('textbox', { name: 'Reason for change (optional)' })).toBeDisabled();
+  expect(screen.getByRole('textbox', { name: 'Reason for Change (Optional)' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'close' })).toBeDisabled();
   finish();
   await waitFor(() => expect(onBusyChange).toHaveBeenLastCalledWith(false));
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-  expect(screen.getByRole('button', { name: 'Assign journey counsellor' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: 'Assign Journey Counsellor' })).toBeEnabled();
   cleanup();
   expect(onBusyChange).toHaveBeenLastCalledWith(false);
 });
@@ -273,9 +274,9 @@ it('loads the scoped counsellor pool only when the header editor opens and reuse
   await user.tab();
   expect(getOptions).not.toHaveBeenCalled();
   expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
-  await user.click(screen.getByRole('button', { name: 'Assign journey counsellor' }));
+  await user.click(screen.getByRole('button', { name: 'Assign Journey Counsellor' }));
   await waitFor(() =>
-    expect(screen.getByRole('combobox', { name: 'Assign journey counsellor' })).not.toHaveAttribute(
+    expect(screen.getByRole('combobox', { name: 'Assign Journey Counsellor' })).not.toHaveAttribute(
       'aria-disabled',
       'true'
     )
@@ -283,8 +284,8 @@ it('loads the scoped counsellor pool only when the header editor opens and reuse
   expect(getOptions).toHaveBeenCalledExactlyOnceWith('offering-1');
   await user.click(screen.getByRole('button', { name: 'Cancel' }));
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-  await user.click(screen.getByRole('button', { name: 'Assign journey counsellor' }));
-  expect(screen.getByRole('combobox', { name: 'Assign journey counsellor' })).not.toHaveAttribute(
+  await user.click(screen.getByRole('button', { name: 'Assign Journey Counsellor' }));
+  expect(screen.getByRole('combobox', { name: 'Assign Journey Counsellor' })).not.toHaveAttribute(
     'aria-disabled',
     'true'
   );
@@ -306,23 +307,23 @@ it('keeps entered header assignment values after a failed save and protects dirt
   renderDocumentUi(<ApplicationCounsellorCard presentation="header" application={application} />, [
     'Students.Admissions.Applications.Add',
   ]);
-  await user.click(screen.getByRole('button', { name: 'Assign journey counsellor' }));
+  await user.click(screen.getByRole('button', { name: 'Assign Journey Counsellor' }));
   await waitFor(() =>
-    expect(screen.getByRole('combobox', { name: 'Assign journey counsellor' })).not.toHaveAttribute(
+    expect(screen.getByRole('combobox', { name: 'Assign Journey Counsellor' })).not.toHaveAttribute(
       'aria-disabled',
       'true'
     )
   );
-  await user.click(screen.getByRole('combobox', { name: 'Assign journey counsellor' }));
+  await user.click(screen.getByRole('combobox', { name: 'Assign Journey Counsellor' }));
   await user.click(screen.getByRole('option', { name: 'Counsellor One' }));
   await user.type(
-    screen.getByRole('textbox', { name: 'Reason for change (optional)' }),
+    screen.getByRole('textbox', { name: 'Reason for Change (Optional)' }),
     'Admission follow-through'
   );
-  await user.click(screen.getByRole('button', { name: 'Assign owner' }));
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Assign owner' })).toBeEnabled());
+  await user.click(screen.getByRole('button', { name: 'Assign Owner' }));
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Assign Owner' })).toBeEnabled());
   expect(screen.getByRole('dialog', { name: 'Assign Journey Counsellor' })).toBeVisible();
-  expect(screen.getByRole('textbox', { name: 'Reason for change (optional)' })).toHaveValue(
+  expect(screen.getByRole('textbox', { name: 'Reason for Change (Optional)' })).toHaveValue(
     'Admission follow-through'
   );
   const confirm = vi.fn().mockReturnValue(false);
@@ -350,14 +351,21 @@ it('recovers header option-loading errors and explains an empty eligible list', 
   renderDocumentUi(<ApplicationCounsellorCard presentation="header" application={application} />, [
     'Students.Admissions.Applications.Add',
   ]);
-  await user.click(screen.getByRole('button', { name: 'Assign journey counsellor' }));
-  expect(await screen.findByText('Eligible counsellors could not be loaded.')).toBeVisible();
-  expect(screen.getByRole('button', { name: 'Assign owner' })).toBeDisabled();
+  await user.click(screen.getByRole('button', { name: 'Assign Journey Counsellor' }));
+  await expectStudentErrorToast('Eligible counsellors could not be loaded.');
+  expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+  expect(screen.getByRole('combobox', { name: 'Assign Journey Counsellor' })).toHaveAttribute(
+    'aria-disabled',
+    'true'
+  );
+  expect(screen.getByRole('button', { name: 'Assign Owner' })).toBeDisabled();
   fail = false;
-  await user.click(screen.getByRole('button', { name: 'Retry' }));
+  await user.click(screen.getByRole('button', { name: 'Cancel' }));
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  await user.click(screen.getByRole('button', { name: 'Assign Journey Counsellor' }));
   expect(
     await screen.findByText('No eligible counsellors are available for this offering.')
   ).toBeVisible();
   expect(getOptions).toHaveBeenCalledTimes(2);
-  expect(screen.getByRole('button', { name: 'Assign owner' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Assign Owner' })).toBeDisabled();
 });

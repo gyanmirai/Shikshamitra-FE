@@ -27,6 +27,8 @@ vi.mock('./components/form-builder-live-preview', () => ({
 
 function renderRouting(error: 'section' | 'visibility' | 'type' | 'validation') {
   const values = getBlankAdmissionFormInitialValues(1);
+  // Historical authored fields remain repairable without the new core policy locks.
+  values.coreFieldPolicyVersion = undefined;
   values.layoutType = 1;
   values.sections[0].fields = [newField(values.sections[0].id, 0)];
   const target = {
@@ -100,11 +102,11 @@ function renderRouting(error: 'section' | 'visibility' | 'type' | 'validation') 
 it('opens the exact inactive section heading when fixing an error from Preview on the mobile field panel', async () => {
   renderRouting('section');
   fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
-  fireEvent.click(screen.getByRole('tab', { name: 'Student fields' }));
+  fireEvent.click(screen.getByRole('tab', { name: 'Student Fields' }));
   fireEvent.click(screen.getByRole('button', { name: 'Fix error' }));
-  expect(screen.getByRole('tab', { name: 'Your form' })).toHaveAttribute('aria-selected', 'true');
+  expect(screen.getByRole('tab', { name: 'Your Form' })).toHaveAttribute('aria-selected', 'true');
   expect(screen.getByRole('button', { name: 'Preview' })).toBeVisible();
-  const heading = screen.getByRole('textbox', { name: 'Section heading' });
+  const heading = screen.getByRole('textbox', { name: 'Section Heading' });
   expect(heading).toBeVisible();
   await waitFor(() => expect(heading).toHaveFocus());
 });
@@ -114,7 +116,7 @@ it('opens Rules for an inactive field condition issue and focuses its actual rep
   fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
   fireEvent.click(screen.getByRole('button', { name: 'Fix error' }));
   expect(screen.getByRole('tab', { name: 'Rules' })).toHaveAttribute('aria-selected', 'true');
-  const rule = screen.getByRole('textbox', { name: 'Compatibility rule' });
+  const rule = screen.getByRole('textbox', { name: 'Compatibility Rule' });
   expect(rule).toBeVisible();
   await waitFor(() => expect(rule).toHaveFocus());
   expect(JSON.parse(screen.getByTestId('saved-form').textContent!).sections[1].fields[0]).toEqual(

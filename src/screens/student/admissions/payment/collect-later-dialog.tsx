@@ -50,7 +50,7 @@ export function CollectLaterDialog({ busy, onClose, onSubmit }: Props) {
     <CustomDialog
       open
       title="Collect Later in Onboarding"
-      titleInfo="Record why fee collection will be handled after admission finalization."
+      titleInfo="Record Why Fee Collection Will Be Handled After Admission Finalization."
       maxWidth="sm"
       handleClose={onClose}
       disableClose={loading}

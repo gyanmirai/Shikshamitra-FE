@@ -81,14 +81,14 @@ export function AdmissionFeeSelectionSummary({
   return (
     <Stack
       component="section"
-      aria-label="Selection summary"
+      aria-label="Selection Summary"
       spacing={1.5}
       sx={{ p: 2, border: 1, borderColor: 'divider', borderRadius: 1.5, minWidth: 0, height: 1 }}
     >
       <Typography variant="subtitle2">
         <AdmissionDialogTitle
-          title="Selection summary"
-          helpText="Published amounts are shown for reference. Finance calculates dues and handles payment separately."
+          title="Selection Summary"
+          helpText="Published Amounts Are Shown for Reference. Finance Calculates Dues and Handles Payment Separately."
         />
       </Typography>
       <Divider />

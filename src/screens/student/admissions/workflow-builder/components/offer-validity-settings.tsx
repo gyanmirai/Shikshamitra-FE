@@ -16,11 +16,11 @@ export function OfferValiditySettings({
   onChange: (change: Partial<AdmissionOfferPolicy>) => void;
 }) {
   const fields = [
-    { key: 'validityDays', label: 'Default validity (days) *' },
+    { key: 'validityDays', label: 'Default Validity (Days) *' },
     ...(policy.allowExpiryOverride
       ? [
-          { key: 'minimumValidityDays', label: 'Minimum validity (days) *' },
-          { key: 'maximumValidityDays', label: 'Maximum validity (days) *' },
+          { key: 'minimumValidityDays', label: 'Minimum Validity (Days) *' },
+          { key: 'maximumValidityDays', label: 'Maximum Validity (Days) *' },
         ]
       : []),
   ] as { key: 'validityDays' | 'minimumValidityDays' | 'maximumValidityDays'; label: string }[];

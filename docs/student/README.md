@@ -3,7 +3,7 @@ module: student
 domain: overview
 content_type: Landing
 status: canonical
-updated_on: 2026-10-24
+updated_on: 2026-11-03
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -11,6 +11,7 @@ audience: humans-and-agents
 # Understand Student frontend integration
 
 TL;DR: use this page as the entrypoint for Student routes, screens, clients, workflows, and frontend validation.
+Admission forms use versioned core-field ownership and source-owned Inquiry reuse; see [the builder workflow](./workflows.md#dynamic-form-builder), [client metadata](./clients.md#admission-form-list), and [core-field checks](./testing.md#admission-core-fields-and-academic-selectors).
 General admissions start from qualified inquiries; RTE, Management and Staff can start through their configured special Registration offerings.
 Pipeline owns active Inquiry-linked cases and started special registrations before Admission Decision; Applications owns cases that have entered Decision, including later correction work.
 Both open the shared full-page Applicant 360 workspace with phase-aware menu ancestry and safe return context.

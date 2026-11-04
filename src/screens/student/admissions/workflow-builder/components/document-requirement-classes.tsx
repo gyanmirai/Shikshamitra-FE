@@ -29,11 +29,11 @@ export function DocumentRequirementClasses({
       <CustomSelect
         size="small"
         fullWidth
-        label="Applies to classes"
+        label="Applies to Classes"
         value={selected ? 'selected' : 'all'}
         options={[
-          { value: 'all', label: 'All classes' },
-          { value: 'selected', label: 'Selected classes' },
+          { value: 'all', label: 'All Classes' },
+          { value: 'selected', label: 'Selected Classes' },
         ]}
         onChange={(value) => formik.setFieldValue('standardIds', value === 'all' ? null : [])}
       />

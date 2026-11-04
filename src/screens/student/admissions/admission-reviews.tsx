@@ -53,7 +53,7 @@ export default function AdmissionReviewsScreen() {
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: 1, minHeight: 0 }}>
       <CustomBreadcrumbs
         heading="Application Reviews"
-        description="Find assigned reviews, check deadlines and open the application to review its evidence."
+        description="Find Assigned Reviews, Check Deadlines and Open the Application to Review Its Evidence."
         links={[
           { name: 'Student', href: studentPaths.dashboard },
           { name: 'Admissions', href: studentPaths.enrollment.root },
@@ -85,7 +85,7 @@ export default function AdmissionReviewsScreen() {
               onChange={(_, value) => updateFilter('assignedToMe', value)}
             />
           }
-          label="Assigned to me"
+          label="Assigned to Me"
         />
         <FormControlLabel
           control={
@@ -94,7 +94,7 @@ export default function AdmissionReviewsScreen() {
               onChange={(_, value) => updateFilter('overdueOnly', value)}
             />
           }
-          label="Overdue only"
+          label="Overdue Only"
         />
       </Stack>
       {query.isError ? (

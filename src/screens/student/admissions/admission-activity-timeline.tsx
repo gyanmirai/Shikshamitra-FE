@@ -39,7 +39,7 @@ export function AdmissionActivityTimeline({
     return (
       <EmptyContent
         filled
-        title="No activity recorded"
+        title="No Activity Recorded"
         description={emptyDescription}
         sx={{ minHeight: 180, mt: 2 }}
         slotProps={{ img: { maxWidth: 80 } }}
@@ -79,11 +79,11 @@ export function AdmissionActivityTimeline({
                   </Typography>
                 )}
                 <Typography variant="caption" color="text.secondary">
-                  Handled by:{' '}
+                  Handled By:{' '}
                   {activity.actorName ||
-                    (activity.creatorId ? 'Staff name unavailable' : 'No staff recorded')}
+                    (activity.creatorId ? 'Staff Name Unavailable' : 'No Staff Recorded')}
                   {' · '}
-                  {fDateTime(activity.occurredAt) || 'Time not recorded'}
+                  {fDateTime(activity.occurredAt) || 'Time Not Recorded'}
                 </Typography>
               </TimelineContent>
             </TimelineItem>
@@ -96,7 +96,7 @@ export function AdmissionActivityTimeline({
           onClick={() => setExpanded((value) => !value)}
           endIcon={<Iconify icon={expanded ? 'mdi:chevron-up' : 'mdi:chevron-down'} />}
         >
-          {expanded ? 'Show recent activity' : `Show all ${activities.length} events`}
+          {expanded ? 'Show Recent Activity' : `Show all ${activities.length} events`}
         </Button>
       )}
     </>

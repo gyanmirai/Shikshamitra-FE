@@ -32,7 +32,7 @@ export function AssessmentSchedulingGuidance({
   const sessions = useGetAssessmentSessionsQuery(scope, { skip: !canView });
   if (!canView) return null;
   if (sessions.isLoading || (!sessions.currentData && sessions.isFetching))
-    return <Skeleton variant="rounded" height={48} aria-label="Checking assessment slots" />;
+    return <Skeleton variant="rounded" height={48} aria-label="Checking Assessment Slots" />;
   if (sessions.isError || !sessions.currentData)
     return (
       <StudentFeedback
@@ -81,11 +81,11 @@ export function AssessmentSchedulingGuidance({
       }
     >
       {sessions.currentData.length
-        ? 'No assessment slots are available for this stage. '
-        : 'No assessment slot has been created for this stage. '}
+        ? 'No Assessment Slots Are Available for This Stage. '
+        : 'No Assessment Slot Has Been Created for This Stage. '}
       {canManageSessions
-        ? 'Create an assessment slot in Assessments, then book it for this applicant before starting the entrance exam.'
-        : 'Ask an admissions administrator to create an available slot, then book it for this applicant before starting the entrance exam.'}
+        ? 'Create an Assessment Slot in Assessments, Then Book It for This Applicant Before Starting the Entrance Exam.'
+        : 'Ask an Admissions Administrator to Create an Available Slot, Then Book It for This Applicant Before Starting the Entrance Exam.'}
     </StudentFeedback>
   );
 }

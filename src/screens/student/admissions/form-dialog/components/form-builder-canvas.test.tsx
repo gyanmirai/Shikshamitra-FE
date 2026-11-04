@@ -66,13 +66,13 @@ describe('FormBuilderCanvas section deletion', () => {
   it('removes Bank Details even when it is the only section in its step', async () => {
     const user = userEvent.setup();
     const { bank, retainedSection } = renderCanvas();
-    const steps = screen.getByRole('navigation', { name: 'Form steps' });
+    const steps = screen.getByRole('navigation', { name: 'Form Steps' });
     const bankStepName = bank.stepName ?? bank.name;
     const retainedStepName = retainedSection.stepName ?? retainedSection.name;
 
     expect(within(steps).getByRole('button', { name: bankStepName })).toBeVisible();
 
-    await user.click(screen.getByRole('button', { name: 'Delete Bank Details section' }));
+    await user.click(screen.getByRole('button', { name: 'Delete Bank Details Section' }));
     expect(screen.getByText(/removes that step too/i)).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Delete section' }));
 
@@ -87,11 +87,11 @@ describe('FormBuilderCanvas section deletion', () => {
     const user = userEvent.setup();
     renderCanvas(true);
 
-    await user.click(screen.getByRole('button', { name: 'Delete Bank Details section' }));
+    await user.click(screen.getByRole('button', { name: 'Delete Bank Details Section' }));
     await user.click(screen.getByRole('button', { name: 'Delete section' }));
 
     expect(screen.getByTestId('section-codes').textContent).toBe('');
-    expect(screen.getByText(/This draft has no sections/i)).toBeVisible();
+    expect(screen.getByText(/This draft has no Sections/i)).toBeVisible();
     await expect(
       admissionFormSchema.validate({
         ...getSystemAdmissionFormTemplate('student-registration'),
@@ -176,7 +176,7 @@ function renderCombinedCanvas(layoutType: 0 | 1, effectiveLayout = layoutType) {
 describe('combined Inquiry and Registration canvas', () => {
   it('uses the selected Inquiry stepper even when the Registration draft is single-page', () => {
     renderCombinedCanvas(0, 1);
-    const navigation = screen.getByRole('navigation', { name: 'Form steps' });
+    const navigation = screen.getByRole('navigation', { name: 'Form Steps' });
     expect(within(navigation).getByRole('button', { name: 'Inquiry step' })).toBeVisible();
     expect(screen.getByRole('heading', { name: 'Student questions' })).toBeVisible();
     expect(screen.getByRole('heading', { name: 'Family questions' })).toBeVisible();
@@ -188,7 +188,7 @@ describe('combined Inquiry and Registration canvas', () => {
     const { base } = renderCombinedCanvas(0);
     expect(screen.getByRole('heading', { name: 'Student questions' })).toBeVisible();
     expect(screen.getByRole('heading', { name: 'Family questions' })).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Edit Inquiry question 1 field' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Edit Inquiry question 1 Field' })).toBeVisible();
     expect(
       screen.queryByRole('button', { name: 'Reorder Inquiry question 1' })
     ).not.toBeInTheDocument();
@@ -198,8 +198,8 @@ describe('combined Inquiry and Registration canvas', () => {
     expect(
       screen.queryByRole('button', { name: 'Delete Family questions section' })
     ).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Edit Student Details section' }));
-    const heading = screen.getByRole('textbox', { name: 'Section heading' });
+    await user.click(screen.getByRole('button', { name: 'Edit Student Details Section' }));
+    const heading = screen.getByRole('textbox', { name: 'Section Heading' });
     fireEvent.change(heading, { target: { value: 'Registration details' } });
     await user.keyboard('{Enter}');
     const saved = JSON.parse(screen.getByTestId('base-draft').textContent!);
@@ -210,13 +210,13 @@ describe('combined Inquiry and Registration canvas', () => {
   it('navigates source steps with their original section grouping alongside Registration steps', async () => {
     const user = userEvent.setup();
     renderCombinedCanvas(1);
-    const navigation = screen.getByRole('navigation', { name: 'Form steps' });
+    const navigation = screen.getByRole('navigation', { name: 'Form Steps' });
     expect(within(navigation).getByRole('button', { name: 'Inquiry step' })).toBeVisible();
     expect(screen.getByRole('heading', { name: 'Student questions' })).toBeVisible();
     expect(screen.getByRole('heading', { name: 'Family questions' })).toBeVisible();
     expect(screen.queryByRole('heading', { name: 'Student Details' })).not.toBeInTheDocument();
     expect(
-      within(navigation).queryByRole('button', { name: 'Actions for Inquiry step step' })
+      within(navigation).queryByRole('button', { name: 'Actions For Inquiry step step' })
     ).not.toBeInTheDocument();
     await user.click(within(navigation).getByRole('button', { name: 'Student details' }));
     expect(screen.getByRole('heading', { name: 'Student Details' })).toBeVisible();

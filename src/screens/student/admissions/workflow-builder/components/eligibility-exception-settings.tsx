@@ -28,11 +28,11 @@ export function EligibilityExceptionSettings({
     <FormSectionCard
       icon="mdi:shield-check-outline"
       title="Exceptions"
-      descriptionTooltip="An exception needs a recorded reason and an authorized decision. Missing information must be corrected before requesting an exception."
+      descriptionTooltip="An Exception Needs a Recorded Reason and an Authorized Decision. Missing Information Must Be Corrected Before Requesting an Exception."
     >
       <Stack spacing={1.5}>
         <FormControlLabel
-          label="Allow authorized exception requests"
+          label="Allow Authorized Exception Requests"
           control={
             <Switch
               size="small"
@@ -47,17 +47,17 @@ export function EligibilityExceptionSettings({
             <CustomSelect
               fullWidth
               size="small"
-              label="Exception approval role (optional)"
+              label="Exception Approval Role (Optional)"
               value={policy.exceptionApprovalRole ?? ''}
               disabled={disabled || query.isFetching || query.isError}
               options={[
-                { value: '', label: 'Any staff member with exception review permission' },
+                { value: '', label: 'Any Staff Member with Exception Review Permission' },
                 ...roles.map((role) => ({ value: role.name, label: role.name })),
                 ...(roleMissing
                   ? [
                       {
                         value: policy.exceptionApprovalRole!,
-                        label: `${policy.exceptionApprovalRole} (saved role)`,
+                        label: `${policy.exceptionApprovalRole} (Saved Role)`,
                       },
                     ]
                   : []),
@@ -81,7 +81,7 @@ export function EligibilityExceptionSettings({
             <FormControlLabel
               label={
                 <WorkflowSettingLabel
-                  label="Require a different staff member to approve"
+                  label="Require a Different Staff Member to Approve"
                   help="A different authorized staff member reviews and approves the exception request."
                 />
               }
@@ -89,7 +89,7 @@ export function EligibilityExceptionSettings({
                 <Switch
                   size="small"
                   slotProps={{
-                    input: { 'aria-label': 'Require a different staff member to approve' },
+                    input: { 'aria-label': 'Require a Different Staff Member to Approve' },
                   }}
                   disabled={disabled}
                   checked={policy.requireIndependentReviewer}

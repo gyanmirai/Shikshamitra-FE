@@ -61,8 +61,8 @@ it('reviews the actual ordered stage outcomes without inventing assessment marks
   expect(within(rows[1]).getByText('Failed')).toBeVisible();
   expect(screen.queryByText(/Passed/)).not.toBeInTheDocument();
   expect(screen.queryByText(/63/)).not.toBeInTheDocument();
-  expect(screen.queryByText('Admission offer')).not.toBeInTheDocument();
-  expect(screen.getByText('Applying for Class 1')).toBeVisible();
+  expect(screen.queryByText('Admission Offer')).not.toBeInTheDocument();
+  expect(screen.getByText('Applying For Class 1')).toBeVisible();
   fireEvent.click(rows[1]);
   expect(onSelectStage).toHaveBeenCalledWith('exam');
 });

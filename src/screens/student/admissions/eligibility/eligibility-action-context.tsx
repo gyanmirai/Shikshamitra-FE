@@ -17,7 +17,7 @@ export function EligibilityActionContext({
     <Stack spacing={1}>
       {evaluation && (
         <Typography variant="body2">
-          For check {evaluation.sequenceNumber}, recorded {fDateTime(evaluation.evaluatedAt)}.
+          For Check {evaluation.sequenceNumber}, Recorded {fDateTime(evaluation.evaluatedAt)}.
         </Typography>
       )}
       {exception && (
@@ -37,7 +37,7 @@ export function EligibilityActionContext({
       )}
       {summary.policy?.exceptionApprovalRole && (
         <Typography variant="caption" color="text.secondary">
-          Approval role: {summary.policy.exceptionApprovalRole}
+          Approval Role: {summary.policy.exceptionApprovalRole}
         </Typography>
       )}
     </Stack>

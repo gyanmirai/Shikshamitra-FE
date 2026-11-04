@@ -5,14 +5,14 @@ export const ADMISSION_APPLICATION_STATUS_LABELS: Record<AdmissionApplicationSta
   1: 'Submitted',
   2: 'Withdrawn',
   3: 'Rejected',
-  4: 'In review',
+  4: 'In Review',
   5: 'Waitlisted',
   6: 'Approved',
-  7: 'Offer issued',
-  8: 'Offer accepted',
-  9: 'Offer declined',
-  10: 'Enrolled (legacy)',
-  11: 'Admission finalized',
+  7: 'Offer Issued',
+  8: 'Offer Accepted',
+  9: 'Offer Declined',
+  10: 'Enrolled (Legacy)',
+  11: 'Admission Finalized',
 };
 
 export function getAdmissionApplicationStatusLabel(status: number): string {

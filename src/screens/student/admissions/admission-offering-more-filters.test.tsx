@@ -78,12 +78,12 @@ describe('AdmissionOfferingMoreFilters', () => {
     const onChange = renderFilters();
 
     await user.click(screen.getByRole('button', { name: 'Filters' }));
-    await user.click(screen.getByRole('combobox', { name: 'Active status' }));
+    await user.click(screen.getByRole('combobox', { name: 'Active Status' }));
     await user.click(screen.getByRole('option', { name: /^Active$/ }));
 
     expect(onChange).not.toHaveBeenCalled();
 
-    await user.click(screen.getByRole('button', { name: 'Apply filters' }));
+    await user.click(screen.getByRole('button', { name: 'Apply Filters' }));
     expect(onChange).toHaveBeenCalledWith({
       campusId: '',
       availabilityStatus: '',
@@ -121,14 +121,14 @@ describe('AdmissionOfferingMoreFilters', () => {
     });
 
     await user.click(screen.getByRole('button', { name: 'Filters (2)' }));
-    expect(screen.queryByRole('combobox', { name: 'Admission cycle' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Admission Cycle' })).not.toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: 'Availability' })).toBeVisible();
     expect(screen.getByRole('combobox', { name: 'Campus' })).toBeVisible();
     expect(screen.queryByRole('combobox', { name: 'Board' })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('combobox', { name: 'Availability' }));
     await user.click(screen.getByRole('option', { name: 'Open' }));
-    await user.click(screen.getByRole('button', { name: 'Apply filters' }));
+    await user.click(screen.getByRole('button', { name: 'Apply Filters' }));
 
     expect(onChange).toHaveBeenCalledWith({
       campusId: 'campus-1',

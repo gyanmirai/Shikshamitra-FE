@@ -217,7 +217,7 @@ export function AdmissionAcademicFilters({
             valueKey="id"
             options={
               dashboardScope || allowAllHierarchy
-                ? [{ id: allowAllHierarchy ? ALL : '', name: 'All boards' }, ...boards]
+                ? [{ id: allowAllHierarchy ? ALL : '', name: 'All Boards' }, ...boards]
                 : boards
             }
             value={allowAllHierarchy && !boardId ? ALL : boardId}
@@ -232,7 +232,7 @@ export function AdmissionAcademicFilters({
             valueKey="id"
             options={
               dashboardScope || allowAllHierarchy
-                ? [{ id: allowAllHierarchy ? ALL : '', name: 'All mediums' }, ...mediums]
+                ? [{ id: allowAllHierarchy ? ALL : '', name: 'All Mediums' }, ...mediums]
                 : mediums
             }
             value={allowAllHierarchy && !mediumId ? ALL : mediumId}
@@ -246,7 +246,7 @@ export function AdmissionAcademicFilters({
             label="Class"
             labelKey="name"
             valueKey="id"
-            options={[{ id: ALL, name: 'All classes' }, ...standards]}
+            options={[{ id: ALL, name: 'All Classes' }, ...standards]}
             value={
               readAcademicFilterIds(standardId).length ? readAcademicFilterIds(standardId) : [ALL]
             }
@@ -262,7 +262,7 @@ export function AdmissionAcademicFilters({
               onClick={onClear}
               sx={{ flexShrink: 0 }}
             >
-              Clear academic filters
+              Clear Academic Filters
             </Button>
           )}
           {filterAction && (

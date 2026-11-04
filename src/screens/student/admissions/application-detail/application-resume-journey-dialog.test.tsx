@@ -56,7 +56,7 @@ it('shows the unchanged reference and actual target stage and requires an audit 
   render(<ApplicationResumeJourneyDialog {...props} onSubmit={submit} />);
   expect(screen.getByText('APP-35')).toBeVisible();
   expect(screen.getByText('Document verification')).toBeVisible();
-  await user.click(screen.getByRole('button', { name: 'Resume admission' }));
+  await user.click(screen.getByRole('button', { name: 'Resume Admission' }));
   expect(await screen.findByText('A reason is required')).toBeVisible();
   expect(submit).not.toHaveBeenCalled();
 });
@@ -70,11 +70,11 @@ it('retains entered reason and actual server error after failure, then closes on
   const onClose = vi.fn();
   render(<ApplicationResumeJourneyDialog {...props} onSubmit={onSubmit} onClose={onClose} />);
   await user.type(screen.getByRole('textbox', { name: 'Reason' }), 'Parent wants to continue');
-  await user.click(screen.getByRole('button', { name: 'Resume admission' }));
+  await user.click(screen.getByRole('button', { name: 'Resume Admission' }));
   expect(await screen.findByText('The admission period is now closed.')).toBeVisible();
   expect(screen.getByRole('textbox', { name: 'Reason' })).toHaveValue('Parent wants to continue');
   expect(onClose).not.toHaveBeenCalled();
-  await user.click(screen.getByRole('button', { name: 'Resume admission' }));
+  await user.click(screen.getByRole('button', { name: 'Resume Admission' }));
   await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
 }, 15000);
 
@@ -90,7 +90,7 @@ it('shows the actual blocker and prevents resume while loading or blocked', () =
     />
   );
   expect(screen.getByText('The original stage could not be recovered.')).toBeVisible();
-  expect(screen.getByRole('button', { name: 'Resume admission' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Resume Admission' })).toBeDisabled();
 });
 
 it('locks reason and dismissal while saving', () => {

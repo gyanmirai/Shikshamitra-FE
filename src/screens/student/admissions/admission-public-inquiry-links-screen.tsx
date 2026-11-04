@@ -29,13 +29,13 @@ export default function AdmissionPublicInquiryLinksScreen() {
       }}
     >
       <CustomBreadcrumbs
-        heading="Public inquiry links"
-        description="Create and manage public admission inquiry forms and links."
+        heading="Public Inquiry Links"
+        description="Create and Manage Public Admission Inquiry Forms and Links."
         links={[
           { name: 'Student', href: studentPaths.dashboard },
           { name: 'Admissions', href: studentPaths.enrollment.root },
           { name: 'Settings', href: studentPaths.enrollment.settings.root },
-          { name: 'Public inquiry links' },
+          { name: 'Public Inquiry Links' },
         ]}
         slotProps={{
           action: { alignSelf: { xs: 'flex-end', md: 'center' }, maxWidth: '100%' },
@@ -48,10 +48,10 @@ export default function AdmissionPublicInquiryLinksScreen() {
             <Button
               size="small"
               variant="contained"
-              startIcon={<Iconify icon="mdi:link-plus" />}
+              startIcon={<Iconify icon="mdi:link-variant" />}
               onClick={() => setCreateOpen(true)}
             >
-              Create inquiry link
+              Create Inquiry Link
             </Button>
           ) : undefined
         }

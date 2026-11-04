@@ -90,7 +90,7 @@ export function WorkflowListFilters({ filters, onUpdate }: Props) {
           },
         }}
       >
-        <Box role="dialog" aria-label="Workflow filters">
+        <Box role="dialog" aria-label="Workflow Filters">
           <Stack
             direction="row"
             alignItems="center"
@@ -100,7 +100,7 @@ export function WorkflowListFilters({ filters, onUpdate }: Props) {
             <Typography variant="subtitle1">Filters</Typography>
             <IconButton
               size="small"
-              aria-label="Close filters"
+              aria-label="Close Filters"
               onClick={popover.onClose}
               sx={{
                 width: { xs: 44, sm: 36 },
@@ -129,7 +129,7 @@ export function WorkflowListFilters({ filters, onUpdate }: Props) {
                 })
               }
             >
-              <MenuItem value="all">All statuses</MenuItem>
+              <MenuItem value="all">All Statuses</MenuItem>
               <MenuItem value={0}>Draft</MenuItem>
               <MenuItem value={3}>Validated</MenuItem>
               <MenuItem value={4}>Submitted</MenuItem>
@@ -160,14 +160,14 @@ export function WorkflowListFilters({ filters, onUpdate }: Props) {
                 updateDraft({ usage: event.target.value as WorkflowFilters['usage'] })
               }
             >
-              <MenuItem value="all">All usage</MenuItem>
-              <MenuItem value="used">In use</MenuItem>
-              <MenuItem value="unused">Not in use</MenuItem>
+              <MenuItem value="all">All Usage</MenuItem>
+              <MenuItem value="used">In Use</MenuItem>
+              <MenuItem value="unused">Not in Use</MenuItem>
             </TextField>
 
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
               <DatePicker
-                label="Created from"
+                label="Created From"
                 format={ADMISSION_DATE_FORMAT}
                 value={createdFrom}
                 onChange={(value) =>
@@ -177,7 +177,7 @@ export function WorkflowListFilters({ filters, onUpdate }: Props) {
                 slotProps={{ textField: { fullWidth: true, size: 'small' } }}
               />
               <DatePicker
-                label="Created to"
+                label="Created To"
                 format={ADMISSION_DATE_FORMAT}
                 value={createdTo}
                 onChange={(value) => updateDraft({ createdTo: value?.format('YYYY-MM-DD') ?? '' })}
@@ -221,7 +221,7 @@ export function WorkflowListFilters({ filters, onUpdate }: Props) {
                 '&:hover': { bgcolor: 'text.secondary' },
               }}
             >
-              Apply filters
+              Apply Filters
             </Button>
           </Stack>
         </Box>

@@ -23,7 +23,7 @@ export function AssessmentSessionFields({ formik, disabled }: Props) {
             fullWidth
             required
             size="small"
-            label={key === 'name' ? 'Session name' : 'Location'}
+            label={key === 'name' ? 'Session Name' : 'Location'}
             disabled={disabled}
             {...formik.getFieldProps(key)}
             {...feedback(key)}
@@ -33,7 +33,7 @@ export function AssessmentSessionFields({ formik, disabled }: Props) {
       {(['startsAt', 'endsAt'] as const).map((key) => (
         <Grid key={key} size={{ xs: 12, sm: 6 }}>
           <DateTimePicker
-            label={key === 'startsAt' ? 'Starts at' : 'Ends at'}
+            label={key === 'startsAt' ? 'Starts At' : 'Ends At'}
             format={ADMISSION_DATE_TIME_FORMAT}
             disabled={disabled}
             value={formik.values[key] ? dayjs(formik.values[key]) : null}

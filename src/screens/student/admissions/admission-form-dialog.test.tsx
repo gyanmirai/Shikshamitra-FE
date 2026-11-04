@@ -30,8 +30,8 @@ vi.mock('./form-dialog/components/form-builder-review', () => ({
 }));
 
 it.each([
-  { purpose: 0 as const, type: 'Inquiry', starter: 'Use inquiry form: Inquiry form' },
-  { purpose: 1 as const, type: 'Registration', starter: 'Use recommended: Registration form' },
+  { purpose: 0 as const, type: 'Inquiry', starter: 'Use Inquiry Form: Inquiry Form' },
+  { purpose: 1 as const, type: 'Registration', starter: 'Use Recommended: Registration Form' },
 ])(
   'validates and preserves the $type draft when navigating back and saving',
   async ({ purpose, type, starter }) => {
@@ -51,20 +51,20 @@ it.each([
       </ThemeProvider>
     );
     await user.click(screen.getByRole('button', { name: 'Continue' }));
-    expect(screen.getByRole('combobox', { name: /Form type/i })).toBeVisible();
+    expect(screen.getByRole('combobox', { name: /Form Type/i })).toBeVisible();
     expect(screen.queryByRole('heading', { name: 'Build fields' })).not.toBeInTheDocument();
     expect(onSave).not.toHaveBeenCalled();
     await user.click(screen.getByRole('button', { name: starter }));
-    const name = (screen.getByRole('textbox', { name: 'Form name *' }) as HTMLInputElement).value;
+    const name = (screen.getByRole('textbox', { name: 'Form Name *' }) as HTMLInputElement).value;
     await user.click(screen.getByRole('button', { name: 'Continue' }));
     await screen.findByRole('heading', { name: 'Build fields' });
     await user.click(screen.getByRole('button', { name: 'Back' }));
-    await screen.findByRole('combobox', { name: /Form type/i });
-    expect(screen.getByRole('textbox', { name: 'Form name *' })).toHaveValue(name);
+    await screen.findByRole('combobox', { name: /Form Type/i });
+    expect(screen.getByRole('textbox', { name: 'Form Name *' })).toHaveValue(name);
     expect(screen.getByRole('heading', { name: new RegExp(`Create ${type} Form`) })).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Continue' }));
     await screen.findByRole('heading', { name: 'Build fields' });
-    await user.click(screen.getByRole('button', { name: 'Save draft' }));
+    await user.click(screen.getByRole('button', { name: 'Save Draft' }));
     await waitFor(() =>
       expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ name, purpose }))
     );
@@ -73,8 +73,8 @@ it.each([
 );
 
 it.each([
-  { purpose: 0 as const, type: 'Inquiry', starter: 'Use inquiry form: Inquiry form' },
-  { purpose: 1 as const, type: 'Registration', starter: 'Use recommended: Registration form' },
+  { purpose: 0 as const, type: 'Inquiry', starter: 'Use Inquiry Form: Inquiry Form' },
+  { purpose: 1 as const, type: 'Registration', starter: 'Use Recommended: Registration Form' },
 ])(
   'keeps the selected $type type and heading through all steps and submission',
   async ({ purpose, type, starter }) => {
@@ -92,7 +92,7 @@ it.each([
         />
       </ThemeProvider>
     );
-    await user.click(screen.getByRole('combobox', { name: /Form type/i }));
+    await user.click(screen.getByRole('combobox', { name: /Form Type/i }));
     await user.click(screen.getByRole('option', { name: type }));
     await waitFor(() =>
       expect(screen.getByRole('heading', { name: new RegExp(`Create ${type} Form`) })).toBeVisible()
@@ -104,7 +104,7 @@ it.each([
     await user.click(screen.getByRole('button', { name: 'Continue' }));
     await screen.findByRole('heading', { name: 'Review draft' });
     expect(screen.getByRole('heading', { name: new RegExp(`Create ${type} Form`) })).toBeVisible();
-    await user.click(screen.getByRole('button', { name: 'Publish now' }));
+    await user.click(screen.getByRole('button', { name: 'Publish Now' }));
     await waitFor(() =>
       expect(onPublishNow).toHaveBeenCalledWith(expect.objectContaining({ purpose }))
     );

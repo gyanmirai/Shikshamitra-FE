@@ -49,7 +49,7 @@ export function AssessmentSessionTable({
     { id: 'location', label: 'Location', minWidth: 160 },
     {
       id: 'bookedCount',
-      label: 'Booked / capacity',
+      label: 'Booked / Capacity',
       minWidth: 140,
       render: (_: unknown, row) => `${row.bookedCount} / ${row.capacity}`,
     },
@@ -64,9 +64,9 @@ export function AssessmentSessionTable({
           : assessmentDateTimeTimestamp(session.endsAt) <= now
             ? 'Ended'
             : assessmentDateTimeTimestamp(session.startsAt) <= now
-              ? 'In progress'
+              ? 'In Progress'
               : 'Scheduled';
-        return <Label color={status === 'In progress' ? 'success' : 'default'}>{status}</Label>;
+        return <Label color={status === 'In Progress' ? 'success' : 'default'}>{status}</Label>;
       },
     },
     {
@@ -81,10 +81,10 @@ export function AssessmentSessionTable({
         return (
           <Stack direction="row" spacing={0.5}>
             {onRoster && (
-              <Tooltip title="View applicants">
+              <Tooltip title="View Applicants">
                 <IconButton
                   size="small"
-                  aria-label={`View applicants for ${session.name}`}
+                  aria-label={`View Applicants For ${session.name}`}
                   onClick={() => onRoster(session)}
                 >
                   <Iconify icon="mdi:account-group-outline" />
@@ -96,8 +96,8 @@ export function AssessmentSessionTable({
                 <Tooltip
                   title={
                     assessmentDateTimeTimestamp(session.startsAt) <= now
-                      ? 'Started sessions cannot be edited'
-                      : 'Edit session'
+                      ? 'Started Sessions Cannot Be Edited'
+                      : 'Edit Session'
                   }
                 >
                   <span>
@@ -111,7 +111,7 @@ export function AssessmentSessionTable({
                     </IconButton>
                   </span>
                 </Tooltip>
-                <Tooltip title="Cancel session">
+                <Tooltip title="Cancel Session">
                   <IconButton
                     size="small"
                     aria-label={`Cancel ${session.name}`}
@@ -130,7 +130,7 @@ export function AssessmentSessionTable({
   return (
     <CustomizableTable
       tableId="admission-assessment-sessions"
-      tableTitle="Assessment sessions"
+      tableTitle="Assessment Sessions"
       columns={columns}
       data={sessions}
       isLoading={loading}
@@ -139,7 +139,7 @@ export function AssessmentSessionTable({
       isPagination
       wrapperProps={{ sx: { height: 1 } }}
       tableContainerProps={{ sx: { height: 1 } }}
-      noDataText="No sessions for this offering and stage. Create a session to start staff bookings."
+      noDataText="No Sessions for This Offering and Stage. Create a Session to Start Staff Bookings."
     />
   );
 }
