@@ -4,7 +4,16 @@ import type { RefObject } from 'react';
 import type { RenderTask, PDFDocumentLoadingTask } from 'pdfjs-dist';
 
 import { useRef, useState, useEffect } from 'react';
-import { Box, Alert, Stack, Button, MenuItem, Skeleton, TextField, Typography } from '@mui/material';
+import {
+  Box,
+  Alert,
+  Stack,
+  Button,
+  MenuItem,
+  Skeleton,
+  TextField,
+  Typography,
+} from '@mui/material';
 
 import { extractPayslipPdfText } from './payslip-pdf-text';
 
@@ -13,16 +22,49 @@ type Props = {
   title: string;
   contentRef: RefObject<HTMLDivElement | null>;
   onReady: (url: string | null) => void;
+  viewportHeight?: string;
 };
 
 // Render the issued bytes, never a second template built from payroll fields.
-export default function PayslipPdfViewer({ url, title, contentRef, onReady }: Props) {
+export default function PayslipPdfViewer({
+  url,
+  title,
+  contentRef,
+  onReady,
+  viewportHeight,
+}: Props) {
   const pagesRef = useRef<HTMLDivElement>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(true);
   const [retry, setRetry] = useState(0);
-  const [zoom, setZoom] = useState('fit');
+  const [zoom, setZoom] = useState(viewportHeight ? 'page' : 'fit');
   const [pageWidth, setPageWidth] = useState(0);
+  const [pageHeight, setPageHeight] = useState(0);
+  const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
+
+  useEffect(() => {
+    const element = viewportRef.current;
+    if (!element) return undefined;
+    const observer = new ResizeObserver(() => {
+      setViewportSize({ width: element.clientWidth, height: element.clientHeight });
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
+  const fitWidth = Math.min(viewportSize.width, 850);
+  const fitPageWidth = pageHeight
+    ? Math.min(fitWidth, (Math.max(0, viewportSize.height - 10) * pageWidth) / pageHeight)
+    : 0;
+  const currentZoom =
+    zoom === 'fit'
+      ? (fitWidth / pageWidth) * 100
+      : zoom === 'page'
+        ? (fitPageWidth / pageWidth) * 100
+        : Number(zoom);
+  const zoomOut = Math.min(200, Math.max(25, Math.ceil(currentZoom / 25) * 25 - 25));
+  const zoomIn = Math.min(200, Math.floor(currentZoom / 25) * 25 + 25);
 
   useEffect(() => {
     let cancelled = false;
@@ -33,13 +75,14 @@ export default function PayslipPdfViewer({ url, title, contentRef, onReady }: Pr
     container?.replaceChildren();
     setError(false);
     setLoading(true);
-    setZoom('fit');
     onReady(null);
 
     const load = async () => {
       const pdfjs = await import('pdfjs-dist');
       if (cancelled) return;
-      worker = new Worker(new URL('pdfjs-dist/build/pdf.worker.mjs', import.meta.url), { type: 'module' });
+      worker = new Worker(new URL('pdfjs-dist/build/pdf.worker.mjs', import.meta.url), {
+        type: 'module',
+      });
       const pdfWorker = pdfjs.PDFWorker.create({ port: worker });
       task = pdfjs.getDocument({ url, worker: pdfWorker });
       const pdf = await task.promise;
@@ -51,7 +94,10 @@ export default function PayslipPdfViewer({ url, title, contentRef, onReady }: Pr
         const page = await pdf.getPage(pageNumber);
         if (cancelled) return;
         const viewport = page.getViewport({ scale: 2 });
-        if (pageNumber === 1) setPageWidth(viewport.width / 2);
+        if (pageNumber === 1) {
+          setPageWidth(viewport.width / 2);
+          setPageHeight(viewport.height / 2);
+        }
         const canvas = document.createElement('canvas');
         canvas.width = Math.ceil(viewport.width);
         canvas.height = Math.ceil(viewport.height);
@@ -60,7 +106,8 @@ export default function PayslipPdfViewer({ url, title, contentRef, onReady }: Pr
         render = page.render({ canvas, viewport });
         await render.promise;
         const [text, structure] = await Promise.all([
-          page.getTextContent({ includeMarkedContent: true }), page.getStructTree(),
+          page.getTextContent({ includeMarkedContent: true }),
+          page.getStructTree(),
         ]);
         if (cancelled) return;
         const section = document.createElement('section');
@@ -77,41 +124,144 @@ export default function PayslipPdfViewer({ url, title, contentRef, onReady }: Pr
         container?.append(section);
       }
       /* eslint-enable no-await-in-loop */
-      if (!cancelled) { setLoading(false); onReady(url); }
+      if (!cancelled) {
+        setLoading(false);
+        onReady(url);
+      }
     };
-    load().catch(() => { if (!cancelled) { setError(true); setLoading(false); } });
+    load().catch(() => {
+      if (!cancelled) {
+        setError(true);
+        setLoading(false);
+      }
+    });
     return () => {
       cancelled = true;
       render?.cancel();
-      task?.destroy().catch(() => { /* A cancelled document cannot publish pages. */ });
+      task?.destroy().catch(() => {
+        /* A cancelled document cannot publish pages. */
+      });
       worker?.terminate();
       container?.replaceChildren();
     };
   }, [url, retry, onReady]);
 
-  return <Box>
-    <Stack direction="row" sx={{ mb: 1 }}>
-      <TextField select label="PDF zoom" size="small" value={zoom} disabled={loading || error}
-        sx={{ width: 150 }} onChange={(event) => setZoom(event.target.value)}>
-        <MenuItem value="fit">Fit width</MenuItem>
-        {[100, 150, 200].map((value) => <MenuItem key={value} value={String(value)}>{value}%</MenuItem>)}
-      </TextField>
-    </Stack>
-    {loading && <Stack role="status" spacing={1} aria-label="Rendering payslip PDF">
-      <Typography variant="body2" color="text.secondary">Preparing document preview...</Typography>
-      <Skeleton variant="rounded" height={96} />
-    </Stack>}
-    {error && <Alert severity="error" action={<Button size="small" onClick={() => setRetry((value) => value + 1)}>Retry</Button>}>
-      The payslip PDF could not be displayed.
-    </Alert>}
-    <Box role="region" aria-label="Payslip PDF viewer" tabIndex={0} sx={{ minWidth: 0, overflow: 'auto' }}>
-      <Box ref={contentRef} aria-label={title} aria-busy={loading} sx={{
-        display: loading || error ? 'none' : 'block', width: zoom === 'fit' ? '100%' : pageWidth * Number(zoom) / 100,
-        maxWidth: zoom === 'fit' ? 850 : 'none', mx: 'auto',
-        '& .payslip-pdf-page': { mb: 1, border: 1, borderColor: 'divider', bgcolor: 'common.white' },
-        '& .payslip-pdf-text': { position: 'absolute', width: 1, height: 1, overflow: 'hidden', clipPath: 'inset(50%)' },
-        '@media print': { width: '100%', maxWidth: 'none', '& .payslip-pdf-page': { border: 0, mb: 0, breakAfter: 'page' }, '& .payslip-pdf-page:last-child': { breakAfter: 'auto' } },
-      }}><div ref={pagesRef} /></Box>
+  return (
+    <Box>
+      <Stack
+        direction="row"
+        spacing={1}
+        alignItems="center"
+        useFlexGap
+        sx={{ mb: 1, flexWrap: 'wrap' }}
+      >
+        <Button
+          type="button"
+          size="small"
+          variant="outlined"
+          disabled={loading || error || currentZoom <= 25}
+          onClick={() => setZoom(String(zoomOut))}
+        >
+          Zoom out
+        </Button>
+        <TextField
+          select
+          label="PDF zoom"
+          size="small"
+          value={zoom}
+          disabled={loading || error}
+          sx={{ width: { xs: 110, sm: 150 } }}
+          onChange={(event) => setZoom(event.target.value)}
+        >
+          {viewportHeight && <MenuItem value="page">Fit page</MenuItem>}
+          <MenuItem value="fit">Fit width</MenuItem>
+          {[25, 50, 75, 100, 125, 150, 175, 200].map((value) => (
+            <MenuItem key={value} value={String(value)}>
+              {value}%
+            </MenuItem>
+          ))}
+        </TextField>
+        <Button
+          type="button"
+          size="small"
+          variant="outlined"
+          disabled={loading || error || currentZoom >= 200}
+          onClick={() => setZoom(String(zoomIn))}
+        >
+          Zoom in
+        </Button>
+      </Stack>
+      <Box
+        ref={viewportRef}
+        role="region"
+        aria-label="Payslip PDF viewer"
+        tabIndex={0}
+        sx={{
+          minWidth: 0,
+          overflow: 'auto',
+          height: viewportHeight,
+          overscrollBehavior: 'contain',
+          '@media print': { height: 'auto', overflow: 'visible' },
+        }}
+      >
+        {loading && (
+          <Stack role="status" spacing={1} aria-label="Rendering payslip PDF">
+            <Typography variant="body2" color="text.secondary">
+              Preparing document preview...
+            </Typography>
+            <Skeleton variant="rounded" height={96} />
+          </Stack>
+        )}
+        {error && (
+          <Alert
+            severity="error"
+            action={
+              <Button size="small" onClick={() => setRetry((value) => value + 1)}>
+                Retry
+              </Button>
+            }
+          >
+            The payslip PDF could not be displayed.
+          </Alert>
+        )}
+        <Box
+          ref={contentRef}
+          aria-label={title}
+          aria-busy={loading}
+          sx={{
+            display: loading || error ? 'none' : 'block',
+            width:
+              zoom === 'fit'
+                ? '100%'
+                : zoom === 'page'
+                  ? fitPageWidth
+                  : (pageWidth * Number(zoom)) / 100,
+            maxWidth: zoom === 'fit' ? 850 : 'none',
+            mx: 'auto',
+            '& .payslip-pdf-page': {
+              mb: 1,
+              border: 1,
+              borderColor: 'divider',
+              bgcolor: 'common.white',
+            },
+            '& .payslip-pdf-text': {
+              position: 'absolute',
+              width: 1,
+              height: 1,
+              overflow: 'hidden',
+              clipPath: 'inset(50%)',
+            },
+            '@media print': {
+              width: '100%',
+              maxWidth: 'none',
+              '& .payslip-pdf-page': { border: 0, mb: 0, breakAfter: 'page' },
+              '& .payslip-pdf-page:last-child': { breakAfter: 'auto' },
+            },
+          }}
+        >
+          <div ref={pagesRef} />
+        </Box>
+      </Box>
     </Box>
-  </Box>;
+  );
 }
