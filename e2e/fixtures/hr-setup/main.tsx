@@ -96,7 +96,10 @@ function Fixture() {
   const [hr, setHr] = useState(true);
   return (
     <HrSetupSessionProvider>
-      <Stack spacing={2} sx={{ p: 2 }}>
+      <Stack
+        spacing={2}
+        sx={{ p: 2, ...(scenario === 'esic-settings' && { height: '100dvh', overflow: 'hidden' }) }}
+      >
         <Typography variant="h5">HR Workspace</Typography>
         <Typography variant="body2">
           {context.synthetic
