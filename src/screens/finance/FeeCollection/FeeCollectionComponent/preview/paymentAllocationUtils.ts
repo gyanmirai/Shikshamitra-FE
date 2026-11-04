@@ -16,6 +16,7 @@ export interface AllocatedFeeRow {
   installmentLabel?: string;
   originalAmount: number;
   paidAmount: number;
+  adjustmentCreditAmount: number;
   principalPaidAmount: number;
   lateFeePaidAmount: number;
   remainingAmount: number;
@@ -132,6 +133,7 @@ const allocateFeeItem = (
         installmentLabel: item.installmentLabel,
         originalAmount,
         paidAmount,
+        adjustmentCreditAmount: item.adjustmentCreditAmount ?? 0,
         principalPaidAmount,
         lateFeePaidAmount,
         remainingAmount: (toPaise(originalAmount) - toPaise(paidAmount)) / 100,

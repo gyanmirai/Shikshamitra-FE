@@ -21,14 +21,15 @@ import DocumentPreviewDialog from 'src/components/preview-document/DocumentPrevi
 import { Box, Card, Stack, Button, Tooltip, Typography, IconButton } from '@mui/material';
 import { ConcessionStatusType, ConcessionStatusTypeColors } from 'src/enums/concession-status-type';
 
-import { canDecideConcession } from '../Concession/concessionDecisionEligibility';
 import { concessionAmountFields } from './concessionAmountFields';
+import { canDecideConcession } from '../Concession/concessionDecisionEligibility';
 
 import type { IConcessionRequestItem } from './type';
 
 interface IConcessionCardProps {
   item: IConcessionRequestItem;
   onEdit: (item: IConcessionRequestItem) => void;
+  onViewDetails?: (item: IConcessionRequestItem) => void;
   onApprove: (item: IConcessionRequestItem) => void;
   approvalChecking?: boolean;
   approvalLoading?: boolean;
@@ -40,6 +41,7 @@ interface IConcessionCardProps {
 const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
   item,
   onEdit,
+  onViewDetails,
   onApprove,
   approvalChecking = false,
   approvalLoading = false,
@@ -56,6 +58,7 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
   const canApprove = hasGrantedPermission(permissions, actions.approve);
   const canReject = hasGrantedPermission(permissions, actions.reject);
   const canEdit = hasGrantedPermission(permissions, actions.edit);
+  const canView = hasGrantedPermission(permissions, actions.view);
   const canDelete = hasGrantedPermission(permissions, actions.delete);
   const canViewDocuments = hasGrantedPermission(permissions, actions.viewDocument);
   const canUploadDocuments = hasGrantedPermission(permissions, actions.uploadDocument);
@@ -328,7 +331,7 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
           </Typography>
         )}
       </Stack>
-      {cardActions.length > 0 && (
+      {(cardActions.length > 0 || (canView && onViewDetails)) && (
         <Box
           component="footer"
           sx={{
@@ -337,13 +340,31 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
             bgcolor: 'background.neutral',
             borderTop: 1,
             borderColor: 'divider',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 1,
+            flexWrap: 'wrap',
           }}
         >
+          {canView && onViewDetails && (
+            <Button
+              type="button"
+              size="small"
+              color="inherit"
+              aria-label="View request details"
+              startIcon={<Iconify icon={GlobalIcons.eye} />}
+              onClick={() => onViewDetails(item)}
+            >
+              View details
+            </Button>
+          )}
           <ThreeDotsActions
             showThreeDots={false}
             directActions={cardActions}
             sx={{
               justifyContent: 'flex-end',
+              ml: 'auto',
               flexWrap: 'wrap',
               '& .MuiIconButton-root': {
                 width: 32,

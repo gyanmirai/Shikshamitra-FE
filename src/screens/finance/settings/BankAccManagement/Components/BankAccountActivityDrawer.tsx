@@ -692,6 +692,7 @@ function BankActivityContent({
                 exportBusy={exportState.isLoading}
                 exportDisabled={!data || activity.isError}
                 onExport={exportRows}
+                searchFieldProps={{ placeholder: 'Search' }}
               />
             </Box>
           </>

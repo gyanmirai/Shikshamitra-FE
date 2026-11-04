@@ -103,7 +103,12 @@ export function FinanceAiReportPlanReview({ review, onFormatChange }: Props) {
           </Typography>
         </Box>
         <CurriculumReportPreviewTable
-          columns={preview.columns}
+          columns={preview.columns.map((column) => ({
+            ...column,
+            align: /^(Amount|Total)$|^(FH|STD|M|Cash|Gateway|Total)_/.test(column.id)
+              ? ('right' as const)
+              : ('left' as const),
+          }))}
           rows={rows}
           rowsPerPage={Math.min(preview.pageSize, 5)}
           isLoading={false}

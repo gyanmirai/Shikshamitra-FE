@@ -10,6 +10,7 @@ import { defaultSettings } from 'src/components/settings/config-settings';
 import { financePermissions } from 'src/constants/finance-menu';
 import confirmPopup from 'src/redux/confirmPopup/confirmPopupSlice';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import ConcessionRequestDetails from 'src/screens/finance/ConcessionAdmin/ConcessionRequestDetails';
 import ConcessionItemCard from 'src/screens/finance/ConcessionAdmin/ConcessionItemCard';
 import StudentInformationAccordion from 'src/screens/finance/ConcessionAdmin/StucentConcessionCard';
 import 'simplebar-react/dist/simplebar.min.css';
@@ -32,6 +33,7 @@ const store = configureStore({
     auth: () => ({
       user: { sub: ownRequest ? 'maker' : 'checker', role: previewRole },
       permissions: [
+        actions.view,
         actions.edit,
         actions.approve,
         actions.reject,
@@ -48,10 +50,10 @@ const item: IConcessionRequestItem = {
   studentConcessionTypeRequestId: 'synthetic',
   concessionTypeId: 'sibling-tuition',
   concessionTypeName: 'Sibling Tuition Concession',
-  status: 6,
-  totalRequestedAmount: 275,
+  status: Number(previewParams.get('status') ?? 6),
+  totalRequestedAmount: previewParams.has('status') ? 14500 : 275,
   totalAmount: 275,
-  totalApprovedAmount: 0,
+  totalApprovedAmount: ['1', '4', '5'].includes(previewParams.get('status') || '') ? 14500 : 0,
   totalReversedAmount: 0,
   netApprovedAmount: 0,
   feeHeads: [],
@@ -82,6 +84,7 @@ const item: IConcessionRequestItem = {
   timeline: [{ action: 'created', status: 6, occurredAt: '2026-10-15T11:13:33Z' }],
 };
 function Fixture() {
+  const [detailItem, setDetailItem] = React.useState<IConcessionRequestItem | null>(null);
   const [lastAction, setLastAction] = React.useState('');
   const [deleteOpen, setDeleteOpen] = React.useState(false);
   return (
@@ -117,6 +120,7 @@ function Fixture() {
           >
             <ConcessionItemCard
               item={item}
+              onViewDetails={setDetailItem}
               onEdit={() => setLastAction('Edit delegated')}
               onDelete={() => setDeleteOpen(true)}
               onOpenDocs={() => setLastAction('Document manager delegated')}
@@ -137,6 +141,7 @@ function Fixture() {
                   documentName: `Supporting certificate ${index + 1}`,
                 })),
               }}
+              onViewDetails={setDetailItem}
               onEdit={() => setLastAction('Edit delegated')}
               onDelete={() => setDeleteOpen(true)}
               onOpenDocs={() => setLastAction('Document manager delegated')}
@@ -151,6 +156,22 @@ function Fixture() {
           <Typography role="status" sx={{ mt: 1 }}>
             {lastAction}
           </Typography>
+          {detailItem && (
+            <ConcessionRequestDetails
+              open
+              item={detailItem}
+              onClose={() => setDetailItem(null)}
+              academicYear="2026-2027"
+              student={{
+                studentId: 'student',
+                name: 'Aanya Example',
+                grNumber: '10260',
+                rollNo: '2',
+                standardName: 'Class 1',
+                divisionName: 'A',
+              }}
+            />
+          )}
           <ConfirmDialog
             open={deleteOpen}
             onClose={() => setDeleteOpen(false)}

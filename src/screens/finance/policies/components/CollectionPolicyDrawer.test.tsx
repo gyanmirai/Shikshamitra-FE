@@ -32,6 +32,7 @@ vi.mock('src/redux/customQueryAndMutation', () => ({
   default: () => [vi.fn(), { isLoading: false }],
 }));
 vi.mock('src/components/scrollbar', () => ({ Scrollbar: ({ children }: any) => children }));
+vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 vi.mock('src/components/confirm-dialog', () => ({
   ConfirmDialog: ({ open, action, onClose }: any) =>
     open && (

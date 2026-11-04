@@ -74,6 +74,7 @@ const StudentConcessionListTable: React.FC<ICombinedProps> = ({ data, onViewAllC
       },
     ]}
     data={data || []}
+    searchFieldProps={{ placeholder: 'Search' }}
   />
 );
 

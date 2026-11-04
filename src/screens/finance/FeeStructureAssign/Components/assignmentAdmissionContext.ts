@@ -51,9 +51,10 @@ export function mergeAssignmentInputs(
   next: AssignmentRequest,
   current: AssignmentRequest,
   candidate: AssignmentCandidate,
-  context?: AssignmentContext
+  context?: AssignmentContext,
+  previousSource?: AssignmentRequest
 ): AssignmentRequest {
-  const confirmed = context?.structureId === candidate.id;
+  const confirmed = context?.status !== 'Assigned' && context?.structureId === candidate.id;
   const selectedOptionalFeeHeadIds = confirmed
     ? context.selectedOptionalFeeHeadIds
     : next.selectedOptionalFeeHeadIds;
@@ -63,9 +64,51 @@ export function mergeAssignmentInputs(
       .map((head) => head.feeHeadId)
   );
   const included = (head: { feeHeadId: string }) => !confirmed || includedHeads.has(head.feeHeadId);
-  const servicePeriods = next.servicePeriods.filter(
-    (period) => period.source !== 'Registration' && included(period)
+  const verifiedHeads = new Set(
+    next.servicePeriods
+      .filter(
+        (period) =>
+          period.source === 'Registration' ||
+          (current.editAssignmentId && period.source === 'TransportService')
+      )
+      .map((period) => period.feeHeadId)
   );
+  const servicePeriods = next.servicePeriods.filter(
+    (period) =>
+      period.source !== 'Registration' &&
+      (!current.editAssignmentId || period.source !== 'TransportService') &&
+      included(period)
+  );
+  if (current.editAssignmentId)
+    servicePeriods.push(
+      ...current.servicePeriods.filter(
+        (period) => verifiedHeads.has(period.feeHeadId) && includedHeads.has(period.feeHeadId)
+      )
+    );
+  if (current.editAssignmentId) {
+    const previousPeriods = new Map(
+      previousSource?.servicePeriods.map((period) => [period.feeHeadId, period])
+    );
+    const nextPeriods = new Map(next.servicePeriods.map((period) => [period.feeHeadId, period]));
+    const currentPeriods = new Map(
+      current.servicePeriods.map((period) => [period.feeHeadId, period])
+    );
+    servicePeriods.splice(0);
+    includedHeads.forEach((feeHeadId) => {
+      const proposed = nextPeriods.get(feeHeadId);
+      const explicitlyChanged =
+        previousSource &&
+        JSON.stringify(previousPeriods.get(feeHeadId)) !== JSON.stringify(proposed);
+      const foreignVerified =
+        current.studentId !== next.studentId &&
+        (proposed?.source === 'Registration' || proposed?.source === 'TransportService');
+      const period =
+        explicitlyChanged && !foreignVerified
+          ? proposed
+          : (currentPeriods.get(feeHeadId) ?? (foreignVerified ? undefined : proposed));
+      if (period) servicePeriods.push(period);
+    });
+  }
   const explicitHeadIds = new Set(servicePeriods.map((period) => period.feeHeadId));
   const variableAmounts = new Map(
     (confirmed ? (current.variableFeeHeads ?? []) : [])
@@ -78,6 +121,8 @@ export function mergeAssignmentInputs(
   return {
     ...next,
     studentId: current.studentId,
+    editAssignmentId: current.editAssignmentId,
+    assignmentConcurrencyStamp: current.assignmentConcurrencyStamp,
     previewToken: undefined,
     selectedOptionalFeeHeadIds,
     variableFeeHeads: [...variableAmounts.values()],

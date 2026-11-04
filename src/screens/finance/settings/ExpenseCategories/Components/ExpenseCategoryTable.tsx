@@ -198,7 +198,7 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
       <CustomizableTable
         tableId="expense-category-data-table"
         tableTitle="Expense Categories"
-        searchFieldProps={{ placeholder: 'Search name...' }}
+        searchFieldProps={{ placeholder: 'Search' }}
         noDataText={
           <>
             Expense Category Data Not Found{' '}

@@ -4,7 +4,16 @@ import { it, vi, expect, beforeEach } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { act, render, screen, within, waitFor, cleanup, fireEvent } from '@testing-library/react';
+import {
+  act,
+  render,
+  screen,
+  within,
+  waitFor,
+  cleanup,
+  fireEvent,
+  waitForElementToBeRemoved,
+} from '@testing-library/react';
 
 import { structureCandidate } from './feeStructureModel';
 import FeeStructureWorkspaceCard from './Components/FeeStructureWorkspaceCard';
@@ -105,9 +114,13 @@ const initialData = {
   status: 1,
 };
 const theme = createTheme(defaultSettings);
-const ui = (record?: any) => (
+const ui = (record?: any, isActive = true) => (
   <ThemeProvider theme={theme}>
-    <FeeStructureWorkspaceCard index={0} initialData={{ ...initialData, record }} />
+    <FeeStructureWorkspaceCard
+      index={0}
+      initialData={{ ...initialData, record }}
+      isActive={isActive}
+    />
   </ThemeProvider>
 );
 
@@ -149,6 +162,23 @@ async function chooseCollection(name: string) {
   fireEvent.click(await screen.findByRole('button', { name: `Select ${name} version 1` }));
 }
 
+it('retains the unsaved name when suspending and resuming an editor without saving', async () => {
+  const view = render(ui());
+  fireEvent.change(screen.getByRole('textbox', { name: /Structure name/i }), {
+    target: { value: 'Annual fees draft' },
+  });
+  await waitFor(() =>
+    expect(screen.getByRole('textbox', { name: /Structure name/i })).toHaveValue(
+      'Annual fees draft'
+    )
+  );
+  view.rerender(ui(undefined, false));
+  expect(screen.queryByRole('textbox', { name: /Structure name/i })).toBeNull();
+  view.rerender(ui());
+  expect(screen.getByRole('textbox', { name: /Structure name/i })).toHaveValue('Annual fees draft');
+  expect(state.mutate).not.toHaveBeenCalled();
+});
+
 it('groups fee heads by non-selectable categories and searches both category and head names', async () => {
   state.lookups.settings.heads = [
     { id: 'sports', name: 'Sports', categoryName: 'Activities' },
@@ -164,14 +194,15 @@ it('groups fee heads by non-selectable categories and searches both category and
   expect(within(list).queryByRole('option', { name: 'Academic' })).toBeNull();
   expect(within(list).getByRole('option', { name: 'Tuition · Academic' })).toBeVisible();
   expect(within(list).getByRole('option', { name: 'Tuition · Transport' })).toBeVisible();
-  const search = within(list).getByRole('textbox', { name: 'Search Fee head' });
+  const search = screen.getByRole('combobox', { name: /Fee head/ });
+  fireEvent.focus(search);
   fireEvent.change(search, { target: { value: 'academic' } });
-  expect(within(list).getAllByRole('option')).toHaveLength(2);
+  await waitFor(() => expect(within(list).getAllByRole('option')).toHaveLength(2));
   expect(within(list).queryByText('Sports')).toBeNull();
   fireEvent.change(search, { target: { value: 'laboratory' } });
-  expect(within(list).getAllByRole('option')).toHaveLength(1);
+  await waitFor(() => expect(within(list).getAllByRole('option')).toHaveLength(1));
   fireEvent.click(within(list).getByRole('option', { name: 'Laboratory' }));
-  expect(screen.getByRole('combobox', { name: /Fee head/ })).toHaveTextContent('Laboratory');
+  expect(screen.getByRole('combobox', { name: /Fee head/ })).toHaveValue('Laboratory');
 });
 
 it('requires a payment frequency for every head and has no admission collection option', async () => {
@@ -648,6 +679,7 @@ it('opens saved drafts with direct fee-head actions and keeps them available aft
   fireEvent.click(screen.getByRole('button', { name: 'Discard Changes' }));
   const confirmation = await screen.findByRole('dialog', { name: 'Discard unsaved changes' });
   fireEvent.click(within(confirmation).getByRole('button', { name: 'Discard Changes' }));
+  await waitForElementToBeRemoved(confirmation, { timeout: 5000 });
   await waitFor(() =>
     expect(screen.getByRole('textbox', { name: 'Structure name' })).toHaveValue(record.name)
   );

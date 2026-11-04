@@ -1,13 +1,14 @@
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
-import { it, vi, expect } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { it, vi, expect, afterEach } from 'vitest';
+import { act, render, screen, fireEvent } from '@testing-library/react';
 import confirmPopup from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import { useFinanceFormClose } from './use-finance-form-close';
 
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 vi.mock('src/routes/hooks', () => ({ useRouter: () => ({ push: vi.fn() }) }));
+afterEach(() => vi.unstubAllGlobals());
 
 const storeFor = () =>
   configureStore({
@@ -31,7 +32,9 @@ function Fixture({
   const { handleClose, confirmation } = useFinanceFormClose(open, close, busy, localDirty);
   return (
     <>
-      <button onClick={() => handleClose()}>Close editor</button>
+      <button type="button" onClick={() => handleClose()}>
+        Close editor
+      </button>
       {confirmation}
     </>
   );
@@ -100,3 +103,37 @@ it('locks an already open discard confirmation when saving begins', () => {
   fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
   expect(close).not.toHaveBeenCalled();
 });
+
+it.each([true, false])(
+  'closes and resets the form before accepted same-route history traversal; dirty=%s',
+  (dirty) => {
+    const navigation = new EventTarget() as EventTarget & { traverseTo: ReturnType<typeof vi.fn> };
+    navigation.traverseTo = vi.fn().mockReturnValue({ finished: Promise.resolve() });
+    vi.stubGlobal('navigation', navigation);
+    const store = storeFor();
+    const close = vi.fn();
+    render(
+      <Provider store={store}>
+        <Fixture close={close} localDirty={dirty ? undefined : false} />
+      </Provider>
+    );
+    const event = new Event('navigate', { cancelable: true });
+    Object.assign(event, {
+      navigationType: 'traverse',
+      destination: {
+        key: 'previous-adjustment-list',
+        url: `${window.location.origin}/finance/adjustments?adjustmentPage=2`,
+      },
+    });
+    act(() => {
+      navigation.dispatchEvent(event);
+    });
+    if (dirty) {
+      expect(close).not.toHaveBeenCalled();
+      fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
+      expect(store.getState().confirmPopup.isChanges).toBe(false);
+    }
+    expect(close).toHaveBeenCalledOnce();
+    expect(navigation.traverseTo).toHaveBeenCalledWith('previous-adjustment-list');
+  }
+);

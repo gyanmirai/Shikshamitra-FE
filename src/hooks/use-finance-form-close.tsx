@@ -26,6 +26,7 @@ export function useFinanceFormClose(
     open && dirty,
     {
       blockNavigation: open && busy,
+      onBeforeTraversal: open ? reset : undefined,
       push: (href) => {
         reset();
         router.push(href);

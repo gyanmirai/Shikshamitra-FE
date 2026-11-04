@@ -259,6 +259,7 @@ const StudentFeeRefundTable: React.FC<StudentFeeRefundTableProps> = ({
             maxWidth: 160,
           },
           {
+            cellSx: { textAlign: 'right' as const },
             id: 'refundAmount',
             label: 'Refund Amount',
             align: 'left',
@@ -406,6 +407,7 @@ const StudentFeeRefundTable: React.FC<StudentFeeRefundTableProps> = ({
           },
         ]}
         data={data}
+        searchFieldProps={{ placeholder: 'Search' }}
       />
     </>
   );

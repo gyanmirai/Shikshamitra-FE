@@ -77,8 +77,8 @@ const FeeInstallmentDialog = ({ open, onClose, selectedTerm }: any) => {
                   <TableRow key={head.name}>
                     <TableCell>{head.name}</TableCell>
                     <TableCell>{head.category}</TableCell>
-                    <TableCell>₹ {(head.pending ?? Math.max(0, head.total - head.paid - (head.concessionAmount ?? 0))).toLocaleString()}</TableCell>
-                    <TableCell> {head.paid?.toLocaleString()}</TableCell>
+                    <TableCell align="right">₹ {(head.pending ?? Math.max(0, head.total - head.paid - (head.concessionAmount ?? 0))).toLocaleString()}</TableCell>
+                    <TableCell align="right"> {head.paid?.toLocaleString()}</TableCell>
 
                     <TableCell>
                       <Label
@@ -133,9 +133,9 @@ const FeeInstallmentDialog = ({ open, onClose, selectedTerm }: any) => {
 
                         <TableCell>{ch.dueDate}</TableCell>
 
-                        <TableCell>₹ {pendingAmount.toLocaleString()}</TableCell>
+                        <TableCell align="right">₹ {pendingAmount.toLocaleString()}</TableCell>
 
-                        <TableCell>₹ {ch.paid.toLocaleString()}</TableCell>
+                        <TableCell align="right">₹ {ch.paid.toLocaleString()}</TableCell>
 
                         <TableCell>
                           <Label

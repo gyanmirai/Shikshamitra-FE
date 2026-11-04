@@ -66,6 +66,7 @@ const item: IConcessionRequestItem = {
 
 const handlers = {
   onEdit: vi.fn(),
+  onViewDetails: vi.fn(),
   onDelete: vi.fn(),
   onApprove: vi.fn(),
   onReject: vi.fn(),
@@ -203,13 +204,14 @@ describe('individual concession request card', () => {
     );
     ['Edit concession request', 'Approve', 'Reject', 'Delete concession request'].forEach(
       (name) => {
-        expect(screen.getByRole('button', { name })).toBeEmptyDOMElement();
+        expect(screen.getByRole('button', { name })).toHaveTextContent(/^$/);
       }
     );
     expect(screen.getByRole('button', { name: 'See all supporting documents' })).toHaveTextContent(
       'See all'
     );
-    expect(screen.queryByRole('button', { name: 'View request details' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'View request details' }));
+    expect(handlers.onViewDetails).toHaveBeenCalledWith(item);
     expect(screen.queryByRole('button', { name: 'Review and submit' })).not.toBeInTheDocument();
   });
   it('shows the header, full requested amount and every uploaded document', () => {
@@ -244,7 +246,7 @@ describe('individual concession request card', () => {
   it('delegates Edit, See All and Delete to the existing owning workflow', () => {
     show();
     const edit = screen.getByRole('button', { name: 'Edit concession request' });
-    expect(edit).toBeEmptyDOMElement();
+    expect(edit).toHaveTextContent(/^$/);
     fireEvent.click(edit);
     fireEvent.click(screen.getByRole('button', { name: 'See all supporting documents' }));
     fireEvent.click(screen.getByRole('button', { name: 'Delete concession request' }));

@@ -461,6 +461,7 @@ export default function FeeStructurePoliciesStep({
                   ),
                 },
               ]}
+              searchFieldProps={{ placeholder: 'Search' }}
             />
             {catalogs[choosing].loading && !!options.length && (
               <Typography variant="caption" role="status">

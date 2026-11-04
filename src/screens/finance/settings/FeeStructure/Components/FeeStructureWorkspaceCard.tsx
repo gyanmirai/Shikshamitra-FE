@@ -1,13 +1,5 @@
 'use client';
 
-import FinanceFormSkeleton, {
-  FinanceSkeletonRows,
-} from 'src/screens/finance/components/FinanceFormSkeleton';
-
-import { FeeStructureFormSkeleton } from 'src/screens/finance/components/FinanceFormSkeletons';
-
-import { financeNameSchema } from 'src/utils/finance-name';
-
 import type {
   StructureLine,
   StructureRecord,
@@ -24,16 +16,21 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
+import { financeNameSchema } from 'src/utils/finance-name';
 import { useRef, useMemo, useState, useEffect } from 'react';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { getStorage, setStorage } from 'src/hooks/use-local-storage';
-import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { Box, Stack, Alert, Button, Typography } from '@mui/material';
+import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { FeeStructureLockStatusType } from 'src/enums/finance-fee-structure-status';
+import { FeeStructureFormSkeleton } from 'src/screens/finance/components/FinanceFormSkeletons';
 import FinancePrerequisiteState from 'src/screens/finance/components/FinancePrerequisiteState';
 import { useDeleteClassWiseFeeStructureMutation } from 'src/redux/finance/financeFeeStructure';
+import FinanceFormSkeleton, {
+  FinanceSkeletonRows,
+} from 'src/screens/finance/components/FinanceFormSkeleton';
 import {
   useReviseStructureMutation,
   usePreviewStructureMutation,
@@ -67,6 +64,7 @@ interface Props {
   initialData: IClassWiseFeeStructureCard;
   index: number;
   viewOnly?: boolean;
+  isActive?: boolean;
   onSaved?: (saved: IClassWiseFeeStructureCard) => void;
   onDeleted?: () => void;
   onDirtyChange?: (dirty: boolean) => void;
@@ -103,6 +101,7 @@ export default function FeeStructureWorkspaceCard({
   initialData,
   index,
   viewOnly = false,
+  isActive = true,
   onSaved,
   onDeleted,
   onDirtyChange,
@@ -160,8 +159,9 @@ export default function FeeStructureWorkspaceCard({
   const generation = useRef(0);
   const [requestId] = useState(uuidv4);
   const locked = record?.status === FeeStructureLockStatusType.Locked;
+  const candidateJson = useMemo(() => JSON.stringify(candidate), [candidate]);
   const dirty =
-    JSON.stringify(candidate) !== baseline ||
+    candidateJson !== baseline ||
     candidate.feeHeads.some(
       (line) =>
         !line.isVariable &&
@@ -186,7 +186,7 @@ export default function FeeStructureWorkspaceCard({
     scheduleTerm,
     termDetail,
     refreshPrerequisites,
-  } = useFeeStructureLookups(scope, !record || tab === 'policies', scheduleLine, locked);
+  } = useFeeStructureLookups(scope, !record || tab === 'policies', scheduleLine, locked, isActive);
   const publicationPrerequisites = structurePublicationPrerequisites({
     locked: !!locked || viewOnly,
     heads,
@@ -559,7 +559,15 @@ export default function FeeStructureWorkspaceCard({
   useEffect(() => {
     if (tab === 'review') reviewRef.current();
   }, [tab]);
-  const savedCandidate: StructureCandidate = JSON.parse(baseline);
+  const savedCandidate = useMemo<StructureCandidate>(() => JSON.parse(baseline), [baseline]);
+  const candidateHeadsJson = useMemo(
+    () => JSON.stringify(candidate.feeHeads),
+    [candidate.feeHeads]
+  );
+  const savedHeadsJson = useMemo(
+    () => JSON.stringify(savedCandidate.feeHeads),
+    [savedCandidate.feeHeads]
+  );
   const headsValid =
     !nameError &&
     !candidate.feeHeads.some(
@@ -572,7 +580,7 @@ export default function FeeStructureWorkspaceCard({
     headsValid &&
     candidate.feeHeads.length > 0 &&
     candidate.name === savedCandidate.name &&
-    JSON.stringify(candidate.feeHeads) === JSON.stringify(savedCandidate.feeHeads);
+    candidateHeadsJson === savedHeadsJson;
   const policiesSaved =
     !!record &&
     (locked || policiesValid) &&
@@ -715,7 +723,7 @@ export default function FeeStructureWorkspaceCard({
           {error}
         </Alert>
       )}
-      {settings && (
+      {settings && isActive && (
         <Box
           sx={{
             flex: 1,
@@ -732,7 +740,14 @@ export default function FeeStructureWorkspaceCard({
               minHeight: 0,
               minWidth: 0,
               pt: 1,
-              '& .MuiStepper-vertical .MuiStepConnector-root': { ml: 2.75 },
+              '& .MuiStepper-vertical': {
+                height: 'auto',
+                maxHeight: '100%',
+                alignSelf: 'center',
+                flexShrink: 0,
+                '& .MuiStepConnector-root': { ml: 2.75, flex: '0 0 auto' },
+                '& .MuiStepConnector-line': { minHeight: 32 },
+              },
               // The shared vertical mode uses a horizontal header below lg. Keep
               // that compact header vertical here without changing other consumers.
               '& .MuiStepper-horizontal': {

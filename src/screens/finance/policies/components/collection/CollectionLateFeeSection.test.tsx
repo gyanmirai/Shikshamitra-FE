@@ -7,11 +7,10 @@ import CollectionLateFeeSection from './CollectionLateFeeSection';
 vi.mock('src/screens/finance/components/FinanceRoutingFields', () => ({ default: () => null }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 
-describe('collection late-fee saved fee heads', () => {
-  it('keeps historical selections visible when they are absent from the active lookup', () => {
+describe('collection common late-fee rules', () => {
+  it('shows a common rule without a fee-head selector even when legacy selections exist', () => {
     render(
       <CollectionLateFeeSection
-        feeHeads={[]}
         addSlab={vi.fn()}
         removeSlab={vi.fn()}
         formik={{
@@ -32,6 +31,12 @@ describe('collection late-fee saved fee heads', () => {
         }}
       />
     );
-    expect(screen.getByText('Fee head name unavailable (saved selection)')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('combobox', { name: /Apply late fee on fee heads/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('Fee head name unavailable (saved selection)')
+    ).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/Flat late fee amount/)).toBeInTheDocument();
   });
 });

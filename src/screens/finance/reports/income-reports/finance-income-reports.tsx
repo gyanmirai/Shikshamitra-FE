@@ -64,7 +64,7 @@ const FinanceIncomeReports = () => {
     { id: 'dateOfPayment', label: 'Date Of Payment' },
     { id: 'sourceOfIncome', label: 'Source Of Income' },
     { id: 'description', label: 'Description' },
-    { id: 'amountReceived', label: 'Amount Receievd' },
+    { cellSx: { textAlign: 'right' as const }, id: 'amountReceived', label: 'Amount Receievd' },
     { id: 'dueDate', label: 'Due Date' },
     { id: 'status', label: 'Status' },
   ];
@@ -103,7 +103,7 @@ const FinanceIncomeReports = () => {
 
   const pendigDatacolumns: any = [
     { id: 'source', label: 'Source' },
-    { id: 'amountDue', label: 'Amount Due' },
+    { cellSx: { textAlign: 'right' as const }, id: 'amountDue', label: 'Amount Due' },
     { id: 'dueDate', label: 'Due Date' },
     { id: 'daysOverDue', label: 'Days Overdue' },
   ];
@@ -353,7 +353,8 @@ const FinanceIncomeReports = () => {
         />
       </Box>
 
-      <CustomizableTable columns={columns} data={incomeData} tableId="income-reports-table" />
+      <CustomizableTable columns={columns} data={incomeData} tableId="income-reports-table"
+        searchFieldProps={{ placeholder: 'Search' }} />
 
       <Typography variant="h6" sx={{ pt: '15px', pb: '15px' }}>
         Pending Income
@@ -362,6 +363,7 @@ const FinanceIncomeReports = () => {
         columns={pendigDatacolumns}
         data={pendingData}
         tableId="pending-income-table"
+        searchFieldProps={{ placeholder: 'Search' }}
       />
 
       <Box py="15px" gap={1} display="flex" justifyContent="flex-end">

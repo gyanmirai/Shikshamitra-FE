@@ -91,6 +91,7 @@ export function CurriculumReportPreviewTable({
                 {columns.map((column) => (
                   <TableCell
                     key={column.id}
+                    align={column.align}
                     sx={{
                       fontSize: '0.8rem',
                       whiteSpace: 'nowrap',

@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import {
   useApplyFeeAdjustmentMutation,
   useLazyGetAdjustmentApplyContextQuery,
@@ -18,11 +18,17 @@ interface UseApplyAdjustmentArgs {
 }
 
 export const useApplyAdjustment = ({ open, adjustment }: UseApplyAdjustmentArgs) => {
-  const approvedAmount =
+  const requestedBalance =
     adjustment?.remainingAdjustmentBalance ?? adjustment?.adjustmentAmount ?? 0;
+  const [serverBalance, setServerBalance] = useState<number | null>(null);
+  const approvedAmount = serverBalance ?? requestedBalance;
   const [items, setItems] = useState<AdjustmentApplyItem[]>([]);
   const [notes, setNotes] = useState('');
   const [errorText, setErrorText] = useState('');
+  const [isContextError, setContextError] = useState(false);
+  const [loadingContext, setLoadingContext] = useState(Boolean(open && adjustment?.id));
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  const lastAttempt = useRef<{ fingerprint: string; key: string } | null>(null);
 
   const [getApplyContext, applyContextResp] = useLazyGetAdjustmentApplyContextQuery();
   const [applyAdjustment, applyResp] = useApplyFeeAdjustmentMutation();
@@ -41,11 +47,16 @@ export const useApplyAdjustment = ({ open, adjustment }: UseApplyAdjustmentArgs)
       }
 
       try {
+        setLoadingContext(true);
+        setContextError(false);
+        setErrorText('');
+        setItems([]);
+        setServerBalance(null);
         const result = await getApplyContext(adjustment.id, true).unwrap();
         if (!active) return;
+        setServerBalance(result.remainingAmount);
 
-        setItems(
-          (result.pendingFees || []).map((fee) => ({
+        const pendingItems = (result.pendingFees || []).map((fee) => ({
             installmentId: fee.installmentId,
             dueFeeId: fee.dueFeeId,
             installmentLabel: fee.installmentLabel,
@@ -57,12 +68,37 @@ export const useApplyAdjustment = ({ open, adjustment }: UseApplyAdjustmentArgs)
             pendingAmount: fee.pendingAmount,
             adjustableAmount: fee.maxApplicableAmount,
             appliedAmount: 0,
+            amountDraft: '',
             finalPendingAmount: fee.pendingAmount,
             isSelected: false,
-          }))
-        );
+          }));
+        let remaining = result.remainingAmount;
+        const allocations = new Map<string, number>();
+        [...pendingItems]
+          .sort((a, b) => a.monthOrder - b.monthOrder)
+          .forEach((fee) => {
+            const amount = Math.round(Math.min(fee.pendingAmount, fee.adjustableAmount, remaining) * 100) / 100;
+            allocations.set(fee.installmentId, amount);
+            remaining = Math.max(Math.round((remaining - amount) * 100) / 100, 0);
+          });
+        setItems(pendingItems.map((fee) => {
+          const appliedAmount = allocations.get(fee.installmentId) ?? 0;
+          return {
+            ...fee,
+            isSelected: appliedAmount > 0,
+            appliedAmount,
+            amountDraft: appliedAmount > 0 ? String(appliedAmount) : '',
+            finalPendingAmount: Math.max(fee.pendingAmount - appliedAmount, 0),
+          };
+        }));
       } catch {
-        if (active) setItems([]);
+        if (active) {
+          setItems([]);
+          setContextError(true);
+          setErrorText('Could not load pending fees. Please retry before applying the adjustment.');
+        }
+      } finally {
+        if (active) setLoadingContext(false);
       }
     };
 
@@ -71,7 +107,7 @@ export const useApplyAdjustment = ({ open, adjustment }: UseApplyAdjustmentArgs)
     return () => {
       active = false;
     };
-  }, [adjustment?.id, getApplyContext, open]);
+  }, [adjustment?.id, getApplyContext, open, loadAttempt]);
 
   const totalPendingFees = useMemo(
     () => items.reduce((sum, item) => sum + item.pendingAmount, 0),
@@ -79,7 +115,7 @@ export const useApplyAdjustment = ({ open, adjustment }: UseApplyAdjustmentArgs)
   );
 
   const totalAppliedAmount = useMemo(
-    () => items.reduce((sum, item) => sum + item.appliedAmount, 0),
+    () => Math.round(items.reduce((sum, item) => sum + item.appliedAmount, 0) * 100) / 100,
     [items]
   );
 
@@ -89,7 +125,7 @@ export const useApplyAdjustment = ({ open, adjustment }: UseApplyAdjustmentArgs)
   );
 
   const remainingAdjustmentBalance = useMemo(
-    () => Math.max(approvedAmount - totalAppliedAmount, 0),
+    () => Math.max(Math.round((approvedAmount - totalAppliedAmount) * 100) / 100, 0),
     [approvedAmount, totalAppliedAmount]
   );
 
@@ -120,6 +156,7 @@ export const useApplyAdjustment = ({ open, adjustment }: UseApplyAdjustmentArgs)
             ...item,
             isSelected: false,
             appliedAmount: 0,
+            amountDraft: '',
             finalPendingAmount: item.pendingAmount,
           };
         }
@@ -130,23 +167,29 @@ export const useApplyAdjustment = ({ open, adjustment }: UseApplyAdjustmentArgs)
   }, []);
 
   const setAppliedAmount = useCallback(
-    (installmentId: string, value: number) => {
+    (installmentId: string, value: number | string) => {
       setItems((prev) => {
         const currentItem = prev.find((item) => item.installmentId === installmentId);
         if (!currentItem || !currentItem.isSelected) return prev;
 
-        const safeValue = Number.isFinite(value) ? Math.max(value, 0) : 0;
+        const numericValue = Number(value);
+        const safeValue = Number.isFinite(numericValue) ? Math.max(numericValue, 0) : 0;
         const sumOthers = prev
           .filter((item) => item.installmentId !== installmentId)
           .reduce((sum, item) => sum + item.appliedAmount, 0);
 
-        const maxAllowedByApproved = Math.max(approvedAmount - sumOthers, 0);
-        const cappedValue = Math.min(safeValue, currentItem.pendingAmount, maxAllowedByApproved);
+        const maxAllowedByApproved = Math.max(
+          Math.round((approvedAmount - sumOthers) * 100) / 100,
+          0
+        );
+        const rowLimit = Math.min(currentItem.pendingAmount, currentItem.adjustableAmount);
+        const cappedValue =
+          Math.round(Math.min(safeValue, rowLimit, maxAllowedByApproved) * 100) / 100;
 
         if (safeValue > maxAllowedByApproved) {
           setErrorText('Total applied amount cannot exceed approved adjustment amount.');
-        } else if (safeValue > currentItem.pendingAmount) {
-          setErrorText('Applied amount cannot exceed pending amount of selected row.');
+        } else if (safeValue > rowLimit) {
+          setErrorText('Applied amount cannot exceed the available amount of the selected row.');
         } else {
           setErrorText('');
         }
@@ -156,6 +199,7 @@ export const useApplyAdjustment = ({ open, adjustment }: UseApplyAdjustmentArgs)
             ? {
                 ...item,
                 appliedAmount: cappedValue,
+                amountDraft: String(value),
                 finalPendingAmount: Math.max(item.pendingAmount - cappedValue, 0),
               }
             : item
@@ -172,7 +216,12 @@ export const useApplyAdjustment = ({ open, adjustment }: UseApplyAdjustmentArgs)
     // but store the result in a map so the original display order is preserved.
     const allocationMap = new Map<
       string,
-      { isSelected: boolean; appliedAmount: number; finalPendingAmount: number }
+      {
+        isSelected: boolean;
+        appliedAmount: number;
+        amountDraft: string;
+        finalPendingAmount: number;
+      }
     >();
 
     setItems((prev) => {
@@ -181,11 +230,13 @@ export const useApplyAdjustment = ({ open, adjustment }: UseApplyAdjustmentArgs)
       let rem = remaining;
 
       sorted.forEach((item) => {
-        const applied = Math.min(item.pendingAmount, rem);
-        rem -= applied;
+        const applied =
+          Math.round(Math.min(item.pendingAmount, item.adjustableAmount, rem) * 100) / 100;
+        rem = Math.max(Math.round((rem - applied) * 100) / 100, 0);
         allocationMap.set(item.installmentId, {
           isSelected: applied > 0,
           appliedAmount: applied,
+          amountDraft: applied > 0 ? String(applied) : '',
           finalPendingAmount: Math.max(item.pendingAmount - applied, 0),
         });
       });
@@ -207,6 +258,7 @@ export const useApplyAdjustment = ({ open, adjustment }: UseApplyAdjustmentArgs)
         ...item,
         isSelected: false,
         appliedAmount: 0,
+        amountDraft: '',
         finalPendingAmount: item.pendingAmount,
       }))
     );
@@ -230,26 +282,44 @@ export const useApplyAdjustment = ({ open, adjustment }: UseApplyAdjustmentArgs)
     [items]
   );
 
+  const hasInvalidAmounts = items.some((item) => {
+    if (!item.isSelected) return false;
+    const draft = item.amountDraft ?? String(item.appliedAmount);
+    return (
+      !/^\d+(\.\d{1,2})?$/.test(draft) ||
+      Number(draft) <= 0 ||
+      Math.abs(Number(draft) - item.appliedAmount) > 0.00001
+    );
+  });
+
   const submit = useCallback(async () => {
     if (!adjustment) throw new Error('No adjustment selected.');
+    if (loadingContext || isContextError)
+      throw new Error('Load current pending fees before applying the adjustment.');
+    if (hasInvalidAmounts) throw new Error('Review the adjustment amounts before continuing.');
 
     if (!selectedLines.length) {
-      throw new Error('Select at least one installment and apply amount to continue.');
+      throw new Error('No eligible outstanding fees are available for this adjustment.');
     }
 
+    const body = {
+      approvalNotes: notes || undefined,
+      allowPartialApply: true,
+      lines: selectedLines.map((line) => ({
+        dueFeeId: line.dueFeeId!,
+        feeHeadId: line.feeHeadId,
+        installmentLabel: line.installmentLabel,
+        appliedAmount: line.appliedAmount,
+      })),
+    };
+    const fingerprint = JSON.stringify({ id: adjustment.id, body });
+    if (lastAttempt.current?.fingerprint !== fingerprint) {
+      lastAttempt.current = { fingerprint, key: crypto.randomUUID() };
+    }
     const result = await applyAdjustment({
       id: adjustment.id,
-      idempotencyKey: crypto.randomUUID(),
-      body: {
-        approvalNotes: notes || undefined,
-        allowPartialApply: true,
-        lines: selectedLines.map((line) => ({
-          dueFeeId: line.dueFeeId!,
-          feeHeadId: line.feeHeadId,
-          installmentLabel: line.installmentLabel,
-          appliedAmount: line.appliedAmount,
-        })),
-      },
+      idempotencyKey: lastAttempt.current.key,
+      body,
     }).unwrap();
 
     const mapped: ApplyAdjustmentDialogSubmitResult = {
@@ -269,7 +339,15 @@ export const useApplyAdjustment = ({ open, adjustment }: UseApplyAdjustmentArgs)
     };
 
     return mapped;
-  }, [adjustment, applyAdjustment, notes, selectedLines]);
+  }, [
+    adjustment,
+    applyAdjustment,
+    notes,
+    selectedLines,
+    loadingContext,
+    isContextError,
+    hasInvalidAmounts,
+  ]);
 
   return {
     items,
@@ -277,7 +355,11 @@ export const useApplyAdjustment = ({ open, adjustment }: UseApplyAdjustmentArgs)
     setNotes,
     errorText,
     summary,
-    isLoadingPendingFees: applyContextResp.isLoading || applyContextResp.isFetching,
+    isLoadingPendingFees:
+      loadingContext || applyContextResp.isLoading || applyContextResp.isFetching,
+    isContextError,
+    hasInvalidAmounts,
+    retryLoad: () => setLoadAttempt((attempt) => attempt + 1),
     isSubmitting: applyResp.isLoading,
     setSelection,
     setAppliedAmount,

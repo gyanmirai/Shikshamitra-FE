@@ -153,6 +153,7 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
               minWidth: '120px',
             },
             {
+              cellSx: { textAlign: 'right' as const },
               id: 'totalBudgetAmount',
               label: 'Total Budget Amount',
               align: 'left',
@@ -166,7 +167,13 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
                 );
               },
             },
-            { id: 'allocated', label: 'Allocated', align: 'left', filterType: 'number' },
+            {
+              cellSx: { textAlign: 'right' as const },
+              id: 'allocated',
+              label: 'Allocated',
+              align: 'left',
+              filterType: 'number',
+            },
             // { id: 'unallocated', label: 'Unallocated', align: 'left', filterType: 'number' },
             // {
             //   id: 'action',
@@ -199,6 +206,7 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
             // },
           ]}
           data={tableData || []}
+          searchFieldProps={{ placeholder: 'Search' }}
         />
       ) : tabs.value === 1 ? (
         <CustomizableTable
@@ -231,6 +239,7 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
               minWidth: '120px',
             },
             {
+              cellSx: { textAlign: 'right' as const },
               id: 'totalBudgetAmount',
               label: 'Total Budget Amount',
               align: 'left',
@@ -240,8 +249,20 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
                 return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
               },
             },
-            { id: 'allocated', label: 'Allocated', align: 'left', filterType: 'number' },
-            { id: 'unallocated', label: 'Unallocated', align: 'left', filterType: 'number' },
+            {
+              cellSx: { textAlign: 'right' as const },
+              id: 'allocated',
+              label: 'Allocated',
+              align: 'left',
+              filterType: 'number',
+            },
+            {
+              cellSx: { textAlign: 'right' as const },
+              id: 'unallocated',
+              label: 'Unallocated',
+              align: 'left',
+              filterType: 'number',
+            },
             {
               stickyPosition: 'right',
               excludeFromExport: true,
@@ -276,6 +297,7 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
             },
           ]}
           data={tableData || []}
+          searchFieldProps={{ placeholder: 'Search' }}
         />
       ) : tabs.value === 2 ? (
         <CustomizableTable
@@ -308,6 +330,7 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
               minWidth: '120px',
             },
             {
+              cellSx: { textAlign: 'right' as const },
               id: 'totalBudgetAmount',
               label: 'Total Budget Amount',
               align: 'left',
@@ -317,8 +340,20 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
                 return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
               },
             },
-            { id: 'allocated', label: 'Allocated', align: 'left', filterType: 'number' },
-            { id: 'unallocated', label: 'Unallocated', align: 'left', filterType: 'number' },
+            {
+              cellSx: { textAlign: 'right' as const },
+              id: 'allocated',
+              label: 'Allocated',
+              align: 'left',
+              filterType: 'number',
+            },
+            {
+              cellSx: { textAlign: 'right' as const },
+              id: 'unallocated',
+              label: 'Unallocated',
+              align: 'left',
+              filterType: 'number',
+            },
             {
               stickyPosition: 'right',
               excludeFromExport: true,
@@ -349,6 +384,7 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
             },
           ]}
           data={tableData || []}
+          searchFieldProps={{ placeholder: 'Search' }}
         />
       ) : (
         <CustomizableTable
@@ -381,6 +417,7 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
               minWidth: '120px',
             },
             {
+              cellSx: { textAlign: 'right' as const },
               id: 'totalBudgetAmount',
               label: 'Total Budget Amount',
               align: 'left',
@@ -390,10 +427,23 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
                 return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
               },
             },
-            { id: 'allocated', label: 'Allocated', align: 'left', filterType: 'number' },
-            { id: 'unallocated', label: 'Unallocated', align: 'left', filterType: 'number' },
+            {
+              cellSx: { textAlign: 'right' as const },
+              id: 'allocated',
+              label: 'Allocated',
+              align: 'left',
+              filterType: 'number',
+            },
+            {
+              cellSx: { textAlign: 'right' as const },
+              id: 'unallocated',
+              label: 'Unallocated',
+              align: 'left',
+              filterType: 'number',
+            },
           ]}
           data={tableData || []}
+          searchFieldProps={{ placeholder: 'Search' }}
         />
       )}
 

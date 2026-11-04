@@ -1,16 +1,14 @@
 import type { AssignmentPreview } from 'src/redux/finance/studentFeeAssignment';
 
-import { useId, useState } from 'react';
+import { useId } from 'react';
 import { Label } from 'src/components/label';
 import { fDate } from 'src/utils/format-time';
-import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { DetailField, DetailSection } from 'src/components/detail-view';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Box, Link, Stack, Collapse, IconButton, Typography } from '@mui/material';
+import { Box, Stack, Collapse, IconButton, Typography } from '@mui/material';
 import { InfoTooltipIcon } from 'src/screens/hr/policies/components/HRPolicySharedUI';
 import { selectableAssignmentPolicyFamilies } from 'src/redux/finance/studentFeeAssignment';
 
@@ -35,7 +33,6 @@ export default function AssignmentReview({
   data: AssignmentPreview;
   committed?: boolean;
 }) {
-  const [showInstallments, setShowInstallments] = useState(false);
   const headsExpanded = useBoolean(true);
   const scheduleExpanded = useBoolean(true);
   const regionId = useId();
@@ -267,6 +264,7 @@ export default function AssignmentReview({
                       ),
                     },
                   ]}
+                  searchFieldProps={{ placeholder: 'Search' }}
                 />
               </Collapse>
             </DetailSection>
@@ -274,40 +272,8 @@ export default function AssignmentReview({
             <DetailSection
               icon="mdi:calendar-clock-outline"
               title="Installment Schedule"
-              helpText="Recorded installments with demand dates, payment deadlines and assigned amounts. Saved assignments also show paid and outstanding balances. View all opens the individual fee-head installments."
-              action={
-                <Stack direction="row" spacing={0.5} alignItems="center" useFlexGap flexWrap="wrap">
-                  {expansionAction('installment schedule', scheduleRegion, scheduleExpanded)}
-                  <Link
-                    component="button"
-                    type="button"
-                    variant="body2"
-                    underline="hover"
-                    color="text.primary"
-                    disabled={!data.lines.length}
-                    onClick={() => setShowInstallments(true)}
-                    sx={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 0.75,
-                      fontWeight: 600,
-                      p: 0,
-                      bgcolor: 'transparent',
-                      border: 0,
-                      '&:focus-visible': {
-                        outline: '2px solid',
-                        outlineColor: 'primary.main',
-                        outlineOffset: 4,
-                        borderRadius: 0.5,
-                      },
-                      '&:disabled': { color: 'text.disabled', cursor: 'default' },
-                    }}
-                  >
-                    <Iconify icon={GlobalIcons.eye} width={18} aria-hidden />
-                    View all
-                  </Link>
-                </Stack>
-              }
+              helpText="Recorded installments with demand dates, payment deadlines and assigned amounts. Saved assignments also show paid and outstanding balances."
+              action={expansionAction('installment schedule', scheduleRegion, scheduleExpanded)}
             >
               <Collapse in={scheduleExpanded.value} id={scheduleRegion}>
                 <CustomizableTable
@@ -412,175 +378,13 @@ export default function AssignmentReview({
                         ]
                       : []),
                   ]}
+                  searchFieldProps={{ placeholder: 'Search' }}
                 />
               </Collapse>
             </DetailSection>
           </Stack>
         </Box>
       </Stack>
-      {showInstallments && (
-        <CustomDialog
-          open
-          title="Installment details"
-          titleInfo="Individual recorded fee-head installments, allocation shares, dates and amounts for this assignment."
-          maxWidth={committed ? 'lg' : 'md'}
-          hasForm={false}
-          guardUnsavedChanges={false}
-          handleClose={() => setShowInstallments(false)}
-        >
-          <DialogScrollContent
-            scrollBarProps={{
-              autoHide: false,
-              ariaLabel: 'Installment details',
-            }}
-          >
-            <CustomizableTable
-              {...embeddedTableProps}
-              tableContainerProps={{
-                sx: {
-                  height: 'auto',
-                  flex: 'none',
-                  // This embedded table grows with its rows: the dialog body owns
-                  // vertical scrolling, while the table contains horizontal overflow.
-                  '& .MuiTable-root': { minWidth: committed ? 1120 : 820 },
-                  '& .MuiTableCell-root': { whiteSpace: 'nowrap' },
-                },
-              }}
-              tableId={`${tableId}-installments`}
-              tableTitle={
-                committed ? 'Assigned fee installments and balances' : 'Preview fee installments'
-              }
-              data={data.lines.map((line, i) => ({
-                ...line,
-                _id: line.dueFeeId ?? `${line.feeHeadId}-${line.sequence}-${i}`,
-              }))}
-              noDataText="No installments recorded for this assignment."
-              columns={[
-                {
-                  id: 'feeHeadName',
-                  label: 'Fee head / installment',
-                  filterType: 'string' as const,
-                  minWidth: 260,
-                  width: 300,
-                  isSort: false,
-                  isFilter: true,
-                  render: (_value, line) => (
-                    <Stack direction="row" spacing={0.5} alignItems="center" sx={{ minWidth: 0 }}>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          minWidth: 0,
-                          flex: 1,
-                          whiteSpace: 'normal',
-                          overflowWrap: 'anywhere',
-                        }}
-                      >
-                        {line.feeHeadName} · {line.installmentLabel}
-                      </Typography>
-                      {line.explanation && (
-                        <InfoTooltipIcon
-                          label={`${line.feeHeadName} ${line.installmentLabel} calculation details`}
-                          title={line.explanation}
-                        />
-                      )}
-                    </Stack>
-                  ),
-                },
-                {
-                  id: 'allocationPercentage',
-                  label: 'Share',
-                  filterType: 'number' as const,
-                  renderColumn: () => (
-                    <InfoTooltipIcon
-                      label="About installment shares"
-                      title="The percentage of this fee allocated to the installment by its saved payment term. Service-date adjustments do not change this share."
-                    />
-                  ),
-                  minWidth: 80,
-                  align: 'left',
-                  cellSx: { textAlign: 'right', fontVariantNumeric: 'tabular-nums' },
-                  isSort: false,
-                  isFilter: true,
-                  render: (value) => (legacy ? 'Unknown' : `${value}%`),
-                },
-                {
-                  id: 'demandDate',
-                  label: 'Demand date',
-                  filterType: 'date' as const,
-                  renderColumn: () => (
-                    <InfoTooltipIcon
-                      label="About installment demand dates"
-                      title="The date this installment becomes available for collection."
-                    />
-                  ),
-                  minWidth: 125,
-                  isSort: false,
-                  isFilter: true,
-                  render: (value) => (value ? fDate(value) : '—'),
-                },
-                {
-                  id: 'dueDate',
-                  label: 'Due date',
-                  filterType: 'date' as const,
-                  renderColumn: () => (
-                    <InfoTooltipIcon
-                      label="About installment due dates"
-                      title="The payment deadline for this installment. Assignment preserves the configured date."
-                    />
-                  ),
-                  minWidth: 125,
-                  isSort: false,
-                  isFilter: true,
-                  render: (value) => fDate(value),
-                },
-                {
-                  id: 'proratedAmount',
-                  label: 'Obligation',
-                  filterType: 'number' as const,
-                  renderColumn: () => (
-                    <InfoTooltipIcon
-                      label="About installment obligations"
-                      title="The amount assigned to this installment after applicable service-date adjustments. This is not the outstanding balance after payments."
-                    />
-                  ),
-                  minWidth: 125,
-                  align: 'left',
-                  cellSx: { textAlign: 'right', fontVariantNumeric: 'tabular-nums' },
-                  isSort: false,
-                  isFilter: true,
-                  render: (value) => money(value),
-                },
-                ...(committed
-                  ? [
-                      {
-                        id: 'paidAmount',
-                        label: 'Paid',
-                        filterType: 'number' as const,
-                        minWidth: 120,
-                        align: 'left' as const,
-                        cellSx: { textAlign: 'right' as const, fontVariantNumeric: 'tabular-nums' },
-                        isSort: false,
-                        isFilter: true,
-                        render: (value: number) => money(value),
-                      },
-                      {
-                        id: 'outstandingAmount',
-                        label: 'Outstanding',
-                        filterType: 'number' as const,
-                        minWidth: 140,
-                        align: 'left' as const,
-                        cellSx: { textAlign: 'right' as const, fontVariantNumeric: 'tabular-nums' },
-                        isSort: false,
-                        isFilter: true,
-                        render: (value: number) => money(value),
-                      },
-                    ]
-                  : []),
-              ]}
-            />
-          </DialogScrollContent>
-        </CustomDialog>
-      )}
     </Box>
   );
 }

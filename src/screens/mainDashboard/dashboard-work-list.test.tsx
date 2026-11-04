@@ -4,7 +4,8 @@ import { render, screen } from '@testing-library/react';
 
 import { DashboardWorkList } from './dashboard-work-list';
 
-vi.mock('@iconify/react', () => ({ Icon: 'svg', disableCache: vi.fn() }));
+vi.mock('@iconify/react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@iconify/react')>()), Icon: 'svg', disableCache: vi.fn() }));
 
 const item = {
   id: 'approval',

@@ -7,7 +7,7 @@ import type {
   AssignmentCandidate,
 } from 'src/redux/finance/studentFeeAssignment';
 
-import { createApi } from '@reduxjs/toolkit/query/react';
+import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import {
   classType,
   financeModuleType,
@@ -62,6 +62,8 @@ const policyOptions: AssignmentPolicy[] = [
   },
 ];
 const stamps = new Map<string, number>();
+const unpaidEdit = new URLSearchParams(window.location.search).has('unpaidEdit');
+const paidEdit = new URLSearchParams(window.location.search).has('paidEdit');
 const bulkSidebar = new URLSearchParams(window.location.search).has('bulkSidebar');
 const installmentStress = new URLSearchParams(window.location.search).has('installmentStress');
 
@@ -156,9 +158,17 @@ function assignmentContext(studentId: string): AssignmentContext {
     status: assigned ? 'Assigned' : admission ? 'Selected' : 'Unassigned',
     source: admission ? 'Admission' : 'Finance',
     assignmentId: assigned?.assignmentId,
+    canEditStructure: Boolean(unpaidEdit && assigned && !(paidEdit && studentId === 'student-one')),
+    assignmentConcurrencyStamp: String(stamps.get(studentId) ?? 0),
+    assignedAssignment: assigned?.assignment,
+    structureEditBlocker:
+      paidEdit && studentId === 'student-one'
+        ? 'Payment has been recorded. Only policies can be edited.'
+        : undefined,
     applicationId: admission ? `application-${studentId}` : null,
-    structureId: admission ? candidate.id : null,
-    structureRevision: admission ? candidate.revisionNumber : null,
+    structureId: assigned?.assignment.structureId ?? (admission ? candidate.id : null),
+    structureRevision:
+      assigned?.assignment.revisionNumber ?? (admission ? candidate.revisionNumber : null),
     joiningDate: admission ? joiningDate : null,
     chargeStartDate: admission ? joiningDate : null,
     chargeEndDate: admission ? '2027-03-31' : null,
@@ -291,18 +301,18 @@ function preview(input: AssignmentRequest): AssignmentPreview {
         : defaultPolicy;
       return selected
         ? [
-          {
-            ...selected,
-            source:
-              selected.versionId === defaultPolicy.versionId ? 'FeeStructure' : 'StudentOverride',
-          },
-        ]
+            {
+              ...selected,
+              source:
+                selected.versionId === defaultPolicy.versionId ? 'FeeStructure' : 'StudentOverride',
+            },
+          ]
         : [];
     }),
   };
 }
 function commit(input: AssignmentRequest): AssignmentCommit {
-  if (saved.has(input.studentId))
+  if (saved.has(input.studentId) && !input.editAssignmentId)
     return { ...saved.get(input.studentId)!, outcome: 'AlreadyAssigned' };
   const result: AssignmentCommit = {
     assignmentId: `assignment-${input.studentId}`,
@@ -313,6 +323,7 @@ function commit(input: AssignmentRequest): AssignmentCommit {
         : preview(input),
   };
   saved.set(input.studentId, result);
+  if (input.editAssignmentId) stamps.set(input.studentId, (stamps.get(input.studentId) ?? 0) + 1);
   return result;
 }
 // Opt into saved evidence so drawer checks do not depend on completing a new assignment.
@@ -326,6 +337,24 @@ if (new URLSearchParams(window.location.search).has('assignedView')) {
     feeHeadDetails: [],
   });
 }
+if (unpaidEdit) {
+  ['student-one', 'student-two'].forEach((studentId) =>
+    commit({
+      studentId,
+      academicYearId: 'year',
+      standardFeeStructureId: candidate.id,
+      selectedOptionalFeeHeadIds: [],
+      servicePeriods: [],
+      feeHeadDetails: [],
+      variableFeeHeads: candidate.heads
+        .filter((head) => head.isVariable && !head.isOptional)
+        .map((head) => ({ feeHeadId: head.feeHeadId, amount: 5000 })),
+    })
+  );
+}
+const realApi = new URLSearchParams(window.location.search).has('realApi');
+const realBaseQuery = fetchBaseQuery({ baseUrl: '/api' });
+
 export const api = createApi({
   reducerPath: 'api',
   tagTypes: [
@@ -334,7 +363,10 @@ export const api = createApi({
     ...Object.values(studentAdmissionType),
     ...Object.values(classType),
   ],
-  baseQuery: async (args: { url: string; body?: any; params?: any }) => {
+  baseQuery: async (args: { url: string; body?: any; params?: any }, queryApi, extraOptions) => {
+    if (realApi) return realBaseQuery(args, queryApi, extraOptions);
+    if (args.body?.editAssignmentId && paidEdit && args.body.studentId === 'student-one')
+      return { error: { status: 409, data: { code: 'Finance:Assignment:StructureEditBlocked' } } };
     if (args.url.endsWith('/contexts')) {
       if (admissionScenario === 'context-error')
         return {
@@ -496,6 +528,10 @@ export const api = createApi({
               stageName: 'Primary',
               isActive: true,
               isFeeStructureAssigned: saved.has('student-one'),
+              canEditStructure: assignmentContext('student-one').canEditStructure,
+              structureEditBlocker: assignmentContext('student-one').structureEditBlocker,
+              structureId: assignmentContext('student-one').structureId,
+              structureRevision: assignmentContext('student-one').structureRevision,
               assignmentState: assignmentContext('student-one').status,
               assignmentSource: assignmentContext('student-one').source,
             },
@@ -513,6 +549,10 @@ export const api = createApi({
               stageName: 'Primary',
               isActive: true,
               isFeeStructureAssigned: saved.has('student-two'),
+              canEditStructure: assignmentContext('student-two').canEditStructure,
+              structureEditBlocker: assignmentContext('student-two').structureEditBlocker,
+              structureId: assignmentContext('student-two').structureId,
+              structureRevision: assignmentContext('student-two').structureRevision,
               assignmentState: assignmentContext('student-two').status,
               assignmentSource: assignmentContext('student-two').source,
             },
@@ -554,7 +594,7 @@ export const api = createApi({
       };
     }
     if (args.url.endsWith('/assign-bulk')) {
-      const items: AssignmentRequest[] = args.body.items;
+      const { items }: { items: AssignmentRequest[] } = args.body;
       const results = items.map((input) => {
         const attempt = commitAttempts.get(input.studentId) ?? 0;
         commitAttempts.set(input.studentId, attempt + 1);

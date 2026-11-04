@@ -264,6 +264,7 @@ const FinanceNewBudgetingScreen = () => {
         tableId={`${tabs.value}-table`}
         columns={renderTableColumns(tabs.value as 'income' | 'expenses')}
         data={tabs.value === 'income' ? budgetIncomeData : budgetExpenseData}
+        searchFieldProps={{ placeholder: 'Search' }}
       />
 
       <CustomDialog

@@ -62,6 +62,7 @@ import AssignedPolicyEditor from './AssignedPolicyEditor';
 import AssignmentStudentInputs from './AssignmentStudentInputs';
 import PreparedAssignmentHandoff from './PreparedAssignmentHandoff';
 import { assignmentCurrencyTotals } from './assignmentReviewPresentation';
+import { assignmentEditRequest, assignmentEditReasonError } from './assignmentEditRequest';
 import { assignmentYearBounds, assignmentServiceDateError } from './assignmentServiceDates';
 import {
   assignmentInputError,
@@ -150,6 +151,7 @@ type AssignmentWorkflowProps = {
   onClose: () => void;
   onBusyChange?: (busy: boolean) => void;
   onContextResolved?: (status: AssignmentContext['status']) => void;
+  onStructureEditResolved?: (editing: boolean) => void;
 };
 
 export default function AssignmentWorkflow({
@@ -226,8 +228,51 @@ export default function AssignmentWorkflow({
         {single.blocker || 'Review this student’s admission facts before assigning fees.'}
       </Alert>
     );
+  const editingContexts =
+    selectedStudents.length > 1 ? (initialBatchContexts.current ?? contexts) : contexts;
+  const editSelection =
+    editorProps.editAssignedPolicies &&
+    selectedStudents.every((student) =>
+      editingContexts?.some(
+        (item) => item.studentId === student.studentId && item.status === 'Assigned'
+      )
+    );
+  const editingStructure =
+    !!editSelection &&
+    canAssign &&
+    selectedStudents.every((student) => student.isActive !== false) &&
+    selectedStudents.every((student) =>
+      editingContexts?.some(
+        (item) =>
+          item.studentId === student.studentId &&
+          item.canEditStructure &&
+          item.assignmentId &&
+          item.assignmentConcurrencyStamp &&
+          item.assignedAssignment
+      )
+    );
+  if (editSelection && selectedStudents.length > 1 && !editingStructure) {
+    const blocked = editingContexts?.find((item) => !item.canEditStructure);
+    return (
+      <Alert severity="warning" sx={{ m: 2 }}>
+        {blocked?.structureEditBlocker ||
+          'Select unpaid students with editable assignments. Paid assignments allow policy changes only.'}
+      </Alert>
+    );
+  }
+  const editStructures = editingStructure
+    ? new Set(
+        editingContexts?.map((item) => JSON.stringify([item.structureId, item.structureRevision]))
+      )
+    : undefined;
+  if (editStructures && editStructures.size !== 1)
+    return (
+      <Alert severity="warning" sx={{ m: 2 }}>
+        Select students with the same fee structure and revision for bulk editing.
+      </Alert>
+    );
   const excluded =
-    selectedStudents.length > 1
+    selectedStudents.length > 1 && !editingStructure
       ? selectedStudents.filter((student) =>
           initialBatchContexts.current?.some(
             (item) =>
@@ -263,9 +308,10 @@ export default function AssignmentWorkflow({
         <AssignmentEditor
           {...editorProps}
           academicYearId={academicYearId}
+          editAssignedStructure={editingStructure}
           onBusyChange={onBusyChange}
           students={students}
-          contexts={contexts ?? []}
+          contexts={(editingStructure ? editingContexts : contexts) ?? []}
           onAssignedConflict={() => contextQuery.refetch()}
         />
       ) : (
@@ -283,7 +329,9 @@ function AdmissionDefaults({
   students,
   candidates,
   academicYearId,
+  editingStructure = false,
 }: {
+  editingStructure?: boolean;
   formik: FormikProps<AssignmentValues>;
   contexts: AssignmentContext[];
   students: Student[];
@@ -307,17 +355,23 @@ function AdmissionDefaults({
       {
         structureId: candidate.id,
         requests: students.map((student) =>
-          admissionAssignmentRequest(
-            student.studentId,
-            academicYearId,
-            candidate,
-            contexts.find((context) => context.studentId === student.studentId)
-          )
+          editingStructure
+            ? assignmentEditRequest(
+                contexts.find((item) => item.studentId === student.studentId)!,
+                candidate,
+                academicYearId
+              )
+            : admissionAssignmentRequest(
+                student.studentId,
+                academicYearId,
+                candidate,
+                contexts.find((context) => context.studentId === student.studentId)
+              )
         ),
       },
       false
     );
-  }, [academicYearId, candidates, contexts, formik, students]);
+  }, [academicYearId, candidates, contexts, editingStructure, formik, students]);
   return null;
 }
 
@@ -326,14 +380,21 @@ function AssignmentEditor({
   academicYearId,
   academicYearName,
   editAssignedPolicies = false,
+  editAssignedStructure = false,
+  onStructureEditResolved,
   onClose,
   onBusyChange,
   contexts,
   onAssignedConflict,
 }: Omit<AssignmentWorkflowProps, 'onContextResolved'> & {
+  editAssignedStructure?: boolean;
   contexts: AssignmentContext[];
   onAssignedConflict: () => void;
 }) {
+  useEffect(
+    () => onStructureEditResolved?.(editAssignedStructure),
+    [editAssignedStructure, onStructureEditResolved]
+  );
   const { permissions } = useSelector((state: RootState) => state.auth);
   const currentYear = useSelector((state: RootState) => state.globalState?.currentYear);
   const yearBounds = assignmentYearBounds(currentYear, academicYearId);
@@ -351,10 +412,15 @@ function AssignmentEditor({
   );
   const dispatch = useDispatch();
   const [editingPolicies, setEditingPolicies] = useState(
-    editAssignedPolicies && canOverridePolicies
+    editAssignedPolicies && canOverridePolicies && !editAssignedStructure
   );
+  useEffect(() => {
+    if (editAssignedPolicies && !editAssignedStructure && canOverridePolicies)
+      setEditingPolicies(true);
+  }, [editAssignedPolicies, editAssignedStructure, canOverridePolicies]);
   const setPolicyDirty = useCallback((dirty: boolean) => dispatch(setIsChanges(dirty)), [dispatch]);
-  const viewing = students.length === 1 && !!students[0].isFeeStructureAssigned;
+  const viewing =
+    !editAssignedStructure && students.length === 1 && !!students[0].isFeeStructureAssigned;
   const candidates = useAssignmentCandidatesQuery(
     { studentId: students[0]?.studentId, academicYearId },
     { skip: !academicYearId || viewing || !canAssign }
@@ -385,6 +451,7 @@ function AssignmentEditor({
   const [error, setError] = useState('');
   const [invalidAmounts, setInvalidAmounts] = useState(false);
   const [showInputErrors, setShowInputErrors] = useState(false);
+  const [showEditReasonError, setShowEditReasonError] = useState(false);
   const [operationPhase, setOperationPhase] = useState<'preview' | 'commit'>();
   const [previewClock, setPreviewClock] = useState(Date.now);
   const [retryingConfirmation, setRetryingConfirmation] = useState(false);
@@ -449,6 +516,21 @@ function AssignmentEditor({
     setRetryingConfirmation(false);
   };
 
+  const policyReasonMissing = (
+    candidate: AssignmentCandidate | undefined,
+    request: AssignmentRequest
+  ) => {
+    const saved = contexts.find((item) => item.studentId === request.studentId)?.assignedAssignment;
+    const baseline = request.editAssignmentId ? saved?.policies : candidate?.policies;
+    return (
+      request.policies?.some(
+        (policy) =>
+          policy.versionId !==
+          (baseline?.find((item) => item.family === policy.family)?.versionId ?? null)
+      ) && !request.policyOverrideReason?.trim()
+    );
+  };
+
   const runPreview = async (values: AssignmentValues) => {
     if (missingStructure) return;
     generation.current += 1;
@@ -476,15 +558,7 @@ function AssignmentEditor({
       setError(students.length === 1 || isBulk ? policyErr : `${studentName}: ${policyErr}`);
       return;
     }
-    const missingReason = items.find(
-      (request) =>
-        request.policies?.some(
-          (policy) =>
-            policy.versionId !==
-            (candidate.policies?.find((defaultPolicy) => defaultPolicy.family === policy.family)
-              ?.versionId ?? null)
-        ) && !request.policyOverrideReason?.trim()
-    );
+    const missingReason = items.find((request) => policyReasonMissing(candidate, request));
     if (missingReason) {
       setStructureValidated(false);
       setSelectedStudentId(missingReason.studentId);
@@ -771,7 +845,7 @@ function AssignmentEditor({
       <CustomStepperWithFormik
         contentScrollMode={isBulk ? 'regions' : 'step'}
         initialValues={initialValues}
-        steps={steps}
+        steps={editAssignedStructure ? [steps[0], steps[1], 'Review & save'] : steps}
         activeStep={activeStep}
         validationSchema={validationSchema}
         loadingLabel={
@@ -786,6 +860,12 @@ function AssignmentEditor({
         onStepClick={async (index, _label, formik) => {
           if (operation.current || busy || index === activeStep) return;
           if (activeStep === 0 && index > 0) {
+            const reasonError = formik.values.requests.map(assignmentEditReasonError).find(Boolean);
+            if (reasonError) {
+              setShowEditReasonError(true);
+              setError(reasonError);
+              return;
+            }
             const candidate = candidates.data?.find((c) => c.id === formik.values.structureId);
             if (candidate) {
               const missingPolicy = formik.values.requests.find(
@@ -806,13 +886,7 @@ function AssignmentEditor({
               }
               const missingReason = formik.values.requests.find(
                 (r: AssignmentRequest) =>
-                  !committedIds.has(r.studentId) &&
-                  r.policies?.some(
-                    (p) =>
-                      p.versionId !==
-                      (candidate.policies?.find((d) => d.family === p.family)?.versionId ?? null)
-                  ) &&
-                  !r.policyOverrideReason?.trim()
+                  !committedIds.has(r.studentId) && policyReasonMissing(candidate, r)
               );
               if (missingReason) {
                 setSelectedStudentId(missingReason.studentId);
@@ -861,7 +935,7 @@ function AssignmentEditor({
             ? complete
               ? 'Close'
               : 'Review remaining students'
-            : `Assign fees (${selectedPreviewItems.length})`
+            : `${editAssignedStructure ? 'Save fee changes' : 'Assign fees'} (${selectedPreviewItems.length})`
         }
         saveAndNextButtonProps={{
           size: 'small',
@@ -893,6 +967,12 @@ function AssignmentEditor({
         handleNext={async (_last, values: AssignmentValues, _formik, setLoading) => {
           if (operation.current || busy || missingStructure) return;
           if (activeStep === 0) {
+            const reasonError = values.requests.map(assignmentEditReasonError).find(Boolean);
+            if (reasonError) {
+              setShowEditReasonError(true);
+              setError(reasonError);
+              return;
+            }
             const candidate = candidates.data?.find((c) => c.id === values.structureId);
             if (candidate) {
               const missingPolicy = values.requests.find(
@@ -911,18 +991,14 @@ function AssignmentEditor({
                 return;
               }
             }
-            const missingReason = values.requests.find((r) => {
-              const requestCandidate = candidates.data?.find((c) => c.id === values.structureId);
-              return (
+            const missingReason = values.requests.find(
+              (r) =>
                 !committedIds.has(r.studentId) &&
-                r.policies?.some(
-                  (p) =>
-                    p.versionId !==
-                    (requestCandidate?.policies?.find((d) => d.family === p.family)?.versionId ?? null)
-                ) &&
-                !r.policyOverrideReason?.trim()
-              );
-            });
+                policyReasonMissing(
+                  candidates.data?.find((c) => c.id === values.structureId),
+                  r
+                )
+            );
             if (missingReason) {
               setSelectedStudentId(missingReason.studentId);
               setActiveStep(0);
@@ -984,18 +1060,14 @@ function AssignmentEditor({
             }
 
             if (activeStep === 1) {
-              const missingReason = values.requests.find((r) => {
-                const candidate = candidates.data?.find((c) => c.id === values.structureId);
-                return (
+              const missingReason = values.requests.find(
+                (r) =>
                   !committedIds.has(r.studentId) &&
-                  r.policies?.some(
-                    (p) =>
-                      p.versionId !==
-                      (candidate?.policies?.find((d) => d.family === p.family)?.versionId ?? null)
-                  ) &&
-                  !r.policyOverrideReason?.trim()
-                );
-              });
+                  policyReasonMissing(
+                    candidates.data?.find((c) => c.id === values.structureId),
+                    r
+                  )
+              );
               if (missingReason) {
                 setSelectedStudentId(missingReason.studentId);
                 setActiveStep(0);
@@ -1069,6 +1141,7 @@ function AssignmentEditor({
                 students={students}
                 candidates={candidates.data}
                 academicYearId={academicYearId}
+                editingStructure={editAssignedStructure}
               />
               {activeStep === 1 && (
                 <AssignmentAmountValidity
@@ -1079,6 +1152,12 @@ function AssignmentEditor({
                       .some((request) => Boolean(assignmentInputError(candidate, request)))
                   }
                   onChange={setInvalidAmounts}
+                />
+              )}
+              {editAssignedStructure && activeStep === 2 && !showResults && (
+                <DetailField
+                  label="Fee structure change reason"
+                  value={values.requests[0]?.editReason}
                 />
               )}
               {showResults && (
@@ -1119,11 +1198,14 @@ function AssignmentEditor({
                     disabled={
                       busy ||
                       committedIds.size > 0 ||
-                      contexts.some(
-                        (sourceContext) =>
-                          sourceContext.structureId &&
-                          students.some((student) => student.studentId === sourceContext.studentId)
-                      )
+                      (!editAssignedStructure &&
+                        contexts.some(
+                          (sourceContext) =>
+                            sourceContext.structureId &&
+                            students.some(
+                              (student) => student.studentId === sourceContext.studentId
+                            )
+                        ))
                     }
                     error={!!formik.touched.structureId && !!formik.errors.structureId}
                     helperText={formik.touched.structureId ? formik.errors.structureId : undefined}
@@ -1146,17 +1228,62 @@ function AssignmentEditor({
                         structureId: String(value),
                         requests: selectedCandidate
                           ? students.map((s) =>
-                              admissionAssignmentRequest(
-                                s.studentId,
-                                academicYearId,
-                                selectedCandidate,
-                                contexts.find((item) => item.studentId === s.studentId)
-                              )
+                              editAssignedStructure
+                                ? {
+                                    ...assignmentEditRequest(
+                                      contexts.find((item) => item.studentId === s.studentId)!,
+                                      selectedCandidate,
+                                      academicYearId
+                                    ),
+                                    editReason:
+                                      values.requests.find((item) => item.studentId === s.studentId)
+                                        ?.editReason ?? '',
+                                  }
+                                : admissionAssignmentRequest(
+                                    s.studentId,
+                                    academicYearId,
+                                    selectedCandidate,
+                                    contexts.find((item) => item.studentId === s.studentId)
+                                  )
                             )
                           : [],
                       });
                     }}
                   />
+                  {editAssignedStructure && (
+                    <TextField
+                      size="small"
+                      fullWidth
+                      required
+                      label="Fee structure change reason"
+                      name="editReason"
+                      value={values.requests[0]?.editReason ?? ''}
+                      disabled={busy || complete}
+                      onBlur={() => setShowEditReasonError(true)}
+                      error={
+                        showEditReasonError &&
+                        Boolean(values.requests[0] && assignmentEditReasonError(values.requests[0]))
+                      }
+                      onChange={(event) => {
+                        invalidate();
+                        setStructureValidated(false);
+                        formik.setFieldValue(
+                          'requests',
+                          values.requests.map((request) =>
+                            committedIds.has(request.studentId)
+                              ? request
+                              : { ...request, editReason: event.target.value }
+                          )
+                        );
+                      }}
+                      helperText={
+                        (showEditReasonError &&
+                          values.requests[0] &&
+                          assignmentEditReasonError(values.requests[0])) ||
+                        'Explain why the unpaid fee assignment is changing.'
+                      }
+                    />
+                  )}
                   {candidate && (
                     <Stack
                       direction="row"
@@ -1193,15 +1320,16 @@ function AssignmentEditor({
                   const admissionContext = contexts.find(
                     (item) => item.studentId === student.studentId
                   );
-                  const admissionPeriods = candidate
-                    ? admissionServicePeriods(
-                        candidate,
-                        admissionContext,
-                        candidate.heads
-                          .filter((head) => head.isOptional)
-                          .map((head) => head.feeHeadId)
-                      )
-                    : [];
+                  const admissionPeriods =
+                    candidate && !editAssignedStructure
+                      ? admissionServicePeriods(
+                          candidate,
+                          admissionContext,
+                          candidate.heads
+                            .filter((head) => head.isOptional)
+                            .map((head) => head.feeHeadId)
+                        )
+                      : [];
                   const studentCandidate = candidate && {
                     ...candidate,
                     heads: candidate.heads.map((head) => ({
@@ -1228,7 +1356,7 @@ function AssignmentEditor({
                         if (committedIds.has(r.studentId)) return r;
                         if (!isBulk)
                           return r.studentId === next.studentId && candidate
-                            ? mergeAssignmentInputs(next, r, candidate, admissionContext)
+                            ? mergeAssignmentInputs(next, r, candidate, admissionContext, request)
                             : r;
                         // The bulk editor owns one configuration. Keep each student's identity
                         // and saved result separate while applying changes to all remaining requests.
@@ -1237,7 +1365,8 @@ function AssignmentEditor({
                               next,
                               r,
                               candidate,
-                              contexts.find((item) => item.studentId === r.studentId)
+                              contexts.find((item) => item.studentId === r.studentId),
+                              request
                             )
                           : r;
                       })
@@ -1472,10 +1601,13 @@ function AssignmentEditor({
                         <Stack spacing={2} sx={{ minWidth: 0, pr: isBulk ? 1 : 0 }}>
                           {configuringBulk ? (
                             <Typography variant="body2" color="text.secondary">
-                              {contexts.some((source) => source.source === 'Admission')
+                              {editAssignedStructure
+                                ? 'Changes apply to all '
+                                : contexts.some((source) => source.source === 'Admission')
                                 ? 'Each student keeps their admission dates and confirmed fee choices. Other settings apply to all '
                                 : 'The same policies, fees and dates apply to all '}
                               {committedIds.size ? 'remaining' : 'selected'} students.
+                              {editAssignedStructure && ' Each student keeps their saved service dates unless you change them.'}
                             </Typography>
                           ) : (
                             (isBulk || (outcome && (showResults || outcome.result))) && (
@@ -1571,7 +1703,10 @@ function AssignmentEditor({
                                   <AssignmentStudentInputs
                                     key={student.studentId}
                                     candidate={studentCandidate ?? candidate}
-                                    lockOptionalSelection={Boolean(admissionContext?.structureId)}
+                                    lockOptionalSelection={
+                                      !editAssignedStructure &&
+                                      Boolean(admissionContext?.structureId)
+                                    }
                                     request={request}
                                     onChange={updateRequest}
                                     canOverrideDates={canOverrideDates}

@@ -1,107 +1,65 @@
 'use client';
 
-import type { LabelColor } from 'src/components/label';
+import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
-import React, { useMemo } from 'react';
-import { varAlpha } from 'src/theme/styles';
+import { useSelector } from 'react-redux';
+import { Box, Alert, Stack, Drawer, Button, Skeleton, DialogActions } from '@mui/material';
+import { GlobalIcons } from 'src/utils/icons';
+import { fDate, fDateTime } from 'src/utils/format-time';
+import { formatNumber } from 'src/utils/formate_number';
 import { Label } from 'src/components/label';
-import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import { formatNumber } from 'src/utils/formate_number';
-import { FeeMonth } from 'src/enums/fee-collection-type';
+import { DetailGrid, DetailField } from 'src/components/detail-view';
+import { FormSectionCard } from 'src/components/form-section-card';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { financePermissions } from 'src/constants/finance-menu';
 import { useGetFeeAdjustmentQuery } from 'src/redux/finance/adjustments/adjustmentApi';
-import {
-  Box,
-  Card,
-  Paper,
-  Stack,
-  Button,
-  Divider,
-  Skeleton,
-  Typography,
-  DialogActions,
-} from '@mui/material';
+import type { FeeAdjustmentDetailDto } from '../types/adjustmentApi.types';
+import type { IAdjustmentViewProps } from '../types/adjustment.types';
 
+import { useFinancePermissions } from '../../hooks/useFinancePermissions';
+import FinancePolicyDrawerHeader from '../../policies/components/FinancePolicyDrawerHeader';
+import { AdjustmentStatusEnum } from '../enums/adjustment.enum';
 import {
   ADJUSTMENT_STATUS_COLORS,
   formatAdjustmentStatusLabel,
 } from '../constants/adjustmentOptions';
 
-import type { IAdjustmentViewProps } from '../types/adjustment.types';
-
-// ─── Info Item ─────────────────────────────────────────────────────────────────
-
-const InfoItem = ({
-  icon,
+const moneyColumn = (id: string, label: string): IColumn => ({
+  id,
   label,
-  value,
-}: {
-  icon: string;
-  label: string;
-  value?: string | number | null;
-}) => {
-  const theme = useTheme();
-  return (
-    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
-      <Box
-        sx={{
-          width: 36,
-          height: 36,
-          borderRadius: 1,
-          bgcolor: varAlpha(theme.palette.primary.mainChannel, 0.08),
-          color: 'primary.main',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
-        }}
-      >
-        <Iconify icon={icon} sx={{ fontSize: 18 }} />
-      </Box>
-      <Box sx={{ minWidth: 0 }}>
-        <Typography
-          variant="caption"
-          sx={{
-            color: 'text.secondary',
-            display: 'block',
-            mb: 0.2,
-            fontWeight: 500,
-            textTransform: 'uppercase',
-            letterSpacing: 0.5,
-            fontSize: '0.65rem',
-          }}
-        >
-          {label}
-        </Typography>
-        <Typography
-          variant="subtitle2"
-          sx={{ fontWeight: 700, color: 'text.primary', wordBreak: 'break-word' }}
-        >
-          {value ?? 'N/A'}
-        </Typography>
-      </Box>
-    </Box>
-  );
-};
+  minWidth: 130,
+  align: 'right',
+  isSort: false,
+  isFilter: false,
+  render: (value) => (value == null ? '—' : formatNumber(value, 'INR', { fractionDigits: 2 })),
+});
+const sourceColumns: IColumn[] = [
+  { id: 'installmentLabel', label: 'Installment', minWidth: 150, isSort: false, isFilter: false },
+  { id: 'feeHeadName', label: 'Fee head', minWidth: 140, isSort: false, isFilter: false },
+  moneyColumn('paidAmount', 'Paid'),
+  moneyColumn('adjustableAmount', 'Adjustable'),
+  moneyColumn('requestedAmount', 'Requested'),
+];
+const allocationColumns: IColumn[] = [
+  { id: 'installmentLabel', label: 'Installment', minWidth: 150, isSort: false, isFilter: false },
+  { id: 'feeHeadName', label: 'Fee head', minWidth: 140, isSort: false, isFilter: false },
+  moneyColumn('amount', 'Applied'),
+  { id: 'applyBatchNumber', label: 'Batch', minWidth: 80, isSort: false, isFilter: false },
+  {
+    id: 'appliedOn',
+    label: 'Applied on',
+    minWidth: 160,
+    isSort: false,
+    isFilter: false,
+    render: (value) => (value ? fDateTime(value) : '—'),
+  },
+];
 
-// ─── Loading Skeleton ──────────────────────────────────────────────────────────
-
-const ViewSkeleton = () => (
-  <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-    <Skeleton variant="rectangular" height={160} sx={{ borderRadius: 2 }} />
-    <Skeleton variant="rectangular" height={72} sx={{ borderRadius: 2 }} />
-    <Skeleton variant="rectangular" height={200} sx={{ borderRadius: 2 }} />
-    <Skeleton variant="rectangular" height={120} sx={{ borderRadius: 2 }} />
-  </Box>
-);
-
-// ─── Component ────────────────────────────────────────────────────────────────
-
-const AdjustmentView: React.FC<IAdjustmentViewProps> = ({
+export default function AdjustmentView({
   adjustmentId,
   viewMeta,
   onClose,
@@ -109,324 +67,268 @@ const AdjustmentView: React.FC<IAdjustmentViewProps> = ({
   onReject,
   showApprove = false,
   showReject = false,
-}) => {
-  // ── Fetch detail data inside the view (common hook pattern) ──
-  const { data: detail, isLoading } = useQueryAndMutation({
+}: IAdjustmentViewProps) {
+  const access = useFinancePermissions(financePermissions.fees.adjustment);
+  const actorId = useSelector((state: RootState) => state.auth.user?.sub);
+  const query = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetFeeAdjustmentQuery,
     params: adjustmentId,
-    options: { skip: !adjustmentId },
+    options: { skip: !adjustmentId || !access.canView },
   });
-
-  const statusColor = (ADJUSTMENT_STATUS_COLORS[viewMeta.status] ?? 'default') as LabelColor;
-
-  // ── Helper: derive a human-readable month label from 1-based month integer + year ──
-  const formatMonthYear = (month: number, year: number): string => {
-    // FeeMonth enum is 0-based, API sends 1-based month numbers
-    const monthName = FeeMonth[month] ?? `Month ${month}`;
-    return `${monthName} ${year}`;
-  };
-
-  // ── Source Lines columns ──
-  const sourceLinesColumns: IColumn[] = useMemo(
-    () => [
-      {
-        id: 'month',
-        label: 'Installment',
-        align: 'left',
-        render: (_v: number, row: any) => (
-          <Typography variant="body2" fontWeight={600}>
-            {formatMonthYear(row.month, row.year)}
-          </Typography>
-        ),
-      },
-      { id: 'feeHeadName', label: 'Fee Head', align: 'left' },
-      {
-        id: 'adjustableAmount',
-        label: 'Adjustable Amount',
-        align: 'left',
-        isFilter: true,
-        filterType: 'number' as const,
-        render: (v: number) => formatNumber(v, 'INR'),
-      },
-      {
-        id: 'paidAmount',
-        label: 'Paid Amount',
-        align: 'left',
-        isFilter: true,
-        filterType: 'number' as const,
-        render: (v: number) => formatNumber(v, 'INR'),
-      },
-      {
-        id: 'requestedAmount',
-        label: 'Requested Amount',
-        align: 'left',
-        isFilter: true,
-        filterType: 'number' as const,
-        render: (v: number) => (
-          <Typography variant="body2" fontWeight={700} color="primary.main">
-            {formatNumber(v, 'INR')}
-          </Typography>
-        ),
-      },
-    ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
+  const detail: FeeAdjustmentDetailDto | undefined = query.currentData;
+  const loading = query.isLoading || query.isFetching;
+  const status = detail?.status ?? viewMeta.status;
+  const mayDecide = Boolean(
+    detail &&
+    !loading &&
+    !query.isError &&
+    access.canAdd &&
+    actorId &&
+    (detail.requestedByUserId ?? viewMeta.requestedByUserId) !== actorId
   );
-
-  // ── Target Allocations columns ──
-  const targetAllocColumns: IColumn[] = useMemo(
-    () => [
-      {
-        id: 'month',
-        label: 'Installment',
-        align: 'left',
-        render: (_v: number, row: any) => (
-          <Typography variant="body2" fontWeight={600}>
-            {formatMonthYear(row.month, row.year)}
-          </Typography>
-        ),
-      },
-      { id: 'feeHeadName', label: 'Fee Head', align: 'left' },
-      {
-        id: 'amount',
-        label: 'Applied Amount',
-        filterType: 'number',
-        align: 'left',
-        render: (v: number) => (
-          <Typography variant="body2" fontWeight={700} color="success.main">
-            {formatNumber(v, 'INR')}
-          </Typography>
-        ),
-      },
-    ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
-  );
-
-  if (isLoading || !detail) {
-    return <ViewSkeleton />;
-  }
-
-  const requestedDate = new Date(detail.createdAt).toLocaleDateString('en-IN', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
-
-  const summaryItems = [
-    {
-      label: 'Voucher No.',
-      value: detail.voucherNumber,
-    },
-    {
-      label: 'Applied Amount',
-      value: formatNumber(detail.appliedAmount, 'INR'),
-    },
-    {
-      label: 'Remaining Amount',
-      value: formatNumber(detail.remainingAmount, 'INR'),
-    },
-  ];
+  const canApply =
+    mayDecide &&
+    (status === AdjustmentStatusEnum.Pending || status === AdjustmentStatusEnum.PartiallyApplied);
+  const studentFields = detail
+    ? [
+        { label: 'Student name', value: detail.studentName },
+        { label: 'GR no.', value: detail.studentGrNo },
+        { label: 'Roll no.', value: detail.rollNo },
+        {
+          label: 'Class / Division',
+          value: [detail.className, detail.divisionName].filter(Boolean).join(' / '),
+        },
+        { label: 'Contact no.', value: detail.contactNo },
+      ]
+    : [];
+  const informationFields = detail
+    ? [
+        { label: 'Voucher', value: detail.voucherNumber },
+        {
+          label: 'Requested amount',
+          value: formatNumber(detail.requestedAmount, 'INR', { fractionDigits: 2 }),
+        },
+        {
+          label: 'Applied amount',
+          value: formatNumber(detail.appliedAmount, 'INR', { fractionDigits: 2 }),
+        },
+        {
+          label: 'Remaining amount',
+          value: formatNumber(detail.remainingAmount, 'INR', { fractionDigits: 2 }),
+        },
+        { label: 'Requested by', value: detail.requestedByName },
+        {
+          label: 'Requested on',
+          value: detail.createdAt ? fDate(detail.createdAt, 'DD-MM-YYYY') : undefined,
+        },
+        { label: 'Remarks', value: detail.remarks || detail.reason, fullWidth: true },
+        ...(detail.reason && detail.remarks && detail.reason !== detail.remarks
+          ? [{ label: 'Reason', value: detail.reason, fullWidth: true }]
+          : []),
+      ]
+    : [];
 
   return (
-    <Box display="flex" flexDirection="column" height="100%">
-      <Scrollbar sx={{ p: 2, height: '100%' }}>
-        {/* ── Student Info Card ──────────────────────────────────── */}
-        <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: 2 }}>
-          {/* Header row: Name + Status */}
-          <Box display="flex" alignItems="center" justifyContent="space-between" mb={1.5}>
-            <Box display="flex" alignItems="center" gap={1}>
-              <Iconify
-                icon="mdi:account-circle-outline"
-                width={20}
-                sx={{ color: 'primary.main' }}
-              />
-              <Box>
-                <Typography variant="subtitle2" fontWeight={700}>
-                  {detail.studentName}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  GR No: {detail.studentGrNo ?? 'N/A'}&nbsp;·&nbsp;
-                  {detail.className}
-                  {detail.divisionName ? ` / ${detail.divisionName}` : ''}
-                  {detail.rollNo ? ` · Roll ${detail.rollNo}` : ''}
-                </Typography>
-              </Box>
-            </Box>
-            <Label color={statusColor} sx={{ fontWeight: 700, fontSize: 13 }}>
-              {formatAdjustmentStatusLabel(detail.status)}
-            </Label>
-          </Box>
-
-          <Divider sx={{ mb: 1.5 }} />
-
-          {/* Info grid row 1: Contact, Requested By, Processed By, Type */}
-          <Box display="flex" flexWrap="wrap" gap={1} mb={1.5}>
-            {detail.contactNo && (
-              <InfoItem icon="mdi:phone-outline" label="Contact No." value={detail.contactNo} />
-            )}
-            <InfoItem
-              icon="mdi:account-tie-outline"
-              label="Requested By"
-              value={detail.requestedByName}
-            />
-            {detail.processedByName && (
-              <InfoItem
-                icon="mdi:check-decagram-outline"
-                label="Processed By"
-                value={detail.processedByName}
-              />
-            )}
-            {detail.processedAt && (
-              <InfoItem
-                icon="mdi:calendar-check-outline"
-                label="Processed Date"
-                value={new Date(detail.processedAt).toLocaleDateString('en-IN', {
-                  day: '2-digit',
-                  month: 'short',
-                  year: 'numeric',
-                })}
-              />
-            )}
-            <InfoItem
-              icon="mdi:cash-multiple"
-              label="Requested Amount"
-              value={formatNumber(detail.requestedAmount, 'INR')}
-            />
-            <InfoItem icon="mdi:calendar-outline" label="Requested Date" value={requestedDate} />
-            {detail.reason && (
-              <InfoItem icon="mdi:comment-text-outline" label="Reason" value={detail.reason} />
-            )}
-          </Box>
-        </Paper>
-
-        {/* ── Approver / Rejection Notes ───────────────── */}
-        {(detail.approverNotes || detail.rejectionReason) && (
-          <Stack spacing={1.5} mb={1.5}>
-            {detail.approverNotes && (
-              <Card variant="outlined" sx={{ borderRadius: 2, p: 2 }}>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  fontWeight={600}
-                  textTransform="uppercase"
-                  letterSpacing={1}
-                  display="block"
-                  mb={0.5}
-                >
-                  Approver Notes
-                </Typography>
-                <Typography variant="body2">{detail.approverNotes}</Typography>
-              </Card>
-            )}
-            {detail.rejectionReason && (
-              <Card variant="outlined" sx={{ borderRadius: 2, p: 2, borderColor: 'error.light' }}>
-                <Typography
-                  variant="caption"
-                  color="error.main"
-                  fontWeight={700}
-                  textTransform="uppercase"
-                  letterSpacing={1}
-                  display="block"
-                  mb={0.5}
-                >
-                  Rejection Reason
-                </Typography>
-                <Typography variant="body2" color="error.dark">
-                  {detail.rejectionReason}
-                </Typography>
-              </Card>
-            )}
-          </Stack>
-        )}
-
-        {/* ── Source Lines (Fee lines requested for adjustment) ── */}
-        {detail.sourceLines && detail.sourceLines.length > 0 && (
-          <Paper variant="outlined" sx={{ mb: 1.5, borderRadius: 2, overflow: 'hidden' }}>
-            <Stack direction="row" alignItems="center" gap={1} px={2} pt={1.5} pb={1}>
-              <Iconify icon="mdi:cash-refund" width={18} sx={{ color: 'primary.main' }} />
-              <Box>
-                <Typography variant="subtitle2" fontWeight={700}>
-                  Source Fee Lines
-                </Typography>
-              </Box>
+    <Drawer
+      anchor="right"
+      open
+      onClose={onClose}
+      PaperProps={{
+        role: 'dialog',
+        'aria-modal': true,
+        'aria-labelledby': 'adjustment-details-title',
+        sx: {
+          width: { xs: '100%', sm: 'min(760px, 92vw)' },
+          maxWidth: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          height: 1,
+          bgcolor: 'background.paper',
+          backgroundImage: 'none',
+        },
+      }}
+    >
+      <FinancePolicyDrawerHeader
+        title="View Adjustment Request"
+        titleId="adjustment-details-title"
+        onClose={onClose}
+        helpText="Review the student, source fee lines, recorded adjustment amounts and allocation history. Approval applies a non-cash adjustment to eligible outstanding fees."
+        badges={
+          <Label color={ADJUSTMENT_STATUS_COLORS[status] ?? 'default'}>
+            {formatAdjustmentStatusLabel(status)}
+          </Label>
+        }
+      />
+      <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
+        <Stack spacing={2} sx={{ p: 2, minWidth: 0 }}>
+          {loading ? (
+            <Stack spacing={2} aria-label="Loading adjustment details" aria-busy="true">
+              {[0, 1, 2].map((section) => (
+                <Skeleton key={section} variant="rounded" height={180} />
+              ))}
             </Stack>
-            <CustomizableTable
-              tableId="adjustment-source-lines-table"
-              columns={sourceLinesColumns}
-              data={detail.sourceLines}
-              isPagination={false}
-              isFilter
-              isSearch={false}
-              noDataText="No source lines"
-              wrapperProps={{ minHeight: 'unset' }}
-            />
-          </Paper>
-        )}
-
-        {/* ── Target Allocations (Applied fee relief) ── */}
-        {detail.targetAllocations && detail.targetAllocations.length > 0 && (
-          <Paper variant="outlined" sx={{ mb: 1.5, borderRadius: 2, overflow: 'hidden' }}>
-            <Stack direction="row" alignItems="center" gap={1} px={2} pt={1.5} pb={1}>
-              <Iconify icon="mdi:check-circle-outline" width={18} sx={{ color: 'success.main' }} />
-              <Box>
-                <Typography variant="subtitle2" fontWeight={700}>
-                  Applied Allocations
-                </Typography>
-              </Box>
-            </Stack>
-            <CustomizableTable
-              tableId="adjustment-target-allocations-table"
-              columns={targetAllocColumns}
-              data={detail.targetAllocations}
-              isPagination={false}
-              isFilter={false}
-              isSearch={false}
-              noDataText="No allocations applied yet"
-              wrapperProps={{ minHeight: 'unset' }}
-            />
-          </Paper>
-        )}
+          ) : query.isError || !detail ? (
+            <Alert
+              severity="error"
+              action={
+                <Button color="inherit" size="small" onClick={() => query.refetch()}>
+                  Retry
+                </Button>
+              }
+            >
+              Could not load adjustment details. Please try again.
+            </Alert>
+          ) : (
+            <>
+              <FormSectionCard
+                title="Student Information"
+                sx={{ containerType: 'inline-size', minWidth: 0 }}
+                icon={GlobalIcons.assigned}
+                descriptionTooltip="Student identity and academic details associated with this adjustment request."
+              >
+                <DetailGrid>
+                  {studentFields.map((field) => (
+                    <DetailField key={field.label} {...field} />
+                  ))}
+                </DetailGrid>
+              </FormSectionCard>
+              <FormSectionCard
+                title="Adjustment Information"
+                sx={{ containerType: 'inline-size', minWidth: 0 }}
+                icon={GlobalIcons.notebook}
+                descriptionTooltip="The recorded request, applied balance, remaining balance and remarks. A remaining amount may be applied in a later batch."
+              >
+                <DetailGrid>
+                  {informationFields.map((field) => (
+                    <DetailField key={field.label} {...field} />
+                  ))}
+                </DetailGrid>
+              </FormSectionCard>
+              <FormSectionCard
+                title="Source Fee Lines"
+                icon={GlobalIcons.receiptIcon}
+                descriptionTooltip="Fee installments included in the request, with their paid, adjustable and requested amounts."
+              >
+                <CustomizableTable
+                  tableId="adjustment-source-lines-table"
+                  tableTitle="Adjustment source fee lines"
+                  variant="embedded"
+                  columns={sourceColumns}
+                  data={detail.sourceLines ?? []}
+                  showToolbar={false}
+                  isPagination={false}
+                  isSearch={false}
+                  isFilter={false}
+                  isShowedDense={false}
+                  noDataText="No source fee lines recorded."
+                />
+              </FormSectionCard>
+              {Boolean(detail.targetAllocations?.length) && (
+                <FormSectionCard
+                  title="Applied Allocations"
+                  icon={GlobalIcons.history}
+                  descriptionTooltip="Recorded applications of this adjustment, including each target installment, batch and application date."
+                >
+                  <CustomizableTable
+                    tableId="adjustment-target-allocations-table"
+                    tableTitle="Applied adjustment allocations"
+                    variant="embedded"
+                    columns={allocationColumns}
+                    data={detail.targetAllocations}
+                    showToolbar={false}
+                    isPagination={false}
+                    isSearch={false}
+                    isFilter={false}
+                    isShowedDense={false}
+                  />
+                </FormSectionCard>
+              )}
+              {(detail.processedByName ||
+                detail.processedAt ||
+                detail.approverNotes ||
+                detail.rejectionReason) && (
+                <FormSectionCard
+                  title="Review Information"
+                  sx={{ containerType: 'inline-size', minWidth: 0 }}
+                  icon={GlobalIcons.clock}
+                  descriptionTooltip="The reviewer, review date and notes recorded for this adjustment."
+                >
+                  <DetailGrid>
+                    <DetailField
+                      label="Processed by"
+                      value={detail.processedByName}
+                    />
+                    <DetailField
+                      label="Processed on"
+                      value={detail.processedAt ? fDateTime(detail.processedAt) : undefined}
+                    />
+                    {detail.approverNotes && (
+                      <DetailField
+                        label="Approval notes"
+                        value={detail.approverNotes}
+                        fullWidth
+                      />
+                    )}
+                    {detail.rejectionReason && (
+                      <DetailField
+                        label="Rejection reason"
+                        value={detail.rejectionReason}
+                        fullWidth
+                      />
+                    )}
+                  </DetailGrid>
+                </FormSectionCard>
+              )}
+            </>
+          )}
+        </Stack>
       </Scrollbar>
-
-      {/* ── Actions ───────────────────────────────────────────────── */}
-      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+      <DialogActions
+        sx={{
+          px: 2,
+          py: 1.5,
+          borderTop: 1,
+          borderColor: 'divider',
+          flexShrink: 0,
+          flexWrap: 'wrap',
+          gap: 1,
+        }}
+      >
         <Button
           variant="outlined"
           color="inherit"
           size="small"
-          startIcon={<Iconify icon="mdi:close" />}
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
           onClick={onClose}
         >
           Close
         </Button>
-
-        {showReject && (
+        {showReject && mayDecide && status === AdjustmentStatusEnum.Pending && (
           <Button
             variant="soft"
             color="error"
             size="small"
-            startIcon={<Iconify icon="mdi:close-circle-outline" />}
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
             onClick={onReject}
           >
             Reject
           </Button>
         )}
-        {showApprove && (
+        {showApprove && canApply && (
           <Button
             variant="soft"
             color="success"
             size="small"
-            startIcon={<Iconify icon="mdi:check-circle-outline" />}
+            startIcon={<Iconify icon={GlobalIcons.tick} />}
             onClick={onApprove}
           >
-            Approve & Apply
+            {status === AdjustmentStatusEnum.PartiallyApplied
+              ? 'Apply remaining'
+              : 'Approve and apply'}
           </Button>
         )}
       </DialogActions>
-    </Box>
+    </Drawer>
   );
-};
-
-export default AdjustmentView;
+}

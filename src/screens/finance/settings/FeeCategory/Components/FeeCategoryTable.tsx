@@ -313,7 +313,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
           columns={feeHeadColumns}
           data={heads}
           isLoading={false}
-          searchFieldProps={{ placeholder: 'Search fee heads...' }}
+          searchFieldProps={{ placeholder: 'Search' }}
           noDataText="No fee heads are mapped to this category."
           tableContainerProps={{
             sx: {
@@ -642,6 +642,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
           setSorts(nextSorts);
           setQueryParams((prev) => ({ ...prev, page: 1 }));
         }}
+        searchFieldProps={{ placeholder: 'Search' }}
       />
 
       <Drawer

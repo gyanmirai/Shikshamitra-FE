@@ -308,7 +308,7 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
           onClick: () => onView(row as IBankAccount),
         })}
         tableTitle="Bank Accounts"
-        searchFieldProps={{ placeholder: 'Search bank, branch or holder...' }}
+        searchFieldProps={{ placeholder: 'Search' }}
         noDataText={
           <>
             Bank Account Data Not Found{' '}

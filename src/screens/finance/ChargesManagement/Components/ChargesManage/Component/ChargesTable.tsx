@@ -352,6 +352,7 @@ const ChargesTable = ({
             maxWidth: 220,
           },
           {
+            cellSx: { textAlign: 'right' as const },
             id: 'amount',
             label: 'Amount',
             filterType: 'number',
@@ -536,6 +537,7 @@ const ChargesTable = ({
         }}
         wrapperProps={{ sx: { flex: 1, minHeight: 0 } }}
         tableContainerProps={{ sx: { height: 1 } }}
+        searchFieldProps={{ placeholder: 'Search' }}
       />
     </>
   );

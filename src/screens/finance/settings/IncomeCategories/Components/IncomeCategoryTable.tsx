@@ -207,7 +207,7 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
       <CustomizableTable
         tableId="income-category-data-table"
         tableTitle="Income Categories"
-        searchFieldProps={{ placeholder: 'Search name...' }}
+        searchFieldProps={{ placeholder: 'Search' }}
         noDataText={
           <>
             Income Category Data Not Found{' '}

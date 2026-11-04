@@ -1,5 +1,5 @@
 import { it, vi, expect } from 'vitest';
-import { waitFor, renderHook } from '@testing-library/react';
+import { waitFor, fireEvent, renderHook } from '@testing-library/react';
 import { useGetRefundPoliciesQuery } from 'src/redux/finance/refundPolicy';
 import { useGetCollectionPoliciesQuery } from 'src/redux/finance/collectionPolicy';
 import { useGetActiveFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
@@ -137,4 +137,100 @@ it('loads both policy defaults for a new structure before opening its Policies t
       expect.objectContaining({ skip: false })
     );
   });
+});
+
+it('suspends inactive editors financial lookups and refreshes while retaining action permissions', async () => {
+  const refreshContext = vi.fn();
+  const context = {
+    academicYearId: 'year',
+    boardId: 'board',
+    permissions: {
+      headsRead: true,
+      termsRead: true,
+      collectionRead: true,
+      refundRead: true,
+      delete: true,
+    },
+  };
+  const empty = { items: [], totalCount: 0 };
+  vi.mocked(useGetStructureContextQuery).mockReturnValue({
+    currentData: context,
+    refetch: refreshContext,
+  } as any);
+  const headData = [{ id: 'head', name: 'Tuition' }];
+  const refetchHeads = vi.fn();
+  vi.mocked(useGetActiveFeeHeadsQuery).mockImplementation(
+    (_params, options) =>
+      ({
+        // Match RTK's currentData semantics when a query is skipped.
+        currentData: options?.skip ? undefined : headData,
+        refetch: refetchHeads,
+      }) as any
+  );
+  vi.mocked(useGetPaymentTermByIdQuery).mockReturnValue({} as any);
+  [useGetPaymentTermsQuery, useGetCollectionPoliciesQuery, useGetRefundPoliciesQuery].forEach(
+    (query) => {
+      vi.mocked(query).mockReturnValue({
+        currentData: empty,
+        isFetching: false,
+        refetch: vi.fn(),
+      } as any);
+    }
+  );
+  const { result, rerender } = renderHook(
+    ({ active }) =>
+      useFeeStructureLookups(
+        { feeStructureMetadataId: 'metadata', standardId: 'class' },
+        true,
+        { feeHeadId: 'head', paymentTermId: 'term', paymentTermVersionId: 'version' } as any,
+        false,
+        active
+      ),
+    { initialProps: { active: false } }
+  );
+  expect(result.current.settings?.permissions.delete).toBe(true);
+  [
+    useGetPaymentTermByIdQuery,
+    useGetPaymentTermsQuery,
+    useGetCollectionPoliciesQuery,
+    useGetRefundPoliciesQuery,
+  ].forEach((query) => {
+    expect(query).toHaveBeenLastCalledWith(
+      expect.anything(),
+      expect.objectContaining({ skip: true })
+    );
+  });
+  expect(useGetActiveFeeHeadsQuery).toHaveBeenLastCalledWith(
+    'year',
+    expect.objectContaining({ skip: false })
+  );
+  fireEvent.blur(window);
+  fireEvent.focus(window);
+  expect(refreshContext).not.toHaveBeenCalled();
+  rerender({ active: true });
+  await waitFor(() => expect(result.current.terms.ready).toBe(true));
+  expect(useGetActiveFeeHeadsQuery).toHaveBeenLastCalledWith(
+    'year',
+    expect.objectContaining({ skip: false })
+  );
+  fireEvent.blur(window);
+  fireEvent.focus(window);
+  expect(refreshContext).toHaveBeenCalledOnce();
+  const activeSettings = result.current.settings;
+  rerender({ active: false });
+  expect(result.current.settings).toBe(activeSettings);
+  [useGetPaymentTermsQuery, useGetCollectionPoliciesQuery, useGetRefundPoliciesQuery].forEach(
+    (query) => {
+      expect(query).toHaveBeenLastCalledWith(
+        expect.anything(),
+        expect.objectContaining({ skip: false })
+      );
+    }
+  );
+  expect(useGetPaymentTermByIdQuery).toHaveBeenLastCalledWith(
+    expect.anything(),
+    expect.objectContaining({ skip: true })
+  );
+  rerender({ active: true });
+  expect(result.current.settings).toBe(activeSettings);
 });

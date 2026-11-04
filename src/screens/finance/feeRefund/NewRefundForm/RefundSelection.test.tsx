@@ -475,7 +475,7 @@ describe('refund receipt selection', () => {
   it('keeps bulk adjustment selection available across receipts', async () => {
     render(<Request mode="adjustment" />);
     fireEvent.click(
-      screen.getByRole('checkbox', { name: 'Select refundable installments for Examination fee' })
+      screen.getByRole('checkbox', { name: 'Select adjustable installments for Examination fee' })
     );
     await waitFor(() =>
       expect(screen.getByLabelText('Selection total')).toHaveTextContent('2 installments · 400')

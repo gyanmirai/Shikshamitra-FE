@@ -155,6 +155,7 @@ const DebitCardTable = ({
         ),
       },
       {
+        cellSx: { textAlign: 'right' as const },
         id: 'amount',
         label: 'Amount',
         width: 110,
@@ -373,6 +374,7 @@ const DebitCardTable = ({
         noDataText={<>No Debit Card Data Found</>}
         columns={columns}
         data={data}
+        searchFieldProps={{ placeholder: 'Search' }}
       />
       <CustomDialog
         open={isDialog.value}

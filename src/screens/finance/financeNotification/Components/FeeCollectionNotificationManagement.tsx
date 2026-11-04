@@ -196,6 +196,7 @@ const FeeCollectionNotificationManagement = ({ dialog, setIsViewMode }: any) => 
               },
             },
           ]}
+          searchFieldProps={{ placeholder: 'Search' }}
         />
       )}
     </Box>

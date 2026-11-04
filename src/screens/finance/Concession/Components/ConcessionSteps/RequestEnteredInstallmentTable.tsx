@@ -103,6 +103,7 @@ export default function RequestEnteredInstallmentTable({
       render: (value) => money(value),
     },
     {
+      cellSx: { textAlign: 'right' as const },
       id: 'concessionValue',
       label: percentage ? 'Concession %' : 'Concession amount',
       minWidth: 170,

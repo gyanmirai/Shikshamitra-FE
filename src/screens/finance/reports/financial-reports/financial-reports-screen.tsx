@@ -16,9 +16,9 @@ const monthlyFeeCollectedData = [
 
 const columns: any = [
   { id: 'date', label: 'Date/Month' },
-  { id: 'totalFees', label: 'Total Fees' },
-  { id: 'collectedFees', label: 'Collected Fees' },
-  { id: 'pendingFees', label: 'Pending Fees' },
+  { cellSx: { textAlign: 'right' as const }, id: 'totalFees', label: 'Total Fees' },
+  { cellSx: { textAlign: 'right' as const }, id: 'collectedFees', label: 'Collected Fees' },
+  { cellSx: { textAlign: 'right' as const }, id: 'pendingFees', label: 'Pending Fees' },
 ];
 const gradeWiseFeeCollectedData = [
   { grade: 1, totalFees: '250000', collectedFees: '200000.00', pendingFees: '50000.00' },
@@ -30,9 +30,9 @@ const gradeWiseFeeCollectedData = [
 
 const gradeWiseFeeCollectionColumns: any = [
   { id: 'grade', label: 'Grade' },
-  { id: 'totalFees', label: 'Total Fees' },
-  { id: 'collectedFees', label: 'Collected Fees' },
-  { id: 'pendingFees', label: 'Pending Fees' },
+  { cellSx: { textAlign: 'right' as const }, id: 'totalFees', label: 'Total Fees' },
+  { cellSx: { textAlign: 'right' as const }, id: 'collectedFees', label: 'Collected Fees' },
+  { cellSx: { textAlign: 'right' as const }, id: 'pendingFees', label: 'Pending Fees' },
 ];
 
 const pendingFeeData = [
@@ -65,7 +65,7 @@ const pendingFeeColumns: any = [
   { id: 'studentName', label: 'Student Name' },
   { id: 'grade', label: 'Grade' },
   { id: 'feeType', label: 'Fee Type' },
-  { id: 'amount', label: 'Amount' },
+  { cellSx: { textAlign: 'right' as const }, id: 'amount', label: 'Amount' },
   { id: 'dueDate', label: 'Due Date' },
 ];
 
@@ -116,7 +116,7 @@ const overduePaymentsColumns: any = [
   { id: 'studentName', label: 'Student Name' },
   { id: 'grade', label: 'Grade' },
   { id: 'feeType', label: 'Fee Type' },
-  { id: 'overDueAmount', label: 'Overdue Amount' },
+  { cellSx: { textAlign: 'right' as const }, id: 'overDueAmount', label: 'Overdue Amount' },
   { id: 'dueDate', label: 'Due Date' },
   { id: 'daysOverDue', label: 'Days Overdue' },
 ];
@@ -190,6 +190,7 @@ const FinancialReportsScreen = () => {
             columns={columns}
             data={monthlyFeeCollectedData}
             tableId="monthly-fee-collected"
+            searchFieldProps={{ placeholder: 'Search' }}
           />
           <Box py="15px" display="flex" justifyContent="flex-end">
             {/* <Button variant="contained" size="small">
@@ -209,6 +210,7 @@ const FinancialReportsScreen = () => {
             columns={gradeWiseFeeCollectionColumns}
             data={gradeWiseFeeCollectedData}
             tableId="grade-wise-fee-collection"
+            searchFieldProps={{ placeholder: 'Search' }}
           />
           <Box py="15px" display="flex" justifyContent="flex-end">
             {/* <Button variant="contained" size="small">
@@ -226,6 +228,7 @@ const FinancialReportsScreen = () => {
             columns={pendingFeeColumns}
             data={pendingFeeData}
             tableId="pending-fee"
+            searchFieldProps={{ placeholder: 'Search' }}
           />
           <Box pt="15px" pb="15px" display="flex" justifyContent="flex-end">
             {/* <Button variant="contained" size="small">
@@ -243,6 +246,7 @@ const FinancialReportsScreen = () => {
             columns={overduePaymentsColumns}
             data={overduePaymentsData}
             tableId="overdue-payments"
+            searchFieldProps={{ placeholder: 'Search' }}
           />
           <Box pt="15px" pb="15px" display="flex" justifyContent="flex-end">
             {/* <Button variant="contained" size="small">

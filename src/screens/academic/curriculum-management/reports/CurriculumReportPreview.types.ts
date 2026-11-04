@@ -17,6 +17,7 @@ export interface AcademicReportRequestDto {
 export interface PreviewColumn {
   id: string | null;
   label: string | null;
+  align?: 'left' | 'center' | 'right';
 }
 
 export interface PreviewData {

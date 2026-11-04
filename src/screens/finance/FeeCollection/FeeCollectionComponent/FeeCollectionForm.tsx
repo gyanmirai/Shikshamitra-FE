@@ -463,6 +463,7 @@ const FeeCollectComponentForm = ({
           withdrawalProrationCredit: item.withdrawalProrationCredit,
           withdrawalProrationExplanation: item.withdrawalProrationExplanation,
           paid: item.paid,
+          adjustmentCreditAmount: item.adjustmentCreditAmount,
           due: item.due,
           reconciliationAmount: item.reconciliationAmount,
           concessionAmount: item.concessionAmount,
@@ -497,6 +498,7 @@ const FeeCollectComponentForm = ({
               withdrawalProrationCredit: item.withdrawalProrationCredit,
               withdrawalProrationExplanation: item.withdrawalProrationExplanation,
               paid: item.paid,
+              adjustmentCreditAmount: item.adjustmentCreditAmount,
               due: item.due,
               reconciliationAmount: item.reconciliationAmount,
               concessionAmount: item.concessionAmount,
@@ -531,6 +533,7 @@ const FeeCollectComponentForm = ({
               dueDate: line.dueDate,
               total: line.total,
               paid: line.paid,
+              adjustmentCreditAmount: line.adjustmentCreditAmount,
               due: line.due,
               reconciliationAmount: line.reconciliationAmount,
               concessionAmount: line.concessionAmount,
@@ -638,6 +641,11 @@ const FeeCollectComponentForm = ({
         waivedAmount: c.waivedAmount,
         canWaive: c.canWaive,
         explanation: c.explanation,
+        dueDate: c.dueDate,
+        lateFeeAppliedFromDate: c.lateFeeAppliedFromDate,
+        lateFeeAppliedThroughDate: c.lateFeeAppliedThroughDate,
+        lateFeeAppliedIntervals: c.lateFeeAppliedIntervals,
+        lateFeeAppliedDays: c.lateFeeAppliedDays,
         reconciliationAmount: c.reconciliationAmount,
         status: normalizeLedgerStatus(c.status, c.paidAmount, c.pendingAmount),
       })),
@@ -718,6 +726,7 @@ const FeeCollectComponentForm = ({
                 period,
                 dueAmount: roundedDue,
                 originalDueAmount: item.due,
+                adjustmentCreditAmount: item.adjustmentCreditAmount,
                 roundingAdjustment: safeRoundingDifference(item.due, roundedDue),
                 lateFeeAmount: item.lateFeeAmount,
                 installmentLabel: item.installmentLabel,
@@ -1415,7 +1424,8 @@ const FeeCollectComponentForm = ({
     return map;
   }, [ledgerData]);
 
-  const adapterFeeHeads = useMemo(
+  // Admission-backed students can have a collection ledger without a StudentFeeStructure.
+  const ledgerFeeHeads = useMemo(
     () =>
       Object.entries(feeHeadMap).map(([feeHeadId, feeHeadName]) => ({ feeHeadId, feeHeadName })),
     [feeHeadMap]
@@ -1825,7 +1835,7 @@ const FeeCollectComponentForm = ({
                 entryCount={entryCount}
                 studentId={collectionAdapter ? undefined : String(student?.id ?? '')}
                 academicYearId={currentYear?.id}
-                feeHeads={collectionAdapter ? adapterFeeHeads : undefined}
+                feeHeads={ledgerFeeHeads}
               />
               {formData && !collectionReadBlocked && !hasCollectibleItems && (
                 <Alert severity="info" role="status">

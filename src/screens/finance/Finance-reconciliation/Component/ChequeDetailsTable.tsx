@@ -172,6 +172,7 @@ const ChequeDetailsForm = ({
         filterType: 'string',
       },
       {
+        cellSx: { textAlign: 'right' as const },
         id: 'amount',
         label: 'Amount',
         width: 96,
@@ -364,6 +365,7 @@ const ChequeDetailsForm = ({
         tableId="cheque-details-table"
         columns={columns}
         data={data}
+        searchFieldProps={{ placeholder: 'Search' }}
       />
       <CustomDialog
         open={isDialog.value}

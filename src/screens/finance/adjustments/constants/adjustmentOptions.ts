@@ -33,7 +33,7 @@ export const formatAdjustmentStatusLabel = (status: AdjustmentStatusEnum): strin
     case AdjustmentStatusEnum.Rejected:
       return 'Rejected';
     case AdjustmentStatusEnum.PartiallyApplied:
-      return 'Partially Applied';
+      return 'Partially applied';
     case AdjustmentStatusEnum.Approved:
       return 'Approved';
     case AdjustmentStatusEnum.Cancelled:

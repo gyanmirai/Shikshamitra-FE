@@ -169,18 +169,19 @@ Do not prepend another rupee symbol, pass `%` as a currency code, add local toLo
 Intl.NumberFormat formatters, or use display strings in API filters, exports requiring raw
 values, or arithmetic. Table numeric filters use raw numeric values, not formatted strings.
 
-**Current precision limitation:** formatNumber accepts only `(number | string, currency?)`.
-It uses the runtime locale, zero fraction digits, and
+**Default precision:** formatNumber accepts `(number | string, currency?, options?)`.
+Existing two-argument calls use the runtime locale, zero fraction digits, and
 [roundUpAmount](../../../../src/utils/whole-rupee-amount.ts). It rounds upward even without a
 currency argument: `formatNumber(12.25)` displays `13`. Invalid numeric strings fall back to
 `0`, so callers must distinguish missing/invalid values themselves. Input lakh grouping does
 not establish formatNumber's runtime locale.
 
-Use the current helper for the established whole-rupee display convention and integral counts/
-percentages. A view that must show exact decimal amounts or fractional percentages needs an
-explicit precision-capable extension of this shared formatter before routing those values
-through it. Do not silently show 12.25% as 13%, invent a third options argument, change the
-saved rate, or create a feature-specific formatter. This documentation does not change the helper.
+Use the default for the established whole-rupee display convention and integral counts/
+percentages. Transaction reviews that support decimal amounts must opt into the implemented
+precision option: `formatNumber(amount, 'INR', { fractionDigits: 2 })`. It formats the original
+number with two decimals and does not call roundUpAmount. The default for other callers is
+unchanged. Fractional non-currency values can use the same option with an undefined currency.
+Do not change saved values or create a feature-specific formatter to achieve display precision.
 
 ## Sources and verification
 

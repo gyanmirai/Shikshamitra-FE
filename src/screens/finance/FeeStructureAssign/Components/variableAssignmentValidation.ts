@@ -5,6 +5,8 @@ import type {
 
 import { amountError } from 'src/screens/finance/settings/FeeStructure/feeStructureModel';
 
+import { assignmentEditReasonError } from './assignmentEditRequest';
+
 export function assignmentFeeSelectionError(
   candidate: AssignmentCandidate,
   request: AssignmentRequest
@@ -21,7 +23,9 @@ export function assignmentInputError(
   request: AssignmentRequest
 ): string | undefined {
   return (
-    assignmentFeeSelectionError(candidate, request) || variableAssignmentError(candidate, request)
+    assignmentEditReasonError(request) ||
+    assignmentFeeSelectionError(candidate, request) ||
+    variableAssignmentError(candidate, request)
   );
 }
 

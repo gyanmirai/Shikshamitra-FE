@@ -92,12 +92,12 @@ const FeeItemsPreviewTable = ({
                       {periodLabel}
                     </Typography>
                   </TableCell>
-                  <TableCell sx={cellSx}>₹{formatNumber(roundedAmount)}</TableCell>
-                  <TableCell sx={{ ...cellSx, color: 'text.secondary' }}>₹0</TableCell>
-                  <TableCell sx={{ ...cellSx, color: 'success.main', fontWeight: 600 }}>
+                  <TableCell align="right" sx={cellSx}>₹{formatNumber(roundedAmount)}</TableCell>
+                  <TableCell align="right" sx={{ ...cellSx, color: 'text.secondary' }}>₹0</TableCell>
+                  <TableCell align="right" sx={{ ...cellSx, color: 'success.main', fontWeight: 600 }}>
                     ₹{formatNumber(roundedAmount)}
                   </TableCell>
-                  <TableCell sx={{ ...cellSx, color: 'warning.main' }}>₹0</TableCell>
+                  <TableCell align="right" sx={{ ...cellSx, color: 'warning.main' }}>₹0</TableCell>
                 </TableRow>
               );
             })}
@@ -107,7 +107,7 @@ const FeeItemsPreviewTable = ({
               <TableCell sx={{ ...cellSx, fontWeight: 700, bgcolor: 'grey.50' }} colSpan={3}>
                 Subtotal
               </TableCell>
-              <TableCell
+              <TableCell align="right"
                 sx={{ ...cellSx, fontWeight: 700, color: 'primary.main', bgcolor: 'grey.50' }}
               >
                 ₹{formatNumber(itemsTotal)}

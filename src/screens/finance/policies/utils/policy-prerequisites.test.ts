@@ -28,7 +28,9 @@ describe('policy prerequisites', () => {
     expect(refundPolicyPrerequisites(refund, empty, routing)).toEqual([{ key: 'fee-head' }]);
   });
   it('clears the fee-head prerequisite when active heads become available', () => {
-    expect(refundPolicyPrerequisites(refund, { currentData: [{ id: 'active' }] }, routing)).toEqual([]);
+    expect(refundPolicyPrerequisites(refund, { currentData: [{ id: 'active' }] }, routing)).toEqual(
+      []
+    );
   });
   it('requires active heads for selected-head refunds without saved choices', () => {
     expect(
@@ -73,17 +75,16 @@ describe('policy prerequisites', () => {
     expect(prorationPolicyPrerequisites([], empty)).toEqual([{ key: 'fee-head' }]);
     expect(prorationPolicyPrerequisites([{ feeHeadId: 'historical' }], empty)).toEqual([]);
   });
-  it('requires heads only when collection late fees are enabled', () => {
-    expect(collectionPolicyPrerequisites(collection, empty, routing)).toEqual([]);
-    expect(
-      collectionPolicyPrerequisites({ ...collection, enableLateFee: true }, empty, routing)
-    ).toEqual([{ key: 'fee-head' }]);
+  it('does not require fee-head setup for common collection late fees', () => {
+    expect(collectionPolicyPrerequisites(collection, routing)).toEqual([]);
+    expect(collectionPolicyPrerequisites({ ...collection, enableLateFee: true }, routing)).toEqual(
+      []
+    );
   });
   it('requires income routing only for active collection late fees and keeps saved selections', () => {
     expect(
       collectionPolicyPrerequisites(
-        { ...collection, status: 'Active', enableLateFee: true, lateFeeApplyOnFeeHeads: ['saved'] },
-        empty,
+        { ...collection, status: 'Active', enableLateFee: true },
         routing
       )
     ).toEqual([{ key: 'income-category' }]);
@@ -93,10 +94,8 @@ describe('policy prerequisites', () => {
           ...collection,
           status: 'Active',
           enableLateFee: true,
-          lateFeeApplyOnFeeHeads: ['saved'],
           lateFeeIncomeCategoryId: 'saved',
         },
-        empty,
         routing
       )
     ).toEqual([]);
@@ -118,11 +117,7 @@ describe('policy prerequisites', () => {
     ).toEqual([]);
     expect(prorationPolicyPrerequisites([], { ...empty, ...state })).toEqual([]);
     expect(
-      collectionPolicyPrerequisites(
-        { ...collection, enableLateFee: true },
-        { ...empty, ...state },
-        {}
-      )
+      collectionPolicyPrerequisites({ ...collection, enableLateFee: true }, { ...state })
     ).toEqual([]);
   });
 });

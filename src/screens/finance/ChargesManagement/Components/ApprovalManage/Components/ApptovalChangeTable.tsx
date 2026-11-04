@@ -137,6 +137,7 @@ const ChargesApprovalTable: React.FC<ChargesApprovalTableProps> = ({ data, onVie
           },
           { id: 'students', label: 'Students', align: 'left', filterType: 'number' },
           {
+            cellSx: { textAlign: 'right' as const },
             id: 'amount',
             label: 'Amount',
             align: 'left',
@@ -188,6 +189,7 @@ const ChargesApprovalTable: React.FC<ChargesApprovalTableProps> = ({ data, onVie
           },
         ]}
         data={tableData || []}
+        searchFieldProps={{ placeholder: 'Search' }}
       />
     </Box>
   );

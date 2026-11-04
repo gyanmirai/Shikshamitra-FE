@@ -121,6 +121,17 @@ describe('allocatePayment', () => {
     expect(row.remainingAmount).toBe(50);
   });
 
+  it('retains the adjustment credit amount on the collection preview row', () => {
+    const result = allocatePayment(
+      [{ ...selectedItem, adjustmentCreditAmount: 125 }],
+      [],
+      { 'head-1': 'Tuition' },
+      500
+    );
+
+    expect(result.allocatedRows[0]).toMatchObject({ type: 'fee', adjustmentCreditAmount: 125 });
+  });
+
   it('supports partial payment allocation against rounded whole-rupee obligation', () => {
     // 1499.99 rounded to 1500. Total = 1500 + 100 = 1600.
     const result = allocatePayment([selectedItem], [], { 'head-1': 'Tuition' }, 500);

@@ -173,12 +173,22 @@ export const feeStructureWorkspaceApi = financeModuleApi.injectEndpoints({
       // Metadata supplies only classes accessible in the current medium/year/board.
       // Reuse the scoped class read contract; do not fetch other metadata/mediums.
       async queryFn({ classes }, _api, _extra, baseQuery) {
-        const results = await Promise.all(
-          classes.map(async (item) => ({
-            item,
-            result: await baseQuery({ url: '/fee-structures', params: { standardId: item.id } }),
-          }))
-        );
+        const loadClass = async (item: (typeof classes)[number]) => ({
+          item,
+          result: await baseQuery({ url: '/fee-structures', params: { standardId: item.id } }),
+        });
+        const results: Awaited<ReturnType<typeof loadClass>>[] = [];
+        let next = 0;
+        // The current API reads one class at a time. Bound concurrent reads so
+        // opening Copy in a large medium cannot flood the API with requests.
+        const worker = async (): Promise<void> => {
+          if (next >= classes.length) return;
+          const index = next;
+          next += 1;
+          results[index] = await loadClass(classes[index]);
+          await worker();
+        };
+        await Promise.all(Array.from({ length: Math.min(4, classes.length) }, worker));
         const failure = results.find(({ result }) => result.error);
         if (failure?.result.error) return { error: failure.result.error };
         return {
