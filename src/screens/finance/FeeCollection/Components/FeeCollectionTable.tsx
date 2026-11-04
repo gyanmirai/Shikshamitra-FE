@@ -1,6 +1,7 @@
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 import type { IParams } from 'src/components/customizabaleTable/types';
+import type { FeeCollectionSummaryItem } from 'src/redux/feeCollection/feeCollection';
 
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
@@ -149,9 +150,12 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
     );
   }, [filterKey]);
 
+  const feeCollectionItems: (FeeCollectionSummaryItem & { id?: string | number })[] | undefined =
+    feeCollectionData?.items;
+
   const tableData = useMemo(
     () =>
-      feeCollectionData?.items?.map((item: any) => ({
+      feeCollectionItems?.map((item) => ({
         ...item,
         id: item.studentId ?? item.financeFeeAccountId ?? item.id,
         name: `${item.studentName || '-'}${item.grNumber ? ` (${item.grNumber})` : ''}`,
@@ -168,7 +172,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
         paidCharges: item.paidCharges,
         pendingCharges: item.pendingCharges ?? 0,
       })),
-    [feeCollectionData?.items]
+    [feeCollectionItems]
   );
 
   const summaryRow = useMemo(

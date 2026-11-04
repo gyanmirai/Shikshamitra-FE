@@ -16,6 +16,7 @@ import { FeeCollectionWaiverContext } from './feeCollectionContext';
 import AllocationPreviewTable from './preview/AllocationPreviewTable';
 
 import type { FeeLedgerListProps } from './FeeLedgerList';
+import type { AllocatedFeeRow } from './preview/paymentAllocationUtils';
 
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 vi.mock('@mui/icons-material', () => {
@@ -340,8 +341,8 @@ describe('collection ledger waiver capabilities', () => {
   });
 
   it('keeps the review in collection order across different installment months', () => {
-    const makeRow = (key: string, name: string, period: string) => ({
-      type: 'fee' as const,
+    const makeRow = (key: string, name: string, period: string): AllocatedFeeRow => ({
+      type: 'fee',
       key,
       dueFeeId: key,
       feeHeadId: name,
@@ -349,6 +350,7 @@ describe('collection ledger waiver capabilities', () => {
       period,
       originalAmount: 100,
       paidAmount: 50,
+      adjustmentCreditAmount: 0,
       principalPaidAmount: 50,
       lateFeePaidAmount: 0,
       remainingAmount: 50,
