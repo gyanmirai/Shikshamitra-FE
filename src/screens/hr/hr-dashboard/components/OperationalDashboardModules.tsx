@@ -26,14 +26,20 @@ export type ModuleVisibility = {
 
 function ModuleDetail({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <Box component="div" sx={{ display: 'flex', justifyContent: 'space-between', gap: 1 }}>
-      <Typography component="dt" variant="body2" color="text.secondary">
+    <Box component="div" sx={{ display: 'flex', justifyContent: 'space-between', gap: 1.5 }}>
+      <Typography component="dt" variant="body2" color="text.secondary" sx={{ minWidth: 0 }}>
         {label}
       </Typography>
       <Typography
         component="dd"
         variant="body2"
-        sx={{ m: 0, fontWeight: 600, fontVariantNumeric: 'tabular-nums', textAlign: 'right' }}
+        sx={{
+          m: 0,
+          fontWeight: 600,
+          fontVariantNumeric: 'tabular-nums',
+          textAlign: 'right',
+          flexShrink: 0,
+        }}
       >
         {typeof value === 'number' ? formatCount(value) : value}
       </Typography>
@@ -69,31 +75,48 @@ function ModuleCard({
       aria-busy={state === undefined}
       variant="outlined"
       sx={{
-        p: 2,
+        overflow: 'hidden',
         borderRadius: 2,
         display: 'flex',
         flexDirection: 'column',
-        gap: 1.5,
         minWidth: 0,
       }}
     >
-      <Stack direction="row" alignItems="center" gap={1}>
-        <Iconify icon={icon} width={20} sx={{ color: 'text.secondary' }} aria-hidden="true" />
-        <Typography variant="h6" component="h2">
+      <Stack
+        direction="row"
+        alignItems="center"
+        justifyContent="space-between"
+        gap={1}
+        sx={{ px: 2, pt: 2 }}
+      >
+        <Typography variant="subtitle2" component="h2" color="text.secondary">
           {title}
         </Typography>
+        <Box
+          sx={{
+            display: 'grid',
+            placeItems: 'center',
+            width: 32,
+            height: 32,
+            borderRadius: 1,
+            bgcolor: 'background.neutral',
+            flexShrink: 0,
+          }}
+        >
+          <Iconify icon={icon} width={20} sx={{ color: 'text.secondary' }} aria-hidden="true" />
+        </Box>
       </Stack>
       {state === undefined ? (
-        <Box>
-          <DashboardSkeleton aria-hidden="true" width={64} height={40} />
+        <Box sx={{ px: 2, pt: 0.5, pb: 2 }}>
+          <DashboardSkeleton aria-hidden="true" width={64} height={48} />
           <Typography variant="body2" color="text.secondary">
             {label}
           </Typography>
         </Box>
       ) : (
-        <Box>
+        <Box sx={{ px: 2, pt: 0.5, pb: 2 }}>
           <Typography
-            variant={available ? 'h4' : 'h6'}
+            variant={available ? 'h3' : 'h6'}
             component="p"
             sx={{ fontVariantNumeric: 'tabular-nums' }}
           >
@@ -108,7 +131,7 @@ function ModuleCard({
           </Typography>
         </Box>
       )}
-      <Box sx={{ flex: 1, minWidth: 0 }}>
+      <Box sx={{ flex: 1, minWidth: 0, px: 2, py: 1.5, borderTop: 1, borderColor: 'divider' }}>
         {state === undefined ? (
           <Stack aria-hidden="true" spacing={0.5}>
             {detailLabels ? (
@@ -165,7 +188,7 @@ export default function OperationalDashboardModules({
           sm: 'repeat(2, minmax(0, 1fr))',
           lg: 'repeat(4, minmax(0, 1fr))',
         },
-        gap: 1.5,
+        gap: 2,
       }}
     >
       {visible.workforce && (
