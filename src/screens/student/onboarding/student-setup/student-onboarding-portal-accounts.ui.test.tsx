@@ -4,14 +4,19 @@ import type {
   StudentCredentialsWorkspace,
 } from 'src/redux/student/onboarding/student-onboarding-types';
 
+import { createRef } from 'react';
 import { vi, it, expect, beforeEach } from 'vitest';
 import { shikshaMitraToast } from 'src/components/toast';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import StudentOnboardingPortalAccounts from './student-onboarding-portal-accounts';
 
 import type { StudentOnboardingItem } from './student-onboarding-model';
+import type {
+  StudentCredentialSendSummary,
+  StudentOnboardingPortalAccountsHandle,
+} from './student-onboarding-portal-accounts';
 
 const mocks = vi.hoisted(() => ({
   query: {
@@ -319,6 +324,81 @@ it('keeps compact recipient selection and manual sending with an accessible emai
     relationship: 'father',
     expectedEmail: 'raj@example.test',
   });
+});
+
+it('uses the combined activation UI and refreshes recipient eligibility before sending after activation', async () => {
+  const pendingWorkspace: StudentCredentialsWorkspace = {
+    ...mocks.query.currentData!,
+    recipients: mocks.query.currentData!.recipients.map((recipient) => ({
+      ...recipient,
+      canSend: false,
+      blockedReason: 'Activate the student before sending credentials.',
+    })),
+  };
+  mocks.query.data = pendingWorkspace;
+  mocks.query.currentData = pendingWorkspace;
+  const activeWorkspace: StudentCredentialsWorkspace = {
+    ...pendingWorkspace,
+    concurrencyStamp: 'active-stamp',
+    recipients: pendingWorkspace.recipients.map((recipient) => ({
+      ...recipient,
+      canSend: true,
+      blockedReason: null,
+    })),
+  };
+  mocks.query.refetch.mockResolvedValueOnce({ data: activeWorkspace, isError: false });
+  mocks.send.mockReturnValueOnce({
+    unwrap: async () => ({
+      ...activeWorkspace,
+      concurrencyStamp: 'post-send-stamp',
+      recipients: activeWorkspace.recipients.map((recipient) =>
+        recipient.accountType === 'student'
+          ? {
+              ...recipient,
+              delivery: {
+                id: 'email-1',
+                accountType: 'student',
+                email: recipient.email ?? '',
+                status: 'Pending',
+                attemptCount: 1,
+              },
+            }
+          : recipient
+      ),
+    }),
+  });
+  const ref = createRef<StudentOnboardingPortalAccountsHandle>();
+  const selected = vi.fn();
+  panel({
+    ref,
+    student: { ...student, studentEnrollmentId: null },
+    combinedActivation: true,
+    compact: true,
+    onSelectionStateChange: selected,
+  });
+
+  expect(
+    screen.queryByRole('button', { name: 'Send selected login details' })
+  ).not.toBeInTheDocument();
+  selectStudent();
+  expect(
+    screen.getByText('Selected people receive login details after activation.')
+  ).toBeInTheDocument();
+
+  let result: StudentCredentialSendSummary | undefined;
+  await act(async () => {
+    result = await ref.current?.sendSelected(true);
+  });
+
+  expect(mocks.query.refetch).toHaveBeenCalled();
+  expect(mocks.send).toHaveBeenCalledWith(
+    expect.objectContaining({
+      id: 'case-1',
+      concurrencyStamp: 'active-stamp',
+      accountType: 'student',
+    })
+  );
+  expect(result).toEqual({ requested: 1, submitted: 0, queued: 1, failed: 0 });
 });
 
 it('explains the activation prerequisite once while preserving the blocked send with all consent selected', () => {

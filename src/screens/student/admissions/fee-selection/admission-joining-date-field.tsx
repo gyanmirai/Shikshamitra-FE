@@ -4,7 +4,15 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
-import { Stack, Button, Skeleton, Typography, LinearProgress } from '@mui/material';
+import {
+  Stack,
+  Button,
+  Skeleton,
+  TextField,
+  Typography,
+  LinearProgress,
+  InputAdornment,
+} from '@mui/material';
 
 import type { useAdmissionJoiningDate } from './use-admission-joining-date';
 
@@ -43,51 +51,58 @@ export function AdmissionJoiningDateField({
   return (
     <Stack spacing={1}>
       {state.isLocked || !state.canEdit ? (
-        <Stack spacing={0.5}>
-          <Stack direction="row" alignItems="center" spacing={0.5}>
-            <Typography variant="caption" color="text.secondary">
-              Actual Joining Date
-            </Typography>
-            <InfoTooltipIcon
-              label="About Actual Joining Date"
-              title={
-                state.lockReason ||
-                'The Saved Joining Date Is Shared with Registration and Onboarding. An Authorized User Can Confirm It Before Fees Are Prepared.'
-              }
-            />
-          </Stack>
-          <Typography variant="body2">
-            {value?.isValid() ? value.format('DD/MM/YYYY') : '—'}
-          </Typography>
-        </Stack>
+        <TextField
+          label="Actual Joining Date"
+          value={value?.isValid() ? value.format('DD/MM/YYYY') : '—'}
+          fullWidth
+          size="small"
+          InputProps={{
+            readOnly: true,
+            endAdornment: (
+              <InputAdornment position="end">
+                <InfoTooltipIcon
+                  label="About Actual Joining Date"
+                  title={
+                    state.lockReason ||
+                    'The Saved Joining Date Is Shared with Registration and Onboarding. An Authorized User Can Confirm It Before Fees Are Prepared.'
+                  }
+                />
+              </InputAdornment>
+            ),
+          }}
+        />
       ) : (
-        <Stack direction="row" spacing={0.5} alignItems="flex-start">
-          <ShakingTextField error={Boolean(error)} sx={{ flex: 1, minWidth: 0 }}>
-            <DatePicker
-              label="Actual Joining Date"
-              format="DD/MM/YYYY"
-              value={value}
-              maxDate={parseDateOnly(state.academicYearEndDate) ?? undefined}
-              onChange={controller.change}
-              disabled={disabled || query.isFetching || controller.saving}
-              slotProps={{
-                textField: {
-                  name: 'actualJoiningDate',
-                  required: true,
-                  fullWidth: true,
-                  size: 'small',
-                  error: Boolean(error),
-                  helperText: error || undefined,
-                  onBlur: controller.blur,
+        <ShakingTextField error={Boolean(error)}>
+          <DatePicker
+            label="Actual Joining Date"
+            format="DD/MM/YYYY"
+            value={value}
+            maxDate={parseDateOnly(state.academicYearEndDate) ?? undefined}
+            onChange={controller.change}
+            disabled={disabled || query.isFetching || controller.saving}
+            slotProps={{
+              textField: {
+                name: 'actualJoiningDate',
+                required: true,
+                fullWidth: true,
+                size: 'small',
+                error: Boolean(error),
+                helperText: error || undefined,
+                onBlur: controller.blur,
+                InputProps: {
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <InfoTooltipIcon
+                        label="About Actual Joining Date"
+                        title="Confirm When the Student Actually Joins. Registration and Onboarding Use This Same Date. Finance Applies the Configured Policy Automatically; the Payment Date Is Separate."
+                      />
+                    </InputAdornment>
+                  ),
                 },
-              }}
-            />
-          </ShakingTextField>
-          <InfoTooltipIcon
-            label="About Actual Joining Date"
-            title="Confirm When the Student Actually Joins. Registration and Onboarding Use This Same Date. Finance Applies the Configured Policy Automatically; the Payment Date Is Separate."
+              },
+            }}
           />
-        </Stack>
+        </ShakingTextField>
       )}
       {previewPending && <LinearProgress aria-label="Calculating Fee Preview" />}
       {state.canPreview && !state.isLocked && controller.previewFailed && (

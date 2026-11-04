@@ -11,16 +11,15 @@ import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Box, Paper, Stack, Button, Typography } from '@mui/material';
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { Box, Chip, Paper, Stack, Button, Typography } from '@mui/material';
 import {
   useGetStudentRecordsDirectoryQuery,
   useGetStudentRecordsDirectoryOptionsQuery,
 } from 'src/redux/student/records/student-records-api';
 
 import StudentDirectoryTable from './student-directory-table';
-import StudentDirectoryFilters from './student-directory-filters';
 import StudentDirectoryDocuments from './student-directory-documents';
 import { recordsQueryUrl, positivePageValue } from './records-url-state';
 import { useStudentDirectoryExport } from './use-student-directory-export';
@@ -302,60 +301,13 @@ export default function StudentDirectory({ rowActions }: Props) {
         </StudentFeedback>
       )}
       <Paper variant="outlined" sx={{ p: 1, mb: 1, borderRadius: 2, flexShrink: 0 }}>
-        <Stack
-          direction={{ xs: 'column', lg: 'row' }}
-          spacing={1}
-          alignItems={{ xs: 'stretch', lg: 'center' }}
-        >
-          <StudentDirectoryAcademicFilters
-            scope={scope}
-            options={options.currentData}
-            isLoading={options.isLoading || (options.isFetching && !options.currentData)}
-            disabled={!year || options.isError}
-            onChange={(changes) => update({ ...changes, page: 0 })}
-          />
-          <StudentDirectoryFilters
-            population={population}
-            onApply={(value) =>
-              update({ population: value === 'Active' ? undefined : value, page: 0 })
-            }
-          />
-        </Stack>
-        {(scope.classes.length > 0 || scope.divisions.length > 0) && (
-          <Stack
-            direction="row"
-            spacing={1}
-            useFlexGap
-            flexWrap="wrap"
-            alignItems="center"
-            aria-label="Applied academic filters"
-            sx={{ pt: 1 }}
-          >
-            {scope.classes.length > 0 && (
-              <Chip
-                size="small"
-                variant="outlined"
-                label={`${scope.classes.length} ${scope.classes.length === 1 ? 'class' : 'classes'} selected`}
-                onDelete={() => update({ class: undefined, division: undefined, page: 0 })}
-              />
-            )}
-            {scope.divisions.length > 0 && (
-              <Chip
-                size="small"
-                variant="outlined"
-                label={`${scope.divisions.length} ${scope.divisions.length === 1 ? 'division' : 'divisions'} selected`}
-                onDelete={() => update({ division: undefined, page: 0 })}
-              />
-            )}
-            <Button
-              size="small"
-              color="inherit"
-              onClick={() => update({ class: undefined, division: undefined, page: 0 })}
-            >
-              Reset academic filters
-            </Button>
-          </Stack>
-        )}
+        <StudentDirectoryAcademicFilters
+          scope={scope}
+          options={options.currentData}
+          isLoading={options.isLoading || (options.isFetching && !options.currentData)}
+          disabled={!year || options.isError}
+          onChange={(changes) => update({ ...changes, page: 0 })}
+        />
       </Paper>
       {selected.length > 0 && (
         <Stack
@@ -433,6 +385,7 @@ export default function StudentDirectory({ rowActions }: Props) {
           onDocumentAction={openDocuments}
           selection={{
             selected,
+            visible: directoryBulkScopeReady(scope, population),
             enabled: selectionEnabled && !query.isFetching,
             disabledReason: selectionReason,
             onToggle: (row, checked) => toggleStudents([row], checked),

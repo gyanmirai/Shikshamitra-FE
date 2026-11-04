@@ -90,7 +90,11 @@ vi.mock('src/components/custom-select', () => ({
       multiple={multiple}
       disabled={disabled}
       onChange={(event) =>
-        onChange(Array.from(event.target.selectedOptions, (option) => option.value))
+        onChange(
+          multiple
+            ? Array.from(event.target.selectedOptions, (option) => option.value)
+            : event.target.value
+        )
       }
     >
       {options.map((option: any) => (
@@ -188,11 +192,12 @@ const next = () =>
       .find((button) => !button.hasAttribute('disabled'))!
   );
 const studentCheckbox = (name: string) => screen.getByRole('checkbox', { name: `Select ${name}` });
-const openStudents = async () => {
+const openStudents = async (expectRoster = true) => {
   next();
   await screen.findByRole('checkbox', { name: 'Student name' });
   next();
-  await screen.findByLabelText('Select Pupil 1');
+  if (expectRoster) await screen.findByLabelText('Select Pupil 1');
+  else await screen.findByRole('heading', { name: 'Choose Students' });
 };
 
 beforeEach(() => {
@@ -244,6 +249,34 @@ it('passes the selected global academic year into the standalone template builde
   expect(mocks.options).toHaveBeenLastCalledWith({ academicYearId: 'year-1' });
 });
 
+it('uses single Board/Medium with All Classes and dependent plain Division choices', async () => {
+  render(
+    wrap(
+      <StudentICardBuilder onClose={vi.fn()} initialTemplate={template} academicYearId="year-1" />
+    )
+  );
+  await openStudents();
+  expect(screen.getByRole('combobox', { name: 'Board' })).toHaveValue('board-1');
+  expect(screen.getByRole('combobox', { name: 'Medium' })).toHaveValue('medium-1');
+  expect(screen.getByRole('combobox', { name: 'Class' })).toHaveValue('all');
+  expect(screen.getByRole('combobox', { name: 'Division' })).toBeDisabled();
+  fireEvent.change(screen.getByRole('combobox', { name: 'Class' }), {
+    target: { value: 'class-1' },
+  });
+  expect(screen.getByRole('combobox', { name: 'Division' })).toBeEnabled();
+  expect(screen.getByRole('option', { name: 'All Divisions' })).toBeInTheDocument();
+  expect(screen.getByRole('option', { name: 'A' })).toBeInTheDocument();
+  fireEvent.change(screen.getByRole('combobox', { name: 'Division' }), {
+    target: { value: 'division-1' },
+  });
+  fireEvent.change(screen.getByRole('combobox', { name: 'Class' }), { target: { value: 'all' } });
+  expect(screen.getByRole('combobox', { name: 'Division' })).toBeDisabled();
+  expect(mocks.directory.mock.calls.at(-1)?.[0]).toMatchObject({
+    standardIds: [],
+    divisionIds: [],
+  });
+});
+
 it('saves the complete year, academic filters and selected students across directory pages', async () => {
   const { id: _id, concurrencyStamp: _stamp, ...newDesign } = template;
   render(
@@ -252,7 +285,7 @@ it('saves the complete year, academic filters and selected students across direc
     )
   );
   await openStudents();
-  fireEvent.change(screen.getByRole('listbox', { name: 'Board' }), {
+  fireEvent.change(screen.getByRole('combobox', { name: 'Board' }), {
     target: { value: 'board-1' },
   });
   fireEvent.click(studentCheckbox('Pupil 1'));
@@ -290,7 +323,7 @@ it('restores saved scope and off-page student selections before editing the desi
   );
   await openStudents();
   await waitFor(() => expect(screen.getByText('2/100 selected')).toBeVisible());
-  expect(screen.getByRole('listbox', { name: 'Board' })).toHaveValue(['board-1']);
+  expect(screen.getByRole('combobox', { name: 'Board' })).toHaveValue('board-1');
   expect(studentCheckbox('Pupil 1')).toBeChecked();
   next();
   await screen.findByLabelText('Select Pupil 26');
@@ -308,6 +341,32 @@ it('restores saved scope and off-page student selections before editing the desi
     },
   });
   expect(mocks.create).not.toHaveBeenCalled();
+});
+
+it('retains a legacy multiple-class assignment without querying a wider roster or silently rewriting it', async () => {
+  const savedScope = { ...scope, standardIds: ['class-1', 'class-2'], studentIds: ['student-1'] };
+  render(
+    wrap(
+      <StudentICardBuilder
+        onClose={vi.fn()}
+        academicYearId="year-1"
+        initialTemplate={{ ...template, selection: { academicYearId: 'year-1', ...savedScope } }}
+      />
+    )
+  );
+  await openStudents(false);
+  expect(screen.getByText(/Saved filters contain multiple selections/)).toBeVisible();
+  expect(screen.getByText('1/100 selected')).toBeVisible();
+  expect(screen.queryByLabelText('Select Pupil 2')).not.toBeInTheDocument();
+  const rosterReads = mocks.directory.mock.calls.filter(([input]) => !input.studentIds);
+  expect(rosterReads.length).toBeGreaterThan(0);
+  rosterReads.forEach(([, options]) => expect(options.skip).toBe(true));
+  fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+  await waitFor(() => expect(mocks.update).toHaveBeenCalled());
+  expect(mocks.update.mock.calls.at(-1)?.[0].body.selection).toEqual({
+    academicYearId: 'year-1',
+    ...savedScope,
+  });
 });
 
 it('uses the saved assignment year when editing from a different global academic year', async () => {
@@ -502,7 +561,7 @@ it('keeps opaque standalone assignments read-only without querying or inventing 
       'Student assignments are restricted in your current academic scope. You can still save design changes.'
     )
   ).toBeVisible();
-  expect(screen.getByRole('listbox', { name: 'Board' })).toBeDisabled();
+  expect(screen.getByRole('combobox', { name: 'Board' })).toBeDisabled();
   expect(screen.queryByLabelText('Select Pupil 1')).not.toBeInTheDocument();
   expect(mocks.directory.mock.calls.filter(([, options]) => !options?.skip)).toHaveLength(0);
   expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled();
@@ -800,7 +859,7 @@ it('keeps filters-only assignment intent explicit even before students are selec
     )
   );
   await openStudents();
-  fireEvent.change(screen.getByRole('listbox', { name: 'Board' }), {
+  fireEvent.change(screen.getByRole('combobox', { name: 'Board' }), {
     target: { value: 'board-1' },
   });
   fireEvent.click(screen.getByRole('button', { name: 'Save' }));

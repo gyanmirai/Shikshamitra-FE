@@ -1,6 +1,6 @@
 import { skipToken } from '@reduxjs/toolkit/query';
-import { act, renderHook } from '@testing-library/react';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
+import { act, waitFor, renderHook } from '@testing-library/react';
 
 import { useApplicationDetail } from './use-application-detail';
 
@@ -25,6 +25,7 @@ const context = vi.hoisted(() => ({
   readonlyInherited: false,
   formOverride: null as Record<string, unknown> | null,
   staleForm: false,
+  stamp: 'current',
 }));
 const toast = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn(), info: vi.fn() }));
 const application = { id: 'application', concurrencyStamp: 'current', status: 0 };
@@ -89,7 +90,12 @@ vi.mock('src/redux/student/admissions/admission-applications-api', () => {
     useGetAdmissionApplicationQuery: (id: string) => ({
       refetch: requests.applicationRefetch,
       data: context.applicationLoaded
-        ? { ...application, id, canEndJourney: context.canEndJourney }
+        ? {
+            ...application,
+            id,
+            concurrencyStamp: context.stamp,
+            canEndJourney: context.canEndJourney,
+          }
         : undefined,
     }),
     useGetAdmissionApplicationFormQuery: (input: unknown) => {
@@ -155,6 +161,7 @@ describe('application answer validation timing', () => {
     context.readonlyInherited = false;
     context.formOverride = null;
     context.staleForm = false;
+    context.stamp = 'current';
     requests.applicationRefetch.mockReset().mockReturnValue({ unwrap: async () => application });
     requests.workflowRefetch.mockReset().mockReturnValue({ unwrap: async () => ({ stages: [] }) });
     requests.end.mockReturnValue({ unwrap: async () => ({ status: 2 }) });
@@ -292,6 +299,25 @@ describe('application answer validation timing', () => {
     await act(async () => result.current.setFieldValue('PARENT', ''));
     await act(async () => result.current.save());
     expect(requests.update.mock.calls[0][0]).not.toHaveProperty('autoFilledFieldCodes');
+  });
+
+  it('does not attach a newer application stamp to an older edited form baseline', async () => {
+    context.formOverride = familyForm();
+    const { result, rerender } = renderHook(() => useApplicationDetail('application'));
+    await act(async () => result.current.setFieldValue('NOTE', 'My local note'));
+    context.stamp = 'parent-saved-stamp';
+    context.formOverride = familyForm({
+      PARENT: 'Parent changed',
+      CHILD: 'Priya',
+      NOTE: 'Parent note',
+    });
+    rerender();
+    await act(async () => expect(await result.current.save()).toBe(false));
+    expect(requests.update).not.toHaveBeenCalled();
+    expect(result.current.currentValues.NOTE).toBe('My local note');
+    expect(toast.error).toHaveBeenCalledWith(
+      expect.objectContaining({ message: expect.stringMatching(/changed|refresh/i) })
+    );
   });
 
   it('merges a refreshed form into untouched fields while preserving edits and deliberate clears', async () => {
@@ -676,7 +702,7 @@ describe('application answer validation timing', () => {
       pending = result.current.submitApplication();
     });
     expect(result.current.submitState.isLoading).toBe(true);
-    expect(requests.update).toHaveBeenCalledOnce();
+    await waitFor(() => expect(requests.update).toHaveBeenCalledOnce());
     expect(requests.submit).not.toHaveBeenCalled();
     await act(async () => result.current.submitApplication());
     expect(requests.update).toHaveBeenCalledOnce();

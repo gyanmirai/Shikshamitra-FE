@@ -7,6 +7,7 @@ export const ADMISSION_FEE_COLLECTION_PERMISSIONS = {
   view: `${financePermissions.fees.collections}.View`,
   collect: `${financePermissions.fees.collections}.Add`,
   receipts: `${financePermissions.fees.invoicesAndReceipts}.View`,
+  overridePolicies: `${financePermissions.fees.structureAssign}.OverridePolicies`,
 } as const;
 
 export function getAdmissionFeeCollectionAccess(permissions: GrantedPermission[] | undefined) {
@@ -17,5 +18,6 @@ export function getAdmissionFeeCollectionAccess(permissions: GrantedPermission[]
       canView && hasGrantedPermission(permissions, ADMISSION_FEE_COLLECTION_PERMISSIONS.collect),
     canViewReceipts:
       canView && hasGrantedPermission(permissions, ADMISSION_FEE_COLLECTION_PERMISSIONS.receipts),
+    canOverridePolicies: hasGrantedPermission(permissions, ADMISSION_FEE_COLLECTION_PERMISSIONS.overridePolicies),
   };
 }

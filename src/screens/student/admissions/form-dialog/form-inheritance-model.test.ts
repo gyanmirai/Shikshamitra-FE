@@ -169,7 +169,7 @@ describe('Registration source Inquiry inheritance model', () => {
       { sections: [deleted, source] },
       ['section']
     );
-    expect(view.sections).toEqual([source]);
+    expect(view.sections).toEqual([{ ...source, fieldsPerRow: original.fieldsPerRow }]);
   });
   it('uses immutable effective definitions and placement for matched questions without adding a duplicate base field', () => {
     const baseField = {
@@ -186,7 +186,7 @@ describe('Registration source Inquiry inheritance model', () => {
     expect(view.sections[0].fields[0].fieldType).toBe(5);
     expect(original.sections[0].fields).toEqual([baseField]);
   });
-  it('keeps the composed Inquiry stepper and source section grid without changing the Registration draft', () => {
+  it('keeps the composed Inquiry stepper and applies the Registration grid without changing its draft', () => {
     const original = { ...draft(), layoutType: 0 as const, fieldsPerRow: 4 as const };
     const effective = {
       ...original,
@@ -197,7 +197,8 @@ describe('Registration source Inquiry inheritance model', () => {
     const values = getInheritancePreviewValues(original, effective);
     expect(values.layoutType).toBe(1);
     expect(values.fieldsPerRow).toBe(4);
-    expect(values.sections).toBe(effective.sections);
+    expect(values.sections[0].fieldsPerRow).toBe(original.fieldsPerRow);
+    expect(effective.sections[0].fieldsPerRow).toBe(1);
     expect(values.inheritance).toBe(original.inheritance);
     expect(original.sections[0].fields).toEqual([]);
     expect(getInheritanceBuilderValues(original, effective).layoutType).toBe(1);
@@ -341,7 +342,7 @@ describe('Registration source Inquiry inheritance model', () => {
         .flatMap((section) => section.fields)
         .filter((question) => question.id === guardian.id)
     ).toHaveLength(1);
-    expect(view.sections[0].fieldsPerRow).toBe(2);
+    expect(view.sections[0].fieldsPerRow).toBe(original.fieldsPerRow);
     const current = {
       ...original,
       sections: original.sections.map((section) =>

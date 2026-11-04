@@ -21,6 +21,7 @@ import { useCorrectAdmissionApplicationFormMutation } from 'src/redux/student/ad
 
 import { ApplicationRuntimeForm } from './application-runtime-form';
 import { readAdmissionFormValue } from '../admission-visibility-rules';
+import { waitForAdmissionValidationPaint } from '../admission-validation-feedback';
 import { ApplicationFormCorrectionFrame } from './application-form-correction-frame';
 import { getEffectiveCorrectionValues } from './application-form-correction-visibility';
 import { ApplicationFormCorrectionReasonDialog } from './application-form-correction-reason-dialog';
@@ -62,6 +63,8 @@ export function ApplicationFormCorrectionEditor({
   const [saving, setSaving] = useState(false);
   const savingRef = useRef(false);
   const [readingPhoto, setReadingPhoto] = useState(false);
+  const [validating, setValidating] = useState(false);
+  const validationPending = useRef(false);
   const [reasonOpen, setReasonOpen] = useState(false);
   const [conflict, setConflict] = useState(false);
   const [unconfirmed, setUnconfirmed] = useState<CorrectAdmissionApplicationFormInput | null>(null);
@@ -93,7 +96,7 @@ export function ApplicationFormCorrectionEditor({
   latestValues.current = formik.values;
   const acceptsChanges = useRef(false);
   acceptsChanges.current = allowed && !conflict && !unconfirmed;
-  const locked = saving || readingPhoto;
+  const locked = saving || readingPhoto || validating;
   const cannotSave = locked || conflict || (unconfirmed ? !canRetry : !allowed);
   const dirty = formik.dirty || Boolean(unconfirmed);
   const router = useRouter();
@@ -137,17 +140,26 @@ export function ApplicationFormCorrectionEditor({
     setFieldErrors(next);
     return Object.keys(next).length === 0;
   };
-  const requestSave = () => {
-    if (cannotSave || !validate()) return;
-    if (
-      !buildFormCorrection(application, form, initialValues, latestValues.current, '', '').values
-        .length
-    ) {
-      setError('No application details have changed.');
-      return;
+  const requestSave = async () => {
+    if (cannotSave || validationPending.current) return;
+    validationPending.current = true;
+    setValidating(true);
+    try {
+      await waitForAdmissionValidationPaint();
+      if (!validate()) return;
+      if (
+        !buildFormCorrection(application, form, initialValues, latestValues.current, '', '').values
+          .length
+      ) {
+        setError('No application details have changed.');
+        return;
+      }
+      setError('');
+      setReasonOpen(true);
+    } finally {
+      validationPending.current = false;
+      setValidating(false);
     }
-    setError('');
-    setReasonOpen(true);
   };
   const persist = async (reason: string) => {
     if (cannotSave || savingRef.current) return;
@@ -195,7 +207,12 @@ export function ApplicationFormCorrectionEditor({
     <>
       <ApplicationFormCorrectionFrame busy={locked} onClose={close}>
         <Box ref={fieldsRef} sx={{ display: 'contents' }}>
-          <FormBusyRegion busy={saving} fillContent showOverlay={false}>
+          <FormBusyRegion
+            busy={saving || validating}
+            fillContent
+            showOverlay={validating}
+            label={validating ? 'Checking form…' : 'Saving…'}
+          >
             <ApplicationRuntimeForm
               application={application}
               form={form}
@@ -209,6 +226,7 @@ export function ApplicationFormCorrectionEditor({
               ].filter(Boolean)}
               fieldErrors={fieldErrors}
               correctionMode
+              submitLabel="Save changes"
               compact
               readOnly={!allowed || conflict || Boolean(unconfirmed)}
               saving={saving}
@@ -222,6 +240,7 @@ export function ApplicationFormCorrectionEditor({
               onSave={async () => false}
               onPhotoReadingChange={setReadingPhoto}
               onValidateStep={validate}
+              onValidationBusyChange={setValidating}
               onSubmit={requestSave}
               onChange={(code, value) => {
                 // Async field callbacks may hold props from before the save began.

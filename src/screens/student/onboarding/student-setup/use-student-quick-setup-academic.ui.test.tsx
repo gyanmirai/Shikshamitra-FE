@@ -173,6 +173,28 @@ beforeEach(() => {
   }));
 });
 
+it('refreshes an active student case while required credential delivery is pending', async () => {
+  mocks.caseQuery.currentData = makeCase({
+    status: 3,
+    studentEnrollmentId: 'enrollment-1',
+    credentialsPending: true,
+  });
+  vi.useFakeTimers();
+  const { unmount } = renderHook(() =>
+    useStudentQuickSetupAcademic({ caseId: 'case', canManage: true })
+  );
+
+  try {
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(15_000);
+    });
+    expect(mocks.caseQuery.refetch).toHaveBeenCalledOnce();
+  } finally {
+    unmount();
+    vi.useRealTimers();
+  }
+});
+
 function Harness({
   canManage = true,
   disabled = false,

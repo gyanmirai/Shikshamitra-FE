@@ -16,7 +16,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import CustomAccordion from 'src/components/custom-accordian';
 
 import { getAdmissionLanguageLabel } from './form-languages';
-import { hasLockedInquiryFields } from './inquiry-default-fields';
+import { isSectionDeletionLocked } from './inquiry-default-fields';
 import { FormBuilderSectionHeader } from './components/form-builder-section-header';
 import { FormBuilderSectionFields } from './components/form-builder-section-fields';
 
@@ -92,7 +92,12 @@ export function FormBuilderSection({
     id: `section:${section.id}`,
     disabled: readOnly || !sectionReorderEnabled,
   });
-  const deleteDisabled = hasLockedInquiryFields(formik.values.purpose, [section], formik.values.coreFieldPolicyVersion);
+  const deleteDisabled = isSectionDeletionLocked(
+    formik.values.purpose,
+    formik.values.sections,
+    section,
+    formik.values.coreFieldPolicyVersion
+  );
   const removeSection = () => {
     if (deleteDisabled) return;
     formik.setFieldValue(

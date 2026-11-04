@@ -153,7 +153,7 @@ describe('Registration effective canvas integration', () => {
       base.sections
     );
   });
-  it('opens the selected Inquiry step with its own grid while the single-page base remains unchanged', () => {
+  it('opens the selected Inquiry step using the Registration grid while the base remains unchanged', () => {
     renderInheritedBuilder({ sourceLayout: 1 });
     expect(screen.getByRole('button', { name: 'Inquiry step' })).toBeVisible();
     expect(screen.getByRole('heading', { name: 'Published Inquiry section' })).toBeVisible();
@@ -164,7 +164,7 @@ describe('Registration effective canvas integration', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
     const view = JSON.parse(screen.getByTestId('preview-form').textContent!);
     expect(view.layoutType).toBe(1);
-    expect(view.sections[0].fieldsPerRow).toBe(3);
+    expect(view.sections[0].fieldsPerRow).toBe(2);
     expect(JSON.parse(screen.getByTestId('base-form').textContent!).layoutType).toBe(0);
   });
   it('offers Add step on a single-page draft and retains its content after converting', async () => {
@@ -192,6 +192,7 @@ describe('Registration effective canvas integration', () => {
     fireEvent.click(preview);
     const values = JSON.parse(screen.getByTestId('preview-form').textContent!);
     expect(values.fieldsPerRow).toBe(4);
+    expect(values.sections[0].fieldsPerRow).toBe(4);
     expect(values.sections[0].fields[0]).toEqual(sourceField);
     const saved = JSON.parse(screen.getByTestId('base-form').textContent!);
     expect(saved.sections).toHaveLength(1);

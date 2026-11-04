@@ -55,6 +55,25 @@ export function useStudentQuickSetupAcademic({
 }) {
   const caseQuery = useGetStudentOnboardingCaseQuery(caseId, { skip: !caseId });
   const remoteCase = caseQuery.currentData;
+  useEffect(() => {
+    if (
+      !remoteCase?.studentEnrollmentId ||
+      !remoteCase.credentialsPending ||
+      remoteCase.status === 4 ||
+      remoteCase.status === 5
+    )
+      return undefined;
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === 'visible') void caseQuery.refetch();
+    }, 15_000);
+    return () => window.clearInterval(interval);
+  }, [
+    caseQuery.refetch,
+    remoteCase?.credentialsPending,
+    remoteCase?.id,
+    remoteCase?.status,
+    remoteCase?.studentEnrollmentId,
+  ]);
   const readError = Boolean(caseQuery.isError);
   const permissionDenied = Boolean(
     readError &&

@@ -273,9 +273,9 @@ it('keeps a captured academic scope when the opener changes its props', async ()
 
 it('retains editable academic controls for a row print opened without the bulk lock', async () => {
   renderDirectory({ initialAcademicScope: academicScope });
-  const board = await screen.findByRole('listbox', { name: 'Board' });
+  const board = await screen.findByRole('combobox', { name: 'Board' });
   expect(board).not.toBeDisabled();
-  expect(board).toHaveValue(['board-1']);
+  expect(board).toHaveValue('board-1');
 });
 
 it('scales the full card proportionally when its container is narrower than the card', async () => {

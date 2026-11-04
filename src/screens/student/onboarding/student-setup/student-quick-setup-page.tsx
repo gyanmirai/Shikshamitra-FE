@@ -20,6 +20,7 @@ import {
 
 import StudentOnboardingFees from './student-onboarding-fees';
 import { mapOnboardingCaseToItem } from './student-onboarding-model';
+import { getStudentSetupStatusDisplayLabel, studentSetupStatusMeta } from './student-setup-summary';
 import { runStudentQuickSetupSave } from './student-quick-setup-save';
 import StudentQuickSetupAcademic from './student-quick-setup-academic';
 import StudentQuickSetupFeesSection from './student-quick-setup-fees-section';
@@ -35,6 +36,11 @@ import type {
   StudentOnboardingFeesState,
   StudentOnboardingFeesHandle,
 } from './student-onboarding-fees';
+import type {
+  StudentCredentialSendSummary,
+  StudentOnboardingPortalAccountsHandle,
+  StudentOnboardingPortalAccountsSelection,
+} from './student-onboarding-portal-accounts';
 
 export type StudentQuickSetupPageState = { dirty: boolean; busy: boolean };
 
@@ -66,9 +72,10 @@ export default function StudentQuickSetupPage({
   onNext,
   onStateChange,
 }: Props) {
-  const [saving, setSaving] = useState<'later' | 'activate' | null>(null);
+  const [saving, setSaving] = useState<'later' | 'activate' | 'send' | null>(null);
   const savingRef = useRef(false);
   const activationKey = useRef<string | null>(null);
+  const portalAccountsRef = useRef<StudentOnboardingPortalAccountsHandle>(null);
   const feesRef = useRef<StudentOnboardingFeesHandle>(null);
   const [feesState, setFeesState] = useState<StudentOnboardingFeesState>({
     dirty: false,
@@ -77,6 +84,11 @@ export default function StudentQuickSetupPage({
     canSave: false,
   });
   const [credentialsBusy, setCredentialsBusy] = useState(false);
+  const [credentialSelection, setCredentialSelection] =
+    useState<StudentOnboardingPortalAccountsSelection>({
+      selectedCount: 0,
+      canSend: false,
+    });
   const [parentValidationAttempt, setParentValidationAttempt] = useState(0);
   const [parentState, setParentState] = useState<StudentParentSiblingActivationState>({
     caseId: student.id,
@@ -118,6 +130,7 @@ export default function StudentQuickSetupPage({
     : cancelled
       ? { label: 'Cancelled', color: 'default' as const }
       : { label: 'Setup pending', color: 'warning' as const };
+  const onboardingStatus = studentSetupStatusMeta[activeStudent.status];
 
   useEffect(() => {
     onStateChange({ dirty, busy });
@@ -160,7 +173,7 @@ export default function StudentQuickSetupPage({
       ?.scrollIntoView({ block: 'nearest' });
   }, [initialSection, editor.loading]);
 
-  const save = async (shouldActivate: boolean) => {
+  const save = async (shouldActivate: boolean, sendCredentialsAfterActivation = false) => {
     if (
       savingRef.current ||
       busy ||
@@ -223,9 +236,21 @@ export default function StudentQuickSetupPage({
       });
       // Enrollment is durable even if its background refresh or access preparation fails.
       if (result.studentEnrollmentId) setActivatedCase(result);
-      shikshaMitraToast.success({
-        message: result.studentEnrollmentId ? 'Student is now active.' : 'Student setup saved.',
-      });
+      if (shouldActivate && sendCredentialsAfterActivation && result.studentEnrollmentId) {
+        let summary: StudentCredentialSendSummary | undefined;
+        try {
+          summary = await portalAccountsRef.current?.sendSelected(true);
+        } catch {
+          // Enrollment is committed; credential delivery remains separately retryable.
+        }
+        shikshaMitraToast[summary && summary.failed === 0 ? 'success' : 'warning']({
+          message: summarizeCredentialSend(summary, true),
+        });
+      } else {
+        shikshaMitraToast.success({
+          message: result.studentEnrollmentId ? 'Student is now active.' : 'Student setup saved.',
+        });
+      }
     } catch (error) {
       setFailure(
         error instanceof ValidationError
@@ -251,6 +276,49 @@ export default function StudentQuickSetupPage({
       bodyRef.current
         ?.querySelector<HTMLElement>('[aria-invalid="true"], [data-fee-structure-empty]')
         ?.focus();
+    } finally {
+      savingRef.current = false;
+      setSaving(null);
+    }
+  };
+
+  const summarizeCredentialSend = (
+    summary: StudentCredentialSendSummary | undefined,
+    activated: boolean
+  ) => {
+    if (!summary || summary.requested === 0)
+      return activated
+        ? 'Student is now active.'
+        : 'Login details were not sent. Review App Login and try again.';
+    const completed = summary.submitted + summary.queued;
+    const recipientLabel = summary.requested === 1 ? 'recipient' : 'recipients';
+    if (summary.failed === 0 && summary.queued === 0)
+      return `${activated ? 'Student is now active. ' : ''}Login details submitted for ${summary.submitted} ${recipientLabel}.`;
+    if (summary.failed === 0 && summary.submitted === 0)
+      return `${activated ? 'Student is now active. ' : ''}Login details queued for ${summary.queued} ${recipientLabel}.`;
+    if (summary.failed > 0 && completed === 0)
+      return `${activated ? 'Student is active, but ' : ''}login details could not be sent. Review App Login and retry.`;
+    return `${activated ? 'Student is active. ' : ''}Login details were submitted or queued for ${completed} ${recipientLabel}; ${summary.failed} need attention in App Login.`;
+  };
+
+  const sendSelectedNow = async () => {
+    if (
+      savingRef.current ||
+      busy ||
+      !canManage ||
+      !enrolled ||
+      !credentialSelection.selectedCount ||
+      !credentialSelection.canSend
+    )
+      return;
+    savingRef.current = true;
+    setSaving('send');
+    setFailure(undefined);
+    try {
+      const result = await portalAccountsRef.current?.sendSelected();
+      shikshaMitraToast[result && result.failed === 0 ? 'success' : 'warning']({
+        message: summarizeCredentialSend(result, false),
+      });
     } finally {
       savingRef.current = false;
       setSaving(null);
@@ -335,6 +403,11 @@ export default function StudentQuickSetupPage({
             }}
           >
             <Label color={status.color}>{status.label}</Label>
+            {enrolled && (
+              <Label color={onboardingStatus.color}>
+                {getStudentSetupStatusDisplayLabel(activeStudent.status)}
+              </Label>
+            )}
             <Button
               size="small"
               variant="outlined"
@@ -385,7 +458,11 @@ export default function StudentQuickSetupPage({
               {saving && (
                 <LinearProgress
                   aria-label={
-                    saving === 'activate' ? 'Saving and activating student' : 'Saving student setup'
+                    saving === 'activate'
+                      ? 'Saving and activating student'
+                      : saving === 'send'
+                        ? 'Sending login details'
+                        : 'Saving student setup'
                   }
                 />
               )}
@@ -435,14 +512,17 @@ export default function StudentQuickSetupPage({
                   <FormSectionCard
                     title="App Login"
                     icon="mdi:account-key-outline"
-                    descriptionTooltip="Select a recipient to send login details, or edit their saved email."
+                    descriptionTooltip="Select who should receive login details when the student is activated."
                     contentSpacing={1}
                   >
                     <StudentOnboardingPortalAccounts
+                      ref={portalAccountsRef}
                       student={activeStudent}
                       canManage={canManage && !scopeChanged}
+                      combinedActivation
                       onBusyChange={setCredentialsBusy}
                       onParentStateChange={setParentState}
+                      onSelectionStateChange={setCredentialSelection}
                       parentValidationAttempt={parentValidationAttempt}
                       compact
                     />
@@ -562,6 +642,24 @@ export default function StudentQuickSetupPage({
         >
           {enrolled || cancelled || !canManage || editor.permissionDenied ? (
             <>
+              {enrolled && credentialSelection.selectedCount > 0 && (
+                <LoadingButton
+                  size="small"
+                  variant="contained"
+                  loading={saving === 'send'}
+                  disabled={
+                    busy ||
+                    editor.loading ||
+                    editor.readError ||
+                    scopeChanged ||
+                    !credentialSelection.canSend
+                  }
+                  startIcon={<Iconify icon="mdi:email-send-outline" width={18} />}
+                  onClick={sendSelectedNow}
+                >
+                  Send Login Details
+                </LoadingButton>
+              )}
               {onNext && (
                 <Button
                   size="small"
@@ -595,13 +693,16 @@ export default function StudentQuickSetupPage({
                   editor.readError ||
                   parentState.caseId !== student.id ||
                   !parentState.loaded ||
+                  (credentialSelection.selectedCount > 0 && !credentialSelection.canSend) ||
                   scopeChanged ||
                   !current
                 }
                 startIcon={<Iconify icon="mdi:content-save-check-outline" width={18} />}
-                onClick={() => save(true)}
+                onClick={() => save(true, credentialSelection.selectedCount > 0)}
               >
-                Save & Activate
+                {credentialSelection.selectedCount > 0
+                  ? 'Save, Activate & Send Login Details'
+                  : 'Save & Activate'}
               </LoadingButton>
             </>
           )}

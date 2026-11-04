@@ -20,8 +20,25 @@ export type AdmissionCollectionReceipt = {
   scope?: 'fee' | 'charge';
 };
 
+export type AdmissionProrationPolicy = {
+  policyId?: string;
+  policyVersionId?: string;
+  policyName: string;
+  policyVersion: number;
+  source: string;
+};
+
+export type AdmissionProrationPolicyOption = {
+  policyId: string;
+  policyVersionId: string;
+  policyName: string;
+  policyVersion: number;
+  isDefault: boolean;
+};
+
 export type AdmissionFeeCollectionSummary = {
   proration?: FeeProrationResult | null;
+  prorationPolicy?: AdmissionProrationPolicy | null;
   applicationId: string;
   accountId: string | null;
   studentId: string | null;

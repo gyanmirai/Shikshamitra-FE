@@ -43,7 +43,7 @@ export default function ProrationPolicyWorkspace() {
     <Box sx={{ height: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
       <FinanceSetupManagerHeader
         editorOpen={drawerOpen.value}
-        description="Define reusable per-fee-head proration rules for mid-session admissions, exits, and service changes. Assign one policy to each Fee Structure."
+        description="Define per-fee-head proration rules for admissions and service changes. The active default applies by academic year to new fee preparations; prepared fees keep their saved policy version."
         heading="Proration Policy"
         action={
           canCreate ? (

@@ -87,6 +87,7 @@ beforeEach(() => {
     onDocumentAction: vi.fn(),
     selection: {
       selected: [],
+      visible: true,
       enabled: true,
       disabledReason: '',
       onToggle: vi.fn(),

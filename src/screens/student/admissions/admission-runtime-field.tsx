@@ -22,6 +22,7 @@ import { Box, Grid, Checkbox, TextField, FormHelperText, FormControlLabel } from
 import { ADMISSION_DATE_FORMAT } from './admission-date-formats';
 import { isAdmissionEmailField } from './admission-email-values';
 import { isOptionalStudentNamePart } from './admission-student-name';
+import { parseRuntimeOptionsSource } from './application-detail/application-runtime-options';
 import { AdmissionBoardClassField } from './admission-board-class-field';
 import { parseFieldConfiguration } from './form-dialog/form-field-presets';
 import { AdmissionProfilePhotoField } from './admission-profile-photo-field';
@@ -50,6 +51,7 @@ type Field = {
   helpText?: string | null;
   helpTextDetails?: string;
   optionsJson?: string | null;
+  optionsSourceJson?: string | null;
   validationJson?: string | null;
   inheritedFrom?: AdmissionFormInheritedOrigin | null;
 };
@@ -93,6 +95,10 @@ export default function AdmissionRuntimeField(input: AdmissionRuntimeFieldProps)
     : input;
   const helperId = useId();
   const { field, formValues, optionsResolved } = props;
+  const publicSource = optionsResolved ? parseRuntimeOptionsSource(field.optionsSourceJson) : null;
+  const parentRequired = Boolean(
+    publicSource?.parentField && !formValues?.[publicSource.parentField]
+  );
   const { format } = parseFieldConfiguration(field.validationJson);
   if (isAdmissionSiblingField(field)) return <AdmissionSiblingRuntimeField {...props} />;
   const resolvedClasses =
@@ -112,6 +118,10 @@ export default function AdmissionRuntimeField(input: AdmissionRuntimeFieldProps)
   const renderer = fieldRendererRegistry[field.fieldType] ?? renderInput;
   return renderer({
     ...props,
+    field: parentRequired
+      ? { ...field, helpText: 'Select the parent academic field first.' }
+      : field,
+    disabled: props.disabled || parentRequired,
     helperId,
     options:
       field.bindingType === 0 && field.bindingKey === 'Applicant.Gender' && !field.optionsJson

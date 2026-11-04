@@ -57,15 +57,13 @@ const firstAcademicScope = (
   boardId: string,
   mediumId = options?.mediums.find((item) => item.parentId === boardId)?.id || '',
   academicMediumStageId = options?.stages?.find((item) => item.parentId === mediumId)?.id || '',
-  standardId = options?.standards.find(
-    (item) => item.parentId === mediumId && item.stageId === academicMediumStageId
-  )?.id || ''
+  standardId = ''
 ) => ({
   boardId,
   mediumId,
   academicMediumStageId,
   standardId,
-  divisionId: options?.divisions.find((item) => item.parentId === standardId)?.id || '',
+  divisionId: '',
 });
 
 export default function StudentCertificateForm({
@@ -218,6 +216,14 @@ export default function StudentCertificateForm({
     stages.some((item) => item.id === values.academicMediumStageId) &&
     classes.some((item) => item.id === values.standardId) &&
     divisions.some((item) => item.id === values.divisionId);
+  const validRoster =
+    !sourceYearChanged &&
+    !!academicYearId &&
+    boards.some((item) => item.id === values.boardId) &&
+    mediums.some((item) => item.id === values.mediumId) &&
+    stages.some((item) => item.id === values.academicMediumStageId) &&
+    (!values.standardId || classes.some((item) => item.id === values.standardId)) &&
+    (!values.divisionId || divisions.some((item) => item.id === values.divisionId));
   useEffect(() => {
     if (!options || defaultsApplied.current) return;
     defaultsApplied.current = true;
@@ -281,9 +287,9 @@ export default function StudentCertificateForm({
       maxResultCount: pageSize,
       skipCount: page * pageSize,
     },
-    { skip: !validSelection }
+    { skip: !validRoster }
   );
-  const rows = (validSelection ? (directory.currentData?.items ?? []) : []).map((student) => ({
+  const rows = (validRoster ? (directory.currentData?.items ?? []) : []).map((student) => ({
     ...student,
     grNumber: student.grNumber || student.grNo?.toString() || null,
   }));
@@ -315,11 +321,18 @@ export default function StudentCertificateForm({
       <CustomSelect
         size="small"
         label={label}
-        value={values[field]}
-        options={choices}
+        value={values[field] || (field === 'standardId' || field === 'divisionId' ? 'all' : '')}
+        options={
+          field === 'standardId' || field === 'divisionId'
+            ? [
+                { id: 'all', name: field === 'standardId' ? 'All Classes' : 'All Divisions' },
+                ...choices,
+              ]
+            : choices
+        }
         labelKey="name"
         valueKey="id"
-        onChange={(value) => changeScope(patch(String(value)))}
+        onChange={(value) => changeScope(patch(value === 'all' ? '' : String(value)))}
         isLoading={optionsQuery.isFetching}
         disabled={busy || !academicYearId || optionsQuery.isError || !enabled}
         formControlProps={{ fullWidth: true }}
@@ -580,16 +593,18 @@ export default function StudentCertificateForm({
             <CustomizableTable
               tableId="certificate-student-selection"
               tableTitle="Select students"
-              columns={columns}
+              columns={
+                validSelection ? columns : columns.filter((column) => column.id !== 'selection')
+              }
               data={rows}
-              isLoading={validSelection && directory.isFetching}
+              isLoading={validRoster && directory.isFetching}
               isPagination
               isSearch
               serverSidePagination
               serverSideSearch
               page={page}
               rowsPerPage={pageSize}
-              totalCount={validSelection ? (directory.currentData?.totalCount ?? 0) : 0}
+              totalCount={validRoster ? (directory.currentData?.totalCount ?? 0) : 0}
               rowsPerPageOptions={[10, 25, 50, 100]}
               onServerPagination={(nextPage, nextSize) => {
                 setPage(nextPage);
@@ -600,12 +615,12 @@ export default function StudentCertificateForm({
                 setPage(0);
               }}
               noDataText={
-                validSelection
+                validRoster
                   ? 'No active students match the selected filters.'
-                  : 'Choose a board, medium, school level, class and division to load students.'
+                  : 'Choose a board, medium and school level to load students.'
               }
               errorContent={
-                validSelection && directory.isError ? (
+                validRoster && directory.isError ? (
                   <StudentFeedback
                     notificationKey="STU-0846"
                     presentation="toast"

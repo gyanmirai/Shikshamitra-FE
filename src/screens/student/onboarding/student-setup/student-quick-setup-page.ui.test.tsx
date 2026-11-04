@@ -21,6 +21,7 @@ const mocks = vi.hoisted(() => ({
   previewActivation: vi.fn(),
   activate: vi.fn(),
   sendCredentials: vi.fn(),
+  credentialSelection: { selectedCount: 0, canSend: false },
   success: vi.fn(),
   error: vi.fn(),
   events: [] as string[],
@@ -128,36 +129,52 @@ vi.mock('./student-onboarding-fees', async () => {
   };
 });
 vi.mock('./student-onboarding-portal-accounts', async () => {
-  const { useEffect } = await import('react');
+  const { forwardRef, useEffect, useImperativeHandle } = await import('react');
   return {
-    default: function MockPortal({
-      onBusyChange,
-      onParentStateChange,
-      student,
-      canManage,
-    }: {
-      onBusyChange: (busy: boolean) => void;
-      canManage: boolean;
-      student: { id: string };
-      onParentStateChange: (state: { caseId: string; loaded: boolean }) => void;
-    }) {
-      useEffect(() => {
-        onParentStateChange({ caseId: student.id, ...(mocks.parentContext || { loaded: true }) });
-      }, [onParentStateChange, student.id]);
-      return (
-        <>
-          <button type="button" disabled={!canManage} onClick={mocks.sendCredentials}>
-            Send Credentials
-          </button>
-          <button type="button" onClick={() => onBusyChange(true)}>
-            Start credential request
-          </button>
-          <button type="button" onClick={() => onBusyChange(false)}>
-            Finish credential request
-          </button>
-        </>
-      );
-    },
+    default: forwardRef(
+      (
+        {
+          onBusyChange,
+          onParentStateChange,
+          onSelectionStateChange,
+          student,
+          canManage,
+        }: {
+          onBusyChange: (busy: boolean) => void;
+          canManage: boolean;
+          student: { id: string };
+          onParentStateChange: (state: { caseId: string; loaded: boolean }) => void;
+          onSelectionStateChange: (state: { selectedCount: number; canSend: boolean }) => void;
+        },
+        ref
+      ) => {
+        useImperativeHandle(ref, () => ({
+          sendSelected: async (afterActivation = false) => {
+            mocks.events.push(afterActivation ? 'send-after-activation' : 'send-selected');
+            return mocks.sendCredentials();
+          },
+        }));
+        useEffect(() => {
+          onParentStateChange({ caseId: student.id, ...(mocks.parentContext || { loaded: true }) });
+        }, [onParentStateChange, student.id]);
+        useEffect(() => {
+          onSelectionStateChange?.(mocks.credentialSelection);
+        }, [onSelectionStateChange]);
+        return (
+          <>
+            <button type="button" disabled={!canManage} onClick={mocks.sendCredentials}>
+              Send Credentials
+            </button>
+            <button type="button" onClick={() => onBusyChange(true)}>
+              Start credential request
+            </button>
+            <button type="button" onClick={() => onBusyChange(false)}>
+              Finish credential request
+            </button>
+          </>
+        );
+      }
+    ),
   };
 });
 vi.mock('./student-onboarding-workflow-documents', () => ({
@@ -222,6 +239,7 @@ describe('single-student setup page', () => {
     mocks.academicBusy = false;
     mocks.academicDirty = true;
     mocks.events = [];
+    mocks.credentialSelection = { selectedCount: 0, canSend: false };
     mocks.parentContext = undefined;
     mocks.saveAcademic.mockImplementation(async () => {
       mocks.events.push('academic');
@@ -251,6 +269,22 @@ describe('single-student setup page', () => {
     }));
   });
 
+  it('shows active enrollment and onboarding attention as separate statuses', () => {
+    mocks.current = makeCase({ status: 3, studentEnrollmentId: 'enrollment-1' });
+    renderPage({ student: mapOnboardingCaseToItem(mocks.current) });
+
+    expect(screen.getByText('Student active')).toBeInTheDocument();
+    expect(screen.getByText('Setup needs attention')).toBeInTheDocument();
+  });
+
+  it('shows setup complete after required onboarding work is reconciled', () => {
+    mocks.current = makeCase({ status: 4, studentEnrollmentId: 'enrollment-1' });
+    renderPage({ student: mapOnboardingCaseToItem(mocks.current) });
+
+    expect(screen.getByText('Student active')).toBeInTheDocument();
+    expect(screen.getByText('Setup complete')).toBeInTheDocument();
+  });
+
   it('keeps academic fields, fees and App Login in one page with the lifecycle actions', () => {
     const { container } = renderPage();
     expect(screen.getByRole('heading', { name: 'Aarav UXTest' })).toBeInTheDocument();
@@ -259,6 +293,9 @@ describe('single-student setup page', () => {
     expect(screen.getByRole('region', { name: 'App Login' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Save for Later' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Save & Activate' })).toBeEnabled();
+    expect(
+      screen.queryByRole('button', { name: 'Save, Activate & Send Login Details' })
+    ).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Admission & Documents' })).toBeInTheDocument();
     expect(screen.queryByText(/Route:/)).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Back to Students' })).toBeEnabled();
@@ -293,6 +330,77 @@ describe('single-student setup page', () => {
       )
     );
     expect(mocks.sendCredentials).not.toHaveBeenCalled();
+  });
+
+  it('activates first and sends selected login details only after activation succeeds', async () => {
+    mocks.credentialSelection = { selectedCount: 2, canSend: true };
+    mocks.sendCredentials.mockResolvedValue({ requested: 2, submitted: 2, queued: 0, failed: 0 });
+    renderPage();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save, Activate & Send Login Details' }));
+
+    await waitFor(() =>
+      expect(mocks.events).toEqual([
+        'academic',
+        'fees',
+        'preview',
+        'activate',
+        'send-after-activation',
+      ])
+    );
+    expect(screen.getByText('Student active')).toBeInTheDocument();
+    expect(mocks.activate).toHaveBeenCalledOnce();
+    expect(mocks.sendCredentials).toHaveBeenCalledOnce();
+  });
+
+  it('does not send credentials if activation fails', async () => {
+    mocks.credentialSelection = { selectedCount: 1, canSend: true };
+    mocks.previewActivation.mockImplementation(() => ({
+      unwrap: async () => makeCase({ status: 1, primaryBlocker: 'Verify the required document.' }),
+    }));
+    renderPage();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save, Activate & Send Login Details' }));
+
+    await waitFor(() => expect(mocks.error).toHaveBeenCalled());
+    expect(mocks.events).not.toContain('send-after-activation');
+    expect(mocks.sendCredentials).not.toHaveBeenCalled();
+  });
+
+  it('disables the combined action when a selected recipient needs review', () => {
+    mocks.credentialSelection = { selectedCount: 1, canSend: false };
+    renderPage();
+
+    expect(
+      screen.getByRole('button', { name: 'Save, Activate & Send Login Details' })
+    ).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Save for Later' })).toBeEnabled();
+  });
+
+  it('keeps the student active when credential sending fails after activation', async () => {
+    mocks.credentialSelection = { selectedCount: 1, canSend: true };
+    mocks.sendCredentials.mockRejectedValueOnce(new Error('email sender unavailable'));
+    renderPage();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save, Activate & Send Login Details' }));
+
+    await waitFor(() => expect(mocks.events).toContain('send-after-activation'));
+    expect(screen.getByText('Student active')).toBeInTheDocument();
+    expect(mocks.activate).toHaveBeenCalledOnce();
+  });
+
+  it('offers the selected-login action instead of reactivation for an already active student', async () => {
+    mocks.current = makeCase({ studentEnrollmentId: 'enrollment-1', status: 4 });
+    mocks.credentialSelection = { selectedCount: 1, canSend: true };
+    mocks.sendCredentials.mockResolvedValue({ requested: 1, submitted: 1, queued: 0, failed: 0 });
+    renderPage();
+
+    const send = screen.getByRole('button', { name: 'Send Login Details' });
+    expect(send).toBeEnabled();
+    expect(screen.queryByRole('button', { name: 'Save & Activate' })).not.toBeInTheDocument();
+    fireEvent.click(send);
+    await waitFor(() => expect(mocks.events).toContain('send-selected'));
+    expect(mocks.activate).not.toHaveBeenCalled();
   });
 
   it('returns keyboard focus to the initiating action after the page unmounts', async () => {
@@ -404,6 +512,17 @@ describe('single-student setup page', () => {
     expect(mocks.saveFees).toHaveBeenCalledWith({ allowIncomplete: true });
     expect(mocks.getCase).toHaveBeenCalledWith('case-1', false);
     expect(mocks.previewActivation).not.toHaveBeenCalled();
+    expect(mocks.activate).not.toHaveBeenCalled();
+    expect(mocks.sendCredentials).not.toHaveBeenCalled();
+  });
+
+  it('does not send selected credentials when staff chooses Save for Later', async () => {
+    mocks.credentialSelection = { selectedCount: 1, canSend: true };
+    renderPage();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save for Later' }));
+
+    await waitFor(() => expect(mocks.getCase).toHaveBeenCalledWith('case-1', false));
     expect(mocks.activate).not.toHaveBeenCalled();
     expect(mocks.sendCredentials).not.toHaveBeenCalled();
   });

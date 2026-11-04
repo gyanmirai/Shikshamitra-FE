@@ -4,12 +4,15 @@ import type { ReactNode } from 'react';
 
 import { useEffect } from 'react';
 import { Provider } from 'react-redux';
+import { usePathname } from 'next/navigation';
 import { PersistGate } from 'redux-persist/integration/react';
+import { publicAdmissionsPaths } from 'src/constants/public-admissions';
 
 import store, { persistor } from './store';
 import LoadSession from './auth/load-session';
 
 export default function ReduxProvider({ children }: { children: ReactNode }) {
+  const publicRegistration = usePathname() === publicAdmissionsPaths.registration;
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (
@@ -25,7 +28,7 @@ export default function ReduxProvider({ children }: { children: ReactNode }) {
   return (
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
-        <LoadSession />
+        {!publicRegistration && <LoadSession />}
         {children}
       </PersistGate>
     </Provider>

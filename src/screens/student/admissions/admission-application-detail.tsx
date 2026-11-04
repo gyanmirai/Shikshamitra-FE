@@ -46,7 +46,6 @@ import { ApplicationManagedStages } from './application-detail/application-manag
 import { ApplicationResumeJourney } from './application-detail/application-resume-journey';
 import { ApplicationJourneyHistory } from './application-detail/application-journey-history';
 import { ApplicationActivityDrawer } from './application-detail/application-activity-drawer';
-import { ApplicationFormDocuments } from './document-verification/application-form-documents';
 import { ApplicationWorkspaceActions } from './application-detail/application-workspace-actions';
 import { ApplicationFinalizedActions } from './application-detail/application-finalized-summary';
 import { requiresStageCompletionDetails } from './application-detail/admission-stage-completion';
@@ -56,6 +55,7 @@ import { canCorrectApplicationForm } from './application-detail/application-form
 import { isAdmissionApplicationNotFound } from './application-detail/application-detail-query-state';
 import { AdmissionStageCompletionDialog } from './application-detail/admission-stage-completion-dialog';
 import { ApplicationFormCorrectionDrawer } from './application-detail/application-form-correction-drawer';
+import { ParentRegistrationPanel } from './application-detail/parent-registration/parent-registration-panel';
 import {
   getAdmissionApplicationStatusColor,
   getAdmissionApplicationStatusLabel,
@@ -134,7 +134,17 @@ export default function AdmissionApplicationDetailScreen({
   const [panelBusy, setPanelBusy] = useState({
     decision: false,
     notes: false,
+    validation: false,
+    parentRegistration: false,
   });
+  const onValidationBusyChange = useCallback((busy: boolean) => {
+    setPanelBusy((state) => (state.validation === busy ? state : { ...state, validation: busy }));
+  }, []);
+  const onParentRegistrationBusyChange = useCallback((busy: boolean) => {
+    setPanelBusy((state) =>
+      state.parentRegistration === busy ? state : { ...state, parentRegistration: busy }
+    );
+  }, []);
   const onDecisionBusyChange = useCallback((busy: boolean) => {
     setPanelBusy((state) => (state.decision === busy ? state : { ...state, decision: busy }));
   }, []);
@@ -142,6 +152,13 @@ export default function AdmissionApplicationDetailScreen({
     setPanelBusy((state) => (state.notes === busy ? state : { ...state, notes: busy }));
   }, []);
   const { applicationQuery, formQuery, workflowQuery } = detail;
+  const refetchApplication = applicationQuery.refetch;
+  const refetchForm = formQuery.refetch;
+  const formUninitialized = formQuery.isUninitialized;
+  const onParentRegistrationProgressChange = useCallback(() => {
+    refetchApplication();
+    if (!formUninitialized) refetchForm();
+  }, [refetchApplication, refetchForm, formUninitialized]);
   const application = applicationQuery.data;
   const canReadOfferingContext =
     Boolean(application?.admissionOfferingId) &&
@@ -192,6 +209,8 @@ export default function AdmissionApplicationDetailScreen({
     resumeBusy ||
     panelBusy.decision ||
     panelBusy.notes ||
+    panelBusy.validation ||
+    panelBusy.parentRegistration ||
     feeEditorState.busy ||
     detail.updateState.isLoading ||
     detail.submitState.isLoading ||
@@ -314,7 +333,7 @@ export default function AdmissionApplicationDetailScreen({
         startIcon={<Iconify icon={GlobalIcons.edit} />}
         onClick={correctionDrawer.onTrue}
       >
-        Edit Application Form
+        Edit form
       </Button>
     );
   const renderRuntimeForm = (historicalReview = false) => {
@@ -322,6 +341,19 @@ export default function AdmissionApplicationDetailScreen({
     const readOnly = historicalReview || !detail.canEdit;
     return (
       <>
+        {(workspace.view === 'form' ||
+          (!historicalReview && workspace.view === 'journey' && isFormStage(selectedStage))) && (
+          <ParentRegistrationPanel
+            applicationId={application.id}
+            canView={hasGrantedPermission(permissions, 'Students.Admissions.Applications.View')}
+            canManage={detail.canEdit}
+            disabled={navigationLocked}
+            dirty={detail.hasUnsavedAnswers}
+            currentValues={detail.currentValues}
+            onBusyChange={onParentRegistrationBusyChange}
+            onProgressChange={onParentRegistrationProgressChange}
+          />
+        )}
         {workspace.view === 'journey' && formCorrectionAction && (
           <Stack direction="row" justifyContent="flex-end" sx={{ flexShrink: 0 }}>
             {formCorrectionAction}
@@ -341,6 +373,7 @@ export default function AdmissionApplicationDetailScreen({
           onChange={detail.setFieldValue}
           onBlur={detail.setFieldTouched}
           onValidateStep={detail.validateStep}
+          onValidationBusyChange={onValidationBusyChange}
           onSave={detail.save}
           onSubmit={detail.submitApplication}
           showSaveDraft={detail.formStageQuery.currentData?.policy?.allowSaveAndResume ?? true}
@@ -357,16 +390,6 @@ export default function AdmissionApplicationDetailScreen({
           canReopen={detail.canReopen}
           reopening={detail.reopenState.isLoading}
           onReopen={detail.reopenApplication}
-          documents={
-            !readOnly && (
-              <ApplicationFormDocuments
-                applicationId={application.id}
-                stages={workflow?.stages ?? []}
-                unsaved={detail.hasUnsavedAnswers}
-                saving={detail.updateState.isLoading || detail.submitState.isLoading}
-              />
-            )
-          }
         />
       </>
     );
@@ -869,11 +892,13 @@ export default function AdmissionApplicationDetailScreen({
                 <FormBusyRegion
                   fillContent
                   busy={workspaceBusy}
-                  showOverlay={false}
+                  showOverlay={panelBusy.validation}
                   label={
-                    detail.advanceState.isLoading
-                      ? 'Moving to the Next Admission Stage…'
-                      : 'Updating Admission Details…'
+                    panelBusy.validation
+                      ? 'Checking form…'
+                      : detail.advanceState.isLoading
+                        ? 'Moving to the Next Admission Stage…'
+                        : 'Updating Admission Details…'
                   }
                 >
                   <Box

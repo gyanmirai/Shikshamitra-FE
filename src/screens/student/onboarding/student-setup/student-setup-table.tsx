@@ -24,7 +24,11 @@ import {
 import StudentPendingTasks from './student-pending-tasks';
 import StudentSetupDivisionEditor from './student-setup-division-editor';
 import { hasAssignedDivision, type StudentSetupView } from './student-setup-view';
-import { getStudentPendingTasks, getStudentSetupSummary } from './student-setup-summary';
+import {
+  getStudentPendingTasks,
+  getStudentSetupSummary,
+  getStudentSetupStatusDisplayLabel,
+} from './student-setup-summary';
 import { studentSetupSortFields, studentSetupStatusOptions } from './student-setup-worklist-config';
 import {
   accountStatusMeta,
@@ -172,7 +176,10 @@ export default function StudentSetupTable({
           pendingWork: pendingTasks.map((task) => task.label).join('; ') || setup.pendingText,
           accounts: `Student: ${accountStatusMeta[student.studentAccountStatus].label} · Parent / guardian: ${accountStatusMeta[student.guardianAccountStatus].label}`,
           statusLabel:
-            view === 'readiness' ? setup.status.label : onboardingStageMeta[student.status].label,
+            view === 'readiness'
+              ? getStudentSetupStatusDisplayLabel(student.status)
+              : onboardingStageMeta[student.status].label,
+          enrollmentStatusLabel: student.studentEnrollmentId ? 'Active' : 'Not active',
         };
       }),
     [rows, view, manualEditing, editableIds, manualValues, manualErrors, assignmentMessages]
@@ -611,8 +618,21 @@ export default function StudentSetupTable({
         render: (value, row) => <Label color={row.assignmentStatusColor}>{value}</Label>,
       },
       {
+        id: 'enrollmentStatusLabel',
+        label: 'Enrollment status',
+        width: 145,
+        minWidth: 145,
+        isFilter: false,
+        isSort: false,
+        render: (_value, row) => (
+          <Label variant="soft" color={row.studentEnrollmentId ? 'success' : 'default'}>
+            {row.enrollmentStatusLabel}
+          </Label>
+        ),
+      },
+      {
         id: 'statusLabel',
-        label: assignmentView ? 'Setup status' : 'Status',
+        label: assignmentView || view === 'readiness' ? 'Setup status' : 'Status',
         width: 156,
         minWidth: 156,
         filterType: 'enum',
@@ -690,6 +710,7 @@ export default function StudentSetupTable({
         'pendingWork',
         'identifiers',
         'accounts',
+        'enrollmentStatusLabel',
         'statusLabel',
         'actions',
       ],

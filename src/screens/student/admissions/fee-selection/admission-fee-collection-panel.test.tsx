@@ -203,14 +203,15 @@ function editableDate() {
     academicYearEndDate: '2027-05-31',
     concurrencyStamp: 'date-stamp',
   };
+  const editableState = {
+    ...date,
+    joiningDate: '2026-06-02',
+    canEdit: true,
+    canPreview: true,
+    isLocked: false,
+  };
   mocks.joiningDate.mockReturnValue({
-    currentData: {
-      ...date,
-      joiningDate: '2026-06-02',
-      canEdit: true,
-      canPreview: true,
-      isLocked: false,
-    },
+    currentData: editableState,
     isLoading: false,
     isFetching: false,
     isError: false,
@@ -232,6 +233,58 @@ function editableDate() {
   });
   mocks.previewDate.mockReturnValue({
     currentData: { joiningDate: '2026-06-02', totalAmount: 9973, proration: null, warnings: [] },
+    isFetching: false,
+    isError: false,
+  });
+  return editableState;
+}
+
+function enablePolicySelection() {
+  permissions = [
+    ...permissions,
+    { name: 'Finance.Fees.StructureAssign.OverridePolicies', isGranted: true },
+  ];
+  const current = editableDate();
+  mocks.joiningDate.mockReturnValue({
+    currentData: {
+      ...current,
+      canSelectProrationPolicy: true,
+      defaultProrationPolicyVersionId: 'policy-default-v1',
+      prorationPolicies: [
+        {
+          policyId: 'policy-default',
+          policyVersionId: 'policy-default-v1',
+          policyName: 'Monthly Default',
+          policyVersion: 1,
+          isDefault: true,
+        },
+        {
+          policyId: 'policy-daily',
+          policyVersionId: 'policy-daily-v3',
+          policyName: 'Daily Option',
+          policyVersion: 3,
+          isDefault: false,
+        },
+      ],
+    },
+    isFetching: false,
+    isError: false,
+    refetch: mocks.refetch,
+  });
+  mocks.previewDate.mockReturnValue({
+    currentData: {
+      joiningDate: '2026-06-02',
+      totalAmount: 9973,
+      proration: null,
+      prorationPolicy: {
+        policyId: 'policy-default',
+        policyVersionId: 'policy-default-v1',
+        policyName: 'Monthly Default',
+        policyVersion: 1,
+        source: 'FinanceDefault',
+      },
+      warnings: [],
+    },
     isFetching: false,
     isError: false,
   });
@@ -313,6 +366,11 @@ it('renders only the Finance proration result without Student-side policy inputs
   mocks.summary.mockReturnValue({
     currentData: {
       ...summary,
+      prorationPolicy: {
+        policyName: 'Monthly Finance policy',
+        policyVersion: 2,
+        source: 'FinanceDefault',
+      },
       proration: {
         policyName: 'Monthly Finance policy',
         policyVersion: 2,
@@ -334,9 +392,156 @@ it('renders only the Finance proration result without Student-side policy inputs
   });
   renderPanel();
   expect(screen.getByText('Monthly Finance policy · v2')).toBeVisible();
+  expect(screen.getByText(/Finance default for 2026-2027/)).toBeVisible();
   expect(screen.getByText('Joining date reduction')).toBeVisible();
   expect(screen.queryByRole('combobox', { name: /proration/i })).not.toBeInTheDocument();
   expect(mocks.prepare).not.toHaveBeenCalled();
+});
+
+it('shows the academic-year default preselected for staff authorized to override policies', () => {
+  enablePolicySelection();
+  renderPanel();
+
+  expect(screen.getByRole('combobox', { name: 'Proration policy' })).toHaveTextContent(
+    'Monthly Default · v1 · Default'
+  );
+  expect(screen.queryByRole('textbox', { name: /reason/i })).not.toBeInTheDocument();
+});
+
+it('does not show policy choices until an actual joining date is available', () => {
+  const current = editableDate();
+  mocks.joiningDate.mockReturnValue({
+    currentData: {
+      ...current,
+      joiningDate: null,
+      canSelectProrationPolicy: true,
+      defaultProrationPolicyVersionId: 'policy-default-v1',
+      prorationPolicies: [
+        {
+          policyId: 'policy-default',
+          policyVersionId: 'policy-default-v1',
+          policyName: 'Monthly Default',
+          policyVersion: 1,
+          isDefault: true,
+        },
+      ],
+    },
+    isFetching: false,
+    isError: false,
+    refetch: mocks.refetch,
+  });
+
+  renderPanel();
+
+  expect(screen.queryByRole('combobox', { name: 'Proration policy' })).not.toBeInTheDocument();
+});
+
+it('places joining-date information inside the date field', () => {
+  editableDate();
+  renderPanel();
+
+  const dateField = screen
+    .getByRole('group', { name: /actual joining date/i })
+    .closest('.MuiFormControl-root');
+  const infoButton = screen.getByRole('button', { name: 'About Actual Joining Date' });
+
+  expect(dateField).not.toBeNull();
+  expect(dateField).toContainElement(infoButton);
+});
+
+it('previews a chosen policy and prepares fees without a reason field', async () => {
+  enablePolicySelection();
+  renderPanel();
+
+  fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Proration policy' }));
+  fireEvent.click(await screen.findByRole('option', { name: /Daily Option · v3/ }));
+
+  await waitFor(() =>
+    expect(mocks.previewDate).toHaveBeenLastCalledWith(
+      expect.objectContaining({ prorationPolicyVersionId: 'policy-daily-v3' }),
+      expect.objectContaining({ skip: false })
+    )
+  );
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Collect Fees' })).toBeEnabled());
+  fireEvent.click(screen.getByRole('button', { name: 'Collect Fees' }));
+
+  await waitFor(() =>
+    expect(mocks.prepare).toHaveBeenCalledWith({
+      applicationId: 'application-1',
+      variableFeeHeads: [],
+      prorationPolicyVersionId: 'policy-daily-v3',
+    })
+  );
+});
+
+it('does not expose the policy selector without the Finance override permission', () => {
+  permissions = permissions.filter(
+    ({ name }) => name !== ADMISSION_FEE_COLLECTION_PERMISSIONS.overridePolicies
+  );
+  const current = editableDate();
+  mocks.joiningDate.mockReturnValue({
+    currentData: {
+      ...current,
+      canSelectProrationPolicy: true,
+      defaultProrationPolicyVersionId: 'policy-default-v1',
+      prorationPolicies: [
+        {
+          policyId: 'policy-default',
+          policyVersionId: 'policy-default-v1',
+          policyName: 'Monthly Default',
+          policyVersion: 1,
+          isDefault: true,
+        },
+      ],
+    },
+    isFetching: false,
+    isError: false,
+    refetch: mocks.refetch,
+  });
+
+  renderPanel();
+
+  expect(screen.queryByRole('combobox', { name: 'Proration policy' })).not.toBeInTheDocument();
+});
+
+it('shows the academic-year default when it applies no joining-date reduction', () => {
+  mocks.summary.mockReturnValue({
+    currentData: {
+      ...summary,
+      prorationPolicy: {
+        policyName: 'Monthly Finance policy',
+        policyVersion: 2,
+        source: 'FinanceDefault',
+      },
+      proration: null,
+    },
+    isLoading: false,
+    isFetching: false,
+    isError: false,
+    refetch: mocks.refetch,
+  });
+
+  renderPanel();
+
+  expect(screen.getByText('Finance default')).toBeVisible();
+  expect(screen.getByText('Monthly Finance policy · v2')).toBeVisible();
+  expect(screen.getByText(/No joining-date reduction applies/)).toBeVisible();
+  expect(screen.queryByRole('combobox', { name: /proration/i })).not.toBeInTheDocument();
+});
+
+it('explains full-charge treatment when no academic-year default is configured', () => {
+  mocks.summary.mockReturnValue({
+    currentData: { ...summary, proration: null, prorationPolicy: null },
+    isLoading: false,
+    isFetching: false,
+    isError: false,
+    refetch: mocks.refetch,
+  });
+
+  renderPanel();
+
+  expect(screen.getByText(/No active default proration policy is configured/)).toBeVisible();
+  expect(screen.getByText(/existing full-charge treatment/)).toBeVisible();
 });
 
 it.each(['summary', 'selection'])(

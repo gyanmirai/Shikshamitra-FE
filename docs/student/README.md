@@ -3,7 +3,7 @@ module: student
 domain: overview
 content_type: Landing
 status: canonical
-updated_on: 2026-11-03
+updated_on: 2026-11-04
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -25,7 +25,7 @@ App Login offers Not needed, Optional and Required separately for students and p
 Pending cases inherit admission requirements automatically; activated and completed cases preserve their saved snapshots.
 Fees optionally selects and confirms an existing published fee structure through Onboarding. An explicit Collect Fees action opens the reused Finance collection form without navigating to Finance; neither fee assignment nor payment is required for activation. Unassigned fees stay separately pending. Admissions Payment also allows Collect later in Onboarding with a mandatory reason and no structure or payment.
 Activation creates the operational enrollment and refreshes Student Records; pending account or email work remains visible in Credentials after activation.
-Credentials selects the account type and saved email, then uses one manual Send Credentials command for safe account preparation and durable delivery.
+Credentials selects the account type and saved email. On a pending student, one Save & Activate action activates first and then submits login details only for selected recipients; Save for Later never sends. An already-active student can send selected unsent details from the page action, while resends keep their separate confirmation.
 Staff can add or update the selected Student/Father/Mother email in a compact dialog; existing login changes require owner verification and preserve the password and sibling links.
 Student List uses the selected header year, four visible academic selectors and Active/Former inside Filters, with a compact server-backed table and preserved profile navigation context.
 Student Profile has Overview, Details, Documents and History. Details renders the retained offering Registration form with inline edits; immediate saves update current values and create an audit entry while preserving submitted originals. Inquiry remains in Admissions.

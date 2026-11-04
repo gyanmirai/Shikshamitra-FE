@@ -27,11 +27,15 @@ export function useAdmissionJoiningDate(
     stamp: string;
   }>();
   const [touched, setTouched] = useState(false);
+  const [selection, setSelection] = useState<{ applicationId: string; versionId: string | null }>();
   const currentDraft =
     state?.canEdit && !state.isLocked && draft?.applicationId === applicationId ? draft : undefined;
   const value = currentDraft ? currentDraft.value : parseDateOnly(state?.joiningDate);
   const validDate = Boolean(value?.isValid());
   const date = validDate ? toDateOnly(value) : '';
+  const selectedPolicyVersionId = selection?.applicationId === applicationId
+    ? selection.versionId
+    : state?.defaultProrationPolicyVersionId ?? null;
   const yearEnd = toDateOnly(state?.academicYearEndDate);
   const validation = !value
     ? 'Actual joining date is required.'
@@ -49,6 +53,7 @@ export function useAdmissionJoiningDate(
       applicationId,
       joiningDate: date,
       variableFeeHeads: [],
+      ...(state?.canSelectProrationPolicy && { prorationPolicyVersionId: selectedPolicyVersionId }),
     },
     needsPreview && !validation && !stale && !query.isFetching
   );
@@ -67,6 +72,9 @@ export function useAdmissionJoiningDate(
       value: next,
       stamp: currentDraft?.stamp ?? state?.concurrencyStamp ?? '',
     });
+  };
+  const changePolicy = (versionId: string | null) => {
+    setSelection({ applicationId, versionId });
   };
   const confirm = async () => {
     setTouched(true);
@@ -105,6 +113,8 @@ export function useAdmissionJoiningDate(
     value,
     date,
     change,
+    selectedPolicyVersionId,
+    changePolicy,
     confirm,
     retry,
     stale,

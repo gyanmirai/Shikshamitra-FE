@@ -201,6 +201,8 @@ export type AdmissionFormField = {
   placeholder?: string | null;
   helpText?: string | null;
   optionsJson?: string | null;
+  /** Safe public source hint; choices remain resolved in optionsJson. */
+  optionsSourceJson?: string | null;
   validationJson?: string | null;
   visibilityRuleJson?: string | null;
   requiredRuleJson?: string | null;
@@ -242,6 +244,8 @@ export type CorrectAdmissionApplicationFormInput = {
   values: { fieldCode: string; valueJson?: string | null }[];
 };
 export type AdmissionApplicationForm = {
+  /** Stamp captured by the same server read as these answers. */
+  concurrencyStamp?: string | null;
   autoFilledFieldCodes?: string[];
   familyPrefill?: {
     sourceApplicantId: string;

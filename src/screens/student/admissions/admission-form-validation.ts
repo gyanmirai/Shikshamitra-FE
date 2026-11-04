@@ -277,6 +277,21 @@ export function getDynamicAdmissionValidationErrors(
   }
 }
 
+/** Validate the edited answer with its sibling values, without scanning unrelated steps. */
+export function getDynamicAdmissionFieldValidationError(
+  schema: ReturnType<typeof buildDynamicAdmissionYupSchema>,
+  fieldCode: string,
+  values: DynamicValues
+) {
+  if (!Object.prototype.hasOwnProperty.call(schema.fields, fieldCode)) return undefined;
+  try {
+    schema.pick([fieldCode]).validateSync(values);
+    return undefined;
+  } catch (error) {
+    return error instanceof Yup.ValidationError ? error.message : undefined;
+  }
+}
+
 /** Submission requires the editable identity questions; drafts and light Inquiry capture stay partial. */
 export function getAdmissionSubmissionValidationErrors(
   form: AdmissionFormValidationDefinition,
