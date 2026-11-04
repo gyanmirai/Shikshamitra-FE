@@ -1,18 +1,19 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
 import { varAlpha } from 'src/theme/styles';
 import { useTheme } from '@mui/material/styles';
+import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
+import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import {
   Box,
   Stack,
   Divider,
   MenuItem,
   TextField,
+  ButtonBase,
   Typography,
   IconButton,
   InputAdornment,
@@ -97,10 +98,16 @@ export const QuickSubjectSwitcher: React.FC<QuickSubjectSwitcherProps> = ({
 
   return (
     <>
-      <Box
+      <ButtonBase
+        aria-label={`Switch subject: ${currentSubjectName || 'Select subject'}`}
+        aria-haspopup="menu"
+        aria-expanded={popover.open}
         onClick={popover.onOpen}
         sx={{
           display: 'inline-flex',
+          minWidth: 0,
+          textAlign: 'left',
+          '&.Mui-focusVisible': { outline: '2px solid', outlineColor: 'info.main' },
           alignItems: 'center',
           gap: 0.75,
           cursor: 'pointer',
@@ -115,9 +122,11 @@ export const QuickSubjectSwitcher: React.FC<QuickSubjectSwitcherProps> = ({
       >
         <Typography
           variant="h5"
-          component="h1"
+          component="span"
           sx={{
             fontWeight: 700,
+            overflowWrap: 'anywhere',
+            minWidth: 0,
             color: 'text.primary',
             fontSize: { xs: '1.15rem', sm: '1.35rem', md: '1.5rem' },
           }}
@@ -133,7 +142,7 @@ export const QuickSubjectSwitcher: React.FC<QuickSubjectSwitcherProps> = ({
             transform: popover.open ? 'rotate(180deg)' : 'none',
           }}
         />
-      </Box>
+      </ButtonBase>
 
       <CustomPopover
         open={popover.open}
@@ -143,6 +152,7 @@ export const QuickSubjectSwitcher: React.FC<QuickSubjectSwitcherProps> = ({
           paper: {
             sx: {
               width: 320,
+              maxWidth: 'calc(100vw - 32px)',
               p: 0,
               maxHeight: 460,
               display: 'flex',
@@ -158,6 +168,7 @@ export const QuickSubjectSwitcher: React.FC<QuickSubjectSwitcherProps> = ({
             size="small"
             fullWidth
             autoFocus
+            inputProps={{ 'aria-label': 'Search subjects to switch' }}
             placeholder="Search subject..."
             value={filterText}
             onChange={(e) => setFilterText(e.target.value)}
@@ -165,12 +176,16 @@ export const QuickSubjectSwitcher: React.FC<QuickSubjectSwitcherProps> = ({
               input: {
                 startAdornment: (
                   <InputAdornment position="start">
-                    <Iconify icon="eva:search-fill" width={16} sx={{ color: 'text.disabled' }} />
+                    <Iconify icon="eva:search-fill" width={16} sx={{ color: 'text.secondary' }} />
                   </InputAdornment>
                 ),
                 endAdornment: filterText ? (
                   <InputAdornment position="end">
-                    <IconButton size="small" onClick={() => setFilterText('')} sx={{ p: 0.25 }}>
+                    <IconButton
+                      aria-label="Clear subject switcher search"
+                      size="small"
+                      onClick={() => setFilterText('')}
+                    >
                       <Iconify icon="eva:close-fill" width={14} />
                     </IconButton>
                   </InputAdornment>
@@ -185,7 +200,7 @@ export const QuickSubjectSwitcher: React.FC<QuickSubjectSwitcherProps> = ({
         <Scrollbar sx={{ flexGrow: 1, p: 0.75 }}>
           {totalMatches === 0 ? (
             <Box sx={{ py: 3, textAlign: 'center' }}>
-              <Typography variant="body2" color="text.disabled">
+              <Typography variant="body2" color="text.secondary">
                 No subjects found
               </Typography>
             </Box>
@@ -200,12 +215,13 @@ export const QuickSubjectSwitcher: React.FC<QuickSubjectSwitcherProps> = ({
                       px: 1,
                       py: 0.5,
                       display: 'block',
-                      color: 'text.disabled',
-                      fontSize: '0.675rem',
-                      letterSpacing: 0.8,
+                      color: 'text.secondary',
+                      fontSize: '0.75rem',
+                      letterSpacing: 0,
+                      textTransform: 'none',
                     }}
                   >
-                    CORE ({filteredCores.length})
+                    Core Subjects ({filteredCores.length})
                   </Typography>
                   {filteredCores.map((sub) => {
                     const active = isSelected(sub);
@@ -236,7 +252,7 @@ export const QuickSubjectSwitcher: React.FC<QuickSubjectSwitcherProps> = ({
                             noWrap
                             sx={{
                               fontWeight: active ? 700 : 500,
-                              color: active ? 'primary.main' : 'text.primary',
+                              color: 'text.primary',
                               fontSize: '0.8125rem',
                             }}
                           >
@@ -247,7 +263,7 @@ export const QuickSubjectSwitcher: React.FC<QuickSubjectSwitcherProps> = ({
                               variant="caption"
                               sx={{
                                 color: 'text.secondary',
-                                fontSize: '0.675rem',
+                                fontSize: '0.75rem',
                                 fontFamily: 'monospace',
                               }}
                             >
@@ -278,12 +294,13 @@ export const QuickSubjectSwitcher: React.FC<QuickSubjectSwitcherProps> = ({
                       px: 1,
                       py: 0.5,
                       display: 'block',
-                      color: 'text.disabled',
-                      fontSize: '0.675rem',
-                      letterSpacing: 0.8,
+                      color: 'text.secondary',
+                      fontSize: '0.75rem',
+                      letterSpacing: 0,
+                      textTransform: 'none',
                     }}
                   >
-                    ELECTIVE GROUPS
+                    Elective Groups
                   </Typography>
 
                   {filteredGroups.map((group) => (
@@ -332,7 +349,7 @@ export const QuickSubjectSwitcher: React.FC<QuickSubjectSwitcherProps> = ({
                                   noWrap
                                   sx={{
                                     fontWeight: active ? 700 : 500,
-                                    color: active ? 'primary.main' : 'text.primary',
+                                    color: 'text.primary',
                                     fontSize: '0.8125rem',
                                   }}
                                 >
@@ -343,7 +360,7 @@ export const QuickSubjectSwitcher: React.FC<QuickSubjectSwitcherProps> = ({
                                     variant="caption"
                                     sx={{
                                       color: 'text.secondary',
-                                      fontSize: '0.675rem',
+                                      fontSize: '0.75rem',
                                       fontFamily: 'monospace',
                                     }}
                                   >

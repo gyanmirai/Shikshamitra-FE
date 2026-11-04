@@ -27,7 +27,15 @@ const TeacherHoverProfile: React.FC<{
     arrow
     placement="right"
     title={
-      <Card sx={{ p: 0, minWidth: 280, boxShadow: 'none' }}>
+      <Card
+        sx={{
+          p: 0,
+          width: 280,
+          maxWidth: 'calc(100vw - 48px)',
+          boxShadow: 'none',
+          overflowWrap: 'anywhere',
+        }}
+      >
         <Box
           sx={{
             p: 2.5,
@@ -39,6 +47,7 @@ const TeacherHoverProfile: React.FC<{
           }}
         >
           <Badge
+            invisible={!teacher.status}
             overlap="circular"
             anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
             badgeContent={
@@ -47,7 +56,8 @@ const TeacherHoverProfile: React.FC<{
                   width: 12,
                   height: 12,
                   borderRadius: '50%',
-                  border: '2px solid #fff',
+                  border: '2px solid',
+                  borderColor: 'background.paper',
                   bgcolor:
                     teacher.status === 'Active'
                       ? 'success.main'

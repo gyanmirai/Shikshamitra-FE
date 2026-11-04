@@ -1,4 +1,5 @@
 import { vi, it, expect, describe } from 'vitest';
+import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { render, screen, within } from '@testing-library/react';
@@ -37,9 +38,7 @@ const navigatorItem: INavigatorSubjectItem = {
 };
 
 function renderWithTheme(node: React.ReactNode) {
-  return render(
-    <ThemeProvider theme={createTheme(defaultSettings)}>{node}</ThemeProvider>
-  );
+  return render(<ThemeProvider theme={createTheme(defaultSettings)}>{node}</ThemeProvider>);
 }
 
 describe('subject detail presentation', () => {
@@ -74,7 +73,7 @@ describe('subject detail presentation', () => {
   it('shows status with the remaining subject information', () => {
     renderWithTheme(<SubjectInformationCard subject={subject} status={1} />);
 
-    const information = screen.getByText('Subject Information').parentElement;
+    const information = screen.getByText('Subject Information').closest('section');
     expect(information).not.toBeNull();
     expect(within(information!).getByText('SCI001')).toBeVisible();
     expect(within(information!).getByText('Science')).toBeVisible();
@@ -82,7 +81,44 @@ describe('subject detail presentation', () => {
     expect(within(information!).getByText('Published')).toBeVisible();
   });
 
-  it('exposes the selected subject without relying on a filled background', () => {
+  it('opens the subject switcher from the keyboard and labels its search', async () => {
+    const user = userEvent.setup();
+    renderWithTheme(
+      <SubjectWorkspaceHeader
+        subject={subject}
+        activeNavigatorItem={navigatorItem}
+        coreSubjects={[navigatorItem]}
+        electiveGroups={[]}
+        selectedAssignmentId="assignment-one"
+        selectedSubjectCode="SCI001"
+        selectedSubjectId="science"
+        onSelectSubject={vi.fn()}
+        navigationInfo={{
+          positionText: '1 of 1',
+          hasPrevious: false,
+          hasNext: false,
+          goToPrevious: vi.fn(),
+          goToNext: vi.fn(),
+        }}
+      />
+    );
+    const switcher = screen.getByRole('button', { name: 'Switch subject: Science' });
+    switcher.focus();
+    await user.keyboard('{Enter}');
+    expect(switcher).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('textbox', { name: 'Search subjects to switch' })).toBeVisible();
+  });
+
+  it('uses the recorded allocation type and does not invent unavailable metadata', () => {
+    renderWithTheme(<SubjectInformationCard subject={subject} subjectType={1} />);
+    expect(screen.getByText('Elective')).toBeVisible();
+    expect(screen.queryByText('Standard')).not.toBeInTheDocument();
+    expect(screen.queryByText('General')).not.toBeInTheDocument();
+    expect(screen.queryByText('Draft')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Subject Information information' })).toBeVisible();
+  });
+
+  it('exposes the selected subject to assistive technology', () => {
     renderWithTheme(
       <SubjectNavigator
         coreSubjects={[navigatorItem]}

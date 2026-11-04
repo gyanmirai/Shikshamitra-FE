@@ -1,8 +1,10 @@
 import type { LabelColor } from 'src/components/label';
 
 import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
+import { Box, Typography } from '@mui/material';
 import { SubjectType } from 'src/enums/subject-type';
-import { Box, Paper, Typography } from '@mui/material';
+import { FormSectionCard } from 'src/components/form-section-card';
 
 import type { ISubjectDetail } from '../type';
 
@@ -21,25 +23,13 @@ const STATUS_CONFIG: Record<string | number, { label: string; color: LabelColor 
   Inactive: { label: 'Inactive', color: 'default' },
 };
 
-const InformationItem = ({
-  label,
-  value,
-  monospace = false,
-}: {
-  label: string;
-  value: React.ReactNode;
-  monospace?: boolean;
-}) => (
+const InformationItem = ({ label, value }: { label: string; value: React.ReactNode }) => (
   <Box sx={{ minWidth: 0 }}>
     <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.25 }}>
       {label}
     </Typography>
     {typeof value === 'string' ? (
-      <Typography
-        variant="body2"
-        noWrap
-        sx={{ fontWeight: 600, color: 'text.primary', fontFamily: monospace ? 'monospace' : 'inherit' }}
-      >
+      <Typography variant="body2" sx={{ color: 'text.primary', overflowWrap: 'anywhere' }}>
         {value}
       </Typography>
     ) : (
@@ -51,44 +41,46 @@ const InformationItem = ({
 type Props = {
   subject: ISubjectDetail | null;
   status?: number | string;
+  subjectType?: number;
 };
 
-export function SubjectInformationCard({ subject, status = 0 }: Props) {
-  const statusInfo = STATUS_CONFIG[status] ?? {
-    label: String(status),
+export function SubjectInformationCard({ subject, status, subjectType }: Props) {
+  const statusInfo = (status == null ? undefined : STATUS_CONFIG[status]) ?? {
+    label: status == null ? 'Not available' : String(status),
     color: 'default' as LabelColor,
   };
 
   return (
-    <Paper variant="outlined" sx={{ p: 2, borderRadius: 1.5 }}>
-      <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 700 }}>
-        Subject Information
-      </Typography>
-
+    <FormSectionCard
+      title="Subject Information"
+      icon={GlobalIcons.notebook}
+      descriptionTooltip="Saved subject identity, allocation type, and publication status."
+      titleTypographyProps={{ fontWeight: 600 }}
+      sx={{ minWidth: 0, containerType: 'inline-size' }}
+    >
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', sm: 'repeat(4, minmax(0, 1fr))' },
+          gridTemplateColumns: 'minmax(0, 1fr)',
+          '@container (min-width: 360px)': { gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' },
+          '@container (min-width: 680px)': { gridTemplateColumns: 'repeat(4, minmax(0, 1fr))' },
           gap: 2,
         }}
       >
-        <InformationItem label="Subject Code" value={subject?.subjectCode || '—'} monospace />
+        <InformationItem label="Subject code" value={subject?.subjectCode || 'Not available'} />
         <InformationItem
           label="Type"
           value={
-            subject?.subjectNo !== undefined && SubjectType[subject.subjectNo]
-              ? SubjectType[subject.subjectNo]
-              : 'Standard'
+            subjectType !== undefined
+              ? SubjectType[subjectType] || 'Not available'
+              : 'Not available'
           }
         />
         <InformationItem
-          label="Subject Name"
-          value={subject?.subjectName || subject?.subject?.name || '—'}
+          label="Subject name"
+          value={subject?.subjectName || subject?.subject?.name || 'Not available'}
         />
-        <InformationItem
-          label="Medium"
-          value={subject?.subject?.educationMediumId ? 'Configured' : 'General'}
-        />
+        <InformationItem label="Medium" value="Not available" />
         <InformationItem
           label="Status"
           value={
@@ -98,6 +90,6 @@ export function SubjectInformationCard({ subject, status = 0 }: Props) {
           }
         />
       </Box>
-    </Paper>
+    </FormSectionCard>
   );
 }

@@ -1,4 +1,5 @@
 import React from 'react';
+import { academicPaths } from 'src/constants/academic-menu';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import type { ISubjectFormValues } from './type';
@@ -30,9 +31,8 @@ const SubjectBreadcrumbs = ({
         isBack
         onBack={onBackFromForm}
         links={[
-          { name: 'Academics', href: '/academic/dashboard' },
-          { name: 'Curriculum', href: '/academic/curriculumSubjects' },
-          { name: 'Subject Allocation', href: '/academic/curriculumSubjects' },
+          { name: 'Academics', href: academicPaths.dashboard },
+          { name: 'Subject Allocation' },
         ]}
         sx={{ px: 1 }}
       />
@@ -49,11 +49,9 @@ const SubjectBreadcrumbs = ({
           : 'Define and organize academic subjects by linking them to classes, setting subject codes, and outlining curriculum requirements to ensure effective teaching-learning process.'
       }
       links={[
-        { name: 'Academics', href: '/academic/dashboard' },
-        { name: 'Curriculum', href: '/academic/curriculumSubjects' },
+        { name: 'Academics', href: academicPaths.dashboard },
         {
           name: 'Subject Allocation',
-          href: isViewOpen ? '/academic/curriculumSubjects' : undefined,
         },
       ]}
       isBack={isViewOpen}

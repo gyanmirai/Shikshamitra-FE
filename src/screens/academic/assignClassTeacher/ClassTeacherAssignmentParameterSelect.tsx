@@ -2,6 +2,7 @@ import CustomSelect from 'src/components/custom-select';
 
 type ClassTeacherAssignmentParameterSelectProps = {
   ariaLabel: string;
+  label?: string;
   options: readonly string[];
   value: string;
   onChange: (value: string) => void;
@@ -10,6 +11,7 @@ type ClassTeacherAssignmentParameterSelectProps = {
 
 export function ClassTeacherAssignmentParameterSelect({
   ariaLabel,
+  label,
   options,
   value,
   onChange,
@@ -21,8 +23,10 @@ export function ClassTeacherAssignmentParameterSelect({
       options={options.map((option) => ({ label: option, value: option }))}
       value={value}
       onChange={(selectedValue) => onChange(String(selectedValue))}
-      labelId=""
+      label={label}
+      labelId={label ? undefined : ''}
       inputProps={{ 'aria-label': ariaLabel }}
+      SelectDisplayProps={{ 'aria-label': ariaLabel, 'aria-labelledby': undefined }}
     />
   );
 }
