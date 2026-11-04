@@ -4,6 +4,7 @@ import { Provider } from 'react-redux';
 import { http, HttpResponse } from 'msw';
 import { mswServer } from 'src/test/mswServer';
 import { configureStore } from '@reduxjs/toolkit';
+import authReducer from 'src/redux/auth/authSlice';
 import { payslipApi } from 'src/redux/hr/payslip-api';
 import { it, vi, expect, afterAll, afterEach } from 'vitest';
 import { act, render, screen, cleanup, waitFor, fireEvent } from '@testing-library/react';
@@ -44,7 +45,13 @@ const before: PayslipSettings = {
 const stores: ReturnType<typeof makeStore>[] = [];
 function makeStore() {
   return configureStore({
-    reducer: { [payslipApi.reducerPath]: payslipApi.reducer },
+    reducer: { auth: authReducer, [payslipApi.reducerPath]: payslipApi.reducer },
+    preloadedState: {
+      auth: {
+        ...authReducer(undefined, { type: 'test/initialize' }),
+        permissionsInitialized: true,
+      },
+    },
     middleware: (defaults) => defaults().concat(payslipApi.middleware),
   });
 }
