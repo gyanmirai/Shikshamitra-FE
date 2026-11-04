@@ -120,7 +120,7 @@ beforeEach(() => {
 
 it('renders a page and persistent actions without a salary dialog', () => {
   render(<SalaryEditorScreen employeeId="staff" />);
-  expect(screen.getByRole('heading', { name: 'Edit Salary' })).toBeVisible();
+  expect(screen.getByRole('heading', { name: 'Set Up Staff Salary' })).toBeVisible();
   expect(mocks.prefetch).toHaveBeenCalled();
   expect(screen.getByTestId('salary-editor-footer')).toContainElement(
     screen.getByRole('button', { name: 'Save salary' })
@@ -155,11 +155,11 @@ it('retains a draft when Back is cancelled and returns to the origin only after 
   mocks.query = new URLSearchParams({ returnTo }).toString();
   render(<SalaryEditorScreen employeeId="staff" />);
   fireEvent.click(screen.getByRole('button', { name: 'Change input' }));
-  fireEvent.click(screen.getByRole('button', { name: /^Back$/ }));
+  fireEvent.click(screen.getByRole('button', { name: /^Cancel$/ }));
   expect(mocks.push).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
   expect(screen.getByRole('button', { name: 'Change input' })).toBeVisible();
-  fireEvent.click(screen.getByRole('button', { name: /^Back$/ }));
+  fireEvent.click(screen.getByRole('button', { name: /^Cancel$/ }));
   fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
   await waitFor(() => expect(mocks.push).toHaveBeenCalledWith(returnTo));
 });
@@ -169,14 +169,14 @@ it('guards breadcrumb and payroll links and blocks Back during saving', () => {
   fireEvent.click(screen.getByRole('link', { name: 'Payroll Management' }));
   expect(screen.getByRole('dialog')).toBeVisible();
   fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
-  fireEvent.click(screen.getByRole('link', { name: 'Payroll Structure' }));
+  fireEvent.click(screen.getByRole('link', { name: 'Staff Salaries' }));
   expect(screen.getByRole('dialog')).toBeVisible();
   fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
   fireEvent.click(screen.getByRole('link', { name: /Manage one-time/ }));
   expect(screen.getByRole('dialog')).toBeVisible();
   fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
   fireEvent.click(screen.getByRole('button', { name: 'Start saving' }));
-  expect(screen.getByRole('button', { name: /^Back$/ })).toBeDisabled();
+  expect(screen.getByRole('button', { name: /^Cancel$/ })).toBeDisabled();
   expect(mocks.push).not.toHaveBeenCalled();
 });
 it('returns safely after saving without prompting and rejects external return URLs', () => {
@@ -184,7 +184,7 @@ it('returns safely after saving without prompting and rejects external return UR
   render(<SalaryEditorScreen employeeId="staff" />);
   fireEvent.click(screen.getByRole('button', { name: 'Change input' }));
   fireEvent.click(screen.getByRole('button', { name: 'Finish saving' }));
-  fireEvent.click(screen.getByRole('button', { name: /^Back$/ }));
+  fireEvent.click(screen.getByRole('button', { name: /^Cancel$/ }));
   expect(mocks.push).toHaveBeenCalledWith('/hr/payroll/structure?employeeId=staff');
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 });

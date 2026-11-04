@@ -136,13 +136,13 @@ function SalaryStructureWorkspace() {
   return (
     <Stack spacing={2.5} sx={{ minWidth: 0 }}>
       <CustomBreadcrumbs
-        heading="Payroll Structure"
+        heading="Staff Salaries"
         headingComponent="h1"
         layout="inline"
         description="Review recurring salary and statutory deductions for a full month."
         links={[
           { name: 'Payroll Management', href: hrPaths.payroll.root },
-          { name: 'Payroll Structure' },
+          { name: 'Staff Salaries' },
         ]}
         action={
           employeeId && canManage ? (

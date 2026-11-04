@@ -21,6 +21,7 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
+import SalaryBasisChoice from './salary-basis-choice';
 import { EsiPolicyFields } from './esi-policy-fields';
 import SalaryTemplateRules from './salary-template-rules';
 import { SectionCard } from '../../employee/employee-form-fields/InformationFields';
@@ -125,6 +126,14 @@ export default function SalaryTemplateConfigure({
                   {...formik.getFieldProps('description')}
                   error={formik.touched.description && Boolean(formik.errors.description)}
                   helperText={formik.touched.description && formik.errors.description}
+                />
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <SalaryBasisChoice
+                  label="Default salary basis"
+                  value={formik.values.defaultSalaryBasis}
+                  disabled={readOnly}
+                  onChange={(value) => formik.setFieldValue('defaultSalaryBasis', value)}
                 />
               </Grid>
               <Grid size={{ xs: 12 }}>

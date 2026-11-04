@@ -765,7 +765,6 @@ function SalaryTemplateWorkflow({
           />
           <SalaryTemplateReview
             salaryBasis={formik.values.defaultSalaryBasis}
-            setSalaryBasis={(value) => formik.setFieldValue('defaultSalaryBasis', value)}
             readOnly={readOnly}
             previewCurrent={Boolean(previewCurrent)}
             hasPreviewed={hasPreviewed}
