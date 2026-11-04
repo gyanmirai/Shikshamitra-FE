@@ -28,6 +28,7 @@ import {
   DialogActions,
 } from '@mui/material';
 
+import { esiRequestError } from './esi-request-error';
 import { configurationValues, configurationPayload } from './esi-configuration-form';
 
 export const esiTreatmentLabels: Record<EsiComponentTreatment['treatment'], string> = {
@@ -144,7 +145,10 @@ function TreatmentForm({
       setError(
         parseApiProblemDetail(cause).errorCode === 'ESI_PREVIEW_STALE'
           ? 'ESIC settings changed. Close and reopen this dialog to review the latest version.'
-          : 'ESIC treatment could not be saved. Your changes are preserved. Try again.'
+          : esiRequestError(
+              cause,
+              'ESIC treatment could not be saved. Your changes are preserved. Try again.'
+            )
       );
     } finally {
       saving.current = false;

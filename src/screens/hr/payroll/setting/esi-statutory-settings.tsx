@@ -41,6 +41,7 @@ import {
 } from '@mui/material';
 
 import EsiOverrideDialog from './esi-override-dialog';
+import { esiRequestError } from './esi-request-error';
 import { EsiEnrollmentDrawer } from './esi-enrollment-drawer';
 import { useEsiUnsavedNavigation } from './esi-unsaved-navigation';
 import { EsiConfigurationEmployees } from './esi-configuration-employees';
@@ -101,7 +102,12 @@ export default function EsiStatutorySettings() {
     hrPermissions.payroll.settings.statutorySchemes
   );
   const query = useGetEsiConfigurationQuery(undefined, { skip: !canView });
-  if (!canView) return <HrNotice role="alert" severity="info">You do not have access to ESIC settings.</HrNotice>;
+  if (!canView)
+    return (
+      <HrNotice role="alert" severity="info">
+        You do not have access to ESIC settings.
+      </HrNotice>
+    );
   if (query.data?.current) return <ConfigurationForm settings={query.data} />;
   if (query.isError || query.data)
     return (
@@ -198,7 +204,10 @@ function ConfigurationForm({ settings }: { settings: EsiConfigurationSettings })
         setError(
           isStalePreviewError(failure)
             ? 'Settings changed. Cancel your edits to load the latest settings before saving.'
-            : 'ESIC settings could not be saved. Your changes are preserved. Try again.'
+            : esiRequestError(
+                failure,
+                'ESIC settings could not be saved. Your changes are preserved. Try again.'
+              )
         );
       } finally {
         requestPending.current = false;
@@ -383,9 +392,11 @@ function ConfigurationForm({ settings }: { settings: EsiConfigurationSettings })
                       onChange={(event) => {
                         const effectiveMonth = event.target.value;
                         const version =
-                          settings.history.find(
-                            (item) => !item.isCancelled && item.effectiveMonth <= effectiveMonth
-                          ) ?? settings.current;
+                          [...settings.history]
+                            .sort((a, b) => b.effectiveMonth.localeCompare(a.effectiveMonth))
+                            .find(
+                              (item) => !item.isCancelled && item.effectiveMonth <= effectiveMonth
+                            ) ?? settings.current;
                         form.setFieldValue('effectiveMonth', effectiveMonth);
                         if (version)
                           form.setFieldValue('concurrencyStamp', version.concurrencyStamp);
@@ -558,7 +569,10 @@ function ConfigurationForm({ settings }: { settings: EsiConfigurationSettings })
                         </Button>
                       }
                     >
-                      Staff details could not be loaded.
+                      {esiRequestError(
+                        attention.error,
+                        'Staff details could not be loaded. Retry to check again.'
+                      )}
                     </Alert>
                   )}
                   {employees && (

@@ -28,6 +28,7 @@ export function EsiConfigurationEmployees({
       preview={state.data}
       isLoading={state.isLoading}
       isError={state.isError}
+      error={state.error}
       canManageEnrollment={canManageEnrollment}
       canApproveOverride={canApproveOverride}
       onRetry={() => state.refetch()}

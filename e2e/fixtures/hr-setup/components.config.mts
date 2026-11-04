@@ -102,6 +102,8 @@ const fixture: Plugin = {
       if (path === '/fixture/state')
         return send({ earnings, deductions, templates, updates, treatmentSaves, previewRequests });
       if (path === '/api/payroll/statutory-schemes/esi/configuration') {
+        if (request.method === 'PUT' && request.headers.referer?.includes('protected=1'))
+          return send({ errorCode: 'HR:Payroll:EsiConfigurationLocked' }, 409);
         if (request.method === 'PUT') treatmentSaves.push(body);
         return send({
           hasSchoolWideScope: true,
@@ -115,6 +117,19 @@ const fixture: Plugin = {
           },
         });
       }
+      if (
+        path === '/api/payroll/statutory-schemes/esi/rule' ||
+        path === '/api/payroll/statutory-schemes/esi/impact-preview'
+      )
+        return send({ errorCode: 'HR:Payroll:EsiPolicyNotEffective' }, 400);
+      if (path === '/api/payroll/payslip-settings')
+        return send({
+          schoolName: 'Synthetic school',
+          schoolAddress: 'Synthetic address',
+          automaticEmail: false,
+          concurrencyStamp: 'reviewed',
+        });
+      if (path === '/api/payroll/payslip-settings/preview') return send({}, 503);
       if (path === '/api/payroll/statutory-schemes/esi/component-treatments')
         return send(
           earnings.map((earning) => ({

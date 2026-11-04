@@ -107,6 +107,30 @@ describe('Compact ESIC settings', () => {
     }));
   });
   afterEach(cleanup);
+  it('saves June setup and preserves the selected month and registration after a protected-period rejection', async () => {
+    mocks.save.mockReturnValue({
+      unwrap: () =>
+        Promise.reject(Object.assign(new Error('Protected payroll'), { status: 409, data: { errorCode: 'HR:Payroll:EsiConfigurationLocked' } })),
+    });
+    render(<EsiStatutorySettings />);
+    fireEvent.change(screen.getByLabelText('Changes effective from'), {
+      target: { value: '2026-06' },
+    });
+    fireEvent.change(screen.getByLabelText('ESIC registration number'), {
+      target: { value: 'JUNE-DRAFT' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await screen.findByText(/This change would affect locked, finalized, or paid payroll/);
+    expect(screen.getByLabelText('Changes effective from')).toHaveValue('2026-06');
+    expect(screen.getByLabelText('ESIC registration number')).toHaveValue('JUNE-DRAFT');
+    const attempted = mocks.save.mock.calls[0][0];
+    mocks.save.mockReturnValue({
+      unwrap: () => Promise.resolve({ ...mocks.settings, suggestedEffectiveMonth: '2026-12' }),
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(mocks.save).toHaveBeenCalledTimes(2));
+    expect(mocks.save.mock.calls[1][0]).toEqual(attempted);
+  });
   it('shows automatic settings with registration details available on demand', () => {
     render(<EsiStatutorySettings />);
     expect(screen.queryByRole('tab')).toBeNull();

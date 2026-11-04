@@ -82,6 +82,21 @@ describe('ESIC treatment at the earning component', () => {
     mocks.save.mockReturnValue({ unwrap: () => Promise.resolve({}) });
   });
   afterEach(cleanup);
+  it('keeps an older-month draft and explains protected payroll instead of suggesting a retry', async () => {
+    mocks.save.mockReturnValue({
+      unwrap: () =>
+        Promise.reject(Object.assign(new Error('Protected payroll'), { status: 409, data: { errorCode: 'HR:Payroll:EsiConfigurationLocked' } })),
+    });
+    render(<EarningEsiTreatmentDialog {...props} initialMonth="2026-06" />);
+    changeTreatment();
+    fireEvent.click(screen.getByRole('button', { name: 'Save treatment' }));
+    await screen.findByText(/This change would affect locked, finalized, or paid payroll/);
+    expect(screen.getByLabelText('Changes effective from')).toHaveValue('2026-06');
+    expect(screen.getByRole('combobox', { name: 'ESIC wage treatment' })).toHaveTextContent(
+      'Included in ESIC wages'
+    );
+    expect(mocks.close).not.toHaveBeenCalled();
+  });
   it('preselects the unresolved earning while retaining the existing treatment and month controls', () => {
     render(
       <EarningEsiTreatmentDialog

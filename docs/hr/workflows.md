@@ -301,6 +301,7 @@ The server persists an ESIC-on baseline for new schools with unknown legal regis
 Changes apply from the selected effective payroll month without rewriting locked payroll or issued payslips.
 Save is direct, without a separate confirmation step.
 Errors and background refreshes preserve the draft and original concurrency token.
+Older-month setup uses the same save command and server concurrency checks. Protected payroll failures explain the restriction and retain the month and entries. Rate/staff preview failures distinguish an unavailable effective policy from access or temporary request failures; retrying alone does not repair missing policy dates or assignments.
 Calculation help uses the ESIC section information control; Change History is an outlined section-header action.
 A compact staff status row provides one Review Staff action, initially filtering to attention items when present.
 Save and Cancel use compact shared button styling in the stationary bottom-right footer.
@@ -314,6 +315,7 @@ Authorized users can add dated, reasoned ESI exceptions from an employee impact 
 PwD enrollment review can record a government-funded employer-share relief period only after the PwD category, start date, and disability evidence are supplied.
 The impact preview distinguishes employee, employer, and government ESI funding.
 Payslips show earned gross, employee deductions, and net pay.
+Payroll document settings offer **Open School Identity** only after permissions load and the caller has both `ShikshaMitra.Module.InstituteSetup` (required by the settings layout) and `InstituteSetup.SchoolIdentity.View`. The destination manages school assets such as the logo; institute name/address corrections require the school administrator's institute setup workflow. Payroll access does not grant School Identity access.
 Employer contributions remain in school cost reporting and audit evidence.
 Off mode omits ESI amounts and presentation, including empty ESI payslip rows.
 Users select a template, choose Monthly salary or Monthly cost to school (CTC), select the effective month, enter the quoted monthly amount, select PF applicability and rule, preview, and review earnings, employee deductions, employer contributions, ESI, target variance, and the formula trace.

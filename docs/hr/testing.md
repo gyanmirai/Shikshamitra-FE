@@ -8,6 +8,11 @@ owner: frontend-team
 audience: humans-and-agents
 ---
 
+## Historical ESIC setup and payroll branding navigation
+
+Run `esi-configuration-form.test.ts`, `esi-request-error.test.ts`, `esi-automatic-calculation.test.tsx`, `esi-statutory-settings.test.tsx`, `earning-esi-treatment-dialog.test.tsx` and `payslip-settings-form.test.tsx` for retained month/drafts, retry identity, policy/access guidance and both required School Identity route grants.
+Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/@playwright/test/cli.js test --config e2e/hr/esic-historical-recovery.config.ts` for desktop/mobile guidance and permission-aware links using production components with synthetic responses. Complete the final Codex in-app browser smoke check. This frontend fixture does not prove the save guard or deployed tenant setup; real clock-controlled HTTP and PostgreSQL cases live in the backend suite.
+
 ## HR setup readiness wizard
 
 Salary-preview recovery tests include `salary-preview-error.test.ts`, `hr-failure.test.ts`, `hr-recovery-provider.test.tsx`, `hr-recovery-middleware.test.ts`, `inline-salary-preview-recovery.test.ts` and `salary-preview-recovery.integration.test.ts`.

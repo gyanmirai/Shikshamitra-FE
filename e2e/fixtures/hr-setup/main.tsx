@@ -27,6 +27,8 @@ import EarningComponent from 'src/screens/hr/payroll/setting/earning-component';
 import { HrRecoveryProvider } from 'src/screens/hr/recovery/hr-recovery-provider';
 import DeductionComponent from 'src/screens/hr/payroll/setting/deduction-component';
 import SalaryTemplateEditor from 'src/screens/hr/payroll/setting/salary-template-editor';
+import EsiStatutorySettings from 'src/screens/hr/payroll/setting/esi-statutory-settings';
+import PayslipSettingsForm from 'src/screens/hr/payroll/salarySlip-generate/payslip-settings-form';
 
 dayjs.extend(customParseFormat);
 const context = await (await fetch('/fixture/context')).json();
@@ -55,7 +57,14 @@ const baseGrants =
         'HR.PayrollManagement.Settings.StatutorySchemes.ConfigureCalculation',
         'AbpIdentity.Roles.Update',
       ];
-const grants = baseGrants.filter(
+const grants = [
+  ...baseGrants,
+  ...(new URLSearchParams(window.location.search).get('identity') === 'allowed'
+    ? ['ShikshaMitra.Module.InstituteSetup', 'InstituteSetup.SchoolIdentity.View']
+    : new URLSearchParams(window.location.search).get('identity') === 'view-only'
+      ? ['InstituteSetup.SchoolIdentity.View']
+      : []),
+].filter(
   (name) =>
     scenario !== 'no-deduction-create' ||
     name !== 'HR.PayrollManagement.Settings.DeductionComponents.Add'
@@ -96,7 +105,11 @@ function Fixture() {
         </Typography>
         <Button onClick={() => setHr((value) => !value)}>{hr ? 'Leave HR' : 'Return to HR'}</Button>
         <Typography>Normal HR operations remain available after closing setup.</Typography>
-        {scenario === 'salary-template' ? (
+        {scenario === 'esic-settings' ? (
+          <EsiStatutorySettings />
+        ) : scenario === 'payslip-settings' ? (
+          <PayslipSettingsForm canEdit />
+        ) : scenario === 'salary-template' ? (
           <SalaryTemplateEditor mode="create" />
         ) : scenario === 'earning-components' ? (
           <EarningComponent />

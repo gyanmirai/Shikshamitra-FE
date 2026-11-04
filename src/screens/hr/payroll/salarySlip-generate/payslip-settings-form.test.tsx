@@ -4,9 +4,22 @@ import { act, render, screen, waitFor, cleanup, fireEvent } from '@testing-libra
 import PayslipSettingsForm from './payslip-settings-form';
 
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
+vi.mock('react-redux', () => ({
+  useSelector: (select: any) =>
+    select({
+      auth: {
+        permissionsInitialized: state.identityAccess.ready,
+        permissions: [
+          { name: 'ShikshaMitra.Module.InstituteSetup', isGranted: state.identityAccess.module },
+          { name: 'InstituteSetup.SchoolIdentity.View', isGranted: state.identityAccess.canView },
+        ],
+      },
+    }),
+}));
 vi.mock('./payslip-settings-preview', () => ({ default: () => <div>Sample preview</div> }));
 
 const state = vi.hoisted(() => ({
+  identityAccess: { ready: true, canView: true, module: true },
   query: {
     data: {
       schoolName: 'Institute school',
@@ -39,6 +52,7 @@ const save = () => screen.getByRole('button', { name: 'Save' });
 
 describe('payroll document settings', () => {
   beforeEach(() => {
+    state.identityAccess = { ready: true, canView: true, module: true };
     state.query.data = {
       schoolName: 'Institute school',
       schoolAddress: 'Institute address',
@@ -58,10 +72,22 @@ describe('payroll document settings', () => {
     expect(screen.queryByLabelText('School name')).not.toBeInTheDocument();
     expect(screen.queryByLabelText('School address')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Upload.*logo/i })).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Open Institute Setup' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Open School Identity' })).toHaveAttribute(
       'href',
       '/setting/school-identity'
     );
+  });
+
+  it.each([
+    { ready: true, canView: false, module: true },
+    { ready: false, canView: true, module: true },
+    { ready: true, canView: true, module: false },
+  ])('does not offer an inaccessible setup route for %j', (access) => {
+    state.identityAccess = access;
+    render(<PayslipSettingsForm canEdit />);
+    expect(screen.queryByRole('link', { name: 'Open School Identity' })).toBeNull();
+    expect(screen.getByText(/Ask an administrator with School Identity access/)).toBeVisible();
+    expect(screen.getByText('Institute school')).toBeVisible();
   });
 
   it('adopts a completed refresh while clean', async () => {

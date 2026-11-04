@@ -21,6 +21,21 @@ const settings = {
   },
 };
 describe('Automatic ESIC settings', () => {
+  it('chooses the effective reviewed version even when history is not ordered', () => {
+    const baseline = {
+      ...settings.current,
+      effectiveMonth: '1900-01',
+      concurrencyStamp: 'baseline',
+    };
+    const june = { ...settings.current, effectiveMonth: '2026-06', concurrencyStamp: 'june' };
+    expect(
+      configurationValues({
+        ...settings,
+        suggestedEffectiveMonth: '2026-06',
+        history: [baseline, june],
+      }).concurrencyStamp
+    ).toBe('june');
+  });
   it('uses statutory earnings and removes saved rate overrides from new edits', () => {
     const current = {
       ...settings.current,
