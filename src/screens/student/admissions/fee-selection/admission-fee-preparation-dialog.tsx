@@ -97,15 +97,15 @@ export function AdmissionFeePreparationDialog({
   return (
     <CustomDialog
       open
-      title={`Set variable fee amounts · ${applicantName}`}
-      titleInfo="Enter amounts for the variable fee heads configured in Finance. Finance will calculate the installments before collection."
+      title={`Set Variable Fee Amounts · ${applicantName}`}
+      titleInfo="Enter Amounts for the Variable Fee Heads Configured in Finance. Finance Will Calculate the Installments Before Collection."
       maxWidth="sm"
       handleClose={onClose}
       disableClose={busy || form.isSubmitting}
       hasUnsavedChanges={form.dirty}
     >
       <DialogScrollContent>
-        <FormBusyRegion busy={busy || form.isSubmitting} label="Preparing fees…">
+        <FormBusyRegion busy={busy || form.isSubmitting} label="Preparing Fees…">
           <Stack spacing={2}>
             {heads.map((head, index) => {
               const amountName = `variableFeeHeads.${index}.amount`;
@@ -118,7 +118,7 @@ export function AdmissionFeePreparationDialog({
                     <Box sx={{ flex: 1, minWidth: 0 }}>
                       <ShakingTextField error={Boolean(error)}>
                         <AssignmentMoneyInput
-                          label={`${head.feeHeadName} total for term coverage`}
+                          label={`${head.feeHeadName} Total for Term Coverage`}
                           required
                           fullWidth
                           value={form.values.variableFeeHeads[index].amount}
@@ -131,14 +131,14 @@ export function AdmissionFeePreparationDialog({
                       </ShakingTextField>
                     </Box>
                     <InfoTooltipIcon
-                      label={`About ${head.feeHeadName} amount`}
-                      title="Full coverage amount; installments follow the Finance payment term."
+                      label={`About ${head.feeHeadName} Amount`}
+                      title="Full Coverage Amount; Installments Follow the Finance Payment Term."
                     />
                   </Stack>
                   {form.values.variableFeeHeads[index].amount === 0 && (
                     <ShakingTextField error={Boolean(reasonError)}>
                       <TextField
-                        label={`Reason for zero ${head.feeHeadName} amount`}
+                        label={`Reason for Zero ${head.feeHeadName} Amount`}
                         name={reasonName}
                         required
                         fullWidth
@@ -156,14 +156,14 @@ export function AdmissionFeePreparationDialog({
                 </Stack>
               );
             })}
-            {preview.pending && <LinearProgress aria-label="Calculating variable fee preview" />}
+            {preview.pending && <LinearProgress aria-label="Calculating Variable Fee Preview" />}
             {preview.result && (
               <>
                 <FeeProrationResult result={preview.result.proration} />
                 {!preview.result.proration && (
                   <DetailGrid>
                     <DetailField
-                      label="Scheduled fees"
+                      label="Scheduled Fees"
                       value={formatNumber(preview.result.totalAmount, 'INR')}
                     />
                   </DetailGrid>
@@ -178,10 +178,10 @@ export function AdmissionFeePreparationDialog({
                   severity="error"
                 >
                   {parseApiProblemDetail(preview.query.error).detail ||
-                    'The fee preview could not be calculated.'}
+                    'The Fee Preview Could Not Be Calculated.'}
                 </StudentFeedback>
                 <Button size="small" variant="outlined" onClick={() => preview.query.refetch()}>
-                  Retry fee preview
+                  Retry Fee Preview
                 </Button>
               </Stack>
             )}
@@ -215,7 +215,7 @@ export function AdmissionFeePreparationDialog({
           disabled={Boolean(previewContext) && !preview.ready}
           startIcon={<Iconify icon="mdi:arrow-right" width={16} />}
         >
-          Continue to collection
+          Continue to Collection
         </Button>
       </DialogActions>
     </CustomDialog>

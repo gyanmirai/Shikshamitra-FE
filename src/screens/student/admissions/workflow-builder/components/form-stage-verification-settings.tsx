@@ -40,13 +40,13 @@ export function FormStageVerificationSettings({
     <Stack spacing={1.25}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
         <Typography variant="body2" sx={{ minWidth: 0 }}>
-          Require staff verification
+          Require Staff Verification
         </Typography>
         <Switch
           size="small"
           slotProps={{
             input: {
-              'aria-label': 'Require staff verification before completing this stage',
+              'aria-label': 'Require Staff Verification Before Completing This Stage',
               'aria-description':
                 'Staff must verify selected sections before completing this stage.',
             },
@@ -64,7 +64,7 @@ export function FormStageVerificationSettings({
       </Stack>
       {policy.requireSectionVerification && (
         <Stack spacing={1} sx={{ pl: { sm: 2 } }}>
-          <Typography variant="subtitle2">Sections staff must verify</Typography>
+          <Typography variant="subtitle2">Sections Staff Must Verify</Typography>
           {sectionsLoading ? (
             <StudentFeedback notificationKey="STU-0521" presentation="inline" severity="info">
               Loading form sections…

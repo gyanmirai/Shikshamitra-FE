@@ -45,13 +45,13 @@ export function OfferResponseSettings({ policy, disabled, onChange }: Props) {
     <Stack spacing={2}>
       <FormSectionCard
         icon="mdi:calendar-check-outline"
-        title="Validity and response"
-        descriptionTooltip="Define when offers expire, required acceptance evidence and outcomes that may complete this stage. Saved response and authorization rules remain in effect."
+        title="Validity and Response"
+        descriptionTooltip="Define When Offers Expire, Required Acceptance Evidence and Outcomes That May Complete This Stage. Saved Response and Authorization Rules Remain in Effect."
       >
         <Stack spacing={1.5}>
           <OfferValiditySettings policy={policy} disabled={disabled} onChange={onChange} />
           <FormControlLabel
-            label="Require confirmation that terms were accepted"
+            label="Require Confirmation That Terms Were Accepted"
             control={
               <Switch
                 size="small"
@@ -63,7 +63,7 @@ export function OfferResponseSettings({ policy, disabled, onChange }: Props) {
           />
           {policy.offerType === 'conditional' && (
             <FormControlLabel
-              label="Require confirmation that offer conditions were satisfied"
+              label="Require Confirmation That Offer Conditions Were Satisfied"
               control={
                 <Switch
                   size="small"
@@ -75,7 +75,7 @@ export function OfferResponseSettings({ policy, disabled, onChange }: Props) {
             />
           )}
           <FormControlLabel
-            label="Require a reason when an offer is declined"
+            label="Require a Reason When an Offer Is Declined"
             control={
               <Switch
                 size="small"
@@ -86,7 +86,7 @@ export function OfferResponseSettings({ policy, disabled, onChange }: Props) {
             }
           />
           <WorkflowSettingLabel
-            label="Outcomes that may complete this stage"
+            label="Outcomes That May Complete This Stage"
             help="The offer must reach one of these outcomes before this stage can finish. Configure its next-stage paths separately."
           />
           <Stack direction="row" flexWrap="wrap" useFlexGap spacing={1}>
@@ -106,7 +106,7 @@ export function OfferResponseSettings({ policy, disabled, onChange }: Props) {
             ))}
           </Stack>
           <FormControlLabel
-            label="Continue automatically after acceptance"
+            label="Continue Automatically After Acceptance"
             control={
               <Switch
                 size="small"
@@ -120,17 +120,17 @@ export function OfferResponseSettings({ policy, disabled, onChange }: Props) {
       </FormSectionCard>
       <FormSectionCard
         icon="mdi:cog-outline"
-        title="Advanced settings"
-        descriptionTooltip="Configure authorized expiry overrides, extensions and reissues. Existing limits are preserved when the section is collapsed."
+        title="Advanced Settings"
+        descriptionTooltip="Configure Authorized Expiry Overrides, Extensions and Reissues. Existing Limits Are Preserved When the Section Is Collapsed."
       >
         <CustomAccordion
-          title="Expiry, extensions and reissue"
+          title="Expiry, Extensions and Reissue"
           expanded={exceptions.value || invalidExtensions || invalidReissues}
           onChange={exceptions.onToggle}
           content={
             <Stack spacing={1.5}>
               <FormControlLabel
-                label="Allow staff to override the expiry date"
+                label="Allow Staff to Override the Expiry Date"
                 control={
                   <Switch
                     size="small"
@@ -152,7 +152,7 @@ export function OfferResponseSettings({ policy, disabled, onChange }: Props) {
               />
               <Stack spacing={1.5}>
                 <FormControlLabel
-                  label="Allow expiry extension"
+                  label="Allow Expiry Extension"
                   control={
                     <Switch
                       size="small"
@@ -171,7 +171,7 @@ export function OfferResponseSettings({ policy, disabled, onChange }: Props) {
                   <TextField
                     size="small"
                     type="number"
-                    label="Maximum extensions"
+                    label="Maximum Extensions"
                     error={invalidExtensions}
                     helperText={
                       invalidExtensions ? 'Enter a whole number from 0 to 20.' : undefined
@@ -188,7 +188,7 @@ export function OfferResponseSettings({ policy, disabled, onChange }: Props) {
               </Stack>
               <Stack spacing={1.5}>
                 <FormControlLabel
-                  label="Allow reissue"
+                  label="Allow Reissue"
                   control={
                     <Switch
                       size="small"
@@ -207,7 +207,7 @@ export function OfferResponseSettings({ policy, disabled, onChange }: Props) {
                   <TextField
                     size="small"
                     type="number"
-                    label="Maximum reissues"
+                    label="Maximum Reissues"
                     error={invalidReissues}
                     helperText={invalidReissues ? 'Enter a whole number from 0 to 10.' : undefined}
                     fullWidth

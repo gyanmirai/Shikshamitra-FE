@@ -101,19 +101,19 @@ export function AdmissionApplicantProfileDialog({
         open={open}
         handleClose={requestClose}
         title="Edit Applicant Identity"
-        titleInfo="Update applicant identity and guardian contact before finalizing admission."
+        titleInfo="Update Applicant Identity and Guardian Contact Before Finalizing Admission."
         maxWidth="sm"
         disableClose={busy}
         hasUnsavedChanges={formik.dirty}
         guardUnsavedChanges={false}
       >
         <DialogScrollContent onSubmit={() => formik.handleSubmit()}>
-          <FormBusyRegion busy={busy} label="Saving applicant identity…">
+          <FormBusyRegion busy={busy} label="Saving Applicant Identity…">
             <Stack spacing={2}>
               <TextField
                 fullWidth
                 size="small"
-                label="First name"
+                label="First Name"
                 required
                 {...formik.getFieldProps('firstName')}
                 error={Boolean(formik.touched.firstName && formik.errors.firstName)}
@@ -122,7 +122,7 @@ export function AdmissionApplicantProfileDialog({
               <TextField
                 fullWidth
                 size="small"
-                label="Middle name"
+                label="Middle Name"
                 {...formik.getFieldProps('middleName')}
                 error={Boolean(formik.touched.middleName && formik.errors.middleName)}
                 helperText={formik.touched.middleName && formik.errors.middleName}
@@ -130,13 +130,13 @@ export function AdmissionApplicantProfileDialog({
               <TextField
                 fullWidth
                 size="small"
-                label="Last name"
+                label="Last Name"
                 {...formik.getFieldProps('lastName')}
                 error={Boolean(formik.touched.lastName && formik.errors.lastName)}
                 helperText={formik.touched.lastName && formik.errors.lastName}
               />
               <DatePicker
-                label="Date of birth"
+                label="Date of Birth"
                 format={ADMISSION_DATE_FORMAT}
                 value={formik.values.dateOfBirth ? dayjs(formik.values.dateOfBirth) : null}
                 maxDate={dayjs()}
@@ -168,14 +168,14 @@ export function AdmissionApplicantProfileDialog({
                 onChange={(value) => formik.setFieldValue('gender', String(value ?? ''))}
               />
               <Divider />
-              <Typography variant="subtitle2">Primary guardian contact</Typography>
+              <Typography variant="subtitle2">Primary Guardian Contact</Typography>
               <TextField
                 fullWidth
                 required
                 size="small"
                 type="tel"
                 name="guardianMobile"
-                label="Guardian mobile number"
+                label="Guardian Mobile Number"
                 value={formik.values.guardianMobile}
                 onBlur={formik.handleBlur}
                 onChange={(event) =>
@@ -195,7 +195,7 @@ export function AdmissionApplicantProfileDialog({
                 fullWidth
                 size="small"
                 type="email"
-                label="Guardian email"
+                label="Guardian Email"
                 {...formik.getFieldProps('guardianEmail')}
                 onChange={(event) =>
                   formik.setFieldValue('guardianEmail', normalizeEmail(event.target.value))
@@ -225,7 +225,7 @@ export function AdmissionApplicantProfileDialog({
             onClick={() => formik.handleSubmit()}
             startIcon={<Iconify icon="mdi:content-save-outline" />}
           >
-            Save identity
+            Save Identity
           </LoadingButton>
         </DialogActions>
       </CustomDialog>

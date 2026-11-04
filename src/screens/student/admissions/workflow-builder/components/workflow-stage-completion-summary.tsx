@@ -62,7 +62,7 @@ export function WorkflowStageCompletionSummary({
     </StudentFeedback>
   ) : (
     <WorkflowSettingLabel
-      label="Stage completion"
+      label="Stage Completion"
       help={getWorkflowStageCompletionDescription(stage)}
     />
   );

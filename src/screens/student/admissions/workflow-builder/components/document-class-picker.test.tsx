@@ -47,13 +47,13 @@ describe('document class picker', () => {
     expect(screen.getByRole('combobox', { name: 'Board' })).toBeInTheDocument();
     await chooseBoard(user, 'GSEB');
     await user.click(screen.getByRole('combobox', { name: 'Classes' }));
-    const dialog = () => within(screen.getByRole('dialog', { name: 'Select classes' }));
+    const dialog = () => within(screen.getByRole('dialog', { name: 'Select Classes' }));
     expect(dialog().queryByRole('combobox', { name: 'Board' })).not.toBeInTheDocument();
-    expect(dialog().queryByText(/2026|2025|Academic year/)).not.toBeInTheDocument();
+    expect(dialog().queryByText(/2026|2025|Academic Year/)).not.toBeInTheDocument();
     expect(dialog().getAllByRole('checkbox')).toHaveLength(2);
     expect(dialog().queryByText(/CBSE/)).not.toBeInTheDocument();
     await user.click(dialog().getByRole('checkbox', { name: /Class 2 Gujarati/ }));
-    await user.type(dialog().getByRole('textbox', { name: 'Search classes' }), 'english');
+    await user.type(dialog().getByRole('textbox', { name: 'Search Classes' }), 'english');
     expect(dialog().getAllByRole('checkbox')).toHaveLength(1);
     expect(dialog().getByRole('checkbox', { name: /Class 3 English/ })).not.toBeChecked();
     await user.click(dialog().getByRole('button', { name: 'Done' }));
@@ -66,7 +66,7 @@ describe('document class picker', () => {
     expect(screen.getByRole('combobox', { name: 'Classes' })).toHaveTextContent(
       '2 classes selected'
     );
-    await chooseBoard(user, 'All boards');
+    await chooseBoard(user, 'All Boards');
     await user.click(screen.getByRole('combobox', { name: 'Classes' }));
     expect(screen.getAllByRole('checkbox', { checked: true })).toHaveLength(2);
   });
@@ -78,13 +78,13 @@ describe('document class picker', () => {
     await user.tab();
     expect(screen.getByRole('combobox', { name: 'Classes' })).toHaveFocus();
     await user.keyboard('{Enter}');
-    const dialog = within(screen.getByRole('dialog', { name: 'Select classes' }));
+    const dialog = within(screen.getByRole('dialog', { name: 'Select Classes' }));
     await user.click(
-      dialog.getByRole('checkbox', { name: 'Unavailable class (remove or replace)' })
+      dialog.getByRole('checkbox', { name: 'Unavailable Class (Remove or Replace)' })
     );
     expect(dialog.queryByRole('checkbox', { name: /Unavailable/ })).not.toBeInTheDocument();
-    await user.type(dialog.getByRole('textbox', { name: 'Search classes' }), 'not-a-class');
-    expect(dialog.getByRole('status')).toHaveTextContent('No matching classes');
+    await user.type(dialog.getByRole('textbox', { name: 'Search Classes' }), 'not-a-class');
+    expect(dialog.getByRole('status')).toHaveTextContent('No Matching Classes');
     await user.click(dialog.getByRole('button', { name: 'Clear' }));
     expect(dialog.getByText('0 classes selected')).toBeInTheDocument();
     await user.keyboard('{Escape}');

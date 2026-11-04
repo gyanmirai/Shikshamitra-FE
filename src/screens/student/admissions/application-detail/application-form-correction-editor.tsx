@@ -110,7 +110,7 @@ export function ApplicationFormCorrectionEditor({
             ? 'The save result is unconfirmed. Closing will refresh the application so you can check its latest details.'
             : 'Your unsaved form corrections will be discarded.'
         }
-        cancelText="Keep editing"
+        cancelText="Keep Editing"
         onClose={keepEditing}
         action={
           <Button
@@ -121,7 +121,7 @@ export function ApplicationFormCorrectionEditor({
               discard();
             }}
           >
-            Discard changes
+            Discard Changes
           </Button>
         }
       />
@@ -271,7 +271,7 @@ export function ApplicationFormCorrectionEditor({
                       onClick={() => setReasonOpen(true)}
                       startIcon={<Iconify icon={GlobalIcons.submit} />}
                     >
-                      Retry save
+                      Retry Save
                     </Button>
                   )}
                 </>

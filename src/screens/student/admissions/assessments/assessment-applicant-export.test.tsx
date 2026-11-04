@@ -62,7 +62,7 @@ it('exports exactly the displayed merged Status/Attendance, excludes Result/Acti
       data[0],
       columns.find((column) => column.id === 'attendance')
     )
-  ).toBe('Not required');
+  ).toBe('Not Required');
   expect(data[0].status).toBe('complete');
   expect(columns.slice(-2).map((column) => column.label)).toEqual(['Status', 'Action']);
   expect(columns.slice(-2)).toEqual([

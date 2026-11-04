@@ -32,7 +32,7 @@ export function ApplicationFollowUps({
       sx={{ p: compact ? 1.5 : 2, minWidth: 0, ...(compact && { borderRadius: 1 }) }}
     >
       {query.isLoading && (
-        <Stack spacing={1} role="status" aria-label="Loading application follow-ups">
+        <Stack spacing={1} role="status" aria-label="Loading Application Follow-Ups">
           <Skeleton width="40%" />
           <Skeleton variant="rounded" height={80} />
         </Stack>
@@ -58,8 +58,8 @@ export function ApplicationFollowUps({
           {problem && problem.detail !== 'Something went wrong'
             ? problem.detail
             : sourceUnavailable
-              ? 'The source inquiry is unavailable. Follow-ups cannot be loaded for this application.'
-              : 'Unable to load application follow-ups. Retry to view the latest information.'}
+              ? 'The Source Inquiry Is Unavailable. Follow-ups Cannot Be Loaded for This Application.'
+              : 'Unable to Load Application Follow-ups. Retry to View the Latest Information.'}
         </StudentFeedback>
       )}
       {!query.isLoading && !query.isError && value && (

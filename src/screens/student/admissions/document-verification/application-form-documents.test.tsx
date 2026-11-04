@@ -38,10 +38,10 @@ describe('documents collected during the application form', () => {
         saving={false}
       />
     );
-    expect(await screen.findByRole('button', { name: 'Upload document' })).toBeEnabled();
+    expect(await screen.findByRole('button', { name: 'Upload Document' })).toBeEnabled();
     expect(screen.queryByRole('button', { name: 'Accept' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /waive/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Continue admission' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Waive/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Continue Admission' })).not.toBeInTheDocument();
   });
 
   it.each([
@@ -57,7 +57,7 @@ describe('documents collected during the application form', () => {
         saving={saving}
       />
     );
-    expect(await screen.findByRole('button', { name: 'Upload document' })).toBeDisabled();
+    expect(await screen.findByRole('button', { name: 'Upload Document' })).toBeDisabled();
     if (unsaved)
       expect(screen.getByText(/Save your form answers before uploading/)).toBeInTheDocument();
   });
@@ -71,6 +71,6 @@ describe('documents collected during the application form', () => {
         saving={false}
       />
     );
-    expect(screen.queryByText('Supporting documents')).not.toBeInTheDocument();
+    expect(screen.queryByText('Supporting Documents')).not.toBeInTheDocument();
   });
 });

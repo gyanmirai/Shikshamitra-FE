@@ -61,5 +61,5 @@ it('blocks Payment progression while the fee editor is dirty or saving and repor
   fireEvent.click(screen.getByRole('button', { name: 'Selection saved' }));
   fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
   expect(onComplete).toHaveBeenCalledOnce();
-  expect(screen.queryByRole('button', { name: 'Record payment' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Record Payment' })).not.toBeInTheDocument();
 });

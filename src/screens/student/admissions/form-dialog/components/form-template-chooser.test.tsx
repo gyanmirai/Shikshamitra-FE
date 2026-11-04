@@ -69,20 +69,20 @@ describe('FormTemplateChooser', () => {
     const user = userEvent.setup();
     const props = renderChooser(1);
 
-    expect(screen.getByRole('button', { name: 'Start blank: Blank form' })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: 'Start Blank: Blank Form' })).toHaveAttribute(
       'aria-pressed',
       'true'
     );
     expect(
-      screen.getByRole('button', { name: 'Use recommended: Registration form' })
+      screen.getByRole('button', { name: 'Use Recommended: Registration Form' })
     ).toBeInTheDocument();
     expect(
-      screen.queryByRole('button', { name: 'Use inquiry form: Inquiry form' })
+      screen.queryByRole('button', { name: 'Use Inquiry Form: Inquiry Form' })
     ).not.toBeInTheDocument();
     expect(screen.getAllByRole('button')).toHaveLength(2);
     expect(screen.queryByRole('button', { name: /Browse all templates/i })).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Use recommended: Registration form' }));
+    await user.click(screen.getByRole('button', { name: 'Use Recommended: Registration Form' }));
     expect(props.onSelect).toHaveBeenCalledWith('admission-application');
   });
 
@@ -90,13 +90,13 @@ describe('FormTemplateChooser', () => {
     const user = userEvent.setup();
     const props = renderChooser(0);
 
-    expect(screen.getByRole('button', { name: 'Start blank: Blank form' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Start Blank: Blank Form' })).toBeInTheDocument();
     expect(
-      screen.queryByRole('button', { name: 'Use recommended: Registration form' })
+      screen.queryByRole('button', { name: 'Use Recommended: Registration Form' })
     ).not.toBeInTheDocument();
     expect(screen.getAllByRole('button')).toHaveLength(2);
 
-    await user.click(screen.getByRole('button', { name: 'Use inquiry form: Inquiry form' }));
+    await user.click(screen.getByRole('button', { name: 'Use Inquiry Form: Inquiry Form' }));
     expect(props.onSelect).toHaveBeenCalledWith('admission-inquiry');
   });
 });

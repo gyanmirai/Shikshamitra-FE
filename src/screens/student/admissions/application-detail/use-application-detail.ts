@@ -5,9 +5,9 @@ import type { RootState } from 'src/redux/store';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
-import { useRef, useMemo, useState } from 'react';
 import { skipToken } from '@reduxjs/toolkit/query';
 import { shikshaMitraToast } from 'src/components/toast';
+import { useRef, useMemo, useState, useEffect } from 'react';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useGetAdmissionFormStageQuery } from 'src/redux/student/admissions/admission-form-stage-api';
@@ -60,9 +60,12 @@ export function useApplicationDetail(
     ) ??
     [...(workflowQuery.data?.stages ?? [])].reverse().find((stage) => stage.status >= 2);
   const requiresForm = view === 'form' || (view === 'journey' && selectedStage?.stageType === 1);
-  const formQuery = useGetAdmissionApplicationFormQuery(
-    applicationQuery.data && requiresForm ? id : skipToken
+  const formQueryResult = useGetAdmissionApplicationFormQuery(
+    applicationQuery.data?.id === id && requiresForm ? id : skipToken
   );
+  // RTK Query's data may retain the preceding argument's result while the new
+  // application loads. Only currentData belongs to this application's form.
+  const formQuery = { ...formQueryResult, data: formQueryResult.currentData };
   const selectedFormStage = workflowQuery.data?.stages.find(
     (stage) =>
       stage.id === (selectedStageId ?? workflowQuery.data?.currentStageInstanceId) &&
@@ -99,15 +102,54 @@ export function useApplicationDetail(
   );
   const formik = useFormik<Record<string, string>>({
     initialValues,
-    enableReinitialize: true,
     validationSchema: formQuery.data
       ? buildDynamicAdmissionYupSchema(formQuery.data.definition)
       : Yup.object(),
     onSubmit: async () => undefined,
   });
-  const currentValues = formik.values;
+  const draftApplicationId = useRef(id);
+  const baseline = useRef(initialValues);
+  const editedFields = useRef(new Set<string>());
+  const persistedFields = useRef(new Set<string>());
+  const currentValues = draftApplicationId.current === id ? formik.values : {};
   const latestValues = useRef(currentValues);
   latestValues.current = currentValues;
+  useEffect(() => {
+    if (draftApplicationId.current !== id) {
+      draftApplicationId.current = id;
+      baseline.current = initialValues;
+      editedFields.current.clear();
+      persistedFields.current.clear();
+      latestValues.current = initialValues;
+      formik.resetForm({ values: initialValues });
+      setErrors([]);
+      setFieldErrors({});
+      return;
+    }
+    // Leaving the form view or a pending fetch must not clear a same-record draft.
+    if (!formQuery.data || baseline.current === initialValues) return;
+    const nextBaseline = { ...initialValues };
+    // Once saved, this field has answer history and is no longer eligible for
+    // projection. A delayed GET may contain any old source text, so acknowledge
+    // the field rather than comparing projection strings.
+    (formQuery.data.autoFilledFieldCodes ?? []).forEach((code) => {
+      if (persistedFields.current.has(code)) {
+        if (Object.prototype.hasOwnProperty.call(baseline.current, code))
+          nextBaseline[code] = baseline.current[code];
+        else delete nextBaseline[code];
+      }
+    });
+    const merged = { ...nextBaseline };
+    Object.entries(latestValues.current).forEach(([code, value]) => {
+      if (editedFields.current.has(code) || value !== baseline.current[code]) merged[code] = value;
+    });
+    baseline.current = nextBaseline;
+    latestValues.current = merged;
+    formik.resetForm({ values: nextBaseline, touched: formik.touched, errors: formik.errors });
+    formik.setValues(merged, false);
+    // Formik's state changes must not re-run server reconciliation.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, initialValues]);
   const validateEditedField = (
     fieldCode: string,
     values: Record<string, string>,
@@ -126,34 +168,83 @@ export function useApplicationDetail(
     });
   };
 
+  const savingRef = useRef(false);
+  const [saving, setSaving] = useState(false);
   const persistChanges = async (showSuccessMessage: boolean) => {
+    if (savingRef.current || updateState.isLoading || draftApplicationId.current !== id)
+      return false;
     const application = applicationQuery.data;
-    if (!application?.concurrencyStamp) {
+    if (application?.id !== id || !application?.concurrencyStamp) {
       shikshaMitraToast.error({
         message: 'The application changed or is still loading. Refresh it before saving.',
       });
       return false;
     }
+    const valuesAtSave = latestValues.current;
     const normalizedValues = formQuery.data
-      ? normalizeAdmissionFormEmailValues(formQuery.data.definition, formik.values)
-      : formik.values;
+      ? normalizeAdmissionFormEmailValues(formQuery.data.definition, valuesAtSave)
+      : valuesAtSave;
+    const writableCodes = new Set(
+      formQuery.data?.definition.sections.flatMap(({ fields }) =>
+        fields.filter((field) => !field.readOnly).map((field) => field.code)
+      ) ?? []
+    );
+    const projectedCodes = new Set(
+      (formQuery.data?.autoFilledFieldCodes ?? []).filter(
+        (code) =>
+          writableCodes.has(code) &&
+          Object.prototype.hasOwnProperty.call(normalizedValues, code) &&
+          !persistedFields.current.has(code)
+      )
+    );
+    const normalizedInitialValues = formQuery.data
+      ? normalizeAdmissionFormEmailValues(formQuery.data.definition, formik.initialValues)
+      : formik.initialValues;
+    // Hints identify untouched display projections; edits and clears are authored
+    // answers even when a family source changes before this PATCH reaches the server.
+    const autoFilledFieldCodes = [...projectedCodes].filter(
+      (code) => normalizedValues[code] === normalizedInitialValues[code]
+    );
     const changedValues = Object.entries(normalizedValues).filter(
-      ([fieldCode, value]) => value !== formik.initialValues[fieldCode]
+      ([fieldCode, value]) => value !== baseline.current[fieldCode] || projectedCodes.has(fieldCode)
     );
     if (!changedValues.length) return true;
+    savingRef.current = true;
+    setSaving(true);
+    const savingApplicationId = id;
     try {
-      await updateValues({
+      const savedForm = await updateValues({
         id,
         concurrencyStamp: application.concurrencyStamp,
-        // Send only fields changed since the last load. The backend still
-        // validates the complete pinned form on submit, while draft saves stay
-        // small and safe to retry.
+        ...(autoFilledFieldCodes.length ? { autoFilledFieldCodes } : {}),
+        // Projected answers are display-only until this normal draft save.
+        // Union them with edits, including deliberate clears, exactly once.
         values: changedValues.map(([fieldCode, value]) => ({
           fieldCode,
           valueJson: JSON.stringify(value),
         })),
       }).unwrap();
-      formik.resetForm({ values: normalizedValues });
+      if (draftApplicationId.current !== savingApplicationId) return false;
+      changedValues.forEach(([code]) => {
+        persistedFields.current.add(code);
+      });
+      const savedValues = Array.isArray(savedForm?.values)
+        ? Object.fromEntries(
+            savedForm.values.map((item) => [item.fieldCode, readAdmissionFormValue(item.valueJson)])
+          )
+        : normalizedValues;
+      const merged = { ...savedValues };
+      editedFields.current.clear();
+      Object.entries(latestValues.current).forEach(([code, value]) => {
+        if (value !== valuesAtSave[code]) {
+          merged[code] = value;
+          editedFields.current.add(code);
+        }
+      });
+      baseline.current = savedValues;
+      latestValues.current = merged;
+      formik.resetForm({ values: savedValues });
+      formik.setValues(merged, false);
       if (showSuccessMessage) shikshaMitraToast.success({ message: 'Application saved' });
       return true;
     } catch (error) {
@@ -161,6 +252,9 @@ export function useApplicationDetail(
         message: parseApiProblemDetail(error).detail || 'Unable to save application',
       });
       return false;
+    } finally {
+      savingRef.current = false;
+      setSaving(false);
     }
   };
   const save = () => persistChanges(true);
@@ -355,9 +449,10 @@ export function useApplicationDetail(
     formHistoryQuery,
     requiresForm,
     currentValues,
-    hasUnsavedAnswers: formik.dirty,
+    hasUnsavedAnswers: draftApplicationId.current === id && formik.dirty,
     discardUnsavedAnswers: () => {
       formik.resetForm();
+      editedFields.current.clear();
       setErrors([]);
       setFieldErrors({});
     },
@@ -365,7 +460,7 @@ export function useApplicationDetail(
     fieldErrors,
     runtimeAction,
     setRuntimeAction,
-    updateState,
+    updateState: { ...updateState, isLoading: updateState.isLoading || saving },
     submitState: { ...submitState, isLoading: submitState.isLoading || submitting },
     advanceState: { ...advanceState, isLoading: advanceState.isLoading || advancing },
     save,
@@ -378,6 +473,7 @@ export function useApplicationDetail(
     canEndJourney,
     validateStep,
     setFieldValue: async (fieldCode: string, value: string) => {
+      if (latestValues.current[fieldCode] !== value) editedFields.current.add(fieldCode);
       // A selector may change and blur before React renders the new Formik values.
       const nextValues = { ...latestValues.current, [fieldCode]: value };
       latestValues.current = nextValues;

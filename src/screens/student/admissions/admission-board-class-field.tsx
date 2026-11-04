@@ -11,7 +11,7 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import type { AdmissionRuntimeFieldProps } from './admission-runtime-field';
 
 // Keep menu keyboard/focus behavior in CustomSelect; only replace the scrolling surface.
-const ClassMenuPaper = forwardRef<HTMLDivElement, PaperProps>(({ children, sx, ...props }, ref) => (
+export const AdmissionAcademicMenuPaper = forwardRef<HTMLDivElement, PaperProps>(({ children, sx, ...props }, ref) => (
   <PopoverPaper {...props} ref={ref} sx={[...(Array.isArray(sx) ? sx : [sx]), { overflow: 'hidden' }]}>
     <Scrollbar sx={{ maxHeight: 'min(320px, calc(100dvh - 64px))' }}>{children}</Scrollbar>
   </PopoverPaper>
@@ -41,8 +41,11 @@ export function AdmissionBoardClassField({
   helperText,
 }: Props) {
   const [chosenBoard, setChosenBoard] = useState('');
+  const [chosenMedium, setChosenMedium] = useState('');
   const savedClass = options.find((option) => option.value === value);
   const boardId = (value && savedClass?.boardId) || chosenBoard;
+  const mediumId = (value && savedClass?.mediumId) || chosenMedium;
+  const hasMediums = options.some(option => option.mediumId && option.mediumLabel);
   const boards = [
     ...new Map(
       options
@@ -50,11 +53,13 @@ export function AdmissionBoardClassField({
         .map((option) => [option.boardId!, { value: option.boardId!, label: option.boardLabel! }])
     ).values(),
   ];
+  const mediums = [...new Map(options.filter(option => option.boardId === boardId && option.mediumId && option.mediumLabel)
+    .map(option => [option.mediumId!, {value: option.mediumId!, label: option.mediumLabel!}])).values()];
   const classes = options.filter(
-    (option) => option.boardId === boardId || (!option.isActive && option.value === value)
+    (option) => (option.boardId === boardId && (!hasMediums || option.mediumId === mediumId)) || (!option.isActive && option.value === value)
   );
   const blocked = disabled || unavailable || loading;
-  const menuProps = { slots: { paper: ClassMenuPaper } };
+  const menuProps = { slots: { paper: AdmissionAcademicMenuPaper } };
   return (
     <Box sx={{ minWidth: 0, containerType: 'inline-size' }}>
       <Box
@@ -62,7 +67,7 @@ export function AdmissionBoardClassField({
           display: 'grid',
           gap: 1,
           gridTemplateColumns: 'minmax(0, 1fr)',
-          '@container (min-width: 480px)': { gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' },
+          '@container (min-width: 480px)': { gridTemplateColumns: `repeat(${hasMediums ? 3 : 2}, minmax(0, 1fr))` },
         }}
       >
         <ShakingTextField error={Boolean(error && !boardId)}>
@@ -73,7 +78,7 @@ export function AdmissionBoardClassField({
             size="small"
             fullWidth
             isSearch
-            searchPlaceholder="Search boards"
+            searchPlaceholder="Search Boards"
             value={boardId}
             options={boards}
             labelKey="label"
@@ -88,15 +93,41 @@ export function AdmissionBoardClassField({
                   ? 'No boards available for these classes.'
                   : undefined
             }
-            noOptionsMessage="No boards available"
+            noOptionsMessage="No Boards Available"
             MenuProps={menuProps}
             onChange={(next) => {
               if (String(next) === boardId) return;
               setChosenBoard(String(next));
+              setChosenMedium('');
               onChange('');
             }}
           />
         </ShakingTextField>
+        {hasMediums && <ShakingTextField error={Boolean(error && !mediumId)}>
+          <CustomSelect
+            name={`${field.code}__medium`}
+            label="Medium"
+            required={field.required}
+            size="small"
+            fullWidth
+            isSearch
+            searchPlaceholder="Search Mediums"
+            value={mediumId}
+            options={mediums}
+            labelKey="label"
+            valueKey="value"
+            disabled={blocked || !boardId}
+            isLoading={loading}
+            noOptionsMessage="No Mediums Available for This Board"
+            MenuProps={menuProps}
+            onChange={(next) => {
+              if (String(next) === mediumId) return;
+              setChosenBoard(boardId);
+              setChosenMedium(String(next));
+              onChange('');
+            }}
+          />
+        </ShakingTextField>}
         <ShakingTextField error={Boolean(error)}>
           <CustomSelect
             name={field.code}
@@ -105,21 +136,21 @@ export function AdmissionBoardClassField({
             size="small"
             fullWidth
             isSearch
-            searchPlaceholder="Search classes"
+            searchPlaceholder="Search Classes"
             value={value}
             options={classes}
             labelKey="label"
             valueKey="value"
-            disabled={blocked || !boardId}
+            disabled={blocked || !boardId || (hasMediums && !mediumId)}
             isLoading={loading}
             disabledValues={classes
               .filter((option) => !option.isActive)
               .map((option) => option.value)}
             disabledLabel="Unavailable"
-            noOptionsMessage="No classes configured for this board"
+            noOptionsMessage="No Classes Configured for This Board"
             error={Boolean(error)}
             helperText={
-              error || helperText || (!boardId && !disabled ? 'Select a board first.' : undefined)
+              error || helperText || (!boardId && !disabled ? 'Select a board first.' : hasMediums && !mediumId && !disabled ? 'Select a medium first.' : undefined)
             }
             onBlur={onBlur}
             MenuProps={menuProps}

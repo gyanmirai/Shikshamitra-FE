@@ -19,6 +19,7 @@ import { isAdmissionRuleVisible } from 'src/screens/student/admissions/admission
 import { normalizeAdmissionEmailValue } from 'src/screens/student/admissions/admission-email-values';
 import { canonicalInquiryBinding } from 'src/screens/student/admissions/admission-inquiry-field-bindings';
 import { buildDynamicAdmissionYupSchema } from 'src/screens/student/admissions/admission-form-validation';
+import { dependentAdmissionFieldValues } from 'src/screens/student/admissions/admission-field-dependencies';
 import {
   useAdmissionAddressSync,
   isAdmissionCopiedAddressField,
@@ -41,6 +42,13 @@ import {
   getAdmissionInquiryIdentityErrors,
 } from 'src/screens/student/admissions/admission-inquiry-model';
 
+import { projectPublicInquirySections } from './public-inquiry-schema';
+import {
+  publicAcademicError,
+  PublicAcademicField,
+  publicAcademicSource,
+} from './public-academic-field';
+
 type PublicField = {
   code: string;
   label: string;
@@ -52,6 +60,7 @@ type PublicField = {
   helpText?: string | null;
   defaultValue?: string | null;
   optionsJson?: string | null;
+  optionsSourceJson?: string | null;
   validationJson?: string | null;
   visibilityRuleJson?: string | null;
   requiredRuleJson?: string | null;
@@ -423,8 +432,11 @@ function InquiryForm({
   onSubmitted: () => void;
 }) {
   const { readingPhoto, onPhotoReading } = useAdmissionPhotoReads();
+  const formRef = useRef<HTMLFormElement>(null);
+  const lastFocusedSubmit = useRef(0);
   const [requestError, setRequestError] = useState('');
-  const sections = (context.form?.sections ?? [])
+  const submission = useRef<{ payload: string; requestId?: string } | null>(null);
+  const sections = projectPublicInquirySections(context.form?.sections ?? [])
     .map((section) => ({
       ...section,
       fields: section.fields.filter((field) => !field.isIdentityFallback),
@@ -436,16 +448,40 @@ function InquiryForm({
     consentToContact: false,
   };
   const validationSchema = Yup.object({
-    fields: Yup.lazy((answers: unknown) =>
-      buildDynamicAdmissionYupSchema({
-        sections: sections.filter((section) =>
-          isAdmissionRuleVisible(
-            section.stepVisibilityRuleJson,
-            (answers && typeof answers === 'object' ? answers : {}) as Record<string, string>
-          )
-        ),
-      })
-    ),
+    fields: Yup.lazy((answers: unknown) => {
+      const values = (answers && typeof answers === 'object' ? answers : {}) as Record<
+        string,
+        string
+      >;
+      const visible = sections.filter(
+        (section) =>
+          isAdmissionRuleVisible(section.stepVisibilityRuleJson, values) &&
+          isAdmissionRuleVisible(section.visibilityRuleJson, values)
+      );
+      return visible
+        .flatMap((section) => section.fields)
+        .filter(
+          (field) =>
+            isAdmissionRuleVisible(field.visibilityRuleJson, values) && publicAcademicSource(field)
+        )
+        .reduce(
+          (schema, field) =>
+            schema.test(`public-academic-${field.code}`, (_answer, validation) => {
+              const message = publicAcademicError(field, fields, values, offering);
+              return message
+                ? validation.createError({ path: `${validation.path}.${field.code}`, message })
+                : true;
+            }),
+          buildDynamicAdmissionYupSchema({
+            sections: sections.filter((section) =>
+              isAdmissionRuleVisible(
+                section.stepVisibilityRuleJson,
+                (answers && typeof answers === 'object' ? answers : {}) as Record<string, string>
+              )
+            ),
+          })
+        );
+    }),
     consentToContact: Yup.boolean().oneOf([true], 'Please agree to be contacted.'),
   });
   const formik = useFormik<InquiryValues>({
@@ -520,12 +556,22 @@ function InquiryForm({
       };
 
       try {
+        const serializedPayload = JSON.stringify(payload);
+        if (submission.current?.payload !== serializedPayload) {
+          let requestId: string | undefined;
+          try {
+            requestId = globalThis.crypto?.randomUUID?.();
+          } catch {
+            // The server also deduplicates by payload when this optional browser ID is unavailable.
+          }
+          submission.current = { payload: serializedPayload, requestId };
+        }
         const response = await fetch(
           `${apiBase}/public/admission-inquiries/${encodeURIComponent(token)}`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
+            body: JSON.stringify({ ...payload, requestId: submission.current.requestId }),
           }
         );
         if (!response.ok) {
@@ -548,6 +594,23 @@ function InquiryForm({
   useEffect(() => {
     onBusy(formik.isSubmitting || readingPhoto);
   }, [formik.isSubmitting, onBusy, readingPhoto]);
+  useEffect(() => {
+    if (
+      !formik.submitCount ||
+      formik.isValidating ||
+      formik.isSubmitting ||
+      !Object.keys(formik.errors).length ||
+      lastFocusedSubmit.current === formik.submitCount
+    )
+      return;
+    const invalid = formRef.current?.querySelector<HTMLElement>(
+      '[aria-invalid="true"]:not([type="hidden"]):not(:disabled):not([aria-disabled="true"])'
+    );
+    if (!invalid) return;
+    lastFocusedSubmit.current = formik.submitCount;
+    invalid.focus();
+    invalid.scrollIntoView?.({ block: 'center' });
+  }, [formik.submitCount, formik.isValidating, formik.isSubmitting, formik.errors]);
   useAdmissionAddressSync(
     sections,
     formik.values.fields,
@@ -569,7 +632,7 @@ function InquiryForm({
   );
 
   return (
-    <Box component="form" noValidate onSubmit={formik.handleSubmit}>
+    <Box component="form" ref={formRef} noValidate onSubmit={formik.handleSubmit}>
       <Stack spacing={2}>
         {context.form && (
           <>
@@ -595,56 +658,71 @@ function InquiryForm({
                         .filter((field) =>
                           isAdmissionRuleVisible(field.visibilityRuleJson, formik.values.fields)
                         )
-                        .map((field) => (
-                          <AdmissionRuntimeField
-                            optionsResolved
-                            key={field.code}
-                            onBusyChange={(busy) => onPhotoReading(field.code, busy)}
-                            field={field}
-                            value={formik.values.fields[field.code] ?? ''}
-                            disabled={
-                              readingPhoto ||
-                              formik.isSubmitting ||
-                              field.readOnly ||
-                              isAdmissionCopiedAddressField(field, sections, formik.values.fields)
-                            }
-                            error={
-                              formik.submitCount > 0 || touchedFields?.[field.code]
-                                ? fieldErrors?.[field.code]
-                                : undefined
-                            }
-                            formValues={formik.values.fields}
-                            onChange={(value) => {
-                              const previous = formik.values.fields[field.code];
-                              const resetPrimary =
-                                canonicalInquiryBinding(field) === 'Inquiry.ParentRelationship' &&
-                                previous &&
-                                previous !== value;
-                              formik.setValues((current) => ({
-                                ...current,
-                                fields: {
-                                  ...current.fields,
-                                  ...(resetPrimary
-                                    ? Object.fromEntries(
-                                        fields
-                                          .filter((item) =>
-                                            [
-                                              'Guardian.FirstName',
-                                              'Guardian.LastName',
-                                              'Guardian.Mobile',
-                                              'Guardian.Email',
-                                            ].includes(canonicalInquiryBinding(item) ?? '')
-                                          )
-                                          .map((item) => [item.code, ''])
-                                      )
-                                    : {}),
-                                  [field.code]: value,
-                                },
-                              }));
-                            }}
-                            onBlur={() => formik.setFieldTouched(`fields.${field.code}`, true)}
-                          />
-                        ))}
+                        .map((field) => {
+                          const RuntimeField = publicAcademicSource(field)
+                            ? PublicAcademicField
+                            : AdmissionRuntimeField;
+                          return (
+                            <RuntimeField
+                              fields={fields}
+                              offering={offering}
+                              optionsResolved
+                              key={field.code}
+                              onBusyChange={(busy) => onPhotoReading(field.code, busy)}
+                              field={field}
+                              value={formik.values.fields[field.code] ?? ''}
+                              disabled={
+                                readingPhoto ||
+                                formik.isSubmitting ||
+                                field.readOnly ||
+                                isAdmissionCopiedAddressField(field, sections, formik.values.fields)
+                              }
+                              error={
+                                formik.submitCount > 0 || touchedFields?.[field.code]
+                                  ? fieldErrors?.[field.code]
+                                  : undefined
+                              }
+                              formValues={formik.values.fields}
+                              onChange={(value) => {
+                                const previous = formik.values.fields[field.code];
+                                const resetPrimary =
+                                  canonicalInquiryBinding(field) === 'Inquiry.ParentRelationship' &&
+                                  previous &&
+                                  previous !== value;
+                                formik.setValues((current) => ({
+                                  ...current,
+                                  fields: {
+                                    ...current.fields,
+                                    ...dependentAdmissionFieldValues(
+                                      fields.map((item) => ({
+                                        ...item,
+                                        optionsJson: item.optionsSourceJson ?? item.optionsJson,
+                                      })),
+                                      field.code,
+                                      current.fields
+                                    ),
+                                    ...(resetPrimary
+                                      ? Object.fromEntries(
+                                          fields
+                                            .filter((item) =>
+                                              [
+                                                'Guardian.FirstName',
+                                                'Guardian.LastName',
+                                                'Guardian.Mobile',
+                                                'Guardian.Email',
+                                              ].includes(canonicalInquiryBinding(item) ?? '')
+                                            )
+                                            .map((item) => [item.code, ''])
+                                        )
+                                      : {}),
+                                    [field.code]: value,
+                                  },
+                                }));
+                              }}
+                              onBlur={() => formik.setFieldTouched(`fields.${field.code}`, true)}
+                            />
+                          );
+                        })}
                     </Stack>
                   </FormSectionCard>
                 ))}

@@ -9,7 +9,7 @@ export function TransitionHistoryCard({ workflow }: { workflow?: AdmissionApplic
     <Card>
       <CardContent>
         <Typography variant="h6" sx={{ mb: 2 }}>
-          Transition history
+          Transition History
         </Typography>
         <Stack spacing={1.5}>
           {workflow.history.map((history) => {
@@ -26,7 +26,7 @@ export function TransitionHistoryCard({ workflow }: { workflow?: AdmissionApplic
                     {from?.name ?? 'Stage'} {to ? `→ ${to.name}` : '→ Completed'}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    Handled by: {history.actorName || 'Name not recorded'} ·{' '}
+                    Handled By: {history.actorName || 'Name Not Recorded'} ·{' '}
                     {new Date(history.occurredAt).toLocaleString()}
                     {history.reason ? ` · ${history.reason}` : ''}
                   </Typography>

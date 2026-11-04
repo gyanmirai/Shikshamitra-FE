@@ -51,7 +51,7 @@ describe('admission form list query', () => {
     ).toBeUndefined();
   });
 
-  it('sends text and numeric criteria without labels or an implicit type restriction', () => {
+  it('combines an explicit form type with text and numeric criteria', () => {
     expect(
       buildAdmissionFormListQuery({
         page: 2,
@@ -78,6 +78,7 @@ describe('admission form list query', () => {
     ).toEqual({
       search: 'parent',
       status: undefined,
+      purpose: 0,
       skipCount: 20,
       maxResultCount: 10,
       columnFilters:

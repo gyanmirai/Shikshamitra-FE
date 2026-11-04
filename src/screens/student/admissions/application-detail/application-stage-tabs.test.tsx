@@ -33,8 +33,8 @@ it('shows configured stage names in order without icons and retains accessible s
   ]);
   expect(tabs.map((tab) => tab.getAttribute('aria-label'))).toEqual([
     'Application form, Completed',
-    'Assessment, Current step',
-    'Fee, Not started',
+    'Assessment, Current Step',
+    'Fee, Not Started',
     'Decision, Skipped',
   ]);
   tabs.forEach((tab) => {
@@ -56,12 +56,12 @@ it('allows recorded-stage review while preventing future-stage navigation', asyn
       onChange={onChange}
     />
   );
-  expect(screen.getByRole('tab', { name: 'Assessment, Current step' })).toHaveAttribute(
+  expect(screen.getByRole('tab', { name: 'Assessment, Current Step' })).toHaveAttribute(
     'aria-selected',
     'true'
   );
-  expect(screen.getByRole('tab', { name: 'Fee, Not started' })).toBeDisabled();
-  fireEvent.click(screen.getByRole('tab', { name: 'Fee, Not started' }));
+  expect(screen.getByRole('tab', { name: 'Fee, Not Started' })).toBeDisabled();
+  fireEvent.click(screen.getByRole('tab', { name: 'Fee, Not Started' }));
   expect(onChange).not.toHaveBeenCalled();
   await user.click(screen.getByRole('tab', { name: 'Application form, Completed' }));
   expect(onChange).toHaveBeenLastCalledWith('form');

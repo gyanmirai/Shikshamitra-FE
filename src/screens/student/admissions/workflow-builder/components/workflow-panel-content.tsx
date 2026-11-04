@@ -107,9 +107,9 @@ function WorkflowPreview({
               <Typography fontWeight={600}>{stage.name}</Typography>
               <Typography variant="caption" color="text.secondary">
                 {stage.isEntryStage
-                  ? 'Journey starts here'
+                  ? 'Journey Starts Here'
                   : stage.isTerminalStage
-                    ? 'Journey ends here'
+                    ? 'Journey Ends Here'
                     : stage.code}
               </Typography>
             </Box>
@@ -120,10 +120,10 @@ function WorkflowPreview({
                 <Stack key={transition.id} direction="row" spacing={1} alignItems="center">
                   <Iconify icon="mdi:arrow-right" color="text.secondary" />
                   <Typography variant="body2" sx={{ flex: 1 }}>
-                    {transition.isDefault ? 'Otherwise' : 'When the route condition matches'}
+                    {transition.isDefault ? 'Otherwise' : 'When the Route Condition Matches'}
                   </Typography>
                   <Typography variant="body2" fontWeight={600} textAlign="right">
-                    {stageById.get(transition.toStageId)?.name ?? 'Missing stage'}
+                    {stageById.get(transition.toStageId)?.name ?? 'Missing Stage'}
                   </Typography>
                 </Stack>
               ))}
@@ -173,11 +173,11 @@ function WorkflowUsage({
       >
         <Card variant="outlined" sx={{ p: 2 }}>
           <Typography variant="h4">{usage.offeringCount}</Typography>
-          <Typography color="text.secondary">Admission offerings</Typography>
+          <Typography color="text.secondary">Admission Offerings</Typography>
         </Card>
         <Card variant="outlined" sx={{ p: 2 }}>
           <Typography variant="h4">{usage.campusCount ?? 0}</Typography>
-          <Typography color="text.secondary">Campus scopes</Typography>
+          <Typography color="text.secondary">Campus Scopes</Typography>
         </Card>
         <Card variant="outlined" sx={{ p: 2, gridColumn: { sm: '1 / -1' } }}>
           <Typography variant="h4">{usage.applicationCount}</Typography>
@@ -191,7 +191,7 @@ function WorkflowUsage({
             <Box>
               <Typography fontWeight={600}>{offering.code}</Typography>
               <Typography variant="caption" color="text.secondary">
-                {offering.admissionCycleName || 'Admission cycle'}
+                {offering.admissionCycleName || 'Admission Cycle'}
               </Typography>
             </Box>
             <Label color={offering.isActive ? 'success' : 'default'}>

@@ -93,12 +93,12 @@ function FinalizationSurface({
         <Stack spacing={0.5} sx={{ px: 1.5, pt: 1.5 }}>
           <Stack direction="row" alignItems="center" spacing={0.5}>
             <Typography variant="h6" component="h2" ref={headingRef} tabIndex={-1}>
-              Finalize admission
+              Finalize Admission
             </Typography>
             <CustomTooltip title={FINALIZATION_INFO} arrow>
               <IconButton
                 size="small"
-                aria-label="Finalize admission information"
+                aria-label="Finalize Admission Information"
                 sx={{ color: 'info.main' }}
               >
                 <Iconify icon="mdi:information-outline" width={18} />
@@ -288,7 +288,7 @@ function OpenApplicationFinalizationDialog({
                   useFlexGap
                 >
                   <Typography variant="subtitle1" component="h3">
-                    Student record details
+                    Student Record Details
                   </Typography>
                   {canCorrectForm && (
                     <Button
@@ -299,7 +299,7 @@ function OpenApplicationFinalizationDialog({
                       startIcon={<Iconify icon={GlobalIcons.edit} />}
                       onClick={() => setCorrectionOpen(true)}
                     >
-                      Edit application form
+                      Edit Application Form
                     </Button>
                   )}
                 </Stack>
@@ -328,7 +328,7 @@ function OpenApplicationFinalizationDialog({
                             sx={{ m: 0, flex: 1, overflowWrap: 'anywhere' }}
                           >
                             {field.key === 'Applicant.ProfilePhoto'
-                              ? 'Photo provided'
+                              ? 'Photo Provided'
                               : field.value}
                           </Typography>
                         </Stack>
@@ -351,16 +351,16 @@ function OpenApplicationFinalizationDialog({
                           }
                           label={
                             canApplyDirectly
-                              ? 'Apply these reviewed details to the Student profile.'
-                              : 'Submit these admission details for Student profile review.'
+                              ? 'Apply These Reviewed Details to the Student Profile.'
+                              : 'Submit These Admission Details for Student Profile Review.'
                           }
                         />
                         <Typography variant="caption" color="text.secondary">
                           {!canReviewProfileFields
-                            ? 'You can finalize admission and retain these answers. Your access does not allow Student profile review.'
+                            ? 'You Can Finalize Admission and Retain These Answers. Your Access Does Not Allow Student Profile Review.'
                             : canApplyDirectly
-                              ? 'Updates only supported profile fields supplied in this admission.'
-                              : 'Existing profile details remain until the Student Records review is approved.'}
+                              ? 'Updates Only Supported Profile Fields Supplied in This Admission.'
+                              : 'Existing Profile Details Remain Until the Student Records Review Is Approved.'}
                         </Typography>
                       </>
                     )}
@@ -369,7 +369,7 @@ function OpenApplicationFinalizationDialog({
                 {preview?.profileReviewDescription &&
                   (presentation === 'inline' ? (
                     <CustomAccordion
-                      title="Profile review rules"
+                      title="Profile Review Rules"
                       expanded={profileRules.value}
                       onChange={profileRules.onToggle}
                       content={
@@ -387,7 +387,7 @@ function OpenApplicationFinalizationDialog({
                   <Skeleton
                     variant="rounded"
                     height={96}
-                    aria-label="Loading student record details"
+                    aria-label="Loading Student Record Details"
                   />
                 )}
                 {!loading && !capturedFields.length && (
@@ -397,7 +397,7 @@ function OpenApplicationFinalizationDialog({
                 )}
                 <Divider />
                 <Typography variant="subtitle2" component="h3">
-                  Guardian verification
+                  Guardian Verification
                 </Typography>
                 <FormControlLabel
                   control={
@@ -408,7 +408,7 @@ function OpenApplicationFinalizationDialog({
                       onChange={(event) => setGuardianVerified(event.target.checked)}
                     />
                   }
-                  label="I verified the primary guardian’s phone number or email."
+                  label="I Verified the Primary Guardian’s Phone Number or Email."
                   sx={{
                     m: 0,
                     p: 1,
@@ -421,7 +421,7 @@ function OpenApplicationFinalizationDialog({
                   Required to finalize admission.
                 </Typography>
                 <Divider />
-                <Typography variant="subtitle2">Onboarding handover</Typography>
+                <Typography variant="subtitle2">Onboarding Handover</Typography>
                 <Typography variant="body2" color="text.secondary">
                   Finalizing creates or links a Student identity and an Onboarding case. Placement,
                   GR and roll numbers, fees and accounts are completed in Student Onboarding.
@@ -482,7 +482,7 @@ function OpenApplicationFinalizationDialog({
               }
             }}
           >
-            {submitting ? 'Finalizing admission…' : 'Finalize admission'}
+            {submitting ? 'Finalizing Admission…' : 'Finalize Admission'}
           </LoadingButton>
         </DialogActions>
       </FinalizationSurface>

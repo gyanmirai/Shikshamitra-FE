@@ -82,7 +82,7 @@ describe('safe stage type changes', () => {
   it('protects an attached form on a new stage until its type change is confirmed', async () => {
     const user = userEvent.setup();
     render(<Fixture isNewStage />);
-    await user.click(screen.getByRole('combobox', { name: 'Stage type *' }));
+    await user.click(screen.getByRole('combobox', { name: 'Stage Type *' }));
     await user.click(screen.getByRole('option', { name: 'Assessment' }));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(draft()).toEqual(initial);
@@ -94,7 +94,7 @@ describe('safe stage type changes', () => {
     const stage = createStage(formType, 1, false);
     expect(stage.configurationJson).toBeTruthy();
     render(<Fixture stage={stage} isNewStage />);
-    await user.click(screen.getByRole('combobox', { name: 'Stage type *' }));
+    await user.click(screen.getByRole('combobox', { name: 'Stage Type *' }));
     await user.click(screen.getByRole('option', { name: 'Assessment' }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(draft()).toMatchObject({ stageType: 2, code: stage.code, id: stage.id });
@@ -102,23 +102,23 @@ describe('safe stage type changes', () => {
   it('preserves the chosen ending when changing to another stage type', async () => {
     const user = userEvent.setup();
     render(<Fixture stage={{ ...initial, isTerminalStage: true }} />);
-    await user.click(screen.getByRole('combobox', { name: 'Stage type *' }));
+    await user.click(screen.getByRole('combobox', { name: 'Stage Type *' }));
     await user.click(screen.getByRole('option', { name: 'Assessment' }));
-    await user.click(screen.getByRole('button', { name: 'Change type' }));
+    await user.click(screen.getByRole('button', { name: 'Change Type' }));
     expect(draft()).toMatchObject({ stageType: 2, isTerminalStage: true });
   });
 
   it('keeps configured form on cancel and clears it only after confirmation', async () => {
     const user = userEvent.setup();
     render(<Fixture />);
-    await user.click(screen.getByRole('combobox', { name: 'Stage type *' }));
+    await user.click(screen.getByRole('combobox', { name: 'Stage Type *' }));
     await user.click(screen.getByRole('option', { name: 'Assessment' }));
     expect(draft()).toEqual(initial);
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(draft()).toEqual(initial);
-    await user.click(screen.getByRole('combobox', { name: 'Stage type *' }));
+    await user.click(screen.getByRole('combobox', { name: 'Stage Type *' }));
     await user.click(screen.getByRole('option', { name: 'Assessment' }));
-    await user.click(screen.getByRole('button', { name: 'Change type' }));
+    await user.click(screen.getByRole('button', { name: 'Change Type' }));
     expect(draft()).toMatchObject({
       name: 'Assessment',
       description: 'Record an assessment result',
@@ -143,7 +143,7 @@ describe('safe stage type changes', () => {
         }}
       />
     );
-    await user.click(screen.getByRole('combobox', { name: 'Stage type *' }));
+    await user.click(screen.getByRole('combobox', { name: 'Stage Type *' }));
     await user.click(screen.getByRole('option', { name: 'Assessment' }));
     expect(draft()).toMatchObject({
       stageType: 2,
@@ -154,7 +154,7 @@ describe('safe stage type changes', () => {
   });
   it('disables type selection in read-only view', () => {
     render(<Fixture readOnly />);
-    expect(screen.getByRole('combobox', { name: 'Stage type *' })).toHaveAttribute(
+    expect(screen.getByRole('combobox', { name: 'Stage Type *' })).toHaveAttribute(
       'aria-disabled',
       'true'
     );

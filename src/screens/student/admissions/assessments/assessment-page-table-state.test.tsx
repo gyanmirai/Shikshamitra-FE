@@ -168,7 +168,7 @@ it('keeps session setup within the selected Board and Medium while allowing ever
   ];
   mocks.workbench.scopes.currentData = scopes;
   renderPage();
-  fireEvent.click(screen.getByRole('button', { name: 'Create session' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Create Session' }));
   expect(mocks.setup?.scopes).toEqual(scopes.slice(0, 2));
 });
 
@@ -179,7 +179,7 @@ it('disables session creation if only another Medium has scheduled assessments',
     { academicYearId: 'year', boardId: 'board-1', mediumId: 'medium-2', schedulingEnabled: true },
   ];
   renderPage();
-  expect(screen.getByRole('button', { name: 'Create session' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Create Session' })).toBeDisabled();
 });
 
 it('carries selected students into existing-session booking under the Student tab', () => {
@@ -206,10 +206,10 @@ it('carries selected students into existing-session booking under the Student ta
     expect.stringContaining('assessmentTab=sessions')
   );
   expect(screen.getByRole('tab', { name: 'Student' })).toHaveAttribute('aria-selected', 'true');
-  expect(screen.queryByRole('button', { name: 'Create session' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Create Session' })).not.toBeInTheDocument();
   expect(mocks.select).toBeDefined();
   act(() => mocks.select!([row], true));
-  fireEvent.click(screen.getByRole('button', { name: 'Book session (1)' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Book Session (1)' }));
   expect(screen.getByTestId('student-booking')).toHaveTextContent('Sweta');
   expect(screen.getByTestId('student-booking')).toHaveTextContent('1 scopes');
   expect(screen.getByText('Sweta', { exact: true })).toBeVisible();
@@ -223,8 +223,8 @@ it('puts session creation in Session and does not render the inactive Student ta
     totalCount: 1,
   };
   renderPage();
-  expect(screen.getByRole('button', { name: 'Create session' })).toBeInTheDocument();
-  expect(screen.queryByText('Inactive panel row')).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Create Session' })).toBeInTheDocument();
+  expect(screen.queryByText('InActive panel row')).not.toBeInTheDocument();
   expect(screen.getByRole('tab', { name: 'Session' })).toHaveAttribute('aria-selected', 'true');
 });
 
@@ -271,7 +271,7 @@ it('does not claim no configured stages after scope lookup fails', () => {
   mocks.workbench.scopes.isError = true;
   renderPage();
   expect(
-    screen.queryByText('No assessment stages are configured for this academic context.')
+    screen.queryByText('No Assessment Stages Are Configured for This Academic Context.')
   ).not.toBeInTheDocument();
 });
 it('retains safe rows after a roster refresh fails', () => {
@@ -303,8 +303,8 @@ it('puts Student first and allows booked selections to open booking guidance', (
   renderPage();
   expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual(['Student', 'Session']);
   act(() => mocks.select!([row], true));
-  expect(screen.getByRole('button', { name: 'Book session (1)' })).toBeEnabled();
-  fireEvent.click(screen.getByRole('button', { name: 'Book session (1)' }));
+  expect(screen.getByRole('button', { name: 'Book Session (1)' })).toBeEnabled();
+  fireEvent.click(screen.getByRole('button', { name: 'Book Session (1)' }));
   expect(screen.getByTestId('student-booking')).toHaveTextContent('Booked student');
 });
 
@@ -326,7 +326,7 @@ it('uses fresh booking capability for an already-selected student after roster r
     totalCount: 1,
   };
   page.rerenderPage();
-  fireEvent.click(screen.getByRole('button', { name: 'Book session (1)' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Book Session (1)' }));
   expect(screen.getByTestId('booking-capability')).toHaveTextContent('true');
 });
 
@@ -358,7 +358,7 @@ it.each(['inactive', 'missing', 'other-application', 'missing-policy'])(
       totalCount: condition === 'missing' ? 0 : 1,
     };
     page.rerenderPage();
-    expect(screen.getByRole('button', { name: 'Book session (0)' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Book Session (0)' })).toBeDisabled();
   }
 );
 
@@ -381,6 +381,6 @@ it.each(['loading', 'error', 'paused'])(
     mocks.workbench.applicants.isFetching = condition === 'loading';
     mocks.workbench.applicants.isError = condition === 'error';
     page.rerenderPage();
-    expect(screen.getByRole('button', { name: 'Book session (1)' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Book Session (1)' })).toBeEnabled();
   }
 );

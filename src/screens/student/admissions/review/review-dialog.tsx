@@ -56,7 +56,7 @@ export function ReviewDialog({
       <ConfirmDialog
         open={discard}
         onClose={() => setDiscard(false)}
-        title="Discard unsaved changes?"
+        title="Discard Unsaved Changes?"
         icon="warning"
         content="Saved information remains available. Changes made in this dialog will be discarded."
         action={
@@ -68,7 +68,7 @@ export function ReviewDialog({
               onClose();
             }}
           >
-            Discard changes
+            Discard Changes
           </Button>
         }
       />

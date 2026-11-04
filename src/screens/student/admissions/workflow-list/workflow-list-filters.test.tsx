@@ -43,15 +43,15 @@ describe('WorkflowListFilters', () => {
     const user = userEvent.setup();
     const onUpdate = renderFilters();
 
-    expect(screen.queryByRole('dialog', { name: 'Workflow filters' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'Workflow Filters' })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Filters' }));
-    expect(screen.getByRole('dialog', { name: 'Workflow filters' })).toBeVisible();
+    expect(screen.getByRole('dialog', { name: 'Workflow Filters' })).toBeVisible();
 
     await user.type(screen.getByRole('spinbutton', { name: 'Version' }), '3');
     expect(onUpdate).not.toHaveBeenCalled();
 
-    await user.click(screen.getByRole('button', { name: 'Apply filters' }));
+    await user.click(screen.getByRole('button', { name: 'Apply Filters' }));
     await waitFor(() =>
       expect(onUpdate).toHaveBeenCalledWith(
         expect.objectContaining({ version: '3', status: 'all', usage: 'all' })

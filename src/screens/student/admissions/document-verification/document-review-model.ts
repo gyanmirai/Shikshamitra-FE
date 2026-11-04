@@ -4,11 +4,11 @@ import type { DocumentAction } from './document-action-model';
 import type { useDocumentPermissions } from './use-document-permissions';
 
 export const documentReviewActionLabels: Record<DocumentAction, string> = {
-  upload: 'Upload document',
-  original: 'Record physical original',
+  upload: 'Upload Document',
+  original: 'Record Physical Original',
   accept: 'Approve',
   reject: 'Reject',
-  waive: 'Waive requirement',
+  waive: 'Waive Requirement',
 };
 
 export const documentReviewActionIcons: Record<DocumentAction, string> = {

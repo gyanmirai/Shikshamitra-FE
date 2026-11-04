@@ -31,17 +31,17 @@ type Props = {
 };
 
 const titles: Record<CycleGuardedAction, string> = {
-  publish: 'Publish admission cycle?',
-  close: 'Close admission cycle?',
-  reopen: 'Reopen admission cycle?',
-  archive: 'Archive admission cycle?',
-  delete: 'Delete draft permanently?',
+  publish: 'Publish Admission Cycle?',
+  close: 'Close Admission Cycle?',
+  reopen: 'Reopen Admission Cycle?',
+  archive: 'Archive Admission Cycle?',
+  delete: 'Delete Draft Permanently?',
 };
 
 const actionLabels: Record<CycleGuardedAction, string> = {
   publish: 'Publish',
-  close: 'Close cycle',
-  reopen: 'Reopen cycle',
+  close: 'Close Cycle',
+  reopen: 'Reopen Cycle',
   archive: 'Archive',
   delete: 'Delete',
 };
@@ -132,7 +132,7 @@ export function AdmissionCycleActionDialog({
         <Stack spacing={1.5}>
           {action === 'delete' ? (
             <Typography variant="body2">
-              The draft admission cycle <strong>&ldquo;{cycle.name}&rdquo;</strong> will be
+              The Draft Admission Cycle <strong>&ldquo;{cycle.name}&rdquo;</strong> will be
               permanently deleted.
             </Typography>
           ) : action === 'close' ? (
@@ -148,9 +148,9 @@ export function AdmissionCycleActionDialog({
 
           {impactPending && (
             <Stack direction="row" spacing={1} alignItems="center" role="status" aria-live="polite">
-              <CircularProgress size={18} aria-label="Checking admission cycle" />
+              <CircularProgress size={18} aria-label="Checking Admission Cycle" />
               <Typography variant="body2" color="text.secondary">
-                Checking linked offerings and applications…
+                Checking Linked Offerings and Applications…
               </Typography>
             </Stack>
           )}
@@ -234,7 +234,7 @@ export function AdmissionCycleActionDialog({
           )}
           {action === 'reopen' && (
             <DatePicker
-              label="New applications close date"
+              label="New Applications Close Date"
               format={ADMISSION_DATE_FORMAT}
               minDate={dayjs()}
               value={newEndDate ? dayjs(newEndDate) : null}
@@ -252,7 +252,7 @@ export function AdmissionCycleActionDialog({
               multiline
               minRows={2}
               size="small"
-              label={`${actionLabels[action]} reason`}
+              label={`${actionLabels[action]} Reason`}
               value={reason}
               onChange={(event) => setReason(event.target.value.slice(0, 500))}
               helperText={`${reason.length}/500 characters`}

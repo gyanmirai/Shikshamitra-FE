@@ -15,10 +15,10 @@ type Option = { id: string; name?: string; code?: string };
 export const MY_INQUIRIES_FILTER = '__mine__';
 export const UNASSIGNED_INQUIRIES_FILTER = '__unassigned__';
 export const INQUIRY_WORK_QUEUE_OPTIONS: { value: AdmissionInquiryWorkQueue; label: string }[] = [
-  { value: 1, label: 'Overdue work' },
-  { value: 2, label: 'Awaiting first contact' },
-  { value: 3, label: 'Awaiting qualification' },
-  { value: 4, label: 'Open follow-ups' },
+  { value: 1, label: 'Overdue Work' },
+  { value: 2, label: 'Awaiting First Contact' },
+  { value: 3, label: 'Awaiting Qualification' },
+  { value: 4, label: 'Open Follow-Ups' },
 ];
 
 type Props = {
@@ -110,7 +110,7 @@ export function AdmissionInquiryFilters(props: Props) {
         {showSearch && (
           <TextField
             fullWidth
-            label="Search applicant or phone"
+            label="Search Applicant or Phone"
             value={search}
             onChange={(event) => onChange('search', event.target.value)}
             size="small"
@@ -123,7 +123,7 @@ export function AdmissionInquiryFilters(props: Props) {
           cycleId,
           [
             <MenuItem key="all" value="">
-              All cycles
+              All Cycles
             </MenuItem>,
             ...cycles.map((cycle) => (
               <MenuItem key={cycle.id} value={cycle.id}>
@@ -139,7 +139,7 @@ export function AdmissionInquiryFilters(props: Props) {
           offeringId,
           [
             <MenuItem key="all" value="">
-              All offerings
+              All Offerings
             </MenuItem>,
             ...offerings.map((offering) => (
               <MenuItem key={offering.id} value={offering.id}>
@@ -156,7 +156,7 @@ export function AdmissionInquiryFilters(props: Props) {
             status,
             [
               <MenuItem key="all" value="">
-                All statuses
+                All Statuses
               </MenuItem>,
               ...INQUIRY_STATUS_OPTIONS.map((option) => (
                 <MenuItem key={option.value} value={option.value}>
@@ -172,7 +172,7 @@ export function AdmissionInquiryFilters(props: Props) {
           source,
           [
             <MenuItem key="all" value="">
-              All sources
+              All Sources
             </MenuItem>,
             ...INQUIRY_SOURCE_OPTIONS.map((option) => (
               <MenuItem key={option.value} value={option.value}>
@@ -184,11 +184,11 @@ export function AdmissionInquiryFilters(props: Props) {
         )}
         {select(
           'workQueue',
-          'Work queue',
+          'Work Queue',
           workQueue,
           [
             <MenuItem key="all" value="">
-              All work
+              All Work
             </MenuItem>,
             ...INQUIRY_WORK_QUEUE_OPTIONS.map((option) => (
               <MenuItem key={option.value} value={option.value}>
@@ -204,12 +204,12 @@ export function AdmissionInquiryFilters(props: Props) {
           ownerId,
           [
             <MenuItem key="all" value="">
-              All counsellors
+              All Counsellors
             </MenuItem>,
             ...(currentUserId
               ? [
                   <MenuItem key="mine" value={MY_INQUIRIES_FILTER}>
-                    My inquiries
+                    My Inquiries
                   </MenuItem>,
                 ]
               : []),

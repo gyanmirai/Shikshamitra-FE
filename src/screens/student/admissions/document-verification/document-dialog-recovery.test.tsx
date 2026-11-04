@@ -38,12 +38,12 @@ it('retains reviewer notes after a conflict and preserves the underlying dirty a
     store.dispatch(setIsChanges(true));
   });
   const dialog = within(screen.getByRole('dialog'));
-  await userEvent.type(dialog.getByLabelText(/^Rejection reason/), 'Replace the blurred scan');
-  await userEvent.click(dialog.getByRole('button', { name: 'Request replacement' }));
+  await userEvent.type(dialog.getByLabelText(/^Rejection Reason/), 'Replace the blurred scan');
+  await userEvent.click(dialog.getByRole('button', { name: 'Request Replacement' }));
   expect(
     await dialog.findByText('The application changed. Reopen this document before reviewing it.')
   ).toBeInTheDocument();
-  expect(dialog.getByLabelText(/^Rejection reason/)).toHaveValue('Replace the blurred scan');
+  expect(dialog.getByLabelText(/^Rejection Reason/)).toHaveValue('Replace the blurred scan');
   expect(close).not.toHaveBeenCalled();
   vi.stubGlobal(
     'confirm',

@@ -39,7 +39,8 @@ export function FormBuilderStepHeader({
     formik.values.purpose,
     formik.values.sections.filter((section) =>
       step.sections.some((item) => item.section.id === section.id)
-    )
+    ),
+    formik.values.coreFieldPolicyVersion
   );
   const { onTrue: openSettings } = settings;
   const headingRef = useRef<HTMLButtonElement>(null);
@@ -140,7 +141,7 @@ export function FormBuilderStepHeader({
       {readOnly ? null : editing ? (
         <IconButton
           size="small"
-          aria-label="Finish editing step heading"
+          aria-label="Finish Editing Step Heading"
           onClick={finishEditing}
           sx={{ width: 44, height: 44 }}
         >

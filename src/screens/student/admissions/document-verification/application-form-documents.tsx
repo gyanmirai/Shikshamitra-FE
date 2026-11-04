@@ -20,7 +20,7 @@ export function ApplicationFormDocuments({
   if (!collecting.length) return null;
   return (
     <Stack spacing={1}>
-      <Typography variant="subtitle1">Supporting documents</Typography>
+      <Typography variant="subtitle1">Supporting Documents</Typography>
       <Typography variant="body2" color="text.secondary">
         Upload once here. The same files will be available for staff verification in the document
         stage.

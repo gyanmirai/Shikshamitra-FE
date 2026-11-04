@@ -54,7 +54,7 @@ function FeeCollectionSkeleton({ refreshing = false }: { refreshing?: boolean })
   return (
     <Stack
       role="status"
-      aria-label={refreshing ? 'Refreshing fee collection' : 'Loading fee collection'}
+      aria-label={refreshing ? 'Refreshing Fee Collection' : 'Loading Fee Collection'}
       aria-busy
       spacing={2}
       sx={{ flex: 1, minWidth: 0 }}
@@ -258,7 +258,7 @@ export default function AdmissionFeeCollectionPanel({
     return (
       <Stack spacing={1.5} useFlexGap sx={panelSx}>
         <Typography variant="subtitle2" component="h3">
-          Fee collection
+          Fee Collection
         </Typography>
         <FeeCollectionSkeleton />
         {footerAction && <Box sx={{ mt: 'auto', alignSelf: 'flex-end' }}>{footerAction}</Box>}
@@ -266,8 +266,8 @@ export default function AdmissionFeeCollectionPanel({
     );
   if (!state)
     return (
-      <Stack component="section" aria-label="Fee collection" spacing={1.5} useFlexGap sx={panelSx}>
-        <Typography variant="subtitle2">Fee collection</Typography>
+      <Stack component="section" aria-label="Fee Collection" spacing={1.5} useFlexGap sx={panelSx}>
+        <Typography variant="subtitle2">Fee Collection</Typography>
         <StudentFeedback notificationKey="STU-0332" presentation="toast" severity="error">
           Fee collection details could not be loaded.
         </StudentFeedback>
@@ -307,14 +307,14 @@ export default function AdmissionFeeCollectionPanel({
       sx={{ flexShrink: 0 }}
     >
       {state.totalAmount === 0 && state.outstandingAmount === 0 && !requiresVariableAmounts
-        ? 'Confirm no payment due'
-        : 'Collect fees'}
+        ? 'Confirm No Payment Due'
+        : 'Collect Fees'}
     </Button>
   );
   return (
     <Stack
       component="section"
-      aria-label="Fee collection"
+      aria-label="Fee Collection"
       aria-busy={refreshingCollection}
       spacing={1.5}
       useFlexGap
@@ -328,14 +328,14 @@ export default function AdmissionFeeCollectionPanel({
       >
         <Stack direction="row" spacing={0.5} alignItems="center">
           <Typography variant="subtitle2" component="h3">
-            Fee collection
+            Fee Collection
           </Typography>
           {stretch && (
-            <CustomTooltip title="Partial collection is allowed. Charges and late fees are shown separately in the collection form. Collect later opens a required-reason dialog.">
+            <CustomTooltip title="Partial Collection Is Allowed. Charges and Late Fees Are Shown Separately in the Collection Form. Collect Later Opens a Required-Reason Dialog.">
               <IconButton
                 size="small"
                 color="info"
-                aria-label="Fee collection information"
+                aria-label="Fee Collection Information"
                 sx={{ width: { xs: 44, sm: 30 }, height: { xs: 44, sm: 30 } }}
               >
                 <Iconify icon="mdi:information-outline" width={16} />
@@ -413,9 +413,9 @@ export default function AdmissionFeeCollectionPanel({
                 sx={{ m: 0, overflowWrap: 'anywhere' }}
               >
                 {requiresVariableAmounts && title !== 'Confirmed payments' ? (
-                  'Set variable amounts'
+                  'Set Variable Amounts'
                 ) : value == null ? (
-                  <Box component="span" aria-label="Not calculated">
+                  <Box component="span" aria-label="Not Calculated">
                     —
                   </Box>
                 ) : (
@@ -475,7 +475,7 @@ export default function AdmissionFeeCollectionPanel({
             isShowedDense={false}
             showToolbar={false}
             wrapperProps={{ sx: { minWidth: 0, minHeight: 0 } }}
-            tableContainerProps={{ sx: { minWidth: 0 }, 'aria-label': 'Fee receipts' }}
+            tableContainerProps={{ sx: { minWidth: 0 }, 'aria-label': 'Fee Receipts' }}
             columns={[
               {
                 id: 'receiptNumber',
@@ -523,7 +523,7 @@ export default function AdmissionFeeCollectionPanel({
                       ? 'Confirmed'
                       : value === 'reversed'
                         ? 'Reversed'
-                        : 'Awaiting verification'}
+                        : 'Awaiting Verification'}
                   </Label>
                 ),
               },
@@ -541,7 +541,7 @@ export default function AdmissionFeeCollectionPanel({
                     startIcon={<Iconify icon="mdi:download" width={16} />}
                     disabled={Boolean(receiptBusy)}
                     loading={receiptBusy === row.id}
-                    aria-label={`Download receipt ${row.receiptNumber}`}
+                    aria-label={`Download Receipt ${row.receiptNumber}`}
                     onClick={() => download(row as AdmissionCollectionReceipt)}
                   >
                     Download

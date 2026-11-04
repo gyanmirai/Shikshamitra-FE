@@ -105,7 +105,7 @@ it('keeps the details step compact without duplicated progress text', () => {
   expect(screen.queryByText(/Step \d of 2/)).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Back to details' })).not.toBeInTheDocument();
   expect(
-    screen.queryByRole('button', { name: 'Back to workflow details' })
+    screen.queryByRole('button', { name: 'Back to Workflow Details' })
   ).not.toBeInTheDocument();
 });
 
@@ -116,14 +116,14 @@ it('returns to saved workflow details through its completed step and locks it wh
       <WorkflowSetupProgress onBackToDetails={onBackToDetails} />
     </ThemeProvider>
   );
-  fireEvent.click(screen.getByRole('button', { name: 'Back to workflow details' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Back to Workflow Details' }));
   expect(onBackToDetails).toHaveBeenCalledOnce();
   rerender(
     <ThemeProvider theme={createTheme(defaultSettings)}>
       <WorkflowSetupProgress onBackToDetails={onBackToDetails} disabled />
     </ThemeProvider>
   );
-  expect(screen.getByRole('button', { name: 'Back to workflow details' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Back to Workflow Details' })).toBeDisabled();
 });
 
 it.each([

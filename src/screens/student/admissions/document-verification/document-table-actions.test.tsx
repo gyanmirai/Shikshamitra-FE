@@ -31,9 +31,9 @@ describe('DocumentTableActions', () => {
       />
     );
     expect(
-      screen.getByRole('button', { name: 'View document for Birth certificate' })
+      screen.getByRole('button', { name: 'View Document For Birth certificate' })
     ).toBeDisabled();
-    const upload = screen.getByRole('button', { name: 'Upload document for Birth certificate' });
+    const upload = screen.getByRole('button', { name: 'Upload Document for Birth certificate' });
     expect(upload).toHaveTextContent('');
     await userEvent.click(upload);
     expect(onAction).toHaveBeenCalledExactlyOnceWith('upload');
@@ -52,10 +52,10 @@ describe('DocumentTableActions', () => {
       />
     );
     await userEvent.click(
-      screen.getByRole('button', { name: 'More actions for Birth certificate' })
+      screen.getByRole('button', { name: 'More Actions For Birth certificate' })
     );
-    expect(screen.getByRole('menuitem', { name: 'Waive requirement' })).toBeEnabled();
-    await userEvent.click(screen.getByRole('menuitem', { name: 'Record physical original' }));
+    expect(screen.getByRole('menuitem', { name: 'Waive Requirement' })).toBeEnabled();
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Record Physical Original' }));
     expect(onAction).toHaveBeenCalledExactlyOnceWith('original');
   });
 
@@ -71,10 +71,10 @@ describe('DocumentTableActions', () => {
       />
     );
     expect(
-      screen.getByRole('button', { name: 'Upload replacement for Birth certificate' })
+      screen.getByRole('button', { name: 'Upload Replacement for Birth certificate' })
     ).toBeDisabled();
     await userEvent.click(
-      screen.getByRole('button', { name: 'View document for Birth certificate' })
+      screen.getByRole('button', { name: 'View Document For Birth certificate' })
     );
     expect(onView).toHaveBeenCalledOnce();
   });
@@ -94,7 +94,7 @@ describe('DocumentTableActions', () => {
       />
     );
     expect(
-      screen.queryByRole('button', { name: 'Upload document for Birth certificate' })
+      screen.queryByRole('button', { name: 'Upload Document for Birth certificate' })
     ).not.toBeInTheDocument();
   });
 
@@ -112,6 +112,6 @@ describe('DocumentTableActions', () => {
         onView={vi.fn()}
       />
     );
-    expect(screen.queryByRole('button', { name: /Upload|More actions/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Upload|More Actions/ })).not.toBeInTheDocument();
   });
 });

@@ -54,20 +54,20 @@ export function DocumentActionFields({
             <StudentFeedback notificationKey="STU-0307" presentation="inline" severity="info">
               This creates a new version for review. Previous versions remain in the history.
               {requirement.evidence.at(-1)?.originalSeen
-                ? ' Record the original again after replacing the file.'
+                ? ' Record the Original Again After Replacing the File.'
                 : ''}
             </StudentFeedback>
           )}
           <FormSectionCard
             title="Attachments"
             icon={GlobalIcons.documentIcon}
-            descriptionTooltip="Select one document for this requirement. It is uploaded when you submit."
+            descriptionTooltip="Select One Document for This Requirement. It Is Uploaded When You Submit."
           >
             <Stack direction="row" spacing={1} alignItems="flex-start">
               <Iconify icon={GlobalIcons.upload} width={20} sx={{ color: 'text.secondary' }} />
               <Box>
                 <Typography component="h3" variant="subtitle2" fontWeight={700}>
-                  Upload files
+                  Upload Files
                 </Typography>
                 <Typography id={fileHelpId} variant="caption" color="text.secondary">
                   {fileGuidance}
@@ -142,9 +142,9 @@ export function DocumentActionFields({
             name="notes"
             label={
               original
-                ? 'Original verification notes'
+                ? 'Original Verification Notes'
                 : action === 'reject'
-                  ? 'Rejection reason'
+                  ? 'Rejection Reason'
                   : action === 'waive'
                     ? 'Reason'
                     : 'Notes'

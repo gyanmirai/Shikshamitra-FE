@@ -35,7 +35,7 @@ type Options = {
 };
 
 const statusColors: Record<number, LabelColor> = {
-  0: 'info',
+  0: 'warning',
   1: 'primary',
   2: 'success',
   3: 'warning',
@@ -56,14 +56,14 @@ export function getAdmissionInquiryActions(
     return [
       {
         id: 'application',
-        label: `Open application for ${inquiry.applicantName}`,
+        label: `Open Application For ${inquiry.applicantName}`,
         icon: 'mdi:file-document-edit-outline',
         disabled: !inquiry.applicationId || options.canOpenApplication === false,
         tooltip:
           options.canOpenApplication === false
-            ? 'You do not have permission to view applications.'
+            ? 'You Do Not Have Permission to View Applications.'
             : !inquiry.applicationId
-              ? 'The historical application link could not be resolved.'
+              ? 'The Historical Application Link Could Not Be Resolved.'
               : undefined,
         onClick: () => options.onManage(inquiry),
       },
@@ -74,43 +74,43 @@ export function getAdmissionInquiryActions(
       label: `Edit ${reference}`,
       icon: GlobalIcons.edit,
       disabled: options.isMoving,
-      tooltip: options.isMoving ? 'Wait for the inquiry to move to the next stage.' : undefined,
+      tooltip: options.isMoving ? 'Wait for the Inquiry to Move to the Next Stage.' : undefined,
       onClick: () => options.onManage(inquiry),
     });
   if (options.canManage && options.onFollowUp)
     actions.push({
       id: 'follow-up',
-      label: `Follow-up ${reference}`,
+      label: `Follow-Up ${reference}`,
       icon: GlobalIcons.notebook,
       disabled:
         options.isMoving ||
         Boolean(inquiry.isTransferred || inquiry.applicationId || inquiry.isDuplicate),
       tooltip:
         inquiry.isTransferred || inquiry.applicationId
-          ? 'Continue this application from Pipeline.'
+          ? 'Continue This Application From Pipeline.'
           : inquiry.isDuplicate
-            ? 'Continue the original inquiry.'
+            ? 'Continue the Original Inquiry.'
             : undefined,
       onClick: () => options.onFollowUp?.(inquiry),
     });
   if (options.canMove)
     actions.push({
       id: 'move',
-      label: `Move ${reference} to next stage`,
+      label: `Move ${reference} To Next Stage`,
       icon: 'mdi:arrow-right-circle-outline',
       disabled: options.isMoving || Boolean(inquiryHandoffBlocker(inquiry)),
       loading: options.isMoving && options.movingInquiryId === inquiry.id,
       tooltip: options.isMoving
         ? options.movingInquiryId === inquiry.id
-          ? 'Moving inquiry…'
-          : 'Wait for the current inquiry to finish moving.'
+          ? 'Moving Inquiry…'
+          : 'Wait for the Current Inquiry to Finish Moving.'
         : inquiryHandoffBlocker(inquiry),
       onClick: () => options.onMove(inquiry),
     });
   if (options.onHistory)
     actions.push({
       id: 'history',
-      label: `Handling history for ${reference}`,
+      label: `Handling History For ${reference}`,
       icon: 'mdi:history',
       disabled: options.isMoving,
       onClick: () => options.onHistory?.(inquiry),
@@ -132,7 +132,7 @@ export function buildAdmissionInquiryColumns(options: Options): IColumn[] {
     },
     {
       id: 'applicantName',
-      label: 'Student name',
+      label: 'Student Name',
       minWidth: 220,
       sticky: true,
       stickyPosition: 'left',
@@ -207,7 +207,7 @@ export function buildAdmissionInquiryColumns(options: Options): IColumn[] {
         return (
           <AdaptiveThreeDotsActions
             mobileDirectActionLimit={0}
-            moreLabel={`Actions for ${inquiry.applicantName}`}
+            moreLabel={`Actions For ${inquiry.applicantName}`}
             sx={{
               gap: 0,
               justifyContent: 'flex-end',

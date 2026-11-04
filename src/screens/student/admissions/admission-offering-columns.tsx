@@ -41,7 +41,7 @@ export const buildAdmissionOfferingColumns = (
   },
   {
     id: 'admissionCycleName',
-    label: 'Admission cycle',
+    label: 'Admission Cycle',
     isFilter: false,
     isSort: false,
     minWidth: 170,
@@ -70,7 +70,7 @@ export const buildAdmissionOfferingColumns = (
   },
   {
     id: 'stageName',
-    label: 'School level',
+    label: 'School Level',
     isFilter: true,
     filterType: 'enum',
     filterOperators: ['equals'],
@@ -99,7 +99,7 @@ export const buildAdmissionOfferingColumns = (
         text={
           row.workflowName && row.workflowVersion != null
             ? `${row.workflowName} v${row.workflowVersion}`
-            : 'Not configured'
+            : 'Not Configured'
         }
       />
     ),
@@ -140,7 +140,7 @@ export const buildAdmissionOfferingColumns = (
   },
   {
     id: 'isActive',
-    label: 'Active status',
+    label: 'Active Status',
     isFilter: false,
     isSort: false,
     minWidth: 110,

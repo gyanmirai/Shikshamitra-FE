@@ -187,15 +187,15 @@ describe('ApplicationFinalizationDialog', () => {
     const onRetry = vi.fn();
     const onFormCorrected = vi.fn();
     renderDialog(readyPreview, undefined, { ...correctionContext, onRetry, onFormCorrected });
-    fireEvent.click(screen.getByLabelText(/I verified the primary guardian/));
-    fireEvent.click(screen.getByRole('button', { name: 'Edit application form' }));
+    fireEvent.click(screen.getByLabelText(/I Verified the Primary Guardian/));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Application Form' }));
     expect(screen.getByRole('dialog', { name: 'Edit Application Form' })).toHaveAttribute(
       'data-application-id',
       'application-1'
     );
     expect(screen.queryByRole('heading', { name: 'Finalize Admission' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Cancel correction' }));
-    expect(screen.getByLabelText(/I verified the primary guardian/)).toBeChecked();
+    expect(screen.getByLabelText(/I Verified the Primary Guardian/)).toBeChecked();
     expect(onRetry).not.toHaveBeenCalled();
     expect(onFormCorrected).not.toHaveBeenCalled();
   });
@@ -223,21 +223,21 @@ describe('ApplicationFinalizationDialog', () => {
       { ...correctionContext, onRetry, onFormCorrected }
     );
     fireEvent.click(screen.getByLabelText(/Existing Student/));
-    fireEvent.click(screen.getByLabelText(/I verified the primary guardian/));
+    fireEvent.click(screen.getByLabelText(/I Verified the Primary Guardian/));
     fireEvent.click(
-      screen.getByLabelText(/Submit these admission details for Student profile review/)
+      screen.getByLabelText(/Submit These Admission Details for Student Profile Review/)
     );
-    expect(screen.getByRole('button', { name: 'Finalize admission' })).toBeEnabled();
-    fireEvent.click(screen.getByRole('button', { name: 'Edit application form' }));
+    expect(screen.getByRole('button', { name: 'Finalize Admission' })).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Application Form' }));
     fireEvent.click(screen.getByRole('button', { name: 'Save correction' }));
     expect(onFormCorrected).toHaveBeenCalledOnce();
     expect(onRetry).not.toHaveBeenCalled();
     expect(screen.getByLabelText(/Existing Student/)).not.toBeChecked();
-    expect(screen.getByLabelText(/I verified the primary guardian/)).not.toBeChecked();
-    expect(screen.getByRole('button', { name: 'Finalize admission' })).toBeDisabled();
+    expect(screen.getByLabelText(/I Verified the Primary Guardian/)).not.toBeChecked();
+    expect(screen.getByRole('button', { name: 'Finalize Admission' })).toBeDisabled();
     fireEvent.click(screen.getByLabelText(/Existing Student/));
     expect(
-      screen.getByLabelText(/Submit these admission details for Student profile review/)
+      screen.getByLabelText(/Submit These Admission Details for Student Profile Review/)
     ).not.toBeChecked();
   });
 
@@ -246,12 +246,12 @@ describe('ApplicationFinalizationDialog', () => {
     const onRetry = vi.fn();
     const onFormCorrected = vi.fn();
     renderDialog(readyPreview, undefined, { ...correctionContext, onRetry, onFormCorrected });
-    fireEvent.click(screen.getByLabelText(/I verified the primary guardian/));
-    fireEvent.click(screen.getByRole('button', { name: 'Edit application form' }));
+    fireEvent.click(screen.getByLabelText(/I Verified the Primary Guardian/));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Application Form' }));
     fireEvent.click(screen.getByRole('button', { name: 'Refresh unconfirmed correction' }));
     expect(onRetry).toHaveBeenCalledOnce();
     expect(onFormCorrected).not.toHaveBeenCalled();
-    expect(screen.getByLabelText(/I verified the primary guardian/)).not.toBeChecked();
+    expect(screen.getByLabelText(/I Verified the Primary Guardian/)).not.toBeChecked();
   });
 
   it.each([0, 2, 3, 9, 10, 11] as const)(
@@ -263,7 +263,7 @@ describe('ApplicationFinalizationDialog', () => {
         application: { ...correctionContext.application, status },
       });
       expect(
-        screen.queryByRole('button', { name: 'Edit application form' })
+        screen.queryByRole('button', { name: 'Edit Application Form' })
       ).not.toBeInTheDocument();
     }
   );
@@ -275,7 +275,7 @@ describe('ApplicationFinalizationDialog', () => {
       permissions.values = permissions.values.filter((permission) => permission.name !== grant);
       renderDialog(readyPreview, undefined, correctionContext);
       expect(
-        screen.queryByRole('button', { name: 'Edit application form' })
+        screen.queryByRole('button', { name: 'Edit Application Form' })
       ).not.toBeInTheDocument();
     }
   );
@@ -283,7 +283,7 @@ describe('ApplicationFinalizationDialog', () => {
   it('does not offer form correction without application identity', () => {
     grantCorrection();
     renderDialog(readyPreview, undefined, { application: correctionContext.application });
-    expect(screen.queryByRole('button', { name: 'Edit application form' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Edit Application Form' })).not.toBeInTheDocument();
   });
 
   it.each([{ busy: true }, { loading: true }, { hasError: true }])(
@@ -291,7 +291,7 @@ describe('ApplicationFinalizationDialog', () => {
     (state) => {
       grantCorrection();
       renderDialog(readyPreview, undefined, { ...correctionContext, ...state });
-      expect(screen.getByRole('button', { name: 'Edit application form' })).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Edit Application Form' })).toBeDisabled();
     }
   );
   it('retains optional finalization when profile-review access is unavailable', async () => {
@@ -303,13 +303,13 @@ describe('ApplicationFinalizationDialog', () => {
       capturedStudentFields: [{ key: 'Medical.Allergies', label: 'Allergies', value: 'Peanuts' }],
     });
     expect(
-      screen.getByLabelText(/Submit these admission details for Student profile review/)
+      screen.getByLabelText(/Submit These Admission Details for Student Profile Review/)
     ).toBeDisabled();
     expect(
       screen.getByText(/Identity details require separate Identity Compliance review/)
     ).toBeVisible();
-    fireEvent.click(screen.getByLabelText(/I verified the primary guardian/));
-    fireEvent.click(screen.getByRole('button', { name: 'Finalize admission' }));
+    fireEvent.click(screen.getByLabelText(/I Verified the Primary Guardian/));
+    fireEvent.click(screen.getByRole('button', { name: 'Finalize Admission' }));
     await waitFor(() =>
       expect(onSubmit).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -330,14 +330,14 @@ describe('ApplicationFinalizationDialog', () => {
       ],
     });
     const review = screen.getByLabelText(
-      /Submit these admission details for Student profile review/
+      /Submit These Admission Details for Student Profile Review/
     );
     expect(review).not.toBeChecked();
-    expect(screen.getByText(/remain until the Student Records review is approved/)).toBeVisible();
-    expect(screen.getByText('Photo provided')).toBeVisible();
+    expect(screen.getByText(/Remain Until the Student Records Review Is Approved/)).toBeVisible();
+    expect(screen.getByText('Photo Provided')).toBeVisible();
     fireEvent.click(review);
-    fireEvent.click(screen.getByLabelText(/I verified the primary guardian/));
-    fireEvent.click(screen.getByRole('button', { name: 'Finalize admission' }));
+    fireEvent.click(screen.getByLabelText(/I Verified the Primary Guardian/));
+    fireEvent.click(screen.getByRole('button', { name: 'Finalize Admission' }));
     await waitFor(() =>
       expect(onSubmit).toHaveBeenCalledWith(
         expect.objectContaining({ existingStudentId: 'student-1', applyStudentProfileFields: true })
@@ -355,7 +355,7 @@ describe('ApplicationFinalizationDialog', () => {
       ],
     });
     expect(
-      screen.getByLabelText(/Apply these reviewed details to the Student profile/)
+      screen.getByLabelText(/Apply These Reviewed Details to the Student Profile/)
     ).not.toBeChecked();
   });
   it('keeps finalization disabled when a non-duplicate readiness gate fails', () => {
@@ -369,7 +369,7 @@ describe('ApplicationFinalizationDialog', () => {
       ),
     });
 
-    expect(screen.getByRole('button', { name: 'Finalize admission' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Finalize Admission' })).toBeDisabled();
     expect(screen.getByText('Complete the workflow.')).toBeInTheDocument();
   });
 
@@ -391,11 +391,11 @@ describe('ApplicationFinalizationDialog', () => {
         },
       ],
     });
-    const submit = screen.getByRole('button', { name: 'Finalize admission' });
+    const submit = screen.getByRole('button', { name: 'Finalize Admission' });
     expect(submit).toBeDisabled();
 
     fireEvent.click(screen.getByLabelText(/Aarav Patel/));
-    fireEvent.click(screen.getByLabelText(/I verified the primary guardian/));
+    fireEvent.click(screen.getByLabelText(/I Verified the Primary Guardian/));
     expect(submit).toBeEnabled();
     fireEvent.click(submit);
 
@@ -410,8 +410,8 @@ describe('ApplicationFinalizationDialog', () => {
 
   it('defaults to creating a new identity only when no possible match exists', async () => {
     const onSubmit = renderDialog(readyPreview);
-    fireEvent.click(screen.getByLabelText(/I verified the primary guardian/));
-    fireEvent.click(screen.getByRole('button', { name: 'Finalize admission' }));
+    fireEvent.click(screen.getByLabelText(/I Verified the Primary Guardian/));
+    fireEvent.click(screen.getByRole('button', { name: 'Finalize Admission' }));
 
     await waitFor(() =>
       expect(onSubmit).toHaveBeenCalledWith({
@@ -431,7 +431,7 @@ describe('ApplicationFinalizationDialog', () => {
         'does not assign a class division, seat, GR number, roll number, fees, or login account'
       )
     );
-    expect(screen.getByText('Onboarding handover')).toBeVisible();
+    expect(screen.getByText('Onboarding Handover')).toBeVisible();
     expect(
       screen.getByText(/Finalizing creates or links a Student identity and an Onboarding case/)
     ).toBeVisible();
@@ -452,12 +452,12 @@ describe('ApplicationFinalizationDialog', () => {
       ),
     });
 
-    fireEvent.click(screen.getByLabelText(/I verified the primary guardian/));
-    fireEvent.click(screen.getByRole('button', { name: 'Repair applicant identity' }));
+    fireEvent.click(screen.getByLabelText(/I Verified the Primary Guardian/));
+    fireEvent.click(screen.getByRole('button', { name: 'Repair Applicant Identity' }));
     expect(screen.getByRole('dialog', { name: 'Edit Applicant Identity' })).toBeVisible();
     expect(screen.queryByRole('heading', { name: 'Finalize Admission' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Cancel repair' }));
-    expect(screen.getByLabelText(/I verified the primary guardian/)).toBeChecked();
+    expect(screen.getByLabelText(/I Verified the Primary Guardian/)).toBeChecked();
   });
 
   it('uses actual applicant and application context without inventing an offer or success', () => {
@@ -472,7 +472,7 @@ describe('ApplicationFinalizationDialog', () => {
     expect(screen.getByText('Real Applicant')).toBeVisible();
     expect(screen.getByText('Application APP-42')).toBeVisible();
     expect(screen.queryByText('Offering GSEB-2')).not.toBeInTheDocument();
-    expect(screen.getByText('In review')).toBeVisible();
+    expect(screen.getByText('In Review')).toBeVisible();
     expect(screen.queryByText('Approved')).not.toBeInTheDocument();
     expect(screen.getAllByText('Ready')).toHaveLength(readyPreview.items.length);
   });
@@ -480,8 +480,8 @@ describe('ApplicationFinalizationDialog', () => {
   it('keeps empty readiness blocked and retryable', () => {
     const onRetry = vi.fn();
     renderDialog({ ...readyPreview, items: [] }, undefined, { onRetry });
-    fireEvent.click(screen.getByLabelText(/I verified the primary guardian/));
-    expect(screen.getByRole('button', { name: 'Finalize admission' })).toBeDisabled();
+    fireEvent.click(screen.getByLabelText(/I Verified the Primary Guardian/));
+    expect(screen.getByRole('button', { name: 'Finalize Admission' })).toBeDisabled();
     expect(screen.getByText(/Finalization readiness is unavailable/)).toBeVisible();
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
     expect(onRetry).toHaveBeenCalledOnce();
@@ -502,7 +502,7 @@ describe('ApplicationFinalizationDialog', () => {
     });
     expect(screen.getByText('Gender is missing.')).toBeVisible();
     expect(
-      screen.queryByRole('button', { name: 'Repair applicant identity' })
+      screen.queryByRole('button', { name: 'Repair Applicant Identity' })
     ).not.toBeInTheDocument();
   });
 
@@ -525,16 +525,16 @@ describe('ApplicationFinalizationDialog', () => {
       undefined,
       { onRetry }
     );
-    fireEvent.click(screen.getByLabelText(/I verified the primary guardian/));
+    fireEvent.click(screen.getByLabelText(/I Verified the Primary Guardian/));
     fireEvent.click(
-      screen.getByLabelText(/Submit these admission details for Student profile review/)
+      screen.getByLabelText(/Submit These Admission Details for Student Profile Review/)
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Repair applicant identity' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Repair Applicant Identity' }));
     fireEvent.click(screen.getByRole('button', { name: 'Save identity' }));
     expect(onRetry).toHaveBeenCalledOnce();
-    expect(screen.getByLabelText(/I verified the primary guardian/)).not.toBeChecked();
+    expect(screen.getByLabelText(/I Verified the Primary Guardian/)).not.toBeChecked();
     expect(
-      screen.getByLabelText(/Submit these admission details for Student profile review/)
+      screen.getByLabelText(/Submit These Admission Details for Student Profile Review/)
     ).not.toBeChecked();
   });
 
@@ -553,9 +553,9 @@ describe('ApplicationFinalizationDialog', () => {
         onSubmit={vi.fn()}
       />
     );
-    expect(screen.getByRole('status', { name: 'Loading finalization readiness' })).toBeVisible();
-    expect(screen.queryByText('Finalization checks')).not.toBeInTheDocument();
-    expect(screen.getByLabelText(/I verified the primary guardian/)).toBeDisabled();
+    expect(screen.getByRole('status', { name: 'Loading Finalization Readiness' })).toBeVisible();
+    expect(screen.queryByText('Finalization Checks')).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/I Verified the Primary Guardian/)).toBeDisabled();
     rendered.rerender(
       <ApplicationFinalizationDialog
         open
@@ -570,7 +570,7 @@ describe('ApplicationFinalizationDialog', () => {
       />
     );
     expect(screen.getByText('Finalization readiness could not be loaded.')).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Finalize admission' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Finalize Admission' })).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
     expect(onRetry).toHaveBeenCalledOnce();
     rendered.rerender(
@@ -592,11 +592,11 @@ describe('ApplicationFinalizationDialog', () => {
 
   it('does not label readiness preparation as a finalization write', () => {
     renderDialog(readyPreview, undefined, { busy: true, loading: true });
-    expect(screen.getByRole('status', { name: 'Loading finalization readiness' })).toBeVisible();
-    const finalize = screen.getByRole('button', { name: 'Finalize admission' });
+    expect(screen.getByRole('status', { name: 'Loading Finalization Readiness' })).toBeVisible();
+    const finalize = screen.getByRole('button', { name: 'Finalize Admission' });
     expect(finalize).toBeDisabled();
     expect(finalize).toHaveAttribute('data-loading', 'false');
-    expect(screen.queryByText('Finalizing admission…')).not.toBeInTheDocument();
+    expect(screen.queryByText('Finalizing Admission…')).not.toBeInTheDocument();
     expect(
       screen.queryByText('No additional Student profile details were captured.')
     ).not.toBeInTheDocument();
@@ -606,12 +606,12 @@ describe('ApplicationFinalizationDialog', () => {
     const onClose = vi.fn();
     const onSubmit = vi.fn().mockResolvedValueOnce(false).mockResolvedValueOnce(true);
     renderDialog(readyPreview, onSubmit, { onClose });
-    fireEvent.click(screen.getByLabelText(/I verified the primary guardian/));
-    fireEvent.click(screen.getByRole('button', { name: 'Finalize admission' }));
+    fireEvent.click(screen.getByLabelText(/I Verified the Primary Guardian/));
+    fireEvent.click(screen.getByRole('button', { name: 'Finalize Admission' }));
     await waitFor(() => expect(onSubmit).toHaveBeenCalledOnce());
     expect(onClose).not.toHaveBeenCalled();
-    expect(screen.getByLabelText(/I verified the primary guardian/)).toBeChecked();
-    fireEvent.click(screen.getByRole('button', { name: 'Finalize admission' }));
+    expect(screen.getByLabelText(/I Verified the Primary Guardian/)).toBeChecked();
+    fireEvent.click(screen.getByRole('button', { name: 'Finalize Admission' }));
     await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
   });
 
@@ -623,9 +623,9 @@ describe('ApplicationFinalizationDialog', () => {
     const onSubmit = vi.fn(() => pending);
     const onClose = vi.fn();
     renderDialog(readyPreview, onSubmit, { presentation: 'inline', onClose });
-    fireEvent.click(screen.getByLabelText(/I verified the primary guardian/));
-    fireEvent.click(screen.getByRole('button', { name: 'Finalize admission' }));
-    const button = screen.getByRole('button', { name: 'Finalizing admission…' });
+    fireEvent.click(screen.getByLabelText(/I Verified the Primary Guardian/));
+    fireEvent.click(screen.getByRole('button', { name: 'Finalize Admission' }));
+    const button = screen.getByRole('button', { name: 'Finalizing Admission…' });
     expect(button).toBeVisible();
     expect(button).toBeDisabled();
     expect(button).toHaveAttribute('data-loading', 'true');
@@ -636,8 +636,8 @@ describe('ApplicationFinalizationDialog', () => {
       finish(false);
       await pending;
     });
-    expect(screen.getByRole('button', { name: 'Finalize admission' })).toBeEnabled();
-    expect(screen.getByLabelText(/I verified the primary guardian/)).toBeChecked();
+    expect(screen.getByRole('button', { name: 'Finalize Admission' })).toBeEnabled();
+    expect(screen.getByLabelText(/I Verified the Primary Guardian/)).toBeChecked();
     expect(onClose).not.toHaveBeenCalled();
   });
 
@@ -654,14 +654,14 @@ describe('ApplicationFinalizationDialog', () => {
       onSubmit,
       { presentation: 'inline', onClose }
     );
-    expect(screen.getByRole('heading', { name: 'Finalize admission' })).toBeVisible();
-    expect(screen.getByRole('heading', { name: 'Finalize admission' })).toHaveFocus();
-    expect(screen.getByRole('heading', { name: 'Student record details' })).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Finalize Admission' })).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Finalize Admission' })).toHaveFocus();
+    expect(screen.getByRole('heading', { name: 'Student Record Details' })).toBeVisible();
     expect(screen.getByText('Sunrise School')).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Finalize admission' })).toBeDisabled();
-    fireEvent.click(screen.getByLabelText(/I verified the primary guardian/));
-    expect(screen.getByRole('button', { name: 'Finalize admission' })).toBeEnabled();
-    fireEvent.click(screen.getByRole('button', { name: 'Finalize admission' }));
+    expect(screen.getByRole('button', { name: 'Finalize Admission' })).toBeDisabled();
+    fireEvent.click(screen.getByLabelText(/I Verified the Primary Guardian/));
+    expect(screen.getByRole('button', { name: 'Finalize Admission' })).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Finalize Admission' }));
     await waitFor(() =>
       expect(onSubmit).toHaveBeenCalledWith({
         existingStudentId: undefined,

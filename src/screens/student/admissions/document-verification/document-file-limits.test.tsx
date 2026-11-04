@@ -78,7 +78,7 @@ it('keeps one dropped file local, clears it on removal and submits a reselected 
   expect(dialog.queryByText('birth.pdf')).not.toBeInTheDocument();
   fireEvent.change(dropzone.querySelector('input')!, { target: { files: [file] } });
   await userEvent.type(dialog.getByLabelText('Notes'), 'Certificate copy');
-  await userEvent.click(dialog.getByRole('button', { name: 'Upload document' }));
+  await userEvent.click(dialog.getByRole('button', { name: 'Upload Document' }));
   await waitFor(() => expect(onSuccess).toHaveBeenCalledOnce());
   expect(submitted).toEqual([{ name: 'birth.pdf', size: 6291456, notes: 'Certificate copy' }]);
 }, 15000);
@@ -133,7 +133,7 @@ it('locks selection, removal, preview and close while the document upload is in 
   fireEvent.change(dropzone.querySelector('input')!, {
     target: { files: [new File(['pdf'], 'birth.pdf', { type: 'application/pdf' })] },
   });
-  await userEvent.click(dialog.getByRole('button', { name: 'Upload document' }));
+  await userEvent.click(dialog.getByRole('button', { name: 'Upload Document' }));
   await waitFor(() => expect(dropzone).toHaveAttribute('aria-disabled', 'true'));
   expect(dropzone.querySelector('input')).toBeDisabled();
   expect(dialog.getByRole('button', { name: 'Remove birth.pdf' })).toBeDisabled();

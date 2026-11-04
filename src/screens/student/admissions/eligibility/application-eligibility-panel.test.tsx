@@ -55,21 +55,21 @@ it('checks saved information explicitly, shows the evidence, and waits for staff
       onComplete={onComplete}
     />
   );
-  expect(await screen.findByText('Not checked')).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Continue admission' })).toBeDisabled();
+  expect(await screen.findByText('Not Checked')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Continue Admission' })).toBeDisabled();
   expect(evaluated).toBe(false);
   expect(historyReads).toBe(0);
-  await user.click(screen.getByRole('button', { name: 'Check eligibility' }));
+  await user.click(screen.getByRole('button', { name: 'Check Eligibility' }));
   await user.click(
-    within(screen.getByRole('dialog')).getByRole('button', { name: 'Check eligibility' })
+    within(screen.getByRole('dialog')).getByRole('button', { name: 'Check Eligibility' })
   );
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   expect(submitted).toEqual({ concurrencyStamp: 'application-stamp' });
-  expect(await screen.findByText('Recorded value: 65 months')).toBeInTheDocument();
+  expect(await screen.findByText('Recorded Value: 65 months')).toBeInTheDocument();
   expect(screen.getByText(/Expected: At least 60 months/)).toBeInTheDocument();
   expect(screen.getByText('Source: Applicant date of birth')).toBeInTheDocument();
   expect(onComplete).not.toHaveBeenCalled();
-  await user.click(screen.getByRole('button', { name: 'Continue admission' }));
+  await user.click(screen.getByRole('button', { name: 'Continue Admission' }));
   expect(onComplete).toHaveBeenCalledWith();
 }, 15000);
 
@@ -105,10 +105,10 @@ it('shows missing-information blockers and respects server action availability',
     />
   );
   expect(await screen.findByText('Date of birth is missing.')).toBeInTheDocument();
-  expect(screen.getByText('Recorded value: Not provided')).toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: /Check eligibility/ })).not.toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: 'Request an exception' })).not.toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Continue admission' })).toBeDisabled();
+  expect(screen.getByText('Recorded Value: Not Provided')).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: /Check Eligibility/ })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Request an Exception' })).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Continue Admission' })).toBeDisabled();
 });
 
 it('allows an explicit server-approved review route for an ineligible result without making an admission decision', async () => {
@@ -135,6 +135,6 @@ it('allows an explicit server-approved review route for an ineligible result wit
   );
   expect(await screen.findByText(/configured review route/)).toBeInTheDocument();
   expect(onComplete).not.toHaveBeenCalled();
-  await user.click(screen.getByRole('button', { name: 'Continue admission' }));
+  await user.click(screen.getByRole('button', { name: 'Continue Admission' }));
   expect(onComplete).toHaveBeenCalledWith();
 });

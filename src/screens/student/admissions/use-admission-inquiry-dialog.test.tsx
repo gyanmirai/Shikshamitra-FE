@@ -182,7 +182,7 @@ it.each(['guardian', 'father', 'mother'] as const)(
       await result.current.formik.submitForm();
     });
     expect(result.current.formik.errors.fields).toMatchObject({
-      PHONE: 'Parent mobile is required',
+      PHONE: 'Parent mobile is required.',
     });
     expect(duplicateChecks).toBe(0);
     expect(submitted).toHaveLength(0);
@@ -361,7 +361,7 @@ it('explains missing legacy identity mappings on submit without sending an empty
   expect(create).not.toHaveBeenCalled();
   expect(shikshaMitraToast.error).toHaveBeenCalledWith({
     message:
-      'This inquiry form is missing linked fields: Student name, Parent / Guardian name, Parent / Guardian mobile. Update its field mappings in Admissions Settings.',
+      'This inquiry form is missing linked fields: Student Name, Parent / Guardian Name, Parent / Guardian Mobile. Update its field mappings in Admissions Settings.',
   });
   expect(result.current.formik.values.fields.NOTE).toBe('Keep this draft');
 });
@@ -463,7 +463,7 @@ it.each([false, true])(
     }
     expect(shikshaMitraToast.error).toHaveBeenCalledWith({
       message:
-        'This inquiry form is missing linked fields: Parent / Guardian name. Update its field mappings in Admissions Settings.',
+        'This inquiry form is missing linked fields: Parent / Guardian Name. Update its field mappings in Admissions Settings.',
     });
     expect(result.current.formik.values.fields.PHONE).toBe('9876543210');
   }

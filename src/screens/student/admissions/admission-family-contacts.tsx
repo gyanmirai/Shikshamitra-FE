@@ -89,10 +89,10 @@ export function AdmissionFamilyContacts({
     <FormSectionCard
       title="Family Contacts"
       icon="mdi:account-group-outline"
-      descriptionTooltip="One parent is enough. Add another parent or guardian only when needed. The main school contact is separate from app access."
+      descriptionTooltip="One Parent Is Enough. Add Another Parent or Guardian Only When Needed. The Main School Contact Is Separate From App Access."
     >
       <FormControlLabel
-        label="Add other parent"
+        label="Add Other Parent"
         control={
           <Checkbox
             size="small"
@@ -104,15 +104,15 @@ export function AdmissionFamilyContacts({
       />
       {value.addOtherParent && (
         <Stack spacing={2}>
-          {field('otherParentFullName', `${otherLabel} full name`, true)}
+          {field('otherParentFullName', `${otherLabel} Full Name`, true)}
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-            {field('otherParentMobile', `${otherLabel} mobile`)}
-            {field('otherParentEmail', `${otherLabel} email`)}
+            {field('otherParentMobile', `${otherLabel} Mobile`)}
+            {field('otherParentEmail', `${otherLabel} Email`)}
           </Stack>
         </Stack>
       )}
       <FormControlLabel
-        label="Add other guardian"
+        label="Add Other Guardian"
         control={
           <Checkbox
             size="small"
@@ -125,19 +125,19 @@ export function AdmissionFamilyContacts({
       {value.addGuardian && (
         <Stack spacing={2}>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-            {field('guardianFullName', 'Guardian full name', true)}
-            {field('guardianRelationship', 'Guardian relationship', true)}
+            {field('guardianFullName', 'Guardian Full Name', true)}
+            {field('guardianRelationship', 'Guardian Relationship', true)}
           </Stack>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-            {field('guardianMobile', 'Guardian mobile')}
-            {field('guardianEmail', 'Guardian email')}
+            {field('guardianMobile', 'Guardian Mobile')}
+            {field('guardianEmail', 'Guardian Email')}
           </Stack>
         </Stack>
       )}
       <CustomSelect
         fullWidth
         size="small"
-        label="Main school contact"
+        label="Main School Contact"
         name="familyContacts.mainContactRelationship"
         value={mainContact}
         disabled={disabled || !parentRelationship}

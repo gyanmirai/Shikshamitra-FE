@@ -2,6 +2,7 @@ import type { AdmissionApplicant360 } from 'src/redux/student/admissions/admissi
 
 import { vi, it, expect, describe, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { expectStudentErrorToast } from 'src/test/student-toast-test-fixture';
 
 import AdmissionApplicant360Screen from './admission-applicant-360';
 
@@ -78,24 +79,25 @@ describe('saved applicant URL recovery', () => {
     ].map((name) => ({ name, isGranted: true }));
     state.result = { currentData: fixture };
   });
-  it('shows loading then a recoverable error without the legacy overview', () => {
+  it('shows loading then a toast error without the legacy overview or retry row', async () => {
     state.result = { isFetching: true };
     const view = render(<AdmissionApplicant360Screen />);
-    expect(screen.getByRole('status', { name: 'Loading applicant record' })).toBeInTheDocument();
+    expect(screen.getByRole('status', { name: 'Loading Applicant Record' })).toBeInTheDocument();
     state.result = { isError: true };
     view.rerender(<AdmissionApplicant360Screen />);
-    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
-    expect(state.refetch).toHaveBeenCalledOnce();
+    await expectStudentErrorToast('Applicant record could not be loaded. Try again.');
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+    expect(state.refetch).not.toHaveBeenCalled();
     expect(screen.queryByText('Applicant essentials')).not.toBeInTheDocument();
   });
-  it('opens the single application in its filtered list drawer', () => {
+  it('opens the single application workspace with its filtered list return context', () => {
     state.search = new URLSearchParams({
       returnTo: '/student/admissions/pipeline?page=2&owner=mine',
     }).toString();
     state.result = { currentData: { ...fixture, applications: [application('one')] } };
     render(<AdmissionApplicant360Screen />);
     expect(state.replace).toHaveBeenCalledWith(
-      '/student/admissions/pipeline?page=2&owner=mine&application=one'
+      '/student/admissions/pipeline/applications/one?returnTo=%2Fstudent%2Fadmissions%2Fpipeline%3Fpage%3D2%26owner%3Dmine'
     );
   });
   it('requires an explicit selection when multiple applications exist', () => {
@@ -106,24 +108,24 @@ describe('saved applicant URL recovery', () => {
     expect(state.replace).not.toHaveBeenCalled();
     expect(
       screen
-        .getAllByRole('link', { name: 'Open application' })
+        .getAllByRole('link', { name: 'Open Application' })
         .map((link) => link.getAttribute('href'))
     ).toEqual([
-      '/student/admissions/applications?application=one',
-      '/student/admissions/applications?application=two',
+      '/student/admissions/pipeline/applications/one?returnTo=%2Fstudent%2Fadmissions%2Fapplications',
+      '/student/admissions/pipeline/applications/two?returnTo=%2Fstudent%2Fadmissions%2Fapplications',
     ]);
-    expect(screen.getByRole('button', { name: 'Edit identity' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Edit Identity' })).toBeDisabled();
   });
   it('retains Inquiry recovery for applicants with no application and does not start direct admission', () => {
     state.search = 'inquiryId=inquiry-1';
     render(<AdmissionApplicant360Screen />);
     expect(screen.getByText(/Move to next stage/)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Manage inquiry' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Manage Inquiry' })).toHaveAttribute(
       'href',
       '/student/admissions/inquiries?inquiryId=inquiry-1'
     );
-    expect(screen.queryByRole('button', { name: /Start admission/i })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Applicant notes' }));
+    expect(screen.queryByRole('button', { name: /Start Admission/i })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Applicant Notes' }));
     expect(screen.getByText('Focused applicant notes')).toBeInTheDocument();
   });
   it('opens an old identity repair bookmark directly and closes to a safe list', () => {
@@ -145,7 +147,7 @@ describe('saved applicant URL recovery', () => {
     expect(state.query).toHaveBeenCalledWith('applicant-1', { skip: true });
     expect(state.replace).not.toHaveBeenCalled();
     expect(screen.getByText(/permission to view this applicant/)).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Open application' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Open Application' })).not.toBeInTheDocument();
   });
   it('does not open applications when only Applicant permissions are granted', () => {
     state.permissions = state.permissions.filter((entry) => !entry.name.includes('Applications.'));

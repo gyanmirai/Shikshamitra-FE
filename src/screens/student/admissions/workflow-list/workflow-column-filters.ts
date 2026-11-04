@@ -4,9 +4,9 @@ import { formatDateOnly } from 'src/utils/date-only';
 
 const columnLabels: Record<string, string> = {
   name: 'Workflow',
-  lastModificationTime: 'Last modified',
-  publishedAt: 'Published at',
-  offeringCount: 'Used by offerings',
+  lastModificationTime: 'Last Modified',
+  publishedAt: 'Published At',
+  offeringCount: 'Used by Offerings',
   version: 'Version',
 };
 

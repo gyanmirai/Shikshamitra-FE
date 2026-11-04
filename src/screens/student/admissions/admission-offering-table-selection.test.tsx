@@ -81,7 +81,7 @@ describe('Offering table selection', () => {
     const input = props();
     render(<AdmissionOfferingTable {...input} />);
     fireEvent.click(
-      screen.getByRole('checkbox', { name: 'Select Class 1 General for activation' })
+      screen.getByRole('checkbox', { name: 'Select Class 1 General For Activation' })
     );
     expect(input.selection.onToggle).toHaveBeenCalledWith(rows[0], true);
     expect(input.onView).not.toHaveBeenCalled();
@@ -89,17 +89,17 @@ describe('Offering table selection', () => {
   it('disables active and blocked offerings', () => {
     render(<AdmissionOfferingTable {...props()} />);
     expect(
-      screen.getByRole('checkbox', { name: 'Select Class 2 General for activation' })
+      screen.getByRole('checkbox', { name: 'Select Class 2 General For Activation' })
     ).toBeDisabled();
     expect(
-      screen.getByRole('checkbox', { name: 'Select Class 3 General for activation' })
+      screen.getByRole('checkbox', { name: 'Select Class 3 General For Activation' })
     ).toBeDisabled();
   });
   it('offers select-all only for eligible rows on the current page', () => {
     const input = props();
     render(<AdmissionOfferingTable {...input} />);
     fireEvent.click(
-      screen.getByRole('checkbox', { name: 'Select all eligible offerings on this page' })
+      screen.getByRole('checkbox', { name: 'Select All Eligible Offerings on This Page' })
     );
     expect(input.selection.onToggleAll).toHaveBeenCalledWith(true);
   });
@@ -107,7 +107,7 @@ describe('Offering table selection', () => {
     const input = props();
     render(<AdmissionOfferingTable {...input} />);
     fireEvent.keyDown(
-      screen.getByRole('checkbox', { name: 'Select Class 1 General for activation' }),
+      screen.getByRole('checkbox', { name: 'Select Class 1 General For Activation' }),
       { key: ' ' }
     );
     expect(input.onView).not.toHaveBeenCalled();
@@ -134,23 +134,23 @@ describe('Offering table selection', () => {
       />
     );
     expect(
-      screen.getByRole('checkbox', { name: 'Select all eligible offerings on this page' })
+      screen.getByRole('checkbox', { name: 'Select All Eligible Offerings on This Page' })
     ).toBeDisabled();
   });
 
   it('offers filter recovery inside the empty table instead of claiming no offerings exist', () => {
     const onClearFilters = vi.fn();
     render(<AdmissionOfferingTable {...props()} rows={[]} filteredEmpty onClearFilters={onClearFilters} />);
-    expect(screen.getByText('No admission offerings match the selected filters.')).toBeVisible();
-    expect(screen.queryByText('No admission offering has been configured.')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
+    expect(screen.getByText('No Admission Offerings Match the Selected Filters.')).toBeVisible();
+    expect(screen.queryByText('No Admission Offering Has Been Configured.')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Clear Filters' }));
     expect(onClearFilters).toHaveBeenCalledOnce();
   });
 
   it('keeps a distinct initial empty state without a filter reset action', () => {
     render(<AdmissionOfferingTable {...props()} rows={[]} />);
-    expect(screen.getByText('No admission offering has been configured.')).toBeVisible();
-    expect(screen.queryByRole('button', { name: 'Clear filters' })).not.toBeInTheDocument();
+    expect(screen.getByText('No Admission Offering Has Been Configured.')).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Clear Filters' })).not.toBeInTheDocument();
   });
   it('wires shared server filters and refresh state while keeping current rows visible', () => {
     const onFilters = vi.fn();
@@ -167,6 +167,6 @@ describe('Offering table selection', () => {
   it('shows the missing academic prerequisite instead of a successful empty list', () => {
     render(<AdmissionOfferingTable {...props()} rows={[]} prerequisite="Select a board and medium to view admission offerings." />);
     expect(screen.getByText('Select a board and medium to view admission offerings.')).toBeVisible();
-    expect(screen.queryByText('No admission offering has been configured.')).not.toBeInTheDocument();
+    expect(screen.queryByText('No Admission Offering Has Been Configured.')).not.toBeInTheDocument();
   });
 });

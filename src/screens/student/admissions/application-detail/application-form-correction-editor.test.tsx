@@ -60,7 +60,7 @@ vi.mock('./application-runtime-form', () => ({
         {footerActions}
         {!readOnly && (
           <button type="button" disabled={!canSubmitForm} onClick={onSubmit}>
-            Save corrections
+            Save Corrections
           </button>
         )}
       </div>
@@ -120,14 +120,14 @@ function setup(overrides: Partial<Props> = {}) {
 }
 async function reasonDialog() {
   fireEvent.change(screen.getByLabelText('Student name'), { target: { value: 'Corrected' } });
-  fireEvent.click(screen.getByRole('button', { name: 'Save corrections' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Save Corrections' }));
   return screen.findByRole('dialog', { name: 'Save Form Corrections' });
 }
 async function saveReason(dialog: HTMLElement) {
   fireEvent.change(within(dialog).getByRole('textbox', { name: /^Reason/ }), {
     target: { value: '  Verified correction  ' },
   });
-  fireEvent.click(within(dialog).getByRole('button', { name: 'Save corrections' }));
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Save Corrections' }));
 }
 beforeEach(() => {
   api.save.mockReset();
@@ -145,7 +145,7 @@ it('guards same-document navigation until unsaved corrections are explicitly dis
   fireEvent.click(link);
   const confirm = await screen.findByRole('dialog', { name: 'Discard Form Corrections?' });
   expect(api.push).not.toHaveBeenCalled();
-  fireEvent.click(within(confirm).getByRole('button', { name: 'Discard changes' }));
+  fireEvent.click(within(confirm).getByRole('button', { name: 'Discard Changes' }));
   expect(api.push).toHaveBeenCalledWith('/student/admissions/applications');
   link.remove();
 });
@@ -165,7 +165,7 @@ it('blocks a browser Back traversal during an active save', async () => {
   await saveReason(dialog);
   await waitFor(() => expect(api.save).toHaveBeenCalledOnce());
   await waitFor(() =>
-    expect(within(dialog).getByRole('button', { name: 'Back to form' })).toBeDisabled()
+    expect(within(dialog).getByRole('button', { name: 'Back to Form' })).toBeDisabled()
   );
   const event = new Event('navigate', { cancelable: true });
   Object.assign(event, {
@@ -183,12 +183,12 @@ it('blocks a browser Back traversal during an active save', async () => {
 it('validates the entire frozen form before requesting a reason and requires an audit reason', async () => {
   setup();
   fireEvent.change(screen.getByLabelText('Student name'), { target: { value: '' } });
-  fireEvent.click(screen.getByRole('button', { name: 'Save corrections' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Save Corrections' }));
   expect(screen.getByText('Student name is required.')).toBeVisible();
   await waitFor(() => expect(screen.getByLabelText('Student name')).toHaveFocus());
   expect(api.save).not.toHaveBeenCalled();
   const dialog = await reasonDialog();
-  fireEvent.click(within(dialog).getByRole('button', { name: 'Save corrections' }));
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Save Corrections' }));
   expect(await within(dialog).findByText('Enter a reason for this correction')).toBeVisible();
   expect(api.save).not.toHaveBeenCalled();
 });
@@ -309,7 +309,7 @@ it('preserves edited answers and audit reason on a rejected save and displays th
   expect(within(dialog).getByRole('textbox', { name: /^Reason/ })).toHaveValue(
     '  Verified correction  '
   );
-  fireEvent.click(within(dialog).getByRole('button', { name: 'Back to form' }));
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Back to Form' }));
   await waitFor(() => expect(screen.getByLabelText('Student name')).toBeVisible());
   expect(screen.getByLabelText('Student name')).toHaveValue('Corrected');
   expect(screen.getByText('Correct this name')).toBeVisible();
@@ -324,7 +324,7 @@ it('freezes an unconfirmed command and retries the exact payload even after fres
   const first = api.save.mock.calls[0][0];
   rerenderProps({ allowed: false });
   expect(within(dialog).getByRole('textbox', { name: /^Reason/ })).toBeDisabled();
-  fireEvent.click(within(dialog).getByRole('button', { name: 'Retry save' }));
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Retry Save' }));
   await waitFor(() => expect(props.onSaved).toHaveBeenCalledOnce());
   expect(api.save).toHaveBeenCalledTimes(2);
   expect(api.save.mock.calls[1][0]).toEqual(first);
@@ -341,13 +341,13 @@ it('does not overwrite an edited answer or silently adopt a new stamp after a co
   expect(
     await within(dialog).findByText(/The application changed.*reopen the latest application/)
   ).toBeVisible();
-  fireEvent.click(within(dialog).getByRole('button', { name: 'Back to form' }));
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Back to Form' }));
   await waitFor(() => expect(screen.getByLabelText('Student name')).toBeVisible());
   expect(screen.getByLabelText('Student name')).toHaveValue('Corrected');
   expect(screen.getByLabelText('Student name')).toBeDisabled();
   fireEvent.click(await screen.findByRole('button', { name: 'Cancel' }));
   const discard = await screen.findByRole('dialog', { name: 'Discard Form Corrections?' });
-  fireEvent.click(within(discard).getByRole('button', { name: 'Discard changes' }));
+  fireEvent.click(within(discard).getByRole('button', { name: 'Discard Changes' }));
   expect(props.onClose).toHaveBeenCalledOnce();
   expect(props.onSaved).not.toHaveBeenCalled();
 });
@@ -365,7 +365,7 @@ it('blocks close and duplicate saves during an in-flight correction', async () =
   const staleChange = api.change;
   await saveReason(dialog);
   await waitFor(() => expect(api.save).toHaveBeenCalledOnce());
-  expect(within(dialog).getByRole('button', { name: 'Back to form' })).toBeDisabled();
+  expect(within(dialog).getByRole('button', { name: 'Back to Form' })).toBeDisabled();
   expect(within(dialog).getByRole('button', { name: 'close' })).toBeDisabled();
   expect(within(dialog).getByRole('textbox', { name: /^Reason/ })).toBeDisabled();
   act(() => staleChange?.('NAME', 'Late asynchronous answer'));
@@ -384,7 +384,7 @@ it('locks close while a photo is being read and guards dirty discard', async () 
   fireEvent.change(screen.getByLabelText('Student name'), { target: { value: 'Corrected' } });
   fireEvent.click(await screen.findByRole('button', { name: 'Cancel' }));
   expect(await screen.findByRole('dialog', { name: 'Discard Form Corrections?' })).toBeVisible();
-  fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Keep Editing' }));
   expect(props.onClose).not.toHaveBeenCalled();
   expect(screen.getByLabelText('Student name')).toHaveValue('Corrected');
 });
@@ -395,11 +395,11 @@ it('refreshes instead of claiming success when closing an unconfirmed save', asy
   const dialog = await reasonDialog();
   await saveReason(dialog);
   expect(await within(dialog).findByText(/Save confirmation was not received/)).toBeVisible();
-  fireEvent.click(within(dialog).getByRole('button', { name: 'Back to form' }));
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Back to Form' }));
   await waitFor(() => expect(screen.getByLabelText('Student name')).toBeVisible());
   fireEvent.click(await screen.findByRole('button', { name: 'Cancel' }));
   const discard = await screen.findByRole('dialog', { name: 'Discard Form Corrections?' });
-  fireEvent.click(within(discard).getByRole('button', { name: 'Discard changes' }));
+  fireEvent.click(within(discard).getByRole('button', { name: 'Discard Changes' }));
   expect(props.onRefresh).toHaveBeenCalledOnce();
   expect(props.onSaved).not.toHaveBeenCalled();
 });

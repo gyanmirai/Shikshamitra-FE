@@ -35,7 +35,7 @@ export function FormReviewStructure({ form, onEditFields }: Props) {
         sx={{ mb: 2 }}
       >
         <Box>
-          <Typography variant="subtitle1">Form structure</Typography>
+          <Typography variant="subtitle1">Form Structure</Typography>
           <Typography variant="body2" color="text.secondary">
             Sections and fields in applicant order.
           </Typography>
@@ -47,7 +47,7 @@ export function FormReviewStructure({ form, onEditFields }: Props) {
           startIcon={<Iconify icon="mdi:pencil-outline" />}
           sx={{ flexShrink: 0, minHeight: 44 }}
         >
-          Edit fields
+          Edit Fields
         </Button>
       </Stack>
       <Stack spacing={2}>
@@ -58,7 +58,7 @@ export function FormReviewStructure({ form, onEditFields }: Props) {
                 variant="subtitle2"
                 sx={{ p: 1, borderRadius: 1, bgcolor: 'action.hover', overflowWrap: 'anywhere' }}
               >
-                Step {stepIndex + 1}: {group.name || 'Untitled step'}
+                Step {stepIndex + 1}: {group.name || 'Untitled Step'}
               </Typography>
             )}
             <Stack divider={<Divider />} spacing={1.25}>
@@ -70,11 +70,11 @@ export function FormReviewStructure({ form, onEditFields }: Props) {
                     justifyContent="space-between"
                   >
                     <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
-                      {section.name || 'Untitled section'}
+                      {section.name || 'Untitled Section'}
                     </Typography>
                     <Typography variant="caption" color="text.secondary" sx={{ flexShrink: 0 }}>
-                      {section.fields.length} {section.fields.length === 1 ? 'field' : 'fields'} ·{' '}
-                      {section.fields.filter((field) => field.required).length} required
+                      {section.fields.length} {section.fields.length === 1 ? 'Field' : 'Fields'} ·{' '}
+                      {section.fields.filter((field) => field.required).length} Required
                     </Typography>
                   </Stack>
                   <Typography
@@ -87,7 +87,7 @@ export function FormReviewStructure({ form, onEditFields }: Props) {
                           .sort((left, right) => left.displayOrder - right.displayOrder)
                           .map((field) => field.label || 'Untitled field')
                           .join(', ')
-                      : 'No fields added yet.'}
+                      : 'No Fields Added Yet.'}
                   </Typography>
                 </Box>
               ))}

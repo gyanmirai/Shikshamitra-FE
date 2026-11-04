@@ -53,7 +53,7 @@ export function ApplicationApplicantNotesDialog({
       <CustomDialog
         open
         title="Applicant Notes"
-        titleInfo="Keep internal context for the next admissions staff member."
+        titleInfo="Keep Internal Context for the Next Admissions Staff Member."
         maxWidth="sm"
         handleClose={close}
         disableClose={busy}
@@ -70,7 +70,7 @@ export function ApplicationApplicantNotesDialog({
               You do not have permission to view applicant notes.
             </StudentFeedback>
           ) : query.isLoading || (!data && query.isFetching) ? (
-            <Stack role="status" aria-label="Loading applicant notes" spacing={1}>
+            <Stack role="status" aria-label="Loading Applicant Notes" spacing={1}>
               <Skeleton height={48} />
               <Skeleton height={96} />
             </Stack>

@@ -31,7 +31,7 @@ describe('Pipeline missing-source recovery', () => {
     renderCell('nextFollowUpAt', row);
     renderCell('actions', row);
     expect(screen.getByText('QA direct applicant')).toBeInTheDocument();
-    expect(screen.getByText('No inquiry follow-ups')).toBeInTheDocument();
+    expect(screen.getByText('No Inquiry Follow-ups')).toBeInTheDocument();
     expect(screen.queryByText(/Inquiry unavailable/)).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Continue APP-7' })).toHaveAttribute(
       'href',
@@ -42,12 +42,12 @@ describe('Pipeline missing-source recovery', () => {
     renderCell('currentStageName', { currentStageName: null });
     renderCell('standardName', { standardName: null, offeringCode: null });
     expect(screen.getByText('No current step')).toBeInTheDocument();
-    expect(screen.getByText('Class unavailable')).toBeInTheDocument();
+    expect(screen.getByText('Class Unavailable')).toBeInTheDocument();
     expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
   });
   it('keeps only the approved compact visible columns and excludes actions from export', () => {
     expect(columns.filter((column) => !column.defaultHidden).map((column) => column.label)).toEqual(
-      ['Student name', 'Class', 'Current step', 'Follow-ups', 'Status', 'Actions']
+      ['Student Name', 'Class', 'Current Step', 'Follow-Ups', 'Status', 'Actions']
     );
     expect(
       columns.some((column) =>
@@ -58,7 +58,7 @@ describe('Pipeline missing-source recovery', () => {
   });
   it('does not turn missing dates into invalid dates or artificial deadlines', () => {
     renderCell('nextFollowUpAt', { nextFollowUpAt: null, openFollowUpCount: 0 });
-    expect(screen.getByText('No open follow-ups')).toBeInTheDocument();
+    expect(screen.getByText('No Open Follow-ups')).toBeInTheDocument();
     expect(screen.queryByText(/Invalid|deadline passed|Due /)).not.toBeInTheDocument();
   });
   it('keeps current application navigation available when its inquiry is missing', () => {
@@ -84,7 +84,7 @@ describe('Pipeline exported conditional content', () => {
         openFollowUpCount: 0,
         hasOverdueFollowUp: false,
       })
-    ).toBe('No open follow-ups');
+    ).toBe('No Open Follow-ups');
     const nextFollowUpAt = '2026-10-09T10:00:00+05:30';
     expect(
       exportCell('nextFollowUpAt', {
@@ -125,12 +125,12 @@ describe('Pipeline runtime progress and contextual actions', () => {
       stageProgress: progress,
     };
     renderCell('currentStageName', row);
-    const indicator = screen.getByRole('progressbar', { name: 'Admission journey' });
+    const indicator = screen.getByRole('progressbar', { name: 'Admission Journey' });
     expect(indicator).toHaveAttribute('aria-valuenow', '3');
     expect(indicator).toHaveAttribute('aria-valuemax', '4');
     expect(indicator).toHaveAttribute('aria-valuetext', 'Step 3 of 4: Payment');
     expect(screen.getByRole('img', { name: 'Assessment: Skipped' })).toBeInTheDocument();
-    expect(exportCell('currentStageName', row)).toBe('Payment 3 of 4');
+    expect(exportCell('currentStageName', row)).toBe('Payment 3 Of 4');
   });
   it('does not fabricate progress for older servers or an unknown current stage', () => {
     const view = renderCell('currentStageName', { currentStageName: 'Assessment' });
@@ -207,7 +207,7 @@ describe('Pipeline runtime progress and contextual actions', () => {
     modifiedLink.addEventListener('click', (event) => event.preventDefault(), { once: true });
     fireEvent.click(modifiedLink, { ctrlKey: true });
     expect(onOpen).not.toHaveBeenCalled();
-    expect(screen.queryByRole('button', { name: /More actions/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /More Actions/ })).not.toBeInTheDocument();
     expect(modifiedLink.querySelector('.MuiButton-endIcon')).toBeNull();
     expect(rowClick).not.toHaveBeenCalled();
     fireEvent.click(modifiedLink);

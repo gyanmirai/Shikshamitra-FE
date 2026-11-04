@@ -52,7 +52,7 @@ export function ApplicationApplicantIdentityDialog({
       <CustomDialog
         open
         title="Edit Applicant Identity"
-        titleInfo="Update applicant identity and guardian contact before finalizing admission."
+        titleInfo="Update Applicant Identity and Guardian Contact Before Finalizing Admission."
         handleClose={onClose}
         disableClose={busy}
         hasUnsavedChanges={false}
@@ -68,7 +68,7 @@ export function ApplicationApplicantIdentityDialog({
               You do not have permission to edit applicant identity.
             </StudentFeedback>
           ) : query.isLoading || (!data && query.isFetching) ? (
-            <Stack spacing={1} role="status" aria-label="Loading applicant identity">
+            <Stack spacing={1} role="status" aria-label="Loading Applicant Identity">
               <Skeleton height={48} />
               <Skeleton height={48} />
               <Skeleton height={48} />

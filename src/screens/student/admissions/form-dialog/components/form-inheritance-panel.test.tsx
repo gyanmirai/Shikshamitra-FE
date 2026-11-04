@@ -90,12 +90,13 @@ function setup(
       </Formik>
     </ThemeProvider>
   );
+  return initialValues;
 }
 describe('Inherited Registration field settings', () => {
   it('shows the captured full-name reference as non-required during Registration', () => {
     setup(true, false, true, false, true);
-    expect(screen.getByRole('switch', { name: 'Required during Registration' })).not.toBeChecked();
-    expect(screen.getByText('The captured Inquiry answer is a read-only reference.')).toBeVisible();
+    expect(screen.getByRole('switch', { name: 'Required During Registration' })).not.toBeChecked();
+    expect(screen.getByText('The Captured Inquiry Answer Is a Read-only Reference.')).toBeVisible();
   });
 
   it('keeps connection-load recovery reachable before a source has been selected', async () => {
@@ -122,18 +123,18 @@ describe('Inherited Registration field settings', () => {
         </Formik>
       </ThemeProvider>
     );
-    fireEvent.click(await screen.findByRole('button', { name: 'Check again' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Check Again' }));
     expect(refresh).toHaveBeenCalledOnce();
     expect(screen.getByRole('alert')).toHaveTextContent('Inquiry versions could not be loaded.');
   });
   it('does not implicitly allow Inquiry questions through a question match before approval', () => {
     setup(false, false, false, true);
-    expect(screen.getByRole('combobox', { name: 'Same question in Registration' })).toHaveAttribute(
+    expect(screen.getByRole('combobox', { name: 'Same Question in Registration' })).toHaveAttribute(
       'aria-disabled',
       'true'
     );
-    expect(screen.getByRole('switch', { name: 'Required during Registration' })).toBeDisabled();
-    expect(screen.queryByRole('combobox', { name: 'Section' })).not.toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: 'Required During Registration' })).toBeDisabled();
+    expect(screen.queryByRole('combobox', { name: 'SECTION' })).not.toBeInTheDocument();
     expect(JSON.parse(screen.getByTestId('draft').textContent!).inheritance.sources).toHaveLength(
       0
     );
@@ -190,23 +191,23 @@ describe('Inherited Registration field settings', () => {
     );
     expect(screen.getByText('Reuse Inquiry Questions')).toBeVisible();
     expect(
-      screen.getByRole('switch', { name: 'Include Inquiry questions in Registration' })
+      screen.getByRole('switch', { name: 'Include Inquiry Questions in Registration' })
     ).toBeChecked();
     expect(screen.getAllByRole('combobox')).toHaveLength(1);
     expect(
-      screen.queryByText('Each applicant sees the questions from their own Inquiry form.')
+      screen.queryByText('Each applicant sees the questions from their own Inquiry Form.')
     ).not.toBeInTheDocument();
-    expect(screen.queryByText('Choosing a form changes this preview.')).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Check again' })).not.toBeInTheDocument();
-    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Preview using Inquiry form' }));
+    expect(screen.queryByText('Choosing a form changes this Preview.')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Check Again' })).not.toBeInTheDocument();
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Preview Using Inquiry Form' }));
     await screen.findByRole('option', { name: 'Archived Inquiry D · v1' });
     await waitFor(() =>
       expect(screen.getAllByRole('option', { name: 'Inquiry A · v1' })).toHaveLength(2)
     );
     fireEvent.click(screen.getByRole('option', { name: 'Archived Inquiry D · v1' }));
     expect(selectSource).toHaveBeenCalledWith('source-3');
-    fireEvent.click(screen.getByRole('button', { name: 'More options' }));
-    expect(screen.getByRole('menuitem', { name: 'Check again' })).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'More Options' }));
+    expect(screen.getByRole('menuitem', { name: 'Check Again' })).toBeVisible();
   });
   it('repairs an invalid empty preview through selected-source reset without discarding other draft data', async () => {
     const values = {
@@ -275,9 +276,9 @@ describe('Inherited Registration field settings', () => {
       </ThemeProvider>
     );
     expect(screen.getByText('Review the removed field override.')).toBeVisible();
-    fireEvent.click(screen.getByRole('button', { name: 'More options' }));
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Reset question adjustments' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Reset adjustments' }));
+    fireEvent.click(screen.getByRole('button', { name: 'More Options' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Reset Question Adjustments' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Reset Adjustments' }));
     await waitFor(() =>
       expect(screen.queryByText('Review the removed field override.')).not.toBeInTheDocument()
     );
@@ -289,41 +290,43 @@ describe('Inherited Registration field settings', () => {
   });
   it('locks the source label and type and explains why deletion is unavailable', () => {
     setup();
-    expect(screen.getByLabelText('Field label')).toBeDisabled();
-    expect(screen.getByLabelText('Field label')).toHaveValue('DOB');
-    expect(screen.getByLabelText('Field type')).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Delete field' })).toBeDisabled();
+    expect(screen.getByLabelText('Field Label')).toBeDisabled();
+    expect(screen.getByLabelText('Field Label')).toHaveValue('DOB');
+    expect(screen.getByLabelText('Field Type')).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Delete Field' })).toBeDisabled();
     expect(screen.getByText('Inherited fields are managed in Inquiry.')).toBeVisible();
-    expect(screen.getByRole('link', { name: 'Open Inquiry form' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Open Inquiry Form' })).toHaveAttribute(
       'href',
       '/student/admissions/settings/forms/inquiry-b/preview'
     );
-    expect(screen.getByRole('link', { name: 'Open Inquiry form' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Open Inquiry Form' })).toHaveAttribute(
       'target',
       '_blank'
     );
   });
   it('locks optional Inquiry requiredness and does not offer Registration placement or order overrides', () => {
-    setup();
-    expect(screen.getByRole('switch', { name: 'Required during Registration' })).toBeDisabled();
-    expect(screen.getByRole('switch', { name: 'Required during Registration' })).not.toBeChecked();
-    expect(screen.queryByRole('combobox', { name: 'Section' })).not.toBeInTheDocument();
+    const initialValues = setup();
+    expect(screen.getByRole('switch', { name: 'Required During Registration' })).toBeDisabled();
+    expect(screen.getByRole('switch', { name: 'Required During Registration' })).not.toBeChecked();
+    expect(screen.queryByRole('combobox', { name: 'SECTION' })).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Field order')).not.toBeInTheDocument();
     expect(
       JSON.parse(screen.getByTestId('draft').textContent!).inheritance.sources[0]
         .requiredFieldIdentities
     ).toEqual([]);
-    expect(JSON.parse(screen.getByTestId('draft').textContent!).sections[0].fields).toEqual([]);
+    expect(JSON.parse(screen.getByTestId('draft').textContent!).sections[0].fields).toEqual(
+      initialValues.sections[0].fields
+    );
   });
   it('does not allow weakening a source requirement', () => {
     setup(true);
-    expect(screen.getByRole('switch', { name: 'Required during Registration' })).toBeDisabled();
-    expect(screen.getByRole('switch', { name: 'Required during Registration' })).toBeChecked();
+    expect(screen.getByRole('switch', { name: 'Required During Registration' })).toBeDisabled();
+    expect(screen.getByRole('switch', { name: 'Required During Registration' })).toBeChecked();
   });
   it('shows the Inquiry requirement even when the duplicate Registration slot had stricter requiredness', () => {
     setup(false, true);
-    expect(screen.getByRole('switch', { name: 'Required during Registration' })).not.toBeChecked();
-    expect(screen.getByRole('switch', { name: 'Required during Registration' })).toBeDisabled();
-    expect(screen.getByText('Optional in the source Inquiry.')).toBeVisible();
+    expect(screen.getByRole('switch', { name: 'Required During Registration' })).not.toBeChecked();
+    expect(screen.getByRole('switch', { name: 'Required During Registration' })).toBeDisabled();
+    expect(screen.getByText('Optional in the Source Inquiry.')).toBeVisible();
   });
 });

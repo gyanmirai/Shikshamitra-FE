@@ -6,165 +6,140 @@ import type {
 
 import { isEqual } from 'src/utils/helper';
 
-import { canonicalInquiryBinding } from '../admission-inquiry-field-bindings';
-
-const defaults = [
+export const ADMISSION_CORE_FIELD_POLICY_VERSION = 1;
+const relationshipOptions = JSON.stringify([
+  { value: 'father', label: 'Father' },
+  { value: 'mother', label: 'Mother' },
+  { value: 'guardian', label: 'Guardian' },
+]);
+type CoreDefinition = Pick<AdmissionFormField, 'bindingKey' | 'label' | 'fieldType' | 'required'> &
+  Partial<AdmissionFormField>;
+const identityDefaults: CoreDefinition[] = [
   {
-    code: 'INQUIRY_STUDENT_NAME',
-    label: 'Student name',
-    bindingKey: 'Applicant.Name',
+    bindingKey: 'Applicant.FirstName',
+    label: 'First name',
     fieldType: 0,
-    translations: { gu: { label: 'વિદ્યાર્થીનું નામ' }, hi: { label: 'विद्यार्थी का नाम' } },
+    required: true,
+    translations: { gu: { label: 'પ્રથમ નામ' }, hi: { label: 'प्रथम नाम' } },
   },
   {
-    code: 'INQUIRY_PARENT_NAME',
-    label: 'Parent/Guardian name',
+    bindingKey: 'Applicant.LastName',
+    label: 'Last name',
+    fieldType: 0,
+    required: false,
+    translations: { gu: { label: 'અટક' }, hi: { label: 'अंतिम नाम' } },
+  },
+  {
     bindingKey: 'Guardian.FirstName',
+    label: 'Parent name',
     fieldType: 0,
-    translations: {
-      gu: { label: 'માતા-પિતા/વાલીનું નામ' },
-      hi: { label: 'माता-पिता/अभिभावक का नाम' },
-    },
+    required: true,
+    translations: { gu: { label: 'માતા-પિતાનું નામ' }, hi: { label: 'माता-पिता का नाम' } },
   },
   {
-    code: 'INQUIRY_PARENT_MOBILE',
-    label: 'Parent/Guardian mobile',
     bindingKey: 'Guardian.Mobile',
+    label: 'Parent contact number',
     fieldType: 4,
+    required: true,
+    validationJson: JSON.stringify({ format: 'phone', phone: true, regex: '^[6-9][0-9]{9}$' }),
     translations: {
-      gu: { label: 'માતા-પિતા/વાલીનો મોબાઇલ નંબર' },
-      hi: { label: 'माता-पिता/अभिभावक का मोबाइल नंबर' },
+      gu: { label: 'માતા-પિતાનો સંપર્ક નંબર' },
+      hi: { label: 'माता-पिता का संपर्क नंबर' },
     },
   },
   {
-    code: 'INQUIRY_PRIMARY_CONTACT',
-    label: 'Primary contact',
-    bindingKey: 'Inquiry.ParentRelationship',
+    bindingKey: 'Guardian.Email',
+    label: 'Parent email',
+    fieldType: 3,
+    required: true,
+    translations: { gu: { label: 'માતા-પિતાનું ઇમેઇલ' }, hi: { label: 'माता-पिता का ईमेल' } },
+  },
+];
+const relationshipDefault: CoreDefinition = {
+  bindingKey: 'Inquiry.ParentRelationship',
+  label: 'Relationship to student',
+  fieldType: 6,
+  required: true,
+  optionsJson: relationshipOptions,
+  translations: { gu: { label: 'વિદ્યાર્થી સાથેનો સંબંધ' }, hi: { label: 'विद्यार्थी से संबंध' } },
+};
+const registrationDefaults: CoreDefinition[] = [
+  { bindingKey: 'Applicant.DateOfBirth', label: 'Date of birth', fieldType: 5, required: true },
+  {
+    bindingKey: 'Applicant.Gender',
+    label: 'Gender',
     fieldType: 6,
-    optionsJson: JSON.stringify([
-      { value: 'father', label: 'Father' },
-      { value: 'mother', label: 'Mother' },
-      { value: 'guardian', label: 'Guardian' },
-    ]),
-    translations: {
-      gu: { label: 'મુખ્ય સંપર્ક' },
-      hi: { label: 'मुख्य संपर्क' },
-    },
+    required: true,
+    optionsJson: JSON.stringify(
+      ['Male', 'Female', 'Other'].map((value) => ({ value, label: value }))
+    ),
   },
-] as const;
-
-const splitStudentDefault = {
-  code: 'INQUIRY_STUDENT_FIRST_NAME',
-  label: 'Student first name',
-  bindingKey: 'Applicant.FirstName',
-  fieldType: 0,
-  translations: {
-    gu: { label: 'વિદ્યાર્થીનું પ્રથમ નામ' },
-    hi: { label: 'विद्यार्थी का प्रथम नाम' },
-  },
-} as const;
-type DefaultDefinition = (typeof defaults)[number] | typeof splitStudentDefault;
-
-const definitionFor = (field: AdmissionFormField) =>
+];
+const definitionsFor = (purpose: number | undefined) =>
+  purpose === 0
+    ? [...identityDefaults, relationshipDefault]
+    : [...identityDefaults, ...registrationDefaults];
+const definitionFor = (purpose: number | undefined, field: AdmissionFormField) =>
   field.bindingType === 0
-    ? [...defaults, splitStudentDefault].find(
-        (definition) => definition.code === field.code && definition.bindingKey === field.bindingKey
+    ? definitionsFor(purpose).find(
+        (item) => item.bindingKey?.toLowerCase() === field.bindingKey?.toLowerCase()
       )
     : undefined;
 
 export const INQUIRY_FIELD_LOCK_HELP =
-  'Required for every inquiry. This field cannot be edited or removed from the form. Applicants can enter their details.';
+  'This core field stays on the form. You can change its label and translations, or move it to another always-visible section.';
 
-/** Reserved codes identify generated controls; authored Registration edits must stay editable. */
-function isPristineDefault(field: AdmissionFormField) {
-  const definition = definitionFor(field);
-  if (
-    !definition ||
-    field.label !== definition.label ||
-    field.fieldType !== definition.fieldType ||
-    !field.required ||
-    field.readOnly ||
-    field.inheritedFrom ||
-    [
-      field.placeholder,
-      field.helpText,
-      field.defaultValue,
-      field.visibilityRuleJson,
-      field.requiredRuleJson,
-    ].some((value) => value?.trim())
-  )
-    return false;
-  if ((field.optionsJson || '') !== ('optionsJson' in definition ? definition.optionsJson : ''))
-    return false;
-  try {
-    if (
-      !isEqual(
-        JSON.parse(field.validationJson || '{}'),
-        definition.fieldType === 4 ? { format: 'phone', phone: true } : {}
-      )
-    )
-      return false;
-  } catch {
-    return false;
-  }
-  return Object.entries(field.translations ?? {}).every(([language, translation]) =>
-    Object.entries(translation ?? {})
-      .filter(
-        ([, value]) =>
-          value != null &&
-          value !== '' &&
-          !(typeof value === 'object' && Object.keys(value).length === 0)
-      )
-      .every(
-        ([key, value]) =>
-          key === 'label' && value === definition.translations[language as 'gu' | 'hi']?.label
-      )
-  );
-}
-
-export const isLockedInquiryField = (purpose: number | undefined, field: AdmissionFormField) =>
-  purpose === 0 && isPristineDefault(field);
-
+/** Versioned form metadata and canonical bindings own locks; labels and codes never do. */
+export const isLockedInquiryField = (
+  purpose: number | undefined,
+  field: AdmissionFormField,
+  policyVersion?: number | null
+) =>
+  policyVersion === ADMISSION_CORE_FIELD_POLICY_VERSION &&
+  Boolean(definitionFor(purpose, field)) &&
+  !field.inheritedFrom;
 export const hasLockedInquiryFields = (
   purpose: number | undefined,
-  sections: readonly Pick<AdmissionFormSection, 'fields'>[]
+  sections: readonly Pick<AdmissionFormSection, 'fields'>[],
+  policyVersion?: number | null
 ) =>
-  sections.some((section) => section.fields.some((field) => isLockedInquiryField(purpose, field)));
-
+  sections.some((section) =>
+    section.fields.some((field) => isLockedInquiryField(purpose, field, policyVersion))
+  );
 export const hasOnlyInquiryDefaults = (form: CreateUpdateAdmissionForm) => {
   const fields = form.sections.flatMap((section) => section.fields);
-  return (fields.length === 3 || fields.length === 4) && fields.every(isPristineDefault);
+  return (
+    fields.length === definitionsFor(form.purpose).length &&
+    fields.every((field) => isUneditedDefault(form, field))
+  );
 };
-
 export const withoutInquiryDefaults = (form: CreateUpdateAdmissionForm) => ({
   ...form,
   sections: form.sections.map((section) => ({
     ...section,
-    fields: section.fields.filter((field) => !isPristineDefault(field)),
+    fields: section.fields.filter((field) => !isUneditedDefault(form, field)),
   })),
 });
 
-/** System-owned controls keep language switching available even though their settings are locked. */
+/** Dirty-draft comparison is independent of permanent structural ownership. */
+function isUneditedDefault(form: CreateUpdateAdmissionForm, field: AdmissionFormField) {
+  const definition = definitionFor(form.purpose, field);
+  return (
+    isLockedInquiryField(form.purpose, field, form.coreFieldPolicyVersion) &&
+    field.label === definition?.label &&
+    isEqual(field.translations ?? {}, definition?.translations ?? {})
+  );
+}
+
+/** Existing saved forms, including their authored translations, are read without repair. */
 export function withInquiryDefaultTranslations(
   form: CreateUpdateAdmissionForm
 ): CreateUpdateAdmissionForm {
-  if (form.purpose !== 0) return form;
-  return {
-    ...form,
-    sections: form.sections.map((section) => ({
-      ...section,
-      fields: section.fields.map((field) => {
-        const definition = definitionFor(field);
-        return definition
-          ? { ...field, translations: { ...definition.translations, ...field.translations } }
-          : field;
-      }),
-    })),
-  };
+  return form;
 }
 
 const createDefault = (
-  definition: DefaultDefinition,
+  definition: CoreDefinition,
   sectionId: string,
   displayOrder: number
 ): AdmissionFormField => ({
@@ -172,114 +147,176 @@ const createDefault = (
   id: crypto.randomUUID(),
   sectionId,
   displayOrder,
+  code: definition.bindingKey!.replaceAll('.', '_').toUpperCase(),
   bindingType: 0,
-  required: true,
   readOnly: false,
-  ...(definition.fieldType === 4
-    ? { validationJson: JSON.stringify({ format: 'phone', phone: true }) }
-    : {}),
 });
 
-/** Only new-form materialization calls this; saved definitions are never repaired on read. */
+/** Only fresh materialization calls this. Historical definitions and answers are untouched. */
 export function ensureNewInquiryDefaults(
   form: CreateUpdateAdmissionForm
 ): CreateUpdateAdmissionForm {
-  if (form.purpose !== 0) return form;
-  const fields = form.sections.flatMap((section) => section.fields);
-  const bindings = new Set(fields.map(canonicalInquiryBinding));
-  const hasParentPair = ['Father', 'Mother'].some(
-    (prefix) => bindings.has(`${prefix}.Name`) && bindings.has(`${prefix}.Mobile`)
+  const inherited = form.purpose === 1 && form.inheritance?.enabled;
+  const definitions = inherited ? registrationDefaults : definitionsFor(form.purpose);
+  const hasSplitName = form.sections.some((section) =>
+    section.fields.some(
+      (field) => field.bindingType === 0 && field.bindingKey === 'Applicant.FirstName'
+    )
   );
-  const missing = defaults.filter((definition) => {
-    if (definition.bindingKey === 'Applicant.Name')
-      return !bindings.has('Applicant.Name') && !bindings.has('Applicant.FirstName');
-    if (hasParentPair && !bindings.has('Guardian.FirstName') && !bindings.has('Guardian.Mobile'))
-      return false;
-    return !bindings.has(definition.bindingKey);
-  });
-  if (!missing.length) return form;
-  const target = form.sections.find(
-    (section) =>
-      !section.isRepeatable &&
-      !section.visibilityRuleJson?.trim() &&
-      !section.stepVisibilityRuleJson?.trim()
+  const next: CreateUpdateAdmissionForm = {
+    ...form,
+    coreFieldPolicyVersion: ADMISSION_CORE_FIELD_POLICY_VERSION,
+    sections: form.sections.map((section) => ({
+      ...section,
+      fields: section.fields
+        .filter(
+          (field) =>
+            inherited ||
+            field.bindingType !== 0 ||
+            !(
+              (field.bindingKey === 'Applicant.Name' && hasSplitName) ||
+              (form.purpose === 0 && field.bindingKey === 'Guardian.Relationship')
+            )
+        )
+        .map((original) => {
+          const field =
+            !inherited && original.bindingType === 0 && original.bindingKey === 'Applicant.Name'
+              ? { ...original, bindingKey: 'Applicant.FirstName', label: 'First name' }
+              : original;
+          const definition = definitions.find(
+            (item) => field.bindingType === 0 && item.bindingKey === field.bindingKey
+          );
+          return definition && !field.inheritedFrom
+            ? {
+                ...field,
+                fieldType: definition.fieldType,
+                required: definition.required,
+                readOnly: false,
+                visibilityRuleJson: undefined,
+                requiredRuleJson: undefined,
+                defaultValue: undefined,
+                optionsJson: definition.optionsJson,
+                validationJson: definition.validationJson,
+                label: form.coreFieldPolicyVersion === 1 ? field.label : definition.label,
+                translations: { ...definition.translations, ...field.translations },
+              }
+            : field;
+        }),
+    })),
+  };
+  const fields = next.sections.flatMap((section) => section.fields);
+  const missing = definitions.filter(
+    (definition) =>
+      !fields.some((field) => field.bindingType === 0 && field.bindingKey === definition.bindingKey)
   );
+  const safeSection = (section: AdmissionFormSection) =>
+    !section.isRepeatable &&
+    !section.visibilityRuleJson?.trim() &&
+    !section.stepVisibilityRuleJson?.trim();
+  const displaced = next.sections
+    .filter((section) => !safeSection(section))
+    .flatMap((section) =>
+      section.fields.filter(
+        (field) =>
+          !field.inheritedFrom &&
+          field.bindingType === 0 &&
+          definitions.some((definition) => definition.bindingKey === field.bindingKey)
+      )
+    );
+  if (!missing.length && !displaced.length) return next;
+  const displacedIds = new Set(displaced.map((field) => field.id));
+  const target = next.sections.find(safeSection);
+  const usedSectionCodes = new Set(next.sections.map((section) => section.code));
+  let sectionCode = 'CORE_DETAILS';
+  for (let suffix = 2; usedSectionCodes.has(sectionCode); suffix += 1)
+    sectionCode = `CORE_DETAILS_${suffix}`;
   const section: AdmissionFormSection = target ?? {
     id: crypto.randomUUID(),
-    code: 'INQUIRY_IDENTITY',
-    name: 'Inquiry details',
-    displayOrder: form.sections.length,
+    code: sectionCode,
+    name: form.purpose === 0 ? 'Inquiry details' : 'Student details',
+    displayOrder: next.sections.length,
     fields: [],
   };
-  const start = Math.max(-1, ...fields.map((field) => field.displayOrder)) + 1;
-  const next = {
+  const usedCodes = new Set(fields.map((field) => field.code.toUpperCase()));
+  const additions = missing.map((definition, index) => {
+    const field = createDefault(
+      definition,
+      section.id,
+      section.fields.length + displaced.length + index
+    );
+    const baseCode = field.code;
+    for (let suffix = 2; usedCodes.has(field.code); suffix += 1)
+      field.code = `${baseCode}_${suffix}`;
+    usedCodes.add(field.code);
+    return field;
+  });
+  const updated = {
     ...section,
     fields: [
       ...section.fields,
-      ...missing.map((definition, index) =>
-        createDefault(
-          definition.bindingKey === 'Applicant.Name' &&
-            (bindings.has('Applicant.MiddleName') || bindings.has('Applicant.LastName'))
-            ? splitStudentDefault
-            : definition,
-          section.id,
-          start + index
-        )
-      ),
+      ...displaced.map((field, index) => ({
+        ...field,
+        sectionId: section.id,
+        displayOrder: section.fields.length + index,
+      })),
+      ...additions,
     ],
   };
   return {
-    ...form,
-    sections: target
-      ? form.sections.map((item) => (item.id === target.id ? next : item))
-      : [...form.sections, next],
+    ...next,
+    sections: [
+      ...next.sections.map((item) =>
+        item.id === section.id
+          ? updated
+          : { ...item, fields: item.fields.filter((field) => !displacedIds.has(field.id)) }
+      ),
+      ...(target ? [] : [updated]),
+    ],
   };
 }
-
-/** Starter fields are new, so their fixed identity controls can receive the reserved codes. */
-export function lockNewInquiryStarter(form: CreateUpdateAdmissionForm): CreateUpdateAdmissionForm {
-  if (form.purpose !== 0) return form;
+export const lockNewInquiryStarter = ensureNewInquiryDefaults;
+export function changeNewFormInheritance(form: CreateUpdateAdmissionForm, enabled: boolean) {
+  const next = { ...form, inheritance: { enabled, sources: form.inheritance?.sources ?? [] } };
+  if (form.coreFieldPolicyVersion !== ADMISSION_CORE_FIELD_POLICY_VERSION) return next;
   return ensureNewInquiryDefaults({
-    ...form,
-    sections: form.sections.map((section) => ({
+    ...next,
+    sections: next.sections.map((section) => ({
       ...section,
-      fields: section.fields.map((field) => {
-        const definition = defaults.find(
-          (item) => item.bindingKey === canonicalInquiryBinding(field)
-        );
-        return definition
-          ? { ...field, ...createDefault(definition, section.id, field.displayOrder), id: field.id }
-          : field;
-      }),
+      fields: enabled
+        ? section.fields.filter(
+            (field) =>
+              field.bindingType !== 0 ||
+              !identityDefaults.some((item) => item.bindingKey === field.bindingKey)
+          )
+        : section.fields,
     })),
   });
 }
-
 export function changeNewFormPurpose(
   form: CreateUpdateAdmissionForm,
   purpose: CreateUpdateAdmissionForm['purpose']
 ) {
+  const base = hasOnlyInquiryDefaults(form) ? withoutInquiryDefaults(form) : form;
   const next = {
-    ...(form.purpose === 0 && purpose === 1 && hasOnlyInquiryDefaults(form)
-      ? withoutInquiryDefaults(form)
-      : form),
+    ...base,
     purpose,
+    sections: base.sections.map((section) => ({
+      ...section,
+      fields: section.fields.filter(
+        (field) =>
+          !(purpose === 1 && field.bindingType === 0 && field.bindingKey?.startsWith('Inquiry.'))
+      ),
+    })),
   };
   return ensureNewInquiryDefaults(next);
 }
-
 export function conflictsWithInquiryDefaultName(form: CreateUpdateAdmissionForm, binding?: string) {
   return Boolean(
-    binding &&
+    binding === 'Applicant.Name' &&
+    form.coreFieldPolicyVersion === 1 &&
     form.sections.some((section) =>
       section.fields.some(
-        (field) =>
-          isLockedInquiryField(form.purpose, field) &&
-          (field.bindingKey === 'Applicant.Name'
-            ? ['Applicant.FirstName', 'Applicant.MiddleName', 'Applicant.LastName'].includes(
-                binding
-              )
-            : field.bindingKey === 'Applicant.FirstName' && binding === 'Applicant.Name')
+        (field) => field.bindingType === 0 && field.bindingKey === 'Applicant.FirstName'
       )
     )
   );

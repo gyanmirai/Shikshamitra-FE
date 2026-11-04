@@ -51,7 +51,7 @@ export function ReviewCorrectionDialog({
   const busy = formik.isSubmitting || recovery.reloading;
   return (
     <ReviewDialog
-      title="Request application corrections"
+      title="Request Application Corrections"
       dirty={formik.dirty}
       busy={busy}
       onClose={onClose}
@@ -65,7 +65,7 @@ export function ReviewCorrectionDialog({
             onClick={() => formik.handleSubmit()}
             disabled={busy || !summary.canRequestCorrection}
           >
-            {formik.isSubmitting ? 'Saving…' : 'Request corrections'}
+            {formik.isSubmitting ? 'Saving…' : 'Request Corrections'}
           </Button>
         </DialogActions>
       )}
@@ -96,7 +96,7 @@ export function ReviewCorrectionDialog({
             size="small"
             multiline
             minRows={3}
-            label="Correction instructions *"
+            label="Correction Instructions *"
             {...formik.getFieldProps('reason')}
             disabled={busy}
             error={Boolean(formik.touched.reason && formik.errors.reason)}

@@ -32,7 +32,7 @@ describe('Applicant 360 presentation model', () => {
     expect(getApplicantName(applicant360)).toBe('Raj Patel');
     expect(getApplicantMissingDetails(applicant360)).toEqual(['date of birth', 'gender']);
     expect(getApplicantJourneyState(applicant360.applications)).toMatchObject({
-      label: 'Application not started',
+      label: 'Application Not Started',
       description: 'Confirm inquiry interest before starting an application',
     });
   });
@@ -51,7 +51,7 @@ describe('Applicant 360 presentation model', () => {
 
     expect(getCurrentStage(application)).toMatchObject({ code: 'REVIEW', name: 'Review' });
     expect(getApplicantJourneyState([application])).toMatchObject({
-      label: 'In review',
+      label: 'In Review',
       description: 'Review',
     });
   });
@@ -83,7 +83,7 @@ describe('Applicant 360 presentation model', () => {
         description: 'Inquiry marked as contacted',
         occurredAt: '2026-09-18T08:00:00Z',
       })
-    ).toMatchObject({ title: 'Family contact recorded', color: 'success' });
+    ).toMatchObject({ title: 'Family Contact Recorded', color: 'success' });
 
     expect(
       getActivityPresentation({

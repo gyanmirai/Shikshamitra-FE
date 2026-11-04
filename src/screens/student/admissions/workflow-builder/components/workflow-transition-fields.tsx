@@ -58,7 +58,7 @@ export function WorkflowTransitionFields({
   const conditionLabel =
     conditionFields.find((field) => field.value === formik.values.conditionField)?.label ||
     formik.values.conditionField ||
-    'the selected field';
+    'The Selected Field';
   const assessment =
     from?.stageType === 2 &&
     readAdmissionAssessmentPolicy(from.configurationJson)?.enabled === true;
@@ -71,7 +71,7 @@ export function WorkflowTransitionFields({
     (!documents || !isDocumentOutcomeCondition(formik.values));
   if (simpleNextStep) {
     return (
-      <Scrollbar role="region" aria-label="Next-step configuration" sx={{ flex: 1, minHeight: 0 }}>
+      <Scrollbar role="region" aria-label="Next-Step Configuration" sx={{ flex: 1, minHeight: 0 }}>
         <Stack spacing={2} sx={{ p: 2 }}>
           {formik.status && (
             <StudentFeedback notificationKey="STU-0589" presentation="persistent" severity="error">
@@ -82,12 +82,12 @@ export function WorkflowTransitionFields({
             <Typography variant="caption" color="text.secondary">
               After
             </Typography>
-            <Typography variant="subtitle2">{from?.name ?? 'Current stage'}</Typography>
+            <Typography variant="subtitle2">{from?.name ?? 'Current Stage'}</Typography>
           </Stack>
           <WorkflowTransitionStageSelect
             formik={formik}
             field="toStageId"
-            label="Continue to *"
+            label="Continue To *"
             stages={stages}
             readOnly={readOnly}
           />
@@ -95,15 +95,15 @@ export function WorkflowTransitionFields({
             {formik.values.hasCondition
               ? `Saved path: ${getTransitionSummary(formik.values)}. Existing special paths remain read-only.`
               : assessment
-                ? 'Passed or waived applicants follow this next step. Failed, absent or retake outcomes stay at Assessment; staff can arrange an allowed retake or end the journey as Withdrawn.'
-                : 'The applicant follows this next step after the stage completion requirements are met.'}
+                ? 'Passed or Waived Applicants Follow This Next Step. Failed, Absent or Retake Outcomes Stay at Assessment; Staff Can Arrange an Allowed Retake or End the Journey as Withdrawn.'
+                : 'The Applicant Follows This Next Step After the Stage Completion Requirements Are Met.'}
           </Typography>
         </Stack>
       </Scrollbar>
     );
   }
   return (
-    <Scrollbar role="region" aria-label="Next-step configuration" sx={{ flex: 1, minHeight: 0 }}>
+    <Scrollbar role="region" aria-label="Next-Step Configuration" sx={{ flex: 1, minHeight: 0 }}>
       <Stack spacing={2} sx={{ p: 2 }}>
         {(!from ||
           !isApplicationStageType(from.stageType) ||
@@ -124,13 +124,13 @@ export function WorkflowTransitionFields({
             <Typography variant="caption" color="text.secondary">
               After
             </Typography>
-            <Typography variant="subtitle2">{from?.name ?? 'Current stage'}</Typography>
+            <Typography variant="subtitle2">{from?.name ?? 'Current Stage'}</Typography>
           </Stack>
         ) : (
           <WorkflowTransitionStageSelect
             formik={formik}
             field="fromStageId"
-            label="From stage *"
+            label="From Stage *"
             stages={stages}
             readOnly={readOnly}
           />
@@ -138,7 +138,7 @@ export function WorkflowTransitionFields({
         <WorkflowTransitionStageSelect
           formik={formik}
           field="toStageId"
-          label="Continue to *"
+          label="Continue To *"
           stages={stages}
           readOnly={readOnly}
         />
@@ -160,7 +160,7 @@ export function WorkflowTransitionFields({
                   })
                 }
               >
-                Replace inquiry condition
+                Replace Inquiry Condition
               </Button>
             )}
           </Stack>
@@ -172,12 +172,12 @@ export function WorkflowTransitionFields({
           <CustomSelect
             size="small"
             fullWidth
-            label="When to continue"
+            label="When to Continue"
             disabled={readOnly}
             value={formik.values.hasCondition ? 'special' : 'usual'}
             options={[
-              { value: 'usual', label: 'Usual next step' },
-              { value: 'special', label: 'Only when a condition matches' },
+              { value: 'usual', label: 'Usual Next Step' },
+              { value: 'special', label: 'Only When a Condition Matches' },
             ]}
             onChange={(value) =>
               formik.setValues({
@@ -191,7 +191,7 @@ export function WorkflowTransitionFields({
         {showCondition ? (
           <>
             {formsLoading && (
-              <Typography variant="caption">Loading published form answers…</Typography>
+              <Typography variant="caption">Loading Published Form Answers…</Typography>
             )}
             {formsError && (
               <StudentFeedback
@@ -220,14 +220,14 @@ export function WorkflowTransitionFields({
           </StudentFeedback>
         ) : null}
         <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>
-          After {from?.name ?? 'this stage'} is complete, continue to{' '}
+          After {from?.name ?? 'This Stage'} Is Complete, Continue To{' '}
           {stages.find((stage) => stage.id === formik.values.toStageId)?.name ??
-            'the selected stage'}
+            'The Selected Stage'}
           {formik.values.hasCondition
             ? formik.values.preserveCondition
-              ? ' when the saved advanced condition matches.'
+              ? ' When the Saved Advanced Condition Matches.'
               : ` when ${conditionLabel} ${ROUTE_OPERATOR_LABELS[formik.values.conditionOperator] ?? formik.values.conditionOperator}${['IsEmpty', 'IsNotEmpty'].includes(formik.values.conditionOperator) ? '' : ` ${formik.values.conditionValue || 'the selected value'}`}.`
-            : ' when no special condition matches.'}
+            : ' When No Special Condition Matches.'}
         </Typography>
         {formik.values.hasCondition &&
           (competingPaths > 0 ||
@@ -240,14 +240,14 @@ export function WorkflowTransitionFields({
               sx={{ border: 1, borderColor: 'divider' }}
             >
               <AccordionSummary expandIcon={<Iconify icon="mdi:chevron-down" />}>
-                <Typography variant="subtitle2">Advanced route order</Typography>
+                <Typography variant="subtitle2">Advanced Route Order</Typography>
               </AccordionSummary>
               <AccordionDetails>
                 <TextField
                   fullWidth
                   size="small"
                   type="number"
-                  label="Route order *"
+                  label="Route Order *"
                   disabled={readOnly}
                   {...formik.getFieldProps('priority')}
                   error={formik.touched.priority && Boolean(formik.errors.priority)}

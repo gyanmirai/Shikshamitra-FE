@@ -63,7 +63,7 @@ export function FieldVisibilitySettings({ formik, sectionIndex, fieldIndex }: Fi
           size="small"
           multiline
           minRows={2}
-          label="Compatibility rule"
+          label="Compatibility Rule"
           value={field.visibilityRuleJson ?? ''}
           onChange={(event) =>
             formik.setFieldValue(`${path}.visibilityRuleJson`, event.target.value || undefined)
@@ -86,7 +86,7 @@ export function FieldVisibilitySettings({ formik, sectionIndex, fieldIndex }: Fi
               )
             }
           >
-            Replace with simple condition
+            Replace with Simple Condition
           </Button>
           <Button
             size="small"
@@ -94,7 +94,7 @@ export function FieldVisibilitySettings({ formik, sectionIndex, fieldIndex }: Fi
             startIcon={<Iconify icon="mdi:close" />}
             onClick={() => formik.setFieldValue(`${path}.visibilityRuleJson`, undefined)}
           >
-            Clear rule
+            Clear Rule
           </Button>
         </Stack>
       </Stack>
@@ -108,12 +108,12 @@ export function FieldVisibilitySettings({ formik, sectionIndex, fieldIndex }: Fi
     <Stack spacing={1.5}>
       <CustomSelect
         size="small"
-        label="Show field when"
+        label="Show Field When"
         value={rule?.field ?? ALWAYS_VISIBLE}
         options={[
-          { value: ALWAYS_VISIBLE, label: 'Always visible' },
+          { value: ALWAYS_VISIBLE, label: 'Always Visible' },
           ...(currentFieldIsMissing
-            ? [{ value: rule?.field ?? '', label: `${rule?.field} (field not found)` }]
+            ? [{ value: rule?.field ?? '', label: `${rule?.field} (Field Not Found)` }]
             : []),
           ...otherFields.map((item) => ({ value: item.code, label: item.label })),
         ]}
@@ -132,7 +132,7 @@ export function FieldVisibilitySettings({ formik, sectionIndex, fieldIndex }: Fi
             <TextField
               fullWidth
               size="small"
-              label="Answer to match"
+              label="Answer to Match"
               value={String(rule.value ?? '')}
               onChange={(event) => updateRule({ value: event.target.value })}
             />
@@ -144,7 +144,7 @@ export function FieldVisibilitySettings({ formik, sectionIndex, fieldIndex }: Fi
             onClick={() => formik.setFieldValue(`${path}.visibilityRuleJson`, undefined)}
             sx={{ alignSelf: 'flex-start', minHeight: 44 }}
           >
-            Clear condition
+            Clear Condition
           </Button>
         </>
       )}

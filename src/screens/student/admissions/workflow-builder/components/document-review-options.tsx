@@ -15,12 +15,12 @@ export function DocumentReviewOptions({
   return (
     <FormSectionCard
       icon="mdi:shield-check-outline"
-      title="Review and exceptions"
-      descriptionTooltip="Staff permissions control who can collect, review or waive evidence. Waivers require an authorized staff member and a recorded reason."
+      title="Review and Exceptions"
+      descriptionTooltip="Staff Permissions Control Who Can Collect, Review or Waive Evidence. Waivers Require an Authorized Staff Member and a Recorded Reason."
     >
       <Stack spacing={1}>
         <FormControlLabel
-          label="Require a different staff member to review"
+          label="Require a Different Staff Member to Review"
           control={
             <Switch
               size="small"
@@ -31,7 +31,7 @@ export function DocumentReviewOptions({
           }
         />
         <FormControlLabel
-          label="Allow authorized waivers with a reason"
+          label="Allow Authorized Waivers with a Reason"
           control={
             <Switch
               size="small"

@@ -140,15 +140,15 @@ export default function AdmissionInquiryFormPage() {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: 1, minHeight: 0 }}>
       <CustomBreadcrumbs
-        heading="New inquiry"
-        description="Choose an offering and capture the family's details to create an inquiry."
+        heading="Inquiry"
+        description="Choose an Offering and Capture the Family's Details to Create an Inquiry."
         isBack
         onBack={handleCancel}
         links={[
           { name: 'Student', href: studentPaths.dashboard },
           { name: 'Admissions', href: studentPaths.enrollment.root },
           { name: 'Inquiries', href: studentPaths.enrollment.inquiries },
-          { name: 'New inquiry' },
+          { name: 'Inquiry' },
         ]}
       />
       <Paper
@@ -167,13 +167,13 @@ export default function AdmissionInquiryFormPage() {
           bgcolor: 'background.paper',
         }}
       >
-        {controller.offeringsLoading && <LinearProgress aria-label="Loading admission offerings" />}
+        {controller.offeringsLoading && <LinearProgress aria-label="Loading Admission Offerings" />}
         <FormFieldSpacing
           role="region"
-          aria-label="Inquiry form fields"
+          aria-label="Inquiry Form Fields"
           sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: { xs: 1.5, sm: 2 } }}
         >
-          <FormBusyRegion busy={controller.busy} label="Saving inquiry…">
+          <FormBusyRegion busy={controller.busy} label="Saving Inquiry…">
             <Stack spacing={2}>
               {controller.offeringsError && !hierarchySelected && (
                 <StudentFeedback
@@ -231,7 +231,7 @@ export default function AdmissionInquiryFormPage() {
                     required
                     fullWidth
                     size="small"
-                    label="Admission period"
+                    label="Admission Period"
                     value={formik.values.admissionCycleId ?? ''}
                     disabled={controller.busy || controller.academicLoading}
                     error={Boolean(
@@ -389,7 +389,7 @@ export default function AdmissionInquiryFormPage() {
                   supportedLanguages.length > 1 && (
                     <CustomSelect
                       size="small"
-                      label="Form language"
+                      label="Form Language"
                       value={language}
                       options={supportedLanguages.map((code) => ({
                         value: code,
@@ -411,7 +411,7 @@ export default function AdmissionInquiryFormPage() {
                       sx={{ gridColumn: '1 / -1' }}
                     >
                       {controller.noOfferingReason ||
-                        'No inquiry offering is available for the selected class and admission period.'}
+                        'No Inquiry Offering Is Available for the Selected Class and Admission Period.'}
                     </StudentFeedback>
                   )}
                 {hierarchySelected && !controller.offeringsLoading && controller.offeringsError && (
@@ -436,7 +436,7 @@ export default function AdmissionInquiryFormPage() {
                       sx={{ gridColumn: '1 / -1' }}
                     >
                       {controller.unavailableReason ||
-                        'Admission is not open for the selected class.'}
+                        'Admission Is Not Open for the Selected Class.'}
                     </StudentFeedback>
                   )}
                 {controller.classCapacity &&
@@ -457,19 +457,19 @@ export default function AdmissionInquiryFormPage() {
                       }}
                     >
                       {controller.classCapacity.capacity == null
-                        ? 'Admission room capacity is not set. Division seats are checked during onboarding. You can continue this inquiry.'
+                        ? 'Admission Room Capacity Is Not Set. Division Seats Are Checked During Onboarding. You Can Continue This Inquiry.'
                         : `${controller.classCapacity.remainingSeats} of ${controller.classCapacity.capacity} admission room seats available.`}
                       {controller.classCapacity.isFull &&
                         (controller.canCreateInquiry
                           ? ` ${controller.unavailableReason || 'The configured admission capacity rules allow this inquiry. Division allocation is checked during onboarding.'}`
-                          : ' Capacity is full and this offering does not accept further inquiries.')}
+                          : ' Capacity Is Full and This Offering Does Not Accept Further Inquiries.')}
                     </StudentFeedback>
                   )}
               </InquiryFormSection>
 
               {controller.runtimeLoading && (
                 <InquiryFormSection
-                  title="Inquiry form"
+                  title="Inquiry Form"
                   description="Loading fields for the selected offering."
                 >
                   {Array.from({ length: 6 }, (_, index) => (
@@ -501,7 +501,7 @@ export default function AdmissionInquiryFormPage() {
                     key={section.id}
                     title={section.name}
                     icon={GlobalIcons.admissionStudent}
-                    descriptionTooltip={`Enter the ${section.name.toLocaleLowerCase()} requested by this inquiry form.`}
+                    descriptionTooltip={`Enter The ${section.name.toLocaleLowerCase()} Requested by This Inquiry Form.`}
                   >
                     <AdmissionSectionFields
                       columns={2}
@@ -602,7 +602,7 @@ export default function AdmissionInquiryFormPage() {
 
         <Stack
           component="footer"
-          aria-label="Inquiry form actions"
+          aria-label="Inquiry Form Actions"
           direction="row"
           justifyContent="flex-end"
           spacing={1}
@@ -641,7 +641,7 @@ export default function AdmissionInquiryFormPage() {
             loading={controller.busy}
             startIcon={<Iconify icon="mdi:account-plus-outline" />}
           >
-            Create inquiry
+            Create Inquiry
           </LoadingButton>
         </Stack>
       </Paper>

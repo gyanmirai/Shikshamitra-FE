@@ -140,14 +140,14 @@ export function WorkflowStandardTemplateDialog({
               Choose a Workflow Template
             </Typography>
             <CustomTooltip
-              title="Replace this draft’s journey and select the published forms it uses."
+              title="Replace This Draft’s Journey and Select the Published Forms It Uses."
               arrow
               placement={isMobile ? 'bottom' : 'right'}
             >
               <IconButton
                 size="small"
                 color="info"
-                aria-label="Workflow template information"
+                aria-label="Workflow Template Information"
                 sx={{ width: 44, height: 44, flexShrink: 0 }}
               >
                 <Iconify icon="mdi:information-outline" width={18} />
@@ -156,7 +156,7 @@ export function WorkflowStandardTemplateDialog({
           </Stack>
           <IconButton
             size="small"
-            aria-label="Close workflow template"
+            aria-label="Close Workflow Template"
             onClick={() => requestExit('close')}
             sx={{ width: 44, height: 44, flexShrink: 0 }}
           >
@@ -191,7 +191,7 @@ export function WorkflowStandardTemplateDialog({
                 keep the change.
               </StudentFeedback>
             )}
-            <FormSectionCard icon="mdi:sitemap-outline" title="Starting journey">
+            <FormSectionCard icon="mdi:sitemap-outline" title="Starting Journey">
               <Stack spacing={2}>
                 <WorkflowTemplateSelector
                   value={formik.values.templateId}
@@ -199,15 +199,15 @@ export function WorkflowStandardTemplateDialog({
                   columns={1}
                 />
                 <CustomAccordion
-                  title="Preview selected journey"
+                  title="Preview Selected Journey"
                   expanded={previewOpen.value}
                   onChange={previewOpen.onToggle}
                   content={
                     <Stack spacing={1.5}>
                       <Stack direction="row" spacing={0.75}>
-                        <Label variant="outlined">{selectedTemplate.stages.length} stages</Label>
+                        <Label variant="outlined">{selectedTemplate.stages.length} Stages</Label>
                         <Label variant="outlined">
-                          {Math.max(selectedTemplate.stages.length - 1, 0)} routes
+                          {Math.max(selectedTemplate.stages.length - 1, 0)} Routes
                         </Label>
                       </Stack>
                       {selectedTemplate.inquiryLinked && <WorkflowInquiryContext />}
@@ -221,10 +221,10 @@ export function WorkflowStandardTemplateDialog({
                 />
               </Stack>
             </FormSectionCard>
-            <FormSectionCard icon="mdi:form-select" title="Published forms">
+            <FormSectionCard icon="mdi:form-select" title="Published Forms">
               <Stack spacing={2}>
                 <AdmissionDefinitionSelect
-                  label="Published inquiry form (optional)"
+                  label="Published Inquiry Form (Optional)"
                   valueId={formik.values.inquiryFormDefinitionId}
                   initialOption={initialInquiryForm}
                   fetchOptions={fetchInquiryForms}
@@ -238,7 +238,7 @@ export function WorkflowStandardTemplateDialog({
                   )}
                 >
                   <AdmissionDefinitionSelect
-                    label="Published registration form *"
+                    label="Published Registration Form *"
                     valueId={formik.values.registrationFormDefinitionId}
                     initialOption={initialRegistrationForm}
                     fetchOptions={fetchRegistrationForms}
@@ -286,18 +286,18 @@ export function WorkflowStandardTemplateDialog({
             startIcon={<Iconify icon="mdi:auto-fix" />}
             onClick={() => formik.handleSubmit()}
           >
-            Replace journey
+            Replace Journey
           </Button>
         </Stack>
       </Drawer>
       <ConfirmDialog
         open={discardAction !== null}
         onClose={() => setDiscardAction(null)}
-        title="Discard template selections?"
+        title="Discard Template Selections?"
         content="Your template and form selections will be lost."
         action={
           <Button size="small" color="error" variant="contained" onClick={discardAndExit}>
-            Discard selections
+            Discard Selections
           </Button>
         }
       />

@@ -17,17 +17,17 @@ export function ReviewTimingSettings({
   return (
     <FormSectionCard
       icon="mdi:clock-outline"
-      title="Advanced settings"
-      descriptionTooltip="Set a due date and show overdue status in the review queue."
+      title="Advanced Settings"
+      descriptionTooltip="Set a Due Date and Show Overdue Status in the Review Queue."
     >
       <CustomAccordion
-        title="Review timing"
+        title="Review Timing"
         expanded={timing.value || invalid}
         onChange={timing.onToggle}
         content={
           <Stack spacing={1.5}>
             <FormControlLabel
-              label="Set a review due date"
+              label="Set a Review Due Date"
               control={
                 <Switch
                   size="small"
@@ -42,7 +42,7 @@ export function ReviewTimingSettings({
                 fullWidth
                 size="small"
                 type="number"
-                label="Days after entering Review *"
+                label="Days After Entering Review *"
                 value={value}
                 disabled={disabled}
                 error={invalid}

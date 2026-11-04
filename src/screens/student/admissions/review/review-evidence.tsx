@@ -5,7 +5,7 @@ import { Chip, Stack, Typography } from '@mui/material';
 export function ReviewEvidence({ items }: { items: Evidence[] }) {
   return (
     <Stack spacing={1}>
-      <Typography variant="subtitle2">Evidence for this review</Typography>
+      <Typography variant="subtitle2">Evidence for This Review</Typography>
       {!items.length && (
         <Typography variant="body2" color="text.secondary">
           No prior stage requirements were configured.
@@ -32,10 +32,10 @@ export function ReviewEvidence({ items }: { items: Evidence[] }) {
               color={item.isStale ? 'warning' : item.passed ? 'success' : 'default'}
               label={
                 item.isStale
-                  ? 'Changed · recheck needed'
+                  ? 'Changed · Recheck Needed'
                   : item.passed
-                    ? 'Requirement met'
-                    : 'Needs attention'
+                    ? 'Requirement Met'
+                    : 'Needs Attention'
               }
             />
           </Stack>

@@ -95,7 +95,7 @@ describe('WorkflowBuilderCanvas', () => {
     };
     const stages = [decision, form, assessment];
     render(<Canvas stages={stages} />, { wrapper: Wrapper });
-    const sequence = screen.getByRole('list', { name: 'Journey stage sequence' });
+    const sequence = screen.getByRole('list', { name: 'Journey Stage Sequence' });
     const cards = within(sequence).getAllByRole('listitem');
     expect(cards.map((card) => within(card).getByRole('heading').textContent)).toEqual([
       assessment.name,
@@ -125,13 +125,13 @@ describe('WorkflowBuilderCanvas', () => {
     };
     render(<Canvas stages={[stage, next]} transitions={[special]} />, { wrapper: Wrapper });
     expect(
-      await screen.findByRole('button', { name: 'View route to Next stage' })
+      await screen.findByRole('button', { name: 'View Route To Next stage' })
     ).toBeInTheDocument();
     expect(
-      screen.queryByRole('button', { name: 'Edit route to Next stage' })
+      screen.queryByRole('button', { name: 'Edit Route To Next stage' })
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole('button', { name: 'Remove route to Next stage' })
+      screen.queryByRole('button', { name: 'Remove Route To Next stage' })
     ).not.toBeInTheDocument();
   });
   it('removes special outcome actions from connected stage cards and their menus', async () => {
@@ -146,17 +146,17 @@ describe('WorkflowBuilderCanvas', () => {
     render(<Canvas stages={[stage, next]} transitions={[usual]} />, { wrapper: Wrapper });
     expect(screen.queryByRole('button', { name: 'Add special outcome' })).not.toBeInTheDocument();
     expect(
-      await screen.findByRole('button', { name: 'Edit route to Next stage' })
+      await screen.findByRole('button', { name: 'Edit Route To Next stage' })
     ).toBeInTheDocument();
     expect(screen.queryByRole('menuitem', { name: 'Add special outcome' })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Edit route to Next stage' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Route To Next stage' }));
     expect(handlers.onEditTransition).toHaveBeenCalledWith(usual);
   });
   it('shows the journey directly and keeps empty-state creation usable', () => {
     render(<Canvas />, { wrapper: Wrapper });
     expect(screen.queryByRole('tabpanel')).not.toBeInTheDocument();
     const journey = screen.getByRole('region', { name: 'Admission Journey' });
-    fireEvent.click(within(journey).getByRole('button', { name: 'Add stage' }));
+    fireEvent.click(within(journey).getByRole('button', { name: 'Add Stage' }));
     expect(handlers.onAddStage).toHaveBeenCalledOnce();
     expect(within(journey).getByRole('button', { name: 'Save draft' })).toBeInTheDocument();
   });
@@ -166,17 +166,17 @@ describe('WorkflowBuilderCanvas', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
     expect(handlers.onUndo).toHaveBeenCalledOnce();
     expect(screen.getByRole('button', { name: 'Redo' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Add stage' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Add Stage' })).toBeEnabled();
     const scrollRegion = screen.getByLabelText('Admission journey stages');
     expect(scrollRegion).toHaveAttribute('tabindex', '0');
     expect(scrollRegion).toContainElement(screen.getByText(stage.name));
     expect(scrollRegion).not.toContainElement(
-      screen.getByRole('group', { name: 'Journey edit history' })
+      screen.getByRole('group', { name: 'Journey Edit History' })
     );
     expect(scrollRegion).not.toContainElement(screen.getByRole('button', { name: 'Save draft' }));
     expect(
-      within(screen.getByRole('status', { name: 'Journey validation summary' })).getByText(
-        'Journey needs attention'
+      within(screen.getByRole('status', { name: 'Journey Validation Summary' })).getByText(
+        'Journey Needs Attention'
       )
     ).toBeInTheDocument();
   });
@@ -184,8 +184,8 @@ describe('WorkflowBuilderCanvas', () => {
   it('keeps read-only stages visible without edit history or add controls', () => {
     render(<Canvas stages={[stage]} readOnly />, { wrapper: Wrapper });
     expect(screen.getByText(stage.name)).toBeInTheDocument();
-    expect(screen.queryByRole('group', { name: 'Journey edit history' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Add stage' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: 'Journey Edit History' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Add Stage' })).not.toBeInTheDocument();
     const viewButton = screen.getByRole('button', { name: `View ${stage.name}` });
     fireEvent.click(viewButton);
     expect(handlers.onEditStage).toHaveBeenCalledWith(stage);
@@ -213,7 +213,7 @@ describe('WorkflowBuilderCanvas', () => {
 
   it('describes connected stages without claiming full publishing validation', () => {
     render(<Canvas stages={[{ ...stage, isTerminalStage: true }]} />, { wrapper: Wrapper });
-    expect(screen.getByText('Journey connected')).toBeInTheDocument();
+    expect(screen.getByText('Journey Connected')).toBeInTheDocument();
     expect(screen.queryByText('Journey valid')).not.toBeInTheDocument();
   });
 
@@ -241,8 +241,8 @@ describe('WorkflowBuilderCanvas', () => {
       />,
       { wrapper: Wrapper }
     );
-    const status = screen.getByRole('status', { name: 'Journey validation summary' });
-    expect(within(status).getByText('Journey connected')).toBeInTheDocument();
-    expect(within(status).getByText('Unsaved changes')).toBeInTheDocument();
+    const status = screen.getByRole('status', { name: 'Journey Validation Summary' });
+    expect(within(status).getByText('Journey Connected')).toBeInTheDocument();
+    expect(within(status).getByText('Unsaved Changes')).toBeInTheDocument();
   });
 });

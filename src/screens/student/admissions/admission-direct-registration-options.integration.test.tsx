@@ -6,6 +6,7 @@ import type {
 
 import { vi, it, expect, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { expectStudentErrorToast } from 'src/test/student-toast-test-fixture';
 
 import AdmissionDirectRegistrationDialog from './admission-direct-registration-dialog';
 
@@ -86,7 +87,7 @@ beforeEach(() => {
 });
 
 const openCycle = async () => {
-  fireEvent.click(screen.getByRole('combobox', { name: /Admission cycle/ }));
+  fireEvent.click(screen.getByRole('combobox', { name: /Admission Cycle/ }));
   fireEvent.click(await screen.findByRole('option', { name: cycle.name }));
 };
 
@@ -101,7 +102,7 @@ it('shows a server match by class even when the offering name does not contain t
   mocks.loadOfferings.mockReturnValue({ unwrap: async () => ({ totalCount: 1, items: [rte] }) });
   render(<AdmissionDirectRegistrationDialog open academicYearId="year-1" onClose={vi.fn()} />);
   await openCycle();
-  const offeringInput = screen.getByRole('combobox', { name: /Admission offering/ });
+  const offeringInput = screen.getByRole('combobox', { name: /Admission Offering/ });
   fireEvent.click(offeringInput);
   fireEvent.change(offeringInput, { target: { value: 'Class 1' } });
   await waitFor(() =>
@@ -112,10 +113,10 @@ it('shows a server match by class even when the offering name does not contain t
 
 it('explains the cycle prerequisite and does not request offerings before a cycle is selected', async () => {
   render(<AdmissionDirectRegistrationDialog open academicYearId="year-1" onClose={vi.fn()} />);
-  expect(screen.getByRole('combobox', { name: /Admission offering/ })).toBeDisabled();
+  expect(screen.getByRole('combobox', { name: /Admission Offering/ })).toBeDisabled();
   expect(screen.getByText('Select an admission cycle first to load offerings.')).toBeVisible();
   expect(mocks.loadOfferings).not.toHaveBeenCalled();
-  expect(screen.getByRole('button', { name: 'Start registration' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Start Registration' })).toBeDisabled();
 });
 
 it('clears a touched Offering error immediately after choosing a valid result', async () => {
@@ -123,7 +124,7 @@ it('clears a touched Offering error immediately after choosing a valid result', 
   mocks.loadOfferings.mockReturnValue({ unwrap: async () => ({ totalCount: 1, items: [rte] }) });
   render(<AdmissionDirectRegistrationDialog open academicYearId="year-1" onClose={vi.fn()} />);
   await openCycle();
-  const offeringInput = screen.getByRole('combobox', { name: /Admission offering/ });
+  const offeringInput = screen.getByRole('combobox', { name: /Admission Offering/ });
   fireEvent.blur(offeringInput);
   await waitFor(() => expect(offeringInput).toHaveAttribute('aria-invalid', 'true'));
   fireEvent.click(offeringInput);
@@ -137,24 +138,24 @@ it('refreshes a previously empty RTE lookup after activation without losing ente
   mocks.loadOfferings.mockReturnValue({ unwrap: async () => ({ totalCount: 0, items: [] }) });
   render(<AdmissionDirectRegistrationDialog open academicYearId="year-1" onClose={vi.fn()} />);
   await openCycle();
-  fireEvent.change(screen.getAllByRole('textbox', { name: /First name/ })[0], {
+  fireEvent.change(screen.getAllByRole('textbox', { name: /First Name/ })[0], {
     target: { value: 'QA child' },
   });
-  fireEvent.click(screen.getByRole('combobox', { name: /Admission offering/ }));
+  fireEvent.click(screen.getByRole('combobox', { name: /Admission Offering/ }));
   expect(await screen.findByText(/No matching active, open RTE offering/)).toBeVisible();
-  fireEvent.keyDown(screen.getByRole('combobox', { name: /Admission offering/ }), {
+  fireEvent.keyDown(screen.getByRole('combobox', { name: /Admission Offering/ }), {
     key: 'Escape',
   });
   mocks.loadOfferings.mockReturnValue({ unwrap: async () => ({ totalCount: 1, items: [rte] }) });
   fireEvent.click(screen.getByRole('button', { name: 'Refresh Choices' }));
-  fireEvent.click(screen.getByRole('combobox', { name: /Admission offering/ }));
+  fireEvent.click(screen.getByRole('combobox', { name: /Admission Offering/ }));
   fireEvent.click(await screen.findByRole('option', { name: /Class 1 RTE/ }));
-  expect(screen.getAllByRole('textbox', { name: /First name/ })[0]).toHaveValue('QA child');
-  expect(screen.getByRole('combobox', { name: /Admission cycle/ })).toHaveValue(cycle.name);
-  expect(screen.getByRole('button', { name: 'Start registration' })).toBeEnabled();
+  expect(screen.getAllByRole('textbox', { name: /First Name/ })[0]).toHaveValue('QA child');
+  expect(screen.getByRole('combobox', { name: /Admission Cycle/ })).toHaveValue(cycle.name);
+  expect(screen.getByRole('button', { name: 'Start Registration' })).toBeEnabled();
 });
 
-it('shows loading and a recoverable lookup error, then reloads real options on Retry', async () => {
+it('shows loading and a toast lookup error, then loads real options when the dialog reopens', async () => {
   let rejectLookup!: (error: Error) => void;
   const failedRequest = new Promise((_, reject) => {
     rejectLookup = reject;
@@ -167,13 +168,16 @@ it('shows loading and a recoverable lookup error, then reloads real options on R
   );
   await openCycle();
   expect(await screen.findByRole('progressbar', { name: 'Loading options' })).toBeVisible();
-  expect(screen.getByRole('button', { name: 'Start registration' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Start Registration' })).toBeDisabled();
   rejectLookup(new Error('Lookup unavailable'));
   mocks.offeringError = true;
   view.rerender(
     <AdmissionDirectRegistrationDialog open academicYearId="year-1" onClose={vi.fn()} />
   );
-  expect(await screen.findByText(/Admission choices could not be loaded/)).toBeVisible();
+  await expectStudentErrorToast(
+    'Admission choices could not be loaded. Retry before selecting an offering.'
+  );
+  expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
   await waitFor(() =>
     expect(screen.queryByRole('progressbar', { name: 'Loading options' })).not.toBeInTheDocument()
   );
@@ -181,8 +185,10 @@ it('shows loading and a recoverable lookup error, then reloads real options on R
   mocks.loadOfferings.mockReturnValue({
     unwrap: async () => ({ totalCount: 1, items: [{ ...eligible, track: 1, entryMode: 1 }] }),
   });
-  fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
-  fireEvent.click(screen.getByRole('combobox', { name: /Admission offering/ }));
+  view.unmount();
+  render(<AdmissionDirectRegistrationDialog open academicYearId="year-1" onClose={vi.fn()} />);
+  await openCycle();
+  fireEvent.click(screen.getByRole('combobox', { name: /Admission Offering/ }));
   expect(await screen.findByRole('option', { name: /Class 26 Management/ })).toBeVisible();
 });
 
@@ -208,10 +214,10 @@ it('shows eligible Management rows using filtering before pagination with the re
     })
   );
   render(<AdmissionDirectRegistrationDialog open academicYearId="year-1" onClose={vi.fn()} />);
-  fireEvent.click(screen.getByRole('combobox', { name: /Admission cycle/ }));
+  fireEvent.click(screen.getByRole('combobox', { name: /Admission Cycle/ }));
   fireEvent.click(await screen.findByRole('option', { name: cycle.name }));
-  fireEvent.change(screen.getByLabelText('Admission type'), { target: { value: '2' } });
-  fireEvent.click(screen.getByRole('combobox', { name: /Admission offering/ }));
+  fireEvent.change(screen.getByLabelText('Admission Type'), { target: { value: '2' } });
+  fireEvent.click(screen.getByRole('combobox', { name: /Admission Offering/ }));
   expect(await screen.findByRole('option', { name: /Class 26 Management/ })).toBeVisible();
   expect(
     screen.queryByRole('option', { name: 'Inquiry-first Management' })

@@ -99,7 +99,7 @@ export function AssessmentActionDialog({
   };
   const title =
     action === 'book' && snapshot.policy.schedulingEnabled
-      ? 'Book assessment session'
+      ? 'Book Assessment Session'
       : assessmentActionLabels[action];
   const titleInfo: Record<AssessmentAction, string> = {
     book: snapshot.policy.schedulingEnabled
@@ -138,7 +138,7 @@ export function AssessmentActionDialog({
             {error}
           </StudentFeedback>
         )}
-        <FormBusyRegion busy={formik.isSubmitting} label="Saving assessment…">
+        <FormBusyRegion busy={formik.isSubmitting} label="Saving Assessment…">
           <AssessmentActionFields
             action={action}
             assessment={snapshot}
@@ -166,7 +166,7 @@ export function AssessmentActionDialog({
             disabled={formik.isSubmitting || !snapshot.canSaveResultDraft}
             onClick={saveDraft}
           >
-            Save draft
+            Save Draft
           </Button>
         )}
         <Button
@@ -182,7 +182,7 @@ export function AssessmentActionDialog({
           {formik.isSubmitting
             ? 'Saving…'
             : action === 'result' && profile
-              ? 'Submit result'
+              ? 'Submit Result'
               : 'Save'}
         </Button>
       </DialogActions>

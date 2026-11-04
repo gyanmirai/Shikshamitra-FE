@@ -31,7 +31,7 @@ export function ReviewRecoveryAlert({
               disabled={busy}
               onClick={() => (dirty ? setConfirm(true) : onReload())}
             >
-              Reload latest {context}
+              Reload Latest {context}
             </Button>
           }
         >

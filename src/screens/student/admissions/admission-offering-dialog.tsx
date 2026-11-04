@@ -34,6 +34,7 @@ type Props = {
   onRetryDetail?: () => void;
   saving: boolean;
   onSave: (values: AdmissionOfferingWriteInput, admissionCycleId: string) => Promise<void>;
+  onDeactivate?: () => void;
 };
 
 export function AdmissionOfferingDialog(props: Props) {
@@ -49,6 +50,7 @@ export function AdmissionOfferingDialog(props: Props) {
     loadingDetail,
     detailError,
     onRetryDetail,
+    onDeactivate,
   } = props;
 
   if (mode === 'edit') {
@@ -63,6 +65,7 @@ export function AdmissionOfferingDialog(props: Props) {
         saving={saving}
         onClose={onClose}
         onSave={onSave}
+        onDeactivate={onDeactivate}
       />
     );
   }
@@ -129,8 +132,8 @@ function AdmissionOfferingLegacyDialog({
           <Typography id="admission-offering-drawer-title" variant="h6" component="div">
             <AdmissionDialogTitle
               title={mode === 'clone' ? 'Clone Admission Offering' : 'Add Admission Offering'}
-              helpText="An offering connects a class to its published admission workflow and forms."
-              helpLabel="Admission offering information"
+              helpText="An Offering Connects a Class to Its Published Admission Workflow and Forms."
+              helpLabel="Admission Offering Information"
             />
           </Typography>
           <Typography variant="body2" color="text.secondary">
@@ -138,7 +141,7 @@ function AdmissionOfferingLegacyDialog({
           </Typography>
         </Box>
         <IconButton
-          aria-label="Close admission offering"
+          aria-label="Close Admission Offering"
           disabled={saving || form.validating}
           onClick={cancelDialog}
         >
@@ -151,7 +154,7 @@ function AdmissionOfferingLegacyDialog({
         {mode === 'clone' && (
           <CustomSelect
             options={cycles}
-            label="Target admission cycle *"
+            label="Target Admission Cycle *"
             labelKey="name"
             valueKey="id"
             value={targetCycle.id}
@@ -254,7 +257,7 @@ function AdmissionOfferingLegacyDialog({
           disabled={form.queryFailed || form.hierarchyEmpty || Boolean(form.submitIntent)}
           onClick={() => form.submitWithActiveState(false)}
         >
-          {mode === 'clone' ? 'Clone as inactive' : 'Save as inactive'}
+          {mode === 'clone' ? 'Clone as Inactive' : 'Save as Inactive'}
         </LoadingButton>
         <LoadingButton
           variant="contained"
@@ -267,7 +270,7 @@ function AdmissionOfferingLegacyDialog({
           disabled={form.queryFailed || form.hierarchyEmpty || Boolean(form.submitIntent)}
           onClick={() => form.submitWithActiveState(true)}
         >
-          {mode === 'clone' ? 'Clone and activate' : 'Validate and activate'}
+          {mode === 'clone' ? 'Clone and Activate' : 'Validate and Activate'}
         </LoadingButton>
       </Stack>
     </Drawer>

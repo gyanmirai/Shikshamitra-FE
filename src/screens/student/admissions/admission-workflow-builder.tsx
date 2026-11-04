@@ -242,8 +242,8 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
         currentJourney={{ stages: draft.stages, transitions: draft.transitions }}
         initialRegistrationForm={registrationFormQuery.data}
         fetchRegistrationForms={fetchRegistrationForms}
-        title="Edit workflow name and description"
-        submitLabel="Save & continue"
+        title="Edit Workflow Name and Description"
+        submitLabel="Save & Continue"
         initialValues={
           detailsInitialValues ?? {
             name: workflow.name,

@@ -21,7 +21,7 @@ export function FormBuilderDeleteUnit({ name, unit, onDelete, open, onClose, hid
       {!hideTrigger && (
         <IconButton
           size="small"
-          aria-label={unit === 'step' ? `Delete ${name} step` : `Delete ${name}`}
+          aria-label={unit === 'step' ? `Delete ${name} Step` : `Delete ${name}`}
           onClick={confirm.onTrue}
           sx={{ width: 44, height: 44, color: 'text.secondary' }}
         >

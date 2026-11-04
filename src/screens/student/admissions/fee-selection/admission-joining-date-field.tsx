@@ -17,7 +17,7 @@ export function AdmissionJoiningDateField({
 }) {
   const { state, query, value, error, stale, previewPending, previewQuery } = controller;
   if (!state && (query.isLoading || query.isFetching))
-    return <Skeleton aria-label="Loading actual joining date" variant="rounded" height={44} />;
+    return <Skeleton aria-label="Loading Actual Joining Date" variant="rounded" height={44} />;
   if (!state || query.isError || stale)
     return (
       <Stack spacing={1} alignItems="flex-start">
@@ -27,8 +27,8 @@ export function AdmissionJoiningDateField({
           severity="error"
         >
           {stale
-            ? 'The application changed. Refresh the saved joining date before collecting fees.'
-            : 'The actual joining date could not be loaded. Retry before collecting fees.'}
+            ? 'The Application Changed. Refresh the Saved Joining Date Before Collecting Fees.'
+            : 'The Actual Joining Date Could Not Be Loaded. Retry Before Collecting Fees.'}
         </StudentFeedback>
         <Button
           size="small"
@@ -36,7 +36,7 @@ export function AdmissionJoiningDateField({
           onClick={() => controller.retry()}
           disabled={query.isFetching}
         >
-          Refresh joining date
+          Refresh Joining Date
         </Button>
       </Stack>
     );
@@ -46,13 +46,13 @@ export function AdmissionJoiningDateField({
         <Stack spacing={0.5}>
           <Stack direction="row" alignItems="center" spacing={0.5}>
             <Typography variant="caption" color="text.secondary">
-              Actual joining date
+              Actual Joining Date
             </Typography>
             <InfoTooltipIcon
-              label="About actual joining date"
+              label="About Actual Joining Date"
               title={
                 state.lockReason ||
-                'The saved joining date is shared with Registration and Onboarding. An authorized user can confirm it before fees are prepared.'
+                'The Saved Joining Date Is Shared with Registration and Onboarding. An Authorized User Can Confirm It Before Fees Are Prepared.'
               }
             />
           </Stack>
@@ -64,7 +64,7 @@ export function AdmissionJoiningDateField({
         <Stack direction="row" spacing={0.5} alignItems="flex-start">
           <ShakingTextField error={Boolean(error)} sx={{ flex: 1, minWidth: 0 }}>
             <DatePicker
-              label="Actual joining date"
+              label="Actual Joining Date"
               format="DD/MM/YYYY"
               value={value}
               maxDate={parseDateOnly(state.academicYearEndDate) ?? undefined}
@@ -84,12 +84,12 @@ export function AdmissionJoiningDateField({
             />
           </ShakingTextField>
           <InfoTooltipIcon
-            label="About actual joining date"
-            title="Confirm when the student actually joins. Registration and Onboarding use this same date. Finance applies the configured policy automatically; the payment date is separate."
+            label="About Actual Joining Date"
+            title="Confirm When the Student Actually Joins. Registration and Onboarding Use This Same Date. Finance Applies the Configured Policy Automatically; the Payment Date Is Separate."
           />
         </Stack>
       )}
-      {previewPending && <LinearProgress aria-label="Calculating fee preview" />}
+      {previewPending && <LinearProgress aria-label="Calculating Fee Preview" />}
       {state.canPreview && !state.isLocked && controller.previewFailed && (
         <Stack spacing={1} alignItems="flex-start">
           <StudentFeedback
@@ -98,7 +98,7 @@ export function AdmissionJoiningDateField({
             severity="error"
           >
             {parseApiProblemDetail(previewQuery.error).detail ||
-              'The fee preview could not be calculated. Retry before collecting fees.'}
+              'The Fee Preview Could Not Be Calculated. Retry Before Collecting Fees.'}
           </StudentFeedback>
           <Button
             size="small"
@@ -106,7 +106,7 @@ export function AdmissionJoiningDateField({
             disabled={disabled || previewQuery.isFetching}
             onClick={() => previewQuery.refetch()}
           >
-            Retry fee preview
+            Retry Fee Preview
           </Button>
         </Stack>
       )}

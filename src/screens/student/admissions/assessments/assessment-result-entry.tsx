@@ -68,7 +68,7 @@ export function AssessmentResultEntry({
               disabled={disabled || quick.busy || !quick.canSaveDraft}
               onClick={quick.saveDraft}
             >
-              Save draft
+              Save Draft
             </LoadingButton>
             {inlineSave && (
               <LoadingButton
@@ -78,7 +78,7 @@ export function AssessmentResultEntry({
                 loading={formik.isSubmitting}
                 disabled={disabled || quick.busy || !quick.canRecordResult}
               >
-                Submit result
+                Submit Result
               </LoadingButton>
             )}
           </Stack>
@@ -149,7 +149,7 @@ export function AssessmentResultEntry({
             size="small"
             variant="contained"
             loading={formik.isSubmitting}
-            aria-label={`Save result for attempt ${quick.attempt?.attemptNumber}`}
+            aria-label={`Save Result for Attempt ${quick.attempt?.attemptNumber}`}
             disabled={disabled || !quick.canRecordResult}
             sx={{ flexShrink: 0, alignSelf: { xs: 'flex-start', sm: 'center' } }}
           >

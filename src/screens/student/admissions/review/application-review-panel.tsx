@@ -66,7 +66,7 @@ export function ApplicationReviewPanel({
           </StudentFeedback>
         ) : (
           <>
-            {query.isFetching && <LinearProgress aria-label="Refreshing review" />}
+            {query.isFetching && <LinearProgress aria-label="Refreshing Review" />}
             <ReviewSummaryContent
               summary={summary}
               disabled={query.isFetching || advancing}
@@ -79,7 +79,7 @@ export function ApplicationReviewPanel({
                   disabled={!summary.canComplete || query.isFetching || advancing}
                   onClick={() => onComplete?.()}
                 >
-                  {advancing ? 'Continuing…' : 'Continue admission'}
+                  {advancing ? 'Continuing…' : 'Continue Admission'}
                 </Button>
               </Stack>
             )}

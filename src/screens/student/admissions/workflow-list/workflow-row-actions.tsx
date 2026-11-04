@@ -75,7 +75,7 @@ export function WorkflowRowActions({
   if (canReopen && workflow.status === 2)
     actions.push({
       id: 'reopen',
-      label: 'Re-open',
+      label: 'Re-Open',
       icon: 'mdi:archive-arrow-up-outline',
       onClick: onReopen,
     });
@@ -87,14 +87,14 @@ export function WorkflowRowActions({
       disabled: ![0, 3].includes(workflow.status),
       tooltip: [0, 3].includes(workflow.status)
         ? undefined
-        : 'Only draft and validated workflows can be edited.',
+        : 'Only Draft and Validated Workflows Can Be Edited.',
       onClick: onEdit,
     });
   if (canDelete && !showPublish) actions.push(deleteAction);
   if (canClone)
     actions.push({
       id: 'clone',
-      label: 'Clone as draft',
+      label: 'Clone as Draft',
       icon: 'mdi:content-copy',
       onClick: onClone,
     });
@@ -102,14 +102,14 @@ export function WorkflowRowActions({
   if (canCreateVersion && [1, 2, 7].includes(workflow.status))
     actions.push({
       id: 'new-version',
-      label: 'Create new version',
+      label: 'Create New Version',
       icon: 'mdi:file-plus-outline',
       onClick: onCreateVersion,
     });
   if (canViewUsage)
     actions.push({
       id: 'usage',
-      label: 'View usage',
+      label: 'View Usage',
       icon: 'mdi:chart-box-outline',
       onClick: onUsage,
     });
@@ -125,7 +125,7 @@ export function WorkflowRowActions({
   return (
     <AdaptiveThreeDotsActions
       placement="right-top"
-      moreLabel={`Actions for ${workflow.name}`}
+      moreLabel={`Actions For ${workflow.name}`}
       directActionLimit={directActionLimit}
       mobileDirectActionLimit={showPublish ? 1 : 0}
       sx={{

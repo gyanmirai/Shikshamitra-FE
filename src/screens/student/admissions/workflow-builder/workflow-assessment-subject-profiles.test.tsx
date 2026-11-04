@@ -139,22 +139,22 @@ describe('class subject assessment configuration', { timeout: 20000 }, () => {
     const onSave = vi.fn();
     renderDocumentUi(<Harness policy={subjectPolicy} onSave={onSave} />);
     await waitFor(() => expect(request).toHaveBeenCalledOnce());
-    expect(screen.getByLabelText('Loading assessment classes and subjects')).toBeVisible();
+    expect(screen.getByLabelText('Loading Assessment Classes and Subjects')).toBeVisible();
     expect(
-      screen.queryByText(/Unavailable board|Unavailable medium|Unavailable class/)
+      screen.queryByText(/Unavailable Board|Unavailable Medium|Unavailable Class/)
     ).not.toBeInTheDocument();
     expect(screen.queryByRole('combobox', { name: /^Board/ })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Add class profile' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Add Class Profile' })).toBeDisabled();
     await act(async () => resolveCatalog());
     await waitFor(() =>
-      expect(screen.getByRole('button', { name: 'Add class profile' })).toBeEnabled()
+      expect(screen.getByRole('button', { name: 'Add Class Profile' })).toBeEnabled()
     );
     expect(
-      screen.queryByLabelText('Loading assessment classes and subjects')
+      screen.queryByLabelText('Loading Assessment Classes and Subjects')
     ).not.toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: /^Board/ })).toHaveTextContent('CBSE');
     expect(screen.getByRole('combobox', { name: /^Medium/ })).toHaveTextContent('English');
-    expect(screen.getByRole('combobox', { name: /^Applies to classes/ })).toHaveTextContent(
+    expect(screen.getByRole('combobox', { name: /^Applies to Classes/ })).toHaveTextContent(
       'Class 5'
     );
     await userEvent.click(screen.getByRole('button', { name: 'Apply changes' }));
@@ -163,8 +163,8 @@ describe('class subject assessment configuration', { timeout: 20000 }, () => {
   });
   it('keeps scalar mode default without fetching the subject catalog', async () => {
     const { user, onSave, request } = setup();
-    expect(screen.getByRole('spinbutton', { name: 'Total marks *' })).toBeVisible();
-    expect(screen.queryByText('Class assessment profiles')).not.toBeInTheDocument();
+    expect(screen.getByRole('spinbutton', { name: 'Total Marks *' })).toBeVisible();
+    expect(screen.queryByText('Class Assessment Profiles')).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(savedPolicy(onSave)).toEqual(DEFAULT_ASSESSMENT_POLICY);
@@ -173,35 +173,35 @@ describe('class subject assessment configuration', { timeout: 20000 }, () => {
 
   it('opts in, configures multiple classes and school/custom subjects, and derives total before saving', async () => {
     const { user, onSave, request } = setup();
-    await user.click(screen.getByRole('combobox', { name: /Scoring method/ }));
-    await user.click(screen.getByRole('option', { name: 'Subject-wise marks' }));
+    await user.click(screen.getByRole('combobox', { name: /Scoring Method/ }));
+    await user.click(screen.getByRole('option', { name: 'Subject-Wise Marks' }));
     await waitFor(() =>
-      expect(screen.getByRole('button', { name: 'Add class profile' })).toBeEnabled()
+      expect(screen.getByRole('button', { name: 'Add Class Profile' })).toBeEnabled()
     );
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Add class profile' }));
+    await user.click(screen.getByRole('button', { name: 'Add Class Profile' }));
     await user.click(screen.getByRole('combobox', { name: /^Board/ }));
     await user.click(screen.getByRole('option', { name: 'CBSE · 2026–2027' }));
     await user.click(screen.getByRole('combobox', { name: /^Medium/ }));
     await user.click(screen.getByRole('option', { name: 'English' }));
-    await user.click(screen.getByRole('combobox', { name: /^Applies to classes/ }));
+    await user.click(screen.getByRole('combobox', { name: /^Applies to Classes/ }));
     await user.click(screen.getByRole('option', { name: 'Class 5' }));
     await user.click(screen.getByRole('option', { name: 'Class 6' }));
     await user.keyboard('{Escape}');
-    await user.click(screen.getByRole('button', { name: 'Add school subject' }));
-    await user.click(screen.getByRole('combobox', { name: 'School subject' }));
+    await user.click(screen.getByRole('button', { name: 'Add School Subject' }));
+    await user.click(screen.getByRole('combobox', { name: 'School Subject' }));
     await user.click(screen.getByRole('option', { name: 'English · For selected classes' }));
     const englishMaximum = screen.getByRole('textbox', { name: 'Maximum marks — English' });
     await user.clear(englishMaximum);
     await user.type(englishMaximum, '30');
-    await user.click(screen.getByRole('button', { name: 'Add custom subject' }));
-    await user.type(screen.getByRole('textbox', { name: /Custom subject name/ }), 'Reasoning');
+    await user.click(screen.getByRole('button', { name: 'Add Custom Subject' }));
+    await user.type(screen.getByRole('textbox', { name: /Custom Subject Name/ }), 'Reasoning');
     const reasoningMaximum = screen.getByRole('textbox', { name: 'Maximum marks — Reasoning' });
     await user.clear(reasoningMaximum);
     await user.type(reasoningMaximum, '20');
-    expect(screen.getByRole('textbox', { name: 'Total marks' })).toHaveValue('50');
-    await user.clear(screen.getByRole('textbox', { name: 'Overall passing marks' }));
-    await user.type(screen.getByRole('textbox', { name: 'Overall passing marks' }), '20');
+    expect(screen.getByRole('textbox', { name: 'Total Marks' })).toHaveValue('50');
+    await user.clear(screen.getByRole('textbox', { name: 'Overall Passing Marks' }));
+    await user.type(screen.getByRole('textbox', { name: 'Overall Passing Marks' }), '20');
     await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(savedPolicy(onSave)).toMatchObject({
@@ -229,11 +229,11 @@ describe('class subject assessment configuration', { timeout: 20000 }, () => {
 
   it('requires every subject threshold for per-subject rules and retains the same subject identity', async () => {
     const { user, onSave } = setup(subjectPolicy);
-    await screen.findByRole('combobox', { name: /Pass rule/ });
-    await user.click(screen.getByRole('combobox', { name: /Pass rule/ }));
-    await user.click(screen.getByRole('option', { name: 'Every subject' }));
+    await screen.findByRole('combobox', { name: /Pass Rule/ });
+    await user.click(screen.getByRole('combobox', { name: /Pass Rule/ }));
+    await user.click(screen.getByRole('option', { name: 'Every Subject' }));
     expect(
-      screen.queryByRole('textbox', { name: 'Overall passing marks' })
+      screen.queryByRole('textbox', { name: 'Overall Passing Marks' })
     ).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     await screen.findAllByText(
@@ -253,18 +253,18 @@ describe('class subject assessment configuration', { timeout: 20000 }, () => {
   it('blocks duplicate classes in another profile', async () => {
     const { user } = setup(subjectPolicy);
     await waitFor(() =>
-      expect(screen.getByRole('button', { name: 'Add class profile' })).toBeEnabled()
+      expect(screen.getByRole('button', { name: 'Add Class Profile' })).toBeEnabled()
     );
-    await user.click(screen.getByRole('button', { name: 'Add class profile' }));
+    await user.click(screen.getByRole('button', { name: 'Add Class Profile' }));
     const profile = screen
-      .getByRole('button', { name: /Class profile 0 subjects/ })
+      .getByRole('button', { name: /Class profile 0 Subjects/ })
       .closest('.MuiAccordion-root')!;
     const editor = within(profile as HTMLElement);
     await user.click(editor.getByRole('combobox', { name: /^Board/ }));
     await user.click(screen.getByRole('option', { name: 'CBSE · 2026–2027' }));
     await user.click(editor.getByRole('combobox', { name: /^Medium/ }));
     await user.click(screen.getByRole('option', { name: 'English' }));
-    await user.click(editor.getByRole('combobox', { name: /^Applies to classes/ }));
+    await user.click(editor.getByRole('combobox', { name: /^Applies to Classes/ }));
     expect(screen.getByRole('option', { name: /Class 5/ })).toHaveAttribute(
       'aria-disabled',
       'true'
@@ -288,15 +288,15 @@ describe('class subject assessment configuration', { timeout: 20000 }, () => {
     expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
     expect(request).toHaveBeenCalledOnce();
     expect(screen.getByRole('textbox', { name: 'Maximum marks — English' })).toHaveValue('50');
-    expect(screen.getByRole('combobox', { name: /^Board/ })).toHaveTextContent('Saved board');
-    expect(screen.getByRole('combobox', { name: /^Medium/ })).toHaveTextContent('Saved medium');
-    expect(screen.getByRole('combobox', { name: /^Applies to classes/ })).toHaveTextContent(
+    expect(screen.getByRole('combobox', { name: /^Board/ })).toHaveTextContent('Saved Board');
+    expect(screen.getByRole('combobox', { name: /^Medium/ })).toHaveTextContent('Saved Medium');
+    expect(screen.getByRole('combobox', { name: /^Applies to Classes/ })).toHaveTextContent(
       '1 saved class'
     );
     expect(
-      screen.queryByText(/Unavailable board|Unavailable medium|Unavailable class/)
+      screen.queryByText(/Unavailable Board|Unavailable Medium|Unavailable Class/)
     ).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Add school subject' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Add School Subject' })).toBeDisabled();
     await user.clear(screen.getByRole('textbox', { name: 'Maximum marks — English' }));
     await user.type(screen.getByRole('textbox', { name: 'Maximum marks — English' }), '45');
     let resolveCatalog!: () => void;
@@ -321,14 +321,14 @@ describe('class subject assessment configuration', { timeout: 20000 }, () => {
     });
     expect(screen.getByRole('textbox', { name: 'Maximum marks — English' })).toHaveValue('45');
     expect(
-      screen.queryByText(/No classes are available in your permitted scope/)
+      screen.queryByText(/No Classes are available in your permitted scope/)
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByLabelText('Loading assessment classes and subjects')
+      screen.queryByLabelText('Loading Assessment Classes and Subjects')
     ).not.toBeInTheDocument();
     await act(async () => resolveCatalog());
     await waitFor(() =>
-      expect(screen.getByRole('button', { name: 'Add school subject' })).toBeEnabled()
+      expect(screen.getByRole('button', { name: 'Add School Subject' })).toBeEnabled()
     );
     expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Maximum marks — English' })).toHaveValue('45');
@@ -343,7 +343,7 @@ describe('class subject assessment configuration', { timeout: 20000 }, () => {
     screen
       .getAllByRole('combobox')
       .forEach((input) => expect(input).toHaveAttribute('aria-disabled', 'true'));
-    expect(screen.getByRole('button', { name: 'Add class profile' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Remove profile' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Add Class Profile' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Remove Profile' })).toBeDisabled();
   });
 });

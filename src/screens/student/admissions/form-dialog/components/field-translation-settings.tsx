@@ -46,7 +46,7 @@ export function FieldTranslationSettings({ formik, sectionIndex, fieldIndex }: F
             <TextField
               fullWidth
               size="small"
-              label="Field label"
+              label="Field Label"
               value={field.translations?.[language]?.label ?? ''}
               onChange={(event) => updateTranslation(language, 'label', event.target.value)}
             />
@@ -60,14 +60,14 @@ export function FieldTranslationSettings({ formik, sectionIndex, fieldIndex }: F
             <TextField
               fullWidth
               size="small"
-              label="Help text"
+              label="Help Text"
               value={field.translations?.[language]?.helpText ?? ''}
               onChange={(event) => updateTranslation(language, 'helpText', event.target.value)}
             />
             <TextField
               fullWidth
               size="small"
-              label="Required / validation message"
+              label="Required / Validation Message"
               value={field.translations?.[language]?.validationMessage ?? ''}
               onChange={(event) =>
                 updateTranslation(language, 'validationMessage', event.target.value)

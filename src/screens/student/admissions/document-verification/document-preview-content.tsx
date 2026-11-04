@@ -43,14 +43,14 @@ export function DocumentPreviewContent({
       <Stack spacing={1} sx={{ pb: 1.5, borderBottom: 1, borderColor: 'divider' }}>
         {showFileName && (
           <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>
-            {evidence.fileName} · Copy version {evidence.versionNumber}
+            {evidence.fileName} · Copy Version {evidence.versionNumber}
           </Typography>
         )}
         <Stack direction="row" alignItems="center" gap={1} useFlexGap flexWrap="wrap">
           {imageReady && !imageFailed && (
             <>
               <DocumentFileControl
-                label="Zoom out"
+                label="Zoom Out"
                 icon="mdi:magnify-minus-outline"
                 disabled={zoom !== null && zoom <= 0.25}
                 reason="Minimum zoom reached."
@@ -60,7 +60,7 @@ export function DocumentPreviewContent({
                 {zoom === null ? 'Fit' : `${Math.round(zoom * 100)}%`}
               </Typography>
               <DocumentFileControl
-                label="Zoom in"
+                label="Zoom In"
                 icon="mdi:magnify-plus-outline"
                 disabled={zoom !== null && zoom >= 3}
                 reason="Maximum zoom reached."
@@ -71,7 +71,7 @@ export function DocumentPreviewContent({
                 startIcon={<Iconify icon="mdi:fit-to-screen-outline" />}
                 onClick={() => setZoom(null)}
               >
-                Fit to page
+                Fit to Page
               </Button>
             </>
           )}
@@ -84,7 +84,7 @@ export function DocumentPreviewContent({
         {preview.status === 'loading' ? (
           <Skeleton
             variant="rounded"
-            aria-label="Loading document preview"
+            aria-label="Loading Document Preview"
             sx={{ flex: 1, height: 1 }}
           />
         ) : preview.status === 'error' || imageFailed ? (
@@ -94,7 +94,7 @@ export function DocumentPreviewContent({
             severity="error"
             action={
               <Button size="small" color="inherit" onClick={retryPreview}>
-                Retry preview
+                Retry Preview
               </Button>
             }
           >
@@ -109,8 +109,8 @@ export function DocumentPreviewContent({
             component="object"
             data={preview.url}
             type="application/pdf"
-            title={`${name} document preview`}
-            aria-label={`${name} document preview`}
+            title={`${name} Document Preview`}
+            aria-label={`${name} Document Preview`}
             sx={{ width: 1, flex: 1, minHeight: 0, border: 0 }}
           >
             <Typography variant="body2">
@@ -130,7 +130,7 @@ export function DocumentPreviewContent({
               <Box
                 component="img"
                 src={preview.url}
-                alt={`${name} document preview`}
+                alt={`${name} Document Preview`}
                 onLoad={(event) => {
                   if (event.target instanceof HTMLImageElement)
                     setImageWidth(event.target.naturalWidth);

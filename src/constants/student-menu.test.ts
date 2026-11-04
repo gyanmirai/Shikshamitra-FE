@@ -115,9 +115,7 @@ describe('student navigation', () => {
       NestedMenuItem | undefined;
 
     expect(onboarding?.path).toBe('/student/onboarding');
-    expect(onboarding?.permissionName).toEqual([
-      'Students.Onboarding.View',
-    ]);
+    expect(onboarding?.permissionName).toEqual(['Students.Onboarding.View']);
     expect(onboarding?.visibilityPermissionName).toBe('ShikshaMitra.Module.Students.Onboarding');
     expect(onboarding?.children?.map((item) => item.title)).toEqual([
       'Student Setup',
@@ -127,14 +125,14 @@ describe('student navigation', () => {
       path: '/student/onboarding/setup',
       permissionName: 'Students.Onboarding.View',
     });
-    expect(onboarding?.children?.find((item) => item.title === 'Onboarding Settings')).toMatchObject({
+    expect(
+      onboarding?.children?.find((item) => item.title === 'Onboarding Settings')
+    ).toMatchObject({
       path: '/student/onboarding/settings',
       permissionName: 'Students.Onboarding.View',
     });
     expect(
-      onboarding?.children
-        ?.find((item) => item.title === 'Onboarding Settings')
-        ?.children
+      onboarding?.children?.find((item) => item.title === 'Onboarding Settings')?.children
     ).toBeUndefined();
   });
 
@@ -186,14 +184,14 @@ describe('student navigation', () => {
       'Admission Periods',
       'Admission Form',
       'Admission Stage',
-      'Intake & Assignment',
+      'Public Inquiry Links',
       'Admission Offering',
     ]);
     expect(settings?.children?.map((item) => item.path)).toEqual([
       '/student/admissions/settings/cycles',
       '/student/admissions/settings/forms',
       '/student/admissions/settings/workflows',
-      '/student/admissions/settings/intake-assignment',
+      '/student/admissions/settings/public-inquiry-links',
       '/student/admissions/settings/offerings',
     ]);
 

@@ -34,6 +34,30 @@ afterEach(async () => {
 });
 
 describe('Student toast feedback', () => {
+  it('offers the current recovery action inside the toast without an orphan page button', () => {
+    const retry = vi.fn();
+    const view = (disabled: boolean) => (
+      <StudentFeedback
+        notificationKey="recoverable"
+        severity="error"
+        toastAction={
+          <Button disabled={disabled} onClick={retry}>
+            Retry
+          </Button>
+        }
+      >
+        Unable to load form versions.
+      </StudentFeedback>
+    );
+    const { rerender } = render(view(true));
+    rerender(view(false));
+    expect(toast.error).toHaveBeenCalledOnce();
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+    const props = toast.error.mock.calls[0][0].alertProps('error-id');
+    render(<>{props.action}</>);
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(retry).toHaveBeenCalledOnce();
+  });
   it('preserves the focus target for an actionable registration error', () => {
     const target = createRef<HTMLDivElement>();
     render(
@@ -68,6 +92,7 @@ describe('Student toast feedback', () => {
     rerender(view(false));
     expect(toast.error).toHaveBeenCalledOnce();
     expect(screen.queryByText('Cases could not be loaded.')).not.toBeInTheDocument();
+    expect(toast.error.mock.calls[0][0].alertProps('error-id').action).toBeUndefined();
     expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });

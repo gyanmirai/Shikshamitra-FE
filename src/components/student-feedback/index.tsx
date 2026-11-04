@@ -15,6 +15,8 @@ export type StudentFeedbackProps = AlertProps & {
   notificationKey: string;
   /** Request failures use toast; inline/persistent are reserved for local validation and business state. */
   presentation?: Presentation;
+  /** Optional recovery control inside a request-failure toast; never creates a page action row. */
+  toastAction?: ReactNode;
   closeDisabled?: boolean;
   ref?: Ref<HTMLDivElement>;
   /** Additional identity for persisted user-specific notices or record-specific contexts. */
@@ -78,6 +80,7 @@ export function StudentFeedback({
   notificationKey,
   scopeKey: noticeScope,
   presentation = 'toast',
+  toastAction,
   severity = 'success',
   children,
   action,
@@ -92,15 +95,15 @@ export function StudentFeedback({
   'aria-label': ariaLabel,
 }: StudentFeedbackProps) {
   const scope = useContext(FeedbackScope);
-  const latest = useRef({ children, onClose, closeDisabled, closeText });
+  const latest = useRef({ children, toastAction, onClose, closeDisabled, closeText });
   const text = messageText(children).replace(/\s+/g, ' ').trim();
   // Identical notices in nested/sibling regions share an announcement. JSX identity,
   // event handlers, sx and loading/disabled action changes do not create new events.
   const signature = JSON.stringify([scope, noticeScope, severity, text || notificationKey]);
 
   useEffect(() => {
-    latest.current = { children, onClose, closeDisabled, closeText };
-  }, [children, onClose, closeDisabled, closeText]);
+    latest.current = { children, toastAction, onClose, closeDisabled, closeText };
+  }, [children, toastAction, onClose, closeDisabled, closeText]);
 
   useEffect(() => {
     if (presentation === 'inline' || !text) return undefined;
@@ -108,6 +111,7 @@ export function StudentFeedback({
       shikshaMitraToast[severity]({
         message: latest.current.children,
         alertProps: (toastId: string | number) => ({
+          action: presentation === 'toast' ? latest.current.toastAction : undefined,
           closeText: latest.current.closeText,
           onClose: (event: React.SyntheticEvent) => {
             if (latest.current.closeDisabled) return;

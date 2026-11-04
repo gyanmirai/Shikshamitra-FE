@@ -40,7 +40,7 @@ export function ApplicationFormCorrectionReasonDialog({
     <CustomDialog
       open={open}
       title="Save Form Corrections"
-      titleInfo="Approval is retained. The reason and changed fields are recorded in admission history; finalization checks run again."
+      titleInfo="Approval Is Retained. The Reason and Changed Fields Are Recorded in Admission History; Finalization Checks Run Again."
       handleClose={onClose}
       disableClose={busy}
       guardUnsavedChanges={false}
@@ -58,7 +58,7 @@ export function ApplicationFormCorrectionReasonDialog({
           <FormSectionCard
             title="Correction Reason"
             icon={GlobalIcons.edit}
-            descriptionTooltip="Explain why these application details need correction."
+            descriptionTooltip="Explain Why These Application Details Need Correction."
           >
             <ShakingTextField error={Boolean(formik.touched.reason && formik.errors.reason)}>
               <TextField
@@ -95,7 +95,7 @@ export function ApplicationFormCorrectionReasonDialog({
           onClick={onClose}
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
         >
-          Back to form
+          Back to Form
         </Button>
         <LoadingButton
           type="submit"
@@ -106,7 +106,7 @@ export function ApplicationFormCorrectionReasonDialog({
           disabled={saveDisabled}
           startIcon={<Iconify icon={GlobalIcons.submit} />}
         >
-          {retryOnly ? 'Retry save' : 'Save corrections'}
+          {retryOnly ? 'Retry Save' : 'Save Corrections'}
         </LoadingButton>
       </DialogActions>
     </CustomDialog>

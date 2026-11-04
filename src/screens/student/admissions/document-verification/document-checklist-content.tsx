@@ -44,12 +44,12 @@ export function DocumentChecklistContent({
       {required.length > 0 && (
         <Stack spacing={0.5}>
           <Typography variant="body2">
-            {complete} of {required.length} required documents resolved
+            {complete} Of {required.length} Required Documents Resolved
           </Typography>
           <LinearProgress
             variant="determinate"
             value={(complete / required.length) * 100}
-            aria-label="Required document progress"
+            aria-label="Required Document Progress"
           />
         </Stack>
       )}
@@ -113,7 +113,7 @@ export function DocumentChecklistContent({
           aria-expanded={showNotApplicable}
           onClick={() => setShowNotApplicable((value) => !value)}
         >
-          {showNotApplicable ? 'Hide' : 'Show'} documents not applicable to this applicant (
+          {showNotApplicable ? 'Hide' : 'Show'} Documents Not Applicable to This Applicant (
           {notApplicable.length})
         </Button>
       )}

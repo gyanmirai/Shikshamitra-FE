@@ -29,8 +29,8 @@ it('shows the real staff name for each action without displaying an assignment o
       emptyDescription="No activity"
     />
   );
-  expect(screen.getByText(/Handled by: Asha Sharma/)).toBeInTheDocument();
-  expect(screen.getByText(/Handled by: Ravi Patel/)).toBeInTheDocument();
+  expect(screen.getByText(/Handled By: Asha Sharma/)).toBeInTheDocument();
+  expect(screen.getByText(/Handled By: Ravi Patel/)).toBeInTheDocument();
   expect(screen.queryByText(/private-user-id|second-user-id/)).not.toBeInTheDocument();
 });
 
@@ -55,8 +55,8 @@ it('keeps unavailable historical actors explicit and does not invent a staff nam
       emptyDescription="No activity"
     />
   );
-  expect(screen.getByText(/No staff recorded/)).toBeInTheDocument();
-  expect(screen.getByText(/Staff name unavailable/)).toBeInTheDocument();
+  expect(screen.getByText(/No Staff Recorded/)).toBeInTheDocument();
+  expect(screen.getByText(/Staff Name Unavailable/)).toBeInTheDocument();
 });
 
 it('keeps all supplied history accessible after expanding recent activity', () => {

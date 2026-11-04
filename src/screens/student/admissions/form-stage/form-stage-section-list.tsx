@@ -23,18 +23,18 @@ export function FormStageSectionList({
   if (!required.length) return null;
   return (
     <>
-      {!compact && <Typography variant="subtitle2">Section verification</Typography>}
+      {!compact && <Typography variant="subtitle2">Section Verification</Typography>}
       {/* Embedded verification records: the surrounding form remains the primary task. */}
       <CustomizableTable
         tableId="admission-form-section-verification"
-        tableTitle="Section verification"
+        tableTitle="Section Verification"
         data={required}
         isSearch={false}
         isFilter={false}
         isPagination={false}
         isShowedDense={false}
         wrapperProps={{ sx: { minWidth: 0, minHeight: 0 } }}
-        tableContainerProps={{ sx: { minWidth: 0 }, 'aria-label': 'Section verification' }}
+        tableContainerProps={{ sx: { minWidth: 0 }, 'aria-label': 'Section Verification' }}
         columns={[
           {
             id: 'sectionName',
@@ -53,7 +53,7 @@ export function FormStageSectionList({
                   <Typography variant="caption" color="text.secondary">
                     {section.verifiedAt
                       ? `Verified ${fDateTime(section.verifiedAt)}`
-                      : 'Waiting for staff verification'}
+                      : 'Waiting for Staff Verification'}
                   </Typography>
                 </Stack>
               );

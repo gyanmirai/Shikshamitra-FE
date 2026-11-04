@@ -77,7 +77,7 @@ it('uses separate searchable Board and Class menus with the common scrollbar and
     within(menu).getAllByRole('option', { name: 'Class 6 (English / Secondary)' })
   ).toHaveLength(1);
   expect(within(menu).queryByRole('combobox', { name: 'Board' })).not.toBeInTheDocument();
-  await user.type(screen.getByPlaceholderText('Search classes'), 'Class 7');
+  await user.type(screen.getByPlaceholderText('Search Classes'), 'Class 7');
   expect(
     within(menu).queryByRole('option', { name: 'Class 6 (English / Secondary)' })
   ).not.toBeInTheDocument();

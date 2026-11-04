@@ -9,20 +9,20 @@ import type {
 import * as Yup from 'yup';
 
 export const reviewStatusLabels: Record<ReviewStatus, string> = {
-  notStarted: 'Not started',
+  notStarted: 'Not Started',
   draft: 'Draft',
-  submitted: 'Awaiting decision',
+  submitted: 'Awaiting Decision',
   approved: 'Approved',
   waitlisted: 'Waitlisted',
   rejected: 'Rejected',
-  correctionRequested: 'Corrections requested',
-  stale: 'Review needed again',
+  correctionRequested: 'Corrections Requested',
+  stale: 'Review Needed Again',
 };
 export const recommendationLabels: Record<ReviewRecommendation, string> = {
-  approve: 'Recommend approval',
-  waitlist: 'Recommend waitlist',
-  reject: 'Recommend rejection',
-  requestCorrection: 'Request application corrections',
+  approve: 'Recommend Approval',
+  waitlist: 'Recommend Waitlist',
+  reject: 'Recommend Rejection',
+  requestCorrection: 'Request Application Corrections',
 };
 export function reviewDraftValues(summary: ReviewSummary): ReviewDraft {
   const record = summary.latestRecord?.status === 'assignment' ? null : summary.latestRecord;

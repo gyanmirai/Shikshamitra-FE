@@ -42,7 +42,7 @@ export const getApplicantJourneyState = (applications: Application[]) => {
   const application = getPrimaryApplication(applications);
   if (!application)
     return {
-      label: 'Application not started',
+      label: 'Application Not Started',
       color: 'info' as LabelColor,
       description: 'Confirm inquiry interest before starting an application',
     };
@@ -57,47 +57,47 @@ export const getApplicantJourneyState = (applications: Application[]) => {
 
 const activityPresentation: Record<string, { title: string; icon: string; color: LabelColor }> = {
   InquiryCreated: {
-    title: 'Inquiry created',
+    title: 'Inquiry Created',
     icon: 'mdi:account-question-outline',
     color: 'info',
   },
   InquiryDetailsUpdated: {
-    title: 'Inquiry details updated',
+    title: 'Inquiry Details Updated',
     icon: 'mdi:pencil-outline',
     color: 'default',
   },
   InquiryContacted: {
-    title: 'Family contact recorded',
+    title: 'Family Contact Recorded',
     icon: 'mdi:phone-check-outline',
     color: 'success',
   },
   InquiryCommunicationDraftCreated: {
-    title: 'Communication prepared',
+    title: 'Communication Prepared',
     icon: 'mdi:message-text-outline',
     color: 'info',
   },
   InquiryCommunicationPublished: {
-    title: 'Communication sent',
+    title: 'Communication Sent',
     icon: 'mdi:send-check-outline',
     color: 'success',
   },
   ApplicationStarted: {
-    title: 'Application started',
+    title: 'Application Started',
     icon: 'mdi:file-document-edit-outline',
     color: 'primary',
   },
   ApplicantProfileUpdated: {
-    title: 'Applicant profile updated',
+    title: 'Applicant Profile Updated',
     icon: 'mdi:account-edit-outline',
     color: 'default',
   },
   NoteAdded: {
-    title: 'Note added',
+    title: 'Note Added',
     icon: 'mdi:note-plus-outline',
     color: 'default',
   },
   NoteModified: {
-    title: 'Note updated',
+    title: 'Note Updated',
     icon: 'mdi:note-edit-outline',
     color: 'default',
   },

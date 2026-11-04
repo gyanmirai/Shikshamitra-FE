@@ -7,25 +7,25 @@ import type {
 } from 'src/redux/student/admissions/admission-assessment-types';
 
 export const assessmentStatusLabels = {
-  notBooked: 'Not booked',
+  notBooked: 'Not Booked',
   scheduled: 'Scheduled',
-  attendancePending: 'Attendance pending',
-  resultPending: 'Result pending',
-  reviewPending: 'Review pending',
-  ongoing: 'In progress',
+  attendancePending: 'Attendance Pending',
+  resultPending: 'Result Pending',
+  reviewPending: 'Review Pending',
+  ongoing: 'In Progress',
   passed: 'Pass',
   failed: 'Failed',
   absent: 'Absent',
   waived: 'Waived',
-  retakeRequired: 'Retake required',
+  retakeRequired: 'Retake Required',
   unavailable: 'Unavailable',
 };
 export const assessmentAttendanceLabels = {
   pending: 'Pending',
   present: 'Present',
   absent: 'Absent',
-  notMarked: 'Not marked',
-  notRequired: 'Not required',
+  notMarked: 'Not Marked',
+  notRequired: 'Not Required',
   notApplicable: '—',
 };
 

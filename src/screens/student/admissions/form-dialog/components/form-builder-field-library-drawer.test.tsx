@@ -32,8 +32,8 @@ describe('FormBuilderFieldLibraryDrawer', () => {
       </ThemeProvider>
     );
 
-    await user.click(screen.getByRole('tab', { name: 'Custom fields' }));
-    await user.click(screen.getByRole('button', { name: 'More field formats' }));
+    await user.click(screen.getByRole('tab', { name: 'Custom Fields' }));
+    await user.click(screen.getByRole('button', { name: 'More Field Formats' }));
     await user.click(screen.getByRole('button', { name: 'Add Text' }));
     await user.click(screen.getByRole('button', { name: 'Add Number' }));
 
@@ -42,7 +42,7 @@ describe('FormBuilderFieldLibraryDrawer', () => {
     expect(onClose).not.toHaveBeenCalled();
     expect(screen.getByRole('dialog')).toBeVisible();
 
-    await user.click(screen.getByRole('button', { name: 'Close field library' }));
+    await user.click(screen.getByRole('button', { name: 'Close Field Library' }));
     expect(onClose).toHaveBeenCalledOnce();
   });
 });

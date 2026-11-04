@@ -26,7 +26,7 @@ import {
   useUpdateCommunicationTemplateMutation,
 } from 'src/redux/communication/notification/notificationTemplateApi';
 
-type LifecycleEvent = { key: string; label: string; description: string };
+type LifecycleEvent = { key: string; label: string; templateLabel: string; description: string };
 type CommunicationTemplate = {
   id: string;
   templateName: string;
@@ -44,50 +44,60 @@ type CommunicationTemplate = {
 
 const CATEGORY = 'Admissions lifecycle';
 const PREFIX = 'Admissions · ';
+// templateLabel retains the existing storage name and default subject.
 export const ADMISSION_PARENT_MESSAGE_EVENTS: LifecycleEvent[] = [
   {
     key: 'inquiry-acknowledgement',
-    label: 'Inquiry acknowledgement',
+    label: 'Inquiry Acknowledgement',
+    templateLabel: 'Inquiry acknowledgement',
     description: 'Sent after a family submits an inquiry.',
   },
   {
     key: 'application-received',
-    label: 'Application received',
+    label: 'Application Received',
+    templateLabel: 'Application received',
     description: 'Confirms that the application was received.',
   },
   {
     key: 'missing-documents',
-    label: 'Missing documents',
+    label: 'Missing Documents',
+    templateLabel: 'Missing documents',
     description: 'Requests documents still needed for review.',
   },
   {
     key: 'exam-scheduled',
-    label: 'Exam scheduled',
+    label: 'Exam Scheduled',
+    templateLabel: 'Exam scheduled',
     description: 'Shares the entrance assessment schedule.',
   },
   {
     key: 'hall-ticket-ready',
-    label: 'Hall ticket ready',
+    label: 'Hall Ticket Ready',
+    templateLabel: 'Hall ticket ready',
     description: 'Notifies the family that the hall ticket is available.',
   },
   {
     key: 'result-published',
-    label: 'Result published',
+    label: 'Result Published',
+    templateLabel: 'Result published',
     description: 'Tells the family that an assessment result is available.',
   },
   {
     key: 'offer-issued',
-    label: 'Offer issued',
+    label: 'Offer Issued',
+    templateLabel: 'Offer issued',
     description: 'Shares the admission offer and next action.',
   },
   {
     key: 'payment-reminder',
-    label: 'Payment reminder',
+    label: 'Payment Reminder',
+    templateLabel: 'Payment reminder',
     description: 'Reminds the family about an admission payment.',
   },
   {
     key: 'admission-finalized',
-    label: 'Admission finalized',
+    label: 'Admission Finalized',
+    templateLabel: 'Admission finalized',
     description: 'Confirms the final admission handoff.',
   },
 ];
@@ -142,11 +152,11 @@ export function ApplicationExperienceParentCommunication() {
       ),
     [query.data?.items]
   );
-  const existing = selected ? byEvent.get(`${PREFIX}${selected.label}`) : undefined;
+  const existing = selected ? byEvent.get(`${PREFIX}${selected.templateLabel}`) : undefined;
   const formik = useFormik<Values>({
     enableReinitialize: true,
     initialValues: {
-      subject: existing?.subject ?? selected?.label ?? '',
+      subject: existing?.subject ?? selected?.templateLabel ?? '',
       body: existing?.body ?? (selected ? DEFAULT_BODY[selected.key] : ''),
       channels: existing?.channels?.length ? existing.channels : [2, 3],
       isActive: existing?.isActive ?? true,
@@ -155,7 +165,7 @@ export function ApplicationExperienceParentCommunication() {
     onSubmit: async (values) => {
       if (!selected) return;
       const data = {
-        templateName: `${PREFIX}${selected.label}`,
+        templateName: `${PREFIX}${selected.templateLabel}`,
         targetRole: 'Parent',
         category: CATEGORY,
         subject: values.subject.trim(),
@@ -188,7 +198,7 @@ export function ApplicationExperienceParentCommunication() {
     <Box sx={{ minHeight: 0, overflow: 'auto', pb: 1 }}>
       <Stack spacing={1}>
         {ADMISSION_PARENT_MESSAGE_EVENTS.map((event) => {
-          const template = byEvent.get(`${PREFIX}${event.label}`);
+          const template = byEvent.get(`${PREFIX}${event.templateLabel}`);
           return (
             <Box
               key={event.key}
@@ -211,7 +221,7 @@ export function ApplicationExperienceParentCommunication() {
                     variant="outlined"
                     color={template?.isActive ? 'success' : 'default'}
                     label={
-                      template ? (template.isActive ? 'Configured' : 'Paused') : 'Not configured'
+                      template ? (template.isActive ? 'Configured' : 'Paused') : 'Not Configured'
                     }
                   />
                 </Stack>
@@ -226,7 +236,7 @@ export function ApplicationExperienceParentCommunication() {
                 disabled={query.isLoading || query.isFetching}
                 onClick={() => setSelected(event)}
               >
-                {template ? 'Edit message' : 'Configure'}
+                {template ? 'Edit Message' : 'Configure'}
               </Button>
             </Box>
           );
@@ -235,13 +245,13 @@ export function ApplicationExperienceParentCommunication() {
 
       {query.isLoading && (
         <Box sx={{ display: 'grid', placeItems: 'center', minHeight: 180 }}>
-          <CircularProgress size={28} aria-label="Loading parent messages" />
+          <CircularProgress size={28} aria-label="Loading Parent Messages" />
         </Box>
       )}
       {query.isError && (
         <Box sx={{ mt: 2 }}>
           <Button size="small" variant="outlined" onClick={query.refetch}>
-            Retry loading messages
+            Retry Loading Messages
           </Button>
         </Box>
       )}
@@ -274,7 +284,7 @@ export function ApplicationExperienceParentCommunication() {
               </Typography>
             </Box>
             <IconButton
-              aria-label="Close message editor"
+              aria-label="Close Message Editor"
               onClick={close}
               disabled={saving}
               sx={{ minWidth: 44, minHeight: 44 }}
@@ -309,13 +319,13 @@ export function ApplicationExperienceParentCommunication() {
               />
             </ShakingTextField>
             <Box>
-              <Typography variant="subtitle2">Delivery channels</Typography>
+              <Typography variant="subtitle2">Delivery Channels</Typography>
               <Stack direction="row" flexWrap="wrap">
                 {[
                   { value: 0, label: 'WhatsApp' },
                   { value: 1, label: 'SMS' },
                   { value: 2, label: 'Email' },
-                  { value: 3, label: 'In-app' },
+                  { value: 3, label: 'In-App' },
                 ].map((channel) => (
                   <FormControlLabel
                     key={channel.value}
@@ -343,7 +353,7 @@ export function ApplicationExperienceParentCommunication() {
               )}
             </Box>
             <FormControlLabel
-              label="Use this message"
+              label="Use This Message"
               control={
                 <Checkbox
                   checked={formik.values.isActive}
@@ -374,7 +384,7 @@ export function ApplicationExperienceParentCommunication() {
               disabled={saving}
               sx={{ minHeight: { xs: 44, sm: 36 } }}
             >
-              {saving ? 'Saving…' : 'Save message'}
+              {saving ? 'Saving…' : 'Save Message'}
             </Button>
           </Stack>
         </Box>

@@ -34,7 +34,7 @@ function select(label: string, option: string) {
 describe('Admission offering routing fields', () => {
   it('shows one required admission type selector without an entry-mode dropdown', () => {
     show();
-    const field = screen.getByRole('combobox', { name: 'Admission type' });
+    const field = screen.getByRole('combobox', { name: 'Admission Type' });
     expect(field).toHaveAttribute('aria-required', 'true');
     expect(
       field.closest('.MuiFormControl-root')?.querySelector('.MuiFormLabel-asterisk')
@@ -50,13 +50,13 @@ describe('Admission offering routing fields', () => {
     { label: 'Staff', track: 3 as const },
   ])('starts registration-first when changing General to $label', ({ label, track }) => {
     const { onChange } = show();
-    select('Admission type', label);
+    select('Admission Type', label);
     expect(onChange).toHaveBeenCalledExactlyOnceWith({ track, entryMode: 1 });
   });
 
   it('switches an RTE offering to General with inquiry-first entry', () => {
     const { onChange } = show({ values: { track: 1, entryMode: 1 } });
-    select('Admission type', 'General');
+    select('Admission Type', 'General');
     expect(onChange).toHaveBeenCalledExactlyOnceWith({ track: 0, entryMode: 0 });
   });
 
@@ -64,18 +64,18 @@ describe('Admission offering routing fields', () => {
     'preserves saved Management entry mode %s until the admission type changes',
     (entryMode) => {
       const { onChange } = show({ values: { track: 2, entryMode } });
-      expect(screen.getByRole('combobox', { name: 'Admission type' })).toHaveTextContent(
+      expect(screen.getByRole('combobox', { name: 'Admission Type' })).toHaveTextContent(
         'Management'
       );
       expect(onChange).not.toHaveBeenCalled();
-      select('Admission type', 'Management');
+      select('Admission Type', 'Management');
       expect(onChange).not.toHaveBeenCalled();
     }
   );
 
   it('locks the admission type when the offering identity is already used or loading', () => {
     const { onChange } = show({ values: { track: 2, entryMode: 0 }, locked: true });
-    const field = screen.getByRole('combobox', { name: 'Admission type' });
+    const field = screen.getByRole('combobox', { name: 'Admission Type' });
     expect(field).toHaveAttribute('aria-disabled', 'true');
     fireEvent.mouseDown(field);
     expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
@@ -84,7 +84,7 @@ describe('Admission offering routing fields', () => {
 
   it('derives registration-first when changing a legacy Both offering to another special type', () => {
     const { onChange } = show({ values: { track: 2, entryMode: 2 } });
-    select('Admission type', 'Staff');
+    select('Admission Type', 'Staff');
     expect(onChange).toHaveBeenCalledExactlyOnceWith({ track: 3, entryMode: 1 });
   });
 
@@ -95,7 +95,7 @@ describe('Admission offering routing fields', () => {
         track: { error: true, helperText: 'Admission type is required' },
       },
     });
-    const type = screen.getByRole('combobox', { name: 'Admission type' });
+    const type = screen.getByRole('combobox', { name: 'Admission Type' });
     expect(type).toHaveAttribute('aria-invalid', 'true');
     expect(type.closest('.MuiFormControl-root')).toHaveTextContent('Admission type is required');
     fireEvent.blur(type);
@@ -106,7 +106,7 @@ describe('Admission offering routing fields', () => {
     show({
       feedback: { entryMode: { error: true, helperText: 'RTE must start with registration.' } },
     });
-    const type = screen.getByRole('combobox', { name: 'Admission type' });
+    const type = screen.getByRole('combobox', { name: 'Admission Type' });
     expect(type).toHaveAttribute('aria-invalid', 'true');
     expect(type.closest('.MuiFormControl-root')).toHaveTextContent(
       'RTE must start with registration.'

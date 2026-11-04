@@ -15,10 +15,10 @@ import type { DocumentAction } from './document-action-model';
 import type { useDocumentPermissions } from './use-document-permissions';
 
 const collectionLabels = {
-  upload: 'Upload a copy',
-  original: 'Check the physical original',
-  either: 'Upload a copy or check the physical original',
-  both: 'Upload a copy and check the physical original',
+  upload: 'Upload a Copy',
+  original: 'Check the Physical Original',
+  either: 'Upload a Copy or Check the Physical Original',
+  both: 'Upload a Copy and Check the Physical Original',
 };
 export function DocumentRequirementCard({
   requirement,
@@ -51,7 +51,7 @@ export function DocumentRequirementCard({
             <Typography variant="subtitle1">{requirement.name}</Typography>
             <Typography variant="caption" color="text.secondary">
               {requirement.status === 'notRequired'
-                ? 'Not applicable to this applicant'
+                ? 'Not Applicable to This Applicant'
                 : requirement.requirement === 'conditional'
                   ? `Conditional · ${requirement.isRequired ? 'Required for this applicant' : 'Based on applicant details'}`
                   : requirement.isRequired
@@ -77,14 +77,14 @@ export function DocumentRequirementCard({
           <Stack spacing={0.5}>
             <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
               {latest.fileName ||
-                (latest.kind === 'waiver' ? 'Requirement waived' : 'Physical original recorded')}
+                (latest.kind === 'waiver' ? 'Requirement Waived' : 'Physical Original Recorded')}
             </Typography>
             <Typography variant="caption" color="text.secondary">
               Version {latest.versionNumber} · Recorded {fDateTime(latest.submittedAt)}
             </Typography>
             {latest.originalSeen && (
               <Typography variant="body2">
-                Original sighted
+                Original Sighted
                 {latest.originalSeenAt ? ` · ${fDateTime(latest.originalSeenAt)}` : ''}
               </Typography>
             )}
@@ -110,7 +110,7 @@ export function DocumentRequirementCard({
                 aria-controls={historyId}
                 onClick={history.onToggle}
               >
-                {history.value ? 'Hide history' : `View history (${requirement.evidence.length})`}
+                {history.value ? 'Hide History' : `View history (${requirement.evidence.length})`}
               </Button>
             </Stack>
           </Stack>

@@ -41,9 +41,9 @@ it('keeps settings above the builder dialog and its select menus above the setti
       </Dialog>
     </ThemeProvider>
   );
-  await user.click(screen.getByRole('button', { name: 'Edit Student name field' }));
+  await user.click(screen.getByRole('button', { name: 'Edit Student name Field' }));
   await user.click(screen.getByRole('tab', { name: 'Rules' }));
-  await user.click(screen.getByRole('combobox', { name: /Show field when/ }));
+  await user.click(screen.getByRole('combobox', { name: /Show Field When/ }));
   const option = screen.getByRole('option', { name: 'Date of birth' });
   const menu = option.closest('.MuiMenu-root')!;
   const drawer = document.querySelector('.MuiDrawer-root')!;
@@ -53,20 +53,20 @@ it('keeps settings above the builder dialog and its select menus above the setti
   );
   expect(drawer.compareDocumentPosition(menu)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
   await user.click(option);
-  expect(screen.getByRole('combobox', { name: /Show field when/ })).toHaveTextContent(
+  expect(screen.getByRole('combobox', { name: /Show Field When/ })).toHaveTextContent(
     'Date of birth'
   );
   await user.click(screen.getByRole('combobox', { name: 'Condition' }));
   await user.click(screen.getByRole('option', { name: 'is not empty' }));
-  expect(screen.queryByRole('textbox', { name: 'Answer to match' })).not.toBeInTheDocument();
-  await user.click(screen.getByRole('button', { name: 'Clear condition' }));
+  expect(screen.queryByRole('textbox', { name: 'Answer to Match' })).not.toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Clear Condition' }));
   await user.click(screen.getByRole('tab', { name: 'Basic' }));
-  await user.click(screen.getByRole('combobox', { name: 'Field type' }));
+  await user.click(screen.getByRole('combobox', { name: 'Field Type' }));
   await user.click(screen.getByRole('option', { name: 'Textarea' }));
-  expect(screen.getByRole('combobox', { name: 'Field type' })).toHaveTextContent('Textarea');
+  expect(screen.getByRole('combobox', { name: 'Field Type' })).toHaveTextContent('Textarea');
   await user.click(screen.getByRole('button', { name: 'Done' }));
   await waitFor(() =>
-    expect(screen.queryByRole('button', { name: 'Close field settings' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Close Field Settings' })).not.toBeInTheDocument()
   );
   expect(screen.getByRole('dialog', { name: 'Form builder' })).toBeVisible();
 }, 15000);

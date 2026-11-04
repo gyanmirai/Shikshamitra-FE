@@ -76,6 +76,7 @@ export function AdmissionSiblingFamilyMatch({
   const inquiryLayout = layout === 'inquiry';
   const addSiblingAction = (
     <Button
+      aria-label="Add Sibling"
       type="button"
       size="small"
       variant={inquiryLayout ? 'contained' : 'outlined'}
@@ -84,13 +85,13 @@ export function AdmissionSiblingFamilyMatch({
       startIcon={<Iconify icon={GlobalIcons.addIcon} width={18} />}
       onClick={() => formik.submitForm()}
     >
-      Add sibling
+      Sibling
     </Button>
   );
 
   return (
     <Stack spacing={inquiryLayout ? 2 : 1} sx={{ minWidth: 0 }}>
-      {!inquiryLayout && <Typography variant="body2">Existing family · {children}</Typography>}
+      {!inquiryLayout && <Typography variant="body2">Existing Family · {children}</Typography>}
       <Box
         sx={{
           display: 'grid',
@@ -159,7 +160,7 @@ export function AdmissionSiblingFamilyMatch({
               sx={{ color: 'text.secondary', flexShrink: 0 }}
             />
             <Box>
-              <Typography variant="subtitle2">Same family, a new inquiry</Typography>
+              <Typography variant="subtitle2">Same Family, a New Inquiry</Typography>
               <Typography variant="body2" color="text.secondary">
                 Saved parent details stay unchanged.
               </Typography>
@@ -201,7 +202,7 @@ export function AdmissionSiblingFamilyMatch({
         content={
           <Stack spacing={1}>
             <Typography variant="body2">
-              Confirm this child belongs to {selected?.name}’s family. Saved parent details will be
+              Confirm This Child Belongs To {selected?.name}’s family. Saved parent details will be
               reused without changing the existing parent record.
             </Typography>
             {(mobileDiffers ||
@@ -218,6 +219,7 @@ export function AdmissionSiblingFamilyMatch({
         }
         action={
           <LoadingButton
+            aria-label="Add Sibling"
             type="button"
             size="small"
             variant="contained"
@@ -240,7 +242,7 @@ export function AdmissionSiblingFamilyMatch({
               }
             }}
           >
-            Add sibling
+            Sibling
           </LoadingButton>
         }
       />

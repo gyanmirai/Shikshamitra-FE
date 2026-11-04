@@ -49,6 +49,83 @@ const draft = (): CreateUpdateAdmissionForm => ({
 });
 
 describe('Registration source Inquiry inheritance model', () => {
+  it('does not reappend orphan local Board/Medium controls after an inherited legacy Class replaces their Class', () => {
+    const original = draft();
+    const academic = (id: string, source: string, parentField?: string): AdmissionFormField => ({
+      ...newField('section', 0, 6),
+      id,
+      code: id,
+      bindingKey: id,
+      label: id,
+      optionsJson: JSON.stringify({ source, ...(parentField ? { parentField } : {}) }),
+    });
+    const board = academic('BOARD', 'EducationBoards');
+    const medium = academic('MEDIUM', 'EducationMediums', board.code);
+    const standard = academic('CLASS', 'StandardsByMedium', medium.code);
+    const note = {
+      ...newField('section', 3),
+      id: 'note',
+      code: 'NOTE',
+      label: 'Additional question',
+    };
+    original.sections[0].fields = [board, medium, standard, note];
+    const inherited = {
+      ...standard,
+      optionsJson: '{"source":"Standards"}',
+      inheritedFrom: {
+        inquiryFormDefinitionId: 'inquiry',
+        sourceFieldCode: 'CLASS_INTERESTED',
+        fieldIdentity: 'academic:class-interest',
+      },
+    };
+    const sourceSection = {
+      ...original.sections[0],
+      id: 'source',
+      code: 'INQ_SOURCE',
+      fields: [inherited],
+    };
+    const effective = { sections: [sourceSection, { ...original.sections[0], fields: [note] }] };
+    const view = getInheritanceBuilderValues(original, effective);
+    expect(
+      view.sections.flatMap((section) => section.fields).map((question) => question.id)
+    ).toEqual(['CLASS', 'note']);
+    expect(original.sections[0].fields).toEqual([board, medium, standard, note]);
+    const conditional = {
+      ...original,
+      sections: [
+        {
+          ...original.sections[0],
+          fields: [
+            board,
+            medium,
+            standard,
+            { ...note, visibilityRuleJson: '{"field":"BOARD","operator":"isNotEmpty"}' },
+          ],
+        },
+      ],
+    };
+    expect(
+      getInheritanceBuilderValues(conditional, effective)
+        .sections.flatMap((section) => section.fields)
+        .map((question) => question.id)
+        .sort()
+    ).toEqual(['BOARD', 'CLASS', 'note']);
+    // A newly authored independent question can still need those parents while its preview is pending.
+    const independent = academic('OTHER_CLASS', 'Standards', medium.code);
+    const current = {
+      ...original,
+      sections: [
+        { ...original.sections[0], fields: [...original.sections[0].fields, independent] },
+      ],
+    };
+    const pending = getInheritanceBuilderValues(current, effective);
+    expect(
+      pending.sections
+        .flatMap((section) => section.fields)
+        .map((question) => question.id)
+        .sort()
+    ).toEqual(['BOARD', 'CLASS', 'MEDIUM', 'OTHER_CLASS', 'note']);
+  });
   it('keeps current base edits and new sections visible while retaining exact source sections during a preview refresh', () => {
     const original = draft();
     const question = { ...newField('section', 0), label: 'Before edit' };

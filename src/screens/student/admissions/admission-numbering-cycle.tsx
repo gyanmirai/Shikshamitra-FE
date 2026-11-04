@@ -33,11 +33,11 @@ export function AdmissionNumberingCycle({
     <FormSectionCard
       icon={GlobalIcons.scheduledReport}
       title="Numbering Cycle"
-      descriptionTooltip="Choose when the school-wide counter restarts. The year in the number is matched automatically. The cycle locks after the first custom number is issued."
+      descriptionTooltip="Choose When the School-Wide Counter Restarts. The Year in the Number Is Matched Automatically. The Cycle Locks After the First Custom Number Is Issued."
     >
       <ShakingTextField error={Boolean(cycleError)}>
         <CustomSelect
-          label="Numbering cycle"
+          label="Numbering Cycle"
           name="resetPolicy"
           value={form.values.resetPolicy}
           options={numberingCycles.map(({ value, label }) => ({ value, label }))}
@@ -71,13 +71,13 @@ export function AdmissionNumberingCycle({
           content={
             <ShakingTextField error={Boolean(yearError)}>
               <CustomSelect
-                label="Year in number"
+                label="Year in Number"
                 name="yearFormat"
                 value={form.values.yearFormat}
                 options={[
-                  { value: 0, label: 'No year' },
-                  { value: 1, label: 'Calendar year' },
-                  { value: 2, label: 'Academic year' },
+                  { value: 0, label: 'No Year' },
+                  { value: 1, label: 'Calendar Year' },
+                  { value: 2, label: 'Academic Year' },
                 ]}
                 size="small"
                 fullWidth

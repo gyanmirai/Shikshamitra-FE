@@ -69,12 +69,12 @@ function setup(conditionRuleJson?: string) {
 describe('assessment route interactions', { timeout: 15000 }, () => {
   it('serializes a failed assessment route as an explicit outcome condition without UI-only fields', async () => {
     const { user, onSave } = setup();
-    await user.click(screen.getByRole('combobox', { name: 'Continue after' }));
+    await user.click(screen.getByRole('combobox', { name: 'Continue After' }));
     await user.click(screen.getByRole('option', { name: /^Failed$/ }));
     await waitFor(() =>
       expect(screen.queryByRole('listbox', { hidden: true })).not.toBeInTheDocument()
     );
-    await user.click(screen.getByRole('button', { name: 'Save path' }));
+    await user.click(screen.getByRole('button', { name: 'Save Path' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(onSave.mock.calls[0][0]).toEqual({
       id: 'transition-1',
@@ -96,8 +96,8 @@ describe('assessment route interactions', { timeout: 15000 }, () => {
   ] as const)('keeps the path attached to its assessment stage: %s', async (condition) => {
     const { user, onSave } = setup(condition);
     expect(screen.getByRole('heading', { name: 'Entrance assessment' })).toBeInTheDocument();
-    expect(screen.queryByRole('combobox', { name: 'From stage *' })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Save path' }));
+    expect(screen.queryByRole('combobox', { name: 'From Stage *' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Save Path' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     const saved = onSave.mock.calls[0][0];
     expect(saved.fromStageId).toBe(source.id);
@@ -109,13 +109,13 @@ describe('assessment route interactions', { timeout: 15000 }, () => {
     const { user, onSave } = setup(
       '{"field":"assessment.outcome","operator":"Equals","value":"failed"}'
     );
-    expect(screen.getByRole('combobox', { name: 'Continue after' })).toHaveTextContent('Failed');
-    await user.click(screen.getByRole('combobox', { name: 'Continue after' }));
-    await user.click(screen.getByRole('option', { name: 'Passed or waived (default route)' }));
+    expect(screen.getByRole('combobox', { name: 'Continue After' })).toHaveTextContent('Failed');
+    await user.click(screen.getByRole('combobox', { name: 'Continue After' }));
+    await user.click(screen.getByRole('option', { name: 'Passed or Waived (Default Route)' }));
     await waitFor(() =>
       expect(screen.queryByRole('listbox', { hidden: true })).not.toBeInTheDocument()
     );
-    await user.click(screen.getByRole('button', { name: 'Save path' }));
+    await user.click(screen.getByRole('button', { name: 'Save Path' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(onSave.mock.calls[0][0]).toMatchObject({
       isDefault: true,

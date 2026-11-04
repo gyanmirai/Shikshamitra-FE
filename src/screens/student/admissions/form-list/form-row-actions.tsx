@@ -15,6 +15,7 @@ type Props = {
   onHistory: () => void;
   onCreateVersion: () => void;
   onArchive: () => void;
+  onRestore: () => void;
   onDelete: () => void;
 };
 
@@ -36,6 +37,7 @@ export function getFormRowActionVisibility(
     history: true,
     createVersion: canPublish && isPublished,
     archive: canManage && isPublished,
+    restore: canManage && status === 2,
   };
 }
 
@@ -51,6 +53,7 @@ export function FormRowActions({
   onHistory,
   onCreateVersion,
   onArchive,
+  onRestore,
   onDelete,
 }: Props) {
   const visible = getFormRowActionVisibility(form.status, canManage, canPublish, canDelete);
@@ -80,7 +83,7 @@ export function FormRowActions({
   if (visible.clone)
     actions.push({
       id: 'clone',
-      label: `Clone as draft`,
+      label: `Clone as Draft`,
       icon: 'mdi:content-copy',
       onClick: onClone,
     });
@@ -94,7 +97,7 @@ export function FormRowActions({
   if (visible.createVersion)
     actions.push({
       id: 'new-version',
-      label: `New version`,
+      label: `New Version`,
       icon: 'mdi:source-branch-plus',
       onClick: onCreateVersion,
     });
@@ -105,10 +108,17 @@ export function FormRowActions({
       icon: 'mdi:archive-outline',
       onClick: onArchive,
     });
+  if (visible.restore)
+    actions.push({
+      id: 'restore',
+      label: 'Restore',
+      icon: 'mdi:restore',
+      onClick: onRestore,
+    });
   if (visible.history)
     actions.push({
       id: 'history',
-      label: `History & versions `,
+      label: `History & Versions `,
       icon: 'mdi:history',
       onClick: onHistory,
     });
@@ -116,7 +126,7 @@ export function FormRowActions({
   return (
     <AdaptiveThreeDotsActions
       placement="right-top"
-      moreLabel={`More actions `}
+      moreLabel={`More Actions `}
       mobileDirectActionLimit={0}
       sx={{
         gap: 0,

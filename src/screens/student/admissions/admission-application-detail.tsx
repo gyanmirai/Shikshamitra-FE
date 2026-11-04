@@ -302,51 +302,73 @@ export default function AdmissionApplicationDetailScreen({
     });
   };
   const closeDetail = () => requestNavigation({ view: 'close' });
+  const formCorrectionAction = application &&
+    form &&
+    detail.canEdit &&
+    canCorrectApplicationForm(application, form) && (
+      <Button
+        size="small"
+        color="inherit"
+        variant="outlined"
+        disabled={navigationLocked}
+        startIcon={<Iconify icon={GlobalIcons.edit} />}
+        onClick={correctionDrawer.onTrue}
+      >
+        Edit Application Form
+      </Button>
+    );
   const renderRuntimeForm = (historicalReview = false) => {
     if (!application || !form) return null;
     const readOnly = historicalReview || !detail.canEdit;
     return (
-      <ApplicationRuntimeForm
-        academicMediumId={academicOffering?.mediumId}
-        compact
-        readOnly={readOnly}
-        application={application}
-        form={form}
-        values={detail.currentValues}
-        errors={readOnly ? [] : detail.errors}
-        fieldErrors={readOnly ? {} : detail.fieldErrors}
-        saving={detail.updateState.isLoading}
-        submitting={detail.submitState.isLoading}
-        onChange={detail.setFieldValue}
-        onBlur={detail.setFieldTouched}
-        onValidateStep={detail.validateStep}
-        onSave={detail.save}
-        onSubmit={detail.submitApplication}
-        showSaveDraft={detail.formStageQuery.currentData?.policy?.allowSaveAndResume ?? true}
-        canSubmitForm={
-          selectedCurrentStage &&
-          (detail.formStageQuery.currentData?.canSubmit ?? application.status === 0)
-        }
-        managedFormStage={Boolean(selectedStage?.formStageEnabled)}
-        sectionActions={
-          workspace.view === 'journey' && isFormStage(selectedStage)
-            ? renderManagedStages()
-            : undefined
-        }
-        canReopen={detail.canReopen}
-        reopening={detail.reopenState.isLoading}
-        onReopen={detail.reopenApplication}
-        documents={
-          !readOnly && (
-            <ApplicationFormDocuments
-              applicationId={application.id}
-              stages={workflow?.stages ?? []}
-              unsaved={detail.hasUnsavedAnswers}
-              saving={detail.updateState.isLoading || detail.submitState.isLoading}
-            />
-          )
-        }
-      />
+      <>
+        {workspace.view === 'journey' && formCorrectionAction && (
+          <Stack direction="row" justifyContent="flex-end" sx={{ flexShrink: 0 }}>
+            {formCorrectionAction}
+          </Stack>
+        )}
+        <ApplicationRuntimeForm
+          academicMediumId={academicOffering?.mediumId}
+          compact
+          readOnly={readOnly}
+          application={application}
+          form={form}
+          values={detail.currentValues}
+          errors={readOnly ? [] : detail.errors}
+          fieldErrors={readOnly ? {} : detail.fieldErrors}
+          saving={detail.updateState.isLoading}
+          submitting={detail.submitState.isLoading}
+          onChange={detail.setFieldValue}
+          onBlur={detail.setFieldTouched}
+          onValidateStep={detail.validateStep}
+          onSave={detail.save}
+          onSubmit={detail.submitApplication}
+          showSaveDraft={detail.formStageQuery.currentData?.policy?.allowSaveAndResume ?? true}
+          canSubmitForm={
+            selectedCurrentStage &&
+            (detail.formStageQuery.currentData?.canSubmit ?? application.status === 0)
+          }
+          managedFormStage={Boolean(selectedStage?.formStageEnabled)}
+          sectionActions={
+            workspace.view === 'journey' && isFormStage(selectedStage)
+              ? renderManagedStages()
+              : undefined
+          }
+          canReopen={detail.canReopen}
+          reopening={detail.reopenState.isLoading}
+          onReopen={detail.reopenApplication}
+          documents={
+            !readOnly && (
+              <ApplicationFormDocuments
+                applicationId={application.id}
+                stages={workflow?.stages ?? []}
+                unsaved={detail.hasUnsavedAnswers}
+                saving={detail.updateState.isLoading || detail.submitState.isLoading}
+              />
+            )
+          }
+        />
+      </>
     );
   };
   const canComplete =
@@ -413,7 +435,7 @@ export default function AdmissionApplicationDetailScreen({
     if (!application) return null;
     if (formLoading)
       return (
-        <Stack spacing={1.5} role="status" aria-label="Loading admission form">
+        <Stack spacing={1.5} role="status" aria-label="Loading Admission Form">
           <Skeleton height={40} />
           <Skeleton variant="rounded" height={200} />
           <Skeleton variant="rounded" height={200} />
@@ -430,14 +452,14 @@ export default function AdmissionApplicationDetailScreen({
       return (
         <Stack spacing={1.5}>
           <Stack direction="row" alignItems="center" justifyContent="space-between">
-            <Typography variant="h6">Application history</Typography>
+            <Typography variant="h6">Application History</Typography>
             <Button size="small" onClick={() => requestNavigation({ view: 'journey' })}>
               Current Step
             </Button>
           </Stack>
           <ApplicationJourneyHistory applicantId={application.applicantId} />
           {detail.formHistoryQuery.isLoading ? (
-            <Skeleton variant="rounded" height={160} aria-label="Loading application history" />
+            <Skeleton variant="rounded" height={160} aria-label="Loading Application History" />
           ) : detail.formHistoryQuery.isError ? (
             <AdmissionQueryError onRetry={detail.formHistoryQuery.refetch} />
           ) : hasHistory ? (
@@ -445,7 +467,7 @@ export default function AdmissionApplicationDetailScreen({
               {hasJourneyClosure && (
                 <StudentFeedback notificationKey="STU-0014" presentation="inline" severity="info">
                   <Stack spacing={0.5}>
-                    <Typography variant="subtitle2">Admission journey ended</Typography>
+                    <Typography variant="subtitle2">Admission Journey Ended</Typography>
                     <Typography
                       variant="body2"
                       sx={{ overflowWrap: 'anywhere', whiteSpace: 'pre-wrap' }}
@@ -482,23 +504,9 @@ export default function AdmissionApplicationDetailScreen({
             flexWrap="wrap"
             spacing={1}
           >
-            <Typography variant="h6">Application record</Typography>
+            <Typography variant="h6">Application Record</Typography>
             <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
-              {application &&
-                form &&
-                detail.canEdit &&
-                canCorrectApplicationForm(application, form) && (
-                  <Button
-                    size="small"
-                    color="inherit"
-                    variant="outlined"
-                    disabled={navigationLocked}
-                    startIcon={<Iconify icon={GlobalIcons.edit} />}
-                    onClick={correctionDrawer.onTrue}
-                  >
-                    Edit application form
-                  </Button>
-                )}
+              {formCorrectionAction}
               <Button
                 size="small"
                 disabled={navigationLocked}
@@ -515,7 +523,7 @@ export default function AdmissionApplicationDetailScreen({
       <Stack
         id={selectedStage ? `application-stage-panel-${selectedStage.id}` : undefined}
         role="region"
-        aria-label={selectedStage?.name ?? 'Admission stage'}
+        aria-label={selectedStage?.name ?? 'Admission Stage'}
         spacing={1.5}
         sx={
           selectedStage?.stageType === 4 ||
@@ -527,7 +535,7 @@ export default function AdmissionApplicationDetailScreen({
       >
         {selectedStage?.completedAt && (
           <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-            Handled by: {selectedStage.completedByName || 'Staff name not recorded'}
+            Handled By: {selectedStage.completedByName || 'Staff Name Not Recorded'}
           </Typography>
         )}
         {historical && selectedStage && !isFormStage(selectedStage) && (
@@ -593,7 +601,7 @@ export default function AdmissionApplicationDetailScreen({
               <Typography variant="subtitle2">{selectedStage.name}</Typography>
               <Typography variant="body2">
                 {historical
-                  ? 'The recorded outcome for this step is available in Application History.'
+                  ? 'The Recorded Outcome for This Step Is Available in Application History.'
                   : getStageGuidance(
                       selectedStage,
                       application.status,
@@ -631,7 +639,7 @@ export default function AdmissionApplicationDetailScreen({
       {!isDrawer && (
         <CustomBreadcrumbs
           heading={decisionWorkspace ? 'Applications' : 'Pipeline'}
-          description="Review or prepare any admission stage. Continue admission advances the current stage when its requirements are complete."
+          description="Review or Prepare Any Admission Stage. Continue Admission Advances the Current Stage When Its Requirements Are Complete."
           isBack
           onBack={closeDetail}
           backDisabled={navigationLocked}
@@ -676,7 +684,7 @@ export default function AdmissionApplicationDetailScreen({
           <Box sx={{ minWidth: 0 }}>
             <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
               <Typography id={titleId} variant="h6">
-                {application?.applicantName ?? 'Application details'}
+                {application?.applicantName ?? 'Application Details'}
               </Typography>
               {application &&
                 (refreshingDetails ? (
@@ -685,7 +693,7 @@ export default function AdmissionApplicationDetailScreen({
                     width={80}
                     height={24}
                     role="status"
-                    aria-label="Refreshing application status"
+                    aria-label="Refreshing Application Status"
                   />
                 ) : (
                   <Label color={getAdmissionApplicationStatusColor(application.status)}>
@@ -700,7 +708,7 @@ export default function AdmissionApplicationDetailScreen({
                 useFlexGap
                 flexWrap="wrap"
                 alignItems="center"
-                aria-label="Application academic context"
+                aria-label="Application Academic Context"
                 sx={{ color: 'text.secondary', mt: 0.25 }}
               >
                 {[formatAdmissionReference(application.applicationNumber), ...academicContext].map(
@@ -748,14 +756,14 @@ export default function AdmissionApplicationDetailScreen({
               arrow: { hide: true, placement: 'top-right' },
               paper: {
                 role: 'dialog',
-                'aria-label': 'Admission journey',
+                'aria-label': 'Admission Journey',
                 sx: { width: 320, maxWidth: 'calc(100vw - 32px)' },
               },
             }}
           >
             <Scrollbar sx={{ maxHeight: '65vh' }}>
               <Stack spacing={1} sx={{ p: 1 }}>
-                <Typography variant="subtitle1">Admission journey</Typography>
+                <Typography variant="subtitle1">Admission Journey</Typography>
                 <ApplicationStageJourney
                   stages={workflow?.stages ?? []}
                   selectedStageId={workspace.view === 'journey' ? selectedStage?.id : undefined}
@@ -769,7 +777,7 @@ export default function AdmissionApplicationDetailScreen({
                   }
                 />
                 <Divider />
-                <MenuList disablePadding aria-label="Journey actions">
+                <MenuList disablePadding aria-label="Journey Actions">
                   <MenuItem
                     disabled={navigationLocked}
                     onClick={() => requestNavigation({ view: 'form' })}
@@ -816,7 +824,7 @@ export default function AdmissionApplicationDetailScreen({
         <Scrollbar fillContent sx={{ flex: '1 1 auto', minHeight: 0 }}>
           <Box sx={{ minWidth: 0, flex: 1, display: 'flex', flexDirection: 'column' }}>
             {isLoading && (
-              <Stack spacing={1.5} role="status" aria-label="Loading application details">
+              <Stack spacing={1.5} role="status" aria-label="Loading Application Details">
                 <Skeleton height={56} />
                 <Skeleton variant="rounded" height={48} />
                 <Skeleton variant="rounded" height={200} />
@@ -832,8 +840,8 @@ export default function AdmissionApplicationDetailScreen({
                     {returnUrl.startsWith(studentPaths.enrollment.pipeline)
                       ? 'Back to Pipeline'
                       : returnUrl.startsWith(studentPaths.enrollment.assessments)
-                        ? 'Back to assessments'
-                        : 'Back to applications'}
+                        ? 'Back to Assessments'
+                        : 'Back to Applications'}
                   </Button>
                 }
               >
@@ -864,8 +872,8 @@ export default function AdmissionApplicationDetailScreen({
                   showOverlay={false}
                   label={
                     detail.advanceState.isLoading
-                      ? 'Moving to the next admission stage…'
-                      : 'Updating admission details…'
+                      ? 'Moving to the Next Admission Stage…'
+                      : 'Updating Admission Details…'
                   }
                 >
                   <Box
@@ -949,7 +957,7 @@ export default function AdmissionApplicationDetailScreen({
                         }
                         onClick={resumeJourneyDialog.onTrue}
                       >
-                        Resume admission
+                        Resume Admission
                       </Button>
                     )
                   ) : (
@@ -971,10 +979,10 @@ export default function AdmissionApplicationDetailScreen({
                       onClick={continueAdmission}
                     >
                       {detail.advanceState.isLoading
-                        ? 'Moving to next stage…'
+                        ? 'Moving to Next Stage…'
                         : detail.submitState.isLoading
-                          ? 'Submitting application…'
-                          : 'Continue admission'}
+                          ? 'Submitting Application…'
+                          : 'Continue Admission'}
                     </LoadingButton>
                   )}
                 </>

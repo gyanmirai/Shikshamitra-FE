@@ -12,6 +12,43 @@ type SourceOption = AdmissionDefinitionOption & { savedLabel?: string };
 const labelFor = (option: SourceOption) => option.savedLabel ?? getAdmissionDefinitionLabel(option);
 const filterSources = createFilterOptions<SourceOption>({ stringify: labelFor });
 
+/** Saved previews can select approved sources, without offering approval or draft mutations. */
+export function SavedInquirySourcePicker({
+  sources,
+  sourceId,
+  onChange,
+  loading = false,
+}: {
+  sources: SourceOption[];
+  sourceId: string | null;
+  onChange: (id: string | null) => void;
+  loading?: boolean;
+}) {
+  return (
+    <PaginatedSearchSelect<SourceOption>
+      label="Preview Using Inquiry Form"
+      name="inquiryPreviewSource"
+      fullWidth
+      size="small"
+      minChars={0}
+      value={sources.find((source) => source.id === sourceId) ?? null}
+      isLoading={loading}
+      fetchOptions={async (search) => ({
+        data: sources.filter((source) =>
+          labelFor(source).toLowerCase().includes(search.toLowerCase())
+        ),
+        hasMore: false,
+      })}
+      getOptionLabel={labelFor}
+      getOptionKey={(option) => option.id}
+      isOptionEqualToValue={(option, selected) => option.id === selected.id}
+      filterOptions={(_, state) => filterSources(sources, state)}
+      onChange={(_, option) => onChange(option?.id ?? null)}
+      noOptionsText="No approved Inquiry forms"
+    />
+  );
+}
+
 /** One identity-based picker for saved versions, retained connections and published choices. */
 export function InquirySourcePicker() {
   const inheritance = useFormInheritance()!;
@@ -43,13 +80,13 @@ export function InquirySourcePicker() {
   if (inheritance.initializingSources) {
     return (
       <TextField
-        label="Preview using Inquiry form"
+        label="Preview Using Inquiry Form"
         fullWidth
         size="small"
         disabled
         slotProps={{
           input: {
-            endAdornment: <CircularProgress size={20} aria-label="Loading Inquiry forms" />,
+            endAdornment: <CircularProgress size={20} aria-label="Loading Inquiry Forms" />,
           },
         }}
       />
@@ -58,7 +95,7 @@ export function InquirySourcePicker() {
 
   return (
     <PaginatedSearchSelect<SourceOption>
-      label="Preview using Inquiry form"
+      label="Preview Using Inquiry Form"
       name="inquiryPreviewSource"
       fullWidth
       size="small"
@@ -67,7 +104,7 @@ export function InquirySourcePicker() {
       value={value}
       disabled={inheritance.formik.isSubmitting}
       isLoading={inheritance.sourceLoading}
-      loadingLabel="Loading Inquiry forms"
+      loadingLabel="Loading Inquiry Forms"
       fetchOptions={
         inheritance.canViewSources
           ? inheritance.fetchSources

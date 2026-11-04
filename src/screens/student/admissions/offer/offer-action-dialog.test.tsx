@@ -34,7 +34,7 @@ it('issues an offer without changing the journey counsellor', async () => {
   );
 
   expect(screen.queryByRole('combobox', { name: /Admission counsellor/ })).not.toBeInTheDocument();
-  await user.click(screen.getByRole('button', { name: 'Issue offer' }));
+  await user.click(screen.getByRole('button', { name: 'Issue Offer' }));
 
   await waitFor(() =>
     expect(onSubmit).toHaveBeenCalledWith(

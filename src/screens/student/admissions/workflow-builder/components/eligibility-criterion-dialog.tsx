@@ -66,7 +66,7 @@ export function EligibilityCriterionDialog({
       <CustomDialog
         open
         hasForm={false}
-        title={readOnly ? 'Eligibility criterion' : 'Configure eligibility criterion'}
+        title={readOnly ? 'Eligibility Criterion' : 'Configure Eligibility Criterion'}
         handleClose={close}
         maxWidth="sm"
         guardUnsavedChanges={false}
@@ -130,7 +130,7 @@ export function EligibilityCriterionDialog({
             </Button>
             {!readOnly && (
               <Button size="small" variant="contained" type="submit">
-                Save criterion
+                Save Criterion
               </Button>
             )}
           </DialogActions>
@@ -139,11 +139,11 @@ export function EligibilityCriterionDialog({
       <ConfirmDialog
         open={discard.value}
         onClose={discard.onFalse}
-        title="Discard criterion changes?"
+        title="Discard Criterion Changes?"
         content="Your changes have not been added to the stage draft."
         action={
           <Button size="small" color="error" variant="contained" onClick={onClose}>
-            Discard changes
+            Discard Changes
           </Button>
         }
       />

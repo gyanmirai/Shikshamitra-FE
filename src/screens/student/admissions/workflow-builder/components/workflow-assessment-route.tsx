@@ -45,18 +45,18 @@ export function WorkflowAssessmentRoute({
         select
         fullWidth
         size="small"
-        label="Continue after"
+        label="Continue After"
         value={route}
         disabled={readOnly}
         onChange={(event) => selectRoute(event.target.value)}
       >
-        <MenuItem value="default">Passed or waived (default route)</MenuItem>
+        <MenuItem value="default">Passed or Waived (Default Route)</MenuItem>
         {outcomes.map((outcome) => (
           <MenuItem key={outcome} value={outcome}>
             {outcome.charAt(0).toUpperCase() + outcome.slice(1)}
           </MenuItem>
         ))}
-        <MenuItem value="custom">Another condition</MenuItem>
+        <MenuItem value="custom">Another Condition</MenuItem>
       </TextField>
       <StudentFeedback notificationKey="STU-0536" presentation="inline" severity="info">
         Failed, absent, and retake outcomes only follow a matching outcome route. Staff can also

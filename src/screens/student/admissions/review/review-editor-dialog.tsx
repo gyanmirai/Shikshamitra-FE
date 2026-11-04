@@ -27,7 +27,7 @@ export function ReviewEditorDialog({
   const busy = formik.isSubmitting || editor.reloading;
   return (
     <ReviewDialog
-      title="Review and recommendation"
+      title="Review and Recommendation"
       maxWidth="md"
       onClose={onClose}
       dirty={formik.dirty}
@@ -43,7 +43,7 @@ export function ReviewEditorDialog({
               disabled={busy || !editor.summary.canSaveDraft}
               onClick={() => editor.save('draft')}
             >
-              Save draft
+              Save Draft
             </Button>
           )}
           {permissions.submit && (
@@ -52,7 +52,7 @@ export function ReviewEditorDialog({
               disabled={busy || !editor.summary.canSubmit}
               onClick={() => editor.save('submit')}
             >
-              {formik.isSubmitting ? 'Saving…' : 'Submit recommendation'}
+              {formik.isSubmitting ? 'Saving…' : 'Submit Recommendation'}
             </Button>
           )}
         </DialogActions>

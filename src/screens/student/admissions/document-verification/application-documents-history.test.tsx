@@ -40,9 +40,9 @@ describe('document history and access', { timeout: 15000 }, () => {
         onComplete={vi.fn()}
       />
     );
-    expect(await screen.findByRole('button', { name: 'Upload document' })).toBeEnabled();
-    expect(screen.queryByRole('button', { name: 'Continue admission' })).not.toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: 'Upload document' }));
+    expect(await screen.findByRole('button', { name: 'Upload Document' })).toBeEnabled();
+    expect(screen.queryByRole('button', { name: 'Continue Admission' })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Upload Document' }));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
   });
 
@@ -60,7 +60,7 @@ describe('document history and access', { timeout: 15000 }, () => {
     );
     expect(screen.getByText(/Document access is required/)).toBeInTheDocument();
     expect(requests).toBe(0);
-    expect(screen.queryByText('Birth certificate')).not.toBeInTheDocument();
+    expect(screen.queryByText('Birth Certificate')).not.toBeInTheDocument();
   });
 
   it('loads completed checklist history on expansion and never exposes mutation actions', async () => {
@@ -84,11 +84,11 @@ describe('document history and access', { timeout: 15000 }, () => {
       />
     );
     expect(requests).toBe(0);
-    await userEvent.click(screen.getByRole('button', { name: /Document history/ }));
+    await userEvent.click(screen.getByRole('button', { name: /Document History/ }));
     expect(await screen.findByText('birth-certificate.pdf')).toBeInTheDocument();
     expect(requests).toBe(1);
-    expect(screen.queryByRole('button', { name: 'Upload replacement' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Waive requirement' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Continue admission' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Upload Replacement' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Waive Requirement' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Continue Admission' })).not.toBeInTheDocument();
   });
 });

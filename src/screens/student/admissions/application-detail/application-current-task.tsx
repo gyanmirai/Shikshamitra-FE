@@ -86,7 +86,7 @@ export function ApplicationCurrentTask({
               {getStageGuidance(stage, applicationStatus, nextRequiredAction)}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-              Entered {fDateTime(stage.enteredAt) || 'time not recorded'}
+              Entered {fDateTime(stage.enteredAt) || 'Time Not Recorded'}
             </Typography>
           </Box>
           <Button
@@ -99,7 +99,7 @@ export function ApplicationCurrentTask({
               flexShrink: 0,
             }}
           >
-            Review application form
+            Review Application Form
           </Button>
         </Stack>
       )}
@@ -129,7 +129,7 @@ export function ApplicationCurrentTask({
                 startIcon={<Iconify icon="mdi:arrow-right-circle-outline" />}
                 onClick={onRetryFormHandoff}
               >
-                Continue admission
+                Continue Admission
               </LoadingButton>
             )}
             {!compact && awaitingDecision && (
@@ -140,7 +140,7 @@ export function ApplicationCurrentTask({
                 href="#admission-decision"
                 startIcon={<Iconify icon="mdi:clipboard-check-outline" />}
               >
-                Review admission decision
+                Review Admission Decision
               </Button>
             )}
             {canSkip && stage.allowManualSkip && (
@@ -151,7 +151,7 @@ export function ApplicationCurrentTask({
                 startIcon={<Iconify icon="mdi:skip-next-outline" />}
                 onClick={onSkip}
               >
-                Skip this step
+                Skip This Step
               </Button>
             )}
           </Stack>
@@ -161,8 +161,8 @@ export function ApplicationCurrentTask({
       {!compact && isFormStage(stage) && !canRetryFormHandoff && formPolicy && (
         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1.5 }}>
           {formPolicy.autoAdvanceOnSubmit
-            ? 'The form automatically advances this journey after a successful submission.'
-            : 'After successful submission, use Continue to finish this step.'}
+            ? 'The Form Automatically Advances This Journey After a Successful Submission.'
+            : 'After Successful Submission, Use Continue to Finish This Step.'}
         </Typography>
       )}
     </Box>

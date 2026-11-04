@@ -29,15 +29,15 @@ export function DocumentEvidenceHistory({
             </Stack>
             <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
               {version.kind === 'waiver'
-                ? 'Requirement waived'
-                : version.fileName || 'Physical original recorded'}
+                ? 'Requirement Waived'
+                : version.fileName || 'Physical Original Recorded'}
             </Typography>
             <Typography variant="caption" color="text.secondary">
               Recorded {fDateTime(version.submittedAt)}
             </Typography>
             {version.originalSeen && (
               <Typography variant="body2">
-                Original sighted
+                Original Sighted
                 {version.originalSeenAt ? ` · ${fDateTime(version.originalSeenAt)}` : ''}
               </Typography>
             )}
@@ -59,7 +59,7 @@ export function DocumentEvidenceHistory({
               <Stack key={review.id} spacing={0.5}>
                 <Divider />
                 <Typography variant="caption" color="text.secondary">
-                  {review.decision === 'accepted' ? 'Accepted' : 'Replacement requested'} ·{' '}
+                  {review.decision === 'accepted' ? 'Accepted' : 'Replacement Requested'} ·{' '}
                   {fDateTime(review.reviewedAt)}
                 </Typography>
                 {review.reason && (

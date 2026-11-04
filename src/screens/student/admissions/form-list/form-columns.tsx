@@ -18,6 +18,7 @@ type Handlers = {
   onHistory: (form: AdmissionForm) => void;
   onCreateVersion: (form: AdmissionForm) => void;
   onArchive: (form: AdmissionForm) => void;
+  onRestore: (form: AdmissionForm) => void;
   onDelete: (form: AdmissionForm) => void;
 };
 
@@ -39,7 +40,7 @@ export function createFormColumns(handlers: Handlers): IColumn[] {
 
     {
       id: 'purpose',
-      label: 'Form type',
+      label: 'Form Type',
       minWidth: 130,
       isFilter: false,
       isSort: false,
@@ -118,6 +119,7 @@ export function createFormColumns(handlers: Handlers): IColumn[] {
             onHistory={() => handlers.onHistory(form)}
             onCreateVersion={() => handlers.onCreateVersion(form)}
             onArchive={() => handlers.onArchive(form)}
+            onRestore={() => handlers.onRestore(form)}
             onDelete={() => handlers.onDelete(form)}
           />
         );

@@ -23,7 +23,7 @@ export function FieldGuidanceSettings({ formik, sectionIndex, fieldIndex }: Fiel
       <TextField
         fullWidth
         size="small"
-        label="Default value"
+        label="Default Value"
         value={field.defaultValue ?? ''}
         onChange={(event) =>
           formik.setFieldValue(`${path}.defaultValue`, event.target.value || undefined)
@@ -43,7 +43,7 @@ export function FieldGuidanceSettings({ formik, sectionIndex, fieldIndex }: Fiel
         label={
           <Stack>
             <Typography variant="body2" fontWeight={600}>
-              Read-only
+              Read-Only
             </Typography>
           </Stack>
         }

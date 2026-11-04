@@ -216,11 +216,11 @@ function SessionSetupContent({
             <Typography id={titleId} variant="h6">
               <AdmissionDialogTitle
                 title={editing ? 'Edit Session' : 'Create Session'}
-                helpText="Choose the assessment, classes, schedule and Institute room. Book students from the Student tab after creating the session."
+                helpText="Choose the Assessment, Classes, Schedule and Institute Room. Book Students From the Student Tab After Creating the Session."
               />
             </Typography>
             <IconButton
-              aria-label="Close session setup"
+              aria-label="Close Session Setup"
               size="small"
               sx={{ width: 44, height: 44 }}
               onClick={close}
@@ -235,10 +235,10 @@ function SessionSetupContent({
               busy={locked}
               label={
                 resourcesLoading
-                  ? 'Loading session options…'
+                  ? 'Loading Session Options…'
                   : editing
-                    ? 'Saving session…'
-                    : 'Creating session…'
+                    ? 'Saving Session…'
+                    : 'Creating Session…'
               }
             >
               <Stack spacing={2} sx={{ p: { xs: 2, sm: 3 } }}>
@@ -368,7 +368,7 @@ function SessionSetupContent({
         }
         action={
           <Button size="small" variant="contained" color="error" onClick={onClose}>
-            Discard changes
+            Discard Changes
           </Button>
         }
       />

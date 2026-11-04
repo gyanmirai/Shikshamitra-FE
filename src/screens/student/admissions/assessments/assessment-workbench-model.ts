@@ -9,11 +9,11 @@ import type { getAssessmentPermissions } from './use-assessment-permissions';
 
 export const assessmentQueues: { value: AssessmentQueue | 'all'; label: string }[] = [
   { value: 'all', label: 'All' },
-  { value: 'toBook', label: 'To book' },
+  { value: 'toBook', label: 'To Book' },
   { value: 'attendance', label: 'Attendance' },
   { value: 'result', label: 'Results' },
   { value: 'ready', label: 'Ready' },
-  { value: 'attention', label: 'Needs attention' },
+  { value: 'attention', label: 'Needs Attention' },
   { value: 'completed', label: 'Completed' },
 ];
 const sortColumns = ['applicantName', 'applicationNumber', 'sessionStartsAt', 'enteredAt'];

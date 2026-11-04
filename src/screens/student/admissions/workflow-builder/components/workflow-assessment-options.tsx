@@ -17,17 +17,17 @@ export function WorkflowAssessmentOptions({ policy, readOnly, onChange }: Props)
   const options = [
     {
       field: 'schedulingEnabled',
-      label: 'Schedule an entrance exam',
+      label: 'Schedule an Entrance Exam',
       help: 'Book an exam session before recording the assessment result. Turn off to record a result directly.',
     },
     {
       field: 'attendanceRequired',
-      label: 'Require attendance',
+      label: 'Require Attendance',
       help: 'Record whether the applicant attended before completing the assessment.',
     },
     {
       field: 'scoringEnabled',
-      label: 'Calculate the result from marks',
+      label: 'Calculate the Result From Marks',
       help: 'Turn off to let authorized staff record the assessment outcome directly.',
     },
   ] as const;
@@ -64,12 +64,12 @@ export function WorkflowAssessmentOptions({ policy, readOnly, onChange }: Props)
               size="small"
               fullWidth
               required
-              label="Scoring method"
+              label="Scoring Method"
               value={policy.version === 2 ? (policy.scoringMode ?? 'total') : 'total'}
               disabled={readOnly}
               options={[
-                { value: 'total', label: 'Total marks' },
-                { value: 'subjects', label: 'Subject-wise marks' },
+                { value: 'total', label: 'Total Marks' },
+                { value: 'subjects', label: 'Subject-Wise Marks' },
               ]}
               onChange={(value) =>
                 onChange({
@@ -88,7 +88,7 @@ export function WorkflowAssessmentOptions({ policy, readOnly, onChange }: Props)
             type="number"
             label={
               <WorkflowSettingLabel
-                label="Maximum attempts *"
+                label="Maximum Attempts *"
                 help="Includes the first assessment. Choose 1 to disable retakes; maximum 10."
               />
             }
@@ -96,7 +96,7 @@ export function WorkflowAssessmentOptions({ policy, readOnly, onChange }: Props)
             value={policy.maxAttempts}
             onChange={(event) => onChange({ maxAttempts: Number(event.target.value) })}
             slotProps={{
-              htmlInput: { min: 1, max: 10, step: 1, 'aria-label': 'Maximum attempts *' },
+              htmlInput: { min: 1, max: 10, step: 1, 'aria-label': 'Maximum Attempts *' },
             }}
             error={invalidAttempts}
             helperText={invalidAttempts ? 'Enter a whole number from 1 to 10.' : undefined}
@@ -110,7 +110,7 @@ export function WorkflowAssessmentOptions({ policy, readOnly, onChange }: Props)
               fullWidth
               size="small"
               type="number"
-              label="Total marks *"
+              label="Total Marks *"
               disabled={readOnly}
               value={policy.totalMarks}
               onChange={(event) => onChange({ totalMarks: Number(event.target.value) })}
@@ -130,7 +130,7 @@ export function WorkflowAssessmentOptions({ policy, readOnly, onChange }: Props)
               type="number"
               label={
                 <WorkflowSettingLabel
-                  label="Passing marks *"
+                  label="Passing Marks *"
                   help="An equal or higher score passes."
                 />
               }
@@ -142,7 +142,7 @@ export function WorkflowAssessmentOptions({ policy, readOnly, onChange }: Props)
                   min: 0,
                   max: policy.totalMarks,
                   step: 'any',
-                  'aria-label': 'Passing marks *',
+                  'aria-label': 'Passing Marks *',
                 },
               }}
               error={policy.passingMarks < 0 || policy.passingMarks > policy.totalMarks}

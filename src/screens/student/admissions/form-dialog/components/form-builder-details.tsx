@@ -59,7 +59,7 @@ export function FormBuilderDetails({ formik, editing }: Props) {
   };
   const selectStarter = (starter: AdmissionFormStarter) => {
     const values = createStarter(starter);
-    const label = starter === 'blank' ? 'Blank form' : values.name;
+    const label = starter === 'blank' ? 'Blank Form' : values.name;
     const hasDraftChanges = !isEqual(
       { ...withoutInquiryDefaults(formik.values), purpose: formik.initialValues.purpose },
       withoutInquiryDefaults(formik.initialValues)
@@ -76,7 +76,7 @@ export function FormBuilderDetails({ formik, editing }: Props) {
         <ShakingTextField error={purposeError}>
           <CustomSelect
             name="purpose"
-            label="Form type"
+            label="Form Type"
             required
             size="small"
             fullWidth
@@ -101,7 +101,7 @@ export function FormBuilderDetails({ formik, editing }: Props) {
         </ShakingTextField>
       </Box>
       {!editing && (
-        <Box component="section" aria-label="Form templates">
+        <Box component="section" aria-label="Form Templates">
           <FormTemplateChooser
             purpose={purpose}
             selectedStarter={selectedStarter}
@@ -117,7 +117,7 @@ export function FormBuilderDetails({ formik, editing }: Props) {
             tabIndex={-1}
             sx={{ pb: 1, mb: 1.5, borderBottom: '1px dashed', borderColor: 'divider' }}
           >
-            Form details
+            Form Details
           </Typography>
           <FormBuilderDetailFields formik={formik} />
         </Grid>
@@ -125,7 +125,7 @@ export function FormBuilderDetails({ formik, editing }: Props) {
       <ConfirmDialog
         open={Boolean(pendingStarter)}
         onClose={() => setPendingStarter(null)}
-        title={`Replace this draft with ${pendingStarter?.label ?? 'this template'}?`}
+        title={`Replace This Draft With ${pendingStarter?.label ?? 'this template'}?`}
         content={`This replaces the form details, sections, and fields you have entered with ${(pendingStarter?.label ?? 'the selected template').toLowerCase()}.`}
         action={
           <Button
@@ -137,7 +137,7 @@ export function FormBuilderDetails({ formik, editing }: Props) {
               pendingStarter && applyStarter(pendingStarter.values, pendingStarter.starter)
             }
           >
-            Replace draft
+            Replace Draft
           </Button>
         }
       />

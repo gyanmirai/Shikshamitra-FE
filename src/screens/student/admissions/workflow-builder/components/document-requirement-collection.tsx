@@ -58,29 +58,29 @@ export function DocumentRequirementCollection({
     });
   };
   const mappings = [
-    { value: ADMISSION_EVIDENCE, label: 'Keep as admission evidence' },
+    { value: ADMISSION_EVIDENCE, label: 'Keep as Admission Evidence' },
     ...documentTypes.map((item) => ({ value: item.id, label: item.name })),
   ];
   const categoriesEmpty = !documentTypes.length && !documentTypesLoading && !documentTypesError;
   if (categoriesEmpty)
     mappings.push({
       value: '__no_categories__',
-      label: 'No student document categories configured',
+      label: 'No Student Document Categories Configured',
     });
   if (values.documentTypeId && !documentTypes.some((item) => item.id === values.documentTypeId)) {
     mappings.push({
       value: values.documentTypeId,
-      label: 'Previously selected student document type',
+      label: 'Previously Selected Student Document Type',
     });
   }
   return (
     <Stack spacing={1}>
-      <Typography variant="subtitle2">Upload and student record</Typography>
+      <Typography variant="subtitle2">Upload and Student Record</Typography>
       <DocumentUploadLimits formik={formik} />
       <CustomSelect
         size="small"
         fullWidth
-        label="Student document category (optional)"
+        label="Student Document Category (Optional)"
         isLoading={documentTypesLoading && !documentTypes.length}
         disabledValues={['__no_categories__']}
         disabledLabel="Configure categories in Student Records settings"
@@ -90,14 +90,14 @@ export function DocumentRequirementCollection({
         endAdornment={
           <InputAdornment position="end" sx={{ mr: 2.5 }}>
             <CustomTooltip
-              title="Accepted uploads connect to the student record and matching Onboarding requirements when admission is finalized."
+              title="Accepted Uploads Connect to the Student Record and Matching Onboarding Requirements When Admission Is Finalized."
               arrow
               placement="right"
             >
               <IconButton
                 type="button"
                 size="small"
-                aria-label="Student document category information"
+                aria-label="Student Document Category Information"
                 onMouseDown={(event) => event.stopPropagation()}
                 onClick={(event) => {
                   event.preventDefault();
@@ -143,7 +143,7 @@ export function DocumentRequirementCollection({
       )}
       {selectedMapping && uploads && (
         <Typography variant="caption" color="text.secondary">
-          Category limits: {selectedMapping.allowedExtensions.join(', ').toUpperCase()} · Maximum{' '}
+          Category Limits: {selectedMapping.allowedExtensions.join(', ').toUpperCase()} · Maximum{' '}
           {selectedMapping.maxFileSizeMb} MB. Both category and requirement limits apply.
         </Typography>
       )}

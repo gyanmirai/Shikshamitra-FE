@@ -145,6 +145,7 @@ export function FormBuilderCanvas({
             </Scrollbar>
             <Box sx={{ p: 1.5, flexShrink: 0, borderTop: 1, borderColor: 'divider' }}>
               <Button
+                aria-label="Add Step"
                 fullWidth
                 size="small"
                 variant="outlined"
@@ -152,7 +153,7 @@ export function FormBuilderCanvas({
                 disabled={formik.isSubmitting}
                 onClick={() => onAddStep(activeStep?.id)}
               >
-                Add step
+                Step
               </Button>
             </Box>
           </Card>

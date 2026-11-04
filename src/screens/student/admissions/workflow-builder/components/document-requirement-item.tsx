@@ -6,10 +6,10 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { Box, Paper, Stack, IconButton, Typography } from '@mui/material';
 
 const collectionLabels = {
-  upload: 'File upload',
-  original: 'Original inspection',
-  either: 'Upload or original',
-  both: 'Upload and original',
+  upload: 'File Upload',
+  original: 'Original Inspection',
+  either: 'Upload or Original',
+  both: 'Upload and Original',
 };
 export function DocumentRequirementItem({
   item,
@@ -54,12 +54,12 @@ export function DocumentRequirementItem({
           </Stack>
           {!readOnly && (
             <Stack direction="row" sx={{ flexShrink: 0 }}>
-              <CustomTooltip title="Edit requirement">
+              <CustomTooltip title="Edit Requirement">
                 <IconButton size="small" aria-label={`Edit ${item.name}`} onClick={onEdit}>
                   <Iconify icon="mdi:pencil-outline" width={20} />
                 </IconButton>
               </CustomTooltip>
-              <CustomTooltip title="Remove requirement">
+              <CustomTooltip title="Remove Requirement">
                 <IconButton
                   size="small"
                   color="error"
@@ -83,11 +83,11 @@ export function DocumentRequirementItem({
             ·{' '}
             {item.standardIds
               ? `${item.standardIds.length} selected ${item.standardIds.length === 1 ? 'class' : 'classes'}`
-              : 'All classes'}
+              : 'All Classes'}
           </Typography>
           {item.collectionMode !== 'original' && (
             <Typography variant="caption" sx={{ overflowWrap: 'anywhere' }}>
-              · {item.allowedExtensions.join(', ').toUpperCase()} · Up to {item.maxFileSizeMb} MB
+              · {item.allowedExtensions.join(', ').toUpperCase()} · Up To {item.maxFileSizeMb} MB
             </Typography>
           )}
         </Stack>

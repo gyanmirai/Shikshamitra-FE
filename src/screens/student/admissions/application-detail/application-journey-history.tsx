@@ -11,9 +11,9 @@ export function ApplicationJourneyHistory({ applicantId }: { applicantId: string
   const activities = query.currentData;
   return (
     <Stack spacing={1}>
-      <Typography variant="subtitle1">Inquiry and admission activity</Typography>
+      <Typography variant="subtitle1">Inquiry and Admission Activity</Typography>
       {query.isLoading || (query.isFetching && !activities) ? (
-        <Skeleton variant="rounded" height={160} aria-label="Loading journey activity" />
+        <Skeleton variant="rounded" height={160} aria-label="Loading Journey Activity" />
       ) : query.isError ? (
         <StudentFeedback
           notificationKey="STU-0200"
@@ -30,7 +30,7 @@ export function ApplicationJourneyHistory({ applicantId }: { applicantId: string
       ) : (
         <AdmissionActivityTimeline
           activities={activities ?? []}
-          emptyDescription="Staff actions and their handling history will appear here."
+          emptyDescription="Staff Actions and Their Handling History Will Appear Here."
         />
       )}
     </Stack>

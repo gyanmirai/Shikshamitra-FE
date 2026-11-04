@@ -129,9 +129,9 @@ export function canPerformAdmissionDecision(
 
 function getSuccessMessage(action: AdmissionDecisionAction): string {
   const labels: Record<AdmissionDecisionAction, string> = {
-    approve: 'Application approved',
-    reject: 'Application rejected',
-    waitlist: 'Application waitlisted',
+    approve: 'Application Approved',
+    reject: 'Application Rejected',
+    waitlist: 'Application Waitlisted',
   };
   return labels[action];
 }

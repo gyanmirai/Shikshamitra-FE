@@ -69,7 +69,7 @@ export function ApplicationEligibilityPanel({
           </StudentFeedback>
         ) : (
           <>
-            {query.isFetching && <LinearProgress aria-label="Refreshing eligibility results" />}
+            {query.isFetching && <LinearProgress aria-label="Refreshing Eligibility Results" />}
             <EligibilityResultContent
               summary={summary}
               permissions={permissions}
@@ -83,7 +83,7 @@ export function ApplicationEligibilityPanel({
                   disabled={!summary.canComplete || query.isFetching || advancing}
                   onClick={() => onComplete?.()}
                 >
-                  {advancing ? 'Continuing…' : 'Continue admission'}
+                  {advancing ? 'Continuing…' : 'Continue Admission'}
                 </Button>
               </Stack>
             )}

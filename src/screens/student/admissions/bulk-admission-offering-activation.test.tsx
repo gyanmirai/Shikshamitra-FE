@@ -63,20 +63,55 @@ describe('Bulk activation controls', () => {
       within(screen.getByRole('button', { name: 'Activate' })).queryByRole('progressbar')
     ).not.toBeInTheDocument();
   });
-  it('keeps per-offering failure reasons visible and offers retry through the selected action', () => {
+  it('keeps per-offering recovery inside the confirmation instead of a raw red page paragraph', () => {
     const activation = {
       ...state(),
+      confirmationOpen: true,
       failures: [
         { id: 'two', name: 'Class 2 General', message: 'Publish the registration form first.' },
       ],
     };
     render(<BulkAdmissionOfferingActivation activation={activation} disabled={false} />);
-    expect(
-      screen.getByText('Class 2 General: Publish the registration form first.', { exact: false })
-    ).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Activate Selected' })).toBeEnabled();
+    const dialog = screen.getByRole('dialog', { name: 'Offering Activation Needs Changes' });
+    expect(within(dialog).getByText('Class 2 General')).toBeVisible();
+    expect(within(dialog).getByText('Publish the registration form first.')).toBeVisible();
+    expect(within(dialog).getByRole('button', { name: 'Retry activation' })).toBeEnabled();
     // The batch hook already announces the outcome; local reasons must not announce it again.
     expect(toast.error).not.toHaveBeenCalled();
+  });
+
+  it('provides permitted form recovery for a structured configuration failure', () => {
+    render(
+      <BulkAdmissionOfferingActivation
+        disabled={false}
+        canReviewForms
+        activation={{
+          ...state(),
+          confirmationOpen: true,
+          failures: [
+            {
+              id: 'two',
+              name: 'Class 2',
+              message: 'Review required identity.',
+              configurationErrors: [
+                {
+                  code: 'ApplicationFormIdentityIncomplete',
+                  message: 'Make Gender required.',
+                  formDefinitionId: 'form-2',
+                  formName: 'Registration 2026',
+                },
+              ],
+            },
+          ],
+        }}
+      />
+    );
+    expect(screen.getByRole('link', { name: 'Review Registration 2026' })).toHaveAttribute(
+      'href',
+      expect.stringContaining('form-2')
+    );
+    expect(screen.getByText('Make Gender required.')).toBeVisible();
+    expect(screen.queryByText('Review required identity.')).not.toBeInTheDocument();
   });
   it('does not render an empty selection toolbar', () => {
     render(

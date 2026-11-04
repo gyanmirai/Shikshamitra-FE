@@ -10,7 +10,7 @@ export const INQUIRY_STATUS_OPTIONS: Array<{
 }> = [
   { value: 0, label: 'Pending' },
   { value: 2, label: 'Interested' },
-  { value: 6, label: 'Not interested' },
+  { value: 6, label: 'Not Interested' },
 ];
 
 export const INQUIRY_SOURCE_OPTIONS: Array<{
@@ -18,18 +18,18 @@ export const INQUIRY_SOURCE_OPTIONS: Array<{
   label: string;
 }> = [
   { value: 0, label: 'Website' },
-  { value: 1, label: 'Walk-in' },
+  { value: 1, label: 'Walk-In' },
   { value: 2, label: 'Phone' },
   { value: 3, label: 'Referral' },
   { value: 4, label: 'Campaign' },
   { value: 5, label: 'Import' },
   { value: 6, label: 'WhatsApp' },
-  { value: 7, label: 'Existing parent' },
+  { value: 7, label: 'Existing Parent' },
   { value: 8, label: 'Manual' },
   { value: 9, label: 'Other' },
-  { value: 10, label: 'QR code' },
-  { value: 11, label: 'School fair' },
-  { value: 12, label: 'Social media' },
+  { value: 10, label: 'QR Code' },
+  { value: 11, label: 'School Fair' },
+  { value: 12, label: 'Social Media' },
 ];
 
 export const inquiryStatusLabel = (value: unknown) =>

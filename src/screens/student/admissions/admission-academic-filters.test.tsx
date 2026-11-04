@@ -182,7 +182,7 @@ describe('admission academic filters', () => {
       </ThemeProvider>
     );
     expect(onChange).not.toHaveBeenCalled();
-    expect(screen.getByText('All boards')).toBeInTheDocument();
+    expect(screen.getByText('All Boards')).toBeInTheDocument();
   });
 
   it('retains the default hierarchy selection for other admissions screens', () => {
@@ -259,7 +259,7 @@ describe('admission academic filters', () => {
     ['Board', 'Medium', 'Class'].forEach((name) => {
       expect(screen.getByRole('combobox', { name })).toHaveAttribute('aria-disabled', 'true');
     });
-    expect(screen.getByRole('button', { name: 'Clear academic filters' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Clear Academic Filters' })).toBeDisabled();
     expect(onChange).not.toHaveBeenCalled();
   });
 });

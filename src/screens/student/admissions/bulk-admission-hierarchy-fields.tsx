@@ -161,7 +161,7 @@ export function BulkAdmissionHierarchyFields({
               !values.mediumId || loading || classesLoading || classesError || classesDisabled
             }
             disabledValues={configuredClassIds}
-            disabledLabel="Offering already exists"
+            disabledLabel="Offering Already Exists"
             onChange={(ids) => {
               const selectedIds = (Array.isArray(ids) ? ids : [ids]).map(String);
               const selection = selectBulkClasses(
@@ -182,7 +182,7 @@ export function BulkAdmissionHierarchyFields({
         </ShakingTextField>
         {classesError && retryClasses && (
           <Button size="small" onClick={retryClasses} sx={{ mt: 0.5 }}>
-            Retry class check
+            Retry Class Check
           </Button>
         )}
       </Grid>

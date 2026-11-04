@@ -16,13 +16,13 @@ export function WorkflowSetupProgress({
     <Paper
       component="section"
       elevation={0}
-      aria-label="Workflow setup progress"
+      aria-label="Workflow Setup Progress"
       sx={{ px: { xs: 1, sm: 2 }, py: 0, flexShrink: 0 }}
     >
       {onBackToDetails && activeStep === 1 ? (
         <Stepper
           role="list"
-          aria-label="Workflow setup steps"
+          aria-label="Workflow Setup Steps"
           activeStep={activeStep}
           alternativeLabel
           sx={{ m: 0, p: 0 }}
@@ -31,7 +31,7 @@ export function WorkflowSetupProgress({
             <StepButton
               onClick={onBackToDetails}
               disabled={disabled}
-              aria-label="Back to workflow details"
+              aria-label="Back to Workflow Details"
             >
               <StepLabel sx={{ '& .MuiStepLabel-label': { typography: 'subtitle2' } }}>
                 Workflow details

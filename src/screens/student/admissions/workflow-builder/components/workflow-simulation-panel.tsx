@@ -37,15 +37,15 @@ type Props = {
 };
 
 const fieldLabels: Record<string, string> = {
-  'inquiry.management.outcome': 'Inquiry outcome',
-  'assessment.outcome': 'Assessment outcome',
-  'documents.status': 'Document status',
-  'documents.waivedCount': 'Document waivers',
-  'eligibility.status': 'Eligibility status',
-  'payment.status': 'Payment status',
-  'review.decision': 'Review decision',
-  'offer.status': 'Offer status',
-  'seat.status': 'Seat status',
+  'inquiry.management.outcome': 'Inquiry Outcome',
+  'assessment.outcome': 'Assessment Outcome',
+  'documents.status': 'Document Status',
+  'documents.waivedCount': 'Document Waivers',
+  'eligibility.status': 'Eligibility Status',
+  'payment.status': 'Payment Status',
+  'review.decision': 'Review Decision',
+  'offer.status': 'Offer Status',
+  'seat.status': 'Seat Status',
 };
 
 export function WorkflowSimulationPanel({ stages, transitions }: Props) {
@@ -100,7 +100,7 @@ export function WorkflowSimulationPanel({ stages, transitions }: Props) {
             <Iconify icon="mdi:flask-outline" width={20} />
           </Box>
           <Box sx={{ minWidth: 0 }}>
-            <Typography variant="subtitle2">Test one applicant outcome at a time</Typography>
+            <Typography variant="subtitle2">Test One Applicant Outcome at a Time</Typography>
             <Typography variant="body2" color="text.secondary">
               Change the scenario or its values to see which route the applicant follows. Final
               validation remains authoritative before publication. This tests routing and configured
@@ -119,7 +119,7 @@ export function WorkflowSimulationPanel({ stages, transitions }: Props) {
           select
           fullWidth
           size="small"
-          label="Test scenario"
+          label="Test Scenario"
           value={scenarioId}
           onChange={(event) => selectScenario(event.target.value)}
         >
@@ -141,7 +141,7 @@ export function WorkflowSimulationPanel({ stages, transitions }: Props) {
           aria-labelledby="workflow-scenario-values-heading"
         >
           <Typography id="workflow-scenario-values-heading" variant="subtitle2">
-            Scenario values
+            Scenario Values
           </Typography>
           {conditionFields.map((field) => (
             <TextField
@@ -181,10 +181,10 @@ export function WorkflowSimulationPanel({ stages, transitions }: Props) {
       >
         <AlertTitle>
           {result.status === 'completed'
-            ? 'Scenario reaches the final stage'
+            ? 'Scenario Reaches the Final Stage'
             : result.status === 'blocked'
-              ? 'Scenario stops before completion'
-              : 'Scenario has a routing problem'}
+              ? 'Scenario Stops Before Completion'
+              : 'Scenario Has a Routing Problem'}
         </AlertTitle>
         {result.message}
       </StudentFeedback>
@@ -202,7 +202,7 @@ export function WorkflowSimulationPanel({ stages, transitions }: Props) {
           </StudentFeedback>
         )}
         <Typography id="workflow-selected-journey-heading" variant="subtitle2">
-          Selected journey
+          Selected Journey
         </Typography>
         <Paper variant="outlined" sx={{ mt: 1, px: 1.5, py: 0.75 }}>
           {result.steps.map((step, index) => (
@@ -252,8 +252,8 @@ export function WorkflowSimulationPanel({ stages, transitions }: Props) {
                 </Typography>
                 {step.nextStageId && (
                   <Typography variant="caption" color="text.secondary">
-                    {step.routeKind === 'default' ? 'Default next step' : 'Matching condition'} →{' '}
-                    {stageById.get(step.nextStageId)?.name ?? 'Missing stage'}
+                    {step.routeKind === 'default' ? 'Default Next Step' : 'Matching Condition'} →{' '}
+                    {stageById.get(step.nextStageId)?.name ?? 'Missing Stage'}
                   </Typography>
                 )}
               </Box>
@@ -272,7 +272,7 @@ export function WorkflowSimulationPanel({ stages, transitions }: Props) {
             sx={{ flex: 1, minWidth: 0, pr: 1 }}
           >
             <Box sx={{ minWidth: 0 }}>
-              <Typography variant="subtitle2">All scenario checks</Typography>
+              <Typography variant="subtitle2">All Scenario Checks</Typography>
               <Typography variant="caption" color="text.secondary">
                 Open to compare every predefined outcome.
               </Typography>
@@ -281,7 +281,7 @@ export function WorkflowSimulationPanel({ stages, transitions }: Props) {
               size="small"
               variant="outlined"
               color={completedScenarioCount === scenarioResults.length ? 'success' : 'warning'}
-              label={`${completedScenarioCount} of ${scenarioResults.length} complete`}
+              label={`${completedScenarioCount} of ${scenarioResults.length} Complete`}
             />
           </Stack>
         </AccordionSummary>

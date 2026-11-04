@@ -545,13 +545,13 @@ export function getAdmissionInquiryIdentityErrors(
     {
       value: payload.applicantFirstName,
       keys: ['Applicant.FirstName', 'Applicant.Name'],
-      label: 'Student name',
+      label: 'Student Name',
     },
-    { value: payload.guardianFirstName, keys: [parentName], label: 'Parent / Guardian name' },
+    { value: payload.guardianFirstName, keys: [parentName], label: 'Parent / Guardian Name' },
     {
       value: payload.guardianPhone,
       keys: [`${contact.prefix}.Mobile`],
-      label: 'Parent / Guardian mobile',
+      label: 'Parent / Guardian Mobile',
     },
   ];
   const fieldErrors: Record<string, string> = {};
@@ -559,7 +559,7 @@ export function getAdmissionInquiryIdentityErrors(
   entries.forEach(({ value, keys, label }) => {
     if (value?.trim()) return;
     const field = active.find((item) => keys.includes(canonicalInquiryBinding(item) ?? ''));
-    if (field) fieldErrors[field.code] = `${field.label} is required to create an inquiry.`;
+    if (field) fieldErrors[field.code] = `${field.label} is required.`;
     else missingMappings.push(label);
   });
   return {
@@ -583,7 +583,9 @@ export function validateAdmissionInquiry(
   );
   activeFields.forEach((field) => {
     if (field.required && !fieldValue(values, field.code) && fieldErrors[field.code])
-      fieldErrors[field.code] = `${field.label} is required`;
+      fieldErrors[field.code] = canonicalInquiryBinding(field) === 'Inquiry.ParentRelationship'
+        ? `Select a ${field.label.toLowerCase()}.`
+        : `${field.label} is required.`;
   });
   const { prefix } = getAdmissionInquiryPrimaryContact(fields, values);
   const guardianPhoneField = activeFields.find(
@@ -592,7 +594,7 @@ export function validateAdmissionInquiry(
   const guardianPhone = guardianPhoneField ? fieldValue(values, guardianPhoneField.code) : '';
   if (guardianPhoneField && guardianPhone && !/^[6-9]\d{9}$/.test(guardianPhone))
     fieldErrors[guardianPhoneField.code] =
-      'Parent mobile number must be a valid 10-digit Indian mobile number.';
+      `${guardianPhoneField.label} must be a valid 10-digit Indian mobile number.`;
   const sourceField = activeFields.find(
     (field) => canonicalInquiryBinding(field) === 'Inquiry.Source'
   );

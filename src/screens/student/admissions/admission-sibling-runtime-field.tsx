@@ -140,7 +140,7 @@ export function AdmissionSiblingRuntimeField({
         filterSelectedOptions
         disabled={disabled || hydrating}
         isLoading={hydrating}
-        loadingLabel="Loading sibling students"
+        loadingLabel="Loading Sibling Students"
         label={`${field.label}${field.required ? ' *' : ''}`}
         placeholder={field.placeholder || 'Search students'}
         helperText={

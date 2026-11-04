@@ -82,11 +82,11 @@ export function WorkflowOutcomeRoute({
           >
             {outcome.label}
             {allowedOutcomes && !allowedOutcomes.includes(outcome.value)
-              ? ' (enable in stage completion settings)'
+              ? ' (Enable in Stage Completion Settings)'
               : ''}
           </MenuItem>
         ))}
-        <MenuItem value="custom">Another condition</MenuItem>
+        <MenuItem value="custom">Another Condition</MenuItem>
       </TextField>
       <StudentFeedback notificationKey="STU-0565" presentation="persistent" severity="info">
         {guidance}

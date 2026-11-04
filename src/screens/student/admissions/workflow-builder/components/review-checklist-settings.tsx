@@ -28,7 +28,7 @@ export function ReviewChecklistSettings({
     <Stack spacing={1}>
       {value.length >= 25 && (
         <Typography variant="caption" color="text.secondary">
-          {value.length} of 30 checklist items
+          {value.length} Of 30 Checklist Items
         </Typography>
       )}
       {!value.length && (
@@ -69,7 +69,7 @@ export function ReviewChecklistSettings({
       ))}
       {!disabled && (
         <Button size="small" variant="outlined" disabled={value.length >= 30} onClick={add}>
-          Add review checklist item
+          Add Review Checklist Item
         </Button>
       )}
       {editing && (

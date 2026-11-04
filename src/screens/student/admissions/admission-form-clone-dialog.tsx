@@ -72,13 +72,13 @@ function AdmissionFormCloneEditor({
       open
       handleClose={onClose}
       disableClose={saving}
-      title="Clone form as draft"
+      title="Clone Form as Draft"
       maxWidth="sm"
     >
       <DialogScrollContent onSubmit={() => formik.handleSubmit()}>
         <Stack spacing={2}>
           <Typography variant="body2" color="text.secondary">
-            Copy version {source.version} into a new independent draft. The original form and its
+            Copy Version {source.version} into a new independent draft. The original form and its
             applications remain unchanged.
           </Typography>
           <ShakingTextField error={Boolean(formik.touched.name && formik.errors.name)}>
@@ -87,7 +87,7 @@ function AdmissionFormCloneEditor({
               autoFocus
               required
               size="small"
-              label="Form name"
+              label="Form Name"
               {...formik.getFieldProps('name')}
               error={Boolean(formik.touched.name && formik.errors.name)}
               helperText={
@@ -103,7 +103,7 @@ function AdmissionFormCloneEditor({
               multiline
               minRows={3}
               size="small"
-              label="Description (optional)"
+              label="Description (Optional)"
               {...formik.getFieldProps('description')}
               error={Boolean(formik.touched.description && formik.errors.description)}
               helperText={
@@ -132,7 +132,7 @@ function AdmissionFormCloneEditor({
           startIcon={<Iconify icon="mdi:content-copy" />}
           onClick={() => formik.handleSubmit()}
         >
-          Clone draft
+          Clone Draft
         </LoadingButton>
       </DialogActions>
     </CustomDialog>

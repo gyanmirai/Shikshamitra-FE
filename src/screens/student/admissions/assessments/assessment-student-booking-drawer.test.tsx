@@ -227,7 +227,7 @@ it.each(['Book 2 students', 'Retry'])(
     );
     fireEvent.click(screen.getByRole('button', { name: 'Book 2 students' }));
     await waitFor(() =>
-      expect(screen.getByRole('button', { name: 'Close student booking' })).toBeDisabled()
+      expect(screen.getByRole('button', { name: 'Close Student Booking' })).toBeDisabled()
     );
     reject(new Error('Response lost'));
     await waitFor(() =>
@@ -263,13 +263,13 @@ it('explains an existing booking and opens its details without previewing or con
   };
   show({ rows: [booked], onViewBooking });
   expect(screen.getByText('Already booked in Class 10 Entrance Exam.')).toBeVisible();
-  expect(screen.getByText('Already booked')).toBeVisible();
+  expect(screen.getByText('Already Booked')).toBeVisible();
   expect(screen.getByRole('button', { name: 'Book 1 student' })).toBeDisabled();
   expect(screen.queryByRole('radio')).not.toBeInTheDocument();
   expect(api.get).not.toHaveBeenCalled();
   expect(api.preview).not.toHaveBeenCalled();
   expect(api.confirm).not.toHaveBeenCalled();
-  await userEvent.click(screen.getByRole('button', { name: 'View booking for Sweta' }));
+  await userEvent.click(screen.getByRole('button', { name: 'View Booking For Sweta' }));
   expect(onViewBooking).toHaveBeenCalledExactlyOnceWith(booked);
 });
 

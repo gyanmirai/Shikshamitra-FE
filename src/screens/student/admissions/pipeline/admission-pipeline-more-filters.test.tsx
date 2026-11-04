@@ -44,7 +44,7 @@ const renderFilters = (overrides: Partial<Props> = {}) => {
 
 const openFilters = async (user: ReturnType<typeof userEvent.setup>) => {
   await user.click(screen.getByRole('button', { name: /^Filters/ }));
-  return screen.getByRole('dialog', { name: 'Pipeline filters' });
+  return screen.getByRole('dialog', { name: 'Pipeline Filters' });
 };
 
 describe('Pipeline operational filters', () => {
@@ -55,7 +55,7 @@ describe('Pipeline operational filters', () => {
 
     expect(screen.queryByRole('combobox', { name: 'Counsellor' })).not.toBeInTheDocument();
     expect(screen.queryByRole('combobox', { name: 'Cases' })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('combobox', { name: 'Current step' }));
+    await user.click(screen.getByRole('combobox', { name: 'Current Step' }));
     await user.click(screen.getByRole('option', { name: 'Entrance assessment' }));
     await user.click(screen.getByRole('combobox', { name: 'Status' }));
     await user.click(screen.getByRole('option', { name: 'Draft' }));
@@ -77,11 +77,11 @@ describe('Pipeline operational filters', () => {
     await openFilters(user);
     await user.click(screen.getByRole('combobox', { name: 'Status' }));
     await user.click(screen.getByRole('option', { name: 'Submitted' }));
-    await user.click(screen.getByRole('button', { name: 'Close filters' }));
+    await user.click(screen.getByRole('button', { name: 'Close Filters' }));
     await openFilters(user);
 
     expect(screen.getByRole('combobox', { name: 'Status' })).toHaveTextContent(
-      'All active statuses'
+      'All Active Statuses'
     );
     expect(props.onApply).not.toHaveBeenCalled();
   });
@@ -131,7 +131,7 @@ describe('Pipeline operational filters', () => {
     await openFilters(user);
     result.rerenderFilters({ disabled: true });
 
-    ['Current step', 'Status'].forEach((name) => {
+    ['Current Step', 'Status'].forEach((name) => {
       expect(screen.getByRole('combobox', { name })).toHaveAttribute('aria-disabled', 'true');
     });
     expect(screen.getByRole('button', { name: 'Clear' })).toBeDisabled();

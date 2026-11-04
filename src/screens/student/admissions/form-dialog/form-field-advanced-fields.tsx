@@ -8,7 +8,7 @@ import type { FieldSettingsProps } from './types/field-settings';
 export function FormFieldAdvancedFields(props: FieldSettingsProps) {
   return (
     <SectionCard
-      title="Visibility conditions"
+      title="Visibility Conditions"
       paperProps={{ sx: { mb: 0, minWidth: 0 } }}
       gridProps={{ spacing: 1.5 }}
     >

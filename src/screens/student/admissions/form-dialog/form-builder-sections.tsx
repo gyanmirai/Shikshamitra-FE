@@ -63,7 +63,13 @@ export function FormBuilderSections({
   footer?: ReactNode;
 }) {
   const inheritance = useFormInheritance();
-  const inheritedFields = getInheritedFields(inheritance?.preview?.definition);
+  const inheritedFields = getInheritedFields(
+    getInheritancePreviewValues(
+      formik.values,
+      inheritance?.preview?.definition,
+      inheritance?.preview?.inquiryContextSections
+    )
+  );
   const builderFormik = {
     ...formik,
     values: markInheritedRegistrationFields(formik.values, inheritance?.preview?.definition),
@@ -71,7 +77,8 @@ export function FormBuilderSections({
   const effectiveForm = getInheritanceBuilderValues(
     formik.values,
     inheritance?.preview?.definition,
-    inheritance?.previewBaseSectionIds
+    inheritance?.previewBaseSectionIds,
+    inheritance?.preview?.inquiryContextSections
   );
   const selection = useFormBuilderSelection(effectiveForm.sections);
   const selectSection = selection.select;
@@ -216,12 +223,12 @@ export function FormBuilderSections({
       >
         <Typography id="admission-form-field-settings-title" variant="subtitle1">
           <AdmissionDialogTitle
-            title="Field settings"
-            helpLabel="About field settings"
-            helpText="Configure the field, answer options, and visibility. Changes stay in this draft until you save."
+            title="Field Settings"
+            helpLabel="About Field Settings"
+            helpText="Configure the Field, Answer Options, and Visibility. Changes Stay in This Draft Until You Save."
           />
         </Typography>
-        <IconButton aria-label="Close field settings" onClick={() => setSidePanel(null)}>
+        <IconButton aria-label="Close Field Settings" onClick={() => setSidePanel(null)}>
           <Iconify icon="mdi:close" />
         </IconButton>
       </Stack>
@@ -331,7 +338,14 @@ export function FormBuilderSections({
                 sx={{ p: 1.5, flexShrink: 0, borderBottom: 1, borderColor: 'divider' }}
               >
                 <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" alignItems="center">
-                  <FormValidationPanel form={effectiveForm} onSelectIssue={selectIssue} />
+                  <FormValidationPanel
+                    form={getInheritanceBuilderValues(
+                      formik.values,
+                      inheritance?.preview?.definition,
+                      inheritance?.previewBaseSectionIds
+                    )}
+                    onSelectIssue={selectIssue}
+                  />
                 </Stack>
                 <Stack
                   direction="row"
@@ -343,16 +357,18 @@ export function FormBuilderSections({
                 >
                   {effectiveForm.layoutType === 0 && (
                     <Button
+                      aria-label="Add Step"
                       size="small"
                       variant="outlined"
                       startIcon={<Iconify icon="mdi:plus" />}
                       disabled={formik.isSubmitting}
                       onClick={() => addStep()}
                     >
-                      Add step
+                      Step
                     </Button>
                   )}
                   <Button
+                    aria-label="Add Section"
                     size="small"
                     variant="outlined"
                     startIcon={<Iconify icon="mdi:plus" />}
@@ -362,7 +378,7 @@ export function FormBuilderSections({
                       setMobilePanel('form');
                     }}
                   >
-                    Add section
+                    Section
                   </Button>
                   <Button
                     size="small"
@@ -373,7 +389,7 @@ export function FormBuilderSections({
                     aria-controls={gridAnchor ? 'admission-form-grid-menu' : undefined}
                     onClick={(event) => setGridAnchor(event.currentTarget)}
                   >
-                    Grid layout
+                    Grid Layout
                   </Button>
                   <Button
                     size="small"
@@ -386,7 +402,7 @@ export function FormBuilderSections({
                     disabled={canvasMode !== 'preview' && !previewReady}
                     onClick={() => setCanvasMode(canvasMode === 'preview' ? 'design' : 'preview')}
                   >
-                    {canvasMode === 'preview' ? 'Back to builder' : 'Preview'}
+                    {canvasMode === 'preview' ? 'Back to Builder' : 'Preview'}
                   </Button>
                 </Stack>
               </Stack>
@@ -405,7 +421,7 @@ export function FormBuilderSections({
                       setGridAnchor(null);
                     }}
                   >
-                    {count === 1 ? '1 column' : `${count} columns`}
+                    {count === 1 ? '1 Column' : `${count} columns`}
                   </MenuItem>
                 ))}
               </Menu>
@@ -430,7 +446,8 @@ export function FormBuilderSections({
                         <FormBuilderLivePreview
                           form={getInheritancePreviewValues(
                             formik.values,
-                            inheritance?.preview?.definition
+                            inheritance?.preview?.definition,
+                            inheritance?.preview?.inquiryContextSections
                           )}
                         />
                       ) : (
@@ -441,8 +458,8 @@ export function FormBuilderSections({
                             severity={inheritance?.loading ? 'info' : 'warning'}
                           >
                             {inheritance?.loading
-                              ? 'Checking Inquiry questions before showing this preview.'
-                              : 'Review the Inquiry question checks before opening this preview.'}
+                              ? 'Checking Inquiry Questions Before Showing This Preview.'
+                              : 'Review the Inquiry Question Checks Before Opening This Preview.'}
                           </StudentFeedback>
                         </Box>
                       )}

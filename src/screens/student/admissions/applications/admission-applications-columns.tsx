@@ -57,7 +57,7 @@ export function buildAdmissionApplicationsColumns({
               '&:hover': { color: 'primary.main', textDecoration: 'underline' },
             }}
           >
-            {row.applicantName || 'Applicant unavailable'}
+            {row.applicantName || 'Applicant Unavailable'}
           </Typography>
           <Typography
             component={NextLink}
@@ -116,7 +116,7 @@ export function buildAdmissionApplicationsColumns({
     },
     {
       id: 'lastSavedAt',
-      label: 'Last saved',
+      label: 'Last Saved',
       defaultHidden: true,
       minWidth: 170,
       isSort: true,

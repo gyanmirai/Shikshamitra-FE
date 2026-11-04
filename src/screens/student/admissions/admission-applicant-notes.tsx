@@ -86,7 +86,7 @@ export default function AdmissionApplicantNotes({
     <Stack spacing={2}>
       {!embedded && (
         <Box>
-          <Typography variant="h6">Team notes</Typography>
+          <Typography variant="h6">Team Notes</Typography>
           <Typography variant="body2" color="text.secondary">
             Keep internal context for the next counselor or admissions staff member.
           </Typography>
@@ -98,8 +98,8 @@ export default function AdmissionApplicantNotes({
           multiline
           minRows={2}
           maxRows={6}
-          label={editingId ? 'Edit note' : 'Add note'}
-          placeholder="Add useful family context, preferences, or an agreed follow-up…"
+          label={editingId ? 'Edit Note' : 'Add Note'}
+          placeholder="Add Useful Family Context, Preferences, or an Agreed Follow-Up…"
           value={text}
           onChange={(event) => setText(event.target.value)}
           fullWidth
@@ -121,7 +121,7 @@ export default function AdmissionApplicantNotes({
             }
             sx={compact ? undefined : { minHeight: 44 }}
           >
-            {editingId ? 'Update note' : 'Add note'}
+            {editingId ? 'Update Note' : 'Add Note'}
           </LoadingButton>
           {editingId && (
             <Button
@@ -156,7 +156,7 @@ export default function AdmissionApplicantNotes({
                 sx={{ mt: 1 }}
               >
                 <Typography variant="caption" color="text.secondary">
-                  {fDateTime(note.creationTime) || 'Time not recorded'}
+                  {fDateTime(note.creationTime) || 'Time Not Recorded'}
                   {note.lastEditedAt ? ` · edited ${fDateTime(note.lastEditedAt)}` : ''}
                 </Typography>
                 {!readOnly && (
@@ -181,7 +181,7 @@ export default function AdmissionApplicantNotes({
       ) : (
         <EmptyContent
           filled
-          title="No team notes yet"
+          title="No Team Notes Yet"
           description="Add only context that helps staff support this family’s admission journey."
           sx={{ minHeight: compact ? 96 : 190 }}
           slotProps={{ img: { maxWidth: 80 } }}

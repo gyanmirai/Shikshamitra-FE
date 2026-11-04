@@ -85,8 +85,8 @@ export function WorkflowAssessmentSubjects({
                       color={unavailable ? 'error.main' : 'text.secondary'}
                     >
                       {unavailable
-                        ? 'Unavailable for this medium. Remove or replace this subject.'
-                        : 'School subject'}
+                        ? 'Unavailable for This Medium. Remove or Replace This Subject.'
+                        : 'School Subject'}
                     </Typography>
                   </Stack>
                 ) : (
@@ -94,7 +94,7 @@ export function WorkflowAssessmentSubjects({
                     fullWidth
                     size="small"
                     required
-                    label="Custom subject name"
+                    label="Custom Subject Name"
                     disabled={disabled}
                     value={subject.name}
                     onChange={(event) => update(index, { name: event.target.value })}
@@ -110,7 +110,7 @@ export function WorkflowAssessmentSubjects({
               </Grid>
               <Grid size={{ xs: perSubjectPass ? 5 : 10, sm: perSubjectPass ? 3 : 4 }}>
                 <WorkflowAssessmentMarksField
-                  label="Maximum marks"
+                  label="Maximum Marks"
                   ariaLabel={`Maximum marks — ${subject.name || `subject ${index + 1}`}`}
                   value={subject.totalMarks}
                   max={10000}
@@ -123,7 +123,7 @@ export function WorkflowAssessmentSubjects({
               {perSubjectPass && (
                 <Grid size={{ xs: 5, sm: 3 }}>
                   <WorkflowAssessmentMarksField
-                    label="Passing marks"
+                    label="Passing Marks"
                     ariaLabel={`Passing marks — ${subject.name || `subject ${index + 1}`}`}
                     value={subject.passingMarks}
                     max={subject.totalMarks}
@@ -162,7 +162,7 @@ export function WorkflowAssessmentSubjects({
           fullWidth
           size="small"
           isSearch
-          label="School subject"
+          label="School Subject"
           disabled={disabled || catalogUnavailable || !mediumId}
           value=""
           options={ordered.map((subject) => ({
@@ -175,7 +175,7 @@ export function WorkflowAssessmentSubjects({
             const subject = available.find((option) => option.id === id);
             if (subject) add(subject);
           }}
-          noOptionsMessage="No active school subjects for this medium. Add a custom subject or check Academic setup."
+          noOptionsMessage="No Active School Subjects for This Medium. Add a Custom Subject or Check Academic Setup."
         />
       )}
       <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
@@ -186,16 +186,17 @@ export function WorkflowAssessmentSubjects({
           disabled={disabled || catalogUnavailable || !mediumId}
           onClick={() => setShowPicker((value) => !value)}
         >
-          {showPicker ? 'Close subject selector' : 'Add school subject'}
+          {showPicker ? 'Close Subject Selector' : 'Add School Subject'}
         </Button>
         <Button
+          aria-label="Add Custom Subject"
           size="small"
           variant="outlined"
           startIcon={<Iconify icon={GlobalIcons.addIcon} />}
           disabled={disabled || !mediumId}
           onClick={() => add()}
         >
-          Add custom subject
+          Custom Subject
         </Button>
       </Stack>
     </Stack>

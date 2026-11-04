@@ -118,19 +118,19 @@ describe('useFormListActions editor mode', () => {
     }
     render(<TablePublication />);
     fireEvent.click(screen.getByRole('button', { name: 'Publish from table' }));
-    await screen.findByRole('dialog', { name: 'Form needs changes' });
+    await screen.findByRole('dialog', { name: 'Form Needs Changes' });
     expect(screen.getByText('APPLICANT_GENDER needs valid choices.')).toBeVisible();
-    expect(screen.queryByRole('button', { name: 'Publish form' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Publish Form' })).not.toBeInTheDocument();
     expect(publication.publish).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole('button', { name: 'Edit draft' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Draft' }));
     expect(screen.getByLabelText('Editing form')).toHaveTextContent('draft');
     fireEvent.click(await screen.findByRole('button', { name: 'Save correction' }));
     await waitFor(() => expect(screen.getByLabelText('Editing form')).toBeEmptyDOMElement());
     expect(saving.update).toHaveBeenCalledExactlyOnceWith({ id: 'draft', body: correction });
     fireEvent.click(screen.getByRole('button', { name: 'Publish from table' }));
     await screen.findByRole('dialog', { name: 'Publish Inquiry with Other?' });
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Publish form' })).toBeEnabled());
-    fireEvent.click(screen.getByRole('button', { name: 'Publish form' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Publish Form' })).toBeEnabled());
+    fireEvent.click(screen.getByRole('button', { name: 'Publish Form' }));
     await waitFor(() =>
       expect(publication.publish).toHaveBeenCalledExactlyOnceWith({
         id: 'draft',

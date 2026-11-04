@@ -51,7 +51,7 @@ export function AdmissionInquiryBulkAssignmentDialog({
     <CustomDialog
       open
       maxWidth="xs"
-      title="Assign selected inquiries"
+      title="Assign Selected Inquiries"
       handleClose={onClose}
       disableClose={assignState.isLoading}
     >

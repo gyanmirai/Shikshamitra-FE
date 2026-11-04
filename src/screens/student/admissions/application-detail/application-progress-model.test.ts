@@ -30,8 +30,8 @@ const stage = (overrides: Partial<AdmissionApplicationStage>): AdmissionApplicat
 
 describe('application progress model', () => {
   it('uses semantic shared-label states without treating skipped stages as completed', () => {
-    expect(getStageStatusLabel(0)).toBe('Not started');
-    expect(getStageStatusLabel(1)).toBe('Current step');
+    expect(getStageStatusLabel(0)).toBe('Not Started');
+    expect(getStageStatusLabel(1)).toBe('Current Step');
     expect(getStageStatusLabel(2)).toBe('Completed');
     expect(getStageStatusColor(2)).toBe('success');
     expect(getStageStatusColor(3)).toBe('warning');
@@ -51,10 +51,10 @@ describe('application progress model', () => {
 
   it('uses specific action labels for physical form, exam, and approval steps', () => {
     expect(getStageActionLabel(stage({ code: 'PHYSICAL_FORM_ISSUED' }))).toBe(
-      'Confirm physical form issued'
+      'Confirm Physical Form Issued'
     );
-    expect(getStageActionLabel(stage({ stageType: 2 }))).toBe('Record entrance exam result');
-    expect(getStageActionLabel(stage({ stageType: 7 }))).toBe('Finish admission workflow');
+    expect(getStageActionLabel(stage({ stageType: 2 }))).toBe('Record Entrance Exam Result');
+    expect(getStageActionLabel(stage({ stageType: 7 }))).toBe('Finish Admission Workflow');
   });
 
   it('matches the backend status rules before exposing manual completion', () => {

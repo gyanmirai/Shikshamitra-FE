@@ -62,7 +62,7 @@ export function AssessmentApplicantTable({
                 <Box
                   component="span"
                   tabIndex={pageSelectionReason ? 0 : undefined}
-                  aria-label={pageSelectionReason ? 'Why page selection is unavailable' : undefined}
+                  aria-label={pageSelectionReason ? 'Why Page Selection Is Unavailable' : undefined}
                   sx={{ display: 'inline-flex' }}
                 >
                   <Checkbox
@@ -78,7 +78,7 @@ export function AssessmentApplicantTable({
                     }
                     disabled={!selectable.length}
                     inputProps={{
-                      'aria-label': 'Select applicants on this page',
+                      'aria-label': 'Select Applicants on This Page',
                       'aria-description': pageSelectionReason || undefined,
                     }}
                     onChange={(_, checked) => onSelectionChange(selectable, checked)}
@@ -106,7 +106,7 @@ export function AssessmentApplicantTable({
                     tabIndex={selectionReason ? 0 : undefined}
                     aria-label={
                       selectionReason
-                        ? `Why selection is unavailable for ${row.applicantName}`
+                        ? `Why Selection Is Unavailable For ${row.applicantName}`
                         : undefined
                     }
                     sx={{ display: 'inline-flex' }}
@@ -133,7 +133,7 @@ export function AssessmentApplicantTable({
       : []),
     {
       id: 'applicantName',
-      label: 'Student name',
+      label: 'Student Name',
       // Combined name/reference identity remains read-only; global search covers both.
       isFilter: false,
       minWidth: narrow ? 120 : 200,
@@ -150,7 +150,7 @@ export function AssessmentApplicantTable({
     },
     {
       id: 'applicationNumber',
-      label: 'Application number',
+      label: 'Application Number',
       defaultHidden: true,
       isFilter: true,
       filterType: 'string',
@@ -260,7 +260,7 @@ export function AssessmentApplicantTable({
             }}
             aria-label={`${action ? labels[action] : 'View details'} for ${row.applicantName}`}
           >
-            {action ? labels[action] : 'View details'}
+            {action ? labels[action] : 'View Details'}
           </Button>
         );
       },
@@ -282,7 +282,7 @@ export function AssessmentApplicantTable({
       handleRowClick={(row) => onDetails(row as AssessmentRosterItem)}
       rowProps={(record) => ({
         tabIndex: 0,
-        'aria-label': `Assessment details for ${record.applicantName}`,
+        'aria-label': `Assessment Details For ${record.applicantName}`,
         onKeyDown: (event) => {
           if (
             event.target === event.currentTarget &&
@@ -303,7 +303,7 @@ export function AssessmentApplicantTable({
       })}
       columns={columns}
       data={data}
-      tableTitle="Assessment students"
+      tableTitle="Assessment Students"
       exportLabel="Export"
       wrapperProps={{ sx: { height: 1, minWidth: 0, minHeight: 0 } }}
       tableContainerProps={{ sx: { height: 1 } }}
@@ -315,8 +315,8 @@ export function AssessmentApplicantTable({
       serverSideSort
       serverSideSortMode="single"
       searchFieldProps={{
-        placeholder: 'Search students or application number',
-        inputProps: { 'aria-label': 'Search assessment applicants', maxLength: 128 },
+        placeholder: 'Search Students or Application Number',
+        inputProps: { 'aria-label': 'Search Assessment Applicants', maxLength: 128 },
       }}
     />
   );

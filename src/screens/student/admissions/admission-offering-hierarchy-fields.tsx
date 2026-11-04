@@ -54,13 +54,13 @@ export function AdmissionOfferingHierarchyFields({
     <Grid container spacing={compact ? 1 : 1.5}>
       {!compact && (
         <Grid size={12}>
-          <Typography variant="subtitle2">Academic hierarchy</Typography>
+          <Typography variant="subtitle2">Academic Hierarchy</Typography>
         </Grid>
       )}
       {showCampus && (
         <Grid size={{ xs: 12, sm: 6 }}>
           <AdmissionCampusSelect
-            label="Campus (optional)"
+            label="Campus (Optional)"
             valueId={formik.values.campusId ?? null}
             initialOption={initialCampus}
             fetchOptions={fetchCampuses}
@@ -111,7 +111,7 @@ export function AdmissionOfferingHierarchyFields({
       <Grid size={{ xs: 12, sm: 6 }}>
         <CustomSelect
           options={stages}
-          label="School level *"
+          label="School Level *"
           labelKey="name"
           valueKey="id"
           value={formik.values.stageId}

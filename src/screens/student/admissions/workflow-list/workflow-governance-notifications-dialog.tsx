@@ -32,7 +32,7 @@ export function WorkflowGovernanceNotificationsDialog({
     <CustomDialog
       open={open}
       maxWidth="sm"
-      title="Workflow notifications"
+      title="Workflow Notifications"
       handleClose={onClose}
       hasForm={false}
       guardUnsavedChanges={false}
@@ -81,7 +81,7 @@ export function WorkflowGovernanceNotificationsDialog({
                       loading={markingId === notification.id}
                       onClick={() => onMarkRead(notification)}
                     >
-                      Mark read
+                      Mark Read
                     </LoadingButton>
                   )}
                   <Button
@@ -89,7 +89,7 @@ export function WorkflowGovernanceNotificationsDialog({
                     startIcon={<Iconify icon="mdi:arrow-right" />}
                     onClick={() => onOpenWorkflow(notification)}
                   >
-                    Open workflow
+                    Open Workflow
                   </Button>
                 </Stack>
               </Stack>

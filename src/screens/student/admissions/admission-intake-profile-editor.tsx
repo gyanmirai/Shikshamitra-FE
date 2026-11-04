@@ -75,7 +75,7 @@ export type IntakeProfileValues = {
 };
 
 export const profileKindLabel = (kind: AdmissionIntakeProfileKind) =>
-  kind === 0 ? 'Inquiry setup' : 'Counsellor assignment';
+  kind === 0 ? 'Inquiry Setup' : 'Counsellor Assignment';
 
 export function readProfileRules(profile: AdmissionIntakeProfile): Record<string, unknown> | null {
   try {
@@ -247,7 +247,7 @@ export function AdmissionIntakeProfileEditor({ profile, onClose }: Props) {
         <Stack direction="row" spacing={1} alignItems="flex-start" sx={{ px: 2, py: 1.5 }}>
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography id="intake-profile-editor-title" variant="h6">
-              {profile ? `Edit ${profileKindLabel(profile.kind).toLowerCase()}` : 'Add profile'}
+              {profile ? `Edit ${profileKindLabel(profile.kind).toLowerCase()}` : 'Add Profile'}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Create reusable settings that admission offerings can select.
@@ -255,7 +255,7 @@ export function AdmissionIntakeProfileEditor({ profile, onClose }: Props) {
           </Box>
           <IconButton
             size="small"
-            aria-label="Close profile editor"
+            aria-label="Close Profile Editor"
             onClick={requestClose}
             disabled={saving}
             sx={{ width: { xs: 44, sm: 36 }, height: { xs: 44, sm: 36 } }}
@@ -276,7 +276,7 @@ export function AdmissionIntakeProfileEditor({ profile, onClose }: Props) {
             isStepClickable={(index) => index <= step}
             onStepClick={(index) => setStep(index)}
             nextButtonLabel="Next"
-            finalButtonLabel={profile ? 'Update profile' : 'Create profile'}
+            finalButtonLabel={profile ? 'Update Profile' : 'Create Profile'}
             handleBack={() => setStep((current) => Math.max(0, current - 1))}
             handleNext={(isLastStep, values: IntakeProfileValues, _formik, setIsLoading) => {
               if (isLastStep) save(values, setIsLoading);
@@ -327,7 +327,7 @@ export function AdmissionIntakeProfileEditor({ profile, onClose }: Props) {
       <ConfirmDialog
         open={confirmClose}
         onClose={() => setConfirmClose(false)}
-        title="Discard profile changes?"
+        title="Discard Profile Changes?"
         content="The information entered in this profile will be lost."
         action={
           <Button
@@ -339,7 +339,7 @@ export function AdmissionIntakeProfileEditor({ profile, onClose }: Props) {
               onClose();
             }}
           >
-            Discard changes
+            Discard Changes
           </Button>
         }
       />
@@ -357,7 +357,7 @@ function ProfileTypeFields({ formik }: { formik: FormikProps<IntakeProfileValues
         </Typography>
       </Box>
       <RadioGroup
-        aria-label="Profile type"
+        aria-label="Profile Type"
         value={formik.values.kind === null ? '' : String(formik.values.kind)}
         onChange={(_, value) => formik.setFieldValue('kind', Number(value))}
       >
@@ -382,8 +382,8 @@ function ProfileTypeFields({ formik }: { formik: FormikProps<IntakeProfileValues
                   <Typography variant="subtitle2">{profileKindLabel(kind)}</Typography>
                   <Typography variant="body2" color="text.secondary">
                     {kind === 0
-                      ? 'Set inquiry sources and follow-up timing.'
-                      : 'Choose counsellors, workload limits, and a fallback manager.'}
+                      ? 'Set Inquiry Sources and Follow-up Timing.'
+                      : 'Choose Counsellors, Workload Limits, and a Fallback Manager.'}
                   </Typography>
                 </Box>
               }
@@ -410,7 +410,7 @@ function ProfileIdentityFields({ formik }: { formik: FormikProps<IntakeProfileVa
           fullWidth
           size="small"
           name="name"
-          label="Profile name *"
+          label="Profile Name *"
           value={formik.values.name}
           onChange={formik.handleChange}
           onBlur={formik.handleBlur}
@@ -445,7 +445,7 @@ function InquiryFields({
 
   return (
     <>
-      <Typography variant="subtitle1">Inquiry rules</Typography>
+      <Typography variant="subtitle1">Inquiry Rules</Typography>
       <Autocomplete
         multiple
         size="small"
@@ -465,7 +465,7 @@ function InquiryFields({
           <TextField
             {...params}
             size="small"
-            label="Allowed sources"
+            label="Allowed Sources"
             helperText="Leave empty to accept all sources. Source details are optional."
           />
         )}
@@ -476,7 +476,7 @@ function InquiryFields({
             fullWidth
             size="small"
             type="number"
-            label="First contact within hours"
+            label="First Contact Within Hours"
             value={value.firstContactDueInHours ?? ''}
             onChange={(event) =>
               set('firstContactDueInHours', event.target.value ? Number(event.target.value) : null)
@@ -489,7 +489,7 @@ function InquiryFields({
             fullWidth
             size="small"
             type="number"
-            label="Qualify within days"
+            label="Qualify Within Days"
             value={value.qualificationDueInDays ?? ''}
             onChange={(event) =>
               set('qualificationDueInDays', event.target.value ? Number(event.target.value) : null)
@@ -502,7 +502,7 @@ function InquiryFields({
             fullWidth
             size="small"
             type="number"
-            label="Follow-up after days"
+            label="Follow-Up After Days"
             value={value.followUpDueInDays}
             onChange={(event) => set('followUpDueInDays', Number(event.target.value))}
             {...feedback('inquiry.followUpDueInDays')}
@@ -513,7 +513,7 @@ function InquiryFields({
             fullWidth
             size="small"
             type="number"
-            label="Maximum open follow-ups"
+            label="Maximum Open Follow-Ups"
             value={value.maxOpenFollowUps}
             onChange={(event) => set('maxOpenFollowUps', Number(event.target.value))}
             {...feedback('inquiry.maxOpenFollowUps')}
@@ -546,7 +546,7 @@ function AssignmentFields({
 
   return (
     <>
-      <Typography variant="subtitle1">Counsellor assignment rules</Typography>
+      <Typography variant="subtitle1">Counsellor Assignment Rules</Typography>
       <AdmissionIntakeNotice notificationKey="STU-0090" presentation="inline" severity="info">
         New inquiries and direct registrations go to the counsellor with the fewest active cases.
         That counsellor stays the student&apos;s journey owner through admission and becomes the
@@ -587,7 +587,7 @@ function AssignmentFields({
           <TextField
             {...params}
             size="small"
-            label="Counsellor pool *"
+            label="Counsellor Pool *"
             error={Boolean(counsellorMeta.touched && counsellorMeta.error)}
             helperText={counsellorMeta.touched ? counsellorMeta.error : ''}
           />
@@ -597,7 +597,7 @@ function AssignmentFields({
         fullWidth
         size="small"
         type="number"
-        label="Maximum active cases per counsellor *"
+        label="Maximum Active Cases Per Counsellor *"
         value={value.maxActiveCasesPerCounsellor}
         onChange={(event) =>
           onChange({ ...value, maxActiveCasesPerCounsellor: Number(event.target.value) })
@@ -609,14 +609,14 @@ function AssignmentFields({
         select
         fullWidth
         size="small"
-        label="Fallback manager"
+        label="Fallback Manager"
         disabled={loading || loadError}
         value={value.fallbackManagerUserId ?? ''}
         onChange={(event) =>
           onChange({ ...value, fallbackManagerUserId: event.target.value || null })
         }
       >
-        <MenuItem value="">No fallback</MenuItem>
+        <MenuItem value="">No Fallback</MenuItem>
         {counsellors.map((person) => (
           <MenuItem key={person.id} value={person.id}>
             {person.name || person.userName}

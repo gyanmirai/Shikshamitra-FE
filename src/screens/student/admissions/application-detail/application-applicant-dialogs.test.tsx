@@ -161,7 +161,7 @@ describe('focused applicant identity repair', () => {
       );
       expect(state.query).toHaveBeenLastCalledWith('applicant-1', { skip: true });
       expect(screen.getByText(/permission to edit applicant identity/)).toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: 'Save identity' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Save Identity' })).not.toBeInTheDocument();
     }
   );
   it('shows fetching before data arrives and supports retry for missing data', () => {
@@ -169,7 +169,7 @@ describe('focused applicant identity repair', () => {
     const view = render(
       <ApplicationApplicantIdentityDialog open applicantId="applicant-1" onClose={vi.fn()} />
     );
-    expect(screen.getByRole('status', { name: 'Loading applicant identity' })).toBeInTheDocument();
+    expect(screen.getByRole('status', { name: 'Loading Applicant Identity' })).toBeInTheDocument();
     state.result = {};
     view.rerender(
       <ApplicationApplicantIdentityDialog open applicantId="applicant-1" onClose={vi.fn()} />
@@ -186,7 +186,7 @@ describe('focused applicant identity repair', () => {
     };
     render(<ApplicationApplicantIdentityDialog open applicantId="applicant-1" onClose={vi.fn()} />);
     expect(screen.getByText(/finalized or enrolled admission/)).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Save identity' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Save Identity' })).not.toBeInTheDocument();
   });
   it('saves the existing validated identity contract and refreshes its parent', async () => {
     const close = vi.fn();
@@ -199,10 +199,10 @@ describe('focused applicant identity repair', () => {
         onUpdated={updated}
       />
     );
-    fireEvent.change(screen.getByRole('textbox', { name: /First name/ }), {
+    fireEvent.change(screen.getByRole('textbox', { name: /First Name/ }), {
       target: { value: ' Parth Updated ' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Save identity' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save Identity' }));
     await waitFor(() => expect(close).toHaveBeenCalledOnce());
     expect(state.saveIdentity).toHaveBeenCalledWith({
       applicantId: 'applicant-1',
@@ -223,12 +223,12 @@ describe('focused applicant identity repair', () => {
         ),
     });
     render(<ApplicationApplicantIdentityDialog open applicantId="applicant-1" onClose={close} />);
-    fireEvent.change(screen.getByRole('textbox', { name: /First name/ }), {
+    fireEvent.change(screen.getByRole('textbox', { name: /First Name/ }), {
       target: { value: 'Edited name' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Save identity' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save Identity' }));
     await waitFor(() => expect(state.toastError).toHaveBeenCalled());
-    expect(screen.getByRole('textbox', { name: /First name/ })).toHaveValue('Edited name');
+    expect(screen.getByRole('textbox', { name: /First Name/ })).toHaveValue('Edited name');
     expect(close).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(
@@ -287,7 +287,7 @@ describe('applicant notes dialog', () => {
     const view = render(
       <ApplicationApplicantNotesDialog open applicantId="applicant-1" onClose={vi.fn()} />
     );
-    expect(screen.getByRole('status', { name: 'Loading applicant notes' })).toBeInTheDocument();
+    expect(screen.getByRole('status', { name: 'Loading Applicant Notes' })).toBeInTheDocument();
     state.result = { isError: true };
     view.rerender(
       <ApplicationApplicantNotesDialog open applicantId="applicant-1" onClose={vi.fn()} />
@@ -298,11 +298,11 @@ describe('applicant notes dialog', () => {
   it('reuses note edit mutation and clears answers only after successful save', async () => {
     render(<ApplicationApplicantNotesDialog open applicantId="applicant-1" onClose={vi.fn()} />);
     fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
-    fireEvent.change(screen.getByRole('textbox', { name: 'Edit note' }), {
+    fireEvent.change(screen.getByRole('textbox', { name: 'Edit Note' }), {
       target: { value: ' Updated context ' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Update note' }));
-    await waitFor(() => expect(screen.getByRole('textbox', { name: 'Add note' })).toHaveValue(''));
+    fireEvent.click(screen.getByRole('button', { name: 'Update Note' }));
+    await waitFor(() => expect(screen.getByRole('textbox', { name: 'Add Note' })).toHaveValue(''));
     expect(state.updateNote).toHaveBeenCalledWith({
       applicantId: 'applicant-1',
       noteId: 'note-1',
@@ -316,12 +316,12 @@ describe('applicant notes dialog', () => {
         Promise.reject(Object.assign(new Error('Try later'), { data: { detail: 'Try later' } })),
     });
     render(<ApplicationApplicantNotesDialog open applicantId="applicant-1" onClose={close} />);
-    fireEvent.change(screen.getByRole('textbox', { name: 'Add note' }), {
+    fireEvent.change(screen.getByRole('textbox', { name: 'Add Note' }), {
       target: { value: 'Unsaved context' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Add note' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add Note' }));
     await waitFor(() => expect(state.toastError).toHaveBeenCalledWith({ message: 'Try later' }));
-    expect(screen.getByRole('textbox', { name: 'Add note' })).toHaveValue('Unsaved context');
+    expect(screen.getByRole('textbox', { name: 'Add Note' })).toHaveValue('Unsaved context');
     fireEvent.click(screen.getByRole('button', { name: 'Close' }));
     expect(close).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
@@ -338,7 +338,7 @@ describe('applicant notes dialog', () => {
         onBusyChange={busy}
       />
     );
-    expect(screen.getByRole('textbox', { name: 'Add note' })).toBeDisabled();
+    expect(screen.getByRole('textbox', { name: 'Add Note' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Close' })).toBeDisabled();
     expect(busy).toHaveBeenLastCalledWith(true);
     view.unmount();

@@ -239,7 +239,7 @@ export function FormPreviewContent({ form, formik, resolvedOptions, embedded = f
           <Stack direction="row" justifyContent="flex-end" sx={{ mb: 2 }}>
             <CustomSelect
               size="small"
-              label="Form language"
+              label="Form Language"
               disabled={readingPhoto}
               value={language}
               options={supportedLanguages.map((code) => ({

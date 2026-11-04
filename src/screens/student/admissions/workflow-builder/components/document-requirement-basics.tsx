@@ -17,7 +17,7 @@ export function DocumentRequirementBasics({
         <TextField
           size="small"
           fullWidth
-          label="Document name *"
+          label="Document Name *"
           {...formik.getFieldProps('name')}
           error={error('name')}
           helperText={formik.touched.name && formik.errors.name}
@@ -29,7 +29,7 @@ export function DocumentRequirementBasics({
           fullWidth
           multiline
           minRows={2}
-          label="Instructions (optional)"
+          label="Instructions (Optional)"
           name="description"
           value={formik.values.description ?? ''}
           onChange={formik.handleChange}

@@ -120,11 +120,11 @@ function ApplicationActivityContent({ application, onClose, onBusyChange }: Omit
       <Divider />
       <Stack direction="row" justifyContent="space-between" alignItems="center">
         <Typography variant="subtitle1">History</Typography>
-        <Label>{items.filter((item) => item.status === 0).length} open</Label>
+        <Label>{items.filter((item) => item.status === 0).length} Open</Label>
       </Stack>
       {entries.length === 0 && !loading && !notesQuery.isError && !followUps.query.isError && (
         <EmptyContent
-          title="No notes or follow-ups yet"
+          title="No Notes or Follow-Ups Yet"
           description="Saved team notes and follow-ups will appear here."
           filled
           slotProps={{ img: { maxWidth: 80 } }}
@@ -134,7 +134,7 @@ function ApplicationActivityContent({ application, onClose, onBusyChange }: Omit
         entry.kind === 'follow-up' ? (
           <Paper key={`follow-up-${entry.followUp.id}`} variant="outlined" sx={{ p: 1.5 }}>
             <Typography variant="caption" color="text.secondary">
-              Follow-up
+              Follow-Up
             </Typography>
             <FollowUpCard
               compact
@@ -150,7 +150,7 @@ function ApplicationActivityContent({ application, onClose, onBusyChange }: Omit
           <Paper key={`note-${entry.note.id}`} variant="outlined" sx={{ p: 1.5 }}>
             <Stack spacing={0.75}>
               <Stack direction="row" alignItems="center" justifyContent="space-between">
-                <Typography variant="subtitle2">Team note</Typography>
+                <Typography variant="subtitle2">Team Note</Typography>
                 {canEditNotes && onEdit && (
                   <Button
                     size="small"
@@ -199,15 +199,15 @@ function ApplicationActivityContent({ application, onClose, onBusyChange }: Omit
         <Stack spacing={0.5} sx={{ p: 2, flexShrink: 0 }}>
           <Stack direction="row" alignItems="center" spacing={1}>
             <Typography id={titleId} variant="h6">
-              Notes &amp; Follow-ups
+              Notes &amp; Follow-Ups
             </Typography>
-            <CustomTooltip title="Team notes keep applicant context. Follow-ups record the next contact or task for this application.">
-              <IconButton size="small" aria-label="About notes and follow-ups">
+            <CustomTooltip title="Team Notes Keep Applicant Context. Follow-Ups Record the Next Contact or Task for This Application.">
+              <IconButton size="small" aria-label="About Notes and Follow-Ups">
                 <Iconify icon="mdi:information-outline" color="info.main" />
               </IconButton>
             </CustomTooltip>
             <Box sx={{ flexGrow: 1 }} />
-            <IconButton disabled={busy} aria-label="Close Notes & Follow-ups" onClick={close}>
+            <IconButton disabled={busy} aria-label="Close Notes & Follow-Ups" onClick={close}>
               <Iconify icon="mdi:close" />
             </IconButton>
           </Stack>
@@ -225,7 +225,7 @@ function ApplicationActivityContent({ application, onClose, onBusyChange }: Omit
                 severity="error"
                 action={
                   <Button size="small" disabled={busy} onClick={notesQuery.refetch}>
-                    Retry notes
+                    Retry Notes
                   </Button>
                 }
               >
@@ -240,14 +240,14 @@ function ApplicationActivityContent({ application, onClose, onBusyChange }: Omit
                 action={
                   !followUps.sourceUnavailable && (
                     <Button size="small" disabled={busy} onClick={followUps.query.refetch}>
-                      Retry follow-ups
+                      Retry Follow-Ups
                     </Button>
                   )
                 }
               >
                 {followUps.problem?.detail && followUps.problem.detail !== 'Something went wrong'
                   ? followUps.problem.detail
-                  : 'Unable to load application follow-ups.'}
+                  : 'Unable to Load Application Follow-ups.'}
               </StudentFeedback>
             )}
             {!canViewNotes && (
@@ -258,26 +258,26 @@ function ApplicationActivityContent({ application, onClose, onBusyChange }: Omit
             {!canViewFollowUps && (
               <StudentFeedback notificationKey="STU-0170" presentation="inline" severity="info">
                 {application.inquiryId
-                  ? 'Application access is required to view follow-ups.'
-                  : 'No source inquiry is linked to this application. Follow-ups are unavailable.'}
+                  ? 'Application Access Is Required to View Follow-ups.'
+                  : 'No Source Inquiry Is Linked to This Application. Follow-ups Are Unavailable.'}
               </StudentFeedback>
             )}
             {loading && (
-              <Stack role="status" aria-label="Loading notes and follow-ups" spacing={1}>
+              <Stack role="status" aria-label="Loading Notes and Follow-Ups" spacing={1}>
                 <Skeleton height={48} />
                 <Skeleton variant="rounded" height={96} />
               </Stack>
             )}
             {(canEditNotes || canSchedule) && (
               <Stack spacing={1}>
-                <Typography variant="subtitle1">Add activity</Typography>
+                <Typography variant="subtitle1">Add Activity</Typography>
                 <Tabs
                   value={selectedMode}
                   onChange={(_, value) => setMode(value)}
-                  aria-label="Activity type"
+                  aria-label="Activity Type"
                 >
                   <Tab value="note" label="Note" disabled={!canEditNotes || busy} />
-                  <Tab value="follow-up" label="Follow-up" disabled={!canSchedule || busy} />
+                  <Tab value="follow-up" label="Follow-Up" disabled={!canSchedule || busy} />
                 </Tabs>
               </Stack>
             )}

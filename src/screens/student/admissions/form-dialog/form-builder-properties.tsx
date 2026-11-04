@@ -97,7 +97,7 @@ export function FormBuilderProperties({ formik, selectedLocation, navigationRequ
   if (!selectedLocation || !field) {
     return (
       <Stack sx={{ height: 1, p: 2, bgcolor: 'background.paper' }}>
-        <Typography variant="subtitle1">Field settings</Typography>
+        <Typography variant="subtitle1">Field Settings</Typography>
         <Stack
           spacing={1}
           alignItems="center"
@@ -111,7 +111,7 @@ export function FormBuilderProperties({ formik, selectedLocation, navigationRequ
               sx={{ color: 'text.secondary' }}
             />
           </Box>
-          <Typography variant="subtitle2">Choose a field to customize</Typography>
+          <Typography variant="subtitle2">Choose a Field to Customize</Typography>
           <Typography variant="body2" color="text.secondary">
             Select any field in your form to change its label, make it required, or add
             instructions.
@@ -123,17 +123,20 @@ export function FormBuilderProperties({ formik, selectedLocation, navigationRequ
       </Stack>
     );
   }
-  if (isLockedInquiryField(formik.values.purpose, field)) {
+  if (isLockedInquiryField(formik.values.purpose, field, formik.values.coreFieldPolicyVersion)) {
     return (
-      <Stack sx={{ p: 2 }} spacing={2}>
-        <FieldPropertiesHeader field={field} sectionName={section?.name} />
-        <SectionCard title="Required inquiry field" gridProps={{ sx: { display: 'block' } }}>
-          <Stack direction="row" spacing={1} alignItems="flex-start">
-            <Iconify icon="mdi:lock-outline" sx={{ flexShrink: 0 }} />
-            <Typography variant="body2">{INQUIRY_FIELD_LOCK_HELP}</Typography>
-          </Stack>
-        </SectionCard>
-      </Stack>
+      <Scrollbar fillContent sx={{ height: 1, minHeight: 0 }}>
+        <Stack sx={{ p: 2 }} spacing={2}>
+          <FieldPropertiesHeader field={field} sectionName={section?.name} />
+          <SectionCard title="Core Field" gridProps={{ sx: { display: 'block' } }}>
+            <Stack direction="row" spacing={1} alignItems="flex-start">
+              <Iconify icon="mdi:lock-outline" sx={{ flexShrink: 0 }} />
+              <Typography variant="body2">{INQUIRY_FIELD_LOCK_HELP}</Typography>
+            </Stack>
+          </SectionCard>
+          <FormFieldCoreFields formik={formik} {...selectedLocation} />
+        </Stack>
+      </Scrollbar>
     );
   }
   const settingsProps = { formik, ...selectedLocation };
@@ -144,7 +147,7 @@ export function FormBuilderProperties({ formik, selectedLocation, navigationRequ
         value={activeTab}
         onChange={(_, value: 'basic' | 'rules') => setActiveTab(value)}
         variant="fullWidth"
-        aria-label="Field settings categories"
+        aria-label="Field Settings Categories"
         sx={{
           flexShrink: 0,
           borderBottom: 1,
@@ -180,7 +183,7 @@ export function FormBuilderProperties({ formik, selectedLocation, navigationRequ
             <>
               <FormFieldCoreFields {...settingsProps} />
               <SectionCard
-                title="More options"
+                title="More Options"
                 paperProps={{ sx: { mb: 0, minWidth: 0 } }}
                 gridProps={{ sx: { display: 'block' } }}
               >

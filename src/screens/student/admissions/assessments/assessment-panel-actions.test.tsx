@@ -42,7 +42,7 @@ it('completes the assessment without forwarding the click event as workflow data
     />
   );
 
-  await userEvent.click(screen.getByRole('button', { name: 'Complete assessment step' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Complete Assessment Step' }));
 
   expect(onComplete).toHaveBeenCalledWith();
 });

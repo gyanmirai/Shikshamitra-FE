@@ -12,8 +12,8 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetAdmissionFormOptionsQuery } from 'src/redux/student/admissions/admission-forms-api';
 
 import { academicOptionsJson } from './admission-academic-options';
-import { AdmissionBoardClassField } from './admission-board-class-field';
 import { parseRuntimeOptionsSource } from './application-detail/application-runtime-options';
+import { AdmissionBoardClassField, AdmissionAcademicMenuPaper } from './admission-board-class-field';
 
 import type { AdmissionRuntimeFieldProps } from './admission-runtime-field';
 
@@ -37,7 +37,7 @@ export function AdmissionMasterDataRuntimeField({
     : source.source === 'Standards'
       ? academicMediumId
       : undefined;
-  const requiresParent = source.source !== 'Standards' || Boolean(source.parentField);
+  const requiresParent = !['Standards', 'EducationBoards'].includes(source.source) || Boolean(source.parentField);
   const ready = Boolean(yearId && (!requiresParent || parentId));
   // Returning to a parent while its older request is pending needs a new check.
   // Keep this out of the HTTP contract; it only isolates the RTK cache entry.
@@ -118,6 +118,7 @@ export function AdmissionMasterDataRuntimeField({
         disabledValues={choices.filter((option) => !option.isActive).map((option) => option.value)}
         disabledLabel="Unavailable"
         noOptionsMessage="No options configured in Institute Setup"
+        MenuProps={{ slots: { paper: AdmissionAcademicMenuPaper } }}
         error={Boolean(error)}
         helperText={
           error ||

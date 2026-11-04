@@ -101,7 +101,7 @@ export function AdmissionOfferingMoreFilters({ cycle, values, onChange }: Props)
       >
         <Box
           role="dialog"
-          aria-label="Admission offering filters"
+          aria-label="Admission Offering Filters"
           sx={{ display: 'flex', flexDirection: 'column', maxHeight: 'calc(100dvh - 32px)' }}
         >
           <Stack
@@ -111,7 +111,7 @@ export function AdmissionOfferingMoreFilters({ cycle, values, onChange }: Props)
             sx={{ px: 2, py: 1.25 }}
           >
             <Typography variant="subtitle1">Filters</Typography>
-            <IconButton size="small" aria-label="Close filters" onClick={popover.onClose}>
+            <IconButton size="small" aria-label="Close Filters" onClick={popover.onClose}>
               <Iconify icon="mdi:close" width={20} />
             </IconButton>
           </Stack>
@@ -125,7 +125,7 @@ export function AdmissionOfferingMoreFilters({ cycle, values, onChange }: Props)
               initialOption={
                 selectedCampusQuery.data ?? {
                   id: ALL_FILTER_VALUE,
-                  name: 'All campuses',
+                  name: 'All Campuses',
                   code: '',
                   isActive: true,
                 }
@@ -137,9 +137,9 @@ export function AdmissionOfferingMoreFilters({ cycle, values, onChange }: Props)
             />
             <CustomSelect
               options={[
-                { value: ALL_FILTER_VALUE, label: 'All availability statuses' },
-                { value: '0', label: 'Configuration incomplete' },
-                { value: '1', label: 'Not open yet' },
+                { value: ALL_FILTER_VALUE, label: 'All Availability Statuses' },
+                { value: '0', label: 'Configuration Incomplete' },
+                { value: '1', label: 'Not Open Yet' },
                 { value: '2', label: 'Open' },
                 { value: '3', label: 'Closed' },
                 { value: '4', label: 'Inactive' },
@@ -167,8 +167,8 @@ export function AdmissionOfferingMoreFilters({ cycle, values, onChange }: Props)
               </StudentFeedback>
             )}
             <CustomSelect
-              options={[{ id: ALL_FILTER_VALUE, name: 'All school levels' }, ...stages]}
-              label="School level"
+              options={[{ id: ALL_FILTER_VALUE, name: 'All School Levels' }, ...stages]}
+              label="School Level"
               labelKey="name"
               valueKey="id"
               value={draft.stageId || ALL_FILTER_VALUE}
@@ -181,11 +181,11 @@ export function AdmissionOfferingMoreFilters({ cycle, values, onChange }: Props)
             />
             <CustomSelect
               options={[
-                { value: ALL_FILTER_VALUE, label: 'All activity statuses' },
+                { value: ALL_FILTER_VALUE, label: 'All Activity Statuses' },
                 { value: 'true', label: 'Active' },
                 { value: 'false', label: 'Inactive' },
               ]}
-              label="Active status"
+              label="Active Status"
               value={draft.isActive || ALL_FILTER_VALUE}
               onChange={(value) =>
                 updateDraft({ isActive: value === ALL_FILTER_VALUE ? '' : String(value) })
@@ -193,9 +193,9 @@ export function AdmissionOfferingMoreFilters({ cycle, values, onChange }: Props)
             />
             <CustomSelect
               options={[
-                { value: ALL_FILTER_VALUE, label: 'All configuration statuses' },
+                { value: ALL_FILTER_VALUE, label: 'All Configuration Statuses' },
                 { value: '1', label: 'Ready' },
-                { value: '0', label: 'Missing configuration' },
+                { value: '0', label: 'Missing Configuration' },
               ]}
               label="Configuration"
               value={draft.configurationStatus || ALL_FILTER_VALUE}
@@ -245,7 +245,7 @@ export function AdmissionOfferingMoreFilters({ cycle, values, onChange }: Props)
                 '&:hover': { bgcolor: 'text.secondary' },
               }}
             >
-              Apply filters
+              Apply Filters
             </Button>
           </Stack>
         </Box>

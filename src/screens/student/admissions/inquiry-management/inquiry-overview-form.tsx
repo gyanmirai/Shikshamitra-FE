@@ -27,6 +27,7 @@ import { useAdmissionPhotoReads } from '../use-admission-photo-reads';
 import { isAdmissionRuleVisible } from '../admission-visibility-rules';
 import { useInquiryPrimaryContact } from '../use-inquiry-primary-contact';
 import { useAdmissionFormLanguage } from '../use-admission-form-language';
+import { InquiryFamilyConfirmation } from './inquiry-family-confirmation';
 import { canonicalInquiryBinding } from '../admission-inquiry-field-bindings';
 import { useAdmissionUnsavedChanges } from '../use-admission-unsaved-changes';
 import { AdmissionSectionFields } from '../components/admission-section-fields';
@@ -44,6 +45,7 @@ import {
   preserveCompatibleInquiryAnswers,
   getAdmissionInquiryPrimaryContact,
   getAdmissionInquiryVisibleSections,
+  buildAdmissionInquiryDuplicateInput,
 } from '../admission-inquiry-model';
 
 type InquiryEditorValues = AdmissionInquiryFormValues & { preferredLanguageCode: string };
@@ -66,6 +68,9 @@ export function InquiryOverviewForm({
   const { readingPhoto, onPhotoReading } = useAdmissionPhotoReads();
   const [current, setCurrent] = useState(inquiry);
   const [interestExpanded, setInterestExpanded] = useState(true);
+  const [familyOpen, setFamilyOpen] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
+  const lastFocusedSubmit = useRef(0);
   const previousForm = useRef<{
     id: string;
     fields: ReturnType<typeof getAdmissionInquiryFields>;
@@ -108,6 +113,7 @@ export function InquiryOverviewForm({
     onSubmit: async (values) => {
       if (
         readOnly ||
+        familyOpen ||
         readingPhoto ||
         !selectedOffering ||
         !form ||
@@ -180,13 +186,13 @@ export function InquiryOverviewForm({
         fields: { ...currentValues.fields, ...changes },
       }));
     },
-    readOnly || updateState.isLoading || readingPhoto || runtime.isFetching
+    readOnly || familyOpen || updateState.isLoading || readingPhoto || runtime.isFetching
   );
   const primaryContact = useInquiryPrimaryContact({
     formik,
     fields,
     contextKey: `${current.id}:${formik.values.offeringId}:${form?.id ?? ''}`,
-    busy: readOnly || updateState.isLoading || readingPhoto,
+    busy: readOnly || familyOpen || updateState.isLoading || readingPhoto,
   });
   const ageFeedback = useAdmissionInquiryAge({
     sections,
@@ -232,7 +238,7 @@ export function InquiryOverviewForm({
   );
   const loading = runtime.isFetching;
   const loadError = runtime.isError;
-  const locked = readOnly || updateState.isLoading || readingPhoto;
+  const locked = readOnly || familyOpen || updateState.isLoading || readingPhoto;
   const errors = formik.errors.fields as Record<string, string> | undefined;
   const touched = formik.touched.fields as Record<string, boolean> | undefined;
   const hasInterestErrors = ['boardId', 'mediumId', 'standardId', 'offeringId'].some((key) =>
@@ -241,10 +247,31 @@ export function InquiryOverviewForm({
   useEffect(() => {
     if (formik.submitCount && hasInterestErrors) setInterestExpanded(true);
   }, [formik.submitCount, hasInterestErrors]);
+  useEffect(() => {
+    if (!formik.submitCount) {
+      lastFocusedSubmit.current = 0;
+      return;
+    }
+    if (
+      formik.isValidating ||
+      !Object.keys(formik.errors).length ||
+      lastFocusedSubmit.current === formik.submitCount
+    )
+      return;
+    if (hasInterestErrors && !interestExpanded) return;
+    const invalidField = formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]');
+    if (!invalidField) return;
+    lastFocusedSubmit.current = formik.submitCount;
+    invalidField.focus();
+    invalidField.scrollIntoView({ block: 'center' });
+  }, [formik.submitCount, formik.isValidating, formik.errors, hasInterestErrors, interestExpanded]);
   useAdmissionUnsavedChanges(!readOnly, formik.dirty);
   useEffect(() => {
-    onDraftChange?.({ dirty: formik.dirty, busy: updateState.isLoading || readingPhoto });
-  }, [formik.dirty, onDraftChange, updateState.isLoading, readingPhoto]);
+    onDraftChange?.({
+      dirty: formik.dirty,
+      busy: familyOpen || updateState.isLoading || readingPhoto,
+    });
+  }, [formik.dirty, onDraftChange, familyOpen, updateState.isLoading, readingPhoto]);
 
   useEffect(() => {
     if (!formik.dirty) {
@@ -338,6 +365,7 @@ export function InquiryOverviewForm({
   };
   return (
     <Box
+      ref={formRef}
       component="form"
       noValidate
       onSubmit={formik.handleSubmit}
@@ -351,7 +379,7 @@ export function InquiryOverviewForm({
       <Box
         component={FormFieldSpacing}
         role="region"
-        aria-label="Inquiry form fields"
+        aria-label="Inquiry Form Fields"
         sx={
           fullHeight
             ? { flex: 1, minHeight: 0, overflowY: 'auto', p: { xs: 1.5, sm: 2 } }
@@ -360,7 +388,7 @@ export function InquiryOverviewForm({
       >
         <FormBusyRegion
           busy={updateState.isLoading || readingPhoto}
-          label={readingPhoto ? 'Reading photo…' : 'Saving inquiry…'}
+          label={readingPhoto ? 'Reading Photo…' : 'Saving Inquiry…'}
         >
           <Stack spacing={2}>
             {readOnly && (
@@ -372,7 +400,76 @@ export function InquiryOverviewForm({
               <FormSectionCard
                 title={title === 'Admission interest' ? 'Admission Interest' : title}
                 icon={GlobalIcons.admissionInterest}
-                descriptionTooltip="Select the academic context and admission offering."
+                descriptionTooltip="Select the Academic Context and Admission Offering."
+                action={
+                  <InquiryFamilyConfirmation
+                    inquiry={current}
+                    readOnly={readOnly}
+                    dirty={formik.dirty}
+                    busy={
+                      updateState.isLoading ||
+                      readingPhoto ||
+                      formik.isSubmitting ||
+                      loading ||
+                      choicesLoading
+                    }
+                    duplicateInput={
+                      selectedOffering && form
+                        ? buildAdmissionInquiryDuplicateInput(
+                            formik.values,
+                            fields,
+                            selectedOffering
+                          )
+                        : undefined
+                    }
+                    onBusyChange={setFamilyOpen}
+                    onTargetRefreshed={(result) => {
+                      if (
+                        result.id !== current.id ||
+                        formik.dirty ||
+                        updateState.isLoading ||
+                        readingPhoto
+                      )
+                        return null;
+                      setCurrent(result);
+                      const refreshedValues = {
+                        ...formik.values,
+                        admissionCycleId: result.admissionCycleId,
+                        offeringId: result.admissionOfferingId ?? '',
+                        parentRelationship: result.parentRelationship ?? undefined,
+                        capturedParentRelationship: result.parentRelationship ?? undefined,
+                        guardianResponsibilityConfirmed:
+                          result.guardianResponsibilityConfirmed ?? false,
+                        fields: readAdmissionInquiryFormValues(result.formValues),
+                      };
+                      const refreshedOffering = selectedOffering;
+                      const refreshedInput =
+                        result.formDefinition &&
+                        refreshedOffering &&
+                        refreshedOffering.id === result.admissionOfferingId
+                          ? buildAdmissionInquiryDuplicateInput(
+                              refreshedValues,
+                              getAdmissionInquiryFields(result.formDefinition, refreshedValues),
+                              refreshedOffering
+                            )
+                          : undefined;
+                      return {
+                        ...refreshedInput,
+                        admissionCycleId: result.admissionCycleId,
+                        guardianPhone: refreshedInput?.guardianPhone || result.normalizedPhone,
+                        guardianEmail: refreshedInput?.guardianEmail || result.email || undefined,
+                        applicantName: refreshedInput?.applicantName || result.applicantName,
+                        applicantDateOfBirth:
+                          refreshedInput?.applicantDateOfBirth ||
+                          result.applicantDateOfBirth ||
+                          undefined,
+                      };
+                    }}
+                    onConfirmed={(result) => {
+                      if (result.id === current.id && !formik.dirty) setCurrent(result);
+                    }}
+                  />
+                }
                 collapsible
                 expanded={interestExpanded}
                 onExpandedChange={setInterestExpanded}
@@ -461,7 +558,7 @@ export function InquiryOverviewForm({
                 </Box>
               </FormSectionCard>
             )}
-            {(loading || choicesLoading) && <LinearProgress aria-label="Loading inquiry form" />}
+            {(loading || choicesLoading) && <LinearProgress aria-label="Loading Inquiry Form" />}
             {(loadError || choicesError) && (
               <StudentFeedback
                 notificationKey="STU-0421"
@@ -493,7 +590,7 @@ export function InquiryOverviewForm({
                   severity="warning"
                 >
                   {runtime.currentData.availability.reasonMessage ||
-                    'Admission is not open for the selected class.'}
+                    'Admission Is Not Open for the Selected Class.'}
                 </StudentFeedback>
               )}
             {form && (
@@ -508,19 +605,19 @@ export function InquiryOverviewForm({
                   color="text.secondary"
                   sx={{ minWidth: 0, overflowWrap: 'anywhere' }}
                 >
-                  {form.name} · Version {form.version}
+                  {form.name} · version {form.version}
                 </Typography>
                 {!loading && !loadError && supportedLanguages.length > 1 && (
                   <CustomSelect
                     size="small"
-                    label="Form language"
+                    label="Form Language"
                     value={language}
                     options={supportedLanguages.map((code) => ({
                       value: code,
                       label: getAdmissionLanguageLabel(code),
                     }))}
                     onChange={(value) => setLanguage(String(value))}
-                    disabled={updateState.isLoading || readingPhoto}
+                    disabled={locked}
                     formControlProps={{ sx: { width: 1, maxWidth: { sm: 220 } } }}
                   />
                 )}
@@ -549,7 +646,7 @@ export function InquiryOverviewForm({
                     key={section.id}
                     title={section.name}
                     icon={GlobalIcons.admissionStudent}
-                    descriptionTooltip={`Complete the ${section.name} fields.`}
+                    descriptionTooltip={`Complete The ${section.name} Fields.`}
                   >
                     <AdmissionSectionFields
                       columns={2}
@@ -614,7 +711,7 @@ export function InquiryOverviewForm({
       {!readOnly && (
         <Stack
           component="footer"
-          aria-label="Inquiry form actions"
+          aria-label="Inquiry Form Actions"
           direction="row"
           spacing={1}
           justifyContent="flex-end"
@@ -628,12 +725,7 @@ export function InquiryOverviewForm({
           }}
         >
           {onCancel && (
-            <Button
-              size="small"
-              variant="outlined"
-              disabled={updateState.isLoading || readingPhoto}
-              onClick={onCancel}
-            >
+            <Button size="small" variant="outlined" disabled={locked} onClick={onCancel}>
               Cancel
             </Button>
           )}
@@ -644,6 +736,7 @@ export function InquiryOverviewForm({
             loading={updateState.isLoading}
             disabled={
               readingPhoto ||
+              familyOpen ||
               !formik.dirty ||
               !form ||
               loading ||
@@ -652,7 +745,7 @@ export function InquiryOverviewForm({
               (offeringChanged && !runtime.currentData?.availability.canCreateInquiry)
             }
           >
-            Save changes
+            Save Changes
           </LoadingButton>
         </Stack>
       )}

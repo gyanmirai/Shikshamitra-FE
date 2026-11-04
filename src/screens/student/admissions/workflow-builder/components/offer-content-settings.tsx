@@ -13,14 +13,14 @@ export function OfferContentSettings({ policy, disabled, onChange }: Props) {
   return (
     <FormSectionCard
       icon="mdi:text-box-outline"
-      title="Offer content"
-      descriptionTooltip="Write the offer message and terms. Conditional offers also require conditions to be recorded."
+      title="Offer Content"
+      descriptionTooltip="Write the Offer Message and Terms. Conditional Offers Also Require Conditions to Be Recorded."
     >
       <Stack spacing={1.5}>
         <TextField
           select
           size="small"
-          label="Offer type *"
+          label="Offer Type *"
           value={policy.offerType}
           disabled={disabled}
           onChange={(event) =>
@@ -37,7 +37,7 @@ export function OfferContentSettings({ policy, disabled, onChange }: Props) {
         </TextField>
         <TextField
           size="small"
-          label="Offer title *"
+          label="Offer Title *"
           value={policy.title}
           disabled={disabled}
           inputProps={{ maxLength: 160 }}
@@ -46,7 +46,7 @@ export function OfferContentSettings({ policy, disabled, onChange }: Props) {
         <TextField
           multiline
           minRows={3}
-          label="Offer message *"
+          label="Offer Message *"
           value={policy.message}
           disabled={disabled}
           inputProps={{ maxLength: 4000 }}
@@ -69,7 +69,7 @@ export function OfferContentSettings({ policy, disabled, onChange }: Props) {
         <TextField
           multiline
           minRows={2}
-          label="Terms and conditions"
+          label="Terms and Conditions"
           value={policy.terms ?? ''}
           disabled={disabled}
           inputProps={{ maxLength: 8000 }}

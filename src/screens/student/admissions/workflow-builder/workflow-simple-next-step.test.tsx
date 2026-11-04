@@ -42,7 +42,7 @@ function renderNextStep(conditional = false, creating = false) {
 
 it('creates one usual route for an unconnected stage', async () => {
   const { transition, onSave } = renderNextStep(false, true);
-  await userEvent.setup().click(screen.getByRole('button', { name: 'Save path' }));
+  await userEvent.setup().click(screen.getByRole('button', { name: 'Save Path' }));
   await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
   const saved = onSave.mock.calls[0][0];
   expect(saved.id).toBeTruthy();
@@ -56,17 +56,17 @@ it('creates one usual route for an unconnected stage', async () => {
 
 it('saves a usual next step without exposing assessment outcomes or condition fields', async () => {
   const { transition, onSave } = renderNextStep();
-  expect(screen.getByRole('heading', { name: 'Choose next step' })).toBeInTheDocument();
-  expect(screen.getByRole('combobox', { name: 'Continue to *' })).toBeEnabled();
-  expect(screen.queryByRole('combobox', { name: 'Continue after' })).not.toBeInTheDocument();
-  expect(screen.queryByRole('combobox', { name: 'Application field *' })).not.toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: 'Choose Next Step' })).toBeInTheDocument();
+  expect(screen.getByRole('combobox', { name: 'Continue To *' })).toBeEnabled();
+  expect(screen.queryByRole('combobox', { name: 'Continue After' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('combobox', { name: 'Application Field *' })).not.toBeInTheDocument();
   expect(screen.queryByRole('combobox', { name: 'Comparison *' })).not.toBeInTheDocument();
   expect(screen.queryByRole('textbox', { name: 'Value *' })).not.toBeInTheDocument();
-  expect(screen.queryByText('Use a saved field code (advanced)')).not.toBeInTheDocument();
+  expect(screen.queryByText('Use a Saved Field Code (Advanced)')).not.toBeInTheDocument();
   expect(
-    screen.getByText(/Failed, absent or retake outcomes stay at Assessment/)
+    screen.getByText(/Failed, Absent or Retake Outcomes Stay at Assessment/)
   ).toBeInTheDocument();
-  await userEvent.setup().click(screen.getByRole('button', { name: 'Save path' }));
+  await userEvent.setup().click(screen.getByRole('button', { name: 'Save Path' }));
   await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
   expect(onSave.mock.calls[0][0]).toMatchObject({
     id: transition.id,
@@ -79,14 +79,14 @@ it('saves a usual next step without exposing assessment outcomes or condition fi
 
 it('preserves saved special routes as read-only and blocks form submission', async () => {
   const { onSave } = renderNextStep(true);
-  expect(screen.getByRole('heading', { name: 'Next-step details' })).toBeInTheDocument();
-  expect(screen.getByRole('combobox', { name: 'Continue to *' })).toHaveAttribute(
+  expect(screen.getByRole('heading', { name: 'Next-step Details' })).toBeInTheDocument();
+  expect(screen.getByRole('combobox', { name: 'Continue To *' })).toHaveAttribute(
     'aria-disabled',
     'true'
   );
-  expect(screen.queryByRole('button', { name: 'Save path' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Save Path' })).not.toBeInTheDocument();
   expect(screen.getByText(/Existing special paths remain read-only/)).toBeInTheDocument();
-  fireEvent.submit(screen.getByRole('heading', { name: 'Next-step details' }).closest('form')!);
+  fireEvent.submit(screen.getByRole('heading', { name: 'Next-step Details' }).closest('form')!);
   await waitFor(() => expect(screen.queryByText('Saving...')).not.toBeInTheDocument());
   expect(onSave).not.toHaveBeenCalled();
 });

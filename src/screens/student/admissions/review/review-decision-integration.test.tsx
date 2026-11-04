@@ -45,7 +45,7 @@ it('records a reasoned rejection with the application concurrency token and no R
     dialog.getByLabelText('Reason *'),
     'The submitted evidence does not meet the criteria.'
   );
-  await user.click(dialog.getByRole('button', { name: 'Reject application' }));
+  await user.click(dialog.getByRole('button', { name: 'Reject Application' }));
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   expect(body).toEqual({
     concurrencyStamp: 'stamp',
@@ -70,10 +70,10 @@ it.each([true, false])(
       ['Students.Admissions.Applications.Add']
     );
     if (journeyCompleted)
-      expect(screen.getByRole('button', { name: 'Finalize admission' })).toBeEnabled();
+      expect(screen.getByRole('button', { name: 'Finalize Admission' })).toBeEnabled();
     else
-      expect(screen.queryByRole('button', { name: 'Finalize admission' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /offer/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Finalize Admission' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Offer/i })).not.toBeInTheDocument();
   }
 );
 
@@ -83,5 +83,5 @@ it('does not expose decisions or finalization without application manage permiss
     'Students.Admissions.Applications.View',
   ]);
   expect(screen.queryByRole('button', { name: 'Approve' })).not.toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: 'Finalize admission' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Finalize Admission' })).not.toBeInTheDocument();
 });

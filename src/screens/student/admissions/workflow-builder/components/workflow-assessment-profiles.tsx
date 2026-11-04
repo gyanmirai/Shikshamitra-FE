@@ -54,24 +54,25 @@ export function WorkflowAssessmentProfiles({
   return (
     <FormSectionCard
       icon="mdi:account-group-outline"
-      title="Class assessment profiles"
-      descriptionTooltip="Configure one combined exam for each group of classes. A class can belong to one profile. Every configured subject needs marks before a result is submitted. Exam dates, rooms, attendance and bookings remain in Assessments."
+      title="Class Assessment Profiles"
+      descriptionTooltip="Configure One Combined Exam for Each Group of Classes. A Class Can Belong to One Profile. Every Configured Subject Needs Marks Before a Result Is Submitted. Exam Dates, Rooms, Attendance and Bookings Remain in Assessments."
       action={
         <Button
+          aria-label="Add Class Profile"
           size="small"
           variant="outlined"
           startIcon={<Iconify icon={GlobalIcons.addIcon} />}
           disabled={disabled || query.isFetching || query.isError || catalog.classes.length === 0}
           onClick={add}
         >
-          Add class profile
+          Class Profile
         </Button>
       }
     >
       <Stack spacing={1.5} aria-busy={query.isFetching}>
         {initialLoading && (
           <Skeleton
-            aria-label="Loading assessment classes and subjects"
+            aria-label="Loading Assessment Classes and Subjects"
             variant="rounded"
             height={100}
           />

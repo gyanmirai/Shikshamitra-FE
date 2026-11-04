@@ -7,7 +7,7 @@ export function FormHistoryCard({ history }: { history: AdmissionFormChangeHisto
   return (
     <Card sx={{ p: 2 }}>
       <Typography variant="subtitle1" sx={{ mb: 1 }}>
-        Form history
+        Form History
       </Typography>
       <List disablePadding>
         {history.map((item) => (

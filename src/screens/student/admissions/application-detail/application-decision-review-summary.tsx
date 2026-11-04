@@ -48,7 +48,7 @@ export function ApplicationDecisionReviewSummary({
   return (
     <Stack spacing={1} sx={{ minWidth: 0 }}>
       <Typography variant="subtitle1" component="h3">
-        Review summary
+        Review Summary
       </Typography>
       <Divider />
       {stages.length ? (
@@ -106,7 +106,7 @@ export function ApplicationDecisionReviewSummary({
         <Stack direction="row" spacing={1} alignItems="center" sx={{ pt: 0.5 }}>
           <Iconify icon="mdi:school-outline" width={20} />
           <Typography variant="body2" color="text.secondary">
-            Applying for {application.standardName}
+            Applying For {application.standardName}
           </Typography>
         </Stack>
       )}

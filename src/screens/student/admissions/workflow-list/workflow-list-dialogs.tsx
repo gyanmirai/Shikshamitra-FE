@@ -41,7 +41,7 @@ export function WorkflowListDialogs({ actions }: { actions: Actions }) {
         }}
         saving={actions.cloneState.isLoading}
         title="Clone Workflow"
-        submitLabel="Clone draft"
+        submitLabel="Clone Draft"
         initialValues={{
           name: actions.cloneSource ? `${actions.cloneSource.name} Copy` : '',
           code: '',
@@ -61,7 +61,7 @@ export function WorkflowListDialogs({ actions }: { actions: Actions }) {
           deleting
             ? 'Delete Workflow Draft?'
             : reopening
-              ? 'Re-open Workflow?'
+              ? 'Re-Open Workflow?'
               : 'Archive Workflow?'
         }
         content={
@@ -71,7 +71,7 @@ export function WorkflowListDialogs({ actions }: { actions: Actions }) {
                 ? `Are you sure you want to delete '${pending?.workflow.name}'? This permanently removes the unused draft and its stage configuration.`
                 : reopening
                   ? `Re-open ${pending?.workflow.name} (version ${pending?.workflow.version}) with its published content kept read-only. It returns to Published unless it was already Superseded or another published version exists; in those cases it remains Superseded. Offerings stay unchanged.`
-                  : 'Archived workflows cannot be selected for new admission offerings.'}
+                  : 'Archived Workflows Cannot Be Selected for New Admission Offerings.'}
             </Typography>
             {actions.confirmationNotice && (
               <StudentFeedback notificationKey="STU-0621" presentation="inline" severity="warning">
@@ -100,7 +100,7 @@ export function WorkflowListDialogs({ actions }: { actions: Actions }) {
             onClick={actions.confirm}
           >
             {actions.confirmationRefreshing
-              ? 'Checking latest…'
+              ? 'Checking Latest…'
               : deleting
                 ? 'Delete'
                 : reopening

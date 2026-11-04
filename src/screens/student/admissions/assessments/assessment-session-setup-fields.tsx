@@ -103,8 +103,8 @@ export function AssessmentSessionSetupFields({
         title={pipeline ? 'Session Details' : 'Assessment Details'}
         descriptionTooltip={
           pipeline
-            ? "Create a slot for this student's current assessment."
-            : 'Choose the classes attending this session. Assessment choices appear only when a class has multiple eligible assessments.'
+            ? "Create a Slot for This Student's Current Assessment."
+            : 'Choose the Classes Attending This Session. Assessment Choices Appear Only When a Class Has Multiple Eligible Assessments.'
         }
       >
         <Grid container spacing={1}>
@@ -114,7 +114,7 @@ export function AssessmentSessionSetupFields({
                 size="small"
                 fullWidth
                 required
-                label="Session name"
+                label="Session Name"
                 disabled={disabled}
                 {...formik.getFieldProps('name')}
                 onChange={(event) => update('name', event.target.value)}
@@ -128,11 +128,11 @@ export function AssessmentSessionSetupFields({
                 size="small"
                 fullWidth
                 required
-                label="Assessment type"
+                label="Assessment Type"
                 options={[
-                  { value: 'exam', label: 'School exam' },
-                  { value: 'individualInterview', label: 'Individual interview' },
-                  { value: 'groupInterview', label: 'Group interview' },
+                  { value: 'exam', label: 'School Exam' },
+                  { value: 'individualInterview', label: 'Individual Interview' },
+                  { value: 'groupInterview', label: 'Group Interview' },
                 ]}
                 value={formik.values.sessionType}
                 onChange={(value) => update('sessionType', value)}
@@ -159,7 +159,7 @@ export function AssessmentSessionSetupFields({
                   }}
                   error={feedback('offeringIds').error || feedback('classIds').error}
                   helperText={feedback('classIds').helperText || feedback('offeringIds').helperText}
-                  noOptionsMessage="No classes with eligible assessments are available"
+                  noOptionsMessage="No Classes with Eligible Assessments Are Available"
                 />
               </ShakingTextField>
             </Grid>
@@ -183,7 +183,7 @@ export function AssessmentSessionSetupFields({
                       fullWidth
                       required
                       isSearch
-                      label={`${classes.find((item) => item.value === id)?.label ?? 'Class'} — Select assessment`}
+                      label={`${classes.find((item) => item.value === id)?.label ?? 'Class'} — Select Assessment`}
                       options={matches.map((scope) => ({
                         value: sessionAssessmentKey(scope),
                         label: `${scope.stageName} · ${scope.offeringName} · ${scope.workflowName || 'Workflow'} v${scope.workflowVersion}`,
@@ -206,7 +206,7 @@ export function AssessmentSessionSetupFields({
       <FormSectionCard
         icon="mdi:calendar-clock-outline"
         title="Schedule And Room"
-        descriptionTooltip="Rooms come from Institute Setup. Availability and capacity are checked again before confirmation."
+        descriptionTooltip="Rooms Come From Institute Setup. Availability and Capacity Are Checked Again Before Confirmation."
       >
         <Grid container spacing={1}>
           {separateDate && (
@@ -254,7 +254,7 @@ export function AssessmentSessionSetupFields({
                 {separateDate ? (
                   <TimePicker
                     format="hh:mm A"
-                    label={key === 'startsAt' ? 'Starts at' : 'Ends at'}
+                    label={key === 'startsAt' ? 'Starts At' : 'Ends At'}
                     value={formik.values[key]}
                     disabled={
                       disabled ||
@@ -283,7 +283,7 @@ export function AssessmentSessionSetupFields({
                   />
                 ) : (
                   <DateTimePicker
-                    label={key === 'startsAt' ? 'Starts at' : 'Ends at'}
+                    label={key === 'startsAt' ? 'Starts At' : 'Ends At'}
                     format={ADMISSION_DATE_TIME_FORMAT}
                     value={formik.values[key]}
                     onChange={(value) => update(key, value)}
@@ -320,9 +320,9 @@ export function AssessmentSessionSetupFields({
                 required
                 minChars={0}
                 debounceMs={150}
-                label="Institute room"
+                label="Institute Room"
                 name="roomId"
-                placeholder="Search room or building"
+                placeholder="Search Room or Building"
                 value={room ?? null}
                 getOptionLabel={(option) => option.roomName}
                 isOptionEqualToValue={(option, value) => option.id === value.id}
@@ -355,7 +355,7 @@ export function AssessmentSessionSetupFields({
                           {option.floorName}
                         </Typography>
                       </Box>
-                      <Label color="default">{option.capacity} seats</Label>
+                      <Label color="default">{option.capacity} Seats</Label>
                     </Box>
                   );
                 }}
@@ -380,7 +380,7 @@ export function AssessmentSessionSetupFields({
                 size="small"
                 fullWidth
                 required
-                label={pipeline ? 'Capacity' : 'Session capacity'}
+                label={pipeline ? 'Capacity' : 'Session Capacity'}
                 name="capacity"
                 prefix=""
                 decimalScale={0}
@@ -395,7 +395,7 @@ export function AssessmentSessionSetupFields({
           {room && (
             <Grid size={{ xs: 12, sm: 6 }}>
               <Typography variant="body2" color="text.secondary">
-                Room capacity: {room.capacity}
+                Room Capacity: {room.capacity}
               </Typography>
             </Grid>
           )}
@@ -405,7 +405,7 @@ export function AssessmentSessionSetupFields({
         <FormSectionCard
           icon="mdi:account-clock-outline"
           title="Interview Arrangement"
-          descriptionTooltip="Individual interviews use one applicant per generated slot. Group interviews share the session time."
+          descriptionTooltip="Individual Interviews Use One Applicant per Generated Slot. Group Interviews Share the Session Time."
         >
           <Grid container spacing={1}>
             <Grid size={12}>
@@ -467,8 +467,8 @@ export function AssessmentSessionSetupFields({
                         required
                         label={
                           key === 'slotDurationMinutes'
-                            ? 'Duration per applicant (minutes)'
-                            : 'Gap between slots (minutes)'
+                            ? 'Duration Per Applicant (Minutes)'
+                            : 'Gap Between Slots (Minutes)'
                         }
                         name={key}
                         prefix=""

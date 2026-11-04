@@ -15,12 +15,12 @@ const ACTION_LABELS = [
   'Validated',
   'Submitted',
   'Approved',
-  'Changes requested',
+  'Changes Requested',
   'Scheduled',
   'Published',
   'Superseded',
   'Archived',
-  'Rollback draft created',
+  'Rollback Draft Created',
   'Reopened',
 ] as const;
 

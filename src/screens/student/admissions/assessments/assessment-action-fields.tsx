@@ -89,7 +89,7 @@ export function AssessmentActionFields({
             size="small"
             prefix=""
             decimalScale={2}
-            label={`Marks out of ${assessment.policy.totalMarks}`}
+            label={`Marks Out Of ${assessment.policy.totalMarks}`}
             value={values.marks}
             name="marks"
             disabled={isSubmitting}
@@ -120,7 +120,7 @@ export function AssessmentActionFields({
           size="small"
           multiline
           minRows={3}
-          label="Notes / reason"
+          label="Notes / Reason"
           disabled={isSubmitting}
           {...formik.getFieldProps('notes')}
           error={Boolean(touched.notes && errors.notes)}

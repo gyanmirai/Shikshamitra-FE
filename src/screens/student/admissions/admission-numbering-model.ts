@@ -9,11 +9,11 @@ export type NumberingFormValues = Omit<SaveAdmissionNumbering, 'startingNumber'>
   startingNumber: string;
 };
 export const numberingCycles = [
-  { value: 2, label: 'Academic year wise', description: 'Counter restarts each academic year.' },
-  { value: 1, label: 'Calendar year wise', description: 'Counter restarts each calendar year.' },
+  { value: 2, label: 'Academic Year Wise', description: 'Counter restarts each academic year.' },
+  { value: 1, label: 'Calendar Year Wise', description: 'Counter restarts each calendar year.' },
   {
     value: 0,
-    label: 'Continuous numbering',
+    label: 'Continuous Numbering',
     description: 'Counter continues across years without restarting.',
   },
 ] as const;

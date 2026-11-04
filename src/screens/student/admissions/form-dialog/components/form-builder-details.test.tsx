@@ -11,6 +11,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { defaultSettings } from 'src/components/settings/config-settings';
 
 import { FormBuilderDetails } from './form-builder-details';
+import { changeNewFormPurpose } from '../inquiry-default-fields';
 import { getBlankAdmissionFormInitialValues } from '../form-dialog-model';
 
 [
@@ -49,8 +50,8 @@ function renderDetails(purpose: 0 | 1, editing = false) {
 
 describe('FormBuilderDetails purpose-specific starters', () => {
   it.each([
-    { purpose: 0 as const, starter: 'Use inquiry form: Inquiry form' },
-    { purpose: 1 as const, starter: 'Use recommended: Registration form' },
+    { purpose: 0 as const, starter: 'Use Inquiry Form: Inquiry Form' },
+    { purpose: 1 as const, starter: 'Use Recommended: Registration Form' },
   ])(
     'preserves purpose $purpose while applying and replacing starters',
     async ({ purpose, starter }) => {
@@ -65,19 +66,19 @@ describe('FormBuilderDetails purpose-specific starters', () => {
       expect(getValues().code).toBe('');
 
       const templateName = getValues().name;
-      await user.clear(screen.getByRole('textbox', { name: 'Form name *' }));
+      await user.clear(screen.getByRole('textbox', { name: 'Form Name *' }));
       await user.paste('My school form');
-      await user.click(screen.getByRole('button', { name: 'Start blank: Blank form' }));
-      expect(screen.getByRole('button', { name: 'Replace draft' })).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'Start Blank: Blank Form' }));
+      expect(screen.getByRole('button', { name: 'Replace Draft' })).toBeInTheDocument();
       expect(getValues().name).toBe('My school form');
       await user.click(screen.getByRole('button', { name: 'Cancel' }));
       expect(getValues().name).toBe('My school form');
       expect(getValues().purpose).toBe(purpose);
 
-      await user.click(screen.getByRole('button', { name: 'Start blank: Blank form' }));
-      await user.click(screen.getByRole('button', { name: 'Replace draft' }));
+      await user.click(screen.getByRole('button', { name: 'Start Blank: Blank Form' }));
+      await user.click(screen.getByRole('button', { name: 'Replace Draft' }));
       await waitFor(() =>
-        expect(getValues().sections[0].fields).toHaveLength(purpose === 0 ? 4 : 0)
+        expect(getValues().sections[0].fields).toHaveLength(purpose === 0 ? 6 : 7)
       );
       expect(getValues().name).not.toBe(templateName);
       expect(getValues().purpose).toBe(purpose);
@@ -90,15 +91,15 @@ describe('FormBuilderDetails purpose-specific starters', () => {
       purpose: 0 as const,
       nextPurpose: 1 as const,
       type: 'Registration',
-      starter: 'Use inquiry form: Inquiry form',
-      nextStarter: 'Use recommended: Registration form',
+      starter: 'Use Inquiry Form: Inquiry Form',
+      nextStarter: 'Use Recommended: Registration Form',
     },
     {
       purpose: 1 as const,
       nextPurpose: 0 as const,
       type: 'Inquiry',
-      starter: 'Use recommended: Registration form',
-      nextStarter: 'Use inquiry form: Inquiry form',
+      starter: 'Use Recommended: Registration Form',
+      nextStarter: 'Use Inquiry Form: Inquiry Form',
     },
   ])(
     'switches $purpose to $nextPurpose without replacing draft details or fields',
@@ -106,29 +107,26 @@ describe('FormBuilderDetails purpose-specific starters', () => {
       const user = userEvent.setup();
       const getValues = renderDetails(purpose);
       await user.click(screen.getByRole('button', { name: starter }));
-      await user.clear(screen.getByRole('textbox', { name: 'Form name *' }));
+      await user.clear(screen.getByRole('textbox', { name: 'Form Name *' }));
       await user.paste('My saved draft');
-      await user.click(screen.getByRole('textbox', { name: 'Description (optional)' }));
+      await user.click(screen.getByRole('textbox', { name: 'Description (Optional)' }));
       await user.paste('School notes');
       const previousValues = structuredClone(getValues());
 
-      await user.click(screen.getByRole('combobox', { name: /Form type/ }));
+      await user.click(screen.getByRole('combobox', { name: /Form Type/ }));
       await user.click(screen.getByRole('option', { name: type }));
 
-      const expected = { ...previousValues, purpose: nextPurpose };
+      const expected = changeNewFormPurpose(previousValues, nextPurpose);
       const actual = structuredClone(getValues());
-      if (nextPurpose === 0) {
-        expect(
-          actual.sections
-            .flatMap((section) => section.fields)
-            .find((field) => field.bindingKey === 'Inquiry.ParentRelationship')
-        ).toMatchObject({ required: true, label: 'Primary contact' });
-        actual.sections.forEach((section) => {
-          section.fields = section.fields.filter(
-            (field) => field.bindingKey !== 'Inquiry.ParentRelationship'
-          );
-        });
-      }
+      // Newly created policy fields have fresh IDs in each materialization.
+      expected.sections.forEach((section) =>
+        section.fields.forEach((field) => {
+          const persisted = actual.sections
+            .flatMap((item) => item.fields)
+            .find((item) => item.bindingKey === field.bindingKey);
+          if (persisted) field.id = persisted.id;
+        })
+      );
       expect(actual).toEqual(expected);
       const switchedValues = structuredClone(getValues());
       expect(screen.queryByRole('button', { name: starter })).not.toBeInTheDocument();
@@ -136,19 +134,19 @@ describe('FormBuilderDetails purpose-specific starters', () => {
         'aria-pressed',
         'false'
       );
-      expect(screen.getByRole('button', { name: 'Start blank: Blank form' })).toHaveAttribute(
+      expect(screen.getByRole('button', { name: 'Start Blank: Blank Form' })).toHaveAttribute(
         'aria-pressed',
         'false'
       );
-      expect(screen.queryByRole('button', { name: 'Replace draft' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Replace Draft' })).not.toBeInTheDocument();
 
       await user.click(screen.getByRole('button', { name: nextStarter }));
-      expect(screen.getByRole('button', { name: 'Replace draft' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Replace Draft' })).toBeInTheDocument();
       await user.click(screen.getByRole('button', { name: 'Cancel' }));
       expect(getValues()).toEqual(switchedValues);
 
       await user.click(screen.getByRole('button', { name: nextStarter }));
-      await user.click(screen.getByRole('button', { name: 'Replace draft' }));
+      await user.click(screen.getByRole('button', { name: 'Replace Draft' }));
       await waitFor(() => expect(getValues().name).not.toBe('My saved draft'));
       expect(getValues().purpose).toBe(nextPurpose);
       expect(getValues().sections.some((section) => section.fields.length > 0)).toBe(true);
@@ -162,11 +160,11 @@ describe('FormBuilderDetails purpose-specific starters', () => {
   it('applies the registration starter directly after changing only the form type', async () => {
     const user = userEvent.setup();
     const getValues = renderDetails(0);
-    expect(screen.getByRole('combobox', { name: /Form type/ })).toHaveTextContent('Inquiry');
-    await user.click(screen.getByRole('combobox', { name: /Form type/ }));
+    expect(screen.getByRole('combobox', { name: /Form Type/ })).toHaveTextContent('Inquiry');
+    await user.click(screen.getByRole('combobox', { name: /Form Type/ }));
     await user.click(screen.getByRole('option', { name: 'Registration' }));
-    await user.click(screen.getByRole('button', { name: 'Use recommended: Registration form' }));
-    expect(screen.queryByRole('button', { name: 'Replace draft' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Use Recommended: Registration Form' }));
+    expect(screen.queryByRole('button', { name: 'Replace Draft' })).not.toBeInTheDocument();
     expect(getValues().purpose).toBe(1);
     expect(getValues().sections.some((section) => section.fields.length > 0)).toBe(true);
   });
@@ -174,17 +172,14 @@ describe('FormBuilderDetails purpose-specific starters', () => {
   it('keeps a blank draft selected and preserves its data when changing form type', async () => {
     const user = userEvent.setup();
     const getValues = renderDetails(0);
-    await user.click(screen.getByRole('textbox', { name: 'Form name *' }));
+    await user.click(screen.getByRole('textbox', { name: 'Form Name *' }));
     await user.paste('Custom blank draft');
     const previousValues = structuredClone(getValues());
-    await user.click(screen.getByRole('combobox', { name: /Form type/ }));
+    await user.click(screen.getByRole('combobox', { name: /Form Type/ }));
     await user.click(screen.getByRole('option', { name: 'Registration' }));
-    expect(getValues()).toEqual({
-      ...previousValues,
-      purpose: 1,
-      sections: previousValues.sections.map((section) => ({ ...section, fields: [] })),
-    });
-    expect(screen.getByRole('button', { name: 'Start blank: Blank form' })).toHaveAttribute(
+    expect(getValues()).toMatchObject({ name: previousValues.name, purpose: 1 });
+    expect(getValues().sections[0].fields).toHaveLength(7);
+    expect(screen.getByRole('button', { name: 'Start Blank: Blank Form' })).toHaveAttribute(
       'aria-pressed',
       'true'
     );
@@ -193,23 +188,28 @@ describe('FormBuilderDetails purpose-specific starters', () => {
   it('does not mark a populated template as blank after returning to details and switching type', async () => {
     const user = userEvent.setup();
     const getValues = renderDetails(0);
-    await user.click(screen.getByRole('button', { name: 'Use inquiry form: Inquiry form' }));
+    await user.click(screen.getByRole('button', { name: 'Use Inquiry Form: Inquiry Form' }));
     const previousValues = structuredClone(getValues());
     getValues.leaveDetails();
     getValues.returnToDetails();
-    expect(screen.getByRole('button', { name: 'Start blank: Blank form' })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: 'Start Blank: Blank Form' })).toHaveAttribute(
       'aria-pressed',
       'false'
     );
-    await user.click(screen.getByRole('combobox', { name: /Form type/ }));
+    await user.click(screen.getByRole('combobox', { name: /Form Type/ }));
     await user.click(screen.getByRole('option', { name: 'Registration' }));
-    expect(getValues()).toEqual({ ...previousValues, purpose: 1 });
-    expect(screen.getByRole('button', { name: 'Start blank: Blank form' })).toHaveAttribute(
+    expect(getValues()).toMatchObject({ name: previousValues.name, purpose: 1 });
+    expect(
+      getValues()
+        .sections.flatMap((section) => section.fields)
+        .filter((field) => !field.bindingKey?.startsWith('Inquiry.')).length
+    ).toBeGreaterThan(0);
+    expect(screen.getByRole('button', { name: 'Start Blank: Blank Form' })).toHaveAttribute(
       'aria-pressed',
       'false'
     );
     expect(
-      screen.getByRole('button', { name: 'Use recommended: Registration form' })
+      screen.getByRole('button', { name: 'Use Recommended: Registration Form' })
     ).toHaveAttribute('aria-pressed', 'false');
   });
 
@@ -219,14 +219,14 @@ describe('FormBuilderDetails purpose-specific starters', () => {
       const user = userEvent.setup();
       const getValues = renderDetails(purpose, true);
       expect(
-        screen.queryByRole('button', { name: 'Start blank: Blank form' })
+        screen.queryByRole('button', { name: 'Start Blank: Blank Form' })
       ).not.toBeInTheDocument();
-      const typeSelect = screen.getByRole('combobox', { name: /Form type/i });
+      const typeSelect = screen.getByRole('combobox', { name: /Form Type/i });
       expect(typeSelect).toHaveAttribute('aria-disabled', 'true');
       expect(typeSelect).toHaveTextContent(purpose === 0 ? 'Inquiry' : 'Registration');
       await user.click(typeSelect);
       expect(screen.queryByRole('option')).not.toBeInTheDocument();
-      await user.click(screen.getByRole('textbox', { name: 'Form name *' }));
+      await user.click(screen.getByRole('textbox', { name: 'Form Name *' }));
       await user.paste('Updated form');
       expect(getValues().purpose).toBe(purpose);
     }

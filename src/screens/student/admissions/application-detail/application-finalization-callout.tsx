@@ -29,7 +29,7 @@ export function ApplicationFinalizationCallout({
           alignSelf: 'flex-start',
         }}
       >
-        Finalize admission
+        Finalize Admission
       </Button>
     </>
   );

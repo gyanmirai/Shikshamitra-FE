@@ -119,15 +119,15 @@ it('fetches completed assessment history only when expanded and keeps action con
   );
   const store = setup(true);
   expect(requests).toBe(0);
-  await userEvent.click(screen.getByRole('button', { name: /Entrance exam · Assessment history/ }));
+  await userEvent.click(screen.getByRole('button', { name: /Entrance exam · Assessment History/ }));
   expect(await screen.findByText(/Marks: 85/)).toBeInTheDocument();
   expect(screen.getByText(/Scheduled:/)).toHaveTextContent('20 Sep 2026');
   expect(screen.getByText(/Scheduled:/)).toHaveTextContent('Assessment hall A');
   expect(screen.queryByText(/Without scheduled session/)).not.toBeInTheDocument();
   expect(requests).toBe(1);
-  expect(screen.queryByRole('button', { name: 'Record result' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Record Result' })).not.toBeInTheDocument();
   expect(
-    screen.queryByRole('button', { name: 'Complete assessment step' })
+    screen.queryByRole('button', { name: 'Complete Assessment Step' })
   ).not.toBeInTheDocument();
   cleanup();
   store.dispatch(api.util.resetApiState());
@@ -169,7 +169,7 @@ it.each([true, false])(
       })
     );
     const store = setup(true, true);
-    expect(await screen.findByRole('article', { name: 'Assessment attempt 1' })).toBeVisible();
+    expect(await screen.findByRole('article', { name: 'Assessment Attempt 1' })).toBeVisible();
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
     expect(screen.getByText(hasPolicy ? '85 / 100' : '85')).toBeVisible();
     expect(screen.getByText('Entrance exam morning')).toBeVisible();
@@ -180,7 +180,7 @@ it.each([true, false])(
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
     expect(
       screen.queryByRole('button', {
-        name: /Mark attempt|Save result|More actions|Complete assessment/,
+        name: /Mark Attempt|Save result|More Actions|Complete Assessment/,
       })
     ).not.toBeInTheDocument();
     expect(requests).toBe(1);
@@ -228,7 +228,7 @@ it('does not fetch restricted completed-stage evidence when the viewer lacks ass
     })
   );
   const store = setup(false);
-  await userEvent.click(screen.getByRole('button', { name: /Entrance exam · Assessment history/ }));
+  await userEvent.click(screen.getByRole('button', { name: /Entrance exam · Assessment History/ }));
   expect(
     screen.getByText('Assessment access is required to view these results.')
   ).toBeInTheDocument();

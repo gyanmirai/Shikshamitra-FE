@@ -9,8 +9,8 @@ export type SeatActionValue = { expiresAt: string; reason: string; joinWaitlist:
   overrideCapacity: boolean; capacity: number; allowBelowOccupied: boolean };
 type Props = { action: SeatAction; state: AdmissionSeatStage; busy: boolean;
   onClose: () => void; onSubmit: (value: SeatActionValue) => void };
-const TITLES = { reserve: 'Reserve seat', confirm: 'Confirm seat', renew: 'Renew reservation',
-  release: 'Release seat', waitlist: 'Add to waitlist', capacity: 'Change capacity' };
+const TITLES = { reserve: 'Reserve Seat', confirm: 'Confirm Seat', renew: 'Renew Reservation',
+  release: 'Release Seat', waitlist: 'Add to Waitlist', capacity: 'Change Capacity' };
 
 function defaultExpiry(state: AdmissionSeatStage) {
   const date = new Date();
@@ -36,21 +36,21 @@ export function SeatActionDialog({ action, state, busy, onClose, onSubmit }: Pro
       <DialogContent sx={{ pt: '12px !important', display: 'grid', gap: 2 }}>
         <DialogContentText>
           {action === 'capacity' ? `Current occupancy is ${state.reservedCount + state.confirmedCount} of ${state.capacity}.` :
-            'This action is recorded permanently in the applicant seat history.'}
+            'This Action Is Recorded Permanently in the Applicant Seat History.'}
         </DialogContentText>
-        {expiryAction && <TextField size="small" type="datetime-local" label="Reservation expiry *"
+        {expiryAction && <TextField size="small" type="datetime-local" label="Reservation Expiry *"
           value={value.expiresAt} InputLabelProps={{ shrink: true }}
           disabled={action === 'reserve' && state.policy?.allowDurationOverride === false}
           onChange={(event) => setValue({ ...value, expiresAt: event.target.value })} />}
         {action === 'reserve' && state.remainingCapacity === 0 && state.policy?.allowWaitlist &&
-          <FormControlLabel label="Join the waitlist if capacity is still full" control={<Checkbox checked={value.joinWaitlist}
+          <FormControlLabel label="Join the Waitlist If Capacity Is Still Full" control={<Checkbox checked={value.joinWaitlist}
             onChange={(_, checked) => setValue({ ...value, joinWaitlist: checked })} />} />}
         {action === 'reserve' && state.remainingCapacity === 0 && state.policy?.allowCapacityOverride &&
-          <FormControlLabel label="Use my capacity override permission" control={<Checkbox checked={value.overrideCapacity}
+          <FormControlLabel label="Use My Capacity Override Permission" control={<Checkbox checked={value.overrideCapacity}
             onChange={(_, checked) => setValue({ ...value, overrideCapacity: checked })} />} />}
-        {action === 'capacity' && <><TextField size="small" type="number" label="New capacity *" value={value.capacity}
+        {action === 'capacity' && <><TextField size="small" type="number" label="New Capacity *" value={value.capacity}
           inputProps={{ min: 1, max: 100000 }} onChange={(event) => setValue({ ...value, capacity: Number(event.target.value) })} />
-          <FormControlLabel label="Allow temporary over-capacity if current occupancy is higher" control={<Checkbox
+          <FormControlLabel label="Allow Temporary Over-Capacity If Current Occupancy Is Higher" control={<Checkbox
             checked={value.allowBelowOccupied} onChange={(_, checked) => setValue({ ...value, allowBelowOccupied: checked })} />} /></>}
         <TextField size="small" multiline minRows={2} label={reasonRequired ? 'Reason *' : 'Note'}
           value={value.reason} inputProps={{ maxLength: 512 }}

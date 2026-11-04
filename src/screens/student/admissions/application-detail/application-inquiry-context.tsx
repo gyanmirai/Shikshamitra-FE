@@ -41,7 +41,7 @@ export function ApplicationInquiryContext({ sections, values, language }: Props)
           key={section.id}
           title={section.name}
           icon="mdi:link-variant"
-          descriptionTooltip="These details belong to the source Inquiry and are shown read-only. Registration does not change them."
+          descriptionTooltip="These Details Belong to the Source Inquiry and Are Shown Read-Only. Registration Does Not Change Them."
         >
           <AdmissionSectionFields
             fields={section.fields}

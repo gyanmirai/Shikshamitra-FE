@@ -73,12 +73,12 @@ describe('Admission offering details drawer', () => {
       screen.getByRole('presentation').querySelector('.MuiDrawer-paperAnchorRight')
     ).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Class 1 Admission' })).toBeVisible();
-    expect(screen.getByRole('region', { name: 'Academic scope' })).toBeVisible();
-    expect(screen.getByRole('region', { name: 'Admission window' })).toBeVisible();
-    expect(screen.getByRole('region', { name: 'Process and forms' })).toBeVisible();
-    expect(screen.getByRole('region', { name: 'Admission capacity' })).toBeVisible();
-    expect(screen.getByRole('region', { name: 'Configuration readiness' })).toBeVisible();
-    expect(screen.queryByRole('button', { name: 'Assign class rooms' })).not.toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Academic Scope' })).toBeVisible();
+    expect(screen.getByRole('region', { name: 'Admission Window' })).toBeVisible();
+    expect(screen.getByRole('region', { name: 'Process and Forms' })).toBeVisible();
+    expect(screen.getByRole('region', { name: 'Admission Capacity' })).toBeVisible();
+    expect(screen.getByRole('region', { name: 'Configuration Readiness' })).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Assign Class Rooms' })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /^Close$/ }));
     expect(onClose).toHaveBeenCalledOnce();

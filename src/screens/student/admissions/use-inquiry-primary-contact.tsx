@@ -153,7 +153,7 @@ export function GuardianResponsibilityConfirmation({
             if (!busy) onConfirm();
           }}
         >
-          Confirm guardian
+          Confirm Guardian
         </Button>
       }
     />

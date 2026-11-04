@@ -200,19 +200,19 @@ export function AdmissionWorkflowTransitionDrawer({
             <Box>
               <Typography variant="h6">
                 {locked
-                  ? 'Next-step details'
+                  ? 'Next-step Details'
                   : simpleNextStep
-                    ? 'Choose next step'
-                    : 'What happens next?'}
+                    ? 'Choose Next Step'
+                    : 'What Happens Next?'}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 {simpleNextStep
-                  ? 'Choose where the applicant continues after this stage.'
-                  : 'Choose the usual next step or add a path for a specific outcome.'}
+                  ? 'Choose Where the Applicant Continues After This Stage.'
+                  : 'Choose the Usual Next Step or Add a Path for a Specific Outcome.'}
               </Typography>
             </Box>
             <IconButton
-              aria-label="Close next-step editor"
+              aria-label="Close Next-Step Editor"
               onClick={requestClose}
               sx={{ width: 44, height: 44 }}
             >
@@ -259,11 +259,11 @@ export function AdmissionWorkflowTransitionDrawer({
       <ConfirmDialog
         open={discard.value}
         onClose={discard.onFalse}
-        title="Discard next-step changes?"
+        title="Discard Next-Step Changes?"
         content="Your unsaved next-step changes will be lost."
         action={
           <Button color="error" variant="contained" onClick={close}>
-            Discard changes
+            Discard Changes
           </Button>
         }
       />
@@ -296,7 +296,7 @@ function DrawerActions({ onCancel, disabled }: { onCancel: () => void; disabled:
           size="small"
           startIcon={<Iconify icon="mdi:content-save-outline" />}
         >
-          Save path
+          Save Path
         </Button>
       </Stack>
     </>

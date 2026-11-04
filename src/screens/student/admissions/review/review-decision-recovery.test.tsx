@@ -58,39 +58,39 @@ it.each([true, false])(
     await user.click(screen.getByRole('button', { name: 'Reject' }));
     const dialog = within(screen.getByRole('dialog'));
     expect(
-      dialog.queryByText(/This decision is recorded in the application history/)
+      dialog.queryByText(/This Decision Is Recorded in the Application History/)
     ).not.toBeInTheDocument();
-    await user.hover(dialog.getByRole('button', { name: 'Reject application information' }));
+    await user.hover(dialog.getByRole('button', { name: 'Reject Application information' }));
     expect(await screen.findByRole('tooltip')).toHaveTextContent(
-      'This decision is recorded in the application history for APP-TEST.'
+      'This Decision Is Recorded in the Application History For APP-TEST.'
     );
-    await user.unhover(dialog.getByRole('button', { name: 'Reject application information' }));
+    await user.unhover(dialog.getByRole('button', { name: 'Reject Application information' }));
     await user.type(dialog.getByLabelText('Reason *'), 'Original decision reason.');
-    await user.click(dialog.getByRole('button', { name: 'Reject application' }));
+    await user.click(dialog.getByRole('button', { name: 'Reject Application' }));
     expect(await dialog.findByText(/Unable to confirm the decision/)).toBeInTheDocument();
     expect(dialog.getByLabelText('Reason *')).toHaveValue('Original decision reason.');
-    expect(dialog.getByRole('button', { name: 'Reject application' })).toBeDisabled();
-    await user.click(dialog.getByRole('button', { name: 'Reload latest application' }));
+    expect(dialog.getByRole('button', { name: 'Reject Application' })).toBeDisabled();
+    await user.click(dialog.getByRole('button', { name: 'Reload Latest application' }));
     await user.click(
       within(
-        await screen.findByRole('dialog', { name: 'Reload the latest application?' })
+        await screen.findByRole('dialog', { name: 'Reload the Latest application?' })
       ).getByRole('button', { name: 'Cancel' })
     );
     expect(reloads).toBe(0);
-    await user.click(dialog.getByRole('button', { name: 'Reload latest application' }));
+    await user.click(dialog.getByRole('button', { name: 'Reload Latest application' }));
     await user.click(
       within(
-        await screen.findByRole('dialog', { name: 'Reload the latest application?' })
-      ).getByRole('button', { name: 'Discard edits and reload' })
+        await screen.findByRole('dialog', { name: 'Reload the Latest application?' })
+      ).getByRole('button', { name: 'Discard Edits and Reload' })
     );
     await waitFor(() => expect(dialog.getByLabelText('Reason *')).toHaveValue(''));
     if (!stillAllowed) {
-      expect(dialog.getByRole('button', { name: 'Reject application' })).toBeDisabled();
+      expect(dialog.getByRole('button', { name: 'Reject Application' })).toBeDisabled();
       expect(bodies).toHaveLength(1);
       return;
     }
     await user.type(dialog.getByLabelText('Reason *'), 'Reason after checking current evidence.');
-    await user.click(dialog.getByRole('button', { name: 'Reject application' }));
+    await user.click(dialog.getByRole('button', { name: 'Reject Application' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(bodies).toEqual([
       { concurrencyStamp: 'old-stamp', reason: 'Original decision reason.' },

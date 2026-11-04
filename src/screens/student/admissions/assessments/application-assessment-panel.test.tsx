@@ -101,11 +101,11 @@ beforeEach(() => {
 
 it('keeps empty requirements and start/waive actions visible in compact mode', () => {
   panel();
-  expect(screen.getByText('No assessment attempt yet')).toBeVisible();
+  expect(screen.getByText('No Assessment Attempt Yet')).toBeVisible();
   expect(screen.getByText('Attempts')).toBeVisible();
   expect(screen.getByText(`0 of ${DEFAULT_ASSESSMENT_POLICY.maxAttempts}`)).toBeVisible();
-  expect(screen.getByRole('button', { name: 'Waive assessment' })).toBeEnabled();
-  fireEvent.click(screen.getByRole('button', { name: 'Start assessment' }));
+  expect(screen.getByRole('button', { name: 'Waive Assessment' })).toBeEnabled();
+  fireEvent.click(screen.getByRole('button', { name: 'Start Assessment' }));
   expect(screen.getByRole('dialog')).toHaveTextContent('Action book');
 });
 
@@ -134,7 +134,7 @@ it('removes the redundant start banner while retaining actionable stage blockers
   expect(
     screen.queryByText('Attendance and results become available when the session starts.')
   ).not.toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: 'Start assessment' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Start Assessment' })).not.toBeInTheDocument();
 });
 
 it('keeps current and previous attempts as cards without a table or history section', () => {
@@ -156,12 +156,12 @@ it('keeps current and previous attempts as cards without a table or history sect
   panel();
   expect(screen.getByText('Attempt 2')).toBeVisible();
   expect(screen.getByText('Attempt 1')).toBeVisible();
-  expect(screen.getByRole('article', { name: 'Assessment attempt 2' })).toBeVisible();
-  expect(screen.getByRole('article', { name: 'Assessment attempt 1' })).toBeVisible();
+  expect(screen.getByRole('article', { name: 'Assessment Attempt 2' })).toBeVisible();
+  expect(screen.getByRole('article', { name: 'Assessment Attempt 1' })).toBeVisible();
   expect(screen.queryByRole('table')).not.toBeInTheDocument();
   expect(screen.queryByText('Activity')).not.toBeInTheDocument();
-  expect(screen.queryByText('Attempt history')).not.toBeInTheDocument();
-  expect(screen.queryByText('Save result to continue')).not.toBeInTheDocument();
+  expect(screen.queryByText('Attempt History')).not.toBeInTheDocument();
+  expect(screen.queryByText('Save Result to continue')).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: /Previous attempts/ })).not.toBeInTheDocument();
 });
 
@@ -169,7 +169,7 @@ it('retains completion capability checks and does not forward click events', () 
   const onComplete = vi.fn();
   mocks.query.mockReturnValue(query({ ...base, canComplete: true }));
   panel(onComplete);
-  fireEvent.click(screen.getByRole('button', { name: 'Complete assessment step' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Complete Assessment Step' }));
   expect(onComplete).toHaveBeenCalledWith();
 });
 
@@ -180,14 +180,14 @@ it('does not expose assessment controls without view access and skips the query'
     { applicationId: 'application-1', stageInstanceId: 'stage-1' },
     { skip: true }
   );
-  expect(screen.queryByRole('button', { name: 'Start assessment' })).not.toBeInTheDocument();
-  expect(screen.getByText('Assessment access is required', { exact: false })).toBeVisible();
+  expect(screen.queryByRole('button', { name: 'Start Assessment' })).not.toBeInTheDocument();
+  expect(screen.getByText('Assessment access is Required', { exact: false })).toBeVisible();
 });
 
 it('locks compact stage controls during refresh and announces query failures through the shared toast', () => {
   mocks.query.mockReturnValue(query(base, { isFetching: true }));
   const { unmount } = panel();
-  expect(screen.getByRole('button', { name: 'Start assessment' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Start Assessment' })).toBeDisabled();
   unmount();
   mocks.query.mockReturnValue(query(base, { isError: true }));
   panel();
@@ -219,9 +219,9 @@ it.each([false, true])(
     };
     mocks.query.mockReturnValue(query(assessment, { isFetching: true }));
     const { rerender } = panel();
-    const attempt = screen.getByRole('article', { name: 'Assessment attempt 1' });
+    const attempt = screen.getByRole('article', { name: 'Assessment Attempt 1' });
     expect(attempt).toBeVisible();
-    expect(screen.getByRole('progressbar', { name: 'Refreshing assessment' })).toBeVisible();
+    expect(screen.getByRole('progressbar', { name: 'Refreshing Assessment' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Refresh' })).toBeDisabled();
     mocks.query.mockReturnValue(query(assessment, { isError }));
     rerender(
@@ -238,9 +238,9 @@ it.each([false, true])(
       </ThemeProvider>
     );
     expect(
-      screen.queryByRole('progressbar', { name: 'Refreshing assessment' })
+      screen.queryByRole('progressbar', { name: 'Refreshing Assessment' })
     ).not.toBeInTheDocument();
-    expect(screen.getByRole('article', { name: 'Assessment attempt 1' })).toBe(attempt);
+    expect(screen.getByRole('article', { name: 'Assessment Attempt 1' })).toBe(attempt);
     expect(screen.getByRole('button', { name: 'Refresh' })).toBeEnabled();
   }
 );
@@ -308,7 +308,7 @@ it('reports completion readiness to the page without rendering a duplicate Conti
     </ThemeProvider>
   );
   expect(
-    screen.queryByRole('button', { name: 'Complete assessment step' })
+    screen.queryByRole('button', { name: 'Complete Assessment Step' })
   ).not.toBeInTheDocument();
   expect(onReadinessChange).toHaveBeenLastCalledWith({
     stageId: 'stage-1',
@@ -387,12 +387,12 @@ it('shows the booked session, school-local date/time and room in the attempt car
     )
   );
   panel();
-  const card = screen.getByRole('article', { name: 'Assessment attempt 1' });
+  const card = screen.getByRole('article', { name: 'Assessment Attempt 1' });
   expect(within(card).getByText('School exam · Entrance assessment · 15 Oct 2026')).toBeVisible();
   expect(within(card).getByText('15 Oct 2026')).toBeVisible();
   expect(within(card).getByText('3:10 PM–3:15 PM IST')).toBeVisible();
   expect(within(card).getByText('A001')).toBeVisible();
-  expect(within(card).getByText('Result pending')).toHaveClass('mnl__label__root');
+  expect(within(card).getByText('Result Pending')).toHaveClass('mnl__label__root');
 });
 
 it('keeps a small Save Result action beside marks and submits the same result form', async () => {
@@ -400,7 +400,7 @@ it('keeps a small Save Result action beside marks and submits the same result fo
   panel();
   const marks = screen.getByRole('textbox', { name: 'Marks / 100' });
   const save = screen.getByRole('button', {
-    name: 'Save result for attempt 1',
+    name: 'Save Result for Attempt 1',
   }) as HTMLButtonElement;
   const form = marks.closest('form');
   expect(save).toHaveClass('MuiButton-sizeSmall');
@@ -421,7 +421,11 @@ it('keeps a small Save Result action beside marks and submits the same result fo
 it.each(['present', 'absent'])('records %s directly without a form popup', async (attendance) => {
   mocks.query.mockReturnValue(query(editable()));
   panel();
-  fireEvent.click(screen.getByRole('button', { name: `Mark attempt 1 ${attendance}` }));
+  fireEvent.click(
+    screen.getByRole('button', {
+      name: `Mark Attempt 1 ${attendance === 'present' ? 'Present' : 'Absent'}`,
+    })
+  );
   await waitFor(() =>
     expect(mocks.run).toHaveBeenCalledWith(
       'attendance',
@@ -430,7 +434,7 @@ it.each(['present', 'absent'])('records %s directly without a form popup', async
     )
   );
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Save result for attempt 1' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Save Result for Attempt 1' })).toBeDisabled();
 });
 
 it('preserves decimal marks and the reviewed stamp when a later refresh changes the record', async () => {
@@ -459,7 +463,7 @@ it('preserves decimal marks and the reviewed stamp when a later refresh changes 
       />
     </ThemeProvider>
   );
-  fireEvent.click(screen.getByRole('button', { name: 'Save result for attempt 1' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Save Result for Attempt 1' }));
   await waitFor(() =>
     expect(mocks.run).toHaveBeenCalledWith(
       'result',
@@ -483,16 +487,16 @@ it('validates the configured mark limit and retains the draft after a failed sav
   fireEvent.change(screen.getByRole('textbox', { name: 'Marks / 80' }), {
     target: { value: '81' },
   });
-  fireEvent.click(screen.getByRole('button', { name: 'Save result for attempt 1' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Save Result for Attempt 1' }));
   expect(await screen.findByText('Enter marks between 0 and 80')).toBeVisible();
   expect(mocks.run).not.toHaveBeenCalled();
   fireEvent.change(screen.getByRole('textbox', { name: 'Marks / 80' }), {
     target: { value: '69' },
   });
-  fireEvent.click(screen.getByRole('button', { name: 'Save result for attempt 1' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Save Result for Attempt 1' }));
   expect(await screen.findByText('The attempt changed. Reload and try again.')).toBeVisible();
   expect(screen.getByRole('textbox', { name: 'Marks / 80' })).toHaveValue('69');
-  fireEvent.click(screen.getByRole('button', { name: 'Discard result' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Discard Result' }));
   await waitFor(() => expect(screen.getByRole('textbox', { name: 'Marks / 80' })).toHaveValue(''));
 });
 
@@ -505,14 +509,14 @@ it('locks conflicting controls and prevents duplicate writes during inline savin
   );
   mocks.query.mockReturnValue(query(editable()));
   panel();
-  fireEvent.click(screen.getByRole('button', { name: 'Mark attempt 1 present' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Mark attempt 1 absent' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Mark Attempt 1 Present' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Mark Attempt 1 Absent' }));
   expect(mocks.run).toHaveBeenCalledOnce();
-  expect(screen.getByRole('button', { name: 'Mark attempt 1 absent' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Mark Attempt 1 Absent' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Refresh' })).toBeDisabled();
   await act(async () => resolve());
   await waitFor(() =>
-    expect(screen.getByRole('button', { name: 'Mark attempt 1 absent' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Mark Attempt 1 Absent' })).toBeEnabled()
   );
 });
 
@@ -544,8 +548,8 @@ it('keeps saved results in the same card without editable completed controls', (
 it('retains audited Waive/Cancel dialogs in the shared row menu', () => {
   mocks.query.mockReturnValue(query(editable()));
   panel();
-  fireEvent.click(screen.getByRole('button', { name: 'More actions for attempt 1' }));
-  fireEvent.click(screen.getByRole('menuitem', { name: 'Cancel attempt' }));
+  fireEvent.click(screen.getByRole('button', { name: 'More Actions for Attempt 1' }));
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Cancel Attempt' }));
   expect(screen.getByRole('dialog')).toHaveTextContent('Action cancel');
 });
 
@@ -555,7 +559,7 @@ it('changes recorded attendance through the existing notes dialog', () => {
   );
   panel();
   expect(screen.getByText('Present')).toHaveClass('mnl__label__root');
-  const change = screen.getByRole('button', { name: 'Change attendance for attempt 1' });
+  const change = screen.getByRole('button', { name: 'Change Attendance for Attempt 1' });
   expect(change).toHaveClass('MuiButton-sizeSmall');
   fireEvent.click(change);
   expect(screen.getByRole('dialog')).toHaveTextContent('Action attendance');
@@ -585,8 +589,8 @@ it('keeps a failed result visible and routes retakes through the existing reason
   expect(screen.getByText('22 / 100')).toBeVisible();
   expect(screen.getByText('Failed')).toHaveClass('mnl__label__root');
   expect(screen.queryByRole('textbox', { name: 'Marks / 100' })).not.toBeInTheDocument();
-  fireEvent.click(screen.getByRole('button', { name: 'More actions for attempt 1' }));
-  fireEvent.click(screen.getByRole('menuitem', { name: 'Allow retake' }));
+  fireEvent.click(screen.getByRole('button', { name: 'More Actions for Attempt 1' }));
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Allow Retake' }));
   expect(screen.getByRole('dialog')).toHaveTextContent('Action retake');
   expect(onComplete).not.toHaveBeenCalled();
 });
@@ -618,10 +622,10 @@ it('does not expose inline write controls when action permissions are denied', (
   mocks.permissions.waive = false;
   mocks.query.mockReturnValue(query(editable({ canRecordResult: true, canCancel: false })));
   panel();
-  expect(screen.queryByRole('button', { name: 'Mark attempt 1 present' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Mark Attempt 1 Present' })).not.toBeInTheDocument();
   expect(screen.getByRole('textbox', { name: 'Marks / 100' })).toBeDisabled();
   expect(
-    screen.queryByRole('button', { name: 'More actions for attempt 1' })
+    screen.queryByRole('button', { name: 'More Actions for Attempt 1' })
   ).not.toBeInTheDocument();
 });
 
@@ -647,8 +651,8 @@ it('retains entered marks through a failed background read and locks stale write
     </ThemeProvider>
   );
   expect(screen.getByRole('textbox', { name: 'Marks / 100' })).toHaveValue('57');
-  expect(screen.getByRole('button', { name: 'Save result for attempt 1' })).toBeDisabled();
-  fireEvent.click(screen.getByRole('button', { name: 'Discard result' }));
+  expect(screen.getByRole('button', { name: 'Save Result for Attempt 1' })).toBeDisabled();
+  fireEvent.click(screen.getByRole('button', { name: 'Discard Result' }));
   await waitFor(() => expect(screen.getByRole('textbox', { name: 'Marks / 100' })).toHaveValue(''));
 });
 
@@ -677,9 +681,9 @@ it('offers discard when the edited attempt disappears after refresh', async () =
       'The assessment attempt changed. Discard the unsaved result and try again.'
     )
   ).toBeVisible();
-  fireEvent.click(screen.getByRole('button', { name: 'Discard result' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Discard Result' }));
   await waitFor(() =>
-    expect(screen.queryByRole('button', { name: 'Discard result' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Discard Result' })).not.toBeInTheDocument()
   );
   expect(mocks.run).not.toHaveBeenCalled();
 });
@@ -698,7 +702,7 @@ it('records a pass/fail result when scoring and required attendance are disabled
   expect(screen.queryByRole('textbox', { name: /Marks/ })).not.toBeInTheDocument();
   fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Result' }));
   fireEvent.click(screen.getByRole('option', { name: 'Passed' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Save result for attempt 1' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Save Result for Attempt 1' }));
   await waitFor(() =>
     expect(mocks.run).toHaveBeenCalledWith(
       'result',
@@ -733,8 +737,8 @@ it('reports unsaved results to the page and blocks continuation until discard', 
       expect.objectContaining({ dirty: true, canComplete: false })
     )
   );
-  expect(screen.getByRole('button', { name: 'Complete assessment step' })).toBeDisabled();
-  fireEvent.click(screen.getByRole('button', { name: 'Discard result' }));
+  expect(screen.getByRole('button', { name: 'Complete Assessment Step' })).toBeDisabled();
+  fireEvent.click(screen.getByRole('button', { name: 'Discard Result' }));
   await waitFor(() =>
     expect(onReadinessChange).toHaveBeenLastCalledWith(
       expect.objectContaining({ canComplete: true })
@@ -801,10 +805,10 @@ it('restores subject draft marks, requires every mark for submit, and saves part
   fireEvent.change(screen.getByRole('textbox', { name: /English \/ 50/ }), {
     target: { value: '15.25' },
   });
-  fireEvent.click(screen.getByRole('button', { name: 'Submit result' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Submit Result' }));
   await waitFor(() => expect(screen.getByText('Enter Maths marks between 0 and 50')).toBeVisible());
   expect(mocks.run).not.toHaveBeenCalled();
-  fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Save Draft' }));
   await waitFor(() =>
     expect(mocks.run).toHaveBeenCalledWith(
       'resultDraft',
@@ -812,6 +816,6 @@ it('restores subject draft marks, requires every mark for submit, and saves part
       expect.objectContaining({ canComplete: false })
     )
   );
-  expect(screen.getByRole('button', { name: 'Complete assessment step' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Complete Assessment Step' })).toBeDisabled();
   expect(complete).not.toHaveBeenCalled();
 });

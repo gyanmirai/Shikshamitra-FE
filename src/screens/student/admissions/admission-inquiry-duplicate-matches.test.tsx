@@ -73,11 +73,11 @@ it('disables parent linking for an explicitly selected Guardian before any famil
       onOverrideReasonChange={vi.fn()}
     />
   );
-  const addSibling = screen.getByRole('button', { name: 'Add sibling' });
+  const addSibling = screen.getByRole('button', { name: 'Add Sibling' });
   expect(addSibling).toBeDisabled();
   fireEvent.click(addSibling);
   expect(useFamily).not.toHaveBeenCalled();
-  expect(screen.getByRole('button', { name: 'Different family?' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: 'Different Family?' })).toBeEnabled();
   expect(addSibling.parentElement!).toHaveAttribute('tabindex', '0');
   fireEvent.mouseOver(addSibling.parentElement!);
   expect(await screen.findByRole('tooltip')).toHaveTextContent(
@@ -106,12 +106,12 @@ it('prioritizes an existing current-cycle inquiry while retaining deliberate sib
   );
   expect(screen.getByRole('heading', { name: 'Possible Duplicate Inquiry' })).toBeVisible();
   expect(screen.queryByLabelText('Parent')).not.toBeInTheDocument();
-  fireEvent.click(screen.getByRole('button', { name: 'Open existing inquiry' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Open Existing Inquiry' }));
   expect(openExisting).toHaveBeenCalledWith('inquiry-1');
   expect(useFamily).not.toHaveBeenCalled();
-  fireEvent.click(screen.getByRole('button', { name: 'Different child? Review family' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Different Child? Review Family' }));
   expect(screen.getByLabelText('Parent')).toHaveValue('');
-  expect(screen.getByRole('button', { name: 'Add sibling' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: 'Add Sibling' })).toBeEnabled();
 });
 
 it('keeps the review dialog local, reopens after resubmission and locks dismissal during saving', async () => {
@@ -132,7 +132,7 @@ it('keeps the review dialog local, reopens after resubmission and locks dismissa
     </Provider>
   );
   const review = screen.getByRole('dialog', { name: 'Existing Family Found' });
-  fireEvent.click(within(review).getByRole('button', { name: 'Back to form' }));
+  fireEvent.click(within(review).getByRole('button', { name: 'Back to Form' }));
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   expect(store.getState().confirmPopup.isChanges).toBe(true);
   view.rerender(
@@ -141,7 +141,7 @@ it('keeps the review dialog local, reopens after resubmission and locks dismissa
     </Provider>
   );
   const busyReview = await screen.findByRole('dialog', { name: 'Existing Family Found' });
-  expect(within(busyReview).getByRole('button', { name: 'Back to form' })).toBeDisabled();
+  expect(within(busyReview).getByRole('button', { name: 'Back to Form' })).toBeDisabled();
   expect(within(busyReview).getByRole('button', { name: /^close$/i })).toBeDisabled();
 });
 
@@ -165,10 +165,10 @@ function renderMatches(guardianPhone: string, candidate = match) {
 it('requires parent selection and explicit family confirmation before adding a sibling', async () => {
   const onUseExisting = renderMatches('9876543210');
   fireEvent.change(screen.getByLabelText('Parent'), { target: { value: 'applicant-1:father' } });
-  fireEvent.click(screen.getByRole('button', { name: 'Add sibling' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Add Sibling' }));
   const confirmation = await screen.findByRole('dialog', { name: 'Add Sibling?' });
   expect(onUseExisting).not.toHaveBeenCalled();
-  fireEvent.click(within(confirmation).getByRole('button', { name: 'Add sibling' }));
+  fireEvent.click(within(confirmation).getByRole('button', { name: 'Add Sibling' }));
   await waitFor(() => expect(onUseExisting).toHaveBeenCalledWith('family-1', parent));
 });
 
@@ -196,8 +196,8 @@ it('offers only the configured parent role without selecting or relabelling anot
 it('does not offer family linking for a name-only match with a different mobile', () => {
   const onUseExisting = renderMatches('9876543211');
 
-  expect(screen.getByRole('button', { name: 'Add sibling' })).toBeDisabled();
-  expect(screen.getByText(/Parent contact details do not match/)).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Add Sibling' })).toBeDisabled();
+  expect(screen.getByText(/Parent Contact Details Do Not Match/)).toBeInTheDocument();
   expect(onUseExisting).not.toHaveBeenCalled();
 });
 
@@ -208,11 +208,11 @@ it('allows same-email different-mobile only after deliberate parent and family c
     matchByMobile: false,
   });
   fireEvent.change(screen.getByLabelText('Parent'), { target: { value: 'applicant-1:father' } });
-  fireEvent.click(screen.getByRole('button', { name: 'Add sibling' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Add Sibling' }));
   const dialog = await screen.findByRole('dialog', { name: 'Add Sibling?' });
   expect(within(dialog).getByText(/entered mobile differs/)).toBeInTheDocument();
   expect(onUseExisting).not.toHaveBeenCalled();
-  fireEvent.click(within(dialog).getByRole('button', { name: 'Add sibling' }));
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Add Sibling' }));
   await waitFor(() => expect(onUseExisting).toHaveBeenCalledWith('family-1', parent));
 });
 it('does not guess a parent when both Father and Mother are available', async () => {
@@ -224,12 +224,12 @@ it('does not guess a parent when both Father and Mother are available', async ()
     ],
   });
   expect(screen.getByLabelText('Parent')).toHaveValue('');
-  fireEvent.click(screen.getByRole('button', { name: 'Add sibling' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Add Sibling' }));
   await screen.findByText('Select a parent.');
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   expect(onUseExisting).not.toHaveBeenCalled();
   fireEvent.change(screen.getByLabelText('Parent'), { target: { value: 'applicant-1:mother' } });
-  fireEvent.click(screen.getByRole('button', { name: 'Add sibling' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Add Sibling' }));
   const dialog = await screen.findByRole('dialog', { name: 'Add Sibling?' });
   fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
@@ -242,14 +242,14 @@ it('requires Father or Mother for a legacy generic parent without inventing the 
     parents: [{ ...parent, relationship: null }],
   });
   fireEvent.change(screen.getByLabelText('Parent'), { target: { value: 'applicant-1:parent' } });
-  fireEvent.click(screen.getByRole('button', { name: 'Add sibling' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Add Sibling' }));
   await screen.findByText('Select Father or Mother.');
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   expect(screen.queryByRole('option', { name: 'Guardian' })).not.toBeInTheDocument();
   fireEvent.change(screen.getByLabelText('Relationship'), { target: { value: 'mother' } });
-  fireEvent.click(screen.getByRole('button', { name: 'Add sibling' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Add Sibling' }));
   const dialog = await screen.findByRole('dialog', { name: 'Add Sibling?' });
-  fireEvent.click(within(dialog).getByRole('button', { name: 'Add sibling' }));
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Add Sibling' }));
   await waitFor(() =>
     expect(onUseExisting).toHaveBeenCalledWith('family-1', { ...parent, relationship: 'mother' })
   );
@@ -258,8 +258,8 @@ it('requires Father or Mother for a legacy generic parent without inventing the 
 it('honors the server decision even when the mobile numbers match', () => {
   const onUseExisting = renderMatches('9876543210', { ...match, canLinkFamily: false });
 
-  expect(screen.getByRole('button', { name: 'Add sibling' })).toBeDisabled();
-  expect(screen.getByText(/not available for linking/)).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Add Sibling' })).toBeDisabled();
+  expect(screen.getByText(/Not Available for Linking/)).toBeInTheDocument();
   expect(onUseExisting).not.toHaveBeenCalled();
 });
 
@@ -275,15 +275,15 @@ it('requires a nonblank reason before creating a separate family for a duplicate
     onOverrideReasonChange: vi.fn(),
   };
   const view = render(<AdmissionInquiryDuplicateMatches {...props} overrideReason="   " />);
-  fireEvent.click(screen.getByRole('button', { name: 'Different family?' }));
-  expect(screen.getByRole('button', { name: 'Create separate family' })).toBeDisabled();
+  fireEvent.click(screen.getByRole('button', { name: 'Different Family?' }));
+  expect(screen.getByRole('button', { name: 'Create Separate Family' })).toBeDisabled();
   view.rerender(
     <AdmissionInquiryDuplicateMatches
       {...props}
       overrideReason="Another family shares this number."
     />
   );
-  fireEvent.click(screen.getByRole('button', { name: 'Create separate family' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Create Separate Family' }));
   expect(createSeparate).toHaveBeenCalledOnce();
 });
 
@@ -295,7 +295,7 @@ it('keeps family matching controls in the form without publishing them to a toas
     existingInquiryNumber: 'INQ-2026-000030',
   });
   expect(screen.getByRole('heading', { name: 'Existing Family Found' })).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Open inquiry' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Open Inquiry' })).toBeInTheDocument();
   expect(screen.getByLabelText('Parent')).toBeInTheDocument();
   expect(shikshaMitraToast.warning).not.toHaveBeenCalled();
 });
@@ -335,18 +335,18 @@ it('discloses the separate-family reason only on click and retains its draft on 
     );
   }
   render(<Draft />);
-  const toggle = screen.getByRole('button', { name: 'Different family?' });
+  const toggle = screen.getByRole('button', { name: 'Different Family?' });
   expect(toggle).toHaveAttribute('aria-expanded', 'false');
-  expect(screen.queryByLabelText(/Reason for creating a separate family/)).not.toBeInTheDocument();
+  expect(screen.queryByLabelText(/Reason for Creating a Separate Family/)).not.toBeInTheDocument();
   fireEvent.click(toggle);
-  const field = await screen.findByLabelText(/Reason for creating a separate family/);
+  const field = await screen.findByLabelText(/Reason for Creating a Separate Family/);
   fireEvent.change(field, { target: { value: 'Two different families share this number.' } });
   fireEvent.click(toggle);
   await waitFor(() =>
-    expect(screen.queryByLabelText(/Reason for creating a separate family/)).not.toBeInTheDocument()
+    expect(screen.queryByLabelText(/Reason for Creating a Separate Family/)).not.toBeInTheDocument()
   );
   fireEvent.click(toggle);
-  expect(await screen.findByLabelText(/Reason for creating a separate family/)).toHaveValue(
+  expect(await screen.findByLabelText(/Reason for Creating a Separate Family/)).toHaveValue(
     'Two different families share this number.'
   );
 });
@@ -362,10 +362,10 @@ it('locks the disclosed reason and all family actions while the owner is saving'
     onOverrideReasonChange: vi.fn(),
   };
   const view = render(<AdmissionInquiryDuplicateMatches {...props} busy={false} />);
-  fireEvent.click(screen.getByRole('button', { name: 'Different family?' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Different Family?' }));
   view.rerender(<AdmissionInquiryDuplicateMatches {...props} busy />);
-  expect(screen.getByLabelText(/Reason for creating a separate family/)).toBeDisabled();
-  ['Different family?', 'Open inquiry', 'Add sibling', 'Create separate family'].forEach((name) => {
+  expect(screen.getByLabelText(/Reason for Creating a Separate Family/)).toBeDisabled();
+  ['Different Family?', 'Open Inquiry', 'Add Sibling', 'Create Separate Family'].forEach((name) => {
     expect(screen.getByRole('button', { name })).toBeDisabled();
   });
 });

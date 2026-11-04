@@ -37,8 +37,8 @@ it('uses the shared custom tooltip for keyboard-focused icon actions', async () 
   const user = userEvent.setup();
   const actions = renderActions();
   await user.tab();
-  expect(screen.getByRole('button', { name: 'Notes & Follow-ups' })).toHaveFocus();
-  expect(await screen.findByRole('tooltip')).toHaveTextContent('Notes & Follow-ups');
+  expect(screen.getByRole('button', { name: 'Notes & Follow-Ups' })).toHaveFocus();
+  expect(await screen.findByRole('tooltip')).toHaveTextContent('Notes & Follow-Ups');
   await user.keyboard('{Enter}');
   expect(actions.onActivity).toHaveBeenCalledOnce();
 });
@@ -46,9 +46,9 @@ it('uses the shared custom tooltip for keyboard-focused icon actions', async () 
 it('locks feature actions during an unavailable read while keeping safe dismissal available', async () => {
   const user = userEvent.setup();
   const actions = renderActions({ disabled: true, closeDisabled: false });
-  expect(screen.getByRole('button', { name: 'Admission journey' })).toBeDisabled();
-  expect(screen.getByRole('button', { name: 'Focus mode' })).toBeDisabled();
-  await user.click(screen.getByRole('button', { name: 'Close application' }));
+  expect(screen.getByRole('button', { name: 'Admission Journey' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Focus Mode' })).toBeDisabled();
+  await user.click(screen.getByRole('button', { name: 'Close Application' }));
   expect(actions.onClose).toHaveBeenCalledOnce();
   expect(actions.onFocus).not.toHaveBeenCalled();
 });

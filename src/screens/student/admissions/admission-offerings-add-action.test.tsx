@@ -144,11 +144,11 @@ describe('Admission Offerings add action', () => {
     render(<AdmissionOfferingsScreen />);
 
     expect(screen.queryByRole('button', { name: 'Bulk create' })).not.toBeInTheDocument();
-    expect(screen.getByRole('banner').querySelector('button')?.textContent).toBe('Add offering');
+    expect(screen.getByRole('banner').querySelector('button')?.textContent).toBe('Offering');
     expect(screen.getByRole('region', { name: 'Offering context filters' })).toHaveTextContent(
       'Filters'
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Add offering' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add Offering' }));
     expect(openBulk).toHaveBeenCalledOnce();
   });
 
@@ -221,7 +221,7 @@ describe('Admission Offerings add action', () => {
     expect(screen.getByRole('button', { name: 'Activate' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Close' })).toBeDisabled();
     const dialog = screen.getByRole('dialog', { name: 'Activate Admission Offering?' });
-    expect(within(dialog).getByRole('status', { name: 'Activating offering…' })).toBeVisible();
+    expect(within(dialog).getByRole('status', { name: 'Activating Offering…' })).toBeVisible();
     expect(
       within(screen.getByRole('button', { name: 'Activate' })).queryByRole('progressbar')
     ).not.toBeInTheDocument();

@@ -70,7 +70,7 @@ export function AdmissionFormPublishDialog({
       }
       title={
         <Box component="span" id="admission-form-publish-title">
-          {hasIssues ? 'Form needs changes' : `Publish ${form?.name ?? 'form'}?`}
+          {hasIssues ? 'Form Needs Changes' : `Publish ${form?.name ?? 'form'}?`}
         </Box>
       }
       sx={{ '& .MuiDialogActions-root': { p: 2, borderTop: 1, borderColor: 'divider' } }}
@@ -83,7 +83,7 @@ export function AdmissionFormPublishDialog({
         ) : hasIssues ? (
           <Stack spacing={1}>
             <StudentFeedback notificationKey="STU-0068" presentation="persistent" severity="error">
-              Resolve all {issues.length} {issues.length === 1 ? 'issue' : 'issues'} before
+              Resolve all {issues.length} {issues.length === 1 ? 'Issue' : 'Issues'} before
               publishing.
             </StudentFeedback>
             <List dense disablePadding sx={{ maxHeight: 240, overflowY: 'auto' }}>
@@ -120,7 +120,7 @@ export function AdmissionFormPublishDialog({
             startIcon={<Iconify icon="mdi:pencil-outline" />}
             onClick={onEdit}
           >
-            Edit draft
+            Edit Draft
           </Button>
         ) : (
           <LoadingButton
@@ -131,7 +131,7 @@ export function AdmissionFormPublishDialog({
             startIcon={<Iconify icon="mdi:publish" />}
             onClick={onPublish}
           >
-            Publish form
+            Publish Form
           </LoadingButton>
         )
       }

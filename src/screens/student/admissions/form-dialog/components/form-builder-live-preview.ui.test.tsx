@@ -8,15 +8,15 @@ import { renderDocumentUi } from '../../document-verification/document-ui-test-f
 
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 
-it('allows applicants to enter the three builder-locked Inquiry defaults', async () => {
+it('allows applicants to enter builder-locked Inquiry defaults and preserves input across language changes', async () => {
   const user = userEvent.setup();
   const draft = getBlankAdmissionFormInitialValues(0);
   draft.supportedLanguages = ['en', 'gu', 'hi'];
   const before = structuredClone(draft);
   renderDocumentUi(<FormBuilderLivePreview form={draft} />);
-  const student = screen.getByRole('textbox', { name: /^Student name/ });
-  const parent = screen.getByRole('textbox', { name: /^Parent\/Guardian name/ });
-  const mobile = screen.getByRole('textbox', { name: /^Parent\/Guardian mobile/ });
+  const student = screen.getByRole('textbox', { name: /^First name/ });
+  const parent = screen.getByRole('textbox', { name: /^Parent name/ });
+  const mobile = screen.getByRole('textbox', { name: /^Parent contact number/ });
   expect(student).toBeEnabled();
   expect(parent).toBeEnabled();
   expect(mobile).toBeEnabled();
@@ -26,14 +26,14 @@ it('allows applicants to enter the three builder-locked Inquiry defaults', async
   expect(student).toHaveValue('QA Student');
   expect(parent).toHaveValue('QA Parent');
   expect((mobile as HTMLInputElement).value.replace(/\D/g, '')).toContain('9876543210');
-  await user.click(screen.getByRole('combobox', { name: 'Form language' }));
+  await user.click(screen.getByRole('combobox', { name: 'Form Language' }));
   await user.click(screen.getByRole('option', { name: 'Gujarati' }));
-  expect(screen.getByRole('textbox', { name: /^વિદ્યાર્થીનું નામ/ })).toHaveValue('QA Student');
-  expect(screen.getByRole('textbox', { name: /^માતા-પિતા\/વાલીનું નામ/ })).toHaveValue('QA Parent');
-  await user.click(screen.getByRole('combobox', { name: 'Form language' }));
+  expect(screen.getByRole('textbox', { name: /^પ્રથમ નામ/ })).toHaveValue('QA Student');
+  expect(screen.getByRole('textbox', { name: /^માતા-પિતાનું નામ/ })).toHaveValue('QA Parent');
+  await user.click(screen.getByRole('combobox', { name: 'Form Language' }));
   await user.click(screen.getByRole('option', { name: 'Hindi' }));
-  expect(screen.getByRole('textbox', { name: /^विद्यार्थी का नाम/ })).toHaveValue('QA Student');
-  expect(screen.getByRole('textbox', { name: /^माता-पिता\/अभिभावक का नाम/ })).toHaveValue(
+  expect(screen.getByRole('textbox', { name: /^प्रथम नाम/ })).toHaveValue('QA Student');
+  expect(screen.getByRole('textbox', { name: /^माता-पिता का नाम/ })).toHaveValue(
     'QA Parent'
   );
   expect(draft).toEqual(before);
@@ -52,7 +52,7 @@ it('renders an editable preview without scenarios or validation actions and neve
       <FormBuilderLivePreview form={draft} />
     </form>
   );
-  expect(screen.queryByRole('combobox', { name: 'Test scenario' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('combobox', { name: 'Test Scenario' })).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Validate preview' })).not.toBeInTheDocument();
   const input = screen.getByRole('textbox', { name: 'Student name' });
   await user.type(input, 'Preview student');
@@ -100,7 +100,7 @@ it('switches English, Gujarati, and Hindi field copy without section translation
     placeholder: string,
     help: string
   ) => {
-    await user.click(screen.getByRole('combobox', { name: 'Form language' }));
+    await user.click(screen.getByRole('combobox', { name: 'Form Language' }));
     await user.click(within(screen.getByRole('listbox')).getByRole('option', { name: language }));
     expect(screen.getByRole('textbox', { name: label })).toHaveValue('QA student');
     expect(screen.getByRole('textbox', { name: label })).toHaveAttribute(

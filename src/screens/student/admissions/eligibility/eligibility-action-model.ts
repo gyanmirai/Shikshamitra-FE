@@ -4,10 +4,10 @@ export type EligibilityAction =
   'evaluate' | 'requestException' | 'approveException' | 'rejectException';
 
 export const eligibilityActionLabels: Record<EligibilityAction, string> = {
-  evaluate: 'Check eligibility',
-  requestException: 'Request an exception',
-  approveException: 'Approve exception',
-  rejectException: 'Decline exception',
+  evaluate: 'Check Eligibility',
+  requestException: 'Request an Exception',
+  approveException: 'Approve Exception',
+  rejectException: 'Decline Exception',
 };
 
 export const eligibilityActionDescriptions: Record<EligibilityAction, string> = {

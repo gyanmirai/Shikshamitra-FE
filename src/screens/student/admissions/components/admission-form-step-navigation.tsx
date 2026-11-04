@@ -105,7 +105,7 @@ export function AdmissionFormStepNavigation({
     </Stepper>
   );
   return (
-    <Stack component="nav" aria-label="Form steps" spacing={1.5} sx={{ minWidth: 0 }}>
+    <Stack component="nav" aria-label="Form Steps" spacing={1.5} sx={{ minWidth: 0 }}>
       {vertical ? (
         stepper
       ) : (

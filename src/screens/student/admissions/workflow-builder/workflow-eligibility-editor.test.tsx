@@ -10,19 +10,19 @@ vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 it('retires Eligibility settings and requires explicit replacement', async () => {
   const { onSave, stage } = renderRetiredStage(3, 'Eligibility');
   expect(screen.getByText(/This saved stage type is no longer available/)).toBeInTheDocument();
-  expect(screen.queryByRole('radio', { name: 'Check eligibility rules' })).not.toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: 'Check eligibility rules' })).not.toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Apply changes' })).toBeDisabled();
+  expect(screen.queryByRole('radio', { name: 'Check Eligibility Rules' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Check Eligibility Rules' })).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Apply Changes' })).toBeDisabled();
   const user = userEvent.setup();
-  await user.click(screen.getByRole('combobox', { name: 'Stage type *' }));
+  await user.click(screen.getByRole('combobox', { name: 'Stage Type *' }));
   await user.click(screen.getByRole('option', { name: 'Admission Decision' }));
   await user.click(screen.getByRole('button', { name: 'Cancel' }));
-  expect(screen.getByRole('textbox', { name: 'Stage name *' })).toHaveValue(stage.name);
+  expect(screen.getByRole('textbox', { name: 'Stage Name *' })).toHaveValue(stage.name);
   expect(onSave).not.toHaveBeenCalled();
-  await user.click(screen.getByRole('combobox', { name: 'Stage type *' }));
+  await user.click(screen.getByRole('combobox', { name: 'Stage Type *' }));
   await user.click(screen.getByRole('option', { name: 'Admission Decision' }));
-  await user.click(screen.getByRole('button', { name: 'Change type' }));
-  await user.click(screen.getByRole('button', { name: 'Apply changes' }));
+  await user.click(screen.getByRole('button', { name: 'Change Type' }));
+  await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
   await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
   expect(onSave.mock.calls[0][0]).toMatchObject({
     stageType: 7,

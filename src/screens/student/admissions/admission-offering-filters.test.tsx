@@ -84,7 +84,7 @@ describe('Admission Offering primary filters', () => {
     expect(screen.getByRole('combobox', { name: 'Medium' })).toBeVisible();
     expect(screen.getByRole('combobox', { name: 'Class' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Filters' })).toBeVisible();
-    expect(screen.getByRole('combobox', { name: 'Admission cycle' })).toBeVisible();
+    expect(screen.getByRole('combobox', { name: 'Admission Cycle' })).toBeVisible();
 
     await user.click(screen.getByRole('combobox', { name: 'Board' }));
     await user.click(screen.getByRole('option', { name: 'CBSE' }));
@@ -103,5 +103,53 @@ describe('Admission Offering primary filters', () => {
     await user.click(screen.getByRole('combobox', { name: 'Class' }));
     await user.click(screen.getByRole('option', { name: 'Class 5' }));
     expect(onChange).toHaveBeenCalledWith({ standardId: 'class-5' });
+  });
+
+  it('keeps the closed Class control compact and selects all available classes from its menu', async () => {
+    const user = userEvent.setup();
+    const onChange = renderFilters({ ...values, boardId: 'board-1', mediumId: 'medium-1' });
+    const field = screen.getByRole('combobox', { name: 'Class' });
+
+    expect(field).toHaveTextContent('All classes (2)');
+    expect(field.querySelector('.MuiChip-root')).toBeNull();
+    expect(document.getElementById(field.getAttribute('aria-labelledby')!)).toHaveAttribute(
+      'data-shrink',
+      'true'
+    );
+    await user.click(field);
+    await user.click(screen.getByRole('option', { name: 'Select All' }));
+    expect(onChange).toHaveBeenCalledWith({ standardId: 'class-5,class-10' });
+  });
+
+  it('summarizes partial selection and keeps its IDs when the menu is dismissed', async () => {
+    const user = userEvent.setup();
+    const onChange = renderFilters({
+      ...values,
+      boardId: 'board-1',
+      mediumId: 'medium-1',
+      standardId: 'class-5',
+    });
+    const field = screen.getByRole('combobox', { name: 'Class' });
+    expect(field).toHaveTextContent('1 selected');
+    onChange.mockClear();
+    await user.click(field);
+    await user.keyboard('{Escape}');
+    expect(field).toHaveTextContent('1 selected');
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('allows deselecting all explicit classes without changing academic context', async () => {
+    const user = userEvent.setup();
+    const onChange = renderFilters({
+      ...values,
+      boardId: 'board-1',
+      mediumId: 'medium-1',
+      standardId: 'class-5,class-10',
+    });
+    const field = screen.getByRole('combobox', { name: 'Class' });
+    expect(field).toHaveTextContent('All classes (2)');
+    await user.click(field);
+    await user.click(screen.getByRole('option', { name: 'Deselect All' }));
+    expect(onChange).toHaveBeenCalledWith({ standardId: '' });
   });
 });

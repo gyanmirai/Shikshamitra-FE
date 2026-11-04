@@ -23,6 +23,8 @@ const context = vi.hoisted(() => ({
   applicationLoaded: true,
   emailForm: false,
   readonlyInherited: false,
+  formOverride: null as Record<string, unknown> | null,
+  staleForm: false,
 }));
 const toast = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn(), info: vi.fn() }));
 const application = { id: 'application', concurrencyStamp: 'current', status: 0 };
@@ -84,37 +86,37 @@ vi.mock('src/redux/student/admissions/admission-form-stage-api', () => ({
 vi.mock('src/redux/student/admissions/admission-applications-api', () => {
   const mutation = () => [vi.fn(), { isLoading: false }];
   return {
-    useGetAdmissionApplicationQuery: () => ({
+    useGetAdmissionApplicationQuery: (id: string) => ({
       refetch: requests.applicationRefetch,
       data: context.applicationLoaded
-        ? { ...application, canEndJourney: context.canEndJourney }
+        ? { ...application, id, canEndJourney: context.canEndJourney }
         : undefined,
     }),
     useGetAdmissionApplicationFormQuery: (input: unknown) => {
       requests.form(input);
-      return {
-        data:
-          input === skipToken
-            ? undefined
-            : context.emailForm
-              ? context.readonlyInherited
-                ? {
-                    ...emailForm,
-                    definition: {
-                      ...emailForm.definition,
-                      inheritance: { enabled: true, sources: [] },
-                      sections: emailForm.definition.sections.map((section) => ({
-                        ...section,
-                        fields: section.fields.map((field) => ({
-                          ...field,
-                          readOnly: field.code === 'EMAIL',
-                        })),
+      const data =
+        context.formOverride ??
+        (input === skipToken
+          ? undefined
+          : context.emailForm
+            ? context.readonlyInherited
+              ? {
+                  ...emailForm,
+                  definition: {
+                    ...emailForm.definition,
+                    inheritance: { enabled: true, sources: [] },
+                    sections: emailForm.definition.sections.map((section) => ({
+                      ...section,
+                      fields: section.fields.map((field) => ({
+                        ...field,
+                        readOnly: field.code === 'EMAIL',
                       })),
-                    },
-                  }
-                : emailForm
-              : form,
-      };
+                    })),
+                  },
+                }
+              : emailForm
+            : form);
+      return { data, currentData: context.staleForm ? undefined : data };
     },
     useGetAdmissionApplicationWorkflowQuery: (input: unknown) => {
       requests.workflow(input);
@@ -151,12 +153,297 @@ describe('application answer validation timing', () => {
     context.applicationLoaded = true;
     context.emailForm = false;
     context.readonlyInherited = false;
+    context.formOverride = null;
+    context.staleForm = false;
     requests.applicationRefetch.mockReset().mockReturnValue({ unwrap: async () => application });
     requests.workflowRefetch.mockReset().mockReturnValue({ unwrap: async () => ({ stages: [] }) });
     requests.end.mockReturnValue({ unwrap: async () => ({ status: 2 }) });
     requests.update.mockReturnValue({ unwrap: async () => ({}) });
     requests.submit.mockReturnValue({
       unwrap: async () => ({ validationErrors: [], fieldErrors: {} }),
+    });
+  });
+
+  const familyForm = (
+    values = { PARENT: 'Saved father', CHILD: 'Priya', NOTE: 'Manual note' }
+  ) => ({
+    ...form,
+    autoFilledFieldCodes: ['PARENT', 'PARENT', 'UNKNOWN', 'LOCKED'],
+    familyPrefill: {
+      sourceApplicantId: 'sibling',
+      sourceApplicantName: 'Riya',
+      relationship: 'father',
+    },
+    values: Object.entries(values).map(([fieldCode, value]) => ({
+      fieldCode,
+      valueJson: JSON.stringify(value),
+    })),
+    definition: {
+      sections: [
+        {
+          id: 'parent',
+          fields: [
+            { code: 'PARENT', label: 'Parent name', fieldType: 0 },
+            { code: 'CHILD', label: 'Child name', fieldType: 0 },
+            { code: 'NOTE', label: 'Notes', fieldType: 0 },
+            { code: 'LOCKED', label: 'Frozen field', fieldType: 0, readOnly: true },
+          ],
+        },
+      ],
+    },
+  });
+
+  it('saves exactly the writable projected fields without requiring an edit and does not repeat the write', async () => {
+    context.formOverride = {
+      ...familyForm(),
+      values: [
+        ...familyForm().values,
+        { fieldCode: 'LOCKED', valueJson: '"Frozen parent answer"' },
+        { fieldCode: 'UNKNOWN', valueJson: '"Not in this form"' },
+      ],
+    };
+    const { result } = renderHook(() => useApplicationDetail('application'));
+    expect(result.current.currentValues).toEqual({
+      PARENT: 'Saved father',
+      CHILD: 'Priya',
+      NOTE: 'Manual note',
+      LOCKED: 'Frozen parent answer',
+      UNKNOWN: 'Not in this form',
+    });
+    await act(async () => expect(await result.current.save()).toBe(true));
+    expect(requests.update).toHaveBeenCalledWith({
+      id: 'application',
+      concurrencyStamp: 'current',
+      values: [{ fieldCode: 'PARENT', valueJson: '"Saved father"' }],
+      autoFilledFieldCodes: ['PARENT'],
+    });
+    await act(async () => expect(await result.current.save()).toBe(true));
+    expect(requests.update).toHaveBeenCalledOnce();
+  });
+
+  it('keeps an explicit clear in the PATCH and does not restore it after the persisted response', async () => {
+    context.formOverride = familyForm();
+    const { result, rerender } = renderHook(() => useApplicationDetail('application'));
+    await act(async () => result.current.setFieldValue('PARENT', ''));
+    await act(async () => expect(await result.current.save()).toBe(true));
+    expect(requests.update.mock.calls[0][0].values).toEqual([
+      { fieldCode: 'PARENT', valueJson: '""' },
+    ]);
+    context.formOverride = {
+      ...familyForm({ PARENT: '', CHILD: 'Priya', NOTE: 'Manual note' }),
+      autoFilledFieldCodes: [],
+    };
+    rerender();
+    expect(result.current.currentValues.PARENT).toBe('');
+    await act(async () => result.current.save());
+    expect(requests.update).toHaveBeenCalledOnce();
+  });
+
+  it.each([
+    { order: ['CANONICAL', 'GENERIC'], edited: 'CANONICAL', value: 'Doctor', hint: ['GENERIC'] },
+    { order: ['GENERIC', 'CANONICAL'], edited: 'GENERIC', value: 'Doctor', hint: ['CANONICAL'] },
+    { order: ['CANONICAL', 'GENERIC'], edited: 'CANONICAL', value: '', hint: ['GENERIC'] },
+    { order: ['GENERIC', 'CANONICAL'], edited: 'GENERIC', value: '', hint: ['CANONICAL'] },
+  ])(
+    'hints only the untouched projected alias when $edited is authored as "$value"',
+    async ({ order, edited, value, hint }) => {
+      context.formOverride = {
+        ...familyForm(),
+        autoFilledFieldCodes: order,
+        values: order.map((fieldCode) => ({ fieldCode, valueJson: '"Teacher"' })),
+        definition: {
+          sections: [
+            { id: 'parent', fields: order.map((code) => ({ code, label: code, fieldType: 0 })) },
+          ],
+        },
+      };
+      const { result } = renderHook(() => useApplicationDetail('application'));
+      await act(async () => result.current.setFieldValue(edited, value));
+      await act(async () => expect(await result.current.save()).toBe(true));
+      expect(requests.update.mock.calls[0][0].autoFilledFieldCodes).toEqual(hint);
+      expect(requests.update.mock.calls[0][0].values).toContainEqual({
+        fieldCode: edited,
+        valueJson: JSON.stringify(value),
+      });
+      expect(requests.update.mock.calls[0][0].values).toContainEqual({
+        fieldCode: hint[0],
+        valueJson: '"Teacher"',
+      });
+      expect(requests.update.mock.calls[0][0].values).toHaveLength(2);
+    }
+  );
+
+  it('compares normalized projection and initial values when deriving optional autofill hints', async () => {
+    context.emailForm = true;
+    context.formOverride = { ...emailForm, autoFilledFieldCodes: ['EMAIL'] };
+    const { result } = renderHook(() => useApplicationDetail('application'));
+    await act(async () => expect(await result.current.save()).toBe(true));
+    expect(requests.update).toHaveBeenCalledWith({
+      id: 'application',
+      concurrencyStamp: 'current',
+      values: [{ fieldCode: 'EMAIL', valueJson: '"existing@example.com"' }],
+      autoFilledFieldCodes: ['EMAIL'],
+    });
+  });
+
+  it('omits optional autofill hints when every projected answer was edited or cleared', async () => {
+    context.formOverride = familyForm();
+    const { result } = renderHook(() => useApplicationDetail('application'));
+    await act(async () => result.current.setFieldValue('PARENT', ''));
+    await act(async () => result.current.save());
+    expect(requests.update.mock.calls[0][0]).not.toHaveProperty('autoFilledFieldCodes');
+  });
+
+  it('merges a refreshed form into untouched fields while preserving edits and deliberate clears', async () => {
+    context.formOverride = familyForm();
+    const { result, rerender } = renderHook(() => useApplicationDetail('application'));
+    await act(async () => result.current.setFieldValue('PARENT', ''));
+    await act(async () => result.current.setFieldValue('NOTE', 'Typed note'));
+    context.formOverride = familyForm({
+      PARENT: 'New source father',
+      CHILD: 'Priya updated',
+      NOTE: 'Server note',
+    });
+    rerender();
+    expect(result.current.currentValues).toEqual({
+      PARENT: '',
+      CHILD: 'Priya updated',
+      NOTE: 'Typed note',
+    });
+    expect(result.current.hasUnsavedAnswers).toBe(true);
+    await act(async () => result.current.save());
+    expect(requests.update.mock.calls[0][0].values).toEqual([
+      { fieldCode: 'PARENT', valueJson: '""' },
+      { fieldCode: 'NOTE', valueJson: '"Typed note"' },
+    ]);
+  });
+
+  it('retains touched validation context through a background form refresh', async () => {
+    const { result, rerender } = renderHook(() => useApplicationDetail('application'));
+    await act(async () => result.current.setFieldTouched('FirstName'));
+    context.formOverride = { ...form, values: [{ fieldCode: 'City', valueJson: '"Surat"' }] };
+    rerender();
+    expect(result.current.fieldErrors.FirstName).toBe('First name is required.');
+    await act(async () => result.current.setFieldValue('FirstName', 'Priya'));
+    expect(result.current.fieldErrors.FirstName).toBeUndefined();
+  });
+
+  it.each(['Saved father', 'Changed source father'])(
+    'does not resurrect a saved clear when an older projected GET returns %s',
+    async (delayedParent) => {
+      context.formOverride = familyForm();
+      // The read captured this source value before Save, but arrives afterwards.
+      const delayedRead = familyForm({
+        PARENT: delayedParent,
+        CHILD: 'Priya',
+        NOTE: 'Manual note',
+      });
+      const { result, rerender } = renderHook(() => useApplicationDetail('application'));
+      await act(async () => result.current.setFieldValue('PARENT', ''));
+      requests.update.mockReturnValue({
+        unwrap: async () => ({
+          ...familyForm({ PARENT: '', CHILD: 'Priya', NOTE: 'Manual note' }),
+          autoFilledFieldCodes: [],
+        }),
+      });
+      await act(async () => result.current.save());
+      context.formOverride = delayedRead;
+      rerender();
+      expect(result.current.currentValues.PARENT).toBe('');
+      expect(result.current.hasUnsavedAnswers).toBe(false);
+      await act(async () => result.current.save());
+      expect(requests.update).toHaveBeenCalledOnce();
+    }
+  );
+
+  it('does not apply an earlier application save response after navigating to another application', async () => {
+    context.formOverride = familyForm();
+    let finish!: (value: unknown) => void;
+    requests.update.mockReturnValue({
+      unwrap: () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    });
+    const { result, rerender } = renderHook(({ id }) => useApplicationDetail(id), {
+      initialProps: { id: 'application' },
+    });
+    let pending!: Promise<boolean>;
+    await act(async () => {
+      pending = result.current.save();
+    });
+    context.formOverride = {
+      ...familyForm({ PARENT: 'B parent', CHILD: 'B child', NOTE: 'B note' }),
+      autoFilledFieldCodes: [],
+    };
+    rerender({ id: 'other-application' });
+    await act(async () => {
+      finish(familyForm());
+      await pending;
+    });
+    expect(result.current.currentValues).toEqual({
+      PARENT: 'B parent',
+      CHILD: 'B child',
+      NOTE: 'B note',
+    });
+    expect(result.current.hasUnsavedAnswers).toBe(false);
+  });
+
+  it('resets independently when the application changes and hides retained stale query data', async () => {
+    context.formOverride = familyForm();
+    const { result, rerender } = renderHook(({ id }) => useApplicationDetail(id), {
+      initialProps: { id: 'application' },
+    });
+    await act(async () => result.current.setFieldValue('NOTE', 'A private draft'));
+    context.staleForm = true;
+    rerender({ id: 'other-application' });
+    expect(result.current.currentValues).toEqual({});
+    expect(result.current.formQuery.data).toBeUndefined();
+    context.formOverride = familyForm({ PARENT: 'B parent', CHILD: 'B child', NOTE: 'B note' });
+    context.staleForm = false;
+    rerender({ id: 'other-application' });
+    expect(result.current.currentValues).toEqual({
+      PARENT: 'B parent',
+      CHILD: 'B child',
+      NOTE: 'B note',
+    });
+    expect(result.current.hasUnsavedAnswers).toBe(false);
+  });
+
+  it('keeps a normal unchanged form a no-op and preserves typed data on a failed save', async () => {
+    const { result } = renderHook(() => useApplicationDetail('application'));
+    await act(async () => expect(await result.current.save()).toBe(true));
+    expect(requests.update).not.toHaveBeenCalled();
+    await act(async () => result.current.setFieldValue('FirstName', 'Typed student'));
+    requests.update.mockReturnValue({
+      unwrap: async () => {
+        throw new Error('offline');
+      },
+    });
+    await act(async () => expect(await result.current.save()).toBe(false));
+    expect(result.current.currentValues.FirstName).toBe('Typed student');
+    expect(result.current.hasUnsavedAnswers).toBe(true);
+  });
+
+  it('prevents two saves from posting the same projected values while the first save is pending', async () => {
+    context.formOverride = familyForm();
+    let finish!: (value: unknown) => void;
+    requests.update.mockReturnValue({
+      unwrap: () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    });
+    const { result } = renderHook(() => useApplicationDetail('application'));
+    let pending!: Promise<boolean>;
+    await act(async () => {
+      pending = result.current.save();
+    });
+    await act(async () => expect(await result.current.save()).toBe(false));
+    expect(requests.update).toHaveBeenCalledOnce();
+    await act(async () => {
+      finish({});
+      await pending;
     });
   });
 

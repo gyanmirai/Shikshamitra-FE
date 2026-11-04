@@ -25,7 +25,7 @@ export function ReviewAssignmentDialog({
   const { summary } = recovery;
   return (
     <ReviewDialog
-      title="Assign reviewer and deadline"
+      title="Assign Reviewer and Deadline"
       dirty={formik.dirty}
       busy={busy}
       onClose={onClose}
@@ -39,7 +39,7 @@ export function ReviewAssignmentDialog({
             onClick={() => formik.handleSubmit()}
             disabled={busy || !summary.canAssign}
           >
-            {formik.isSubmitting ? 'Saving…' : 'Save assignment'}
+            {formik.isSubmitting ? 'Saving…' : 'Save Assignment'}
           </Button>
         </DialogActions>
       )}
@@ -66,13 +66,13 @@ export function ReviewAssignmentDialog({
             role={summary.policy?.reviewerRole ?? null}
             disabled={busy}
             available
-            label="Assigned reviewer"
+            label="Assigned Reviewer"
             emptyLabel="Unassigned"
             savedName={summary.assignedReviewerName}
             onChange={(value) => formik.setFieldValue('assignedReviewerId', value)}
           />
           <DateTimePicker
-            label="Review deadline (optional)"
+            label="Review Deadline (Optional)"
             format={ADMISSION_DATE_TIME_FORMAT}
             value={formik.values.dueAt ? dayjs(formik.values.dueAt) : null}
             disabled={busy}

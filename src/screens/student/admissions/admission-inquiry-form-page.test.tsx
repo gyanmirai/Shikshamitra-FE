@@ -216,7 +216,7 @@ it('copies a checked address into the Inquiry create values sent by Formik', asy
     )
   );
   expect(screen.getByRole('textbox', { name: 'Permanent street' })).toBeDisabled();
-  await user.click(screen.getByRole('button', { name: 'Create inquiry' }));
+  await user.click(screen.getByRole('button', { name: 'Create Inquiry' }));
   await waitFor(() =>
     expect(submit).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -238,7 +238,7 @@ it('does not display publication requirements or disable capture for a legacy pu
     }) as unknown as ReturnType<typeof useAdmissionInquiryDialog>
   );
   render(<AdmissionInquiryFormPage />);
-  expect(screen.getByRole('button', { name: 'Create inquiry' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: 'Create Inquiry' })).toBeEnabled();
   expect(shikshaMitraToast.error).not.toHaveBeenCalledWith(
     expect.objectContaining({ message: expect.stringContaining('before publishing') })
   );
@@ -342,7 +342,7 @@ describe('New inquiry form', () => {
     );
     render(<AdmissionInquiryFormPage />);
     expect(screen.getByRole('combobox', { name: 'Offering' }).textContent).toBe(offering.expected);
-    expect(screen.getByRole('combobox', { name: 'Admission period' })).toHaveTextContent(
+    expect(screen.getByRole('combobox', { name: 'Admission Period' })).toHaveTextContent(
       'Side Admission Cycle'
     );
   });
@@ -351,7 +351,7 @@ describe('New inquiry form', () => {
     vi.mocked(useAdmissionInquiryDialog).mockImplementation(useMultilingualController);
     render(<AdmissionInquiryFormPage />);
     const section = screen.getByRole('heading', { name: 'Admission Interest' }).closest('section');
-    expect(section).toContainElement(screen.getByRole('combobox', { name: 'Form language' }));
+    expect(section).toContainElement(screen.getByRole('combobox', { name: 'Form Language' }));
   });
 
   it('omits the language control for a single-language form', () => {
@@ -361,7 +361,7 @@ describe('New inquiry form', () => {
       }) as unknown as ReturnType<typeof useAdmissionInquiryDialog>
     );
     render(<AdmissionInquiryFormPage />);
-    expect(screen.queryByRole('combobox', { name: 'Form language' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Form Language' })).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /^Student details$/i })).toBeVisible();
   });
 
@@ -375,11 +375,11 @@ describe('New inquiry form', () => {
     );
     render(<AdmissionInquiryFormPage />);
     expect(screen.getByText(/0 of 24 admission room seats available/)).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Create inquiry' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Create Inquiry' })).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: 'Close' }));
     expect(screen.queryByText(/0 of 24 admission room seats available/)).not.toBeInTheDocument();
     expect(screen.getByText('No admission seats remain.')).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Create inquiry' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Create Inquiry' })).toBeDisabled();
   });
 
   it('reports failed prerequisite requests through standard toasts without inline errors or Retry rows', () => {
@@ -400,7 +400,7 @@ describe('New inquiry form', () => {
     ).not.toBeInTheDocument();
     expect(screen.queryByText('Academic choices could not be loaded.')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Retry/ })).not.toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'New inquiry' })).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Inquiry' })).toBeVisible();
     rerender(<AdmissionInquiryFormPage />);
     expect(shikshaMitraToast.error).toHaveBeenCalledTimes(2);
   });
@@ -427,8 +427,8 @@ describe('New inquiry form', () => {
       'true'
     );
     expect(screen.getByText('Checking latest admission offerings…')).toBeVisible();
-    expect(screen.queryByText('Admission is closed.')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Create inquiry' })).toBeDisabled();
+    expect(screen.queryByText('Admission is Closed.')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Create Inquiry' })).toBeDisabled();
   });
 
   it('reports a failed class check through the standard toast while keeping selection usable', () => {
@@ -451,13 +451,13 @@ describe('New inquiry form', () => {
     expect(
       screen.queryByText('Admission availability could not be checked. Please try again.')
     ).not.toBeInTheDocument();
-    expect(screen.queryByText(/No inquiry offering/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/No Inquiry Offering/)).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: 'Class' })).not.toHaveAttribute(
       'aria-disabled',
       'true'
     );
-    expect(screen.getByRole('button', { name: 'Create inquiry' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Create Inquiry' })).toBeDisabled();
   });
 
   it('shows the latest unavailable reason once, without the old generic helper', () => {
@@ -474,7 +474,7 @@ describe('New inquiry form', () => {
     );
     render(<AdmissionInquiryFormPage />);
     expect(screen.getAllByText(reason)).toHaveLength(1);
-    expect(screen.queryByText('Selected class has no admission open.')).not.toBeInTheDocument();
+    expect(screen.queryByText('Selected Class has no Admission open.')).not.toBeInTheDocument();
   });
 
   it('shows academic-start age with configured DOB help and permits creating an underage inquiry', async () => {
@@ -522,7 +522,7 @@ describe('New inquiry form', () => {
       </LocalizationProvider>
     );
     expect(screen.getByText('Age: 4y 3m · Minimum: 5y')).toBeVisible();
-    await userEvent.hover(screen.getByLabelText('Date of birth information'));
+    await userEvent.hover(screen.getByLabelText('Date of birth Information'));
     expect(await screen.findByRole('tooltip')).toHaveTextContent(
       'Birth certificate date. Age at academic year start (01-04-2026)'
     );
@@ -531,7 +531,7 @@ describe('New inquiry form', () => {
         message: expect.stringContaining('below the minimum age of 5 years'),
       })
     );
-    const submit = screen.getByRole('button', { name: 'Create inquiry' });
+    const submit = screen.getByRole('button', { name: 'Create Inquiry' });
     expect(submit).toBeEnabled();
     fireEvent.click(submit);
     expect(fixture.formik.handleSubmit).toHaveBeenCalled();
@@ -553,12 +553,12 @@ describe('New inquiry form', () => {
     const user = userEvent.setup();
     vi.mocked(useAdmissionInquiryDialog).mockImplementation(useMultilingualController);
     render(<AdmissionInquiryFormPage />);
-    expect(screen.getByRole('combobox', { name: 'Form language' })).toHaveTextContent('Gujarati');
+    expect(screen.getByRole('combobox', { name: 'Form Language' })).toHaveTextContent('Gujarati');
     expect(screen.getByRole('heading', { name: 'વિદ્યાર્થીની વિગતો' })).toBeVisible();
     expect(screen.getByText('નામ જરૂરી છે')).toBeVisible();
     await user.type(screen.getByRole('textbox', { name: 'વિદ્યાર્થીનું નામ' }), 'QA student');
     expect(screen.getByText('પૂર્ણ નામ લખો')).toBeVisible();
-    await user.click(screen.getByRole('combobox', { name: 'Form language' }));
+    await user.click(screen.getByRole('combobox', { name: 'Form Language' }));
     await user.click(screen.getByRole('option', { name: 'Hindi' }));
     expect(screen.getByRole('textbox', { name: 'विद्यार्थी का नाम' })).toHaveValue('QA student');
     expect(screen.getByRole('textbox', { name: 'विद्यार्थी का नाम' })).toHaveAttribute(
@@ -566,7 +566,7 @@ describe('New inquiry form', () => {
       'नाम लिखें'
     );
     expect(screen.getByRole('heading', { name: 'Student details' })).toBeVisible();
-    await user.click(screen.getByRole('combobox', { name: 'Form language' }));
+    await user.click(screen.getByRole('combobox', { name: 'Form Language' }));
     await user.click(screen.getByRole('option', { name: 'English' }));
     expect(screen.getByRole('textbox', { name: 'Applicant first name' })).toHaveValue('QA student');
   });
@@ -576,10 +576,10 @@ describe('New inquiry form', () => {
     const { container } = render(<AdmissionInquiryFormPage />);
 
     expect(container.querySelector('form')).toHaveAttribute('novalidate');
-    fireEvent.click(screen.getByRole('button', { name: 'Create inquiry' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Create Inquiry' }));
     await waitFor(() => {
-      expect(screen.getAllByText('Applicant first name is required')).toHaveLength(1);
-      expect(screen.getAllByText('Guardian mobile is required')).toHaveLength(1);
+      expect(screen.getAllByText('Applicant first name is required.')).toHaveLength(1);
+      expect(screen.getAllByText('Guardian mobile is required.')).toHaveLength(1);
       expect(container.querySelector('[aria-invalid="true"]')).toHaveFocus();
     });
   });
@@ -618,7 +618,7 @@ describe('New inquiry form', () => {
     );
     render(<AdmissionInquiryFormPage />);
 
-    expect(screen.queryByRole('textbox', { name: 'Source details' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: 'Source Details' })).not.toBeInTheDocument();
     expect(screen.queryByRole('combobox', { name: 'Parent relationship' })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Inquiry Details' })).not.toBeInTheDocument();
   });
@@ -629,8 +629,8 @@ describe('New inquiry form', () => {
     );
     render(<AdmissionInquiryFormPage />);
     expect(screen.queryByRole('heading', { name: 'Family Contacts' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('checkbox', { name: 'Add other parent' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('checkbox', { name: 'Add other guardian' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('combobox', { name: 'Main school contact' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('checkbox', { name: 'Add Other Parent' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('checkbox', { name: 'Add Other Guardian' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Main School Contact' })).not.toBeInTheDocument();
   });
 });

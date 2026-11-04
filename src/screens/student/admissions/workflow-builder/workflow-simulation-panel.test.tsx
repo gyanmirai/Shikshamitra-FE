@@ -47,15 +47,15 @@ describe('WorkflowSimulationPanel', () => {
   it('summarizes all release scenarios and opens a selected scenario', () => {
     render(<WorkflowSimulationPanel stages={stages} transitions={transitions} />);
 
-    expect(screen.getByText('6 of 6 complete')).toBeInTheDocument();
+    expect(screen.getByText('6 of 6 Complete')).toBeInTheDocument();
     expect(
-      screen.queryByRole('button', { name: /Fee structure unconfirmed/i })
+      screen.queryByRole('button', { name: /Fee Structure Unconfirmed/i })
     ).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByText('All scenario checks'));
-    fireEvent.click(screen.getByRole('button', { name: /Fee structure unconfirmed/i }));
+    fireEvent.click(screen.getByText('All Scenario Checks'));
+    fireEvent.click(screen.getByRole('button', { name: /Fee Structure Unconfirmed/i }));
 
     expect(screen.getByText(/Finance fee structure/i)).toBeInTheDocument();
-    expect(screen.getByLabelText('Test scenario')).toHaveTextContent('Fee structure unconfirmed');
+    expect(screen.getByLabelText('Test Scenario')).toHaveTextContent('Fee Structure Unconfirmed');
   });
 });

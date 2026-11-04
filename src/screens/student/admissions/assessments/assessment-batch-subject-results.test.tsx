@@ -213,7 +213,7 @@ it('keeps mixed class profiles separate, saves partial drafts, then submits comp
   expect(second.queryByRole('textbox', { name: /Maths/ })).not.toBeInTheDocument();
   fireEvent.change(first.getByRole('textbox', { name: /English/ }), { target: { value: '12.25' } });
   fireEvent.change(second.getByRole('textbox', { name: /Science/ }), { target: { value: '40' } });
-  fireEvent.click(screen.getByRole('button', { name: 'Save drafts' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Save Drafts' }));
   await waitFor(() => expect(mocks.draft).toHaveBeenCalledTimes(2));
   expect(mocks.draft.mock.calls[0][0]).toMatchObject({
     concurrencyStamp: 'reviewed',
@@ -222,7 +222,7 @@ it('keeps mixed class profiles separate, saves partial drafts, then submits comp
       { code: 'maths', marks: null },
     ],
   });
-  await waitFor(() => expect(screen.getAllByText('Draft saved')).toHaveLength(2));
+  await waitFor(() => expect(screen.getAllByText('Draft Saved')).toHaveLength(2));
   fireEvent.change(first.getByRole('textbox', { name: /Maths/ }), { target: { value: '40' } });
   fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
   await waitFor(() => expect(mocks.result).toHaveBeenCalledTimes(2));
@@ -252,7 +252,7 @@ it('reconciles a lost final response by exact subject scores without sending a s
   setup([row]);
   fireEvent.change(screen.getByRole('textbox', { name: /English/ }), { target: { value: '25' } });
   fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
-  await waitFor(() => expect(screen.getByText('Needs retry')).toBeVisible());
+  await waitFor(() => expect(screen.getByText('Needs Retry')).toBeVisible());
   fireEvent.click(screen.getByRole('button', { name: 'Submit Remaining Rows' }));
   await waitFor(() => expect(screen.getByText('Saved', { exact: true })).toBeVisible());
   expect(mocks.result).toHaveBeenCalledOnce();
@@ -283,15 +283,15 @@ it('validates only entered rows without submitting the native form or requiring 
   fireEvent.click(submit);
   await waitFor(() =>
     expect(
-      screen.getByText('Applicant five: Enter Science marks between 0 and 30', { exact: false })
+      screen.getByText('Applicant five: Enter Science Marks between 0 and 30', { exact: false })
     ).toBeVisible()
   );
-  expect(screen.queryByText(/Enter Language readiness marks/)).not.toBeInTheDocument();
+  expect(screen.queryByText(/Enter Language readiness Marks/)).not.toBeInTheDocument();
   expect(mocks.get).not.toHaveBeenCalled();
   expect(mocks.result).not.toHaveBeenCalled();
   expect(mocks.nativeSubmit).not.toHaveBeenCalled();
   expect(invalid).not.toHaveBeenCalled();
-  fireEvent.click(screen.getByRole('button', { name: 'Save drafts' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Save Drafts' }));
   await waitFor(() => expect(mocks.draft).toHaveBeenCalledOnce());
   expect(mocks.draft).toHaveBeenCalledWith(
     expect.objectContaining({
@@ -302,7 +302,7 @@ it('validates only entered rows without submitting the native form or requiring 
       ],
     })
   );
-  await waitFor(() => expect(screen.getByText('Draft saved')).toBeVisible());
+  await waitFor(() => expect(screen.getByText('Draft Saved')).toBeVisible());
   fireEvent.change(science, { target: { value: '25' } });
   fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
   await waitFor(() => expect(mocks.result).toHaveBeenCalledOnce());

@@ -29,7 +29,7 @@ export function buildAdmissionPipelineColumns(
   const columns: IColumn[] = [
     {
       id: 'applicantName',
-      label: 'Student name',
+      label: 'Student Name',
       sticky: true,
       stickyOnMobile: false,
       minWidth: 170,
@@ -56,14 +56,14 @@ export function buildAdmissionPipelineColumns(
       maxWidth: 160,
       render: (_, row) => (
         <Typography variant="body2" noWrap>
-          {row.standardName || 'Class unavailable'}
+          {row.standardName || 'Class Unavailable'}
         </Typography>
       ),
     },
     {
       // Preserve stage-name sorting; the combined summary has no single header predicate.
       id: 'currentStageName',
-      label: 'Current step',
+      label: 'Current Step',
       minWidth: 220,
       maxWidth: 280,
       isSort: true,
@@ -73,7 +73,7 @@ export function buildAdmissionPipelineColumns(
     {
       // Follow-up counts and purpose form a combined summary; no single-field filter.
       id: 'nextFollowUpAt',
-      label: 'Follow-ups',
+      label: 'Follow-Ups',
       isFilter: false,
       minWidth: 210,
       maxWidth: 260,
@@ -168,7 +168,7 @@ export function buildAdmissionPipelineColumns(
           indeterminate={selectedCount > 0 && selectedCount < selection.eligibleIds.length}
           disabled={selection.disabled || !selection.eligibleIds.length}
           inputProps={{
-            'aria-label': 'Select all eligible applications on this page',
+            'aria-label': 'Select All Eligible Applications on This Page',
             'aria-checked':
               selectedCount > 0 && selectedCount < selection.eligibleIds.length
                 ? 'mixed'
@@ -186,7 +186,7 @@ export function buildAdmissionPipelineColumns(
           checked={selection.selectedIds.includes(row.id)}
           disabled={selection.disabled || !selection.eligibleIds.includes(row.id)}
           inputProps={{
-            'aria-label': `Select ${row.applicantName || row.applicationNumber} for counsellor assignment`,
+            'aria-label': `Select ${row.applicantName || row.applicationNumber} For Counsellor Assignment`,
           }}
           onChange={(_event, checked) => selection.onToggle(row as AdmissionPipelineItem, checked)}
           onClick={(event) => event.stopPropagation()}

@@ -28,7 +28,7 @@ export function ApplicationExperienceDocumentRequirements() {
   return (
     <Stack spacing={1.5} sx={{ minHeight: 0, overflow: 'auto', pb: 1 }}>
       <Paper variant="outlined" sx={{ p: 2 }}>
-        <Typography variant="subtitle1">Conditional document rules</Typography>
+        <Typography variant="subtitle1">Conditional Document Rules</Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
           Requirements stay attached to the Document verification stage so the same rules are
           enforced during the applicant journey.
@@ -65,7 +65,7 @@ export function ApplicationExperienceDocumentRequirements() {
         <Paper variant="outlined" sx={{ p: 3, textAlign: 'center' }}>
           <Iconify icon="mdi:file-document-alert-outline" width={30} />
           <Typography variant="subtitle1" sx={{ mt: 1 }}>
-            No admission stage workflow yet
+            No Admission Stage Workflow Yet
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
             Create an admission stage workflow, add a Document verification stage, then configure
@@ -93,7 +93,7 @@ export function ApplicationExperienceDocumentRequirements() {
               {workflow.name}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Version {workflow.version} · Open its Document verification stage
+              Version {workflow.version} · Open Its Document Verification Stage
             </Typography>
           </Box>
           <Button
@@ -101,12 +101,12 @@ export function ApplicationExperienceDocumentRequirements() {
             variant="outlined"
             sx={{ minHeight: { xs: 44, sm: 36 } }}
             endIcon={<Iconify icon="mdi:arrow-right" />}
-            aria-label={`${workflow.status === 0 || workflow.status === 3 ? 'Configure' : 'View'} requirements for ${workflow.name}`}
+            aria-label={`${workflow.status === 0 || workflow.status === 3 ? 'Configure' : 'View'} Requirements For ${workflow.name}`}
             onClick={() => router.push(`/student/admissions/settings/workflows/${workflow.id}`)}
           >
             {workflow.status === 0 || workflow.status === 3
-              ? 'Configure requirements'
-              : 'View requirements'}
+              ? 'Configure Requirements'
+              : 'View Requirements'}
           </Button>
         </Paper>
       ))}

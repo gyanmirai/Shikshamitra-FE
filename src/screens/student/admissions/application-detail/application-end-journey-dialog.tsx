@@ -43,7 +43,7 @@ export function ApplicationEndJourneyDialog({
     <CustomDialog
       open={open}
       title="End Admission Journey"
-      titleInfo="Record why the applicant is leaving the admission process. Saved information and history remain available."
+      titleInfo="Record Why the Applicant Is Leaving the Admission Process. Saved Information and History Remain Available."
       handleClose={onClose}
       disableClose={busy}
       guardUnsavedChanges={false}
@@ -51,7 +51,7 @@ export function ApplicationEndJourneyDialog({
     >
       <DialogScrollContent>
         <Typography variant="body2" sx={{ mb: 2 }}>
-          End the admission journey for {applicantName}? The application will be marked Withdrawn
+          End the Admission Journey For {applicantName}? The application will be marked Withdrawn
           and its history will be kept.
         </Typography>
         <TextField
