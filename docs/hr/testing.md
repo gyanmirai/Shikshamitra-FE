@@ -77,7 +77,12 @@ It does not establish authenticated tenant access, payroll locking, real payment
 
 ## Payslip & statement settings regression
 
-Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vitest/vitest.mjs run src/screens/hr/payroll/salarySlip-generate/payslip-settings --pool=forks --maxWorkers=1` on Windows. The preview tests cover debounce, stale response suppression, cancellation, retry and identical viewer/download URLs; settings tests cover draft reset/cancel, save recovery and navigation. Browser acceptance must additionally check 390/768/1440px, both themes, keyboard focus and live PDF layout; automated component tests alone do not certify these states.
+Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vitest/vitest.mjs run src/screens/hr/payroll/salarySlip-generate/payslip-settings src/screens/hr/payroll/salarySlip-generate/payslip-pdf-viewer.test.tsx --pool=forks --maxWorkers=1` on Windows.
+The preview tests cover debounce, stale response suppression, cancellation, retry and identical viewer/download URLs; settings tests cover draft reset/cancel, save recovery and navigation.
+Viewer tests cover zoom buttons, 25%-200% limits, unchanged canvas/PDF requests and rendering failure recovery.
+Run `npx playwright test --config e2e/hr/payslip-preview.config.ts` for the production settings form against an isolated synthetic PDF endpoint at 390/768/1440px in both themes.
+The browser suite checks Fit page, internal keyboard scrolling, stationary zoom controls, no document-level horizontal overflow, download and appearance regeneration.
+Finish with an in-app browser smoke test; the local fixture does not certify authenticated backend issuance or production document typography.
 
 For HR keyboard coverage, the route/component inventory, synthetic browser procedure, and remaining authenticated acceptance limits, see [Keyboard usability](references/keyboard-usability.md).
 

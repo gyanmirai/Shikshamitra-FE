@@ -80,6 +80,55 @@ describe('canonical PDF renderer', () => {
     expect(contentRef.current?.querySelector('canvas')).toBe(originalCanvas);
   });
 
+  it('supports button zoom limits and retains zoom when the sample refreshes', async () => {
+    pdf.getDocument.mockImplementation(() => ({
+      promise: Promise.resolve(documentWithText('Sample payslip')),
+      destroy: pdf.destroy,
+    }));
+    const ready = vi.fn();
+    const contentRef = createRef<HTMLDivElement>();
+    const view = render(
+      <PayslipPdfViewer
+        url="blob:sample"
+        title="Sample"
+        contentRef={contentRef}
+        onReady={ready}
+        viewportHeight="500px"
+      />
+    );
+    await waitFor(() => expect(ready).toHaveBeenLastCalledWith('blob:sample'));
+    expect(screen.getByRole('combobox', { name: 'PDF zoom' })).toHaveTextContent('Fit page');
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'PDF zoom' }));
+    fireEvent.click(screen.getByRole('option', { name: /^100%$/ }));
+    const originalCanvas = contentRef.current?.querySelector('canvas');
+    fireEvent.click(screen.getByRole('button', { name: 'Zoom in' }));
+    expect(screen.getByRole('combobox', { name: 'PDF zoom' })).toHaveTextContent('125%');
+    fireEvent.click(screen.getByRole('button', { name: 'Zoom out' }));
+    expect(screen.getByRole('combobox', { name: 'PDF zoom' })).toHaveTextContent('100%');
+    expect(contentRef.current?.querySelector('canvas')).toBe(originalCanvas);
+    expect(pdf.getDocument).toHaveBeenCalledOnce();
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'PDF zoom' }));
+    fireEvent.click(screen.getByRole('option', { name: /^25%$/ }));
+    expect(screen.getByRole('button', { name: 'Zoom out' })).toBeDisabled();
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'PDF zoom' }));
+    fireEvent.click(screen.getByRole('option', { name: /^200%$/ }));
+    expect(screen.getByRole('button', { name: 'Zoom in' })).toBeDisabled();
+    view.rerender(
+      <PayslipPdfViewer
+        url="blob:updated-sample"
+        title="Sample"
+        contentRef={contentRef}
+        onReady={ready}
+        viewportHeight="500px"
+      />
+    );
+    await waitFor(() => expect(ready).toHaveBeenLastCalledWith('blob:updated-sample'));
+    expect(screen.getByRole('combobox', { name: 'PDF zoom' })).toHaveTextContent('200%');
+    expect(screen.getByRole('region', { name: 'Payslip PDF viewer' })).toHaveStyle({
+      height: '500px',
+    });
+  });
+
   it('announces unmapped source glyphs without guessing letters or changing the PDF source', async () => {
     const source = documentWithText('Synthe\u0000c Employee ESI 75.00 Net pay 9925.00');
     pdf.getDocument.mockReturnValue({ promise: Promise.resolve(source), destroy: pdf.destroy });
