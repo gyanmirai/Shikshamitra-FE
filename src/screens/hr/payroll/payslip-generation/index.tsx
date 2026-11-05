@@ -29,7 +29,10 @@ export default function SalaryDocumentCenter() {
     hasNavigationPermission(permissions, hrPermissions.payroll.settings.root) &&
     hasGrantedPermission(permissions, hrPermissions.payroll.settings.payrollDocuments);
   return (
-    <Stack spacing={1} sx={{ minWidth: 0 }}>
+    <Stack
+      spacing={1}
+      sx={{ minWidth: 0, minHeight: 0, height: 1, overflowY: 'auto', '& > *': { flexShrink: 0 } }}
+    >
       <CustomBreadcrumbs
         heading="Salary documents"
         description="Review monthly payslips, employee salary statements and the school payroll register."

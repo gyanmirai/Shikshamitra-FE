@@ -631,6 +631,7 @@ Mark Reviewed acknowledges the displayed warning evidence before locking.
 ESIC eligibility and contributions use classified earnings automatically; salary components own the statutory treatment.
 
 The existing payslip-generation route now presents Monthly payslips, Employee statements and School register tabs.
+Monthly payslips keep staff and pay-period selectors above one wrapping, stationary document-action group. The centered PDF starts at Fit width in a bounded keyboard-scrollable viewport; zoom controls stay outside the PDF scroll area. The surrounding workspace scrolls independently to delivery history and document versions. Settings samples retain their Fit page default.
 Monthly issuance retains its existing immutable PDF workflow.
 Statements choose one staff member and an inclusive range; registers choose one month.
 Filters survive tab changes; inactive panels stop previews and export polling.

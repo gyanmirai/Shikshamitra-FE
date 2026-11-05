@@ -178,4 +178,44 @@ describe('canonical PDF renderer', () => {
     expect(screen.getByText('Recovered PDF')).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: 'PDF zoom' })).not.toHaveAttribute('aria-disabled', 'true');
   });
+  it('keeps a bounded monthly PDF readable and resets scroll for each document', async () => {
+    pdf.getDocument.mockImplementation(() => ({
+      promise: Promise.resolve(documentWithText('Issued PDF', 2)),
+      destroy: pdf.destroy,
+    }));
+    const ready = vi.fn();
+    const contentRef = createRef<HTMLDivElement>();
+    const view = render(
+      <PayslipPdfViewer
+        url="blob:first"
+        title="Monthly payslip"
+        contentRef={contentRef}
+        onReady={ready}
+        viewportHeight="60dvh"
+        initialZoom="fit"
+      />
+    );
+    await waitFor(() => expect(ready).toHaveBeenLastCalledWith('blob:first'));
+    const viewport = screen.getByRole('region', { name: 'Payslip PDF viewer' });
+    expect(screen.getByRole('combobox', { name: 'PDF zoom' })).toHaveTextContent('Fit width');
+    expect(viewport).toHaveStyle({ height: '60dvh', overflow: 'auto' });
+    expect(contentRef.current?.querySelectorAll('canvas')).toHaveLength(2);
+    viewport.scrollTop = 400;
+    viewport.scrollLeft = 100;
+    view.rerender(
+      <PayslipPdfViewer
+        url="blob:second"
+        title="Monthly payslip"
+        contentRef={contentRef}
+        onReady={ready}
+        viewportHeight="60dvh"
+        initialZoom="fit"
+      />
+    );
+    await waitFor(() => expect(ready).toHaveBeenLastCalledWith('blob:second'));
+    expect(viewport.scrollTop).toBe(0);
+    expect(viewport.scrollLeft).toBe(0);
+    expect(screen.getByRole('combobox', { name: 'PDF zoom' })).toHaveTextContent('Fit width');
+    expect(contentRef.current?.querySelectorAll('canvas')).toHaveLength(2);
+  });
 });

@@ -1002,3 +1002,7 @@ Run `npx playwright test --config e2e/hr/salary-setup.config.ts` for the product
 The journey verifies stage validation, retained drafts, preview invalidation, failed-save retry, confirmed-save metadata, mobile containment and the persistent footer.
 Screenshots stay under `.artifacts/salary-setup-browser`; these checks do not certify backend calculations or deployed persistence.
 Use `SalaryStructureBuilder.test.tsx`, `salary-editor-screen.test.tsx`, `salary-template-editor.test.tsx`, `payroll-settings.test.tsx` and `permissions.test.ts` for focused component and navigation coverage.
+
+## Salary document viewing (Task 6594)
+
+Run `node node_modules/@playwright/test/cli.js test --config e2e/hr/salary-documents.config.ts` for seven synthetic browser scenarios using the production document center and PDF.js viewer. They cover 390/768/1440-pixel layouts in light/dark themes, Fit width, keyboard scrolling at larger zoom, stationary grouped actions, version/staff changes, reachable history, body overflow and PDF loading/error/retry. Run the payslip component suites for current-revision permissions, stale reads, print readiness and cancellation. The fixture is loopback-only and serves synthetic PDFs; it does not certify authenticated tenant access, actual payroll mutation, email delivery or native printing.
