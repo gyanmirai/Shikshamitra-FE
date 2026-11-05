@@ -8,6 +8,10 @@ owner: frontend-team
 audience: humans-and-agents
 ---
 
+## ESIC archive review
+
+Run the focused `esi-policy-archive-dialog.test.tsx` and `esi-policies.test.tsx` Vitest suites, then `npx playwright test --config e2e/hr/esic-archive.config.ts`. The synthetic fixture covers dependency blocking, coverage labels, cancel, failed-load retry, explicit confirmed payloads, busy dismissal locks and stale-write recovery at phone/tablet/desktop sizes in both themes. Finish with an in-app browser smoke test against the local fixture; no real tenant mutations are needed.
+
 ## Historical ESIC setup and payroll branding navigation
 
 Run `esi-configuration-form.test.ts`, `esi-request-error.test.ts`, `esi-automatic-calculation.test.tsx`, `esi-statutory-settings.test.tsx`, `earning-esi-treatment-dialog.test.tsx` and `payslip-settings-form.test.tsx` for retained month/drafts, retry identity, policy/access guidance and both required School Identity route grants.
