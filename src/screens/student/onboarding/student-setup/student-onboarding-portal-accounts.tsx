@@ -17,13 +17,13 @@ import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { studentPaths } from 'src/constants/student-menu';
-import { useRef, useMemo, useState, useEffect } from 'react';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { LoadingButton } from 'src/components/loading-button';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
+import { useRef, useMemo, useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import {
   Box,
   Stack,
@@ -54,11 +54,29 @@ import { getOnboardingMessage, getOnboardingErrorMessage } from './student-onboa
 import type { StudentOnboardingItem } from './student-onboarding-model';
 import type { StudentParentSiblingActivationState } from './student-parent-sibling-state';
 
+export type StudentCredentialSendSummary = {
+  requested: number;
+  submitted: number;
+  queued: number;
+  failed: number;
+};
+
+export type StudentOnboardingPortalAccountsHandle = {
+  sendSelected: (afterActivation?: boolean) => Promise<StudentCredentialSendSummary>;
+};
+
+export type StudentOnboardingPortalAccountsSelection = {
+  selectedCount: number;
+  canSend: boolean;
+};
+
 type Props = {
   student: StudentOnboardingItem;
   canManage: boolean;
+  combinedActivation?: boolean;
   onBusyChange?: (busy: boolean) => void;
   onParentStateChange?: (state: StudentParentSiblingActivationState) => void;
+  onSelectionStateChange?: (state: StudentOnboardingPortalAccountsSelection) => void;
   parentValidationAttempt?: number;
   compact?: boolean;
 };
@@ -102,14 +120,20 @@ const ownerIdentity = (
   ]);
 };
 
-export default function StudentOnboardingPortalAccounts({
+const StudentOnboardingPortalAccounts = forwardRef<StudentOnboardingPortalAccountsHandle, Props>(
+  (
+    {
   student,
   canManage,
+      combinedActivation = false,
   onBusyChange,
   onParentStateChange,
+      onSelectionStateChange,
   parentValidationAttempt = 0,
   compact = false,
-}: Props) {
+    }: Props,
+    ref
+  ) => {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const credentials = useGetStudentOnboardingCredentialsQuery(student.id);
   const [sendCredentials, mutation] = useSendStudentOnboardingCredentialsMutation();
@@ -143,8 +167,9 @@ export default function StudentOnboardingPortalAccounts({
     (sibling?.guardianAccessSelected ? 'guardian' : '') ||
     (legacyChoiceRequired
       ? ''
-      : adults.find((recipient) => recipient.relationship !== 'guardian' && recipient.isMainContact)
-          ?.relationship ||
+        : adults.find(
+            (recipient) => recipient.relationship !== 'guardian' && recipient.isMainContact
+          )?.relationship ||
         adults.find((recipient) => recipient.relationship !== 'guardian')?.relationship ||
         adults[0]?.relationship ||
         '');
@@ -156,9 +181,11 @@ export default function StudentOnboardingPortalAccounts({
       : suggestedAdult;
   const adult = adults.find((recipient) => recipient.relationship === relationship);
   const studentRecipient = recipients.find((recipient) => recipient.accountType === 'student');
-  const [selected, setSelected] = useState<{ caseId: string; student: boolean; guardian: boolean }>(
-    { caseId: student.id, student: false, guardian: false }
-  );
+    const [selected, setSelected] = useState<{
+      caseId: string;
+      student: boolean;
+      guardian: boolean;
+    }>({ caseId: student.id, student: false, guardian: false });
   const [confirmation, setConfirmation] = useState('');
   const adultIdentity = ownerIdentity(workspace, relationship);
   const confirmed = confirmation === adultIdentity;
@@ -376,7 +403,29 @@ export default function StudentOnboardingPortalAccounts({
     chosen.every(
       (recipient) => eligible(recipient) && (recipient.accountType === 'student' || confirmed)
     );
+    const selectedCount = Number(activeSelected.student) + Number(activeSelected.guardian);
+    const accessReady = chosen.every(
+      (recipient) =>
+        emailSchema.isValidSync(recipient.email?.trim() || '') &&
+        !queued(recipient) &&
+        !requiresCredentialResendConfirmation(recipient.delivery) &&
+        (recipient.accountType === 'student'
+          ? workspace?.studentAccessEnabled !== false
+          : workspace?.guardianAccessEnabled !== false) &&
+        (recipient.accountType !== 'guardian' || confirmed)
+    );
+    const selectionCanSend =
+      selectedCount > 0 &&
+      selectedCount === chosen.length &&
+      canManage &&
+      !unavailable &&
+      !busy &&
+      accessReady &&
+      (!student.studentEnrollmentId || chosen.every((recipient) => eligible(recipient)));
   const needsActivation = compact && !student.studentEnrollmentId && chosen.length > 0;
+    useEffect(() => {
+      onSelectionStateChange?.({ selectedCount, canSend: selectionCanSend });
+    }, [onSelectionStateChange, selectedCount, selectionCanSend]);
   const currentRequest = (caseId: string) =>
     mounted.current && latest.current.caseId === caseId && latest.current.canManage;
   const accept = (result: StudentCredentialsWorkspace, baseSource: typeof source) => {
@@ -399,25 +448,58 @@ export default function StudentOnboardingPortalAccounts({
     setMustRefresh(false);
     return result.data;
   };
-  const send = async (only?: StudentCredentialsRecipient, resend = false) => {
-    if (submitting.current || busy || unavailable || !canManage || !workspace) return;
-    const targets = only ? [only] : chosen;
+    const send = async (
+      only?: StudentCredentialsRecipient,
+      resend = false,
+      options: {
+        targets?: StudentCredentialsRecipient[];
+        workspace?: StudentCredentialsWorkspace;
+        allowRefreshInProgress?: boolean;
+        notifySuccess?: boolean;
+      } = {}
+    ): Promise<StudentCredentialSendSummary> => {
+      const currentWorkspace = options.workspace ?? workspace;
+      const targets = only ? [only] : (options.targets ?? chosen);
+      const summary: StudentCredentialSendSummary = {
+        requested: targets.length,
+        submitted: 0,
+        queued: 0,
+        failed: 0,
+      };
+      if (
+        submitting.current ||
+        busy ||
+        (unavailable && !options.allowRefreshInProgress) ||
+        !canManage ||
+        !currentWorkspace
+      ) {
+        summary.failed = summary.requested;
+        return summary;
+      }
+      const currentTargets = targets.map((target) =>
+        currentWorkspace.recipients.find(
+          (recipient) =>
+            recipientKey(recipient) === recipientKey(target) && recipient.email === target.email
+        )
+      );
     if (
       !targets.length ||
-      !targets.every(
+        currentTargets.some((recipient) => !recipient) ||
+        !currentTargets.every(
         (recipient) =>
-          eligible(recipient) &&
+            recipient &&
+            eligible(recipient, currentWorkspace) &&
           requiresCredentialResendConfirmation(recipient.delivery) === resend &&
           (recipient.accountType === 'student' || confirmed)
       )
     )
-      return;
+        return { ...summary, failed: summary.requested };
     const caseId = student.id;
     const operationVersion = scope.current.version;
     const isCurrent = () => currentRequest(caseId) && scope.current.version === operationVersion;
-    const reviewedAdult = ownerIdentity(workspace, relationship);
-    let current = workspace;
-    let observedSource = source;
+      const reviewedAdult = ownerIdentity(currentWorkspace, relationship);
+      let current = currentWorkspace;
+      let observedSource = options.workspace ? latest.current.source : source;
     submitting.current = true;
     setWorking(true);
     try {
@@ -488,10 +570,15 @@ export default function StudentOnboardingPortalAccounts({
           current = result;
           accept(result, observedSource);
           const updated = result.recipients.find((item) => recipientKey(item) === key);
-          if (updated?.delivery?.status === 'Sent')
+            if (updated?.delivery?.status === 'Sent') {
+              summary.submitted += 1;
+              if (options.notifySuccess !== false)
             shikshaMitraToast.success({ message: 'Login email submitted for sending.' });
-          else if (queued(updated)) shikshaMitraToast.info({ message: 'Login email is queued.' });
-          else
+            } else if (queued(updated)) {
+              summary.queued += 1;
+              if (options.notifySuccess !== false)
+                shikshaMitraToast.info({ message: 'Login email is queued.' });
+            } else
             setErrors((previous) => ({
               ...previous,
               [key]: getOnboardingMessage(
@@ -521,7 +608,20 @@ export default function StudentOnboardingPortalAccounts({
             current = refreshed;
             observedSource = latest.current.source;
             const recovered = refreshed.recipients.find((item) => recipientKey(item) === key);
-            if (queued(recovered) || recovered?.delivery?.status === 'Sent') {
+              if (recovered?.delivery?.status === 'Sent') {
+                summary.submitted += 1;
+                if (options.notifySuccess !== false)
+                  shikshaMitraToast.success({ message: 'Login email submitted for sending.' });
+                setErrors((previous) => {
+                  const next = { ...previous };
+                  delete next[key];
+                  return next;
+                });
+                setSelected((previous) => ({ ...previous, [recipient.accountType]: false }));
+              } else if (queued(recovered)) {
+                summary.queued += 1;
+                if (options.notifySuccess !== false)
+                  shikshaMitraToast.info({ message: 'Login email is queued.' });
               setErrors((previous) => {
                 const next = { ...previous };
                 delete next[key];
@@ -539,7 +639,31 @@ export default function StudentOnboardingPortalAccounts({
       submitting.current = false;
       if (mounted.current) setWorking(false);
     }
+    summary.failed = Math.max(0, summary.requested - summary.submitted - summary.queued);
+    return summary;
   };
+  const sendSelected = async (afterActivation = false): Promise<StudentCredentialSendSummary> => {
+    const targets = [...chosen];
+    if (!targets.length) return { requested: 0, submitted: 0, queued: 0, failed: 0 };
+    if (!afterActivation) return send(undefined, false, { targets, notifySuccess: false });
+
+    const refreshed = await refetchCurrent(student.id).catch(() => undefined);
+    if (!refreshed)
+      return { requested: targets.length, submitted: 0, queued: 0, failed: targets.length };
+    return send(undefined, false, {
+      targets,
+      workspace: refreshed,
+      allowRefreshInProgress: true,
+      notifySuccess: false,
+    });
+  };
+  const sendSelectedRef = useRef(sendSelected);
+  sendSelectedRef.current = sendSelected;
+  useImperativeHandle(
+    ref,
+    () => ({ sendSelected: (afterActivation) => sendSelectedRef.current(afterActivation) }),
+    []
+  );
   const runParentCommand = async (retry = false) => {
     if (submitting.current || busy || unavailable || !workspace || !canManage) return;
     if (!retry && (!canLink || !confirmed || !parentCandidate)) return;
@@ -1038,7 +1162,8 @@ export default function StudentOnboardingPortalAccounts({
                   : 'Original parent setup failed. Ask authorized staff to review it.'}
               </Typography>
             )}
-            {(sibling?.status === 'SetupPending' || parentCandidate?.setupStatus === 'Pending') && (
+              {(sibling?.status === 'SetupPending' ||
+                parentCandidate?.setupStatus === 'Pending') && (
               <Typography variant="body2" color="text.secondary">
                 Original parent account setup is pending.
               </Typography>
@@ -1070,13 +1195,15 @@ export default function StudentOnboardingPortalAccounts({
             )}
           </Box>
         )}
-        {(error || (reason && !activationReason && (!compact || activeSelected[accountType]))) && (
+          {(error ||
+            (reason && !activationReason && (!compact || activeSelected[accountType]))) && (
           <Typography
             variant="body2"
             color={error ? 'error.main' : 'text.secondary'}
             sx={{ pl: { sm: 3.5 }, overflowWrap: 'anywhere' }}
           >
-            {error || getOnboardingMessage(reason, 'Review the login requirements before sending.')}
+              {error ||
+                getOnboardingMessage(reason, 'Review the login requirements before sending.')}
           </Typography>
         )}
         {delivery &&
@@ -1186,7 +1313,7 @@ export default function StudentOnboardingPortalAccounts({
         noValidate
         onSubmit={(event) => {
           event.preventDefault();
-          if (canSend) send();
+            if (canSend && !combinedActivation) send();
         }}
       >
         <FormBusyRegion
@@ -1249,12 +1376,21 @@ export default function StudentOnboardingPortalAccounts({
             </Stack>
           </Box>
         </FormBusyRegion>
-        <Stack spacing={1} sx={{ borderTop: '1px solid', borderColor: 'divider', mt: 1.5, pt: 1 }}>
-          {needsActivation && (
+          <Stack
+            spacing={1}
+            sx={{ borderTop: '1px solid', borderColor: 'divider', mt: 1.5, pt: 1 }}
+          >
+            {combinedActivation && selectedCount > 0 ? (
+              <FormHelperText sx={{ m: 0 }}>
+                {student.studentEnrollmentId
+                  ? 'Selected people will receive login details now.'
+                  : 'Selected people receive login details after activation.'}
+              </FormHelperText>
+            ) : needsActivation ? (
             <Typography variant="caption" color="text.secondary">
               Use Save &amp; Activate first, then send login details.
             </Typography>
-          )}
+            ) : null}
           {!compact && (
             <FormHelperText sx={{ m: 0 }}>
               Each selected person receives a separate email using their own saved login.
@@ -1287,6 +1423,7 @@ export default function StudentOnboardingPortalAccounts({
                 </Button>
               )}
             </Stack>
+              {!(combinedActivation && compact) && (
             <LoadingButton
               type="submit"
               aria-label="Send selected login details"
@@ -1300,6 +1437,7 @@ export default function StudentOnboardingPortalAccounts({
             >
               {compact ? 'Send login details' : 'Send selected login details'}
             </LoadingButton>
+              )}
           </Stack>
         </Stack>
       </Box>
@@ -1378,4 +1516,6 @@ export default function StudentOnboardingPortalAccounts({
       )}
     </Stack>
   );
-}
+});
+
+export default StudentOnboardingPortalAccounts;

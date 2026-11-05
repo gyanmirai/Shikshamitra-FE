@@ -126,6 +126,22 @@ it.each([0, 1] as const)(
   15000
 );
 
+it('keeps a core section protected when composition has moved its fields into an Inquiry section', async () => {
+  const values = getBlankAdmissionFormInitialValues(1);
+  const baseSection = values.sections[0];
+  const composedSection = { ...baseSection, fields: [] };
+  const { isSectionDeletionLocked } = await import('./inquiry-default-fields');
+
+  expect(
+    isSectionDeletionLocked(
+      values.purpose,
+      values.sections,
+      composedSection,
+      values.coreFieldPolicyVersion
+    )
+  ).toBe(true);
+});
+
 it.each([0, 1] as const)(
   'confirms direct section deletion for purpose %s and preserves the draft on cancel',
   async (purpose) => {

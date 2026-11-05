@@ -1,3 +1,4 @@
+import type { RootState } from 'src/redux/store';
 import type { AdmissionApplicationStage } from 'src/redux/student/admissions/admission-applications-api';
 import type {
   AdmissionDocumentRequirement,
@@ -5,6 +6,8 @@ import type {
 } from 'src/redux/student/admissions/admission-document-types';
 
 import { useState } from 'react';
+import { useSelector } from 'react-redux';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { Card, Stack, Button, Skeleton, Typography, LinearProgress } from '@mui/material';
 import { useGetApplicationDocumentsQuery } from 'src/redux/student/admissions/admission-document-verification-api';
@@ -16,6 +19,7 @@ import { getDocumentReviewActions } from './document-review-model';
 import { useDocumentPermissions } from './use-document-permissions';
 import { DocumentChecklistContent } from './document-checklist-content';
 import { useApplicationStageReadiness } from '../application-detail/application-stage-readiness';
+import { ParentRegistrationPanel } from '../application-detail/parent-registration/parent-registration-panel';
 
 import type { DocumentAction } from './document-action-model';
 import type { ApplicationStageReadinessHandler } from '../application-detail/application-stage-readiness';
@@ -44,6 +48,11 @@ export function ApplicationDocumentsPanel({
   onReadinessChange?: ApplicationStageReadinessHandler;
 }) {
   const permissions = useDocumentPermissions();
+  const [parentMutationBusy, setParentMutationBusy] = useState(false);
+  const grants = useSelector((state: RootState) => state.auth.permissions);
+  const canManageParentRegistration =
+    hasGrantedPermission(grants, 'Students.Admissions.Applications.View') &&
+    hasGrantedPermission(grants, 'Students.Admissions.Applications.Edit');
   const query = useGetApplicationDocumentsQuery(
     { applicationId, stageInstanceId: stage.id },
     { skip: !permissions.view }
@@ -71,7 +80,7 @@ export function ApplicationDocumentsPanel({
   useApplicationStageReadiness(onReadinessChange, {
     stageId: stage.id,
     canComplete: Boolean(!historical && permissions.view && summary?.canComplete && !query.isError),
-    busy: disabled || query.isFetching || advancing || Boolean(selected),
+    busy: disabled || query.isFetching || advancing || Boolean(selected) || parentMutationBusy,
     concurrencyStamp: summary?.concurrencyStamp,
   });
   return (
@@ -116,11 +125,22 @@ export function ApplicationDocumentsPanel({
         ) : (
           <>
             {query.isFetching && <LinearProgress aria-label="Refreshing Document Checklist" />}
+            {!historical && canManageParentRegistration && (
+              <ParentRegistrationPanel
+                applicationId={applicationId}
+                documentStageId={stage.id}
+                canView={permissions.view}
+                canManage={canManageParentRegistration}
+                disabled={disabled || query.isFetching || advancing || Boolean(selected)}
+                currentValues={{}}
+                onBusyChange={setParentMutationBusy}
+              />
+            )}
             <DocumentChecklistContent
               layout={layout}
               summary={summary}
               permissions={permissions}
-              disabled={disabled || query.isFetching || advancing}
+              disabled={disabled || query.isFetching || advancing || parentMutationBusy}
               readOnly={readOnly}
               onAction={(action, requirement) => setSelected({ action, requirement, summary })}
               onView={(requirement) =>
@@ -133,7 +153,11 @@ export function ApplicationDocumentsPanel({
                   size="small"
                   variant="contained"
                   disabled={
-                    !summary.canComplete || query.isFetching || advancing || Boolean(selected)
+                    !summary.canComplete ||
+                    query.isFetching ||
+                    advancing ||
+                    Boolean(selected) ||
+                    parentMutationBusy
                   }
                   onClick={() => onComplete?.()}
                 >

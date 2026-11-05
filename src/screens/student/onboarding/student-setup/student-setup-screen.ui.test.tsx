@@ -5,7 +5,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import StudentSetupScreen from './index';
 import { useStudentSetupAssignment } from './use-student-setup-assignment';
@@ -40,6 +40,7 @@ const mocks = vi.hoisted(() => ({
   }>,
   replace: vi.fn(),
   query: vi.fn(),
+  refetchList: vi.fn(),
   push: vi.fn(),
   options: {
     academicYears: [],
@@ -132,7 +133,7 @@ vi.mock('src/redux/student/onboarding/student-onboarding-api', () => ({
       isLoading: false,
       isFetching: mocks.casesFetching,
       isError: mocks.casesError,
-      refetch: vi.fn(),
+      refetch: mocks.refetchList,
     };
   },
   useGetStudentOnboardingCaseQuery: () => ({
@@ -376,6 +377,29 @@ describe('Student Setup workspace selection wiring', () => {
     expect(mocks.params.get('status')).toBe('0');
     expect(mocks.params.get('board')).toBe('board-cbse');
     expect(mocks.params.get('class')).toBe('grade-6');
+  });
+
+  it('refreshes readiness while an active student has pending credential delivery', async () => {
+    setRoute('readiness');
+    mocks.rows = [
+      {
+        ...studentOnboardingTestData[0],
+        id: 'case-pending-credentials',
+        studentEnrollmentId: 'enrollment-1',
+        credentialsPending: true,
+        status: 3,
+      },
+    ];
+    vi.useFakeTimers();
+    const { unmount } = render(element);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(15_000);
+    });
+
+    expect(mocks.refetchList).toHaveBeenCalledOnce();
+    unmount();
+    vi.useRealTimers();
   });
 
   it('opens a pending task in the full-page workspace without changing the worklist tab', () => {

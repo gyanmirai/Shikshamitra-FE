@@ -259,13 +259,14 @@ describe('Student Setup table task interactions', () => {
     expect(screen.getByText('1')).toBeVisible();
   });
 
-  it('shows five readable columns by default while retaining optional information and filters', () => {
+  it('shows enrollment and onboarding status separately by default', () => {
     render(tableElement(props()));
     expect(screen.getAllByRole('columnheader').map((header) => header.textContent)).toEqual([
       'Student',
       'Class & Division',
       'Pending work',
-      'Status',
+      'Enrollment status',
+      'Setup status',
       'Action',
     ]);
     expect(screen.getByText(student.applicationNumber)).toBeInTheDocument();
@@ -293,6 +294,29 @@ describe('Student Setup table task interactions', () => {
       stickyPosition: 'right',
       filterType: 'enum',
     });
+    expect(tableProps?.columns.find((column) => column.id === 'enrollmentStatusLabel')).toMatchObject({
+      isFilter: false,
+      isSort: false,
+    });
+  });
+
+  it('shows an active enrollment separately from onboarding that still needs attention', () => {
+    render(
+      tableElement({
+        ...props(),
+        rows: [
+          {
+            ...student,
+            studentEnrollmentId: 'enrollment-1',
+            status: 'action-required',
+            backendStatus: 3,
+          },
+        ],
+      })
+    );
+
+    expect(screen.getByText('Active')).toBeVisible();
+    expect(screen.getByText('Setup needs attention')).toBeVisible();
   });
 
   it.each([
@@ -351,7 +375,7 @@ describe('Student Setup table task interactions', () => {
   });
 
   it.each([
-    ['provisioning', 'Finishing setup', 'Completion check pending', 'Check completion'],
+    ['provisioning', 'Setup finishing', 'Completion check pending', 'Check completion'],
     ['completed', 'Setup complete', 'No pending work', 'View details'],
     ['cancelled', 'Cancelled', 'Setup cancelled', 'View details'],
   ] as const)(
@@ -468,12 +492,12 @@ describe('Student Setup table task interactions', () => {
     ];
     const labels = [
       'Setup pending',
-      'In progress',
+      'Setup in progress',
       'Ready to activate',
-      'Needs attention',
+      'Setup needs attention',
       'Setup complete',
       'Cancelled',
-      'Finishing setup',
+      'Setup finishing',
     ];
     const input = {
       ...props(),

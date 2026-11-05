@@ -32,7 +32,7 @@ export function AdmissionFeePreparationDialog({
   busy: boolean;
   onClose: () => void;
   onSubmit: (heads: AdmissionVariableFeeHead[]) => Promise<void>;
-  previewContext?: { applicationId: string; joiningDate: string };
+  previewContext?: { applicationId: string; joiningDate: string; prorationPolicyVersionId?: string | null };
 }) {
   const form = useFormik({
     initialValues: {
@@ -88,6 +88,9 @@ export function AdmissionFeePreparationDialog({
       applicationId: previewContext?.applicationId ?? '',
       joiningDate: previewContext?.joiningDate ?? '',
       variableFeeHeads,
+      ...(previewContext?.prorationPolicyVersionId !== undefined && {
+        prorationPolicyVersionId: previewContext.prorationPolicyVersionId,
+      }),
     },
     Boolean(previewContext) &&
       variableFeeHeads.every(

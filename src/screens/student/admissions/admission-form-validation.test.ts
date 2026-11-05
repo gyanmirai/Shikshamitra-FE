@@ -3,9 +3,47 @@ import type { AdmissionForm } from 'src/redux/student/admissions/admission-forms
 import { it, expect, describe } from 'vitest';
 
 import {
+  buildDynamicAdmissionYupSchema,
   getDynamicAdmissionValidationErrors,
   getAdmissionSubmissionValidationErrors,
+  getDynamicAdmissionFieldValidationError,
 } from './admission-form-validation';
+
+it('validates only the selected field with sibling visibility and literal dotted field codes', () => {
+  const schema = buildDynamicAdmissionYupSchema({
+    sections: [
+      {
+        fields: [
+          { code: 'SHOW', label: 'Show', fieldType: 0, required: false },
+          {
+            code: 'CONTACT.RELATION',
+            label: 'Relationship',
+            fieldType: 0,
+            required: true,
+            visibilityRuleJson: '{"field":"SHOW","operator":"Equals","value":"yes"}',
+          },
+          { code: 'LATER', label: 'Later answer', fieldType: 0, required: true },
+        ],
+      },
+    ],
+  });
+  expect(
+    getDynamicAdmissionFieldValidationError(schema, 'CONTACT.RELATION', { SHOW: 'no' })
+  ).toBeUndefined();
+  expect(
+    getDynamicAdmissionFieldValidationError(schema, 'CONTACT.RELATION', {
+      SHOW: 'yes',
+      'CONTACT.RELATION': '',
+    })
+  ).toBe('Relationship is required.');
+  expect(
+    getDynamicAdmissionFieldValidationError(schema, 'CONTACT.RELATION', {
+      SHOW: 'yes',
+      'CONTACT.RELATION': 'Father',
+    })
+  ).toBeUndefined();
+  expect(getDynamicAdmissionFieldValidationError(schema, 'UNKNOWN', {})).toBeUndefined();
+});
 
 it('does not require an inaccessible identity answer on a hidden form step', () => {
   const definition = {

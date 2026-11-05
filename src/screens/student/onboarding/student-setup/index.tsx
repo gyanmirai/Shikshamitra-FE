@@ -391,6 +391,24 @@ export default function StudentSetupScreen() {
   const onboardingQuery = useGetStudentOnboardingCasesQuery(queryArgs, {
     skip: !academicYearId || (!dashboardQueue && (!selectedBoardId || !selectedMediumId)),
   });
+  const credentialDeliveryPending =
+    activeView === 'readiness' &&
+    Boolean(
+      onboardingQuery.currentData?.items.some(
+        (item) =>
+          Boolean(item.studentEnrollmentId) &&
+          item.credentialsPending &&
+          item.status !== 4 &&
+          item.status !== 5
+      )
+    );
+  useEffect(() => {
+    if (!credentialDeliveryPending) return undefined;
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === 'visible') void onboardingQuery.refetch();
+    }, 15_000);
+    return () => window.clearInterval(interval);
+  }, [credentialDeliveryPending, onboardingQuery.refetch]);
   const pendingCountQuery = useGetStudentOnboardingCasesQuery(
     {
       ...queryArgs,

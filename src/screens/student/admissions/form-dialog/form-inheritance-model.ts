@@ -162,7 +162,10 @@ export function getInheritancePreviewValues(
         supportedLanguages: [
           ...new Set([...form.supportedLanguages, ...(effective.supportedLanguages ?? [])]),
         ],
-        sections: mergeInquiryContextSections(effective.sections, contextSections),
+        sections: mergeInquiryContextSections(effective.sections, contextSections).map((section) => ({
+          ...section,
+          fieldsPerRow: form.fieldsPerRow,
+        })),
       }
     : form;
 }
@@ -177,7 +180,10 @@ export function getInheritanceBuilderValues(
   if (!effective) return form;
   effective = {
     ...effective,
-    sections: mergeInquiryContextSections(effective.sections, contextSections),
+    sections: mergeInquiryContextSections(effective.sections, contextSections).map((section) => ({
+      ...section,
+      fieldsPerRow: form.fieldsPerRow,
+    })),
   };
   const snapshotBaseIds = new Set(previewBaseSectionIds);
   const inherited = getInheritedFields(effective);

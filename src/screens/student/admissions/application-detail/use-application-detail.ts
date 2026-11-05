@@ -2,7 +2,6 @@
 
 import type { RootState } from 'src/redux/store';
 
-import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
 import { skipToken } from '@reduxjs/toolkit/query';
@@ -26,11 +25,13 @@ import {
 import { readAdmissionFormValue } from '../admission-visibility-rules';
 import { canRequestNormalStageAdvance } from './application-progress-model';
 import { normalizeAdmissionFormEmailValues } from '../admission-email-values';
+import { waitForAdmissionValidationPaint } from '../admission-validation-feedback';
 import { ADMISSION_APPLICATION_PERMISSIONS } from '../admission-application-permissions';
 import {
   buildDynamicAdmissionYupSchema,
   getDynamicAdmissionValidationErrors,
   getAdmissionSubmissionValidationErrors,
+  getDynamicAdmissionFieldValidationError,
 } from '../admission-form-validation';
 
 export type RuntimeAction = 'skip' | 'override' | null;
@@ -100,15 +101,22 @@ export function useApplicationDetail(
       ),
     [formQuery.data?.values]
   );
+  const validationSchema = useMemo(
+    () => buildDynamicAdmissionYupSchema(formQuery.data?.definition ?? { sections: [] }),
+    [formQuery.data?.definition]
+  );
   const formik = useFormik<Record<string, string>>({
     initialValues,
-    validationSchema: formQuery.data
-      ? buildDynamicAdmissionYupSchema(formQuery.data.definition)
-      : Yup.object(),
+    validationSchema,
+    validateOnChange: false,
+    validateOnBlur: false,
     onSubmit: async () => undefined,
   });
   const draftApplicationId = useRef(id);
   const baseline = useRef(initialValues);
+  const baselineStamp = useRef(
+    formQuery.data?.concurrencyStamp ?? applicationQuery.data?.concurrencyStamp
+  );
   const editedFields = useRef(new Set<string>());
   const persistedFields = useRef(new Set<string>());
   const currentValues = draftApplicationId.current === id ? formik.values : {};
@@ -118,6 +126,8 @@ export function useApplicationDetail(
     if (draftApplicationId.current !== id) {
       draftApplicationId.current = id;
       baseline.current = initialValues;
+      baselineStamp.current =
+        formQuery.data?.concurrencyStamp ?? applicationQuery.data?.concurrencyStamp;
       editedFields.current.clear();
       persistedFields.current.clear();
       latestValues.current = initialValues;
@@ -128,6 +138,13 @@ export function useApplicationDetail(
     }
     // Leaving the form view or a pending fetch must not clear a same-record draft.
     if (!formQuery.data || baseline.current === initialValues) return;
+    const hasEdits = Object.entries(latestValues.current).some(
+      ([code, value]) => value !== baseline.current[code]
+    );
+    if (hasEdits && baselineStamp.current !== applicationQuery.data?.concurrencyStamp) return;
+    if (!hasEdits)
+      baselineStamp.current =
+        formQuery.data?.concurrencyStamp ?? applicationQuery.data?.concurrencyStamp;
     const nextBaseline = { ...initialValues };
     // Once saved, this field has answer history and is no longer eligible for
     // projection. A delayed GET may contain any old source text, so acknowledge
@@ -156,7 +173,7 @@ export function useApplicationDetail(
     showUntouchedError: boolean
   ) => {
     const error = formQuery.data
-      ? getDynamicAdmissionValidationErrors(formQuery.data.definition, values)[fieldCode]
+      ? getDynamicAdmissionFieldValidationError(validationSchema, fieldCode, values)
       : undefined;
     setFieldErrors((previous) => {
       if ((!showUntouchedError && !previous[fieldCode]) || previous[fieldCode] === error)
@@ -180,6 +197,18 @@ export function useApplicationDetail(
       });
       return false;
     }
+    if (
+      baselineStamp.current &&
+      baselineStamp.current !== application.concurrencyStamp &&
+      Object.entries(latestValues.current).some(([code, value]) => value !== baseline.current[code])
+    ) {
+      shikshaMitraToast.error({
+        message:
+          'This application changed while you were editing. Your answers are retained. Discard the draft and refresh the latest form before saving.',
+      });
+      return false;
+    }
+    const snapshotStamp = baselineStamp.current ?? application.concurrencyStamp;
     const valuesAtSave = latestValues.current;
     const normalizedValues = formQuery.data
       ? normalizeAdmissionFormEmailValues(formQuery.data.definition, valuesAtSave)
@@ -215,7 +244,7 @@ export function useApplicationDetail(
     try {
       const savedForm = await updateValues({
         id,
-        concurrencyStamp: application.concurrencyStamp,
+        concurrencyStamp: snapshotStamp,
         ...(autoFilledFieldCodes.length ? { autoFilledFieldCodes } : {}),
         // Projected answers are display-only until this normal draft save.
         // Union them with edits, including deliberate clears, exactly once.
@@ -242,6 +271,8 @@ export function useApplicationDetail(
         }
       });
       baseline.current = savedValues;
+      baselineStamp.current =
+        (savedForm as { concurrencyStamp?: string })?.concurrencyStamp ?? snapshotStamp;
       latestValues.current = merged;
       formik.resetForm({ values: savedValues });
       formik.setValues(merged, false);
@@ -349,17 +380,17 @@ export function useApplicationDetail(
     submittingRef.current = true;
     setSubmitting(true);
     try {
+      await waitForAdmissionValidationPaint();
       if (formQuery.data) {
-        const clientErrors = await formik.validateForm();
-        const normalizedErrors = Object.fromEntries(
-          Object.entries(clientErrors).filter(([, error]) => typeof error === 'string')
-        ) as Record<string, string>;
-        Object.assign(
-          normalizedErrors,
-          getAdmissionSubmissionValidationErrors(formQuery.data.definition, currentValues)
+        const normalizedErrors = getAdmissionSubmissionValidationErrors(
+          formQuery.data.definition,
+          latestValues.current
         );
         await formik.setTouched(
-          Object.fromEntries(Object.keys(formik.values).map((fieldCode) => [fieldCode, true]))
+          Object.fromEntries(
+            Object.keys(latestValues.current).map((fieldCode) => [fieldCode, true])
+          ),
+          false
         );
         if (Object.keys(normalizedErrors).length) {
           setFieldErrors(normalizedErrors);
@@ -400,7 +431,7 @@ export function useApplicationDetail(
     if (!section) return true;
     const validationErrors = getDynamicAdmissionValidationErrors(
       { sections: [{ fields: section.fields }] },
-      currentValues
+      latestValues.current
     );
     setFieldErrors(validationErrors);
     setErrors(
@@ -451,7 +482,11 @@ export function useApplicationDetail(
     currentValues,
     hasUnsavedAnswers: draftApplicationId.current === id && formik.dirty,
     discardUnsavedAnswers: () => {
-      formik.resetForm();
+      baseline.current = initialValues;
+      baselineStamp.current =
+        formQuery.data?.concurrencyStamp ?? applicationQuery.data?.concurrencyStamp;
+      latestValues.current = initialValues;
+      formik.resetForm({ values: initialValues });
       editedFields.current.clear();
       setErrors([]);
       setFieldErrors({});

@@ -180,16 +180,31 @@ vi.mock('./application-detail/application-runtime-form', () => ({
   ApplicationRuntimeForm: ({
     readOnly,
     canSubmitForm,
+    documents,
   }: {
     readOnly: boolean;
     canSubmitForm: boolean;
+    documents?: React.ReactNode;
   }) => (
     <div
       data-testid="runtime-form"
       data-read-only={String(readOnly)}
       data-can-submit={String(canSubmitForm)}
+      data-has-documents={String(Boolean(documents))}
     >
       Runtime application form
+    </div>
+  ),
+}));
+
+vi.mock('./application-detail/parent-registration/parent-registration-panel', () => ({
+  ParentRegistrationPanel: ({ applicationId, canManage }: any) => (
+    <div
+      data-testid="parent-registration-panel"
+      data-application-id={applicationId}
+      data-can-manage={String(canManage)}
+    >
+      Parent registration controls
     </div>
   ),
 }));
@@ -417,7 +432,7 @@ describe('AdmissionApplicationDetailScreen', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Admission Journey' }));
       fireEvent.click(screen.getByRole('button', { name: 'Registration Form' }));
       expect(screen.getByTestId('runtime-form')).toHaveAttribute('data-read-only', 'true');
-      fireEvent.click(screen.getByRole('button', { name: 'Edit Application Form' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Edit form' }));
       expect(screen.getByRole('dialog', { name: 'Edit Application Form' })).toHaveAttribute(
         'data-application-id',
         'application-1'
@@ -456,7 +471,7 @@ describe('AdmissionApplicationDetailScreen', () => {
     render(<AdmissionApplicationDetailScreen />);
     fireEvent.click(screen.getByRole('button', { name: 'Admission Journey' }));
     fireEvent.click(screen.getByRole('button', { name: 'Registration Form' }));
-    expect(screen.queryByRole('button', { name: 'Edit Application Form' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Edit form' })).not.toBeInTheDocument();
     expect(screen.getByTestId('runtime-form')).toHaveAttribute('data-read-only', 'true');
   });
 
@@ -471,7 +486,7 @@ describe('AdmissionApplicationDetailScreen', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Admission Journey' }));
     fireEvent.click(screen.getByRole('menuitem', { name: 'Review Application Form' }));
     expect(screen.getByTestId('runtime-form')).toHaveAttribute('data-read-only', 'true');
-    fireEvent.click(screen.getByRole('button', { name: 'Edit Application Form' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit form' }));
     expect(screen.getByRole('dialog', { name: 'Edit Application Form' })).toHaveAttribute(
       'data-application-id',
       'application-1'
@@ -480,6 +495,10 @@ describe('AdmissionApplicationDetailScreen', () => {
     expect(screen.getByRole('button', { name: 'Admission Journey' })).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: 'Current Step' }));
     expect(screen.getByText('Application Record')).toBeInTheDocument();
+    expect(screen.getByTestId('parent-registration-panel')).toHaveAttribute(
+      'data-application-id',
+      'application-1'
+    );
     expect(detailState.discardUnsavedAnswers).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Save correction' }));
     expect(applicationRefetch).toHaveBeenCalledOnce();
@@ -508,9 +527,7 @@ describe('AdmissionApplicationDetailScreen', () => {
       render(<AdmissionApplicationDetailScreen />);
       fireEvent.click(screen.getByRole('button', { name: 'Admission Journey' }));
       fireEvent.click(screen.getByRole('menuitem', { name: 'Review Application Form' }));
-      expect(
-        screen.queryByRole('button', { name: 'Edit Application Form' })
-      ).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Edit form' })).not.toBeInTheDocument();
       expect(screen.getByTestId('runtime-form')).toHaveAttribute('data-read-only', 'true');
     }
   );
@@ -959,6 +976,7 @@ describe('Applicant 360 full-page workspace', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Registration form' }));
     expect(screen.getByTestId('runtime-form')).toHaveAttribute('data-read-only', 'false');
     expect(screen.getByTestId('runtime-form')).toHaveAttribute('data-can-submit', 'false');
+    expect(screen.getByTestId('runtime-form')).toHaveAttribute('data-has-documents', 'false');
     expect(screen.getByRole('button', { name: 'Continue Admission' })).toBeDisabled();
     expect(detailState.workflowQuery.data.currentStageInstanceId).toBe('payment');
     expect(detailState.advance).not.toHaveBeenCalled();

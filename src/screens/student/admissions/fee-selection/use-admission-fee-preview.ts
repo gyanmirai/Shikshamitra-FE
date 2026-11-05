@@ -10,6 +10,7 @@ export function useAdmissionFeePreview(
     applicationId: string;
     joiningDate: string;
     variableFeeHeads: AdmissionVariableFeeHead[];
+    prorationPolicyVersionId?: string | null;
   },
   enabled: boolean
 ) {

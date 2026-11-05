@@ -19,7 +19,6 @@ import {
 } from './student-directory-column-filters';
 
 import type { DirectoryRowActions } from './student-directory-columns';
-import type { StudentPopulation } from './student-directory-filter-panel';
 
 type Props = {
   hasFilters: boolean;
@@ -30,7 +29,7 @@ type Props = {
   sorting: string;
   columnFilters: StudentDirectoryColumnFilter[];
   update: (values: Record<string, string | number | undefined>) => void;
-  population: StudentPopulation;
+  population: 'Active' | 'Former';
   academicYearReady: boolean;
   academicOptionsLoading?: boolean;
   academicContextMessage?: string;
@@ -44,6 +43,7 @@ type Props = {
   onDocumentAction: (kind: 'id-card' | 'certificate', students: StudentDirectoryItem[]) => void;
   selection: {
     selected: StudentDirectoryItem[];
+    visible: boolean;
     enabled: boolean;
     disabledReason: string;
     onToggle: (row: StudentDirectoryItem, checked: boolean) => void;
@@ -183,7 +183,7 @@ export default function StudentDirectoryTable({
       ),
   };
   const columns = [
-    selectionColumn,
+    ...(selection.visible ? [selectionColumn] : []),
     ...buildDirectoryColumns({ profileHref, rowActions: documentActions, compact }),
   ];
 

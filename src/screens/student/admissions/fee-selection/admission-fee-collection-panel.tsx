@@ -15,6 +15,7 @@ import { fDateTime } from 'src/utils/format-time';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { fCurrency } from 'src/utils/format-number';
 import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { EmptyContent } from 'src/components/empty-content';
@@ -22,6 +23,7 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { DetailGrid, DetailField, DetailSection } from 'src/components/detail-view';
 import { Box, Stack, Button, Skeleton, IconButton, Typography } from '@mui/material';
 import { useDownloadReceiptPdfMutation } from 'src/redux/feeCollection/feeCollection';
 import FeeProrationResult from 'src/screens/finance/FeeCollection/FeeCollectionComponent/FeeProrationResult';
@@ -139,9 +141,24 @@ export default function AdmissionFeeCollectionPanel({
     requiresVariableAmounts: Boolean(state?.variableFeeHeads?.length),
   });
   const canPrepare = Boolean(state?.canCollect || joiningDate.state?.canPreview);
+  const showingDatePreview = Boolean(joiningDate.state?.canPreview);
+  const activePreview = showingDatePreview ? joiningDate.preview : undefined;
+  const prorationResult = showingDatePreview ? activePreview?.proration : state?.proration;
+  const prorationPolicy = showingDatePreview
+    ? activePreview?.prorationPolicy
+    : state?.prorationPolicy;
+  const feeCalculationReady = showingDatePreview
+    ? Boolean(activePreview)
+    : state?.totalAmount != null;
   const prepareAndOpen = async (variableFeeHeads: AdmissionVariableFeeHead[]) => {
     await joiningDate.confirm();
-    const prepared = await prepare({ applicationId, variableFeeHeads }).unwrap();
+    const prepared = await prepare({
+      applicationId,
+      variableFeeHeads,
+      ...(joiningDate.state?.canSelectProrationPolicy && {
+        prorationPolicyVersionId: joiningDate.selectedPolicyVersionId,
+      }),
+    }).unwrap();
     variableAmounts.onFalse();
     if (prepared.isSettled) {
       onOpenChange?.(false);
@@ -375,10 +392,80 @@ export default function AdmissionFeeCollectionPanel({
             preparing.isLoading
           }
         />
-        {joiningDate.preview?.proration && <Label sx={{ alignSelf: 'flex-end' }}>Preview</Label>}
-        <FeeProrationResult
-          result={joiningDate.state?.canPreview ? joiningDate.preview?.proration : state.proration}
-        />
+        {Boolean(joiningDate.date) &&
+          joiningDate.state?.canSelectProrationPolicy &&
+          access.canOverridePolicies && (
+            <Stack spacing={1} sx={{ maxWidth: { xs: '100%', sm: 520 } }}>
+              <CustomSelect<'value' | 'label', false>
+                label="Proration policy"
+                value={joiningDate.selectedPolicyVersionId ?? ''}
+                options={[
+                  ...(!joiningDate.state.defaultProrationPolicyVersionId
+                    ? [{ value: '', label: 'No policy · Full charge' }]
+                    : []),
+                  ...(joiningDate.state.prorationPolicies ?? []).map((policy) => ({
+                    value: policy.policyVersionId,
+                    label: `${policy.policyName} · v${policy.policyVersion}${policy.isDefault ? ' · Default' : ''}`,
+                  })),
+                ]}
+                disabled={
+                  disabled ||
+                  joiningDate.state.isLocked ||
+                  preparing.isLoading ||
+                  dialog.value ||
+                  variableAmounts.value
+                }
+                isLoading={joiningDate.query.isFetching}
+                isSearch={(joiningDate.state.prorationPolicies?.length ?? 0) > 6}
+                noOptionsMessage="No active proration policies are available for this academic year."
+                onChange={(value) => {
+                  joiningDate.changePolicy(String(value) || null);
+                }}
+                helperText="Used to calculate fees from the actual joining date."
+              />
+            </Stack>
+          )}
+        {joiningDate.preview &&
+          (joiningDate.preview.proration || joiningDate.preview.prorationPolicy) && (
+            <Label sx={{ alignSelf: 'flex-end' }}>Preview</Label>
+          )}
+        {prorationResult && <FeeProrationResult result={prorationResult} />}
+        {feeCalculationReady && prorationResult && prorationPolicy?.source === 'FinanceDefault' && (
+          <Typography variant="caption" color="text.secondary">
+            Finance default for {state?.academicYear?.name ?? 'this academic year'}.
+          </Typography>
+        )}
+        {!prorationResult && prorationPolicy ? (
+          <DetailSection
+            title="Proration policy"
+            icon="mdi:calendar-range"
+            helpText="Finance applies the active academic-year default. The policy and version shown here are the ones used for this fee calculation."
+          >
+            <DetailGrid>
+              <DetailField
+                label={
+                  prorationPolicy.source === 'FinanceDefault' ? 'Finance default' : 'Policy used'
+                }
+                value={`${prorationPolicy.policyName} · v${prorationPolicy.policyVersion}`}
+                secondary={
+                  prorationPolicy.source === 'FinanceDefault'
+                    ? `Default for ${state?.academicYear?.name ?? 'this academic year'}`
+                    : undefined
+                }
+              />
+            </DetailGrid>
+            <Typography variant="caption" color="text.secondary">
+              {feeCalculationReady
+                ? 'No joining-date reduction applies to this fee calculation.'
+                : 'Finance uses this default when preparing fees; its effect depends on the joining date and fee-head schedule.'}
+            </Typography>
+          </DetailSection>
+        ) : !prorationResult && feeCalculationReady ? (
+          <StudentFeedback notificationKey="STU-0340" presentation="inline" severity="info">
+            No active default proration policy is configured for this academic year. Fees use the
+            existing full-charge treatment.
+          </StudentFeedback>
+        ) : null}
         <Box
           component="dl"
           sx={{
@@ -596,7 +683,13 @@ export default function AdmissionFeeCollectionPanel({
           busy={preparing.isLoading}
           previewContext={
             joiningDate.state?.canPreview
-              ? { applicationId, joiningDate: joiningDate.date }
+              ? {
+                  applicationId,
+                  joiningDate: joiningDate.date,
+                  ...(joiningDate.state.canSelectProrationPolicy && {
+                    prorationPolicyVersionId: joiningDate.selectedPolicyVersionId,
+                  }),
+                }
               : undefined
           }
           onClose={() => {

@@ -36,6 +36,21 @@ export const studentSetupStatusMeta: Record<OnboardingItemStatus, StudentSetupSu
   cancelled: { label: 'Cancelled', color: 'default' },
 };
 
+export const getStudentSetupStatusDisplayLabel = (status: OnboardingItemStatus) => {
+  switch (status) {
+    case 'action-required':
+      return 'Setup needs attention';
+    case 'awaiting-approval':
+      return 'Setup in progress';
+    case 'provisioning':
+      return 'Setup finishing';
+    case 'completed':
+      return 'Setup complete';
+    default:
+      return studentSetupStatusMeta[status].label;
+  }
+};
+
 // Keep existing task destinations, including the legacy combined finance/accounts check.
 export const pendingTaskView = (key: string): StudentSetupView => {
   if (key.includes('document')) return 'readiness';

@@ -135,7 +135,6 @@ export type StudentICardAcademicScope = {
 };
 type Scope = StudentICardAcademicScope;
 const emptyScope: Scope = { boardIds: [], mediumIds: [], standardIds: [], divisionIds: [] };
-const asStringArray = (value: string[] | number[]) => value.map(String);
 const studentName = (student: StudentDirectoryItem) =>
   [student.firstName, student.middleName, student.lastName].filter(Boolean).join(' ') ||
   'Restricted identity';
@@ -202,7 +201,7 @@ export default function StudentICardBuilder({
   );
   const [step, setStep] = useState(firstStep);
   const [completed, setCompleted] = useState<number[]>([]);
-  const [scope, setScope] = useState<Scope>(() =>
+  const [storedScope, setScope] = useState<Scope>(() =>
     initialAcademicScope
       ? {
           boardIds: [...initialAcademicScope.boardIds],
@@ -355,21 +354,27 @@ export default function StudentICardBuilder({
   ]);
 
   const options = optionsQuery.currentData;
+  const scope = useMemo<Scope>(() => {
+    const boardId = storedScope.boardIds[0] ?? options?.boards[0]?.id;
+    const mediumId = options?.mediums.find((item) => item.parentId === boardId)?.id;
+    return {
+      ...storedScope,
+      boardIds: storedScope.boardIds.length ? storedScope.boardIds : boardId ? [boardId] : [],
+      mediumIds: storedScope.mediumIds.length ? storedScope.mediumIds : mediumId ? [mediumId] : [],
+    };
+  }, [storedScope, options]);
+  const singleScope = Object.values(scope).every((ids) => ids.length <= 1);
   const mediumOptions = useMemo(
     () =>
       (options?.mediums ?? []).filter(
-        (item) =>
-          !scope.boardIds.length || (item.parentId && scope.boardIds.includes(item.parentId))
+        (item) => scope.boardIds.length === 1 && item.parentId === scope.boardIds[0]
       ),
     [options?.mediums, scope.boardIds]
   );
   const classOptions = useMemo(
     () =>
       (options?.standards ?? [])
-        .filter(
-          (item) =>
-            !scope.mediumIds.length || (item.parentId && scope.mediumIds.includes(item.parentId))
-        )
+        .filter((item) => scope.mediumIds.length === 1 && item.parentId === scope.mediumIds[0])
         .filter(
           (item) =>
             !scope.boardIds.length || mediumOptions.some((medium) => medium.id === item.parentId)
@@ -379,11 +384,7 @@ export default function StudentICardBuilder({
   const divisionOptions = useMemo(
     () =>
       (options?.divisions ?? [])
-        .filter(
-          (item) =>
-            !scope.standardIds.length ||
-            (item.parentId && scope.standardIds.includes(item.parentId))
-        )
+        .filter((item) => scope.standardIds.length === 1 && item.parentId === scope.standardIds[0])
         .filter(
           (item) =>
             (!scope.mediumIds.length && !scope.boardIds.length) ||
@@ -391,6 +392,12 @@ export default function StudentICardBuilder({
         ),
     [options?.divisions, scope.standardIds, scope.mediumIds, scope.boardIds, classOptions]
   );
+  const scopeReady =
+    singleScope &&
+    !!options?.boards.some((item) => item.id === scope.boardIds[0]) &&
+    mediumOptions.some((item) => item.id === scope.mediumIds[0]) &&
+    (!scope.standardIds.length || classOptions.some((item) => item.id === scope.standardIds[0])) &&
+    (!scope.divisionIds.length || divisionOptions.some((item) => item.id === scope.divisionIds[0]));
   const directory = useGetStudentRecordsDirectoryQuery(
     {
       population: 'Active',
@@ -400,9 +407,9 @@ export default function StudentICardBuilder({
       search: search.trim() || undefined,
       ...scope,
     },
-    { skip: step < 2 || contextInvalid || selectionRestricted }
+    { skip: step < 2 || contextInvalid || selectionRestricted || !scopeReady }
   );
-  const rows = selectionRestricted ? [] : (directory.currentData?.items ?? []);
+  const rows = selectionRestricted || !scopeReady ? [] : (directory.currentData?.items ?? []);
   const selectedIds = Object.keys(selected);
   const selectedRows = Object.values(selected).filter((student): student is StudentDirectoryItem =>
     Boolean(student)
@@ -454,7 +461,7 @@ export default function StudentICardBuilder({
   };
   const changeScope = (patch: Partial<Scope>) => {
     if (lockAcademicScope || selectionRestricted) return;
-    setScope((previous) => ({ ...previous, ...patch }));
+    setScope({ ...scope, ...patch });
     setPage(0);
     setSelected({});
     setHydrationIds([]);
@@ -467,7 +474,8 @@ export default function StudentICardBuilder({
     label: string,
     key: keyof Scope,
     choices: StudentDirectoryOption[],
-    patch: (value: string[]) => Partial<Scope>
+    patch: (value: string[]) => Partial<Scope>,
+    enabled = true
   ) =>
     lockAcademicScope ? (
       <TextField
@@ -497,15 +505,26 @@ export default function StudentICardBuilder({
     ) : (
       <CustomSelect
         label={label}
-        multiple
-        value={scope[key]}
-        options={choices}
+        value={
+          scope[key].length === 1
+            ? scope[key][0]
+            : key === 'standardIds' || key === 'divisionIds'
+              ? 'all'
+              : ''
+        }
+        options={
+          key === 'standardIds' || key === 'divisionIds'
+            ? [
+                { id: 'all', name: key === 'standardIds' ? 'All Classes' : 'All Divisions' },
+                ...choices,
+              ]
+            : choices
+        }
         labelKey="name"
         valueKey="id"
-        isSearch
         isLoading={optionsQuery.isFetching}
-        onChange={(value) => changeScope(patch(asStringArray(value)))}
-        disabled={busy || optionsQuery.isError || selectionRestricted}
+        onChange={(value) => changeScope(patch(value === 'all' ? [] : [String(value)]))}
+        disabled={busy || optionsQuery.isError || selectionRestricted || !enabled}
         formControlProps={{ sx: { width: '100%', minWidth: 0 } }}
       />
     );
@@ -562,16 +581,16 @@ export default function StudentICardBuilder({
           template.selection.divisionIds,
         ].some((ids) => ids?.length);
       const currentAssignment =
-        selectedIds.length > 0 || Object.values(scope).some((ids) => ids.length > 0);
+        selectedIds.length > 0 || Object.values(storedScope).some((ids) => ids.length > 0);
       if (selectionRestricted || (!currentAssignment && !persistedAssignment))
         delete body.selection;
       else
         body.selection = {
           academicYearId: academicYearId ?? null,
-          boardIds: [...scope.boardIds],
-          mediumIds: [...scope.mediumIds],
-          standardIds: [...scope.standardIds],
-          divisionIds: [...scope.divisionIds],
+          boardIds: [...storedScope.boardIds],
+          mediumIds: [...storedScope.mediumIds],
+          standardIds: [...storedScope.standardIds],
+          divisionIds: [...storedScope.divisionIds],
           studentIds: selectedIds,
         };
       const saved =
@@ -601,7 +620,7 @@ export default function StudentICardBuilder({
   };
   const preview = async (templateId = template?.id ?? undefined) => {
     if (contextInvalid || selectionRestricted) return false;
-    const {generation} = latestContext.current;
+    const { generation } = latestContext.current;
     if (!selectedIds.length) {
       setError('Select at least one student.');
       return false;
@@ -636,7 +655,7 @@ export default function StudentICardBuilder({
   };
   const advance = async () => {
     if (contextInvalid || (step === 2 && selectionRestricted)) return;
-    const {generation} = latestContext.current;
+    const { generation } = latestContext.current;
     if (step === 0 && !templateName.trim()) {
       setTemplateNameTouched(true);
       setError('');
@@ -667,7 +686,7 @@ export default function StudentICardBuilder({
   };
   const exportPdf = async () => {
     if (contextInvalid || selectionRestricted || !template || !selectedIds.length) return;
-    const {generation} = latestContext.current;
+    const { generation } = latestContext.current;
     if (selectedIds.length > 100 || selectedRows.length !== selectedIds.length) {
       setError(
         'Export requires up to 100 students with available directory details. Saved selections are retained.'
@@ -694,7 +713,7 @@ export default function StudentICardBuilder({
   };
   const issue = async () => {
     if (contextInvalid || selectionRestricted || !selectedIds.length) return;
-    const {generation} = latestContext.current;
+    const { generation } = latestContext.current;
     if (selectedIds.length > 100 || selectedRows.length !== selectedIds.length) {
       setError(
         'Issuing cards requires up to 100 students with available directory details. Saved selections are retained.'
@@ -1035,7 +1054,7 @@ export default function StudentICardBuilder({
                   descriptionTooltip={
                     lockAcademicScope
                       ? 'Academic filters come from Student List and stay read-only for bulk printing. Choose which students to include below.'
-                      : 'Select one or more boards, mediums, classes, and divisions. The choices narrow from left to right.'
+                      : 'Choose one board and medium. All Classes and All Divisions keep those filters open; choose a class to enable Division.'
                   }
                 />
                 {optionsQuery.isError && (
@@ -1054,7 +1073,14 @@ export default function StudentICardBuilder({
                     save design changes.
                   </Typography>
                 )}
-                <Grid container spacing={1.5}>
+                {!singleScope && !lockAcademicScope && (
+                  <Typography role="status" variant="body2" color="text.secondary">
+                    Saved filters contain multiple selections. Choose one board, medium, class or
+                    division to update the student scope. Saved students are retained until you
+                    change a filter.
+                  </Typography>
+                )}
+                <Grid container spacing={1}>
                   <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
                     {scopeSelect('Board', 'boardIds', options?.boards ?? [], (value) => ({
                       boardIds: value,
@@ -1064,22 +1090,40 @@ export default function StudentICardBuilder({
                     }))}
                   </Grid>
                   <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-                    {scopeSelect('Medium', 'mediumIds', mediumOptions, (value) => ({
-                      mediumIds: value,
-                      standardIds: [],
-                      divisionIds: [],
-                    }))}
+                    {scopeSelect(
+                      'Medium',
+                      'mediumIds',
+                      mediumOptions,
+                      (value) => ({
+                        mediumIds: value,
+                        standardIds: [],
+                        divisionIds: [],
+                      }),
+                      scope.boardIds.length === 1
+                    )}
                   </Grid>
                   <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-                    {scopeSelect('Class', 'standardIds', classOptions, (value) => ({
-                      standardIds: value,
-                      divisionIds: [],
-                    }))}
+                    {scopeSelect(
+                      'Class',
+                      'standardIds',
+                      classOptions,
+                      (value) => ({
+                        standardIds: value,
+                        divisionIds: [],
+                      }),
+                      scope.mediumIds.length === 1
+                    )}
                   </Grid>
                   <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-                    {scopeSelect('Division', 'divisionIds', divisionOptions, (value) => ({
-                      divisionIds: value,
-                    }))}
+                    {scopeSelect(
+                      'Division',
+                      'divisionIds',
+                      divisionOptions,
+                      (value) => ({
+                        divisionIds: value,
+                      }),
+                      scope.standardIds.length === 1
+                    )}
                   </Grid>
                 </Grid>
                 <Stack

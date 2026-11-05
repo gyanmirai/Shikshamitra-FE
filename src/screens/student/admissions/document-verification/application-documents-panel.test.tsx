@@ -15,7 +15,55 @@ import { documentStage, renderDocumentUi } from './document-ui-test-fixture';
 vi.hoisted(() => {
   process.env.NEXT_PUBLIC_API_URL = 'http://localhost:5000';
 });
+vi.mock('src/routes/hooks', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 describe('applicant document checklist interactions', { timeout: 15000 }, () => {
+  it.each([false, true])(
+    'keeps parent document requests inside the editable Documents owner (historical: %s)',
+    async (historical) => {
+      mswServer.use(
+        http.get(documentStagePath, () => HttpResponse.json(documentSummary)),
+        http.get(
+          '*/api/student/enrollment/admissions/applications/application-1/parent-registration',
+          () =>
+            HttpResponse.json({
+              applicationId: 'application-1',
+              concurrencyStamp: 'stamp',
+              recipients: [],
+              request: null,
+              canRequestDocumentCorrections: true,
+              availableDocuments: [
+                { stageInstanceId: documentStage.id, code: 'BIRTH', name: 'Birth certificate' },
+              ],
+            })
+        )
+      );
+      renderDocumentUi(
+        <ApplicationDocumentsPanel
+          applicationId="application-1"
+          stage={documentStage}
+          historical={historical}
+        />,
+        [
+          'View',
+          'Add',
+          'Students.Admissions.Applications.View',
+          'Students.Admissions.Applications.Edit',
+        ]
+      );
+      await screen.findByText('Birth certificate');
+      if (historical)
+        expect(
+          screen.queryByRole('button', { name: 'Request parent documents' })
+        ).not.toBeInTheDocument();
+      else
+        expect(
+          await screen.findByRole('button', { name: 'Request parent documents' })
+        ).toBeEnabled();
+      expect(
+        screen.queryByRole('button', { name: 'Send registration link' })
+      ).not.toBeInTheDocument();
+    }
+  );
   it.each([
     { grants: ['View'], canAdd: false, canWaive: false },
     { grants: ['View', 'Add'], canAdd: true, canWaive: false },

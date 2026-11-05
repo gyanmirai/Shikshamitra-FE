@@ -21,7 +21,9 @@ export type AdmissionDocumentEvidence = {
   originalSeen: boolean;
   originalSeenBy?: string | null;
   originalSeenAt?: string | null;
-  submittedBy: string;
+  submittedBy: string | null;
+  parentRegistrationId?: string | null;
+  parentContactJson?: string | null;
   submittedAt: string;
   notes?: string | null;
   status: 'pendingReview' | 'accepted' | 'rejected' | 'waived';

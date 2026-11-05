@@ -9,7 +9,11 @@ import {
 
 import { unwrapAdmissionFeeSelection } from './admission-fee-selection-types';
 
-import type { AdmissionVariableFeeHead } from './admission-fee-collection-types';
+import type {
+  AdmissionProrationPolicy,
+  AdmissionVariableFeeHead,
+  AdmissionProrationPolicyOption,
+} from './admission-fee-collection-types';
 
 export type AdmissionJoiningDate = {
   joiningDate: string | null;
@@ -20,6 +24,9 @@ export type AdmissionJoiningDate = {
   lockReason: string | null;
   academicYearStartDate: string;
   academicYearEndDate: string;
+  canSelectProrationPolicy?: boolean;
+  defaultProrationPolicyVersionId?: string | null;
+  prorationPolicies?: AdmissionProrationPolicyOption[];
 };
 
 export type AdmissionJoiningDatePreview = {
@@ -28,6 +35,7 @@ export type AdmissionJoiningDatePreview = {
   scheduledAmount: number;
   reductionAmount: number;
   proration: FeeProrationResult | null;
+  prorationPolicy?: AdmissionProrationPolicy | null;
   warnings: string[];
 };
 
@@ -51,6 +59,7 @@ export const admissionJoiningDateApi = api.injectEndpoints({
         applicationId: string;
         joiningDate: string;
         variableFeeHeads: AdmissionVariableFeeHead[];
+        prorationPolicyVersionId?: string | null;
       }
     >({
       query: ({ applicationId, ...body }) => ({

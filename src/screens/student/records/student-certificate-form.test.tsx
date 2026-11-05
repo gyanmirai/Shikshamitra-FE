@@ -42,6 +42,34 @@ const students: StudentDirectoryItem[] = [
   },
 ];
 
+it('keeps School level, defaults to All Classes and scopes Division after class selection', async () => {
+  const user = userEvent.setup();
+  render(
+    <StudentCertificateForm
+      certificateType={1}
+      certificateLabel="Bonafide"
+      onClose={mocks.close}
+      onGenerated={mocks.generated}
+    />
+  );
+  expect(screen.getByRole('combobox', { name: 'School level' })).toHaveValue('stage-1');
+  expect(screen.getByRole('combobox', { name: 'Class' })).toHaveValue('all');
+  expect(screen.getByRole('combobox', { name: 'Division' })).toBeDisabled();
+  expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+  await user.selectOptions(screen.getByRole('combobox', { name: 'Class' }), 'class-1');
+  expect(screen.getByRole('combobox', { name: 'Division' })).toBeEnabled();
+  expect(screen.getByRole('combobox', { name: 'Division' })).toHaveValue('all');
+  expect(mocks.directory).toHaveBeenLastCalledWith(
+    expect.objectContaining({
+      academicMediumStageId: 'stage-1',
+      standardId: 'class-1',
+      divisionId: undefined,
+    })
+  );
+  await user.selectOptions(screen.getByRole('combobox', { name: 'Division' }), 'division-1');
+  expect(screen.getByRole('checkbox', { name: 'Select Asha Patel' })).toBeInTheDocument();
+});
+
 it('retains directory students in the matching academic scope without issuing on open', async () => {
   const user = userEvent.setup();
   render(
@@ -200,6 +228,8 @@ it('previews selected names in a dialog and retries a partial generation with th
       onGenerated={mocks.generated}
     />
   );
+  await user.selectOptions(screen.getByRole('combobox', { name: 'Class' }), 'class-1');
+  await user.selectOptions(screen.getByRole('combobox', { name: 'Division' }), 'division-1');
   await user.click(screen.getByRole('checkbox', { name: 'Select Asha Patel' }));
   await user.click(screen.getByRole('checkbox', { name: 'Select Ravi Shah' }));
   await user.type(
@@ -241,10 +271,10 @@ it('defaults the full academic hierarchy and clears student selection when it ch
   expect(screen.getByRole('combobox', { name: 'Medium' })).toHaveValue('medium-1');
   expect(screen.getByRole('dialog', { name: 'Create Bonafide Certificates' })).toBeInTheDocument();
   expect(screen.getByRole('combobox', { name: 'School level' })).toHaveValue('stage-1');
-  expect(screen.getByRole('combobox', { name: 'Class' })).toHaveValue('class-1');
-  expect(screen.getByRole('combobox', { name: 'Division' })).toHaveValue('division-1');
+  expect(screen.getByRole('combobox', { name: 'Class' })).toHaveValue('all');
+  expect(screen.getByRole('combobox', { name: 'Division' })).toHaveValue('all');
   expect(screen.getByRole('combobox', { name: 'Class' })).toBeEnabled();
-  expect(screen.getByRole('combobox', { name: 'Division' })).toBeEnabled();
+  expect(screen.getByRole('combobox', { name: 'Division' })).toBeDisabled();
   expect(screen.queryByRole('option', { name: /^All$/ })).not.toBeInTheDocument();
   expect(mocks.directory).toHaveBeenLastCalledWith(
     expect.objectContaining({
@@ -253,18 +283,21 @@ it('defaults the full academic hierarchy and clears student selection when it ch
       boardId: 'board-1',
       mediumId: 'medium-1',
       academicMediumStageId: 'stage-1',
-      standardId: 'class-1',
-      divisionId: 'division-1',
+      standardId: undefined,
+      divisionId: undefined,
     })
   );
+  await user.selectOptions(screen.getByRole('combobox', { name: 'Class' }), 'class-1');
+  await user.selectOptions(screen.getByRole('combobox', { name: 'Division' }), 'division-1');
   await user.click(screen.getByRole('checkbox', { name: 'Select Asha Patel' }));
   await user.selectOptions(screen.getByRole('combobox', { name: 'Class' }), 'class-2');
-  expect(screen.getByRole('combobox', { name: 'Division' })).toHaveValue('division-2');
-  expect(screen.getByRole('checkbox', { name: 'Select Asha Patel' })).not.toBeChecked();
+  expect(screen.getByRole('combobox', { name: 'Division' })).toHaveValue('all');
+  expect(screen.queryByRole('checkbox', { name: 'Select Asha Patel' })).not.toBeInTheDocument();
   expect(screen.getByText('Students (0/100 selected)')).toBeInTheDocument();
   expect(mocks.directory).toHaveBeenLastCalledWith(
-    expect.objectContaining({ standardId: 'class-2', divisionId: 'division-2' })
+    expect.objectContaining({ standardId: 'class-2', divisionId: undefined })
   );
+  await user.selectOptions(screen.getByRole('combobox', { name: 'Division' }), 'division-2');
   await user.click(screen.getByRole('checkbox', { name: 'Select Asha Patel' }));
   await user.selectOptions(screen.getByRole('combobox', { name: 'Board' }), 'board-2');
   expect(screen.queryByRole('checkbox', { name: 'Select Asha Patel' })).not.toBeInTheDocument();
@@ -291,6 +324,8 @@ it.each([
         onGenerated={mocks.generated}
       />
     );
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Class' }), 'class-1');
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Division' }), 'division-1');
     await user.click(screen.getByRole('checkbox', { name: 'Select Asha Patel' }));
     await user.type(screen.getByRole('textbox', { name: fieldLabel }), 'Verified school record');
     await user.click(screen.getByRole('button', { name: 'Preview' }));

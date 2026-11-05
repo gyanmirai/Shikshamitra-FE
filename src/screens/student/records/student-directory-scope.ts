@@ -28,12 +28,15 @@ export function directoryScope(
       (item) =>
         item.id === id &&
         standards.some((standard) => standard.id === item.parentId) &&
-        (!classes.length || classes.includes(item.parentId ?? ''))
+        classes.length === 1 &&
+        item.parentId === classes[0]
     )
   );
   const validRequestedScope =
     (!params.get('board') || params.get('board') === board) &&
     (!params.get('medium') || params.get('medium') === medium) &&
+    classes.length <= 1 &&
+    divisions.length <= 1 &&
     classes.length === ids(params.get('class')).length &&
     divisions.length === ids(params.get('division')).length;
   return {

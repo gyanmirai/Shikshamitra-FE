@@ -184,7 +184,9 @@ it('validates the entire frozen form before requesting a reason and requires an 
   setup();
   fireEvent.change(screen.getByLabelText('Student name'), { target: { value: '' } });
   fireEvent.click(screen.getByRole('button', { name: 'Save Corrections' }));
-  expect(screen.getByText('Student name is required.')).toBeVisible();
+  expect(screen.getByRole('status', { name: 'Checking form…' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Save Corrections' })).toBeDisabled();
+  expect(await screen.findByText('Student name is required.')).toBeVisible();
   await waitFor(() => expect(screen.getByLabelText('Student name')).toHaveFocus());
   expect(api.save).not.toHaveBeenCalled();
   const dialog = await reasonDialog();

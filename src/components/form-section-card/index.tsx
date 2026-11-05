@@ -3,7 +3,7 @@ import type { Theme, SxProps } from '@mui/material/styles';
 
 import { useId, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
-import { Card, Stack, Tooltip, Collapse, IconButton } from '@mui/material';
+import { Card, Stack, Button, Tooltip, Collapse, IconButton } from '@mui/material';
 
 import { FormSectionHeader, type FormSectionHeaderProps } from './section-header';
 
@@ -15,6 +15,7 @@ interface FormSectionCardProps extends FormSectionHeaderProps {
   defaultExpanded?: boolean;
   expanded?: boolean;
   onExpandedChange?: (expanded: boolean) => void;
+  toggleLabels?: { expand: string; collapse: string };
   'aria-label'?: string;
   children?: ReactNode;
   contentSpacing?: number;
@@ -41,13 +42,26 @@ export function FormSectionCard({
   defaultExpanded = true,
   expanded: controlledExpanded,
   onExpandedChange,
+  toggleLabels,
 }: FormSectionCardProps) {
   const [localExpanded, setLocalExpanded] = useState(defaultExpanded);
   const expanded = controlledExpanded ?? localExpanded;
   const sectionId = useId();
   const toggleId = `${sectionId}-toggle`;
   const contentId = `${sectionId}-content`;
-  const toggleLabel = `${expanded ? 'Collapse' : 'Expand'} ${typeof title === 'string' ? title : 'section'}`;
+  const toggleLabel = toggleLabels
+    ? toggleLabels[expanded ? 'collapse' : 'expand']
+    : `${expanded ? 'Collapse' : 'Expand'} ${typeof title === 'string' ? title : 'section'}`;
+  const toggleProps = {
+    id: toggleId,
+    'aria-label': toggleLabel,
+    'aria-expanded': expanded,
+    'aria-controls': contentId,
+    onClick: () => {
+      setLocalExpanded(!expanded);
+      onExpandedChange?.(!expanded);
+    },
+  };
 
   return (
     <Card
@@ -69,21 +83,24 @@ export function FormSectionCard({
             collapsible ? (
               <Stack direction="row" spacing={1} alignItems="center">
                 {action}
-                <Tooltip title={toggleLabel}>
-                  <IconButton
-                    id={toggleId}
+                {toggleLabels ? (
+                  <Button
+                    {...toggleProps}
+                    type="button"
                     size="small"
-                    aria-label={toggleLabel}
-                    aria-expanded={expanded}
-                    aria-controls={contentId}
-                    onClick={() => {
-                      setLocalExpanded(!expanded);
-                      onExpandedChange?.(!expanded);
-                    }}
+                    variant="text"
+                    color="inherit"
+                    endIcon={<Iconify icon={expanded ? 'mdi:chevron-up' : 'mdi:chevron-down'} />}
                   >
-                    <Iconify icon={expanded ? 'mdi:chevron-up' : 'mdi:chevron-down'} />
-                  </IconButton>
-                </Tooltip>
+                    {toggleLabel}
+                  </Button>
+                ) : (
+                  <Tooltip title={toggleLabel}>
+                    <IconButton {...toggleProps} size="small">
+                      <Iconify icon={expanded ? 'mdi:chevron-up' : 'mdi:chevron-down'} />
+                    </IconButton>
+                  </Tooltip>
+                )}
               </Stack>
             ) : (
               action

@@ -35,6 +35,15 @@ export function DocumentEvidenceHistory({
             <Typography variant="caption" color="text.secondary">
               Recorded {fDateTime(version.submittedAt)}
             </Typography>
+            {version.parentRegistrationId && (
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ overflowWrap: 'anywhere' }}
+              >
+                {parentAttribution(version.parentContactJson)}
+              </Typography>
+            )}
             {version.originalSeen && (
               <Typography variant="body2">
                 Original Sighted
@@ -77,4 +86,25 @@ export function DocumentEvidenceHistory({
       ))}
     </Stack>
   );
+}
+
+function parentAttribution(json?: string | null) {
+  try {
+    const contact = JSON.parse(json || '{}');
+    const name = contact.fullName ?? contact.FullName;
+    const relationship =
+      contact.relationshipLabel ??
+      contact.RelationshipLabel ??
+      contact.relationship ??
+      contact.Relationship;
+    return [
+      'Uploaded by parent',
+      typeof relationship === 'string' ? relationship : '',
+      typeof name === 'string' ? name : '',
+    ]
+      .filter(Boolean)
+      .join(' · ');
+  } catch {
+    return 'Uploaded by parent';
+  }
 }

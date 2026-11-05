@@ -34,37 +34,6 @@ vi.mock('./student-directory-documents', () => ({
     return null;
   },
 }));
-vi.mock('src/components/responsiveMultiSelect', () => ({
-  ResponsiveMultiSelect: ({
-    label,
-    value,
-    options,
-    disabled,
-    onChange,
-    getOptionLabel,
-    getOptionValue,
-  }: any) => (
-    <label htmlFor={`multi-${label}`}>
-      {label}
-      <select
-        id={`multi-${label}`}
-        multiple
-        aria-label={label}
-        value={value}
-        disabled={disabled}
-        onChange={(event) =>
-          onChange(Array.from(event.target.selectedOptions).map((item) => item.value))
-        }
-      >
-        {options.map((item: any) => (
-          <option key={getOptionValue(item)} value={getOptionValue(item)}>
-            {getOptionLabel(item)}
-          </option>
-        ))}
-      </select>
-    </label>
-  ),
-}));
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span /> }));
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: mocks.push }),
@@ -312,37 +281,11 @@ describe('Student List workspace', () => {
     expect(mocks.header.descriptionDisplay).toBe('tooltip');
     expect(screen.queryByText(mocks.header.description)).not.toBeInTheDocument();
   });
-  it('keeps Active/Former inside Filters and applies the population draft without dropping context', () => {
-    mocks.params = new URLSearchParams('board=board-1&search=Shah&sort=grNumber%20desc&page=2');
+  it('removes the Filters button and population popover while retaining academic selectors', () => {
     render(<StudentDirectory />);
-    fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
-    const panel = screen.getByRole('dialog', { name: 'Filter students' });
-    expect(within(panel).getByLabelText('Students')).toHaveValue('Active');
-    expect(within(panel).queryByLabelText('Board')).not.toBeInTheDocument();
-    fireEvent.change(within(panel).getByLabelText('Students'), { target: { value: 'Former' } });
-    expect(mocks.push).not.toHaveBeenCalled();
-    fireEvent.click(within(panel).getByRole('button', { name: 'Apply filters' }));
-    expect(pushedParams()).toEqual({
-      board: 'board-1',
-      search: 'Shah',
-      sort: 'grNumber desc',
-      page: '0',
-      population: 'Former',
-    });
-  });
-  it('discards canceled population edits and resets only population to Active', () => {
-    mocks.params = new URLSearchParams('population=Former&board=board-1&search=Shah');
-    render(<StudentDirectory />);
-    fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
-    fireEvent.change(screen.getByLabelText('Students'), { target: { value: 'Active' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
-    expect(mocks.push).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
-    expect(screen.getByLabelText('Students')).toHaveValue('Former');
-    fireEvent.click(screen.getByRole('button', { name: 'Reset defaults' }));
-    expect(screen.getByLabelText('Students')).toHaveValue('Active');
-    fireEvent.click(screen.getByRole('button', { name: 'Apply filters' }));
-    expect(pushedParams()).toEqual({ board: 'board-1', search: 'Shah', page: '0' });
+    expect(screen.queryByRole('button', { name: /^Filters/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'Filter students' })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Students')).not.toBeInTheDocument();
   });
   it('changes academic scope immediately and clears dependent choices while preserving population and search', () => {
     mocks.params = new URLSearchParams(
@@ -362,7 +305,7 @@ describe('Student List workspace', () => {
       'population=Former&board=board-1&medium=medium-1&class=class-1&division=division-1&search=Shah&sort=name%20desc&page=2'
     );
     render(<StudentDirectory />);
-    fireEvent.click(screen.getByRole('button', { name: 'Reset academic filters' }));
+    fireEvent.change(screen.getByLabelText('Class'), { target: { value: 'all' } });
     expect(pushedParams()).toEqual({
       population: 'Former',
       board: 'board-1',
@@ -568,15 +511,58 @@ describe('Student List workspace', () => {
     expect(mocks.options.refetch).toHaveBeenCalledOnce();
   });
 
-  it('uses single Board/Medium choices without All and multi-select Class/Division', () => {
+  it('uses single academic selectors with an explicit All classes option and dependent Division', () => {
     render(<StudentDirectory />);
     expect(screen.getByLabelText('Board')).toHaveValue('board-1');
     expect(screen.getByLabelText('Medium')).toHaveValue('medium-1');
     expect(screen.queryByRole('option', { name: 'All boards' })).not.toBeInTheDocument();
     expect(screen.queryByRole('option', { name: 'All mediums' })).not.toBeInTheDocument();
-    expect(screen.getByLabelText('Class')).toHaveAttribute('multiple');
-    expect(screen.getByLabelText('Division')).toHaveAttribute('multiple');
+    expect(screen.getByLabelText('Class')).not.toHaveAttribute('multiple');
+    expect(screen.getByLabelText('Division')).not.toHaveAttribute('multiple');
+    expect(screen.getByRole('option', { name: 'All Classes' })).toBeVisible();
+    expect(screen.getByLabelText('Division')).toBeDisabled();
     expect(mocks.input).toMatchObject({ boardId: 'board-1', mediumId: 'medium-1' });
+  });
+
+  it('shows only the selected class divisions with plain labels and an All Divisions choice', () => {
+    mocks.options.currentData.standards.push({
+      id: 'class-2',
+      name: 'Class 2',
+      parentId: 'medium-1',
+    });
+    mocks.options.currentData.divisions.push({ id: 'division-2', name: 'B', parentId: 'class-2' });
+    mocks.params = new URLSearchParams('class=class-1');
+    render(<StudentDirectory />);
+    const division = screen.getByLabelText('Division');
+    expect(division).toBeEnabled();
+    expect(
+      within(division)
+        .getAllByRole('option')
+        .map((option) => option.textContent)
+    ).toEqual(['All Divisions', 'A']);
+  });
+
+  it('clears class, division and page when choosing All Classes while preserving other filters', () => {
+    mocks.params = new URLSearchParams(
+      'class=class-1&division=division-1&page=2&search=Riya&population=Former'
+    );
+    render(<StudentDirectory />);
+    fireEvent.change(screen.getByLabelText('Class'), { target: { value: 'all' } });
+    expect(pushedParams()).toEqual({ page: '0', search: 'Riya', population: 'Former' });
+  });
+
+  it('clears the division when class changes and clears only division for All Divisions', () => {
+    mocks.params = new URLSearchParams('class=class-1&division=division-1&page=2');
+    mocks.options.currentData.standards.push({
+      id: 'class-2',
+      name: 'Class 2',
+      parentId: 'medium-1',
+    });
+    render(<StudentDirectory />);
+    fireEvent.change(screen.getByLabelText('Class'), { target: { value: 'class-2' } });
+    expect(pushedParams()).toEqual({ class: 'class-2', page: '0' });
+    fireEvent.change(screen.getByLabelText('Division'), { target: { value: 'all' } });
+    expect(pushedParams()).toEqual({ class: 'class-1', page: '0' });
   });
 
   it('exposes the common table tools and keyboard-accessible row profile action', () => {
@@ -595,13 +581,15 @@ describe('Student List workspace', () => {
     });
   });
 
-  it('disables checkboxes without exactly one class and division, then hands selected students to documents', () => {
+  it('hides checkboxes without exactly one class and division, then hands selected students to documents', () => {
     mocks.permissions = [
       'Students.Records.StudentICard.View',
       'Students.Records.StudentICard.Add',
     ].map((name) => ({ name, isGranted: true }));
     const { rerender } = render(<StudentDirectory />);
-    expect(screen.getByRole('checkbox', { name: 'Select Riya Shah' })).toBeDisabled();
+    expect(screen.queryByRole('checkbox', { name: 'Select Riya Shah' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('checkbox', { name: 'Select current page' })).not.toBeInTheDocument();
+    expect(mocks.table.columns.some((column: any) => column.id === 'selection')).toBe(false);
     mocks.params = new URLSearchParams(
       'board=board-1&medium=medium-1&class=class-1&division=division-1'
     );
@@ -630,6 +618,26 @@ describe('Student List workspace', () => {
     });
   });
 
+  it('hides the selection column and clears bulk selection when returning to All Divisions', () => {
+    mocks.permissions = [
+      'Students.Records.Certificates.View',
+      'Students.Records.Certificates.Add',
+    ].map((name) => ({ name, isGranted: true }));
+    mocks.params = new URLSearchParams('class=class-1&division=division-1');
+    const { rerender } = render(<StudentDirectory />);
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Select Riya Shah' }));
+    expect(screen.getByText('1 student selected')).toBeVisible();
+    mocks.params.delete('division');
+    rerender(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <StudentDirectory />
+      </ThemeProvider>
+    );
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('toolbar', { name: 'Selected students' })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Riya Shah' })).toBeVisible();
+  });
+
   it('clears selection immediately when the class/division scope becomes multiple', () => {
     mocks.permissions = [
       'Students.Records.Certificates.View',
@@ -653,8 +661,9 @@ describe('Student List workspace', () => {
       </ThemeProvider>
     );
     expect(screen.queryByText('1 student selected')).not.toBeInTheDocument();
-    expect(screen.getByRole('checkbox', { name: 'Select Riya Shah' })).toBeDisabled();
-    expect(screen.getByRole('checkbox', { name: 'Select Riya Shah' })).not.toBeChecked();
+    expect(screen.queryByRole('checkbox', { name: 'Select Riya Shah' })).not.toBeInTheDocument();
+    expect(mocks.queryOptions.skip).toBe(true);
+    expect(screen.getByRole('button', { name: 'Reset academic filters' })).toBeVisible();
   });
 
   it('removes selected students if a same-scope refresh masks their identity', () => {

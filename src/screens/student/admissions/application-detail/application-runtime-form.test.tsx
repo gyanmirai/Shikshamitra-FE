@@ -283,6 +283,50 @@ function renderForm(overrides: Partial<Props> = {}) {
 }
 
 describe('application form step navigation', () => {
+  it('shows validation progress and locks the form before checking an invalid step', async () => {
+    const onSave = vi.fn(async () => true);
+    let busyDuringValidation = false;
+    const validate = vi.fn(() => {
+      busyDuringValidation =
+        Boolean(screen.queryByRole('status', { name: 'Checking form…' })) &&
+        (screen.getByRole('textbox', { name: 'Basic details answer' }) as HTMLInputElement)
+          .disabled &&
+        (screen.getByRole('button', { name: 'Save & Next' }) as HTMLButtonElement).disabled;
+      return false;
+    });
+    renderForm({ onValidateStep: validate, onSave });
+    fireEvent.click(screen.getByRole('button', { name: 'Save & Next' }));
+    await waitFor(() => expect(validate).toHaveBeenCalledWith('basic'));
+    expect(busyDuringValidation).toBe(true);
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Save & Next' })).toBeEnabled());
+    expect(onSave).not.toHaveBeenCalled();
+    expect(screen.getByText('Basic details')).toBeVisible();
+  });
+  it('blocks duplicate validation attempts and allows a corrected retry to save once', async () => {
+    let valid = false;
+    const validate = vi.fn(() => valid);
+    const save = vi.fn(async () => true);
+    renderForm({ compact: true, onValidateStep: validate, onSave: save });
+    const next = screen.getByRole('button', { name: 'Save & Next' });
+    fireEvent.click(next);
+    fireEvent.click(next);
+    await waitFor(() => expect(next).toBeEnabled());
+    expect(validate).toHaveBeenCalledTimes(1);
+    expect(save).not.toHaveBeenCalled();
+    valid = true;
+    fireEvent.click(next);
+    expect(await screen.findByRole('textbox', { name: 'Health details answer' })).toBeVisible();
+    expect(save).toHaveBeenCalledOnce();
+  });
+
+  it('checks a compact future-step click without bypassing an invalid current answer', async () => {
+    const validate = vi.fn(() => false);
+    renderForm({ compact: true, onValidateStep: validate });
+    fireEvent.click(screen.getByRole('button', { name: 'Medical information' }));
+    await waitFor(() => expect(validate).toHaveBeenCalledWith('basic'));
+    expect(screen.getByRole('textbox', { name: 'Basic details answer' })).toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: 'Health details answer' })).not.toBeInTheDocument();
+  });
   it('allows reviewing another step after focusing a submission error', async () => {
     const { rerenderForm } = renderForm();
     rerenderForm({ fieldErrors: { medical: 'Health details answer is required.' } });
@@ -386,7 +430,7 @@ describe('application form step navigation', () => {
       } as Props['form'],
     });
     fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-    expect(screen.getByRole('textbox', { name: 'Health details answer' })).toBeVisible();
+    expect(await screen.findByRole('textbox', { name: 'Health details answer' })).toBeVisible();
     rerenderForm({ fieldErrors: { basic: 'Correct the saved identity answer.' } });
     expect(screen.getByRole('textbox', { name: 'Basic details answer' })).toBeVisible();
     expect(screen.getByText('Correct the saved identity answer.')).toBeVisible();
@@ -520,6 +564,7 @@ describe('application form step navigation', () => {
     expect(save).toHaveBeenCalledOnce();
     expect(screen.getByText('Basic details')).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Save & Next' }));
+    await screen.findByRole('button', { name: 'Submit Application' });
     expect(save).toHaveBeenCalledTimes(2);
     expect(screen.queryByRole('button', { name: 'Save & Next' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Next' })).not.toBeInTheDocument();

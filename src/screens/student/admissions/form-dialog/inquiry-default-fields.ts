@@ -106,6 +106,17 @@ export const hasLockedInquiryFields = (
   sections.some((section) =>
     section.fields.some((field) => isLockedInquiryField(purpose, field, policyVersion))
   );
+export const isSectionDeletionLocked = (
+  purpose: number | undefined,
+  draftSections: readonly AdmissionFormSection[],
+  displayedSection: AdmissionFormSection,
+  policyVersion?: number | null
+) =>
+  hasLockedInquiryFields(
+    purpose,
+    [displayedSection, ...draftSections.filter((section) => section.id === displayedSection.id)],
+    policyVersion
+  );
 export const hasOnlyInquiryDefaults = (form: CreateUpdateAdmissionForm) => {
   const fields = form.sections.flatMap((section) => section.fields);
   return (

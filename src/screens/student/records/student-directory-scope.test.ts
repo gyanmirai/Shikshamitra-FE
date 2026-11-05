@@ -35,13 +35,14 @@ describe('Student List academic and bulk scope', () => {
     });
   });
 
-  it('preserves multiple valid classes and divisions without expanding to other boards', () => {
+  it('rejects legacy multiple selections without expanding to other boards', () => {
     const scope = directoryScope(
       new URLSearchParams('board=b1&medium=m1&class=c1,c2,c1,c3&division=d1,d2,d3'),
       options
     );
     expect(scope.classes).toEqual(['c1', 'c2']);
-    expect(scope.divisions).toEqual(['d1', 'd2']);
+    expect(scope.divisions).toEqual([]);
+    expect(scope.ready).toBe(false);
     expect(directoryBulkScopeReady(scope, 'Active')).toBe(false);
   });
 
@@ -70,6 +71,12 @@ describe('Student List academic and bulk scope', () => {
       options
     );
     expect(scope).toEqual({ board: 'b2', medium: 'm2', classes: [], divisions: [], ready: false });
+  });
+
+  it('rejects a division-only URL instead of filtering all classes by an orphan division', () => {
+    const scope = directoryScope(new URLSearchParams('division=d1'), options);
+    expect(scope.divisions).toEqual([]);
+    expect(scope.ready).toBe(false);
   });
 
   it('fails closed for invalid or mixed stale class/division IDs instead of expanding the population', () => {

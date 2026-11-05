@@ -1,7 +1,7 @@
 import type { StudentOnboardingStatus } from 'src/redux/student/onboarding/student-onboarding-types';
 
 import { onboardingStageMeta } from './student-onboarding-model';
-import { studentSetupStatusMeta } from './student-setup-summary';
+import { getStudentSetupStatusDisplayLabel } from './student-setup-summary';
 
 export const studentSetupStatusOptions: Array<{
   status: StudentOnboardingStatus;
@@ -11,37 +11,37 @@ export const studentSetupStatusOptions: Array<{
   {
     status: 0,
     label: onboardingStageMeta['to-prepare'].label,
-    setupLabel: studentSetupStatusMeta['to-prepare'].label,
+    setupLabel: getStudentSetupStatusDisplayLabel('to-prepare'),
   },
   {
     status: 1,
     label: onboardingStageMeta['awaiting-approval'].label,
-    setupLabel: studentSetupStatusMeta['awaiting-approval'].label,
+    setupLabel: getStudentSetupStatusDisplayLabel('awaiting-approval'),
   },
   {
     status: 2,
     label: onboardingStageMeta['ready-to-activate'].label,
-    setupLabel: studentSetupStatusMeta['ready-to-activate'].label,
+    setupLabel: getStudentSetupStatusDisplayLabel('ready-to-activate'),
   },
   {
     status: 3,
     label: onboardingStageMeta['action-required'].label,
-    setupLabel: studentSetupStatusMeta['action-required'].label,
+    setupLabel: getStudentSetupStatusDisplayLabel('action-required'),
   },
   {
     status: 4,
     label: onboardingStageMeta.completed.label,
-    setupLabel: studentSetupStatusMeta.completed.label,
+    setupLabel: getStudentSetupStatusDisplayLabel('completed'),
   },
   {
     status: 5,
     label: onboardingStageMeta.cancelled.label,
-    setupLabel: studentSetupStatusMeta.cancelled.label,
+    setupLabel: getStudentSetupStatusDisplayLabel('cancelled'),
   },
   {
     status: 6,
     label: onboardingStageMeta.provisioning.label,
-    setupLabel: studentSetupStatusMeta.provisioning.label,
+    setupLabel: getStudentSetupStatusDisplayLabel('provisioning'),
   },
 ];
 

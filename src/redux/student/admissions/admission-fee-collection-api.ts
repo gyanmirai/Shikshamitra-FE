@@ -54,12 +54,14 @@ export const admissionFeeCollectionApi = financeModuleApi.injectEndpoints({
       {
         applicationId: string;
         variableFeeHeads: AdmissionVariableFeeHead[];
+        prorationPolicyVersionId?: string | null;
+        policyOverrideReason?: string;
       }
     >({
-      query: ({ applicationId, variableFeeHeads }) => ({
+      query: ({ applicationId, ...body }) => ({
         url: `${admissionFeeCollectionUrl(applicationId)}/prepare`,
         method: 'POST',
-        body: { variableFeeHeads },
+        body,
         timeout: 60_000,
       }),
       transformResponse: unwrapAdmissionFeeSelection<AdmissionFeeCollectionSummary>,

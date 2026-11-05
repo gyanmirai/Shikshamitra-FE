@@ -3,7 +3,7 @@ module: student
 domain: routes
 content_type: Reference
 status: canonical
-updated_on: 2026-10-26
+updated_on: 2026-11-04
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -168,3 +168,9 @@ Do not describe an Admissions page as visible navigation unless its route and pe
 The Applicant 360 and application detail pages are deep-linked detail surfaces and should be reached from the corresponding Applicant or Application list.
 
 The legacy `/student/admissions/settings/intake-assignment` route redirects to Public Inquiry Links. Intake setup editors, assignment controls and Onboarding Case owner are no longer mounted by active routes.
+
+## Public parent Registration
+
+`/admission-registration` is a public owner-link page outside the staff authentication shell, not a sidebar destination. `src/constants/public-admissions.ts` owns the route; `src/app/(public-route)/admission-registration/page.tsx` mounts `src/screens/public/admission-registration/`. The private token arrives in `#token=...`, is held in the owning client state and is sent only through the dedicated capability header. Missing/unavailable access shows a recoverable school-contact state without redirecting through staff sign-in.
+
+Staff link controls stay inside the existing application Registration workspace and Application Record, keeping correction review reachable after the journey advances. The pipeline row action still opens the existing workspace; no second application or form builder is introduced. Document acceptance/rejection remains in Document Verification.
