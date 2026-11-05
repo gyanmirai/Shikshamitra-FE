@@ -156,7 +156,7 @@ Apply commits the draft group/department values and resets paging; changing the 
 Clear filters removes group, department, table search, column criteria and sorting together while keeping the selected date.
 Dirty attendance rows lock scope changes until Reset or Save resolves the draft.
 The editable status header has no column filter or sort action; badges and bulk/row controls share the same four aligned tracks.
-Department matching is defined by the [backend attendance contract](../../../Shikshamitra-BE/docs/modules/hr/api.md).
+Department matching is defined by the [backend attendance contract](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md).
 
 Reset on manual attendance restores the last loaded day state, including an approved leave status, instead of inventing a new pending state.
 Changing the selected attendance date clears the prior date's rows and lock state until the new response arrives, and row, save, reset, and lock actions stay disabled during that transition.
