@@ -296,12 +296,6 @@ function InstallmentTemplateDialogSession({
         }}
       >
         <DialogScrollContent>
-          {existingInstallmentCount > 0 && (
-            <Box sx={{ mb: 2 }}>
-              Applying this template will replace the existing {existingInstallmentCount}{' '}
-              installment(s).
-            </Box>
-          )}
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
               {error}
@@ -594,19 +588,19 @@ function InstallmentTemplateDialogSession({
           >
             Cancel
           </Button>
-          <Button
-            type="submit"
-            size="small"
-            color="inherit"
-            variant={preview ? 'outlined' : 'contained'}
-            startIcon={
-              <Iconify icon={preview ? GlobalIcons.refresh : GlobalIcons.calendar} width={18} />
-            }
-            loading={previewState.isLoading}
-            disabled={!canGenerate}
-          >
-            {preview ? 'Regenerate Preview' : 'Generate Preview'}
-          </Button>
+          {!preview && (
+            <Button
+              type="submit"
+              size="small"
+              color="inherit"
+              variant="contained"
+              startIcon={<Iconify icon={GlobalIcons.calendar} width={18} />}
+              loading={previewState.isLoading}
+              disabled={!canGenerate}
+            >
+              Generate Preview
+            </Button>
+          )}
           {preview && (
             <Button
               type="button"

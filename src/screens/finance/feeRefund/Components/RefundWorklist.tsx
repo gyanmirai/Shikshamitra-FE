@@ -7,7 +7,9 @@ import type { FeeRefundRequestDto } from 'src/redux/finance/RefundManagement/fee
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { fDate } from 'src/utils/format-time';
-import { fNumber } from 'src/utils/format-number';
+import { formatNumber } from 'src/utils/formate_number';
+import { hasGrantedPermission } from 'src/utils/permissions';
+import { financePermissions } from 'src/constants/finance-menu';
 import React, { useMemo, useState, useEffect } from 'react';
 import { Box, Tab, Card, Tabs, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -118,6 +120,9 @@ export default function RefundWorklist({
     [columnFilters]
   );
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const refundActions = financePermissions.fees.refundActions;
+  const can = (permission: string) => hasGrantedPermission(permissions, permission);
   useEffect(() => {
     setPage(0);
   }, [
@@ -309,7 +314,7 @@ export default function RefundWorklist({
                 filterType: 'formattedNumber',
                 isFilter: true,
                 isSort: false,
-                render: (value) => (value == null ? '—' : `₹${fNumber(value)}`),
+                render: (value) => (value == null ? '—' : formatNumber(value, 'INR')),
               },
               {
                 id: 'refundMethod',
@@ -372,24 +377,25 @@ export default function RefundWorklist({
                       moreLabel={`More refund actions for ${row.name}`}
                       placement="right-top"
                       actions={[
-                        ...(actions.includes('edit')
+                        ...(can(refundActions.edit) && actions.includes('edit')
                           ? [action(refund, 'Edit', 'solar:pen-bold', onEdit)]
                           : []),
-                        ...(actions.includes('approve')
+                        ...(can(refundActions.approve) && actions.includes('approve')
                           ? [action(refund, 'Approve', 'mdi:approve', onApprove)]
                           : []),
-                        ...(actions.includes('reject') &&
+                        ...(can(refundActions.reject) &&
+                        actions.includes('reject') &&
                         (refund.status === FeeRefundStatusType.Pending ||
                           refund.status === FeeRefundStatusType.UnderReview)
                           ? [action(refund, 'Reject', 'mdi:close', onReject)]
                           : []),
-                        ...(actions.includes('recordPayout')
+                        ...(can(refundActions.process) && actions.includes('recordPayout')
                           ? [action(refund, 'Record payment', 'mdi:bank-transfer-out', onRecord)]
                           : []),
-                        ...(actions.includes('createReplacement')
+                        ...(can(refundActions.add) && actions.includes('createReplacement')
                           ? [action(refund, 'Create linked request', 'mdi:content-copy', onReplace)]
                           : []),
-                        ...(actions.includes('returnPayout')
+                        ...(can(refundActions.reverse) && actions.includes('returnPayout')
                           ? [
                               action(
                                 refund,

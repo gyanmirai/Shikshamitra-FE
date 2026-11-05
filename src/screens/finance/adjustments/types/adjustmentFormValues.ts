@@ -53,10 +53,9 @@ export const buildAdjustmentValidationSchema = (hideStudentInfoForm = false) =>
 
 export const buildAdjustmentApiPayload = (
   values: IAdjustmentFullFormValues
-): CreateFeeAdjustmentDto => ({
-  studentId: values.studentId,
+): Omit<CreateFeeAdjustmentDto, 'idempotencyKey'> => ({
+  studentId: String(values.studentId),
   reason: values.remarks,
-  remarks: values.remarks || undefined,
   sourceLines: (values.feeHeadRefunds || []).flatMap((fh) =>
     fh.months
       .filter((m) => Number(m.amount) > 0 && m.dueFeeId)

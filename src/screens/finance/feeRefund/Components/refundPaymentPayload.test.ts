@@ -26,11 +26,12 @@ it.each(['Cash', 'Bank Transfer (NEFT/RTGS/IMPS)', 'Cheque'])(
     expect(payload).toMatchObject({
       amount: 3750,
       idempotencyKey: 'retry-key',
-      bankAccountId: 'bank-1',
       expenseCategoryId: 'expense-1',
       paymentDate: '2026-10-23T18:18:47.383Z',
       method,
     });
+    if (method === 'Cash') expect(payload).not.toHaveProperty('bankAccountId');
+    else expect(payload).toHaveProperty('bankAccountId', 'bank-1');
   }
 );
 
@@ -38,6 +39,7 @@ it('leaves a new cash reference to the server', () => {
   expect(
     buildRefundPayoutPayload(refund, values, 'new-key', '2026-10-24T00:00:00Z')
   ).not.toHaveProperty('externalReference');
+  expect(buildRefundPayoutPayload(refund, values, 'new-key', '2026-10-24T00:00:00Z')).not.toHaveProperty('bankAccountId');
 });
 
 it('sends the entered reference for a new non-cash payment', () => {

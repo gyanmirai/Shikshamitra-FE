@@ -14,7 +14,7 @@ export function buildRefundPayoutPayload(
     method: values.method,
     amount: refund._approvedAmount ?? 0,
     paymentDate,
-    bankAccountId: values.bankAccountId,
+    ...(values.method === 'Cash' ? {} : { bankAccountId: values.bankAccountId }),
     expenseCategoryId: values.expenseCategoryId,
     // A pending reference is display-only; the server owns the saved payment identity.
     ...(!refund._payoutPending && values.method !== 'Cash'

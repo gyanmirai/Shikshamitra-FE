@@ -21,6 +21,7 @@ export const useApplyAdjustment = ({ open, adjustment }: UseApplyAdjustmentArgs)
   const requestedBalance =
     adjustment?.remainingAdjustmentBalance ?? adjustment?.adjustmentAmount ?? 0;
   const [serverBalance, setServerBalance] = useState<number | null>(null);
+  const [isUnpaidTransfer, setIsUnpaidTransfer] = useState(false);
   const approvedAmount = serverBalance ?? requestedBalance;
   const [items, setItems] = useState<AdjustmentApplyItem[]>([]);
   const [notes, setNotes] = useState('');
@@ -42,6 +43,7 @@ export const useApplyAdjustment = ({ open, adjustment }: UseApplyAdjustmentArgs)
           setItems([]);
           setNotes('');
           setErrorText('');
+          setIsUnpaidTransfer(false);
         }
         return;
       }
@@ -55,6 +57,8 @@ export const useApplyAdjustment = ({ open, adjustment }: UseApplyAdjustmentArgs)
         const result = await getApplyContext(adjustment.id, true).unwrap();
         if (!active) return;
         setServerBalance(result.remainingAmount);
+        const unpaidTransfer = result.kind === 1;
+        setIsUnpaidTransfer(unpaidTransfer);
 
         const pendingItems = (result.pendingFees || []).map((fee) => ({
             installmentId: fee.installmentId,
@@ -77,7 +81,10 @@ export const useApplyAdjustment = ({ open, adjustment }: UseApplyAdjustmentArgs)
         [...pendingItems]
           .sort((a, b) => a.monthOrder - b.monthOrder)
           .forEach((fee) => {
-            const amount = Math.round(Math.min(fee.pendingAmount, fee.adjustableAmount, remaining) * 100) / 100;
+            const amount = Math.round(Math.min(
+              unpaidTransfer ? fee.adjustableAmount : fee.pendingAmount,
+              fee.adjustableAmount, remaining
+            ) * 100) / 100;
             allocations.set(fee.installmentId, amount);
             remaining = Math.max(Math.round((remaining - amount) * 100) / 100, 0);
           });
@@ -88,7 +95,9 @@ export const useApplyAdjustment = ({ open, adjustment }: UseApplyAdjustmentArgs)
             isSelected: appliedAmount > 0,
             appliedAmount,
             amountDraft: appliedAmount > 0 ? String(appliedAmount) : '',
-            finalPendingAmount: Math.max(fee.pendingAmount - appliedAmount, 0),
+            finalPendingAmount: unpaidTransfer
+              ? fee.pendingAmount + appliedAmount
+              : Math.max(fee.pendingAmount - appliedAmount, 0),
           };
         }));
       } catch {
@@ -182,7 +191,9 @@ export const useApplyAdjustment = ({ open, adjustment }: UseApplyAdjustmentArgs)
           Math.round((approvedAmount - sumOthers) * 100) / 100,
           0
         );
-        const rowLimit = Math.min(currentItem.pendingAmount, currentItem.adjustableAmount);
+        const rowLimit = isUnpaidTransfer
+          ? currentItem.adjustableAmount
+          : Math.min(currentItem.pendingAmount, currentItem.adjustableAmount);
         const cappedValue =
           Math.round(Math.min(safeValue, rowLimit, maxAllowedByApproved) * 100) / 100;
 
@@ -200,13 +211,15 @@ export const useApplyAdjustment = ({ open, adjustment }: UseApplyAdjustmentArgs)
                 ...item,
                 appliedAmount: cappedValue,
                 amountDraft: String(value),
-                finalPendingAmount: Math.max(item.pendingAmount - cappedValue, 0),
+                finalPendingAmount: isUnpaidTransfer
+                  ? item.pendingAmount + cappedValue
+                  : Math.max(item.pendingAmount - cappedValue, 0),
               }
             : item
         );
       });
     },
-    [approvedAmount]
+    [approvedAmount, isUnpaidTransfer]
   );
 
   const autoApply = useCallback(() => {
@@ -231,13 +244,18 @@ export const useApplyAdjustment = ({ open, adjustment }: UseApplyAdjustmentArgs)
 
       sorted.forEach((item) => {
         const applied =
-          Math.round(Math.min(item.pendingAmount, item.adjustableAmount, rem) * 100) / 100;
+          Math.round(Math.min(
+            isUnpaidTransfer ? item.adjustableAmount : item.pendingAmount,
+            item.adjustableAmount, rem
+          ) * 100) / 100;
         rem = Math.max(Math.round((rem - applied) * 100) / 100, 0);
         allocationMap.set(item.installmentId, {
           isSelected: applied > 0,
           appliedAmount: applied,
           amountDraft: applied > 0 ? String(applied) : '',
-          finalPendingAmount: Math.max(item.pendingAmount - applied, 0),
+          finalPendingAmount: isUnpaidTransfer
+            ? item.pendingAmount + applied
+            : Math.max(item.pendingAmount - applied, 0),
         });
       });
 
@@ -250,7 +268,7 @@ export const useApplyAdjustment = ({ open, adjustment }: UseApplyAdjustmentArgs)
     });
 
     setErrorText('');
-  }, [approvedAmount]);
+  }, [approvedAmount, isUnpaidTransfer]);
 
   const clearAutoSelection = useCallback(() => {
     setItems((prev) =>

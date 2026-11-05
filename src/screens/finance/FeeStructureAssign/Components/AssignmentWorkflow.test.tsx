@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => ({
   details: vi.fn(),
   update: vi.fn(),
   close: vi.fn(),
+  completed: vi.fn(),
   candidateState: {} as Record<string, unknown>,
   contextState: {} as Record<string, unknown>,
   candidateRefetch: vi.fn(),
@@ -198,6 +199,7 @@ function mount(
           students={students}
           academicYearId="year"
           onClose={mocks.close}
+          onCompleted={mocks.completed}
           editAssignedPolicies={editAssignedPolicies}
         />
       </ThemeProvider>
@@ -1119,6 +1121,7 @@ describe('assignment review and commit boundaries', () => {
       })
     );
     expect(screen.queryByRole('button', { name: 'Preview assignments' })).not.toBeInTheDocument();
+    await waitFor(() => expect(mocks.completed).toHaveBeenCalledOnce());
   });
   it('retries only failed students after an immutable partially successful bulk commit', async () => {
     mocks.bulkPreview.mockImplementation(({ items }) => ({
@@ -1152,6 +1155,7 @@ describe('assignment review and commit boundaries', () => {
     await screen.findByRole('button', { name: 'Assign fees (2)' });
     fireEvent.click(screen.getByRole('button', { name: 'Assign fees (2)' }));
     await screen.findByText('Committed amount 12000');
+    expect(mocks.completed).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Review remaining students' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Include transport for two' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Preview assignments' }));
@@ -1162,7 +1166,8 @@ describe('assignment review and commit boundaries', () => {
         ],
       })
     );
-    expect(screen.getByRole('button', { name: 'Select Meera' })).toHaveTextContent(
+    expect(screen.getByRole('button', { name: 'Select Meera' })).toHaveTextContent('Meera');
+    expect(screen.getByRole('button', { name: 'Select Meera' })).not.toHaveTextContent(
       'Ready to assign'
     );
     expect(screen.queryByText('Failed')).not.toBeInTheDocument();

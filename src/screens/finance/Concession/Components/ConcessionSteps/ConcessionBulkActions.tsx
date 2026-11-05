@@ -2,6 +2,7 @@ import type { ConcessionEligibleDueFee } from 'src/redux/finance/ConcessionManag
 
 import { useId, useState } from 'react';
 import { Box, Stack, Button, Typography } from '@mui/material';
+import { Iconify } from 'src/components/iconify';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 
 import { allocateConcessionBulk } from './concessionBulkAllocation';
@@ -102,7 +103,8 @@ export default function ConcessionBulkActions({
                   disabled || !targetIds.length || !(perRow ? perInstallment : total).trim()
                 }
                 onClick={() => apply(mode)}
-                sx={{ flexShrink: 0, minHeight: 40, width: { xs: '100%', sm: 'auto' } }}
+                startIcon={<Iconify icon={perRow ? 'mdi:content-copy' : 'mdi:equal'} width={18} />}
+                sx={{ flexShrink: 0 }}
               >
                 {perRow ? 'Apply to all installments' : 'Auto-distribute equal'}
               </Button>

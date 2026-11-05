@@ -741,9 +741,11 @@ export default function FeeStructureWorkspaceCard({
               minWidth: 0,
               pt: 1,
               '& .MuiStepper-vertical': {
+                width: 240,
+                minWidth: 240,
                 height: 'auto',
                 maxHeight: '100%',
-                alignSelf: 'center',
+                alignSelf: 'flex-start',
                 flexShrink: 0,
                 '& .MuiStepConnector-root': { ml: 2.75, flex: '0 0 auto' },
                 '& .MuiStepConnector-line': { minHeight: 32 },

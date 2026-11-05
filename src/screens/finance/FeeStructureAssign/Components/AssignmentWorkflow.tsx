@@ -149,6 +149,7 @@ type AssignmentWorkflowProps = {
   academicYearName?: string;
   editAssignedPolicies?: boolean;
   onClose: () => void;
+  onCompleted?: () => void;
   onBusyChange?: (busy: boolean) => void;
   onContextResolved?: (status: AssignmentContext['status']) => void;
   onStructureEditResolved?: (editing: boolean) => void;
@@ -383,6 +384,7 @@ function AssignmentEditor({
   editAssignedStructure = false,
   onStructureEditResolved,
   onClose,
+  onCompleted,
   onBusyChange,
   contexts,
   onAssignedConflict,
@@ -484,6 +486,20 @@ function AssignmentEditor({
       .map((r) => r.studentId)
   );
   const complete = committedIds.size === students.length;
+  const completionNotified = useRef(false);
+  useEffect(() => {
+    if (
+      completionNotified.current ||
+      !onCompleted ||
+      !showResults ||
+      !complete ||
+      busy ||
+      !outcomes?.results.every((item) => item.result && item.outcome !== 'AlreadyAssigned')
+    )
+      return;
+    completionNotified.current = true;
+    onCompleted();
+  }, [busy, complete, onCompleted, outcomes, showResults]);
   const selectedPreviewItems =
     preview?.results.filter((r) => r.preview && !committedIds.has(r.studentId)) ?? [];
   const expiredAt = Math.min(
@@ -1539,25 +1555,15 @@ function AssignmentEditor({
                                           {item.studentName || 'Student'}
                                         </Typography>
                                       </Tooltip>
-                                      <Label
-                                        color={
-                                          saved?.result
-                                            ? 'success'
-                                            : needsAttention
-                                              ? 'warning'
-                                              : 'default'
-                                        }
-                                      >
-                                        {saved?.result
-                                          ? saved.outcome === 'AlreadyAssigned'
-                                            ? 'Already assigned'
-                                            : 'Assigned'
-                                          : needsAttention
-                                            ? 'Needs attention'
-                                            : checked?.preview
-                                              ? 'Ready to assign'
-                                              : 'Configure'}
-                                      </Label>
+                                      {(saved?.result || needsAttention) && (
+                                        <Label color={saved?.result ? 'success' : 'warning'}>
+                                          {saved?.result
+                                            ? saved.outcome === 'AlreadyAssigned'
+                                              ? 'Already assigned'
+                                              : 'Assigned'
+                                            : 'Needs attention'}
+                                        </Label>
+                                      )}
                                       {needsAttention && (
                                         <Typography
                                           variant="caption"
@@ -1567,11 +1573,6 @@ function AssignmentEditor({
                                           {needsInput ||
                                             saved?.errorMessage ||
                                             checked?.errorMessage}
-                                        </Typography>
-                                      )}
-                                      {checked?.preview && !saved?.result && (
-                                        <Typography variant="caption">
-                                          {formatNumber(checked.preview.proratedTotal, 'INR')}
                                         </Typography>
                                       )}
                                     </Stack>

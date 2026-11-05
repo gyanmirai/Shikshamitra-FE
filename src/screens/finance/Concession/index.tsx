@@ -203,6 +203,7 @@ const Concession = () => {
       {addConcessionRequest.value && (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <ConcessionRequestForm
+            scopeOptions={academicFilters.scopeOptions}
             onBusyChange={setRequestBusy}
             open={addConcessionRequest.value}
             onClose={handleClose}

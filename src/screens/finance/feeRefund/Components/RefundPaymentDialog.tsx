@@ -71,19 +71,6 @@ export default function RefundPaymentDialog({
   onClose,
   onSubmit,
 }: Props) {
-  const requirements: FinancePrerequisite[] = [];
-  const routingState = {
-    isLoading: bankAccountsLoading,
-    isError: routingError,
-    isUninitialized: routingUninitialized,
-  };
-  if (isFinancePrerequisiteMissing({ ...routingState, options: expenseCategories }))
-    requirements.push({ key: 'expense-category' });
-  if (isFinancePrerequisiteMissing({ ...routingState, options: bankAccounts }))
-    requirements.push({ key: 'bank-account' });
-  const setupMissing = requirements.length > 0;
-  const routingUnavailable =
-    bankAccountsLoading || routingError || routingUninitialized || setupMissing;
   useRefreshFinancePrerequisites(onRefreshRouting);
   const [confirmClose, setConfirmClose] = useState(false);
   const submitting = useRef(false);
@@ -94,7 +81,9 @@ export default function RefundPaymentDialog({
     initialValues: {
       method: normalizeRefundMethod(refund._refundMethod ?? ''),
       externalReference: refund._payoutReference ?? '',
-      bankAccountId: refund._payingBankAccountId ?? refund._defaultPayingBankAccountId ?? '',
+      bankAccountId: normalizeRefundMethod(refund._refundMethod ?? '') === 'Cash'
+        ? ''
+        : refund._payingBankAccountId ?? refund._defaultPayingBankAccountId ?? '',
       expenseCategoryId: refund._expenseCategoryId ?? refund._defaultExpenseCategoryId ?? '',
     },
     validationSchema: Yup.object({
@@ -110,7 +99,10 @@ export default function RefundPaymentDialog({
           is: (method: string) => Boolean(method) && method !== 'Cash' && !refund._payoutPending,
           then: (schema) => schema.trim().required('Payment reference is required'),
         }),
-      bankAccountId: Yup.string().required('Source school bank account is required'),
+      bankAccountId: Yup.string().when('method', {
+        is: (method: string) => method !== 'Cash',
+        then: (schema) => schema.required('Source school bank account is required'),
+      }),
       expenseCategoryId: Yup.string().required('Expense category is required'),
     }),
     onSubmit: async (values) => {
@@ -126,6 +118,22 @@ export default function RefundPaymentDialog({
       }
     },
   });
+  const requirements: FinancePrerequisite[] = [];
+  const routingState = {
+    isLoading: bankAccountsLoading,
+    isError: routingError,
+    isUninitialized: routingUninitialized,
+  };
+  if (isFinancePrerequisiteMissing({ ...routingState, options: expenseCategories }))
+    requirements.push({ key: 'expense-category' });
+  if (
+    formik.values.method !== 'Cash' &&
+    isFinancePrerequisiteMissing({ ...routingState, options: bankAccounts })
+  )
+    requirements.push({ key: 'bank-account' });
+  const setupMissing = requirements.length > 0;
+  const routingUnavailable =
+    bankAccountsLoading || routingError || routingUninitialized || setupMissing;
   useEffect(() => {
     if (
       formik.isSubmitting ||
@@ -208,7 +216,11 @@ export default function RefundPaymentDialog({
                 </Alert>
               ) : (
                 <FormSectionCard
-                  descriptionTooltip="Choose the expense category and source school bank account. Recording payment completes the refund and adds it to Expenses."
+                  descriptionTooltip={
+                    nonCash
+                      ? 'Choose the expense category and source school bank account. Recording payment completes the refund and adds it to Expenses.'
+                      : 'Choose the expense category. Recording payment completes the cash refund and adds it to Expenses.'
+                  }
                   icon={GlobalIcons.receiptIcon}
                   title="Payment Details"
                   titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
@@ -291,18 +303,20 @@ export default function RefundPaymentDialog({
                         </ShakingTextField>
                       </Grid>
                     )}
-                    <RefundRoutingField
-                      field="bankAccountId"
-                      value={formik.values.bankAccountId}
-                      options={bankAccounts}
-                      loading={bankAccountsLoading && !busy}
-                      disabled={
-                        busy || Boolean(refund._payoutPending && refund._payingBankAccountId)
-                      }
-                      error={fieldError('bankAccountId')}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                    />
+                    {nonCash && (
+                      <RefundRoutingField
+                        field="bankAccountId"
+                        value={formik.values.bankAccountId}
+                        options={bankAccounts}
+                        loading={bankAccountsLoading && !busy}
+                        disabled={
+                          busy || Boolean(refund._payoutPending && refund._payingBankAccountId)
+                        }
+                        error={fieldError('bankAccountId')}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                      />
+                    )}
                   </Grid>
                   {formik.status && <Alert severity="error">{formik.status}</Alert>}
                 </FormSectionCard>

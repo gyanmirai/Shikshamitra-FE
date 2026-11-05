@@ -7,6 +7,8 @@ export const mapDetailToAdjustmentRequest = (
   detail: FeeAdjustmentDetailDto
 ): AdjustmentRequest => ({
   id: detail.id,
+  availableActions: detail.availableActions,
+  unavailableReason: detail.unavailableReason,
   studentId: detail.studentId,
   studentName: detail.studentName,
   studentGrNo: detail.studentGrNo?.toString(),

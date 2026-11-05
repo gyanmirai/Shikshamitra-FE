@@ -24,7 +24,10 @@ vi.mock('react-redux', () => ({
     fn({ globalState: { currentYear: { id: state.year } }, auth: { user: { sub: state.userId } } }),
 }));
 vi.mock('../../hooks/useFinancePermissions', () => ({
-  useFinancePermissions: () => ({ canView: true, canAdd: state.canAdd }),
+  useFinancePermissions: () => ({
+    canView: true, canAdd: state.canAdd,
+    canApprove: state.canAdd, canReject: state.canAdd,
+  }),
 }));
 vi.mock('../../hooks/useFinanceAcademicFilters', () => ({
   useFinanceAcademicFilters: () => ({
@@ -240,6 +243,7 @@ it.each(['creator', 'checker'])(
         remainingAmount: 100,
         status: AdjustmentStatusEnum.Pending,
         statusName: 'Pending',
+        availableActions: ['Approve', 'Reject'],
         requestedByUserId: 'creator',
         requestedByName: 'Creator',
         createdAt: '2026-11-03T00:00:00Z',
@@ -257,13 +261,47 @@ it.each(['creator', 'checker'])(
       />
     );
     const decisions = state.table.columns.find((column: any) => column.id === 'actions');
-    render(decisions.render(undefined, state.table.data[0]));
     if (userId === 'creator') {
+      expect(decisions).toBeUndefined();
       expect(screen.queryByRole('button', { name: /^Approve/ })).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name: /^Reject/ })).not.toBeInTheDocument();
     } else {
+      expect(decisions).toBeDefined();
+      render(decisions.render(undefined, state.table.data[0]));
       expect(screen.getByRole('button', { name: /^Approve/ })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /^Reject/ })).toBeInTheDocument();
     }
   }
 );
+
+it.each([
+  AdjustmentStatusEnum.Pending,
+  AdjustmentStatusEnum.Approved,
+  AdjustmentStatusEnum.Rejected,
+  AdjustmentStatusEnum.Cancelled,
+])('hides the Actions column when status %s has no row action', (status) => {
+  state.canAdd = true;
+  state.items = [{
+    id: 'request', studentId: 'student', studentName: 'Student',
+    requestedAmount: 100, appliedAmount: 0, remainingAmount: 100,
+    status, statusName: 'Status', requestedByUserId: 'creator',
+    availableActions: [], createdAt: '2026-11-03T00:00:00Z',
+  }];
+  render(<AdjustmentTable activeTab={AdjustmentTabEnum.Pending} onView={vi.fn()}
+    onApprove={vi.fn()} onReject={vi.fn()} />);
+  expect(state.table.columns.some((column: any) => column.id === 'actions')).toBe(false);
+});
+
+it('keeps Actions when one partially applied row can still be approved', () => {
+  state.canAdd = true;
+  state.items = [
+    { id: 'paid', studentId: 'student', studentName: 'Paid', requestedAmount: 100,
+      status: AdjustmentStatusEnum.Approved, requestedByUserId: 'creator', availableActions: [] },
+    { id: 'partial', studentId: 'student', studentName: 'Partial', requestedAmount: 100,
+      status: AdjustmentStatusEnum.PartiallyApplied, requestedByUserId: 'creator',
+      availableActions: ['Approve'] },
+  ];
+  render(<AdjustmentTable activeTab={AdjustmentTabEnum.Approved} onView={vi.fn()}
+    onApprove={vi.fn()} onReject={vi.fn()} />);
+  expect(state.table.columns.some((column: any) => column.id === 'actions')).toBe(true);
+});

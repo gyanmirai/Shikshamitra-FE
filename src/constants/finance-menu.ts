@@ -134,6 +134,12 @@ export const financePermissions = {
       reverse: `${defaultFinancePermissionName}Fees.Concession.Reverse`,
     },
     adjustment: `${defaultFinancePermissionName}Fees.Adjustment`,
+    adjustmentActions: {
+      view: `${defaultFinancePermissionName}Fees.Adjustment.View`,
+      add: `${defaultFinancePermissionName}Fees.Adjustment.Add`,
+      approve: `${defaultFinancePermissionName}Fees.Adjustment.Approve`,
+      reject: `${defaultFinancePermissionName}Fees.Adjustment.Reject`,
+    },
     structureAssign: `${defaultFinancePermissionName}Fees.StructureAssign`,
     settings: {
       root: `${defaultModulePermissionName}${defaultFinancePermissionName}Fees.Settings`,
@@ -519,7 +525,7 @@ const financeModule = {
               title: 'Cash Management',
               path: financePaths.accounts.cashManagement,
               _action: 'cash-management',
-              permissionName: `${financePermissions.accounts.cashManagement  }.View`,
+              permissionName: `${financePermissions.accounts.cashManagement}.View`,
               icon: menuIconView('mdi:cash-check'),
             },
             {

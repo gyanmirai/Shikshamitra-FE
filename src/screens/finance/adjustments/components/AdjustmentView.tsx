@@ -83,12 +83,13 @@ export default function AdjustmentView({
     detail &&
     !loading &&
     !query.isError &&
-    access.canAdd &&
     actorId &&
     (detail.requestedByUserId ?? viewMeta.requestedByUserId) !== actorId
   );
   const canApply =
     mayDecide &&
+    access.canApprove &&
+    detail?.availableActions?.includes('Approve') &&
     (status === AdjustmentStatusEnum.Pending || status === AdjustmentStatusEnum.PartiallyApplied);
   const studentFields = detail
     ? [
@@ -181,6 +182,9 @@ export default function AdjustmentView({
             </Alert>
           ) : (
             <>
+              {detail.unavailableReason && (
+                <Alert severity="info">{detail.unavailableReason}</Alert>
+              )}
               <FormSectionCard
                 title="Student Information"
                 sx={{ containerType: 'inline-size', minWidth: 0 }}
@@ -255,20 +259,13 @@ export default function AdjustmentView({
                   descriptionTooltip="The reviewer, review date and notes recorded for this adjustment."
                 >
                   <DetailGrid>
-                    <DetailField
-                      label="Processed by"
-                      value={detail.processedByName}
-                    />
+                    <DetailField label="Processed by" value={detail.processedByName} />
                     <DetailField
                       label="Processed on"
                       value={detail.processedAt ? fDateTime(detail.processedAt) : undefined}
                     />
                     {detail.approverNotes && (
-                      <DetailField
-                        label="Approval notes"
-                        value={detail.approverNotes}
-                        fullWidth
-                      />
+                      <DetailField label="Approval notes" value={detail.approverNotes} fullWidth />
                     )}
                     {detail.rejectionReason && (
                       <DetailField
@@ -304,17 +301,21 @@ export default function AdjustmentView({
         >
           Close
         </Button>
-        {showReject && mayDecide && status === AdjustmentStatusEnum.Pending && (
-          <Button
-            variant="soft"
-            color="error"
-            size="small"
-            startIcon={<Iconify icon={GlobalIcons.cancel} />}
-            onClick={onReject}
-          >
-            Reject
-          </Button>
-        )}
+        {showReject &&
+          mayDecide &&
+          access.canReject &&
+          detail?.availableActions?.includes('Reject') &&
+          status === AdjustmentStatusEnum.Pending && (
+            <Button
+              variant="soft"
+              color="error"
+              size="small"
+              startIcon={<Iconify icon={GlobalIcons.cancel} />}
+              onClick={onReject}
+            >
+              Reject
+            </Button>
+          )}
         {showApprove && canApply && (
           <Button
             variant="soft"

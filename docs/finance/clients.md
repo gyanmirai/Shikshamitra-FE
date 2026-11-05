@@ -292,6 +292,12 @@ handled in their owning regions so a PDF failure cannot report the accepted paym
 
 Receipt and reconciliation list clients carry serialized `filters` alongside the existing search/context/paging params. The reconciliation workspace passes numeric payment-method tab IDs; its shared query hook accepts those IDs, numeric strings and named methods, and enables server header filters for the six active methods. Unsupported legacy methods omit the server-filter callback. Applying/clearing criteria resets the page while preserving search and page size. Adjustment list requests carry existing `filter` text plus serialized `filters`, `page` and `pageSize`; the displayed total comes from the server.
 
+Adjustment list and detail responses carry `availableActions` and `unavailableReason`. The client maps those fields into the worklist and detail view, and requires distinct Approve/Reject grants before offering a decision. The charge, concession and refund workspaces likewise intersect exact grants with each record's server actions. Existing list endpoints do not expose a request-owner or assigned-reviewer filter.
+
+Adjustment creation includes an `idempotencyKey` in the JSON body; an unchanged form payload reuses the key after a failed or uncertain attempt. Editing an adjustment uses the same body contract when that client flow is enabled. Apply still sends its separate `Idempotency-Key` header.
+
+`src/redux/finance/financeWorkContextApi.ts` loads the selected year's server creation scope and request capabilities. Charge, concession and refund create forms restrict board, medium, class and division choices to those IDs. Adjustment creation requires the server's `adjustment.add` capability and the Add grant; its direct Create command produces a Pending request, without a separate Submit action. List filters retain the broader academic hierarchy so a manager can reach reportees' review records. Each module's backend list predicate controls which rows and counts are returned.
+
 Charge detail student lists declare Collected, Waived and Outstanding as numeric filters. Equals, Greater Than, Less Than and Between compare raw currency amounts, including fractional values; INR formatting is applied only to the displayed cell.
 
 Cash expense Paid, adjustment target Applied Amount and collection outcome Paid/Pending after also use numeric criteria over raw amounts. Cash expense Payment date uses date criteria over the recorded datetime. These detail menus are independent of the table toolbar; hiding that toolbar does not disable the per-column filters.
@@ -304,10 +310,10 @@ The collection summary also exposes `refundAmount` separately from gross `paidFe
 
 ## Finance setup guide client
 
-| Source | Responsibility |
-| --- | --- |
-| `src/redux/finance/setup/api.ts` | State query and progress mutation injected into the existing Finance module API |
-| `src/redux/finance/setup/types.ts` | Typed year-scoped configuration and guide progress responses |
+| Source                                                    | Responsibility                                                                         |
+| --------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `src/redux/finance/setup/api.ts`                          | State query and progress mutation injected into the existing Finance module API        |
+| `src/redux/finance/setup/types.ts`                        | Typed year-scoped configuration and guide progress responses                           |
 | `src/screens/finance/setup/use-finance-setup-progress.ts` | Resume, deferred settings, save locks, safe navigation and explicit concurrency reload |
 
 Cache arguments include tenant/user identity and academic year.

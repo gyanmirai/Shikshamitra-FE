@@ -1,5 +1,5 @@
-import { render, screen } from '@testing-library/react';
-import { FeeMonth } from 'src/enums/fee-collection-type';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { FeeCollectionStatusType, FeeMonth } from 'src/enums/fee-collection-type';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
 
 import FeeHeadRefundTable from './FeeHeadRefundTable';
@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   adjustment: {} as any,
   setFieldValue: vi.fn(),
   summary: vi.fn(),
+  group: vi.fn(),
 }));
 
 vi.mock('react-redux', () => ({ useSelector: () => ({ currentYear: { id: 'year' } }) }));
@@ -33,7 +34,10 @@ vi.mock('./feeHeadRefundTable/RefundTableSkeleton', () => ({
   default: () => <span>Loading refundable fees</span>,
 }));
 vi.mock('./feeHeadRefundTable/FeeHeadGroup', () => ({
-  default: ({ feeHead }: any) => <span>{feeHead.feeHeadName}</span>,
+  default: ({ feeHead }: any) => {
+    mocks.group(feeHead);
+    return <span>{feeHead.feeHeadName}</span>;
+  },
 }));
 
 const formik = () =>
@@ -186,4 +190,107 @@ describe('refund allocation policy limits', () => {
     render(<FeeHeadRefundTable formik={formik()} mode="adjustment" compact />);
     expect(screen.getByText('adjustment-balance')).toBeInTheDocument();
   });
+});
+
+it('passes pending and overdue amounts and statuses to the existing adjustment selector', () => {
+  mocks.adjustment = {
+    currentData: {
+      totalAdjustable: 125,
+      feeHeads: [{
+        feeHeadId: 'transport', feeHeadName: 'Transport',
+        months: [
+          { dueFeeId: 'due-1', month: FeeMonth.August, year: 2026,
+            total: 100, paid: 0, adjusted: 0, adjustable: 50,
+            status: FeeCollectionStatusType.Pending },
+          { dueFeeId: 'due-2', month: FeeMonth.September, year: 2026,
+            total: 100, paid: 0, adjusted: 0, adjustable: 75,
+            status: FeeCollectionStatusType.Overdue },
+        ],
+      }],
+    },
+    isLoading: false, isFetching: false, refetch: vi.fn(),
+  };
+  render(<FeeHeadRefundTable formik={formik()} mode="adjustment" compact />);
+  const items = mocks.group.mock.lastCall?.[0].items;
+  expect(items.map((item: any) => [item.refundable, item.status])).toEqual([
+    [50, FeeCollectionStatusType.Pending],
+    [75, FeeCollectionStatusType.Overdue],
+  ]);
+});
+
+it('auto-distributes a total into an unchecked eligible fee head', () => {
+  mocks.setFieldValue.mockClear();
+  mocks.adjustment = {
+    currentData: {
+      totalAdjustable: 20450,
+      feeHeads: [
+        { feeHeadId: 'project', feeHeadName: 'Project Fee', months: [
+          { dueFeeId: 'project-due', month: FeeMonth.December, year: 2026,
+            total: 250, paid: 0, adjusted: 0, adjustable: 250, kind: 1 },
+        ] },
+        { feeHeadId: 'school', feeHeadName: 'School Fee', months: [
+          { dueFeeId: 'school-due', month: FeeMonth.December, year: 2026,
+            total: 20000, paid: 0, adjusted: 0, adjustable: 20000, kind: 1 },
+        ] },
+        { feeHeadId: 'destination', feeHeadName: 'Destination Fee', months: [
+          { dueFeeId: 'destination-due', month: FeeMonth.December, year: 2026,
+            total: 200, paid: 0, adjusted: 0, adjustable: 200, kind: 1 },
+        ] },
+      ],
+    },
+    isLoading: false, isFetching: false, refetch: vi.fn(),
+  };
+  const values = formik();
+  values.values.refundType = undefined;
+  values.values.feeHeadRefunds = [{ feeHeadId: 'project', months: [
+    { month: 'December 2026', dueFeeId: 'project-due', amount: '' },
+  ] }];
+  render(<FeeHeadRefundTable formik={values} mode="adjustment" compact />);
+  fireEvent.change(screen.getByRole('textbox', { name: 'Total adjustment amount' }),
+    { target: { value: '10000' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Auto-distribute equal' }));
+  expect(mocks.setFieldValue).toHaveBeenLastCalledWith('feeHeadRefunds', [
+    { feeHeadId: 'project', months: [expect.objectContaining({ dueFeeId: 'project-due', amount: '250' })] },
+    { feeHeadId: 'school', months: [expect.objectContaining({ dueFeeId: 'school-due', amount: '9750' })] },
+  ]);
+});
+
+it('applies per-installment and overall amounts in the existing adjustment fee selector', () => {
+  mocks.setFieldValue.mockClear();
+  mocks.adjustment = {
+    currentData: {
+      totalAdjustable: 120,
+      feeHeads: [{
+        feeHeadId: 'transport', feeHeadName: 'Transport',
+        months: [
+          { dueFeeId: 'due-1', month: FeeMonth.August, year: 2026,
+            total: 100, paid: 100, refunded: 0, adjusted: 0, adjustable: 60 },
+          { dueFeeId: 'due-2', month: FeeMonth.September, year: 2026,
+            total: 100, paid: 100, refunded: 0, adjusted: 0, adjustable: 60 },
+        ],
+      }],
+    },
+    isLoading: false, isFetching: false, refetch: vi.fn(),
+  };
+  render(<FeeHeadRefundTable formik={formik()} mode="adjustment" compact />);
+
+  fireEvent.change(screen.getByRole('textbox', { name: 'Amount per installment' }),
+    { target: { value: '40' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Apply to all installments' }));
+  expect(mocks.setFieldValue).toHaveBeenLastCalledWith('feeHeadRefunds', [
+    { feeHeadId: 'transport', months: [
+      expect.objectContaining({ dueFeeId: 'due-1', amount: '40' }),
+      expect.objectContaining({ dueFeeId: 'due-2', amount: '40' }),
+    ] },
+  ]);
+
+  fireEvent.change(screen.getByRole('textbox', { name: 'Total adjustment amount' }),
+    { target: { value: '100' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Auto-distribute equal' }));
+  expect(mocks.setFieldValue).toHaveBeenLastCalledWith('feeHeadRefunds', [
+    { feeHeadId: 'transport', months: [
+      expect.objectContaining({ dueFeeId: 'due-1', amount: '50' }),
+      expect.objectContaining({ dueFeeId: 'due-2', amount: '50' }),
+    ] },
+  ]);
 });

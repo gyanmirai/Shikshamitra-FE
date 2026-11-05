@@ -595,16 +595,18 @@ See the [Fee Collection waiver contract](../../../Shikshamitra-BE/docs/modules/f
 
 The adjustment workspace follows Refund Management's shared finance presentation while retaining the [backend adjustment contract](../../../Shikshamitra-BE/docs/modules/finance/api.md).
 
-| Surface | Frontend behavior |
-|---|---|
-| Worklist | Shared full-height table, academic context controls, status groups, server search and supported text/number/date header criteria. Status, page, page size, search and header criteria are URL-backed; changing academic context resets the page. Counts come from the visible query's academic scope. |
-| Create | Student Information, Adjustment Information and Source Fee Lines sections; shared source selector in adjustment mode; Cancel/Submit footer; successful saves close the form, failed saves retain the entered values. |
-| View | Contextual right drawer above the mounted worklist, with student/request information, source fee lines, allocation history and review notes. Fetch failures expose Retry and retain Close. |
-| Approval | Full-page allocation workspace with student/request context, editable outstanding-fee table, auto allocation, approval notes and a separate allocation preview before applying. Partially applied requests retain their distinct status and can expose Apply remaining. |
-| Permissions | Existing View/Add/Delete grouping is unchanged. Add gates creation and review; requester/checker separation remains enforced in the frontend and backend. |
-| Amounts and recovery | Decimal drafts remain strings until validated. Adjustment money displays opt into two decimals through the shared formatter. Saving locks conflicting controls; confirmed navigation discards the owned form. Retrying an unchanged allocation payload reuses its idempotency key. |
+| Surface              | Frontend behavior                                                                                                                                                                                                                                                                                     |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Worklist             | Shared full-height table, academic context controls, status groups, server search and supported text/number/date header criteria. Status, page, page size, search and header criteria are URL-backed; changing academic context resets the page. Counts come from the visible query's academic scope. |
+| Create               | Student Information, Adjustment Information and Source Fee Lines sections; the existing source selector supports amount per installment and total adjustment amount across checked installments. Cancel/Submit footer; successful saves close the form, failed saves retain entered values. |
+| View                 | Contextual right drawer above the mounted worklist, with student/request information, source fee lines, allocation history and review notes. Fetch failures expose Retry and retain Close.                                                                                                            |
+| Approval             | Full-page allocation workspace with student/request context, editable outstanding-fee table, auto allocation, approval notes and a separate allocation preview before applying. Partially applied requests retain their distinct status and can expose Apply remaining. |
+| Permissions          | Add gates creation only. Approve and Reject are distinct grants; list and detail actions also require the matching server `availableActions` entry and an independent checker. A server `unavailableReason` is shown in the detail drawer when credit transfer is unavailable.                        |
+| Amounts and recovery | Decimal drafts remain strings until validated. Adjustment money displays opt into two decimals through the shared formatter. Saving locks conflicting controls; confirmed navigation discards the owned form. Retrying an unchanged allocation payload reuses its idempotency key.                    |
 
 The Approved worklist group includes partially applied and fully applied requests. Its row labels retain the actual state rather than collapsing both to one status.
+
+Across charge, concession, adjustment and refund workspaces, list totals come from the existing server-scoped queries. Decision controls require the exact action grant and the record's server `availableActions`; a missing or empty action list grants nothing. Class-teacher charge requests enter Pending review even when their category does not ordinarily require approval. Until the charge audience preview contract exists, the confirmed All selection submits explicit IDs from the scoped lookup. Refund approval remains separate from recording a payout. Dedicated My requests and Awaiting my review server filters are not yet exposed by these module list APIs, so the existing scoped status worklists remain the navigation surface.
 
 Concession and adjustment workflows should preserve approval and audit behavior.
 
@@ -903,15 +905,15 @@ Backend rules and PDF contract: [Receipts and provisional receipts](../../../Shi
 
 Finance forms share `FormPrerequisiteState` through the Finance route/permission adapter. A successful empty lookup for the current year and form context replaces the dependent body with a centered explanation, a permitted setup/review link and **Refresh options**. Headers, Cancel and entered values stay mounted; submission is guarded. Setup opens in a new tab, and returning refetches options. Users without the destination's View and relevant action grant see administrator guidance. Loading, denied, failed, skipped and filtered searches are not missing setup.
 
-| Forms | Prerequisites covered |
-| --- | --- |
-| Refund, Proration and Collection policies | Refund/proration fee-head setup; expense or income mapping when activating; non-cash refund bank. Collection late fees use a common rule without fee-head selection or setup. |
-| Fee heads, Fee Categories and Charge Categories | Fee category and income mappings |
-| Payment Terms and Fee Structures | Board/calendar; active heads; published board/year terms; active collection policy for publication |
-| Fee Assignment and Concession Requests | Matching published structure; student assignment; active concession type and policy |
-| Charges and Collections | Charge category; assigned obligations; bank for non-cash collection |
-| Refund Requests, payouts and Adjustments | Assigned refund policy; eligible paid sources; explicit pending-verification responses; payout category and bank |
-| Manual Income/Expense and Cash Management | Category; non-cash bank; available cash; deposit/approval bank |
+| Forms                                           | Prerequisites covered                                                                                                                                                         |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Refund, Proration and Collection policies       | Refund/proration fee-head setup; expense or income mapping when activating; non-cash refund bank. Collection late fees use a common rule without fee-head selection or setup. |
+| Fee heads, Fee Categories and Charge Categories | Fee category and income mappings                                                                                                                                              |
+| Payment Terms and Fee Structures                | Board/calendar; active heads; published board/year terms; active collection policy for publication                                                                            |
+| Fee Assignment and Concession Requests          | Matching published structure; student assignment; active concession type and policy                                                                                           |
+| Charges and Collections                         | Charge category; assigned obligations; bank for non-cash collection                                                                                                           |
+| Refund Requests, payouts and Adjustments        | Assigned refund policy; eligible paid sources; explicit pending-verification responses; payout category and bank                                                              |
+| Manual Income/Expense and Cash Management       | Category; non-cash bank; available cash; deposit/approval bank                                                                                                                |
 
 Draft and optional choices retain their existing rules: all-head refund drafts, disabled late fees, cash collection without a bank, approved charge-only collection and optional structure policies remain available. Historical mappings and saved version pins remain visible. Cash command retries retain their original uncertain-outcome payload; the server remains authoritative for balances, eligibility and publication.
 
@@ -929,7 +931,6 @@ Columns, current-page export and fullscreen utilities remain available.
 
 The direct-access Adjustments screen maps its Rejected tab to the backend rejected status and renders the mapped student GR number.
 Its legacy first-100 list remains a separate limitation; the route is absent from active navigation.
-
 
 Audit Trail uses one authoritative search value for the field and keyword chip. Typing updates those controls immediately and waits 400 ms at the API query boundary. Reset and explicit clears commit the cleared/default query immediately and cancel pending search callbacks. Reset preserves initial student/correlation/deep-link filter defaults; re-entering a prior keyword performs a new filtered query.
 

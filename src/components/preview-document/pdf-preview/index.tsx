@@ -8,11 +8,13 @@ export default function PdfPreview({
   title,
   showPageText = true,
   controlsPosition = 'top',
+  hideControlsForSinglePage = false,
 }: {
   url: string;
   title: string;
   showPageText?: boolean;
   controlsPosition?: 'top' | 'bottom';
+  hideControlsForSinglePage?: boolean;
 }) {
   return (
     <Suspense fallback={<Skeleton aria-label="Loading PDF viewer" height={400} />}>
@@ -22,6 +24,7 @@ export default function PdfPreview({
         title={title}
         showPageText={showPageText}
         controlsPosition={controlsPosition}
+        hideControlsForSinglePage={hideControlsForSinglePage}
       />
     </Suspense>
   );

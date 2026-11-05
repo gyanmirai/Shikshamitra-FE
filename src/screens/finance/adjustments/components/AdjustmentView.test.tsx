@@ -7,7 +7,8 @@ const state = vi.hoisted(() => ({
   detail: undefined as any,
   error: false,
   actor: 'checker',
-  canAdd: true,
+  canApprove: true,
+  canReject: true,
   retry: vi.fn(),
 }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
@@ -16,7 +17,11 @@ vi.mock('react-redux', () => ({
   useSelector: (select: any) => select({ auth: { user: { sub: state.actor } } }),
 }));
 vi.mock('../../hooks/useFinancePermissions', () => ({
-  useFinancePermissions: () => ({ canView: true, canAdd: state.canAdd }),
+  useFinancePermissions: () => ({
+    canView: true,
+    canApprove: state.canApprove,
+    canReject: state.canReject,
+  }),
 }));
 vi.mock('src/redux/finance/adjustments/adjustmentApi', () => ({
   useGetFeeAdjustmentQuery: vi.fn(),
@@ -36,7 +41,8 @@ vi.mock('src/components/customizabaleTable', () => ({ default: () => null }));
 beforeEach(() => {
   state.error = false;
   state.actor = 'checker';
-  state.canAdd = true;
+  state.canApprove = true;
+  state.canReject = true;
   state.retry.mockClear();
   state.detail = {
     id: 'request',
@@ -50,6 +56,7 @@ beforeEach(() => {
     remainingAmount: 100,
     requestedByUserId: 'maker',
     status: 0,
+    availableActions: ['Approve', 'Reject'],
     createdAt: '2026-11-03T09:00:00Z',
     sourceLines: [],
     targetAllocations: [],
@@ -89,7 +96,10 @@ it.each(['maker', 'view-only'])(
   'keeps decision buttons unavailable for %s even when the caller requests them',
   (actor) => {
     if (actor === 'maker') state.actor = 'maker';
-    else state.canAdd = false;
+    else {
+      state.canApprove = false;
+      state.canReject = false;
+    }
     show();
     expect(screen.queryByRole('button', { name: /Approve/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Reject' })).not.toBeInTheDocument();
@@ -100,4 +110,12 @@ it('uses the freshly loaded terminal status instead of stale list metadata', () 
   show();
   expect(screen.getByText('Rejected')).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: /Approve/ })).not.toBeInTheDocument();
+});
+it('hides decisions when the server returns no available actions and explains why', () => {
+  state.detail.availableActions = [];
+  state.detail.unavailableReason = 'Paid credit is unavailable for transfer.';
+  show();
+  expect(screen.queryByRole('button', { name: /Approve/ })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Reject' })).not.toBeInTheDocument();
+  expect(screen.getByText('Paid credit is unavailable for transfer.')).toBeInTheDocument();
 });

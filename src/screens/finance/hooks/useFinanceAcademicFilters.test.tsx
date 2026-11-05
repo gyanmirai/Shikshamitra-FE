@@ -23,6 +23,26 @@ vi.mock('src/redux/customQueryAndMutation', () => ({
 }));
 
 vi.mock('src/redux/class/classApi', () => ({ useGetClassByMediumQuery: vi.fn() }));
+vi.mock('src/redux/finance/financeWorkContextApi', () => ({
+  useGetFinanceWorkContextQuery: () => ({
+    currentData: {
+      academicYearId: testState.currentYear.id,
+      scopeLabel: 'Class 1 A',
+      scopeOptions: [
+        {
+          boardId: 'board-1',
+          mediumId: 'medium-1',
+          stageId: 'stage-1',
+          standardId: 'class-1',
+          divisionId: 'division-1',
+        },
+      ],
+      requestCapabilities: { adjustment: { submit: false } },
+    },
+    isLoading: false,
+    isError: false,
+  }),
+}));
 
 describe('finance academic filters', () => {
   beforeEach(() => {
@@ -100,5 +120,21 @@ describe('finance academic filters', () => {
     expect(result.current.filterPayload).toMatchObject({ educationMediumId: 'medium-2' });
     expect(result.current.filterPayload).not.toHaveProperty('standardId');
     expect(result.current.filterPayload).not.toHaveProperty('divisionId');
+  });
+
+  it('keeps review filters broad while exposing exact creation scope', () => {
+    testState.currentYear.boards.push({ id: 'board-2', educationMediums: [{ id: 'medium-2' }] });
+    const { result } = renderHook(() => useFinanceAcademicFilters());
+    expect(result.current.boards.map((board) => board.id)).toEqual(['board-1', 'board-2']);
+    expect(result.current.scopeOptions).toEqual([
+      {
+        boardId: 'board-1',
+        mediumId: 'medium-1',
+        stageId: 'stage-1',
+        standardId: 'class-1',
+        divisionId: 'division-1',
+      },
+    ]);
+    expect(result.current.requestCapabilities?.adjustment.submit).toBe(false);
   });
 });

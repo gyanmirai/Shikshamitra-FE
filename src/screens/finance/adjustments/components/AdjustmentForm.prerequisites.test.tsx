@@ -50,6 +50,26 @@ it('does not reuse a paid source from the previous student during a scope transi
   expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
 });
 
+it('explains why every unpaid installment cannot be selected as a transfer source', () => {
+  state.eligibility = {
+    currentData: { totalAdjustable: 200, feeHeads: [{ months: [
+      { dueFeeId: 'source', kind: 1, adjustable: 100 },
+      { dueFeeId: 'destination', kind: 1, adjustable: 100 },
+    ] }] },
+  };
+  render(
+    <AdjustmentForm hideStudentInfoForm initialData={{
+      studentId: 'student', remarks: 'Move unpaid balance',
+      feeHeadRefunds: [{ feeHeadId: 'head', months: [
+        { month: 'June 2026', dueFeeId: 'source', amount: '100' },
+        { month: 'July 2026', dueFeeId: 'destination', amount: '100' },
+      ] }],
+    }} onSubmit={vi.fn()} onCancel={vi.fn()} />
+  );
+  expect(screen.getByText(/leave one pending or overdue installment unchecked/i)).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+});
+
 it('waits for a successful save before resetting or closing and locks Cancel while saving', async () => {
   state.eligibility = {
     currentData: { totalAdjustable: 100, feeHeads: [{ months: [{ adjustable: 100 }] }] },

@@ -196,10 +196,13 @@ const FeeCollection = () => {
                   shikshaMitraToast.error({ message: 'Academic year is required.' });
                   return;
                 }
-                const body = buildAdjustmentApiPayload({
-                  ...values,
-                  studentId: selectedStudent.id,
-                });
+                const body = {
+                  ...buildAdjustmentApiPayload({
+                    ...values,
+                    studentId: selectedStudent.id,
+                  }),
+                  idempotencyKey: crypto.randomUUID(),
+                };
                 await createFeeAdjustment({ academicYearId: currentYear.id, body }).unwrap();
                 adjustmentDialog.onFalse();
                 setSelectedStudent(null);

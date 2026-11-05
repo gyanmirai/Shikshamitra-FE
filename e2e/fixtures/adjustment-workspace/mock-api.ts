@@ -276,7 +276,7 @@ const create = ({ body }: { academicYearId: string; body: CreateFeeAdjustmentDto
   );
   item.requestedByUserId = actor;
   item.requestedByName = actor === 'maker' ? 'Creator' : 'Reviewer';
-  item.remarks = body.remarks;
+  item.remarks = body.reason;
   item.reason = body.reason || '';
   item.sourceLines = body.sourceLines.map((line) => ({
     ...item.sourceLines[0],

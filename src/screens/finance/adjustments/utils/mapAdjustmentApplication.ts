@@ -6,6 +6,8 @@ export function mapAdjustmentApplicationItem(
 ): AdjustmentRequest {
   return {
     id: item.id,
+    availableActions: item.availableActions,
+    unavailableReason: item.unavailableReason,
     studentId: item.studentId,
     studentName: item.studentName,
     studentGrNo: item.grNumber,

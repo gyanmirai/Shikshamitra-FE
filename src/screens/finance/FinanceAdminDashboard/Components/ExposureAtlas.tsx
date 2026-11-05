@@ -4,11 +4,24 @@ import type { RootState } from 'src/redux/store';
 import type { BoardMediumOption } from 'src/components/boardMediumDropdown';
 
 import { useSelector } from 'react-redux';
-import { useTheme } from '@mui/material/styles';
-import { fCurrency } from 'src/utils/format-number';
 import { useMemo, useState, useEffect } from 'react';
+import { formatNumber } from 'src/utils/formate_number';
 import BoardMediumDropdown from 'src/components/boardMediumDropdown';
-import { Box, Paper, Stack, Divider, Typography, LinearProgress } from '@mui/material';
+import {
+  Card,
+  Grid,
+  Stack,
+  Table,
+  Divider,
+  TableRow,
+  TableBody,
+  TableCell,
+  TableHead,
+  CardHeader,
+  Typography,
+  CardContent,
+  TableContainer,
+} from '@mui/material';
 
 import { financeExposurePreview } from '../finance-admin-dashboard-preview-data';
 
@@ -19,17 +32,16 @@ function academicYearLabel(year: Record<string, any>) {
 
   const start = year.startDate ? new Date(year.startDate).getFullYear() : '';
   const end = year.endDate ? new Date(year.endDate).getFullYear() : '';
-  return start && end ? `AY ${  start  }–${  end}` : 'Selected academic year';
+  return start && end ? `AY ${start}–${end}` : 'Selected academic year';
 }
 
 export default function ExposureAtlas() {
-  const theme = useTheme();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const options = useMemo<BoardMediumOption[]>(
     () =>
       (currentYear?.boards ?? []).flatMap((board: any) =>
         (board.educationMediums ?? []).map((medium: any) => ({
-          label: `${board.name  } / ${  medium.name}`,
+          label: `${board.name} / ${medium.name}`,
           boardId: String(board.id),
           mediumId: String(medium.id),
         }))
@@ -55,237 +67,118 @@ export default function ExposureAtlas() {
     }
   }, [activeBoardMedium, selectedBoardMedium?.boardId, selectedBoardMedium?.mediumId]);
 
-  const maxOutstanding = financeExposurePreview.classes[0].outstanding;
+  const yearLabel = currentYear?.id
+    ? academicYearLabel(currentYear as Record<string, any>)
+    : 'No academic year selected';
 
   return (
-    <Paper component="section" aria-labelledby="exposure-atlas-title" variant="outlined">
-      <Box
+    <Card
+      component="section"
+      aria-labelledby="outstanding-fees-title"
+      variant="outlined"
+      sx={{ height: '100%', boxShadow: 'none' }}
+    >
+      <CardHeader
+        title={
+          <Typography id="outstanding-fees-title" variant="h6">
+            Outstanding Fees by Class
+          </Typography>
+        }
+        subheader={`Current academic year · ${yearLabel}`}
+        action={
+          options.length ? (
+            <BoardMediumDropdown
+              value={activeBoardMedium}
+              onChange={setSelectedBoardMedium}
+              minWidth={240}
+            />
+          ) : null
+        }
         sx={{
-          p: { xs: 2, md: 3 },
+          p: 2,
           display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: { xs: 'stretch', md: 'center' },
-          gap: 2,
-          flexDirection: { xs: 'column', md: 'row' },
-        }}
-      >
-        <Box>
-          <Typography id="exposure-atlas-title" variant="h6">
-            Exposure Atlas
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Move from the selected academic year into its board, medium and class balances.
-          </Typography>
-        </Box>
-        {options.length ? (
-          <BoardMediumDropdown
-            value={activeBoardMedium}
-            onChange={setSelectedBoardMedium}
-            minWidth={260}
-          />
-        ) : (
-          <Typography role="status" variant="body2" color="text.secondary">
-            This academic year has no board and medium options.
-          </Typography>
-        )}
-      </Box>
-
-      <Box
-        sx={{
-          px: { xs: 2, md: 3 },
-          pb: 1.5,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1,
           flexWrap: 'wrap',
+          gap: 1,
+          '& .MuiCardHeader-content': { minWidth: 0 },
+          '& .MuiCardHeader-action': { m: 0, width: { xs: '100%', md: 'auto' } },
         }}
-      >
-        <Typography variant="caption" color="text.secondary">
-          Scope path
+      />
+      {!options.length && (
+        <Typography role="status" variant="body2" color="text.secondary" sx={{ px: 2, pb: 2 }}>
+          No board and medium options are available for this year.
         </Typography>
-        <Typography variant="caption" fontWeight={700}>
-          {currentYear?.id ? academicYearLabel(currentYear as Record<string, any>) : 'No year selected'}
-        </Typography>
-        {activeBoardMedium && (
-          <>
-            <Typography aria-hidden variant="caption" color="text.disabled">
-              /
-            </Typography>
-            <Typography variant="caption" fontWeight={700}>
-              {activeBoardMedium.label}
-            </Typography>
-            <Typography aria-hidden variant="caption" color="text.disabled">
-              /
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Class
-            </Typography>
-          </>
-        )}
-      </Box>
-
+      )}
       <Divider />
-
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(3, minmax(0, 1fr))' },
-          gap: { xs: 1.5, sm: 3 },
-          px: { xs: 2, md: 3 },
-          py: 2,
-          bgcolor: 'action.hover',
-        }}
-      >
-        <Box>
-          <Typography variant="caption" color="text.secondary">
-            Outstanding · year snapshot
-          </Typography>
-          <Typography variant="h6">{fCurrency(financeExposurePreview.outstanding)}</Typography>
-        </Box>
-        <Box>
-          <Typography variant="caption" color="text.secondary">
-            Overdue · included above
-          </Typography>
-          <Typography variant="h6" color="error.main">
-            {fCurrency(financeExposurePreview.overdue)}
-          </Typography>
-        </Box>
-        <Box>
-          <Typography variant="caption" color="text.secondary">
-            Students with overdue balances
-          </Typography>
-          <Typography variant="h6">{financeExposurePreview.overdueStudents}</Typography>
-        </Box>
-      </Box>
-
-      <Box role="table" aria-label="Class-wise finance exposure for selected board and medium">
-        <Box
-          role="row"
-          sx={{
-            px: { xs: 2, md: 3 },
-            py: 1.25,
-            display: 'grid',
-            gridTemplateColumns: {
-              xs: '1fr 1fr',
-              md: 'minmax(120px, 1.1fr) minmax(110px, 1fr) minmax(110px, 1fr) minmax(95px, 0.75fr)',
-            },
-            gap: 1,
-            borderBottom: '1px solid',
-            borderColor: 'divider',
-          }}
-        >
-          <Typography role="columnheader" variant="caption" color="text.secondary" fontWeight={700}>
-            CLASS
-          </Typography>
-          <Typography
-            role="columnheader"
-            variant="caption"
-            color="text.secondary"
-            textAlign="right"
-            fontWeight={700}
-          >
-            OUTSTANDING
-          </Typography>
-          <Typography
-            role="columnheader"
-            variant="caption"
-            color="text.secondary"
-            textAlign="right"
-            fontWeight={700}
-            sx={{ display: { xs: 'none', md: 'block' } }}
-          >
-            OVERDUE
-          </Typography>
-          <Typography
-            role="columnheader"
-            variant="caption"
-            color="text.secondary"
-            textAlign="right"
-            fontWeight={700}
-            sx={{ display: { xs: 'none', md: 'block' } }}
-          >
-            SEPARATE CHARGES
-          </Typography>
-        </Box>
-
-        {financeExposurePreview.classes.map((item) => (
-          <Box
-            key={item.className}
-            role="row"
-            sx={{
-              px: { xs: 2, md: 3 },
-              py: 1.5,
-              display: 'grid',
-              gridTemplateColumns: {
-                xs: '1fr 1fr',
-                md: 'minmax(120px, 1.1fr) minmax(110px, 1fr) minmax(110px, 1fr) minmax(95px, 0.75fr)',
-              },
-              gap: 1,
-              alignItems: 'center',
-              borderBottom: '1px solid',
-              borderColor: 'divider',
-              '&:last-child': { borderBottom: 0 },
-            }}
-          >
-            <Box role="rowheader">
-              <Typography variant="subtitle2">{item.className}</Typography>
-              <Typography variant="caption" color="text.secondary">
-                {item.students} students with overdue balances
-              </Typography>
-            </Box>
-            <Box role="cell" sx={{ textAlign: 'right' }}>
-              <Typography variant="body2" fontWeight={600}>
-                {fCurrency(item.outstanding)}
-              </Typography>
-              <LinearProgress
-                aria-label={`${item.className  } share of outstanding exposure`}
-                variant="determinate"
-                value={(item.outstanding / maxOutstanding) * 100}
-                sx={{
-                  mt: 0.5,
-                  ml: 'auto',
-                  width: '72%',
-                  height: 4,
-                  borderRadius: 1,
-                  bgcolor: 'action.hover',
-                  '& .MuiLinearProgress-bar': { backgroundColor: theme.palette.primary.main },
-                }}
-              />
-            </Box>
-            <Typography
-              role="cell"
-              variant="body2"
-              textAlign="right"
-              sx={{ display: { xs: 'none', md: 'block' } }}
-            >
-              {fCurrency(item.overdue)}
+      <CardContent sx={{ p: 2 }}>
+        <Grid container spacing={2}>
+          <Grid size={{ xs: 6, sm: 4 }}>
+            <Typography variant="caption" color="text.secondary">
+              Total outstanding
             </Typography>
-            <Typography
-              role="cell"
-              variant="body2"
-              textAlign="right"
-              sx={{ display: { xs: 'none', md: 'block' } }}
-            >
-              {fCurrency(item.charges)}
+            <Typography component="p" variant="h6" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+              {formatNumber(financeExposurePreview.outstanding, 'INR')}
             </Typography>
-          </Box>
-        ))}
-      </Box>
-
+          </Grid>
+          <Grid size={{ xs: 6, sm: 4 }}>
+            <Typography variant="caption" color="text.secondary">
+              Overdue
+            </Typography>
+            <Typography component="p" variant="h6" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+              {formatNumber(financeExposurePreview.overdue, 'INR')}
+            </Typography>
+          </Grid>
+          <Grid size={{ xs: 12, sm: 4 }}>
+            <Typography variant="caption" color="text.secondary">
+              Students with overdue fees
+            </Typography>
+            <Typography component="p" variant="h6">
+              {financeExposurePreview.overdueStudents}
+            </Typography>
+          </Grid>
+        </Grid>
+      </CardContent>
+      <Divider />
+      <TableContainer sx={{ maxWidth: '100%' }}>
+        <Table size="small" aria-label="Outstanding fees by class" sx={{ minWidth: 580 }}>
+          <TableHead>
+            <TableRow>
+              <TableCell>Class</TableCell>
+              <TableCell align="right">Outstanding</TableCell>
+              <TableCell align="right">Overdue</TableCell>
+              <TableCell align="right">Separate charges</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {financeExposurePreview.classes.map((item) => (
+              <TableRow key={item.className} hover>
+                <TableCell component="th" scope="row">
+                  <Typography variant="subtitle2">{item.className}</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {item.students} students overdue
+                  </Typography>
+                </TableCell>
+                <TableCell align="right">{formatNumber(item.outstanding, 'INR')}</TableCell>
+                <TableCell align="right">{formatNumber(item.overdue, 'INR')}</TableCell>
+                <TableCell align="right">{formatNumber(item.charges, 'INR')}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
       <Divider />
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
         justifyContent="space-between"
         spacing={0.5}
-        sx={{ px: { xs: 2, md: 3 }, py: 1.5 }}
+        sx={{ p: 2 }}
       >
         <Typography variant="caption" color="text.secondary">
-          Separate charges across classes: {fCurrency(financeExposurePreview.separateCharges)}
+          Separate charges total: {formatNumber(financeExposurePreview.separateCharges, 'INR')}
         </Typography>
         <Typography variant="caption" color="text.secondary">
-          Current selected-year snapshot · not reconstructed for the activity date range
+          The activity date filter does not change these year totals.
         </Typography>
       </Stack>
-    </Paper>
+    </Card>
   );
 }

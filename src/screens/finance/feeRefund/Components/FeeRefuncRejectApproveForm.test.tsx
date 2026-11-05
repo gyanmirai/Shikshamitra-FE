@@ -24,7 +24,7 @@ vi.mock('src/components/customDialog', () => ({
 vi.mock('src/components/shaking-text-field', () => ({ default: ({ children }: any) => children }));
 
 describe('refund approval and rejection', () => {
-  it('does not choose an arbitrary bank when the pinned default is stale', async () => {
+  it('does not request a bank for cash approval', async () => {
     const onClose = vi.fn();
     render(
       <FeeRefundReasonApprovalForm
@@ -32,7 +32,6 @@ describe('refund approval and rejection', () => {
         cashRefund
         academicYearId="year"
         defaultExpenseCategoryId="expense"
-        defaultBankAccountId="archived-bank"
         onClose={onClose}
       />
     );
@@ -41,14 +40,11 @@ describe('refund approval and rejection', () => {
         'Refund expense'
       )
     );
-    expect(
-      screen.getByRole('combobox', { name: /Source school bank account/ })
-    ).not.toHaveTextContent('School account');
-    expect(screen.getByRole('button', { name: 'Approve and pay cash' })).toBeDisabled();
-    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.queryByRole('combobox', { name: /Source school bank account/ })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Approve and pay cash' })).toBeEnabled();
   });
 
-  it('collects explicit cash routing when the pinned policy has no bank default', async () => {
+  it('collects only an expense category for cash approval', async () => {
     const onClose = vi.fn();
     render(
       <FeeRefundReasonApprovalForm
@@ -62,13 +58,10 @@ describe('refund approval and rejection', () => {
     expect(onClose).not.toHaveBeenCalled();
     fireEvent.mouseDown(screen.getByRole('combobox', { name: /Expense category/ }));
     fireEvent.click(await screen.findByRole('option', { name: 'Refund expense' }));
-    fireEvent.mouseDown(screen.getByRole('combobox', { name: /Source school bank account/ }));
-    fireEvent.click(await screen.findByRole('option', { name: 'School account' }));
     fireEvent.click(screen.getByRole('button', { name: 'Approve and pay cash' }));
     await waitFor(() =>
       expect(onClose).toHaveBeenCalledWith(null, true, undefined, {
         expenseCategoryId: 'expense',
-        bankAccountId: 'bank',
       })
     );
   });

@@ -82,6 +82,7 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
   defaultMediumId = '',
   defaultStandardId = '',
   defaultDivisionId = '',
+  scopeOptions = null,
 }) => {
   const theme = useTheme();
   const permissions = useChargePermissions();
@@ -242,7 +243,7 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
           (item: { id: string }) => item.id === values.chargeCategoryId
         );
         const categoryName = category?.name ?? values.chargeName;
-        const automaticallyApproved = isAdminCreator || category?.isApprovalRequired === false;
+        const needsAdminConfirmation = isAdminCreator;
 
         if (values.selectionMode === 'all' && candidateStudentIdsRef.current.length === 0) {
           shikshaMitraToast.error({
@@ -263,7 +264,18 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
           });
           return;
         }
-        const audience = buildAudiencePayload(values, candidateStudentIdsRef.current);
+        // The current lookup does not return a server audience preview/fingerprint.
+        // Pin "all" to the confirmed IDs so an unseen student is never added at commit.
+        const audience = buildAudiencePayload(
+          values.selectionMode === 'all'
+            ? {
+                ...values,
+                selectionMode: 'selected',
+                studentIds: candidateStudentIdsRef.current,
+              }
+            : values,
+          candidateStudentIdsRef.current
+        );
         const payload = {
           chargeName: values.chargeName,
           chargeCategoryId: values.chargeCategoryId,
@@ -275,7 +287,7 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
 
         if (
           !isEditMode &&
-          automaticallyApproved &&
+          needsAdminConfirmation &&
           confirmedAdminSnapshotRef.current !== audienceSnapshot
         ) {
           setAdminConfirmation({
@@ -306,18 +318,12 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
             academicYearId: currentYear.id,
             body: payload,
           }).unwrap();
-          if (automaticallyApproved && created.data.status !== 1) {
-            shikshaMitraToast.warning({
-              message: 'Charge was created as Pending. Automatic approval did not occur.',
-            });
-          } else {
-            shikshaMitraToast.success({
-              message:
-                created.data.status === 1
-                  ? `Charge created and approved for ${categoryName}`
-                  : `Charge created as Pending for ${categoryName}`,
-            });
-          }
+          shikshaMitraToast.success({
+            message:
+              created.data.status === 1
+                ? `Charge created and approved for ${categoryName}`
+                : `Charge created as Pending for ${categoryName}`,
+          });
         }
         confirmedAdminSnapshotRef.current = null;
         dispatch(setIsChanges(false));
@@ -334,9 +340,6 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
   });
 
   const { values, touched, errors, setFieldValue, setFieldTouched, setValues } = formik;
-  const selectedCategoryRequiresApproval =
-    availableChargeCategories.find((item: { id: string }) => item.id === values.chargeCategoryId)
-      ?.isApprovalRequired !== false;
   const isDirty = useDirtyState(initialValues, values);
   const {
     classes,
@@ -345,6 +348,32 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
     isError: classesError,
     refetch: retryClasses,
   } = useChargeAcademicStructure(values.educationMediumId, values.standardId);
+  const visibleClasses = useMemo(
+    () =>
+      classes.filter(
+        (cls) =>
+          !scopeOptions ||
+          scopeOptions.some(
+            (option) =>
+              option.boardId === values.boardId &&
+              option.mediumId === values.educationMediumId &&
+              option.standardId === cls.id
+          )
+      ),
+    [classes, scopeOptions, values.boardId, values.educationMediumId]
+  );
+  const visibleDivisions = useMemo(
+    () =>
+      allDivision.filter(
+        (division) =>
+          !scopeOptions ||
+          scopeOptions.some(
+            (option) =>
+              option.standardId === values.standardId[0] && option.divisionId === division.id
+          )
+      ),
+    [allDivision, scopeOptions, values.standardId]
+  );
 
   const applySelectionChange = useCallback(
     (
@@ -391,10 +420,9 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
   );
 
   const {
-    students: scopeStudents,
+    students: unfilteredScopeStudents,
     isLoading: studentsLoading,
     hasFetched: studentsFetched,
-    candidateStudentIds,
     isError: studentsError,
     retry: retryStudents,
   } = useStudentsInScope(
@@ -403,6 +431,26 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
     values.standardId,
     values.divisionIds,
     values.chargeCategoryId
+  );
+
+  const scopeStudents = useMemo(
+    () =>
+      unfilteredScopeStudents.filter(
+        (student) =>
+          !scopeOptions ||
+          scopeOptions.some(
+            (option) =>
+              option.boardId === values.boardId &&
+              option.mediumId === values.educationMediumId &&
+              option.standardId === student.standardId &&
+              option.divisionId === student.divisionId
+          )
+      ),
+    [unfilteredScopeStudents, scopeOptions, values.boardId, values.educationMediumId]
+  );
+  const candidateStudentIds = useMemo(
+    () => scopeStudents.map((student) => student.id),
+    [scopeStudents]
   );
 
   candidateStudentIdsRef.current = candidateStudentIds;
@@ -439,30 +487,68 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
 
   // Load boards on component mount
   useEffect(() => {
-    const yearBoards = currentYear?.boards || [];
+    const yearBoards = (currentYear?.boards || []).filter(
+      (board: any) => !scopeOptions || scopeOptions.some((option) => option.boardId === board.id)
+    );
     setBoards(yearBoards);
     if (yearBoards.length > 0) {
-      if (!values.boardId) {
+      if (!values.boardId || !yearBoards.some((board: any) => board.id === values.boardId)) {
         const firstBoard = yearBoards[0];
-        const firstMedium = firstBoard?.educationMediums?.[0]?.id ?? '';
+        const firstMedium =
+          firstBoard?.educationMediums?.find(
+            (medium: any) =>
+              !scopeOptions ||
+              scopeOptions.some(
+                (option) => option.boardId === firstBoard.id && option.mediumId === medium.id
+              )
+          )?.id ?? '';
         setValues((previous) => ({
           ...previous,
           boardId: firstBoard.id,
           educationMediumId: firstMedium,
         }));
-      } else if (!values.educationMediumId) {
+      } else if (
+        !values.educationMediumId ||
+        (scopeOptions &&
+          !scopeOptions.some(
+            (option) =>
+              option.boardId === values.boardId && option.mediumId === values.educationMediumId
+          ))
+      ) {
         const board = yearBoards.find((b: any) => b.id === values.boardId);
-        const firstMedium = board?.educationMediums?.[0]?.id ?? '';
+        const firstMedium =
+          board?.educationMediums?.find(
+            (medium: any) =>
+              !scopeOptions ||
+              scopeOptions.some(
+                (option) => option.boardId === board.id && option.mediumId === medium.id
+              )
+          )?.id ?? '';
         setFieldValue('educationMediumId', firstMedium);
       }
     }
-  }, [currentYear, values.boardId, values.educationMediumId, setFieldValue, setValues]);
+  }, [
+    currentYear,
+    scopeOptions,
+    values.boardId,
+    values.educationMediumId,
+    setFieldValue,
+    setValues,
+  ]);
 
   // Load mediums when board changes
   useEffect(() => {
     const selectedBoard = boards.find((b: any) => b.id === values.boardId);
-    setMediums(selectedBoard?.educationMediums || []);
-  }, [values.boardId, boards]);
+    setMediums(
+      (selectedBoard?.educationMediums || []).filter(
+        (medium: any) =>
+          !scopeOptions ||
+          scopeOptions.some(
+            (option) => option.boardId === values.boardId && option.mediumId === medium.id
+          )
+      )
+    );
+  }, [values.boardId, boards, scopeOptions]);
 
   // Track dirty state in Redux
   useEffect(() => {
@@ -543,10 +629,7 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
         ? 'Checking charge permissions…'
         : !(isEditMode ? permissions.canEdit : permissions.canAdd)
           ? `You do not have permission to ${isEditMode ? 'update' : 'create'} charges.`
-          : !isEditMode &&
-              isAdminCreator &&
-              selectedCategoryRequiresApproval &&
-              !permissions.canApprove
+          : !isEditMode && isAdminCreator && !permissions.canApprove
             ? 'Approve permission is required for an administrator to create an automatically approved charge.'
             : studentsLoading
               ? 'Wait for the student list to finish loading.'
@@ -682,9 +765,9 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                                 color="text.secondary"
                                 fontSize="0.75rem"
                               >
-                                {isAdminCreator || !selectedCategoryRequiresApproval
-                                  ? 'Your charge will be approved automatically after confirmation.'
-                                  : 'This charge will start as Pending and require approval.'}
+                                {isAdminCreator
+                                  ? 'An authorized administrator can confirm approval on creation.'
+                                  : 'Class-teacher requests enter Pending review, including categories without an approval requirement. The server determines the final status.'}
                               </Typography>
                             )}
                           </ShakingTextField>
@@ -896,8 +979,8 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                               >
                                 Classes and divisions could not be loaded.
                               </Alert>
-                            ) : (classes || []).length > 0 ? (
-                              (classes || []).map((cls: any) => (
+                            ) : visibleClasses.length > 0 ? (
+                              visibleClasses.map((cls: any) => (
                                 <Button
                                   key={cls.id}
                                   variant={
@@ -972,15 +1055,14 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                             <Typography role="status" variant="body2">
                               Loading divisions…
                             </Typography>
-                          ) : !allDivision || allDivision.length === 0 ? (
+                          ) : visibleDivisions.length === 0 ? (
                             <Box sx={{ p: 2, width: '100%', textAlign: 'center' }}>
                               <Typography variant="body2" color="text.secondary">
-                                No divisions are configured for this class. Students from the whole
-                                class are included.
+                                No divisions are available in your Finance scope for this class.
                               </Typography>
                             </Box>
                           ) : (
-                            allDivision.map((div: Division) => (
+                            visibleDivisions.map((div: Division) => (
                               <Button
                                 key={div.id}
                                 variant={

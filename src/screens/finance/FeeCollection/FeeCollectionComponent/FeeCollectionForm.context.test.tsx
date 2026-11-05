@@ -491,6 +491,16 @@ describe('embedded Finance collection context', () => {
     expect(screen.queryByText(/\d+ items? selected/)).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Select form fee' }));
     await screen.findByRole('row', { name: 'Form fee, Jun 2026' });
+    const feeItems = screen.getByRole('button', { name: /Payments \(1\)/ });
+    fireEvent.click(feeItems);
+    expect(feeItems).toHaveAttribute('aria-expanded', 'false');
+    await waitFor(() =>
+      expect(screen.queryByRole('row', { name: 'Form fee, Jun 2026' })).not.toBeInTheDocument()
+    );
+    expect(screen.getByLabelText('Amount to collect *')).toBeVisible();
+    fireEvent.click(feeItems);
+    expect(feeItems).toHaveAttribute('aria-expanded', 'true');
+    await screen.findByRole('row', { name: 'Form fee, Jun 2026' });
     fireEvent.change(screen.getByLabelText('Amount to collect *'), { target: { value: '250' } });
     expect(screen.getByLabelText('Amount to collect *')).toHaveValue('₹ 250');
     expect(screen.queryByRole('tab')).not.toBeInTheDocument();

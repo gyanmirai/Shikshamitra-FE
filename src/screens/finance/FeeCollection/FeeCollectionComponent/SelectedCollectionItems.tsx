@@ -1,11 +1,13 @@
 import type { DragEndEvent } from '@dnd-kit/core';
 
+import { useState } from 'react';
 import { CSS } from '@dnd-kit/utilities';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { Box, IconButton, Typography } from '@mui/material';
+import CustomAccordion from 'src/components/custom-accordian';
+import { Box, IconButton, Paper, Typography } from '@mui/material';
 import {
   useSensor,
   DndContext,
@@ -156,6 +158,8 @@ export default function SelectedCollectionItems({
   showAllocation = false,
   emptyText = 'Select fees or charges from the ledger to start collecting.',
 }: Props) {
+  const [feesExpanded, setFeesExpanded] = useState(true);
+  const [chargesExpanded, setChargesExpanded] = useState(true);
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
@@ -191,40 +195,91 @@ export default function SelectedCollectionItems({
       </SortableContext>
     </DndContext>
   );
+  const tableHeader = (
+    <Box role="rowgroup" sx={{ bgcolor: 'background.neutral', borderRadius: 1 }}>
+      <Box role="row" sx={{ ...rowLayout, py: 0.75 }}>
+        {[
+          fixedFeeOrder ? 'Order' : 'Reorder',
+          'Fee item',
+          'Term',
+          showAllocation ? 'Pay now' : 'Amount',
+          'Remove',
+        ].map((label, index) => (
+          <Typography
+            key={label}
+            role="columnheader"
+            aria-label={label}
+            variant="caption"
+            color="text.secondary"
+            sx={{ fontWeight: 600, textAlign: index === 3 ? 'right' : 'left' }}
+          >
+            {index === 0 || index === 4 ? '' : label}
+          </Typography>
+        ))}
+      </Box>
+    </Box>
+  );
   return (
     <Box role="table" aria-label="Selected collection items" sx={{ minWidth: 0 }}>
-      <Box role="rowgroup" sx={{ bgcolor: 'background.neutral', borderRadius: 1 }}>
-        <Box role="row" sx={{ ...rowLayout, py: 0.75 }}>
-          {[
-            fixedFeeOrder ? 'Order' : 'Reorder',
-            'Fee item',
-            'Term',
-            showAllocation ? 'Pay now' : 'Amount',
-            'Remove',
-          ].map((label, index) => (
-            <Typography
-              key={label}
-              role="columnheader"
-              aria-label={label}
-              variant="caption"
-              color="text.secondary"
-              sx={{ fontWeight: 600, textAlign: index === 3 ? 'right' : 'left' }}
-            >
-              {index === 0 || index === 4 ? '' : label}
-            </Typography>
-          ))}
-        </Box>
-      </Box>
-      {fees.length > 0 && group(fees, 'Selected fees', onMoveFee)}
+      {fees.length > 0 && (
+        <Paper
+          component="section"
+          variant="outlined"
+          aria-label="Fee payments"
+          sx={{ borderRadius: 1.5, overflow: 'hidden', bgcolor: 'background.paper' }}
+        >
+          <CustomAccordion
+            title={`Payments (${fees.length}) · ${formatNumber(
+              fees.reduce((total, fee) => total + fee.amount, 0),
+              'INR'
+            )}`}
+            expanded={feesExpanded}
+            onChange={() => setFeesExpanded((current) => !current)}
+            content={
+              <Box>
+                {tableHeader}
+                {group(fees, 'Selected fees', onMoveFee)}
+              </Box>
+            }
+          />
+        </Paper>
+      )}
       {charges.length > 0 && (
-        <>
-          {fees.length > 0 && (
-            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', pt: 1 }}>
-              Charges · allocated after fees
-            </Typography>
-          )}
-          {group(charges, 'Selected charges', onMoveCharge)}
-        </>
+        <Paper
+          component="section"
+          variant="outlined"
+          aria-label="Charges"
+          sx={{
+            mt: fees.length > 0 ? 1.5 : 0,
+            borderRadius: 1.5,
+            overflow: 'hidden',
+            bgcolor: 'background.paper',
+          }}
+        >
+          <CustomAccordion
+            title={`Charges (${charges.length}) · ${formatNumber(
+              charges.reduce((total, charge) => total + charge.amount, 0),
+              'INR'
+            )}`}
+            expanded={chargesExpanded}
+            onChange={() => setChargesExpanded((current) => !current)}
+            content={
+              <Box>
+                {fees.length > 0 && (
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ display: 'block', pb: 1 }}
+                  >
+                    Allocated after fee payments
+                  </Typography>
+                )}
+                {tableHeader}
+                {group(charges, 'Selected charges', onMoveCharge)}
+              </Box>
+            }
+          />
+        </Paper>
       )}
       {fees.length === 0 && charges.length === 0 && (
         <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>

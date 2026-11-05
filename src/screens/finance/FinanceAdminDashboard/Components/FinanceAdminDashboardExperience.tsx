@@ -5,26 +5,23 @@ import type { DateRange } from 'src/components/custom-date-range-picker';
 
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
-import { fCurrency } from 'src/utils/format-number';
+import { alpha } from '@mui/material/styles';
 import { useMemo, useState, useEffect } from 'react';
+import { formatNumber } from 'src/utils/formate_number';
 import { financePaths } from 'src/constants/finance-menu';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { CustomDateRangePicker } from 'src/components/custom-date-range-picker';
-import {
-  Box,
-  Chip,
-  Grid,
-  Alert,
-  Paper,
-  Stack,
-  Button,
-  Typography,
-} from '@mui/material';
+import { Box, Chip, Grid, Alert, Paper, Stack, Button, Typography } from '@mui/material';
 
 import ExposureAtlas from './ExposureAtlas';
 import MoneyTransitMap from './MoneyTransitMap';
 import { FinanceReportRail, FinanceAttentionQueue } from './FinanceActionRail';
-import { financeQueuePreview, financeExposurePreview, summarizeFinanceActivity } from '../finance-admin-dashboard-preview-data';
+import { financeNoteFrameSx, financeNoteInnerSx } from './finance-dashboard-note-styles';
+import {
+  financeQueuePreview,
+  financeExposurePreview,
+  summarizeFinanceActivity,
+} from '../finance-admin-dashboard-preview-data';
 
 function academicYearName(year: Record<string, any>) {
   if (year.name || year.academicYearName || year.yearName) {
@@ -33,7 +30,7 @@ function academicYearName(year: Record<string, any>) {
 
   const start = year.startDate ? dayjs(year.startDate).year() : null;
   const end = year.endDate ? dayjs(year.endDate).year() : null;
-  return start && end ? `AY ${  start  }–${  end}` : 'Selected academic year';
+  return start && end ? `AY ${start}–${end}` : 'Selected academic year';
 }
 
 function createDefaultRange(yearStart: dayjs.Dayjs, yearEnd: dayjs.Dayjs): DateRange {
@@ -98,8 +95,26 @@ export default function FinanceAdminDashboardExperience() {
     : 'No academic year selected';
   const rangeLabel =
     fromDate && toDate
-      ? `${fromDate.format('DD MMM YYYY')  } – ${  toDate.format('DD MMM YYYY')}`
+      ? `${fromDate.format('DD MMM YYYY')} – ${toDate.format('DD MMM YYYY')}`
       : 'Select a valid date range';
+  const confirmedNet = activity.confirmedIncome - activity.expenses;
+  const statementFacts = [
+    {
+      label: 'Fee payments received · activity',
+      value: formatNumber(activity.received, 'INR'),
+      detail: `${activity.transactions.toLocaleString('en-IN')} transactions · ${rangeLabel}`,
+    },
+    {
+      label: 'Awaiting my decision · year queue',
+      value: String(financeQueuePreview.decisions),
+      detail: 'Requests needing an admin decision',
+    },
+    {
+      label: 'Refunds awaiting payment · year queue',
+      value: formatNumber(financeQueuePreview.refundAmount, 'INR'),
+      detail: `${financeQueuePreview.refundRequests} requests`,
+    },
+  ];
 
   const applyPreset = (preset: 'week' | 'month' | 'year') => {
     if (!yearStart || !yearEnd || !hasValidAcademicYear) return;
@@ -142,7 +157,7 @@ export default function FinanceAdminDashboardExperience() {
               size="small"
               variant="outlined"
               color={currentYear?.id ? 'primary' : 'default'}
-              label={`Global academic year · ${  yearLabel}`}
+              label={`Global academic year · ${yearLabel}`}
             />
             <Chip
               size="small"
@@ -213,57 +228,105 @@ export default function FinanceAdminDashboardExperience() {
         ) : null}
 
         <Paper
+          component="section"
+          aria-label="Finance Statement"
           variant="outlined"
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', lg: 'repeat(4, 1fr)' },
-            px: { xs: 2, md: 2.5 },
-            py: 1.5,
-            '& > *:nth-of-type(even)': { borderRight: { xs: 0, lg: '1px solid' } },
-          }}
+          sx={financeNoteFrameSx}
         >
-          <Box sx={{ p: 1, borderRight: { xs: '1px solid', lg: 0 }, borderColor: 'divider' }}>
-            <Typography variant="caption" color="text.secondary">
-              Fee payments received · activity
-            </Typography>
-            <Typography variant="h5">{fCurrency(activity.received)}</Typography>
-            <Typography variant="caption" color="text.secondary">
-              {activity.transactions.toLocaleString('en-IN')} transactions · {rangeLabel}
-            </Typography>
-          </Box>
-          <Box sx={{ p: 1, borderColor: 'divider' }}>
-            <Typography variant="caption" color="text.secondary">
-              Outstanding fees · year snapshot
-            </Typography>
-            <Typography variant="h5">{fCurrency(financeExposurePreview.outstanding)}</Typography>
-            <Typography variant="caption" color="text.secondary">
-              Across the selected academic year
-            </Typography>
-          </Box>
-          <Box
-            sx={{
-              p: 1,
-              borderRight: { xs: '1px solid', lg: 0 },
-              borderTop: { xs: '1px solid', lg: 0 },
-              borderColor: 'divider',
-            }}
-          >
-            <Typography variant="caption" color="text.secondary">
-              Awaiting my decision · year queue
-            </Typography>
-            <Typography variant="h5">{financeQueuePreview.decisions}</Typography>
-            <Typography variant="caption" color="text.secondary">
-              Requests needing an admin decision
-            </Typography>
-          </Box>
-          <Box sx={{ p: 1, borderTop: { xs: '1px solid', lg: 0 }, borderColor: 'divider' }}>
-            <Typography variant="caption" color="text.secondary">
-              Refunds awaiting payment · year queue
-            </Typography>
-            <Typography variant="h5">{fCurrency(financeQueuePreview.refundAmount)}</Typography>
-            <Typography variant="caption" color="text.secondary">
-              {financeQueuePreview.refundRequests} requests
-            </Typography>
+          <Box sx={financeNoteInnerSx}>
+            <Box
+              sx={{
+                p: { xs: 2, md: 3 },
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1fr) auto' },
+                gap: { xs: 3, md: 4 },
+                alignItems: 'center',
+              }}
+            >
+              <Box sx={{ minWidth: 0 }}>
+                <Typography variant="overline" color="success.main" sx={{ letterSpacing: 2 }}>
+                  Finance Statement · {yearLabel}
+                </Typography>
+                <Typography variant="h6" sx={{ mt: 1 }}>
+                  Net movement · activity
+                </Typography>
+                <Typography
+                  variant="h1"
+                  sx={{
+                    mt: 0.5,
+                    color: 'text.primary',
+                    lineHeight: 1.05,
+                    overflowWrap: 'anywhere',
+                  }}
+                >
+                  {formatNumber(confirmedNet, 'INR')}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                  Confirmed income {formatNumber(activity.confirmedIncome, 'INR')} less recorded
+                  expenses {formatNumber(activity.expenses, 'INR')} · {rangeLabel}
+                </Typography>
+              </Box>
+              <Box
+                sx={{
+                  width: { xs: 200, sm: 220 },
+                  aspectRatio: '1',
+                  borderRadius: '50%',
+                  border: (theme) => `4px double ${alpha(theme.palette.success.main, 0.65)}`,
+                  outline: (theme) => `1px solid ${alpha(theme.palette.success.main, 0.3)}`,
+                  outlineOffset: 7,
+                  bgcolor: (theme) => alpha(theme.palette.success.main, 0.055),
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  textAlign: 'center',
+                  p: 2,
+                  mx: { xs: 'auto', md: 0 },
+                }}
+              >
+                <Typography variant="caption" color="text.secondary">
+                  Outstanding fees · year snapshot
+                </Typography>
+                <Typography variant="h5" sx={{ color: 'text.primary', mt: 0.5 }}>
+                  {formatNumber(financeExposurePreview.outstanding, 'INR')}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+                  Across the selected academic year
+                </Typography>
+              </Box>
+            </Box>
+            <Box
+              sx={{
+                borderTop: '1px dashed',
+                borderColor: 'success.main',
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, minmax(0, 1fr))' },
+              }}
+            >
+              {statementFacts.map((fact, index) => (
+                <Box
+                  key={fact.label}
+                  sx={{
+                    minWidth: 0,
+                    px: { xs: 2, md: 3 },
+                    py: 2,
+                    borderRight: { sm: index < 2 ? '1px dashed' : 0 },
+                    borderBottom: { xs: index < 2 ? '1px dashed' : 0, sm: 0 },
+                    borderColor: (theme) => alpha(theme.palette.success.main, 0.3),
+                  }}
+                >
+                  <Typography variant="caption" color="text.secondary">
+                    {fact.label}
+                  </Typography>
+                  <Typography variant="h5" sx={{ mt: 0.5, overflowWrap: 'anywhere' }}>
+                    {fact.value}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {fact.detail}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
           </Box>
         </Paper>
 
@@ -279,11 +342,6 @@ export default function FinanceAdminDashboardExperience() {
         </Grid>
 
         <FinanceReportRail />
-
-        <Typography variant="caption" color="text.secondary" sx={{ px: 1 }}>
-          Activity values follow the selected date range. Outstanding, overdue exposure and
-          unresolved year queues follow the global academic year and are shown as current snapshots.
-        </Typography>
       </Stack>
     </Box>
   );

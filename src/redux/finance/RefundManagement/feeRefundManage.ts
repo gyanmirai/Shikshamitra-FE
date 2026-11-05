@@ -208,7 +208,7 @@ export interface RecordRefundPayoutInput {
   method: string;
   amount: number;
   paymentDate: string;
-  bankAccountId: string;
+  bankAccountId?: string;
   expenseCategoryId: string;
   externalReference?: string;
   evidenceReference?: string;

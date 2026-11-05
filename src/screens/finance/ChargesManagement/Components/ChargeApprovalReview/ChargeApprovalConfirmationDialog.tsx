@@ -13,7 +13,6 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 import { Box, Grid, Button, Divider, TextField, Typography } from '@mui/material';
 
 import type { IChargeApprovalConfirmationDialogProps } from './types';
-import CustomTooltip from 'src/components/custom-tooltip';
 
 /**
  * ChargeApprovalConfirmationDialog Component
@@ -54,27 +53,16 @@ const ChargeApprovalConfirmationDialog: React.FC<IChargeApprovalConfirmationDial
     <CustomDialog
       open={open}
       title={
-        <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+        <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
           <Iconify
             icon={isRejectMode ? 'carbon:close-filled' : 'carbon:checkmark-filled'}
             sx={{
-              fontSize: 24,
+              fontSize: 22,
               color: isRejectMode ? 'error.main' : 'success.main',
+              flexShrink: 0,
             }}
           />
-          <Typography variant="h5">{isRejectMode ? 'Reject Charge' : 'Approve Charge'}</Typography>
-          <CustomTooltip
-            arrow
-            placement="right"
-            sx={{ textAlign: 'justify' }}
-            title={
-              isRejectMode
-                ? 'Review the charge details carefully before rejecting. You can provide a reason for rejection.'
-                : 'Review the charge details carefully before approving. You can add approval notes.'
-            }
-          >
-            <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-          </CustomTooltip>
+          {isRejectMode ? 'Reject Charge' : 'Approve Charge'}
         </Box>
       }
       handleClose={onCancel}
@@ -83,49 +71,36 @@ const ChargeApprovalConfirmationDialog: React.FC<IChargeApprovalConfirmationDial
       <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
         <Box sx={{ p: 2 }}>
           {/* Confirmation Message */}
-          <Box sx={{ mb: 2 }}>
+          <Box sx={{ mb: 1 }}>
             <Typography variant="body2">
               {isRejectMode
-                ? `You are about to reject the charge "${chargeName}" for ${selectedStudents} student${selectedStudents !== 1 ? 's' : ''}.`
-                : `You are about to approve the charge "${chargeName}" for ${selectedStudents} student${selectedStudents !== 1 ? 's' : ''}.`}
+                ? `You are about to reject the charge “${chargeName}”.`
+                : `You are about to approve the charge “${chargeName}”.`}
             </Typography>
           </Box>
 
-          {/* Student Count Info */}
+          {/* Show the affected count in relation to the full student list. */}
           <Box
             sx={{
-              p: 2,
-              backgroundColor: 'action.hover',
-              borderRadius: 1,
+              display: 'flex',
+              alignItems: 'baseline',
+              flexWrap: 'wrap',
+              columnGap: 0.75,
+              rowGap: 0.25,
               mb: 2,
             }}
           >
-            <Grid container spacing={2}>
-              <Grid size={{ xs: 6 }}>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    Total Students
-                  </Typography>
-                  <Typography variant="h6" fontWeight={700}>
-                    {totalStudents}
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid size={{ xs: 6 }}>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    Selected for {isRejectMode ? 'Rejection' : 'Approval'}
-                  </Typography>
-                  <Typography
-                    variant="h6"
-                    fontWeight={700}
-                    color={isRejectMode ? 'error.main' : 'success.main'}
-                  >
-                    {selectedStudents}
-                  </Typography>
-                </Box>
-              </Grid>
-            </Grid>
+            <Typography
+              component="strong"
+              variant="subtitle1"
+              sx={{ fontWeight: 700, color: isRejectMode ? 'error.main' : 'success.main' }}
+            >
+              {selectedStudents} of {totalStudents}
+            </Typography>
+            <Typography component="span" variant="body2" color="text.secondary">
+              student{totalStudents !== 1 ? 's' : ''} selected for{' '}
+              {isRejectMode ? 'rejection' : 'approval'}
+            </Typography>
           </Box>
 
           {/* Notes/Reason Field */}

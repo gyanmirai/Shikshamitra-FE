@@ -172,7 +172,7 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
         </Box>
       </Box>
       <Box sx={{ '&:not(:empty)': { mt: 2 } }}>
-        {hasSelectedMonths && !isFullRefund && (
+        {hasSelectedMonths && !isFullRefund && !isAdj && (
           <Box
             display="flex"
             alignItems="center"

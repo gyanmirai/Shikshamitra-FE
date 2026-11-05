@@ -124,7 +124,12 @@ export default function AssignmentDrawer({
             />
           ) : (
             <>
-              <DrawerHeader title={title} onClose={requestClose} closeDisabled={busy} />
+              <DrawerHeader
+                title={title}
+                helpText={`Review the fee structure, policies, fees and service dates before confirming ${students.length > 1 ? 'these assignments' : 'this assignment'}.`}
+                onClose={requestClose}
+                closeDisabled={busy}
+              />
               <Divider />
             </>
           )}
@@ -136,6 +141,7 @@ export default function AssignmentDrawer({
               academicYearName={academicYearName}
               editAssignedPolicies={editAssignedPolicies}
               onClose={requestClose}
+              onCompleted={onClose}
               onBusyChange={setBusy}
               onContextResolved={resolveContext}
               onStructureEditResolved={resolveEditMode}
