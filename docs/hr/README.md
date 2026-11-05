@@ -3,7 +3,7 @@ module: hr
 domain: overview
 content_type: Landing
 status: canonical
-updated_on: 2026-11-02
+updated_on: 2026-11-05
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -80,4 +80,4 @@ Minimals is the design foundation and attendance register is the table reference
 ## Employee Work Shifts
 
 HR owns employee work-shift configuration and dated employee assignments.
-See [workflows](workflows.md#work-shift-workflows) and [backend contracts](../../../Shikshamitra-BE/docs/modules/hr/api.md#employee-work-shift-apis).
+See [workflows](workflows.md#work-shift-workflows) and [backend contracts](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md).

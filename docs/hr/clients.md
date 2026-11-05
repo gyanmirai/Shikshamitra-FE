@@ -3,7 +3,7 @@ module: hr
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-11-02
+updated_on: 2026-11-05
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -261,4 +261,4 @@ src/redux/hr/work-shifts-api.ts owns HR catalogue, active options and employee a
 EmployeeWorkShift and EmployeeShiftAssignment cache tags are independent of the school Shift tag.
 Employee creation sends initialWorkShiftAssignment with a workShiftId and effectiveFrom date.
 Profile updates do not send a schedule change.
-See [backend contracts](../../../Shikshamitra-BE/docs/modules/hr/api.md#employee-work-shift-apis) for validation and ownership.
+See [backend contracts](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md) for validation and ownership.
