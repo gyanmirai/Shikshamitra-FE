@@ -48,3 +48,14 @@ test('stale mutation keeps review open with an error', async ({ page }) => {
   await expect(page.getByRole('alert')).toContainText('Dependencies changed');
   await expect(page.getByRole('dialog')).toBeVisible();
 });
+test('recorded expiry does not extend across a gap or certify version activity', async ({
+  page,
+}) => {
+  await page.goto('/?scenario=gap');
+  await page.getByRole('button', { name: 'Review archive' }).click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toContainText('2026-01-01 to 2026-01-31');
+  await expect(dialog).not.toContainText('2026-03-31');
+  await expect(dialog).toContainText('2026-04-01 to no recorded end date');
+  await expect(dialog).toContainText('do not confirm version activity or availability');
+});

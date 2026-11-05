@@ -10,7 +10,7 @@ audience: humans-and-agents
 
 ## ESIC archive review
 
-Run the focused `esi-policy-archive-dialog.test.tsx` and `esi-policies.test.tsx` Vitest suites, then `npx playwright test --config e2e/hr/esic-archive.config.ts`. The synthetic fixture covers dependency blocking, coverage labels, cancel, failed-load retry, explicit confirmed payloads, busy dismissal locks and stale-write recovery at phone/tablet/desktop sizes in both themes. Finish with an in-app browser smoke test against the local fixture; no real tenant mutations are needed.
+Run the focused `esi-policy-archive-dialog.test.tsx` and `esi-policies.test.tsx` Vitest suites, then `npx playwright test --config e2e/hr/esic-archive.config.ts`. The synthetic fixture covers dependency blocking, recorded version dates (including explicit expiry before a later successor), activity/availability disclaimers, cancel, failed-load retry, explicit confirmed payloads, busy dismissal locks and stale-write recovery at phone/tablet/desktop sizes in both themes. Finish with an in-app browser smoke test against the local fixture; no real tenant mutations are needed.
 
 ## Historical ESIC setup and payroll branding navigation
 

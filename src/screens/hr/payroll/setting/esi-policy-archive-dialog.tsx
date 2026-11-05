@@ -83,17 +83,18 @@ export function EsiPolicyArchiveDialog({
                 <Typography>No live salary templates select this policy.</Typography>
               )}
               <Typography variant="body2" color="text.secondary">
-                Salary templates have no effective date range. Policy version coverage:
+                Salary templates have no effective date range. Recorded policy version dates: these
+                dates do not confirm version activity or availability for a payroll month.
               </Typography>
               {current.policy.versions.length ? (
                 current.policy.versions.map((version) => (
                   <Typography variant="body2" key={version.id}>
                     Version {version.version}: {version.effectiveFrom.slice(0, 10)} to{' '}
-                    {version.appliesUntil?.slice(0, 10) || 'open-ended'}
+                    {version.effectiveTo?.slice(0, 10) || 'no recorded end date'}
                   </Typography>
                 ))
               ) : (
-                <Typography>No effective policy versions are available.</Typography>
+                <Typography>No policy versions are recorded.</Typography>
               )}
             </>
           )}

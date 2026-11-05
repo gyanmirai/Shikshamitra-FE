@@ -15,6 +15,7 @@ export const policy: EsiPolicy = {
       id: 'v1',
       version: 1,
       effectiveFrom: '2026-01-01',
+      effectiveTo: '2026-12-31',
       appliesUntil: '2026-12-31',
       schemeCode: 'ESI',
       jurisdictionCode: 'IN-GJ',
@@ -33,6 +34,19 @@ export const policy: EsiPolicy = {
   ],
 };
 const scenario = new URLSearchParams(window.location.search).get('scenario') || 'used';
+if (scenario === 'gap') {
+  policy.versions = [
+    { ...policy.versions[0], effectiveTo: '2026-01-31', appliesUntil: '2026-03-31' },
+    {
+      ...policy.versions[0],
+      id: 'v2',
+      version: 2,
+      effectiveFrom: '2026-04-01',
+      effectiveTo: null,
+      appliesUntil: null,
+    },
+  ];
+}
 export function useGetEsiPolicyArchiveReviewQuery() {
   const [retry, setRetry] = useState(false);
   return {

@@ -25,6 +25,7 @@ const mocks = vi.hoisted(() => ({
   close: vi.fn(),
 }));
 vi.mock('src/components/toast', () => ({ shikshaMitraToast: { success: vi.fn() } }));
+vi.mock('src/components/iconify', () => ({ Iconify: () => <span /> }));
 vi.mock('src/redux/hr/esi-policy-api', () => ({
   useGetEsiPolicyArchiveReviewQuery: () => ({ ...mocks.review, refetch: mocks.refetch }),
   useArchiveEsiPolicyMutation: () => [mocks.archive, { isLoading: mocks.busy }],
@@ -60,7 +61,7 @@ it('shows dependencies, preserves date meaning and blocks archive', () => {
       policy: {
         ...policy,
         versions: [
-          { id: 'v1', version: 1, effectiveFrom: '2026-01-01', appliesUntil: '2026-12-31' },
+          { id: 'v1', version: 1, effectiveFrom: '2026-01-01', effectiveTo: '2026-12-31' },
         ],
       },
     },
@@ -71,6 +72,39 @@ it('shows dependencies, preserves date meaning and blocks archive', () => {
   expect(screen.getByText(/2026-01-01 to 2026-12-31/)).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Archive policy' })).toBeDisabled();
   expect(mocks.archive).not.toHaveBeenCalled();
+});
+it('shows recorded expiry before a successor without implying gap or inactive-version coverage', () => {
+  mocks.review = {
+    ...ready(),
+    currentData: {
+      ...ready().currentData,
+      policy: {
+        ...policy,
+        versions: [
+          {
+            id: 'v1',
+            version: 1,
+            effectiveFrom: '2026-01-01',
+            effectiveTo: '2026-01-31',
+            appliesUntil: '2026-03-31',
+          },
+          {
+            id: 'v2',
+            version: 2,
+            effectiveFrom: '2026-04-01',
+            effectiveTo: null,
+            appliesUntil: null,
+          },
+        ],
+      },
+    },
+  };
+  show();
+  expect(screen.getByText(/2026-01-01 to 2026-01-31/)).toBeInTheDocument();
+  expect(screen.queryByText(/2026-03-31/)).not.toBeInTheDocument();
+  expect(screen.getByText(/2026-04-01 to no recorded end date/)).toBeInTheDocument();
+  expect(screen.getByText(/do not confirm version activity or availability/)).toBeInTheDocument();
+  expect(screen.queryByText(/Policy version coverage/)).not.toBeInTheDocument();
 });
 it.each(['loading', 'failed', 'stale', 'missing', 'archived'])(
   'fails closed for %s review',
