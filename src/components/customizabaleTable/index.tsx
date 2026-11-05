@@ -28,11 +28,11 @@ import CustomDialog from '../customDialog';
 import { exportTable } from './table-export';
 import { shikshaMitraToast } from '../toast';
 import { getExportableColumns } from './utils';
-import { getColumnSizeSx } from './utils/columnSizing';
 import { TableBody } from './components/TableBody';
 import { ComponentBlock } from '../component-block';
 import { useTableData } from './hooks/useTableData';
 import { TableExportContext } from './export-context';
+import { getColumnSizeSx } from './utils/columnSizing';
 import { TableHeader } from './components/TableHeader';
 import { FilterChips } from './components/FilterChips';
 import { TableToolbar } from './components/TableToolbar';
@@ -159,8 +159,8 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
         if (serverColumnTypes)
           return {
             ...col,
-            isSort: Boolean(type && onServerSort),
-            isFilter: Boolean(type && canUseColumnFilters),
+            isSort: col.isSort !== false && Boolean(type && onServerSort),
+            isFilter: col.isFilter !== false && Boolean(type && canUseColumnFilters),
             filterType:
               col.filterType === 'enum' && col.enumOptions?.length
                 ? ('enum' as const)
@@ -196,7 +196,10 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   });
 
   const { page, rowsPerPage, searchTerm, filters, sorts, columnVisibility, dense } = tableConfig;
-  const visibleColumnIds = memoizedColumns.filter(column => columnVisibility[column.id] !== false && column.id !== 'actions').map(column => column.id).join('\u001f');
+  const visibleColumnIds = memoizedColumns
+    .filter((column) => columnVisibility[column.id] !== false && column.id !== 'actions')
+    .map((column) => column.id)
+    .join('\u001f');
   const visibleColumnsCallback = useRef(onVisibleColumnsChange);
   visibleColumnsCallback.current = onVisibleColumnsChange;
   useEffect(() => {

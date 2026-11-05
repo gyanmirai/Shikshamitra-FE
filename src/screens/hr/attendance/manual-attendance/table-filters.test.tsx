@@ -132,6 +132,29 @@ describe('manual attendance endpoint-owned table filters', () => {
     expect(captured.table.exportDisabled).toBe(true);
     expect(captured.table.paginationDisabled).toBe(true);
   });
+  it('clears column criteria and search as well as domain filters, then accepts repeated group changes', () => {
+    show();
+    act(() => {
+      captured.table.onServerSearch('SYN');
+      captured.table.onServerFilter([
+        { column: 'fullName', type: 'contains', value: 'missing', label: 'Name' },
+      ]);
+      captured.table.onServerSort('fullName', [{ column: 'fullName', direction: 'asc' }]);
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
+    expect(captured.table.filters).toEqual([]);
+    expect(captured.table.sorts).toEqual([]);
+    expect(captured.query.search).toBe('');
+    ['true', 'false', 'all', 'true'].forEach((group) => {
+      fireEvent.change(screen.getByRole('combobox', { name: 'Staff group' }), {
+        target: { value: group },
+      });
+      fireEvent.click(screen.getByRole('button', { name: 'Apply filters' }));
+      expect(captured.query.isTeaching).toBe(group === 'all' ? undefined : group === 'true');
+      expect(captured.query.attendanceDate).toBe('2026-10-24');
+      expect(captured.exportQuery.isTeaching).toBe(captured.query.isTeaching);
+    });
+  });
 });
 
 // This screen test isolates its owning reader; typed criteria transport is covered by the adapter suite.

@@ -8,6 +8,13 @@ owner: frontend-team
 audience: humans-and-agents
 ---
 
+## Mark Attendance filters
+
+Run the manual-attendance screen/status-mapper tests, `use-hr-table-query.test.tsx`, shared-table `index.controlled-state.test.tsx`, and `attendanceApi.contract.test.ts` for filter parameters, reset behavior, dirty locks and explicit interactive-column opt-outs.
+Run `node node_modules/@playwright/test/cli.js test --config tests/browser/manual-attendance-6597.config.ts` for the real screen and RTK Query against loopback synthetic readers.
+The fixture covers group/department combinations, empty results, clearing column criteria, reset, aligned status controls, 390/768/1440 widths in both themes, and late date responses after a page reset. It refuses all persistence writes.
+Finish with the Codex in-app browser. These checks do not establish authenticated tenant or deployed PostgreSQL behavior.
+
 ## ESIC archive review
 
 Run the focused `esi-policy-archive-dialog.test.tsx` and `esi-policies.test.tsx` Vitest suites, then `npx playwright test --config e2e/hr/esic-archive.config.ts`. The synthetic fixture covers dependency blocking, recorded version dates (including explicit expiry before a later successor), activity/availability disclaimers, cancel, failed-load retry, explicit confirmed payloads, busy dismissal locks and stale-write recovery at phone/tablet/desktop sizes in both themes. Finish with an in-app browser smoke test against the local fixture; no real tenant mutations are needed.

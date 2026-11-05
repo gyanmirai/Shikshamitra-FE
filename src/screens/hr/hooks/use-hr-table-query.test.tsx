@@ -34,6 +34,25 @@ const options = {
 };
 
 describe('authorized operational table query adapter', () => {
+  it('clears all criteria together and returns to the owning reader without accepting stale criteria data', () => {
+    const { result } = renderHook(() => useHrTableQuery({ ...options, genericSearch: true }, base));
+    act(() => {
+      result.current.tableProps.onServerSearch!('staff');
+      result.current.tableProps.onServerFilter!([
+        { column: 'status', type: 'equals', value: 'Pending', valueType: 'enum', label: 'Status' },
+      ]);
+      result.current.tableProps.onServerSort!('startDate', [
+        { column: 'startDate', direction: 'asc' },
+      ]);
+    });
+    expect(result.current.currentData).not.toBe(base.currentData);
+    act(() => result.current.resetCriteria());
+    expect(result.current.currentData).toBe(base.currentData);
+    expect(result.current.tableProps.filters).toEqual([]);
+    expect(result.current.tableProps.sorts).toEqual([]);
+    expect(result.current.tableProps.searchTerm).toBe('');
+    expect(rpc.read.mock.lastCall?.[1].skip).toBe(true);
+  });
   beforeEach(() => {
     rpc.read.mockClear();
     resetPage.mockClear();
