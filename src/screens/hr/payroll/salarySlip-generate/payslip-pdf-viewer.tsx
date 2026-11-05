@@ -23,6 +23,7 @@ type Props = {
   contentRef: RefObject<HTMLDivElement | null>;
   onReady: (url: string | null) => void;
   viewportHeight?: string;
+  initialZoom?: 'fit' | 'page';
 };
 
 // Render the issued bytes, never a second template built from payroll fields.
@@ -32,13 +33,14 @@ export default function PayslipPdfViewer({
   contentRef,
   onReady,
   viewportHeight,
+  initialZoom,
 }: Props) {
   const pagesRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(true);
   const [retry, setRetry] = useState(0);
-  const [zoom, setZoom] = useState(viewportHeight ? 'page' : 'fit');
+  const [zoom, setZoom] = useState<string>(initialZoom ?? (viewportHeight ? 'page' : 'fit'));
   const [pageWidth, setPageWidth] = useState(0);
   const [pageHeight, setPageHeight] = useState(0);
   const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
@@ -73,6 +75,10 @@ export default function PayslipPdfViewer({
     let worker: Worker | undefined;
     const container = pagesRef.current;
     container?.replaceChildren();
+    if (viewportRef.current) {
+      viewportRef.current.scrollTop = 0;
+      viewportRef.current.scrollLeft = 0;
+    }
     setError(false);
     setLoading(true);
     onReady(null);
@@ -147,7 +153,7 @@ export default function PayslipPdfViewer({
   }, [url, retry, onReady]);
 
   return (
-    <Box>
+    <Box sx={{ minWidth: 0 }}>
       <Stack
         direction="row"
         spacing={1}
@@ -239,6 +245,7 @@ export default function PayslipPdfViewer({
             maxWidth: zoom === 'fit' ? 850 : 'none',
             mx: 'auto',
             '& .payslip-pdf-page': {
+              position: 'relative',
               mb: 1,
               border: 1,
               borderColor: 'divider',
@@ -246,6 +253,8 @@ export default function PayslipPdfViewer({
             },
             '& .payslip-pdf-text': {
               position: 'absolute',
+              top: 0,
+              left: 0,
               width: 1,
               height: 1,
               overflow: 'hidden',

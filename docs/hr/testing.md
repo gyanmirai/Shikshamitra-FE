@@ -15,6 +15,10 @@ Run `node node_modules/@playwright/test/cli.js test --config tests/browser/manua
 The fixture covers group/department combinations, empty results, clearing column criteria, reset, aligned status controls, 390/768/1440 widths in both themes, and late date responses after a page reset. It refuses all persistence writes.
 Finish with the Codex in-app browser. These checks do not establish authenticated tenant or deployed PostgreSQL behavior.
 
+## ESIC archive review
+
+Run the focused `esi-policy-archive-dialog.test.tsx` and `esi-policies.test.tsx` Vitest suites, then `npx playwright test --config e2e/hr/esic-archive.config.ts`. The synthetic fixture covers dependency blocking, recorded version dates (including explicit expiry before a later successor), activity/availability disclaimers, cancel, failed-load retry, explicit confirmed payloads, busy dismissal locks and stale-write recovery at phone/tablet/desktop sizes in both themes. Finish with an in-app browser smoke test against the local fixture; no real tenant mutations are needed.
+
 ## Historical ESIC setup and payroll branding navigation
 
 Run `esi-configuration-form.test.ts`, `esi-request-error.test.ts`, `esi-automatic-calculation.test.tsx`, `esi-statutory-settings.test.tsx`, `earning-esi-treatment-dialog.test.tsx` and `payslip-settings-form.test.tsx` for retained month/drafts, retry identity, policy/access guidance and both required School Identity route grants.
@@ -1009,3 +1013,7 @@ Run `npx playwright test --config e2e/hr/salary-setup.config.ts` for the product
 The journey verifies stage validation, retained drafts, preview invalidation, failed-save retry, confirmed-save metadata, mobile containment and the persistent footer.
 Screenshots stay under `.artifacts/salary-setup-browser`; these checks do not certify backend calculations or deployed persistence.
 Use `SalaryStructureBuilder.test.tsx`, `salary-editor-screen.test.tsx`, `salary-template-editor.test.tsx`, `payroll-settings.test.tsx` and `permissions.test.ts` for focused component and navigation coverage.
+
+## Salary document viewing (Task 6594)
+
+Run `node node_modules/@playwright/test/cli.js test --config e2e/hr/salary-documents.config.ts` for seven synthetic browser scenarios using the production document center and PDF.js viewer. They cover 390/768/1440-pixel layouts in light/dark themes, Fit width, keyboard scrolling at larger zoom, stationary grouped actions, version/staff changes, reachable history, body overflow and PDF loading/error/retry. Run the payslip component suites for current-revision permissions, stale reads, print readiness and cancellation. The fixture is loopback-only and serves synthetic PDFs; it does not certify authenticated tenant access, actual payroll mutation, email delivery or native printing.
