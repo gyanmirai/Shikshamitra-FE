@@ -8,6 +8,13 @@ owner: frontend-team
 audience: humans-and-agents
 ---
 
+## Mark Attendance filters
+
+Run the manual-attendance screen/status-mapper tests, `use-hr-table-query.test.tsx`, shared-table `index.controlled-state.test.tsx`, and `attendanceApi.contract.test.ts` for filter parameters, reset behavior, dirty locks and explicit interactive-column opt-outs.
+Run `node node_modules/@playwright/test/cli.js test --config tests/browser/manual-attendance-6597.config.ts` for the real screen and RTK Query against loopback synthetic readers.
+The fixture covers group/department combinations, empty results, clearing column criteria, reset, aligned status controls, 390/768/1440 widths in both themes, and late date responses after a page reset. It refuses all persistence writes.
+Finish with the Codex in-app browser. These checks do not establish authenticated tenant or deployed PostgreSQL behavior.
+
 ## Historical ESIC setup and payroll branding navigation
 
 Run `esi-configuration-form.test.ts`, `esi-request-error.test.ts`, `esi-automatic-calculation.test.tsx`, `esi-statutory-settings.test.tsx`, `earning-esi-treatment-dialog.test.tsx` and `payslip-settings-form.test.tsx` for retained month/drafts, retry identity, policy/access guidance and both required School Identity route grants.

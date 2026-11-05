@@ -167,6 +167,13 @@ export function useHrTableQuery<T extends object>(options: Options, original: T)
   };
   return {
     ...original,
+    resetCriteria: () => {
+      if (options.locked) return;
+      setFilters([]);
+      setSorts([]);
+      setSearch('');
+      options.resetPage();
+    },
     ...(active
       ? {
           data: filtered.currentData,
@@ -179,5 +186,5 @@ export function useHrTableQuery<T extends object>(options: Options, original: T)
         }
       : {}),
     tableProps,
-  } as T & { tableProps: typeof tableProps };
+  } as T & { tableProps: typeof tableProps; resetCriteria: () => void };
 }
