@@ -1,7 +1,6 @@
 'use client';
 
 import type { Dayjs } from 'dayjs';
-import { hrPaths } from 'src/constants/hr-menus';
 import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
@@ -9,6 +8,7 @@ import dayjs from 'dayjs';
 import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
+import { hrPaths } from 'src/constants/hr-menus';
 import { RestartAlt } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { useSearchParams } from 'next/navigation';

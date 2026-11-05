@@ -4,15 +4,15 @@ import React from 'react';
 import { Provider } from 'react-redux';
 import { api } from 'src/redux/service';
 import { createRoot } from 'react-dom/client';
-import { configureStore } from '@reduxjs/toolkit';
 import { Box, CssBaseline } from '@mui/material';
+import { configureStore } from '@reduxjs/toolkit';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import confirmPopup from 'src/redux/confirmPopup/confirmPopupSlice';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import ManualAttendance from 'src/screens/hr/attendance/manual-attendance';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 
 const store = configureStore({
   reducer: {
