@@ -14,7 +14,6 @@ import { Iconify } from 'src/components/iconify';
 import { hrPermissions } from 'src/constants/hr-menus';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { HrNotice } from 'src/screens/hr/components/hr-notice';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -24,6 +23,11 @@ import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { useGetEsiComponentTreatmentsQuery } from 'src/redux/hr/statutory-scheme-api';
+import {
+  useGetEsiPoliciesQuery,
+  useCreateEsiPolicyMutation,
+  useAddEsiPolicyVersionMutation,
+} from 'src/redux/hr/esi-policy-api';
 import {
   Box,
   Grid,
@@ -43,13 +47,8 @@ import {
   useHrSetupEditorState,
   SetupInlineCustomDialog,
 } from 'src/screens/hr/setup/hr-setup-editor-context';
-import {
-  useGetEsiPoliciesQuery,
-  useCreateEsiPolicyMutation,
-  useArchiveEsiPolicyMutation,
-  useAddEsiPolicyVersionMutation,
-} from 'src/redux/hr/esi-policy-api';
 
+import { EsiPolicyArchiveDialog } from './esi-policy-archive-dialog';
 import { SectionCard } from '../../employee/employee-form-fields/InformationFields';
 
 export default function EsiPolicies({ hasSchoolWideScope }: { hasSchoolWideScope: boolean }) {
@@ -64,8 +63,7 @@ export default function EsiPolicies({ hasSchoolWideScope }: { hasSchoolWideScope
   const [target, setTarget] = useState<EsiPolicy | 'new' | null>(null);
   const [view, setView] = useState<EsiPolicy | null>(null);
   const [archiveTarget, setArchiveTarget] = useState<EsiPolicy | null>(null);
-  const [archive, archiveState] = useArchiveEsiPolicyMutation();
-  const [error, setError] = useState('');
+
   const rows = (query.data || []).map((policy) => ({
     ...policy,
     employeeRate: policy.versions[0]?.employeePercentage,
@@ -280,48 +278,13 @@ export default function EsiPolicies({ hasSchoolWideScope }: { hasSchoolWideScope
           </Button>
         </DialogActions>
       </CustomDialog>
-      <ConfirmDialog
-        open={Boolean(archiveTarget)}
-        onClose={() => {
-          if (!archiveState.isLoading) {
-            setArchiveTarget(null);
-            setError('');
-          }
-        }}
-        title={`Archive ${archiveTarget?.name || 'ESIC policy'}?`}
-        content={
-          <Stack spacing={1}>
-            <Typography>
-              New salary assignments cannot select this policy. Existing assignments and payroll
-              history retain it.
-            </Typography>
-            {error && <Alert severity="error">{error}</Alert>}
-          </Stack>
-        }
-        disableCancel={archiveState.isLoading}
-        action={
-          <Button
-            variant="contained"
-            loading={archiveState.isLoading}
-            onClick={async () => {
-              if (!archiveTarget) return;
-              try {
-                await archive({
-                  id: archiveTarget.id,
-                  concurrencyStamp: archiveTarget.concurrencyStamp,
-                }).unwrap();
-                setArchiveTarget(null);
-                setError('');
-                shikshaMitraToast.success({ message: 'ESIC policy archived.' });
-              } catch (cause) {
-                setError(parseApiProblemDetail(cause).detail);
-              }
-            }}
-          >
-            Archive
-          </Button>
-        }
-      />
+      {archiveTarget && (
+        <EsiPolicyArchiveDialog
+          key={archiveTarget.id}
+          policy={archiveTarget}
+          onClose={() => setArchiveTarget(null)}
+        />
+      )}
     </Stack>
   );
 }

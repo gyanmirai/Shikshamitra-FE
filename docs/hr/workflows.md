@@ -8,6 +8,10 @@ owner: frontend-team
 audience: humans-and-agents
 ---
 
+## Review ESIC policy archive
+
+Open Archive from an eligible ESIC policy. The confirmation loads a fresh dependency review; archive stays disabled while loading, after a load failure, or while live templates select the policy. Review template names/version/status and the separately recorded policy version start/expiry dates. These use `effectiveFrom`/`effectiveTo`, never the successor-derived `appliesUntil`, and do not establish activity or payroll availability. A missing expiry is labeled "no recorded end date". Templates have no effective date range. Save a reviewed usable replacement for the relevant salary month in each live template, or archive an unused template, then reopen the review. Cancel leaves records unchanged. For an unused policy, explicitly choose Archive policy; dismissal and repeated submission are locked until the server responds. Failed writes retain the error and refresh the review. Existing archived selections are not automatically repaired; existing staff payroll and history retain their versions.
+
 # Trace HR frontend workflows
 
 TL;DR: use this page to connect HR screens, clients, and browser tests.

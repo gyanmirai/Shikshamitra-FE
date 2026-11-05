@@ -10,6 +10,8 @@ audience: humans-and-agents
 
 # Find HR frontend API clients
 
+`esi-policy-api.ts` loads `GET /payroll/statutory-schemes/esi/policies/{id}/archive-review` when the archive confirmation mounts, refetching cached reviews. The dialog uses `currentData`, rejects loading/failed/wrong-policy reviews, and submits the reviewed concurrency stamp with `confirmed: true`. Reviews share statutory and salary-template invalidation tags; failed mutations refresh dependencies before retry. See the [backend policy contract](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md#named-esic-policies).
+
 `hr-setup-readiness-api.ts` reads `/api/hr/setup-readiness` for the document-scoped HR setup wizard.
 Its cache key includes tenant/user/year context, and it shares owning policy, shift, component, template, and statutory invalidation tags.
 The authenticated workspace owns non-persisted dismissal state, while the HR layout owns the query and lazy wizard mounting.
