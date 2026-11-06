@@ -14,7 +14,6 @@ import {
   Stack,
   Button,
   Drawer,
-  Dialog,
   Select,
   Divider,
   MenuItem,
@@ -24,9 +23,6 @@ import {
   Typography,
   InputLabel,
   FormControl,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   LinearProgress,
 } from '@mui/material';
 
@@ -306,14 +302,14 @@ export function PolicyVersionDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
           ) : null}
         </Stack>
       </Drawer>
-      <RestoreVersionDialog ctx={ctx} />
+      <RestoreVersionDrawer ctx={ctx} />
     </>
   );
 }
 
-// --- RestoreVersionDialog ------------------------------------------------------
+// --- RestoreVersionDrawer ------------------------------------------------------
 
-function RestoreVersionDialog({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
+function RestoreVersionDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
   const {
     restoreVersion: cachedRestoreVersion,
     restorePreview: cachedRestorePreview,
@@ -351,16 +347,31 @@ function RestoreVersionDialog({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
         : 'success';
 
   return (
-    <Dialog
+    <Drawer
+      anchor="right"
       open={Boolean(restoreVersion)}
       onClose={() => {
         if (!isPolicyOperationActive) setRestoreVersion(null);
       }}
-      fullWidth
-      maxWidth="sm"
+      PaperProps={{
+        'aria-label': 'Restore Version As Draft',
+        sx: { width: { xs: '100%', sm: 'min(640px, 92vw)' }, maxWidth: '100%' },
+      }}
     >
-      <DialogTitle>Restore Version As Draft</DialogTitle>
-      <DialogContent>
+      <DrawerHeader
+        title="Restore Version As Draft"
+        helpText="Review the recorded version and provide a name and reason for the new draft."
+        onClose={() => {
+          if (!isPolicyOperationActive) setRestoreVersion(null);
+        }}
+        closeDisabled={isPolicyOperationActive}
+      />
+      <Divider />
+      <Box
+        component="fieldset"
+        disabled={isPolicyOperationActive}
+        sx={{ flex: 1, minHeight: 0, minWidth: 0, overflow: 'auto', border: 0, m: 0, p: 2.5 }}
+      >
         <Stack spacing={2} sx={{ pt: 1 }}>
           {restorePreviewLoading ? <LinearProgress /> : null}
           <HrNotice severity="info">
@@ -427,8 +438,14 @@ function RestoreVersionDialog({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
             minRows={3}
           />
         </Stack>
-      </DialogContent>
-      <DialogActions>
+      </Box>
+      <Divider />
+      <Stack
+        direction="row"
+        spacing={1.5}
+        justifyContent="flex-end"
+        sx={{ px: { xs: 2, sm: 3 }, py: 1.5, flexShrink: 0 }}
+      >
         <Button
           size="small"
           onClick={() => setRestoreVersion(null)}
@@ -451,7 +468,7 @@ function RestoreVersionDialog({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
         >
           Create Draft
         </Button>
-      </DialogActions>
-    </Dialog>
+      </Stack>
+    </Drawer>
   );
 }

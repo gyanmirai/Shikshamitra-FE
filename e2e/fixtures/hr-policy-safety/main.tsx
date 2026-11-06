@@ -44,6 +44,10 @@ const permissions = [
   ),
   ...Object.values(hrPermissions.payroll.settings.salaryTemplateActions),
   ...Object.values(hrPermissions.payroll.settings.statutorySchemeActions),
+  `${hrPermissions.payroll.settings.earningComponents}.Add`,
+  `${hrPermissions.payroll.settings.earningComponents}.Delete`,
+  `${hrPermissions.payroll.settings.deductionComponents}.Add`,
+  `${hrPermissions.payroll.settings.deductionComponents}.Delete`,
   `${hrPermissions.payroll.generateSalarySlip}.Add`,
 ].map((name) => ({ name, isGranted: true }));
 const settingsScreens: Record<string, React.ComponentType> = {
