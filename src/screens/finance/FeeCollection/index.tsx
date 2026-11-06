@@ -5,9 +5,9 @@ import type { RootState } from 'src/redux/store';
 
 import { useState } from 'react';
 import dynamic from 'next/dynamic';
-import { Box, Card } from '@mui/material';
+import { Box, Card, Skeleton } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import { financePermissions } from 'src/constants/finance-menu';
@@ -23,11 +23,22 @@ import { buildAdjustmentApiPayload } from '../adjustments/types/adjustmentFormVa
 import type { IStudentFee } from './Components/type';
 import type { IAdjustmentFullFormValues } from '../adjustments/types/adjustmentFormValues';
 
-const FeeCollectComponentForm = dynamic(
-  () => import('./FeeCollectionComponent/FeeCollectionForm')
+const deferredWorkspaceLoading = () => (
+  <Box sx={{ p: 2 }}>
+    <Skeleton variant="rounded" height={240} />
+  </Box>
 );
-const ViewFeeDetails = dynamic(() => import('./Components/ViewFeeDetails'));
-const AdjustmentForm = dynamic(() => import('../adjustments/components/AdjustmentForm'));
+
+const FeeCollectComponentForm = dynamic(
+  () => import('./FeeCollectionComponent/FeeCollectionForm'),
+  { loading: deferredWorkspaceLoading }
+);
+const ViewFeeDetails = dynamic(() => import('./Components/ViewFeeDetails'), {
+  loading: deferredWorkspaceLoading,
+});
+const AdjustmentForm = dynamic(() => import('../adjustments/components/AdjustmentForm'), {
+  loading: deferredWorkspaceLoading,
+});
 
 const FeeCollection = () => {
   const access = useFinancePermissions(financePermissions.fees.collections);
@@ -40,7 +51,6 @@ const FeeCollection = () => {
   // Get the changes status from the confirm popup redux state
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
-  const dispatch = useDispatch();
   const [createFeeAdjustment] = useCreateFeeAdjustmentMutation();
   const { handleClose, confirmation: discardConfirmation } = useFinanceFormClose(
     studentDialog.value,
