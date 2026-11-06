@@ -175,19 +175,21 @@ const FeeCollection = () => {
           academicFilters={academicFilters}
         />
       </Box>
-      <CustomDialog
-        open={studentDialog.value && access.canAdd}
-        guardUnsavedChanges={false}
-        title={`Collect Fees – ${selectedStudent?.name ?? 'Student'}`}
-        fullScreen
-        transitionDuration={{ enter: 0, exit: 0 }}
-        handleClose={() => {
-          studentDialog.onFalse();
-          setSelectedStudent(null);
-        }}
-      >
-        <FeeCollectComponentForm student={selectedStudent} onCancel={handleClose} />
-      </CustomDialog>
+      {studentDialog.value && access.canAdd && (
+        <CustomDialog
+          open
+          guardUnsavedChanges={false}
+          title={`Collect Fees – ${selectedStudent?.name ?? 'Student'}`}
+          fullScreen
+          transitionDuration={{ enter: 0, exit: 0 }}
+          handleClose={() => {
+            studentDialog.onFalse();
+            setSelectedStudent(null);
+          }}
+        >
+          <FeeCollectComponentForm student={selectedStudent} onCancel={handleClose} />
+        </CustomDialog>
+      )}
       {viewDialog.value && selectedStudent && (
         <ViewFeeDetails
           student={selectedStudent}
