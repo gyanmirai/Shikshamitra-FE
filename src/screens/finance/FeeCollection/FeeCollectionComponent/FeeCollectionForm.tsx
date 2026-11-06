@@ -912,9 +912,10 @@ const FeeCollectComponentForm = ({
     []
   );
   // ── Derived amounts ────────────────────────────────────────────────────────
-  const subtotal = useMemo(() => {
-    return selectionTotal(formik.values.selectedItems, formik.values.charges, chargesData ?? []);
-  }, [formik.values.selectedItems, formik.values.charges, chargesData]);
+  const subtotal = useMemo(
+    () => selectionTotal(formik.values.selectedItems, formik.values.charges, chargesData ?? []),
+    [formik.values.selectedItems, formik.values.charges, chargesData]
+  );
 
   const orderedSelectedItems = resolveItems(formik.values.selectedItems, formik.values.charges);
   const isAmountOnly =

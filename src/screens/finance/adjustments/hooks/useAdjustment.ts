@@ -27,7 +27,7 @@ export function useAdjustment() {
         ? createAttempt.current.key
         : crypto.randomUUID();
     createAttempt.current = { fingerprint, key };
-    return await createFeeAdjustment({
+    return createFeeAdjustment({
       academicYearId: currentYear.id,
       body: { ...draft, idempotencyKey: key },
     }).unwrap();

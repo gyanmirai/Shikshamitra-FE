@@ -75,8 +75,8 @@ export function allocateAdjustmentBulk(
       if (capped.length) {
         capped.forEach((index) => {
           allocated[index] = capacities[index];
-          remaining -= capacities[index];
         });
+        remaining -= capped.reduce((sum, index) => sum + capacities[index], 0);
         active = active.filter((index) => !capped.includes(index));
       } else {
         active.forEach((index) => { allocated[index] = share; });

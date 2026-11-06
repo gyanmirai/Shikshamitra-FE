@@ -61,7 +61,8 @@ interface Props {
 }
 
 export function InstallmentTemplateDialog(props: Props) {
-  return props.open ? <InstallmentTemplateDialogSession {...props} /> : null;
+  const { open } = props;
+  return open ? <InstallmentTemplateDialogSession {...props} /> : null;
 }
 
 function InstallmentTemplateDialogSession({
@@ -292,7 +293,7 @@ function InstallmentTemplateDialogSession({
         noValidate
         onSubmit={(event) => {
           event.preventDefault();
-          void handlePreview();
+          handlePreview();
         }}
       >
         <DialogScrollContent>
@@ -568,7 +569,7 @@ function InstallmentTemplateDialogSession({
                       isSort: false,
                       isFilter: false,
                       align: 'left',
-                      render: (value) => Number(value).toFixed(2) + '%',
+                      render: (value) => `${Number(value).toFixed(2)}%`,
                     },
                   ]}
                 />

@@ -419,8 +419,8 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
       kind: adjustmentKinds.get(item.dueFeeId) ?? 0,
     }))
   );
-  const applyAdjustmentAmounts = (amounts: Record<string, string>, mode: 'perInstallment' | 'equalTotal') => {
-    const updated = mode === 'equalTotal'
+  const applyAdjustmentAmounts = (amounts: Record<string, string>, bulkMode: 'perInstallment' | 'equalTotal') => {
+    const updated = bulkMode === 'equalTotal'
       ? feeHeadsWithPayments.map((head) => ({
           feeHeadId: head.feeHeadId,
           months: head.items.filter((item) => item.dueFeeId && amounts[item.dueFeeId])
