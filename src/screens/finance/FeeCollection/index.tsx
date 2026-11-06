@@ -4,6 +4,7 @@ import { useFinanceFormClose } from 'src/hooks/use-finance-form-close';
 import type { RootState } from 'src/redux/store';
 
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import { Box, Card } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
@@ -15,15 +16,18 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useCreateFeeAdjustmentMutation } from 'src/redux/finance/adjustments/adjustmentApi';
 import { useFinanceAcademicFilters } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
 
-import ViewFeeDetails from './Components/ViewFeeDetails';
 import FeeCollectionTable from './Components/FeeCollectionTable';
-import AdjustmentForm from '../adjustments/components/AdjustmentForm';
 import { useFinancePermissions } from '../hooks/useFinancePermissions';
-import FeeCollectComponentForm from './FeeCollectionComponent/FeeCollectionForm';
 import { buildAdjustmentApiPayload } from '../adjustments/types/adjustmentFormValues';
 
 import type { IStudentFee } from './Components/type';
 import type { IAdjustmentFullFormValues } from '../adjustments/types/adjustmentFormValues';
+
+const FeeCollectComponentForm = dynamic(
+  () => import('./FeeCollectionComponent/FeeCollectionForm')
+);
+const ViewFeeDetails = dynamic(() => import('./Components/ViewFeeDetails'));
+const AdjustmentForm = dynamic(() => import('../adjustments/components/AdjustmentForm'));
 
 const FeeCollection = () => {
   const access = useFinancePermissions(financePermissions.fees.collections);
@@ -142,7 +146,15 @@ const FeeCollection = () => {
           ]}
         />
       )}
-      {!studentDialog.value && !viewDialog.value && !adjustmentDialog.value && (
+      <Box
+        sx={{
+          display:
+            !studentDialog.value && !viewDialog.value && !adjustmentDialog.value ? 'flex' : 'none',
+          flex: 1,
+          minHeight: 0,
+          flexDirection: 'column',
+        }}
+      >
         <FeeCollectionTable
           onAddFee={studentDialog}
           onDelete={() => {}}
@@ -162,7 +174,7 @@ const FeeCollection = () => {
           }}
           academicFilters={academicFilters}
         />
-      )}
+      </Box>
       <CustomDialog
         open={studentDialog.value && access.canAdd}
         guardUnsavedChanges={false}
