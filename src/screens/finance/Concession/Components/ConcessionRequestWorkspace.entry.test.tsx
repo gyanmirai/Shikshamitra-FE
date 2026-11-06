@@ -1,9 +1,9 @@
 import { useFormik } from 'formik';
 import { it, vi, expect } from 'vitest';
-import { render, screen, within, fireEvent } from '@testing-library/react';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings/config-settings';
+import { render, screen, within, fireEvent } from '@testing-library/react';
 
 import ConcessionRequestWorkspace from './ConcessionRequestWorkspace';
 import RequestEnteredInstallments from './ConcessionSteps/RequestEnteredInstallments';
@@ -64,13 +64,17 @@ function Editor() {
   );
 }
 
-it('edits only inside each fee breakdown and shares the fixed request maximum across fees', () => {
+it('keeps installment and bulk entry inside each fee breakdown and shares the fixed request maximum', () => {
   render(<Editor />);
   const tuitionCard = screen.getByLabelText('School tuition').closest('li')!;
   const schoolCard = screen.getByLabelText('School fees').closest('li')!;
-  expect(within(tuitionCard).getAllByRole('textbox', { hidden: true })).toHaveLength(2);
-  expect(within(schoolCard).getAllByRole('textbox', { hidden: true })).toHaveLength(2);
-  expect(screen.getAllByRole('textbox', { hidden: true })).toHaveLength(4);
+  expect(within(tuitionCard).getAllByLabelText(/Half-Yearly [12].*amount/)).toHaveLength(2);
+  expect(within(schoolCard).getAllByLabelText(/Half-Yearly [12].*amount/)).toHaveLength(2);
+  expect(screen.getAllByLabelText(/Half-Yearly [12].*amount/)).toHaveLength(4);
+  [tuitionCard, schoolCard].forEach((card) => {
+    expect(within(card).getByRole('textbox', { name: 'Amount per installment' })).toBeVisible();
+    expect(within(card).getByRole('textbox', { name: 'Total concession amount' })).toBeVisible();
+  });
   const tuition = within(tuitionCard).getByLabelText(/Half-Yearly 1.*amount/);
   const school = within(schoolCard).getByLabelText(/Half-Yearly 1.*amount/);
   fireEvent.change(tuition, { target: { value: '750' } });
