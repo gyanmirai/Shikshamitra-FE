@@ -1,7 +1,11 @@
 import type { FormikProps } from 'formik';
-import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
+import type {
+  AdmissionFormField,
+  CreateUpdateAdmissionForm,
+} from 'src/redux/student/admissions/admission-forms-api';
 
 import Box from '@mui/material/Box';
+import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import { CSS } from '@dnd-kit/utilities';
 import { useSortable } from '@dnd-kit/sortable';
@@ -61,7 +65,7 @@ export function FormBuilderField({
       style={{
         transform: CSS.Transform.toString(sortable.transform),
         transition: sortable.transition,
-        opacity: sortable.isDragging ? 0.65 : 1,
+        opacity: sortable.isDragging ? 0.2 : 1,
       }}
       sx={{
         minWidth: 0,
@@ -70,6 +74,7 @@ export function FormBuilderField({
         borderColor: selected ? 'primary.main' : 'divider',
         borderRadius: 1,
         bgcolor: 'background.paper',
+        '@media (prefers-reduced-motion: reduce)': { transition: 'none !important' },
         '&:hover': { borderColor: 'primary.main' },
         '& .admission-field-reorder, & .admission-field-actions': { opacity: 0 },
         '&:hover .admission-field-reorder, &:focus-within .admission-field-reorder, &:hover .admission-field-actions, &:focus-within .admission-field-actions':
@@ -212,5 +217,39 @@ export function FormBuilderField({
         </Box>
       </Stack>
     </Box>
+  );
+}
+
+export function FormBuilderFieldDragPreview({ field }: { field: AdmissionFormField }) {
+  return (
+    <Paper
+      data-testid="admission-field-drag-overlay"
+      aria-hidden="true"
+      elevation={8}
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 1,
+        minHeight: 72,
+        p: 1.25,
+        border: 1,
+        borderColor: 'primary.main',
+        borderRadius: 1,
+        bgcolor: 'background.paper',
+        cursor: 'grabbing',
+        pointerEvents: 'none',
+      }}
+    >
+      <Iconify icon="mdi:drag-vertical" width={20} sx={{ color: 'primary.main', flexShrink: 0 }} />
+      <Box sx={{ minWidth: 0 }}>
+        <Typography variant="subtitle2" noWrap>
+          {field.label || 'Untitled field'}
+          {field.required ? ' *' : ''}
+        </Typography>
+        <Typography variant="body2" color="text.secondary" noWrap>
+          {fieldPrompt(field.fieldType, field.label || 'Field', field.placeholder)}
+        </Typography>
+      </Box>
+    </Paper>
   );
 }

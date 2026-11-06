@@ -1,31 +1,22 @@
 import type { DuplicateMatch } from 'src/redux/student/admissions/admission-inquiries-api';
 import type { AdmissionSiblingParentSelection } from 'src/redux/student/admissions/admission-parent-family-types';
 
-import { useId, useState } from 'react';
-import { Label } from 'src/components/label';
+import * as Yup from 'yup';
+import { useFormik } from 'formik';
+import { useRef, useState } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
-import { fDate } from 'src/utils/format-time';
 import { Iconify } from 'src/components/iconify';
-import ShakingTextField from 'src/components/shaking-text-field';
-import { FormSectionCard } from 'src/components/form-section-card';
+import { LoadingButton } from 'src/components/loading-button';
+import { Box, Stack, Button, Typography, DialogActions } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import {
-  Box,
-  Stack,
-  Avatar,
-  Button,
-  Divider,
-  Collapse,
-  TextField,
-  Typography,
-  DialogActions,
-} from '@mui/material';
 
-import { formatAdmissionReference } from './admission-reference';
-import { ADMISSION_DATE_FORMAT } from './admission-date-formats';
 import { canLinkAdmissionInquiryFamily } from './admission-inquiry-model';
 import { isPossibleDuplicateInquiry } from './admission-inquiry-match-review';
-import { AdmissionSiblingFamilyMatch } from './admission-sibling-family-match';
+import { buildInquiryFamilyReviews } from './admission-inquiry-parent-review-model';
+import {
+  AdmissionInquiryParentReview,
+  AdmissionInquiryContactMatch,
+} from './admission-inquiry-parent-review';
 
 type Props = {
   matches: DuplicateMatch[];
@@ -43,12 +34,33 @@ type Props = {
     parent: AdmissionSiblingParentSelection
   ) => void | Promise<void>;
   onOpenExisting: (inquiryId: string) => void;
-  onCreateSeparate: () => void;
-  overrideReason: string;
-  onOverrideReasonChange: (value: string) => void;
 };
 
-export function AdmissionInquiryDuplicateMatches({
+export function AdmissionInquiryDuplicateMatches({ reviewKey, ...props }: Props) {
+  const {
+    matches,
+    guardianPhone,
+    guardianEmail,
+    applicantName,
+    applicantDateOfBirth,
+    admissionCycleId,
+    parentRelationship,
+  } = props;
+  // A changed identity, source or resubmission creates a fresh local review, without changing the form draft.
+  const session = JSON.stringify([
+    reviewKey,
+    matches,
+    guardianPhone,
+    guardianEmail,
+    applicantName,
+    applicantDateOfBirth,
+    admissionCycleId,
+    parentRelationship,
+  ]);
+  return matches.length ? <InquiryMatchReview key={session} {...props} /> : null;
+}
+
+function InquiryMatchReview({
   matches,
   guardianPhone,
   guardianEmail = '',
@@ -57,271 +69,171 @@ export function AdmissionInquiryDuplicateMatches({
   admissionCycleId,
   parentRelationship,
   presentation = 'inline',
-  reviewKey,
   busy,
   onUseExisting,
   onOpenExisting,
-  onCreateSeparate,
-  overrideReason,
-  onOverrideReasonChange,
-}: Props) {
-  const [showSeparateFamily, setShowSeparateFamily] = useState(false);
-  const [dismissedReview, setDismissedReview] = useState('');
-  const [expandedMatches, setExpandedMatches] = useState<string[]>([]);
-  const separateFamilyId = useId();
-  const reviewSession = JSON.stringify([
-    applicantName,
-    applicantDateOfBirth,
-    admissionCycleId,
-    parentRelationship,
-    guardianPhone,
-    guardianEmail,
-    reviewKey,
-    matches.map((match) => [match.applicantId, match.familyId, match.existingInquiryId]),
-  ]);
-  const possibleDuplicate = (match: DuplicateMatch) =>
+}: Omit<Props, 'reviewKey'>) {
+  const [open, setOpen] = useState(true);
+  const [reviewDifferentChild, setReviewDifferentChild] = useState(false);
+  const inFlight = useRef(false);
+  const duplicate = matches.find((match) =>
     isPossibleDuplicateInquiry(match, {
       applicantName,
       applicantDateOfBirth,
       admissionCycleId,
-    });
-  const reviewTitle =
-    matches.length === 1 && possibleDuplicate(matches[0])
-      ? 'Possible Duplicate Inquiry'
-      : matches.length > 1
-        ? 'Possible Family Matches'
-        : 'Existing Family Found';
-  const closeReview = () => {
-    if (!busy) setDismissedReview(reviewSession);
-  };
-  const separateFamilyToggle = (
-    <Button
-      type="button"
-      size="small"
-      color="inherit"
-      disabled={busy}
-      aria-expanded={showSeparateFamily}
-      aria-controls={separateFamilyId}
-      onClick={() => setShowSeparateFamily((value) => !value)}
-    >
-      Different Family?
-    </Button>
+    })
   );
-  const reviewContent =
-    matches.length > 0 ? (
-      <FormSectionCard
-        title={presentation === 'dialog' ? 'Match Details' : reviewTitle}
-        icon={GlobalIcons.family}
-        descriptionTooltip="Review the Saved Parent Before Adding This Child as a Sibling. A Contact Match Does Not Link the Family Automatically."
-        sx={{ minWidth: 0 }}
-      >
-        {applicantName && (
-          <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
-            New Inquiry: {applicantName}
+  const families = buildInquiryFamilyReviews(
+    matches.filter((match) => canLinkAdmissionInquiryFamily(match, guardianPhone, guardianEmail)),
+    parentRelationship
+  );
+  const options = families.flatMap((family) => family.parents);
+  const formik = useFormik({
+    initialValues: { parent: options.length === 1 ? options[0].key : '', relationship: '' },
+    validationSchema: Yup.object({
+      parent: Yup.string()
+        .oneOf(options.map((option) => option.key))
+        .required('Select a parent.'),
+      relationship: Yup.string().when('parent', {
+        is: (key: string) =>
+          options.some((option) => option.key === key && !option.parent.relationship),
+        then: (schema) => schema.oneOf(['father', 'mother']).required('Select Father or Mother.'),
+      }),
+    }),
+    onSubmit: async (values) => {
+      if (busy || inFlight.current || (duplicate && !reviewDifferentChild)) return;
+      const option = options.find((item) => item.key === values.parent);
+      const relationship = option?.parent.relationship ?? values.relationship;
+      if (!option || (relationship !== 'father' && relationship !== 'mother')) return;
+      inFlight.current = true;
+      try {
+        await onUseExisting(option.match.familyId, { ...option.parent, relationship });
+      } finally {
+        inFlight.current = false;
+      }
+    },
+  });
+  const selected = options.find((option) => option.key === formik.values.parent);
+  const relationship = selected?.parent.relationship ?? formik.values.relationship;
+  const locked = busy || formik.isSubmitting;
+  const canConfirm = Boolean(
+    selected && ['father', 'mother'].includes(relationship) && (!duplicate || reviewDifferentChild)
+  );
+  const close = () => {
+    if (!locked && !inFlight.current) setOpen(false);
+  };
+  const content = (
+    <Stack spacing={2} sx={{ minWidth: 0 }}>
+      {applicantName && (
+        <Typography variant="body2">
+          New inquiry: <strong>{applicantName}</strong>
+        </Typography>
+      )}
+      <AdmissionInquiryContactMatch matches={matches} phone={guardianPhone} email={guardianEmail} />
+      {duplicate && !reviewDifferentChild && (
+        <Stack spacing={1} alignItems="flex-start">
+          <Typography variant="body2" color="warning.main">
+            An inquiry with this student name already exists. Review it before adding another child.
           </Typography>
-        )}
-        {matches.map((match, index) => {
-          const canLink = canLinkAdmissionInquiryFamily(match, guardianPhone, guardianEmail);
-          const duplicate = possibleDuplicate(match);
-          const matchKey = `${reviewSession}:${match.applicantId}:${match.familyId}`;
-          const reviewSibling = !duplicate || expandedMatches.includes(matchKey);
-          return (
-            <Stack key={`${match.familyId}-${match.applicantId}`} spacing={2} sx={{ minWidth: 0 }}>
-              {index > 0 && <Divider />}
-              <Stack
-                direction={{ xs: 'column', sm: 'row' }}
-                spacing={1}
-                alignItems={{ sm: 'center' }}
-              >
-                <Stack
-                  direction="row"
-                  spacing={1.5}
-                  alignItems="center"
-                  sx={{ flex: 1, minWidth: 0 }}
-                >
-                  <Avatar sx={{ bgcolor: 'background.neutral', color: 'text.secondary' }}>
-                    <Iconify icon={GlobalIcons.admissionStudent} width={22} />
-                  </Avatar>
-                  <Box sx={{ minWidth: 0, overflowWrap: 'anywhere' }}>
-                    <Typography variant="subtitle2">{match.applicantName}</Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {[
-                        match.existingInquiryNumber
-                          ? formatAdmissionReference(match.existingInquiryNumber)
-                          : null,
-                        match.guardianPhone,
-                        match.guardianEmail,
-                        match.dateOfBirth ? `DOB: ${fDate(match.dateOfBirth.slice(0, 10), ADMISSION_DATE_FORMAT)}` : null,
-                      ]
-                        .filter(Boolean)
-                        .join(' · ') || 'Existing Family'}
-                    </Typography>
-                  </Box>
-                </Stack>
-                <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
-                  <Label color={duplicate || !canLink ? 'warning' : 'info'}>
-                    {duplicate ? 'Possible Duplicate' : canLink ? 'Contact Match' : 'Review Needed'}
-                  </Label>
-                  {match.existingInquiryId && (
-                    <Button
-                      type="button"
-                      size="small"
-                      variant={duplicate ? 'contained' : 'outlined'}
-                      color="inherit"
-                      disabled={busy}
-                      startIcon={<Iconify icon={GlobalIcons.eye} width={18} />}
-                      onClick={() => onOpenExisting(match.existingInquiryId!)}
-                    >
-                      {duplicate ? 'Open Existing Inquiry' : 'Open Inquiry'}
-                    </Button>
-                  )}
-                </Stack>
-              </Stack>
-              <Divider />
-              {duplicate && (
-                <Stack spacing={1} alignItems="flex-start">
-                  <Typography variant="body2">
-                    This student name matches an inquiry in the selected admission period. Review
-                    the saved inquiry before creating another.
-                  </Typography>
-                  <Button
-                    type="button"
-                    size="small"
-                    variant="outlined"
-                    disabled={busy}
-                    aria-expanded={reviewSibling}
-                    onClick={() =>
-                      setExpandedMatches((current) =>
-                        reviewSibling
-                          ? current.filter((key) => key !== matchKey)
-                          : [...current, matchKey]
-                      )
-                    }
-                  >
-                    Different Child? Review Family
-                  </Button>
-                </Stack>
-              )}
-              {!canLink && (
-                <Typography variant="body2" color="text.secondary">
-                  {match.canLinkFamily === false && match.guardianPhone === guardianPhone
-                    ? 'This Family Is Not Available for Linking. Review the Existing Inquiry or Create a Separate Family.'
-                    : 'Parent Contact Details Do Not Match. Check the Email or Mobile Before Adding a Sibling.'}
-                </Typography>
-              )}
-              {reviewSibling && (
-                <AdmissionSiblingFamilyMatch
-                  key={`${match.familyId}:${guardianPhone}:${guardianEmail}`}
-                  parents={(match.parents ?? []).filter(
-                    (parent) =>
-                      !parentRelationship ||
-                      parentRelationship === 'guardian' ||
-                      !parent.relationship ||
-                      parent.relationship === parentRelationship
-                  )}
-                  children={match.applicantName}
-                  busy={busy}
-                  enteredMobile={guardianPhone}
-                  layout="inquiry"
-                  secondaryAction={matches.length === 1 ? separateFamilyToggle : undefined}
-                  disabled={!canLink || parentRelationship === 'guardian'}
-                  disabledReason={
-                    parentRelationship === 'guardian'
-                      ? 'Sibling linking requires Father or Mother as the primary contact.'
-                      : undefined
-                  }
-                  mobileDiffers={match.matchByEmail === true && match.matchByMobile !== true}
-                  onConfirm={(parent) => onUseExisting(match.familyId, parent)}
-                />
-              )}
-            </Stack>
-          );
-        })}
-        {matches.length > 1 && <Box>{separateFamilyToggle}</Box>}
-        <Collapse in={showSeparateFamily} unmountOnExit>
-          <Stack id={separateFamilyId} spacing={2}>
-            <Divider />
-            <ShakingTextField>
-              <TextField
-                name="duplicateOverrideReason"
-                fullWidth
-                size="small"
-                multiline
-                minRows={2}
-                label="Reason for Creating a Separate Family"
-                required
-                value={overrideReason}
-                disabled={busy}
-                onChange={(event) => onOverrideReasonChange(event.target.value)}
-                slotProps={{ htmlInput: { maxLength: 512 } }}
-                helperText="Explain why this inquiry belongs to a separate family. Use Add sibling for another child in the same family."
-              />
-            </ShakingTextField>
-            <Stack direction="row" justifyContent="flex-end">
-              <Button
-                type="button"
-                size="small"
-                variant="outlined"
-                color="inherit"
-                disabled={busy || !overrideReason.trim()}
-                onClick={() => {
-                  if (!busy && overrideReason.trim()) onCreateSeparate();
-                }}
-              >
-                Create Separate Family
-              </Button>
-            </Stack>
-          </Stack>
-        </Collapse>
-      </FormSectionCard>
-    ) : null;
+          {duplicate.existingInquiryId && (
+            <Button
+              type="button"
+              size="small"
+              variant="outlined"
+              disabled={locked}
+              onClick={() => onOpenExisting(duplicate.existingInquiryId!)}
+              startIcon={<Iconify icon={GlobalIcons.eye} width={18} />}
+            >
+              Open Existing Inquiry
+            </Button>
+          )}
+          <Button
+            type="button"
+            size="small"
+            disabled={locked}
+            onClick={() => setReviewDifferentChild(true)}
+          >
+            Different Child? Review Parent
+          </Button>
+        </Stack>
+      )}
+      {(!duplicate || reviewDifferentChild) && (
+        <AdmissionInquiryParentReview
+          families={families}
+          selected={selected}
+          disabled={locked}
+          enteredMobile={guardianPhone}
+          onSelect={(option) => formik.setValues({ parent: option.key, relationship: '' })}
+          relationship={formik.values.relationship}
+          onRelationshipChange={(value) => formik.setFieldValue('relationship', value)}
+          relationshipError={formik.submitCount ? formik.errors.relationship : undefined}
+        />
+      )}
+    </Stack>
+  );
+  const actions = (
+    <DialogActions disableSpacing sx={{ flexWrap: 'wrap', gap: 1 }}>
+      <Button
+        type="button"
+        size="small"
+        variant="outlined"
+        disabled={locked}
+        onClick={close}
+        startIcon={<Iconify icon={GlobalIcons.edit} width={18} />}
+      >
+        Edit Contact Details
+      </Button>
+      <LoadingButton
+        type="button"
+        size="small"
+        variant="contained"
+        color="inherit"
+        loading={locked}
+        disabled={locked || !canConfirm}
+        onClick={() => formik.submitForm()}
+        startIcon={<Iconify icon={GlobalIcons.addIcon} width={18} />}
+      >
+        Add as Sibling
+      </LoadingButton>
+    </DialogActions>
+  );
+  if (!open) return null;
   return (
     <>
       <Box
         role="status"
         aria-atomic="true"
         sx={{
-          border: 0,
-          m: -1,
-          p: 0,
-          width: '1px',
-          height: '1px',
-          overflow: 'hidden',
           position: 'absolute',
-          whiteSpace: 'nowrap',
+          width: 1,
+          height: 1,
+          overflow: 'hidden',
           clip: 'rect(0 0 0 0)',
         }}
       >
-        {matches.length > 0 &&
-          `${matches.length} possible existing ${matches.length === 1 ? 'family' : 'families'} found. Review the saved parent before adding a sibling.`}
+        {families.length} possible existing {families.length === 1 ? 'family' : 'families'} found.
+        Check the saved parent details.
       </Box>
-      {presentation === 'dialog' && matches.length > 0 ? (
+      {presentation === 'dialog' ? (
         <CustomDialog
-          open={Boolean(matches.length) && dismissedReview !== reviewSession}
-          handleClose={closeReview}
-          title={reviewTitle}
-          titleInfo="Review the Existing Inquiry or Explicitly Confirm the Saved Parent Before Adding a Sibling."
+          open
+          title="Check Parent Details"
+          titleInfo="Check the saved parent and children. Add as Sibling reuses this parent for the new inquiry."
+          handleClose={close}
           maxWidth="sm"
           hasForm={false}
           guardUnsavedChanges={false}
-          disableClose={busy}
-          aria-busy={busy}
+          disableClose={locked}
+          aria-busy={locked}
         >
-          <DialogScrollContent>{reviewContent}</DialogScrollContent>
-          <DialogActions sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
-            <Button
-              size="small"
-              variant="outlined"
-              disabled={busy}
-              onClick={closeReview}
-              startIcon={<Iconify icon={GlobalIcons.cancel} width={18} />}
-            >
-              Back to Form
-            </Button>
-          </DialogActions>
+          <DialogScrollContent>{content}</DialogScrollContent>
+          {actions}
         </CustomDialog>
       ) : (
-        reviewContent
+        <Stack spacing={2}>
+          {content}
+          {actions}
+        </Stack>
       )}
     </>
   );

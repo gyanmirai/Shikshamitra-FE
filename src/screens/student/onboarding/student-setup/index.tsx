@@ -399,7 +399,6 @@ export default function StudentSetupScreen() {
         (item) =>
           Boolean(item.studentEnrollmentId) &&
           item.credentialsPending &&
-          item.status !== 4 &&
           item.status !== 5
       )
     );

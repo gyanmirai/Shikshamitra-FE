@@ -2,7 +2,8 @@ import type { MouseEvent } from 'react';
 import type { AdmissionPipelineItem } from 'src/redux/student/admissions/admission-pipeline-api';
 
 import Link from 'next/link';
-import { Box, Button } from '@mui/material';
+import { IconButton } from '@mui/material';
+import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
 
 import { formatAdmissionReference } from '../admission-reference';
@@ -17,6 +18,22 @@ type Props = {
 export function AdmissionPipelineRowActions({ row, href, onOpen }: Props) {
   const label = pipelineActionLabel(row);
   const reference = formatAdmissionReference(row.applicationNumber);
+  const icon =
+    row.stageType === 0
+      ? 'mdi:account-search-outline'
+      : row.stageType === 1
+        ? 'mdi:clipboard-check-outline'
+        : row.stageType === 2
+          ? 'mdi:calendar-plus-outline'
+          : row.stageType === 4
+            ? 'mdi:wallet-outline'
+            : row.stageType === 5
+              ? 'mdi:file-document-check-outline'
+              : row.stageType === 12
+                ? 'mdi:calendar-clock-outline'
+                : row.stageType === 7
+                  ? 'mdi:school-outline'
+                  : 'mdi:arrow-right-circle-outline';
   const open = (event: MouseEvent<HTMLElement>) => {
     event.stopPropagation();
     if (
@@ -32,23 +49,16 @@ export function AdmissionPipelineRowActions({ row, href, onOpen }: Props) {
     }
   };
   return (
-    <CustomTooltip title={row.nextRequiredAction || 'Open the current admission step'}>
-      <Button
+    <CustomTooltip title={label} arrow>
+      <IconButton
         component={Link}
         href={href}
         aria-label={`${label} ${reference}`}
-        size="small"
-        variant="outlined"
         onClick={open}
-        sx={{ whiteSpace: 'nowrap', width: 'auto' }}
+        sx={{ color: 'text.secondary' }}
       >
-        <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-          {label}
-        </Box>
-        <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
-          Open
-        </Box>
-      </Button>
+        <Iconify icon={icon} width={20} aria-hidden />
+      </IconButton>
     </CustomTooltip>
   );
 }

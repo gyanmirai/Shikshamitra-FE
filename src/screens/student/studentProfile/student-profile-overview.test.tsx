@@ -116,11 +116,13 @@ it('renders the approved overview with actual saved contacts and retains detail/
   );
   renderStudentProfile();
   expect(await screen.findByText('guardian@example.test')).toBeVisible();
-  expect(screen.getByText('Date of birth').nextElementSibling).toHaveTextContent('01/04/2016');
   expect(screen.getByRole('region', { name: 'Academic context' })).toHaveTextContent(
     'Approved historical entry'
   );
-  expect(screen.getByRole('heading', { name: 'Record Activity' })).toBeVisible();
+  expect(screen.getByText('Date of birth').nextElementSibling).toHaveTextContent('01/04/2016');
+  expect(screen.getByRole('region', { name: 'Student Details' })).toBeVisible();
+  expect(screen.getByRole('region', { name: 'Admission & Onboarding' })).toBeVisible();
+  expect(screen.getByRole('region', { name: 'Recent Changes' })).toBeVisible();
   expect(screen.getAllByText('Meera Patel')).toHaveLength(2);
   expect(screen.queryByText('student@example.test')).not.toBeInTheDocument();
   expect(
@@ -128,11 +130,11 @@ it('renders the approved overview with actual saved contacts and retains detail/
   ).toBeVisible();
   expect(screen.getAllByText('GR number')).toHaveLength(1);
   expect(screen.getAllByText('Roll number')).toHaveLength(1);
-  expect(screen.getByRole('link', { name: 'View History' })).toHaveAttribute(
+  expect(screen.getByRole('tab', { name: 'History' })).toHaveAttribute(
     'href',
     '/student/profile?view=history'
   );
-  await userEvent.click(screen.getByRole('link', { name: 'View All Details' }));
+  await userEvent.click(screen.getByRole('tab', { name: 'Details' }));
   expect(await screen.findByText('No Registration form available')).toBeVisible();
 });
 
@@ -146,14 +148,13 @@ it('explains each saved overview section through keyboard-accessible help withou
   const overview = screen.getByRole('tab', { name: 'Overview' });
   const user = userEvent.setup();
   const sections = [
-    ['Student Details', 'Saved date of birth, age and gender for this student.'],
+    ['Student Details', 'Saved date of birth, calculated age and gender for this student.'],
     ['Parents & Contact', 'Saved parents, optional other guardian and the main school contact.'],
-    ['Record Activity', 'Linked admission and onboarding milestones'],
     [
       'Admission & Onboarding',
-      'Saved admission, enrollment activation and portal credential status',
+      'Linked admission, enrollment activation and portal credential status',
     ],
-    ['Recent Changes', 'The three most recent student record changes'],
+    ['Recent Changes', 'The latest recorded changes.'],
   ] as const;
   await sections.reduce(async (previous, [title, explanation]) => {
     await previous;
@@ -179,6 +180,76 @@ it('keeps a missing source and absent contact values empty instead of inventing 
   expect(screen.getByText('Not linked')).toBeVisible();
   expect(screen.getByText('No linked journey available.')).toBeVisible();
   expect(screen.queryByText('Meera Patel')).not.toBeInTheDocument();
+});
+
+it('keeps the saved academic context in the identity header across profile tabs', async () => {
+  mswServer.use(
+    http.get(profilePath, () =>
+      HttpResponse.json({
+        data: {
+          ...studentProfile,
+          academicYearId: 'previous-year',
+          enrollmentHistory: [
+            {
+              id: 'enrollment-1',
+              academicYearId: 'previous-year',
+              academicYearName: '2025–2026',
+              isActive: false,
+            },
+          ],
+        },
+      })
+    )
+  );
+  renderStudentProfile();
+  const context = await screen.findByRole('region', { name: 'Academic context' });
+  expect(context).toHaveTextContent('2025–2026');
+  expect(context.closest('[role="tabpanel"]')).toBeNull();
+  expect(screen.getAllByText('Academic year')).toHaveLength(1);
+  await userEvent.click(screen.getByRole('tab', { name: 'Details' }));
+  expect(await screen.findByText('No Registration form available')).toBeVisible();
+  expect(screen.getByRole('region', { name: 'Academic context' })).toHaveTextContent('2025–2026');
+});
+
+it.each([
+  ['Students.Admissions.Applications.View', 'View Admission'],
+  ['Students.Onboarding.View', 'Continue Onboarding'],
+])('retains the separately authorized journey action for %s', async (permission, action) => {
+  mswServer.use(
+    http.get(profilePath, () =>
+      HttpResponse.json({
+        data: {
+          ...studentProfile,
+          academicYearId: 'year-1',
+          admissionOnboarding: [
+            {
+              applicationId: 'application-1',
+              applicationNumber: 'APP-001',
+              academicYearId: 'year-1',
+              finalizedAt: '2026-09-02T08:00:00Z',
+              onboardingCaseId: 'case-1',
+              status: 'Activated',
+              activatedAt: '2026-09-03T08:00:00Z',
+              credentialsStatus: 'Failed',
+            },
+          ],
+        },
+      })
+    )
+  );
+  renderStudentProfile(profileStudentId, ['Students.Records.StudentList.View', permission]);
+  const activity = await screen.findByRole('region', { name: 'Admission & Onboarding' });
+  expect(within(activity).getByRole('link', { name: action })).toHaveAttribute(
+    'href',
+    expect.stringContaining(permission.includes('Onboarding') ? 'case=case-1' : 'application-1')
+  );
+  expect(
+    within(activity).queryByRole('link', {
+      name: action === 'View Admission' ? 'Continue Onboarding' : 'View Admission',
+    })
+  ).not.toBeInTheDocument();
+  expect(within(activity).getByText('Failed')).toBeVisible();
+  expect(within(activity).getAllByText('APP-001')).toHaveLength(1);
 });
 
 it('keeps the profile context and shows a contact skeleton while saved details are loading', async () => {
@@ -245,9 +316,39 @@ it('retains the restricted history message without a false empty state or a hist
   mswServer.use(http.get(profilePath, () => HttpResponse.json({ data: studentProfile })));
   renderStudentProfile();
   await screen.findByText('Aanya Patel');
-  const activity = screen.getByRole('heading', { name: 'Record Activity' }).closest('section')!;
+  const activity = screen.getByRole('region', { name: 'Recent Changes' });
   expect(
     within(activity).getByText('Record change history is not available with your current access.')
   ).toBeVisible();
   expect(within(activity).queryByText('No record changes are available.')).not.toBeInTheDocument();
+});
+
+it('reports overview history failures once through the Student toast without an inline error or empty state', async () => {
+  const toast = vi.spyOn(shikshaMitraToast, 'error');
+  mswServer.use(
+    http.get(profilePath, () => HttpResponse.json({ data: studentProfile })),
+    http.get('*/api/students/records/changes', () =>
+      HttpResponse.json({ error: { message: 'Unavailable' } }, { status: 503 })
+    )
+  );
+  try {
+    renderStudentProfile(profileStudentId, [
+      'Students.Records.StudentList.View',
+      'Students.Records.Changes.View',
+    ]);
+    await waitFor(() =>
+      expect(toast).toHaveBeenCalledWith(
+        expect.objectContaining({ message: 'Record change history could not be loaded.' })
+      )
+    );
+    const recent = screen.getByRole('region', { name: 'Recent Changes' });
+    expect(
+      within(recent).queryByText('Recent changes could not be loaded.')
+    ).not.toBeInTheDocument();
+    expect(within(recent).queryByText('No record changes are available.')).not.toBeInTheDocument();
+    expect(within(recent).queryByRole('button', { name: /Retry/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Overview' })).toHaveAttribute('aria-selected', 'true');
+  } finally {
+    toast.mockRestore();
+  }
 });

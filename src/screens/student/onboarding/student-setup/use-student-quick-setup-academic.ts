@@ -59,7 +59,6 @@ export function useStudentQuickSetupAcademic({
     if (
       !remoteCase?.studentEnrollmentId ||
       !remoteCase.credentialsPending ||
-      remoteCase.status === 4 ||
       remoteCase.status === 5
     )
       return undefined;

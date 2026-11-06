@@ -42,15 +42,15 @@ export const studentPaths = {
     setup: '/student/onboarding/setup',
     settings: '/student/onboarding/settings',
     settingsSections: {
-      portalAccess: '/student/onboarding/settings?tab=portal-access',
+      portalAccess: '/student/onboarding/settings?tab=gr-number',
       grNumber: '/student/onboarding/settings?tab=gr-number',
       rollNumber: '/student/onboarding/settings?tab=roll-number',
       // Retain existing callers while old bookmarked routes redirect to this workspace.
-      readinessAccess: '/student/onboarding/settings?tab=portal-access',
+      readinessAccess: '/student/onboarding/settings?tab=gr-number',
       numberingPlacement: '/student/onboarding/settings?tab=gr-number',
-      operationalPolicies: '/student/onboarding/settings?tab=portal-access',
-      rules: '/student/onboarding/settings?tab=portal-access',
-      accountsAccess: '/student/onboarding/settings?tab=portal-access',
+      operationalPolicies: '/student/onboarding/settings?tab=gr-number',
+      rules: '/student/onboarding/settings?tab=gr-number',
+      accountsAccess: '/student/onboarding/settings?tab=gr-number',
     },
   },
   records: {
@@ -72,7 +72,6 @@ export const studentPaths = {
     studentICard: '/student/student-i-card',
     certificates: '/student/certificates',
     reports: '/student/reports',
-    settings: '/student/studentRecords/setting',
   },
   attendance: {
     root: '/student/attendance/take-attendance',
@@ -134,7 +133,6 @@ export const studentPermissions = {
       `${defaultStudentPermissionName}Records.StudentICard.View`,
       `${defaultStudentPermissionName}Records.Certificates.View`,
       `${defaultStudentPermissionName}Records.Reports.View`,
-      `${defaultStudentPermissionName}Records.Settings.View`,
     ],
     studentList: `${defaultStudentPermissionName}Records.StudentList.View`,
     manageStudent: `${defaultStudentPermissionName}Records.StudentList.Add`,
@@ -334,6 +332,24 @@ const studentModule = () => ({
           permissionName: studentPermissions.records.root,
           visibilityPermissionName: studentVisibilityPermissions.records,
           icon: menuIconView('mdi:folder-account-outline'),
+          permissionChildren: [
+            { title: 'Student List', permissionName: studentPermissions.records.studentList },
+            {
+              title: 'House Management',
+              permissionName: studentPermissions.records.houseManagement,
+            },
+            { title: 'Student I-Card', permissionName: studentPermissions.records.studentICard },
+            { title: 'Certificates', permissionName: studentPermissions.records.certificates },
+            {
+              title: 'Reports',
+              permissionName: studentPermissions.records.reports,
+              permissionChildren: [
+                { title: 'Records reports', permissionName: studentPermissions.records.reports },
+                { title: 'Student reports', permissionName: 'Students.Reports.View' },
+              ],
+            },
+            { title: 'Policy Settings', permissionName: studentPermissions.records.setting },
+          ],
           children: [
             {
               title: 'Student List',
@@ -381,13 +397,6 @@ const studentModule = () => ({
                 { title: 'Student reports', permissionName: 'Students.Reports.View' },
               ],
               icon: menuIconView('mdi:chart-box-outline'),
-            },
-            {
-              title: 'Settings',
-              path: studentPaths.records.settings,
-              _action: 'student-setting',
-              permissionName: studentPermissions.records.setting,
-              icon: menuIconView('mdi:cog-outline'),
             },
           ],
         },

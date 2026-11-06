@@ -17,22 +17,10 @@ import { StudentFeedback } from 'src/components/student-feedback';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useId, useRef, useState, useEffect, useCallback } from 'react';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
-import { usePopover, CustomPopover } from 'src/components/custom-popover';
 import { useParams, usePathname, useSearchParams } from 'next/navigation';
 import { studentPaths, studentPermissions } from 'src/constants/student-menu';
+import { Box, Stack, Paper, Button, Drawer, Skeleton, Typography } from '@mui/material';
 import { useGetAdmissionOfferingQuery } from 'src/redux/student/admissions/admission-offerings-api';
-import {
-  Box,
-  Stack,
-  Paper,
-  Button,
-  Drawer,
-  Divider,
-  MenuList,
-  MenuItem,
-  Skeleton,
-  Typography,
-} from '@mui/material';
 
 import { AdmissionQueryError } from './admission-query-error';
 import { formatAdmissionReference } from './admission-reference';
@@ -41,10 +29,10 @@ import { FormHistoryCard } from './application-detail/form-history-card';
 import { useApplicationDetail } from './application-detail/use-application-detail';
 import { TransitionHistoryCard } from './application-detail/transition-history-card';
 import { ApplicationRuntimeForm } from './application-detail/application-runtime-form';
-import { ApplicationStageJourney } from './application-detail/application-stage-journey';
 import { ApplicationDecisionCard } from './application-detail/application-decision-card';
 import { ApplicationManagedStages } from './application-detail/application-managed-stages';
 import { ApplicationResumeJourney } from './application-detail/application-resume-journey';
+import { ApplicationJourneySidebar } from './application-detail/application-journey-sidebar';
 import { ApplicationJourneyHistory } from './application-detail/application-journey-history';
 import { ApplicationActivityDrawer } from './application-detail/application-activity-drawer';
 import { ApplicationWorkspaceActions } from './application-detail/application-workspace-actions';
@@ -80,7 +68,7 @@ import {
 import type { ApplicationStageReadiness } from './application-detail/application-managed-stages';
 import type { AdmissionFeeSelectionEditorState } from './fee-selection/admission-fee-selection-editor';
 
-type WorkspaceView = { view: 'journey'; stageId?: string } | { view: 'form' | 'history' };
+type WorkspaceView = { view: 'journey'; stageId?: string } | { view: 'history' };
 type Navigation = WorkspaceView | { view: 'close' };
 
 export default function AdmissionApplicationDetailScreen({
@@ -109,7 +97,6 @@ export default function AdmissionApplicationDetailScreen({
   const [resumeBusy, setResumeBusy] = useState(false);
   const activityDrawer = useBoolean();
   const correctionDrawer = useBoolean();
-  const actionsPopover = usePopover();
   const [finalizationOpen, setFinalizationOpen] = useState(false);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canViewApplicantNotes = hasGrantedPermission(
@@ -200,8 +187,7 @@ export default function AdmissionApplicationDetailScreen({
   const stageDraftDirty = Boolean(
     stageReadiness?.stageId === selectedStage?.id && stageReadiness?.dirty
   );
-  const requiresForm =
-    workspace.view === 'form' || (workspace.view === 'journey' && isFormStage(selectedStage));
+  const requiresForm = workspace.view === 'journey' && isFormStage(selectedStage);
   const isLoading = applicationQuery.isLoading || workflowQuery.isLoading;
   const refreshingDetails = !isLoading && (applicationQuery.isFetching || workflowQuery.isFetching);
   const formLoading = requiresForm && !formQuery.isError && (formQuery.isLoading || !form);
@@ -279,13 +265,6 @@ export default function AdmissionApplicationDetailScreen({
     currentStage?.stageType !== 4 &&
     !currentStage?.seatStageEnabled
   );
-  const canOverride = Boolean(
-    detail.canOverride &&
-    canLeaveFeeEditor &&
-    currentStage?.stageType !== 4 &&
-    !currentStage?.seatStageEnabled
-  );
-
   const leaveGuard = useUnsavedNavigation(
     Boolean(feeEditorState.dirty || stageDraftDirty || detail.hasUnsavedAnswers),
     {
@@ -301,7 +280,6 @@ export default function AdmissionApplicationDetailScreen({
   );
 
   const navigate = (target: Navigation) => {
-    actionsPopover.onClose();
     setFeeEditorState({ dirty: false, busy: false });
     setStageReadiness(null);
     if (target.view === 'close') {
@@ -312,7 +290,6 @@ export default function AdmissionApplicationDetailScreen({
   };
   const requestNavigation = (target: Navigation) => {
     if (navigationLocked) return;
-    actionsPopover.onClose();
     if (
       target.view === 'journey' &&
       workspace.view === 'journey' &&
@@ -345,19 +322,6 @@ export default function AdmissionApplicationDetailScreen({
     const readOnly = historicalReview || !detail.canEdit;
     return (
       <>
-        {(workspace.view === 'form' ||
-          (!historicalReview && workspace.view === 'journey' && isFormStage(selectedStage))) && (
-          <ParentRegistrationPanel
-            applicationId={application.id}
-            canView={hasGrantedPermission(permissions, 'Students.Admissions.Applications.View')}
-            canManage={detail.canEdit}
-            disabled={navigationLocked}
-            dirty={detail.hasUnsavedAnswers}
-            currentValues={detail.currentValues}
-            onBusyChange={onParentRegistrationBusyChange}
-            onProgressChange={onParentRegistrationProgressChange}
-          />
-        )}
         {workspace.view === 'journey' && formCorrectionAction && (
           <Stack direction="row" justifyContent="flex-end" sx={{ flexShrink: 0 }}>
             {formCorrectionAction}
@@ -520,32 +484,6 @@ export default function AdmissionApplicationDetailScreen({
         </Stack>
       );
     }
-    if (workspace.view === 'form')
-      return (
-        <Stack spacing={1.5}>
-          <Stack
-            direction="row"
-            alignItems="center"
-            justifyContent="space-between"
-            useFlexGap
-            flexWrap="wrap"
-            spacing={1}
-          >
-            <Typography variant="h6">Application Record</Typography>
-            <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
-              {formCorrectionAction}
-              <Button
-                size="small"
-                disabled={navigationLocked}
-                onClick={() => requestNavigation({ view: 'journey' })}
-              >
-                Current Step
-              </Button>
-            </Stack>
-          </Stack>
-          {renderRuntimeForm(!isFormStage(currentStage))}
-        </Stack>
-      );
     return (
       <Stack
         id={selectedStage ? `application-stage-panel-${selectedStage.id}` : undefined}
@@ -700,7 +638,6 @@ export default function AdmissionApplicationDetailScreen({
             },
             alignItems: 'center',
             gap: 1,
-            '& > [aria-label="Applicant actions"]': { justifySelf: 'end' },
             p: { xs: 1.5, sm: 2 },
             borderBottom: 1,
             borderColor: 'divider',
@@ -756,172 +693,146 @@ export default function AdmissionApplicationDetailScreen({
               </Stack>
             )}
           </Box>
-          <ApplicationWorkspaceActions
-            disabled={navigationLocked || isError || !application}
-            closeDisabled={navigationLocked}
-            canViewActivity={Boolean(
+          <Stack
+            direction="row"
+            spacing={1}
+            alignItems="center"
+            justifyContent="flex-end"
+            useFlexGap
+            flexWrap="wrap"
+            sx={{ minWidth: 0, maxWidth: 1, justifySelf: { xs: 'stretch', sm: 'end' } }}
+          >
+            {!isLoading &&
               !isError &&
               application &&
-              ((canViewApplicantNotes && application.applicantId) ||
-                (application.inquiryId &&
-                  hasGrantedPermission(permissions, 'Students.Admissions.Applications.View')))
-            )}
-            historySelected={workspace.view === 'history'}
-            journeyOpen={actionsPopover.open}
-            onActivity={activityDrawer.onTrue}
-            onHistory={() => requestNavigation({ view: 'history' })}
-            onJourney={actionsPopover.onOpen}
-            focused={focusMode.value}
-            onFocus={isDrawer ? focusMode.onToggle : undefined}
-            onClose={closeDetail}
-          />
-          <CustomPopover
-            open={actionsPopover.open}
-            anchorEl={actionsPopover.anchorEl}
-            onClose={actionsPopover.onClose}
-            slotProps={{
-              arrow: { hide: true, placement: 'top-right' },
-              paper: {
-                role: 'dialog',
-                'aria-label': 'Admission Journey',
-                sx: { width: 320, maxWidth: 'calc(100vw - 32px)' },
-              },
-            }}
-          >
-            <Scrollbar sx={{ maxHeight: '65vh' }}>
-              <Stack spacing={1} sx={{ p: 1 }}>
-                <Typography variant="subtitle1">Admission Journey</Typography>
-                <ApplicationStageJourney
-                  stages={workflow?.stages ?? []}
-                  selectedStageId={workspace.view === 'journey' ? selectedStage?.id : undefined}
-                  currentStageId={workflow?.currentStageInstanceId}
-                  busy={navigationLocked}
-                  onChange={(stageId) =>
-                    requestNavigation({
-                      view: 'journey',
-                      stageId: stageId === currentStage?.id ? undefined : stageId,
-                    })
-                  }
+              form &&
+              !formQuery.isError &&
+              workspace.view === 'journey' &&
+              isFormStage(selectedStage) &&
+              !historical && (
+                <ParentRegistrationPanel
+                  placement="header"
+                  applicationId={application.id}
+                  canView={hasGrantedPermission(
+                    permissions,
+                    'Students.Admissions.Applications.View'
+                  )}
+                  canManage={detail.canEdit}
+                  disabled={navigationLocked}
+                  dirty={detail.hasUnsavedAnswers}
+                  currentValues={detail.currentValues}
+                  onBusyChange={onParentRegistrationBusyChange}
+                  onProgressChange={onParentRegistrationProgressChange}
                 />
-                <Divider />
-                <MenuList disablePadding aria-label="Journey Actions">
-                  <MenuItem
-                    disabled={navigationLocked}
-                    onClick={() => requestNavigation({ view: 'form' })}
-                  >
-                    <Iconify icon="mdi:file-document-outline" />
-                    Review Application Form
-                  </MenuItem>
-                  {(workspace.view !== 'journey' || historical || !selectedCurrentStage) && (
-                    <MenuItem
-                      disabled={navigationLocked}
-                      onClick={() => requestNavigation({ view: 'journey' })}
-                    >
-                      <Iconify icon="mdi:clipboard-check-outline" />
-                      Current Step
-                    </MenuItem>
-                  )}
-                  {active && canOverride && Boolean(workflow?.availableTransitions.length) && (
-                    <MenuItem
-                      onClick={() => {
-                        actionsPopover.onClose();
-                        detail.setRuntimeAction('override');
-                      }}
-                    >
-                      <Iconify icon="mdi:routes" />
-                      Override Route
-                    </MenuItem>
-                  )}
-                  {active && canSkip && currentStage?.allowManualSkip && (
-                    <MenuItem
-                      onClick={() => {
-                        actionsPopover.onClose();
-                        detail.setRuntimeAction('skip');
-                      }}
-                    >
-                      <Iconify icon="mdi:skip-next-outline" />
-                      Skip Current Step
-                    </MenuItem>
-                  )}
-                </MenuList>
-              </Stack>
-            </Scrollbar>
-          </CustomPopover>
+              )}
+            <ApplicationWorkspaceActions
+              disabled={navigationLocked || isError || !application}
+              closeDisabled={navigationLocked}
+              canViewActivity={Boolean(
+                !isError &&
+                application &&
+                ((canViewApplicantNotes && application.applicantId) ||
+                  (application.inquiryId &&
+                    hasGrantedPermission(permissions, 'Students.Admissions.Applications.View')))
+              )}
+              historySelected={workspace.view === 'history'}
+              onActivity={activityDrawer.onTrue}
+              onHistory={() => requestNavigation({ view: 'history' })}
+              focused={focusMode.value}
+              onFocus={isDrawer ? focusMode.onToggle : undefined}
+              onClose={closeDetail}
+            />
+          </Stack>
         </Box>
-        <Scrollbar fillContent sx={{ flex: '1 1 auto', minHeight: 0 }}>
-          <Box sx={{ minWidth: 0, flex: 1, display: 'flex', flexDirection: 'column' }}>
-            {isLoading && (
-              <Stack spacing={1.5} role="status" aria-label="Loading Application Details">
-                <Skeleton height={56} />
-                <Skeleton variant="rounded" height={48} />
-                <Skeleton variant="rounded" height={200} />
-              </Stack>
-            )}
-            {applicationNotFound && (
-              <StudentFeedback
-                notificationKey="STU-0020"
-                presentation="persistent"
-                severity="warning"
-                action={
-                  <Button color="inherit" size="small" onClick={closeDetail}>
-                    {returnUrl.startsWith(studentPaths.enrollment.pipeline)
-                      ? 'Back to Pipeline'
-                      : returnUrl.startsWith(studentPaths.enrollment.assessments)
-                        ? 'Back to Assessments'
-                        : 'Back to Applications'}
-                  </Button>
-                }
-              >
-                This application is no longer available. It may have been removed, or the link may
-                be outdated.
-              </StudentFeedback>
-            )}
-            {isError && !applicationNotFound && (
-              <AdmissionQueryError
-                onRetry={() => {
-                  applicationQuery.refetch();
-                  if (requiresForm && !formQuery.isUninitialized) formQuery.refetch();
-                  workflowQuery.refetch();
-                }}
-              />
-            )}
-            {!isLoading && !isError && !applicationNotFound && (
-              <Box
-                sx={{
-                  flex: 1,
-                  display: 'flex',
-                  minWidth: 0,
-                }}
-              >
-                <FormBusyRegion
-                  fillContent
-                  busy={workspaceBusy}
-                  showOverlay={panelBusy.validation}
-                  label={
-                    panelBusy.validation
-                      ? 'Checking form…'
-                      : detail.advanceState.isLoading
-                        ? 'Moving to the Next Admission Stage…'
-                        : 'Updating Admission Details…'
+        <Box sx={{ display: 'flex', flex: 1, minHeight: 0, minWidth: 0, overflow: 'hidden' }}>
+          <ApplicationJourneySidebar
+            stages={isError ? [] : (workflow?.stages ?? [])}
+            selectedStageId={workspace.view === 'journey' ? selectedStage?.id : undefined}
+            currentStageId={workflow?.currentStageInstanceId}
+            loading={isLoading}
+            busy={navigationLocked || isError || !application}
+            onChange={(stageId) =>
+              requestNavigation({
+                view: 'journey',
+                stageId: stageId === currentStage?.id ? undefined : stageId,
+              })
+            }
+          />
+          <Scrollbar fillContent sx={{ flex: '1 1 auto', minHeight: 0, minWidth: 0, width: 0 }}>
+            <Box sx={{ minWidth: 0, flex: 1, display: 'flex', flexDirection: 'column' }}>
+              {isLoading && (
+                <Stack spacing={1.5} role="status" aria-label="Loading Application Details">
+                  <Skeleton height={56} />
+                  <Skeleton variant="rounded" height={48} />
+                  <Skeleton variant="rounded" height={200} />
+                </Stack>
+              )}
+              {applicationNotFound && (
+                <StudentFeedback
+                  notificationKey="STU-0020"
+                  presentation="persistent"
+                  severity="warning"
+                  action={
+                    <Button color="inherit" size="small" onClick={closeDetail}>
+                      {returnUrl.startsWith(studentPaths.enrollment.pipeline)
+                        ? 'Back to Pipeline'
+                        : returnUrl.startsWith(studentPaths.enrollment.assessments)
+                          ? 'Back to Assessments'
+                          : 'Back to Applications'}
+                    </Button>
                   }
                 >
-                  <Box
-                    sx={{
-                      flex: 1,
-                      minWidth: 0,
-                      p: { xs: 1.5, sm: 2 },
-                      ...(isFormStage(selectedStage) && { pb: 0.5 }),
-                      display: 'flex',
-                      flexDirection: 'column',
-                    }}
+                  This application is no longer available. It may have been removed, or the link may
+                  be outdated.
+                </StudentFeedback>
+              )}
+              {isError && !applicationNotFound && (
+                <AdmissionQueryError
+                  onRetry={() => {
+                    applicationQuery.refetch();
+                    if (requiresForm && !formQuery.isUninitialized) formQuery.refetch();
+                    workflowQuery.refetch();
+                  }}
+                />
+              )}
+              {!isLoading && !isError && !applicationNotFound && (
+                <Box
+                  sx={{
+                    flex: 1,
+                    display: 'flex',
+                    minWidth: 0,
+                  }}
+                >
+                  <FormBusyRegion
+                    fillContent
+                    busy={workspaceBusy}
+                    showOverlay={panelBusy.validation}
+                    label={
+                      panelBusy.validation
+                        ? 'Checking form…'
+                        : detail.advanceState.isLoading
+                          ? 'Moving to the Next Admission Stage…'
+                          : 'Updating Admission Details…'
+                    }
                   >
-                    {renderLoadedContent()}
-                  </Box>
-                </FormBusyRegion>
-              </Box>
-            )}
-          </Box>
-        </Scrollbar>
+                    <Box
+                      sx={{
+                        flex: 1,
+                        minWidth: 0,
+                        p: { xs: 1.5, sm: 2 },
+                        ...(isFormStage(selectedStage) && { pb: 0.5 }),
+                        display: 'flex',
+                        flexDirection: 'column',
+                      }}
+                    >
+                      {renderLoadedContent()}
+                    </Box>
+                  </FormBusyRegion>
+                </Box>
+              )}
+            </Box>
+          </Scrollbar>
+        </Box>
         {!finalizationOpen && (
           <Stack
             component="footer"
@@ -970,6 +881,18 @@ export default function AdmissionApplicationDetailScreen({
                       onClick={endJourneyDialog.onTrue}
                     >
                       End Journey
+                    </Button>
+                  )}
+                  {active && canSkip && currentStage?.allowManualSkip && (
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      color="inherit"
+                      disabled={navigationLocked}
+                      startIcon={<Iconify icon="mdi:skip-next-outline" />}
+                      onClick={() => detail.setRuntimeAction('skip')}
+                    >
+                      Skip Current Step
                     </Button>
                   )}
                   {application.status === 2 ? (
@@ -1109,19 +1032,15 @@ export default function AdmissionApplicationDetailScreen({
           onSubmit={(reason) => detail.advance({ reason })}
         />
       )}
-      {detail.runtimeAction && workflow && (
+      {detail.runtimeAction === 'skip' && workflow && (
         <AdmissionWorkflowRuntimeActionDialog
           open
-          action={detail.runtimeAction}
+          action="skip"
           transitions={workflow.availableTransitions}
           loading={detail.advanceState.isLoading}
           onClose={() => detail.setRuntimeAction(null)}
           onSubmit={async (value) => {
-            await detail.advance({
-              ...value,
-              skipCurrentStage: detail.runtimeAction === 'skip',
-              adminOverride: detail.runtimeAction === 'override',
-            });
+            await detail.advance({ ...value, skipCurrentStage: true });
           }}
         />
       )}

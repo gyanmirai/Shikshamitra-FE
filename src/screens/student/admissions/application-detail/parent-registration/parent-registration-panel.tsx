@@ -2,20 +2,18 @@
 
 import type {
   ParentRecipientRelationship,
-  ParentRegistrationRecipient,
   StaffParentRegistrationContext,
 } from 'src/redux/student/admissions/admission-parent-registration-types';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import { Label } from 'src/components/label';
 import { useRouter } from 'src/routes/hooks';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { fDateTime } from 'src/utils/format-time';
 import { useRef, useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { LoadingButton } from 'src/components/loading-button';
 import ShakingTextField from 'src/components/shaking-text-field';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -24,7 +22,6 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
 import { readableRegistrationValue } from 'src/screens/public/admission-registration/parent-registration-model';
 import {
   Box,
@@ -35,6 +32,7 @@ import {
   Skeleton,
   TextField,
   Typography,
+  IconButton,
   DialogActions,
 } from '@mui/material';
 import {
@@ -44,16 +42,17 @@ import {
   useRevokeParentRegistrationMutation,
   useTakeoverParentRegistrationMutation,
   useChangeParentRegistrationEmailMutation,
+  useGetParentRegistrationEmailHistoryQuery,
   useRetryParentRegistrationDeliveryMutation,
   useRequestParentRegistrationCorrectionsMutation,
 } from 'src/redux/student/admissions/admission-parent-registration-api';
 
 import { readAdmissionFormValue } from '../../admission-visibility-rules';
-import { ADMISSION_DATE_TIME_FORMAT } from '../../admission-date-formats';
+import { ParentRegistrationEmailHistoryDrawer } from './parent-registration-email-history-drawer';
 
 type Action = 'email' | 'send' | 'corrections' | 'apply' | 'revoke' | 'takeover' | 'retry-delivery';
 const labels: Record<Action, string> = {
-  email: 'Change Parent Email',
+  email: 'Update Link',
   send: 'Send Registration Link',
   corrections: 'Request Parent Documents',
   apply: 'Review Parent Corrections',
@@ -70,25 +69,6 @@ const actionLabels: Record<Action, string> = {
   takeover: 'Take over',
   'retry-delivery': 'Retry delivery',
 };
-const statusLabels: Record<string, string> = {
-  Invited: 'Awaiting parent',
-  InProgress: 'In progress',
-  ReadyForReview: 'Ready for review',
-  TakenOver: 'Taken over',
-  PendingApproval: 'Pending approval',
-  Sending: 'Sending',
-  Unknown: 'Delivery unconfirmed',
-};
-const deliveryLabels: Record<string, string> = {
-  Pending: 'Email pending',
-  Sending: 'Sending email',
-  Sent: 'Email sent',
-  Failed: 'Email failed',
-  PendingApproval: 'Email awaiting approval',
-  Unknown: 'Delivery unconfirmed',
-  Cancelled: 'Email cancelled',
-};
-
 const hasParentEmailChange = (email: string, savedEmail?: string | null) =>
   email.trim().toLowerCase() !== (savedEmail || '').trim().toLowerCase();
 
@@ -102,6 +82,7 @@ export function ParentRegistrationPanel({
   documentStageId,
   onBusyChange,
   onProgressChange,
+  placement = 'inline',
 }: {
   applicationId: string;
   canView: boolean;
@@ -113,8 +94,11 @@ export function ParentRegistrationPanel({
   documentStageId?: string;
   onBusyChange?: (busy: boolean) => void;
   onProgressChange?: () => void;
+  /** Reuse these actions in the applicant header without a second controller or query. */
+  placement?: 'inline' | 'header';
 }) {
   const [polling, setPolling] = useState(false);
+  const [emailHistoryOpen, setEmailHistoryOpen] = useState(false);
   const query: ReturnType<typeof useGetParentRegistrationQuery> = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetParentRegistrationQuery,
@@ -130,6 +114,10 @@ export function ParentRegistrationPanel({
     },
   });
   const context: StaffParentRegistrationContext | undefined = query.currentData;
+  const emailHistoryQuery = useGetParentRegistrationEmailHistoryQuery(applicationId, {
+    skip: !canView || !emailHistoryOpen,
+    refetchOnMountOrArgChange: true,
+  });
   const observedProgress = useRef<{ applicationId: string; marker: string } | null>(null);
   useEffect(() => {
     if (!canView || !context) return;
@@ -283,7 +271,7 @@ export function ParentRegistrationPanel({
               ? 'Parent email saved. Send a registration link when ready.'
               : action === 'apply'
                 ? 'Parent corrections applied. Review the application before continuing.'
-                : 'Parent registration updated. Check the delivery status below.',
+                : 'Parent registration updated. Check email history for the latest status.',
         });
       } catch (failure) {
         const conflictError =
@@ -331,6 +319,10 @@ export function ParentRegistrationPanel({
     retry.current = null;
     const recipient =
       context.recipients.find((item) => item.relationship === relationship) ??
+      (next === 'email'
+        ? (context.recipients.find((item) => item.canChangeEmail && item.isMainContact) ??
+          context.recipients.find((item) => item.canChangeEmail))
+        : undefined) ??
       context.recipients.find((item) => item.isMainContact && item.canSend) ??
       context.recipients.find((item) => item.canSend);
     formik.resetForm({
@@ -344,13 +336,7 @@ export function ParentRegistrationPanel({
   };
   if (!canView || query.isError || (!context && !query.isLoading)) return null;
   const request = context?.request;
-  const isRequestRecipient = (contact: ParentRegistrationRecipient) =>
-    Boolean(
-      request &&
-      request.recipient.relationship === contact.relationship &&
-      request.recipient.fullName === contact.fullName &&
-      !hasParentEmailChange(request.recipient.email || '', contact.email)
-    );
+  const editableRecipients = context?.recipients.filter((contact) => contact.canChangeEmail) ?? [];
   const primaryDeliveryAction = context?.canRetryDelivery
     ? 'retry-delivery'
     : context?.canSend
@@ -359,258 +345,228 @@ export function ParentRegistrationPanel({
   const recipient = snapshot?.recipients.find(
     (item) => item.relationship === formik.values.recipient
   );
+  const hasMoreActions = Boolean(
+    context &&
+    canManage &&
+    (context.canApply ||
+      context.canRevoke ||
+      context.canTakeover ||
+      (primaryDeliveryAction === 'retry-delivery' && context.canSend) ||
+      context.recipients.some(
+        (contact) => contact.canChangeEmail || contact.emailChangeBlockedReason
+      ))
+  );
+  const hasActions = Boolean((canManage && primaryDeliveryAction) || request || hasMoreActions);
+  const headerIconSx = {
+    width: { xs: 44, sm: 36 },
+    height: { xs: 44, sm: 36 },
+    border: 1,
+    borderColor: 'divider',
+    borderRadius: 1,
+  };
   return (
     <>
-      {!documentStageId && (
-        <FormSectionCard
-          title="Parent Registration"
-          icon={GlobalIcons.admissionDetails}
-          descriptionTooltip="Invite a saved parent contact to complete this draft. Staff retain application submission and document verification."
-          action={
-            request && (
-              <Label color={request.status === 'ReadyForReview' ? 'success' : 'default'}>
-                {statusLabels[request.status] || request.status}
-              </Label>
-            )
-          }
-        >
-          {query.isLoading ? (
-            <Skeleton height={42} aria-label="Loading parent registration status" />
-          ) : (
-            context && (
-              <Stack spacing={1.5}>
-                <Stack direction="row" spacing={2} useFlexGap flexWrap="wrap" alignItems="center">
-                  <Stack spacing={1} sx={{ flex: '1 1 220px', minWidth: 0 }}>
-                    {context.recipients.length ? (
-                      context.recipients.map((contact) => (
-                        <Stack key={contact.relationship} spacing={0.5} sx={{ minWidth: 0 }}>
-                          <Stack
-                            direction="row"
-                            spacing={1}
-                            useFlexGap
-                            flexWrap="wrap"
-                            alignItems="center"
-                          >
-                            <Typography
-                              variant="body2"
-                              sx={{ overflowWrap: 'anywhere', minWidth: 0 }}
-                            >
-                              {contact.relationshipLabel || contact.relationship} ·{' '}
-                              {contact.fullName}
-                            </Typography>
-                            {context.recipients.length > 1 && isRequestRecipient(contact) && (
-                              <Typography variant="caption" color="text.secondary">
-                                Link recipient
-                              </Typography>
-                            )}
-                          </Stack>
-                          <Stack
-                            direction="row"
-                            spacing={1}
-                            alignItems="center"
-                            useFlexGap
-                            flexWrap="wrap"
-                          >
-                            <Typography
-                              variant="body2"
-                              sx={{ overflowWrap: 'anywhere', minWidth: 0 }}
-                            >
-                              {contact.email || 'Email not saved'}
-                            </Typography>
-                            {canManage && contact.canChangeEmail && (
-                              <Button
-                                size="small"
-                                disabled={disabled || dirty || busy}
-                                onClick={() => open('email', contact.relationship)}
-                              >
-                                Change email
-                              </Button>
-                            )}
-                          </Stack>
-                          {canManage && contact.emailChangeBlockedReason && (
-                            <Typography variant="caption" color="text.secondary">
-                              {contact.emailChangeBlockedReason}
-                            </Typography>
-                          )}
-                        </Stack>
-                      ))
-                    ) : (
-                      <Typography variant="body2" color="text.secondary">
-                        No parent contact is available. Save a parent contact with an email address
-                        to send a link.
-                      </Typography>
-                    )}
-                  </Stack>
-                  {request ? (
-                    <Stack spacing={0.5} sx={{ flex: '1 1 200px', minWidth: 0 }}>
-                      <Stack
-                        direction="row"
-                        spacing={0.5}
-                        alignItems="center"
-                        useFlexGap
-                        flexWrap="wrap"
-                      >
-                        <Typography
-                          variant="caption"
-                          color={request.deliveryStatus === 'Failed' ? 'error' : 'text.secondary'}
-                        >
-                          {deliveryLabels[request.deliveryStatus] || request.deliveryStatus}
-                        </Typography>
-                        {request.deliveryStatus === 'Sent' && (
-                          <InfoTooltipIcon
-                            label="Email delivery information"
-                            title="Accepted by the email sender. Inbox delivery is not confirmed."
-                          />
-                        )}
-                        <Typography variant="caption" color="text.secondary">
-                          · Expires {fDateTime(request.expiresAt, ADMISSION_DATE_TIME_FORMAT)}
-                        </Typography>
-                      </Stack>
-                      {request.lastSavedAt && (
-                        <Typography variant="caption" color="text.secondary">
-                          Parent last saved {fDateTime(request.lastSavedAt, ADMISSION_DATE_TIME_FORMAT)}
-                        </Typography>
-                      )}
-                      {request.handedInAt && (
-                        <Typography variant="caption" color="text.secondary">
-                          Sent to school {fDateTime(request.handedInAt, ADMISSION_DATE_TIME_FORMAT)}
-                        </Typography>
-                      )}
-                    </Stack>
-                  ) : context.recipients.length > 0 ? (
-                    <Typography variant="body2" color="text.secondary" sx={{ flex: '1 1 200px' }}>
-                      Email a private link so the parent can complete registration.
-                    </Typography>
-                  ) : null}
-                  {canManage && (
-                    <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
-                      {primaryDeliveryAction && (
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          startIcon={<Iconify icon={GlobalIcons.email} />}
-                          disabled={
-                            disabled || dirty || busy || Boolean(context.emailDeliveryBlockedReason)
-                          }
-                          onClick={() => open(primaryDeliveryAction)}
-                        >
-                          {primaryDeliveryAction === 'retry-delivery'
-                            ? 'Retry delivery'
-                            : request
-                              ? 'Resend registration link'
-                              : 'Send registration link'}
-                        </Button>
-                      )}
-                      {context.canApply && (
-                        <Button
-                          size="small"
-                          variant="contained"
-                          disabled={disabled || dirty || busy}
-                          onClick={() => open('apply')}
-                        >
-                          Review parent corrections
-                        </Button>
-                      )}
-                      {(context.canRevoke ||
-                        context.canTakeover ||
-                        (primaryDeliveryAction === 'retry-delivery' && context.canSend)) && (
-                        <ThreeDotsActions
-                          moreLabel="More parent registration actions"
-                          actions={({ popover }) => (
-                            <MenuList>
-                              {primaryDeliveryAction === 'retry-delivery' && context.canSend && (
-                                <MenuItem
-                                  disabled={
-                                    disabled ||
-                                    dirty ||
-                                    busy ||
-                                    Boolean(context.emailDeliveryBlockedReason)
-                                  }
-                                  onClick={() => {
-                                    popover.onClose();
-                                    open('send');
-                                  }}
-                                >
-                                  <Iconify icon={GlobalIcons.email} />
-                                  Send a new link
-                                </MenuItem>
-                              )}
-                              {context.canRevoke && (
-                                <MenuItem
-                                  disabled={disabled || dirty || busy}
-                                  onClick={() => {
-                                    popover.onClose();
-                                    open('revoke');
-                                  }}
-                                >
-                                  <Iconify icon={GlobalIcons.cancel} />
-                                  Revoke link
-                                </MenuItem>
-                              )}
-                              {context.canTakeover && (
-                                <MenuItem
-                                  disabled={disabled || dirty || busy}
-                                  onClick={() => {
-                                    popover.onClose();
-                                    open('takeover');
-                                  }}
-                                >
-                                  <Iconify icon={GlobalIcons.edit} />
-                                  Take over
-                                </MenuItem>
-                              )}
-                            </MenuList>
-                          )}
-                        />
-                      )}
-                    </Stack>
-                  )}
-                </Stack>
-                {request && !context.recipients.some(isRequestRecipient) && (
-                  <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
-                    Link recipient:{' '}
-                    {request.recipient.relationshipLabel || request.recipient.relationship} ·{' '}
-                    {request.recipient.fullName} · {request.recipient.email || 'Email not saved'}
-                  </Typography>
-                )}
-                {request?.deliveryError && (
-                  <Typography variant="body2" color="error" role="alert">
-                    {request.deliveryError}
-                  </Typography>
-                )}
-                {request?.deliveryStatus === 'Unknown' && (
-                  <Typography variant="body2" role="status">
-                    Delivery could not be confirmed. Resend creates a new link and closes the old
-                    link.
-                  </Typography>
-                )}
-                {request?.notes && (
-                  <Typography
-                    variant="body2"
-                    sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}
+      {!documentStageId &&
+        (query.isLoading ? (
+          <Skeleton
+            width={168}
+            height={40}
+            sx={{ alignSelf: 'center', ...(placement === 'inline' && { ml: 'auto' }) }}
+            aria-label="Loading parent registration actions"
+          />
+        ) : (
+          context && (
+            <Stack
+              role="group"
+              aria-label="Parent registration actions"
+              spacing={1}
+              alignItems="flex-end"
+              sx={
+                placement === 'header'
+                  ? {
+                      minWidth: 0,
+                      maxWidth: { xs: '100%', sm: 360 },
+                      ...(hasActions && { borderRight: 1, borderColor: 'divider', pr: 1 }),
+                    }
+                  : { width: 1 }
+              }
+            >
+              <Stack
+                direction="row"
+                spacing={1}
+                alignItems="center"
+                justifyContent="flex-end"
+                useFlexGap
+                flexWrap="wrap"
+              >
+                {canManage && primaryDeliveryAction && (
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    color={placement === 'header' ? 'inherit' : 'primary'}
+                    startIcon={<Iconify icon={GlobalIcons.email} />}
+                    disabled={
+                      disabled || dirty || busy || Boolean(context.emailDeliveryBlockedReason)
+                    }
+                    onClick={() => open(primaryDeliveryAction)}
                   >
-                    {request.notes}
-                  </Typography>
+                    Send email
+                  </Button>
                 )}
-                {dirty && (
-                  <Typography variant="caption" color="text.secondary">
-                    Save your current form edits before changing parent access.
-                  </Typography>
+                {request && (
+                  <CustomTooltip title="Email history" arrow>
+                    <span>
+                      <IconButton
+                        size="small"
+                        aria-label="Email history"
+                        onClick={() => setEmailHistoryOpen(true)}
+                        sx={placement === 'header' ? headerIconSx : undefined}
+                      >
+                        <Iconify icon="mdi:email-sync-outline" />
+                      </IconButton>
+                    </span>
+                  </CustomTooltip>
                 )}
-                {context.emailDeliveryBlockedReason && (
-                  <Typography variant="body2" color="text.secondary" role="status">
-                    {context.emailDeliveryBlockedReason}
-                  </Typography>
-                )}
-                {context.blockedReason && (
-                  <Typography variant="body2" color="text.secondary">
-                    {context.blockedReason}
-                  </Typography>
+                {hasMoreActions && (
+                  <ThreeDotsActions
+                    moreLabel="More parent registration actions"
+                    sx={
+                      placement === 'header'
+                        ? { '& > .MuiIconButton-root': headerIconSx }
+                        : undefined
+                    }
+                    actions={({ popover }) => (
+                      <MenuList>
+                        {context.canApply && (
+                          <MenuItem
+                            disabled={disabled || dirty || busy}
+                            onClick={() => {
+                              popover.onClose();
+                              open('apply');
+                            }}
+                          >
+                            <Iconify icon={GlobalIcons.admissionDetails} />
+                            Review parent corrections
+                          </MenuItem>
+                        )}
+                        {context.recipients.some(
+                          (contact) => contact.canChangeEmail || contact.emailChangeBlockedReason
+                        ) && (
+                          <CustomTooltip
+                            title={
+                              editableRecipients.length
+                                ? 'Update the saved parent email. Send a new link separately after saving.'
+                                : context.recipients.find(
+                                    (contact) => contact.emailChangeBlockedReason
+                                  )?.emailChangeBlockedReason
+                            }
+                            placement="left"
+                          >
+                            <span>
+                              <MenuItem
+                                disabled={!editableRecipients.length || disabled || dirty || busy}
+                                onClick={() => {
+                                  popover.onClose();
+                                  open('email');
+                                }}
+                              >
+                                <Iconify icon={GlobalIcons.edit} />
+                                Update link
+                              </MenuItem>
+                            </span>
+                          </CustomTooltip>
+                        )}
+                        {primaryDeliveryAction === 'retry-delivery' && context.canSend && (
+                          <MenuItem
+                            disabled={
+                              disabled ||
+                              dirty ||
+                              busy ||
+                              Boolean(context.emailDeliveryBlockedReason)
+                            }
+                            onClick={() => {
+                              popover.onClose();
+                              open('send');
+                            }}
+                          >
+                            <Iconify icon={GlobalIcons.email} />
+                            Send a new link
+                          </MenuItem>
+                        )}
+                        {context.canRevoke && (
+                          <MenuItem
+                            disabled={disabled || dirty || busy}
+                            onClick={() => {
+                              popover.onClose();
+                              open('revoke');
+                            }}
+                          >
+                            <Iconify icon={GlobalIcons.cancel} />
+                            Revoke link
+                          </MenuItem>
+                        )}
+                        {context.canTakeover && (
+                          <MenuItem
+                            disabled={disabled || dirty || busy}
+                            onClick={() => {
+                              popover.onClose();
+                              open('takeover');
+                            }}
+                          >
+                            <Iconify icon={GlobalIcons.edit} />
+                            Take over
+                          </MenuItem>
+                        )}
+                      </MenuList>
+                    )}
+                  />
                 )}
               </Stack>
-            )
-          )}
-        </FormSectionCard>
+              {context.emailDeliveryBlockedReason && primaryDeliveryAction && (
+                <Typography variant="caption" color="text.secondary" role="status">
+                  {context.emailDeliveryBlockedReason}
+                </Typography>
+              )}
+              {!context.recipients.some((contact) => contact.canSend) && !request && (
+                <Typography variant="caption" color="text.secondary" role="status">
+                  Save a parent contact with an email address before sending a link.
+                </Typography>
+              )}
+              {request?.deliveryError && (
+                <Typography variant="body2" color="error" role="alert">
+                  {request.deliveryError}
+                </Typography>
+              )}
+              {request?.deliveryStatus === 'Unknown' && (
+                <Typography variant="body2" role="status">
+                  Delivery could not be confirmed. Review email history before sending another link.
+                </Typography>
+              )}
+              {dirty && (
+                <Typography variant="caption" color="text.secondary" role="status">
+                  Save your current form edits before sending email or changing parent access.
+                </Typography>
+              )}
+              {context.blockedReason && !primaryDeliveryAction && (
+                <Typography variant="caption" color="text.secondary" role="status">
+                  {context.blockedReason}
+                </Typography>
+              )}
+            </Stack>
+          )
+        ))}
+      {!documentStageId && (
+        <ParentRegistrationEmailHistoryDrawer
+          open={emailHistoryOpen}
+          onClose={() => setEmailHistoryOpen(false)}
+          history={emailHistoryQuery.currentData}
+          isLoading={
+            emailHistoryQuery.isLoading ||
+            (emailHistoryQuery.isFetching && !emailHistoryQuery.currentData)
+          }
+          isError={emailHistoryQuery.isError}
+          onRetry={emailHistoryQuery.refetch}
+        />
       )}
       {documentStageId &&
         canManage &&
@@ -714,10 +670,40 @@ export function ParentRegistrationPanel({
                   descriptionTooltip="Save the parent contact email first. Saving does not send a registration link and closes existing parent access."
                 >
                   <Stack spacing={2}>
-                    <Typography variant="body2">
-                      {recipient?.relationshipLabel || recipient?.relationship} ·{' '}
-                      {recipient?.fullName}
-                    </Typography>
+                    {snapshot.recipients.filter((item) => item.canChangeEmail).length > 1 && (
+                      <CustomSelect
+                        name="recipient"
+                        label="Parent contact"
+                        fullWidth
+                        size="small"
+                        value={formik.values.recipient}
+                        options={snapshot.recipients
+                          .filter((item) => item.canChangeEmail)
+                          .map((item) => ({
+                            value: item.relationship,
+                            label: `${item.relationshipLabel || item.relationship} · ${item.fullName}`,
+                          }))}
+                        labelKey="label"
+                        valueKey="value"
+                        disabled={busy}
+                        onChange={(value) => {
+                          const contact = snapshot.recipients.find(
+                            (item) => item.relationship === value
+                          );
+                          formik.setValues({
+                            ...formik.values,
+                            recipient: contact?.relationship ?? '',
+                            email: contact?.email || '',
+                          });
+                        }}
+                      />
+                    )}
+                    {snapshot.recipients.filter((item) => item.canChangeEmail).length === 1 && (
+                      <Typography variant="body2">
+                        {recipient?.relationshipLabel || recipient?.relationship} ·{' '}
+                        {recipient?.fullName}
+                      </Typography>
+                    )}
                     <ShakingTextField error={Boolean(formik.touched.email && formik.errors.email)}>
                       <TextField
                         required

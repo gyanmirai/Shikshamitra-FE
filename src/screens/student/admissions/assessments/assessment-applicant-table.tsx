@@ -2,9 +2,11 @@ import type { IColumn, ICustomizableTableProps } from 'src/components/customizab
 import type { AssessmentRosterItem } from 'src/redux/student/admissions/admission-assessment-roster-api';
 
 import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import { useResponsive } from 'src/hooks/use-responsive';
+import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Box, Button, Tooltip, Checkbox, Typography } from '@mui/material';
+import { Box, Tooltip, Checkbox, Typography, IconButton } from '@mui/material';
 
 import { useAssessmentPermissions } from './use-assessment-permissions';
 import { getPrimaryAssessmentAction } from './assessment-workbench-model';
@@ -232,36 +234,49 @@ export function AssessmentApplicantTable({
       sticky: true,
       stickyPosition: 'right',
       stickyOnMobile: false,
-      width: 180,
-      minWidth: 180,
+      width: 64,
+      minWidth: 64,
       render: (_, data) => {
         const row = data as AssessmentRosterItem;
         const action = getPrimaryAssessmentAction(row, permissions, canAdvance);
         const labels: Record<AssessmentAction | 'continue', string> = {
-          book: row.assessment.policy?.schedulingEnabled ? 'Book' : 'Start',
-          attendance: 'Attendance',
-          result: 'Result',
+          book: row.assessment.policy?.schedulingEnabled ? 'Book assessment' : 'Start assessment',
+          attendance: 'Record attendance',
+          result: 'Record result',
           resultDraft: assessmentActionLabels.resultDraft,
           retake: 'Retake',
           cancel: 'Cancel',
           waive: 'Waive',
           continue: 'Continue',
         };
+        const icons: Record<AssessmentAction | 'continue' | 'details', string> = {
+          book: 'mdi:calendar-plus-outline',
+          attendance: 'mdi:calendar-check-outline',
+          result: 'mdi:clipboard-check-outline',
+          resultDraft: 'mdi:content-save-outline',
+          retake: 'mdi:refresh',
+          cancel: 'mdi:calendar-remove-outline',
+          waive: 'mdi:calendar-minus-outline',
+          continue: 'mdi:arrow-right-circle-outline',
+          details: 'mdi:eye-outline',
+        };
+        const label = action ? labels[action] : 'View details';
         return (
-          <Button
-            size="small"
-            color="inherit"
-            variant="outlined"
-            sx={{ width: 1, whiteSpace: 'nowrap', minHeight: { xs: 44, sm: 32 } }}
-            onClick={(event) => {
-              event.stopPropagation();
-              if (action) onAction(row, action);
-              else onDetails(row);
-            }}
-            aria-label={`${action ? labels[action] : 'View details'} for ${row.applicantName}`}
-          >
-            {action ? labels[action] : 'View Details'}
-          </Button>
+          <CustomTooltip title={label} arrow>
+            <IconButton
+              size="small"
+              color="inherit"
+              sx={{ color: 'text.secondary', width: 40, height: 40 }}
+              onClick={(event) => {
+                event.stopPropagation();
+                if (action) onAction(row, action);
+                else onDetails(row);
+              }}
+              aria-label={`${label} for ${row.applicantName}`}
+            >
+              <Iconify icon={icons[action ?? 'details']} width={20} aria-hidden />
+            </IconButton>
+          </CustomTooltip>
         );
       },
     },

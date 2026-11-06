@@ -17,7 +17,6 @@ vi.mock('react-redux', () => ({
   ] } }),
 }));
 
-vi.mock('./portal-access-settings', () => ({ default: () => <div>Portal settings</div> }));
 
 vi.mock('src/components/iconify', () => ({
   Iconify: ({ icon }: { icon: string }) => <span data-icon={icon} />,
@@ -403,7 +402,7 @@ describe('Onboarding numbering settings', () => {
   it('merges login and numbering settings without a division tab or duplicate page heading', () => {
     renderSettings(<OnboardingSettingsPage />);
     expect(screen.getAllByTestId('breadcrumb-heading')).toHaveLength(1);
-    expect(screen.getByRole('tab', { name: 'App Login' })).toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: 'App Login' })).not.toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'GR Number' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Roll Number' })).toBeInTheDocument();
     expect(screen.queryByRole('tab', { name: 'Division Changes' })).not.toBeInTheDocument();

@@ -10,7 +10,7 @@ test.describe.serial('HR setup wizard with disposable SQLite and real backend AP
     await page.goto('/');
     const wizard = page.getByRole('dialog', { name: 'Complete HR Setup', exact: true });
     await wizard.getByRole('button', { name: 'Salary Template', exact: true }).click();
-    await expect(wizard.getByTestId('hr-setup-check-pf-coverage')).toContainText('missing');
+    await expect(wizard.getByTestId('hr-setup-check-pf-coverage')).toContainText('Not configured');
     await wizard
       .getByTestId('hr-setup-check-pf-coverage')
       .getByRole('button', { name: 'Set up', exact: true })
@@ -27,7 +27,7 @@ test.describe.serial('HR setup wizard with disposable SQLite and real backend AP
     );
     await wizard.getByRole('button', { name: 'Back', exact: true }).click();
     await confirmation.getByRole('button', { name: 'Discard Changes', exact: true }).click();
-    await expect(wizard.getByTestId('hr-setup-check-pf-coverage')).toContainText('missing');
+    await expect(wizard.getByTestId('hr-setup-check-pf-coverage')).toContainText('Not configured');
   });
   test('dismissal survives HR navigation and resets on refresh', async ({ page }) => {
     await page.goto('/');
@@ -123,7 +123,7 @@ test.describe.serial('HR setup wizard with disposable SQLite and real backend AP
     await expect(wizard).toHaveCount(0);
     await page.reload();
     await expect(
-      wizard.getByTestId('hr-setup-check-shift').getByText('missing', { exact: true })
+      wizard.getByTestId('hr-setup-check-shift').getByText('Not configured', { exact: true })
     ).toBeVisible();
   });
 
@@ -245,7 +245,7 @@ test.describe.serial('HR setup wizard with disposable SQLite and real backend AP
     await wizard.getByRole('button', { name: 'Preview salary', exact: true }).click();
     await expect(wizard.getByText('Preview ready', { exact: true }).first()).toBeVisible();
     await wizard.getByRole('button', { name: 'Save and next', exact: true }).click();
-    await expect(wizard.getByTestId('hr-setup-check-pf-coverage')).toContainText('missing');
+    await expect(wizard.getByTestId('hr-setup-check-pf-coverage')).toContainText('Not configured');
     await page
       .locator('[data-sonner-toast]')
       .filter({ hasText: 'Salary template is active for new salary setups.' })

@@ -302,24 +302,30 @@ describe('Edit inquiry page', () => {
     render(<AdmissionInquiryEditPage />);
     const notes = screen.getByRole('textbox', { name: 'Family notes' });
     fireEvent.click(await screen.findByRole('button', { name: 'Confirm Siblings' }));
-    const dialog = await screen.findByRole('dialog', { name: 'Confirm Sibling Family' });
+    const dialog = await screen.findByRole('dialog', { name: 'Check Parent Details' });
     expect(notes).toBeDisabled();
-    fireEvent.mouseDown(await within(dialog).findByRole('combobox', { name: /Existing Child/ }));
-    fireEvent.click(await screen.findByRole('option', { name: /Existing child/ }));
-    fireEvent.mouseDown(within(dialog).getByRole('combobox', { name: /Saved Parent/ }));
-    fireEvent.click(await screen.findByRole('option', { name: /Mother.*Saved mother/ }));
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Confirm Family' }));
+    await within(dialog).findByText('Saved mother');
+    expect(
+      within(dialog).queryByRole('combobox', { name: /Existing Child/ })
+    ).not.toBeInTheDocument();
+    expect(within(dialog).getByRole('list', { name: 'Children in this family' })).toHaveTextContent(
+      'Existing child'
+    );
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Add as Sibling' }));
     await screen.findByText('The inquiry changed on the server.');
     fireEvent.click(within(dialog).getByRole('button', { name: 'Reload Matches' }));
     await waitFor(() => expect(familyRequests.refresh).toHaveBeenCalledWith('inquiry-1', false));
     await waitFor(() => expect(familyRequests.lookup).toHaveBeenCalledTimes(2));
     expect(screen.queryByText('Sibling Confirmed')).not.toBeInTheDocument();
     expect(update).not.toHaveBeenCalled();
-    fireEvent.mouseDown(await within(dialog).findByRole('combobox', { name: /Existing Child/ }));
-    fireEvent.click(await screen.findByRole('option', { name: /Existing child/ }));
-    fireEvent.mouseDown(within(dialog).getByRole('combobox', { name: /Saved Parent/ }));
-    fireEvent.click(await screen.findByRole('option', { name: /Mother.*Saved mother/ }));
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Confirm Family' }));
+    await within(dialog).findByText('Saved mother');
+    expect(
+      within(dialog).queryByRole('combobox', { name: /Existing Child/ })
+    ).not.toBeInTheDocument();
+    expect(within(dialog).getByRole('list', { name: 'Children in this family' })).toHaveTextContent(
+      'Existing child'
+    );
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Add as Sibling' }));
     await screen.findByText('Sibling Confirmed');
     expect(familyRequests.confirm).toHaveBeenCalledTimes(2);
     expect(familyRequests.confirm.mock.calls[0][0].body.concurrencyStamp).toBe('stamp-1');

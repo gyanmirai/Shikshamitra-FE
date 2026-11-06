@@ -13,7 +13,6 @@ function renderActions(overrides = {}) {
   const actions = {
     onActivity: vi.fn(),
     onHistory: vi.fn(),
-    onJourney: vi.fn(),
     onFocus: vi.fn(),
     onClose: vi.fn(),
   };
@@ -22,7 +21,6 @@ function renderActions(overrides = {}) {
       <ApplicationWorkspaceActions
         disabled={false}
         canViewActivity
-        journeyOpen={false}
         historySelected={false}
         focused={false}
         {...actions}
@@ -46,9 +44,21 @@ it('uses the shared custom tooltip for keyboard-focused icon actions', async () 
 it('locks feature actions during an unavailable read while keeping safe dismissal available', async () => {
   const user = userEvent.setup();
   const actions = renderActions({ disabled: true, closeDisabled: false });
-  expect(screen.getByRole('button', { name: 'Admission Journey' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Application History' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Focus Mode' })).toBeDisabled();
   await user.click(screen.getByRole('button', { name: 'Close Application' }));
   expect(actions.onClose).toHaveBeenCalledOnce();
   expect(actions.onFocus).not.toHaveBeenCalled();
+});
+
+it('keeps the header focused on record actions without a journey popup or route overrides', () => {
+  renderActions();
+  expect(screen.getAllByRole('button')).toHaveLength(4);
+  expect(screen.getByRole('button', { name: 'Application History' })).toBeEnabled();
+  expect(screen.queryByRole('button', { name: 'Admission Journey' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Override Route' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Skip Current Step' })).not.toBeInTheDocument();
+  screen.getAllByRole('button').forEach((button) => {
+    expect(button).not.toHaveAttribute('aria-haspopup');
+  });
 });

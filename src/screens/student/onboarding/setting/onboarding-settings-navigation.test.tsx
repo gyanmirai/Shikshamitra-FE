@@ -41,9 +41,6 @@ vi.mock('src/components/custom-breadcrumbs', () => ({
 vi.mock('src/components/custom-tabs', () => ({
   CustomTabs: ({ children }: { children: ReactNode }) => <div role="tablist">{children}</div>,
 }));
-vi.mock('./portal-access-settings', () => ({
-  default: () => <div>Student and parent login choices</div>,
-}));
 vi.mock('./onboarding-number-settings', () => ({
   GrNumberSettingsScreen: () => <div>GR series</div>,
   RollNumberSettingsScreen: () => <div>Roll rules</div>,
@@ -55,17 +52,24 @@ beforeEach(() => {
 });
 
 describe('unified onboarding settings navigation', () => {
-  it.each(['', 'tab=unsupported', 'tab=division-changes'])(
-    'opens Portal Access for %s',
-    (query) => {
-      state.params = new URLSearchParams(query);
-      render(<OnboardingSettingsPage />);
-      expect(screen.getByRole('heading', { name: 'Onboarding Settings' })).toBeInTheDocument();
-      expect(screen.getByText('Student and parent login choices')).toBeInTheDocument();
-      expect(screen.getAllByRole('tab')).toHaveLength(3);
-      expect(screen.queryByRole('button', { name: /Add/ })).not.toBeInTheDocument();
-    }
-  );
+  it('keeps only numbering settings and redirects retired App Login query values', () => {
+    state.params = new URLSearchParams('tab=portal-access');
+    render(<OnboardingSettingsPage />);
+    expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual([
+      'GR Number',
+      'Roll Number',
+    ]);
+    expect(screen.getByText('GR series')).toBeInTheDocument();
+    expect(screen.queryByText('Student and parent login choices')).not.toBeInTheDocument();
+  });
+  it.each(['', 'tab=unsupported', 'tab=division-changes'])('opens GR settings for %s', (query) => {
+    state.params = new URLSearchParams(query);
+    render(<OnboardingSettingsPage />);
+    expect(screen.getByRole('heading', { name: 'Onboarding Settings' })).toBeInTheDocument();
+    expect(screen.getByText('GR series')).toBeInTheDocument();
+    expect(screen.getAllByRole('tab')).toHaveLength(2);
+    expect(screen.getByRole('button', { name: 'Add Series' })).toBeInTheDocument();
+  });
 
   it.each([
     ['gr-number', 'GR series', 'Add Series'],
@@ -77,9 +81,9 @@ describe('unified onboarding settings navigation', () => {
       render(<OnboardingSettingsPage />);
       expect(screen.getByText(content)).toBeInTheDocument();
       expect(screen.getByRole('button', { name: action })).toBeDisabled();
-      expect(screen.getByRole('tab', { name: 'App Login' })).toHaveAttribute(
+      expect(screen.getByRole('tab', { name: 'GR Number' })).toHaveAttribute(
         'href',
-        `${studentPaths.onboarding.settings}?academicYearId=year-1&tab=portal-access`
+        `${studentPaths.onboarding.settings}?academicYearId=year-1&tab=gr-number`
       );
       expect(screen.getByRole('tabpanel')).toHaveAttribute(
         'aria-labelledby',
@@ -93,7 +97,7 @@ describe('unified onboarding settings navigation', () => {
     [ReadinessRoute, 'readiness'],
     [RulesRoute, 'rules'],
     [OperationalRoute, 'policies'],
-  ])('redirects the retired %s screen to Portal Access', (Route) => {
+  ])('redirects the retired %s screen to GR settings', (Route) => {
     expect(() => Route()).toThrow(
       `redirect:${studentPaths.onboarding.settingsSections.portalAccess}`
     );

@@ -60,12 +60,12 @@ const match: DuplicateMatch = {
       ],
 };
 
+if (params.has('single')) match.parents = match.parents?.slice(0, 1);
+
 function Workspace() {
   const { mode, setMode } = useColorScheme();
-  const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
   const [links, setLinks] = useState(0);
-  const [separate, setSeparate] = useState(0);
   const [opened, setOpened] = useState('');
   const [reviewKey, setReviewKey] = useState(0);
   return (
@@ -112,9 +112,26 @@ function Workspace() {
                       applicantId: 'synthetic-child-2',
                       familyId: 'synthetic-family-2',
                       applicantName: 'QA Second Candidate',
+                      parents: match.parents?.map((parent) => ({
+                        ...parent,
+                        sourceApplicantId: 'synthetic-child-2',
+                      })),
                     },
                   ]
-                : [match]
+                : params.has('siblings')
+                  ? [
+                      match,
+                      {
+                        ...match,
+                        applicantId: 'synthetic-child-2',
+                        applicantName: 'QA Second Child',
+                        parents: match.parents?.map((parent) => ({
+                          ...parent,
+                          sourceApplicantId: 'synthetic-child-2',
+                        })),
+                      },
+                    ]
+                  : [match]
             }
             guardianPhone={params.has('emailOnly') ? '9876543211' : '9876543210'}
             guardianEmail={email}
@@ -124,10 +141,7 @@ function Workspace() {
             presentation={params.has('dialog') ? 'dialog' : 'inline'}
             reviewKey={reviewKey}
             busy={busy}
-            overrideReason={reason}
-            onOverrideReasonChange={setReason}
             onOpenExisting={setOpened}
-            onCreateSeparate={() => setSeparate((value) => value + 1)}
             onUseExisting={async () => {
               setLinks((value) => value + 1);
               setBusy(true);
@@ -160,9 +174,6 @@ function Workspace() {
         )}
         <Typography component="output" aria-label="Sibling confirmations">
           {links}
-        </Typography>
-        <Typography component="output" aria-label="Separate family submissions">
-          {separate}
         </Typography>
         <Typography component="output" aria-label="Opened inquiry">
           {opened}

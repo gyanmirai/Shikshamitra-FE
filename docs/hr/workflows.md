@@ -8,6 +8,10 @@ owner: frontend-team
 audience: humans-and-agents
 ---
 
+## Review ESIC policy archive
+
+Open Archive from an eligible ESIC policy. The confirmation loads a fresh dependency review; archive stays disabled while loading, after a load failure, or while live templates select the policy. Review template names/version/status and the separately recorded policy version start/expiry dates. These use `effectiveFrom`/`effectiveTo`, never the successor-derived `appliesUntil`, and do not establish activity or payroll availability. A missing expiry is labeled "no recorded end date". Templates have no effective date range. Save a reviewed usable replacement for the relevant salary month in each live template, or archive an unused template, then reopen the review. Cancel leaves records unchanged. For an unused policy, explicitly choose Archive policy; dismissal and repeated submission are locked until the server responds. Failed writes retain the error and refresh the review. Existing archived selections are not automatically repaired; existing staff payroll and history retain their versions.
+
 # Trace HR frontend workflows
 
 TL;DR: use this page to connect HR screens, clients, and browser tests.
@@ -70,6 +74,7 @@ The staff-profile leave tab retains its existing employee-specific history.
 
 Authorized HR operators receive the **Complete HR Setup** wizard on any HR route when the readiness summary reports unresolved configuration.
 The wizard opens at the first unresolved step and marks usable existing configuration complete without requiring acknowledgement.
+Checklist steps use shared section cards with readable saved-state labels, step headings and completion counts. Desktop checklists fit their content; embedded editors retain a bounded scrolling body and fixed actions. Phones show the current step and a position indicator, which does not imply saved completion. Optional deductions remain separate from required checks.
 Users can configure shifts, policies and calendars, earning components, and salary templates through embedded versions of the existing editors.
 The Earning Components step also exposes optional deduction setup to operators with exact Deduction Components View and Add access, including before a template exists. Deductions are not an additional readiness requirement.
 Salary Template's Add Earning and Add Deduction actions open the shared modal picker above the wizard. Empty catalogues and components already added have visible guidance. Authorized operators can create another component within setup and return to the mounted salary draft; reopening the picker shows refreshed choices. Cancelling the picker preserves the draft and returns focus to its launcher.
@@ -155,6 +160,13 @@ Inactive profile panels and populated trend charts load on demand.
 Dashboard refreshes retain the current staff member’s loaded data and offer retry feedback on failure; switching staff shows loading until the matching response arrives.
 
 ## Attendance and payroll interaction behavior
+
+Mark Attendance groups the date, staff group, department and Apply/Clear controls in one responsive toolbar.
+Apply commits the draft group/department values and resets paging; changing the date also returns to the first page.
+Clear filters removes group, department, table search, column criteria and sorting together while keeping the selected date.
+Dirty attendance rows lock scope changes until Reset or Save resolves the draft.
+The editable status header has no column filter or sort action; badges and bulk/row controls share the same four aligned tracks.
+Department matching is defined by the [backend attendance contract](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md).
 
 Reset on manual attendance restores the last loaded day state, including an approved leave status, instead of inventing a new pending state.
 Changing the selected attendance date clears the prior date's rows and lock state until the new response arrives, and row, save, reset, and lock actions stay disabled during that transition.
@@ -640,6 +652,7 @@ Mark Reviewed acknowledges the displayed warning evidence before locking.
 ESIC eligibility and contributions use classified earnings automatically; salary components own the statutory treatment.
 
 The existing payslip-generation route now presents Monthly payslips, Employee statements and School register tabs.
+Monthly payslips keep staff and pay-period selectors above one wrapping, stationary document-action group. The centered PDF starts at Fit width in a bounded keyboard-scrollable viewport; zoom controls stay outside the PDF scroll area. The surrounding workspace scrolls independently to delivery history and document versions. Settings samples retain their Fit page default.
 Monthly issuance retains its existing immutable PDF workflow.
 Statements choose one staff member and an inclusive range; registers choose one month.
 Filters survive tab changes; inactive panels stop previews and export polling.

@@ -14,12 +14,25 @@ Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vites
 
 Browser acceptance must review both sides, edit and reopen a custom back, verify physical dimensions remain independent of preview size, change paper/duplex settings, preserve scoped staff selections across pages, exercise Keep editing/Discard and failed saves, and export a configured front/back PDF. Use synthetic or authorized staff only. Automated adapter tests do not establish authenticated rendering, printed alignment, or physical distribution.
 
+## Mark Attendance filters
+
+Run the manual-attendance screen/status-mapper tests, `use-hr-table-query.test.tsx`, shared-table `index.controlled-state.test.tsx`, and `attendanceApi.contract.test.ts` for filter parameters, reset behavior, dirty locks and explicit interactive-column opt-outs.
+Run `node node_modules/@playwright/test/cli.js test --config tests/browser/manual-attendance-6597.config.ts` for the real screen and RTK Query against loopback synthetic readers.
+The fixture covers group/department combinations, empty results, clearing column criteria, reset, aligned status controls, 390/768/1440 widths in both themes, and late date responses after a page reset. It refuses all persistence writes.
+Finish with the Codex in-app browser. These checks do not establish authenticated tenant or deployed PostgreSQL behavior.
+
+## ESIC archive review
+
+Run the focused `esi-policy-archive-dialog.test.tsx` and `esi-policies.test.tsx` Vitest suites, then `npx playwright test --config e2e/hr/esic-archive.config.ts`. The synthetic fixture covers dependency blocking, recorded version dates (including explicit expiry before a later successor), activity/availability disclaimers, cancel, failed-load retry, explicit confirmed payloads, busy dismissal locks and stale-write recovery at phone/tablet/desktop sizes in both themes. Finish with an in-app browser smoke test against the local fixture; no real tenant mutations are needed.
+
 ## Historical ESIC setup and payroll branding navigation
 
 Run `esi-configuration-form.test.ts`, `esi-request-error.test.ts`, `esi-automatic-calculation.test.tsx`, `esi-statutory-settings.test.tsx`, `earning-esi-treatment-dialog.test.tsx` and `payslip-settings-form.test.tsx` for retained month/drafts, retry identity, policy/access guidance and both required School Identity route grants.
 Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/@playwright/test/cli.js test --config e2e/hr/esic-historical-recovery.config.ts` for desktop/mobile guidance and permission-aware links using production components with synthetic responses. Complete the final Codex in-app browser smoke check. This frontend fixture does not prove the save guard or deployed tenant setup; real clock-controlled HTTP and PostgreSQL cases live in the backend suite.
 
 ## HR setup readiness wizard
+
+Run `npx playwright test --config e2e/hr/hr-setup-polish.config.ts` for the content-sized checklist, all five steps, readable status variants, optional deductions, read-only/year/error/completion states and embedded PF coverage draft protection. It uses actual production components with synthetic readiness and a loopback-only PF read; writes return an explicit error and no backend is connected. Desktop, tablet and phone layouts run in both themes. Finish with the in-app browser smoke test at `http://127.0.0.1:4197` using the same fixture. The real-backend `hr-setup.spec.ts` suite remains the save-contract coverage.
 
 Salary-preview recovery tests include `salary-preview-error.test.ts`, `hr-failure.test.ts`, `hr-recovery-provider.test.tsx`, `hr-recovery-middleware.test.ts`, `inline-salary-preview-recovery.test.ts` and `salary-preview-recovery.integration.test.ts`.
 Cover deficit/excess, numeric strings, exact-paise and subpaise boundaries, malformed or absent metadata, genuine field messages, request/route ownership, abort cleanup and unhandled/access/network fallback.
@@ -1008,3 +1021,7 @@ Run `npx playwright test --config e2e/hr/salary-setup.config.ts` for the product
 The journey verifies stage validation, retained drafts, preview invalidation, failed-save retry, confirmed-save metadata, mobile containment and the persistent footer.
 Screenshots stay under `.artifacts/salary-setup-browser`; these checks do not certify backend calculations or deployed persistence.
 Use `SalaryStructureBuilder.test.tsx`, `salary-editor-screen.test.tsx`, `salary-template-editor.test.tsx`, `payroll-settings.test.tsx` and `permissions.test.ts` for focused component and navigation coverage.
+
+## Salary document viewing (Task 6594)
+
+Run `node node_modules/@playwright/test/cli.js test --config e2e/hr/salary-documents.config.ts` for seven synthetic browser scenarios using the production document center and PDF.js viewer. They cover 390/768/1440-pixel layouts in light/dark themes, Fit width, keyboard scrolling at larger zoom, stationary grouped actions, version/staff changes, reachable history, body overflow and PDF loading/error/retry. Run the payslip component suites for current-revision permissions, stale reads, print readiness and cancellation. The fixture is loopback-only and serves synthetic PDFs; it does not certify authenticated tenant access, actual payroll mutation, email delivery or native printing.

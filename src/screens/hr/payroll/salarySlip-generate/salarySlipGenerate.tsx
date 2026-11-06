@@ -370,7 +370,7 @@ export default function PaySlipGenerationScreen({
   };
 
   return (
-    <Stack spacing={1}>
+    <Stack spacing={1} sx={{ minWidth: 0 }}>
       {!hideHeading && (
         <CustomBreadcrumbs
           heading="Payslips"
@@ -389,7 +389,12 @@ export default function PaySlipGenerationScreen({
         </HrNotice>
       ) : (
         <>
-          <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} alignItems={{ md: 'center' }}>
+          <Stack
+            direction={{ xs: 'column', md: 'row' }}
+            spacing={1}
+            alignItems={{ md: 'center' }}
+            sx={{ px: 1 }}
+          >
             <PaginatedSearchSelect
               id="payslip-staff-member"
               label="Staff member"
@@ -412,43 +417,98 @@ export default function PaySlipGenerationScreen({
               slotProps={{ textField: { size: 'small' } }}
               sx={{ width: { xs: '100%', md: 220 } }}
             />
-            <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ ml: { md: 'auto' } }}>
-              <Button
-                ref={printButtonRef}
-                size="small"
-                disabled={!actions.pdfUrl || renderedPdfUrl !== actions.pdfUrl}
-                onClick={() => {
-                  setPrintError(false);
-                  printPdf();
-                }}
-              >
-                Print
-              </Button>
-              <Button
-                size="small"
-                variant="outlined"
-                disabled={!actions.pdfUrl}
-                onClick={actions.handleDownload}
-              >
-                Download
-              </Button>
-              <Button
-                size="small"
-                variant="contained"
-                disabled={sendBlocked}
-                onClick={(event) => {
-                  if (previousAttempts.length && currentDocument) {
+          </Stack>
+          <Stack
+            role="group"
+            aria-label="Payslip actions"
+            direction="row"
+            spacing={1}
+            useFlexGap
+            sx={{
+              flexWrap: 'wrap',
+              position: 'sticky',
+              top: 0,
+              zIndex: 1,
+              bgcolor: 'background.paper',
+              px: 1,
+              py: 1,
+              borderBottom: 1,
+              borderColor: 'divider',
+            }}
+          >
+            <Button
+              ref={printButtonRef}
+              size="small"
+              disabled={!actions.pdfUrl || renderedPdfUrl !== actions.pdfUrl}
+              onClick={() => {
+                setPrintError(false);
+                printPdf();
+              }}
+            >
+              Print
+            </Button>
+            <Button
+              size="small"
+              variant="outlined"
+              disabled={!actions.pdfUrl}
+              onClick={actions.handleDownload}
+            >
+              Download
+            </Button>
+            <Button
+              size="small"
+              variant="contained"
+              disabled={sendBlocked}
+              onClick={(event) => {
+                if (previousAttempts.length && currentDocument) {
+                  dialogOpener.current = event.currentTarget;
+                  setResendConfirmation(currentDocument.id);
+                } else handleSend();
+              }}
+            >
+              {previousAttempts.length ? 'Resend' : 'Send'}
+            </Button>
+            {canReadDocument && currentDocument && displayedDocument?.isCurrent && canSend && (
+              <>
+                {currentDocument.paymentStatus === 'Finalized' && (
+                  <Button
+                    size="small"
+                    disabled={!canMutateCurrent}
+                    onClick={(event) => {
+                      dialogOpener.current = event.currentTarget;
+                      setAction({ document: currentDocument, mode: 'payment' });
+                    }}
+                  >
+                    Record payment
+                  </Button>
+                )}
+                <Button
+                  size="small"
+                  disabled={!canMutateCurrent}
+                  onClick={(event) => {
                     dialogOpener.current = event.currentTarget;
-                    setResendConfirmation(currentDocument.id);
-                  } else handleSend();
-                }}
-              >
-                {previousAttempts.length ? 'Resend' : 'Send'}
-              </Button>
-            </Stack>
+                    setAction({ document: currentDocument, mode: 'replace' });
+                  }}
+                >
+                  Replace document details
+                </Button>
+                {canCorrect && ['Finalized', 'Paid'].includes(currentDocument.paymentStatus) && (
+                  <Button
+                    size="small"
+                    disabled={!canMutateCurrent}
+                    onClick={(event) => {
+                      dialogOpener.current = event.currentTarget;
+                      setCorrectionDocument(currentDocument);
+                    }}
+                  >
+                    Correct payroll
+                  </Button>
+                )}
+              </>
+            )}
           </Stack>
           {canReadDocument && displayedDocument && (
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>
               Revision {displayedDocument.revision} ·{' '}
               {documentStatusKnown
                 ? displayedDocument.isCurrent
@@ -472,44 +532,6 @@ export default function PaySlipGenerationScreen({
               employeeId={employee.id}
               disabled={sending.isLoading || !documentStatusKnown}
             />
-          )}
-          {canReadDocument && currentDocument && displayedDocument?.isCurrent && canSend && (
-            <Stack direction="row" spacing={1} flexWrap="wrap">
-              {currentDocument.paymentStatus === 'Finalized' && (
-                <Button
-                  size="small"
-                  disabled={!canMutateCurrent}
-                  onClick={(event) => {
-                    dialogOpener.current = event.currentTarget;
-                    setAction({ document: currentDocument, mode: 'payment' });
-                  }}
-                >
-                  Record payment
-                </Button>
-              )}
-              <Button
-                size="small"
-                disabled={!canMutateCurrent}
-                onClick={(event) => {
-                  dialogOpener.current = event.currentTarget;
-                  setAction({ document: currentDocument, mode: 'replace' });
-                }}
-              >
-                Replace document details
-              </Button>
-              {canCorrect && ['Finalized', 'Paid'].includes(currentDocument.paymentStatus) && (
-                <Button
-                  size="small"
-                  disabled={!canMutateCurrent}
-                  onClick={(event) => {
-                    dialogOpener.current = event.currentTarget;
-                    setCorrectionDocument(currentDocument);
-                  }}
-                >
-                  Correct payroll
-                </Button>
-              )}
-            </Stack>
           )}
           {(slips.isError || versions.isError || documentAccessDenied) && (
             <Alert
@@ -584,7 +606,6 @@ export default function PaySlipGenerationScreen({
           )}
           {canReadDocument && actions.pdfUrl && (
             <PayslipPdfViewer
-              key={actions.pdfUrl}
               url={actions.pdfUrl}
               title={
                 displayedDocument
@@ -593,6 +614,8 @@ export default function PaySlipGenerationScreen({
               }
               contentRef={printContentRef}
               onReady={setRenderedPdfUrl}
+              viewportHeight="clamp(280px, 60dvh, 760px)"
+              initialZoom="fit"
             />
           )}
           {canReadDocument && currentDocument && (

@@ -39,6 +39,7 @@ export type StudentOnboardingFeesState = {
   structureName?: string;
   confirmed?: boolean;
   hasError?: boolean;
+  collectionDeferred?: boolean;
 };
 
 export default function StudentOnboardingFees({
@@ -220,6 +221,7 @@ export default function StudentOnboardingFees({
       canSave,
       structureName: feeState?.selection?.structureName,
       confirmed: confirmedUnchanged,
+      collectionDeferred: Boolean(feeState?.feeCollectionDeferral),
       hasError: Boolean(
         readError || form.status || (form.touched.structureId && form.errors.structureId)
       ),
@@ -231,6 +233,7 @@ export default function StudentOnboardingFees({
     canSave,
     onStateChange,
     feeState?.selection?.structureName,
+    feeState?.feeCollectionDeferral,
     confirmedUnchanged,
     readError,
     form.status,

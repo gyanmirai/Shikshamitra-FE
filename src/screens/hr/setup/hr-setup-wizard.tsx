@@ -1,18 +1,20 @@
 'use client';
 
-import type { HrSetupReadiness } from 'src/redux/hr/hr-setup-readiness-api';
 import type { RootState } from 'src/redux/store';
+import type { HrSetupReadiness } from 'src/redux/hr/hr-setup-readiness-api';
 
-import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'src/routes/hooks';
 import { GlobalIcons } from 'src/utils/icons';
+import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { hrSetupSteps } from 'src/constants/hr-setup';
+import { useDispatch, useSelector } from 'react-redux';
 import { hrPermissions } from 'src/constants/hr-menus';
-import { hasGrantedPermission } from 'src/utils/permissions';
 import CustomStepper from 'src/components/custom-stepper';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useRef, useState, useEffect, useCallback } from 'react';
+import { FormSectionCard } from 'src/components/form-section-card';
 import { setCurrentYear } from 'src/redux/globalState/globalSlice';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
@@ -27,9 +29,8 @@ import {
   Typography,
   DialogActions,
   useMediaQuery,
+  LinearProgress,
 } from '@mui/material';
-
-import { useTheme } from '@mui/material/styles';
 
 import { HrSetupEditor } from './hr-setup-editor';
 import {
@@ -47,6 +48,21 @@ import {
 import type { SetupEditorState } from './hr-setup-editor-context';
 
 const emptyEditor: SetupEditorState = { dirty: false, busy: false, save: null };
+const stepDescriptions: Record<string, string> = {
+  staff: 'Prepare the academic year, shifts and staff roles for your school.',
+  policies: 'Review the calendar and default policies used for attendance, leave and payroll.',
+  earnings: 'Configure the earning components used in salary templates.',
+  salary: 'Confirm school PF coverage and review the salary template for new salary setups.',
+  completion: 'Review the saved setup before finishing. Unresolved checks still need attention.',
+};
+const checkStatusLabels = {
+  ready: 'Complete',
+  missing: 'Not configured',
+  inactive: 'Inactive',
+  invalid: 'Needs review',
+  conflicting: 'Conflicting setup',
+  unknown: 'Waiting for academic year',
+};
 type Props = {
   readiness?: HrSetupReadiness;
   error: boolean;
@@ -138,6 +154,8 @@ export default function HrSetupWizard({ readiness, error, refreshing, refresh, o
   };
   const step = hrSetupSteps[activeStep];
   const checks = readiness?.checks.filter((check) => check.step === step.id) || [];
+  const completedChecks = checks.filter((check) => check.state === 'ready').length;
+  const editorTitle = setupCheckLabels[auxiliary || task || ''] || 'Required Configuration';
   return (
     <>
       <CustomDialog
@@ -151,10 +169,15 @@ export default function HrSetupWizard({ readiness, error, refreshing, refresh, o
         disableClose={busy}
         handleClose={() => navigate(onClose)}
         data-testid="hr-setup-wizard"
-        paperProps={{ sx: { height: mobile ? '100%' : 'min(90dvh, 960px)', maxHeight: '100dvh' } }}
+        paperProps={{
+          sx: {
+            height: mobile ? '100%' : task ? 'min(90dvh, 960px)' : 'auto',
+            maxHeight: mobile ? '100dvh' : '90dvh',
+          },
+        }}
       >
-        <Box sx={{ px: 2, pb: 2, flexShrink: 0 }}>
-          <Typography variant="body2" sx={{ mb: 2 }}>
+        <Box sx={{ p: 2, flexShrink: 0, borderBottom: 1, borderColor: 'divider' }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             Complete these setup steps before adding staff or processing attendance and payroll. You
             can close this window and continue working.
           </Typography>
@@ -181,13 +204,41 @@ export default function HrSetupWizard({ readiness, error, refreshing, refresh, o
             />
           )}
           {mobile && (
-            <Typography variant="subtitle2" role="status">
-              Step {activeStep + 1} of {hrSetupSteps.length}: {step.label}
-            </Typography>
+            <Stack spacing={1}>
+              <Typography variant="subtitle2" role="status">
+                Step {activeStep + 1} of {hrSetupSteps.length}: {step.label}
+              </Typography>
+              <LinearProgress
+                variant="determinate"
+                value={((activeStep + 1) / hrSetupSteps.length) * 100}
+                aria-label="Current HR setup step"
+                aria-valuetext={`Step ${activeStep + 1} of ${hrSetupSteps.length}`}
+              />
+            </Stack>
           )}
         </Box>
         <DialogScrollContent>
           <Stack spacing={2}>
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              spacing={1}
+              justifyContent="space-between"
+              alignItems={{ xs: 'flex-start', sm: 'center' }}
+            >
+              <Box sx={{ minWidth: 0 }}>
+                <Typography variant="h6" component="h2">
+                  {task ? `Configure ${editorTitle}` : step.label}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {task ? `Part of ${step.label}` : stepDescriptions[step.id]}
+                </Typography>
+              </Box>
+              {!task && checks.length > 0 && (
+                <Typography variant="body2" color="text.secondary" sx={{ flexShrink: 0 }}>
+                  {completedChecks} of {checks.length} complete
+                </Typography>
+              )}
+            </Stack>
             {(error || failure) && (
               <Alert
                 severity="error"
@@ -250,9 +301,6 @@ export default function HrSetupWizard({ readiness, error, refreshing, refresh, o
                 </Box>
                 {auxiliary && (
                   <HrSetupEditorContext.Provider value={registerAuxiliary}>
-                    <Typography variant="subtitle1">
-                      {setupCheckLabels[auxiliary] || 'Required Configuration'}
-                    </Typography>
                     <HrSetupEditor
                       task={auxiliary}
                       readiness={readiness!}
@@ -270,78 +318,114 @@ export default function HrSetupWizard({ readiness, error, refreshing, refresh, o
               </Alert>
             ) : (
               checks.map((check) => (
-                <Stack key={check.code} spacing={1} data-testid={`hr-setup-check-${check.code}`}>
-                  <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap">
-                    <Typography variant="subtitle2">
-                      {setupCheckLabels[check.code] || check.code}
-                    </Typography>
-                    <Chip
-                      size="small"
-                      color={check.state === 'ready' ? 'success' : 'warning'}
-                      label={
-                        check.state === 'ready'
-                          ? 'Complete'
-                          : check.state === 'unknown'
-                            ? 'Waiting for academic year'
-                            : check.state
-                      }
-                    />
-                  </Stack>
-                  <Typography variant="body2">{check.reason}</Typography>
-                  {check.state !== 'ready' &&
-                    !check.canConfigure &&
-                    check.code !== 'academic-year' && (
-                      <Typography variant="body2">
-                        An administrator must complete this step.
-                      </Typography>
-                    )}
-                  {check.canConfigure && check.code !== 'academic-year' && (
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      sx={{ alignSelf: 'flex-start' }}
-                      disabled={busy || refreshing}
-                      startIcon={<Iconify icon={GlobalIcons.edit} />}
-                      onClick={() => setTask(setupTaskForCheck(readiness!, check.code))}
+                <Box key={check.code} data-testid={`hr-setup-check-${check.code}`}>
+                  <FormSectionCard
+                    title={setupCheckLabels[check.code] || check.code}
+                    titleTypographyProps={{ component: 'h3' }}
+                    icon={
+                      check.step === 'policies'
+                        ? GlobalIcons.calendar
+                        : check.step === 'staff'
+                          ? GlobalIcons.family
+                          : GlobalIcons.documentIcon
+                    }
+                    descriptionTooltip="Status reflects the saved school configuration. Opening a setup does not mark it complete."
+                    action={
+                      <Chip
+                        size="small"
+                        variant="soft"
+                        color={check.state === 'ready' ? 'success' : 'warning'}
+                        label={checkStatusLabels[check.state]}
+                      />
+                    }
+                  >
+                    <Stack
+                      direction={{ xs: 'column', sm: 'row' }}
+                      spacing={2}
+                      alignItems={{ xs: 'flex-start', sm: 'center' }}
                     >
-                      {setupTaskForCheck(readiness!, check.code) !== check.code
-                        ? 'Set up calendar first'
-                        : check.state === 'ready'
-                          ? 'Review setup'
-                          : 'Set up'}
-                    </Button>
-                  )}
-                </Stack>
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography variant="body2" color="text.secondary">
+                          {check.reason}
+                        </Typography>
+                        {check.state !== 'ready' &&
+                          !check.canConfigure &&
+                          check.code !== 'academic-year' && (
+                            <Typography variant="body2">
+                              An administrator must complete this step.
+                            </Typography>
+                          )}
+                      </Box>
+                      {check.canConfigure && check.code !== 'academic-year' && (
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          sx={{ flexShrink: 0 }}
+                          disabled={busy || refreshing}
+                          startIcon={<Iconify icon={GlobalIcons.edit} />}
+                          onClick={() => setTask(setupTaskForCheck(readiness!, check.code))}
+                        >
+                          {setupTaskForCheck(readiness!, check.code) !== check.code
+                            ? 'Set up calendar first'
+                            : check.state === 'ready'
+                              ? 'Review setup'
+                              : 'Set up'}
+                        </Button>
+                      )}
+                    </Stack>
+                  </FormSectionCard>
+                </Box>
               ))
             )}
             {!task && step.id === 'earnings' && (
-              <Stack spacing={1}>
-                <Typography variant="subtitle2">Deduction Components</Typography>
-                <Typography variant="body2">
-                  Optional: create deductions your school needs before adding them to a salary
-                  template.
-                </Typography>
-                {canCreateDeduction ? (
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    sx={{ alignSelf: 'flex-start' }}
-                    disabled={busy || refreshing}
-                    startIcon={<Iconify icon={GlobalIcons.addIcon} />}
-                    onClick={() => setTask('deductions')}
-                  >
-                    Set up deductions
-                  </Button>
-                ) : (
-                  <Typography variant="body2">
-                    Ask your HR administrator to create deduction components if needed.
+              <FormSectionCard
+                title="Deduction Components"
+                titleTypographyProps={{ component: 'h3' }}
+                icon={GlobalIcons.documentIcon}
+                descriptionTooltip="Deductions are optional and do not count toward required HR setup completion."
+                action={<Chip size="small" variant="soft" label="Optional" />}
+              >
+                <Stack
+                  direction={{ xs: 'column', sm: 'row' }}
+                  spacing={2}
+                  alignItems={{ xs: 'flex-start', sm: 'center' }}
+                >
+                  <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
+                    Optional: create deductions your school needs before adding them to a salary
+                    template.
                   </Typography>
-                )}
-              </Stack>
+                  {canCreateDeduction ? (
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      sx={{ flexShrink: 0 }}
+                      disabled={busy || refreshing}
+                      startIcon={<Iconify icon={GlobalIcons.addIcon} />}
+                      onClick={() => setTask('deductions')}
+                    >
+                      Set up deductions
+                    </Button>
+                  ) : (
+                    <Typography variant="body2">
+                      Ask your HR administrator to create deduction components if needed.
+                    </Typography>
+                  )}
+                </Stack>
+              </FormSectionCard>
             )}
           </Stack>
         </DialogScrollContent>
-        <DialogActions sx={{ px: 2, py: 1.5, flexWrap: 'wrap', gap: 1, flexShrink: 0 }}>
+        <DialogActions
+          sx={{
+            px: 2,
+            py: 1.5,
+            flexWrap: 'wrap',
+            gap: 1,
+            flexShrink: 0,
+            borderTop: 1,
+            borderColor: 'divider',
+          }}
+        >
           <Button
             size="small"
             variant="outlined"

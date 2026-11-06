@@ -68,7 +68,7 @@ function SettingsStateHeader({ pathname }: { pathname: string }) {
   const isSettings = pathname.startsWith(studentPaths.onboarding.settings);
   const heading = isSettings ? 'Onboarding Settings' : 'Student Setup';
   const description = isSettings
-    ? 'Configure app login, GR numbers and roll numbers.'
+    ? 'Configure GR numbers and roll numbers.'
     : 'Prepare admission students for activation and complete their app access.';
   return (
     <CustomBreadcrumbs

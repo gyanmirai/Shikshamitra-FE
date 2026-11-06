@@ -98,6 +98,27 @@ export type StaffParentRegistrationContext = {
   availableFields: { code: string; label: string; allowedRecipientRelationships: string[] }[];
   availableDocuments: ParentRegistrationDocument[];
 };
+export type ParentRegistrationEmailAttempt = {
+  status: string;
+  attemptNumber: number;
+  attemptedAt: string | null;
+  destination: string | null;
+  safeMessage: string | null;
+};
+export type ParentRegistrationEmailHistory = {
+  registrationId: string;
+  purpose: 'initial' | 'correction';
+  linkStatus: string;
+  recipientName: string;
+  recipientRelationship: string;
+  recipientRelationshipLabel: string | null;
+  recipientEmail: string | null;
+  expiresAt: string;
+  lastSavedAt: string | null;
+  handedInAt: string | null;
+  notes: string | null;
+  attempts: ParentRegistrationEmailAttempt[];
+};
 export type ParentRegistrationCommand = { concurrencyStamp: string; idempotencyKey: string };
 export type ParentRegistrationSendInput = ParentRegistrationCommand & {
   recipientRelationship: ParentRecipientRelationship;

@@ -1,5 +1,4 @@
 import type { RootState } from 'src/redux/store';
-import type { Board, Medium } from 'src/types/school';
 import type { StudentRecordProfile } from 'src/redux/student/student-profile-types';
 import type { RecordChange } from 'src/redux/student/records/student-record-changes-api';
 import type { StudentRecordDetails } from 'src/redux/student/records/student-record-details-api';
@@ -16,26 +15,40 @@ import { fDate, formatStr } from 'src/utils/format-time';
 import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { StudentFeedback } from 'src/components/student-feedback';
-import { FormSectionCard, FormSectionHeader } from 'src/components/form-section-card';
-import { Box, Alert, Paper, Stack, Button, Divider, Skeleton, Typography } from '@mui/material';
+import { FormSectionCard } from 'src/components/form-section-card';
+import { Box, Alert, Stack, Button, Divider, Skeleton, Typography } from '@mui/material';
 
 import { profileOverviewContacts } from './student-profile-overview-model';
 import { StudentParentsContactDialog } from './student-parents-contact-dialog';
 
-export function ProfileValues({ values }: { values: { label: string; value: unknown }[] }) {
+export function ProfileValues({
+  values,
+  inlineLabels = false,
+}: {
+  values: { label: string; value: unknown }[];
+  inlineLabels?: boolean;
+}) {
   return (
     <Box
       component="dl"
       sx={{
         m: 0,
         display: 'grid',
-        gridTemplateColumns: { xs: '1fr', sm: 'minmax(120px, 1fr) minmax(0, 1.3fr)' },
+        gridTemplateColumns: {
+          xs: inlineLabels ? 'minmax(0, 1fr) minmax(0, 1.3fr)' : '1fr',
+          sm: 'minmax(120px, 1fr) minmax(0, 1.3fr)',
+        },
         gap: 1.25,
       }}
     >
       {values.map(({ label, value }) => (
         <Box key={label} sx={{ display: 'contents' }}>
-          <Typography component="dt" variant="body2" color="text.secondary">
+          <Typography
+            component="dt"
+            variant="body2"
+            color="text.secondary"
+            sx={{ overflowWrap: 'anywhere' }}
+          >
             {label}
           </Typography>
           <Typography component="dd" variant="body2" sx={{ m: 0, overflowWrap: 'anywhere' }}>
@@ -54,12 +67,20 @@ export function EnrollmentMilestones({ student }: { student: StudentRecordProfil
     student.admissionOnboarding?.[0];
   if (!journey)
     return (
-      <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
-        <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
-          No linked journey available.
-        </Typography>
-        <Label color="default">Not linked</Label>
-      </Stack>
+      <FormSectionCard
+        aria-label="Admission & Onboarding"
+        icon={GlobalIcons.admissionStudent}
+        title="Admission & Onboarding"
+        descriptionTooltip="Linked admission, enrollment activation and portal credential status for this student."
+      >
+        <Divider />
+        <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
+          <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
+            No linked journey available.
+          </Typography>
+          <Label color="default">Not linked</Label>
+        </Stack>
+      </FormSectionCard>
     );
   const credentialsReady = ['Completed', 'Ready', 'Provisioned'].includes(
     journey.credentialsStatus ?? ''
@@ -76,95 +97,157 @@ export function EnrollmentMilestones({ student }: { student: StudentRecordProfil
   const canAdmission = hasGrantedPermission(permissions, 'Students.Admissions.Applications.View');
   const canOnboarding = hasGrantedPermission(permissions, 'Students.Onboarding.View');
   return (
-    <Stack spacing={1.5}>
-      {[
-        {
-          label: 'Admission finalized',
-          ready: Boolean(journey.finalizedAt),
-          date: journey.finalizedAt,
-        },
-        {
-          label: 'Enrollment activated',
-          ready: Boolean(journey.activatedAt),
-          date: journey.activatedAt,
-        },
-        {
-          label: 'Portal credentials',
-          ready: credentialsReady,
-          date: null,
-          status: credentialsLabel,
-        },
-      ].map((item) => (
+    <FormSectionCard
+      aria-label="Admission & Onboarding"
+      icon={GlobalIcons.admissionStudent}
+      title="Admission & Onboarding"
+      descriptionTooltip="Linked admission, enrollment activation and portal credential status for this student."
+      action={
         <Stack
-          key={item.label}
           direction="row"
           spacing={1}
-          alignItems="center"
           useFlexGap
           flexWrap="wrap"
+          alignItems="baseline"
+          sx={{ minWidth: 0 }}
         >
-          <Typography variant="body2" sx={{ flex: 1, minWidth: 145 }}>
-            {item.label}
+          <Typography variant="body2" color="text.secondary">
+            Application
           </Typography>
-          <Label
-            color={
-              item.status === 'Failed'
-                ? 'error'
-                : item.status === 'Not required' || item.status === 'Unavailable'
-                  ? 'default'
-                  : item.ready
-                    ? 'success'
-                    : 'warning'
-            }
-          >
-            {item.status ?? (item.ready ? 'Completed' : 'Pending')}
-          </Label>
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            sx={{ minWidth: 86, textAlign: 'right' }}
-          >
-            {item.date ? fDate(item.date, formatStr.split.date) : '—'}
+          <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
+            {journey.applicationNumber || '—'}
           </Typography>
         </Stack>
-      ))}
+      }
+    >
       <Divider />
-      <ProfileValues values={[{ label: 'Application', value: journey.applicationNumber }]} />
-      {journey.activatedAt && journey.credentialsStatus === 'Pending' && (
-        <StudentFeedback notificationKey="STU-0761" presentation="inline" severity="info">
-          Enrollment is active. Portal credentials are still pending.
-        </StudentFeedback>
-      )}
-      {journey.activatedAt && journey.credentialsStatus === 'Failed' && (
-        <StudentFeedback notificationKey="STU-0762" presentation="persistent" severity="warning">
-          Enrollment is active. Portal credentials need attention in Onboarding.
-        </StudentFeedback>
-      )}
-      <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" justifyContent="flex-end">
-        {canAdmission && (
-          <Button
-            size="small"
-            component={RouterLink}
-            variant="outlined"
-            href={studentPaths.enrollment.decisionWorkspace(journey.applicationId)}
+      <Stack spacing={1} divider={<Divider />}>
+        {[
+          {
+            label: 'Admission finalized',
+            ready: Boolean(journey.finalizedAt),
+            date: journey.finalizedAt,
+          },
+          {
+            label: 'Enrollment activated',
+            ready: Boolean(journey.activatedAt),
+            date: journey.activatedAt,
+          },
+          {
+            label: 'Portal credentials',
+            ready: credentialsReady,
+            date: null,
+            status: credentialsLabel,
+          },
+        ].map((item) => (
+          <Box
+            key={item.label}
+            sx={{
+              minWidth: 0,
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: 'minmax(0, 1fr) auto',
+                sm: 'minmax(0, 1fr) auto minmax(86px, auto)',
+              },
+              columnGap: 1,
+              rowGap: 0.5,
+              alignItems: 'center',
+            }}
           >
-            View Admission
-          </Button>
-        )}
-        {canOnboarding && (
-          <Button
-            size="small"
-            component={RouterLink}
-            variant="outlined"
-            href={`${studentPaths.onboarding.setup}?case=${encodeURIComponent(
-              journey.onboardingCaseId
-            )}`}
-          >
-            {journey.completedAt ? 'View Onboarding' : 'Continue Onboarding'}
-          </Button>
-        )}
+            <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
+              {item.label}
+            </Typography>
+            <Label
+              color={
+                item.status === 'Failed'
+                  ? 'error'
+                  : item.status === 'Not required' || item.status === 'Unavailable'
+                    ? 'default'
+                    : item.ready
+                      ? 'success'
+                      : 'warning'
+              }
+            >
+              {item.status ?? (item.ready ? 'Completed' : 'Pending')}
+            </Label>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{
+                gridColumn: { xs: '1 / -1', sm: 'auto' },
+                justifySelf: 'end',
+                textAlign: 'right',
+              }}
+            >
+              {item.date ? fDate(item.date, formatStr.split.date) : '—'}
+            </Typography>
+          </Box>
+        ))}
       </Stack>
-    </Stack>
+      <Divider />
+      <Stack direction={{ xs: 'column', lg: 'row' }} spacing={2} alignItems={{ lg: 'center' }}>
+        {journey.activatedAt && journey.credentialsStatus === 'Pending' && (
+          <StudentFeedback
+            notificationKey="STU-0761"
+            presentation="inline"
+            severity="info"
+            sx={{ flex: 1, minWidth: 0 }}
+          >
+            Enrollment is active. Portal credentials are still pending.
+          </StudentFeedback>
+        )}
+        {journey.activatedAt && journey.credentialsStatus === 'Failed' && (
+          <StudentFeedback
+            notificationKey="STU-0762"
+            presentation="persistent"
+            severity="warning"
+            sx={{ flex: 1, minWidth: 0 }}
+          >
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Iconify
+                icon={GlobalIcons.warning}
+                width={20}
+                sx={{ color: 'warning.main', flexShrink: 0 }}
+              />
+              <Box>Enrollment is active. Portal credentials need attention in Onboarding.</Box>
+            </Stack>
+          </StudentFeedback>
+        )}
+        <Stack
+          direction="row"
+          spacing={1}
+          useFlexGap
+          flexWrap="wrap"
+          justifyContent="flex-end"
+          sx={{ ml: 'auto', flexShrink: 0 }}
+        >
+          {canAdmission && (
+            <Button
+              size="small"
+              color="inherit"
+              component={RouterLink}
+              variant="outlined"
+              href={studentPaths.enrollment.decisionWorkspace(journey.applicationId)}
+            >
+              View Admission
+            </Button>
+          )}
+          {canOnboarding && (
+            <Button
+              size="small"
+              component={RouterLink}
+              color="inherit"
+              variant={journey.completedAt ? 'outlined' : 'contained'}
+              href={`${studentPaths.onboarding.setup}?case=${encodeURIComponent(
+                journey.onboardingCaseId
+              )}`}
+            >
+              {journey.completedAt ? 'View Onboarding' : 'Continue Onboarding'}
+            </Button>
+          )}
+        </Stack>
+      </Stack>
+    </FormSectionCard>
   );
 }
 
@@ -172,7 +255,6 @@ export function StudentProfileOverview({
   student,
   details,
   changes,
-  viewHref,
   changesLoading = false,
   changesError = false,
   canReadChanges = true,
@@ -182,14 +264,12 @@ export function StudentProfileOverview({
   student: StudentRecordProfile;
   details?: StudentRecordDetails;
   changes: RecordChange[];
-  viewHref: (view: string) => string;
   changesLoading?: boolean;
   changesError?: boolean;
   canReadChanges?: boolean;
   detailsLoading?: boolean;
   detailsError?: boolean;
 }) {
-  const currentYear = useSelector((state: RootState) => state.globalState.currentYear);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const [contactsOpen, setContactsOpen] = useState(false);
   const [contactResult, setContactResult] = useState<string | null>(null);
@@ -202,102 +282,28 @@ export function StudentProfileOverview({
     !family.isMasked &&
     hasGrantedPermission(permissions, 'Students.Records.Changes.View') &&
     hasGrantedPermission(permissions, 'Students.Records.Changes.Add');
-  const board = currentYear?.boards?.find((item: Board) =>
-    item.educationMediums?.some((medium: Medium) => medium.id === student.academicMediumId)
-  );
-  const yearName =
-    student.enrollmentHistory?.find((item) => item.academicYearId === student.academicYearId)
-      ?.academicYearName ??
-    (currentYear?.id === student.academicYearId || !student.academicYearId
-      ? currentYear?.name
-      : null);
   const birthDate = student.dateOfBirth ? new Date(student.dateOfBirth) : null;
   const validBirthDate = birthDate && !Number.isNaN(birthDate.getTime());
-  const entry = student.entrySource
-    ? {
-        ActivatedOnboarding: 'Enrollment activated',
-        CompletedOnboarding: 'Onboarding completed',
-        LegacyOverride: 'Approved historical entry',
-        Provisioning: 'Provisioning',
-      }[student.entrySource]
-    : undefined;
   return (
-    <Stack
-      component={Paper}
-      variant="outlined"
-      spacing={1.5}
-      sx={{ minWidth: 0, p: { xs: 1.5, sm: 2 }, bgcolor: 'background.paper', borderRadius: 2 }}
-    >
-      <Paper component="section" aria-label="Academic context" variant="outlined">
-        <Box
-          sx={{
-            m: 0,
-            display: 'grid',
-            gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(3, minmax(0, 1fr))' },
-          }}
-        >
-          {[
-            { label: 'Academic year', value: yearName, icon: 'mdi:school-outline' },
-            { label: 'Board', value: board?.name, icon: 'mdi:book-open-outline' },
-            { label: 'Record source', value: entry, icon: 'mdi:file-document-outline' },
-          ].map((field) => (
-            <Stack
-              key={field.label}
-              direction="row"
-              spacing={1.5}
-              alignItems="center"
-              sx={{
-                p: { xs: 1.5, sm: 2 },
-                minWidth: 0,
-                '&:not(:last-of-type)': {
-                  borderStyle: 'solid',
-                  borderWidth: 0,
-                  borderBottomWidth: { xs: 1, sm: 0 },
-                  borderRightWidth: { xs: 0, sm: 1 },
-                  borderColor: 'divider',
-                },
-              }}
-            >
-              <Iconify
-                icon={field.icon}
-                width={24}
-                sx={{ color: 'text.secondary', flexShrink: 0 }}
-              />
-              <Box component="dl" sx={{ m: 0, minWidth: 0 }}>
-                <Typography component="dt" variant="caption" color="text.secondary">
-                  {field.label}
-                </Typography>
-                <Typography component="dd" variant="body2" sx={{ m: 0, overflowWrap: 'anywhere' }}>
-                  {field.value || '—'}
-                </Typography>
-              </Box>
-            </Stack>
-          ))}
-        </Box>
-      </Paper>
+    <Stack spacing={2} sx={{ minWidth: 0 }}>
       <Box
         sx={{
           display: 'grid',
           gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'repeat(2, minmax(0, 1fr))' },
-          gridAutoRows: '1fr',
-          gap: 1.5,
+          gap: 2,
           alignItems: 'stretch',
         }}
       >
         <FormSectionCard
-          icon={GlobalIcons.admissionStudent}
+          aria-label="Student Details"
+          icon={GlobalIcons.studentProfile}
           title="Student Details"
-          descriptionTooltip="Saved date of birth, age and gender for this student. View all details to see the retained registration form."
-          titleTypographyProps={{ fontWeight: 600 }}
-          sx={{ minWidth: 0, height: 1 }}
-          action={
-            <Button size="small" component={RouterLink} href={viewHref('details')}>
-              View All Details
-            </Button>
-          }
+          descriptionTooltip="Saved date of birth, calculated age and gender for this student."
+          sx={{ minWidth: 0 }}
         >
           <Divider />
           <ProfileValues
+            inlineLabels
             values={[
               {
                 label: 'Date of birth',
@@ -318,11 +324,11 @@ export function StudentProfileOverview({
           />
         </FormSectionCard>
         <FormSectionCard
+          aria-label="Parents & Contact"
           icon={GlobalIcons.family}
           title="Parents & Contact"
           descriptionTooltip="Saved parents, optional other guardian and the main school contact. App access is managed separately."
-          titleTypographyProps={{ fontWeight: 600 }}
-          sx={{ minWidth: 0, height: 1 }}
+          sx={{ minWidth: 0 }}
           action={
             canManageContacts ? (
               <Button
@@ -341,13 +347,13 @@ export function StudentProfileOverview({
         >
           <Divider />
           {detailsLoading ? (
-            <Stack aria-label="Loading parents and contact details" spacing={1}>
-              {Array.from({ length: 4 }, (_, index) => (
-                <Skeleton key={index} height={24} />
+            <Stack role="status" aria-label="Loading parents and contact details" spacing={1}>
+              {['80%', '60%', '50%'].map((width) => (
+                <Skeleton key={width} width={width} height={24} />
               ))}
             </Stack>
           ) : detailsError && !details ? null : (
-            <ProfileValues values={profileOverviewContacts(details)} />
+            <ProfileValues inlineLabels values={profileOverviewContacts(details)} />
           )}
           {contactResult && (
             <Alert severity={contactResult.endsWith('review.') ? 'info' : 'success'}>
@@ -356,67 +362,32 @@ export function StudentProfileOverview({
           )}
         </FormSectionCard>
       </Box>
+      <EnrollmentMilestones student={student} />
       <FormSectionCard
+        aria-label="Recent Changes"
         icon={GlobalIcons.history}
-        title="Record Activity"
-        descriptionTooltip="Linked admission and onboarding milestones, with recent record changes visible to your current access."
-        titleTypographyProps={{ fontWeight: 600 }}
+        title="Recent Changes"
+        descriptionTooltip="The latest recorded changes. Open the History tab for the full change history."
+        actionFullWidthOnMobile
         action={
-          <Button size="small" component={RouterLink} href={viewHref('history')}>
-            View History
-          </Button>
+          !canReadChanges || (!changesError && !changesLoading && !changes.length) ? (
+            <Typography variant="body2" color="text.secondary">
+              {!canReadChanges
+                ? 'Record change history is not available with your current access.'
+                : 'No record changes are available.'}
+            </Typography>
+          ) : undefined
         }
       >
-        <Divider />
-        <Stack spacing={2} divider={<Divider />}>
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: {
-                xs: 'minmax(0, 1fr)',
-                sm: 'minmax(160px, 1fr) minmax(0, 2fr)',
-              },
-              gap: 1.5,
-            }}
-          >
-            <FormSectionHeader
-              icon={GlobalIcons.admissionStudent}
-              title="Admission & Onboarding"
-              descriptionTooltip="Saved admission, enrollment activation and portal credential status from the linked onboarding journey."
-              titleTypographyProps={{ component: 'h3', fontWeight: 600 }}
-            />
-            <EnrollmentMilestones student={student} />
-          </Box>
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: {
-                xs: 'minmax(0, 1fr)',
-                sm: 'minmax(160px, 1fr) minmax(0, 2fr)',
-              },
-              gap: 1.5,
-            }}
-          >
-            <FormSectionHeader
-              icon={GlobalIcons.history}
-              title="Recent Changes"
-              descriptionTooltip="The three most recent student record changes available with your current access."
-              titleTypographyProps={{ component: 'h3', fontWeight: 600 }}
-            />
-            {!canReadChanges ? (
-              <Typography variant="body2" color="text.secondary">
-                Record change history is not available with your current access.
-              </Typography>
-            ) : changesLoading ? (
-              <Stack aria-label="Loading recent changes">
+        {canReadChanges && !changesError && (changesLoading || changes.length > 0) && (
+          <>
+            <Divider />
+            {changesLoading ? (
+              <Stack role="status" aria-label="Loading recent changes">
                 <Skeleton height={40} />
                 <Skeleton height={40} />
               </Stack>
-            ) : changesError ? (
-              <Typography variant="body2" color="text.secondary">
-                Recent changes could not be loaded.
-              </Typography>
-            ) : changes.length ? (
+            ) : (
               <Stack spacing={1.5}>
                 {changes.slice(0, 3).map((change) => (
                   <Stack key={change.id} spacing={0.5}>
@@ -437,13 +408,9 @@ export function StudentProfileOverview({
                   </Stack>
                 ))}
               </Stack>
-            ) : (
-              <Typography variant="body2" color="text.secondary">
-                No record changes are available.
-              </Typography>
             )}
-          </Box>
-        </Stack>
+          </>
+        )}
       </FormSectionCard>
       {contactsOpen && details && (
         <StudentParentsContactDialog

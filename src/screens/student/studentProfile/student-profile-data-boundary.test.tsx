@@ -86,7 +86,7 @@ it('loads the protected profile and passes its canonical GUID to both real Docum
   );
 });
 
-it('keeps tabs unmounted on a failed read and retries the actual profile request', async () => {
+it('keeps tabs unmounted on a failed read and retries the actual profile request from its toast', async () => {
   let attempts = 0;
   mswServer.use(
     http.get(profilePath, () => {

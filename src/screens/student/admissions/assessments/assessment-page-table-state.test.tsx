@@ -120,7 +120,20 @@ vi.mock('./assessment-student-booking-drawer', () => ({
   ),
 }));
 vi.mock('./assessment-sessions-panel', () => ({
-  AssessmentSessionsPanel: () => null,
+  AssessmentSessionsPanel: ({ onSelect }: { onSelect: (session: any) => void }) => (
+    <button type="button" onClick={() => onSelect({ id: 'session-1', name: 'QA Exam' })}>
+      View QA Exam
+    </button>
+  ),
+}));
+vi.mock('./assessment-session-details-drawer', () => ({
+  AssessmentSessionDetailsDrawer: ({ session, onClose }: { session: any; onClose: () => void }) => (
+    <div role="dialog" aria-label={`Session details: ${session.name}`}>
+      <button type="button" onClick={onClose}>
+        Close session details
+      </button>
+    </div>
+  ),
 }));
 vi.mock('src/redux/student/admissions/admission-assessment-planning-api', () => ({
   usePreviewAssessmentSessionMutation: () => [vi.fn()],
@@ -226,6 +239,19 @@ it('puts session creation in Session and does not render the inactive Student ta
   expect(screen.getByRole('button', { name: 'Create Session' })).toBeInTheDocument();
   expect(screen.queryByText('InActive panel row')).not.toBeInTheDocument();
   expect(screen.getByRole('tab', { name: 'Session' })).toHaveAttribute('aria-selected', 'true');
+});
+
+it('opens a Session row in its own details without switching to Student', () => {
+  mocks.workbench.state.tab = 'sessions';
+  renderPage();
+  fireEvent.click(screen.getByRole('button', { name: 'View QA Exam' }));
+  expect(screen.getByRole('tab', { name: 'Session' })).toHaveAttribute('aria-selected', 'true');
+  expect(screen.getByRole('dialog', { name: 'Session details: QA Exam' })).toBeVisible();
+  expect(mocks.workbench.updateWorkbench).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Close session details' }));
+  expect(
+    screen.queryByRole('dialog', { name: 'Session details: QA Exam' })
+  ).not.toBeInTheDocument();
 });
 
 it('keeps precise Status filtering independent of the progress-tab chip and resets paging', () => {

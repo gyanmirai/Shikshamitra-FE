@@ -40,14 +40,33 @@ const renderTable = (table: ReactElement) =>
 describe('CustomizableTable controlled server state', () => {
   it('reports only visible data columns to the owning server search', () => {
     const visible = vi.fn();
-    const table = renderTable(<CustomizableTable tableId="academic-visible-server-search" columns={[
-      { id: 'roomName', label: 'Room' }, { id: 'purpose', label: 'Purpose', defaultHidden: true },
-      { id: 'actions', label: 'Actions' },
-    ]} data={[]} onVisibleColumnsChange={visible} />);
+    const table = renderTable(
+      <CustomizableTable
+        tableId="academic-visible-server-search"
+        columns={[
+          { id: 'roomName', label: 'Room' },
+          { id: 'purpose', label: 'Purpose', defaultHidden: true },
+          { id: 'actions', label: 'Actions' },
+        ]}
+        data={[]}
+        onVisibleColumnsChange={visible}
+      />
+    );
     expect(visible).toHaveBeenLastCalledWith(['roomName']);
-    table.rerender(<ThemeProvider theme={createTheme(defaultSettings)}><CustomizableTable tableId="academic-visible-server-search" columns={[
-      { id: 'roomName', label: 'Room' }, { id: 'date', label: 'Date' }, { id: 'actions', label: 'Actions' },
-    ]} data={[]} onVisibleColumnsChange={visible} /></ThemeProvider>);
+    table.rerender(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <CustomizableTable
+          tableId="academic-visible-server-search"
+          columns={[
+            { id: 'roomName', label: 'Room' },
+            { id: 'date', label: 'Date' },
+            { id: 'actions', label: 'Actions' },
+          ]}
+          data={[]}
+          onVisibleColumnsChange={visible}
+        />
+      </ThemeProvider>
+    );
     expect(visible).toHaveBeenLastCalledWith(['roomName', 'date']);
   });
 
@@ -98,7 +117,7 @@ describe('CustomizableTable controlled server state', () => {
       <CustomizableTable
         tableId="hr-operational-capabilities"
         columns={[
-          { id: 'amount', label: 'Amount', isSort: false, isFilter: false },
+          { id: 'amount', label: 'Amount' },
           { id: 'actions', label: 'Actions' },
         ]}
         serverColumnTypes={{ amount: 'money' }}
@@ -125,6 +144,37 @@ describe('CustomizableTable controlled server state', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     // The existing order is retained until the owner supplies the globally ordered response.
     expect(screen.getAllByRole('row')[1]).toHaveTextContent('10');
+  });
+  it('honors explicit column opt-outs when server metadata describes an interactive control', () => {
+    renderTable(
+      <CustomizableTable
+        tableId="attendance-interactive-status"
+        columns={[
+          {
+            id: 'status',
+            label: <button type="button">Mark all present</button>,
+            isSort: false,
+            isFilter: false,
+          },
+          { id: 'fullName', label: 'Name' },
+        ]}
+        data={[]}
+        serverColumnTypes={{ status: 'string', fullName: 'string' }}
+        serverSidePagination
+        onServerSort={vi.fn()}
+        onServerFilter={vi.fn()}
+      />
+    );
+    expect(screen.queryByRole('button', { name: 'Filter status' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Sort by status' })).not.toBeInTheDocument();
+    expect(
+      screen
+        .getByRole('button', { name: 'Mark all present' })
+        .closest('button')
+        ?.parentElement?.closest('button')
+    ).toBeNull();
+    expect(screen.getByRole('button', { name: 'Filter Name' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Sort by Name' })).toBeInTheDocument();
   });
   it('retains safe rows and labels refresh without reporting an empty or initial-loading state', () => {
     renderTable(

@@ -1,6 +1,10 @@
 import type { ReactNode } from 'react';
 import type { FormikProps } from 'formik';
-import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
+import type { DragStartEvent } from '@dnd-kit/core';
+import type {
+  AdmissionFormField,
+  CreateUpdateAdmissionForm,
+} from 'src/redux/student/admissions/admission-forms-api';
 
 import Box from '@mui/material/Box';
 import Menu from '@mui/material/Menu';
@@ -10,6 +14,7 @@ import Drawer from '@mui/material/Drawer';
 import Divider from '@mui/material/Divider';
 import MenuItem from '@mui/material/MenuItem';
 import { useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import { Iconify } from 'src/components/iconify';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
@@ -24,6 +29,8 @@ import {
   closestCenter,
   PointerSensor,
   KeyboardSensor,
+  DragOverlay,
+  defaultDropAnimationSideEffects,
 } from '@dnd-kit/core';
 
 import { getSectionStepId } from './form-step-groups';
@@ -34,6 +41,7 @@ import { AdmissionDialogTitle } from '../admission-dialog-title';
 import { FormBuilderProperties } from './form-builder-properties';
 import { useFormInheritance } from './hooks/use-form-inheritance';
 import { FormBuilderCanvas } from './components/form-builder-canvas';
+import { FormBuilderFieldDragPreview } from './form-builder-field';
 import { FormBuilderWorkspace } from './components/form-builder-workspace';
 import { useFormBuilderCommands } from './hooks/use-form-builder-commands';
 import { useFormBuilderSelection } from './hooks/use-form-builder-selection';
@@ -54,6 +62,12 @@ import {
 
 import type { BuilderIssueTarget } from './form-builder-issue-navigation';
 import type { BuilderNavigationRequest } from './types/builder-navigation';
+
+const fieldDropAnimation = {
+  duration: 180,
+  easing: 'cubic-bezier(0.2, 0, 0, 1)',
+  sideEffects: defaultDropAnimationSideEffects({ styles: { active: { opacity: '0.2' } } }),
+};
 
 export function FormBuilderSections({
   formik,
@@ -116,6 +130,11 @@ export function FormBuilderSections({
   const [gridAnchor, setGridAnchor] = useState<HTMLElement | null>(null);
   const [navigationRequest, setNavigationRequest] = useState<BuilderNavigationRequest>();
   const [reviewGuidance, setReviewGuidance] = useState<string>();
+  const [activeFieldDrag, setActiveFieldDrag] = useState<{
+    field: AdmissionFormField;
+    width?: number;
+  } | null>(null);
+  const reduceMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
   const previewReady =
     !inheritance?.enabled ||
     Boolean(
@@ -213,6 +232,18 @@ export function FormBuilderSections({
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
+  const handleDragStart = ({ active }: DragStartEvent) => {
+    const activeId = String(active.id);
+    if (!activeId.startsWith('field:')) {
+      setActiveFieldDrag(null);
+      return;
+    }
+    const fieldId = activeId.slice(activeId.lastIndexOf(':') + 1);
+    const field = formik.values.sections
+      .flatMap((section) => section.fields)
+      .find((item) => item.id === fieldId);
+    setActiveFieldDrag(field ? { field, width: active.rect.current.initial?.width } : null);
+  };
   const settingsContent = (
     <Stack sx={{ height: 1, minHeight: 0 }}>
       <Stack
@@ -279,7 +310,12 @@ export function FormBuilderSections({
     <DndContext
       sensors={sensors}
       collisionDetection={closestCenter}
-      onDragEnd={(event) => reorderFormBuilder(event, formik, selection.selectForReorder)}
+      onDragStart={handleDragStart}
+      onDragEnd={(event) => {
+        reorderFormBuilder(event, formik, selection.selectForReorder);
+        setActiveFieldDrag(null);
+      }}
+      onDragCancel={() => setActiveFieldDrag(null)}
     >
       <>
         <FormBuilderWorkspace
@@ -492,6 +528,12 @@ export function FormBuilderSections({
           {settingsContent}
         </Drawer>
         <InheritedFieldDrawer />
+        <DragOverlay
+          dropAnimation={reduceMotion ? null : fieldDropAnimation}
+          style={{ width: activeFieldDrag?.width, pointerEvents: 'none' }}
+        >
+          {activeFieldDrag ? <FormBuilderFieldDragPreview field={activeFieldDrag.field} /> : null}
+        </DragOverlay>
       </>
     </DndContext>
   );

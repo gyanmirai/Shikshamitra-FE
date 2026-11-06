@@ -103,4 +103,79 @@ describe('ApplicationStageJourney', () => {
       screen.getByText('No admission stages are available for this application.')
     ).toBeInTheDocument();
   });
+
+  it('keeps numbered stages accessible and selects their configured IDs when collapsed', () => {
+    const onChange = vi.fn();
+    render(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <ApplicationStageJourney
+          collapsed
+          stages={[
+            stage('future', 30, 0, 'Payment'),
+            stage('done', 10, 2, 'Registration Form'),
+            stage('current', 20, 1, 'Document Verification'),
+          ]}
+          currentStageId="current"
+          onChange={onChange}
+        />
+      </ThemeProvider>
+    );
+
+    const buttons = screen.getAllByRole('button');
+    expect(buttons).toHaveLength(3);
+    expect(buttons[0]).toHaveAccessibleName('Registration Form');
+    expect(within(buttons[0]).getByText('1')).toBeInTheDocument();
+    expect(buttons[1]).toHaveAccessibleName('Document Verification');
+    expect(within(buttons[1]).getByText('2')).toBeInTheDocument();
+    expect(buttons[1]).toHaveAttribute('aria-current', 'step');
+    expect(buttons[2]).toHaveAccessibleName('Payment');
+    expect(within(buttons[2]).getByText('3')).toBeInTheDocument();
+
+    fireEvent.click(buttons[2]);
+    expect(onChange).toHaveBeenCalledExactlyOnceWith('future');
+  });
+
+  it('retains the selected stage and interaction lock across collapsed and expanded views', () => {
+    const onChange = vi.fn();
+    const stages = [stage('done', 1, 2, 'Form'), stage('current', 2, 1, 'Payment')];
+    const view = (collapsed: boolean, busy = false) => (
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <ApplicationStageJourney
+          stages={stages}
+          currentStageId="current"
+          selectedStageId="done"
+          collapsed={collapsed}
+          busy={busy}
+          onChange={onChange}
+        />
+      </ThemeProvider>
+    );
+    const { rerender } = render(view(true));
+    expect(screen.getByRole('button', { name: 'Form' })).toHaveAttribute('aria-current', 'step');
+
+    rerender(view(false));
+    expect(screen.getByRole('button', { name: 'Form' })).toHaveAttribute('aria-current', 'step');
+    expect(screen.getByText('Form')).toBeVisible();
+    expect(onChange).not.toHaveBeenCalled();
+
+    rerender(view(true, true));
+    screen.getAllByRole('button').forEach((button) => {
+      expect(button).toBeDisabled();
+      fireEvent.click(button);
+    });
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('retains the empty-state explanation in collapsed mode', () => {
+    render(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <ApplicationStageJourney collapsed stages={[]} />
+      </ThemeProvider>
+    );
+
+    expect(
+      screen.getByText('No admission stages are available for this application.')
+    ).toBeVisible();
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+  });
 });

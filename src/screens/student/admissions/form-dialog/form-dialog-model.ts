@@ -98,6 +98,25 @@ export const admissionFormSchema = Yup.object({
         return Boolean(value?.includes(this.parent.defaultLanguage));
       }
     ),
+  inheritance: Yup.mixed<NonNullable<CreateUpdateAdmissionForm['inheritance']>>()
+    .nullable()
+    .test('step-names', 'Step heading is required', function (value) {
+      const invalid = (value?.sources ?? [])
+        .flatMap((source, index) =>
+          Object.entries(source.stepNames ?? {}).map(([code, name]) => ({ index, code, name }))
+        )
+        .find(({ name }) => !name.trim() || name.length > 128);
+      return (
+        !invalid ||
+        this.createError({
+          path: `inheritance.sources[${invalid.index}].stepNames.${invalid.code}`,
+          message: !invalid.name.trim()
+            ? 'Step heading is required'
+            : 'Use 128 characters or fewer',
+        })
+      );
+    })
+    .optional(),
   sections: Yup.array()
     .of(admissionFormSectionSchema)
     .test('one-class-interest', duplicateClassInterestMessage, function (sections) {

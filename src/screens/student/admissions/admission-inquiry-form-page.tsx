@@ -586,9 +586,6 @@ export default function AdmissionInquiryFormPage() {
                     router.push(`${studentPaths.enrollment.inquiries}?${next.toString()}`)
                   );
                 }}
-                onCreateSeparate={controller.createSeparateFamily}
-                overrideReason={controller.duplicateOverrideReason}
-                onOverrideReasonChange={controller.setDuplicateOverrideReason}
               />
               {controller.requestError && (
                 <StudentFeedback notificationKey="STU-0083" presentation="inline" severity="error">

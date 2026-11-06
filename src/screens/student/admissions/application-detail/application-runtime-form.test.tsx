@@ -49,6 +49,38 @@ vi.mock('../admission-runtime-field', () => ({
 }));
 
 type Props = ComponentProps<typeof ApplicationRuntimeForm>;
+it.each([true, false])(
+  'keeps saved step completion when reviewing earlier sections (compact=%s)',
+  async (compact) => {
+    renderForm({ compact });
+    const firstStep = () =>
+      screen.getByRole('button', { name: 'Personal information' }).closest('.MuiStep-root');
+    expect(firstStep()?.querySelector('.MuiStepIcon-root.Mui-completed')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Save & Next' }));
+    await screen.findByRole('textbox', { name: 'Health details answer' });
+    expect(firstStep()?.querySelector('.MuiStepIcon-root.Mui-completed')).not.toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Previous' }));
+    expect(firstStep()?.querySelector('.MuiStepIcon-root.Mui-completed')).not.toBeNull();
+    fireEvent.change(screen.getByRole('textbox', { name: 'Basic details answer' }), {
+      target: { value: 'Changed' },
+    });
+    expect(firstStep()?.querySelector('.MuiStepIcon-root.Mui-completed')).toBeNull();
+  }
+);
+
+it('does not mark a draft step completed when persistence fails', async () => {
+  const onSave = vi.fn(async () => false);
+  renderForm({ compact: true, onSave });
+  fireEvent.click(screen.getByRole('button', { name: 'Save & Next' }));
+  await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
+  expect(
+    screen
+      .getByRole('button', { name: 'Personal information' })
+      .closest('.MuiStep-root')
+      ?.querySelector('.MuiStepIcon-root.Mui-completed')
+  ).toBeNull();
+});
+
 const section = (id: string, name: string, stepId: string, order: number) => ({
   id,
   code: id,
@@ -325,7 +357,9 @@ describe('application form step navigation', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Medical information' }));
     await waitFor(() => expect(validate).toHaveBeenCalledWith('basic'));
     expect(screen.getByRole('textbox', { name: 'Basic details answer' })).toBeInTheDocument();
-    expect(screen.queryByRole('textbox', { name: 'Health details answer' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('textbox', { name: 'Health details answer' })
+    ).not.toBeInTheDocument();
   });
   it('allows reviewing another step after focusing a submission error', async () => {
     const { rerenderForm } = renderForm();

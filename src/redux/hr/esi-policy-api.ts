@@ -18,6 +18,11 @@ export type EsiPolicy = {
   concurrencyStamp: string;
   versions: EsiPolicyVersion[];
 };
+export type EsiPolicyArchiveReview = {
+  policy: EsiPolicy;
+  canArchive: boolean;
+  templates: { templateId: string; templateName: string; version: number; status: string }[];
+};
 export type EsiPolicyVersionInput = {
   effectiveFrom: string;
   employeePercentage: number;
@@ -54,6 +59,10 @@ const payrollTags = [
 ];
 export const esiPolicyApi = api.injectEndpoints({
   endpoints: (builder) => ({
+    getEsiPolicyArchiveReview: builder.query<EsiPolicyArchiveReview, string>({
+      query: (id) => `${endpoint}/${id}/archive-review`,
+      providesTags: [...tags, payrollStructureType.salaryTemplate],
+    }),
     getEsiPolicies: builder.query<EsiPolicy[], void>({
       query: () => endpoint,
       providesTags: tags,
@@ -73,17 +82,21 @@ export const esiPolicyApi = api.injectEndpoints({
       query: ({ id, body }) => ({ url: `${endpoint}/${id}/versions`, method: 'POST', body }),
       invalidatesTags: payrollTags,
     }),
-    archiveEsiPolicy: builder.mutation<void, { id: string; concurrencyStamp: string }>({
-      query: ({ id, concurrencyStamp }) => ({
+    archiveEsiPolicy: builder.mutation<
+      void,
+      { id: string; concurrencyStamp: string; confirmed: true }
+    >({
+      query: ({ id, concurrencyStamp, confirmed }) => ({
         url: `${endpoint}/${id}/archive`,
         method: 'POST',
-        body: { concurrencyStamp },
+        body: { concurrencyStamp, confirmed },
       }),
       invalidatesTags: payrollTags,
     }),
   }),
 });
 export const {
+  useGetEsiPolicyArchiveReviewQuery,
   useGetEsiPoliciesQuery,
   useGetEsiPolicyOptionsQuery,
   useCreateEsiPolicyMutation,

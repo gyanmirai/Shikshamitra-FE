@@ -13,7 +13,10 @@ import { newField, nextFieldOrder, nextFieldDisplayOrder } from '../form-dialog-
 import { classInterestOptions, isClassInterestQuestion } from '../../admission-class-question';
 import { nextStepNumber, nextSectionNumber, getAdmissionFormStepGroups } from '../form-step-groups';
 import { configureStudentField, connectStudentAddressFields } from '../student-field-configuration';
-import { addAcademicClassSelector, findAcademicClassSelectorField } from '../academic-class-selector';
+import {
+  addAcademicClassSelector,
+  findAcademicClassSelectorField,
+} from '../academic-class-selector';
 import {
   type AdmissionFormSectionTemplateId,
   materializeAdmissionFormSectionTemplate,
@@ -339,6 +342,9 @@ export function useFormBuilderCommands(
     const groupFieldsWithDependencies = fields.map(
       (field) => connectedFields.find((item) => item.id === field.id) ?? field
     );
+    // Replace generated placeholders; keep meaningful authored titles unchanged.
+    const automaticStepName = !selectedStep || /^(?:Step \d+)?$/.test(selectedStep.name.trim());
+    const stepName = automaticStepName ? name : selectedStep!.name;
     const groupSection = {
       ...(reuseSelected ? selected : {}),
       id,
@@ -349,7 +355,7 @@ export function useFormBuilderCommands(
       stepCode: stepId
         ? (selectedStep?.code ?? `STEP_${nextStepNumber(formik.values.sections)}`)
         : undefined,
-      stepName: stepId ? (selectedStep?.name ?? `Step ${steps.length + 1}`) : undefined,
+      stepName: stepId ? stepName : undefined,
       stepDisplayOrder: stepId ? (selectedStep?.displayOrder ?? steps.length) : undefined,
       stepVisibilityRuleJson: selectedStep?.visibilityRuleJson,
       isRepeatable: reuseSelected ? selected.isRepeatable : false,
@@ -359,9 +365,12 @@ export function useFormBuilderCommands(
     };
     formik.setFieldValue(
       'sections',
-      reuseSelected
+      (reuseSelected
         ? formik.values.sections.map((section) => (section.id === id ? groupSection : section))
         : [...formik.values.sections, groupSection]
+      ).map((section) =>
+        stepId && (section.stepId ?? section.id) === stepId ? { ...section, stepName } : section
+      )
     );
     onSelect(id, null);
     const skipped = groupFields.length - availableFields.length;

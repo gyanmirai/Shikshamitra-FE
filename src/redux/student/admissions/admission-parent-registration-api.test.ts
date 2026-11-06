@@ -41,6 +41,13 @@ it('uses the saved recipient command and unwraps staff Result without exposing a
   ).toEqual({ applicationId: 'app', request: null });
 });
 
+it('loads the scoped email history only through its read-only endpoint', () => {
+  expect(endpoints.getParentRegistrationEmailHistory.query('app')).toEqual({
+    url: '/student/enrollment/admissions/applications/app/parent-registration/email-history',
+  });
+  expect(endpoints.getParentRegistrationEmailHistory.transformResponse({ data: [] })).toEqual([]);
+});
+
 it('saves parent email with optimistic contact identity and invalidates staff application caches', () => {
   const input = {
     recipientRelationship: 'mother',

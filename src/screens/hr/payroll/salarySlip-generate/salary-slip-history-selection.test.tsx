@@ -1,6 +1,6 @@
 import { skipToken } from '@reduxjs/toolkit/query';
 import { it, vi, expect, describe, afterEach, beforeEach } from 'vitest';
-import { render, screen, cleanup, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, within, cleanup, waitFor, fireEvent } from '@testing-library/react';
 
 import PaySlipGenerationScreen from './salarySlipGenerate';
 
@@ -75,6 +75,19 @@ vi.mock('src/redux/hr/payslip-api', () => ({
 describe('delivery history belongs to the selected employee', () => {
   beforeEach(() => { state.failed = false; state.refreshing = false; state.documentFailed = false; state.pdfReady = false; state.hasDocument = true; });
   afterEach(cleanup);
+
+
+  it('groups the available document actions separately from staff selection', async () => {
+    state.pdfReady = true;
+    render(<PaySlipGenerationScreen />);
+    fireEvent.click(screen.getByRole('button', { name: 'Select employee A' }));
+    const actions = within(screen.getByRole('group', { name: 'Payslip actions' }));
+    expect(actions.getAllByRole('button').map((button) => button.textContent)).toEqual([
+      'Print', 'Download', 'Resend', 'Record payment', 'Replace document details', 'Correct payroll',
+    ]);
+    expect(actions.queryByRole('textbox', { name: 'Staff member' })).toBeNull();
+    await waitFor(() => expect(actions.getByRole('button', { name: 'Print' })).toBeEnabled());
+  });
 
   it('keeps expected pre-lock periods out of the issued-only summary endpoint', () => {
     summaryRead.mockClear();

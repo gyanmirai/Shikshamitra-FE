@@ -10,10 +10,12 @@ import { useRef, useState, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
 import { StudentFeedback } from 'src/components/student-feedback';
-import { FormSectionCard } from 'src/components/form-section-card';
 import { Box, Stack, Avatar, Button, Skeleton, Typography, LinearProgress } from '@mui/material';
 import {
   useActivateStudentOnboardingMutation,
+  useGetStudentOnboardingCredentialsQuery,
+  useGetStudentOnboardingWorkflowDocumentsQuery,
+  useRefreshStudentOnboardingReadinessMutation,
   useLazyGetStudentOnboardingCaseQuery,
   useLazyPreviewStudentOnboardingActivationQuery,
 } from 'src/redux/student/onboarding/student-onboarding-api';
@@ -23,6 +25,7 @@ import { mapOnboardingCaseToItem } from './student-onboarding-model';
 import { getStudentSetupStatusDisplayLabel, studentSetupStatusMeta } from './student-setup-summary';
 import { runStudentQuickSetupSave } from './student-quick-setup-save';
 import StudentQuickSetupAcademic from './student-quick-setup-academic';
+import StudentQuickSetupSection from './student-quick-setup-section';
 import StudentQuickSetupFeesSection from './student-quick-setup-fees-section';
 import { useStudentQuickSetupAcademic } from './use-student-quick-setup-academic';
 import StudentOnboardingPortalAccounts from './student-onboarding-portal-accounts';
@@ -72,7 +75,7 @@ export default function StudentQuickSetupPage({
   onNext,
   onStateChange,
 }: Props) {
-  const [saving, setSaving] = useState<'later' | 'activate' | 'send' | null>(null);
+  const [saving, setSaving] = useState<'later' | 'activate' | 'send' | 'refresh' | null>(null);
   const savingRef = useRef(false);
   const activationKey = useRef<string | null>(null);
   const portalAccountsRef = useRef<StudentOnboardingPortalAccountsHandle>(null);
@@ -100,6 +103,7 @@ export default function StudentQuickSetupPage({
   const [getCase] = useLazyGetStudentOnboardingCaseQuery();
   const [previewActivation] = useLazyPreviewStudentOnboardingActivationQuery();
   const [activate] = useActivateStudentOnboardingMutation();
+  const [refreshReadiness] = useRefreshStudentOnboardingReadinessMutation();
   const editor = useStudentQuickSetupAcademic({
     caseId: student.id,
     canManage,
@@ -131,6 +135,52 @@ export default function StudentQuickSetupPage({
       ? { label: 'Cancelled', color: 'default' as const }
       : { label: 'Setup pending', color: 'warning' as const };
   const onboardingStatus = studentSetupStatusMeta[activeStudent.status];
+  const [loginOpen, setLoginOpen] = useState(initialSection === 'credentials');
+  const [documentsOpen, setDocumentsOpen] = useState(false);
+  const summaryOptions = { skip: !current || editor.permissionDenied || editor.readError };
+  // These subscriptions share the existing child queries and RTK Query cache keys.
+  const loginSummary = useGetStudentOnboardingCredentialsQuery(student.id, summaryOptions);
+  const documentSummary = useGetStudentOnboardingWorkflowDocumentsQuery(student.id, summaryOptions);
+  const emailCount = new Set(
+    loginSummary.currentData?.recipients
+      .map((recipient) => recipient.email?.trim().toLowerCase())
+      .filter(Boolean)
+  ).size;
+  const acceptedDocuments = documentSummary.currentData
+    ?.flatMap((stage) => stage.requirements)
+    .filter((requirement) => requirement.status === 'accepted').length;
+  const pendingDocuments =
+    documentSummary.currentData
+      ?.flatMap((stage) => stage.requirements)
+      .filter(
+        (requirement) =>
+          requirement.isRequired &&
+          !['accepted', 'waived', 'notRequired'].includes(requirement.status)
+      ).length ?? 0;
+  const documentsNeedAttention =
+    pendingDocuments > 0 ||
+    Boolean(
+      documentSummary.currentData?.some(
+        (stage) =>
+          stage.blockers?.length ||
+          stage.requirements.some((requirement) => requirement.blockers?.length)
+      )
+    );
+
+  useEffect(() => {
+    setLoginOpen(initialSection === 'credentials');
+    setDocumentsOpen(false);
+  }, [student.id, initialSection]);
+  useEffect(() => {
+    if (loginSummary.isError) setLoginOpen(true);
+    if (documentSummary.isError || documentsNeedAttention) setDocumentsOpen(true);
+  }, [
+    student.id,
+    initialSection,
+    loginSummary.isError,
+    documentSummary.isError,
+    documentsNeedAttention,
+  ]);
 
   useEffect(() => {
     onStateChange({ dirty, busy });
@@ -187,9 +237,11 @@ export default function StudentQuickSetupPage({
       return;
     if (
       shouldActivate &&
+      credentialSelection.parentSelected &&
       (parentState.caseId !== student.id || !parentState.loaded || parentState.blockedReason)
     ) {
       setParentValidationAttempt((attempt) => attempt + 1);
+      setLoginOpen(true);
       shikshaMitraToast.error({
         message:
           parentState.caseId === student.id && parentState.loaded
@@ -209,6 +261,10 @@ export default function StudentQuickSetupPage({
       return;
     }
     savingRef.current = true;
+    const sendPrepared =
+      shouldActivate && sendCredentialsAfterActivation
+        ? portalAccountsRef.current?.prepareSend?.()
+        : undefined;
     setSaving(shouldActivate ? 'activate' : 'later');
     setFailure(undefined);
     setFailureSeverity('error');
@@ -229,8 +285,12 @@ export default function StudentQuickSetupPage({
               id: student.id,
               concurrencyStamp: preview.concurrencyStamp,
               idempotencyKey,
-              siblingParentSelection: parentState.selection,
-              guardianAccessSelection: parentState.guardianAccessSelection,
+              siblingParentSelection: credentialSelection.parentSelected
+                ? parentState.selection
+                : undefined,
+              guardianAccessSelection: credentialSelection.parentSelected
+                ? parentState.guardianAccessSelection
+                : undefined,
             }).unwrap(),
         },
       });
@@ -239,19 +299,30 @@ export default function StudentQuickSetupPage({
       if (shouldActivate && sendCredentialsAfterActivation && result.studentEnrollmentId) {
         let summary: StudentCredentialSendSummary | undefined;
         try {
-          summary = await portalAccountsRef.current?.sendSelected(true);
+          summary = sendPrepared
+            ? await sendPrepared()
+            : await portalAccountsRef.current?.sendSelected(true);
         } catch {
           // Enrollment is committed; credential delivery remains separately retryable.
         }
         shikshaMitraToast[summary && summary.failed === 0 ? 'success' : 'warning']({
           message: summarizeCredentialSend(summary, true),
         });
+        if (!summary || summary.failed > 0) setLoginOpen(true);
       } else {
         shikshaMitraToast.success({
           message: result.studentEnrollmentId ? 'Student is now active.' : 'Student setup saved.',
         });
       }
     } catch (error) {
+      if (!(error instanceof ValidationError) && documentsNeedAttention) {
+        setDocumentsOpen(true);
+        window.requestAnimationFrame(() => {
+          const section = bodyRef.current?.querySelector<HTMLElement>('#quick-setup-documents');
+          section?.scrollIntoView({ block: 'nearest' });
+          section?.querySelector<HTMLElement>('button[aria-expanded]')?.focus();
+        });
+      }
       setFailure(
         error instanceof ValidationError
           ? undefined
@@ -290,7 +361,12 @@ export default function StudentQuickSetupPage({
       return activated
         ? 'Student is now active.'
         : 'Login details were not sent. Review App Login and try again.';
-    const completed = summary.submitted + summary.queued;
+    const completed = summary.submitted + summary.queued + (summary.linked ?? 0);
+    if (summary.linked && summary.failed === 0) {
+      const emailStatus =
+        summary.submitted + summary.queued > 0 ? ' Selected login emails were requested.' : '';
+      return `${activated ? 'Student is now active. ' : ''}Existing parent login linked.${emailStatus}`;
+    }
     const recipientLabel = summary.requested === 1 ? 'recipient' : 'recipients';
     if (summary.failed === 0 && summary.queued === 0)
       return `${activated ? 'Student is now active. ' : ''}Login details submitted for ${summary.submitted} ${recipientLabel}.`;
@@ -319,6 +395,37 @@ export default function StudentQuickSetupPage({
       shikshaMitraToast[result && result.failed === 0 ? 'success' : 'warning']({
         message: summarizeCredentialSend(result, false),
       });
+      if (!result || result.failed > 0) setLoginOpen(true);
+    } finally {
+      savingRef.current = false;
+      setSaving(null);
+    }
+  };
+
+  const checkCompletion = async () => {
+    if (
+      savingRef.current ||
+      busy ||
+      !canManage ||
+      !enrolled ||
+      !current ||
+      scopeChanged ||
+      editor.readError
+    )
+      return;
+    savingRef.current = true;
+    setSaving('refresh');
+    setFailure(undefined);
+    try {
+      const result = await refreshReadiness({
+        id: student.id,
+        concurrencyStamp: current.concurrencyStamp,
+      }).unwrap();
+      setActivatedCase(result);
+    } catch (error) {
+      setFailure(
+        getOnboardingErrorMessage(error, 'Setup could not be checked. Refresh and try again.')
+      );
     } finally {
       savingRef.current = false;
       setSaving(null);
@@ -358,8 +465,15 @@ export default function StudentQuickSetupPage({
           flexShrink: 0,
         }}
       >
-        <Avatar sx={{ bgcolor: 'action.selected', color: 'text.secondary' }}>
-          {editor.permissionDenied ? '—' : activeStudent.studentName.charAt(0)}
+        <Avatar variant="rounded" sx={{ bgcolor: 'action.selected', color: 'text.secondary' }}>
+          {editor.permissionDenied
+            ? '—'
+            : activeStudent.studentName
+                .trim()
+                .split(/\s+/)
+                .slice(0, 2)
+                .map((name) => name.charAt(0))
+                .join('')}
         </Avatar>
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography
@@ -367,7 +481,7 @@ export default function StudentQuickSetupPage({
             tabIndex={-1}
             id="student-quick-setup-title"
             component="h2"
-            variant="subtitle1"
+            variant="h6"
             sx={{ overflowWrap: 'anywhere' }}
           >
             {editor.permissionDenied ? 'Student Setup' : activeStudent.studentName}
@@ -407,6 +521,17 @@ export default function StudentQuickSetupPage({
               <Label color={onboardingStatus.color}>
                 {getStudentSetupStatusDisplayLabel(activeStudent.status)}
               </Label>
+            )}
+            {enrolled && !cancelled && current?.status !== 4 && canManage && (
+              <LoadingButton
+                size="small"
+                variant="outlined"
+                loading={saving === 'refresh'}
+                disabled={busy || editor.loading || editor.readError || scopeChanged}
+                onClick={checkCompletion}
+              >
+                Check completion
+              </LoadingButton>
             )}
             <Button
               size="small"
@@ -481,7 +606,7 @@ export default function StudentQuickSetupPage({
                     flexDirection: 'column',
                   }}
                 >
-                  <StudentQuickSetupAcademic editor={editor} compact />
+                  <StudentQuickSetupAcademic editor={editor} compact overview />
                 </Box>
                 <Box
                   id="quick-setup-login"
@@ -509,11 +634,47 @@ export default function StudentQuickSetupPage({
                     flexDirection: 'column',
                   }}
                 >
-                  <FormSectionCard
+                  <StudentQuickSetupSection
                     title="App Login"
                     icon="mdi:account-key-outline"
-                    descriptionTooltip="Select who should receive login details when the student is activated."
-                    contentSpacing={1}
+                    help="Select who should receive login details when the student is activated."
+                    expanded={loginOpen}
+                    onExpandedChange={setLoginOpen}
+                    disabled={busy || editor.readError || scopeChanged}
+                    summary={
+                      !loginSummary.currentData && !loginSummary.isError ? (
+                        <Skeleton width={160} />
+                      ) : (
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          alignItems="center"
+                          justifyContent="flex-end"
+                          useFlexGap
+                          flexWrap="wrap"
+                        >
+                          <Typography
+                            variant="body2"
+                            color={
+                              loginSummary.isError
+                                ? 'error.main'
+                                : emailCount
+                                  ? 'success.main'
+                                  : 'text.secondary'
+                            }
+                          >
+                            {loginSummary.isError
+                              ? 'Login details unavailable'
+                              : emailCount
+                                ? `${emailCount} email ${emailCount === 1 ? 'address' : 'addresses'} saved`
+                                : 'No email saved'}
+                          </Typography>
+                          {credentialSelection.selectedCount > 0 && (
+                            <Label>{credentialSelection.selectedCount} selected</Label>
+                          )}
+                        </Stack>
+                      )
+                    }
                   >
                     <StudentOnboardingPortalAccounts
                       ref={portalAccountsRef}
@@ -526,7 +687,7 @@ export default function StudentQuickSetupPage({
                       parentValidationAttempt={parentValidationAttempt}
                       compact
                     />
-                  </FormSectionCard>
+                  </StudentQuickSetupSection>
                 </Box>
               </>
               <Box
@@ -570,24 +731,50 @@ export default function StudentQuickSetupPage({
                   />
                 </StudentQuickSetupFeesSection>
               </Box>
-              <FormSectionCard
+              <StudentQuickSetupSection
+                sectionId="quick-setup-documents"
                 title="Admission & Documents"
                 icon="mdi:file-document-check-outline"
-                descriptionTooltip="View admission approval and the required documents."
-                action={
-                  current ? (
-                    <Label color={current.admissionConfirmed === true ? 'success' : 'warning'}>
-                      {current.admissionConfirmed === true
-                        ? 'Admission approved'
-                        : current.admissionConfirmed === false
-                          ? 'Admission pending'
-                          : 'Admission unavailable'}
-                    </Label>
-                  ) : (
-                    <Skeleton width={120} height={24} aria-label="Loading admission details" />
-                  )
+                help="View admission approval and the required documents."
+                expanded={documentsOpen}
+                onExpandedChange={setDocumentsOpen}
+                disabled={busy || editor.readError || scopeChanged}
+                summary={
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    alignItems="center"
+                    justifyContent="flex-end"
+                    useFlexGap
+                    flexWrap="wrap"
+                  >
+                    {current ? (
+                      <Label color={current.admissionConfirmed === true ? 'success' : 'warning'}>
+                        {current.admissionConfirmed === true
+                          ? 'Admission approved'
+                          : current.admissionConfirmed === false
+                            ? 'Admission pending'
+                            : 'Admission unavailable'}
+                      </Label>
+                    ) : (
+                      <Skeleton width={120} height={24} aria-label="Loading admission details" />
+                    )}
+                    <Typography
+                      variant="body2"
+                      color={documentsNeedAttention ? 'warning.main' : 'text.secondary'}
+                    >
+                      {documentSummary.isError
+                        ? 'Documents unavailable'
+                        : documentsNeedAttention
+                          ? pendingDocuments
+                            ? `${pendingDocuments} ${pendingDocuments === 1 ? 'document' : 'documents'} to review`
+                            : 'Review documents'
+                          : acceptedDocuments !== undefined
+                            ? `${acceptedDocuments} accepted ${acceptedDocuments === 1 ? 'document' : 'documents'}`
+                            : 'Loading documents…'}
+                    </Typography>
+                  </Stack>
                 }
-                contentSpacing={1}
               >
                 <Box
                   component="fieldset"
@@ -602,7 +789,7 @@ export default function StudentQuickSetupPage({
                     presentation="workspace"
                   />
                 </Box>
-              </FormSectionCard>
+              </StudentQuickSetupSection>
             </>
           )}
         </Stack>
@@ -691,8 +878,8 @@ export default function StudentQuickSetupPage({
                   busy ||
                   editor.loading ||
                   editor.readError ||
-                  parentState.caseId !== student.id ||
-                  !parentState.loaded ||
+                  (credentialSelection.parentSelected &&
+                    (parentState.caseId !== student.id || !parentState.loaded)) ||
                   (credentialSelection.selectedCount > 0 && !credentialSelection.canSend) ||
                   scopeChanged ||
                   !current

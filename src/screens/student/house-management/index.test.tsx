@@ -123,6 +123,8 @@ vi.mock('src/redux/student/house-management/house-management-api', () => {
       isFetching: fixture.housesFetching,
       isError: fixture.housesError,
     }),
+    useGetHouseLogoQuery: () => ({ currentData: undefined }),
+    useUploadHouseLogoMutation: mutation,
     useGetHouseDivisionsQuery: () => result,
     useGetHouseStudentsQuery: (input: unknown) => {
       fixture.input(input);

@@ -58,7 +58,7 @@ const match = {
   existingInquiryNumber: 'INQ-A',
   familyId: 'family',
   canLinkFamily: true,
-  parents: [parent],
+  parents: [parent, { ...parent, relationship: 'mother', name: 'Meera' }],
 } as DuplicateMatch;
 type Props = ComponentProps<typeof InquiryFamilyConfirmation>;
 function open(overrides: Partial<Props> = {}) {
@@ -94,11 +94,10 @@ async function choose(label: string, name: RegExp) {
 }
 async function launch() {
   fireEvent.click(screen.getByRole('button', { name: 'Confirm Siblings' }));
-  await screen.findByRole('combobox', { name: /Existing Child/ });
+  await screen.findByText('Review the saved parent details before continuing.');
 }
 async function selectSavedParent() {
-  await choose('Existing Child', /Riya/);
-  await choose('Saved Parent', /Father.*Amit/);
+  await choose('Parent', /Father.*Amit/);
 }
 beforeEach(() => {
   vi.clearAllMocks();
@@ -118,22 +117,20 @@ beforeEach(() => {
   );
 });
 
-it('loads candidates only after explicit open and requires both child and exact saved parent before one confirmation', async () => {
+it('loads candidates only after explicit open and requires the exact saved parent while keeping children read-only', async () => {
   open();
   expect(requests.lookup).not.toHaveBeenCalled();
   await launch();
   expect(requests.lookup).toHaveBeenCalledOnce();
-  expect(screen.getByRole('combobox', { name: /Existing Child/ })).not.toHaveTextContent('Riya');
-  fireEvent.click(screen.getByRole('button', { name: 'Confirm Family' }));
-  await screen.findByText('Select an existing child.');
-  expect(screen.getByRole('combobox', { name: /Existing Child/ })).toHaveFocus();
+  expect(screen.queryByRole('combobox', { name: /Existing Child/ })).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Add as Sibling' })).toBeDisabled();
   expect(requests.confirm).not.toHaveBeenCalled();
   await selectSavedParent();
   expect(screen.getAllByRole('dialog')).toHaveLength(1);
   expect(
     screen.queryByRole('button', { name: /copy|use saved|review parent/i })
   ).not.toBeInTheDocument();
-  fireEvent.click(screen.getByRole('button', { name: 'Confirm Family' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Add as Sibling' }));
   await waitFor(() => expect(requests.saved).toHaveBeenCalledOnce());
   expect(requests.confirm).toHaveBeenCalledWith({
     id: 'target',
@@ -153,13 +150,11 @@ it('requires an explicit Father or Mother for a legacy saved parent and never in
   });
   open();
   await launch();
-  await choose('Existing Child', /Riya/);
-  await choose('Saved Parent', /Parent.*Amit/);
-  fireEvent.click(screen.getByRole('button', { name: 'Confirm Family' }));
-  await screen.findByText('Select Father or Mother.');
+
+  expect(screen.getByRole('button', { name: 'Add as Sibling' })).toBeDisabled();
   expect(requests.confirm).not.toHaveBeenCalled();
-  await choose('Relationship', /^Mother$/);
-  fireEvent.click(screen.getByRole('button', { name: 'Confirm Family' }));
+  await choose('Relationship to Student', /^Mother$/);
+  fireEvent.click(screen.getByRole('button', { name: 'Add as Sibling' }));
   await waitFor(() =>
     expect(requests.confirm).toHaveBeenCalledWith(
       expect.objectContaining({ body: expect.objectContaining({ parentRelationship: 'mother' }) })
@@ -181,7 +176,7 @@ it('treats self-only, invalid and unavailable-parent results as no matches and r
   expect(requests.lookup).toHaveBeenCalledOnce();
   requests.lookup.mockReturnValue({ unwrap: async () => [match] });
   fireEvent.click(screen.getByRole('button', { name: 'Reload Matches' }));
-  await screen.findByRole('combobox', { name: /Existing Child/ });
+  await screen.findByRole('combobox', { name: /^Parent/ });
   expect(requests.lookup).toHaveBeenCalledTimes(2);
 });
 
@@ -198,7 +193,7 @@ it('reports lookup errors without blocking normal entry and keeps the explicit r
   await screen.findByText('Matches are unavailable.');
   fireEvent.click(screen.getByRole('button', { name: 'Reload Matches' }));
   await waitFor(() => expect(requests.lookup).toHaveBeenCalledTimes(2));
-  fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Edit Contact Details' }));
   expect(requests.busy).toHaveBeenLastCalledWith(false);
   expect(screen.getByRole('button', { name: 'Confirm Siblings' })).toBeEnabled();
 });
@@ -214,13 +209,13 @@ it('retains the chosen source and parent on a failed confirmation and reload cle
   open();
   await launch();
   await selectSavedParent();
-  fireEvent.click(screen.getByRole('button', { name: 'Confirm Family' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Add as Sibling' }));
   await screen.findByText('The saved parent changed. Reload matches.');
-  expect(screen.getByRole('combobox', { name: /Saved Parent/ })).toHaveTextContent('Amit');
+  expect(screen.getByRole('combobox', { name: /^Parent/ })).toHaveTextContent('Amit');
   expect(requests.saved).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('button', { name: 'Reload Matches' }));
   await waitFor(() =>
-    expect(screen.getByRole('combobox', { name: /Existing Child/ })).not.toHaveTextContent('Riya')
+    expect(screen.getByRole('combobox', { name: /^Parent/ })).not.toHaveTextContent('Amit')
   );
 });
 
@@ -235,16 +230,16 @@ it('locks every submit/close/control while saving and ignores duplicate confirma
   open();
   await launch();
   await selectSavedParent();
-  fireEvent.click(screen.getByRole('button', { name: 'Confirm Family' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Add as Sibling' }));
   await waitFor(() => expect(requests.confirm).toHaveBeenCalledOnce());
-  expect(screen.getByRole('button', { name: 'Confirm Family' })).toBeDisabled();
-  expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Add as Sibling' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Edit Contact Details' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'close' })).toBeDisabled();
-  expect(screen.getByRole('combobox', { name: /Saved Parent/ })).toHaveAttribute(
+  expect(screen.getByRole('combobox', { name: /^Parent/ })).toHaveAttribute(
     'aria-disabled',
     'true'
   );
-  fireEvent.click(screen.getByRole('button', { name: 'Confirm Family' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Add as Sibling' }));
   expect(requests.confirm).toHaveBeenCalledOnce();
   await act(async () => finish({ ...inquiry, siblingFamilyConfirmed: true }));
   await waitFor(() => expect(requests.saved).toHaveBeenCalledOnce());
@@ -270,7 +265,7 @@ it.each([
   expect(screen.queryByRole('button', { name: 'Confirm Siblings' })).not.toBeInTheDocument();
   expect(requests.lookup).not.toHaveBeenCalled();
 });
-it.each(['Cancel', 'close', 'Escape'])(
+it.each(['Edit Contact Details', 'close', 'Escape'])(
   'uses the shared discard guard for dirty %s without a browser prompt',
   async (action) => {
     open();
@@ -283,9 +278,9 @@ it.each(['Cancel', 'close', 'Escape'])(
     expect(window.confirm).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
     await waitFor(() =>
-      expect(screen.getByRole('combobox', { name: /Saved Parent/ })).toHaveTextContent('Amit')
+      expect(screen.getByRole('combobox', { name: /^Parent/ })).toHaveTextContent('Amit')
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Contact Details' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Discard changes' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(requests.busy).toHaveBeenLastCalledWith(false);
@@ -304,7 +299,7 @@ it('blocks a stale target stamp until an explicit reload rather than sending the
   await launch();
   await selectSavedParent();
   rendered.rerenderProps({ inquiry: { ...inquiry, concurrencyStamp: 'newer' } });
-  expect(screen.getByRole('button', { name: 'Confirm Family' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Add as Sibling' })).toBeDisabled();
   expect(screen.getByText(/This inquiry changed/)).toBeVisible();
   expect(requests.confirm).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('button', { name: 'Reload Matches' }));
@@ -324,7 +319,7 @@ it('recovers a rejected server stamp by explicitly GETting the target before rel
   await launch();
   await selectSavedParent();
   expect(requests.refresh).not.toHaveBeenCalled();
-  fireEvent.click(screen.getByRole('button', { name: 'Confirm Family' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Add as Sibling' }));
   await screen.findByText('This inquiry changed.');
   fireEvent.click(screen.getByRole('button', { name: 'Reload Matches' }));
   await waitFor(() => expect(requests.refresh).toHaveBeenCalledWith('target', false));
@@ -333,15 +328,15 @@ it('recovers a rejected server stamp by explicitly GETting the target before rel
     expect.objectContaining({ concurrencyStamp: 'server-B' })
   );
   expect(requests.saved).not.toHaveBeenCalled();
-  expect(screen.getByRole('combobox', { name: /Existing Child/ })).not.toHaveTextContent('Riya');
+  expect(screen.getByRole('combobox', { name: /^Parent/ })).not.toHaveTextContent('Amit');
   await selectSavedParent();
-  fireEvent.click(screen.getByRole('button', { name: 'Confirm Family' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Add as Sibling' }));
   await waitFor(() => expect(requests.saved).toHaveBeenCalledOnce());
   expect(requests.confirm.mock.calls[1][0].body.concurrencyStamp).toBe('server-B');
 });
 
 it('preserves the selection and blocks another POST when explicit target refresh fails', async () => {
-  open();
+  const review = open();
   await launch();
   await selectSavedParent();
   requests.refresh.mockReturnValue({
@@ -349,31 +344,33 @@ it('preserves the selection and blocks another POST when explicit target refresh
       throw Object.assign(new Error('Forbidden'), { data: { detail: 'Target is unavailable.' } });
     },
   });
+  review.rerenderProps({ inquiry: { ...inquiry, concurrencyStamp: 'newer' } });
   fireEvent.click(screen.getByRole('button', { name: 'Reload Matches' }));
   await screen.findByText('Target is unavailable.');
-  expect(screen.getByRole('combobox', { name: /Saved Parent/ })).toHaveTextContent('Amit');
-  expect(screen.getByRole('button', { name: 'Confirm Family' })).toBeDisabled();
+  expect(screen.getByRole('combobox', { name: /^Parent/ })).toHaveTextContent('Amit');
+  expect(screen.getByRole('button', { name: 'Add as Sibling' })).toBeDisabled();
   expect(requests.confirm).not.toHaveBeenCalled();
   expect(requests.refreshed).not.toHaveBeenCalled();
 });
 
 it('does not reload sources or confirm when the refreshed target has already started an application', async () => {
-  open();
+  const review = open();
   await launch();
   await selectSavedParent();
   requests.refresh.mockReturnValue({
     unwrap: async () => ({ ...inquiry, concurrencyStamp: 'server-B', applicationId: 'app' }),
   });
+  review.rerenderProps({ inquiry: { ...inquiry, concurrencyStamp: 'newer' } });
   fireEvent.click(screen.getByRole('button', { name: 'Reload Matches' }));
   await waitFor(() => expect(requests.refresh).toHaveBeenCalledOnce());
   await screen.findByText('Only an editable pending inquiry can be confirmed as a sibling.');
-  expect(screen.getByRole('button', { name: 'Confirm Family' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Add as Sibling' })).toBeDisabled();
   expect(requests.lookup).toHaveBeenCalledOnce();
   expect(requests.confirm).not.toHaveBeenCalled();
 });
 
 it('retains selected source details but blocks confirmation when the source reload fails after a fresh target read', async () => {
-  open();
+  const review = open();
   await launch();
   await selectSavedParent();
   requests.lookup.mockReturnValue({
@@ -383,10 +380,11 @@ it('retains selected source details but blocks confirmation when the source relo
       });
     },
   });
+  review.rerenderProps({ inquiry: { ...inquiry, concurrencyStamp: 'newer' } });
   fireEvent.click(screen.getByRole('button', { name: 'Reload Matches' }));
   await screen.findByText('Family source is unavailable.');
-  expect(screen.getByRole('combobox', { name: /Saved Parent/ })).toHaveTextContent('Amit');
-  expect(screen.getByRole('button', { name: 'Confirm Family' })).toBeDisabled();
+  expect(screen.getByRole('combobox', { name: /^Parent/ })).toHaveTextContent('Amit');
+  expect(screen.getByRole('button', { name: 'Add as Sibling' })).toBeDisabled();
   expect(requests.saved).not.toHaveBeenCalled();
 });
 
@@ -401,14 +399,15 @@ it('does not apply refreshed data to a parent draft that became dirty while the 
         finish = resolve;
       }),
   });
+  rendered.rerenderProps({ inquiry: { ...inquiry, concurrencyStamp: 'newer' } });
   fireEvent.click(screen.getByRole('button', { name: 'Reload Matches' }));
   rendered.rerenderProps({ dirty: true });
   await act(async () => finish({ ...inquiry, concurrencyStamp: 'server-B' }));
   await waitFor(() =>
-    expect(screen.getByRole('combobox', { name: /Saved Parent/ })).toHaveTextContent('Amit')
+    expect(screen.getByRole('combobox', { name: /^Parent/ })).toHaveTextContent('Amit')
   );
   expect(requests.refreshed).not.toHaveBeenCalled();
   expect(requests.lookup).toHaveBeenCalledOnce();
   expect(requests.confirm).not.toHaveBeenCalled();
-  expect(screen.getByRole('button', { name: 'Confirm Family' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Add as Sibling' })).toBeDisabled();
 });
