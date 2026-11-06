@@ -29,6 +29,8 @@ import AdjustmentApproveRejectForm from './components/AdjustmentApproveRejectFor
 export default function Adjustments() {
   const access = useFinancePermissions(financePermissions.fees.adjustment);
   const academicFilters = useFinanceAcademicFilters();
+  const canCreateAdjustment =
+    access.canAdd && academicFilters.requestCapabilities?.adjustment.add === true;
   const user = useSelector((state: RootState) => state.auth.user);
   const [mode, setMode] = useState<'list' | 'create' | 'apply'>('list');
   const [selected, setSelected] = useState<AdjustmentRequest | null>(null);
@@ -39,8 +41,13 @@ export default function Adjustments() {
   const completed = useRef(false);
   const { createAdjustment, rejectAdjustment, isCreating, isRejecting } = useAdjustment();
   const busy = workflowBusy || isCreating;
-  const canReview = (row: AdjustmentRequest) =>
-    Boolean(access.canAdd && user?.sub && row.requestedByUserId !== user.sub);
+  const canReview = (row: AdjustmentRequest, action: 'Approve' | 'Reject') =>
+    Boolean(
+      (action === 'Approve' ? access.canApprove : access.canReject) &&
+      user?.sub &&
+      row.requestedByUserId !== user.sub &&
+      row.availableActions?.includes(action)
+    );
   const { handleClose, confirmation } = useFinanceFormClose(
     mode !== 'list',
     () => {
@@ -64,7 +71,7 @@ export default function Adjustments() {
   };
   const apply = (row: AdjustmentRequest, fromDetails: boolean) => {
     if (
-      !canReview(row) ||
+      !canReview(row, 'Approve') ||
       ![AdjustmentStatusEnum.Pending, AdjustmentStatusEnum.PartiallyApplied].includes(row.status)
     )
       return;
@@ -74,17 +81,18 @@ export default function Adjustments() {
     setMode('apply');
   };
   const reject = (row: AdjustmentRequest) => {
-    if (!canReview(row) || row.status !== AdjustmentStatusEnum.Pending) return;
+    if (!canReview(row, 'Reject') || row.status !== AdjustmentStatusEnum.Pending) return;
     setSelected(row);
     setRejectOpen(true);
   };
   const submit = async (values: IAdjustmentFullFormValues) => {
-    if (!access.canAdd) throw new Error('You do not have permission to create adjustments.');
+    if (!canCreateAdjustment) throw new Error('Adjustment initiation is unavailable.');
     const result = await createAdjustment(values);
     shikshaMitraToast.success({
-      message: result?.appliedAmount > 0
-        ? 'Adjustment approved and applied successfully.'
-        : 'Adjustment request submitted successfully.',
+      message:
+        result?.appliedAmount > 0
+          ? 'Adjustment approved and applied successfully.'
+          : 'Adjustment request submitted successfully.',
     });
   };
   const submitRejection = async (_event: unknown, submitted = false, notes?: string) => {
@@ -92,7 +100,11 @@ export default function Adjustments() {
       closeRejection();
       return;
     }
-    if (!selected || !canReview(selected) || selected.status !== AdjustmentStatusEnum.Pending)
+    if (
+      !selected ||
+      !canReview(selected, 'Reject') ||
+      selected.status !== AdjustmentStatusEnum.Pending
+    )
       return;
     try {
       await rejectAdjustment(selected.id, user?.name || user?.userName || 'User', notes ?? '');
@@ -137,7 +149,7 @@ export default function Adjustments() {
         backDisabled={busy}
         onBack={() => handleClose()}
         action={
-          mode === 'list' && access.canAdd ? (
+          mode === 'list' && canCreateAdjustment ? (
             <Button
               size="small"
               variant="contained"
@@ -157,7 +169,7 @@ export default function Adjustments() {
           <AdjustmentTable
             academicFilters={academicFilters}
             onCreateAdjustment={() => {
-              if (access.canAdd) setMode('create');
+              if (canCreateAdjustment) setMode('create');
             }}
             onView={(row) => {
               if (access.canView) {
@@ -170,7 +182,7 @@ export default function Adjustments() {
           />
         </Suspense>
       )}
-      {mode === 'create' && access.canAdd && (
+      {mode === 'create' && canCreateAdjustment && (
         <Card
           sx={{
             flex: 1,
@@ -181,6 +193,7 @@ export default function Adjustments() {
           }}
         >
           <AdjustmentForm
+            scopeOptions={academicFilters.scopeOptions}
             onCancel={handleClose}
             onSubmit={submit}
             onBusyChange={setWorkflowBusy}
@@ -210,11 +223,11 @@ export default function Adjustments() {
           onClose={closeDetails}
           onApprove={() => apply(selected, true)}
           onReject={() => reject(selected)}
-          showApprove={canReview(selected)}
-          showReject={canReview(selected)}
+          showApprove={canReview(selected, 'Approve')}
+          showReject={canReview(selected, 'Reject')}
         />
       )}
-      {mode === 'apply' && selected && canReview(selected) && (
+      {mode === 'apply' && selected && canReview(selected, 'Approve') && (
         <ApplyAdjustmentScreen
           key={selected.id}
           approvedBy={user?.name || user?.userName || 'User'}

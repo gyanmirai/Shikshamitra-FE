@@ -253,6 +253,7 @@ const FeeRefund = () => {
       {addRefundRequest.value && (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <FeeRefundFormComponent
+            scopeOptions={academicFilters.scopeOptions}
             onCancel={handleClose}
             onBusyChange={setRefundFormBusy}
             defaultBoardId={academicFilters.selectedBoard}
@@ -408,7 +409,6 @@ const FeeRefund = () => {
             }
             academicYearId={currentYear?.id}
             defaultExpenseCategoryId={selectedFeeRefund?._defaultExpenseCategoryId}
-            defaultBankAccountId={selectedFeeRefund?._defaultPayingBankAccountId}
             loading={isApproving || isRejecting || isCancelling}
           />
         )}

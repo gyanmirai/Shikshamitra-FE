@@ -88,6 +88,7 @@ export interface IConcessionFormValues {
 }
 
 export interface IConcessionFormProps {
+  scopeOptions?: import('src/redux/finance/financeWorkContextApi').FinanceScopeOption[] | null;
   open: boolean;
   onClose: (data?: any, refresh?: boolean) => void;
   onBusyChange?: (busy: boolean) => void;

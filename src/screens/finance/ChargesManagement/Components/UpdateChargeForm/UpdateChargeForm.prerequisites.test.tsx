@@ -8,7 +8,7 @@ const state = vi.hoisted(() => ({
   trigger: vi.fn(),
   categories: { currentData: { items: [] }, refetch: vi.fn() },
   students: { students: [], candidateStudentIds: [], hasFetched: false },
-  structure: { classes: [], allDivisions: [] },
+  structure: { classes: [], divisions: [], isFetching: false, isError: false, refetch: vi.fn() },
 }));
 vi.mock('react-redux', () => ({
   useSelector: () => ({ currentYear: state.year }),

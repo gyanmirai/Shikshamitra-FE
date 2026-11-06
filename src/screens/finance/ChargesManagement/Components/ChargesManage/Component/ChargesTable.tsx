@@ -480,7 +480,7 @@ const ChargesTable = ({
                       ? [
                         {
                           id: 'delete',
-                          label: `Delete ${name}`,
+                          label: 'Delete charge',
                           icon: GlobalIcons.delete,
                           color: 'error.main',
                           onClick: () => onRemove(row as IChargeData),

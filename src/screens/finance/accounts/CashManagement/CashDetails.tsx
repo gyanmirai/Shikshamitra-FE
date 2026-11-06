@@ -284,15 +284,6 @@ export default function CashDetails({
         sx={{ px: { xs: 2, sm: 3 }, py: 1.75, borderTop: 1, borderColor: 'divider' }}
       >
         <Button
-          size="small"
-          variant="outlined"
-          disabled={Boolean(deposit) || query.isFetching}
-          startIcon={<Iconify icon={GlobalIcons.refresh} width={18} />}
-          onClick={() => query.refetch()}
-        >
-          Refresh details
-        </Button>
-        <Button
           ref={closeButton}
           variant="outlined"
           size="small"

@@ -176,34 +176,36 @@ export default function FeeStructureAssignTable({
         </Stack>
       </Paper>
       {selectedEligible.length > 0 && canAssign && standardId && (
-        <Stack
-          direction="row"
-          spacing={1.5}
-          alignItems="center"
-          useFlexGap
-          flexWrap="wrap"
-          sx={{ px: 1 }}
-        >
-          <Typography variant="body2">
-            {selectedEligible.length} student{selectedEligible.length === 1 ? '' : 's'} selected
-          </Typography>
-          <Button
-            size="small"
-            startIcon={
-              <Iconify
-                icon={bulkEditing ? GlobalIcons.edit : 'mdi:account-multiple-plus-outline'}
-              />
-            }
-            variant="contained"
-            disabled={query.isFetching}
-            onClick={() => onBulkAssign?.(selectedEligible, standardId ?? '')}
+        <Paper variant="outlined" sx={{ p: 1, borderRadius: 2, flexShrink: 0 }}>
+          <Stack
+            direction="row"
+            spacing={1}
+            alignItems="center"
+            justifyContent="flex-end"
+            useFlexGap
+            flexWrap="wrap"
           >
-            {bulkEditing ? 'Edit fee structures' : 'Assign structure'}
-          </Button>
-          <Button size="small" onClick={() => setSelected([])}>
-            Clear selection
-          </Button>
-        </Stack>
+            <Typography variant="body2" color="text.secondary" aria-live="polite">
+              {selectedEligible.length} student{selectedEligible.length === 1 ? '' : 's'} selected
+            </Typography>
+            <Button
+              size="small"
+              startIcon={
+                <Iconify
+                  icon={bulkEditing ? GlobalIcons.edit : 'mdi:account-multiple-plus-outline'}
+                />
+              }
+              variant="contained"
+              disabled={query.isFetching}
+              onClick={() => onBulkAssign?.(selectedEligible, standardId ?? '')}
+            >
+              {bulkEditing ? 'Edit fee structures' : 'Assign structure'}
+            </Button>
+            <Button size="small" onClick={() => setSelected([])}>
+              Clear selection
+            </Button>
+          </Stack>
+        </Paper>
       )}
       <CustomizableTable
         tableId="fee-structure-assignment"

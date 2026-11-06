@@ -184,7 +184,7 @@ describe('refund edit loading', () => {
     mocks.submit.mockReturnValue({ unwrap: async () => ({ status: 0 }) });
   });
 
-  it('requires an explicit cash bank and expense category before administrator submission when defaults are missing', async () => {
+  it('requires only an expense category before administrator cash submission', async () => {
     mocks.detail = { isLoading: false, isFetching: false };
     mocks.session = { profile: { role: ['admin'] } };
     mocks.permissions = [
@@ -207,8 +207,7 @@ describe('refund edit loading', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled());
     fireEvent.mouseDown(screen.getByRole('combobox', { name: /Expense category/ }));
     fireEvent.click(await screen.findByRole('option', { name: 'Refund expense' }));
-    fireEvent.mouseDown(screen.getByRole('combobox', { name: /Source school bank account/ }));
-    fireEvent.click(await screen.findByRole('option', { name: 'School account' }));
+    expect(screen.queryByRole('combobox', { name: /Source school bank account/ })).toBeNull();
     await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled());
     fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Submit and pay cash' }));
@@ -216,10 +215,10 @@ describe('refund edit loading', () => {
       expect(mocks.mutation).toHaveBeenCalledWith(
         expect.objectContaining({
           expenseCategoryId: 'expense',
-          bankAccountId: 'bank',
         })
       )
     );
+    expect(mocks.mutation.mock.calls[0][0]).not.toHaveProperty('bankAccountId');
   });
 
   it('submits ordinary maker cash requests without processing permission or a routing lookup', async () => {

@@ -1,26 +1,32 @@
-import React from 'react';
-import { createRoot } from 'react-dom/client';
-import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
-import { ThemeProvider, useColorScheme } from '@mui/material/styles';
-import { Box, Stack, Button, Typography, CssBaseline } from '@mui/material';
-import { createTheme } from 'src/theme/create-theme';
-import { defaultSettings } from 'src/components/settings/config-settings';
-import { financePermissions } from 'src/constants/finance-menu';
-import confirmPopup from 'src/redux/confirmPopup/confirmPopupSlice';
-import Adjustments from 'src/screens/finance/adjustments';
-import { failNextRead, failNextSave, setActor } from './mock-api';
-import 'simplebar-react/dist/simplebar.min.css';
 import '@fontsource/public-sans/400.css';
 import '@fontsource/public-sans/600.css';
 import '@fontsource/public-sans/700.css';
+import 'simplebar-react/dist/simplebar.min.css';
+
+import React from 'react';
+import { Provider } from 'react-redux';
+import { createRoot } from 'react-dom/client';
+import { configureStore } from '@reduxjs/toolkit';
+import { createTheme } from 'src/theme/create-theme';
+import Adjustments from 'src/screens/finance/adjustments';
+import { financePermissions } from 'src/constants/finance-menu';
+import confirmPopup from 'src/redux/confirmPopup/confirmPopupSlice';
+import { ThemeProvider, useColorScheme } from '@mui/material/styles';
+import { defaultSettings } from 'src/components/settings/config-settings';
+import { Box, Stack, Button, Typography, CssBaseline } from '@mui/material';
+
+import { setActor, failNextRead, failNextSave } from './mock-api';
 
 function authState(actor: string) {
   return {
     user: { sub: actor, name: actor === 'maker' ? 'Creator' : 'Reviewer' },
     permissionsInitialized: true,
     loading: false,
-    permissions: ['View', ...(actor === 'viewer' ? [] : ['Add', 'Delete'])].map((action) => ({
+    permissions: [
+      'View',
+      ...(actor === 'maker' ? ['Add'] : []),
+      ...(actor === 'checker' ? ['Approve', 'Reject'] : []),
+    ].map((action) => ({
       name: `${financePermissions.fees.adjustment}.${action}`,
       isGranted: true,
     })),
@@ -29,7 +35,10 @@ function authState(actor: string) {
 const store = configureStore({
   reducer: {
     confirmPopup,
-    auth: (state = authState('checker'), action) =>
+    auth: (
+      state = authState('checker'),
+      action: { type: string; payload?: unknown } = { type: '' }
+    ) =>
       action.type === 'fixture/actor' && typeof action.payload === 'string'
         ? authState(action.payload)
         : state,

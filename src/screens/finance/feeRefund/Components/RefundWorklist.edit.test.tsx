@@ -1,11 +1,21 @@
 import { it, vi, expect, describe, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { financePermissions } from 'src/constants/finance-menu';
 
 import RefundWorklist from './RefundWorklist';
 
-const mocks = vi.hoisted(() => ({ actions: ['edit'], edit: vi.fn(), view: vi.fn() }));
+const mocks = vi.hoisted(() => ({ actions: ['edit'], grants: true, edit: vi.fn(), view: vi.fn() }));
 vi.mock('react-redux', () => ({
-  useSelector: (select: any) => select({ globalState: { currentYear: { id: 'year' } } }),
+  useSelector: (select: any) =>
+    select({
+      globalState: { currentYear: { id: 'year' } },
+      auth: {
+        permissions: Object.values(financePermissions.fees.refundActions).map((name) => ({
+          name,
+          isGranted: mocks.grants,
+        })),
+      },
+    }),
 }));
 vi.mock('src/components/label', () => ({ Label: ({ children }: any) => <span>{children}</span> }));
 vi.mock('src/screens/finance/components/FinanceAcademicContextFilter', () => ({
@@ -97,6 +107,7 @@ describe('refund worklist editing', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.actions = ['edit'];
+    mocks.grants = true;
   });
 
   it('opens the selected saved refund through the server-authorized Edit action', () => {
@@ -120,6 +131,14 @@ describe('refund worklist editing', () => {
     ).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Open refund' }));
     expect(mocks.view).toHaveBeenCalledOnce();
+  });
+
+  it('does not offer Edit without the exact grant even when the server action is present', () => {
+    mocks.grants = false;
+    render(<Worklist />);
+    expect(
+      screen.queryByRole('button', { name: 'Edit for Synthetic student' })
+    ).not.toBeInTheDocument();
   });
 
   it.each(['Completed', 'Rejected', 'Failed'])('keeps the Actions column absent from %s', (tab) => {

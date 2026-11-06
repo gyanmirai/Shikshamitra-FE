@@ -38,6 +38,7 @@ function Fixture() {
   const { setMode } = useColorScheme();
   const [showRequests, setShowRequests] = React.useState(false);
   const filters: UseFinanceAcademicFiltersResult = {
+    scopeOptions: [], requestCapabilities: null, scopeLabel: '', contextLoading: false, contextError: false,
     boards: boards as any, mediums: boards[0].educationMediums as any,
     classes: [{ id: 'class-3', name: 'Class 3' }], divisions: [{ id: 'division-a', name: 'A' }],
     selectedBoard: 'gseb', selectedMedium: 'english', selectedStandardId: 'class-3', selectedDivisionId: 'All Divisions',

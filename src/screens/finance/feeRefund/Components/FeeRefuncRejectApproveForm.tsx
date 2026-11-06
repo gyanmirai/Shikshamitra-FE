@@ -19,7 +19,6 @@ interface IFeeRefundApprovalFormProps {
   cashRefund?: boolean;
   academicYearId?: string;
   defaultExpenseCategoryId?: string | null;
-  defaultBankAccountId?: string | null;
 }
 
 const FeeRefundReasonApprovalForm = ({
@@ -29,7 +28,6 @@ const FeeRefundReasonApprovalForm = ({
   cashRefund,
   academicYearId = '',
   defaultExpenseCategoryId,
-  defaultBankAccountId,
 }: IFeeRefundApprovalFormProps) => {
   const [cashRouting, setCashRouting] = React.useState<CashRefundRoutingValues | null>(null);
   const formik = useFormik({
@@ -68,7 +66,6 @@ const FeeRefundReasonApprovalForm = ({
               <CashRefundRouting
                 academicYearId={academicYearId}
                 defaultExpenseCategoryId={defaultExpenseCategoryId}
-                defaultBankAccountId={defaultBankAccountId}
                 busy={loading}
                 onChange={setCashRouting}
               />

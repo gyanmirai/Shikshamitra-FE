@@ -1,4 +1,5 @@
 import type { RootState } from 'src/redux/store';
+import { useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { financePermissions } from 'src/constants/finance-menu';
 import {
@@ -15,16 +16,24 @@ export function useAdjustment() {
   const currentYear = useSelector((state: RootState) => state.globalState.currentYear);
   const [createFeeAdjustment, createState] = useCreateFeeAdjustmentMutation();
   const [rejectFeeAdjustment, rejectState] = useRejectFeeAdjustmentMutation();
+  const createAttempt = useRef<{ fingerprint: string; key: string } | null>(null);
   const createAdjustment = async (values: IAdjustmentFullFormValues) => {
     if (!access.canAdd) throw new Error('You do not have permission to create adjustments.');
     if (!currentYear?.id) throw new Error('Academic year is required.');
-    return await createFeeAdjustment({
+    const draft = buildAdjustmentApiPayload(values);
+    const fingerprint = JSON.stringify({ academicYearId: currentYear.id, draft });
+    const key =
+      createAttempt.current?.fingerprint === fingerprint
+        ? createAttempt.current.key
+        : crypto.randomUUID();
+    createAttempt.current = { fingerprint, key };
+    return createFeeAdjustment({
       academicYearId: currentYear.id,
-      body: buildAdjustmentApiPayload(values),
+      body: { ...draft, idempotencyKey: key },
     }).unwrap();
   };
   const rejectAdjustment = async (id: string, _rejectedBy: string, rejectionReason: string) => {
-    if (!access.canAdd) throw new Error('You do not have permission to reject adjustments.');
+    if (!access.canReject) throw new Error('You do not have permission to reject adjustments.');
     await rejectFeeAdjustment({ id, body: { message: rejectionReason } }).unwrap();
   };
   return {

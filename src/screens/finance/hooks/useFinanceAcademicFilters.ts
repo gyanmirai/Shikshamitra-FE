@@ -5,6 +5,11 @@ import { useSelector } from 'react-redux';
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetClassByMediumQuery } from 'src/redux/class/classApi';
+import { useGetFinanceWorkContextQuery } from 'src/redux/finance/financeWorkContextApi';
+import type {
+  FinanceScopeOption,
+  FinanceWorkContext,
+} from 'src/redux/finance/financeWorkContextApi';
 
 export const ALL_CLASS_OPTION = { id: 'All Classes', name: 'All Classes' };
 export const ALL_DIVISION_OPTION = { id: 'All Divisions', name: 'All Divisions' };
@@ -18,6 +23,11 @@ export interface FinanceAcademicFilterPayload {
 }
 
 export interface UseFinanceAcademicFiltersResult {
+  scopeOptions: FinanceScopeOption[];
+  requestCapabilities: FinanceWorkContext['requestCapabilities'] | null;
+  scopeLabel: string;
+  contextLoading: boolean;
+  contextError: boolean;
   boards: Board[];
   mediums: Medium[];
   classes: any[];
@@ -40,6 +50,15 @@ export interface UseFinanceAcademicFiltersResult {
 
 export function useFinanceAcademicFilters(): UseFinanceAcademicFiltersResult {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const {
+    currentData: workContext,
+    isLoading: contextLoading,
+    isError: contextError,
+  } = useGetFinanceWorkContextQuery(
+    { academicYearId: currentYear?.id ?? '' },
+    { skip: !currentYear?.id }
+  );
+  const currentWorkContext = workContext?.academicYearId === currentYear?.id ? workContext : null;
 
   const [selectedBoard, setSelectedBoardState] = useState('');
   const [selectedMedium, setSelectedMediumState] = useState('');
@@ -153,6 +172,11 @@ export function useFinanceAcademicFilters(): UseFinanceAcademicFiltersResult {
   }, [isReady, currentYear, selectedBoard, selectedMedium, selectedStandardId, selectedDivisionId]);
 
   return {
+    scopeOptions: currentWorkContext?.scopeOptions ?? [],
+    requestCapabilities: currentWorkContext?.requestCapabilities ?? null,
+    scopeLabel: currentWorkContext?.scopeLabel ?? '',
+    contextLoading,
+    contextError,
     boards,
     mediums,
     classes: classes ?? [],

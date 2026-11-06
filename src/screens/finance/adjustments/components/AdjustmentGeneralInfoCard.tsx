@@ -12,9 +12,10 @@ import { useLazyGetStudentsByDivisionQuery } from 'src/redux/student';
 import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
 import type { IAdjustmentFullFormValues } from '../types/adjustmentFormValues';
 
-const AdjustmentGeneralInfoCard: React.FC<{ formik: FormikProps<IAdjustmentFullFormValues> }> = ({
-  formik,
-}) => {
+const AdjustmentGeneralInfoCard: React.FC<{
+  formik: FormikProps<IAdjustmentFullFormValues>;
+  scopeOptions?: import('src/redux/finance/financeWorkContextApi').FinanceScopeOption[] | null;
+}> = ({ formik, scopeOptions = null }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const { values, touched, errors, setFieldValue } = formik;
 
@@ -29,6 +30,20 @@ const AdjustmentGeneralInfoCard: React.FC<{ formik: FormikProps<IAdjustmentFullF
     type: 'mutation',
     currentQueryAndMutation: useLazyGetClassByMediumQuery,
   });
+  const scopedClasses = useMemo(
+    () =>
+      (classes ?? []).filter(
+        (cls: any) =>
+          !scopeOptions ||
+          scopeOptions.some(
+            (option) =>
+              option.boardId === values.boardId &&
+              option.mediumId === values.mediumId &&
+              option.standardId === cls.id
+          )
+      ),
+    [classes, scopeOptions, values.boardId, values.mediumId]
+  );
 
   const [
     getStudents,
@@ -48,34 +63,72 @@ const AdjustmentGeneralInfoCard: React.FC<{ formik: FormikProps<IAdjustmentFullF
   );
 
   useEffect(() => {
-    const yearBoards = currentYear?.boards || [];
+    const yearBoards = (currentYear?.boards || []).filter(
+      (board: any) => !scopeOptions || scopeOptions.some((option) => option.boardId === board.id)
+    );
     setBoards(yearBoards);
     if (yearBoards.length > 0) {
-      if (!values.boardId) {
+      if (!values.boardId || !yearBoards.some((board: any) => board.id === values.boardId)) {
         const firstBoard = yearBoards[0];
         setFieldValue('boardId', firstBoard.id);
-        const firstMedium = firstBoard?.educationMediums?.[0]?.id ?? '';
+        const firstMedium =
+          firstBoard?.educationMediums?.find(
+            (medium: any) =>
+              !scopeOptions ||
+              scopeOptions.some(
+                (option) => option.boardId === firstBoard.id && option.mediumId === medium.id
+              )
+          )?.id ?? '';
         setFieldValue('mediumId', firstMedium);
-      } else if (!values.mediumId) {
+      } else if (
+        !values.mediumId ||
+        (scopeOptions &&
+          !scopeOptions.some(
+            (option) => option.boardId === values.boardId && option.mediumId === values.mediumId
+          ))
+      ) {
         const board = yearBoards.find((b: any) => b.id === values.boardId);
-        const firstMedium = board?.educationMediums?.[0]?.id ?? '';
+        const firstMedium =
+          board?.educationMediums?.find(
+            (medium: any) =>
+              !scopeOptions ||
+              scopeOptions.some(
+                (option) => option.boardId === board.id && option.mediumId === medium.id
+              )
+          )?.id ?? '';
         setFieldValue('mediumId', firstMedium);
       }
     }
-  }, [currentYear, values.boardId, values.mediumId, setFieldValue]);
+  }, [currentYear, scopeOptions, values.boardId, values.mediumId, setFieldValue]);
 
   useEffect(() => {
     const board = boards.find((b: any) => b.id === values.boardId);
-    setMediums(board?.educationMediums || []);
-  }, [values.boardId, boards]);
+    setMediums(
+      (board?.educationMediums || []).filter(
+        (medium: any) =>
+          !scopeOptions ||
+          scopeOptions.some(
+            (option) => option.boardId === values.boardId && option.mediumId === medium.id
+          )
+      )
+    );
+  }, [values.boardId, boards, scopeOptions]);
 
   useEffect(() => {
     if (values.mediumId) getClassByMedium(values.mediumId);
   }, [values.mediumId, getClassByMedium]);
 
   useEffect(() => {
-    setAllDivisions(classes?.find((cls: any) => cls.id === values.standardId)?.divisions || []);
-  }, [values.standardId, classes]);
+    setAllDivisions(
+      (scopedClasses.find((cls: any) => cls.id === values.standardId)?.divisions || []).filter(
+        (division: any) =>
+          !scopeOptions ||
+          scopeOptions.some(
+            (option) => option.standardId === values.standardId && option.divisionId === division.id
+          )
+      )
+    );
+  }, [values.standardId, scopedClasses, scopeOptions]);
 
   useEffect(() => {
     if (values.divisionId) getStudents(values.divisionId);
@@ -145,7 +198,7 @@ const AdjustmentGeneralInfoCard: React.FC<{ formik: FormikProps<IAdjustmentFullF
             label="Class"
             name="standardId"
             disabled={!values.mediumId || classLoading || classFetching}
-            options={classes || []}
+            options={scopedClasses}
             isLoading={classLoading || classFetching}
             labelKey="name"
             valueKey="id"

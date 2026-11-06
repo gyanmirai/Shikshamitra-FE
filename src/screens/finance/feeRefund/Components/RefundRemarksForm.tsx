@@ -4,6 +4,10 @@ import type { LabelColor } from 'src/components/label';
 import type { FeeRefundRequestDto } from 'src/redux/finance/RefundManagement/feeRefundManage';
 
 import React from 'react';
+import { useSelector } from 'react-redux';
+import type { RootState } from 'src/redux/store';
+import { hasGrantedPermission } from 'src/utils/permissions';
+import { financePermissions } from 'src/constants/finance-menu';
 import { Label } from 'src/components/label';
 import { alpha } from '@mui/material/styles';
 import { GlobalIcons } from 'src/utils/icons';
@@ -98,6 +102,12 @@ const RefundRemarksForm: React.FC<IRefundFormProps> = ({
   onApprove,
 }) => {
   const refundId = student._refundRequestId;
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const canApprove = hasGrantedPermission(
+    permissions,
+    financePermissions.fees.refundActions.approve
+  );
+  const canReject = hasGrantedPermission(permissions, financePermissions.fees.refundActions.reject);
   const receiptPreview = useBoolean();
 
   const {
@@ -170,10 +180,10 @@ const RefundRemarksForm: React.FC<IRefundFormProps> = ({
   const availableActions = dto?.availableActions ?? student._availableActions ?? [];
   const canViewReceipt = Boolean(
     dto &&
-      (status === FeeRefundStatusType.Processed
-        ? dto.processedAmount > 0
-        : status === FeeRefundStatusType.Processing &&
-          dto.settlements?.some((settlement) => settlement.status === 0))
+    (status === FeeRefundStatusType.Processed
+      ? dto.processedAmount > 0
+      : status === FeeRefundStatusType.Processing &&
+        dto.settlements?.some((settlement) => settlement.status === 0))
   );
 
   return (
@@ -425,18 +435,18 @@ const RefundRemarksForm: React.FC<IRefundFormProps> = ({
         }}
       >
         {refundId && canViewReceipt && (
-            <Button
-              variant="contained"
-              size="small"
-              disabled={loading || isError}
-              onClick={receiptPreview.onTrue}
-              startIcon={<Iconify icon={GlobalIcons.receiptIcon} />}
-            >
-              {status === FeeRefundStatusType.Processing
-                ? 'View provisional refund receipt'
-                : 'View refund receipt'}
-            </Button>
-          )}
+          <Button
+            variant="contained"
+            size="small"
+            disabled={loading || isError}
+            onClick={receiptPreview.onTrue}
+            startIcon={<Iconify icon={GlobalIcons.receiptIcon} />}
+          >
+            {status === FeeRefundStatusType.Processing
+              ? 'View provisional refund receipt'
+              : 'View refund receipt'}
+          </Button>
+        )}
         <Button
           variant="outlined"
           color="inherit"
@@ -446,7 +456,8 @@ const RefundRemarksForm: React.FC<IRefundFormProps> = ({
         >
           Close
         </Button>
-        {availableActions.includes('reject') &&
+        {canReject &&
+          availableActions.includes('reject') &&
           (status === FeeRefundStatusType.Pending ||
             status === FeeRefundStatusType.UnderReview) && (
             <Button
@@ -460,7 +471,7 @@ const RefundRemarksForm: React.FC<IRefundFormProps> = ({
               Reject
             </Button>
           )}
-        {availableActions.includes('approve') && (
+        {canApprove && availableActions.includes('approve') && (
           <Button
             variant="soft"
             color="success"
@@ -473,11 +484,7 @@ const RefundRemarksForm: React.FC<IRefundFormProps> = ({
           </Button>
         )}
       </DialogActions>
-      {receiptPreview.value &&
-        open.value &&
-        refundId &&
-        !isError &&
-        canViewReceipt && (
+      {receiptPreview.value && open.value && refundId && !isError && canViewReceipt && (
         <React.Suspense fallback={null}>
           <RefundReceiptDialog
             refundId={refundId}

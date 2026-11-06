@@ -577,9 +577,32 @@ describe('Collect Fees presentation and shared ledger', () => {
     fireEvent.click(screen.getByRole('checkbox', { name: 'Select Class 3 Tuition Fee' }));
     fireEvent.click(screen.getByRole('checkbox', { name: 'Select Additional Charges' }));
     await expectSelection(5, 2400);
+    expect(screen.getByRole('region', { name: 'Fee payments' })).toBeVisible();
+    expect(screen.getByRole('region', { name: 'Charges' })).toBeVisible();
+    const paymentsAccordion = screen.getByRole('button', { name: /^Payments \(/ });
+    const chargesAccordion = screen.getByRole('button', { name: /^Charges \(/ });
+    expect(paymentsAccordion).toHaveAttribute('aria-expanded', 'true');
+    expect(chargesAccordion).toHaveAttribute('aria-expanded', 'true');
+    fireEvent.click(chargesAccordion);
+    expect(chargesAccordion).toHaveAttribute('aria-expanded', 'false');
+    expect(paymentsAccordion).toHaveAttribute('aria-expanded', 'true');
     fireEvent.click(screen.getByRole('button', { name: 'Clear All' }));
     expect(screen.getByLabelText(/Amount to collect/)).toHaveValue('');
     expect(screen.getByRole('button', { name: 'Clear All' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Collect Payment' })).toBeDisabled();
+  }, 30_000);
+
+  it('synchronizes an individual installment checkbox with the amount to collect', async () => {
+    mocks.data = buildForm(false);
+    mocks.data.charges = [];
+    render(<FeeCollectComponentForm student={student} />);
+
+    const installment = rowCheckbox('June 2026');
+    fireEvent.click(installment);
+    await expectSelection(1, 2000);
+
+    fireEvent.click(installment);
+    await waitFor(() => expect(screen.getByLabelText(/Amount to collect/)).toHaveValue(''));
     expect(screen.getByRole('button', { name: 'Collect Payment' })).toBeDisabled();
   }, 30_000);
 });

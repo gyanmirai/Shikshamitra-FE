@@ -2,10 +2,12 @@ import type { RootState } from 'src/redux/store';
 
 import { useSelector } from 'react-redux';
 import { useState, useEffect } from 'react';
-import { Box, Button } from '@mui/material';
+import { Box, Button, IconButton } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { GlobalIcons } from 'src/utils/icons';
 
 import FeeStructureEditForm from './FeeStructureEditForm';
 
@@ -41,7 +43,26 @@ export default function FeeStructureWorkspaceDialog({
       <CustomDialog
         title={
           <Box component="span" sx={{ display: 'block' }}>
-            {viewOnly ? 'View Fee Structure' : 'Manage Fee Structure'}
+            <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              {viewOnly ? 'View Fee Structure' : 'Manage Fee Structure'}
+              <CustomTooltip
+                arrow
+                placement="bottom"
+                title={
+                  viewOnly
+                    ? 'Review this class’s fee heads, payment terms, linked policies, and publication status.'
+                    : 'Configure fee heads and payment terms, attach policies, then review and publish this class’s fee structure.'
+                }
+              >
+                <IconButton
+                  size="small"
+                  aria-label={`${viewOnly ? 'View' : 'Manage'} Fee Structure information`}
+                  sx={{ color: 'info.main', p: 0.25 }}
+                >
+                  <Iconify icon={GlobalIcons.info} width={18} />
+                </IconButton>
+              </CustomTooltip>
+            </Box>
             <Box
               component="span"
               sx={{

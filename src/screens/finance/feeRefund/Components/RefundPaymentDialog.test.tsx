@@ -61,7 +61,7 @@ function setup(
 }
 
 it('shows both routing prerequisites and blocks payout even when saved IDs remain in the form', async () => {
-  const { onSubmit } = setup({}, undefined, { bankAccounts: [], expenseCategories: [] });
+  const { onSubmit } = setup({ _refundMethod: 'BankTransfer' }, undefined, { bankAccounts: [], expenseCategories: [] });
   expect(screen.getByText('expense-category,bank-account')).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled();
   expect(screen.getByRole('button', { name: 'Record Payment' })).toBeDisabled();
@@ -77,32 +77,35 @@ it('keeps routing failures distinct from missing expense categories or banks', (
 });
 
 it('requires expense routing for cash and submits without a handover or verification field', async () => {
-  const { onSubmit } = setup({ _defaultExpenseCategoryId: '', _defaultPayingBankAccountId: '' });
+  const { onSubmit } = setup(
+    { _defaultExpenseCategoryId: '', _defaultPayingBankAccountId: '' },
+    undefined,
+    { bankAccounts: [] }
+  );
   expect(screen.getByRole('dialog', { name: 'Record Refund Payment' })).toBeTruthy();
   expect(screen.getByRole('button', { name: 'Payment Details information' })).toBeTruthy();
   expect(screen.getByText('Test Student')).toBeTruthy();
   expect(screen.getByText('₹ 200')).toBeTruthy();
   expect(screen.getByRole('textbox', { name: 'Payout method' })).toBeDisabled();
   expect(screen.queryByRole('textbox', { name: /handover|evidence/i })).toBeNull();
+  expect(screen.queryByText('bank-account')).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: 'Record Payment' }));
   await screen.findByText('Expense category is required');
-  expect(screen.getByText('Source school bank account is required')).toBeTruthy();
+  expect(screen.queryByRole('combobox', { name: 'Source school bank account' })).toBeNull();
   expect(onSubmit).not.toHaveBeenCalled();
-  fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Source school bank account' }));
-  fireEvent.click(screen.getByRole('option', { name: 'School Bank' }));
   fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Expense category' }));
   fireEvent.click(screen.getByRole('option', { name: 'Fee refunds' }));
   fireEvent.click(screen.getByRole('button', { name: 'Record Payment' }));
   await waitFor(() => expect(onSubmit).toHaveBeenCalledOnce());
   expect(onSubmit).toHaveBeenCalledWith({
     method: 'Cash',
-    bankAccountId: 'bank-1',
+    bankAccountId: '',
     externalReference: '',
     expenseCategoryId: 'category-1',
   });
 });
 
-it('accepts stored None as valid expense routing without removing required bank validation', async () => {
+it('accepts stored None as valid cash expense routing without a bank', async () => {
   const { onSubmit } = setup({ _defaultExpenseCategoryId: 'none' }, undefined, {
     expenseCategories: [{ id: 'none', label: 'None' }],
   });
@@ -110,8 +113,9 @@ it('accepts stored None as valid expense routing without removing required bank 
   fireEvent.click(screen.getByRole('button', { name: 'Record Payment' }));
   await waitFor(() => expect(onSubmit).toHaveBeenCalledOnce());
   expect(onSubmit).toHaveBeenCalledWith(
-    expect.objectContaining({ expenseCategoryId: 'none', bankAccountId: 'bank-1' })
+    expect.objectContaining({ expenseCategoryId: 'none' })
   );
+  expect(screen.queryByRole('combobox', { name: 'Source school bank account' })).toBeNull();
 });
 
 it('requires a bank reference for a new non-cash payment', async () => {

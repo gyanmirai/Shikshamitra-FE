@@ -13,20 +13,17 @@ import {
 
 export interface CashRefundRoutingValues {
   expenseCategoryId: string;
-  bankAccountId: string;
 }
 
 /** Mounted only by an authorized command that completes a cash payout. */
 export default function CashRefundRouting({
   academicYearId,
   defaultExpenseCategoryId,
-  defaultBankAccountId,
   busy,
   onChange,
 }: {
   academicYearId: string;
   defaultExpenseCategoryId?: string | null;
-  defaultBankAccountId?: string | null;
   busy?: boolean;
   onChange: (values: CashRefundRoutingValues | null) => void;
 }) {
@@ -36,10 +33,8 @@ export default function CashRefundRouting({
   );
   const [values, setValues] = useState<CashRefundRoutingValues>({
     expenseCategoryId: '',
-    bankAccountId: '',
   });
   const categories = useMemo(() => query.currentData?.expenseCategories ?? [], [query.currentData]);
-  const banks = useMemo(() => query.currentData?.bankAccounts ?? [], [query.currentData]);
   const loading = query.isLoading || query.isFetching;
   const unavailable = loading || query.isError || query.isUninitialized || !query.currentData;
   const refresh = () => {
@@ -55,27 +50,18 @@ export default function CashRefundRouting({
           : categories.some((x) => x.id === defaultExpenseCategoryId)
             ? (defaultExpenseCategoryId ?? '')
             : '',
-        bankAccountId: banks.some((x) => x.id === current.bankAccountId)
-          ? current.bankAccountId
-          : banks.some((x) => x.id === defaultBankAccountId)
-            ? (defaultBankAccountId ?? '')
-            : '',
       };
-      return current.expenseCategoryId === next.expenseCategoryId &&
-        current.bankAccountId === next.bankAccountId
-        ? current
-        : next;
+      return current.expenseCategoryId === next.expenseCategoryId ? current : next;
     });
-  }, [categories, banks, unavailable, defaultExpenseCategoryId, defaultBankAccountId]);
+  }, [categories, unavailable, defaultExpenseCategoryId]);
   useEffect(() => {
     onChange(
       !unavailable &&
-        categories.some((x) => x.id === values.expenseCategoryId) &&
-        banks.some((x) => x.id === values.bankAccountId)
+        categories.some((x) => x.id === values.expenseCategoryId)
         ? values
         : null
     );
-  }, [categories, banks, unavailable, values, onChange]);
+  }, [categories, unavailable, values, onChange]);
   useEffect(() => () => onChange(null), [onChange]);
   const requirements: FinancePrerequisite[] = [];
   const state = {
@@ -85,13 +71,11 @@ export default function CashRefundRouting({
   };
   if (isFinancePrerequisiteMissing({ ...state, options: categories }))
     requirements.push({ key: 'expense-category' });
-  if (isFinancePrerequisiteMissing({ ...state, options: banks }))
-    requirements.push({ key: 'bank-account' });
   return (
     <FormSectionCard
       title="Cash expense routing"
       icon="solar:wallet-bold-duotone"
-      descriptionTooltip="Choose the expense category and source school bank account used when approval completes this cash refund."
+      descriptionTooltip="Choose the expense category used when approval completes this cash refund."
     >
       {requirements.length ? (
         <FinancePrerequisiteState requirements={requirements} onRefresh={refresh} />
@@ -108,19 +92,14 @@ export default function CashRefundRouting({
         </Alert>
       ) : (
         <Grid container spacing={2}>
-          {(['expenseCategoryId', 'bankAccountId'] as const).map((field) => (
-            <RefundRoutingField
-              key={field}
-              field={field}
-              value={values[field]}
-              options={field === 'expenseCategoryId' ? categories : banks}
-              loading={loading || query.isUninitialized}
-              disabled={busy}
-              onChange={(event) =>
-                setValues((current) => ({ ...current, [field]: event.target.value }))
-              }
-            />
-          ))}
+          <RefundRoutingField
+            field="expenseCategoryId"
+            value={values.expenseCategoryId}
+            options={categories}
+            loading={loading || query.isUninitialized}
+            disabled={busy}
+            onChange={(event) => setValues({ expenseCategoryId: event.target.value })}
+          />
         </Grid>
       )}
     </FormSectionCard>

@@ -184,7 +184,6 @@ it('opens the existing bank credit confirmation for an eligible legacy deposit w
     'confirm:deposit-1:selected-year'
   );
   expect(screen.getByRole('button', { name: /^Close$/ })).toBeDisabled();
-  expect(screen.getByRole('button', { name: 'Refresh details' })).toBeDisabled();
   fireEvent.click(screen.getByRole('button', { name: 'Cancel confirmation' }));
   expect(screen.getByRole('button', { name: /^Close$/ })).toBeEnabled();
 });
@@ -220,10 +219,9 @@ it.each([
   expect(screen.getByRole('button', { name: /^Close$/ })).toBeEnabled();
 });
 
-it('refreshes and closes the read-only source view', () => {
+it('closes the read-only source view without a refresh action', () => {
   setup();
-  fireEvent.click(screen.getByRole('button', { name: 'Refresh details' }));
-  expect(mock.refetch).toHaveBeenCalledOnce();
+  expect(screen.queryByRole('button', { name: 'Refresh details' })).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: /^Close$/ }));
   expect(mock.onClose).toHaveBeenCalledOnce();
 });

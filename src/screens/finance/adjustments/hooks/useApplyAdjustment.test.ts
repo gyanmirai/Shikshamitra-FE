@@ -50,6 +50,26 @@ it('respects the server-provided row limit for manual and automatic allocation',
   expect(result.current.items[0].appliedAmount).toBe(25);
   expect(result.current.summary.remainingAdjustmentBalance).toBe(75);
 });
+it('shows the increased destination balance for an unpaid fee transfer', async () => {
+  state.fetch.mockReturnValue({
+    unwrap: async () => ({
+      kind: 1,
+      remainingAmount: 30,
+      pendingFees: [{
+        installmentId: 'due', dueFeeId: 'due', feeHeadId: 'head', feeHeadName: 'Tuition',
+        installmentLabel: 'June 2026', monthOrder: 1, totalFees: 5, paidAmount: 0,
+        pendingAmount: 5, maxApplicableAmount: 30,
+      }],
+    }),
+  });
+  const { result } = renderHook(() =>
+    useApplyAdjustment({ open: true, adjustment: request, approvedBy: 'Checker' })
+  );
+  await waitFor(() => expect(result.current.items[0]?.appliedAmount).toBe(30));
+  expect(result.current.items[0].finalPendingAmount).toBe(35);
+  act(() => result.current.setAppliedAmount('due', '12'));
+  expect(result.current.items[0].finalPendingAmount).toBe(17);
+});
 it('shows an actionable context error and permits retry after a failed read', async () => {
   state.fetch.mockReturnValueOnce({
     unwrap: async () => {

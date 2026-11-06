@@ -360,6 +360,7 @@ const ChargesManagement = () => {
           }}
         >
           <UpdateChargeForm
+            scopeOptions={academicFilters.scopeOptions}
             open={addChargeDialog}
             onClose={handleClose}
             defaultBoardId={academicFilters.selectedBoard}
@@ -391,6 +392,7 @@ const ChargesManagement = () => {
           }}
         >
           <UpdateChargeForm
+            scopeOptions={academicFilters.scopeOptions}
             chargeId={selectedChargeData.chargeId}
             open={editChargeDialog}
             onClose={handleEditClose}

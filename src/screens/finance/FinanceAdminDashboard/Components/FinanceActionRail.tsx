@@ -1,30 +1,33 @@
 'use client';
 
 import Link from 'next/link';
+import { Iconify } from 'src/components/iconify';
 import { financePaths } from 'src/constants/finance-menu';
-import { Box, Chip, Paper, Stack, Divider, Typography } from '@mui/material';
+import { Box, Card, Chip, Stack, Divider, CardHeader, Typography } from '@mui/material';
 
-import { financeQueuePreview, financeReportShortcuts } from '../finance-admin-dashboard-preview-data';
+import {
+  financeQueuePreview,
+  financeReportShortcuts,
+} from '../finance-admin-dashboard-preview-data';
 
 export function FinanceAttentionQueue() {
   return (
-    <Paper component="section" aria-labelledby="finance-attention-title" variant="outlined">
-      <Stack
-        direction="row"
-        alignItems="center"
-        justifyContent="space-between"
-        sx={{ px: 2.5, py: 2 }}
-      >
-        <Box>
+    <Card
+      component="section"
+      aria-labelledby="finance-attention-title"
+      variant="outlined"
+      sx={{ height: '100%', boxShadow: 'none' }}
+    >
+      <CardHeader
+        title={
           <Typography id="finance-attention-title" variant="h6">
-            Needs attention
+            Needs Attention
           </Typography>
-          <Typography variant="caption" color="text.secondary">
-            Open operational exceptions and pending requests
-          </Typography>
-        </Box>
-        <Chip size="small" label={`${financeQueuePreview.needsAttention.length  } items`} />
-      </Stack>
+        }
+        subheader="Finance items to review"
+        action={<Chip size="small" label={`${financeQueuePreview.needsAttention.length} items`} />}
+        sx={{ p: 2, '& .MuiCardHeader-action': { m: 0 } }}
+      />
       <Divider />
       <Stack divider={<Divider flexItem />}>
         {financeQueuePreview.needsAttention.map((item) => (
@@ -58,7 +61,7 @@ export function FinanceAttentionQueue() {
                     height: 7,
                     flex: '0 0 auto',
                     borderRadius: '50%',
-                    bgcolor: `${item.severity  }.main`,
+                    bgcolor: `${item.severity}.main`,
                   }}
                 />
                 <Typography variant="subtitle2" noWrap>
@@ -75,24 +78,30 @@ export function FinanceAttentionQueue() {
           </Box>
         ))}
       </Stack>
-    </Paper>
+    </Card>
   );
 }
 
 export function FinanceReportRail() {
   return (
-    <Paper component="section" aria-labelledby="finance-report-title" variant="outlined">
-      <Box sx={{ px: 2.5, py: 2 }}>
-        <Typography id="finance-report-title" variant="h6">
-          Report shortcuts
-        </Typography>
-        <Typography variant="caption" color="text.secondary">
-          Open Finance Reports to choose the reporting period and filters.
-        </Typography>
-      </Box>
+    <Card
+      component="section"
+      aria-labelledby="finance-report-title"
+      variant="outlined"
+      sx={{ boxShadow: 'none' }}
+    >
+      <CardHeader
+        title={
+          <Typography id="finance-report-title" variant="h6">
+            Quick Reports
+          </Typography>
+        }
+        subheader="Open Finance Reports to choose a period and filters"
+        sx={{ p: 2 }}
+      />
       <Divider />
       <Stack divider={<Divider flexItem />}>
-        {financeReportShortcuts.map((report, index) => (
+        {financeReportShortcuts.map((report) => (
           <Box
             key={report}
             component={Link}
@@ -101,7 +110,7 @@ export function FinanceReportRail() {
               px: 2.5,
               py: 1.5,
               display: 'grid',
-              gridTemplateColumns: '32px minmax(0, 1fr) auto',
+              gridTemplateColumns: 'minmax(0, 1fr) auto',
               alignItems: 'center',
               gap: 1,
               color: 'inherit',
@@ -114,16 +123,16 @@ export function FinanceReportRail() {
               },
             }}
           >
-            <Typography variant="caption" color="text.secondary" fontWeight={700}>
-              0{index + 1}
-            </Typography>
             <Typography variant="body2">{report}</Typography>
-            <Typography aria-hidden variant="body2" color="text.secondary">
-              ↗
-            </Typography>
+            <Iconify
+              icon="mdi:chevron-right"
+              width={18}
+              aria-hidden
+              sx={{ color: 'text.secondary' }}
+            />
           </Box>
         ))}
       </Stack>
-    </Paper>
+    </Card>
   );
 }

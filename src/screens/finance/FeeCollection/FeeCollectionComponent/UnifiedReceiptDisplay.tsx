@@ -1,6 +1,7 @@
 import type { FeeReceiptDetail, ChargeReceiptDetail } from 'src/redux/feeCollection/feeCollection';
 
 import PdfPreview from 'src/components/preview-document/pdf-preview';
+import { Iconify } from 'src/components/iconify';
 import { Stack, Alert, Button, Skeleton, Typography } from '@mui/material';
 
 interface UnifiedReceiptDisplayProps {
@@ -54,7 +55,12 @@ export default function UnifiedReceiptDisplay({
             severity="warning"
             action={
               onRetry && (
-                <Button size="small" onClick={onRetry}>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={<Iconify icon="solar:restart-bold" width={18} />}
+                  onClick={onRetry}
+                >
                   Retry receipt
                 </Button>
               )
@@ -68,6 +74,7 @@ export default function UnifiedReceiptDisplay({
             title={`${name} Receipt`}
             showPageText={false}
             controlsPosition="bottom"
+            hideControlsForSinglePage
           />
         ) : (
           <Typography variant="body2" color="text.secondary">

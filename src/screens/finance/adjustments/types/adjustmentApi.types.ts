@@ -20,14 +20,17 @@ export interface CreateFeeAdjustmentSourceLineDto {
 }
 
 export interface CreateFeeAdjustmentDto {
-  studentId: string | number;
-  reason?: string;
-  remarks?: string;
+  idempotencyKey: string;
+  studentId: string;
+  reason: string;
   sourceLines: CreateFeeAdjustmentSourceLineDto[];
 }
 
 export interface AdjustmentEligibilityMonthDto {
   dueFeeId: string;
+  kind?: 0 | 1;
+  status?: number;
+  outstandingAmount?: number;
   month: number;
   year: number;
   total: number;
@@ -47,6 +50,7 @@ export interface AdjustmentEligibilityFeeHeadDto {
 
 export interface AdjustmentEligibilityDto {
   studentId: string;
+  unavailableReason?: string | null;
   academicYearId: string;
   totalPaid: number;
   totalAdjustable: number;
@@ -56,6 +60,8 @@ export interface AdjustmentEligibilityDto {
 
 export interface FeeAdjustmentApplicationItemDto {
   id: string;
+  availableActions?: string[];
+  unavailableReason?: string | null;
   requestedByUserId?: string | null;
   studentId: string;
   studentName: string;
@@ -112,7 +118,10 @@ export interface FeeAdjustmentTargetAllocationDto {
 }
 
 export interface FeeAdjustmentDetailDto {
+  kind?: 0 | 1;
   id: string;
+  availableActions?: string[];
+  unavailableReason?: string | null;
   voucherNumber: string;
   studentId: string;
   studentName: string;
@@ -158,6 +167,7 @@ export interface FeeAdjustmentPendingFeeDto {
 }
 
 export interface FeeAdjustmentApplyContextDto {
+  kind?: 0 | 1;
   adjustmentId: string;
   studentId: string;
   approvedAmount: number;

@@ -144,6 +144,21 @@ const RECEIPT_PDF_ERROR =
 
 const toPaise = (amount: number): number => Math.round((amount + Number.EPSILON) * 100);
 
+const selectionTotal = (
+  items: SelectedItem[],
+  chargeIds: string[],
+  chargesData: IFeeCharge[]
+) =>
+  items.reduce((sum, item) => sum + roundUpToRupee(item.dueAmount) + (item.lateFeeAmount ?? 0), 0) +
+  chargesData
+    .filter((charge) => chargeIds.includes(charge.chargeId))
+    .reduce((sum, charge) => sum + charge.amount, 0);
+
+const selectionAmount = (items: SelectedItem[], chargeIds: string[], chargesData: IFeeCharge[]) => {
+  const total = selectionTotal(items, chargeIds, chargesData);
+  return total > 0 ? String(total) : '';
+};
+
 const buildDetailsForMethod = (method: string): Record<string, any> => {
   const config = paymentMethodsConfig[method as keyof typeof paymentMethodsConfig] ?? [];
   const details: Record<string, any> = {};
@@ -897,16 +912,10 @@ const FeeCollectComponentForm = ({
     []
   );
   // ── Derived amounts ────────────────────────────────────────────────────────
-  const subtotal = useMemo(() => {
-    const itemsTotal = formik.values.selectedItems.reduce(
-      (s, i) => s + roundUpToRupee(i.dueAmount) + (i.lateFeeAmount ?? 0),
-      0
-    );
-    const chargesTotal = (chargesData ?? [])
-      .filter((c) => formik.values.charges.includes(c.chargeId))
-      .reduce((s, c) => s + c.amount, 0);
-    return itemsTotal + chargesTotal;
-  }, [formik.values.selectedItems, formik.values.charges, chargesData]);
+  const subtotal = useMemo(
+    () => selectionTotal(formik.values.selectedItems, formik.values.charges, chargesData ?? []),
+    [formik.values.selectedItems, formik.values.charges, chargesData]
+  );
 
   const orderedSelectedItems = resolveItems(formik.values.selectedItems, formik.values.charges);
   const isAmountOnly =
@@ -985,7 +994,17 @@ const FeeCollectComponentForm = ({
       { items: formik.values.selectedItems, charges: formik.values.charges },
       { items, charges: formik.values.charges }
     );
-    formik.setFieldValue('selectedItems', items, false);
+    formik.setValues(
+      (values) => ({
+        ...values,
+        selectedItems: items,
+        payment: {
+          ...values.payment,
+          amount: selectionAmount(items, values.charges, chargesData),
+        },
+      }),
+      false
+    );
   };
 
   const handleChargesChange = (chargeIds: string[]) => {
@@ -996,7 +1015,17 @@ const FeeCollectComponentForm = ({
       { items: formik.values.selectedItems, charges: formik.values.charges },
       { items: formik.values.selectedItems, charges: chargeIds }
     );
-    formik.setFieldValue('charges', chargeIds, false);
+    formik.setValues(
+      (values) => ({
+        ...values,
+        charges: chargeIds,
+        payment: {
+          ...values.payment,
+          amount: selectionAmount(values.selectedItems, chargeIds, chargesData),
+        },
+      }),
+      false
+    );
   };
 
   const handlePaymentMethodChange = (method: string) => {
@@ -1395,7 +1424,15 @@ const FeeCollectComponentForm = ({
     }));
     // One Formik update keeps fee and charge selections consistent with totals.
     formik.setValues(
-      (values) => ({ ...values, selectedItems: next.items, charges: next.charges }),
+      (values) => ({
+        ...values,
+        selectedItems: next.items,
+        charges: next.charges,
+        payment: {
+          ...values.payment,
+          amount: selectionAmount(next.items, next.charges, chargesData),
+        },
+      }),
       false
     );
   };
@@ -2553,9 +2590,9 @@ const FeeCollectComponentForm = ({
           sx={{
             borderTop: (t) => `1px solid ${alpha(t.palette.divider, 0.45)}`,
             flexWrap: 'wrap',
-            rowGap: 1,
+            rowGap: '1px',
             columnGap: '1px',
-            '& > :not(:first-of-type)': { marginLeft: 0 },
+            '& > :not(style) ~ :not(style)': { marginLeft: 0 },
           }}
         >
           {(
@@ -2573,9 +2610,10 @@ const FeeCollectComponentForm = ({
             ] as const
           ).map(({ scope, receipt, blobUrl }) =>
             receipt && blobUrl && receiptPdfStatus[scope] === 'ready' ? (
-              <Stack key={scope} direction="row" spacing={1}>
+              <Stack key={scope} direction="row" sx={{ gap: '1px' }}>
                 <Button
                   size="small"
+                  variant="outlined"
                   startIcon={<Iconify icon="mdi:open-in-new" />}
                   onClick={() => handleOpenReceiptInNewTab(blobUrl)}
                 >
@@ -2586,7 +2624,6 @@ const FeeCollectComponentForm = ({
                   variant="outlined"
                   startIcon={<Iconify icon="mdi:download" />}
                   onClick={() => handleDownloadReceipt(receipt, blobUrl)}
-                  sx={{ p: 1 }}
                 >
                   {feeReceiptData && chargeReceiptData ? `Download ${scope}` : 'Download'}
                 </Button>
@@ -2598,7 +2635,6 @@ const FeeCollectComponentForm = ({
             size="small"
             onClick={handleReceiptDialogClose}
             startIcon={<Iconify icon={GlobalIcons.submit} />}
-            sx={{ p: 1 }}
           >
             Done
           </Button>

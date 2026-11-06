@@ -591,7 +591,7 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
                     ? 'Decision identity is unavailable'
                     : 'You cannot approve or reject your own request';
                 const serverAllows = (action: string) =>
-                  !row.availableActions?.length || row.availableActions.includes(action);
+                  row.availableActions?.includes(action) === true;
                 const canCancelRow =
                   canCancel &&
                   serverAllows('cancel') &&

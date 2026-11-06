@@ -11,6 +11,7 @@ import { Box, Alert, Button, Typography, FormHelperText } from '@mui/material';
 import { FeeMonth, FeeCollectionStatusType } from 'src/enums/fee-collection-type';
 import { useGetAdjustmentEligibilityQuery } from 'src/redux/finance/adjustments/adjustmentApi';
 import { useGetRefundEligibilityQuery } from 'src/redux/finance/RefundManagement/feeRefundManage';
+import AdjustmentBulkActions from '../../adjustments/components/AdjustmentBulkActions';
 
 import FeeHeadGroup from './feeHeadRefundTable/FeeHeadGroup';
 import { getRefundPrerequisite } from './refundPrerequisites';
@@ -143,8 +144,9 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
           refunded,
           refundable,
           concession,
-          status:
-            m.paid >= m.total
+          status: isAdj && 'status' in m && typeof m.status === 'number'
+            ? m.status as FeeCollectionStatusType
+            : m.paid >= m.total
               ? FeeCollectionStatusType.Paid
               : m.paid > 0
                 ? FeeCollectionStatusType.Pending
@@ -397,6 +399,49 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
     [feeHeads, isAdj]
   );
 
+  const adjustmentEntries = Object.fromEntries(
+    formik.values.feeHeadRefunds.flatMap((head) =>
+      head.months.filter((month) => month.dueFeeId).map((month) =>
+        [month.dueFeeId!, String(month.amount)] as const
+      )
+    )
+  );
+  const adjustmentSelectedIds = Object.keys(adjustmentEntries);
+  const adjustmentKinds = new Map(
+    (adjustmentEligibility.currentData?.feeHeads ?? []).flatMap((head) =>
+      head.months.map((month) => [month.dueFeeId, month.kind ?? 0] as const)
+    )
+  );
+  const adjustmentLines = feeHeadsWithPayments.flatMap((head) =>
+    head.items.filter((item) => item.dueFeeId && item.refundable > 0).map((item) => ({
+      dueFeeId: item.dueFeeId,
+      capacity: item.refundable,
+      kind: adjustmentKinds.get(item.dueFeeId) ?? 0,
+    }))
+  );
+  const applyAdjustmentAmounts = (amounts: Record<string, string>, bulkMode: 'perInstallment' | 'equalTotal') => {
+    const updated = bulkMode === 'equalTotal'
+      ? feeHeadsWithPayments.map((head) => ({
+          feeHeadId: head.feeHeadId,
+          months: head.items.filter((item) => item.dueFeeId && amounts[item.dueFeeId])
+            .map((item) => ({
+              month: item.month,
+              dueFeeId: item.dueFeeId,
+              amount: amounts[item.dueFeeId],
+            })),
+        })).filter((head) => head.months.length > 0)
+      : formik.values.feeHeadRefunds.map((head) => ({
+          ...head,
+          months: head.months.map((month) =>
+            month.dueFeeId && amounts[month.dueFeeId] !== undefined
+              ? { ...month, amount: amounts[month.dueFeeId] }
+              : month
+          ),
+        }));
+    formik.setFieldValue('feeHeadRefunds', updated);
+    formik.setFieldTouched('feeHeadRefunds', true, false);
+  };
+
   useEffect(() => {
     onHasRecords?.(
       Boolean(
@@ -536,6 +581,12 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
             {feeHeadsWithPayments.length} fee head{feeHeadsWithPayments.length !== 1 ? 's' : ''}
           </Typography>
         </Box>
+      )}
+
+      {isAdj && feeHeadsWithPayments.length > 0 && (
+        <AdjustmentBulkActions key={String(studentId)} lines={adjustmentLines}
+          selectedIds={adjustmentSelectedIds} entries={adjustmentEntries}
+          onApply={applyAdjustmentAmounts} />
       )}
 
       {feeHeadsWithPayments.map((feeHead) => (

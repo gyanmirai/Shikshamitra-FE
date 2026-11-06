@@ -66,6 +66,7 @@ import {
 import type { IFeeHeadRefundItem } from './initialValuesAndValidation';
 
 interface FeeRefundFormProps {
+  scopeOptions?: import('src/redux/finance/financeWorkContextApi').FinanceScopeOption[] | null;
   onCancel?: (e: any, isSubmit: boolean) => void;
   onBusyChange?: (busy: boolean) => void;
   loading?: boolean;
@@ -86,6 +87,7 @@ const FeeRefundFormComponent = ({
   defaultMediumId = '',
   defaultStandardId = '',
   defaultDivisionId = '',
+  scopeOptions = null,
   isEdit = false,
   editRefundId,
   replacementRefundId,
@@ -726,7 +728,11 @@ const FeeRefundFormComponent = ({
                     title="Student Information"
                     icon="solar:users-group-rounded-bold-duotone"
                   >
-                    <RefundGeneralInfoCard formik={formik} disabled={hasSourceRefund} />
+                    <RefundGeneralInfoCard
+                      formik={formik}
+                      disabled={hasSourceRefund}
+                      scopeOptions={scopeOptions}
+                    />
                   </FormSectionCard>
 
                   {isEdit &&
@@ -766,11 +772,6 @@ const FeeRefundFormComponent = ({
                           replacementRefundId
                             ? editRefundDetail?.defaultExpenseCategoryId
                             : refundEligibility.currentData?.defaultExpenseCategoryId
-                        }
-                        defaultBankAccountId={
-                          replacementRefundId
-                            ? editRefundDetail?.defaultPayingBankAccountId
-                            : refundEligibility.currentData?.defaultPayingBankAccountId
                         }
                         busy={busy}
                         onChange={setCashRouting}

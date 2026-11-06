@@ -142,7 +142,7 @@ export const financePrerequisiteCatalog = {
     permissions: [`${financePermissions.accounts.cashManagement}.View`],
   },
   'adjustment-balance': {
-    title: 'No eligible paid fee balance',
+    title: 'No eligible fee balance',
     description: 'Review the student fees before creating an adjustment.',
     actionLabel: 'Review collections',
     href: financePaths.fees.collections,

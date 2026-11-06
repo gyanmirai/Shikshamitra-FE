@@ -39,6 +39,7 @@ export default defineConfig({
     alias: [
       ...[
         'src/redux/finance/adjustments/adjustmentApi',
+        'src/redux/finance/financeWorkContextApi',
         'src/redux/finance/RefundManagement/feeRefundManage',
         'src/redux/class/classApi',
         'src/redux/student',

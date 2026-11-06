@@ -5,7 +5,7 @@ import type { RootState } from 'src/redux/store';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Box, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
+import { Box, Stack, Alert, Button, TextField, Typography, DialogActions } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { formatNumber } from 'src/utils/formate_number';
@@ -39,6 +39,7 @@ export default function AdjustmentForm({
   defaultMediumId = '',
   defaultStandardId = '',
   defaultDivisionId = '',
+  scopeOptions = null,
 }: IAdjustmentFormProps & {
   hideStudentInfoForm?: boolean;
   initialData?: Partial<IAdjustmentFullFormValues>;
@@ -79,10 +80,23 @@ export default function AdjustmentForm({
     [formik.values.feeHeadRefunds]
   );
   const totalAmount = selectedMonths.reduce((sum, month) => sum + (Number(month.amount) || 0), 0);
+  const selectedDueIds = new Set(selectedMonths.map((month) => month.dueFeeId));
+  const selectedKinds = new Set(
+    (eligibility.currentData?.feeHeads ?? []).flatMap((head) => head.months)
+      .filter((month) => selectedDueIds.has(month.dueFeeId))
+      .map((month) => month.kind ?? 0)
+  );
+  const mixedSources = selectedKinds.size > 1;
+  const unpaidLines = (eligibility.currentData?.feeHeads ?? []).flatMap((head) => head.months)
+    .filter((month) => month.kind === 1 && month.adjustable > 0);
+  const noUnpaidDestination = selectedKinds.has(1) &&
+    unpaidLines.every((month) => selectedDueIds.has(month.dueFeeId));
   const canSubmitAdjustment = Boolean(
     eligibility.currentData &&
     !eligibility.isFetching &&
     !eligibility.isError &&
+    !mixedSources &&
+    !noUnpaidDestination &&
     eligibility.currentData.totalAdjustable > 0 &&
     eligibility.currentData.feeHeads.some((head) =>
       head.months.some((month) => month.adjustable > 0)
@@ -126,7 +140,7 @@ export default function AdjustmentForm({
                     icon={GlobalIcons.assigned}
                     descriptionTooltip="Choose the student's board, medium, class and division for the current academic year, then select the student."
                   >
-                    <AdjustmentGeneralInfoCard formik={formik} />
+                    <AdjustmentGeneralInfoCard formik={formik} scopeOptions={scopeOptions} />
                   </FormSectionCard>
                 )}
                 <FormSectionCard
@@ -156,6 +170,16 @@ export default function AdjustmentForm({
                   icon={GlobalIcons.receiptIcon}
                   descriptionTooltip="Select eligible fee installments and enter the amount requested from each source. Availability is checked for the selected student and academic year."
                 >
+                  {mixedSources && (
+                    <Alert severity="info" sx={{ mb: 1.5 }}>
+                      Select either pending and overdue installments or paid-credit installments for one adjustment.
+                    </Alert>
+                  )}
+                  {noUnpaidDestination && !mixedSources && (
+                    <Alert severity="info" sx={{ mb: 1.5 }}>
+                      Leave one pending or overdue installment unchecked to receive the transferred amount.
+                    </Alert>
+                  )}
                   {/* The shared selector supports adjustment mode using this common form-value subset. */}
                   <FeeHeadRefundTable
                     compact

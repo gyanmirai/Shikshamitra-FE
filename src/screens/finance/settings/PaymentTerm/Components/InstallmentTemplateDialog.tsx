@@ -61,7 +61,8 @@ interface Props {
 }
 
 export function InstallmentTemplateDialog(props: Props) {
-  return props.open ? <InstallmentTemplateDialogSession {...props} /> : null;
+  const { open } = props;
+  return open ? <InstallmentTemplateDialogSession {...props} /> : null;
 }
 
 function InstallmentTemplateDialogSession({
@@ -292,16 +293,10 @@ function InstallmentTemplateDialogSession({
         noValidate
         onSubmit={(event) => {
           event.preventDefault();
-          void handlePreview();
+          handlePreview();
         }}
       >
         <DialogScrollContent>
-          {existingInstallmentCount > 0 && (
-            <Box sx={{ mb: 2 }}>
-              Applying this template will replace the existing {existingInstallmentCount}{' '}
-              installment(s).
-            </Box>
-          )}
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
               {error}
@@ -574,7 +569,7 @@ function InstallmentTemplateDialogSession({
                       isSort: false,
                       isFilter: false,
                       align: 'left',
-                      render: (value) => Number(value).toFixed(2) + '%',
+                      render: (value) => `${Number(value).toFixed(2)}%`,
                     },
                   ]}
                 />
@@ -594,19 +589,19 @@ function InstallmentTemplateDialogSession({
           >
             Cancel
           </Button>
-          <Button
-            type="submit"
-            size="small"
-            color="inherit"
-            variant={preview ? 'outlined' : 'contained'}
-            startIcon={
-              <Iconify icon={preview ? GlobalIcons.refresh : GlobalIcons.calendar} width={18} />
-            }
-            loading={previewState.isLoading}
-            disabled={!canGenerate}
-          >
-            {preview ? 'Regenerate Preview' : 'Generate Preview'}
-          </Button>
+          {!preview && (
+            <Button
+              type="submit"
+              size="small"
+              color="inherit"
+              variant="contained"
+              startIcon={<Iconify icon={GlobalIcons.calendar} width={18} />}
+              loading={previewState.isLoading}
+              disabled={!canGenerate}
+            >
+              Generate Preview
+            </Button>
+          )}
           {preview && (
             <Button
               type="button"

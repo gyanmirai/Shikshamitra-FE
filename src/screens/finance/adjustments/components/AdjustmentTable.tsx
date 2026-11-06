@@ -2,7 +2,7 @@
 
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
-import type { IParams } from 'src/components/customizabaleTable/types';
+import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
@@ -30,7 +30,7 @@ import {
   formatAdjustmentStatusLabel,
 } from '../constants/adjustmentOptions';
 
-import type { IAdjustmentTableProps } from '../types/adjustment.types';
+import type { AdjustmentRequest, IAdjustmentTableProps } from '../types/adjustment.types';
 import { useAdjustmentWorklistQuery } from '../hooks/useAdjustmentWorklistQuery';
 
 const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
@@ -149,19 +149,37 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
       applicationsData?.rejectedCount ?? tabCounts?.[AdjustmentTabEnum.Rejected] ?? 0,
   };
 
+  const canApproveRow = useCallback(
+    (row: AdjustmentRequest) => Boolean(
+      currentUserId && row.requestedByUserId !== currentUserId &&
+      access.canApprove && row.availableActions?.includes('Approve') &&
+      (row.status === AdjustmentStatusEnum.Pending ||
+        row.status === AdjustmentStatusEnum.PartiallyApplied) && onApprove
+    ),
+    [access.canApprove, currentUserId, onApprove]
+  );
+  const canRejectRow = useCallback(
+    (row: AdjustmentRequest) => Boolean(
+      currentUserId && row.requestedByUserId !== currentUserId &&
+      access.canReject && row.availableActions?.includes('Reject') &&
+      row.status === AdjustmentStatusEnum.Pending && onReject
+    ),
+    [access.canReject, currentUserId, onReject]
+  );
+  const showActionsColumn = data.some((row: AdjustmentRequest) =>
+    canApproveRow(row) || canRejectRow(row)
+  );
   const renderActions = useCallback(
-    (params: { row: any }) => {
+    (params: { row: AdjustmentRequest }) => {
       const { row } = params;
-      const isPending = row.status === AdjustmentStatusEnum.Pending;
       const isPartial = row.status === AdjustmentStatusEnum.PartiallyApplied;
-      const canDecide = access.canAdd && !!currentUserId && row.requestedByUserId !== currentUserId;
       return (
         <AdaptiveThreeDotsActions
           directActionLimit={2}
           moreLabel={`More adjustment actions for ${row.studentName}`}
           placement="right-top"
           actions={[
-            ...(canDecide && (isPending || isPartial) && onApprove
+            ...(canApproveRow(row)
               ? [
                   {
                     id: 'approve',
@@ -172,7 +190,7 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
                   },
                 ]
               : []),
-            ...(canDecide && isPending && onReject
+            ...(canRejectRow(row)
               ? [
                   {
                     id: 'reject',
@@ -187,7 +205,7 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
         />
       );
     },
-    [access.canAdd, currentUserId, onApprove, onReject]
+    [canApproveRow, canRejectRow, onApprove, onReject]
   );
 
   return (
@@ -408,8 +426,8 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
                   </Label>
                 );
               },
-            },
-            {
+            } as IColumn,
+            ...(showActionsColumn ? [{
               stickyPosition: 'right',
               excludeFromExport: true,
               id: 'actions',
@@ -421,7 +439,7 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
               minWidth: 120,
               sticky: true,
               render: (_v: any, row: any) => renderActions({ row }),
-            },
+            } as IColumn] : []),
           ]}
           data={data}
           searchFieldProps={{ placeholder: 'Search' }}

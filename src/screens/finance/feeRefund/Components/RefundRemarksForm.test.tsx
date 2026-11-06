@@ -4,6 +4,7 @@ import { createTheme } from 'src/theme/create-theme';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { defaultSettings } from 'src/components/settings/config-settings';
+import { financePermissions } from 'src/constants/finance-menu';
 
 import RefundRemarksForm from './RefundRemarksForm';
 
@@ -15,6 +16,17 @@ vi.mock('src/components/scrollbar', () => ({
   Scrollbar: ({ children }: any) => <div>{children}</div>,
 }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span /> }));
+vi.mock('react-redux', () => ({
+  useSelector: (select: any) =>
+    select({
+      auth: {
+        permissions: Object.values(financePermissions.fees.refundActions).map((name) => ({
+          name,
+          isGranted: true,
+        })),
+      },
+    }),
+}));
 vi.mock('src/components/customizabaleTable/table-export', () => ({ exportTable: vi.fn() }));
 const theme = createTheme(defaultSettings);
 
@@ -100,7 +112,9 @@ describe('Refund detail drawer', () => {
       isError: false,
     });
     setup();
-    expect(screen.queryByRole('button', { name: /View .*refund receipt/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /View .*refund receipt/i })
+    ).not.toBeInTheDocument();
   });
 
   it('does not offer a provisional receipt without a recorded payout attempt', () => {
@@ -111,7 +125,9 @@ describe('Refund detail drawer', () => {
       isError: false,
     });
     setup();
-    expect(screen.queryByRole('button', { name: /View .*refund receipt/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /View .*refund receipt/i })
+    ).not.toBeInTheDocument();
   });
 
   it('shows only this approved request installment and hides Reject despite an old action hint', () => {

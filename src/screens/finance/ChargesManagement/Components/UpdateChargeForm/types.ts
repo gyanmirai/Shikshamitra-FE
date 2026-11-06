@@ -86,6 +86,7 @@ export interface IStudentOption {
  * Supports both Create and Update modes
  */
 export interface IUpdateChargeFormProps {
+  scopeOptions?: import('src/redux/finance/financeWorkContextApi').FinanceScopeOption[] | null;
   chargeId?: string; // Optional - if not provided, form is in Create mode
   open: UseBooleanReturn;
   onClose: (event?: any, isSubmit?: boolean) => void;

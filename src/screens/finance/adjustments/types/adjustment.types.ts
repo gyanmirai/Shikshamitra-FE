@@ -29,6 +29,8 @@ export interface AdjustmentAuditTrail {
 
 export interface AdjustmentRequest {
   id: string;
+  availableActions?: string[];
+  unavailableReason?: string | null;
   studentId: string;
   studentName: string;
   studentGrNo?: string;
@@ -89,6 +91,7 @@ export interface IAdjustmentTableProps {
 }
 
 export interface IAdjustmentFormProps {
+  scopeOptions?: import('src/redux/finance/financeWorkContextApi').FinanceScopeOption[] | null;
   onCancel: (e: any, isSubmit?: boolean) => void;
   onSubmit: (values: IAdjustmentFullFormValues) => void | Promise<void>;
   onBusyChange?: (busy: boolean) => void;
