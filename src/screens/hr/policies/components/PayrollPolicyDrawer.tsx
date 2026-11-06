@@ -3,6 +3,7 @@
 import type { EditablePolicyStatus } from 'src/redux/hr/hr-policy-api';
 
 import React from 'react';
+import { varAlpha } from 'src/theme/styles';
 import { Iconify } from 'src/components/iconify';
 import { HrLoadingNotice } from 'src/screens/hr/components/hr-notice';
 import { useGetWorkCalendarPolicyHolidaysQuery } from 'src/redux/hr/hr-policy-api';
@@ -251,6 +252,8 @@ export function PayrollPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
                       component="label"
                       variant="outlined"
                       sx={{
+                        display: 'block',
+                        width: 1,
                         p: 1.25,
                         height: 1,
                         minHeight: 84,
@@ -258,9 +261,7 @@ export function PayrollPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
                         borderColor: selected ? 'primary.main' : 'divider',
                         bgcolor: (theme) =>
                           selected
-                            ? theme.palette.mode === 'dark'
-                              ? 'rgba(0, 167, 111, 0.1)'
-                              : 'rgba(0, 167, 111, 0.06)'
+                            ? varAlpha(theme.vars.palette.primary.mainChannel, 0.08)
                             : 'background.paper',
                         transition: (theme) =>
                           theme.transitions.create(['background-color', 'border-color'], {
