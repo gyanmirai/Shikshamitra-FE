@@ -1,10 +1,14 @@
 import React from 'react';
-import { it, vi, expect, describe } from 'vitest';
+import { it, vi, expect, describe, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 
 import FeeCollectionTable from './FeeCollectionTable';
 
-const state = vi.hoisted(() => ({ params: {} as any, table: {} as any }));
+const state = vi.hoisted(() => ({
+  params: {} as any,
+  table: {} as any,
+  query: { isLoading: false, isFetching: false },
+}));
 vi.mock('react-redux', () => ({ useSelector: () => ({ currentYear: { id: 'year' } }) }));
 vi.mock('src/screens/finance/components/FinanceAcademicContextFilter', () => ({
   default: () => null,
@@ -22,6 +26,8 @@ vi.mock('src/redux/customQueryAndMutation', () => ({
         totalCount: 48,
         items: [{ studentId: 'student', studentName: 'Asha', totalFees: 400, status: 0 }],
       },
+      isLoading: state.query.isLoading,
+      isFetching: state.query.isFetching,
     };
   },
 }));
@@ -79,6 +85,21 @@ function setup() {
 }
 
 describe('Collections full-result query', () => {
+  beforeEach(() => {
+    state.params = {};
+    state.table = {};
+    state.query.isLoading = false;
+    state.query.isFetching = false;
+  });
+
+  it('keeps loaded rows visible while a background refresh is running', () => {
+    state.query.isFetching = true;
+    setup();
+
+    expect(state.table.isLoading).toBe(false);
+    expect(state.table.isRefreshing).toBe(true);
+  });
+
   it('maps one-based server callbacks to API offsets and zero-based table pages', () => {
     setup();
     fireEvent.click(screen.getByText('Second page'));
