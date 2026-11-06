@@ -1,7 +1,7 @@
 import { vi, it, expect } from 'vitest';
 import '@testing-library/jest-dom/vitest';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, within, fireEvent } from '@testing-library/react';
 
 import StudentQuickSetupFeesSection from './student-quick-setup-fees-section';
 
@@ -47,14 +47,32 @@ it('shows unassigned fees separately without claiming confirmation', () => {
   expect(screen.queryByText('Confirmed')).not.toBeInTheDocument();
 });
 
-it('opens incomplete fees and reopens an error after the staff collapse it', () => {
-  const state = { ...base, confirmed: false };
-  const result = render(view(state));
+it('shows collection deferral before the fee structure name in the collapsed summary', () => {
+  render(view({ ...base, confirmed: false, collectionDeferred: true }));
+  const expand = screen.getByRole('button', { name: 'Expand fees' });
+  expect(within(expand).getByText('Collection deferred from Admissions')).toBeVisible();
+  expect(screen.queryByText('Class 1 Fees')).not.toBeInTheDocument();
+  expect(screen.getByText('Fees pending')).toBeVisible();
+});
+
+it('lets staff open secondary details from their summary text', () => {
+  render(view());
+  const expand = screen.getByRole('button', { name: 'Expand fees' });
+  expect(within(expand).getByText('Class 1 Fees')).toBeVisible();
+  fireEvent.click(within(expand).getByText('Class 1 Fees'));
   expect(screen.getByRole('button', { name: 'Collapse fees' })).toHaveAttribute(
     'aria-expanded',
     'true'
   );
-  fireEvent.click(screen.getByRole('button', { name: 'Collapse fees' }));
+});
+
+it('keeps optional incomplete fees collapsed and reveals validation errors', () => {
+  const state = { ...base, confirmed: false };
+  const result = render(view(state));
+  expect(screen.getByRole('button', { name: 'Expand fees' })).toHaveAttribute(
+    'aria-expanded',
+    'false'
+  );
   result.rerender(view({ ...state, hasError: true }));
   expect(screen.getByRole('button', { name: 'Collapse fees' })).toHaveAttribute(
     'aria-expanded',

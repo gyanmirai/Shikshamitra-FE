@@ -594,11 +594,6 @@ export const studentGrNumberType = {
   studentGrNumber: 'studentGrNumber',
 } as const;
 
-// ===== Student Group API (reducerPath: studentGroupApi) =====
-export const studentGroupType = {
-  studentGroup: 'studentGroup',
-} as const;
-
 // ===== Student Invoice API (reducerPath: StudentInvoiceApi) =====
 export const studentInvoiceType = {
   studentInvoice: 'StudentInvoice',
@@ -770,7 +765,6 @@ export const allTagTypes = {
   ...studentCertificateType,
   ...studentChangeClassType,
   ...studentGrNumberType,
-  ...studentGroupType,
   ...studentAdmissionsCrmType,
   ...studentOnboardingType,
   academicExam: academicType.exam,

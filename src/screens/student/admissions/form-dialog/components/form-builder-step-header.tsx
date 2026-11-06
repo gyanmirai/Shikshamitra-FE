@@ -21,6 +21,8 @@ type Props = {
   newlyAdded: boolean;
   onNewStepReady: (stepId: string | null) => void;
   readOnly?: boolean;
+  namePath?: string;
+  onRename?: (name: string) => void;
   navigationRequest?: BuilderNavigationRequest;
 };
 
@@ -32,24 +34,30 @@ export function FormBuilderStepHeader({
   newlyAdded,
   onNewStepReady,
   readOnly = false,
+  namePath,
+  onRename,
   navigationRequest,
 }: Props) {
   const settings = useBoolean(newlyAdded);
-  const deleteDisabled = hasLockedInquiryFields(
-    formik.values.purpose,
-    formik.values.sections.filter((section) =>
-      step.sections.some((item) => item.section.id === section.id)
-    ),
-    formik.values.coreFieldPolicyVersion
-  );
+  const deleteDisabled =
+    Boolean(onRename) ||
+    hasLockedInquiryFields(
+      formik.values.purpose,
+      formik.values.sections.filter((section) =>
+        step.sections.some((item) => item.section.id === section.id)
+      ),
+      formik.values.coreFieldPolicyVersion
+    );
   const { onTrue: openSettings } = settings;
   const headingRef = useRef<HTMLButtonElement>(null);
-  const path = `sections[${step.sections[0].sectionIndex}].stepName`;
+  const path = namePath ?? `sections[${step.sections[0].sectionIndex}].stepName`;
   const meta = formik.getFieldMeta<string>(path);
   const nameError = meta.touched
     ? !step.name.trim()
       ? 'Step heading is required'
-      : meta.error
+      : onRename && step.name.length > 128
+        ? 'Use 128 characters or fewer'
+        : meta.error
     : undefined;
   const editing = !readOnly && (settings.value || Boolean(nameError));
   const wasEditing = useRef(editing);
@@ -79,7 +87,7 @@ export function FormBuilderStepHeader({
   }, [navigationRequest, step.id, readOnly, openSettings]);
   const finishEditing = () => {
     formik.setFieldTouched(path, true);
-    if (!step.name.trim()) return;
+    if (!step.name.trim() || step.name.length > 128) return;
     settings.onFalse();
     headingRef.current?.focus();
   };
@@ -103,14 +111,16 @@ export function FormBuilderStepHeader({
           nameError={nameError}
           onNameBlur={() => formik.setFieldTouched(path, true)}
           onNameChange={(stepName) =>
-            formik.setFieldValue(
-              'sections',
-              formik.values.sections.map((section) =>
-                (section.stepId ?? section.id) === step.id
-                  ? { ...section, stepId: step.id, stepName }
-                  : section
-              )
-            )
+            onRename
+              ? onRename(stepName)
+              : formik.setFieldValue(
+                  'sections',
+                  formik.values.sections.map((section) =>
+                    (section.stepId ?? section.id) === step.id
+                      ? { ...section, stepId: step.id, stepName }
+                      : section
+                  )
+                )
           }
           onDone={finishEditing}
         />

@@ -1,19 +1,20 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { LoadingButton } from 'src/components/loading-button';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { FormBusyRegion } from 'src/components/form-busy-region';
-import ShakingTextField from 'src/components/shaking-text-field';
-import { FormSectionCard } from 'src/components/form-section-card';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { Box, Stack, Alert, Button, Skeleton, Typography, DialogActions } from '@mui/material';
 
+import { buildInquiryFamilyReviews } from '../admission-inquiry-parent-review-model';
+import {
+  AdmissionInquiryParentReview,
+  AdmissionInquiryContactMatch,
+} from '../admission-inquiry-parent-review';
 import {
   useInquiryFamilyConfirmation,
   type InquiryFamilyConfirmationProps,
@@ -35,29 +36,15 @@ function InquiryFamilyConfirmationContent(props: InquiryFamilyConfirmationProps)
   const { inquiry } = props;
   const state = useInquiryFamilyConfirmation(props);
   const { formik } = state;
-  const contentRef = useRef<HTMLDivElement>(null);
-  const lastFocusedSubmit = useRef(0);
-  useEffect(() => {
-    if (!formik.submitCount) {
-      lastFocusedSubmit.current = 0;
-      return;
-    }
-    if (
-      formik.isValidating ||
-      lastFocusedSubmit.current === formik.submitCount ||
-      !Object.keys(formik.errors).length
-    )
-      return;
-    const invalid = contentRef.current?.querySelector<HTMLElement>(
-      '[aria-invalid="true"]:not([aria-hidden="true"]):not(:disabled):not([aria-disabled="true"])'
+  const families = buildInquiryFamilyReviews(state.candidates);
+  const selected = families
+    .flatMap((family) => family.parents)
+    .find(
+      (option) =>
+        inquiryFamilyCandidateKey(option.match) === formik.values.source &&
+        inquiryFamilyParentKey(option.parent) === formik.values.parent
     );
-    if (!invalid) return;
-    lastFocusedSubmit.current = formik.submitCount;
-    invalid.focus();
-    invalid.scrollIntoView?.({ block: 'nearest' });
-  }, [formik.submitCount, formik.isValidating, formik.errors]);
-  const fieldError = (name: keyof typeof formik.values) =>
-    formik.touched[name] || formik.submitCount > 0 ? formik.errors[name] : undefined;
+  const relationship = state.selectedParent?.relationship ?? formik.values.relationship;
   const locked =
     state.loading ||
     state.saving ||
@@ -91,8 +78,9 @@ function InquiryFamilyConfirmationContent(props: InquiryFamilyConfirmationProps)
       {state.open && (
         <CustomDialog
           open
-          title="Confirm Sibling Family"
-          titleInfo="Choose an Existing Child and the Saved Father or Mother. Matching Contact Details Are Suggestions; Staff Must Confirm the Family."
+          title="Check Parent Details"
+          maxWidth="sm"
+          titleInfo="Check the saved parent and children. Add as Sibling links this inquiry to that family without changing the saved parent."
           handleClose={state.requestClose}
           guardUnsavedChanges={false}
           disableClose={state.saving}
@@ -107,119 +95,63 @@ function InquiryFamilyConfirmationContent(props: InquiryFamilyConfirmationProps)
           }}
         >
           <DialogScrollContent>
-            <Box ref={contentRef}>
-              <FormBusyRegion busy={state.saving} label="Confirming Sibling Family…">
-                <FormSectionCard
-                  title="Sibling Family"
-                  icon={GlobalIcons.family}
-                  descriptionTooltip="This Confirms Only This Inquiry. Saved Parent Details and Existing Sibling Access Stay Unchanged."
-                >
-                  <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
-                    For {inquiry.applicantName} · {inquiry.inquiryNumber}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Available common parent details will fill the registration form. Missing details
-                    remain normal fields.
-                  </Typography>
-                  {state.loading ? (
-                    <Stack spacing={2} role="status" aria-label="Loading Family Matches">
-                      <Skeleton variant="rounded" height={56} />
-                      <Skeleton variant="rounded" height={56} />
-                    </Stack>
-                  ) : state.candidates.length ? (
-                    <Stack spacing={2}>
-                      <ShakingTextField error={Boolean(fieldError('source'))}>
-                        <CustomSelect
-                          required
-                          fullWidth
-                          size="small"
-                          name="familySource"
-                          label="Existing Child"
-                          value={formik.values.source}
-                          disabled={locked}
-                          options={state.candidates.map((candidate) => ({
-                            value: inquiryFamilyCandidateKey(candidate),
-                            label: `${candidate.applicantName}${candidate.existingInquiryNumber ? ` · ${candidate.existingInquiryNumber}` : ''}`,
-                          }))}
-                          onBlur={() => formik.setFieldTouched('source', true)}
-                          onChange={(value) =>
-                            formik.setValues({
-                              source: String(value),
-                              parent: '',
-                              relationship: '',
-                            })
-                          }
-                          error={Boolean(fieldError('source'))}
-                          helperText={fieldError('source')}
-                        />
-                      </ShakingTextField>
-                      <ShakingTextField error={Boolean(fieldError('parent'))}>
-                        <CustomSelect
-                          required
-                          fullWidth
-                          size="small"
-                          name="savedFamilyParent"
-                          label="Saved Parent"
-                          value={formik.values.parent}
-                          disabled={locked || !state.selectedSource}
-                          options={(state.selectedSource?.parents ?? []).map((parent) => ({
-                            value: inquiryFamilyParentKey(parent),
-                            label: `${parent.relationship === 'father' ? 'Father' : parent.relationship === 'mother' ? 'Mother' : 'Parent'} · ${parent.name}`,
-                          }))}
-                          onBlur={() => formik.setFieldTouched('parent', true)}
-                          onChange={(value) =>
-                            formik.setValues((current) => ({
-                              ...current,
-                              parent: String(value),
-                              relationship: '',
-                            }))
-                          }
-                          error={Boolean(fieldError('parent'))}
-                          helperText={fieldError('parent')}
-                        />
-                      </ShakingTextField>
-                      {state.selectedParent && !state.selectedParent.relationship && (
-                        <ShakingTextField error={Boolean(fieldError('relationship'))}>
-                          <CustomSelect
-                            required
-                            fullWidth
-                            size="small"
-                            name="savedParentRelationship"
-                            label="Relationship"
-                            value={formik.values.relationship}
-                            disabled={locked}
-                            options={[
-                              { value: 'father', label: 'Father' },
-                              { value: 'mother', label: 'Mother' },
-                            ]}
-                            onBlur={() => formik.setFieldTouched('relationship', true)}
-                            onChange={(value) =>
-                              formik.setFieldValue('relationship', String(value))
-                            }
-                            error={Boolean(fieldError('relationship'))}
-                            helperText={fieldError('relationship')}
-                          />
-                        </ShakingTextField>
-                      )}
-                    </Stack>
-                  ) : (
-                    !state.requestError && (
-                      <Typography variant="body2" color="text.secondary">
-                        No available family matches were found for this inquiry. Continue manual
-                        entry or reload matches after the source details are saved.
-                      </Typography>
-                    )
-                  )}
-                  {state.staleTarget && (
-                    <Alert severity="warning">
-                      This inquiry changed. Reload matches and select the family again.
-                    </Alert>
-                  )}
-                  {state.entryReason && <Alert severity="warning">{state.entryReason}</Alert>}
-                  {state.requestError && state.requestError !== state.entryReason && (
-                    <Alert severity="error">{state.requestError}</Alert>
-                  )}
-                  {!state.loading && (
+            <FormBusyRegion busy={state.saving} label="Confirming Sibling Family…">
+              <Stack spacing={2}>
+                <Typography variant="body2">
+                  Inquiry: <strong>{inquiry.applicantName}</strong>
+                </Typography>
+                {state.loading ? (
+                  <Stack spacing={2} role="status" aria-label="Loading Family Matches">
+                    <Skeleton variant="rounded" height={56} />
+                    <Skeleton variant="rounded" height={56} />
+                  </Stack>
+                ) : state.candidates.length ? (
+                  <>
+                    <AdmissionInquiryContactMatch
+                      matches={state.candidates}
+                      phone={state.reviewInput?.guardianPhone ?? ''}
+                      email={state.reviewInput?.guardianEmail}
+                    />
+                    <AdmissionInquiryParentReview
+                      families={families}
+                      selected={selected}
+                      disabled={locked}
+                      enteredMobile={state.reviewInput?.guardianPhone}
+                      relationship={formik.values.relationship}
+                      relationshipError={
+                        formik.touched.relationship || formik.submitCount
+                          ? formik.errors.relationship
+                          : undefined
+                      }
+                      onRelationshipChange={(value) => formik.setFieldValue('relationship', value)}
+                      onSelect={(option) =>
+                        formik.setValues({
+                          source: inquiryFamilyCandidateKey(option.match),
+                          parent: inquiryFamilyParentKey(option.parent),
+                          relationship: '',
+                        })
+                      }
+                    />
+                  </>
+                ) : (
+                  !state.requestError && (
+                    <Typography variant="body2" color="text.secondary">
+                      No available family matches were found. Edit the parent contact details or
+                      reload matches.
+                    </Typography>
+                  )
+                )}
+                {state.staleTarget && (
+                  <Alert severity="warning">
+                    This inquiry changed. Reload matches and select the parent again.
+                  </Alert>
+                )}
+                {state.entryReason && <Alert severity="warning">{state.entryReason}</Alert>}
+                {state.requestError && state.requestError !== state.entryReason && (
+                  <Alert severity="error">{state.requestError}</Alert>
+                )}
+                {!state.loading &&
+                  (state.requestError || state.staleTarget || !state.candidates.length) && (
                     <Button
                       type="button"
                       size="small"
@@ -232,30 +164,30 @@ function InquiryFamilyConfirmationContent(props: InquiryFamilyConfirmationProps)
                       Reload Matches
                     </Button>
                   )}
-                </FormSectionCard>
-              </FormBusyRegion>
-            </Box>
+              </Stack>
+            </FormBusyRegion>
           </DialogScrollContent>
-          <DialogActions>
+          <DialogActions disableSpacing sx={{ flexWrap: 'wrap', gap: 1 }}>
             <Button
               type="button"
               size="small"
               variant="outlined"
-              startIcon={<Iconify icon={GlobalIcons.cancel} width={18} />}
+              startIcon={<Iconify icon={GlobalIcons.edit} width={18} />}
               disabled={state.saving}
               onClick={state.requestClose}
             >
-              Cancel
+              Edit Contact Details
             </Button>
             <LoadingButton
               type="submit"
               size="small"
               variant="contained"
+              color="inherit"
               startIcon={<Iconify icon={GlobalIcons.assigned} width={18} />}
               loading={state.saving}
-              disabled={locked || !state.candidates.length}
+              disabled={locked || !selected || !['father', 'mother'].includes(relationship)}
             >
-              Confirm Family
+              Add as Sibling
             </LoadingButton>
           </DialogActions>
         </CustomDialog>

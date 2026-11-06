@@ -60,8 +60,10 @@ describe('Student Records security navigation', () => {
       ['Student I-Card', '/student/student-i-card'],
       ['Certificates', '/student/certificates'],
       ['Reports', '/student/reports'],
-      ['Settings', '/student/studentRecords/setting'],
     ]);
+    expect(
+      records.permissionChildren?.find((node) => node.title === 'Policy Settings')?.permissionName
+    ).toBe('Students.Records.Settings.View');
   });
 
   it.each([
@@ -69,16 +71,31 @@ describe('Student Records security navigation', () => {
     ['Student I-Card', 'StudentICard'],
     ['Certificates', 'Certificates'],
     ['Reports', 'Reports'],
-    ['Settings', 'Settings'],
   ])('maps %s to its exact backend action bundle', (title, feature) => {
     expect(getNodeActionPermissionNames(submodule(title), catalogue)).toEqual(actions(feature));
   });
 
+  it('keeps policy Settings permissions manageable without exposing the legacy house menu', () => {
+    const settings = recordsNavigation().permissionChildren?.find(
+      (child) => child.title === 'Policy Settings'
+    );
+    expect(settings).toBeDefined();
+    expect(getNodeActionPermissionNames(settings!, catalogue).sort()).toEqual(
+      actions('Settings').sort()
+    );
+  });
+
   it('retains historical workflow identifiers without inventing Delete', () => {
     const node = { permissionName: `${prefix}Overrides.View` };
-    expect(getNodeActionPermissionNamesForAction(node.permissionName!, 'View', catalogue)).toEqual(actions('Overrides', ['View']));
-    expect(getNodeActionPermissionNamesForAction(node.permissionName!, 'Add', catalogue)).toEqual(actions('Overrides', ['Add']));
-    expect(getNodeActionPermissionNamesForAction(node.permissionName!, 'Delete', catalogue)).toEqual([]);
+    expect(getNodeActionPermissionNamesForAction(node.permissionName!, 'View', catalogue)).toEqual(
+      actions('Overrides', ['View'])
+    );
+    expect(getNodeActionPermissionNamesForAction(node.permissionName!, 'Add', catalogue)).toEqual(
+      actions('Overrides', ['Add'])
+    );
+    expect(
+      getNodeActionPermissionNamesForAction(node.permissionName!, 'Delete', catalogue)
+    ).toEqual([]);
   });
 
   it('keeps guardian workflow identifiers distinct from profile guards', () => {

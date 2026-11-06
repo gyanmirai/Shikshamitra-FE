@@ -5,6 +5,7 @@ import type { StudentRecordProfile } from 'src/redux/student/student-profile-typ
 
 import { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { RouterLink } from 'src/routes/components';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -62,10 +63,10 @@ const PRIMARY = [
   { value: 'history', label: 'History' },
 ];
 const PRIMARY_ICONS: Record<string, string> = {
-  overview: 'mdi:view-dashboard-outline',
-  details: 'mdi:account-outline',
-  documents: 'mdi:file-document-outline',
-  history: 'mdi:history',
+  overview: GlobalIcons.dashboard,
+  details: GlobalIcons.studentProfile,
+  documents: GlobalIcons.documentIcon,
+  history: GlobalIcons.history,
 };
 export function StudentProfileView({
   student,
@@ -193,7 +194,6 @@ export function StudentProfileView({
           alignItems: { xs: 'stretch', sm: 'center' },
           flexShrink: 0,
           minWidth: 0,
-          px: 1,
         }}
       >
         <CustomTabs
@@ -204,11 +204,6 @@ export function StudentProfileView({
           allowScrollButtonsMobile
           aria-label="Student profile tabs"
           sx={{ minWidth: 0, flex: 1 }}
-          slotProps={{
-            tab: { minHeight: 44, px: 1.5 },
-            scroller: { p: 0 },
-            selected: { color: 'primary.main' },
-          }}
         >
           {PRIMARY.map((item) => (
             <Tab
@@ -217,7 +212,7 @@ export function StudentProfileView({
               component={RouterLink}
               href={viewHref(item.value)}
               value={item.value}
-              icon={<Iconify icon={PRIMARY_ICONS[item.value]} width={18} />}
+              icon={<Iconify icon={PRIMARY_ICONS[item.value]} width={20} />}
               iconPosition="start"
               label={item.label}
               aria-controls={`student-profile-panel-${item.value}`}
@@ -227,11 +222,13 @@ export function StudentProfileView({
         {related.length > 0 && (
           <>
             <Button
+              size="small"
+              color="inherit"
               onClick={(event) => setRelatedAnchor(event.currentTarget)}
               aria-haspopup="menu"
               aria-expanded={Boolean(relatedAnchor)}
-              endIcon={<Iconify icon="mdi:chevron-down" />}
-              sx={{ flexShrink: 0, ml: { sm: 0.5 }, alignSelf: { xs: 'flex-end', sm: 'center' } }}
+              endIcon={<Iconify icon={GlobalIcons.expandMore} />}
+              sx={{ flexShrink: 0, m: 1, alignSelf: { xs: 'flex-end', sm: 'center' } }}
             >
               {related.find((item) => item.value === view)?.label ?? 'Related modules'}
             </Button>
@@ -285,7 +282,6 @@ export function StudentProfileView({
             PRIMARY.some((item) => item.value === view) ? `student-profile-tab-${view}` : undefined
           }
           sx={{
-            p: { xs: 0.5, sm: 1 },
             minWidth: 0,
             ...(view === 'documents' && {
               height: 1,
@@ -295,7 +291,7 @@ export function StudentProfileView({
             }),
           }}
         >
-          <Stack spacing={1.5} sx={view === 'documents' ? { flex: 1, minHeight: 0 } : undefined}>
+          <Stack spacing={2} sx={view === 'documents' ? { flex: 1, minHeight: 0 } : undefined}>
             {detailsQuery.isError && ['overview', 'details', 'history'].includes(view) && (
               <StudentFeedback
                 notificationKey="STU-0764"
@@ -321,7 +317,6 @@ export function StudentProfileView({
                 student={student}
                 details={details}
                 changes={changeItems}
-                viewHref={viewHref}
                 changesLoading={changes.isLoading || (changes.isFetching && !changes.currentData)}
                 changesError={changes.isError}
                 canReadChanges={canViewChanges}

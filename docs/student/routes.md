@@ -14,7 +14,7 @@ TL;DR: use this page to map the implemented Admissions and Onboarding routes to 
 
 ## House Management
 
-Student Records → House Management is registered after Student List in `src/constants/student-menu.ts`. Its route is `/student/records/houses`, sourced from `studentPaths.records.houseManagement`. The page requires `Students.Records.HouseManagement.View`; controls use `manageHouseManagement` (`Add`, displayed as Add/Update) and `deleteHouseManagement` (`Delete`). Existing Student and Student Records visibility flags apply, with no feature-specific visibility flag or role-name exception. Legacy Student Records House Settings remains separate.
+Student Records → House Management is registered after Student List in `src/constants/student-menu.ts`. Its route is `/student/records/houses`, sourced from `studentPaths.records.houseManagement`. The page requires `Students.Records.HouseManagement.View`; controls use `manageHouseManagement` (`Add`, displayed as Add/Update) and `deleteHouseManagement` (`Delete`). Existing Student and Student Records visibility flags apply, with no feature-specific visibility flag or role-name exception. The former House Settings URL redirects here; the policy settings workspace remains separate.
 
 The route page and permission layout live under `src/app/(auth-route)/student/records/houses/`; the screen is `src/screens/student/house-management/index.tsx`. URL state uses `tab=houses|students|divisions`, `board`, `medium`, `class`, `division`, `house`, `assignment=unassigned`, `search`, `sort`, zero-based `page` and `pageSize`. `houseName` is a display label only. Academic year comes from the shared Student academic scope. Profile links require the separate Student List View grant.
 
@@ -65,7 +65,6 @@ The settings page contains only student leave types. Former `task`, `view`, and 
 | Student Setup → Fees        | `/student/onboarding/setup?view=fees`            | Student Setup task view                                               | `Students.Onboarding.View`                     |
 | Student Setup → Credentials | `/student/onboarding/setup?view=credentials`     | Student Setup task view                                               | `Students.Onboarding.View`                     |
 | Onboarding → Settings       | `/student/onboarding/settings`                   | `src/screens/student/onboarding/setting/onboarding-settings-page.tsx` | `Students.Onboarding.Add`                      |
-| Settings → Portal Access    | `/student/onboarding/settings?tab=portal-access` | `src/screens/student/onboarding/setting/portal-access-settings.tsx`   | `Students.Onboarding.Add`                      |
 | Settings → GR Number        | `/student/onboarding/settings?tab=gr-number`     | Embedded GR number settings                                           | `Students.Onboarding.Add`                      |
 | Settings → Roll Number      | `/student/onboarding/settings?tab=roll-number`   | Embedded Roll number settings                                         | `Students.Onboarding.Add`                      |
 
@@ -84,13 +83,18 @@ Backend services remain authoritative for state changes and permissions.
 
 The Student Records menu has five submodules. Existing Records workflow URLs remain available for actions linked from a record, but are not separate menu entries.
 
-| Submodule      | Route                             | Screen                                                                                       | Permission                           |
-| -------------- | --------------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------ |
-| Student List   | `/student/profile`                | `src/screens/student/studentProfile/index.tsx`                                               | `Students.Records.StudentList.View`  |
-| Student I-Card | `/student/student-i-card`         | `src/screens/student/records/student-icard-templates.tsx`                                    | `Students.Records.StudentICard.View` |
-| Certificates   | `/student/certificates`           | `src/screens/student/records/student-certificate-workspace.tsx`, through the document screen | `Students.Records.Certificates.View` |
-| Reports        | `/student/reports`                | `src/screens/student/reports/index.tsx`                                                      | `Students.Records.Reports.View`      |
-| Settings       | `/student/studentRecords/setting` | `src/screens/student/recordsSetting/index.tsx`                                               | `Students.Records.Settings.View`     |
+| Submodule        | Route                     | Screen                                                                                       | Permission                              |
+| ---------------- | ------------------------- | -------------------------------------------------------------------------------------------- | --------------------------------------- |
+| Student List     | `/student/profile`        | `src/screens/student/studentProfile/index.tsx`                                               | `Students.Records.StudentList.View`     |
+| House Management | `/student/records/houses` | `src/screens/student/house-management/index.tsx`                                             | `Students.Records.HouseManagement.View` |
+| Student I-Card   | `/student/student-i-card` | `src/screens/student/records/student-icard-templates.tsx`                                    | `Students.Records.StudentICard.View`    |
+| Certificates     | `/student/certificates`   | `src/screens/student/records/student-certificate-workspace.tsx`, through the document screen | `Students.Records.Certificates.View`    |
+| Reports          | `/student/reports`        | `src/screens/student/reports/index.tsx`                                                      | `Students.Records.Reports.View`         |
+
+The former `/student/studentRecords/setting` House Settings URL redirects to House Management. House creation,
+editing and deletion use the current House Management form and its dedicated `Students.Records.HouseManagement.*`
+permissions. The separate Student Records policy workspace remains at `/student/records/settings`; its settings
+permissions and runtime policies are unchanged.
 
 I-Card and Certificates use the persisted document APIs rather than the sample rows in the earlier screens. Server permissions and school Records policy still control issuance and record changes.
 

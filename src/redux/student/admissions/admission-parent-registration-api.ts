@@ -6,6 +6,7 @@ import type {
   ParentRegistrationSendInput,
   ParentRegistrationEmailInput,
   StaffParentRegistrationContext,
+  ParentRegistrationEmailHistory,
   ParentRegistrationCorrectionInput,
 } from './admission-parent-registration-types';
 
@@ -13,6 +14,9 @@ const base = (id: string) =>
   `/student/enrollment/admissions/applications/${encodeURIComponent(id)}/parent-registration`;
 const unwrap = (
   result: StaffParentRegistrationContext | { data: StaffParentRegistrationContext }
+) => ('data' in result ? result.data : result);
+const unwrapEmailHistory = (
+  result: ParentRegistrationEmailHistory[] | { data: ParentRegistrationEmailHistory[] }
 ) => ('data' in result ? result.data : result);
 const invalidates = (_result: unknown, error: unknown) =>
   error ? [] : [studentAdmissionsCrmType.admissionApplication];
@@ -32,6 +36,13 @@ export const admissionParentRegistrationApi = api.injectEndpoints({
               },
             ]
           : [],
+    }),
+    getParentRegistrationEmailHistory: builder.query<ParentRegistrationEmailHistory[], string>({
+      query: (id) => ({ url: `${base(id)}/email-history` }),
+      transformResponse: unwrapEmailHistory,
+      providesTags: (_result, _error, applicationId) => [
+        { type: studentAdmissionsCrmType.admissionApplication, id: `PARENT-${applicationId}` },
+      ],
     }),
     sendParentRegistration: builder.mutation<
       StaffParentRegistrationContext,
@@ -113,6 +124,7 @@ export const admissionParentRegistrationApi = api.injectEndpoints({
 
 export const {
   useGetParentRegistrationQuery,
+  useGetParentRegistrationEmailHistoryQuery,
   useSendParentRegistrationMutation,
   useChangeParentRegistrationEmailMutation,
   useRevokeParentRegistrationMutation,

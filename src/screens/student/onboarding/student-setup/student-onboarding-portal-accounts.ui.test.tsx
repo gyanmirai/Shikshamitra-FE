@@ -29,6 +29,7 @@ const mocks = vi.hoisted(() => ({
   },
   permissions: [] as { name: string; isGranted: boolean }[],
   send: vi.fn(),
+  link: vi.fn(),
   success: vi.fn(),
   sending: false,
   legacyAccounts: vi.fn(),
@@ -138,7 +139,7 @@ vi.mock('src/redux/student/onboarding/student-onboarding-api', () => ({
   useGetStudentOnboardingCredentialsQuery: () => mocks.query,
   useSendStudentOnboardingCredentialsMutation: () => [mocks.send, { isLoading: mocks.sending }],
   useRetryStudentOnboardingParentSetupMutation: () => [vi.fn(), { isLoading: false }],
-  useLinkStudentOnboardingParentMutation: () => [vi.fn(), { isLoading: false }],
+  useLinkStudentOnboardingParentMutation: () => [mocks.link, { isLoading: false }],
   useGetStudentPortalAccountsQuery: mocks.legacyAccounts,
   useGetStudentOnboardingServiceHandoffsQuery: mocks.legacyHandoffs,
   useGetStudentCredentialEmailsQuery: mocks.legacyEmails,
@@ -272,6 +273,85 @@ const workspaceWithDelivery = (status: 'Pending' | 'Sent' | 'Failed' | 'Blocked'
     },
   })),
 });
+it.each([false, true])(
+  'preserves the reviewed sibling parent identity through activation (identity changed: %s)',
+  async (identityChanged) => {
+    setRecipients([fatherRecipient]);
+    const pending = {
+      ...mocks.query.currentData!,
+      parentSibling: {
+        enabled: true,
+        familyConfirmed: false,
+        requiresOnboardingConfirmation: true,
+        isLinked: false,
+        requiresSelection: false,
+        canLink: true,
+        canRetrySetup: false,
+        status: 'Available' as const,
+        candidates: [
+          {
+            relationship: 'father' as const,
+            email: fatherRecipient.email!,
+            userId: 'parent-existing',
+            setupStatus: 'Ready' as const,
+          },
+        ],
+      },
+    };
+    mocks.query.currentData = pending;
+    mocks.query.data = pending;
+    mocks.query.refetch.mockResolvedValue({
+      data: {
+        ...pending,
+        parentSibling: {
+          ...pending.parentSibling,
+          candidates: pending.parentSibling.candidates.map((candidate) => ({
+            ...candidate,
+            userId: identityChanged ? 'different-user' : candidate.userId,
+          })),
+        },
+      },
+    });
+    mocks.link.mockReturnValue({
+      unwrap: async () => ({
+        ...pending,
+        concurrencyStamp: 'linked-stamp',
+        parentSibling: {
+          ...pending.parentSibling,
+          isLinked: true,
+          linkedRelationship: 'father',
+          status: 'Linked',
+        },
+      }),
+    });
+    const ref = createRef<StudentOnboardingPortalAccountsHandle>();
+    panel({
+      ref,
+      student: { ...student, studentEnrollmentId: null },
+      combinedActivation: true,
+      compact: true,
+    });
+    selectAdult();
+    confirm();
+    let result: StudentCredentialSendSummary | undefined;
+    await act(async () => {
+      result = await ref.current?.sendSelected(true);
+    });
+    if (identityChanged) expect(mocks.link).not.toHaveBeenCalled();
+    else
+      expect(mocks.link).toHaveBeenCalledWith(
+        expect.objectContaining({
+          confirmExistingParentAccess: true,
+          siblingParentSelection: expect.objectContaining({ expectedUserId: 'parent-existing' }),
+        })
+      );
+    expect(mocks.send).not.toHaveBeenCalled();
+    expect(result).toMatchObject({
+      linked: identityChanged ? 0 : 1,
+      failed: identityChanged ? 1 : 0,
+    });
+  }
+);
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.query.isLoading = false;

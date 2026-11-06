@@ -8,9 +8,10 @@ import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { render, screen, within, fireEvent } from '@testing-library/react';
+import { render, screen, within, cleanup, fireEvent } from '@testing-library/react';
 
 import { FormBuilderCanvas } from './form-builder-canvas';
+import { getInheritancePreviewValues } from '../form-inheritance-model';
 import { getSystemAdmissionFormTemplate } from '../admission-form-template-catalog';
 import {
   newField,
@@ -101,8 +102,12 @@ describe('FormBuilderCanvas section deletion', () => {
   });
 });
 
-function renderCombinedCanvas(layoutType: 0 | 1, effectiveLayout = layoutType) {
-  const base = getBlankAdmissionFormInitialValues(1);
+function renderCombinedCanvas(
+  layoutType: 0 | 1,
+  effectiveLayout = layoutType,
+  saved?: CreateUpdateAdmissionForm
+) {
+  const base = saved ?? getBlankAdmissionFormInitialValues(1);
   const baseField = { ...newField(base.sections[0].id, 0), label: 'Registration question' };
   base.sections[0].fields = [baseField];
   base.layoutType = layoutType;
@@ -138,7 +143,7 @@ function renderCombinedCanvas(layoutType: 0 | 1, effectiveLayout = layoutType) {
           <>
             <FormBuilderCanvas
               formik={formik}
-              effectiveForm={{
+              effectiveForm={getInheritancePreviewValues(formik.values, {
                 ...formik.values,
                 layoutType: effectiveLayout,
                 sections: [
@@ -149,7 +154,7 @@ function renderCombinedCanvas(layoutType: 0 | 1, effectiveLayout = layoutType) {
                     stepDisplayOrder: 1,
                   })),
                 ],
-              }}
+              })}
               selectedSectionId={selected}
               selectedFieldId={null}
               onSelect={(id) => select(id)}
@@ -174,6 +179,42 @@ function renderCombinedCanvas(layoutType: 0 | 1, effectiveLayout = layoutType) {
 }
 
 describe('combined Inquiry and Registration canvas', () => {
+  it('renames a reused Inquiry step, keeps its fields locked and restores the title on reopen', async () => {
+    const user = userEvent.setup({ delay: null });
+    const initial = getBlankAdmissionFormInitialValues(1);
+    initial.inheritance = {
+      enabled: true,
+      sources: [
+        {
+          inquiryFormDefinitionId: 'inquiry-a',
+          requiredFieldIdentities: [],
+          fieldMappings: [],
+          layouts: [],
+        },
+      ],
+    };
+    const { sources } = renderCombinedCanvas(1, 1, initial);
+    await user.click(screen.getByRole('button', { name: 'Actions For Inquiry step step' }));
+    expect(screen.getByRole('menuitem', { name: 'Delete' })).toHaveAttribute(
+      'aria-disabled',
+      'true'
+    );
+    await user.click(screen.getByRole('menuitem', { name: 'Edit' }));
+    const heading = screen.getByRole('textbox', { name: 'Step Heading' });
+    await user.clear(heading);
+    await user.type(heading, 'Student Information');
+    await user.click(screen.getByRole('button', { name: 'Finish Editing Step Heading' }));
+    const saved = JSON.parse(screen.getByTestId('base-draft').textContent!);
+    expect(saved.inheritance.sources[0].stepNames.SOURCE_STEP).toBe('Student Information');
+    expect(saved.sections).toHaveLength(1);
+    expect(sources[0].stepName).toBe('Inquiry step');
+    expect(
+      screen.queryByRole('button', { name: /Reorder Inquiry question/ })
+    ).not.toBeInTheDocument();
+    cleanup();
+    renderCombinedCanvas(1, 1, saved);
+    expect(screen.getByRole('button', { name: 'Student Information' })).toBeVisible();
+  });
   it('uses the selected Inquiry stepper even when the Registration draft is single-page', () => {
     renderCombinedCanvas(0, 1);
     const navigation = screen.getByRole('navigation', { name: 'Form Steps' });

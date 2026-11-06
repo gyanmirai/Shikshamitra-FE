@@ -1,4 +1,4 @@
-/* eslint-disable no-restricted-syntax -- Each viewport/theme case is a distinct regression check. */
+/* eslint-disable no-restricted-syntax -- Each viewport/theme combination is a separate browser regression. */
 import { test, expect } from '@playwright/test';
 
 for (const theme of ['light', 'dark']) {
@@ -7,89 +7,65 @@ for (const theme of ['light', 'dark']) {
     { width: 768, height: 1024 },
     { width: 390, height: 844 },
   ]) {
-    test(`in-form sibling review at ${viewport.width}px in ${theme}`, async ({ page }) => {
+    test(`parent review at ${viewport.width}px in ${theme}`, async ({ page }) => {
       await page.setViewportSize(viewport);
-      await page.goto('/?long');
+      await page.goto('/?long&siblings');
       if (theme === 'dark') await page.getByRole('button', { name: 'Change theme' }).click();
       await expect(page.locator('html')).toHaveAttribute('data-mui-color-scheme', theme);
-      await expect(page.getByRole('heading', { name: 'Existing Family Found' })).toBeVisible();
-      await expect(page.locator('[data-sonner-toast]')).toHaveCount(0);
-      const toggle = page.getByRole('button', { name: 'Different family?' });
-      const reason = page.getByRole('textbox', { name: 'Reason for creating a separate family' });
-      await expect(reason).toHaveCount(0);
-      await toggle.focus();
-      await page.keyboard.press('Enter');
-      await expect(toggle).toHaveAttribute('aria-expanded', 'true');
-      await expect(page.getByRole('button', { name: 'Create separate family' })).toBeDisabled();
-      await reason.fill('Two different families share the contact number.');
-      await toggle.click();
-      await expect(reason).toHaveCount(0);
-      await toggle.click();
-      await expect(reason).toHaveValue('Two different families share the contact number.');
-      await toggle.click();
-      await page.getByRole('button', { name: 'Add sibling', exact: true }).click();
-      await expect(page.getByText('Select a parent.', { exact: true })).toBeVisible();
-      await expect(page.getByRole('dialog')).toHaveCount(0);
+      await expect(
+        page.getByRole('button', { name: 'Add as Sibling', exact: true })
+      ).toBeDisabled();
+      await expect(page.getByText(/Separate Family|Different Family/i)).toHaveCount(0);
       await page.getByRole('combobox', { name: 'Parent', exact: false }).click();
       await page.getByRole('option', { name: /Father · QA Father/ }).click();
-      await expect(page.locator('[data-sonner-toast]')).toHaveCount(0);
+      const children = page.getByRole('list', { name: 'Children in this family' });
+      await expect(children.getByRole('listitem')).toHaveCount(2);
+      await expect(children.getByRole('button')).toHaveCount(0);
+      await expect(children.getByRole('combobox')).toHaveCount(0);
+      await expect(page.getByLabel('Sibling confirmations')).toHaveText('0');
       expect(
         await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)
       ).toBeTruthy();
-      await page.screenshot({
-        path: `.artifacts/add-sibling-20261029/sibling-${viewport.width}-${theme}.png`,
-        fullPage: true,
-        animations: 'disabled',
-      });
-      await page.getByRole('button', { name: 'Add sibling', exact: true }).click();
-      const dialog = page.getByRole('dialog', { name: 'Add Sibling?' });
-      await expect(dialog).toBeVisible();
-      await expect(page.getByLabel('Sibling confirmations')).toHaveText('0');
-      await dialog.getByRole('button', { name: 'Add sibling' }).click();
+      await page.getByRole('button', { name: 'Add as Sibling', exact: true }).click();
+      await expect(page.getByRole('button', { name: 'Edit Contact Details' })).toBeDisabled();
+      await expect(
+        page.getByRole('button', { name: 'Add as Sibling', exact: true })
+      ).toBeDisabled();
       await expect(page.getByLabel('Sibling confirmations')).toHaveText('1');
-      await expect(dialog.getByRole('button', { name: 'Cancel' })).toBeDisabled();
-      await expect(dialog.getByRole('button', { name: 'Add sibling' })).toBeDisabled();
-      await expect(dialog).toHaveCount(0);
-      await expect(page.getByLabel('Sibling confirmations')).toHaveText('1');
-      await page.getByRole('button', { name: 'Open inquiry' }).click();
-      await expect(page.getByLabel('Opened inquiry')).toHaveText('synthetic-inquiry-1');
+      await expect(page.getByRole('button', { name: 'Add as Sibling', exact: true })).toBeEnabled();
+      await expect(page.getByRole('dialog')).toHaveCount(0);
     });
   }
 }
-
-test('multiple matches keep one reason action, and unavailable parents cannot link', async ({
+test('dialog closes locally for contact editing and preserves the parent draft', async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('/?multi&noParents');
-  await expect(page.getByRole('heading', { name: 'Possible Family Matches' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Different family?' })).toHaveCount(1);
-  await Promise.all(
-    (await page.getByRole('button', { name: 'Add sibling', exact: true }).all()).map((button) =>
-      expect(button).toBeDisabled()
-    )
+  await page.goto('/?dialog&siblings');
+  const dialog = page.getByRole('dialog', { name: 'Check Parent Details' });
+  await dialog.getByRole('button', { name: 'Edit Contact Details' }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(page.getByRole('textbox', { name: 'Parent or guardian name' })).toHaveValue(
+    'QA Parent'
   );
-  await page.getByRole('button', { name: 'Different family?' }).click();
-  await page
-    .getByRole('textbox', { name: 'Reason for creating a separate family' })
-    .fill('Unrelated family confirmed by staff.');
-  await page.getByRole('button', { name: 'Create separate family' }).click();
-  await expect(page.getByLabel('Separate family submissions')).toHaveText('1');
-  expect(
-    await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)
-  ).toBeTruthy();
-  await page.goto('/?denied');
-  await expect(page.getByRole('button', { name: 'Add sibling', exact: true })).toBeDisabled();
-  await expect(page.getByText(/not available for linking/)).toBeVisible();
+  await page.getByRole('button', { name: 'Review matches' }).click();
+  await expect(dialog).toBeVisible();
 });
-
-test('email-only family match retains the different-mobile confirmation', async ({ page }) => {
+test('unavailable parents cannot link and have no separate-family bypass', async ({ page }) => {
+  await page.goto('/?multi&noParents');
+  await expect(page.getByRole('button', { name: 'Add as Sibling' })).toBeDisabled();
+  await expect(page.getByText(/No saved Father or Mother/)).toBeVisible();
+  await expect(page.getByText(/Separate Family|Different Family/i)).toHaveCount(0);
+  await page.goto('/?denied');
+  await expect(page.getByRole('button', { name: 'Add as Sibling' })).toBeDisabled();
+});
+test('email-only matching explains different saved mobile on the review itself', async ({
+  page,
+}) => {
   await page.goto('/?emailOnly');
+  await expect(page.getByText('This email matches a saved parent.')).toBeVisible();
   await page.getByRole('combobox', { name: 'Parent', exact: false }).click();
   await page.getByRole('option', { name: /Father · QA Father/ }).click();
-  await page.getByRole('button', { name: 'Add sibling', exact: true }).click();
-  const dialog = page.getByRole('dialog', { name: 'Add Sibling?' });
-  await expect(dialog.getByText(/entered mobile differs/)).toBeVisible();
-  await dialog.getByRole('button', { name: 'Cancel' }).click();
+  await expect(page.getByText(/saved mobile is different/)).toBeVisible();
   await expect(page.getByLabel('Sibling confirmations')).toHaveText('0');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
 });

@@ -173,44 +173,71 @@ beforeEach(() => {
   }));
 });
 
-it('refreshes an active student case while required credential delivery is pending', async () => {
-  mocks.caseQuery.currentData = makeCase({
-    status: 3,
-    studentEnrollmentId: 'enrollment-1',
-    credentialsPending: true,
-  });
-  vi.useFakeTimers();
-  const { unmount } = renderHook(() =>
-    useStudentQuickSetupAcademic({ caseId: 'case', canManage: true })
-  );
-
-  try {
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(15_000);
+it.each([3, 4] as const)(
+  'refreshes pending delivery independently of setup status %s',
+  async (status) => {
+    mocks.caseQuery.currentData = makeCase({
+      status,
+      studentEnrollmentId: 'enrollment-1',
+      credentialsPending: true,
     });
-    expect(mocks.caseQuery.refetch).toHaveBeenCalledOnce();
-  } finally {
-    unmount();
-    vi.useRealTimers();
+    vi.useFakeTimers();
+    const { unmount } = renderHook(() =>
+      useStudentQuickSetupAcademic({ caseId: 'case', canManage: true })
+    );
+
+    try {
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(15_000);
+      });
+      expect(mocks.caseQuery.refetch).toHaveBeenCalledOnce();
+    } finally {
+      unmount();
+      vi.useRealTimers();
+    }
   }
-});
+);
 
 function Harness({
   canManage = true,
   disabled = false,
   compact = false,
+  overview = false,
 }: {
   canManage?: boolean;
   disabled?: boolean;
   compact?: boolean;
+  overview?: boolean;
 }) {
   const editor = useStudentQuickSetupAcademic({ caseId: 'case', canManage, disabled });
   return (
     <ThemeProvider theme={createTheme(defaultSettings)}>
-      <StudentQuickSetupAcademic editor={editor} compact={compact} />
+      <StudentQuickSetupAcademic editor={editor} compact={compact} overview={overview} />
     </ThemeProvider>
   );
 }
+
+it('shows readable academic values and opens the existing editor without saving', async () => {
+  mocks.caseQuery.currentData = makeCase({ grNumber: '001', rollNumber: 3 });
+  render(<Harness compact overview />);
+  const edit = await screen.findByRole('button', { name: 'Edit Class & Numbers' });
+  expect(screen.queryByRole('textbox', { name: 'GR number' })).not.toBeInTheDocument();
+  expect(screen.getByText('001')).toBeVisible();
+  fireEvent.click(edit);
+  expect(screen.getByRole('textbox', { name: 'GR number' })).toHaveValue('001');
+  expect(mocks.gr).not.toHaveBeenCalled();
+  expect(mocks.roll).not.toHaveBeenCalled();
+  expect(mocks.place).not.toHaveBeenCalled();
+});
+
+it('shows an unassigned roll number as missing in a closed setup overview', async () => {
+  mocks.caseQuery.currentData = makeCase({ status: 4, grNumber: '001', rollNumber: null });
+  render(<Harness compact overview />);
+  expect(await screen.findByText('GR number')).toBeVisible();
+  const roll = screen.getByText('Roll number').parentElement!;
+  expect(within(roll).getByText('Not assigned')).toBeVisible();
+  expect(within(roll).queryByText('0')).not.toBeInTheDocument();
+});
 
 it('offers compact number edit actions without assigning until the existing save', async () => {
   mocks.caseQuery.currentData = makeCase({ grNumber: '001', rollNumber: 3 });

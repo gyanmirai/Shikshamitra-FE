@@ -585,6 +585,16 @@ export const studentOnboardingApi = api.injectEndpoints({
       }),
       transformResponse: (response: Result<StudentOnboardingCase> | StudentOnboardingCase) =>
         unwrap(response),
+      async onQueryStarted({ id }, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          dispatch(
+            studentOnboardingApi.util.updateQueryData('getStudentOnboardingCase', id, () => data)
+          );
+        } catch {
+          // A failed readiness command preserves the last confirmed case.
+        }
+      },
       invalidatesTags: (_result, _error, { id }) => caseTags(id, _error),
     }),
     assignStudentOnboardingOwner: builder.mutation<

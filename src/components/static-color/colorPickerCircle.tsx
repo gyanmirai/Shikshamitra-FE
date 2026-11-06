@@ -40,7 +40,7 @@ const colorNames: Record<string, string> = {
   '#FFA726': 'Orange',
   '#A1887F': 'Taupe',
 };
-const staticColors = [
+export const staticColors = [
   '#00B96B', // green
   '#8E24AA', // purple
   '#00BCD4', // cyan

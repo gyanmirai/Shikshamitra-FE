@@ -19,6 +19,8 @@ export type AdmissionFormInheritedOrigin = {
 export type AdmissionFormInheritanceSource = {
   inquiryFormDefinitionId: string;
   requiredFieldIdentities: string[];
+  /** Registration-only titles keyed by the effective Inquiry step code. */
+  stepNames?: Record<string, string>;
   fieldMappings: { sourceFieldCode: string; registrationFieldCode: string }[];
   layouts: {
     fieldIdentity: string;

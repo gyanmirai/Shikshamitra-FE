@@ -59,15 +59,18 @@ export type StudentCredentialSendSummary = {
   submitted: number;
   queued: number;
   failed: number;
+  linked?: number;
 };
 
 export type StudentOnboardingPortalAccountsHandle = {
   sendSelected: (afterActivation?: boolean) => Promise<StudentCredentialSendSummary>;
+  prepareSend?: () => () => Promise<StudentCredentialSendSummary>;
 };
 
 export type StudentOnboardingPortalAccountsSelection = {
   selectedCount: number;
   canSend: boolean;
+  parentSelected?: boolean;
 };
 
 type Props = {
@@ -135,7 +138,11 @@ const StudentOnboardingPortalAccounts = forwardRef<StudentOnboardingPortalAccoun
     ref
   ) => {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
-  const credentials = useGetStudentOnboardingCredentialsQuery(student.id);
+  const [pollDelivery, setPollDelivery] = useState(false);
+  const credentials = useGetStudentOnboardingCredentialsQuery(student.id, {
+    pollingInterval: pollDelivery ? 15_000 : 0,
+    skipPollingIfUnfocused: true,
+  });
   const [sendCredentials, mutation] = useSendStudentOnboardingCredentialsMutation();
   const [retryParentSetup, retryMutation] = useRetryStudentOnboardingParentSetupMutation();
   const [linkParent, linkMutation] = useLinkStudentOnboardingParentMutation();
@@ -152,6 +159,8 @@ const StudentOnboardingPortalAccounts = forwardRef<StudentOnboardingPortalAccoun
       : queryWorkspace;
   const sibling = workspace?.parentSibling;
   const recipients = workspace?.recipients ?? [];
+  const deliveryPending = recipients.some((recipient) => queued(recipient));
+  useEffect(() => setPollDelivery(deliveryPending), [deliveryPending]);
   const adults = recipients.filter((recipient) => recipient.accountType === 'guardian');
   const legacyChoiceRequired = Boolean(
     sibling?.enabled &&
@@ -424,8 +433,12 @@ const StudentOnboardingPortalAccounts = forwardRef<StudentOnboardingPortalAccoun
       (!student.studentEnrollmentId || chosen.every((recipient) => eligible(recipient)));
   const needsActivation = compact && !student.studentEnrollmentId && chosen.length > 0;
     useEffect(() => {
-      onSelectionStateChange?.({ selectedCount, canSend: selectionCanSend });
-    }, [onSelectionStateChange, selectedCount, selectionCanSend]);
+      onSelectionStateChange?.({
+        selectedCount,
+        canSend: selectionCanSend,
+        parentSelected: activeSelected.guardian,
+      });
+    }, [onSelectionStateChange, selectedCount, selectionCanSend, activeSelected.guardian]);
   const currentRequest = (caseId: string) =>
     mounted.current && latest.current.caseId === caseId && latest.current.canManage;
   const accept = (result: StudentCredentialsWorkspace, baseSource: typeof source) => {
@@ -647,21 +660,84 @@ const StudentOnboardingPortalAccounts = forwardRef<StudentOnboardingPortalAccoun
     if (!targets.length) return { requested: 0, submitted: 0, queued: 0, failed: 0 };
     if (!afterActivation) return send(undefined, false, { targets, notifySuccess: false });
 
-    const refreshed = await refetchCurrent(student.id).catch(() => undefined);
+    let refreshed = await refetchCurrent(student.id).catch(() => undefined);
     if (!refreshed)
       return { requested: targets.length, submitted: 0, queued: 0, failed: targets.length };
-    return send(undefined, false, {
-      targets,
-      workspace: refreshed,
-      allowRefreshInProgress: true,
-      notifySuccess: false,
-    });
+    const parent = targets.find((target) => target.accountType === 'guardian');
+    const candidate = refreshed.parentSibling?.candidates.find(
+      (item) => item.relationship === parent?.relationship && item.email === parent.email
+    );
+    let linked = 0;
+    const sameReviewedParent =
+      candidate &&
+      parentCandidate &&
+      candidate.userId === parentCandidate.userId &&
+      candidate.email === parentCandidate.email &&
+      candidate.relationship === parentCandidate.relationship;
+    if (parent && candidate && !sameReviewedParent) {
+      setConfirmation('');
+      setErrors((previous) => ({
+        ...previous,
+        [recipientKey(parent)]:
+          'The parent login changed. Refresh App Login and confirm the parent again.',
+      }));
+    }
+    if (parent && candidate && sameReviewedParent && confirmed) {
+      try {
+        if (!refreshed.parentSibling?.isLinked) {
+          refreshed = await linkParent({
+            id: student.id,
+            concurrencyStamp: refreshed.concurrencyStamp,
+            confirmExistingParentAccess: true,
+            siblingParentSelection: {
+              relationship: candidate.relationship,
+              expectedEmail: candidate.email,
+              expectedUserId: candidate.userId,
+            },
+          }).unwrap();
+          accept(refreshed, latest.current.source);
+        }
+        if (refreshed.parentSibling?.isLinked) {
+          linked = 1;
+          setSelected((previous) => ({ ...previous, guardian: false }));
+        }
+      } catch (error) {
+        setErrors((previous) => ({
+          ...previous,
+          [recipientKey(parent)]: getOnboardingErrorMessage(
+            error,
+            'Parent linking failed. Refresh and retry.'
+          ),
+        }));
+      }
+    }
+    // Siblings use the existing Parent login. Activation must not send new credentials or sign-in help.
+    const emailTargets = targets.filter((target) => target.accountType !== 'guardian' || !candidate);
+    const result = emailTargets.length
+      ? await send(undefined, false, {
+          targets: emailTargets,
+          workspace: refreshed,
+          allowRefreshInProgress: true,
+          notifySuccess: false,
+        })
+      : { requested: 0, submitted: 0, queued: 0, failed: 0 };
+    return candidate
+      ? { ...result, requested: targets.length, linked, failed: result.failed + (linked ? 0 : 1) }
+      : result;
   };
   const sendSelectedRef = useRef(sendSelected);
   sendSelectedRef.current = sendSelected;
   useImperativeHandle(
     ref,
-    () => ({ sendSelected: (afterActivation) => sendSelectedRef.current(afterActivation) }),
+    () => ({
+      sendSelected: (afterActivation) => sendSelectedRef.current(afterActivation),
+      prepareSend: () => {
+        // Activation can refresh the workspace and clear recipient selections.
+        // Preserve this explicitly reviewed selection while the server commits activation.
+        const prepared = sendSelectedRef.current;
+        return () => prepared(true);
+      },
+    }),
     []
   );
   const runParentCommand = async (retry = false) => {
@@ -1516,6 +1592,7 @@ const StudentOnboardingPortalAccounts = forwardRef<StudentOnboardingPortalAccoun
       )}
     </Stack>
   );
-});
+  }
+);
 
 export default StudentOnboardingPortalAccounts;

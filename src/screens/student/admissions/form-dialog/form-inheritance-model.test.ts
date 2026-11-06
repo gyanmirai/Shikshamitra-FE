@@ -15,6 +15,7 @@ import {
 } from './form-dialog-model';
 import {
   getInheritedFields,
+  setInheritedStepName,
   approveInquirySource,
   setInheritedFieldLayout,
   setInheritedFieldMapping,
@@ -49,6 +50,16 @@ const draft = (): CreateUpdateAdmissionForm => ({
 });
 
 describe('Registration source Inquiry inheritance model', () => {
+  it.each(['', '  ', 'a'.repeat(129)])(
+    'validates an invalid Inquiry step title before saving: %j',
+    async (name) => {
+      const form = draft();
+      const renamed = setInheritedStepName(form, 'inquiry-b', 'INQ_DETAILS', name);
+      await expect(admissionFormSchema.validate(renamed)).rejects.toThrow(
+        /Step heading is required|Use 128 characters/
+      );
+    }
+  );
   it('does not reappend orphan local Board/Medium controls after an inherited legacy Class replaces their Class', () => {
     const original = draft();
     const academic = (id: string, source: string, parentField?: string): AdmissionFormField => ({

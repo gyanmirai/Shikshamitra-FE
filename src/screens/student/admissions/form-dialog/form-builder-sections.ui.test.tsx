@@ -43,6 +43,36 @@ function savedForm(): CreateUpdateAdmissionForm {
   return JSON.parse(screen.getByTestId('form-json').textContent ?? '{}');
 }
 
+it('shows a field drag preview while reordering and removes it when cancelled', async () => {
+  const values = getBlankAdmissionFormInitialValues(0);
+  const section = values.sections[0];
+  section.fields = [
+    {
+      id: 'drag-field',
+      sectionId: section.id,
+      code: 'DRAG_FIELD',
+      label: 'Preferred campus',
+      fieldType: 0,
+      bindingType: 1,
+      bindingKey: 'DRAG_FIELD',
+      required: true,
+      readOnly: false,
+      displayOrder: 0,
+    },
+  ];
+  const user = userEvent.setup({ delay: null });
+  renderBuilder(values);
+
+  const handle = screen.getByRole('button', { name: 'Reorder Preferred campus' });
+  handle.focus();
+  await user.keyboard(' ');
+
+  expect(screen.getByTestId('admission-field-drag-overlay')).toHaveTextContent('Preferred campus');
+
+  await user.keyboard('{Escape}');
+  expect(screen.queryByTestId('admission-field-drag-overlay')).not.toBeInTheDocument();
+}, 15000);
+
 it('collapses sections without losing fields and reveals newly added fields in a collapsed section', async () => {
   const user = userEvent.setup({ delay: null });
   renderBuilder();

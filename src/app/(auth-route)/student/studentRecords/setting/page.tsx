@@ -1,6 +1,6 @@
-import React from 'react';
-import HouseSetting from 'src/screens/student/recordsSetting';
+import { redirect } from 'next/navigation';
+import { studentPaths } from 'src/constants/student-menu';
 
-const page = () => <HouseSetting />;
-
-export default page;
+export default function LegacyStudentRecordsHouseSettingsPage() {
+  redirect(studentPaths.records.houseManagement);
+}

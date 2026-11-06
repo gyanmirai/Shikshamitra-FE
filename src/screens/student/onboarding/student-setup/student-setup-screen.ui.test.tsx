@@ -379,28 +379,31 @@ describe('Student Setup workspace selection wiring', () => {
     expect(mocks.params.get('class')).toBe('grade-6');
   });
 
-  it('refreshes readiness while an active student has pending credential delivery', async () => {
-    setRoute('readiness');
-    mocks.rows = [
-      {
-        ...studentOnboardingTestData[0],
-        id: 'case-pending-credentials',
-        studentEnrollmentId: 'enrollment-1',
-        credentialsPending: true,
-        status: 3,
-      },
-    ];
-    vi.useFakeTimers();
-    const { unmount } = render(element);
+  it.each([3, 4] as const)(
+    'refreshes pending credential delivery for setup status %s',
+    async (status) => {
+      setRoute('readiness');
+      mocks.rows = [
+        {
+          ...studentOnboardingTestData[0],
+          id: 'case-pending-credentials',
+          studentEnrollmentId: 'enrollment-1',
+          credentialsPending: true,
+          status,
+        },
+      ];
+      vi.useFakeTimers();
+      const { unmount } = render(element);
 
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(15_000);
-    });
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(15_000);
+      });
 
-    expect(mocks.refetchList).toHaveBeenCalledOnce();
-    unmount();
-    vi.useRealTimers();
-  });
+      expect(mocks.refetchList).toHaveBeenCalledOnce();
+      unmount();
+      vi.useRealTimers();
+    }
+  );
 
   it('opens a pending task in the full-page workspace without changing the worklist tab', () => {
     setRoute('readiness');

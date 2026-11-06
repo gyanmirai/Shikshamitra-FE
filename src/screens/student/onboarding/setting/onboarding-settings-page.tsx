@@ -13,7 +13,6 @@ import { Box, Tab, Paper, Stack, Button } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { studentPaths, studentPermissions } from 'src/constants/student-menu';
 
-import PortalAccessSettingsScreen from './portal-access-settings';
 import { GrNumberSettingsScreen, RollNumberSettingsScreen } from './onboarding-number-settings';
 import { onboardingSettingsTabs, getOnboardingSettingsTab } from './onboarding-settings-navigation';
 
@@ -33,7 +32,7 @@ export default function OnboardingSettingsPage() {
     <Stack spacing={1} sx={{ minWidth: 0, minHeight: 0, height: 1 }}>
       <CustomBreadcrumbs
         heading="Onboarding Settings"
-        description="Set student and parent/guardian login requirements, GR series, and Roll number rules. Admission supplies the student's onboarding requirements."
+        description="Configure GR number series and roll number rules."
         links={[
           { name: 'Student', href: studentPaths.dashboard },
           { name: 'Onboarding', href: studentPaths.onboarding.setup },
@@ -70,20 +69,18 @@ export default function OnboardingSettingsPage() {
               ))}
             </CustomTabs>
           </Box>
-          {activeTab !== 'portal-access' && (
-            <Box sx={{ px: 1, py: 1, display: 'flex', justifyContent: 'flex-end', flexShrink: 0 }}>
-              <Button
-                variant="contained"
-                size="small"
-                disabled={!canConfigure}
-                startIcon={<Iconify icon="mdi:plus" width={18} />}
-                onClick={() => canConfigure && createActionRef.current?.()}
-                sx={{ whiteSpace: 'nowrap' }}
-              >
-                {activeTab === 'gr-number' ? 'Add Series' : 'Add Roll Number Rule'}
-              </Button>
-            </Box>
-          )}
+          <Box sx={{ px: 1, py: 1, display: 'flex', justifyContent: 'flex-end', flexShrink: 0 }}>
+            <Button
+              variant="contained"
+              size="small"
+              disabled={!canConfigure}
+              startIcon={<Iconify icon="mdi:plus" width={18} />}
+              onClick={() => canConfigure && createActionRef.current?.()}
+              sx={{ whiteSpace: 'nowrap' }}
+            >
+              {activeTab === 'gr-number' ? 'Add Series' : 'Add Roll Number Rule'}
+            </Button>
+          </Box>
         </Stack>
       </Paper>
       <Box
@@ -96,10 +93,9 @@ export default function OnboardingSettingsPage() {
           minHeight: 0,
           display: 'flex',
           flexDirection: 'column',
-          overflow: activeTab === 'portal-access' ? 'auto' : 'hidden',
+          overflow: 'hidden',
         }}
       >
-        {activeTab === 'portal-access' && <PortalAccessSettingsScreen />}
         {activeTab === 'gr-number' && (
           <GrNumberSettingsScreen
             embedded

@@ -8,7 +8,9 @@ import { Box, Card, Stack, Button, Typography } from '@mui/material';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 
 import { FormBuilderStep } from '../form-builder-step';
+import { setInheritedStepName } from '../form-inheritance-model';
 import { getAdmissionFormStepGroups } from '../form-step-groups';
+import { useFormInheritance } from '../hooks/use-form-inheritance';
 import { FormBuilderStepHeader } from './form-builder-step-header';
 import { EffectiveFormBuilderSection } from './inherited-form-sections';
 import { AdmissionFormStepNavigation } from '../../components/admission-form-step-navigation';
@@ -44,6 +46,7 @@ export function FormBuilderCanvas({
   effectiveForm = formik.values,
   navigationRequest,
 }: Props) {
+  const inheritance = useFormInheritance();
   const isStepper = effectiveForm.layoutType === 1;
   const steps = getAdmissionFormStepGroups(effectiveForm.sections);
   const activeStepIndex = Math.max(
@@ -123,6 +126,20 @@ export function FormBuilderCanvas({
                     const sourceOwned =
                       editableSections.length !== effectiveStep.sections.length ||
                       formik.values.layoutType === 0;
+                    const sourceId =
+                      effectiveStep.sections
+                        .flatMap(({ section }) => section.fields)
+                        .find((field) => field.inheritedFrom)?.inheritedFrom
+                        ?.inquiryFormDefinitionId ?? inheritance?.sourceId;
+                    const renameCandidate =
+                      editableSections.length !== effectiveStep.sections.length &&
+                      Boolean(sourceId) &&
+                      Boolean(formik.values.inheritance?.enabled);
+                    const sourceIndex =
+                      formik.values.inheritance?.sources.findIndex(
+                        (source) => source.inquiryFormDefinitionId === sourceId
+                      ) ?? -1;
+                    const canRenameInquiry = renameCandidate && sourceIndex >= 0;
                     return (
                       <FormBuilderStepHeader
                         formik={formik}
@@ -131,7 +148,25 @@ export function FormBuilderCanvas({
                             ? effectiveStep
                             : { ...effectiveStep, sections: editableSections }
                         }
-                        readOnly={sourceOwned}
+                        readOnly={sourceOwned && !canRenameInquiry}
+                        namePath={
+                          canRenameInquiry
+                            ? `inheritance.sources[${sourceIndex}].stepNames.${effectiveStep.code}`
+                            : undefined
+                        }
+                        onRename={
+                          canRenameInquiry
+                            ? (name) =>
+                                formik.setValues(
+                                  setInheritedStepName(
+                                    formik.values,
+                                    sourceId!,
+                                    effectiveStep.code,
+                                    name
+                                  )
+                                )
+                            : undefined
+                        }
                         navigationRequest={navigationRequest}
                         selected={index === activeStepIndex}
                         onSelect={() => selectSection(steps[index].sections[0].section.id)}
