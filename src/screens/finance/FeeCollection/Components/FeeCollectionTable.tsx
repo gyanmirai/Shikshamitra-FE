@@ -233,7 +233,8 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
           wrapperProps={{ sx: { flex: 1, minHeight: 0 } }}
           tableContainerProps={{ sx: { height: 1 } }}
           noDataText="No students found in this academic scope"
-          isLoading={feeCollectionLoading || feeCollectionFetching}
+          isLoading={feeCollectionLoading}
+          isRefreshing={feeCollectionFetching && !feeCollectionLoading}
           serverSidePagination
           maxServerRowsPerPage={100}
           page={page - 1}
