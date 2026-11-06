@@ -9,7 +9,7 @@ import { hrPaths } from 'src/constants/hr-menus';
 import { Iconify } from 'src/components/iconify';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { HrNotice, HrLoadingNotice } from 'src/screens/hr/components/hr-notice';
-import { SetupInlineDrawer, SetupInlineDialog } from 'src/screens/hr/setup/hr-setup-editor-context';
+import { SetupInlineDrawer } from 'src/screens/hr/setup/hr-setup-editor-context';
 import {
   Box,
   Chip,
@@ -21,9 +21,6 @@ import {
   TableCell,
   Accordion,
   Typography,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   AccordionSummary,
   AccordionDetails,
 } from '@mui/material';
@@ -495,22 +492,29 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
           </>
         ) : null}
       </Box>
-      <SetupInlineDialog
+      <SetupInlineDrawer
+        anchor="right"
         open={Boolean(selectedConflict)}
         onClose={() => setSelectedConflict(null)}
-        aria-labelledby="assignment-conflict-title"
-        fullWidth
-        maxWidth="sm"
+        PaperProps={{
+          'aria-label': 'Conflicting assignment',
+          sx: { width: { xs: '100%', sm: 'min(640px, 92vw)' }, maxWidth: '100%' },
+        }}
       >
-        <DialogTitle id="assignment-conflict-title">Conflicting assignment</DialogTitle>
-        <DialogContent>
+        <DrawerHeader
+          title="Conflicting Assignment"
+          helpText="Saved assignment details that conflict with the proposed policy change."
+          onClose={() => setSelectedConflict(null)}
+        />
+        <Divider />
+        <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto', p: 2.5 }}>
           <Stack spacing={1}>
             <Typography>
               {selectedConflict?.targetDisplayName || selectedConflict?.targetKey}
             </Typography>
             <Typography>Scope: {toLabel(selectedConflict?.targetType || '')}</Typography>
             <Typography>
-              Effective: {formatDate(selectedConflict?.effectiveFrom)} —{' '}
+              Effective: {formatDate(selectedConflict?.effectiveFrom)} -{' '}
               {selectedConflict?.effectiveTo
                 ? formatDate(selectedConflict.effectiveTo)
                 : 'No end date'}
@@ -534,11 +538,18 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
               reviewing them.
             </Typography>
           </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setSelectedConflict(null)}>Return to impact</Button>
-        </DialogActions>
-      </SetupInlineDialog>
+        </Box>
+        <Divider />
+        <Stack
+          direction="row"
+          justifyContent="flex-end"
+          sx={{ px: { xs: 2, sm: 3 }, py: 1.5, flexShrink: 0 }}
+        >
+          <Button size="small" variant="outlined" onClick={() => setSelectedConflict(null)}>
+            Return to impact
+          </Button>
+        </Stack>
+      </SetupInlineDrawer>
     </SetupInlineDrawer>
   );
 }

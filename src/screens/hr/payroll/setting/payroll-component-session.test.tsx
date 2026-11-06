@@ -252,7 +252,7 @@ describe.each(cases)('$kind component sessions', ({ kind, Screen, Form, row, add
     const user = userEvent.setup();
     renderEditor(<Screen />);
     await user.click(screen.getByRole('button', { name: 'Edit' }));
-    await user.click(screen.getByRole('button', { name: 'Update' }));
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
     const preview = await screen.findByRole('dialog', { name: 'Payroll Impact Preview' });
     expect(preview).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Save synced only' }));
@@ -304,13 +304,13 @@ describe.each(cases)('$kind component sessions', ({ kind, Screen, Form, row, add
     if (kind === 'deduction') expect(mocks.deductionOptions.mock.calls.at(-1)?.[1].skip).toBe(true);
     await user.type(
       screen.getByRole('textbox', { name: new RegExp(`^${kind} Name`, 'i') }),
-      `Percentage ${kind}`
+      'Percentage'
     );
     await user.click(screen.getByRole('combobox', { name: 'Calculation Type *' }));
     await user.click(screen.getByRole('option', { name: 'Percentage Based' }));
     expect(mocks.earningOptions.mock.calls.at(-1)?.[1].skip).toBe(false);
     const basis = screen.getByRole('combobox', { name: 'Calculation base *' });
-    await user.type(basis, 'Later calculation base');
+    await user.type(basis, 'Later');
     expect(screen.queryByRole('option', { name: 'Base 0' })).toBeNull();
     await user.click(screen.getByRole('option', { name: 'Later calculation base' }));
     await user.type(screen.getByRole('spinbutton', { name: /^Percentage/ }), '10');
