@@ -1,12 +1,13 @@
-import { useCallback, useState, useSyncExternalStore } from 'react';
-import { FeeMonth } from 'src/enums/fee-collection-type';
-import { AdjustmentStatusEnum } from 'src/screens/finance/adjustments/enums/adjustment.enum';
 import type {
+  ApplyFeeAdjustmentDto,
   FeeAdjustmentDetailDto,
   CreateFeeAdjustmentDto,
-  ApplyFeeAdjustmentDto,
   GetFeeAdjustmentApplicationsInput,
 } from 'src/screens/finance/adjustments/types/adjustmentApi.types';
+
+import { FeeMonth } from 'src/enums/fee-collection-type';
+import { useState, useCallback, useSyncExternalStore } from 'react';
+import { AdjustmentStatusEnum } from 'src/screens/finance/adjustments/enums/adjustment.enum';
 
 let version = 0;
 const listeners = new Set<() => void>();
@@ -20,6 +21,36 @@ const refresh = () => {
   listeners.forEach((listener) => listener());
 };
 const useObserve = () => useSyncExternalStore(subscribe, snapshot, snapshot);
+export function useGetFinanceWorkContextQuery() {
+  useObserve();
+  const capability = {
+    view: true,
+    add: actor === 'maker',
+    submit: actor === 'maker',
+    approve: actor === 'checker',
+    reject: actor === 'checker',
+  };
+  return response({
+    academicYearId: 'year-2026',
+    scopeLabel: 'Synthetic finance scope',
+    canViewAllTenant: true,
+    scopeOptions: [
+      {
+        boardId: 'cbse',
+        mediumId: 'english',
+        stageId: '',
+        standardId: 'class-1',
+        divisionId: 'division-a',
+      },
+    ],
+    requestCapabilities: {
+      charge: capability,
+      concession: capability,
+      refund: capability,
+      adjustment: capability,
+    },
+  });
+}
 let actor = 'checker';
 let readError = false;
 let failSave = false;
@@ -225,8 +256,8 @@ export function useGetAdjustmentApplicationsQuery(
       return String(value).toLowerCase().includes(String(filter.value).toLowerCase());
     })
   );
-  const page = args?.page || 1,
-    size = args?.pageSize || 10;
+  const page = args?.page || 1;
+  const size = args?.pageSize || 10;
   return response(
     {
       items: rows.slice((page - 1) * size, page * size).map(asRow),
