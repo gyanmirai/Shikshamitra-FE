@@ -56,7 +56,6 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
   const [matchesKey, setMatchesKey] = useState('');
   const identityKeyRef = useRef('');
   const [requestError, setRequestError] = useState<string | null>(null);
-  const [duplicateOverrideReason, setDuplicateOverrideReason] = useState('');
   const academicYearId = useSelector((state: RootState) => state.globalState.currentYear?.id);
   const catalogue = useGetAdmissionInquiryCaptureCatalogueQuery(
     { academicYearId },
@@ -237,7 +236,6 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
 
   async function submit(
     existingFamilyId?: string | null,
-    createSeparateFamily = false,
     parentSelection?: AdmissionSiblingParentSelection
   ) {
     const offering = offeringChoices.find((item) => item.id === formik.values.offeringId);
@@ -252,8 +250,8 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
         fields,
         offering,
         existingFamilyId,
-        createSeparateFamily,
-        duplicateOverrideReason,
+        false,
+        undefined,
         parentSelection
       );
       if (reportIdentityErrors(payload, formik.values)) return;
@@ -317,8 +315,6 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
     currentAdmissionCycleId: selectedOffering?.admissionCycleId,
     currentParentRelationship: getConfiguredInquiryParentRelationship(fields, formik.values.fields),
     requestError,
-    duplicateOverrideReason,
-    setDuplicateOverrideReason,
     periods: catalogue.currentData?.periods ?? [],
     boards: Array.from(
       new Map(
@@ -412,11 +408,7 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
         setRequestError(parentReviewError);
         return;
       }
-      await submit(familyId, false, parent);
-    },
-    createSeparateFamily: async () => {
-      if (!currentMatches.length || !duplicateOverrideReason.trim()) return;
-      await submit(null, true);
+      await submit(familyId, parent);
     },
   };
 }

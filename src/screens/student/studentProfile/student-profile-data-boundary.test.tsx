@@ -2,6 +2,7 @@ import { it, vi, expect } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import { mswServer } from 'src/test/mswServer';
 import userEvent from '@testing-library/user-event';
+import { shikshaMitraToast } from 'src/components/toast';
 import { screen, waitFor } from '@testing-library/react';
 
 import {
@@ -52,7 +53,8 @@ it('loads the protected profile and passes its canonical GUID to both real Docum
   );
 });
 
-it('keeps tabs unmounted on a failed read and retries the actual profile request', async () => {
+it('keeps tabs unmounted on a failed read, reports the toast and recovers on profile reload', async () => {
+  const toast = vi.spyOn(shikshaMitraToast, 'error');
   let attempts = 0;
   mswServer.use(
     http.get(profilePath, () => {
@@ -62,16 +64,25 @@ it('keeps tabs unmounted on a failed read and retries the actual profile request
         : HttpResponse.json({ data: studentProfile });
     })
   );
-  renderStudentProfile();
-  expect(
-    await screen.findByText('Unable to load this student profile', { exact: false })
-  ).toBeVisible();
-  expect(screen.queryByRole('tablist')).not.toBeInTheDocument();
-  expect(screen.queryByText('Admission evidence')).not.toBeInTheDocument();
-  await userEvent.click(screen.getByRole('button', { name: 'Retry' }));
-  expect(await screen.findByText('Aanya Patel')).toBeInTheDocument();
-  expect(attempts).toBe(2);
-  expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  try {
+    const profile = renderStudentProfile();
+    await waitFor(() =>
+      expect(toast).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: expect.stringContaining('Unable to load this student profile'),
+        })
+      )
+    );
+    expect(screen.queryByRole('tablist')).not.toBeInTheDocument();
+    expect(screen.queryByText('Admission evidence')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+    profile.unmount();
+    renderStudentProfile();
+    expect(await screen.findByText('Aanya Patel')).toBeInTheDocument();
+    expect(attempts).toBe(2);
+  } finally {
+    toast.mockRestore();
+  }
 });
 
 it.each([
@@ -84,13 +95,25 @@ it.each([
 ])(
   'rejects malformed or mismatched profile identity without a URL-only fallback',
   async (response) => {
+    const toast = vi.spyOn(shikshaMitraToast, 'error');
     mswServer.use(http.get(profilePath, () => HttpResponse.json({ data: response })));
-    renderStudentProfile();
-    expect(
-      await screen.findByText('Unable to load this student profile', { exact: false })
-    ).toBeVisible();
-    expect(screen.queryByRole('tablist')).not.toBeInTheDocument();
-    expect(screen.queryByText('Admission evidence')).not.toBeInTheDocument();
+    const profile = renderStudentProfile();
+    try {
+      await waitFor(() =>
+        expect(toast).toHaveBeenCalledWith(
+          expect.objectContaining({
+            message: expect.stringContaining('Unable to load this student profile'),
+          })
+        )
+      );
+      expect(screen.queryByRole('tablist')).not.toBeInTheDocument();
+      expect(screen.queryByText('Admission evidence')).not.toBeInTheDocument();
+    } finally {
+      profile.unmount();
+      // Student notices release on the next task to bridge StrictMode remounts.
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      toast.mockRestore();
+    }
   }
 );
 

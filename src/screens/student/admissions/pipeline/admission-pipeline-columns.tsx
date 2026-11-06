@@ -116,8 +116,8 @@ export function buildAdmissionPipelineColumns(
     {
       id: 'actions',
       label: 'Actions',
-      minWidth: 100,
-      width: 180,
+      minWidth: 64,
+      width: 64,
       align: 'right',
       headerAlign: 'left',
       sticky: true,

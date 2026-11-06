@@ -8,12 +8,10 @@ type Props = {
   disabled: boolean;
   closeDisabled?: boolean;
   canViewActivity: boolean;
-  journeyOpen: boolean;
   historySelected: boolean;
   focused?: boolean;
   onActivity: () => void;
   onHistory: () => void;
-  onJourney: MouseEventHandler<HTMLButtonElement>;
   onFocus?: () => void;
   onClose: () => void;
 };
@@ -22,12 +20,10 @@ export function ApplicationWorkspaceActions({
   disabled,
   closeDisabled = disabled,
   canViewActivity,
-  journeyOpen,
   historySelected,
   focused,
   onActivity,
   onHistory,
-  onJourney,
   onFocus,
   onClose,
 }: Props) {
@@ -35,7 +31,6 @@ export function ApplicationWorkspaceActions({
     label: string,
     icon: string,
     onClick: MouseEventHandler<HTMLButtonElement>,
-    expanded?: boolean,
     pressed?: boolean,
     blocked = disabled
   ) => (
@@ -44,8 +39,6 @@ export function ApplicationWorkspaceActions({
         <IconButton
           size="small"
           aria-label={label}
-          aria-haspopup={expanded === undefined ? undefined : 'dialog'}
-          aria-expanded={expanded}
           aria-pressed={pressed}
           disabled={blocked}
           onClick={onClick}
@@ -65,18 +58,16 @@ export function ApplicationWorkspaceActions({
   return (
     <Stack direction="row" spacing={0.75} alignItems="center" aria-label="Applicant Actions">
       {canViewActivity && action('Notes & Follow-Ups', 'mdi:note-text-outline', onActivity)}
-      {action('Application History', 'mdi:history', onHistory, undefined, historySelected)}
-      {action('Admission Journey', 'mdi:chart-timeline-variant', onJourney, journeyOpen)}
+      {action('Application History', 'mdi:history', onHistory, historySelected)}
       {onFocus &&
         action(
           focused ? 'Exit Focus Mode' : 'Focus Mode',
           focused ? 'mdi:arrow-collapse' : 'mdi:arrow-expand',
           onFocus,
-          undefined,
           focused
         )}
       <Divider orientation="vertical" flexItem />
-      {action('Close Application', 'mdi:close', onClose, undefined, undefined, closeDisabled)}
+      {action('Close Application', 'mdi:close', onClose, undefined, closeDisabled)}
     </Stack>
   );
 }

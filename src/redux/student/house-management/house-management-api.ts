@@ -2,7 +2,6 @@ import { api } from 'src/redux/service';
 import { studentType } from 'src/redux/tagTypes';
 
 import { unwrapRecordsResult } from '../records/student-records-api';
-import { houseCatalogueTag } from '../student-group/house-catalogue-tags';
 
 import type {
   House,
@@ -19,10 +18,29 @@ import type {
 
 const root = '/students/records/house-management';
 const tags = [{ type: studentType.student, id: 'HOUSE-MANAGEMENT' }];
-const catalogueTags = [...tags, houseCatalogueTag];
+const catalogueTags = tags;
 const unwrap = <T>(response: T | { data?: T }) => unwrapRecordsResult(response);
 export const houseManagementApi = api.injectEndpoints({
   endpoints: (builder) => ({
+    uploadHouseLogo: builder.mutation<string, File>({
+      query: (file) => {
+        const body = new FormData();
+        body.append('file', file);
+        return { url: '/files', method: 'POST', body };
+      },
+      transformResponse: (response: string | { data?: string }) => {
+        const fileName = unwrap<string>(response);
+        if (!fileName || typeof fileName !== 'string')
+          throw new Error('The logo upload did not return a file reference. Please try again.');
+        return `/api/files/${encodeURIComponent(fileName)}`;
+      },
+    }),
+    getHouseLogo: builder.query<Blob, string>({
+      query: (fileName) => ({
+        url: `/files/${encodeURIComponent(fileName)}`,
+        responseHandler: (response) => response.blob(),
+      }),
+    }),
     getManagedHouses: builder.query<HouseCataloguePage, HouseQuery>({
       query: (params) => ({ url: `${root}/houses`, params }),
       transformResponse: unwrap<HouseCataloguePage>,
@@ -77,6 +95,8 @@ export const houseManagementApi = api.injectEndpoints({
   }),
 });
 export const {
+  useUploadHouseLogoMutation,
+  useGetHouseLogoQuery,
   useGetManagedHousesQuery,
   useLazyGetManagedHousesQuery,
   useGetHouseStudentsQuery,

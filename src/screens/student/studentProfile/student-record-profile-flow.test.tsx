@@ -2,6 +2,7 @@ import { it, vi, expect } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import { mswServer } from 'src/test/mswServer';
 import userEvent from '@testing-library/user-event';
+import { shikshaMitraToast } from 'src/components/toast';
 import { screen, within, waitFor } from '@testing-library/react';
 
 import {
@@ -163,17 +164,28 @@ it('loads the selected change detail before showing its before/after values and 
 });
 
 it('reports a history read failure without presenting a false empty-history message', async () => {
+  const toast = vi.spyOn(shikshaMitraToast, 'error');
   mswServer.use(
     http.get(profilePath, () => HttpResponse.json({ data: studentProfile })),
     http.get(changePath, () =>
       HttpResponse.json({ error: { message: 'Unavailable' } }, { status: 503 })
     )
   );
-  renderStudentProfile(profileStudentId, readGrants);
-  await screen.findByText('Aanya Patel');
-  await userEvent.click(screen.getByRole('tab', { name: 'History' }));
-  expect(await screen.findByRole('button', { name: 'Retry History' })).toBeVisible();
-  expect(screen.queryByText('No record changes yet')).not.toBeInTheDocument();
+  try {
+    renderStudentProfile(profileStudentId, readGrants);
+    await screen.findByText('Aanya Patel');
+    await waitFor(() =>
+      expect(toast).toHaveBeenCalledWith(
+        expect.objectContaining({ message: 'Record change history could not be loaded.' })
+      )
+    );
+    await userEvent.click(screen.getByRole('tab', { name: 'History' }));
+    expect(await screen.findByRole('tabpanel', { name: 'History' })).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Retry History' })).not.toBeInTheDocument();
+    expect(screen.queryByText('No record changes yet')).not.toBeInTheDocument();
+  } finally {
+    toast.mockRestore();
+  }
 });
 
 it('uses a contextual missing-form state without fixed detail cards or correction redirects', async () => {

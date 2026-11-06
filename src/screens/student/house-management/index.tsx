@@ -9,6 +9,7 @@ import type {
 } from 'src/redux/student/house-management/house-management-types';
 
 import { useSelector } from 'react-redux';
+import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { RouterLink } from 'src/routes/components';
@@ -22,12 +23,11 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { usePopover, CustomPopover } from 'src/components/custom-popover';
 import { studentPaths, studentPermissions } from 'src/constants/student-menu';
 import { useStudentAcademicScope } from 'src/hooks/use-student-academic-scope';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
-import { Label } from 'src/components/label';
-import { usePopover, CustomPopover } from 'src/components/custom-popover';
 import {
   Box,
   Tab,
@@ -56,6 +56,7 @@ import {
 
 import { HousePicker } from './house-pickers';
 import HouseFormDialog from './house-form-dialog';
+import HouseLogoAvatar from './house-logo-avatar';
 import HouseLeaderDialog from './house-leader-dialog';
 import HouseAssignmentDrawer from './house-assignment-drawer';
 import { recordsQueryUrl } from '../records/records-url-state';
@@ -256,17 +257,7 @@ export default function HouseManagement() {
       render: (_, row) => (
         <Stack direction="row" spacing={1} alignItems="center">
           <SubjectColorIndicator color={row.color} />
-          <Avatar
-            src={row.logoUrl || undefined}
-            sx={{
-              width: 32,
-              height: 32,
-              bgcolor: 'background.neutral',
-              color: 'text.secondary',
-            }}
-          >
-            {String(row.name).slice(0, 1)}
-          </Avatar>
+          <HouseLogoAvatar name={String(row.name)} logoUrl={row.logoUrl} />
           <Typography variant="body2" sx={{ fontWeight: 'fontWeightSemiBold', overflowWrap: 'anywhere' }}>
             {row.name}
           </Typography>

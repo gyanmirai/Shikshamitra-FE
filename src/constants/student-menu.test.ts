@@ -71,7 +71,6 @@ describe('student navigation', () => {
       'Student I-Card',
       'Certificates',
       'Reports',
-      'Settings',
     ]);
     expect(records.path).toBe('/student/profile');
     expect(records.children?.map((item) => item.path)).toEqual([
@@ -80,8 +79,14 @@ describe('student navigation', () => {
       '/student/student-i-card',
       '/student/certificates',
       '/student/reports',
-      '/student/studentRecords/setting',
     ]);
+    expect(records.children?.some((item) => item.title === 'Settings')).toBe(false);
+    expect(
+      records.permissionChildren?.find((item) => item.title === 'Policy Settings')
+    ).toMatchObject({
+      permissionName: studentPermissions.records.setting,
+    });
+    expect(studentPermissions.records.root).not.toContain(studentPermissions.records.setting);
   });
   it('keeps Dashboard access separate from Dashboard visibility', () => {
     const sections = Object.values(studentModule());

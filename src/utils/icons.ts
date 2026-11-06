@@ -1,4 +1,7 @@
 export const GlobalIcons = {
+  dashboard: 'mdi:view-dashboard-outline',
+  studentProfile: 'mdi:account-outline',
+  warning: 'mdi:alert-outline',
   academicFieldSettings: 'mdi:tune-variant',
   academicTextCase: 'mdi:format-letter-case',
   admissionInterest: 'mdi:school-outline',

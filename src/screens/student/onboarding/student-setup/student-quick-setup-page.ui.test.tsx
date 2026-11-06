@@ -15,13 +15,19 @@ const mocks = vi.hoisted(() => ({
   feeLoading: false,
   readError: false,
   permissionDenied: false,
+  documentsBlocked: false,
   saveAcademic: vi.fn(),
   saveFees: vi.fn(),
   getCase: vi.fn(),
   previewActivation: vi.fn(),
   activate: vi.fn(),
+  refresh: vi.fn(),
   sendCredentials: vi.fn(),
-  credentialSelection: { selectedCount: 0, canSend: false },
+  credentialSelection: { selectedCount: 0, canSend: false, parentSelected: false } as {
+    selectedCount: number;
+    canSend: boolean;
+    parentSelected?: boolean;
+  },
   success: vi.fn(),
   error: vi.fn(),
   events: [] as string[],
@@ -85,6 +91,26 @@ vi.mock('src/redux/student/onboarding/student-onboarding-api', () => ({
   useLazyGetStudentOnboardingCaseQuery: () => [mocks.getCase],
   useLazyPreviewStudentOnboardingActivationQuery: () => [mocks.previewActivation],
   useActivateStudentOnboardingMutation: () => [mocks.activate],
+  useRefreshStudentOnboardingReadinessMutation: () => [mocks.refresh],
+  useGetStudentOnboardingCredentialsQuery: () => ({
+    currentData: {
+      recipients: [{ email: 'student@example.test' }, { email: 'parent@example.test' }],
+    },
+  }),
+  useGetStudentOnboardingWorkflowDocumentsQuery: () => ({
+    currentData: [
+      {
+        requirements: [
+          {
+            status: mocks.documentsBlocked ? 'rejected' : 'accepted',
+            isRequired: true,
+            blockers: [],
+          },
+        ],
+        blockers: [],
+      },
+    ],
+  }),
 }));
 vi.mock('./use-student-quick-setup-academic', () => ({
   useStudentQuickSetupAcademic: () => ({
@@ -229,7 +255,70 @@ const renderPage = (overrides = {}) => {
 };
 
 describe('single-student setup page', () => {
+  it('reopens App Login when a selected login request fails from the footer', async () => {
+    mocks.current = makeCase({ studentEnrollmentId: 'enrollment-1', status: 4 });
+    mocks.credentialSelection = { selectedCount: 1, canSend: true };
+    mocks.sendCredentials.mockResolvedValue({ requested: 1, submitted: 0, queued: 0, failed: 1 });
+    renderPage();
+    fireEvent.click(screen.getByRole('button', { name: 'Send Login Details' }));
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Collapse App Login' })).toHaveAttribute(
+        'aria-expanded',
+        'true'
+      )
+    );
+    expect(mocks.activate).not.toHaveBeenCalled();
+  });
+
+  it('reveals unresolved required documents and reopens them after a blocked activation', async () => {
+    mocks.documentsBlocked = true;
+    mocks.previewActivation.mockReturnValue({
+      unwrap: async () => makeCase({ lastError: 'Verify the required transfer certificate.' }),
+    });
+    renderPage();
+    fireEvent.click(await screen.findByRole('button', { name: 'Collapse Admission & Documents' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save & Activate' }));
+    await waitFor(() => expect(mocks.error).toHaveBeenCalled());
+    expect(screen.getByRole('button', { name: 'Collapse Admission & Documents' })).toHaveAttribute(
+      'aria-expanded',
+      'true'
+    );
+    expect(mocks.activate).not.toHaveBeenCalled();
+  });
+  it('starts with compact summaries and preserves selected login work across expansion', () => {
+    renderPage();
+    expect(screen.getByText('2 email addresses saved')).toBeVisible();
+    expect(screen.getByText('1 accepted document')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Expand App Login' })).toHaveAttribute(
+      'aria-expanded',
+      'false'
+    );
+    expect(screen.getByRole('button', { name: 'Expand Admission & Documents' })).toHaveAttribute(
+      'aria-expanded',
+      'false'
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Expand App Login' }));
+    expect(screen.getByRole('button', { name: 'Send Credentials' })).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Collapse App Login' }));
+    expect(mocks.sendCredentials).not.toHaveBeenCalled();
+    expect(mocks.activate).not.toHaveBeenCalled();
+  });
+  it('lets staff recheck an active case left unfinished by historical login requirements', async () => {
+    mocks.current = makeCase({ status: 3, studentEnrollmentId: 'enrollment-1' });
+    mocks.refresh.mockReturnValue({
+      unwrap: async () => makeCase({ status: 4, studentEnrollmentId: 'enrollment-1' }),
+    });
+    renderPage();
+    fireEvent.click(screen.getByRole('button', { name: 'Check completion' }));
+    await waitFor(() =>
+      expect(mocks.refresh).toHaveBeenCalledWith({
+        id: 'case-1',
+        concurrencyStamp: mocks.current?.concurrencyStamp,
+      })
+    );
+  });
   beforeEach(() => {
+    mocks.documentsBlocked = false;
     mocks.feeLoading = false;
     mocks.readError = false;
     mocks.permissionDenied = false;
@@ -304,29 +393,33 @@ describe('single-student setup page', () => {
     expect(mocks.sendCredentials).not.toHaveBeenCalled();
   });
   it('validates the parent choice before any academic or fee save and preserves manual credentials', async () => {
+    mocks.credentialSelection = { selectedCount: 1, canSend: true, parentSelected: true };
     mocks.parentContext = {
       loaded: true,
       blockedReason: 'Choose Father or Mother in App Login before activating.',
     };
     renderPage();
-    fireEvent.click(screen.getByRole('button', { name: 'Save & Activate' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save, Activate & Send Login Details' }));
     expect(mocks.saveAcademic).not.toHaveBeenCalled();
     expect(mocks.saveFees).not.toHaveBeenCalled();
     expect(mocks.activate).not.toHaveBeenCalled();
     expect(mocks.sendCredentials).not.toHaveBeenCalled();
   });
-  it('passes the reviewed parent identity to Save & Activate without sending a credential email', async () => {
+  it('activates without a parent choice or sending when no login is selected', async () => {
     const selection = {
       relationship: 'mother' as const,
       expectedEmail: 'mother@example.com',
       expectedUserId: 'parent-2',
     };
-    mocks.parentContext = { loaded: true, selection };
+    mocks.parentContext = { loaded: true, selection, blockedReason: 'Review parent access.' };
     renderPage();
     fireEvent.click(screen.getByRole('button', { name: 'Save & Activate' }));
     await waitFor(() =>
       expect(mocks.activate).toHaveBeenCalledWith(
-        expect.objectContaining({ siblingParentSelection: selection })
+        expect.objectContaining({
+          siblingParentSelection: undefined,
+          guardianAccessSelection: undefined,
+        })
       )
     );
     expect(mocks.sendCredentials).not.toHaveBeenCalled();
@@ -432,7 +525,7 @@ describe('single-student setup page', () => {
   });
 
   it('locks Details & History while a request is pending or admission details fail to load', () => {
-    const { rerender, props } = renderPage();
+    const { rerender, props } = renderPage({ initialSection: 'credentials' });
     fireEvent.click(screen.getByRole('button', { name: 'Start credential request' }));
     expect(screen.getByRole('button', { name: 'Details & History' })).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: 'Finish credential request' }));
@@ -484,7 +577,7 @@ describe('single-student setup page', () => {
   });
 
   it('saves and activates in order using the fresh preview stamp, keeps the page open and never sends credentials automatically', async () => {
-    const { props } = renderPage();
+    const { props } = renderPage({ initialSection: 'credentials' });
     fireEvent.click(screen.getByRole('button', { name: 'Save & Activate' }));
     await waitFor(() => expect(screen.getByText('Student active')).toBeInTheDocument());
 
@@ -611,7 +704,7 @@ describe('single-student setup page', () => {
   });
 
   it('does not expose activation actions without management permission', () => {
-    renderPage({ canManage: false });
+    renderPage({ canManage: false, initialSection: 'credentials' });
     expect(screen.queryByRole('button', { name: 'Save & Activate' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Save for Later' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Back to Students' })).toBeEnabled();
@@ -620,7 +713,7 @@ describe('single-student setup page', () => {
   });
 
   it('locks dismissal and footer actions during a credential request and restores them afterwards', () => {
-    const { props } = renderPage();
+    const { props } = renderPage({ initialSection: 'credentials' });
     fireEvent.click(screen.getByRole('button', { name: 'Start credential request' }));
     expect(screen.getByRole('button', { name: 'Back to Students' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Save & Activate' })).toBeDisabled();
@@ -655,7 +748,7 @@ describe('single-student setup page', () => {
   });
 
   it('disables saves and credentials when the selected academic year no longer matches', () => {
-    renderPage({ academicYearId: 'different-year' });
+    renderPage({ academicYearId: 'different-year', initialSection: 'credentials' });
     expect(
       screen.getByText(
         'The academic year changed. Close this student and reopen it in the correct year.'

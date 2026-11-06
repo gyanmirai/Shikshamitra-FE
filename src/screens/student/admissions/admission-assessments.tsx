@@ -43,6 +43,7 @@ import { ADMISSION_APPLICATION_PERMISSIONS } from './admission-application-permi
 import { useAssessmentWorkspaceData } from './assessments/use-assessment-workspace-data';
 import { AssessmentWorkspaceControls } from './assessments/assessment-workspace-controls';
 import { AssessmentSessionSetupDrawer } from './assessments/assessment-session-setup-drawer';
+import { AssessmentSessionDetailsDrawer } from './assessments/assessment-session-details-drawer';
 import { AssessmentStudentBookingDrawer } from './assessments/assessment-student-booking-drawer';
 import {
   useAssessmentPermissions,
@@ -111,6 +112,7 @@ export default function AdmissionAssessmentsScreen() {
   const retryList = scopes.isError ? scopes.refetch : applicants.refetch;
   const sessionPanel = state.tab === 'sessions';
   const [details, setDetails] = useState<AssessmentRosterItem | null>(null);
+  const [viewingSession, setViewingSession] = useState<AssessmentSession | null>(null);
   const [action, setAction] = useState<{
     row: AssessmentRosterItem;
     action: AssessmentAction | 'continue';
@@ -414,20 +416,9 @@ export default function AdmissionAssessmentsScreen() {
                 isFetching={managedSessions.isFetching}
                 error={managedSessions.isError ? 'Unable to load assessment sessions.' : undefined}
                 canManage={permissions.view && permissions.manageSessions}
-                selectedSessionId={state.sessionId}
+                selectedSessionId={viewingSession?.id}
                 onRetry={managedSessions.refetch}
-                onSelect={(session) =>
-                  updateWorkbench({
-                    assessmentTab: 'students',
-                    assessmentSession: session.id,
-                    assessmentScope: undefined,
-                    assessmentQueue: undefined,
-                    assessmentStatus: undefined,
-                    assessmentSearch: undefined,
-                    assessmentFilters: undefined,
-                    assessmentPage: 0,
-                  })
-                }
+                onSelect={setViewingSession}
                 onEdit={(session) => openSetup(session, 'edit')}
                 onCancel={async (session, notes) => {
                   await cancel({
@@ -683,6 +674,12 @@ export default function AdmissionAssessmentsScreen() {
             await update({ id: editing.session.id, body }).unwrap();
             shikshaMitraToast.success({ message: 'Assessment session updated' });
           }}
+        />
+      )}
+      {viewingSession && (
+        <AssessmentSessionDetailsDrawer
+          session={viewingSession}
+          onClose={() => setViewingSession(null)}
         />
       )}
       {booking && (

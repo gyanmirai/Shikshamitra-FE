@@ -170,20 +170,72 @@ function renderCommands(empty = false) {
 }
 
 describe('useFormBuilderCommands', () => {
+  it.each(['Step 2', 'My custom step'])(
+    'names a bulk group without overwriting %s when custom',
+    async (name) => {
+      const initial = getBlankAdmissionFormInitialValues(1);
+      initial.layoutType = 1;
+      initial.sections = [
+        {
+          ...initial.sections[0],
+          fields: [],
+          stepId: 'bulk-step',
+          stepName: name,
+          stepCode: 'STEP_2',
+        },
+      ];
+      const mount = (values: CreateUpdateAdmissionForm) =>
+        render(
+          <Formik initialValues={values} onSubmit={() => undefined}>
+            {(formik) => <Commands formik={formik} selectedSectionId={values.sections[0].id} />}
+          </Formik>
+        );
+      const view = mount(initial);
+      await userEvent.click(screen.getByRole('button', { name: 'Add address pack' }));
+      const saved = JSON.parse(screen.getByTestId('draft').textContent!);
+      expect(saved.sections[0].stepName).toBe(name === 'Step 2' ? 'Current address' : name);
+      view.unmount();
+      mount(saved);
+      await userEvent.click(screen.getByRole('button', { name: 'Add profile section' }));
+      const reopened = JSON.parse(screen.getByTestId('draft').textContent!);
+      expect(
+        reopened.sections.every(
+          (section: { stepName: string }) => section.stepName === saved.sections[0].stepName
+        )
+      ).toBe(true);
+    }
+  );
   it('keeps the final class-applied question separate from a requested class-interest question', async () => {
     const form = getBlankAdmissionFormInitialValues(0);
     const prototype = form.sections[0].fields[0];
-    form.sections[0].fields.push({...prototype, id: 'applied-class', code: 'CLASS_APPLYING_FOR', label: 'Class applying for', bindingType: 1, bindingKey: 'CLASS_APPLYING_FOR', fieldType: 6, optionsJson: '{"source":"Standards"}'});
+    form.sections[0].fields.push({
+      ...prototype,
+      id: 'applied-class',
+      code: 'CLASS_APPLYING_FOR',
+      label: 'Class applying for',
+      bindingType: 1,
+      bindingKey: 'CLASS_APPLYING_FOR',
+      fieldType: 6,
+      optionsJson: '{"source":"Standards"}',
+    });
     const count = form.sections[0].fields.length;
-    render(<Formik initialValues={form} onSubmit={() => undefined}>{formik => <Commands formik={formik} selectedSectionId={form.sections[0].id} />}</Formik>);
-    await userEvent.click(screen.getByRole('button', {name: 'Add class interest'}));
+    render(
+      <Formik initialValues={form} onSubmit={() => undefined}>
+        {(formik) => <Commands formik={formik} selectedSectionId={form.sections[0].id} />}
+      </Formik>
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Add class interest' }));
     expect(JSON.parse(screen.getByTestId('fields').textContent!)).toHaveLength(count + 1);
   });
   it('reuses an explicit class group when a custom class-interest alias is requested', async () => {
-    const {form} = addAcademicClassSelector(getBlankAdmissionFormInitialValues(0), null);
-    const initialCount = form.sections.flatMap(section => section.fields).length;
-    render(<Formik initialValues={form} onSubmit={() => undefined}>{formik => <Commands formik={formik} selectedSectionId={form.sections[0].id} />}</Formik>);
-    await userEvent.click(screen.getByRole('button', {name: 'Add class interest'}));
+    const { form } = addAcademicClassSelector(getBlankAdmissionFormInitialValues(0), null);
+    const initialCount = form.sections.flatMap((section) => section.fields).length;
+    render(
+      <Formik initialValues={form} onSubmit={() => undefined}>
+        {(formik) => <Commands formik={formik} selectedSectionId={form.sections[0].id} />}
+      </Formik>
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Add class interest' }));
     expect(JSON.parse(screen.getByTestId('fields').textContent!)).toHaveLength(initialCount);
   });
   it('reuses the starter class question instead of adding the custom alias', async () => {

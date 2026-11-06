@@ -704,3 +704,95 @@ it('selects a newly opened offering after a fresh class check and preserves the 
   await waitFor(() => expect(result.current.unavailableReason).toBe('All seats are filled.'));
   expect(result.current.canCreateInquiry).toBe(false);
 });
+
+it('creates a sibling only after review using the saved parent source and never a separate-family override', async () => {
+  const available = offering('class-a');
+  const parent = {
+    sourceApplicantId: 'saved-child',
+    relationship: 'father' as const,
+    name: 'Amit Shah',
+    firstName: 'Amit',
+    email: 'parent@example.com',
+    mobile: '9876543210',
+  };
+  const match = {
+    applicantId: 'saved-child',
+    familyId: 'saved-family',
+    applicantName: 'Existing child',
+    guardianPhone: parent.mobile,
+    guardianEmail: parent.email,
+    canLinkFamily: true,
+    parents: [parent],
+  };
+  const submitted: Record<string, unknown>[] = [];
+  const onClose = vi.fn();
+  mswServer.use(
+    http.get(`${root}/capture-catalogue`, () =>
+      HttpResponse.json({ data: catalogue([available]) })
+    ),
+    http.get(`${root}/capture-context/${available.id}`, () =>
+      HttpResponse.json({
+        data: {
+          offering: available,
+          availability: { canCreateInquiry: true },
+          form: {
+            sections: [
+              {
+                fields: [
+                  { code: 'CHILD', bindingKey: 'Applicant.Name', fieldType: 0, required: true },
+                  { code: 'ADULT', bindingKey: 'Guardian.FirstName', fieldType: 0, required: true },
+                  { code: 'MOBILE', bindingKey: 'Guardian.Mobile', fieldType: 4, required: true },
+                  { code: 'EMAIL', bindingKey: 'Guardian.Email', fieldType: 3 },
+                ],
+              },
+            ],
+          },
+        },
+      })
+    ),
+    http.post(`${root}/duplicate-check`, () => HttpResponse.json({ data: [match] })),
+    http.post(root, async ({ request }) => {
+      submitted.push((await request.json()) as Record<string, unknown>);
+      return HttpResponse.json({ data: { id: 'new-sibling' } });
+    })
+  );
+  const { result } = renderHook(() => useAdmissionInquiryDialog(onClose), { wrapper });
+  await waitFor(() => expect(result.current.periods).toHaveLength(1));
+  await selectClass(result, 'class-a');
+  await waitFor(() => expect(result.current.canCreateInquiry).toBe(true));
+  await act(async () => {
+    await result.current.formik.setValues(
+      (values) => ({
+        ...values,
+        parentRelationship: 'father',
+        fields: {
+          CHILD: 'New child',
+          ADULT: 'Amit Shah',
+          MOBILE: parent.mobile,
+          EMAIL: parent.email,
+        },
+      }),
+      false
+    );
+  });
+  await act(async () => {
+    await result.current.formik.submitForm();
+  });
+  await waitFor(() => expect(result.current.matches).toHaveLength(1));
+  expect(submitted).toHaveLength(0);
+  await act(async () => {
+    await result.current.useExistingFamily('saved-family', parent);
+  });
+  await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
+  expect(submitted).toHaveLength(1);
+  expect(submitted[0]).toMatchObject({
+    existingFamilyId: 'saved-family',
+    existingParentApplicantId: 'saved-child',
+    parentRelationship: 'father',
+    applicantName: 'New child',
+    guardianPhone: parent.mobile,
+    guardianEmail: parent.email,
+    createSeparateFamily: false,
+    duplicateOverrideReason: null,
+  });
+});

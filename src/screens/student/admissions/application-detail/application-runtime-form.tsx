@@ -140,6 +140,7 @@ export function ApplicationRuntimeFormCore({
   const previousErrors = useRef<Record<string, string>>({});
   const pendingErrorFocus = useRef(false);
   const [activeStep, setActiveStep] = useState(0);
+  const [savedStepIds, setSavedStepIds] = useState<string[]>([]);
   const [savingStep, setSavingStep] = useState(false);
   const [validatingStep, setValidatingStep] = useState(false);
   const validationPending = useRef(false);
@@ -219,6 +220,16 @@ export function ApplicationRuntimeFormCore({
         invalidCodes.has(section.code) ||
         section.fields.some((field) => invalidCodes.has(field.code))
     )
+  );
+  const completedSteps = visibleSteps.flatMap((step, index) =>
+    (form.status === 1 || savedStepIds.includes(step.id)) &&
+    !step.sections.some(
+      ({ section }) =>
+        invalidCodes.has(section.code) ||
+        section.fields.some((field) => invalidCodes.has(field.code))
+    )
+      ? [index]
+      : []
   );
   useEffect(() => {
     const previous = previousErrors.current;
@@ -319,6 +330,14 @@ export function ApplicationRuntimeFormCore({
     repeatedCodes?: string[]
   ) => {
     if (publicMode && !editableFieldCodes?.includes(code)) return;
+    setSavedStepIds((previous) =>
+      previous.filter(
+        (id) =>
+          !visibleSteps
+            .find((step) => step.id === id)
+            ?.sections.some(({ section }) => section.fields.some((field) => field.code === code))
+      )
+    );
     onChange(
       code,
       entryIndex == null ? value : writeRepeatableValue(values[code], entryIndex, value)
@@ -415,7 +434,11 @@ export function ApplicationRuntimeFormCore({
     try {
       if (!(await validateNavigation(currentSections))) return;
       const saved = await onSave();
-      if (saved) setActiveStep(Math.min(safeActiveStep + 1, visibleSteps.length - 1));
+      if (saved) {
+        const stepId = visibleSteps[safeActiveStep]?.id;
+        if (stepId) setSavedStepIds((previous) => [...new Set([...previous, stepId])]);
+        setActiveStep(Math.min(safeActiveStep + 1, visibleSteps.length - 1));
+      }
     } finally {
       stepSavePending.current = false;
       setSavingStep(false);
@@ -740,6 +763,10 @@ export function ApplicationRuntimeFormCore({
                 '& .MuiStepIcon-root.Mui-active, & .MuiStepIcon-root.Mui-completed': {
                   color: 'primary.main',
                 },
+                '& .MuiStepConnector-root.Mui-active .MuiStepConnector-line, & .MuiStepConnector-root.Mui-completed .MuiStepConnector-line':
+                  {
+                    borderColor: 'primary.main',
+                  },
               }}
             >
               <Scrollbar sx={{ flexGrow: 0 }}>
@@ -747,7 +774,9 @@ export function ApplicationRuntimeFormCore({
                   ariaLabel="Application form sections"
                   steps={visibleSteps.map((step) => step.name)}
                   activeStep={safeActiveStep}
-                  stepStates={visibleSteps.map(() => (form.status === 1 ? 'completed' : 'pending'))}
+                  stepStates={visibleSteps.map((_, index) =>
+                    completedSteps.includes(index) ? 'completed' : 'pending'
+                  )}
                   disabled={interactionLocked}
                   onStepClick={changeStep}
                 />
@@ -798,7 +827,7 @@ export function ApplicationRuntimeFormCore({
                     disabled={interactionLocked}
                     orientation={compact ? 'horizontal' : 'responsive'}
                     compact={compact}
-                    completedSteps={form.status === 1 ? visibleSteps.map((_, index) => index) : []}
+                    completedSteps={completedSteps}
                     onStepChange={changeStep}
                   />
                 </Box>

@@ -14,6 +14,7 @@ import {
   useCheckAdmissionInquiryDuplicatesMutation,
 } from 'src/redux/student/admissions/admission-inquiries-api';
 
+import { buildInquiryFamilyReviews } from '../admission-inquiry-parent-review-model';
 import {
   inquiryFamilyParentKey,
   inquiryFamilyCandidates,
@@ -47,6 +48,7 @@ export function useInquiryFamilyConfirmation(props: InquiryFamilyConfirmationPro
   const mounted = useRef(true);
   const [snapshot, setSnapshot] = useState<{ id: string; stamp: string } | null>(null);
   const [candidates, setCandidates] = useState<ReturnType<typeof inquiryFamilyCandidates>>([]);
+  const [reviewInput, setReviewInput] = useState(props.duplicateInput);
   const [requestError, setRequestError] = useState('');
   const [needsTargetRefresh, setNeedsTargetRefresh] = useState(false);
   const [refreshedTarget, setRefreshedTarget] = useState<{
@@ -224,8 +226,20 @@ export function useInquiryFamilyConfirmation(props: InquiryFamilyConfirmationPro
         latest.current.inquiry.id === current.inquiry.id
       ) {
         setSnapshot({ id: lookupTarget.id, stamp: lookupTarget.concurrencyStamp });
-        setCandidates(inquiryFamilyCandidates(lookupTarget, matches));
-        formik.resetForm();
+        const nextCandidates = inquiryFamilyCandidates(lookupTarget, matches);
+        setCandidates(nextCandidates);
+        setReviewInput(duplicateInput);
+        const options = buildInquiryFamilyReviews(nextCandidates).flatMap(
+          (family) => family.parents
+        );
+        const onlyParent = options.length === 1 ? options[0] : undefined;
+        formik.resetForm({
+          values: {
+            source: onlyParent ? inquiryFamilyCandidateKey(onlyParent.match) : '',
+            parent: onlyParent ? inquiryFamilyParentKey(onlyParent.parent) : '',
+            relationship: '',
+          },
+        });
         setNeedsTargetRefresh(false);
       }
     } catch (error) {
@@ -286,6 +300,7 @@ export function useInquiryFamilyConfirmation(props: InquiryFamilyConfirmationPro
       if (!savingRef.current) setDiscardOpen(false);
     },
     candidates,
+    reviewInput,
     loading,
     saving: saving || formik.isSubmitting,
     entryReason,

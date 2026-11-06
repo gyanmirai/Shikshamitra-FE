@@ -23,6 +23,7 @@ import {
 
 import { Iconify } from '../iconify';
 import { Scrollbar } from '../scrollbar';
+import CustomTooltip from '../custom-tooltip';
 import { mergeStepperButtonProps } from './button-props';
 import {
   focusFirstFormikError,
@@ -41,6 +42,7 @@ interface CustomStepperProps {
   stepCaptions?: React.ReactNode[];
   onStepClick?: (index: number) => void;
   disabled?: boolean;
+  iconOnly?: boolean;
 }
 
 const CustomStepper: React.FC<CustomStepperProps> = ({
@@ -52,6 +54,7 @@ const CustomStepper: React.FC<CustomStepperProps> = ({
   stepCaptions,
   onStepClick,
   disabled = false,
+  iconOnly = false,
 }) => (
   <Box sx={{ width: '100%' }}>
     <Stepper
@@ -66,76 +69,112 @@ const CustomStepper: React.FC<CustomStepperProps> = ({
         p: 0,
         ...(orientation === 'vertical' && {
           '& .MuiStepConnector-line': { minHeight: 20 },
+          ...(iconOnly && { '& .MuiStepConnector-root': { ml: 2.75 } }),
         }),
       }}
     >
-      {steps.map((label, index) => (
-        <Step
-          role="listitem"
-          key={`${index}-${label}`}
-          completed={stepStates ? stepStates[index] === 'completed' : undefined}
-          aria-current={index === activeStep ? 'step' : undefined}
-          sx={{
-            listStyle: 'none',
-            '& svg': { height: 28, width: 28 },
-            ...(stepStates?.[index] === 'skipped' && {
-              '& .MuiStepIcon-root': { color: 'warning.main' },
-            }),
-            ...(stepStates?.[index] === 'error' && {
-              '& .MuiStepIcon-root': { color: 'error.main' },
-            }),
-          }}
-        >
-          {onStepClick ? (
-            <StepButton
-              type="button"
-              disabled={disabled}
-              optional={stepCaptions?.[index]}
-              aria-current={index === activeStep ? 'step' : undefined}
-              onClick={() => onStepClick(index)}
-              sx={{
-                m: 0,
-                p: 1,
-                width: '100%',
-                boxSizing: 'border-box',
-                textAlign: 'left',
-                '&.Mui-focusVisible': {
-                  outline: '2px solid',
-                  outlineColor: 'primary.main',
-                  outlineOffset: -2,
-                },
-              }}
-            >
-              <StepLabel
-                error={stepStates?.[index] === 'error'}
-                optional={stepCaptions?.[index]}
-                sx={{
-                  '& .MuiStepLabel-label': { typography: 'subtitle2', overflowWrap: 'anywhere' },
-                }}
-              >
-                {label}
-              </StepLabel>
-            </StepButton>
-          ) : (
-            <StepLabel
-              error={stepStates?.[index] === 'error'}
-              optional={stepCaptions?.[index]}
-              sx={{
-                '& .MuiStepLabel-label': {
-                  typography: 'subtitle2',
-                  overflowWrap: 'anywhere',
-                },
-              }}
-            >
-              {label}
-            </StepLabel>
-          )}
-        </Step>
-      ))}
+      {steps.map((label, index) => {
+        const state = stepStates?.[index] ?? (index === activeStep ? 'active' : 'pending');
+        const numberIcon = iconOnly ? (
+          <Box
+            component="span"
+            aria-hidden
+            sx={{
+              width: 28,
+              height: 28,
+              display: 'grid',
+              placeItems: 'center',
+              borderRadius: '50%',
+              typography: 'subtitle2',
+              bgcolor:
+                state === 'error'
+                  ? 'error.main'
+                  : state === 'skipped'
+                    ? 'warning.main'
+                    : index === activeStep || state === 'completed'
+                      ? 'primary.main'
+                      : 'text.disabled',
+              color: 'common.white',
+            }}
+          >
+            {index + 1}
+          </Box>
+        ) : undefined;
+        const stepLabel = (
+          <StepLabel
+            icon={numberIcon}
+            error={state === 'error'}
+            optional={stepCaptions?.[index]}
+            sx={{
+              '& .MuiStepLabel-label': { typography: 'subtitle2', overflowWrap: 'anywhere' },
+              ...(iconOnly && {
+                '& .MuiStepLabel-labelContainer': { display: 'none' },
+                '& .MuiStepLabel-iconContainer': { pr: 0 },
+              }),
+            }}
+          >
+            {label}
+          </StepLabel>
+        );
+        const content = onStepClick ? (
+          <StepButton
+            type="button"
+            aria-label={label}
+            aria-description={iconOnly ? state : undefined}
+            disabled={disabled}
+            icon={numberIcon}
+            optional={stepCaptions?.[index]}
+            aria-current={index === activeStep ? 'step' : undefined}
+            onClick={() => onStepClick(index)}
+            sx={{
+              m: 0,
+              p: 1,
+              width: '100%',
+              boxSizing: 'border-box',
+              textAlign: 'left',
+              ...(iconOnly && {
+                minHeight: 44,
+                borderRadius: 1,
+                ...(index === activeStep && { bgcolor: 'action.selected' }),
+              }),
+              '&.Mui-focusVisible': {
+                outline: '2px solid',
+                outlineColor: 'primary.main',
+                outlineOffset: -2,
+              },
+            }}
+          >
+            {stepLabel}
+          </StepButton>
+        ) : (
+          stepLabel
+        );
+        return (
+          <Step
+            role="listitem"
+            key={`${index}-${label}`}
+            completed={stepStates ? state === 'completed' : undefined}
+            aria-current={index === activeStep ? 'step' : undefined}
+            sx={{
+              listStyle: 'none',
+              '& svg': { height: 28, width: 28 },
+              ...(state === 'skipped' && { '& .MuiStepIcon-root': { color: 'warning.main' } }),
+              ...(state === 'error' && { '& .MuiStepIcon-root': { color: 'error.main' } }),
+            }}
+          >
+            {iconOnly ? (
+              <CustomTooltip title={`${label} — ${state}`} placement="right" arrow>
+                <span>{content}</span>
+              </CustomTooltip>
+            ) : (
+              content
+            )}
+          </Step>
+        );
+      })}
     </Stepper>
   </Box>
 );
-
 export default CustomStepper;
 
 interface CustomStepperWithFormikProps {

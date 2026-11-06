@@ -254,7 +254,9 @@ export const defaultOnboardingRules: OnboardingRules = {
 
 export const defaultAccountRules: AccountRules = {
   studentAccount: false,
-  guardianAccount: true,
+  guardianAccount: false,
+  studentAccountAccess: 'optional',
+  guardianAccountAccess: 'optional',
   verifiedGuardianContact: true,
   deliveryTiming: 'after-activation',
   sendStudentCredentialEmail: false,

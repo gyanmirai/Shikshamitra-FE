@@ -11,6 +11,13 @@ const state = vi.hoisted(() => ({
   revoke: vi.fn(),
   changeEmail: vi.fn(),
   retryDelivery: vi.fn(),
+  loadHistory: vi.fn(),
+  history: [] as any[] | undefined,
+  historyLoading: false,
+  historyFetching: false,
+  historyError: false,
+  historyOptions: { skip: true },
+  contextRead: vi.fn(),
   toastError: vi.fn(),
   push: vi.fn(),
   context: {
@@ -101,11 +108,14 @@ vi.mock('src/routes/hooks', () => ({
   useRouter: () => ({ push: state.push }),
 }));
 vi.mock('src/redux/student/admissions/admission-parent-registration-api', () => ({
-  useGetParentRegistrationQuery: () => ({
-    currentData: state.context,
-    isError: state.failed,
-    refetch: vi.fn(),
-  }),
+  useGetParentRegistrationQuery: (...args: unknown[]) => {
+    state.contextRead(...args);
+    return {
+      currentData: state.context,
+      isError: state.failed,
+      refetch: vi.fn(),
+    };
+  },
   useSendParentRegistrationMutation: () => [state.send, {}],
   useChangeParentRegistrationEmailMutation: () => [state.changeEmail, {}],
   useRevokeParentRegistrationMutation: () => [state.revoke, {}],
@@ -113,12 +123,27 @@ vi.mock('src/redux/student/admissions/admission-parent-registration-api', () => 
   useRequestParentRegistrationCorrectionsMutation: () => [state.corrections, {}],
   useApplyParentRegistrationMutation: () => [state.apply, {}],
   useRetryParentRegistrationDeliveryMutation: () => [state.retryDelivery, {}],
+  useGetParentRegistrationEmailHistoryQuery: (_applicationId: string, options: any) => {
+    state.historyOptions = options;
+    return {
+      currentData: state.historyError ? undefined : state.history,
+      isLoading: state.historyLoading,
+      isFetching: state.historyFetching,
+      isError: state.historyError,
+      refetch: state.loadHistory,
+    };
+  },
 }));
 const savedContact = { ...state.context.recipients[0] };
 
 beforeEach(() => {
   vi.clearAllMocks();
   state.failed = false;
+  state.history = [];
+  state.historyLoading = false;
+  state.historyFetching = false;
+  state.historyError = false;
+  state.historyOptions = { skip: true };
   state.context = {
     ...state.context,
     concurrencyStamp: 'initial',
@@ -154,32 +179,185 @@ function installInvitation(deliveryStatus = 'Sent') {
 it('groups the invited contact once and keeps provider acceptance in optional help', () => {
   installInvitation();
   render(<ParentRegistrationPanel applicationId="app" canView canManage currentValues={{}} />);
-  expect(screen.getByText('Awaiting parent')).toBeVisible();
-  expect(screen.getAllByText(/Mother · Saved Mother/)).toHaveLength(1);
-  expect(screen.getByText('Email sent')).toBeVisible();
-  expect(screen.getByRole('button', { name: 'Email delivery information' })).toBeVisible();
-  expect(
-    screen.queryByText('Accepted by the email sender. Inbox delivery is not confirmed.')
-  ).not.toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Resend registration link' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: 'Send email' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: 'Email history' })).toBeVisible();
+  expect(screen.queryByText('Parent Registration')).not.toBeInTheDocument();
+  expect(screen.queryByText('saved@example.test')).not.toBeInTheDocument();
 });
 
-it('keeps every saved adult editable and identifies the invitation recipient without duplicating it', () => {
+it('uses one existing context reader and one toolbar when placed in the applicant header', () => {
   installInvitation();
-  state.context.recipients.push({
-    ...state.context.recipients[0],
-    relationship: 'father',
-    relationshipLabel: 'Father',
-    fullName: 'Saved Father',
-    email: 'father@example.test',
-  });
-  render(<ParentRegistrationPanel applicationId="app" canView canManage currentValues={{}} />);
-  expect(screen.getByText('Link recipient')).toBeVisible();
-  expect(screen.getByText('saved@example.test')).toBeVisible();
-  expect(screen.getByText('father@example.test')).toBeVisible();
-  expect(screen.getAllByRole('button', { name: 'Change email' })).toHaveLength(2);
-  expect(screen.getAllByText(/Mother · Saved Mother/)).toHaveLength(1);
+  const inline = render(
+    <ParentRegistrationPanel applicationId="app" canView canManage currentValues={{}} />
+  );
+  const reads = state.contextRead.mock.calls.length;
+  expect(reads).toBeGreaterThan(0);
+  inline.unmount();
+  state.contextRead.mockClear();
+  render(
+    <ParentRegistrationPanel
+      placement="header"
+      applicationId="app"
+      canView
+      canManage
+      currentValues={{}}
+    />
+  );
+  expect(state.contextRead).toHaveBeenCalledTimes(reads);
+  expect(screen.getAllByRole('button', { name: 'Send email' })).toHaveLength(1);
+  expect(screen.getAllByRole('button', { name: 'Email history' })).toHaveLength(1);
+  expect(state.historyOptions.skip).toBe(true);
 });
+
+it.each(['view', 'manage', 'disabled', 'dirty'] as const)(
+  'keeps the header toolbar within its existing %s boundary',
+  (blocker) => {
+    installInvitation();
+    render(
+      <ParentRegistrationPanel
+        placement="header"
+        applicationId="app"
+        canView={blocker !== 'view'}
+        canManage={blocker !== 'manage'}
+        disabled={blocker === 'disabled'}
+        dirty={blocker === 'dirty'}
+        currentValues={{}}
+      />
+    );
+    if (blocker === 'view' || blocker === 'manage') {
+      expect(screen.queryByRole('button', { name: 'Send email' })).not.toBeInTheDocument();
+    } else {
+      expect(screen.getByRole('button', { name: 'Send email' })).toBeDisabled();
+      fireEvent.click(screen.getByRole('button', { name: 'Send email' }));
+    }
+    if (blocker === 'view')
+      expect(screen.queryByRole('button', { name: 'Email history' })).not.toBeInTheDocument();
+    else expect(screen.getByRole('button', { name: 'Email history' })).toBeVisible();
+    expect(state.send).not.toHaveBeenCalled();
+    expect(state.changeEmail).not.toHaveBeenCalled();
+  }
+);
+
+it.each(['inline', 'header'] as const)(
+  'shows a send action without a registration card and opens recorded email history in a drawer (%s)',
+  async (placement) => {
+    installInvitation();
+    state.history = [
+      {
+        registrationId: 'request',
+        purpose: 'initial',
+        linkStatus: 'Invited',
+        recipientName: 'Saved Mother',
+        recipientRelationship: 'mother',
+        recipientRelationshipLabel: 'Mother',
+        recipientEmail: 'saved@example.test',
+        expiresAt: '2026-11-11T12:00:00Z',
+        attempts: [
+          {
+            status: 'Sent',
+            attemptNumber: 1,
+            attemptedAt: '2026-11-04T12:00:00Z',
+            destination: 'saved@example.test',
+            safeMessage: null,
+          },
+        ],
+      },
+    ];
+    render(
+      <ParentRegistrationPanel
+        placement={placement}
+        applicationId="app"
+        canView
+        canManage
+        currentValues={{}}
+      />
+    );
+
+    expect(screen.queryByText('Parent Registration')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Send email' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Email history' })).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Email history' }));
+    expect(await screen.findByRole('dialog', { name: 'Email History' })).toBeVisible();
+    expect(screen.getByText('saved@example.test')).toBeVisible();
+    expect(
+      screen.getByText('Accepted by the email sender. Inbox delivery is not confirmed.')
+    ).toBeVisible();
+    expect(state.historyOptions.skip).toBe(false);
+  }
+);
+
+it('shows an accurate empty state when history has no recorded link attempts', () => {
+  installInvitation('Pending');
+  render(<ParentRegistrationPanel applicationId="app" canView canManage currentValues={{}} />);
+  fireEvent.click(screen.getByRole('button', { name: 'Email history' }));
+  expect(screen.getByText('No email history yet')).toBeVisible();
+});
+
+it('shows loading instead of empty history while reopening fetch has no current data', () => {
+  installInvitation();
+  state.history = undefined;
+  state.historyFetching = true;
+  const view = () => (
+    <ParentRegistrationPanel
+      placement="header"
+      applicationId="app"
+      canView
+      canManage
+      currentValues={{}}
+    />
+  );
+  const { rerender } = render(view());
+  fireEvent.click(screen.getByRole('button', { name: 'Email history' }));
+  expect(screen.getByLabelText('Loading email history')).toBeVisible();
+  expect(screen.queryByText('No email history yet')).not.toBeInTheDocument();
+
+  state.historyFetching = false;
+  state.history = [];
+  rerender(view());
+  expect(screen.queryByLabelText('Loading email history')).not.toBeInTheDocument();
+  expect(screen.getByText('No email history yet')).toBeVisible();
+});
+
+it('keeps the history drawer recoverable when its read request fails', () => {
+  installInvitation();
+  state.historyError = true;
+  render(<ParentRegistrationPanel applicationId="app" canView canManage currentValues={{}} />);
+  fireEvent.click(screen.getByRole('button', { name: 'Email history' }));
+  expect(screen.getByText('Email history could not be loaded.')).toBeVisible();
+  fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+  expect(state.loadHistory).toHaveBeenCalledOnce();
+});
+
+it.each(['inline', 'header'] as const)(
+  'keeps one update action and lets staff choose the saved adult inside the dialog (%s)',
+  (placement) => {
+    installInvitation();
+    state.context.recipients.push({
+      ...state.context.recipients[0],
+      relationship: 'father',
+      relationshipLabel: 'Father',
+      fullName: 'Saved Father',
+      email: 'father@example.test',
+    });
+    render(
+      <ParentRegistrationPanel
+        placement={placement}
+        applicationId="app"
+        canView
+        canManage
+        currentValues={{}}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'More parent registration actions' }));
+    expect(screen.getByRole('menuitem', { name: 'Update link' })).toBeVisible();
+    expect(screen.queryByText('saved@example.test')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Update link' }));
+    fireEvent.change(screen.getByRole('combobox', { name: 'Parent contact' }), {
+      target: { value: 'father' },
+    });
+    expect(screen.getByRole('textbox', { name: 'Email' })).toHaveValue('father@example.test');
+  }
+);
 
 it('keeps failed delivery guidance visible and preserves the single retry action', () => {
   installInvitation('Failed');
@@ -187,36 +365,40 @@ it('keeps failed delivery guidance visible and preserves the single retry action
   state.context.request.deliveryError = 'The email sender rejected this invitation.';
   render(<ParentRegistrationPanel applicationId="app" canView canManage currentValues={{}} />);
   expect(screen.getByText('The email sender rejected this invitation.')).toBeVisible();
-  expect(screen.getByRole('button', { name: 'Retry delivery' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: 'Send email' })).toBeEnabled();
   expect(
     screen.queryByRole('button', { name: 'Resend registration link' })
   ).not.toBeInTheDocument();
 });
 
-it('preserves the historical invitation recipient when the saved contact has changed', () => {
-  installInvitation();
-  state.context.recipients = [
-    { ...state.context.recipients[0], fullName: 'Current Mother', email: 'current@example.test' },
-  ];
-  render(
-    <ParentRegistrationPanel applicationId="app" canView canManage={false} currentValues={{}} />
-  );
-  expect(screen.getByText('current@example.test')).toBeVisible();
-  expect(
-    screen.getByText(/Link recipient: Mother · Saved Mother · saved@example.test/)
-  ).toBeVisible();
-  expect(screen.queryByRole('button', { name: 'Change email' })).not.toBeInTheDocument();
-  expect(
-    screen.queryByRole('button', { name: 'Resend registration link' })
-  ).not.toBeInTheDocument();
-});
+it.each(['inline', 'header'] as const)(
+  'preserves the historical invitation recipient when the saved contact has changed (%s)',
+  (placement) => {
+    installInvitation();
+    state.context.recipients = [
+      { ...state.context.recipients[0], fullName: 'Current Mother', email: 'current@example.test' },
+    ];
+    render(
+      <ParentRegistrationPanel
+        placement={placement}
+        applicationId="app"
+        canView
+        canManage={false}
+        currentValues={{}}
+      />
+    );
+    expect(screen.getByRole('button', { name: 'Email history' })).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Change email' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Send email' })).not.toBeInTheDocument();
+  }
+);
 
 it('explains the missing parent contact without inventing a send capability', () => {
   state.context.recipients = [];
   state.context.canSend = false;
   render(<ParentRegistrationPanel applicationId="app" canView canManage currentValues={{}} />);
-  expect(screen.getByText(/No parent contact is available/)).toBeVisible();
-  expect(screen.queryByRole('button', { name: 'Send registration link' })).not.toBeInTheDocument();
+  expect(screen.getByText(/Save a parent contact with an email address/)).toBeVisible();
+  expect(screen.queryByRole('button', { name: 'Send email' })).not.toBeInTheDocument();
 });
 
 it.each(['email', 'documents'] as const)('guards browser Back while editing parent %s', (mode) => {
@@ -238,9 +420,10 @@ it.each(['email', 'documents'] as const)('guards browser Back while editing pare
   );
   fireEvent.click(
     screen.getByRole('button', {
-      name: mode === 'email' ? 'Change email' : 'Request parent documents',
+      name: mode === 'email' ? 'More parent registration actions' : 'Request parent documents',
     })
   );
+  if (mode === 'email') fireEvent.click(screen.getByRole('menuitem', { name: 'Update link' }));
   const input = screen.getByRole('textbox', {
     name: mode === 'email' ? 'Email' : /Instructions for the parent/,
   });
@@ -273,16 +456,16 @@ it('keeps email setup failure visible and blocks sending or retry without lockin
   state.context.recipients = [{ ...state.context.recipients[0], canChangeEmail: true }];
   render(<ParentRegistrationPanel applicationId="app" canView canManage currentValues={{}} />);
   expect(screen.getByText('Enable an Email provider in Communication settings.')).toBeVisible();
-  expect(screen.queryByRole('button', { name: 'Send registration link' })).not.toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Retry delivery' })).toBeDisabled();
-  expect(screen.getByRole('button', { name: 'Change email' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: 'Send email' })).toBeDisabled();
+  fireEvent.click(screen.getByRole('button', { name: 'More parent registration actions' }));
+  expect(screen.getByRole('menuitem', { name: 'Update link' })).toBeEnabled();
 });
 it('prioritizes retry and keeps resend and access maintenance in the shared overflow menu', () => {
   state.context.canRetryDelivery = true;
   state.context.canRevoke = true;
   state.context.canTakeover = true;
   render(<ParentRegistrationPanel applicationId="app" canView canManage currentValues={{}} />);
-  expect(screen.getByRole('button', { name: 'Retry delivery' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: 'Send email' })).toBeEnabled();
   expect(
     screen.queryByRole('button', { name: 'Resend registration link' })
   ).not.toBeInTheDocument();
@@ -292,40 +475,52 @@ it('prioritizes retry and keeps resend and access maintenance in the shared over
   expect(screen.getByRole('menuitem', { name: 'Revoke link' })).toBeVisible();
   expect(screen.getByRole('menuitem', { name: 'Take over' })).toBeVisible();
 });
-it('sends only the saved recipient and retains the command key on uncertain retry', async () => {
-  state.failed = false;
-  state.send.mockReturnValue({
-    unwrap: async () => {
-      throw Object.assign(new Error('Network unavailable'), { status: 'FETCH_ERROR' });
-    },
-  });
-  render(<ParentRegistrationPanel applicationId="app" canView canManage currentValues={{}} />);
-  fireEvent.click(screen.getByRole('button', { name: 'Send registration link' }));
-  expect(screen.getByRole('textbox', { name: 'Email' })).toHaveValue('saved@example.test');
-  expect(screen.getByRole('textbox', { name: 'Email' })).toHaveAttribute('readonly');
-  fireEvent.click(screen.getByRole('button', { name: 'Send link' }));
-  await waitFor(() => expect(state.send).toHaveBeenCalledTimes(1));
-  await waitFor(() => expect(state.toastError).toHaveBeenCalled());
-  fireEvent.click(screen.getByRole('button', { name: 'Send link' }));
-  await waitFor(() => expect(state.send).toHaveBeenCalledTimes(2));
-  expect(state.send.mock.calls[1][0]).toEqual(state.send.mock.calls[0][0]);
-  expect(state.send.mock.calls[0][0].input).toMatchObject({
-    recipientRelationship: 'mother',
-    concurrencyStamp: 'initial',
-  });
-  expect(state.send.mock.calls[0][0].input).not.toHaveProperty('email');
-});
+it.each(['inline', 'header'] as const)(
+  'sends only the saved recipient and retains the command key on uncertain retry (%s)',
+  async (placement) => {
+    state.failed = false;
+    state.send.mockReturnValue({
+      unwrap: async () => {
+        throw Object.assign(new Error('Network unavailable'), { status: 'FETCH_ERROR' });
+      },
+    });
+    render(
+      <ParentRegistrationPanel
+        placement={placement}
+        applicationId="app"
+        canView
+        canManage
+        currentValues={{}}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Send email' }));
+    expect(screen.getByRole('textbox', { name: 'Email' })).toHaveValue('saved@example.test');
+    expect(screen.getByRole('textbox', { name: 'Email' })).toHaveAttribute('readonly');
+    fireEvent.click(screen.getByRole('button', { name: 'Send link' }));
+    await waitFor(() => expect(state.send).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(state.toastError).toHaveBeenCalled());
+    fireEvent.click(screen.getByRole('button', { name: 'Send link' }));
+    await waitFor(() => expect(state.send).toHaveBeenCalledTimes(2));
+    expect(state.send.mock.calls[1][0]).toEqual(state.send.mock.calls[0][0]);
+    expect(state.send.mock.calls[0][0].input).toMatchObject({
+      recipientRelationship: 'mother',
+      concurrencyStamp: 'initial',
+    });
+    expect(state.send.mock.calls[0][0].input).not.toHaveProperty('email');
+  }
+);
 it('keeps an optional status failure scoped to parent controls', () => {
   state.failed = true;
   render(<ParentRegistrationPanel applicationId="app" canView canManage currentValues={{}} />);
   expect(state.toastError).toHaveBeenCalled();
   expect(screen.queryByText(/Parent registration status is unavailable/)).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Retry status' })).not.toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: 'Send registration link' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Send email' })).not.toBeInTheDocument();
 });
 it('shows the saved parent email without offering answer-correction requests in Registration', () => {
   render(<ParentRegistrationPanel applicationId="app" canView canManage currentValues={{}} />);
-  expect(screen.getByText('saved@example.test')).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Send email' })).toBeVisible();
+  expect(screen.queryByText('saved@example.test')).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Request corrections' })).not.toBeInTheDocument();
   expect(screen.queryByText('Documents to replace')).not.toBeInTheDocument();
 });
@@ -333,7 +528,8 @@ it('saves an authorized parent email explicitly without sending an invitation', 
   state.context.recipients = [{ ...state.context.recipients[0], canChangeEmail: true }];
   state.changeEmail.mockReturnValue({ unwrap: async () => state.context });
   render(<ParentRegistrationPanel applicationId="app" canView canManage currentValues={{}} />);
-  fireEvent.click(screen.getByRole('button', { name: 'Change email' }));
+  fireEvent.click(screen.getByRole('button', { name: 'More parent registration actions' }));
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Update link' }));
   fireEvent.change(screen.getByRole('textbox', { name: 'Email' }), {
     target: { value: 'changed@example.test' },
   });
@@ -351,7 +547,8 @@ it('ignores unchanged email in the submit control and native form submission', a
   state.context.recipients = [{ ...state.context.recipients[0], canChangeEmail: true }];
   state.changeEmail.mockReturnValue({ unwrap: async () => state.context });
   render(<ParentRegistrationPanel applicationId="app" canView canManage currentValues={{}} />);
-  fireEvent.click(screen.getByRole('button', { name: 'Change email' }));
+  fireEvent.click(screen.getByRole('button', { name: 'More parent registration actions' }));
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Update link' }));
   const email = screen.getByRole('textbox', { name: 'Email' });
   const submit = screen.getByRole('button', { name: 'Submit' });
   expect(submit).toBeDisabled();
@@ -366,18 +563,40 @@ it('ignores unchanged email in the submit control and native form submission', a
   expect(submit).toBeEnabled();
 });
 
-it('honors email capability and saved-form prerequisite', () => {
-  state.context.recipients = [{ ...state.context.recipients[0], canChangeEmail: false }];
-  const { rerender } = render(
-    <ParentRegistrationPanel applicationId="app" canView canManage currentValues={{}} />
-  );
-  expect(screen.queryByRole('button', { name: 'Change email' })).not.toBeInTheDocument();
-  state.context.recipients = [{ ...state.context.recipients[0], canChangeEmail: true }];
-  rerender(
-    <ParentRegistrationPanel applicationId="app" canView canManage dirty currentValues={{}} />
-  );
-  expect(screen.getByRole('button', { name: 'Change email' })).toBeDisabled();
-});
+it.each(['inline', 'header'] as const)(
+  'honors email capability and saved-form prerequisite (%s)',
+  (placement) => {
+    state.context.recipients = [{ ...state.context.recipients[0], canChangeEmail: false }];
+    const { rerender } = render(
+      <ParentRegistrationPanel
+        placement={placement}
+        applicationId="app"
+        canView
+        canManage
+        currentValues={{}}
+      />
+    );
+    expect(
+      screen.queryByRole('button', { name: 'More parent registration actions' })
+    ).not.toBeInTheDocument();
+    state.context.recipients = [{ ...state.context.recipients[0], canChangeEmail: true }];
+    rerender(
+      <ParentRegistrationPanel
+        placement={placement}
+        applicationId="app"
+        canView
+        canManage
+        dirty
+        currentValues={{}}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'More parent registration actions' }));
+    expect(screen.getByRole('menuitem', { name: 'Update link' })).toHaveAttribute(
+      'aria-disabled',
+      'true'
+    );
+  }
+);
 
 it('retains changed email and locks a conflicting save without sending', async () => {
   state.context.recipients = [{ ...state.context.recipients[0], canChangeEmail: true }];
@@ -387,7 +606,8 @@ it('retains changed email and locks a conflicting save without sending', async (
     },
   });
   render(<ParentRegistrationPanel applicationId="app" canView canManage currentValues={{}} />);
-  fireEvent.click(screen.getByRole('button', { name: 'Change email' }));
+  fireEvent.click(screen.getByRole('button', { name: 'More parent registration actions' }));
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Update link' }));
   fireEvent.change(screen.getByRole('textbox', { name: 'Email' }), {
     target: { value: 'kept@example.test' },
   });
@@ -479,7 +699,8 @@ it('compares a proposal with current saved answers and applies only through the 
       currentValues={{ NAME: 'Current name' }}
     />
   );
-  fireEvent.click(screen.getByRole('button', { name: 'Review parent corrections' }));
+  fireEvent.click(screen.getByRole('button', { name: 'More parent registration actions' }));
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Review parent corrections' }));
   expect(screen.getByText('Current: Current name')).toBeVisible();
   expect(screen.getByText('Proposed: Proposed name')).toBeVisible();
   fireEvent.change(screen.getByRole('textbox', { name: /Correction reason/ }), {

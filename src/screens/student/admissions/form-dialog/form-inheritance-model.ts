@@ -80,6 +80,40 @@ function updateSource(
   };
 }
 
+export function setInheritedStepName(
+  form: CreateUpdateAdmissionForm,
+  sourceId: string,
+  stepCode: string,
+  name: string
+) {
+  return updateSource(form, sourceId, (source) => ({
+    ...source,
+    stepNames: { ...source.stepNames, [stepCode]: name },
+  }));
+}
+
+/** Apply live title edits while a fresh server composition is pending. */
+export function applyInheritedStepNames(
+  form: CreateUpdateAdmissionForm,
+  sections: CreateUpdateAdmissionForm['sections']
+) {
+  const titles = new Map(
+    getAdmissionFormStepGroups(sections).map((step) => {
+      const sourceId = step.sections
+        .flatMap((item) => item.section.fields)
+        .find((field) => field.inheritedFrom)?.inheritedFrom?.inquiryFormDefinitionId;
+      const policy = form.inheritance?.sources.find(
+        (source) => source.inquiryFormDefinitionId === sourceId
+      );
+      return [step.id, policy?.stepNames?.[step.code]];
+    })
+  );
+  return sections.map((section) => {
+    const name = titles.get(section.stepId ?? section.id);
+    return name === undefined ? section : { ...section, stepName: name };
+  });
+}
+
 export function setInheritedFieldRequired(
   form: CreateUpdateAdmissionForm,
   sourceId: string,
@@ -162,7 +196,10 @@ export function getInheritancePreviewValues(
         supportedLanguages: [
           ...new Set([...form.supportedLanguages, ...(effective.supportedLanguages ?? [])]),
         ],
-        sections: mergeInquiryContextSections(effective.sections, contextSections).map((section) => ({
+        sections: applyInheritedStepNames(
+          form,
+          mergeInquiryContextSections(effective.sections, contextSections)
+        ).map((section) => ({
           ...section,
           fieldsPerRow: form.fieldsPerRow,
         })),

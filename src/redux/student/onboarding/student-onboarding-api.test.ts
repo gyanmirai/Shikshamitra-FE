@@ -52,6 +52,40 @@ afterEach(() => {
 });
 
 describe('student onboarding API', () => {
+  it('keeps the successful completion result when the following detail refresh fails', async () => {
+    let reads = 0;
+    mswServer.use(
+      http.get('*/api/student/onboarding/case-1', () =>
+        ++reads === 1
+          ? HttpResponse.json({ data: { ...onboardingCase, status: 3 } })
+          : HttpResponse.json({ message: 'Read unavailable' }, { status: 500 })
+      ),
+      http.post('*/api/student/onboarding/case-1/readiness/refresh', () =>
+        HttpResponse.json({
+          data: { ...onboardingCase, status: 4, concurrencyStamp: 'completed-stamp' },
+        })
+      )
+    );
+    const query = store.dispatch(
+      studentOnboardingApi.endpoints.getStudentOnboardingCase.initiate('case-1')
+    );
+    await query.unwrap();
+    await store
+      .dispatch(
+        studentOnboardingApi.endpoints.refreshStudentOnboardingReadiness.initiate({
+          id: 'case-1',
+          concurrencyStamp: 'case-stamp-1',
+        })
+      )
+      .unwrap();
+    await vi.waitFor(() =>
+      expect(
+        studentOnboardingApi.endpoints.getStudentOnboardingCase.select('case-1')(store.getState())
+          .data?.status
+      ).toBe(4)
+    );
+    query.unsubscribe();
+  });
   it('loads Offering requirements context through the scoped Onboarding settings boundary', async () => {
     const offerings = [
       { id: 'offering-1', academicYearId: 'year-1', workflowDefinitionId: 'workflow-1' },
