@@ -1,6 +1,7 @@
 import type { AssessmentEffectiveProfile } from 'src/redux/student/admissions/admission-assessment-types';
 
 import { Box, Stack, Typography } from '@mui/material';
+import ShakingTextField from 'src/components/shaking-text-field';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 
 import {
@@ -46,26 +47,27 @@ export function AssessmentSubjectScoreFields({
         }}
       >
         {profile.subjects.map((subject) => (
-          <NumericFormatCustom
-            key={subject.code}
-            fullWidth
-            required
-            size="small"
-            prefix=""
-            roundToWholeRupees={false}
-            name={`subjectScores.${subject.code}`}
-            label={`${subject.name} / ${subject.totalMarks}`}
-            value={values[subject.code] ?? ''}
-            disabled={disabled}
-            error={Boolean(errors[subject.code])}
-            helperText={
-              errors[subject.code] ||
-              (profile.passRule !== 'overall' ? `Passing: ${subject.passingMarks}` : undefined)
-            }
-            onValueChange={({ value }, source) => {
-              if (source.source === 'event') onChange(subject.code, value);
-            }}
-          />
+          <ShakingTextField key={subject.code} error={Boolean(errors[subject.code])}>
+            <NumericFormatCustom
+              fullWidth
+              required
+              size="small"
+              prefix=""
+              roundToWholeRupees={false}
+              name={`subjectScores.${subject.code}`}
+              label={`${subject.name} / ${subject.totalMarks}`}
+              value={values[subject.code] ?? ''}
+              disabled={disabled}
+              error={Boolean(errors[subject.code])}
+              helperText={
+                errors[subject.code] ||
+                (profile.passRule !== 'overall' ? `Passing: ${subject.passingMarks}` : undefined)
+              }
+              onValueChange={({ value }, source) => {
+                if (source.source === 'event') onChange(subject.code, value);
+              }}
+            />
+          </ShakingTextField>
         ))}
       </Box>
       <Typography variant="body2" aria-live="polite">

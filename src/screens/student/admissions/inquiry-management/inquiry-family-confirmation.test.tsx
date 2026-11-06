@@ -281,12 +281,12 @@ it.each(['Cancel', 'close', 'Escape'])(
     else fireEvent.click(screen.getByRole('button', { name: action }));
     await screen.findByRole('dialog', { name: 'Discard Unsaved Changes?' });
     expect(window.confirm).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole('button', { name: 'Keep Editing' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
     await waitFor(() =>
       expect(screen.getByRole('combobox', { name: /Saved Parent/ })).toHaveTextContent('Amit')
     );
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Discard Changes' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Discard changes' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(requests.busy).toHaveBeenLastCalledWith(false);
     expect(requests.saved).not.toHaveBeenCalled();

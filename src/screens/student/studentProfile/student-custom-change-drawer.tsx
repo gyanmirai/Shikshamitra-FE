@@ -100,7 +100,7 @@ export function StudentCustomChangeDrawer({
                 notificationKey="STU-0754"
                 presentation="toast"
                 severity="error"
-                action={<Button onClick={() => snapshot.refetch()}>Retry</Button>}
+                toastAction={<Button onClick={() => snapshot.refetch()}>Retry</Button>}
               >
                 Current school details could not be loaded. Retry before making a change.
               </StudentFeedback>

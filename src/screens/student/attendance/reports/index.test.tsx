@@ -1,10 +1,19 @@
+import type { ReactNode } from 'react';
+
+import { LocalizationProvider } from '@mui/x-date-pickers';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { screen, render as renderUi } from '@testing-library/react';
+import { expectStudentErrorToast } from 'src/test/student-toast-test-fixture';
 
 import AttendanceReportScreen from './index';
 
+const render = (ui: ReactNode) =>
+  renderUi(<LocalizationProvider dateAdapter={AdapterDayjs}>{ui}</LocalizationProvider>);
+
 const state = vi.hoisted(() => ({
   year: 'year-1',
+  medium: 'medium-1',
   params: new URLSearchParams('from=2026-09-01&to=2026-09-30'),
   result: {
     rows: [
@@ -33,6 +42,8 @@ const state = vi.hoisted(() => ({
 vi.mock('../setting/attendance-context', () => ({
   useAttendanceContext: () => ({
     currentYear: { id: state.year },
+    currentBoard: { id: 'board-1' },
+    currentMedium: { id: state.medium },
     params: state.params,
     standardId: '',
     divisionId: '',
@@ -60,19 +71,24 @@ vi.mock('./components/AttendanceAiReportButton', () => ({
   AttendanceAiReportButton: () => <button type="button">Generate with AI</button>,
 }));
 vi.mock('src/components/customizabaleTable', () => ({
-  default: (props: { data: Record<string, unknown>[]; noDataText: string }) => {
+  default: (props: {
+    data: Record<string, unknown>[];
+    noDataText: string;
+    errorContent?: ReactNode;
+  }) => {
     state.table(props);
     const { data, noDataText } = props;
     return (
       <div>
-        {data.length
-          ? data.map((row) => (
-              <div key={String(row.studentId)}>
-                {String(row.fullName)} {String(row.percentageLabel)} {String(row.completion)}{' '}
-                {String(row.calculationState)} {String(row.targetState)}
-              </div>
-            ))
-          : noDataText}
+        {props.errorContent ||
+          (data.length
+            ? data.map((row) => (
+                <div key={String(row.studentId)}>
+                  {String(row.fullName)} {String(row.percentageLabel)} {String(row.completion)}{' '}
+                  {String(row.calculationState)} {String(row.targetState)}
+                </div>
+              ))
+            : noDataText)}
       </div>
     );
   },
@@ -81,6 +97,7 @@ vi.mock('src/components/customizabaleTable', () => ({
 describe('canonical attendance register', () => {
   beforeEach(() => {
     state.year = 'year-1';
+    state.medium = 'medium-1';
     state.params = new URLSearchParams('from=2026-09-01&to=2026-09-30');
     state.isError = false;
     state.result.rows[0].isBelowThreshold = undefined;
@@ -98,6 +115,8 @@ describe('canonical attendance register', () => {
     expect(state.query).toHaveBeenCalledWith(
       expect.objectContaining({
         academicYearId: 'year-1',
+        boardId: 'board-1',
+        educationMediumId: 'medium-1',
         startDate: '2026-09-01',
         endDate: '2026-09-30',
       }),
@@ -121,6 +140,12 @@ describe('canonical attendance register', () => {
     render(<AttendanceReportScreen />);
     expect(state.query).toHaveBeenCalledWith(expect.anything(), { skip: true });
     expect(screen.getByText('Select an academic year to view attendance.')).toBeInTheDocument();
+  });
+  it('does not broaden a missing medium into a year-wide report request', () => {
+    state.medium = '';
+    render(<AttendanceReportScreen />);
+    expect(state.query).toHaveBeenCalledWith(expect.anything(), { skip: true });
+    expect(screen.getByText('Select a board and medium to view attendance.')).toBeInTheDocument();
   });
   it.each([
     { isProvisional: true, label: 'Provisional' },
@@ -154,12 +179,14 @@ describe('canonical attendance register', () => {
     expect(state.query).toHaveBeenCalledWith(expect.anything(), { skip: true });
     expect(screen.getByText(/Select a valid date range/)).toBeInTheDocument();
   });
-  it('keeps report context and offers retry after a service failure', () => {
+  it('keeps report context and suppresses successful empty results after a service failure', async () => {
     state.isError = true;
     render(<AttendanceReportScreen />);
     expect(screen.getByRole('heading', { name: 'Attendance Reports' })).toBeInTheDocument();
-    expect(screen.getByText('Attendance service unavailable')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
-    expect(state.refetch).toHaveBeenCalledOnce();
+    await expectStudentErrorToast('Attendance service unavailable');
+    expect(
+      screen.queryByText('No eligible students match this date range and class scope.')
+    ).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Attendance report unavailable')).toBeInTheDocument();
   });
 });

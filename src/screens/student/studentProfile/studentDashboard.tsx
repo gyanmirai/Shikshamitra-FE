@@ -1,45 +1,21 @@
-import React from 'react';
-import { Box, Grid } from '@mui/material';
-import { Scrollbar } from 'src/components/scrollbar';
+import { Stack } from '@mui/material';
 import AcademicTimetable from 'src/components/studentProfile/academicTimetable';
 
-import Overview from './studentDashbordComponent';
-import AttendanceTrend from './studentDashbordComponent/attendanceTrend';
-import StudentExamsList from './studentDashbordComponent/studentProfileExamsList';
-import SubjectPerformanceCards from './studentDashbordComponent/subjectPerformanceDetails';
-import StudentHomeworkAssignments from './studentDashbordComponent/studentDashboardHomework';
-import SubjectsTeachersStudentDashboard from './studentDashbordComponent/subjectsTeachersStudentDashboard';
+import { StudentRelatedUnavailable } from './student-related-unavailable';
 
 import type { StudentTabsComponentType } from '.';
 
-const StudentDashboard = (props: StudentTabsComponentType) => (
-  <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 280px)' }}>
-    <Scrollbar sx={{ flexGrow: 1, height: '100%' }}>
-      <Grid container spacing={1}>
-        <Grid size={12}>
-          <Overview />
-        </Grid>
-        <Grid size={12}>
-          <AttendanceTrend />
-        </Grid>
-        <Grid size={12}>
-          <AcademicTimetable />
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <StudentExamsList />
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <StudentHomeworkAssignments />
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <SubjectPerformanceCards />
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <SubjectsTeachersStudentDashboard />
-        </Grid>
-      </Grid>
-    </Scrollbar>
-  </Box>
-);
-
-export default StudentDashboard;
+export default function StudentDashboard({ student, tabs }: StudentTabsComponentType) {
+  return (
+    <Stack spacing={2}>
+      <StudentRelatedUnavailable
+        title="School Activity"
+        message="Student school activity summary is unavailable here."
+        onOverview={tabs ? () => tabs.setValue('overview') : undefined}
+      />
+      {student.standardId && student.divisionId && (
+        <AcademicTimetable standardId={student.standardId} divisionId={student.divisionId} />
+      )}
+    </Stack>
+  );
+}

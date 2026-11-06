@@ -30,7 +30,7 @@ export function ApplicationDecisionHistory({
         presentation="toast"
         severity="error"
         sx={{ mt: 2 }}
-        action={
+        toastAction={
           <Button color="inherit" size="small" onClick={onRetry}>
             Retry
           </Button>

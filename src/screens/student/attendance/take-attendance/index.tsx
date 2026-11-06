@@ -8,6 +8,7 @@ import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
+import { formatStr } from 'src/utils/format-time';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useState, useEffect } from 'react';
 import { studentPaths } from 'src/constants/student-menu';
@@ -222,7 +223,7 @@ function DailyAttendanceWorkspace({
           <DatePicker
             label="Date"
             value={v.selection.date ? dayjs(v.selection.date) : null}
-            format="DD-MM-YYYY"
+            format={formatStr.split.date}
             disabled={!v.context || v.busy}
             minDate={v.year?.startDate ? dayjs(v.year.startDate) : undefined}
             maxDate={
@@ -398,8 +399,8 @@ function DailyAttendanceWorkspace({
           <Stack spacing={1}>
             <Typography variant="body2">
               {v.decision === 'lock'
-                ? `Lock the submitted register for ${formatDateOnly(v.selection.date)}? Further changes follow the school's correction policy.`
-                : `Submit attendance for ${formatDateOnly(v.selection.date)}? All ${v.counts.expected} expected students in this class have been marked.`}
+                ? `Lock the submitted register for ${formatDateOnly(v.selection.date, formatStr.split.date)}? Further changes follow the school's correction policy.`
+                : `Submit attendance for ${formatDateOnly(v.selection.date, formatStr.split.date)}? All ${v.counts.expected} expected students in this class have been marked.`}
             </Typography>
             {v.failure && (
               <StudentFeedback notificationKey="STU-0656" presentation="inline" severity="error">
@@ -458,7 +459,7 @@ function AttendanceWorkspaceRoute() {
             notificationKey="STU-0657"
             presentation="toast"
             severity="error"
-            action={<Button onClick={() => year.refetch()}>Retry</Button>}
+            toastAction={<Button onClick={() => year.refetch()}>Retry</Button>}
           >
             The academic year for this register could not be loaded.
           </StudentFeedback>

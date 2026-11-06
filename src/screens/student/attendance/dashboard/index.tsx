@@ -15,6 +15,7 @@ import { useTheme } from '@mui/material/styles';
 import React, { useMemo, useState } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
+import { formatStr } from 'src/utils/format-time';
 import { Scrollbar } from 'src/components/scrollbar';
 import sortQueryString from 'src/utils/sort-query-string';
 import { studentPaths } from 'src/constants/student-menu';
@@ -22,11 +23,6 @@ import UserHoverProfile from 'src/components/student-popover';
 import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import {
-  AttendanceStatusType,
-  AttendanceStatusOptions,
-  AttendanceStatusTypeColors,
-} from 'src/enums/attendance-type';
 import {
   Box,
   Grid,
@@ -37,6 +33,11 @@ import {
   Typography,
   LinearProgress,
 } from '@mui/material';
+import {
+  AttendanceStatusType,
+  AttendanceStatusOptions,
+  AttendanceStatusTypeColors,
+} from 'src/enums/attendance-type';
 import {
   useGetStudentsByDivisionQuery,
   useGetStudentAttendanceHistoryQuery,
@@ -117,7 +118,7 @@ const StudentAttendanceDashboardScreen = () => {
               presentation="toast"
               severity="error"
               sx={{ mt: 1 }}
-              action={
+              toastAction={
                 <Button size="small" onClick={() => refetch()}>
                   Retry
                 </Button>
@@ -311,7 +312,7 @@ const DivisionOverview = ({ selectedDivision, selectedMonth }: any) => {
   const attendanceHistoryRows =
     attendanceHistory?.items?.map((item: any) => ({
       ...item,
-      date: dayjs(item.date).format('DD-MM-YYYY'),
+      date: dayjs(item.date).format(formatStr.split.date),
       remarks: item.remarks || '-',
     })) || [];
 
@@ -395,12 +396,14 @@ const DivisionOverview = ({ selectedDivision, selectedMonth }: any) => {
               value={startDate}
               onChange={(value) => setStartDate(value)}
               label="Start Date"
+              format={formatStr.split.date}
               slotProps={{ textField: { size: 'small' } }}
             />
             <DatePicker
               value={endDate}
               onChange={(value) => setEndDate(value)}
               label="End Date"
+              format={formatStr.split.date}
               slotProps={{ textField: { size: 'small' } }}
             />
           </Box>

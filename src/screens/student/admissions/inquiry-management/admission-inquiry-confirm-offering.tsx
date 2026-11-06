@@ -90,7 +90,7 @@ export function AdmissionInquiryConfirmOffering({
             notificationKey="STU-0398"
             presentation="toast"
             severity="error"
-            action={
+            toastAction={
               <Button size="small" onClick={() => offerings.refetch()}>
                 Retry
               </Button>

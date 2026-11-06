@@ -1,509 +1,194 @@
 'use client';
 
-import type { Medium } from 'src/types/school';
 import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
-import * as Yup from 'yup';
-import { useFormik } from 'formik';
-import { capitalize } from 'lodash';
-import { LoadingButton } from '@mui/lab';
-import { Add } from '@mui/icons-material';
+import { useState } from 'react';
+import { useSelector } from 'react-redux';
+import { Box, Button } from '@mui/material';
 import { GlobalIcons } from 'src/utils/icons';
-import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
-import base64ToFile from 'src/utils/base64ToFile';
-import { useBoolean } from 'src/hooks/use-boolean';
-import { useSelector, useDispatch } from 'react-redux';
-import { fileToBase64 } from 'src/utils/file-to-base64';
-import FileUploader from 'src/components/custom-upload';
-import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
-import sortQueryString from 'src/utils/sort-query-string';
+import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import ShakingTextField from 'src/components/shaking-text-field';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import ColorPickerCircle from 'src/components/static-color/colorPickerCircle';
 import { useStudentAcademicScope } from 'src/hooks/use-student-academic-scope';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
-import { Box, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
 import {
   studentGroupApi,
   useGetAllGroupQuery,
   useDeleteGroupMutation,
-  useAddStudentGroupMutation,
-  useUpdateStudentGroupMutation,
 } from 'src/redux/student/student-group/student-group';
 
-import { IGroup } from './type';
+import HouseSettingsForm from './house-settings-form';
 import { StudentAcademicScopeFilters } from '../student-academic-scope-filters';
 
+import type { IGroup } from './type';
 
-const HouseSetting = () => {
+export default function HouseSetting() {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canWrite = hasGrantedPermission(permissions, 'Students.Records.Settings.Add');
   const canDelete = hasGrantedPermission(permissions, 'Students.Records.Settings.Delete');
   const { currentMedium } = useStudentAcademicScope();
-  const [query, setQuery] = useState({
-    sorting: '',
-    skipCount: 0,
-    maxResultCount: 10,
-  });
-  const { currentData: groupData, refetch, isError } = useQueryAndMutation({
+  const [form, setForm] = useState<{ record: IGroup | null; mediumId: string } | null>(null);
+  const [deleting, setDeleting] = useState<IGroup | null>(null);
+  const { currentData, refetch, isError, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAllGroupQuery,
-    params: (currentMedium as Medium)?.id,
+    params: currentMedium?.id,
     options: { skip: !currentMedium?.id },
   });
-
-  const [deleteGroup, { isLoading: isDeleteLoading }] = useQueryAndMutation({
+  const [deleteGroup, deleteState] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteGroupMutation,
   });
-
-  // Undo functionality hook
   const { confirmWithUndo } = useConfirmWithUndo();
-
-  const dialog = useBoolean();
-  // Dialog state for delete confirmation
-  const confirm = useBoolean();
-  // State to store group data being edited
-
-  const [editData, setEditData] = useState<null | IGroup>(null);
-  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
-  const dispatch = useDispatch();
-
-  // Handles closing the incident form
-  const handleClose = (_e: any, isSubmit?: boolean) => {
-    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      dispatch(setIsChanges(false));
-      setEditData(null);
-      dialog.onFalse();
-    } else if (!isChanges) {
-      setEditData(null);
-      dialog.onFalse();
-    }
+  const openForm = (record: IGroup | null) => {
+    if (canWrite && currentMedium?.id) setForm({ record, mediumId: currentMedium.id });
   };
-
-  const columns: IColumn[] = useMemo(
-    () => [
-      {
-        label: 'House Name',
-        id: 'name',
-        render(value, row) {
-          return (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <SubjectColorIndicator color={row.color} />
-              <Typography variant="caption" fontSize="13px">
-                {value}
-              </Typography>
-            </Box>
-          );
-        },
-      },
-      {
-        label: 'Actions',
-        id: 'action',
-        isSort: false,
-        isFilter: false,
-        sticky: true,
-        width: '40px',
-        minWidth: '40px',
-        align: 'left',
-        render(value, row) {
-          return (
-            <ThreeDotsActions
-              showEditIcon={canWrite}
-              showDeleteIcon={canDelete}
-              showThreeDots={false}
-              handleEditClick={() => {
-                setEditData(row as any);
-                dialog.onTrue();
-              }}
-              handleDeleteClick={() => {
-                setEditData(row as any);
-                confirm.onTrue();
-              }}
-              placement="right-top"
-              //   actions={({ popover }) => (
-              //     <MenuList>
-              //       <MenuItem
-              //         onClick={() => {
-              //           setEditData(row as IGroup);
-              //           assignStudentDialog.onTrue();
-              //           popover.onClose();
-              //         }}
-              //       >
-              //         <Iconify icon="hugeicons:student" />
-              //         Assign Student
-              //       </MenuItem>
-              //       <MenuItem
-              //         onClick={() => {
-              //           setEditData(row as IGroup);
-              //           assignLeaderDialog.onTrue();
-              //           popover.onClose();
-              //         }}
-              //       >
-              //         <Iconify icon="fluent-mdl2:party-leader" />
-              //         Assign leader
-              //       </MenuItem>
-              //     </MenuList>
-              //   )}
-            />
-          );
-        },
-      },
-    ],
-    [canWrite, canDelete, dialog, confirm]
-  );
-
+  const columns: IColumn[] = [
+    {
+      id: 'name',
+      label: 'House name',
+      render: (value, row) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <SubjectColorIndicator color={row.color} />
+          {value}
+        </Box>
+      ),
+    },
+    {
+      id: 'action',
+      label: 'Actions',
+      isSort: false,
+      isFilter: false,
+      sticky: true,
+      width: 96,
+      minWidth: 96,
+      render: (_value, row) => (
+        <ThreeDotsActions
+          showEditIcon={canWrite}
+          showDeleteIcon={canDelete}
+          showThreeDots={false}
+          handleEditClick={() => openForm(row as IGroup)}
+          handleDeleteClick={() => setDeleting(row as IGroup)}
+        />
+      ),
+    },
+  ];
   return (
-    <Box sx={{ minHeight: 0, height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ minHeight: 0, height: 1, display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
         heading="Settings"
-        description="Student Inquiry: Captures and manages admission-related inquiries from prospective students or parents."
+        description="Manage house names, colors, logos and descriptions for the selected academic medium."
         links={[
-          { name: 'Student', href: '/student/dashboard/' },
-          { name: 'Student Records', href: '/student/dashboard/' },
+          { name: 'Student', href: studentPaths.dashboard },
+          { name: 'Student Records', href: studentPaths.records.studentList },
           { name: 'Settings' },
         ]}
         action={
           <Button
             size="small"
-            startIcon={<Add />}
             variant="contained"
-            onClick={canWrite ? dialog.onTrue : undefined}
-            disabled={!canWrite}
-            sx={{ px: '32px' }}
+            aria-label="Add house"
+            disabled={!canWrite || !currentMedium?.id}
+            startIcon={<Iconify icon={GlobalIcons.addIcon} />}
+            onClick={() => openForm(null)}
           >
             House
           </Button>
         }
       />
       <StudentAcademicScopeFilters />
-      <CustomizableTable
-        tableTitle="House Setting"
-        tableId="group-management-table"
-        noDataText={
-          <>
-            No House Data Found{' '}
-            {canWrite && <Box
-              onClick={dialog.onTrue}
-              color="primary.main"
-              fontWeight={600}
-              sx={{
-                '&:hover': {
-                  cursor: 'pointer',
-                  color: 'primary.main',
-                  textDecoration: 'underline',
-                },
-              }}
-            >
-              Add House
-            </Box>}{' '}
-          </>
-        }
-        totalCount={currentMedium?.id && !isError ? groupData?.data?.length || 0 : 0}
-        // isLoading={isLoading}
-        // serverSide
-        // onServerPagination={async (page, rowPerPage) => {
-        //   const newParams = {
-        //     ...queryParams,
-        //     SkipCount: page * rowPerPage,
-        //     MaxResultCount: rowPerPage,
-        //   };
-        //   setQueryParams(newParams);
-        // }}
-        columns={columns}
-        data={currentMedium?.id && !isError ? groupData?.data || [] : []}
-        serverSide
-        onServerSort={(column, sortData) => {
-          setQuery((prev) => ({
-            ...prev,
-            sorting: sortQueryString(sortData),
-          }));
-        }}
-        onServerPagination={(page: number, rowsPerPage: number) => {
-          setQuery((prev) => ({
-            ...prev,
-            skipCount: page * rowsPerPage,
-            maxResultCount: rowsPerPage,
-          }));
-        }}
-      />{' '}
-      <CustomDialog
-        open={dialog.value && canWrite}
-        handleClose={() => {
-          setEditData(null);
-          dialog.onFalse();
-        }}
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">{editData ? 'Update House' : 'Add House'}</Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title={
-                editData
-                  ? 'You can update the house name.'
-                  : 'You can create a new house by entering the house name.'
-              }
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
-      >
-        <GroupManagementForm editData={editData} handleClose={handleClose} />
-      </CustomDialog>
+      <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+        <CustomizableTable
+          tableTitle="House Settings"
+          tableId="group-management-table"
+          columns={columns}
+          data={currentMedium?.id && !isError ? (currentData?.data ?? []) : []}
+          totalCount={currentMedium?.id && !isError ? (currentData?.data?.length ?? 0) : 0}
+          isLoading={isLoading}
+          noDataText={
+            currentMedium?.id ? (
+              <>
+                No houses have been added.
+                {canWrite && <Button onClick={() => openForm(null)}>Add house</Button>}
+              </>
+            ) : (
+              'Select an academic medium to view houses.'
+            )
+          }
+          errorContent={
+            isError ? (
+              <StudentFeedback
+                notificationKey="STU-HOUSE-SETTINGS-LOAD"
+                presentation="toast"
+                severity="error"
+              >
+                House settings could not be loaded.
+              </StudentFeedback>
+            ) : undefined
+          }
+          wrapperProps={{ sx: { height: 1 } }}
+          tableContainerProps={{ sx: { height: 1 } }}
+        />
+      </Box>
+      {form && canWrite && (
+        <HouseSettingsForm
+          key={form.record?.id ?? 'new'}
+          record={form.record}
+          mediumId={form.mediumId}
+          onClose={() => setForm(null)}
+        />
+      )}
       <ConfirmDialog
-        open={confirm.value && canDelete}
-        onClose={() => {
-          setEditData(null);
-          confirm.onFalse();
-        }}
-        title="Delete"
+        open={Boolean(deleting) && canDelete}
+        onClose={() => !deleteState.isLoading && setDeleting(null)}
+        disableCancel={deleteState.isLoading}
+        title="Delete House?"
         content={
           <>
-            Are you sure you want to delete house <strong>{editData?.name}</strong>?
+            Delete house <strong>{deleting?.name}</strong>?
           </>
         }
         action={
-          <LoadingButton
+          <Button
             variant="contained"
             color="error"
-            size="small"
-            loading={isDeleteLoading}
-            disabled={!canDelete}
-            onClick={async () => {
-              if (!canDelete) return;
+            loading={deleteState.isLoading}
+            startIcon={<Iconify icon={GlobalIcons.delete} />}
+            onClick={() => {
+              if (!canDelete || !deleting) return;
               confirmWithUndo({
-                item: editData,
-                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
-                  dispatchFn(
+                item: deleting,
+                onOptimisticRemove: (dispatch, setDeleteIndex) =>
+                  dispatch(
                     studentGroupApi.util.updateQueryData(
                       'getAllGroup',
                       currentMedium?.id,
-                      (draft: any) => {
-                        const index = draft?.data?.findIndex(
-                          (group: any) => group.id === editData?.id
-                        );
+                      (draft: { data?: IGroup[] }) => {
+                        const index =
+                          draft.data?.findIndex((group) => group.id === deleting.id) ?? -1;
                         setDeleteIndex(index);
-                        if (index !== -1 && draft?.data) {
-                          draft.data.splice(index, 1);
-                        }
+                        if (index !== -1) draft.data?.splice(index, 1);
                       }
                     )
                   ),
                 onUndoRestore: () => refetch(),
-                onCommit: () => deleteGroup(editData?.id),
+                onCommit: () => deleteGroup(deleting.id),
               });
-              confirm.onFalse();
-              setEditData(null);
+              setDeleting(null);
             }}
-            // startIcon={<Iconify icon={GlobalIcons.delete} />}
           >
-            Yes
-          </LoadingButton>
+            Delete
+          </Button>
         }
       />
     </Box>
   );
-};
-
-export default HouseSetting;
-
-const GroupManagementForm = ({
-  editData,
-  handleClose,
-}: {
-  editData: IGroup | null;
-  handleClose: (e: any, isSubmit: boolean) => void;
-}) => {
-  const { currentMedium } = useStudentAcademicScope();
-  const permissions = useSelector((state: RootState) => state.auth.permissions);
-  const canWrite = hasGrantedPermission(permissions, 'Students.Records.Settings.Add');
-
-  // Hooks for adding and updating student groups using custom query and mutation hook
-  const [addGroup, { isLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useAddStudentGroupMutation,
-    popupConfig: { error: false },
-  });
-  // Custom hook for updating student group data
-  // Returns mutation function and loading state
-  // updateGroup: Function to update existing group
-  // isUpdateLoading: Boolean indicating if update is in progress
-  const [updateGroup, { isLoading: isUpdateLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUpdateStudentGroupMutation,
-    popupConfig: { error: false },
-  });
-
-  // Initialize formik form with initial values and submit handler
-  const formik = useFormik({
-    // Set initial name value from editData if exists, otherwise empty string
-    initialValues: {
-      name: editData?.name || '',
-      color: editData?.color || '#000000',
-      logoUrl: editData?.logoUrl ? base64ToFile(editData?.logoUrl as string) : '',
-      description: editData?.description || '',
-    },
-    validationSchema: Yup.object().shape({
-      name: Yup.string().required('House Name is required'),
-      color: Yup.string().required('Color is required'),
-    }),
-    // Handle form submission for both add and update operations
-    onSubmit: async (values) => {
-      if (!canWrite) return;
-      try {
-        // Helper: convert File → base64 (without data URI prefix)
-        const getBase64String = async (file?: File | string) => {
-          if (!file || typeof file === 'string') return undefined;
-          const base64WithPrefix = await fileToBase64(file);
-          return base64WithPrefix.split(',')[1];
-        };
-
-        // Build payload safely (no undefined fields)
-        const payload: any = {
-          name: values.name,
-          color: values.color,
-          description: values.description,
-        };
-
-        // Add logo ONLY if present
-        const logo = await getBase64String(values.logoUrl);
-        if (logo) {
-          payload.logo = logo;
-        }
-
-        if (editData) {
-          await updateGroup({
-            houseSettingId: editData.id,
-            body: payload,
-          }).unwrap();
-
-          shikshaMitraToast.success({
-            message: `${values.name} House Updated Successfully`,
-          });
-        } else {
-          await addGroup({
-            academicMediumId: (currentMedium as Medium).id,
-            body: payload,
-          }).unwrap();
-
-          shikshaMitraToast.success({
-            message: `${values.name} House Added Successfully`,
-          });
-        }
-
-        // Close dialog after success
-        handleClose(null, true);
-      } catch (error) {
-        console.error('House submit error:', error);
-        const parsed = parseApiProblemDetail(error);
-        shikshaMitraToast.error({
-          message: parsed.detail || 'Unable to save House.',
-        });
-      }
-    },
-  });
-  return (
-    <Box>
-      <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-        <DialogScrollContent>
-          <Stack spacing={3} p={0}>
-            <ShakingTextField error={!!(formik.touched.name && formik.errors.name) || false}>
-              <TextField
-                size="small"
-                value={formik.values.name}
-                name="name"
-                fullWidth
-                label="House Name *"
-                autoFocus
-                onChange={(e) => {
-                  const value = capitalize(e.target.value);
-                  formik.setFieldValue('name', value);
-                }}
-                error={formik.touched.name && Boolean(formik.errors.name)}
-                helperText={formik.touched.name && formik.errors.name}
-              />
-            </ShakingTextField>
-            <ColorPickerCircle
-              onSelect={(color: string) => formik.setFieldValue('color', color)}
-              initialColor={formik.values.color}
-            />
-            <FileUploader
-              value={formik.values.logoUrl as File}
-              multiple={false}
-              onChange={(value) => {
-                // const reader = new FileReader();
-                formik.setFieldValue('logoUrl', value);
-                // reader.readAsDataURL(value as File);
-                // reader.readAsDataURL(value as File);
-                // reader.onload = () => {
-                //   const base64String = reader.result;
-                // };
-              }}
-              primaryText="Please Upload Your logo"
-              secondaryText="Maximum file size is 3MB"
-            />
-            <TextField
-              multiline
-              rows={4}
-              size="small"
-              value={formik.values.description || ''}
-              name="description"
-              fullWidth
-              label="Description"
-              onChange={formik.handleChange}
-              error={formik.touched.description && Boolean(formik.errors.description)}
-              helperText={formik.touched.description && formik.errors.description}
-            />
-          </Stack>
-        </DialogScrollContent>
-      </BackPopUpChecked>
-      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-        <Button
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          size="small"
-          variant="outlined"
-          onClick={() => {
-            handleClose(null, false);
-          }}
-        >
-          Cancel
-        </Button>
-        <LoadingButton
-          size="small"
-          type="submit"
-          variant="contained"
-          loading={isLoading || isUpdateLoading}
-          disabled={!canWrite}
-          startIcon={
-            <Iconify
-              icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
-              width={editData ? 16 : 20}
-              height={editData ? 16 : 20}
-            />
-          }
-          onClick={(e: any) => {
-            formik.handleSubmit(e);
-          }}
-        >
-          {editData ? 'Update' : 'Submit'}
-        </LoadingButton>
-      </DialogActions>
-    </Box>
-  );
-};
+}

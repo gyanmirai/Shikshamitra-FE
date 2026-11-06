@@ -799,7 +799,22 @@ describe('AdmissionApplicationDetailScreen', () => {
     render(<AdmissionApplicationDetailScreen />);
 
     expect(screen.getByRole('status', { name: 'Loading Application Details' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Back' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Back' })).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+    expect(push).toHaveBeenCalledOnce();
+  });
+
+  it('does not redirect back into a closed workspace when its initial read arrives late', () => {
+    loadPaymentDetail();
+    const loaded = detailState;
+    loaded.applicationQuery.data.hasReachedDecision = true;
+    detailState = { ...loaded, applicationQuery: query({ isLoading: true }) };
+    const view = render(<AdmissionApplicationDetailScreen />);
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+    expect(push).toHaveBeenCalledOnce();
+    detailState = loaded;
+    view.rerender(<AdmissionApplicationDetailScreen />);
+    expect(replace).not.toHaveBeenCalled();
   });
 
   it('retries application and workflow without refetching an unopened form', () => {
@@ -953,7 +968,7 @@ describe('Applicant 360 full-page workspace', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Application History' }));
     expect(screen.getByText('Admission Journey Ended')).toBeInTheDocument();
     expect(screen.getByText('Parent selected another school')).toBeInTheDocument();
-    expect(screen.getByText(/10 Oct 2026/)).toBeInTheDocument();
+    expect(screen.getByText(/10\/10\/2026/)).toBeInTheDocument();
     expect(
       screen.queryByText('No Application History has been recorded yet.')
     ).not.toBeInTheDocument();

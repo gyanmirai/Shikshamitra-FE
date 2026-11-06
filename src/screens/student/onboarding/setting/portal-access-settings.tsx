@@ -15,6 +15,7 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
+import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 import {
   Box,
   Stack,
@@ -123,6 +124,8 @@ export default function PortalAccessSettingsScreen() {
   const busy = formik.isSubmitting;
   const locked = busy || !canConfigure;
   const { requestNavigation, confirmation } = useUnsavedNavigation(formik.dirty, {
+    guardContextChanges: true,
+    renderConfirmation: renderUnsavedConfirmation,
     push: router.push,
     blockNavigation: busy,
   });
@@ -147,7 +150,7 @@ export default function PortalAccessSettingsScreen() {
       >
         <Box inert={busy}>
           <FormSectionCard
-            title="App login rules"
+            title="App Login Rules"
             icon="mdi:account-supervisor-outline"
             descriptionTooltip="Not needed: no account. Optional: available without holding setup open. Required: the account must be prepared before setup is complete."
           >
@@ -197,7 +200,7 @@ export default function PortalAccessSettingsScreen() {
                 <Divider />
                 <Stack spacing={1}>
                   <Typography id="app-login-delivery-label" variant="subtitle2">
-                    Send login details
+                    Send Login Details
                   </Typography>
                   <RadioGroup
                     aria-labelledby="app-login-delivery-label"
@@ -319,7 +322,7 @@ export default function PortalAccessSettingsScreen() {
                   disabled={!canConfigure || !formik.dirty || !formik.isValid}
                   startIcon={<Iconify icon="mdi:content-save-outline" width={18} />}
                 >
-                  Save Settings
+                  Submit
                 </Button>
               </Stack>
             </Stack>

@@ -147,7 +147,7 @@ export default function AdmissionApplicant360Screen() {
               notificationKey="STU-0007"
               presentation="toast"
               severity="error"
-              action={
+              toastAction={
                 <Button size="small" color="inherit" onClick={query.refetch}>
                   Retry
                 </Button>

@@ -4,6 +4,8 @@ import { Label } from 'src/components/label';
 import { formatDateOnly } from 'src/utils/date-only';
 import { Paper, Stack, Typography } from '@mui/material';
 
+import { ADMISSION_DATE_FORMAT } from './admission-date-formats';
+
 type Props = { cycle: AdmissionCycle; showCode?: boolean };
 
 const cycleStatusLabels = ['Draft', 'Published', 'Closed', 'Archived'] as const;
@@ -25,8 +27,8 @@ export function AdmissionOfferingCycleContext({ cycle, showCode = true }: Props)
             {showCode && ` · ${cycle.code}`}
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            Cycle Window: {formatDateOnly(cycle.startDate, 'DD MMM YYYY')} –{' '}
-            {formatDateOnly(cycle.endDate, 'DD MMM YYYY')}
+            Cycle Window: {formatDateOnly(cycle.startDate, ADMISSION_DATE_FORMAT)} –{' '}
+            {formatDateOnly(cycle.endDate, ADMISSION_DATE_FORMAT)}
           </Typography>
         </Stack>
         <Label color={cycleStatusColors[cycle.status]}>{cycleStatusLabels[cycle.status]}</Label>

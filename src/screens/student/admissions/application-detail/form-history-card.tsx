@@ -1,6 +1,9 @@
 import type { AdmissionFormChangeHistory } from 'src/redux/student/admissions/admission-applications-api';
 
+import { fDateTime } from 'src/utils/format-time';
 import { Card, List, ListItem, Typography, ListItemText } from '@mui/material';
+
+import { ADMISSION_DATE_TIME_FORMAT } from '../admission-date-formats';
 
 export function FormHistoryCard({ history }: { history: AdmissionFormChangeHistory[] }) {
   if (!history.length) return null;
@@ -16,7 +19,7 @@ export function FormHistoryCard({ history }: { history: AdmissionFormChangeHisto
               primary={item.changeType === 'FormCorrected' ? 'Form corrected' : item.changeType}
               secondary={
                 <>
-                  {new Date(item.occurredAt).toLocaleString()}
+                  {fDateTime(item.occurredAt, ADMISSION_DATE_TIME_FORMAT)}
                   {correctionSummary(item.changedFieldsJson, item.changeType).map((text) => (
                     <Typography
                       key={text}

@@ -144,7 +144,7 @@ export function AdmissionPipelineMoreFilters({
                 notificationKey="STU-0446"
                 presentation="toast"
                 severity="error"
-                action={
+                toastAction={
                   onRetry && (
                     <Button size="small" color="inherit" disabled={disabled} onClick={onRetry}>
                       Retry

@@ -3,11 +3,14 @@ import type {
   ApplicationDocumentVerification,
 } from 'src/redux/student/admissions/admission-document-types';
 
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Button, DialogActions } from '@mui/material';
 import { StudentFeedback } from 'src/components/student-feedback';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { DialogScrollContent } from 'src/components/customDialog';
+import { FormSectionCard } from 'src/components/form-section-card';
 
+import { ReviewDialog } from '../review/review-dialog';
 import { documentActionLabels } from './document-action-model';
 import { DocumentActionFields } from './document-action-fields';
 import { useDocumentActionForm } from './use-document-action-form';
@@ -40,23 +43,19 @@ export function DocumentActionDialog({
     onSuccess,
     canSubmit,
   });
-  const cancel = () => {
-    if (!formik.dirty || window.confirm('You have unsaved changes. Do you want to discard them?'))
-      onClose();
-  };
   return (
-    <CustomDialog
+    <ReviewDialog
       open
       title={title}
       titleInfo={
         action === 'reject'
-          ? 'Give a Reason So Admissions Staff Can Provide a Corrected Document.'
-          : undefined
+          ? 'Give a reason so admissions staff can provide a corrected document.'
+          : 'Review this requirement and record the document action for the applicant.'
       }
       maxWidth="sm"
-      handleClose={onClose}
-      hasUnsavedChanges={formik.dirty}
-      disableClose={formik.isSubmitting}
+      onClose={onClose}
+      dirty={formik.dirty}
+      busy={formik.isSubmitting}
       formProps={{
         noValidate: true,
         onSubmit: (event) => {
@@ -64,6 +63,33 @@ export function DocumentActionDialog({
           formik.handleSubmit();
         },
       }}
+      actions={(requestClose) => (
+        <DialogActions>
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={requestClose}
+            disabled={formik.isSubmitting}
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            size="small"
+            variant="contained"
+            color={action === 'reject' ? 'error' : 'inherit'}
+            disabled={!canSubmit || formik.isSubmitting}
+            loading={formik.isSubmitting}
+            loadingPosition="start"
+            startIcon={
+              <Iconify icon={action === 'reject' ? GlobalIcons.cancel : GlobalIcons.submit} />
+            }
+          >
+            {submitLabel}
+          </Button>
+        </DialogActions>
+      )}
     >
       <DialogScrollContent>
         {error && (
@@ -76,39 +102,21 @@ export function DocumentActionDialog({
             {error}
           </StudentFeedback>
         )}
-        <DocumentActionFields
-          action={action}
-          requirement={snapshot.requirement}
-          formik={formik}
-          extensions={extensions}
-          maxFileSizeMb={maxFileSizeMb}
-        />
+        <FormSectionCard
+          title={action === 'upload' ? 'Document Details' : 'Document Decision'}
+          icon={GlobalIcons.documentIcon}
+          descriptionTooltip="Review the requirement and provide the evidence or decision notes for this action."
+          titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+        >
+          <DocumentActionFields
+            action={action}
+            requirement={snapshot.requirement}
+            formik={formik}
+            extensions={extensions}
+            maxFileSizeMb={maxFileSizeMb}
+          />
+        </FormSectionCard>
       </DialogScrollContent>
-      <DialogActions>
-        <Button
-          size="small"
-          variant="outlined"
-          onClick={cancel}
-          disabled={formik.isSubmitting}
-          startIcon={<Iconify icon="mdi:close" />}
-        >
-          Cancel
-        </Button>
-        <Button
-          type="submit"
-          size="small"
-          variant="contained"
-          color={action === 'reject' ? 'error' : 'inherit'}
-          disabled={!canSubmit || formik.isSubmitting}
-          loading={formik.isSubmitting}
-          loadingPosition="start"
-          startIcon={
-            <Iconify icon={action === 'reject' ? 'mdi:close' : 'mdi:content-save-outline'} />
-          }
-        >
-          {submitLabel}
-        </Button>
-      </DialogActions>
-    </CustomDialog>
+    </ReviewDialog>
   );
 }

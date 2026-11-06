@@ -64,6 +64,9 @@ describe('Admission Offering dialog routing', () => {
         />
       </ThemeProvider>
     );
+    const title=mode==='clone'?'Clone Admission Offering':'Add Admission Offering';
+    expect(screen.getByRole('dialog',{name:title})).toBeVisible();
+    expect(screen.getByRole('heading',{name:title,level:2})).toBeVisible();
     expect(screen.getByText('Offering class configuration')).toBeVisible();
     expect(screen.queryByRole('combobox', { name: 'Admission Window' })).not.toBeInTheDocument();
     expect(
@@ -72,6 +75,11 @@ describe('Admission Offering dialog routing', () => {
     expect(screen.queryByLabelText(/Applications Open/)).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/Applications Close/)).not.toBeInTheDocument();
     expect(screen.getByText(/Cycle Window:/)).toBeVisible();
+    if (mode === 'clone')
+      expect(screen.getByRole('combobox', { name: /Target admission cycle/ })).toHaveAttribute(
+        'aria-required',
+        'true'
+      );
   });
   it('uses the edit shell while details are still loading instead of the create form', () => {
     render(

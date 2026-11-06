@@ -157,7 +157,7 @@ export function AdmissionOfferingMoreFilters({ cycle, values, onChange }: Props)
                 notificationKey="STU-0128"
                 presentation="toast"
                 severity="error"
-                action={
+                toastAction={
                   <Button size="small" color="inherit" onClick={() => hierarchyQuery.refetch()}>
                     Retry
                   </Button>

@@ -7,12 +7,12 @@ import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { fDateTime } from 'src/utils/format-time';
 import { RouterLink } from 'src/routes/components';
 import { CustomTabs } from 'src/components/custom-tabs';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { studentPaths } from 'src/constants/student-menu';
+import { fDateTime, formatStr } from 'src/utils/format-time';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -247,6 +247,7 @@ export default function StudentRecordChanges() {
                 <>
                   {!studentId && (
                     <RecordsStudentPicker
+                      toastRecovery
                       onSelect={(student) =>
                         update({ student: student?.studentId, request: undefined })
                       }
@@ -277,7 +278,7 @@ export default function StudentRecordChanges() {
                       notificationKey="STU-0874"
                       presentation="toast"
                       severity="error"
-                      action={
+                      toastAction={
                         <Button color="inherit" onClick={() => snapshot.refetch()}>
                           Retry
                         </Button>
@@ -350,7 +351,7 @@ export default function StudentRecordChanges() {
                 notificationKey="STU-0875"
                 presentation="toast"
                 severity="error"
-                action={
+                toastAction={
                   <Button color="inherit" onClick={() => list.refetch()}>
                     Retry
                   </Button>
@@ -393,7 +394,11 @@ export default function StudentRecordChanges() {
                     ),
                   },
                   { id: 'reason', label: 'Reason', minWidth: 220 },
-                  { id: 'creationTime', label: 'Requested', render: (value) => fDateTime(value) },
+                  {
+                    id: 'creationTime',
+                    label: 'Requested',
+                    render: (value) => fDateTime(value, formatStr.split.dateTime),
+                  },
                   {
                     id: 'approvalCount',
                     label: 'Reviews',
@@ -454,7 +459,7 @@ export default function StudentRecordChanges() {
                 notificationKey="STU-0876"
                 presentation="toast"
                 severity="error"
-                action={
+                toastAction={
                   <Button color="inherit" onClick={() => detail.refetch()}>
                     Retry
                   </Button>
@@ -473,8 +478,8 @@ export default function StudentRecordChanges() {
                 </Typography>
                 <Typography variant="body2">{current.reason}</Typography>
                 <Typography variant="caption">
-                  Effective: {fDateTime(current.effectiveAt)} · Reviews: {current.approvalCount}/
-                  {current.requiredApprovals}
+                  Effective: {fDateTime(current.effectiveAt, formatStr.split.dateTime)} · Reviews:{' '}
+                  {current.approvalCount}/{current.requiredApprovals}
                 </Typography>
                 {current.exceptionCode && (
                   <StudentFeedback
@@ -494,7 +499,7 @@ export default function StudentRecordChanges() {
                     notificationKey="STU-0878"
                     presentation="toast"
                     severity="error"
-                    action={<Button onClick={() => customDetails.refetch()}>Retry</Button>}
+                    toastAction={<Button onClick={() => customDetails.refetch()}>Retry</Button>}
                   >
                     Field labels could not be loaded. Retry before reviewing this change.
                   </StudentFeedback>
@@ -504,7 +509,7 @@ export default function StudentRecordChanges() {
                     notificationKey="STU-0879"
                     presentation="toast"
                     severity="error"
-                    action={<Button onClick={customDiff.retry}>Retry</Button>}
+                    toastAction={<Button onClick={customDiff.retry}>Retry</Button>}
                   >
                     Selected field labels could not be loaded. Retry before reviewing this change.
                   </StudentFeedback>
@@ -568,7 +573,7 @@ export default function StudentRecordChanges() {
                 {current.decisions.map((item, index) => (
                   <Typography key={index} variant="body2">
                     Stage {item.stage}: {item.decision} · {item.actorName ?? 'Reviewer'} ·{' '}
-                    {item.reason} · {fDateTime(item.creationTime)}
+                    {item.reason} · {fDateTime(item.creationTime, formatStr.split.dateTime)}
                   </Typography>
                 ))}
                 {failure && (

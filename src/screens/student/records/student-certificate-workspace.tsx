@@ -11,11 +11,11 @@ import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { fDateTime } from 'src/utils/format-time';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { studentPaths } from 'src/constants/student-menu';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { fDateTime, formatStr } from 'src/utils/format-time';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { Box, Tab, Stack, Paper, Button } from '@mui/material';
@@ -76,7 +76,7 @@ export default function StudentCertificateWorkspace() {
       label: 'Generated',
       isSort: false,
       isFilter: false,
-      render: (value) => fDateTime(value),
+      render: (value) => fDateTime(value, formatStr.split.dateTime),
     },
     { id: 'studentCount', label: 'Students', isSort: false, isFilter: false },
     {
@@ -222,7 +222,7 @@ export default function StudentCertificateWorkspace() {
                     notificationKey="STU-0850"
                     presentation="toast"
                     severity="error"
-                    action={
+                    toastAction={
                       <Button
                         size="small"
                         startIcon={<Iconify icon="solar:restart-bold" />}

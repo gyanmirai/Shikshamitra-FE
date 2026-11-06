@@ -13,9 +13,9 @@ import { useFormik } from 'formik';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { fDateTime } from 'src/utils/format-time';
 import { useRef, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
+import { fDateTime, formatStr } from 'src/utils/format-time';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
@@ -23,6 +23,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 import {
   Box,
   Stack,
@@ -186,7 +187,11 @@ export default function StudentRollNumberWorkspace({
     form.isSubmitting;
   const { requestNavigation, confirmation } = useUnsavedNavigation(
     form.dirty && (batch?.status === 'Preview' || Boolean(batch?.canDecide)),
-    { blockNavigation: busy }
+    {
+      blockNavigation: busy,
+      guardContextChanges: true,
+      renderConfirmation: renderUnsavedConfirmation,
+    }
   );
   const close = () => {
     if (!pending.current && !busy) requestNavigation(onClose);
@@ -473,7 +478,7 @@ export default function StudentRollNumberWorkspace({
               notificationKey="STU-1038"
               presentation="toast"
               severity="error"
-              action={
+              toastAction={
                 <Button size="small" onClick={() => context.refetch()} disabled={busy}>
                   Retry
                 </Button>
@@ -571,7 +576,7 @@ export default function StudentRollNumberWorkspace({
                         color="text.secondary"
                         sx={{ display: 'block' }}
                       >
-                        {fDateTime(item.creationTime)}
+                        {fDateTime(item.creationTime, formatStr.split.dateTime)}
                       </Typography>
                     )}
                   </Typography>
@@ -589,7 +594,7 @@ export default function StudentRollNumberWorkspace({
                   <Button
                     size="small"
                     disabled={busy}
-                    aria-label={`Review ${item.operation === 'renumber' ? 'renumber division' : 'assign missing'}${item.creationTime ? ` from ${fDateTime(item.creationTime)}` : ''}`}
+                    aria-label={`Review ${item.operation === 'renumber' ? 'renumber division' : 'assign missing'}${item.creationTime ? ` from ${fDateTime(item.creationTime, formatStr.split.dateTime)}` : ''}`}
                     onClick={() => read(item.id, 0, 25)}
                   >
                     Review

@@ -211,7 +211,13 @@ describe('Student Setup drawer readiness UI', () => {
         presentation="details"
         initialView="tasks"
         canManage
-        student={{ ...student, source: 'onboarding-case', studentEnrollmentId: null, rollNo: null }}
+        student={{
+          ...student,
+          source: 'onboarding-case',
+          studentEnrollmentId: null,
+          rollNo: null,
+          admissionDate: '2026-10-30T12:48:00',
+        }}
         onClose={onClose}
         onAssignDivision={vi.fn()}
         onAssignGrNumber={vi.fn()}
@@ -227,6 +233,9 @@ describe('Student Setup drawer readiness UI', () => {
     ).toEqual(['Admission', 'Placement & Identifiers']);
     expect(screen.getByText('Blood group')).toBeVisible();
     expect(screen.getByText('O+')).toBeVisible();
+    expect(screen.getByText('Admission date').nextElementSibling).toHaveTextContent(
+      '30/10/2026 12:48 pm'
+    );
     expect(screen.getByText('Roll number').nextElementSibling).toHaveTextContent('0');
     expect(screen.queryByRole('tab')).not.toBeInTheDocument();
     expect(screen.queryByRole('tabpanel')).not.toBeInTheDocument();
@@ -980,6 +989,7 @@ it('loads full event history even when the paged worklist has no events', () => 
   );
   fireEvent.click(screen.getByRole('tab', { name: 'History' }));
   expect(screen.getByText(/Handled by: Asha Sharma/)).toBeInTheDocument();
+  expect(screen.getByText(/^22\/10\/2026 \d{1,2}:\d{2} (am|pm)$/)).toBeInTheDocument();
   expect(screen.getByRole('heading', { name: 'Activity & Audit' })).toBeInTheDocument();
 });
 

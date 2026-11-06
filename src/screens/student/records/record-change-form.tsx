@@ -118,7 +118,7 @@ function CustomRecordChangePage(props: RecordChangeFormProps) {
         notificationKey="STU-0799"
         presentation="toast"
         severity="error"
-        action={<Button onClick={() => details.refetch()}>Retry</Button>}
+        toastAction={<Button onClick={() => details.refetch()}>Retry</Button>}
       >
         School details could not be loaded for this request.
       </StudentFeedback>

@@ -3,7 +3,7 @@ import type { AdmissionOfferingValidationError } from 'src/redux/student/admissi
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { Box, Stack, Button, Typography } from '@mui/material';
+import { Box, Stack, Button, Typography, LinearProgress } from '@mui/material';
 
 import { AdmissionOfferingActionImpact } from './admission-offering-action-impact';
 import { AdmissionOfferingConfigurationIssues } from './admission-offering-configuration-issues';
@@ -13,6 +13,7 @@ import type { PendingOfferingAction } from './use-admission-offering-actions';
 type Props = {
   pendingAction: PendingOfferingAction;
   commanding: boolean;
+  checkingRequirements?: boolean;
   onClose: () => void;
   onConfirm: () => void;
   activationErrors?: AdmissionOfferingValidationError[];
@@ -25,6 +26,7 @@ type Props = {
 export function AdmissionOfferingActionDialog({
   pendingAction,
   commanding,
+  checkingRequirements = false,
   onClose,
   onConfirm,
   activationErrors = [],
@@ -72,7 +74,15 @@ export function AdmissionOfferingActionDialog({
       content={
         action && pendingAction ? (
           <Box id="offering-action-description">
-            {blocked ? (
+            {checkingRequirements ? (
+              <Stack role="status" aria-label="Checking offering requirements" spacing={1.5}>
+                <Typography variant="subtitle2">
+                  {pendingAction.row.name || pendingAction.row.code}
+                </Typography>
+                <Typography variant="body2">Checking offering requirements…</Typography>
+                <LinearProgress />
+              </Stack>
+            ) : blocked ? (
               <Stack spacing={1.5}>
                 <Typography variant="subtitle2">
                   {pendingAction.row.name || pendingAction.row.code}
@@ -100,7 +110,7 @@ export function AdmissionOfferingActionDialog({
           size="small"
           color={action === 'delete' ? 'error' : blocked ? 'inherit' : 'primary'}
           loading={!activating && commanding}
-          disabled={commanding}
+          disabled={commanding || checkingRequirements}
           startIcon={
             <Iconify
               icon={

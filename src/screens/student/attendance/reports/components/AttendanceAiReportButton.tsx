@@ -29,6 +29,7 @@ export function AttendanceAiReportButton() {
         open={workspace.value && canGenerate}
         onClose={workspace.onFalse}
         module="Student Attendance"
+        protectUnsavedChanges
       />
     </>
   );

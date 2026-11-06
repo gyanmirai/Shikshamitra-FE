@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+import type { AlertProps } from '@mui/material';
 import type {
   StudentRecordsPolicy,
   StudentRecordsSettings,
@@ -29,6 +31,10 @@ const mocks = vi.hoisted(() => ({
   preview: vi.fn(),
   publish: vi.fn(),
   navigate: vi.fn(),
+  error: vi.fn(
+    (_options: { message: ReactNode; alertProps: (id: string | number) => AlertProps }) =>
+      'settings-error'
+  ),
 }));
 vi.mock('react-redux', () => ({
   useDispatch: () => vi.fn(),
@@ -58,7 +64,7 @@ vi.mock('src/components/custom-breadcrumbs', () => ({
 }));
 vi.mock('src/components/toast', () => ({
   shikshaMitraToast: {
-    error: vi.fn(),
+    error: mocks.error,
     warning: vi.fn(),
     info: vi.fn(),
     dismiss: vi.fn(),
@@ -286,7 +292,7 @@ describe('Student Records settings', () => {
     expect(screen.getByRole('button', { name: 'Save draft' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Publish' })).toBeDisabled();
   });
-  it('keeps the header visible on load failure and offers retry', () => {
+  it('keeps the header visible on load failure and delivers its retry through the error toast', async () => {
     const retry = vi.fn();
     mocks.query = { currentData: undefined, isError: true, refetch: retry };
     render(<RecordsSettings task="documents" />);
@@ -297,10 +303,20 @@ describe('Student Records settings', () => {
       'aria-selected',
       'true'
     );
-    expect(screen.getByRole('tabpanel', { name: 'Documents & IDs' })).toHaveTextContent(
+    await waitFor(() =>
+      expect(mocks.error).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'Student Records settings could not be loaded. Retry before editing.',
+        })
+      )
+    );
+    expect(screen.getByRole('tabpanel', { name: 'Documents & IDs' })).not.toHaveTextContent(
       /could not be loaded/
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    const recovery = render(
+      <>{mocks.error.mock.calls.at(-1)?.[0].alertProps('settings-error').action}</>
+    );
+    fireEvent.click(within(recovery.container).getByRole('button', { name: 'Retry' }));
     expect(retry).toHaveBeenCalledOnce();
   });
   it('rejects unsafe prefixes and a default return route that is not allowed', async () => {

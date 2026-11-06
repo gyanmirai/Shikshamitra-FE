@@ -7,9 +7,9 @@ import type {
   AdmissionWorkflowStageTypeMetadata,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
+import { useId } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { Box, Stack, Drawer, Button, Divider, IconButton, Typography } from '@mui/material';
 import { getDocumentConfigurationError } from 'src/redux/student/admissions/admission-document-policy-validation';
@@ -18,6 +18,7 @@ import { AdmissionDialogTitle } from './admission-dialog-title';
 import { isApplicationStageType } from './workflow-builder/workflow-stage-configuration';
 import { WorkflowStageFields } from './workflow-builder/components/workflow-stage-fields';
 import { useWorkflowStageEditor } from './workflow-builder/hooks/use-workflow-stage-editor';
+import { SavedWorkflowStageDetails } from './workflow-builder/components/saved-workflow-stage-details';
 
 type Props = {
   open: boolean;
@@ -32,6 +33,7 @@ type Props = {
 };
 
 export function AdmissionWorkflowStageDrawer(props: Props) {
+  const titleId = useId();
   const {
     open,
     stage,
@@ -49,8 +51,7 @@ export function AdmissionWorkflowStageDrawer(props: Props) {
     metadata,
     formDefinitionId,
     forms: resolvedForms,
-    discard,
-    close,
+    confirmation,
     requestClose,
   } = useWorkflowStageEditor({ open, stage, stageTypes, stages, forms, readOnly, onClose, onSave });
   const invalidDocumentSettings =
@@ -63,7 +64,7 @@ export function AdmissionWorkflowStageDrawer(props: Props) {
         anchor="right"
         open={open}
         onClose={requestClose}
-        PaperProps={{ sx: { width: { xs: 1, sm: 720 }, maxWidth: 1 } }}
+        PaperProps={{ 'aria-labelledby': titleId, sx: { width: { xs: 1, sm: 720 }, maxWidth: 1 } }}
       >
         <Box sx={{ height: 1, display: 'flex', flexDirection: 'column' }}>
           <Stack
@@ -74,7 +75,7 @@ export function AdmissionWorkflowStageDrawer(props: Props) {
             sx={{ px: { xs: 2, sm: 3 }, py: 2 }}
           >
             <Box sx={{ minWidth: 0 }}>
-              <Typography variant="h6" component="div">
+              <Typography id={titleId} variant="h6" component="h2">
                 <AdmissionDialogTitle
                   title={`${readOnly ? 'View' : 'Configure'} ${metadata?.displayName ?? 'stage'}`}
                   helpText={
@@ -128,18 +129,26 @@ export function AdmissionWorkflowStageDrawer(props: Props) {
                 </StudentFeedback>
               )}
               {placementField}
-              <WorkflowStageFields
-                formik={formik}
-                metadata={metadata}
-                stageTypes={stageTypes}
-                forms={resolvedForms}
-                stages={stages}
-                formDefinitionId={formDefinitionId}
-                readOnly={readOnly}
-                isNewStage={
-                  suppliedStages !== undefined && !stages.some((item) => item.id === stage?.id)
-                }
-              />
+              {readOnly && stage ? (
+                <SavedWorkflowStageDetails
+                  stage={stage}
+                  metadata={stageTypes.find((item) => item.type === stage.stageType)}
+                  forms={resolvedForms}
+                />
+              ) : (
+                <WorkflowStageFields
+                  formik={formik}
+                  metadata={metadata}
+                  stageTypes={stageTypes}
+                  forms={resolvedForms}
+                  stages={stages}
+                  formDefinitionId={formDefinitionId}
+                  readOnly={readOnly}
+                  isNewStage={
+                    suppliedStages !== undefined && !stages.some((item) => item.id === stage?.id)
+                  }
+                />
+              )}
             </Scrollbar>
             <Stack
               direction="row"
@@ -147,9 +156,11 @@ export function AdmissionWorkflowStageDrawer(props: Props) {
               justifyContent="flex-end"
               sx={{ px: 2, py: 1.5, borderTop: 1, borderColor: 'divider', flexShrink: 0 }}
             >
-              <Button size="small" variant="outlined" onClick={requestClose}>
-                Back
-              </Button>
+              {!readOnly && (
+                <Button size="small" variant="outlined" onClick={requestClose}>
+                  Back
+                </Button>
+              )}
               <Button
                 size="small"
                 variant="contained"
@@ -167,17 +178,7 @@ export function AdmissionWorkflowStageDrawer(props: Props) {
           </Box>
         </Box>
       </Drawer>
-      <ConfirmDialog
-        open={discard.value}
-        onClose={discard.onFalse}
-        title="Discard Stage Changes?"
-        content="Your changes to this stage have not been added to the workflow draft."
-        action={
-          <Button size="small" variant="contained" color="error" onClick={close}>
-            Discard Changes
-          </Button>
-        }
-      />
+      {confirmation}
     </>
   );
 }

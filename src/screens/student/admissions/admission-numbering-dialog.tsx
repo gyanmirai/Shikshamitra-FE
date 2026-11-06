@@ -13,13 +13,13 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useRef, useState, useEffect, useCallback } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 import {
   Box,
   Grid,
@@ -335,18 +335,14 @@ export function AdmissionNumberingFormDialog({
           )}
         </DialogActions>
       </Box>
-      <ConfirmDialog
-        open={discard}
-        cancelText="Keep Editing"
-        onClose={() => setDiscard(false)}
-        title="Discard Unsaved Changes?"
-        content="Your application numbering changes have not been saved."
-        action={
-          <Button variant="contained" color="error" onClick={onClose}>
-            Discard Changes
-          </Button>
-        }
-      />
+      {discard &&
+        renderUnsavedConfirmation(
+          () => setDiscard(false),
+          () => {
+            if (!busy) onClose();
+          },
+          { busy, description: 'Your application numbering changes have not been saved.' }
+        )}
     </CustomDialog>
   );
 }

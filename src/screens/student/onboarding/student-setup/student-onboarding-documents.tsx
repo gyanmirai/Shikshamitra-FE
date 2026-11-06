@@ -50,7 +50,7 @@ export default function StudentOnboardingDocuments({
         notificationKey="STU-0991"
         presentation="toast"
         severity="error"
-        action={
+        toastAction={
           <Button color="inherit" size="small" onClick={() => documentsQuery.refetch()}>
             Retry
           </Button>

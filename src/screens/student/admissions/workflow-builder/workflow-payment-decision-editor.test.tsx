@@ -102,7 +102,9 @@ describe('Finance fee confirmation and admission decision setup', () => {
   });
   it('shows Payment read-only and closes without saving', async () => {
     const { user, onSave, onClose } = setup(4, true);
-    expect(screen.getByRole('textbox', { name: 'Stage Name *' })).toBeDisabled();
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    expect(screen.getByText('Stage name', { selector: 'dt' })).toBeVisible();
+    expect(screen.getAllByText('Payment', { selector: 'dd' })).toHaveLength(2);
     expect(screen.queryByRole('heading', { name: 'Payment Completion' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Apply Changes' })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Close' }));

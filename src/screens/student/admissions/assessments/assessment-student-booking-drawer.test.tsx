@@ -128,6 +128,24 @@ it('offers only pre-created sessions and carries the selected students', () => {
   expect(screen.queryByText('Create & Book')).not.toBeInTheDocument();
 });
 
+it('retains a selected session when staff keep editing and closes only after discard', async () => {
+  const user = userEvent.setup();
+  const onClose = vi.fn();
+  show({ onClose });
+  await user.click(screen.getByRole('radio', { name: 'Class 10 Entrance Exam' }));
+  await waitFor(() =>
+    expect(screen.getByRole('button', { name: 'Book 2 students' })).toBeEnabled()
+  );
+  await user.click(screen.getByRole('button', { name: 'Close Student Booking' }));
+  await user.click(screen.getByRole('button', { name: 'Keep editing' }));
+  expect(screen.getByRole('button', { name: 'Book 2 students' })).toBeEnabled();
+  expect(onClose).not.toHaveBeenCalled();
+  await user.click(screen.getByRole('button', { name: 'Close Student Booking' }));
+  await user.click(screen.getByRole('button', { name: 'Discard changes' }));
+  expect(onClose).toHaveBeenCalledOnce();
+  expect(api.confirm).not.toHaveBeenCalled();
+});
+
 it('loads sessions across the academic year so unsupported choices can be explained', () => {
   show();
   expect(api.workbench).toHaveBeenCalledWith({

@@ -2,13 +2,16 @@ import type { ManagedApplicationAssessment } from 'src/redux/student/admissions/
 
 import { useFormik } from 'formik';
 import { useRef, useState } from 'react';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Button, DialogActions } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import { StudentFeedback } from 'src/components/student-feedback';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { DialogScrollContent } from 'src/components/customDialog';
+import { FormSectionCard } from 'src/components/form-section-card';
 
+import { ReviewDialog } from '../review/review-dialog';
 import { assessmentErrorMessage } from './assessment-utils';
 import { useAssessmentActions } from './use-assessment-actions';
 import { AssessmentActionFields } from './assessment-action-fields';
@@ -93,10 +96,6 @@ export function AssessmentActionDialog({
       formik.setSubmitting(false);
     }
   };
-  const cancel = () => {
-    if (!formik.dirty || window.confirm('You have unsaved changes. Do you want to discard them?'))
-      onClose();
-  };
   const title =
     action === 'book' && snapshot.policy.schedulingEnabled
       ? 'Book Assessment Session'
@@ -118,14 +117,56 @@ export function AssessmentActionDialog({
     waive: 'This records an assessment waiver. Enter the reason for the admission audit history.',
   };
   return (
-    <CustomDialog
+    <ReviewDialog
       open
       title={title}
       titleInfo={titleInfo[action]}
       maxWidth="sm"
-      handleClose={onClose}
-      hasUnsavedChanges={formik.dirty}
-      disableClose={formik.isSubmitting}
+      onClose={onClose}
+      dirty={formik.dirty}
+      busy={formik.isSubmitting}
+      formProps={{
+        noValidate: true,
+        onSubmit: (event) => {
+          event.preventDefault();
+          setDraftValidation(false);
+          formik.handleSubmit();
+        },
+      }}
+      actions={(requestClose) => (
+        <DialogActions>
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={requestClose}
+            disabled={formik.isSubmitting}
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          >
+            Cancel
+          </Button>
+          {action === 'result' && profile && (
+            <Button
+              size="small"
+              variant="outlined"
+              disabled={formik.isSubmitting || !snapshot.canSaveResultDraft}
+              onClick={saveDraft}
+              startIcon={<Iconify icon={GlobalIcons.submit} />}
+            >
+              Save draft
+            </Button>
+          )}
+          <Button
+            size="small"
+            type="submit"
+            variant="contained"
+            disabled={formik.isSubmitting}
+            loading={formik.isSubmitting}
+            startIcon={<Iconify icon={GlobalIcons.submit} />}
+          >
+            {action === 'result' && profile ? 'Submit result' : 'Submit'}
+          </Button>
+        </DialogActions>
+      )}
     >
       <DialogScrollContent>
         {error && (
@@ -139,53 +180,23 @@ export function AssessmentActionDialog({
           </StudentFeedback>
         )}
         <FormBusyRegion busy={formik.isSubmitting} label="Saving Assessment…">
-          <AssessmentActionFields
-            action={action}
-            assessment={snapshot}
-            formik={formik}
-            admissionOfferingId={admissionOfferingId}
-            workflowStageDefinitionId={workflowStageDefinitionId}
-            draftValidation={draftValidation}
-          />
+          <FormSectionCard
+            title="Assessment Details"
+            icon={GlobalIcons.notebook}
+            descriptionTooltip={titleInfo[action]}
+            titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+          >
+            <AssessmentActionFields
+              action={action}
+              assessment={snapshot}
+              formik={formik}
+              admissionOfferingId={admissionOfferingId}
+              workflowStageDefinitionId={workflowStageDefinitionId}
+              draftValidation={draftValidation}
+            />
+          </FormSectionCard>
         </FormBusyRegion>
       </DialogScrollContent>
-      <DialogActions>
-        <Button
-          size="small"
-          variant="outlined"
-          onClick={cancel}
-          disabled={formik.isSubmitting}
-          startIcon={<Iconify icon="mdi:close" />}
-        >
-          Cancel
-        </Button>
-        {action === 'result' && profile && (
-          <Button
-            size="small"
-            variant="outlined"
-            disabled={formik.isSubmitting || !snapshot.canSaveResultDraft}
-            onClick={saveDraft}
-          >
-            Save Draft
-          </Button>
-        )}
-        <Button
-          size="small"
-          variant="contained"
-          onClick={() => {
-            setDraftValidation(false);
-            formik.handleSubmit();
-          }}
-          disabled={formik.isSubmitting}
-          startIcon={<Iconify icon="mdi:content-save-outline" />}
-        >
-          {formik.isSubmitting
-            ? 'Saving…'
-            : action === 'result' && profile
-              ? 'Submit Result'
-              : 'Save'}
-        </Button>
-      </DialogActions>
-    </CustomDialog>
+    </ReviewDialog>
   );
 }

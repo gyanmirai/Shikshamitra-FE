@@ -1,5 +1,8 @@
+import type { ReactNode } from 'react';
+import type { AlertProps } from '@mui/material';
+
 import { vi, it, expect, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import RecordPhotoPreview from './record-photo-preview';
 
@@ -7,6 +10,13 @@ const mocks = vi.hoisted(() => ({
   query: vi.fn(),
   createObjectURL: vi.fn(),
   revokeObjectURL: vi.fn(),
+  error: vi.fn(
+    (_options: { message: ReactNode; alertProps: (id: string | number) => AlertProps }) =>
+      'photo-error'
+  ),
+}));
+vi.mock('src/components/toast', () => ({
+  shikshaMitraToast: { error: mocks.error, dismiss: vi.fn() },
 }));
 vi.mock('src/redux/student/records/student-record-changes-api', () => ({
   useGetStudentRecordPhotoPreviewQuery: mocks.query,
@@ -48,14 +58,29 @@ it('renders authenticated bytes through a temporary local URI and releases it on
   expect(mocks.revokeObjectURL).toHaveBeenCalledWith('blob:protected-student-photo');
 });
 
-it('hides a previously cached photo when the protected read is denied', () => {
+it('hides a previously cached photo when the protected read is denied and retries from the delivered toast', async () => {
+  const retry = vi.fn();
   mocks.query.mockReturnValue({
     currentData: new Blob(['photo']),
     isFetching: false,
     isError: true,
+    refetch: retry,
   });
   render(<RecordPhotoPreview studentId={studentId} uri={uri} />);
-  expect(screen.getByText('current access', { exact: false })).toBeVisible();
+  await waitFor(() =>
+    expect(mocks.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'The proposed photo could not be opened with your current access.',
+      })
+    )
+  );
+  expect(screen.queryByText('current access', { exact: false })).not.toBeInTheDocument();
   expect(screen.queryByRole('img')).not.toBeInTheDocument();
   expect(mocks.createObjectURL).not.toHaveBeenCalled();
+  const recovery = render(
+    <>{mocks.error.mock.calls.at(-1)?.[0].alertProps('photo-error').action}</>
+  );
+  fireEvent.click(within(recovery.container).getByRole('button', { name: 'Retry photo' }));
+  expect(retry).toHaveBeenCalledOnce();
+  expect(screen.queryByRole('img')).not.toBeInTheDocument();
 });

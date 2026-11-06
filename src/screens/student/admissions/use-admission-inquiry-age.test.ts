@@ -57,7 +57,7 @@ describe('Inquiry age feedback', () => {
     );
     expect(decorated).toEqual(
       expect.objectContaining({
-        helpTextDetails: expect.stringContaining('01-04-2026'),
+        helpTextDetails: expect.stringContaining('01/04/2026'),
       })
     );
   });

@@ -13,6 +13,15 @@ export const buildEmployeeICardAssetParams = (blobName: string) => ({ blobName }
 export const buildEmployeeICardPdfUrl = (templateId: string) =>
   `/employees/i-card/templates/${templateId}/pdf`;
 
+export const handleEmployeeICardPdfResponse = async (response: Response) => {
+  if (response.ok) return response.blob();
+  try {
+    return await response.json();
+  } catch {
+    return { detail: 'Could not export Staff I-card PDF' };
+  }
+};
+
 export type EmployeeICardTemplate = {
   logoMode?: 0 | 1 | 2 | null;
   id: string;
@@ -52,7 +61,8 @@ export const employeeICardTemplateApi = api.injectEndpoints({
       query: (mediumStageId) => ({
         url: '/employees/i-card/templates/school-logo',
         params: mediumStageId ? { mediumStageId } : undefined,
-        responseHandler: (response) => response.status === 204 ? Promise.resolve(null) : response.blob(),
+        responseHandler: (response) =>
+          response.status === 204 ? Promise.resolve(null) : response.blob(),
       }),
       providesTags: [instituteSetupType.schoolIdentity],
       keepUnusedDataFor: 0,
@@ -117,7 +127,7 @@ export const employeeICardTemplateApi = api.injectEndpoints({
         url: buildEmployeeICardPdfUrl(templateId),
         method: 'POST',
         body,
-        responseHandler: (response) => response.blob(),
+        responseHandler: handleEmployeeICardPdfResponse,
       }),
     }),
   }),

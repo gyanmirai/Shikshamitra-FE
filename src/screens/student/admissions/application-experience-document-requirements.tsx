@@ -55,7 +55,7 @@ export function ApplicationExperienceDocumentRequirements() {
           notificationKey="STU-0228"
           presentation="toast"
           severity="error"
-          action={<Button onClick={query.refetch}>Retry</Button>}
+          toastAction={<Button onClick={query.refetch}>Retry</Button>}
         >
           Document workflows could not be loaded.
         </StudentFeedback>

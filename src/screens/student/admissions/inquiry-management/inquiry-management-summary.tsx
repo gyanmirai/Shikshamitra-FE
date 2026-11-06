@@ -4,6 +4,8 @@ import { fDateTime } from 'src/utils/format-time';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { Chip, Grid, Paper, Stack, Typography } from '@mui/material';
 
+import { ADMISSION_DATE_TIME_FORMAT } from '../admission-date-formats';
+
 const outcomeLabels = [
   'Interested',
   'Pending',
@@ -27,11 +29,11 @@ export function InquiryManagementSummary({
     { label: 'Contacts', value: String(value.contactCount) },
     {
       label: 'First Contact Due',
-      value: value.firstContactDueAt ? fDateTime(value.firstContactDueAt) : 'Not Tracked',
+      value: value.firstContactDueAt ? fDateTime(value.firstContactDueAt, ADMISSION_DATE_TIME_FORMAT) : 'Not Tracked',
     },
     {
       label: 'Qualification Due',
-      value: value.qualificationDueAt ? fDateTime(value.qualificationDueAt) : 'Not Tracked',
+      value: value.qualificationDueAt ? fDateTime(value.qualificationDueAt, ADMISSION_DATE_TIME_FORMAT) : 'Not Tracked',
     },
   ];
   return (

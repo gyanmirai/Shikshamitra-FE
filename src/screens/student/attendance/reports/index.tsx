@@ -2,10 +2,11 @@
 
 import dayjs from 'dayjs';
 import { Label } from 'src/components/label';
+import { DatePicker } from '@mui/x-date-pickers';
 import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Paper, Stack, LinearProgress } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Paper, Stack, Button, TextField, LinearProgress } from '@mui/material';
 import { useGetAttendanceRegisterQuery } from 'src/redux/student/attendance-management/api';
 import {
   attendanceError,
@@ -13,18 +14,28 @@ import {
   attendancePercentage,
 } from 'src/redux/student/attendance-management/types';
 
+import { useAttendanceReportRange } from './use-attendance-report-range';
 import { AttendanceAiReportButton } from './components/AttendanceAiReportButton';
 import { useAttendanceContext, AttendanceClassFilters } from '../setting/attendance-context';
 
 export default function AttendanceReportScreen() {
   const context = useAttendanceContext();
-  const startDate = context.params.get('from') || dayjs().startOf('month').format('YYYY-MM-DD');
-  const endDate = context.params.get('to') || dayjs().format('YYYY-MM-DD');
+  const range = useAttendanceReportRange(
+    context.params.get('from') || dayjs().startOf('month').format('YYYY-MM-DD'),
+    context.params.get('to') || dayjs().format('YYYY-MM-DD'),
+    context.update
+  );
+  const { startDate, endDate } = range;
   const page = Math.max(0, Number(context.params.get('page')) || 0);
   const valid = isAttendanceRange(startDate, endDate);
+  const hasScope = Boolean(
+    context.currentYear?.id && context.currentBoard?.id && context.currentMedium?.id
+  );
   const query = useGetAttendanceRegisterQuery(
     {
       academicYearId: context.currentYear?.id ?? '',
+      boardId: context.currentBoard?.id,
+      educationMediumId: context.currentMedium?.id,
       standardId: context.standardId || undefined,
       divisionId: context.divisionId || undefined,
       startDate,
@@ -32,7 +43,7 @@ export default function AttendanceReportScreen() {
       skipCount: page * 50,
       maxResultCount: 50,
     },
-    { skip: !context.currentYear?.id || !valid }
+    { skip: !hasScope || !valid }
   );
   const rows = (query.currentData?.rows ?? []).map((row) => ({
     ...row,
@@ -65,23 +76,19 @@ export default function AttendanceReportScreen() {
       <AttendanceClassFilters context={context} />
       <Paper variant="outlined" sx={{ p: 1 }}>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-          <TextField
-            fullWidth
-            size="small"
-            type="date"
+          <DatePicker
             label="From"
-            slotProps={{ inputLabel: { shrink: true } }}
-            value={startDate}
-            onChange={(event) => context.update({ from: event.target.value, page: undefined })}
+            format="DD/MM/YYYY"
+            slotProps={{ textField: { size: 'small', fullWidth: true } }}
+            value={range.fromValue}
+            onChange={range.changeFrom}
           />
-          <TextField
-            fullWidth
-            size="small"
-            type="date"
+          <DatePicker
             label="To"
-            slotProps={{ inputLabel: { shrink: true } }}
-            value={endDate}
-            onChange={(event) => context.update({ to: event.target.value, page: undefined })}
+            format="DD/MM/YYYY"
+            slotProps={{ textField: { size: 'small', fullWidth: true } }}
+            value={range.toValue}
+            onChange={range.changeTo}
           />
         </Stack>
       </Paper>
@@ -90,18 +97,22 @@ export default function AttendanceReportScreen() {
           Select an academic year to view attendance.
         </StudentFeedback>
       )}
+      {context.currentYear?.id && !hasScope && (
+        <StudentFeedback
+          notificationKey="attendance-report-scope"
+          presentation="inline"
+          severity="info"
+        >
+          Select a board and medium to view attendance.
+        </StudentFeedback>
+      )}
       {!valid && (
         <StudentFeedback notificationKey="STU-0631" presentation="inline" severity="warning">
           Select a valid date range with From before To.
         </StudentFeedback>
       )}
       {query.isError && (
-        <StudentFeedback
-          notificationKey="STU-0632"
-          presentation="toast"
-          severity="error"
-          action={<Button onClick={() => query.refetch()}>Retry</Button>}
-        >
+        <StudentFeedback notificationKey="STU-0632" presentation="toast" severity="error">
           {attendanceError(query.error, 'Attendance report could not be loaded.')}
         </StudentFeedback>
       )}
@@ -117,10 +128,18 @@ export default function AttendanceReportScreen() {
           tableContainerProps={{ sx: { height: 1 } }}
           data={rows}
           isLoading={query.isLoading}
+          errorContent={
+            query.isError || !hasScope || !valid ? (
+              <Box role="region" aria-label="Attendance report unavailable" />
+            ) : undefined
+          }
           noDataText="No eligible students match this date range and class scope."
           serverSidePagination
           isSearch={false}
           isFilter={false}
+          showColumns
+          showExport
+          showFullScreen
           page={page}
           rowsPerPage={50}
           rowsPerPageOptions={[50]}

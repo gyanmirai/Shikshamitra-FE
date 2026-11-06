@@ -243,7 +243,7 @@ export default function StudentOnboardingCaseOperations({
           presentation="toast"
           severity="error"
           sx={{ order: 1 }}
-          action={
+          toastAction={
             <Button size="small" onClick={() => handoffsQuery.refetch()}>
               Retry
             </Button>

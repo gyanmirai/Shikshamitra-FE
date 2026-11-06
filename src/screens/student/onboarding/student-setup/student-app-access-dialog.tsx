@@ -14,6 +14,7 @@ import { FormSectionCard } from 'src/components/form-section-card';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
+import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 import { useEnableStudentAppAccessMutation } from 'src/redux/student/onboarding/student-onboarding-api';
 
 import { getOnboardingErrorMessage } from './student-onboarding-messages';
@@ -80,6 +81,8 @@ export default function StudentAppAccessDialog({
   });
   const busy = mutation.isLoading || formik.isSubmitting;
   const { requestNavigation, confirmation } = useUnsavedNavigation(formik.dirty, {
+    guardContextChanges: true,
+    renderConfirmation: renderUnsavedConfirmation,
     blockNavigation: busy,
     push: router.push,
   });

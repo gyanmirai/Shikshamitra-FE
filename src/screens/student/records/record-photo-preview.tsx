@@ -36,7 +36,7 @@ export default function RecordPhotoPreview({ studentId, uri }: { studentId: stri
           notificationKey="STU-0812"
           presentation="toast"
           severity="error"
-          action={
+          toastAction={
             <Button color="inherit" onClick={() => query.refetch()}>
               Retry photo
             </Button>

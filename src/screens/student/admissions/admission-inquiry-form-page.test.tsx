@@ -524,7 +524,7 @@ describe('New inquiry form', () => {
     expect(screen.getByText('Age: 4y 3m · Minimum: 5y')).toBeVisible();
     await userEvent.hover(screen.getByLabelText('Date of birth Information'));
     expect(await screen.findByRole('tooltip')).toHaveTextContent(
-      'Birth certificate date. Age at academic year start (01-04-2026)'
+      'Birth certificate date. Age at academic year start (01/04/2026)'
     );
     await waitFor(() =>
       expect(shikshaMitraToast.warning).toHaveBeenCalledWith({
@@ -631,6 +631,6 @@ describe('New inquiry form', () => {
     expect(screen.queryByRole('heading', { name: 'Family Contacts' })).not.toBeInTheDocument();
     expect(screen.queryByRole('checkbox', { name: 'Add Other Parent' })).not.toBeInTheDocument();
     expect(screen.queryByRole('checkbox', { name: 'Add Other Guardian' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('combobox', { name: 'Main School Contact' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Main school contact' })).not.toBeInTheDocument();
   });
 });

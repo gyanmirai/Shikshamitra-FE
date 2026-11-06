@@ -33,6 +33,7 @@ import {
 import { formatAdmissionReference } from '../admission-reference';
 import AdmissionApplicantNotes from '../admission-applicant-notes';
 import { useApplicationFollowUps } from './use-application-follow-ups';
+import { ADMISSION_DATE_TIME_FORMAT } from '../admission-date-formats';
 import { FollowUpCard } from '../inquiry-management/inquiry-follow-ups';
 import { useFollowUpScheduler } from '../inquiry-management/use-follow-up-scheduler';
 import { ADMISSION_APPLICATION_PERMISSIONS } from '../admission-application-permissions';
@@ -88,20 +89,22 @@ function ApplicationActivityContent({ application, onClose, onBusyChange }: Omit
     actions: followUps.actions,
     blocked: !canSchedule || loading || mutationBusy,
   });
-  const busy = loading || mutationBusy || scheduler.scheduling;
+  const writeBusy = mutationBusy || scheduler.scheduling;
+  const busy = loading || writeBusy;
   const dirty = noteDirty || scheduler.dirty || Object.values(finishDrafts).some(Boolean);
   const router = useRouter();
   const guard = useUnsavedNavigation(dirty, {
+    guardContextChanges: true,
     push: router.push,
-    blockNavigation: busy,
+    blockNavigation: writeBusy,
     title: 'Discard Unsaved Activity?',
     description: 'Your unsaved note or follow-up changes will be discarded.',
   });
   const close = () => guard.requestNavigation(onClose);
   const titleId = useId();
   useEffect(() => {
-    onBusyChange?.(busy);
-  }, [busy, onBusyChange]);
+    onBusyChange?.(writeBusy);
+  }, [writeBusy, onBusyChange]);
   useEffect(() => () => onBusyChange?.(false), [onBusyChange]);
   const notes: ApplicantNote[] = canViewNotes ? (notesQuery.currentData?.notes ?? []) : [];
   const items = canViewFollowUps ? (followUps.value?.followUps ?? []) : [];
@@ -163,8 +166,10 @@ function ApplicationActivityContent({ application, onClose, onBusyChange }: Omit
                 )}
               </Stack>
               <Typography variant="caption" color="text.secondary">
-                {fDateTime(entry.note.creationTime)}
-                {entry.note.lastEditedAt ? ` · edited ${fDateTime(entry.note.lastEditedAt)}` : ''}
+                {fDateTime(entry.note.creationTime, ADMISSION_DATE_TIME_FORMAT)}
+                {entry.note.lastEditedAt
+                  ? ` · edited ${fDateTime(entry.note.lastEditedAt, ADMISSION_DATE_TIME_FORMAT)}`
+                  : ''}
               </Typography>
               <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
                 {entry.note.text}
@@ -207,7 +212,7 @@ function ApplicationActivityContent({ application, onClose, onBusyChange }: Omit
               </IconButton>
             </CustomTooltip>
             <Box sx={{ flexGrow: 1 }} />
-            <IconButton disabled={busy} aria-label="Close Notes & Follow-Ups" onClick={close}>
+            <IconButton disabled={writeBusy} aria-label="Close Notes & Follow-Ups" onClick={close}>
               <Iconify icon="mdi:close" />
             </IconButton>
           </Stack>
@@ -223,7 +228,7 @@ function ApplicationActivityContent({ application, onClose, onBusyChange }: Omit
                 notificationKey="STU-0167"
                 presentation="toast"
                 severity="error"
-                action={
+                toastAction={
                   <Button size="small" disabled={busy} onClick={notesQuery.refetch}>
                     Retry Notes
                   </Button>
@@ -237,7 +242,7 @@ function ApplicationActivityContent({ application, onClose, onBusyChange }: Omit
                 notificationKey="STU-0168"
                 presentation="toast"
                 severity="error"
-                action={
+                toastAction={
                   !followUps.sourceUnavailable && (
                     <Button size="small" disabled={busy} onClick={followUps.query.refetch}>
                       Retry Follow-Ups
@@ -320,7 +325,7 @@ function ApplicationActivityContent({ application, onClose, onBusyChange }: Omit
           justifyContent="flex-end"
           sx={{ p: 2, borderTop: 1, borderColor: 'divider', flexShrink: 0 }}
         >
-          <Button size="small" variant="outlined" disabled={busy} onClick={close}>
+          <Button size="small" variant="outlined" disabled={writeBusy} onClick={close}>
             Close
           </Button>
         </Stack>

@@ -73,7 +73,7 @@ it('preserves new-school defaults with manual sending selected and timing hidden
   expect(screen.getByRole('radio', { name: 'Staff sends manually' })).toBeChecked();
   expect(screen.queryByRole('combobox', { name: 'When to send' })).not.toBeInTheDocument();
   expect(defaultOnboardingSettings.onboardingProfiles).toEqual([]);
-  expect(screen.getByRole('button', { name: 'Save Settings' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'What is checked automatically?' })).toHaveAttribute(
     'aria-expanded',
     'false'
@@ -85,7 +85,7 @@ it('persists optional login without widening completion gates or changing number
   settings.onboardingProfiles = structuredClone(defaultOnboardingProfiles);
   const persist = renderSettings(undefined, settings);
   await choose('Student app login', 'Optional');
-  fireEvent.click(screen.getByRole('button', { name: 'Save Settings' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
   await waitFor(() => expect(persist).toHaveBeenCalledOnce());
   const saved = persist.mock.calls[0][1];
   expect(saved.readinessAccess).toMatchObject({
@@ -101,7 +101,7 @@ it('persists optional login without widening completion gates or changing number
   expect(saved.grNumber).toEqual(settings.grNumber);
   expect(saved.rollNumber).toEqual(settings.rollNumber);
   expect(saved.divisionChange).toEqual(settings.divisionChange);
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Save Settings' })).toBeDisabled());
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled());
 });
 
 it('shows automatic timing, retains the selection when toggled and saves its email policies', async () => {
@@ -115,7 +115,7 @@ it('shows automatic timing, retains the selection when toggled and saves its ema
   expect(screen.getByRole('combobox', { name: 'When to send' })).toHaveTextContent(
     'After setup is complete'
   );
-  fireEvent.click(screen.getByRole('button', { name: 'Save Settings' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
   await waitFor(() => expect(persist).toHaveBeenCalledOnce());
   expect(persist.mock.calls[0][1].readinessAccess).toMatchObject({
     credentialProvisioningMode: 'automatic',
@@ -139,7 +139,7 @@ it('restores saved automatic choices and explicitly switching to manual stops au
     'After setup is complete'
   );
   fireEvent.click(screen.getByRole('radio', { name: 'Staff sends manually' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Save Settings' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
   await waitFor(() => expect(persist).toHaveBeenCalledOnce());
   expect(persist.mock.calls[0][1].readinessAccess).toMatchObject({
     credentialProvisioningMode: 'manual',
@@ -156,10 +156,10 @@ it('preserves entered choices on failure and saves them on retry', async () => {
     .mockResolvedValueOnce(undefined);
   renderSettings(persist);
   await choose('Student app login', 'Required');
-  fireEvent.click(screen.getByRole('button', { name: 'Save Settings' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
   await screen.findByText(/Login settings could not be saved/);
   expect(screen.getByRole('combobox', { name: 'Student app login' })).toHaveTextContent('Required');
-  fireEvent.click(screen.getByRole('button', { name: 'Save Settings' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
   await waitFor(() => expect(persist).toHaveBeenCalledTimes(2));
   await waitFor(() =>
     expect(screen.queryByText(/Login settings could not be saved/)).not.toBeInTheDocument()
@@ -173,7 +173,7 @@ it('enforces settings permission even for direct form submission', async () => {
     .getAllByRole('combobox')
     .forEach((select) => expect(select).toHaveAttribute('aria-disabled', 'true'));
   screen.getAllByRole('radio').forEach((radio) => expect(radio).toBeDisabled());
-  expect(screen.getByRole('button', { name: 'Save Settings' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
   await act(async () => fireEvent.submit(screen.getByRole('form', { name: 'App login settings' })));
   expect(persist).not.toHaveBeenCalled();
 });

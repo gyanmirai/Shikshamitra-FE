@@ -7,11 +7,11 @@ import { useState } from 'react';
 import { useFormik } from 'formik';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { LoadingButton } from 'src/components/loading-button';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { FormSectionCard } from 'src/components/form-section-card';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 import {
   Alert,
   Stack,
@@ -197,24 +197,14 @@ export function ApplicationResumeJourneyDialog({
           </LoadingButton>
         </DialogActions>
       </CustomDialog>
-      <ConfirmDialog
-        open={discardOpen}
-        onClose={() => setDiscardOpen(false)}
-        title="Discard Changes"
-        content="Discard the resume reason?"
-        cancelText="Keep Editing"
-        action={
-          <Button
-            size="small"
-            variant="contained"
-            color="error"
-            startIcon={<Iconify icon={GlobalIcons.cancel} />}
-            onClick={onClose}
-          >
-            Discard Changes
-          </Button>
-        }
-      />
+      {discardOpen &&
+        renderUnsavedConfirmation(
+          () => setDiscardOpen(false),
+          () => {
+            if (!busy) onClose();
+          },
+          { busy, description: 'Discard the unsaved resume reason?' }
+        )}
     </>
   );
 }

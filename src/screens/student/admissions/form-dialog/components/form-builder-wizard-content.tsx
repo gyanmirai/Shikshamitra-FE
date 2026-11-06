@@ -12,7 +12,6 @@ import { FormBuilderDetails } from './form-builder-details';
 import { FormBuilderSections } from '../form-builder-sections';
 import { useFormWizardFocus } from '../hooks/use-form-wizard-focus';
 import { FormInheritanceProvider } from '../hooks/use-form-inheritance';
-import { useAdmissionUnsavedChanges } from '../../use-admission-unsaved-changes';
 
 type Props = {
   formik: FormikProps<CreateUpdateAdmissionForm>;
@@ -29,7 +28,6 @@ export function FormBuilderWizardContent({
   editing,
   onInheritanceReadinessChange,
 }: Props) {
-  useAdmissionUnsavedChanges(true, formik.dirty);
   const contentRef = useFormWizardFocus(activeStep);
   return (
     <FormInheritanceProvider

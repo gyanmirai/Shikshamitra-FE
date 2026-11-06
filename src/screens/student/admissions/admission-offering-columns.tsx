@@ -7,6 +7,7 @@ import { fNumber } from 'src/utils/format-number';
 import { formatDateOnly } from 'src/utils/date-only';
 
 import { AdmissionTableText } from './admission-table-text';
+import { ADMISSION_DATE_FORMAT } from './admission-date-formats';
 import { AdmissionOfferingRowActions } from './admission-offering-row-actions';
 import {
   availabilityColors,
@@ -113,7 +114,7 @@ export const buildAdmissionOfferingColumns = (
     align: 'right',
     headerAlign: 'left',
     minWidth: 120,
-    render: (value) => <AdmissionTableText text={formatDateOnly(value)} />,
+    render: (value) => <AdmissionTableText text={formatDateOnly(value, ADMISSION_DATE_FORMAT)} />,
   },
   {
     id: 'effectiveCloseDate',
@@ -124,7 +125,7 @@ export const buildAdmissionOfferingColumns = (
     align: 'right',
     headerAlign: 'left',
     minWidth: 120,
-    render: (value) => <AdmissionTableText text={formatDateOnly(value)} />,
+    render: (value) => <AdmissionTableText text={formatDateOnly(value, ADMISSION_DATE_FORMAT)} />,
   },
   {
     id: 'applicationCount',

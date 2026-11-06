@@ -79,7 +79,7 @@ it('inherits admission requirements without Offering rule creation and saves onl
   expect(screen.getByText('From Admissions & Finance')).toBeVisible();
   await choose('Student app login', 'Optional');
   fireEvent.click(screen.getByRole('radio', { name: 'Send automatically' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Save Settings' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
   await waitFor(() => expect(persist).toHaveBeenCalledOnce());
   expect(persist.mock.calls[0][1]).toEqual({
     ...defaultOnboardingSettings,
@@ -96,7 +96,7 @@ it('inherits admission requirements without Offering rule creation and saves onl
     },
   });
   expect(persist.mock.calls[0][1].onboardingProfiles).toEqual([]);
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Save Settings' })).toBeDisabled());
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled());
 });
 
 it('preserves historical Offering-linked readiness rules while editing the global login choices', async () => {
@@ -108,7 +108,7 @@ it('preserves historical Offering-linked readiness rules while editing the globa
   expect(screen.queryByRole('button', { name: 'Add Readiness Rule' })).not.toBeInTheDocument();
   expect(screen.queryByRole('textbox', { name: 'Rule name' })).not.toBeInTheDocument();
   await choose('Parent / Guardian app login', 'Optional');
-  fireEvent.click(screen.getByRole('button', { name: 'Save Settings' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
   await waitFor(() => expect(persist).toHaveBeenCalledOnce());
   expect(persist.mock.calls[0][1]).toEqual({
     ...settings,
@@ -134,7 +134,7 @@ it('retains entered login choices and historical Offering rules after failed sav
   ];
   show(persist, settings);
   await choose('Student app login', 'Required');
-  fireEvent.click(screen.getByRole('button', { name: 'Save Settings' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
   await screen.findByText(/Login settings could not be saved/);
   expect(mocks.errorToast).toHaveBeenCalledWith(
     expect.objectContaining({
@@ -142,15 +142,15 @@ it('retains entered login choices and historical Offering rules after failed sav
     })
   );
   expect(screen.getByRole('combobox', { name: 'Student app login' })).toHaveTextContent('Required');
-  expect(screen.getByRole('button', { name: 'Save Settings' })).toBeEnabled();
-  fireEvent.click(screen.getByRole('button', { name: 'Save Settings' }));
+  expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled();
+  fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
   await waitFor(() => expect(persist).toHaveBeenCalledTimes(2));
   expect(persist.mock.calls[1]).toEqual(persist.mock.calls[0]);
   expect(persist.mock.calls[1][1].onboardingProfiles).toEqual(settings.onboardingProfiles);
   await waitFor(() =>
     expect(screen.queryByText(/Login settings could not be saved/)).not.toBeInTheDocument()
   );
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Save Settings' })).toBeDisabled());
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled());
 });
 
 it('keeps the compatibility screen read-only without the exact settings permission, including direct submission', async () => {
@@ -161,7 +161,7 @@ it('keeps the compatibility screen read-only without the exact settings permissi
     .getAllByRole('combobox')
     .forEach((select) => expect(select).toHaveAttribute('aria-disabled', 'true'));
   screen.getAllByRole('radio').forEach((radio) => expect(radio).toBeDisabled());
-  expect(screen.getByRole('button', { name: 'Save Settings' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
   expect(screen.queryByRole('button', { name: 'Add Readiness Rule' })).not.toBeInTheDocument();
   await act(async () => fireEvent.submit(screen.getByRole('form', { name: 'App login settings' })));
   expect(persist).not.toHaveBeenCalled();

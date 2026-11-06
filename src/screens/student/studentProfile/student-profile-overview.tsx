@@ -8,15 +8,15 @@ import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
-import { fDate } from 'src/utils/format-time';
 import { GenderType } from 'src/enums/gender';
 import { Iconify } from 'src/components/iconify';
 import { RouterLink } from 'src/routes/components';
 import calculateAge from 'src/utils/calculate-age';
+import { fDate, formatStr } from 'src/utils/format-time';
 import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { StudentFeedback } from 'src/components/student-feedback';
-import { FormSectionCard } from 'src/components/form-section-card';
+import { FormSectionCard, FormSectionHeader } from 'src/components/form-section-card';
 import { Box, Alert, Paper, Stack, Button, Divider, Skeleton, Typography } from '@mui/material';
 
 import { profileOverviewContacts } from './student-profile-overview-model';
@@ -124,7 +124,7 @@ export function EnrollmentMilestones({ student }: { student: StudentRecordProfil
             color="text.secondary"
             sx={{ minWidth: 86, textAlign: 'right' }}
           >
-            {item.date ? fDate(item.date) : '—'}
+            {item.date ? fDate(item.date, formatStr.split.date) : '—'}
           </Typography>
         </Stack>
       ))}
@@ -285,8 +285,10 @@ export function StudentProfileOverview({
         }}
       >
         <FormSectionCard
-          icon="mdi:account-outline"
-          title="Student details"
+          icon={GlobalIcons.admissionStudent}
+          title="Student Details"
+          descriptionTooltip="Saved date of birth, age and gender for this student. View all details to see the retained registration form."
+          titleTypographyProps={{ fontWeight: 600 }}
           sx={{ minWidth: 0, height: 1 }}
           action={
             <Button size="small" component={RouterLink} href={viewHref('details')}>
@@ -299,7 +301,7 @@ export function StudentProfileOverview({
             values={[
               {
                 label: 'Date of birth',
-                value: validBirthDate ? fDate(student.dateOfBirth) : null,
+                value: validBirthDate ? fDate(student.dateOfBirth, formatStr.split.date) : null,
               },
               {
                 label: 'Age',
@@ -316,9 +318,10 @@ export function StudentProfileOverview({
           />
         </FormSectionCard>
         <FormSectionCard
-          icon="mdi:account-group-outline"
+          icon={GlobalIcons.family}
           title="Parents & Contact"
           descriptionTooltip="Saved parents, optional other guardian and the main school contact. App access is managed separately."
+          titleTypographyProps={{ fontWeight: 600 }}
           sx={{ minWidth: 0, height: 1 }}
           action={
             canManageContacts ? (
@@ -354,8 +357,10 @@ export function StudentProfileOverview({
         </FormSectionCard>
       </Box>
       <FormSectionCard
-        icon="mdi:history"
-        title="Record activity"
+        icon={GlobalIcons.history}
+        title="Record Activity"
+        descriptionTooltip="Linked admission and onboarding milestones, with recent record changes visible to your current access."
+        titleTypographyProps={{ fontWeight: 600 }}
         action={
           <Button size="small" component={RouterLink} href={viewHref('history')}>
             View History
@@ -374,16 +379,12 @@ export function StudentProfileOverview({
               gap: 1.5,
             }}
           >
-            <Stack direction="row" spacing={1} alignItems="flex-start">
-              <Iconify
-                icon="mdi:account-school-outline"
-                width={20}
-                sx={{ color: 'text.secondary', flexShrink: 0 }}
-              />
-              <Typography component="h3" variant="subtitle2">
-                Admission & Onboarding
-              </Typography>
-            </Stack>
+            <FormSectionHeader
+              icon={GlobalIcons.admissionStudent}
+              title="Admission & Onboarding"
+              descriptionTooltip="Saved admission, enrollment activation and portal credential status from the linked onboarding journey."
+              titleTypographyProps={{ component: 'h3', fontWeight: 600 }}
+            />
             <EnrollmentMilestones student={student} />
           </Box>
           <Box
@@ -396,16 +397,12 @@ export function StudentProfileOverview({
               gap: 1.5,
             }}
           >
-            <Stack direction="row" spacing={1} alignItems="flex-start">
-              <Iconify
-                icon="mdi:history"
-                width={20}
-                sx={{ color: 'text.secondary', flexShrink: 0 }}
-              />
-              <Typography component="h3" variant="subtitle2">
-                Recent changes
-              </Typography>
-            </Stack>
+            <FormSectionHeader
+              icon={GlobalIcons.history}
+              title="Recent Changes"
+              descriptionTooltip="The three most recent student record changes available with your current access."
+              titleTypographyProps={{ component: 'h3', fontWeight: 600 }}
+            />
             {!canReadChanges ? (
               <Typography variant="body2" color="text.secondary">
                 Record change history is not available with your current access.
@@ -434,7 +431,7 @@ export function StudentProfileOverview({
                         {change.status}
                       </Label>
                       <Typography variant="caption" color="text.secondary">
-                        {fDate(change.appliedAt ?? change.creationTime)}
+                        {fDate(change.appliedAt ?? change.creationTime, formatStr.split.date)}
                       </Typography>
                     </Stack>
                   </Stack>

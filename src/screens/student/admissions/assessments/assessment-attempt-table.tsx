@@ -15,6 +15,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { Stack, Button, MenuItem, Typography } from '@mui/material';
 
 import { assessmentActionLabels } from './assessment-action-model';
+import { ADMISSION_DATE_TIME_FORMAT } from '../admission-date-formats';
 import { useAssessmentPermissions } from './use-assessment-permissions';
 import { AssessmentResultEntry as ResultEntry } from './assessment-result-entry';
 import { AssessmentSubjectScoreHistory } from './assessment-subject-score-history';
@@ -104,7 +105,7 @@ export function AssessmentAttemptTable({
           )}
           {row.reviewedAt && (
             <Typography variant="caption" color="text.secondary">
-              Reviewed {fDateTime(row.reviewedAt)}
+              Reviewed {fDateTime(row.reviewedAt, ADMISSION_DATE_TIME_FORMAT)}
             </Typography>
           )}
         </Stack>

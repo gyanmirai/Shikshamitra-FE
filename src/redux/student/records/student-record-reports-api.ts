@@ -3,11 +3,16 @@ import { studentType } from 'src/redux/tagTypes';
 
 import { unwrapRecordsResult } from './student-records-api';
 
-export type RecordsReportType = 'Directory' | 'Changes' | 'Documents' | 'Transitions';
+export type ComplianceReportType = 'UdiseBaseline' | 'GujaratCompliance' | 'IdentityExceptions' | 'EligibilityTracking';
+export type RecordsReportType = 'Directory' | 'Changes' | 'Documents' | 'Transitions' | ComplianceReportType;
 export interface RecordsReportInput {
   reportType: RecordsReportType;
   academicYearId?: string;
   studentId?: string;
+  boardId?: string;
+  mediumId?: string;
+  standardId?: string;
+  divisionId?: string;
   status?: string;
   clientKey?: string;
   skipCount?: number;

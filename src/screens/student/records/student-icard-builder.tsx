@@ -15,11 +15,13 @@ import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomStepper from 'src/components/custom-stepper';
+import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useRef, useMemo, useState, useEffect, useLayoutEffect } from 'react';
+import { getIdentityCardSheetLayout } from 'src/components/identity-card-designer';
 import { FormSectionHeader } from 'src/components/form-section-card/section-header';
-import { TemplateIdentityAsset } from 'src/screens/setting/school-identity/components/template-identity-asset';
 import {
   useGetStudentRecordsDirectoryQuery,
   useGetStudentRecordsDirectoryOptionsQuery,
@@ -36,7 +38,6 @@ import {
   ToggleButton,
   LinearProgress,
   InputAdornment,
-  FormControlLabel,
   ToggleButtonGroup,
 } from '@mui/material';
 import {
@@ -50,8 +51,23 @@ import {
   useUpdateRecordIdTemplateMutation,
 } from 'src/redux/student/records/student-record-documents-api';
 
+import { StudentICardDesigner } from './components/student-icard-designer';
+import { StudentICardSheetPreview } from './components/student-icard-sheet-preview';
+import { StudentConfiguredCardPreview } from './components/student-configured-card-preview';
+import {
+  getStudentICardLayout,
+  applyStudentICardDesign,
+  createStudentICardTemplate,
+  getStudentICardDesignErrors,
+  getStudentICardPrintSettings,
+} from './student-icard-design';
+
 const steps = ['Template', 'Designer', 'Students', 'Review', 'Export'];
 const presets = [
+  {
+    key: 'classic-identity', label: 'Classic Identity',
+    description: 'Configurable front and back with exact print dimensions.', color: '#007867',
+  },
   {
     key: 'formal-student',
     label: 'Formal Student',
@@ -148,6 +164,7 @@ export default function StudentICardBuilder({
   academicYearId: openerAcademicYearId,
   contextInvalid = false,
   onBusyChange,
+  onDirtyChange,
 }: {
   onClose: () => void;
   initialTemplate?: IdCardTemplate | null;
@@ -157,6 +174,7 @@ export default function StudentICardBuilder({
   academicYearId?: string;
   contextInvalid?: boolean;
   onBusyChange?: (busy: boolean) => void;
+  onDirtyChange?: (dirty: boolean) => void;
 }) {
   const directoryMode = initialStudents !== undefined;
   const firstStep = directoryMode ? 2 : 0;
@@ -197,8 +215,12 @@ export default function StudentICardBuilder({
   const [exportCards, exportState] = useExportRecordIdsMutation();
   const [issueCards, issueState] = useIssueRecordIdsMutation();
   const [template, setTemplate] = useState<IdCardTemplate | null>(() =>
-    initialTemplate === undefined ? null : normalizeTemplate(initialTemplate ?? {})
+    initialTemplate === undefined ? null : initialTemplate === null
+      ? createStudentICardTemplate() : normalizeTemplate(initialTemplate)
   );
+  const [savedTemplateJson, setSavedTemplateJson] = useState(() => JSON.stringify(
+    initialTemplate === null ? createStudentICardTemplate() : initialTemplate ? normalizeTemplate(initialTemplate) : null
+  ));
   const [step, setStep] = useState(firstStep);
   const [completed, setCompleted] = useState<number[]>([]);
   const [storedScope, setScope] = useState<Scope>(() =>
@@ -256,6 +278,7 @@ export default function StudentICardBuilder({
   const [previewStudentId, setPreviewStudentId] = useState(initialSelection[0]?.studentId ?? '');
   const [sheetPage, setSheetPage] = useState(0);
   const [error, setError] = useState('');
+  const [selectionChanged, setSelectionChanged] = useState(false);
   const [templateNameTouched, setTemplateNameTouched] = useState(false);
   const issueKey = useRef('');
   const latestContext = useRef({ invalid: contextInvalid, generation: 0 });
@@ -284,11 +307,16 @@ export default function StudentICardBuilder({
   useEffect(() => {
     onBusyChange?.(busy);
   }, [busy, onBusyChange]);
+  const currentTemplateJson = JSON.stringify(template);
+  useEffect(() => {
+    onDirtyChange?.(!directoryMode && (currentTemplateJson !== savedTemplateJson || selectionChanged));
+  }, [currentTemplateJson, directoryMode, onDirtyChange, savedTemplateJson, selectionChanged]);
 
   useEffect(() => {
     if (initialTemplate === undefined && templateQuery.currentData && !template) {
       const loaded = templateQuery.currentData;
       setTemplate(normalizeTemplate(loaded));
+      setSavedTemplateJson(JSON.stringify(normalizeTemplate(loaded)));
       if (!directoryMode && loaded.selectionRestricted) {
         setSelectionRestricted(true);
       } else if (!directoryMode && loaded.selection) {
@@ -421,10 +449,13 @@ export default function StudentICardBuilder({
     selectedRows.find((student) => student.studentId === previewStudentId) ?? selectedRows[0];
   const reviewIndex = reviewStudent ? selectedRows.indexOf(reviewStudent) : 0;
   const reviewCard = previews.find((card) => card.studentId === reviewStudent?.studentId);
-  const cardsPerSheet = Math.min(
-    template?.cardsPerPage ?? 8,
-    template?.orientation === 'Vertical' ? 9 : 10
-  );
+  const configuredSheet = template?.schemaVersion === 2
+    ? getIdentityCardSheetLayout(getStudentICardLayout(template), getStudentICardPrintSettings(template)) : null;
+  const configuredPrintSettings = template?.schemaVersion === 2 ? getStudentICardPrintSettings(template) : null;
+  const cardSizedOutput = configuredPrintSettings?.pageSize === 'Card';
+  const cardsPerSheet = Math.max(1, configuredSheet?.effectiveCardsPerPage ?? Math.min(
+    template?.cardsPerPage ?? 8, template?.orientation === 'Vertical' ? 9 : 10
+  ));
   const sheetCount = Math.max(1, Math.ceil(selectedRows.length / cardsPerSheet));
   const currentSheetPage = Math.min(sheetPage, sheetCount - 1);
   const sheetStudents = selectedRows.slice(
@@ -458,9 +489,12 @@ export default function StudentICardBuilder({
     if (!template) return;
     setTemplate({ ...template, ...patch });
     setPreviews([]);
+    setCompleted((current) => current.filter((value) => value < 1));
+    issueKey.current = '';
   };
   const changeScope = (patch: Partial<Scope>) => {
     if (lockAcademicScope || selectionRestricted) return;
+    setSelectionChanged(true);
     setScope({ ...scope, ...patch });
     setPage(0);
     setSelected({});
@@ -530,6 +564,7 @@ export default function StudentICardBuilder({
     );
   const toggleStudent = (student: StudentDirectoryItem) => {
     if (selectionRestricted) return;
+    setSelectionChanged(true);
     setSelected((previous) => {
       const next = { ...previous };
       if (Object.prototype.hasOwnProperty.call(next, student.studentId))
@@ -543,6 +578,7 @@ export default function StudentICardBuilder({
   };
   const togglePage = () => {
     if (selectionRestricted) return;
+    setSelectionChanged(true);
     const allSelected = rows.every((row) => isSelected(row.studentId));
     setSelected((previous) => {
       const next = { ...previous };
@@ -568,6 +604,8 @@ export default function StudentICardBuilder({
       setError('Enter a school name and choose at least one card field.');
       return null;
     }
+    const designErrors = getStudentICardDesignErrors(template);
+    if (designErrors.length) { setError(designErrors[0]); return null; }
     try {
       const body = { ...template };
       delete body.selectionRestricted;
@@ -599,7 +637,10 @@ export default function StudentICardBuilder({
           : template.id
             ? await updateTemplate({ id: template.id, body }).unwrap()
             : await createTemplate(body).unwrap();
-      setTemplate(normalizeTemplate(saved, body));
+      const normalized = normalizeTemplate(saved, body);
+      setTemplate(normalized);
+      setSavedTemplateJson(JSON.stringify(normalized));
+      setSelectionChanged(false);
       if (saved.selectionRestricted && !directoryMode) {
         setSelectionRestricted(true);
         setSelected({});
@@ -613,8 +654,10 @@ export default function StudentICardBuilder({
       setError('');
       shikshaMitraToast.success({ message: 'Student I-Card template saved.' });
       return saved;
-    } catch {
-      setError('The template could not be saved. Refresh if another user changed it.');
+    } catch (failure: unknown) {
+      const problem = parseApiProblemDetail(failure);
+      setError(problem.errorCode === 'ShikshaMitra:IdentityCard:InvalidConfiguration'
+        ? problem.detail : 'The template could not be saved. Refresh if another user changed it.');
       return null;
     }
   };
@@ -661,13 +704,21 @@ export default function StudentICardBuilder({
       setError('');
       return;
     }
-    if (step === 0 && !schoolName.trim()) {
+    if (step === 1 && !schoolName.trim()) {
       setError('Enter a school name.');
       return;
     }
     if (step === 1 && !template?.fields.length) {
       setError('Choose at least one card field.');
       return;
+    }
+    if (step === 1 && template) {
+      const designErrors = getStudentICardDesignErrors(template);
+      if (designErrors.length) { setError(designErrors[0]); return; }
+    }
+    if (step === 0 && template && template.schemaVersion !== 2) {
+      patchTemplate(applyStudentICardDesign(template, getStudentICardLayout(template),
+        getStudentICardPrintSettings(template)));
     }
     if (step === 2 && !selectedIds.length) {
       setError('Select at least one student.');
@@ -706,9 +757,11 @@ export default function StudentICardBuilder({
       if (!pdf.size || (pdf.type && !pdf.type.includes('pdf'))) throw new Error('Invalid PDF');
       downloadRecordPdf(pdf, `Student-I-Cards-${new Date().toISOString().slice(0, 10)}.pdf`);
       shikshaMitraToast.success({ message: 'Student I-Card PDF downloaded.' });
-    } catch {
+    } catch (failure: unknown) {
+      const problem = parseApiProblemDetail(failure);
       if (isCurrentContext(generation))
-        setError('Bulk PDF could not be exported. Check student access and retry.');
+        setError(problem.errorCode === 'ShikshaMitra:IdentityCard:InvalidConfiguration'
+          ? problem.detail : 'Bulk PDF could not be exported. Check student access and retry.');
     }
   };
   const issue = async () => {
@@ -850,15 +903,15 @@ export default function StudentICardBuilder({
           flex: 1,
           minHeight: 0,
           minWidth: 0,
-          overflowY: 'auto',
+          overflowY: step === 1 ? 'hidden' : 'auto',
           border: 0,
           m: 0,
           p: 0,
           pr: 0.5,
         }}
       >
-        <Grid container spacing={2}>
-          <Grid size={{ xs: 12, md: step >= 2 ? 12 : 7 }} sx={{ minWidth: 0 }}>
+        <Grid container spacing={2} sx={{ height: step === 1 ? 1 : undefined, minHeight: 0 }}>
+          <Grid size={{ xs: 12, md: step >= 1 ? 12 : 7 }} sx={{ minWidth: 0, height: step === 1 ? 1 : undefined, minHeight: 0 }}>
             {step === 0 && (
               <Stack spacing={2}>
                 <Grid container spacing={1.25}>
@@ -869,12 +922,14 @@ export default function StudentICardBuilder({
                         type="button"
                         variant="outlined"
                         onClick={() =>
-                          patchTemplate({
-                            presetKey: preset.key,
-                            primaryColor: preset.color,
-                            orientation:
-                              preset.key === 'vertical-badge' ? 'Vertical' : 'Horizontal',
-                          })
+                          patchTemplate(preset.key === 'classic-identity'
+                            ? { ...createStudentICardTemplate(), name: template.name,
+                                schoolName: template.schoolName, schoolAddress: template.schoolAddress,
+                                headerText: template.headerText, footerText: template.footerText,
+                                logo: template.logo }
+                            : { presetKey: preset.key, primaryColor: preset.color,
+                                orientation: preset.key === 'vertical-badge' ? 'Vertical' : 'Horizontal',
+                                schemaVersion: 1, layoutJson: null, printSettingsJson: null, backSideEnabled: false })
                         }
                         sx={{
                           p: 1.5,
@@ -910,7 +965,7 @@ export default function StudentICardBuilder({
                     </Grid>
                   ))}
                 </Grid>
-                <TextField
+                <ShakingTextField error={templateNameError}><TextField
                   size="small"
                   required
                   label="Template name"
@@ -924,11 +979,12 @@ export default function StudentICardBuilder({
                       ? 'Template name is required.'
                       : 'Name this design so you can find and reuse it.'
                   }
-                />
+                /></ShakingTextField>
                 <ToggleButtonGroup
                   exclusive
                   size="small"
                   value={template.orientation}
+                  disabled={template.schemaVersion === 2}
                   onChange={(_event, value) => value && patchTemplate({ orientation: value })}
                   aria-label="Card orientation"
                 >
@@ -938,112 +994,8 @@ export default function StudentICardBuilder({
               </Stack>
             )}
             {step === 1 && (
-              <Stack spacing={2}>
-                <TextField
-                  size="small"
-                  label="School name"
-                  value={template.schoolName}
-                  inputProps={{ maxLength: 150 }}
-                  onChange={(event) => patchTemplate({ schoolName: event.target.value })}
-                />
-                <TextField
-                  size="small"
-                  label="School address"
-                  value={template.schoolAddress}
-                  inputProps={{ maxLength: 300 }}
-                  onChange={(event) => patchTemplate({ schoolAddress: event.target.value })}
-                />
-                <TextField
-                  size="small"
-                  label="Card heading"
-                  value={template.headerText}
-                  inputProps={{ maxLength: 300 }}
-                  onChange={(event) => patchTemplate({ headerText: event.target.value })}
-                />
-                <TextField
-                  size="small"
-                  label="Card footer"
-                  value={template.footerText}
-                  inputProps={{ maxLength: 500 }}
-                  onChange={(event) => patchTemplate({ footerText: event.target.value })}
-                />
-                <Grid container spacing={1.5}>
-                  <Grid size={{ xs: 6 }}>
-                    <TextField
-                      fullWidth
-                      size="small"
-                      label="Accent color"
-                      type="color"
-                      value={template.primaryColor}
-                      onChange={(event) => patchTemplate({ primaryColor: event.target.value })}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 6 }}>
-                    <TextField
-                      fullWidth
-                      size="small"
-                      label="Background color"
-                      type="color"
-                      value={template.backgroundColor}
-                      onChange={(event) => patchTemplate({ backgroundColor: event.target.value })}
-                    />
-                  </Grid>
-                </Grid>
-                <TemplateIdentityAsset
-                  kind="logo"
-                  value={template.logo}
-                  disabled={busy}
-                  onBusy={setIdentityUploading}
-                  onChange={(logo) => patchTemplate({ logo })}
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={template.showPhoto}
-                      onChange={(event) => patchTemplate({ showPhoto: event.target.checked })}
-                    />
-                  }
-                  label="Show student photo"
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={template.showQrCode}
-                      onChange={(event) => patchTemplate({ showQrCode: event.target.checked })}
-                    />
-                  }
-                  label="Show student QR code"
-                />
-                <Typography variant="subtitle2">Information shown on the card</Typography>
-                <Stack direction="row" useFlexGap flexWrap="wrap" gap={1}>
-                  {fieldChoices.map((field) => (
-                    <FormControlLabel
-                      key={field.id}
-                      label={field.name}
-                      control={
-                        <Checkbox
-                          checked={template.fields.includes(field.id)}
-                          onChange={(_event, checked) =>
-                            patchTemplate({
-                              fields: checked
-                                ? [...template.fields, field.id]
-                                : template.fields.filter((item) => item !== field.id),
-                            })
-                          }
-                        />
-                      }
-                    />
-                  ))}
-                </Stack>
-                <Button
-                  variant="outlined"
-                  onClick={save}
-                  disabled={busy}
-                  sx={{ alignSelf: 'flex-start' }}
-                >
-                  Save template
-                </Button>
-              </Stack>
+              <StudentICardDesigner template={template} card={sample} disabled={busy}
+                onBusyChange={setIdentityUploading} onChange={patchTemplate} />
             )}
             {step === 2 && (
               <Stack spacing={2}>
@@ -1313,18 +1265,25 @@ export default function StudentICardBuilder({
                     )}
                     <Typography variant="body2">
                       {selectedRows.length} {selectedRows.length === 1 ? 'card' : 'cards'} selected
-                      · {sheetCount} A4 {sheetCount === 1 ? 'page' : 'pages'}
+                      · {sheetCount * (template.backSideEnabled && configuredPrintSettings?.sideMode === 'both' ? 2 : 1)}{' '}
+                      {cardSizedOutput ? 'card-sized PDF pages' : 'A4 pages'}
                     </Typography>
                     <TextField
                       size="small"
                       type="number"
                       label="Cards per A4 page"
-                      value={template.cardsPerPage}
+                      value={cardSizedOutput ? 1 : template.cardsPerPage}
+                      disabled={cardSizedOutput}
+                      helperText={configuredSheet && !cardSizedOutput
+                        ? `${configuredSheet.effectiveCardsPerPage} fit at the configured size; cards are never shrunk.` : undefined}
                       onChange={(event) => {
                         setSheetPage(0);
+                        const cardsPerPage = Math.max(1, Math.min(10, Number(event.target.value) || 1));
                         setTemplate({
                           ...template,
-                          cardsPerPage: Math.max(1, Math.min(10, Number(event.target.value) || 1)),
+                          cardsPerPage,
+                          ...(configuredPrintSettings ? { printSettingsJson: JSON.stringify(
+                            { ...configuredPrintSettings, cardsPerPage }) } : {}),
                         });
                       }}
                       inputProps={{ min: 1, max: 10 }}
@@ -1333,7 +1292,7 @@ export default function StudentICardBuilder({
                     <Typography variant="body2" color="text.secondary">
                       Layout: {template.orientation}
                     </Typography>
-                    {template.orientation === 'Vertical' && template.cardsPerPage === 10 && (
+                    {!configuredSheet && template.orientation === 'Vertical' && template.cardsPerPage === 10 && (
                       <Typography variant="caption" color="text.secondary">
                         Portrait cards fit up to 9 per A4 page.
                       </Typography>
@@ -1373,9 +1332,10 @@ export default function StudentICardBuilder({
                 <Grid size={{ xs: 12, md: 6 }} sx={{ minWidth: 0 }}>
                   <Paper variant="outlined" sx={{ p: 1.5, minWidth: 0 }}>
                     <Typography component="h3" variant="subtitle2" sx={{ mb: 1 }}>
-                      A4 Print Preview
+                      {configuredSheet ? 'PDF Print Preview' : 'A4 Print Preview'}
                     </Typography>
-                    <Box
+                    {configuredSheet ? <StudentICardSheetPreview template={template}
+                      cards={sheetStudents.map((student) => previews.find((item) => item.studentId === student.studentId))} /> : <Box
                       sx={{
                         width: 1,
                         maxWidth: 320,
@@ -1426,7 +1386,7 @@ export default function StudentICardBuilder({
                           );
                         })}
                       </Box>
-                    </Box>
+                    </Box>}
                     <Typography variant="caption" component="p" textAlign="center" sx={{ mt: 1 }}>
                       {cardsPerSheet} {cardsPerSheet === 1 ? 'slot' : 'slots'} per page ·{' '}
                       {sheetStudents.length} {sheetStudents.length === 1 ? 'card' : 'cards'} on this
@@ -1466,7 +1426,7 @@ export default function StudentICardBuilder({
               </Grid>
             )}
           </Grid>
-          {step < 2 && (
+          {step === 0 && (
             <Grid size={{ xs: 12, md: 5 }}>
               <Paper variant="outlined" sx={{ p: 1.5, position: 'sticky', top: 0 }}>
                 <Typography variant="subtitle2">Live Preview</Typography>
@@ -1520,9 +1480,13 @@ export default function StudentICardBuilder({
 export function StudentCardPreview({
   template,
   card,
+  side,
+  interactive = true,
 }: {
   template: IdCardTemplate;
   card?: Pick<IdCard, 'studentSnapshot' | 'hasPhoto' | 'cardNumber'>;
+  side?: 'front' | 'back';
+  interactive?: boolean;
 }) {
   const vertical = template.orientation === 'Vertical';
   const containerRef = useRef<HTMLDivElement>(null);
@@ -1542,6 +1506,8 @@ export function StudentCardPreview({
     observer.observe(element);
     return () => observer.disconnect();
   }, []);
+  if (template.schemaVersion === 2) return <StudentConfiguredCardPreview
+    template={template} card={card} side={side} interactive={interactive} />;
   return (
     <Box
       ref={containerRef}

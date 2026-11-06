@@ -169,8 +169,8 @@ export function AdmissionCycleActionDialog({
             <>
               <Typography variant="body2">
                 Publishing makes this cycle available to linked admission offerings. Applications
-                are accepted only during {dayjs(cycle.startDate).format('DD MMM YYYY')}–
-                {dayjs(cycle.endDate).format('DD MMM YYYY')}.
+                are accepted only during {dayjs(cycle.startDate).format(ADMISSION_DATE_FORMAT)}–
+                {dayjs(cycle.endDate).format(ADMISSION_DATE_FORMAT)}.
               </Typography>
               {validation?.errors.map((issue) => (
                 <StudentFeedback

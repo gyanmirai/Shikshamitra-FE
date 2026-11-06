@@ -89,7 +89,9 @@ it('keeps a published inquiry stage readable without editable controls', () => {
       onClose={vi.fn()}
     />
   );
-  expect(screen.getByText(/This saved stage type is no longer available/)).toBeInTheDocument();
+  expect(screen.getByText('Stage type', { selector: 'dt' })).toBeVisible();
+  expect(screen.getAllByText('Inquiry', { selector: 'dd' })).toHaveLength(2);
+  expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Apply Changes' })).not.toBeInTheDocument();
   expect(onSave).not.toHaveBeenCalled();
 });

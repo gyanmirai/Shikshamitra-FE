@@ -1,7 +1,10 @@
 import type { AdmissionApplicationWorkflow } from 'src/redux/student/admissions/admission-applications-api';
 
 import { Iconify } from 'src/components/iconify';
+import { fDateTime } from 'src/utils/format-time';
 import { Box, Card, Stack, Typography, CardContent } from '@mui/material';
+
+import { ADMISSION_DATE_TIME_FORMAT } from '../admission-date-formats';
 
 export function TransitionHistoryCard({ workflow }: { workflow?: AdmissionApplicationWorkflow }) {
   if (!workflow?.history.length) return null;
@@ -27,7 +30,7 @@ export function TransitionHistoryCard({ workflow }: { workflow?: AdmissionApplic
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
                     Handled By: {history.actorName || 'Name Not Recorded'} ·{' '}
-                    {new Date(history.occurredAt).toLocaleString()}
+                    {fDateTime(history.occurredAt, ADMISSION_DATE_TIME_FORMAT)}
                     {history.reason ? ` · ${history.reason}` : ''}
                   </Typography>
                 </Box>

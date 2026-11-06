@@ -22,6 +22,7 @@ import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { readOnboardingDashboardQueue } from 'src/utils/student-dashboard-drilldown';
 import { Box, Stack, Button, Skeleton, Typography, LinearProgress } from '@mui/material';
+import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 import {
   readAcademicFilterIds,
   academicClassFilterInput,
@@ -402,13 +403,14 @@ export default function StudentSetupScreen() {
           item.status !== 5
       )
     );
+  const { refetch: refetchOnboarding } = onboardingQuery;
   useEffect(() => {
     if (!credentialDeliveryPending) return undefined;
     const interval = window.setInterval(() => {
-      if (document.visibilityState === 'visible') void onboardingQuery.refetch();
+      if (document.visibilityState === 'visible') refetchOnboarding();
     }, 15_000);
     return () => window.clearInterval(interval);
-  }, [credentialDeliveryPending, onboardingQuery.refetch]);
+  }, [credentialDeliveryPending, refetchOnboarding]);
   const pendingCountQuery = useGetStudentOnboardingCasesQuery(
     {
       ...queryArgs,
@@ -615,6 +617,8 @@ export default function StudentSetupScreen() {
   const { requestNavigation, confirmation } = useUnsavedNavigation(
     assignment.form.dirty || quickSetupState.dirty,
     {
+      guardContextChanges: true,
+      renderConfirmation: renderUnsavedConfirmation,
       blockNavigation: interactionBusy || Boolean(autoAssignment) || Boolean(rollWorkspace),
       push: (href) => {
         assignment.cancel();
@@ -939,7 +943,7 @@ export default function StudentSetupScreen() {
           notificationKey="STU-0958"
           presentation="toast"
           severity="error"
-          action={
+          toastAction={
             <Button size="small" onClick={() => focusedCaseQuery.refetch()}>
               Retry
             </Button>
@@ -1017,7 +1021,7 @@ export default function StudentSetupScreen() {
               notificationKey="STU-0960"
               presentation="toast"
               severity="error"
-              action={
+              toastAction={
                 <Button size="small" onClick={() => filterOptionsQuery.refetch()}>
                   Retry
                 </Button>
@@ -1208,7 +1212,7 @@ export default function StudentSetupScreen() {
                   notificationKey="STU-0963"
                   presentation="toast"
                   severity="error"
-                  action={
+                  toastAction={
                     <Button
                       size="small"
                       disabled={interactionBusy}

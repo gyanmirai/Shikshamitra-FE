@@ -4,7 +4,7 @@ import { http, HttpResponse } from 'msw';
 import { mswServer } from 'src/test/mswServer';
 import { vi, it, expect, beforeEach } from 'vitest';
 import userEvent from '@testing-library/user-event';
-import { screen, within, waitFor, fireEvent } from '@testing-library/react';
+import { act, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import {
   customField,
@@ -162,6 +162,24 @@ it('renders original offering fields in their form order with protected fields r
   expect(screen.getByRole('textbox', { name: 'Permanent GR' })).toBeDisabled();
   expect(snapshotReads).toBe(0);
   expect(screen.queryByRole('link', { name: 'Request change' })).not.toBeInTheDocument();
+});
+
+it('explains the saved form section by keyboard without fetching an edit snapshot or changing answers', async () => {
+  await open();
+  const help = screen.getByRole('button', { name: `${source.formName} information` });
+  await userEvent.keyboard('{Tab}');
+  act(() => help.focus());
+  expect(help).toHaveFocus();
+  expect(await screen.findByRole('tooltip')).toHaveTextContent(
+    'Saved responses from this registration form, with restricted fields controlled by your current record access.'
+  );
+  await userEvent.keyboard('{Escape}');
+  await waitFor(() => expect(screen.queryByRole('tooltip')).not.toBeInTheDocument());
+  expect(screen.getByRole('heading', { name: source.formName })).toBeVisible();
+  expect(screen.getByRole('textbox', { name: /Blood group/ })).toHaveValue('B+');
+  expect(screen.getByRole('textbox', { name: 'Permanent GR' })).toBeDisabled();
+  expect(snapshotReads).toBe(0);
+  expect(writes).toHaveLength(0);
 });
 
 it('applies mapped and custom edits in one direct audited save, stays in Details and preserves submitted originals', async () => {

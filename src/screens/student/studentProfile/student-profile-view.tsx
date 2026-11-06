@@ -301,7 +301,7 @@ export function StudentProfileView({
                 notificationKey="STU-0764"
                 presentation="toast"
                 severity="error"
-                action={<Button onClick={() => detailsQuery.refetch()}>Retry details</Button>}
+                toastAction={<Button onClick={() => detailsQuery.refetch()}>Retry details</Button>}
               >
                 Student details could not be loaded. Your profile context has been kept.
               </StudentFeedback>
@@ -311,7 +311,7 @@ export function StudentProfileView({
                 notificationKey="STU-0765"
                 presentation="toast"
                 severity="error"
-                action={<Button onClick={() => changes.refetch()}>Retry history</Button>}
+                toastAction={<Button onClick={() => changes.refetch()}>Retry history</Button>}
               >
                 Record change history could not be loaded.
               </StudentFeedback>

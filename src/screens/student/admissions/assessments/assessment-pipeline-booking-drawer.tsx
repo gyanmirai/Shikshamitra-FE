@@ -7,9 +7,9 @@ import { useId, useRef, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import { StudentFeedback } from 'src/components/student-feedback';
+import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 import { useGetAdmissionApplicationQuery } from 'src/redux/student/admissions/admission-applications-api';
 import {
   Box,
@@ -189,7 +189,7 @@ export function AssessmentPipelineBookingDrawer({
     },
   });
   const busy = bookForm.isSubmitting || createForm.isSubmitting;
-  const locked = busy || resourcesLoading;
+  const locked = busy;
   const requestNavigation = (next: 'book' | 'close') => {
     if (locked || submitting.current) return;
     const dirty = next === 'book' ? createForm.dirty : createForm.dirty || bookForm.dirty;
@@ -318,7 +318,7 @@ export function AssessmentPipelineBookingDrawer({
                     notificationKey="STU-0264"
                     presentation="toast"
                     severity="error"
-                    action={
+                    toastAction={
                       <Button
                         size="small"
                         onClick={() => {
@@ -349,7 +349,7 @@ export function AssessmentPipelineBookingDrawer({
                     notificationKey="STU-0265"
                     presentation="toast"
                     severity="error"
-                    action={
+                    toastAction={
                       <Button size="small" onClick={application.refetch}>
                         Retry
                       </Button>
@@ -379,6 +379,7 @@ export function AssessmentPipelineBookingDrawer({
               disabled={
                 !(canBook || (mode === 'create' && canReplayConfirmation)) ||
                 locked ||
+                resourcesLoading ||
                 (mode === 'book'
                   ? !bookingReady
                   : !permissions.manageSessions ||
@@ -392,30 +393,23 @@ export function AssessmentPipelineBookingDrawer({
           </Stack>
         </Box>
       </Drawer>
-      <ConfirmDialog
-        open={!!discard}
-        title="Discard Changes?"
-        content="Your unsaved entries will be lost."
-        onClose={() => setDiscard(null)}
-        action={
-          <Button
-            size="small"
-            variant="contained"
-            color="error"
-            onClick={() => {
-              const next = discard;
-              setDiscard(null);
-              if (next === 'book') {
-                createForm.resetForm();
-                setMode('book');
-                setError('');
-              } else onClose();
-            }}
-          >
-            Discard
-          </Button>
-        }
-      />
+      {discard &&
+        renderUnsavedConfirmation(
+          () => {
+            if (!busy && !submitting.current) setDiscard(null);
+          },
+          () => {
+            if (busy || submitting.current) return;
+            const next = discard;
+            setDiscard(null);
+            if (next === 'book') {
+              createForm.resetForm();
+              setMode('book');
+              setError('');
+            } else onClose();
+          },
+          { busy }
+        )}
     </>
   );
 }

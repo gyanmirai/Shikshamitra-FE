@@ -5,8 +5,11 @@ import { useFormik } from 'formik';
 import { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
+import { LoadingButton } from 'src/components/loading-button';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { FormSectionCard } from 'src/components/form-section-card';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
 import {
   Box,
   Chip,
@@ -25,6 +28,8 @@ import {
   useAddCommunicationTemplateMutation,
   useUpdateCommunicationTemplateMutation,
 } from 'src/redux/communication/notification/notificationTemplateApi';
+
+import { useAdmissionCloseGuard } from './use-admission-close-guard';
 
 type LifecycleEvent = { key: string; label: string; templateLabel: string; description: string };
 type CommunicationTemplate = {
@@ -190,9 +195,8 @@ export function ApplicationExperienceParentCommunication() {
     },
   });
   const saving = addState.isLoading || updateState.isLoading;
-  const close = () => {
-    if (!formik.dirty || window.confirm('Discard the unsaved message changes?')) setSelected(null);
-  };
+  const guard = useAdmissionCloseGuard(formik.dirty, saving, Boolean(selected));
+  const close = () => guard.requestNavigation(() => setSelected(null));
 
   return (
     <Box sx={{ minHeight: 0, overflow: 'auto', pb: 1 }}>
@@ -278,10 +282,13 @@ export function ApplicationExperienceParentCommunication() {
             }}
           >
             <Box sx={{ flex: 1 }}>
-              <Typography variant="h6">{selected?.label}</Typography>
-              <Typography variant="body2" color="text.secondary">
-                Saved and delivered through Communication.
-              </Typography>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <Typography variant="h6">{selected?.label}</Typography>
+                <InfoTooltipIcon
+                  label="Parent message information"
+                  title="Configure the template used by Communication for this admission event. Submitting saves the template."
+                />
+              </Stack>
             </Box>
             <IconButton
               aria-label="Close Message Editor"
@@ -293,74 +300,82 @@ export function ApplicationExperienceParentCommunication() {
             </IconButton>
           </Box>
           <Stack spacing={2} sx={{ p: 2, flex: 1, overflow: 'auto' }}>
-            <ShakingTextField error={Boolean(formik.touched.subject && formik.errors.subject)}>
-              <TextField
-                fullWidth
-                size="small"
-                label="Subject *"
-                {...formik.getFieldProps('subject')}
-                error={Boolean(formik.touched.subject && formik.errors.subject)}
-                helperText={formik.touched.subject && formik.errors.subject}
-              />
-            </ShakingTextField>
-            <ShakingTextField error={Boolean(formik.touched.body && formik.errors.body)}>
-              <TextField
-                fullWidth
-                size="small"
-                multiline
-                minRows={8}
-                label="Message *"
-                {...formik.getFieldProps('body')}
-                error={Boolean(formik.touched.body && formik.errors.body)}
-                helperText={
-                  (formik.touched.body && formik.errors.body) ||
-                  'Use variables such as {{parentName}}, {{studentName}}, and {{applicationNumber}}.'
+            <FormSectionCard
+              title="Message Content"
+              icon="mdi:message-text-outline"
+              descriptionTooltip="Set the subject, message and delivery channels. Variables are filled when Communication sends the message."
+            >
+              <ShakingTextField error={Boolean(formik.touched.subject && formik.errors.subject)}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Subject"
+                  required
+                  {...formik.getFieldProps('subject')}
+                  error={Boolean(formik.touched.subject && formik.errors.subject)}
+                  helperText={formik.touched.subject && formik.errors.subject}
+                />
+              </ShakingTextField>
+              <ShakingTextField error={Boolean(formik.touched.body && formik.errors.body)}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  multiline
+                  minRows={8}
+                  label="Message"
+                  required
+                  {...formik.getFieldProps('body')}
+                  error={Boolean(formik.touched.body && formik.errors.body)}
+                  helperText={
+                    (formik.touched.body && formik.errors.body) ||
+                    'Use variables such as {{parentName}}, {{studentName}}, and {{applicationNumber}}.'
+                  }
+                />
+              </ShakingTextField>
+              <Box>
+                <Typography variant="subtitle2">Delivery Channels</Typography>
+                <Stack direction="row" flexWrap="wrap">
+                  {[
+                    { value: 0, label: 'WhatsApp' },
+                    { value: 1, label: 'SMS' },
+                    { value: 2, label: 'Email' },
+                    { value: 3, label: 'In-App' },
+                  ].map((channel) => (
+                    <FormControlLabel
+                      key={channel.value}
+                      label={channel.label}
+                      control={
+                        <Checkbox
+                          checked={formik.values.channels.includes(channel.value)}
+                          onChange={(_, checked) =>
+                            formik.setFieldValue(
+                              'channels',
+                              checked
+                                ? [...formik.values.channels, channel.value]
+                                : formik.values.channels.filter((value) => value !== channel.value)
+                            )
+                          }
+                        />
+                      }
+                    />
+                  ))}
+                </Stack>
+                {formik.touched.channels && formik.errors.channels && (
+                  <Typography variant="caption" color="error">
+                    {String(formik.errors.channels)}
+                  </Typography>
+                )}
+              </Box>
+              <FormControlLabel
+                label="Use This Message"
+                control={
+                  <Checkbox
+                    checked={formik.values.isActive}
+                    onChange={(_, checked) => formik.setFieldValue('isActive', checked)}
+                  />
                 }
               />
-            </ShakingTextField>
-            <Box>
-              <Typography variant="subtitle2">Delivery Channels</Typography>
-              <Stack direction="row" flexWrap="wrap">
-                {[
-                  { value: 0, label: 'WhatsApp' },
-                  { value: 1, label: 'SMS' },
-                  { value: 2, label: 'Email' },
-                  { value: 3, label: 'In-App' },
-                ].map((channel) => (
-                  <FormControlLabel
-                    key={channel.value}
-                    label={channel.label}
-                    control={
-                      <Checkbox
-                        checked={formik.values.channels.includes(channel.value)}
-                        onChange={(_, checked) =>
-                          formik.setFieldValue(
-                            'channels',
-                            checked
-                              ? [...formik.values.channels, channel.value]
-                              : formik.values.channels.filter((value) => value !== channel.value)
-                          )
-                        }
-                      />
-                    }
-                  />
-                ))}
-              </Stack>
-              {formik.touched.channels && formik.errors.channels && (
-                <Typography variant="caption" color="error">
-                  {String(formik.errors.channels)}
-                </Typography>
-              )}
-            </Box>
-            <FormControlLabel
-              label="Use This Message"
-              control={
-                <Checkbox
-                  checked={formik.values.isActive}
-                  onChange={(_, checked) => formik.setFieldValue('isActive', checked)}
-                />
-              }
-            />
+            </FormSectionCard>
           </Stack>
           <Stack
             direction="row"
@@ -373,22 +388,26 @@ export function ApplicationExperienceParentCommunication() {
               variant="outlined"
               onClick={close}
               disabled={saving}
+              startIcon={<Iconify icon="mdi:close" />}
               sx={{ minHeight: { xs: 44, sm: 36 } }}
             >
               Cancel
             </Button>
-            <Button
+            <LoadingButton
               size="small"
               type="submit"
               variant="contained"
               disabled={saving}
+              loading={saving}
+              startIcon={<Iconify icon="mdi:check" />}
               sx={{ minHeight: { xs: 44, sm: 36 } }}
             >
-              {saving ? 'Saving…' : 'Save Message'}
-            </Button>
+              Submit
+            </LoadingButton>
           </Stack>
         </Box>
       </Drawer>
+      {guard.confirmation}
     </Box>
   );
 }

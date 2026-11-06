@@ -14,6 +14,8 @@ import {
   InputAdornment,
 } from '@mui/material';
 
+import { ADMISSION_DATE_FORMAT } from '../admission-date-formats';
+
 import type { useAdmissionJoiningDate } from './use-admission-joining-date';
 
 export function AdmissionJoiningDateField({
@@ -53,7 +55,7 @@ export function AdmissionJoiningDateField({
       {state.isLocked || !state.canEdit ? (
         <TextField
           label="Actual Joining Date"
-          value={value?.isValid() ? value.format('DD/MM/YYYY') : '—'}
+          value={value?.isValid() ? value.format(ADMISSION_DATE_FORMAT) : '—'}
           fullWidth
           size="small"
           InputProps={{

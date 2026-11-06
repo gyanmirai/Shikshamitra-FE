@@ -20,6 +20,15 @@ const render = (ui: React.ReactElement) =>
     ),
   });
 
+it('allows leaving session setup while the initial options are loading', async () => {
+  const options = props();
+  render(<AssessmentSessionSetupDrawer {...options} resourcesLoading />);
+  expect(screen.getByRole('button', { name: 'Close Session Setup' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled();
+  await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+  expect(options.onClose).toHaveBeenCalledOnce();
+});
+
 vi.mock('src/components/toast', () => ({
   shikshaMitraToast: { error: vi.fn(), warning: vi.fn(), info: vi.fn(), dismiss: vi.fn() },
 }));
@@ -246,7 +255,7 @@ it('requires discard confirmation before closing an edited session', async () =>
   await userEvent.click(screen.getByRole('button', { name: 'Fill session details' }));
   await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
   expect(options.onClose).not.toHaveBeenCalled();
-  await userEvent.click(screen.getByRole('button', { name: 'Discard Changes' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
   expect(options.onClose).toHaveBeenCalledOnce();
 });
 it('does not confirm when permission is revoked while availability is loading', async () => {

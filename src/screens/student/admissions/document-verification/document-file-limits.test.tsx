@@ -14,6 +14,7 @@ import { DocumentActionDialog } from './document-action-dialog';
 vi.hoisted(() => {
   process.env.NEXT_PUBLIC_API_URL = 'http://localhost:5000';
 });
+vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 it('shows and enforces effective catalog restrictions returned for the applicant requirement', async () => {
   renderDocumentUi(
     <DocumentActionDialog

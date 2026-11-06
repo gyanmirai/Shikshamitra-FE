@@ -192,6 +192,19 @@ describe('AdmissionFeeSelectionPanel', () => {
     mocks.confirm.mockReturnValue({ unwrap: mocks.confirmationUnwrap });
     mocks.confirmationUnwrap.mockResolvedValue(selected);
   });
+  it('closes an untouched automatically selected fee structure without a discard warning', async () => {
+    renderPanel();
+    fireEvent.click(screen.getByRole('button', { name: 'Select Fee Structure' }));
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Confirm Fee Structure' })).toBeEnabled()
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(
+      screen.queryByRole('dialog', { name: 'Discard Unsaved Changes?' })
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Select Fee Structure' })).toBeVisible();
+    expect(mocks.save).not.toHaveBeenCalled();
+  });
   it('keeps compact selection, canonical published heads and stage guards visible', () => {
     setRead(selected);
     const onContinue = vi.fn();
@@ -492,6 +505,14 @@ describe('AdmissionFeeSelectionPanel', () => {
   );
 
   it('locks during an actual save and releases the editor after a failed save', async () => {
+    mocks.candidates.mockReturnValue({
+      currentData: [
+        candidate,
+        { ...candidate, structureId: 'structure-2', structureName: 'Alternative fees' },
+      ],
+      isLoading: false,
+      isFetching: false,
+    });
     let rejectSave!: (error: unknown) => void;
     mocks.unwrap.mockReturnValue(
       new Promise((_, reject) => {
@@ -501,6 +522,8 @@ describe('AdmissionFeeSelectionPanel', () => {
     const onEditorStateChange = vi.fn();
     renderPanel({ onEditorStateChange });
     fireEvent.click(screen.getByRole('button', { name: 'Select Fee Structure' }));
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Fee Structure *' }));
+    fireEvent.click(screen.getByRole('option', { name: 'Class one fees · Revision 2' }));
     await waitFor(() =>
       expect(screen.getByRole('combobox', { name: 'Fee Structure *' })).toHaveTextContent(
         'Class one fees'
@@ -734,6 +757,14 @@ describe('AdmissionFeeSelectionPanel', () => {
     );
   });
   it('guards cancellation and signals unsaved application navigation after a selection changes', async () => {
+    mocks.candidates.mockReturnValue({
+      currentData: [
+        candidate,
+        { ...candidate, structureId: 'structure-2', structureName: 'Alternative fees' },
+      ],
+      isLoading: false,
+      isFetching: false,
+    });
     const onEditorStateChange = vi.fn();
     renderPanel({ onEditorStateChange });
     fireEvent.click(screen.getByRole('button', { name: 'Select Fee Structure' }));
@@ -749,7 +780,7 @@ describe('AdmissionFeeSelectionPanel', () => {
     expect(
       await screen.findByRole('dialog', { name: 'Discard Unsaved Changes?' })
     ).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Discard Changes' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
     expect(screen.queryByRole('combobox', { name: 'Fee Structure *' })).not.toBeInTheDocument();
     expect(mocks.save).not.toHaveBeenCalled();
     expect(onEditorStateChange).toHaveBeenLastCalledWith({ dirty: false, busy: false });

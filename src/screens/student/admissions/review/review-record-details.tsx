@@ -5,6 +5,7 @@ import { Chip, Stack, Typography } from '@mui/material';
 
 import { ReviewEvidence } from './review-evidence';
 import { recommendationLabels } from './review-model';
+import { ADMISSION_DATE_TIME_FORMAT } from '../admission-date-formats';
 
 export function ReviewRecordDetails({
   record,
@@ -27,7 +28,7 @@ export function ReviewRecordDetails({
         {record.isStale && <Chip size="small" color="warning" label="Evidence Changed" />}
       </Stack>
       <Typography variant="caption" color="text.secondary">
-        Recorded {dayjs(record.recordedAt).format('DD MMM YYYY, h:mm A')} · By {record.recordedBy}
+        Recorded {dayjs(record.recordedAt).format(ADMISSION_DATE_TIME_FORMAT)} · By {record.recordedBy}
       </Typography>
       {record.recommendation && (
         <Typography variant="body2">
@@ -53,7 +54,7 @@ export function ReviewRecordDetails({
       ))}
       <Typography variant="body2" color="text.secondary">
         Assigned To {record.assignedReviewerName || 'Unassigned'} ·{' '}
-        {record.dueAt ? `Due ${dayjs(record.dueAt).format('DD MMM YYYY, h:mm A')}` : 'No Deadline'}
+        {record.dueAt ? `Due ${dayjs(record.dueAt).format(ADMISSION_DATE_TIME_FORMAT)}` : 'No Deadline'}
       </Typography>
       {record.decision && (
         <Stack spacing={0.5} sx={{ borderLeft: 3, borderColor: 'primary.main', pl: 1.5 }}>
@@ -68,7 +69,7 @@ export function ReviewRecordDetails({
                   : 'Waitlisted'}
           </Typography>
           <Typography variant="caption">
-            {dayjs(record.decision.decidedAt).format('DD MMM YYYY, h:mm A')} · By{' '}
+            {dayjs(record.decision.decidedAt).format(ADMISSION_DATE_TIME_FORMAT)} · By{' '}
             {record.decision.decidedBy}
           </Typography>
           {record.decision.reason && (

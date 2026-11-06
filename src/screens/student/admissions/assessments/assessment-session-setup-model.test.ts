@@ -235,7 +235,7 @@ describe('shared assessment session setup', () => {
       rooms,
       0
     );
-    expect(dated.name).toContain('20 Oct 2026');
+    expect(dated.name).toContain('20/10/2026');
     const manual = updateSessionSetupValues(
       dated,
       'name',

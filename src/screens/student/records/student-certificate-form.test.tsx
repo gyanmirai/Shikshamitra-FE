@@ -2,9 +2,11 @@ import type { StudentDirectoryItem } from 'src/redux/student/records/student-rec
 
 import { it, vi, expect, beforeEach } from 'vitest';
 import userEvent from '@testing-library/user-event';
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import StudentCertificateForm from './student-certificate-form';
+
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
 const mocks = vi.hoisted(() => ({
   preview: vi.fn(),
@@ -41,6 +43,132 @@ const students: StudentDirectoryItem[] = [
     hasPhoto: false,
   },
 ];
+
+it('keeps a changed certificate purpose on Cancel until the user discards it', async () => {
+  render(
+    <StudentCertificateForm
+      certificateType={2}
+      certificateLabel="Character"
+      onClose={mocks.close}
+      onGenerated={mocks.generated}
+    />
+  );
+  fireEvent.change(screen.getByRole('textbox', { name: 'Purpose / reason' }), {
+    target: { value: 'School transfer' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+  expect(mocks.close).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
+  expect(screen.getByRole('textbox', { name: 'Purpose / reason' })).toHaveValue('School transfer');
+  fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
+  expect(mocks.close).toHaveBeenCalledTimes(1);
+});
+
+it('closes a clean certificate form without a discard prompt', async () => {
+  const user = userEvent.setup();
+  render(
+    <StudentCertificateForm
+      certificateType={1}
+      certificateLabel="Bonafide"
+      onClose={mocks.close}
+      onGenerated={mocks.generated}
+    />
+  );
+  await user.click(screen.getByRole('button', { name: 'Cancel' }));
+  expect(mocks.close).toHaveBeenCalledTimes(1);
+  expect(screen.queryByRole('button', { name: 'Discard changes' })).not.toBeInTheDocument();
+});
+
+it('lets staff close a pending preview and ignores its result after another preview starts', async () => {
+  let finishOld: (value: unknown) => void = () => {};
+  mocks.preview.mockImplementationOnce(
+    () =>
+      new Promise((resolve) => {
+        finishOld = resolve;
+      })
+  );
+  render(
+    <StudentCertificateForm
+      certificateType={1}
+      certificateLabel="Bonafide"
+      academicYearId="year-1"
+      initialStudents={[
+        {
+          ...students[0],
+          academicYearId: 'year-1',
+          academicMediumId: 'medium-1',
+          standardId: 'class-1',
+          divisionId: 'division-1',
+        },
+      ]}
+      onClose={mocks.close}
+      onGenerated={mocks.generated}
+    />
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
+  await waitFor(() => expect(mocks.preview).toHaveBeenCalledTimes(1));
+  const preview = screen.getByRole('dialog', { name: 'Bonafide Certificate Preview' });
+  expect(within(preview).getByRole('button', { name: 'Close' })).toBeEnabled();
+  fireEvent.click(within(preview).getByRole('button', { name: 'Close' }));
+  expect(
+    screen.queryByRole('dialog', { name: 'Bonafide Certificate Preview' })
+  ).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
+  await waitFor(() => expect(mocks.preview).toHaveBeenCalledTimes(2));
+  await waitFor(() => expect(screen.getByText('Bonafide certificate')).toBeInTheDocument());
+  await act(async () =>
+    finishOld({
+      certificateNo: 'OLD',
+      issueDate: '2026-11-05',
+      student: { studentName: 'Stale student' },
+      template: { renderedHeaderContent: 'Old preview', renderedFooterContent: '' },
+      certificateData: {},
+    })
+  );
+  expect(screen.queryByText('Old preview')).not.toBeInTheDocument();
+  expect(screen.getByText('Bonafide certificate')).toBeInTheDocument();
+});
+
+it('keeps the preview and form locked until certificate generation finishes', async () => {
+  let finishIssue: () => void = () => {};
+  mocks.issue.mockImplementationOnce(
+    () =>
+      new Promise<void>((resolve) => {
+        finishIssue = resolve;
+      })
+  );
+  render(
+    <StudentCertificateForm
+      certificateType={1}
+      certificateLabel="Bonafide"
+      academicYearId="year-1"
+      initialStudents={[
+        {
+          ...students[0],
+          academicYearId: 'year-1',
+          academicMediumId: 'medium-1',
+          standardId: 'class-1',
+          divisionId: 'division-1',
+        },
+      ]}
+      onClose={mocks.close}
+      onGenerated={mocks.generated}
+    />
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
+  await waitFor(() => expect(mocks.preview).toHaveBeenCalledTimes(1));
+  await waitFor(() =>
+    expect(screen.getByRole('button', { name: 'Generate certificates (1)' })).toBeEnabled()
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Generate certificates (1)' }));
+  await waitFor(() => expect(mocks.issue).toHaveBeenCalledTimes(1));
+  expect(screen.getByRole('button', { name: 'Close' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
+  expect(mocks.close).not.toHaveBeenCalled();
+  await act(async () => finishIssue());
+  expect(mocks.close).toHaveBeenCalledTimes(1);
+});
 
 it('keeps School level, defaults to All Classes and scopes Division after class selection', async () => {
   const user = userEvent.setup();

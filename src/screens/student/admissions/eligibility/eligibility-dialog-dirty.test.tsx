@@ -40,13 +40,15 @@ it('confirms discarding an exception reason without clearing the parent applicat
   await user.click(dialog.getByLabelText('Reason *'));
   await user.paste('Preserve my explanation until I choose to discard it.');
   await user.click(dialog.getByRole('button', { name: 'Cancel' }));
-  expect(confirm).toHaveBeenCalledOnce();
+  expect(confirm).not.toHaveBeenCalled();
+  await user.click(screen.getByRole('button', { name: 'Keep editing' }));
   expect(dialog.getByLabelText('Reason *')).toHaveValue(
     'Preserve my explanation until I choose to discard it.'
   );
   expect(store.getState().confirmPopup.isChanges).toBe(true);
   await user.click(dialog.getByRole('button', { name: 'Cancel' }));
+  await user.click(screen.getByRole('button', { name: 'Discard changes' }));
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-  expect(confirm).toHaveBeenCalledTimes(2);
+  expect(confirm).not.toHaveBeenCalled();
   expect(store.getState().confirmPopup.isChanges).toBe(true);
 }, 15000);

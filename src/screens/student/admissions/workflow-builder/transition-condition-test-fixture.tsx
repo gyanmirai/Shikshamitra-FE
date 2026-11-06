@@ -47,6 +47,7 @@ const otherForm = {
 };
 export function renderConditionRoute(conditionRuleJson?: string, readOnly = false) {
   const onSave = vi.fn();
+  const onClose = vi.fn();
   render(
     <ThemeProvider theme={createTheme(defaultSettings)}>
       <AdmissionWorkflowTransitionDrawer
@@ -61,10 +62,10 @@ export function renderConditionRoute(conditionRuleJson?: string, readOnly = fals
           isDefault: !conditionRuleJson,
           conditionRuleJson,
         }}
-        onClose={vi.fn()}
+        onClose={onClose}
         onSave={onSave}
       />
     </ThemeProvider>
   );
-  return { onSave };
+  return { onSave, onClose };
 }

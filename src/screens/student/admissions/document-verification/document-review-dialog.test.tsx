@@ -17,6 +17,7 @@ import { documentStage, renderDocumentUi } from './document-ui-test-fixture';
 vi.hoisted(() => {
   process.env.NEXT_PUBLIC_API_URL = 'http://localhost:5000';
 });
+vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 
 function reviewSummary() {
   return {

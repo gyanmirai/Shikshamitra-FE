@@ -13,6 +13,7 @@ import { Box, Stack, Button, Divider, MenuItem, Typography } from '@mui/material
 import { AssessmentResultEntry } from './assessment-result-entry';
 import { formatAssessmentSchedule } from './assessment-date-time';
 import { assessmentActionLabels } from './assessment-action-model';
+import { ADMISSION_DATE_TIME_FORMAT } from '../admission-date-formats';
 import { useAssessmentPermissions } from './use-assessment-permissions';
 import { AssessmentSubjectScoreHistory } from './assessment-subject-score-history';
 
@@ -284,7 +285,7 @@ export function AssessmentAttemptCard({
             )}
             {attempt.reviewedAt && (
               <Typography variant="caption" color="text.secondary">
-                Reviewed {fDateTime(attempt.reviewedAt)}
+                Reviewed {fDateTime(attempt.reviewedAt, ADMISSION_DATE_TIME_FORMAT)}
               </Typography>
             )}
           </Stack>

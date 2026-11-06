@@ -12,6 +12,7 @@ import { DialogScrollContent } from 'src/components/customDialog';
 import { Stack, Button, Checkbox, TextField, DialogActions, FormControlLabel } from '@mui/material';
 
 import { ReviewDialog } from '../review/review-dialog';
+import { ADMISSION_DATE_TIME_FORMAT } from '../admission-date-formats';
 
 export type OfferAction = 'issue' | 'accept' | 'decline' | 'extend' | 'withdraw' | 'reissue' | null;
 export type OfferActionValue = {
@@ -144,6 +145,7 @@ function OfferActionForm({
             <ShakingTextField error={Boolean(formik.touched.expiresAt && formik.errors.expiresAt)}>
               <DateTimePicker
                 label="Offer Expiry"
+                format={ADMISSION_DATE_TIME_FORMAT}
                 value={formik.values.expiresAt ? dayjs(formik.values.expiresAt) : null}
                 minDateTime={dayjs()}
                 onChange={(value) =>

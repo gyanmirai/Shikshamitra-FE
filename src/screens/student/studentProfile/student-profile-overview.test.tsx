@@ -5,7 +5,7 @@ import { mswServer } from 'src/test/mswServer';
 import { http, delay, HttpResponse } from 'msw';
 import userEvent from '@testing-library/user-event';
 import { shikshaMitraToast } from 'src/components/toast';
-import { screen, within, waitFor } from '@testing-library/react';
+import { act, screen, within, waitFor } from '@testing-library/react';
 
 import { profileOverviewContacts } from './student-profile-overview-model';
 import {
@@ -14,6 +14,7 @@ import {
   profileStudentId,
   profileDetailsPath,
   renderStudentProfile,
+  renderProfileToastAction,
 } from './student-profile-test-fixture';
 
 vi.hoisted(() => {
@@ -115,10 +116,11 @@ it('renders the approved overview with actual saved contacts and retains detail/
   );
   renderStudentProfile();
   expect(await screen.findByText('guardian@example.test')).toBeVisible();
+  expect(screen.getByText('Date of birth').nextElementSibling).toHaveTextContent('01/04/2016');
   expect(screen.getByRole('region', { name: 'Academic context' })).toHaveTextContent(
     'Approved historical entry'
   );
-  expect(screen.getByRole('heading', { name: 'Record activity' })).toBeVisible();
+  expect(screen.getByRole('heading', { name: 'Record Activity' })).toBeVisible();
   expect(screen.getAllByText('Meera Patel')).toHaveLength(2);
   expect(screen.queryByText('student@example.test')).not.toBeInTheDocument();
   expect(
@@ -132,6 +134,41 @@ it('renders the approved overview with actual saved contacts and retains detail/
   );
   await userEvent.click(screen.getByRole('link', { name: 'View All Details' }));
   expect(await screen.findByText('No Registration form available')).toBeVisible();
+});
+
+it('explains each saved overview section through keyboard-accessible help without changing student context', async () => {
+  mswServer.use(
+    http.get(profilePath, () => HttpResponse.json({ data: studentProfile })),
+    http.get(profileDetailsPath, () => HttpResponse.json({ data: details }))
+  );
+  renderStudentProfile();
+  await screen.findByText('guardian@example.test');
+  const overview = screen.getByRole('tab', { name: 'Overview' });
+  const user = userEvent.setup();
+  const sections = [
+    ['Student Details', 'Saved date of birth, age and gender for this student.'],
+    ['Parents & Contact', 'Saved parents, optional other guardian and the main school contact.'],
+    ['Record Activity', 'Linked admission and onboarding milestones'],
+    [
+      'Admission & Onboarding',
+      'Saved admission, enrollment activation and portal credential status',
+    ],
+    ['Recent Changes', 'The three most recent student record changes'],
+  ] as const;
+  await sections.reduce(async (previous, [title, explanation]) => {
+    await previous;
+    expect(screen.getByRole('heading', { name: title })).toBeVisible();
+    const help = screen.getByRole('button', { name: `${title} information` });
+    await user.keyboard('{Tab}');
+    act(() => help.focus());
+    expect(help).toHaveFocus();
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(explanation);
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('tooltip')).not.toBeInTheDocument());
+  }, Promise.resolve());
+  expect(screen.getByRole('tab', { name: 'Overview' })).toBe(overview);
+  expect(screen.getByText('Date of birth').nextElementSibling).toHaveTextContent('01/04/2016');
+  expect(screen.getByText('guardian@example.test')).toBeVisible();
 });
 
 it('keeps a missing source and absent contact values empty instead of inventing historical or family data', async () => {
@@ -158,7 +195,7 @@ it('keeps the profile context and shows a contact skeleton while saved details a
   expect(await screen.findByText('guardian@example.test')).toBeVisible();
 });
 
-it('reports a failed contact read through the standard toast and recovers on normal profile reload', async () => {
+it('reports a failed contact read through the standard toast and retries without replacing the current profile', async () => {
   let reads = 0;
   const toast = vi.spyOn(shikshaMitraToast, 'error');
   mswServer.use(
@@ -170,7 +207,7 @@ it('reports a failed contact read through the standard toast and recovers on nor
         : HttpResponse.json({ data: details });
     })
   );
-  const profile = renderStudentProfile();
+  renderStudentProfile();
   try {
     await waitFor(() =>
       expect(toast).toHaveBeenCalledWith(
@@ -186,10 +223,19 @@ it('reports a failed contact read through the standard toast and recovers on nor
     ).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Retry details' })).not.toBeInTheDocument();
     expect(screen.queryByText('guardian@example.test')).not.toBeInTheDocument();
-    profile.unmount();
-    renderStudentProfile();
+    const overview = screen.getByRole('tab', { name: 'Overview' });
+    const notice = toast.mock.calls.findLast(
+      ([options]) =>
+        options.message ===
+        'Student details could not be loaded. Your profile context has been kept.'
+    )?.[0];
+    const recovery = renderProfileToastAction(notice);
+    await userEvent.click(
+      within(recovery.container).getByRole('button', { name: 'Retry details' })
+    );
     expect(await screen.findByText('guardian@example.test')).toBeVisible();
     expect(reads).toBe(2);
+    expect(screen.getByRole('tab', { name: 'Overview' })).toBe(overview);
   } finally {
     toast.mockRestore();
   }
@@ -199,7 +245,7 @@ it('retains the restricted history message without a false empty state or a hist
   mswServer.use(http.get(profilePath, () => HttpResponse.json({ data: studentProfile })));
   renderStudentProfile();
   await screen.findByText('Aanya Patel');
-  const activity = screen.getByRole('heading', { name: 'Record activity' }).closest('section')!;
+  const activity = screen.getByRole('heading', { name: 'Record Activity' }).closest('section')!;
   expect(
     within(activity).getByText('Record change history is not available with your current access.')
   ).toBeVisible();

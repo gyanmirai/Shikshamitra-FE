@@ -53,7 +53,7 @@ export function WorkflowRowActions({
   onPublish,
 }: Props) {
   const isMobile = useResponsive('down', 'sm');
-  const directActionLimit = 3;
+  const directActionLimit = 2;
   const actions: AdaptiveThreeDotsAction[] = [];
   const showPublish = Boolean(canPublish && isAdmissionWorkflowPublishable(workflow.status));
   const deleteAction: AdaptiveThreeDotsAction = {
@@ -127,7 +127,7 @@ export function WorkflowRowActions({
       placement="right-top"
       moreLabel={`Actions For ${workflow.name}`}
       directActionLimit={directActionLimit}
-      mobileDirectActionLimit={showPublish ? 1 : 0}
+      collapseOnOverflow={false}
       sx={{
         justifyContent: 'flex-end',
         gap: 0,

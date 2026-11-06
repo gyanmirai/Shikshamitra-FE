@@ -38,12 +38,12 @@ export default function RollOrderingFields({
       selected: value.grouping ?? 'mixed',
       options: rollGroupingOptions,
     },
-    { name: 'arrangeBy', label: 'Sort By', selected: field, options: rollSortOptions },
+    { name: 'arrangeBy', label: 'Sort by', selected: field, options: rollSortOptions },
     ...(field === 'studentName'
       ? [
           {
             name: 'nameFormat',
-            label: 'Name Format',
+            label: 'Name format',
             selected: value.nameFormat ?? 'first-name-first',
             options: [
               { value: 'first-name-first', label: 'First Name First' },
@@ -54,7 +54,7 @@ export default function RollOrderingFields({
       : []),
     {
       name: 'arrangeType',
-      label: 'Sort Direction',
+      label: 'Sort direction',
       selected: direction,
       options: [
         {

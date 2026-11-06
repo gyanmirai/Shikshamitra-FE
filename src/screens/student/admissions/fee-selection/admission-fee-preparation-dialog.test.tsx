@@ -10,6 +10,8 @@ import { screen, cleanup, waitFor, fireEvent, render as renderUi } from '@testin
 
 import { AdmissionFeePreparationDialog } from './admission-fee-preparation-dialog';
 
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
+
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span aria-hidden /> }));
 
 const createStore = () =>
@@ -42,6 +44,33 @@ const head: AssignmentHead = {
   verification: 'Amount required',
 };
 
+it('retains entered variable amounts until the user explicitly discards them', () => {
+  const close = vi.fn();
+  const submit = vi.fn();
+  render(
+    <AdmissionFeePreparationDialog
+      applicantName="Kabir Shah"
+      heads={[head]}
+      busy={false}
+      onClose={close}
+      onSubmit={submit}
+    />
+  );
+  fireEvent.change(screen.getByRole('textbox', { name: /Transport total for term coverage/ }), {
+    target: { value: '2500.15' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+  expect(close).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
+  expect(screen.getByRole('textbox', { name: /Transport total for term coverage/ })).toHaveValue(
+    '₹ 2,500.15'
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
+  expect(close).toHaveBeenCalledOnce();
+  expect(submit).not.toHaveBeenCalled();
+});
+
 it('does not prepare unpriced variable fees or silently substitute zero', async () => {
   const onSubmit = vi.fn();
   render(
@@ -53,7 +82,7 @@ it('does not prepare unpriced variable fees or silently substitute zero', async 
       onSubmit={onSubmit}
     />
   );
-  fireEvent.click(screen.getByRole('button', { name: 'Continue to Collection' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Continue to collection' }));
   await screen.findByText('Enter the total fee for this Fee Head.');
   expect(onSubmit).not.toHaveBeenCalled();
 });
@@ -69,16 +98,16 @@ it('uses Finance decimal input and requires a reason for a zero amount', async (
       onSubmit={onSubmit}
     />
   );
-  fireEvent.change(screen.getByRole('textbox', { name: /Transport Total for Term Coverage/ }), {
+  fireEvent.change(screen.getByRole('textbox', { name: /Transport total for term coverage/ }), {
     target: { value: '0' },
   });
-  fireEvent.click(screen.getByRole('button', { name: 'Continue to Collection' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Continue to collection' }));
   await screen.findByText('Explain why this fee amount is zero.');
   expect(onSubmit).not.toHaveBeenCalled();
-  fireEvent.change(screen.getByRole('textbox', { name: /Reason for Zero Transport Amount/ }), {
+  fireEvent.change(screen.getByRole('textbox', { name: /Reason for zero Transport amount/ }), {
     target: { value: 'Not using transport this term' },
   });
-  fireEvent.click(screen.getByRole('button', { name: 'Continue to Collection' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Continue to collection' }));
   await waitFor(() =>
     expect(onSubmit).toHaveBeenCalledWith([
       { feeHeadId: 'transport', amount: 0, zeroAmountReason: 'Not using transport this term' },
@@ -99,15 +128,15 @@ it('preserves entered amounts when Finance rejects preparation', async () => {
       onSubmit={onSubmit}
     />
   );
-  fireEvent.change(screen.getByRole('textbox', { name: /Transport Total for Term Coverage/ }), {
+  fireEvent.change(screen.getByRole('textbox', { name: /Transport total for term coverage/ }), {
     target: { value: '2500.15' },
   });
-  fireEvent.click(screen.getByRole('button', { name: 'Continue to Collection' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Continue to collection' }));
   await screen.findByText('Finance configuration changed. Refresh before preparing.');
   expect(onSubmit).toHaveBeenCalledWith([
     { feeHeadId: 'transport', amount: 2500.15, zeroAmountReason: undefined },
   ]);
-  expect(screen.getByRole('textbox', { name: /Transport Total for Term Coverage/ })).toHaveValue(
+  expect(screen.getByRole('textbox', { name: /Transport total for term coverage/ })).toHaveValue(
     '₹ 2,500.15'
   );
 });

@@ -2,14 +2,17 @@ import type { EligibilitySummary } from 'src/redux/student/admissions/admission-
 
 import { useState } from 'react';
 import { useFormik } from 'formik';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
+import { DialogScrollContent } from 'src/components/customDialog';
+import { FormSectionCard } from 'src/components/form-section-card';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
 
+import { ReviewDialog } from '../review/review-dialog';
 import { EligibilityActionContext } from './eligibility-action-context';
 import {
   eligibilityActionLabels,
@@ -52,19 +55,46 @@ export function EligibilityActionDialog({
       }
     },
   });
-  const cancel = () => {
-    if (!formik.dirty || window.confirm('You have unsaved changes. Do you want to discard them?'))
-      onClose();
-  };
   const hasError = Boolean(formik.touched.reason && formik.errors.reason);
   return (
-    <CustomDialog
+    <ReviewDialog
       open
       title={eligibilityActionLabels[action]}
+      titleInfo={eligibilityActionDescriptions[action]}
       maxWidth="sm"
-      handleClose={onClose}
-      guardUnsavedChanges={formik.dirty}
-      disableClose={formik.isSubmitting}
+      onClose={onClose}
+      dirty={formik.dirty}
+      busy={formik.isSubmitting}
+      formProps={{
+        noValidate: true,
+        onSubmit: (event) => {
+          event.preventDefault();
+          formik.handleSubmit();
+        },
+      }}
+      actions={(requestClose) => (
+        <DialogActions>
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={requestClose}
+            disabled={formik.isSubmitting}
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          >
+            Cancel
+          </Button>
+          <Button
+            size="small"
+            type="submit"
+            variant="contained"
+            disabled={formik.isSubmitting}
+            loading={formik.isSubmitting}
+            startIcon={<Iconify icon={GlobalIcons.submit} />}
+          >
+            {eligibilityActionLabels[action]}
+          </Button>
+        </DialogActions>
+      )}
     >
       <DialogScrollContent>
         <Stack spacing={2}>
@@ -73,47 +103,37 @@ export function EligibilityActionDialog({
               {error}
             </StudentFeedback>
           )}
-          <Typography variant="body2">{eligibilityActionDescriptions[action]}</Typography>
-          {action !== 'evaluate' && (
-            <EligibilityActionContext summary={summary} exceptionId={exceptionId} />
-          )}
-          {action !== 'evaluate' && (
-            <ShakingTextField error={hasError}>
-              <TextField
-                size="small"
-                fullWidth
-                multiline
-                minRows={3}
-                label="Reason *"
-                {...formik.getFieldProps('reason')}
-                error={hasError}
-                helperText={formik.touched.reason && formik.errors.reason}
-                disabled={formik.isSubmitting}
-              />
-            </ShakingTextField>
-          )}
+          <FormSectionCard
+            title="Eligibility Decision"
+            icon={GlobalIcons.notebook}
+            descriptionTooltip={eligibilityActionDescriptions[action]}
+            titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+          >
+            <Stack spacing={2}>
+              <Typography variant="body2">{eligibilityActionDescriptions[action]}</Typography>
+              {action !== 'evaluate' && (
+                <EligibilityActionContext summary={summary} exceptionId={exceptionId} />
+              )}
+              {action !== 'evaluate' && (
+                <ShakingTextField error={hasError}>
+                  <TextField
+                    size="small"
+                    fullWidth
+                    multiline
+                    minRows={3}
+                    label="Reason"
+                    required
+                    {...formik.getFieldProps('reason')}
+                    error={hasError}
+                    helperText={formik.touched.reason && formik.errors.reason}
+                    disabled={formik.isSubmitting}
+                  />
+                </ShakingTextField>
+              )}
+            </Stack>
+          </FormSectionCard>
         </Stack>
       </DialogScrollContent>
-      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-        <Button
-          size="small"
-          variant="outlined"
-          onClick={cancel}
-          disabled={formik.isSubmitting}
-          startIcon={<Iconify icon="mdi:close" />}
-        >
-          Cancel
-        </Button>
-        <Button
-          size="small"
-          variant="contained"
-          disabled={formik.isSubmitting}
-          onClick={() => formik.handleSubmit()}
-          startIcon={<Iconify icon="mdi:content-save-outline" />}
-        >
-          {formik.isSubmitting ? 'Saving…' : eligibilityActionLabels[action]}
-        </Button>
-      </DialogActions>
-    </CustomDialog>
+    </ReviewDialog>
   );
 }

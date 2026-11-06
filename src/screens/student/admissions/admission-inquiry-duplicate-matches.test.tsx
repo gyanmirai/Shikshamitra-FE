@@ -369,3 +369,8 @@ it('locks the disclosed reason and all family actions while the owner is saving'
     expect(screen.getByRole('button', { name })).toBeDisabled();
   });
 });
+
+it('shows duplicate-match birth dates in the Admissions calendar format', () => {
+ render(<AdmissionInquiryDuplicateMatches matches={[{...match,dateOfBirth:'2016-04-05'}]} guardianPhone="9876543210" parentRelationship="father" busy={false} onUseExisting={vi.fn()} onOpenExisting={vi.fn()} onCreateSeparate={vi.fn()} overrideReason="" onOverrideReasonChange={vi.fn()} />);
+ expect(screen.getByText(/DOB:/)).toHaveTextContent('DOB: 05/04/2016');
+});

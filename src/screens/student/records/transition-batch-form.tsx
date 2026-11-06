@@ -139,7 +139,7 @@ function TargetPlacement({
           notificationKey="STU-0917"
           presentation="toast"
           severity="error"
-          action={
+          toastAction={
             <Button color="inherit" onClick={() => options.refetch()}>
               Retry
             </Button>
@@ -370,7 +370,7 @@ export default function TransitionBatchForm({ onSubmitted }: { onSubmitted: () =
           notificationKey="STU-0921"
           presentation="toast"
           severity="error"
-          action={
+          toastAction={
             <Button color="inherit" onClick={() => options.refetch()}>
               Retry
             </Button>
@@ -391,6 +391,7 @@ export default function TransitionBatchForm({ onSubmitted }: { onSubmitted: () =
         isLoading={options.isLoading}
       />
       <RecordsStudentPicker
+        toastRecovery
         onSelect={addStudent}
         disabled={busy || form.values.items.length >= 100}
       />

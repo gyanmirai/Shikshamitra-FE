@@ -8,7 +8,6 @@ import { Iconify } from 'src/components/iconify';
 import CustomUpload from 'src/components/custom-upload';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
-import { FormSectionCard } from 'src/components/form-section-card';
 import { Box, Stack, TextField, FormLabel, Typography, FormControl } from '@mui/material';
 
 import { documentActionSchema } from './document-action-model';
@@ -58,11 +57,7 @@ export function DocumentActionFields({
                 : ''}
             </StudentFeedback>
           )}
-          <FormSectionCard
-            title="Attachments"
-            icon={GlobalIcons.documentIcon}
-            descriptionTooltip="Select One Document for This Requirement. It Is Uploaded When You Submit."
-          >
+          <Stack spacing={2}>
             <Stack direction="row" spacing={1} alignItems="flex-start">
               <Iconify icon={GlobalIcons.upload} width={20} sx={{ color: 'text.secondary' }} />
               <Box>
@@ -113,7 +108,7 @@ export function DocumentActionFields({
                 />
               </FormControl>
             </ShakingTextField>
-          </FormSectionCard>
+          </Stack>
         </>
       )}
       {original && (

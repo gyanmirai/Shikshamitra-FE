@@ -18,6 +18,8 @@ import { useLazyGetAdmissionCyclesQuery } from 'src/redux/student/admissions/adm
 import { useGetAdmissionOfferingClassIdentitiesQuery } from 'src/redux/student/admissions/admission-offerings-api';
 
 import { AdmissionDialogTitle } from './admission-dialog-title';
+import { ADMISSION_DATE_FORMAT } from './admission-date-formats';
+import { useAdmissionCloseGuard } from './use-admission-close-guard';
 import { useBulkAdmissionOffering } from './use-bulk-admission-offering';
 import { BulkAdmissionHierarchyFields } from './bulk-admission-hierarchy-fields';
 import { BulkAdmissionOfferingPreview } from './bulk-admission-offering-preview';
@@ -45,7 +47,7 @@ type Props = {
 const STEPS = ['Select & Configure', 'Preview'];
 const NO_STANDARDS: Standards[] = [];
 const cycleLabel = (cycle: AdmissionCycle) =>
-  `${cycle.name} · ${cycle.academicYearName} · ${formatDateOnly(cycle.startDate, 'DD MMM YYYY')} – ${formatDateOnly(cycle.endDate, 'DD MMM YYYY')}`;
+  `${cycle.name} · ${cycle.academicYearName} · ${formatDateOnly(cycle.startDate, ADMISSION_DATE_FORMAT)} – ${formatDateOnly(cycle.endDate, ADMISSION_DATE_FORMAT)}`;
 
 export function BulkAdmissionOfferingDialog({
   open,
@@ -56,6 +58,7 @@ export function BulkAdmissionOfferingDialog({
 }: Props) {
   const [activeStep, setActiveStep] = useState(0);
   const [classesReady, setClassesReady] = useState(true);
+  const [dirty, setDirty] = useState(false);
   const formikRef = useRef<FormikProps<BulkOfferingValues> | null>(null);
   const bulk = useBulkAdmissionOffering(cycle, open, onCreated ?? onClose);
   const [loadCycles, cyclesQuery] = useLazyGetAdmissionCyclesQuery();
@@ -89,15 +92,8 @@ export function BulkAdmissionOfferingDialog({
   const [initialValues] = useState(() => ({ ...bulkOfferingInitialValues, admissionCycle: cycle }));
   const selectedCount = bulk.preview?.items.length ?? 0;
 
-  const requestClose = () => {
-    if (bulk.loading) return;
-    if (
-      formikRef.current?.dirty &&
-      !window.confirm('You have unsaved changes. Do you want to discard them?')
-    )
-      return;
-    onClose();
-  };
+  const guard = useAdmissionCloseGuard(dirty, bulk.loading, open);
+  const requestClose = () => guard.requestNavigation(onClose);
 
   const handleNext = async (
     _isLastStep: boolean,
@@ -209,6 +205,7 @@ export function BulkAdmissionOfferingDialog({
                   retryCycles={() => setCycleOptionsRevision((revision) => revision + 1)}
                   bulk={bulk}
                   onClassesReadyChange={setClassesReady}
+                  onDirtyChange={setDirty}
                   onEdit={() => {
                     if (!bulk.loading) setActiveStep(0);
                   }}
@@ -218,6 +215,7 @@ export function BulkAdmissionOfferingDialog({
           }}
         />
       </Box>
+      {guard.confirmation}
     </Drawer>
   );
 }
@@ -236,6 +234,7 @@ function BulkAdmissionOfferingStep({
   retryCycles,
   bulk,
   onClassesReadyChange,
+  onDirtyChange,
   onEdit,
 }: {
   open: boolean;
@@ -252,11 +251,13 @@ function BulkAdmissionOfferingStep({
   retryCycles: () => void;
   bulk: BulkState;
   onClassesReadyChange: (ready: boolean) => void;
+  onDirtyChange: (dirty: boolean) => void;
   onEdit: () => void;
 }) {
   const standardsQuery = useGetClassByMediumQuery(formik.values.mediumId, {
     skip: !formik.values.mediumId,
   });
+  useEffect(() => onDirtyChange(formik.dirty), [formik.dirty, onDirtyChange]);
   const standards = (standardsQuery.currentData ?? NO_STANDARDS) as Standards[];
   const canCheckClasses = Boolean(
     open && formik.values.admissionCycle && formik.values.boardId && formik.values.mediumId
@@ -426,7 +427,7 @@ function BulkAdmissionOfferingStep({
                 notificationKey="STU-0297"
                 presentation="toast"
                 severity="error"
-                action={
+                toastAction={
                   <Button color="inherit" size="small" onClick={retryCycles}>
                     Retry
                   </Button>
@@ -440,7 +441,7 @@ function BulkAdmissionOfferingStep({
                 notificationKey="STU-0298"
                 presentation="toast"
                 severity="error"
-                action={
+                toastAction={
                   <Button color="inherit" size="small" onClick={bulk.retryHierarchy}>
                     Retry
                   </Button>
@@ -459,7 +460,7 @@ function BulkAdmissionOfferingStep({
                 notificationKey="STU-0300"
                 presentation="toast"
                 severity="error"
-                action={
+                toastAction={
                   <Button color="inherit" size="small" onClick={() => standardsQuery.refetch()}>
                     Retry
                   </Button>

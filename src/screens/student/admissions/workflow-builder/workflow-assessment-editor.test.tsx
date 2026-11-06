@@ -172,8 +172,12 @@ describe('combined assessment setup', { timeout: 15000 }, () => {
   });
   it('keeps all published settings read-only', async () => {
     await setup(JSON.stringify({ assessment: DEFAULT_ASSESSMENT_POLICY }), true);
-    screen.getAllByRole('switch').forEach((option) => expect(option).toBeDisabled());
-    expect(screen.getByRole('spinbutton', { name: 'Total Marks *' })).toBeDisabled();
+    expect(screen.queryByRole('switch')).not.toBeInTheDocument();
+    expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument();
+    expect(screen.getByText('Total marks', { selector: 'dt' })).toBeVisible();
+    expect(
+      screen.getByText(String(DEFAULT_ASSESSMENT_POLICY.totalMarks), { selector: 'dd' })
+    ).toBeVisible();
     expect(screen.queryByRole('button', { name: 'Apply Changes' })).not.toBeInTheDocument();
   });
 });

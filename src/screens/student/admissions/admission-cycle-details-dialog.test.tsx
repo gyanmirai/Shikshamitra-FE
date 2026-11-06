@@ -116,8 +116,8 @@ describe('Admission cycle details dialog', () => {
 
     expect(screen.getByRole('dialog', { name: 'Admission Period Details' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Regular Admission' })).toBeInTheDocument();
-    expect(screen.getByText('28 Sep 2026')).toBeInTheDocument();
-    expect(screen.getByText('30 Sep 2026')).toBeInTheDocument();
+    expect(screen.getByText('28/09/2026')).toBeInTheDocument();
+    expect(screen.getByText('30/09/2026')).toBeInTheDocument();
     expect(screen.getByText('Submitted')).toBeInTheDocument();
     expect(screen.getByText('Admission cycle published.')).toBeInTheDocument();
   });

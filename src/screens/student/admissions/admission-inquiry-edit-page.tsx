@@ -4,15 +4,14 @@ import type { RootState } from 'src/redux/store';
 
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { studentPaths } from 'src/constants/student-menu';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { Box, Paper, Stack, Button, Skeleton } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useGetAdmissionInquiryQuery } from 'src/redux/student/admissions/admission-inquiries-api';
+import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 import { useGetAdmissionInquiryManagementQuery } from 'src/redux/student/admissions/admission-inquiry-management-api';
 
 import { getAdmissionInquiryAccess } from './inquiry-access';
@@ -92,7 +91,7 @@ export default function AdmissionInquiryEditPage() {
             presentation="toast"
             severity="error"
             sx={{ m: 2 }}
-            action={
+            toastAction={
               <Button
                 size="small"
                 color="inherit"
@@ -133,25 +132,20 @@ export default function AdmissionInquiryEditPage() {
           </>
         )}
       </Paper>
-      <ConfirmDialog
-        open={discard.value}
-        onClose={discard.onFalse}
-        icon="warning"
-        title="Discard Changes?"
-        content="Your unsaved inquiry form changes will be lost."
-        action={
-          <Button
-            variant="contained"
-            startIcon={<Iconify icon="mdi:close" />}
-            onClick={() => {
-              discard.onFalse();
-              router.push(returnUrl);
-            }}
-          >
-            Discard
-          </Button>
-        }
-      />
+      {discard.value &&
+        renderUnsavedConfirmation(
+          discard.onFalse,
+          () => {
+            if (draft.busy) return;
+            discard.onFalse();
+            router.push(returnUrl);
+          },
+          {
+            busy: draft.busy,
+            title: 'Discard Changes?',
+            description: 'Your unsaved inquiry form changes will be lost.',
+          }
+        )}
     </Box>
   );
 }

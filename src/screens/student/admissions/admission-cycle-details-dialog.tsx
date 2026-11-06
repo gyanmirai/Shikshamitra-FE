@@ -15,6 +15,7 @@ import {
   useGetAdmissionCycleHistoryQuery,
 } from 'src/redux/student/admissions/admission-cycles-api';
 
+import { ADMISSION_DATE_FORMAT, ADMISSION_DATE_TIME_FORMAT } from './admission-date-formats';
 import {
   windowLabels,
   windowColors,
@@ -109,18 +110,18 @@ export function AdmissionCycleDetailsDialog({ cycle, onClose }: Props) {
                 rowGap: 1.5,
               }}
             >
-              <DetailItem label="Opens" value={formatDateOnly(cycle.startDate, 'DD MMM YYYY')} />
-              <DetailItem label="Closes" value={formatDateOnly(cycle.endDate, 'DD MMM YYYY')} />
+              <DetailItem label="Opens" value={formatDateOnly(cycle.startDate, ADMISSION_DATE_FORMAT)} />
+              <DetailItem label="Closes" value={formatDateOnly(cycle.endDate, ADMISSION_DATE_FORMAT)} />
               {cycle.scheduledPublishAt && (
                 <DetailItem
                   label="Scheduled Publish"
-                  value={dayjs(cycle.scheduledPublishAt).format('DD MMM YYYY, hh:mm A')}
+                  value={dayjs(cycle.scheduledPublishAt).format(ADMISSION_DATE_TIME_FORMAT)}
                 />
               )}
               {cycle.scheduledCloseAt && (
                 <DetailItem
                   label="Scheduled Close"
-                  value={dayjs(cycle.scheduledCloseAt).format('DD MMM YYYY, hh:mm A')}
+                  value={dayjs(cycle.scheduledCloseAt).format(ADMISSION_DATE_TIME_FORMAT)}
                 />
               )}
             </Box>
@@ -239,7 +240,7 @@ export function AdmissionCycleDetailsDialog({ cycle, onClose }: Props) {
                       {item.description}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      {fDateTime(item.occurredAt) || 'Time Not Recorded'}
+                      {fDateTime(item.occurredAt, ADMISSION_DATE_TIME_FORMAT) || 'Time Not Recorded'}
                     </Typography>
                     {item.reason && (
                       <Typography variant="body2" sx={{ mt: 0.5, overflowWrap: 'anywhere' }}>

@@ -82,7 +82,7 @@ describe('admission cycle publish confirmation', () => {
     expect(screen.getByRole('button', { name: 'Publish' })).toHaveClass('MuiButton-colorInherit');
     expect(screen.queryByText('RTE')).not.toBeInTheDocument();
     expect(screen.queryByText(/CYCLE_INTERNAL_123/)).not.toBeInTheDocument();
-    expect(screen.getByText(/Applications are accepted only during/)).toBeVisible();
+    expect(screen.getByText(/Applications are accepted only during/)).toHaveTextContent('01/10/2026–02/10/2026');
     expect(screen.queryByText('This cycle is ready to Publish.')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Publish' })).toBeEnabled();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();

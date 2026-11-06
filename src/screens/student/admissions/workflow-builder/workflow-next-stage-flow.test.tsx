@@ -27,9 +27,10 @@ import type {
 vi.hoisted(() => {
   process.env.NEXT_PUBLIC_API_URL = 'http://localhost:5000';
 });
+const navigationPush = vi.hoisted(() => vi.fn());
 vi.mock('next-auth/react', () => ({ getSession: vi.fn().mockResolvedValue(null) }));
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: vi.fn() }),
+  useRouter: () => ({ push: navigationPush }),
   useSearchParams: () => new URLSearchParams(),
 }));
 vi.mock('../use-admission-unsaved-changes', () => ({ useAdmissionUnsavedChanges: vi.fn() }));
@@ -49,7 +50,12 @@ vi.mock('./components/workflow-stage-fields', () => ({
   ),
 }));
 vi.mock('./components/workflow-builder-header', () => ({
-  WorkflowBuilderHeader: ({ children }: WorkflowBuilderHeaderProps) => children,
+  WorkflowBuilderHeader: ({ children, onBack }: WorkflowBuilderHeaderProps) => (
+    <>
+      <button type="button" onClick={onBack}>Back to workflows</button>
+      {children}
+    </>
+  ),
   WorkflowLifecycleActions: ({ dirty, saving, onSave }: WorkflowLifecycleActionsProps) => (
     <button type="button" disabled={!dirty || saving} onClick={onSave}>
       Save draft
@@ -128,6 +134,7 @@ const makeStore = () =>
     middleware: (defaults) => defaults().concat(api.middleware),
   });
 afterEach(() => {
+  navigationPush.mockClear();
   cleanup();
   stores.forEach((store) => store.dispatch(api.util.resetApiState()));
   stores.length = 0;
@@ -264,7 +271,7 @@ describe('Choose next step creates and configures a connected stage', { timeout:
       target: { value: 'Unsaved assessment' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Back' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Discard Changes' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Discard changes' }));
     await waitFor(
       () => expect(screen.queryByRole('button', { name: 'Apply Changes' })).not.toBeInTheDocument(),
       { timeout: 10000 }
@@ -327,4 +334,24 @@ describe('Choose next step creates and configures a connected stage', { timeout:
       ])
     );
   });
+});
+
+it('guards leaving the main workflow draft after a staged edit is applied', async () => {
+  await setup();
+  fireEvent.change(screen.getByRole('textbox', { name: 'Stage name *' }), {
+    target: { value: 'Unsaved graph stage' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Apply Changes' }));
+  await waitFor(() =>
+    expect(screen.queryByRole('button', { name: 'Apply Changes' })).not.toBeInTheDocument()
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Back to workflows' }));
+  expect(await screen.findByText('Discard Unsaved Changes?')).toBeVisible();
+  expect(navigationPush).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
+  expect(screen.getByText('Unsaved graph stage')).toBeVisible();
+  fireEvent.click(screen.getByRole('button', { name: 'Back to workflows' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
+  expect(navigationPush).toHaveBeenCalledTimes(1);
+  expect(screen.queryByText('Unsaved graph stage')).not.toBeInTheDocument();
 });

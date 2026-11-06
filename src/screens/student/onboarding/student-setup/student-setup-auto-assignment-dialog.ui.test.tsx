@@ -4,8 +4,10 @@ import { it, vi, expect, beforeEach } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
+import { shikshaMitraToast } from 'src/components/toast';
 import { render, screen, waitFor } from '@testing-library/react';
 import { defaultSettings } from 'src/components/settings/config-settings';
+import { expectStudentErrorToast } from 'src/test/student-toast-test-fixture';
 
 import { studentOnboardingTestData } from './student-onboarding-test-fixtures';
 import StudentSetupAutoAssignmentDialog from './student-setup-auto-assignment-dialog';
@@ -114,8 +116,12 @@ it('shows query errors with retry and does not allow submission', async () => {
   });
   const user = userEvent.setup();
   renderDialog();
-  expect(screen.getByText('Could not load division capacity.')).toBeInTheDocument();
+  await expectStudentErrorToast('Could not load division capacity.');
+  expect(screen.queryByText('Could not load division capacity.')).not.toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Assign Division' })).toBeDisabled();
+  const notice = vi.mocked(shikshaMitraToast.error).mock.calls.at(-1)?.[0];
+  if (!notice || typeof notice.alertProps !== 'function') throw new Error('Expected a retry toast');
+  render(notice.alertProps('test-error').action);
   await user.click(screen.getByRole('button', { name: 'Retry' }));
   expect(mocks.retry).toHaveBeenCalledOnce();
 });

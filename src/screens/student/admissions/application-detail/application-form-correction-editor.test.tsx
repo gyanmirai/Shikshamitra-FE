@@ -5,6 +5,7 @@ import { createTheme } from 'src/theme/create-theme';
 import { renderWithProviders } from 'src/test/test-utils';
 import { vi, it, expect, afterEach, beforeEach } from 'vitest';
 import { defaultSettings } from 'src/components/settings/config-settings';
+import { guardAcademicContextChange } from 'src/hooks/academic-context-change';
 import { act, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import { ApplicationFormCorrectionEditor } from './application-form-correction-editor';
@@ -145,7 +146,7 @@ it('guards same-document navigation until unsaved corrections are explicitly dis
   fireEvent.click(link);
   const confirm = await screen.findByRole('dialog', { name: 'Discard Form Corrections?' });
   expect(api.push).not.toHaveBeenCalled();
-  fireEvent.click(within(confirm).getByRole('button', { name: 'Discard Changes' }));
+  fireEvent.click(within(confirm).getByRole('button', { name: 'Discard changes' }));
   expect(api.push).toHaveBeenCalledWith('/student/admissions/applications');
   link.remove();
 });
@@ -349,7 +350,7 @@ it('does not overwrite an edited answer or silently adopt a new stamp after a co
   expect(screen.getByLabelText('Student name')).toBeDisabled();
   fireEvent.click(await screen.findByRole('button', { name: 'Cancel' }));
   const discard = await screen.findByRole('dialog', { name: 'Discard Form Corrections?' });
-  fireEvent.click(within(discard).getByRole('button', { name: 'Discard Changes' }));
+  fireEvent.click(within(discard).getByRole('button', { name: 'Discard changes' }));
   expect(props.onClose).toHaveBeenCalledOnce();
   expect(props.onSaved).not.toHaveBeenCalled();
 });
@@ -386,7 +387,11 @@ it('locks close while a photo is being read and guards dirty discard', async () 
   fireEvent.change(screen.getByLabelText('Student name'), { target: { value: 'Corrected' } });
   fireEvent.click(await screen.findByRole('button', { name: 'Cancel' }));
   expect(await screen.findByRole('dialog', { name: 'Discard Form Corrections?' })).toBeVisible();
-  fireEvent.click(screen.getByRole('button', { name: 'Keep Editing' }));
+  act(() => api.photo?.(true));
+  expect(screen.getByRole('button', { name: 'Keep editing' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Discard changes' })).toBeDisabled();
+  act(() => api.photo?.(false));
+  fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
   expect(props.onClose).not.toHaveBeenCalled();
   expect(screen.getByLabelText('Student name')).toHaveValue('Corrected');
 });
@@ -401,7 +406,32 @@ it('refreshes instead of claiming success when closing an unconfirmed save', asy
   await waitFor(() => expect(screen.getByLabelText('Student name')).toBeVisible());
   fireEvent.click(await screen.findByRole('button', { name: 'Cancel' }));
   const discard = await screen.findByRole('dialog', { name: 'Discard Form Corrections?' });
-  fireEvent.click(within(discard).getByRole('button', { name: 'Discard Changes' }));
+  fireEvent.click(within(discard).getByRole('button', { name: 'Discard changes' }));
   expect(props.onRefresh).toHaveBeenCalledOnce();
+  expect(props.onSaved).not.toHaveBeenCalled();
+});
+
+it('refreshes an unconfirmed save only after a year discard is approved without a busy blocker', async () => {
+  api.save.mockRejectedValue({ status: 500 });
+  const { props } = setup();
+  const dialog = await reasonDialog();
+  await saveReason(dialog);
+  expect(await within(dialog).findByText(/Save confirmation was not received/)).toBeVisible();
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Back to Form' }));
+  await waitFor(() => expect(screen.getByLabelText('Student name')).toBeVisible());
+  const proceed = vi.fn();
+  act(() => {
+    guardAcademicContextChange(proceed);
+  });
+  const discard = await screen.findByRole('dialog', { name: 'Discard Form Corrections?' });
+  act(() => api.photo?.(true));
+  fireEvent.click(within(discard).getByRole('button', { name: 'Discard changes' }));
+  expect(props.onRefresh).not.toHaveBeenCalled();
+  expect(proceed).not.toHaveBeenCalled();
+  act(() => api.photo?.(false));
+  fireEvent.click(within(discard).getByRole('button', { name: 'Discard changes' }));
+  expect(props.onRefresh).toHaveBeenCalledOnce();
+  expect(proceed).toHaveBeenCalledOnce();
+  expect(props.onClose).not.toHaveBeenCalled();
   expect(props.onSaved).not.toHaveBeenCalled();
 });

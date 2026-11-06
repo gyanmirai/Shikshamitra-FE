@@ -4,6 +4,8 @@ import { fDateTime } from 'src/utils/format-time';
 import { Stack, Typography } from '@mui/material';
 import { StudentFeedback } from 'src/components/student-feedback';
 
+import { ADMISSION_DATE_TIME_FORMAT } from '../admission-date-formats';
+
 export function EligibilityActionContext({
   summary,
   exceptionId,
@@ -17,7 +19,7 @@ export function EligibilityActionContext({
     <Stack spacing={1}>
       {evaluation && (
         <Typography variant="body2">
-          For Check {evaluation.sequenceNumber}, Recorded {fDateTime(evaluation.evaluatedAt)}.
+          For Check {evaluation.sequenceNumber}, Recorded {fDateTime(evaluation.evaluatedAt, ADMISSION_DATE_TIME_FORMAT)}.
         </Typography>
       )}
       {exception && (

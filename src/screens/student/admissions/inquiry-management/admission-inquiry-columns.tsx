@@ -206,7 +206,8 @@ export function buildAdmissionInquiryColumns(options: Options): IColumn[] {
         const inquiry = row as AdmissionInquiry;
         return (
           <AdaptiveThreeDotsActions
-            mobileDirectActionLimit={0}
+            directActionLimit={2}
+            collapseOnOverflow={false}
             moreLabel={`Actions For ${inquiry.applicantName}`}
             sx={{
               gap: 0,

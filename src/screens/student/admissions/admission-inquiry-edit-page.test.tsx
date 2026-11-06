@@ -827,7 +827,7 @@ describe('Edit inquiry page', () => {
     await userEvent.hover(screen.getByLabelText('Date of birth Information'));
     const ageDetails = await screen.findByRole('tooltip');
     expect(ageDetails).toHaveTextContent('Enter the date from the birth certificate.');
-    expect(ageDetails).toHaveTextContent(/academic year start.*01-04-2026/);
+    expect(ageDetails).toHaveTextContent(/academic year start.*01\/04\/2026/);
     await waitFor(() =>
       expect(shikshaMitraToast.warning).toHaveBeenCalledWith({
         message: expect.stringContaining('below the minimum age of 5 years'),
@@ -908,7 +908,7 @@ describe('Edit inquiry page', () => {
     expect(screen.getByText('Original inquiry · version 1')).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Form History' })).not.toBeInTheDocument();
     expect(screen.queryByRole('combobox', { name: 'Status' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Schedule Follow-Up' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Schedule follow-up' })).not.toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Family notes' })).toHaveValue('Existing note');
     fireEvent.change(screen.getByRole('textbox', { name: 'Applicant name' }), {
       target: { value: 'Riya S' },
@@ -944,7 +944,7 @@ describe('Edit inquiry page', () => {
     expect(close).not.toHaveBeenCalled();
     expect(name).toHaveValue('Unsaved inquiry edit');
     expect(await screen.findByRole('dialog', { name: 'Discard Changes?' })).toBeVisible();
-    await user.click(screen.getByRole('button', { name: 'Discard' }));
+    await user.click(screen.getByRole('button', { name: 'Discard changes' }));
     expect(close).toHaveBeenCalledOnce();
     expect(update).not.toHaveBeenCalled();
   });

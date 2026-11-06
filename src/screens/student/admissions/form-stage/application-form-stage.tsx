@@ -1,10 +1,12 @@
 import type { AdmissionApplicationStage } from 'src/redux/student/admissions/admission-applications-api';
 
 import { Label } from 'src/components/label';
+import { fDate } from 'src/utils/format-time';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { Card, Chip, Stack, Button, Skeleton, Typography } from '@mui/material';
 
 import { AdmissionQueryError } from '../admission-query-error';
+import { ADMISSION_DATE_FORMAT } from '../admission-date-formats';
 import { FormStageReasonDialog } from './form-stage-reason-dialog';
 import { useApplicationFormStage } from './hooks/use-application-form-stage';
 import { useApplicationStageReadiness } from '../application-detail/application-stage-readiness';
@@ -133,7 +135,7 @@ export function ApplicationFormStage({
                 <Chip
                   size="small"
                   color={summary.isOverdue ? 'error' : 'default'}
-                  label={`Due ${new Date(summary.dueAt).toLocaleDateString()}`}
+                  label={`Due ${fDate(summary.dueAt, ADMISSION_DATE_FORMAT)}`}
                 />
               )}
             </Stack>

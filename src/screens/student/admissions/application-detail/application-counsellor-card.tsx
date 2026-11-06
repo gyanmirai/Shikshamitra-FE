@@ -15,12 +15,9 @@ import { LoadingButton } from 'src/components/loading-button';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
+import { FormSectionCard } from 'src/components/form-section-card';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import {
-  useGetAdmissionApplicationCounsellorsQuery,
-  useAssignAdmissionApplicationCounsellorMutation,
-} from 'src/redux/student/admissions/admission-applications-api';
 import {
   Box,
   Card,
@@ -35,7 +32,12 @@ import {
   CardContent,
   DialogActions,
 } from '@mui/material';
+import {
+  useGetAdmissionApplicationCounsellorsQuery,
+  useAssignAdmissionApplicationCounsellorMutation,
+} from 'src/redux/student/admissions/admission-applications-api';
 
+import { useAdmissionCloseGuard } from '../use-admission-close-guard';
 import { ADMISSION_APPLICATION_PERMISSIONS } from '../admission-application-permissions';
 
 export function ApplicationCounsellorCard({
@@ -121,7 +123,7 @@ export function ApplicationCounsellorCard({
           notificationKey="STU-0183"
           presentation="toast"
           severity="error"
-          action={
+          toastAction={
             <LoadingButton
               size="small"
               disabled={disabled || assignment.isLoading}
@@ -225,11 +227,12 @@ export function ApplicationCounsellorCard({
     setEditing(false);
     formik.resetForm();
   };
-  const requestCloseHeaderEditor = () => {
-    if (disabled || assignment.isLoading) return;
-    if (!formik.dirty || window.confirm('Are you sure you want to leave this page?'))
-      closeHeaderEditor();
-  };
+  const guard = useAdmissionCloseGuard(
+    formik.dirty,
+    disabled || assignment.isLoading,
+    header && canEdit && editing
+  );
+  const requestCloseHeaderEditor = () => guard.requestNavigation(closeHeaderEditor);
 
   if (header)
     return (
@@ -279,14 +282,20 @@ export function ApplicationCounsellorCard({
             }
             titleInfo="The Journey Counsellor Follows This Application Through Onboarding."
             maxWidth="sm"
-            hasUnsavedChanges={formik.dirty}
+            guardUnsavedChanges={false}
             disableClose={disabled || assignment.isLoading}
-            handleClose={closeHeaderEditor}
+            handleClose={requestCloseHeaderEditor}
           >
             <Stack component="form" onSubmit={formik.handleSubmit}>
               <DialogScrollContent>
                 <FormBusyRegion busy={assignment.isLoading} label="Assigning Journey Counsellor...">
-                  {assignmentFields}
+                  <FormSectionCard
+                    title="Counsellor Assignment"
+                    icon="mdi:account-check-outline"
+                    descriptionTooltip="Choose the staff member responsible for this application. A change is recorded with its reason."
+                  >
+                    {assignmentFields}
+                  </FormSectionCard>
                 </FormBusyRegion>
               </DialogScrollContent>
               <DialogActions>
@@ -304,6 +313,7 @@ export function ApplicationCounsellorCard({
             </Stack>
           </CustomDialog>
         )}
+        {guard.confirmation}
       </>
     );
 

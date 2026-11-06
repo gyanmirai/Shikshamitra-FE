@@ -121,7 +121,7 @@ it('fetches completed assessment history only when expanded and keeps action con
   expect(requests).toBe(0);
   await userEvent.click(screen.getByRole('button', { name: /Entrance exam · Assessment History/ }));
   expect(await screen.findByText(/Marks: 85/)).toBeInTheDocument();
-  expect(screen.getByText(/Scheduled:/)).toHaveTextContent('20 Sep 2026');
+  expect(screen.getByText(/Scheduled:/)).toHaveTextContent('20/09/2026');
   expect(screen.getByText(/Scheduled:/)).toHaveTextContent('Assessment hall A');
   expect(screen.queryByText(/Without scheduled session/)).not.toBeInTheDocument();
   expect(requests).toBe(1);

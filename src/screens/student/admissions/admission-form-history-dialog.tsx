@@ -25,6 +25,8 @@ import {
   useLazyCompareAdmissionFormVersionsQuery,
 } from 'src/redux/student/admissions/admission-forms-api';
 
+import { ADMISSION_DATE_TIME_FORMAT } from './admission-date-formats';
+
 type Props = {
   form: AdmissionForm | null;
   canRestore: boolean;
@@ -231,7 +233,7 @@ export function AdmissionFormHistoryDialog({ form, canRestore, onClose, onRestor
                       primary={entry.action.replace(/([a-z])([A-Z])/g, '$1 $2')}
                       primaryTypographyProps={{ variant: 'body2', fontWeight: 600 }}
                       secondaryTypographyProps={{ variant: 'caption' }}
-                      secondary={`${fDateTime(entry.occurredAt)} · version ${entry.version}${entry.comment ? ` · ${entry.comment}` : ''}`}
+                      secondary={`${fDateTime(entry.occurredAt, ADMISSION_DATE_TIME_FORMAT)} · version ${entry.version}${entry.comment ? ` · ${entry.comment}` : ''}`}
                     />
                   </ListItem>
                 ))}

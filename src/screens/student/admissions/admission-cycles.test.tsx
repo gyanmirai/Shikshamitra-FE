@@ -193,7 +193,7 @@ describe('Admission periods table states', () => {
     }
   );
 
-  it('renders supplied records and server totals without adding table utilities', () => {
+  it('renders supplied records, server totals and the standard table utilities', () => {
     mocks.result.data = { items: [cycle], totalCount: 36 };
     renderScreen();
 
@@ -204,13 +204,13 @@ describe('Admission periods table states', () => {
     expect(within(row).getByText('12')).toBeInTheDocument();
     expect(within(table).getByRole('columnheader', { name: 'Start Date' })).toBeInTheDocument();
     expect(within(table).getByRole('columnheader', { name: 'End Date' })).toBeInTheDocument();
-    expect(within(table).getByText('01-01-2027')).toBeInTheDocument();
-    expect(within(table).getByText('31-03-2027')).toBeInTheDocument();
+    expect(within(table).getByText('01/01/2027')).toBeInTheDocument();
+    expect(within(table).getByText('31/03/2027')).toBeInTheDocument();
     expect(screen.getByText('1–10 of 36')).toBeInTheDocument();
     expect(table.querySelector('.MuiSkeleton-root')).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Columns' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Export' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /full.?screen/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Columns' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Export' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /full.?screen/i })).toBeInTheDocument();
   });
 
   it('shows the successful first-use empty state only after loading completes', () => {

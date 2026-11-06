@@ -2,20 +2,23 @@ import type { CardProps } from '@mui/material';
 
 import { useTheme } from '@mui/material/styles';
 import { Card, CardHeader } from '@mui/material';
-import ScheduledExamTable from 'src/screens/examination/scheduleExam/components/scheduleExamTable';
+import { academicPaths } from 'src/constants/academic-menu';
+import { StudentRelatedUnavailable } from 'src/screens/student/studentProfile/student-related-unavailable';
 
 import { Chart, useChart, ChartSelect, ChartLegends } from '../chart';
 
 import type { ChartOptions } from '../chart';
 
-const ProfileExamination = () => (
-  <ScheduledExamTable
-    isScheduleExamButton={false}
-    isAction={false}
-    onDelete={(data) => {}}
-    data={[]}
-    onViewTimetable={(data) => {}}
-    getExams={() => {}}
+const ProfileExamination = ({ onOverview }: { onOverview?: () => void }) => (
+  <StudentRelatedUnavailable
+    title="Examination"
+    message="Student examination records are unavailable here."
+    onOverview={onOverview}
+    destination={{
+      href: academicPaths.examination.schedule,
+      label: 'Open exam schedules',
+      permission: 'Academics.Examination.ScheduleExam.View',
+    }}
   />
 );
 

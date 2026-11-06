@@ -203,7 +203,7 @@ export function PersistedOnboardingSettingsProvider({ children }: { children: Re
               notificationKey="STU-0936"
               presentation="toast"
               severity="error"
-              action={
+              toastAction={
                 <Button size="small" color="inherit" onClick={() => settingsQuery.refetch()}>
                   Retry
                 </Button>

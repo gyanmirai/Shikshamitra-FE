@@ -16,6 +16,7 @@ import { DocumentActionDialog } from './document-action-dialog';
 vi.hoisted(() => {
   process.env.NEXT_PUBLIC_API_URL = 'http://localhost:5000';
 });
+vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 it('retains reviewer notes after a conflict and preserves the underlying dirty application on discard', async () => {
   mswServer.use(
     http.post(`${documentPath}/evidence/evidence-1/review`, () =>
@@ -51,6 +52,10 @@ it('retains reviewer notes after a conflict and preserves the underlying dirty a
   );
   await waitFor(() => expect(dialog.getByRole('button', { name: 'Cancel' })).toBeEnabled());
   await userEvent.click(dialog.getByRole('button', { name: 'Cancel' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
+  expect(dialog.getByLabelText(/^Rejection Reason/)).toHaveValue('Replace the blurred scan');
+  await userEvent.click(dialog.getByRole('button', { name: 'Cancel' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
   expect(close).toHaveBeenCalledOnce();
   expect(store.getState().confirmPopup.isChanges).toBe(true);
 }, 15000);

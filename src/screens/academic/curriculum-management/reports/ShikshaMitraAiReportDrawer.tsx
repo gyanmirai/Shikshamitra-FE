@@ -7,6 +7,8 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
 import { Box, Alert, Stack, Drawer, Divider } from '@mui/material';
+import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
+import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 
 import { AiReportReady } from './AiReportStatus';
 import { AiReportActivity } from './AiReportActivity';
@@ -31,6 +33,7 @@ interface Props {
   open: boolean;
   onClose: () => void;
   module?: AcademicAiReportModule;
+  protectUnsavedChanges?: boolean;
 }
 
 const MODULE_COPY: Record<AcademicAiReportModule, { description: string; placeholder: string }> = {
@@ -66,6 +69,7 @@ export default function ShikshaMitraAiReportDrawer({
   open,
   onClose,
   module = 'Curriculum',
+  protectUnsavedChanges = false,
 }: Props) {
   const { currentYear, currentBoard, currentMedium } = useSelector(
     (state: RootState) => state.globalState
@@ -90,6 +94,15 @@ export default function ShikshaMitraAiReportDrawer({
     workflow.reset();
     onClose();
   };
+  const { requestNavigation, confirmation } = useUnsavedNavigation(
+    protectUnsavedChanges && open && formik.dirty && workflow.stage !== 'ready',
+    {
+      blockNavigation: protectUnsavedChanges && open && disableClose,
+      guardContextChanges: protectUnsavedChanges,
+      renderConfirmation: renderUnsavedConfirmation,
+    }
+  );
+  const requestClose = () => requestNavigation(handleClose);
 
   const handleEditRequest = () => {
     workflow.reset();
@@ -99,7 +112,7 @@ export default function ShikshaMitraAiReportDrawer({
     <Drawer
       anchor="right"
       open={open}
-      onClose={handleClose}
+      onClose={requestClose}
       PaperProps={{
         'aria-labelledby': 'shikshamitra-ai-drawer-title',
         sx: {
@@ -113,7 +126,7 @@ export default function ShikshaMitraAiReportDrawer({
       <AiReportDrawerHeader
         contextLabel={contextLabel}
         disableClose={disableClose}
-        onClose={handleClose}
+        onClose={requestClose}
       />
       <Divider />
       <Box
@@ -167,11 +180,12 @@ export default function ShikshaMitraAiReportDrawer({
         format={workflow.review?.plan.format}
         hasAcademicContext={hasAcademicContext}
         isDownloading={workflow.isDownloading}
-        onClose={handleClose}
+        onClose={requestClose}
         onDownload={workflow.download}
         onEditRequest={handleEditRequest}
         onGenerate={workflow.generate}
       />
+      {confirmation}
     </Drawer>
   );
 }

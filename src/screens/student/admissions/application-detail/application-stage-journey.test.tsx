@@ -1,5 +1,6 @@
 import type { AdmissionApplicationStage } from 'src/redux/student/admissions/admission-applications-api';
 
+import { addIcon } from '@iconify/react';
 import { it, vi, expect, describe } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
@@ -7,6 +8,10 @@ import { defaultSettings } from 'src/components/settings';
 import { render, screen, within, fireEvent } from '@testing-library/react';
 
 import { ApplicationStageJourney } from './application-stage-journey';
+
+['eva:checkmark-fill', 'ic:round-arrow-forward', 'mdi:arrow-left'].forEach((icon) =>
+  addIcon(icon, { body: '<path d="M0 0h16v16H0z"/>', width: 16, height: 16 })
+);
 
 const stage = (
   id: string,

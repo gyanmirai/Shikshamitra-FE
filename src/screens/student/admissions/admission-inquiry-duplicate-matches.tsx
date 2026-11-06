@@ -22,6 +22,7 @@ import {
 } from '@mui/material';
 
 import { formatAdmissionReference } from './admission-reference';
+import { ADMISSION_DATE_FORMAT } from './admission-date-formats';
 import { canLinkAdmissionInquiryFamily } from './admission-inquiry-model';
 import { isPossibleDuplicateInquiry } from './admission-inquiry-match-review';
 import { AdmissionSiblingFamilyMatch } from './admission-sibling-family-match';
@@ -150,7 +151,7 @@ export function AdmissionInquiryDuplicateMatches({
                           : null,
                         match.guardianPhone,
                         match.guardianEmail,
-                        match.dateOfBirth ? `DOB: ${fDate(match.dateOfBirth.slice(0, 10))}` : null,
+                        match.dateOfBirth ? `DOB: ${fDate(match.dateOfBirth.slice(0, 10), ADMISSION_DATE_FORMAT)}` : null,
                       ]
                         .filter(Boolean)
                         .join(' · ') || 'Existing Family'}

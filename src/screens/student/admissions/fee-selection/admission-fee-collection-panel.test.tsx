@@ -11,6 +11,8 @@ import { act, render, screen, waitFor, fireEvent } from '@testing-library/react'
 import AdmissionFeeCollectionPanel from './admission-fee-collection-panel';
 import { ADMISSION_FEE_COLLECTION_PERMISSIONS } from './admission-fee-collection-permissions';
 
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
+
 const mocks = vi.hoisted(() => ({
   summary: vi.fn(),
   form: vi.fn(),
@@ -57,12 +59,19 @@ vi.mock('src/screens/finance/FeeCollection/FeeCollectionComponent/FeeCollectionF
     student: unknown;
     collectionAdapter: { collect: (input: unknown) => Promise<unknown> };
     onBusyChange: (busy: boolean) => void;
-    onCancel: () => void;
+    onDirtyChange: (dirty: boolean) => void;
+    onCancel: (event?: unknown, submitted?: boolean) => void;
   }) => {
     mocks.formProps(props);
     return (
       <>
         <span>Collection form</span>
+        <button type="button" onClick={() => props.onDirtyChange(true)}>
+          Edit collection
+        </button>
+        <button type="button" onClick={() => props.onCancel(null, false)}>
+          Cancel collection
+        </button>
         <button type="button" onClick={() => props.onBusyChange(true)}>
           Start saving
         </button>
@@ -76,7 +85,7 @@ vi.mock('src/screens/finance/FeeCollection/FeeCollectionComponent/FeeCollectionF
               chargePayments: [],
               payments: [],
             });
-            props.onCancel();
+            props.onCancel(null, true);
           }}
         >
           Complete payment
@@ -306,6 +315,20 @@ it('previews the date without writing, then confirms it before preparing fees', 
   expect(mocks.saveDate.mock.invocationCallOrder[0]).toBeLessThan(
     mocks.prepare.mock.invocationCallOrder[0]
   );
+});
+
+it('protects the adapted collection form on Cancel until its draft is discarded', async () => {
+  renderPanel();
+  fireEvent.click(screen.getByRole('button', { name: 'Collect Fees' }));
+  await screen.findByText('Collection form');
+  fireEvent.click(screen.getByRole('button', { name: 'Edit collection' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Cancel collection' }));
+  expect(screen.getByText('Collection form')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Cancel collection' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
+  expect(screen.queryByText('Collection form')).not.toBeInTheDocument();
+  expect(mocks.collect).not.toHaveBeenCalled();
 });
 
 it('preserves the selected date and blocks fee preparation if date confirmation fails', async () => {
@@ -925,7 +948,7 @@ it.each([null, 'existing-unspent-account'])(
     await screen.findByRole('dialog', { name: 'Set Variable Fee Amounts · Kabir Shah' });
     expect(mocks.prepare).not.toHaveBeenCalled();
     const description =
-      'Enter Amounts for the Variable Fee Heads Configured in Finance. Finance Will Calculate the Installments Before Collection.';
+      'Enter amounts for the variable fee heads configured in Finance. Finance calculates the installments before collection.';
     expect(screen.queryByText(description)).not.toBeInTheDocument();
     const dialogHelp = screen.getByRole('button', {
       name: 'Set Variable Fee Amounts · Kabir Shah information',
@@ -941,11 +964,11 @@ it.each([null, 'existing-unspent-account'])(
       await act(() => vi.advanceTimersByTimeAsync(150));
       await act(() => vi.advanceTimersByTimeAsync(800));
       expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
-      const amountHelp = screen.getByRole('button', { name: 'About Transport Amount' });
+      const amountHelp = screen.getByRole('button', { name: 'About Transport amount' });
       act(() => amountHelp.focus());
       await act(() => vi.advanceTimersByTimeAsync(1000));
       expect(screen.getByRole('tooltip')).toHaveTextContent(
-        'Full Coverage Amount; Installments Follow the Finance Payment Term.'
+        'Full coverage amount; installments follow the Finance payment term.'
       );
       act(() => amountHelp.blur());
       await act(() => vi.advanceTimersByTimeAsync(150));
@@ -954,13 +977,13 @@ it.each([null, 'existing-unspent-account'])(
     } finally {
       vi.useRealTimers();
     }
-    fireEvent.click(screen.getByRole('button', { name: 'Continue to Collection' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Continue to collection' }));
     expect(await screen.findByText('Enter the total fee for this Fee Head.')).toBeVisible();
     expect(mocks.prepare).not.toHaveBeenCalled();
-    fireEvent.change(screen.getByRole('textbox', { name: /Transport Total for Term Coverage/ }), {
+    fireEvent.change(screen.getByRole('textbox', { name: /Transport total for term coverage/ }), {
       target: { value: '1250.75' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Continue to Collection' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Continue to collection' }));
     await screen.findByRole('dialog', { name: 'Collect Fees · Kabir Shah' });
     expect(mocks.prepare).toHaveBeenCalledWith({
       applicationId: 'application-1',
@@ -999,9 +1022,9 @@ it('waits for the exact variable amount preview before confirming date and prepa
   renderPanel();
   fireEvent.click(screen.getByRole('button', { name: 'Collect Fees' }));
   await screen.findByRole('dialog', { name: 'Set Variable Fee Amounts · Kabir Shah' });
-  const next = screen.getByRole('button', { name: 'Continue to Collection' });
+  const next = screen.getByRole('button', { name: 'Continue to collection' });
   expect(next).toBeDisabled();
-  fireEvent.change(screen.getByRole('textbox', { name: /Transport Total for Term Coverage/ }), {
+  fireEvent.change(screen.getByRole('textbox', { name: /Transport total for term coverage/ }), {
     target: { value: '1250.75' },
   });
   expect(next).toBeDisabled();

@@ -16,6 +16,7 @@ import { AttendanceStatus } from 'src/enums/student-attendace-status';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 import {
   useMarkAttendanceMutation,
   useLockAttendanceMutation,
@@ -79,6 +80,8 @@ export function useDailyAttendance(academicYearOverride?: AcademicYear) {
   const { requestNavigation, confirmation } = useUnsavedNavigation(dirty, {
     push: router.push,
     blockNavigation: busy,
+    guardContextChanges: true,
+    renderConfirmation: renderUnsavedConfirmation,
   });
   const lastApplied = useRef<AttendanceDay | undefined>(undefined);
   const seenUrl = useRef(queryString);

@@ -35,9 +35,9 @@ export default function GlobalAcademicSearch() {
     <Box
       data-onboarding="academic-year"
       sx={{
-        flex: '1 1 160px',
-        minWidth: { xs: 0, md: data.isYearOnly ? 200 : 300 },
-        width: '100%',
+        flex: data.isYearOnly ? '0 0 auto' : '1 1 160px',
+        minWidth: { xs: data.isYearOnly ? 136 : 0, md: data.isYearOnly ? 200 : 300 },
+        width: data.isYearOnly ? { xs: 136, md: 200 } : '100%',
         maxWidth: data.isYearOnly ? 200 : 300,
       }}
     >

@@ -24,6 +24,7 @@ const mocks = vi.hoisted(() => ({
   templates: [] as unknown[],
   legacy: {} as unknown,
   state: {
+    confirmPopup: { isChanges: false },
     globalState: { currentYear: { id: 'year-1' as string | undefined } },
     auth: {
       permissions: ['View', 'Add'].map((action) => ({
@@ -36,7 +37,9 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('react-redux', () => ({
   useSelector: (select: (state: unknown) => unknown) => select(mocks.state),
+  useDispatch: () => vi.fn(),
 }));
+vi.mock('src/routes/hooks', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock('src/components/toast', () => ({
   shikshaMitraToast: { success: vi.fn(), error: vi.fn() },
 }));
@@ -194,7 +197,7 @@ const next = () =>
 const studentCheckbox = (name: string) => screen.getByRole('checkbox', { name: `Select ${name}` });
 const openStudents = async (expectRoster = true) => {
   next();
-  await screen.findByRole('checkbox', { name: 'Student name' });
+  await screen.findByRole('heading', { name: 'School Identity' });
   next();
   if (expectRoster) await screen.findByLabelText('Select Pupil 1');
   else await screen.findByRole('heading', { name: 'Choose Students' });
@@ -554,7 +557,7 @@ it('keeps opaque standalone assignments read-only without querying or inventing 
     )
   );
   next();
-  await screen.findByRole('checkbox', { name: 'Student name' });
+  await screen.findByRole('heading', { name: 'School Identity' });
   next();
   expect(
     await screen.findByText(
@@ -688,7 +691,7 @@ it.each(['preview', 'export', 'issue'] as const)(
       footerNext();
       await screen.findByRole('heading', { name: 'Review Cards' });
       footerNext();
-      await screen.findByRole('heading', { name: 'A4 Print Preview' });
+      await screen.findByRole('heading', { name: 'PDF Print Preview' });
     }
     const previousPreviewCalls = mocks.preview.mock.calls.length;
     let acceptSave!: (value: IdCardTemplate) => void;

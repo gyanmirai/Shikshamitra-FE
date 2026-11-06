@@ -10,8 +10,8 @@ import * as Yup from 'yup';
 import { useState } from 'react';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
-import { fDateTime } from 'src/utils/format-time';
 import { shikshaMitraToast } from 'src/components/toast';
+import { fDateTime, formatStr } from 'src/utils/format-time';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -250,7 +250,7 @@ export default function LegacyRecordEntry({
                   notificationKey="STU-0797"
                   presentation="toast"
                   severity="error"
-                  action={
+                  toastAction={
                     <Button color="inherit" onClick={() => query.refetch()}>
                       Retry
                     </Button>
@@ -336,7 +336,7 @@ export default function LegacyRecordEntry({
                       {
                         id: 'creationTime',
                         label: 'Requested',
-                        render: (value) => fDateTime(value),
+                        render: (value) => fDateTime(value, formatStr.split.dateTime),
                       },
                       {
                         id: 'action',

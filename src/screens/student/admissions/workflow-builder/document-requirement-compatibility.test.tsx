@@ -27,8 +27,8 @@ describe('document requirement validation', { timeout: 15000 }, () => {
         onSave={save}
       />
     );
-    await user.click(screen.getByRole('switch', { name: 'Required Document' }));
-    await user.click(screen.getByRole('button', { name: 'Save Requirement' }));
+    await user.click(screen.getByRole('switch', { name: 'Required document' }));
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
     await waitFor(() => expect(save).toHaveBeenCalledOnce());
     expect(save.mock.calls[0][0]).toMatchObject({
       requirement: 'required',
@@ -59,7 +59,7 @@ describe('document requirement validation', { timeout: 15000 }, () => {
     await chooseDocumentOption(user, 'Student Document Category (Optional)', 'Word template');
     expect(screen.getByText(/no format in common/)).toBeInTheDocument();
     expect(screen.queryByRole('combobox', { name: 'Evidence to collect' })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Save Requirement' }));
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
     expect(save).not.toHaveBeenCalled();
     await chooseDocumentOption(
       user,
@@ -69,7 +69,7 @@ describe('document requirement validation', { timeout: 15000 }, () => {
     await user.click(screen.getByRole('combobox', { name: 'Allowed File Formats' }));
     await user.click(screen.getByRole('option', { name: 'PDF' }));
     await user.keyboard('{Escape}');
-    await user.click(screen.getByRole('button', { name: 'Save Requirement' }));
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
     await waitFor(() => expect(save).toHaveBeenCalledOnce());
     expect(save.mock.calls[0][0]).toMatchObject({
       collectionMode: 'upload',

@@ -80,13 +80,13 @@ it('saves a usual next step without exposing assessment outcomes or condition fi
 it('preserves saved special routes as read-only and blocks form submission', async () => {
   const { onSave } = renderNextStep(true);
   expect(screen.getByRole('heading', { name: 'Next-step Details' })).toBeInTheDocument();
-  expect(screen.getByRole('combobox', { name: 'Continue To *' })).toHaveAttribute(
-    'aria-disabled',
-    'true'
-  );
+  expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+  expect(screen.getByText('Continue to', { selector: 'dt' })).toBeVisible();
+  expect(screen.getByRole('heading', { name: 'Saved Condition' })).toBeVisible();
   expect(screen.queryByRole('button', { name: 'Save Path' })).not.toBeInTheDocument();
-  expect(screen.getByText(/Existing special paths remain read-only/)).toBeInTheDocument();
-  fireEvent.submit(screen.getByRole('heading', { name: 'Next-step Details' }).closest('form')!);
+  expect(screen.getByText('failed', { selector: 'dd' })).toBeVisible();
+  expect(screen.getByRole('dialog').querySelector('form')).toBeNull();
+  fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Enter' });
   await waitFor(() => expect(screen.queryByText('Saving...')).not.toBeInTheDocument());
   expect(onSave).not.toHaveBeenCalled();
 });

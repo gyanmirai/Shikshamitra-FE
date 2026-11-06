@@ -187,6 +187,19 @@ it('omits all actions when no action is permitted', () => {
   expect(screen.getByRole('region', { name: 'Student actions' })).toBeEmptyDOMElement();
 });
 
+it('keeps the non-I-card certificate overflow action disabled during bulk selection', () => {
+  props.canPrintIds = false;
+  props.selection.selected = [student];
+  render();
+  expect(screen.getByTestId('table-action-edit-details')).toBeDisabled();
+  expect(screen.getByTestId('table-action-attendance-history')).toBeDisabled();
+  fireEvent.click(screen.getByRole('button', { name: 'More actions for Riya Shah' }));
+  expect(screen.getByTestId('menu-action-certificate')).toHaveAttribute('aria-disabled', 'true');
+  expect(screen.getByTestId('menu-action-change-status')).toHaveAttribute('aria-disabled', 'true');
+  fireEvent.click(screen.getByTestId('menu-action-certificate'));
+  expect(props.onDocumentAction).not.toHaveBeenCalled();
+});
+
 it('keeps direct and overflow actions disabled during bulk selection', () => {
   props.selection.selected = [student];
   render();

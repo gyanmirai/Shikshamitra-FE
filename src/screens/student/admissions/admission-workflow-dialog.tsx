@@ -15,15 +15,16 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useResponsive } from 'src/hooks/use-responsive';
-import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { LoadingButton } from 'src/components/loading-button';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { FormSectionCard } from 'src/components/form-section-card';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useRef, useMemo, useState, useImperativeHandle } from 'react';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
+import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 import {
   Box,
   Card,
@@ -115,9 +116,13 @@ function showWorkflowNameError(error: unknown, formik: FormikProps<WorkflowDetai
   formik?.setFieldError('name', duplicateNameMessage);
 }
 
-function WorkflowDetailsDirtyState({ dirty }: { dirty: boolean }) {
+function WorkflowDetailsDirtyState({ dirty, busy }: { dirty: boolean; busy: boolean }) {
   const router = useRouter();
-  const { confirmation } = useUnsavedNavigation(dirty, { push: router.push });
+  const { confirmation } = useUnsavedNavigation(dirty, {
+    push: router.push,
+    guardContextChanges: true,
+    blockNavigation: busy,
+  });
   return confirmation;
 }
 
@@ -451,14 +456,14 @@ function CreateWorkflowDialog({
                       alignItems: 'stretch',
                     }}
                   >
-                    <WorkflowDetailsDirtyState dirty={formik.dirty && !busy} />
+                    <WorkflowDetailsDirtyState dirty={formik.dirty} busy={busy} />
                     <FormSectionCard
                       icon="mdi:clipboard-text-outline"
                       title="Workflow Details"
                       descriptionTooltip={
                         inline
-                          ? 'Keep Your Current Journey, or Choose a Template to Replace Its Stages and Routes When Saving.'
-                          : 'Choose a Starting Journey and a Published Registration Form. You Can Edit Each Stage in Build Journey.'
+                          ? 'Keep your current journey, or choose a template to replace its stages and routes when saving.'
+                          : 'Choose a starting journey and a published registration form. You can edit each stage in Build Journey.'
                       }
                     >
                       <Stack spacing={1.5}>
@@ -495,8 +500,8 @@ function CreateWorkflowDialog({
                             fullWidth
                             autoFocus={!isMobile}
                             size="small"
-                            label="Workflow Name *"
-                            placeholder="For Example, Fresh Admission"
+                            label="Workflow name *"
+                            placeholder="For example, fresh admission"
                             {...formik.getFieldProps('name')}
                             error={Boolean(formik.touched.name && formik.errors.name)}
                             helperText={formik.touched.name && formik.errors.name}
@@ -510,8 +515,8 @@ function CreateWorkflowDialog({
                             multiline
                             minRows={2}
                             size="small"
-                            label="Description (Optional)"
-                            placeholder="Explain When the School Should Use This Journey."
+                            label="Description (optional)"
+                            placeholder="Explain when the school should use this journey."
                             {...formik.getFieldProps('description')}
                             error={Boolean(formik.touched.description && formik.errors.description)}
                             helperText={formik.touched.description && formik.errors.description}
@@ -525,7 +530,7 @@ function CreateWorkflowDialog({
                             )}
                           >
                             <AdmissionDefinitionSelect
-                              label="Registration Form *"
+                              label="Registration form *"
                               valueId={formik.values.registrationFormDefinitionId ?? null}
                               initialOption={initialRegistrationForm}
                               fetchOptions={fetchRegistrationForms}
@@ -600,17 +605,7 @@ function CreateWorkflowDialog({
           </LoadingButton>
         }
       />
-      <ConfirmDialog
-        open={discard.value}
-        onClose={discard.onFalse}
-        title="Discard Workflow Details?"
-        content="The workflow information you entered will be lost."
-        action={
-          <Button color="error" variant="contained" size="small" onClick={close}>
-            Discard Details
-          </Button>
-        }
-      />
+      {discard.value && renderUnsavedConfirmation(discard.onFalse, close, { busy })}
     </>
   );
 }
@@ -678,7 +673,7 @@ function WorkflowCloneDrawer({
 
   const content = (
     <>
-      {inline && <WorkflowDetailsDirtyState dirty={formik.dirty && !saving} />}
+      {open && <WorkflowDetailsDirtyState dirty={formik.dirty} busy={saving} />}
       <Stack
         direction="row"
         spacing={1}
@@ -698,8 +693,8 @@ function WorkflowCloneDrawer({
               <CustomTooltip
                 title={
                   inline
-                    ? 'Edit This Draft’s Name and Description. Configure Templates, Stages, and Routes in Build Journey.'
-                    : 'Create an Editable Workflow Draft, Then Configure Its Admission Stages and Next Steps.'
+                    ? 'Edit this draft’s name and description. Configure templates, stages, and routes in Build Journey.'
+                    : 'Create an editable workflow draft, then configure its admission stages and next steps.'
                 }
                 arrow
                 placement={isMobile ? 'bottom' : 'right'}
@@ -712,10 +707,10 @@ function WorkflowCloneDrawer({
           </Box>
         )}
         {showStarterJourney && !descriptionOpen.value && !formik.values.description && (
-          <CustomTooltip title="Add an Optional Workflow Description">
+          <CustomTooltip title="Add an optional workflow description">
             <IconButton
               size="small"
-              aria-label="Add Workflow Description"
+              aria-label="Add workflow description"
               onClick={descriptionOpen.onTrue}
               sx={{ width: { xs: 44, sm: 36 }, height: { xs: 44, sm: 36 } }}
             >
@@ -747,7 +742,11 @@ function WorkflowCloneDrawer({
         }}
       >
         <Stack spacing={2}>
-          <FormSectionCard icon="mdi:clipboard-text-outline" title="Workflow Details">
+          <FormSectionCard
+            icon="mdi:clipboard-text-outline"
+            title="Workflow Details"
+            descriptionTooltip="Name this independent workflow draft and add an optional description. The source version and existing applications keep their saved workflow."
+          >
             <Box
               sx={{
                 display: 'grid',
@@ -760,8 +759,8 @@ function WorkflowCloneDrawer({
                   fullWidth
                   autoFocus={!isMobile}
                   size="small"
-                  label="Workflow Name *"
-                  placeholder="For Example, Fresh Admission"
+                  label="Workflow name *"
+                  placeholder="For example, fresh admission"
                   {...formik.getFieldProps('name')}
                   error={Boolean(formik.touched.name && formik.errors.name)}
                   helperText={formik.touched.name && formik.errors.name}
@@ -777,8 +776,8 @@ function WorkflowCloneDrawer({
                   multiline
                   minRows={2}
                   size="small"
-                  label="Description (Optional)"
-                  placeholder="Explain When the School Should Use This Journey."
+                  label="Description (optional)"
+                  placeholder="Explain when the school should use this journey."
                   {...formik.getFieldProps('description')}
                   error={Boolean(formik.touched.description && formik.errors.description)}
                   helperText={formik.touched.description && formik.errors.description}
@@ -808,7 +807,7 @@ function WorkflowCloneDrawer({
                         )}
                       >
                         <AdmissionDefinitionSelect
-                          label="Registration Form *"
+                          label="Registration form *"
                           valueId={formik.values.registrationFormDefinitionId ?? null}
                           fetchOptions={fetchRegistrationForms}
                           onChange={(id) =>
@@ -832,7 +831,7 @@ function WorkflowCloneDrawer({
                       </Typography>
                     )}
                     <AdmissionDefinitionSelect
-                      label="Inquiry Form (Optional)"
+                      label="Inquiry form (optional)"
                       valueId={formik.values.defaultInquiryFormDefinitionId ?? null}
                       fetchOptions={fetchInquiryForms}
                       onChange={(id) => formik.setFieldValue('defaultInquiryFormDefinitionId', id)}
@@ -847,6 +846,7 @@ function WorkflowCloneDrawer({
             <FormSectionCard
               icon="mdi:sitemap-outline"
               title="Choose a Workflow Template"
+              descriptionTooltip="Choose the initial stages and routes for this draft. Review the journey preview before continuing."
               titleTypographyProps={{
                 sx: { fontSize: { xs: '1rem', sm: '1.05rem' }, fontWeight: 700 },
               }}
@@ -960,17 +960,7 @@ function WorkflowCloneDrawer({
           {content}
         </Drawer>
       )}
-      <ConfirmDialog
-        open={discard.value}
-        onClose={discard.onFalse}
-        title="Discard Workflow Details?"
-        content="The workflow information you entered will be lost."
-        action={
-          <Button color="error" variant="contained" size="small" onClick={close}>
-            Discard Details
-          </Button>
-        }
-      />
+      {discard.value && renderUnsavedConfirmation(discard.onFalse, close, { busy: saving })}
     </>
   );
 }

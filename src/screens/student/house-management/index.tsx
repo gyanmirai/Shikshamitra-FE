@@ -9,6 +9,7 @@ import type {
 } from 'src/redux/student/house-management/house-management-types';
 
 import { useSelector } from 'react-redux';
+import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { RouterLink } from 'src/routes/components';
@@ -22,12 +23,11 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { usePopover, CustomPopover } from 'src/components/custom-popover';
 import { studentPaths, studentPermissions } from 'src/constants/student-menu';
 import { useStudentAcademicScope } from 'src/hooks/use-student-academic-scope';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
-import { Label } from 'src/components/label';
-import { usePopover, CustomPopover } from 'src/components/custom-popover';
 import {
   Box,
   Tab,
@@ -228,7 +228,11 @@ export default function HouseManagement() {
         {student.studentName}
       </Link>
     ) : (
-      <Typography component="span" variant="body2" sx={{ fontWeight: 'fontWeightSemiBold', overflowWrap: 'anywhere' }}>
+      <Typography
+        component="span"
+        variant="body2"
+        sx={{ fontWeight: 'fontWeightSemiBold', overflowWrap: 'anywhere' }}
+      >
         {student.studentName}
       </Typography>
     );
@@ -267,7 +271,10 @@ export default function HouseManagement() {
           >
             {String(row.name).slice(0, 1)}
           </Avatar>
-          <Typography variant="body2" sx={{ fontWeight: 'fontWeightSemiBold', overflowWrap: 'anywhere' }}>
+          <Typography
+            variant="body2"
+            sx={{ fontWeight: 'fontWeightSemiBold', overflowWrap: 'anywhere' }}
+          >
             {row.name}
           </Typography>
         </Stack>
@@ -293,7 +300,14 @@ export default function HouseManagement() {
       isFilter: false,
       render: (_, row) => leader(row as House),
     },
-    { id: 'description', label: 'Description', minWidth: 200, isFilter: true, filterType: 'string', render: (value) => value || '—' },
+    {
+      id: 'description',
+      label: 'Description',
+      minWidth: 200,
+      isFilter: true,
+      filterType: 'string',
+      render: (value) => value || '—',
+    },
     {
       id: 'actions',
       label: 'Actions',
@@ -306,6 +320,8 @@ export default function HouseManagement() {
         const row = data as House;
         return (
           <AdaptiveThreeDotsActions
+            directActionLimit={2}
+            collapseOnOverflow={false}
             actions={[
               {
                 id: 'members',
@@ -450,8 +466,23 @@ export default function HouseManagement() {
       filterType: 'string',
       render: (value) => value || '—',
     },
-    { id: 'standardName', label: 'Class', isSort: true, isFilter: true, filterType: 'string', minWidth: 100 },
-    { id: 'divisionName', label: 'Division', minWidth: 100, isSort: false, isFilter: true, filterType: 'string', render: (value) => value || '—' },
+    {
+      id: 'standardName',
+      label: 'Class',
+      isSort: true,
+      isFilter: true,
+      filterType: 'string',
+      minWidth: 100,
+    },
+    {
+      id: 'divisionName',
+      label: 'Division',
+      minWidth: 100,
+      isSort: false,
+      isFilter: true,
+      filterType: 'string',
+      render: (value) => value || '—',
+    },
     {
       id: 'rollNumber',
       label: 'Roll number',
@@ -495,7 +526,14 @@ export default function HouseManagement() {
   ];
   const divisionColumns: IColumn[] = [
     { id: 'standardName', label: 'Class', minWidth: 140, isFilter: true, filterType: 'string' },
-    { id: 'name', label: 'Division', isSort: true, minWidth: 140, isFilter: true, filterType: 'string' },
+    {
+      id: 'name',
+      label: 'Division',
+      isSort: true,
+      minWidth: 140,
+      isFilter: true,
+      filterType: 'string',
+    },
     {
       id: 'studentCount',
       label: 'Visible students',
@@ -527,6 +565,8 @@ export default function HouseManagement() {
             stickyPosition: 'right',
             render: (_: unknown, row: HouseDivision) => (
               <AdaptiveThreeDotsActions
+                directActionLimit={2}
+                collapseOnOverflow={false}
                 actions={[
                   {
                     id: 'leader',
@@ -675,7 +715,10 @@ export default function HouseManagement() {
               gap: 1.5,
               gridTemplateColumns: {
                 xs: 'minmax(0, 1fr)',
-                sm: state.tab === 'houses' ? 'repeat(2, minmax(0, 1fr))' : 'repeat(2, minmax(0, 1fr))',
+                sm:
+                  state.tab === 'houses'
+                    ? 'repeat(2, minmax(0, 1fr))'
+                    : 'repeat(2, minmax(0, 1fr))',
                 lg:
                   state.tab === 'houses'
                     ? 'repeat(2, minmax(0, 1fr))'
@@ -765,7 +808,9 @@ export default function HouseManagement() {
                 startIcon={<Iconify icon="mdi:tune" width={18} />}
                 aria-haspopup="dialog"
                 aria-expanded={moreFiltersPopover.open}
-                aria-controls={moreFiltersPopover.open ? 'house-management-more-filters' : undefined}
+                aria-controls={
+                  moreFiltersPopover.open ? 'house-management-more-filters' : undefined
+                }
                 sx={{
                   height: 40,
                   whiteSpace: 'nowrap',
@@ -794,7 +839,11 @@ export default function HouseManagement() {
             aria-label="Applied house filters"
             sx={{ pt: 1.5, borderTop: 1, borderColor: 'divider', mt: 1.5 }}
           >
-            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 'fontWeightMedium' }}>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ fontWeight: 'fontWeightMedium' }}
+            >
               Applied filters:
             </Typography>
             {Boolean(houseId) && (
@@ -938,11 +987,7 @@ export default function HouseManagement() {
             }
           />
           <Stack direction="row" justifyContent="flex-end" sx={{ pt: 0.5 }}>
-            <Button
-              variant="contained"
-              size="small"
-              onClick={moreFiltersPopover.onClose}
-            >
+            <Button variant="contained" size="small" onClick={moreFiltersPopover.onClose}>
               Done
             </Button>
           </Stack>

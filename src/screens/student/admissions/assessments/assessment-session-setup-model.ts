@@ -13,6 +13,8 @@ import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { fDate } from 'src/utils/format-time';
 
+import { ADMISSION_DATE_FORMAT } from '../admission-date-formats';
+
 export type SessionRoomChoice = AssessmentSessionRoom;
 export type SessionStaffChoice = AssessmentSessionStaff;
 export type SharedSessionInput = AssessmentSharedSessionInput;
@@ -309,7 +311,7 @@ export function suggestedSessionName(values: SessionSetupValues, scopes: Assessm
         .filter(Boolean)
     )
   );
-  const date = values.startsAt?.isValid() ? fDate(values.startsAt) : '';
+  const date = values.startsAt?.isValid() ? fDate(values.startsAt, ADMISSION_DATE_FORMAT) : '';
   return [type, stages.join(' / '), date].filter(Boolean).join(' · ').slice(0, 128);
 }
 

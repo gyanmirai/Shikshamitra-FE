@@ -8,6 +8,7 @@ import { Iconify } from 'src/components/iconify';
 import { Stack, Tooltip, IconButton } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 
+import { ADMISSION_DATE_TIME_FORMAT } from '../admission-date-formats';
 import { assessmentDateTimeTimestamp, normalizeAssessmentDateTime } from './assessment-date-time';
 
 type Props = {
@@ -37,14 +38,14 @@ export function AssessmentSessionTable({
       label: 'Starts',
       minWidth: 180,
       render: (value: string) =>
-        dayjs(normalizeAssessmentDateTime(value)).format('DD MMM YYYY, h:mm A'),
+        dayjs(normalizeAssessmentDateTime(value)).format(ADMISSION_DATE_TIME_FORMAT),
     },
     {
       id: 'endsAt',
       label: 'Ends',
       minWidth: 180,
       render: (value: string) =>
-        dayjs(normalizeAssessmentDateTime(value)).format('DD MMM YYYY, h:mm A'),
+        dayjs(normalizeAssessmentDateTime(value)).format(ADMISSION_DATE_TIME_FORMAT),
     },
     { id: 'location', label: 'Location', minWidth: 160 },
     {

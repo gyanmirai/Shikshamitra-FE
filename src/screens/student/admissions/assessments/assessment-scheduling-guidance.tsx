@@ -39,7 +39,7 @@ export function AssessmentSchedulingGuidance({
         notificationKey="STU-0268"
         presentation="toast"
         severity="error"
-        action={
+        toastAction={
           <Button
             size="small"
             color="inherit"

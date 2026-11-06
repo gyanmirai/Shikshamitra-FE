@@ -99,3 +99,17 @@ it('locks reason and dismissal while saving', () => {
   expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'close' })).toBeDisabled();
 });
+
+it('keeps the reason when staff keep editing and discards only after confirmation', async () => {
+  const user = userEvent.setup();
+  const onClose = vi.fn();
+  render(<ApplicationResumeJourneyDialog {...props} onClose={onClose} />);
+  await user.type(screen.getByRole('textbox', { name: 'Reason' }), 'Continue the saved journey');
+  await user.click(screen.getByRole('button', { name: 'Cancel' }));
+  await user.click(screen.getByRole('button', { name: 'Keep editing' }));
+  expect(screen.getByRole('textbox', { name: 'Reason' })).toHaveValue('Continue the saved journey');
+  expect(onClose).not.toHaveBeenCalled();
+  await user.click(screen.getByRole('button', { name: 'Cancel' }));
+  await user.click(screen.getByRole('button', { name: 'Discard changes' }));
+  expect(onClose).toHaveBeenCalledOnce();
+});

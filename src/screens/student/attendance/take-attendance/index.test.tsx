@@ -5,9 +5,14 @@ import { vi, it, expect, describe, beforeEach } from 'vitest';
 import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import TakeAttendanceScreen from './index';
+import { renderAttendanceErrorRecovery } from '../attendance-toast-test-fixture';
 
 vi.mock('src/redux/year/yearApi', () => ({
-  useGetYearByIdQuery: () => ({ currentData: mocks.yearData, isError: false }),
+  useGetYearByIdQuery: () => ({
+    currentData: mocks.yearData,
+    isError: mocks.yearError,
+    refetch: mocks.yearRetry,
+  }),
 }));
 
 const mocks = vi.hoisted(() => ({
@@ -29,6 +34,8 @@ const mocks = vi.hoisted(() => ({
   queryOptions: vi.fn(),
   workspaceOptions: vi.fn(),
   yearData: undefined as Record<string, unknown> | undefined,
+  yearError: false,
+  yearRetry: vi.fn(),
 }));
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace: mocks.replace, push: mocks.push }),
@@ -241,16 +248,19 @@ vi.mock('src/components/confirm-dialog', () => ({
   ConfirmDialog: ({
     open,
     title,
+    content,
     action,
     onClose,
   }: {
     open: boolean;
     title: string;
+    content?: React.ReactNode;
     action: React.ReactNode;
     onClose: () => void;
   }) =>
     open ? (
       <div role="dialog" aria-label={title}>
+        {content}
         {action}
         <button type="button" onClick={onClose}>
           Cancel
@@ -344,6 +354,8 @@ const day = (patch: Partial<AttendanceDay> = {}): AttendanceDay => ({
 });
 beforeEach(() => {
   mocks.yearData = undefined;
+  mocks.yearError = false;
+  mocks.yearRetry.mockClear();
   mocks.globalReady = true;
   vi.clearAllMocks();
   mocks.params = new URLSearchParams(
@@ -880,10 +892,14 @@ describe('Daily Attendance workspace', () => {
     expect(screen.getByRole('button', { name: 'Lock attendance' })).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: 'Submit attendance' }));
     expect(screen.getByRole('dialog', { name: 'Submit Attendance?' })).toBeVisible();
+    expect(screen.getByRole('dialog', { name: 'Submit Attendance?' })).toHaveTextContent(
+      '30/09/2026'
+    );
     fireEvent.click(screen.getAllByRole('button', { name: 'Submit attendance' }).at(-1)!);
     await waitFor(() => expect(mocks.mark).toHaveBeenCalledOnce());
     expect(mocks.mark.mock.calls[0][0]).toMatchObject({
       submit: true,
+      date: '2026-09-30',
       entries: [
         { studentId: 'one', status: 2 },
         { studentId: 'two', status: 1 },
@@ -901,6 +917,9 @@ describe('Daily Attendance workspace', () => {
     mocks.query = { ...mocks.query, currentData: registered };
     render(<TakeAttendanceScreen />);
     fireEvent.click(await screen.findByRole('button', { name: 'Lock attendance' }));
+    expect(screen.getByRole('dialog', { name: 'Lock Attendance?' })).toHaveTextContent(
+      '30/09/2026'
+    );
     fireEvent.click(screen.getAllByRole('button', { name: 'Lock attendance' }).at(-1)!);
     await waitFor(() => expect(mocks.lock).toHaveBeenCalledOnce());
     expect(mocks.mark).not.toHaveBeenCalled();
@@ -1026,6 +1045,23 @@ describe('Daily Attendance workspace', () => {
     mocks.params.set('year', 'linked-year');
     render(<TakeAttendanceScreen />);
     expect(screen.getByLabelText('Loading register academic year')).toBeVisible();
+    expect(mocks.queryArgs).not.toHaveBeenCalled();
+  });
+
+  it('retries the failed linked year from its toast before mounting a register', () => {
+    mocks.params.set('year', 'linked-year');
+    mocks.yearError = true;
+    render(<TakeAttendanceScreen />);
+    expect(shikshaMitraToast.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'The academic year for this register could not be loaded.',
+      })
+    );
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+    expect(mocks.queryArgs).not.toHaveBeenCalled();
+    const recovery = renderAttendanceErrorRecovery();
+    fireEvent.click(recovery.getByRole('button', { name: 'Retry' }));
+    expect(mocks.yearRetry).toHaveBeenCalledOnce();
     expect(mocks.queryArgs).not.toHaveBeenCalled();
   });
 

@@ -4,6 +4,7 @@ import type { AdmissionApplicationStage } from 'src/redux/student/admissions/adm
 
 import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
+import { fDateTime } from 'src/utils/format-time';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { Card, Chip, Stack, Button, Divider, Skeleton, Typography } from '@mui/material';
@@ -13,6 +14,7 @@ import { SeatHistory } from './seat-history';
 import { SeatActionDialog } from './seat-action-dialog';
 import { useApplicationSeat } from './use-application-seat';
 import { SeatCapacitySummary } from './seat-capacity-summary';
+import { ADMISSION_DATE_TIME_FORMAT } from '../admission-date-formats';
 import { useApplicationStageReadiness } from '../application-detail/application-stage-readiness';
 
 import type { ApplicationStageReadinessHandler } from '../application-detail/application-stage-readiness';
@@ -169,7 +171,7 @@ function SeatStageContent({
           <SeatCapacitySummary state={state} />
           {state.expiresAt && (
             <StudentFeedback notificationKey="STU-0475" presentation="inline" severity="info">
-              Reservation expires {new Date(state.expiresAt).toLocaleString()}.
+              Reservation expires {fDateTime(state.expiresAt, ADMISSION_DATE_TIME_FORMAT)}.
             </StudentFeedback>
           )}
           {state.waitlistPosition && (

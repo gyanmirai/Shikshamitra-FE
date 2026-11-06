@@ -2,6 +2,7 @@ import { it, vi, expect } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import { mswServer } from 'src/test/mswServer';
 import userEvent from '@testing-library/user-event';
+import { shikshaMitraToast } from 'src/components/toast';
 import { screen, within, waitFor } from '@testing-library/react';
 
 import {
@@ -17,6 +18,7 @@ import {
   profileNavigation,
   profileDetailsPath,
   renderStudentProfile,
+  renderProfileToastAction,
 } from './student-profile-test-fixture';
 
 const readGrants = [
@@ -163,17 +165,37 @@ it('loads the selected change detail before showing its before/after values and 
 });
 
 it('reports a history read failure without presenting a false empty-history message', async () => {
+  let historyReads = 0;
+  const errorToast = vi.spyOn(shikshaMitraToast, 'error').mockReturnValue('history-error');
   mswServer.use(
     http.get(profilePath, () => HttpResponse.json({ data: studentProfile })),
-    http.get(changePath, () =>
-      HttpResponse.json({ error: { message: 'Unavailable' } }, { status: 503 })
-    )
+    http.get(changePath, () => {
+      historyReads += 1;
+      return historyReads === 1
+        ? HttpResponse.json({ error: { message: 'Unavailable' } }, { status: 503 })
+        : HttpResponse.json({ data: { items: [change], totalCount: 1 } });
+    })
   );
   renderStudentProfile(profileStudentId, readGrants);
   await screen.findByText('Aanya Patel');
   await userEvent.click(screen.getByRole('tab', { name: 'History' }));
-  expect(await screen.findByRole('button', { name: 'Retry History' })).toBeVisible();
+  await waitFor(() =>
+    expect(errorToast).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'Record change history could not be loaded.' })
+    )
+  );
+  expect(screen.queryByRole('button', { name: /Retry history/i })).not.toBeInTheDocument();
   expect(screen.queryByText('No record changes yet')).not.toBeInTheDocument();
+  const historyTab = screen.getByRole('tab', { name: 'History' });
+  const notice = errorToast.mock.calls.findLast(
+    ([options]) => options.message === 'Record change history could not be loaded.'
+  )?.[0];
+  const recovery = renderProfileToastAction(notice);
+  await userEvent.click(within(recovery.container).getByRole('button', { name: /Retry history/i }));
+  await screen.findByRole('button', { name: 'View School details change history' });
+  expect(historyReads).toBe(2);
+  expect(screen.getByRole('tab', { name: 'History' })).toBe(historyTab);
+  errorToast.mockRestore();
 });
 
 it('uses a contextual missing-form state without fixed detail cards or correction redirects', async () => {

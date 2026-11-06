@@ -49,6 +49,7 @@ import {
 } from 'src/redux/student/admissions/admission-parent-registration-api';
 
 import { readAdmissionFormValue } from '../../admission-visibility-rules';
+import { ADMISSION_DATE_TIME_FORMAT } from '../../admission-date-formats';
 
 type Action = 'email' | 'send' | 'corrections' | 'apply' | 'revoke' | 'takeover' | 'retry-delivery';
 const labels: Record<Action, string> = {
@@ -309,6 +310,7 @@ export function ParentRegistrationPanel({
   });
   const router = useRouter();
   const guard = useUnsavedNavigation(Boolean(action && formik.dirty), {
+    guardContextChanges: Boolean(action),
     push: router.push,
     blockNavigation: busy,
   });
@@ -461,17 +463,17 @@ export function ParentRegistrationPanel({
                           />
                         )}
                         <Typography variant="caption" color="text.secondary">
-                          · Expires {fDateTime(request.expiresAt)}
+                          · Expires {fDateTime(request.expiresAt, ADMISSION_DATE_TIME_FORMAT)}
                         </Typography>
                       </Stack>
                       {request.lastSavedAt && (
                         <Typography variant="caption" color="text.secondary">
-                          Parent last saved {fDateTime(request.lastSavedAt)}
+                          Parent last saved {fDateTime(request.lastSavedAt, ADMISSION_DATE_TIME_FORMAT)}
                         </Typography>
                       )}
                       {request.handedInAt && (
                         <Typography variant="caption" color="text.secondary">
-                          Sent to school {fDateTime(request.handedInAt)}
+                          Sent to school {fDateTime(request.handedInAt, ADMISSION_DATE_TIME_FORMAT)}
                         </Typography>
                       )}
                     </Stack>

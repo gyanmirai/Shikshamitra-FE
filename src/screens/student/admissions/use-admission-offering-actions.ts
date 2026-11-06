@@ -60,7 +60,14 @@ export function useAdmissionOfferingActions(
   const [activationErrors, setActivationErrors] = useState<AdmissionOfferingValidationError[]>([]);
   const commandBusy = useBoolean();
   const commandLock = useRef(false);
+  const [checkingRequirements, setCheckingRequirements] = useState(false);
+  const requirementsRead = useRef<{ offeringId: string } | null>(null);
   const permissions = getAdmissionOfferingPermissions(granted);
+
+  const stopRequirementsCheck = () => {
+    requirementsRead.current = null;
+    setCheckingRequirements(false);
+  };
 
   const openDetailed = async (mode: 'view' | 'edit' | 'clone', row: AdmissionOfferingListItem) => {
     detailRequest.current += 1;
@@ -154,7 +161,13 @@ export function useAdmissionOfferingActions(
   };
 
   const confirmAction = async () => {
-    if (!pendingAction || commandLock.current || !permissions[pendingAction.type]) return;
+    if (
+      !pendingAction ||
+      commandLock.current ||
+      requirementsRead.current ||
+      !permissions[pendingAction.type]
+    )
+      return;
     commandLock.current = true;
     commandBusy.onTrue();
     try {
@@ -194,10 +207,12 @@ export function useAdmissionOfferingActions(
     bulkOpen,
     pendingAction,
     activationErrors,
+    checkingRequirements,
     formAccess: getAdmissionFormAccess(granted),
     workflowAccess: getAdmissionWorkflowAccess(granted),
     editBlockedOffering: () => {
-      if (!pendingAction || commandLock.current || !permissions.edit) return undefined;
+      if (!pendingAction || commandLock.current || requirementsRead.current || !permissions.edit)
+        return undefined;
       const { row } = pendingAction;
       setPendingAction(null);
       setActivationErrors([]);
@@ -244,31 +259,39 @@ export function useAdmissionOfferingActions(
     closeBulk: () => setBulkOpen(false),
     requestAction: (row: AdmissionOfferingListItem) => {
       if (commandLock.current) return;
+      stopRequirementsCheck();
       setActivationErrors([]);
       setPendingAction({ type: row.isActive ? 'deactivate' : 'activate', row });
       if (!row.isActive && !row.canActivate && row.configurationStatus === 0) {
-        commandLock.current = true;
-        commandBusy.onTrue();
+        const request = { offeringId: row.id };
+        requirementsRead.current = request;
+        setCheckingRequirements(true);
         (async () => {
           try {
             const latest = await loadOffering(row.id).unwrap();
+            if (requirementsRead.current !== request) return;
             setActivationErrors(
               latest.configuration?.isValid === false ? latest.configuration.errors : []
             );
           } catch (error) {
+            if (requirementsRead.current !== request) return;
             shikshaMitraToast.error({
               message: getAdmissionApiError(error, 'Unable to check offering requirements.'),
             });
           } finally {
-            commandLock.current = false;
-            commandBusy.onFalse();
+            if (requirementsRead.current === request) stopRequirementsCheck();
           }
         })();
       }
     },
-    requestDelete: (row: AdmissionOfferingListItem) => setPendingAction({ type: 'delete', row }),
+    requestDelete: (row: AdmissionOfferingListItem) => {
+      if (commandLock.current) return;
+      stopRequirementsCheck();
+      setPendingAction({ type: 'delete', row });
+    },
     cancelAction: () => {
       if (!commandLock.current) {
+        stopRequirementsCheck();
         setPendingAction(null);
         setActivationErrors([]);
       }

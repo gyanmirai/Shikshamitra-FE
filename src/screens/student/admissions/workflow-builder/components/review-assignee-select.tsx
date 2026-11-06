@@ -96,7 +96,7 @@ export function ReviewAssigneeSelect({
           notificationKey="STU-0526"
           presentation="toast"
           severity="error"
-          action={
+          toastAction={
             <Button size="small" onClick={() => query.refetch()}>
               Retry
             </Button>

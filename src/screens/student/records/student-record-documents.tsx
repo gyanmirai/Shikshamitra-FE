@@ -15,10 +15,11 @@ import { useFormik } from 'formik';
 import { useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
-import { fDate } from 'src/utils/format-time';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { RouterLink } from 'src/routes/components';
 import { CustomTabs } from 'src/components/custom-tabs';
+import { fDate, formatStr } from 'src/utils/format-time';
 import { shikshaMitraToast } from 'src/components/toast';
 import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
@@ -26,8 +27,10 @@ import { FormBusyRegion } from 'src/components/form-busy-region';
 import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 import { useGetStudentRecordTransitionsQuery } from 'src/redux/student/records/student-record-transitions-api';
 import {
   Box,
@@ -60,6 +63,7 @@ import RecordDocumentTemplates from './record-document-templates';
 import RecordDocumentFilters from './components/record-document-filters';
 import StudentCertificateWorkspace from './student-certificate-workspace';
 import DocumentHistoryActions from './components/document-history-actions';
+import { CertificateDecisionReason, CertificateDecisionSection } from './components/certificate-decision-layout';
 
 type HistoryRow = {
   id: string;
@@ -246,6 +250,19 @@ function RecordDocuments({ fixedKind }: { fixedKind?: 'ids' | 'certificates' }) 
       }
     },
   });
+  const clearDecision = () => {
+    if (busy) return;
+    setDecision(null);
+    copyKey.current = '';
+    decisionForm.resetForm();
+  };
+  const certificateDecisionGuard = useUnsavedNavigation(kind === 'certificates' && !!decision && decisionForm.dirty, {
+    push: kind === 'certificates' ? router.push : undefined,
+    blockNavigation: kind === 'certificates' && busy,
+    guardContextChanges: kind === 'certificates' && !!decision,
+    renderConfirmation: (keepEditing, discard) => renderUnsavedConfirmation(keepEditing, discard, { busy }),
+  });
+  const requestCloseCertificateDecision = () => certificateDecisionGuard.requestNavigation(clearDecision);
   const prepare = async () => {
     setFailure(null);
     setBulkBusy(true);
@@ -359,7 +376,7 @@ function RecordDocuments({ fixedKind }: { fixedKind?: 'ids' | 'certificates' }) 
   const columns: IColumn[] = [
     { id: 'number', label: 'Document number', minWidth: 200 },
     { id: 'type', label: 'Type', minWidth: 120 },
-    { id: 'date', label: 'Issued', minWidth: 130, render: (value) => (value ? fDate(value) : '—') },
+    { id: 'date', label: 'Issued', minWidth: 130, render: (value) => (value ? fDate(value, kind === 'certificates' ? formatStr.split.date : undefined) : '—') },
     {
       id: 'status',
       label: 'Status',
@@ -593,7 +610,7 @@ function RecordDocuments({ fixedKind }: { fixedKind?: 'ids' | 'certificates' }) 
                 )
                 .map((exit) => ({
                   id: exit.id,
-                  label: `${exit.outcome} · ${fDate(exit.effectiveDate)} · ${exit.status}`,
+                  label: `${exit.outcome} · ${fDate(exit.effectiveDate, formatStr.split.date)} · ${exit.status}`,
                 }))}
               batch={batch}
               previewDisabled={
@@ -699,7 +716,8 @@ function RecordDocuments({ fixedKind }: { fixedKind?: 'ids' | 'certificates' }) 
               notificationKey="STU-0888"
               presentation="toast"
               severity="error"
-              action={<Button onClick={() => query.refetch()}>Retry</Button>}
+              action={kind === 'ids' ? <Button onClick={() => query.refetch()}>Retry</Button> : undefined}
+              toastAction={kind === 'certificates' ? <Button onClick={() => query.refetch()}>Retry</Button> : undefined}
             >
               Issue history could not be loaded.
             </StudentFeedback>
@@ -832,7 +850,7 @@ function RecordDocuments({ fixedKind }: { fixedKind?: 'ids' | 'certificates' }) 
       </CustomDialog>
       <CustomDialog
         open={!!decision}
-        handleClose={() => {
+        handleClose={kind === 'certificates' ? requestCloseCertificateDecision : () => {
           if (!busy) {
             setDecision(null);
             copyKey.current = '';
@@ -840,8 +858,10 @@ function RecordDocuments({ fixedKind }: { fixedKind?: 'ids' | 'certificates' }) 
           }
         }}
         title={`${decision?.action ?? 'Review'} ${decision?.row.number ?? 'document'}`}
+        titleInfo={kind === 'certificates' ? 'Review the identified certificate and record the reason for this action.' : undefined}
         maxWidth="sm"
         disableClose={busy}
+        guardUnsavedChanges={kind !== 'certificates'}
         hasUnsavedChanges={decisionForm.dirty}
         onSubmit={(event) => {
           event.preventDefault();
@@ -850,6 +870,7 @@ function RecordDocuments({ fixedKind }: { fixedKind?: 'ids' | 'certificates' }) 
       >
         <DialogScrollContent>
           <FormBusyRegion busy={busy} label="Recording document decision…">
+            <CertificateDecisionSection active={kind === 'certificates'}>
             <Stack spacing={2}>
               <Typography variant="body2">
                 {decision?.action === 'Void'
@@ -858,7 +879,7 @@ function RecordDocuments({ fixedKind }: { fixedKind?: 'ids' | 'certificates' }) 
                     ? 'Create a new numbered copy from the saved original details.'
                     : 'Print the original saved document with the same number.'}
               </Typography>
-              <TextField
+              <CertificateDecisionReason active={kind === 'certificates'} error={Boolean(decisionForm.touched.reason && decisionForm.errors.reason)}><TextField
                 disabled={busy}
                 label="Reason"
                 required
@@ -871,6 +892,7 @@ function RecordDocuments({ fixedKind }: { fixedKind?: 'ids' | 'certificates' }) 
                 error={!!decisionForm.touched.reason && !!decisionForm.errors.reason}
                 helperText={decisionForm.touched.reason && decisionForm.errors.reason}
               />
+              </CertificateDecisionReason>
               {failure && (
                 <StudentFeedback
                   notificationKey="STU-0890"
@@ -881,12 +903,16 @@ function RecordDocuments({ fixedKind }: { fixedKind?: 'ids' | 'certificates' }) 
                 </StudentFeedback>
               )}
             </Stack>
+            </CertificateDecisionSection>
           </FormBusyRegion>
         </DialogScrollContent>
         <DialogActions>
           <Button
             disabled={busy}
-            onClick={() => {
+            variant={kind === 'certificates' ? 'outlined' : undefined}
+            color={kind === 'certificates' ? 'inherit' : undefined}
+            startIcon={kind === 'certificates' ? <Iconify icon={GlobalIcons.cancel} /> : undefined}
+            onClick={kind === 'certificates' ? requestCloseCertificateDecision : () => {
               setDecision(null);
               copyKey.current = '';
               decisionForm.resetForm();
@@ -896,7 +922,8 @@ function RecordDocuments({ fixedKind }: { fixedKind?: 'ids' | 'certificates' }) 
           </Button>
           <Button
             variant="contained"
-            color={decision?.action === 'Void' ? 'error' : 'primary'}
+            color={decision?.action === 'Void' ? 'error' : kind === 'certificates' ? 'inherit' : 'primary'}
+            startIcon={kind === 'certificates' ? <Iconify icon={decision?.action === 'Void' ? GlobalIcons.delete : decision?.action === 'Duplicate' ? GlobalIcons.copy : 'solar:printer-bold'} /> : undefined}
             type="submit"
             loading={busy}
             disabled={busy}
@@ -905,6 +932,7 @@ function RecordDocuments({ fixedKind }: { fixedKind?: 'ids' | 'certificates' }) 
           </Button>
         </DialogActions>
       </CustomDialog>
+      {certificateDecisionGuard.confirmation}
     </Box>
   );
 }

@@ -2,7 +2,7 @@ import type { StudentAdmissionEvidence } from 'src/redux/student/admissions/stud
 
 import { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
-import { fDateTime } from 'src/utils/format-time';
+import { fDateTime, formatStr } from 'src/utils/format-time';
 import { Stack, Accordion, Typography, AccordionSummary, AccordionDetails } from '@mui/material';
 import { DocumentStatusLabel } from 'src/screens/student/admissions/document-verification/document-status';
 import { DocumentEvidenceHistory } from 'src/screens/student/admissions/document-verification/document-evidence-history';
@@ -44,13 +44,16 @@ export function StudentAdmissionEvidenceGroups({
                 </Stack>
                 <Typography variant="caption" color="text.secondary">
                   {versions.length} evidence {versions.length === 1 ? 'version' : 'versions'}
-                  {latest.studentLinkedAt ? ` · Linked ${fDateTime(latest.studentLinkedAt)}` : ''}
+                  {latest.studentLinkedAt
+                    ? ` · Linked ${fDateTime(latest.studentLinkedAt, formatStr.split.dateTime)}`
+                    : ''}
                 </Typography>
               </Stack>
             </AccordionSummary>
             <AccordionDetails>
               {expanded === key && (
                 <DocumentEvidenceHistory
+                  dateTimeFormat={formatStr.split.dateTime}
                   evidence={versions}
                   allowDownload={allowDownload}
                   studentId={studentId}

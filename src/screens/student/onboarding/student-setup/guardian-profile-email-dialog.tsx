@@ -8,14 +8,18 @@ import type {
 import * as Yup from 'yup';
 import { useState } from 'react';
 import { useFormik } from 'formik';
-import { LoadingButton } from '@mui/lab';
+import { useRouter } from 'next/navigation';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
+import { FormSectionCard } from 'src/components/form-section-card';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
+import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 import {
   useGetStudentRecordSnapshotQuery,
   useCreateStudentRecordChangeMutation,
@@ -48,6 +52,7 @@ export default function GuardianProfileEmailDialog(props: Props) {
     <CustomDialog
       open
       title={parentOnly ? 'Correct Parent Email' : 'Correct Guardian Profile Email'}
+      titleInfo="Review the saved family profile before requesting an email correction."
       maxWidth="sm"
       handleClose={onClose}
       hasForm={false}
@@ -58,7 +63,7 @@ export default function GuardianProfileEmailDialog(props: Props) {
             notificationKey="STU-0947"
             presentation={activationRequired ? 'persistent' : 'toast'}
             severity="error"
-            action={
+            toastAction={
               !activationRequired && (
                 <Button size="small" onClick={() => snapshot.refetch()}>
                   Retry
@@ -74,11 +79,23 @@ export default function GuardianProfileEmailDialog(props: Props) {
           <StudentSetupLoadingRows label="Loading saved family profile" count={2} />
         )}
       </DialogScrollContent>
+      <DialogActions>
+        <Button
+          size="small"
+          variant="outlined"
+          color="inherit"
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          onClick={onClose}
+        >
+          Close
+        </Button>
+      </DialogActions>
     </CustomDialog>
   );
 }
 
 function EmailForm({ snapshot: loadedSnapshot, ...props }: Props & { snapshot: RecordSnapshot }) {
+  const router = useRouter();
   // Freeze the reviewed baseline; the Records command rejects stale snapshots.
   const [snapshot] = useState(loadedSnapshot);
   const [clientKey] = useState(() => crypto.randomUUID());
@@ -136,108 +153,131 @@ function EmailForm({ snapshot: loadedSnapshot, ...props }: Props & { snapshot: R
     },
   });
   const busy = mutation.isLoading || formik.isSubmitting;
+  const closeGuard = useUnsavedNavigation(formik.dirty, {
+    push: router.push,
+    blockNavigation: busy,
+    guardContextChanges: true,
+    renderConfirmation: (keepEditing, discard) =>
+      renderUnsavedConfirmation(keepEditing, discard, { busy }),
+  });
+  const requestClose = () => closeGuard.requestNavigation(props.onClose);
   return (
     <CustomDialog
       open
       title={props.parentOnly ? 'Correct Parent Email' : 'Correct Guardian Profile Email'}
+      titleInfo="Request a correction to the selected person's saved email. Student Records approval rules and history apply."
       maxWidth="sm"
-      handleClose={props.onClose}
+      handleClose={requestClose}
       disableClose={busy}
-      hasUnsavedChanges={formik.dirty}
+      guardUnsavedChanges={false}
+      formProps={{
+        onSubmit: (event) => {
+          event.preventDefault();
+          formik.submitForm();
+        },
+        noValidate: true,
+      }}
     >
       <DialogScrollContent dividers>
-        <Stack spacing={1}>
-          <Typography variant="body2" fontWeight={600}>
-            {props.caseLabel}
-          </Typography>
-          <Typography variant="body2">
-            {props.relationship === 'guardian'
-              ? 'Other guardian'
-              : props.relationship === 'father'
-                ? 'Father'
-                : 'Mother'}
-            : {owner?.fullName || 'Profile unavailable'}
-          </Typography>
-          <Typography variant="body2">
-            This correction follows Student Records approval rules and is added to history.
-          </Typography>
-          {!validOwner && (
-            <StudentFeedback
-              notificationKey="STU-0949"
-              presentation="persistent"
-              severity="warning"
-            >
-              Complete this person’s saved family profile in Student Records first.
-            </StudentFeedback>
-          )}
-          <ShakingTextField error={Boolean(formik.touched.email && formik.errors.email)}>
-            <TextField
-              required
-              fullWidth
-              size="small"
-              label="Profile email"
-              name="email"
-              type="email"
-              value={formik.values.email}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              disabled={busy || !validOwner}
-              error={Boolean(formik.touched.email && formik.errors.email)}
-              helperText={formik.touched.email && formik.errors.email}
-            />
-          </ShakingTextField>
-          <ShakingTextField error={Boolean(formik.touched.reason && formik.errors.reason)}>
-            <TextField
-              required
-              fullWidth
-              size="small"
-              multiline
-              minRows={3}
-              label="Correction reason"
-              name="reason"
-              value={formik.values.reason}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              disabled={busy || !validOwner}
-              error={Boolean(formik.touched.reason && formik.errors.reason)}
-              helperText={formik.touched.reason && formik.errors.reason}
-              slotProps={{ htmlInput: { maxLength: 400 } }}
-            />
-          </ShakingTextField>
-          {formik.status && (
-            <StudentFeedback notificationKey="STU-0950" presentation="persistent" severity="error">
-              {formik.status}
-            </StudentFeedback>
-          )}
-        </Stack>
+        <FormSectionCard
+          title="Email Correction"
+          icon={GlobalIcons.email}
+          descriptionTooltip="Confirm the person's identity, enter their email and explain why the saved profile needs correction."
+        >
+          <Stack spacing={2}>
+            <Typography variant="body2" fontWeight={600}>
+              {props.caseLabel}
+            </Typography>
+            <Typography variant="body2">
+              {props.relationship === 'guardian'
+                ? 'Other guardian'
+                : props.relationship === 'father'
+                  ? 'Father'
+                  : 'Mother'}
+              : {owner?.fullName || 'Profile unavailable'}
+            </Typography>
+            <Typography variant="body2">
+              This correction follows Student Records approval rules and is added to history.
+            </Typography>
+            {!validOwner && (
+              <StudentFeedback
+                notificationKey="STU-0949"
+                presentation="persistent"
+                severity="warning"
+              >
+                Complete this person’s saved family profile in Student Records first.
+              </StudentFeedback>
+            )}
+            <ShakingTextField error={Boolean(formik.touched.email && formik.errors.email)}>
+              <TextField
+                required
+                fullWidth
+                size="small"
+                label="Profile email"
+                name="email"
+                type="email"
+                value={formik.values.email}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                disabled={busy || !validOwner}
+                error={Boolean(formik.touched.email && formik.errors.email)}
+                helperText={formik.touched.email && formik.errors.email}
+              />
+            </ShakingTextField>
+            <ShakingTextField error={Boolean(formik.touched.reason && formik.errors.reason)}>
+              <TextField
+                required
+                fullWidth
+                size="small"
+                multiline
+                minRows={3}
+                label="Correction reason"
+                name="reason"
+                value={formik.values.reason}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                disabled={busy || !validOwner}
+                error={Boolean(formik.touched.reason && formik.errors.reason)}
+                helperText={formik.touched.reason && formik.errors.reason}
+                slotProps={{ htmlInput: { maxLength: 400 } }}
+              />
+            </ShakingTextField>
+            {formik.status && (
+              <StudentFeedback
+                notificationKey="STU-0950"
+                presentation="persistent"
+                severity="error"
+              >
+                {formik.status}
+              </StudentFeedback>
+            )}
+          </Stack>
+        </FormSectionCard>
       </DialogScrollContent>
       <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
         <Button
           size="small"
           variant="outlined"
-          startIcon={<Iconify icon="mdi:close" />}
-          onClick={() => {
-            if (!formik.dirty || window.confirm('Are you sure you want to leave this page?'))
-              props.onClose();
-          }}
+          color="inherit"
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          onClick={requestClose}
           disabled={busy}
         >
           Cancel
         </Button>
-        <LoadingButton
+        <Button
           type="submit"
           size="small"
           variant="contained"
-          startIcon={<Iconify icon="mdi:content-save-outline" />}
+          color="inherit"
+          startIcon={<Iconify icon={GlobalIcons.submit} />}
           loading={busy}
           disabled={busy || !validOwner}
-          onClick={() => {
-            if (!busy) formik.handleSubmit();
-          }}
         >
-          Save correction
-        </LoadingButton>
+          Submit
+        </Button>
       </DialogActions>
+      {closeGuard.confirmation}
     </CustomDialog>
   );
 }

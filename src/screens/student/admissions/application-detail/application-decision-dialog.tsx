@@ -5,10 +5,13 @@ import type {
   AdmissionApplicationDecisionInput,
 } from 'src/redux/student/admissions/admission-applications-api';
 
-import { Stack, TextField } from '@mui/material';
+import { GlobalIcons } from 'src/utils/icons';
+import { Stack, TextField, Typography } from '@mui/material';
+import ShakingTextField from 'src/components/shaking-text-field';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { DialogScrollContent } from 'src/components/customDialog';
+import { FormSectionCard } from 'src/components/form-section-card';
 
 import { ReviewDialog } from '../review/review-dialog';
 import { formatAdmissionReference } from '../admission-reference';
@@ -44,6 +47,7 @@ export function ApplicationDecisionDialog({
 
   if (!action) return null;
   const concurrencyUnavailable = !canRecord;
+  const reasonError = Boolean(formik.touched.reason && formik.errors.reason);
 
   return (
     <ReviewDialog
@@ -84,17 +88,39 @@ export function ApplicationDecisionDialog({
                 failed request to check the latest permissions and decision state.
               </StudentFeedback>
             )}
-            <TextField
-              fullWidth
-              disabled={isBusy}
-              multiline
-              minRows={3}
-              size="small"
-              label={requiresReason ? 'Reason *' : 'Reason (Optional)'}
-              {...formik.getFieldProps('reason')}
-              error={Boolean(formik.touched.reason && formik.errors.reason)}
-              helperText={formik.touched.reason && formik.errors.reason}
-            />
+            <FormSectionCard
+              aria-label="Decision details"
+              icon={GlobalIcons.admissionDetails}
+              title="Decision Details"
+              descriptionTooltip={
+                requiresReason
+                  ? 'Confirm the applicant and application reference, then explain this decision. The reason is recorded in the application history.'
+                  : 'Confirm the applicant and application reference. You can add a reason for the application history.'
+              }
+            >
+              <Stack spacing={0.5}>
+                <Typography variant="subtitle2">
+                  {current.applicantName || 'Applicant name unavailable'}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Application {formatAdmissionReference(current.applicationNumber)}
+                </Typography>
+              </Stack>
+              <ShakingTextField error={reasonError}>
+                <TextField
+                  fullWidth
+                  required={requiresReason}
+                  disabled={isBusy}
+                  multiline
+                  minRows={3}
+                  size="small"
+                  label={requiresReason ? 'Reason' : 'Reason (optional)'}
+                  {...formik.getFieldProps('reason')}
+                  error={reasonError}
+                  helperText={formik.touched.reason && formik.errors.reason}
+                />
+              </ShakingTextField>
+            </FormSectionCard>
           </Stack>
         </FormBusyRegion>
       </DialogScrollContent>

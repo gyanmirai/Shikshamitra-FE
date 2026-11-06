@@ -17,6 +17,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, Stack, Button, MenuItem, TextField, Typography } from '@mui/material';
 
 import { assessmentErrorMessage } from './assessment-utils';
+import { ADMISSION_DATE_TIME_FORMAT } from '../admission-date-formats';
 
 import type { SharedSessionView } from './assessment-session-setup-model';
 
@@ -107,14 +108,14 @@ export function AssessmentSessionsPanel({
     {
       id: 'startsAt',
       label: 'Schedule',
-      exportValue: (value, row) => `${fDateTime(value as string)} – ${fDateTime(row.endsAt)}`,
+      exportValue: (value, row) => `${fDateTime(value as string, ADMISSION_DATE_TIME_FORMAT)} – ${fDateTime(row.endsAt, ADMISSION_DATE_TIME_FORMAT)}`,
       filterType: 'dateTime',
       isSort: false,
       render: (value, row) => (
         <Stack>
-          <Typography variant="body2">{fDateTime(value)}</Typography>
+          <Typography variant="body2">{fDateTime(value, ADMISSION_DATE_TIME_FORMAT)}</Typography>
           <Typography variant="caption" color="text.secondary">
-            To {fDateTime(row.endsAt)}
+            To {fDateTime(row.endsAt, ADMISSION_DATE_TIME_FORMAT)}
           </Typography>
         </Stack>
       ),

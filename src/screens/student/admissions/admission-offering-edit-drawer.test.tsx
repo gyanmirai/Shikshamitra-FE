@@ -17,6 +17,7 @@ const mocks = vi.hoisted(() => ({
   errorToast: vi.fn(),
   valid: true,
   queryFailed: false,
+  validating: false,
 }));
 vi.mock('src/components/toast', () => ({
   shikshaMitraToast: { error: mocks.errorToast, dismiss: vi.fn() },
@@ -54,9 +55,10 @@ vi.mock('./use-admission-offering-editor', () => ({
     queryFailed: mocks.queryFailed,
     hierarchyEmpty: false,
     hierarchyLoading: false,
-    validating: false,
+    validating: mocks.validating,
     retryHierarchy: mocks.retry,
     clearReadiness: () => undefined,
+    cancelValidation: () => undefined,
     validateForReview: mocks.validate,
     save: mocks.save,
     readiness: {
@@ -120,14 +122,17 @@ describe('Offering edit drawer experience', () => {
     vi.clearAllMocks();
     mocks.valid = true;
     mocks.queryFailed = false;
+    mocks.validating = false;
     mocks.validate.mockResolvedValue({ isValid: true, errors: [] });
     mocks.save.mockResolvedValue(true);
   });
-  it('opens a locked loading shell, then announces the detail failure through the standard toast', async () => {
+  it('allows closing the initial read, then announces the detail failure through the standard toast', async () => {
     const retry = vi.fn();
     const view = show({ offering: null, loadingDetail: true });
     expect(screen.getByRole('status', { name: 'Loading Admission Offering' })).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Close Admission Offering' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Close Admission Offering' })).toBeEnabled();
+    await userEvent.click(screen.getByRole('button', { name: 'Close Admission Offering' }));
+    expect(props.onClose).toHaveBeenCalledOnce();
     expect(screen.queryByRole('button', { name: 'Continue' })).not.toBeInTheDocument();
     view.rerender(
       <ThemeProvider theme={createTheme(defaultSettings)}>
@@ -151,6 +156,11 @@ describe('Offering edit drawer experience', () => {
     expect(screen.queryByRole('textbox', { name: 'Offering Name *' })).not.toBeInTheDocument();
     expect(retry).not.toHaveBeenCalled();
     expect(screen.getByRole('button', { name: 'Close Admission Offering' })).toBeEnabled();
+  });
+  it('retains the write lock even when the initial details are not yet available', () => {
+    show({ offering: null, loadingDetail: true, saving: true });
+    expect(screen.getByRole('button', { name: 'Close Admission Offering' })).toBeDisabled();
+    expect(props.onClose).not.toHaveBeenCalled();
   });
   it('merges class and configuration, shows cycle below two steps and preserves choices after Preview/Back', async () => {
     const user = userEvent.setup();
@@ -314,7 +324,8 @@ describe('Offering edit drawer experience', () => {
     await user.clear(screen.getByRole('textbox', { name: 'Offering Name *' }));
     await user.type(screen.getByRole('textbox', { name: 'Offering Name *' }), 'Unsaved name');
     await user.click(screen.getByRole('button', { name: 'Deactivate offering' }));
-    expect(confirm).toHaveBeenCalledOnce();
+    expect(confirm).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('button', { name: 'Keep editing' }));
     expect(onDeactivate).not.toHaveBeenCalled();
     expect(props.onClose).not.toHaveBeenCalled();
     expect(screen.getByRole('textbox', { name: 'Offering Name *' })).toHaveValue('Unsaved name');
@@ -402,5 +413,50 @@ describe('Offering edit drawer experience', () => {
     expect(screen.getByRole('textbox', { name: 'Offering Name *' })).toBeVisible();
     expect(screen.queryByRole('heading', { name: 'Preview Offering' })).not.toBeInTheDocument();
     expect(mocks.save).not.toHaveBeenCalled();
+  });
+
+  it('allows closing an in-flight preview read and ignores its late completion', async () => {
+    let resolve!: (value: { isValid: boolean; errors: [] }) => void;
+    mocks.validate.mockImplementationOnce(
+      () =>
+        new Promise((done) => {
+          resolve = done;
+        })
+    );
+    const onClose = vi.fn();
+    const view = show({ onClose });
+    await userEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    await waitFor(() => expect(mocks.validate).toHaveBeenCalledOnce());
+    mocks.validating = true;
+    view.rerender(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <AdmissionOfferingEditDrawer {...props} onClose={onClose} />
+      </ThemeProvider>
+    );
+    expect(screen.getByRole('status')).toHaveTextContent('Checking offering configuration…');
+    expect(screen.queryByText('Saving...')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Close Admission Offering' })).toBeEnabled();
+    await userEvent.click(screen.getByRole('button', { name: 'Close Admission Offering' }));
+    expect(onClose).toHaveBeenCalledOnce();
+    await act(async () => resolve({ isValid: true, errors: [] }));
+    expect(screen.queryByRole('heading', { name: 'Preview Offering' })).not.toBeInTheDocument();
+    expect(mocks.save).not.toHaveBeenCalled();
+  });
+
+  it('retains the write lock while Save validates before persistence', async () => {
+    let resolve!: (value: boolean) => void;
+    mocks.save.mockImplementationOnce(
+      () =>
+        new Promise((done) => {
+          resolve = done;
+        })
+    );
+    show();
+    await userEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Save Changes' }));
+    await waitFor(() => expect(mocks.save).toHaveBeenCalledOnce());
+    expect(screen.getByRole('status')).toHaveTextContent('Saving offering changes…');
+    expect(screen.getByRole('button', { name: 'Close Admission Offering' })).toBeDisabled();
+    await act(async () => resolve(true));
   });
 });

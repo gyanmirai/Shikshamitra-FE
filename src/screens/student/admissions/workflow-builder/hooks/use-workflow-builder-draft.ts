@@ -15,7 +15,6 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { createStage } from '../../workflow-builder-utils';
 import { isApplicationStageType } from '../workflow-stage-configuration';
 import { getSequentialAppendRoute } from '../workflow-route-diagnostics';
-import { useAdmissionUnsavedChanges } from '../../use-admission-unsaved-changes';
 import { type WorkflowTemplateId, getAdmissionWorkflowTemplate } from '../../workflow-template';
 import {
   insertWorkflowStage,
@@ -56,7 +55,6 @@ export function useWorkflowBuilderDraft(
     past: WorkflowSnapshot[];
     future: WorkflowSnapshot[];
   }>({ past: [], future: [] });
-  useAdmissionUnsavedChanges(true, dirty);
 
   useEffect(() => {
     // A save updates loadedStamp before its invalidated query finishes refetching.
@@ -84,14 +82,6 @@ export function useWorkflowBuilderDraft(
     setValidation(null);
     setHistory({ past: [], future: [] });
   }, [loadedStamp, workflow]);
-
-  useEffect(() => {
-    const warnBeforeUnload = (event: BeforeUnloadEvent) => {
-      if (dirty) event.preventDefault();
-    };
-    window.addEventListener('beforeunload', warnBeforeUnload);
-    return () => window.removeEventListener('beforeunload', warnBeforeUnload);
-  }, [dirty]);
 
   const issueCountByStage = (validation?.issues ?? []).reduce<Record<string, number>>(
     (result, issue) => {
@@ -210,6 +200,15 @@ export function useWorkflowBuilderDraft(
     setValidation(null);
     setDirty(true);
   };
+  const resetDraft = () => {
+    if (!workflow) return;
+    setStages([...workflow.stages].sort((left, right) => left.displayOrder - right.displayOrder));
+    setTransitions(workflow.transitions);
+    setDefaultInquiryFormDefinitionId(workflow.defaultInquiryFormDefinitionId ?? null);
+    setDirty(false);
+    setValidation(null);
+    setHistory({ past: [], future: [] });
+  };
 
   return {
     stages,
@@ -249,5 +248,6 @@ export function useWorkflowBuilderDraft(
     duplicateStage,
     saveTransition,
     applyWorkflowTemplate,
+    resetDraft,
   };
 }

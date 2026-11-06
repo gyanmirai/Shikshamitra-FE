@@ -1,5 +1,6 @@
 import { useConfirmDialog } from 'src/hooks/use-confirm-dialog';
 import { setDriverNextEnabled } from 'src/utils/driverBtnConfig';
+import { guardAcademicContextChange } from 'src/hooks/academic-context-change';
 
 import type { GlobalAcademicSearchOption } from './types';
 
@@ -23,6 +24,15 @@ export function useAcademicConfirmation({
   const changeSelection = async (newOption: GlobalAcademicSearchOption | null) => {
     if (!newOption) return;
 
+    const applySelection = () => {
+      const option = isYearOnly
+        ? (options.find((item) => item.academicYear.id === newOption.academicYear.id) ?? newOption)
+        : newOption;
+      applyAcademicOption(option);
+      setDriverNextEnabled(true);
+    };
+    if (isStudentModule && guardAcademicContextChange(applySelection)) return;
+
     const subject = isYearOnly ? 'academic year' : 'academic year, board and medium';
     const from = isYearOnly ? selectedOption?.academicYear.name : selectedOption?.label;
     const to = isYearOnly ? newOption.academicYear.name : newOption.label;
@@ -35,10 +45,8 @@ export function useAcademicConfirmation({
       icon: 'warning',
     });
     if (confirmed) {
-      const option = isYearOnly
-        ? (options.find((item) => item.academicYear.id === newOption.academicYear.id) ?? newOption)
-        : newOption;
-      applyAcademicOption(option);
+      if (isStudentModule && guardAcademicContextChange(applySelection)) return;
+      applySelection();
     }
     if (selectedOption || confirmed) setDriverNextEnabled(true);
   };

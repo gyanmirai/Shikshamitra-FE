@@ -10,31 +10,34 @@ import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import { Editor } from 'src/components/editor';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
+import { formatStr } from 'src/utils/format-time';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useSelector, useDispatch } from 'react-redux';
 import FileUploader from 'src/components/custom-upload';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import sortQueryString from 'src/utils/sort-query-string';
-import React, { useMemo, useState, useEffect } from 'react';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { editorClasses } from 'src/components/editor/classes';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
+import React, { useId, useMemo, useState, useEffect } from 'react';
+import { FormSectionCard } from 'src/components/form-section-card';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { useLazyGetStudentsByDivisionQuery } from 'src/redux/student';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 import { useGetStudentAttendanceTypeQuery } from 'src/redux/student/attendance-type/attendance-type-api';
 import {
   EmployeeLeaveStatusType,
@@ -68,14 +71,13 @@ import {
 } from 'src/redux/student/student-leave/student-leave-api';
 
 import { LeaveRequestActions } from './leave-request-actions';
-import { AttendanceTypeForm } from '../setting/attendance-type';
 import { useAttendanceContext } from '../setting/attendance-context';
 import {
   parseLeaveTableFilters,
   serializeLeaveTableFiltersForApi,
 } from './leave-request-table-filters';
 
-import type { IFormValues } from './type';
+import type { IFormValues, LeaveDecisionContext } from './type';
 
 const LeaveAndAbsentScreen = ({
   scope,
@@ -103,6 +105,8 @@ const LeaveAndAbsentScreen = ({
   // Dialog control for add/edit form
   const dialog = useBoolean();
   const [formBusy, setFormBusy] = useState(false);
+  const [formDirty, setFormDirty] = useState(false);
+  const [decisionLeave, setDecisionLeave] = useState<LeaveDecisionContext | null>(null);
   // Dialog control for reject confirmation
   const confirmRejectDialog = useBoolean();
   // Dialog control for view leave details
@@ -114,8 +118,11 @@ const LeaveAndAbsentScreen = ({
 
   const [leaveId, setLeaveId] = useState<string>('');
 
-  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
-  const dispatch = useDispatch();
+  const { requestNavigation, confirmation } = useUnsavedNavigation(formDirty, {
+    blockNavigation: formBusy,
+    guardContextChanges: true,
+    renderConfirmation: renderUnsavedConfirmation,
+  });
 
   const context = useAttendanceContext();
   const requiresMediumSelection = context.params.get('dashboard') === 'pending' && !selectedMedium;
@@ -191,24 +198,17 @@ const LeaveAndAbsentScreen = ({
   });
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
-    const resetState = () => {
-      setTimeout(() => {
-        setWhichStatus(null);
-        setLeaveId('');
-        dispatch(setIsChanges(false));
-      }, 200); // Adjust timing based on your dialog close animation
+    const close = () => {
+      dialog.onFalse();
+      setEditingLeave(null);
+      confirmRejectDialog.onFalse();
+      setWhichStatus(null);
+      setLeaveId('');
+      setDecisionLeave(null);
+      setFormDirty(false);
     };
-
-    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      dialog.onFalse();
-      setEditingLeave(null);
-      confirmRejectDialog.onFalse();
-      resetState();
-    } else if (!isChanges) {
-      dialog.onFalse();
-      setEditingLeave(null);
-      confirmRejectDialog.onFalse();
-    }
+    if (isSubmit) close();
+    else requestNavigation(close);
   };
 
   const tableData = useMemo(
@@ -218,9 +218,11 @@ const LeaveAndAbsentScreen = ({
         // Use backend's totalDays value directly
         totalDays: item.totalDays,
         // Format leaveDate properly
-        formattedLeaveDate: item.leaveDate ? dayjs(item.leaveDate).format('DD-MM-YYYY') : '-',
+        formattedLeaveDate: item.leaveDate
+          ? dayjs(item.leaveDate).format(formatStr.split.date)
+          : '-',
         // Format endDate with null handling
-        formattedEndDate: item.endDate ? dayjs(item.endDate).format('DD-MM-YYYY') : '-',
+        formattedEndDate: item.endDate ? dayjs(item.endDate).format(formatStr.split.date) : '-',
       })),
     [leaveData]
   );
@@ -294,7 +296,7 @@ const LeaveAndAbsentScreen = ({
         minWidth: '120px',
         align: 'right',
         render(value, row) {
-          return row.isHalfDay ? dayjs(row.leaveDate).format('DD-MM-YYYY') : value;
+          return row.isHalfDay ? dayjs(row.leaveDate).format(formatStr.split.date) : value;
         },
       },
       {
@@ -306,8 +308,8 @@ const LeaveAndAbsentScreen = ({
         render(value, row) {
           if (value === null || value === undefined || Number.isNaN(value)) return '-';
           const days = parseFloat(value);
-          if (days === 0.5) return 'Half Day';
-          return days === 1 ? '1 Day' : `${days} Days`;
+          if (days === 0.5) return 'Half day';
+          return days === 1 ? '1 day' : `${days} days`;
         },
       },
       {
@@ -345,11 +347,13 @@ const LeaveAndAbsentScreen = ({
               editDisabled={requiresMediumSelection}
               studentName={student}
               onApprove={() => {
+                setDecisionLeave(row);
                 setWhichStatus(EmployeeLeaveStatusType.Approved);
                 setLeaveId(row.id);
                 confirmRejectDialog.onTrue();
               }}
               onReject={() => {
+                setDecisionLeave(row);
                 setWhichStatus(EmployeeLeaveStatusType.Rejected);
                 setLeaveId(row.id);
                 confirmRejectDialog.onTrue();
@@ -447,7 +451,7 @@ const LeaveAndAbsentScreen = ({
           notificationKey="STU-0625"
           presentation="toast"
           severity="error"
-          action={<Button onClick={refetch}>Retry</Button>}
+          toastAction={<Button onClick={refetch}>Retry</Button>}
         >
           Leave requests could not be loaded.
         </StudentFeedback>
@@ -509,23 +513,12 @@ const LeaveAndAbsentScreen = ({
         }
         columns={columns}
         data={tableData || []}
-        handleRowClick={(row) => {
-          setViewData(row);
-          viewDialog.onTrue();
-        }}
-        rowProps={(row) => ({
-          tabIndex: 0,
-          role: 'button',
-          'aria-label': `View leave request for ${row.studentName || 'student'}`,
-          onKeyDown: (event) => {
-            if (event.target !== event.currentTarget) return;
-            if (event.key === 'Enter' || event.key === ' ') {
-              event.preventDefault();
-              setViewData(row);
-              viewDialog.onTrue();
-            }
+        getRowAction={(row) => ({
+          label: `View leave request for ${row.studentName || 'student'}`,
+          onClick: () => {
+            setViewData(row);
+            viewDialog.onTrue();
           },
-          sx: { cursor: 'pointer' },
         })}
         serverSide
         serverSidePagination
@@ -562,34 +555,21 @@ const LeaveAndAbsentScreen = ({
         onServerPagination={(nextPage, nextSize) =>
           context.update({ leavePage: String(nextPage - 1), leaveSize: String(nextSize) })
         }
-        isLoading={isLoading || isFetching}
+        isLoading={isLoading || (isFetching && !leaveData)}
+        isRefreshing={isFetching && Boolean(leaveData)}
+        errorContent={
+          isError ? <Box role="region" aria-label="Leave requests unavailable" /> : undefined
+        }
       />{' '}
       <CustomDialog
         maxWidth="md"
         open={dialog.value}
         disableClose={formBusy}
+        guardUnsavedChanges={false}
         handleClose={() => handleClose(null, false)}
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">
-              {editingLeave ? 'Edit Leave Request' : 'Add Leave Request'}
-            </Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              title={
-                editingLeave
-                  ? 'Update this pending leave request.'
-                  : 'Create a student leave request.'
-              }
-            >
-              <Iconify
-                icon="mdi:information-outline"
-                sx={{ cursor: 'pointer' }}
-                color="info.main"
-              />
-            </CustomTooltip>
-          </Box>
+        title={editingLeave ? 'Edit Leave Request' : 'Add Leave Request'}
+        titleInfo={
+          editingLeave ? 'Update this pending leave request.' : 'Create a student leave request.'
         }
       >
         <LeaveRequestForm
@@ -601,44 +581,25 @@ const LeaveAndAbsentScreen = ({
           selectedDivisionId={selectedDivisionId}
           handleClose={handleClose}
           onBusyChange={setFormBusy}
+          onDirtyChange={setFormDirty}
         />
       </CustomDialog>
       <CustomDialog
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">
-              {whichStatus === EmployeeLeaveStatusType.Rejected ? 'Reject Leave' : 'Approve Leave'}
-            </Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              title={
-                whichStatus === EmployeeLeaveStatusType.Rejected
-                  ? 'Reject the leave request with reason'
-                  : 'Approve the leave request'
-              }
-            >
-              <Iconify
-                icon="mdi:information-outline"
-                sx={{ cursor: 'pointer' }}
-                color="info.main"
-              />
-            </CustomTooltip>
-          </Box>
-        }
+        title={`${whichStatus === EmployeeLeaveStatusType.Rejected ? 'Reject Leave' : 'Approve Leave'} · ${decisionLeave?.studentName || 'Student'}`}
+        titleInfo="Review the selected leave request before recording your decision."
         open={confirmRejectDialog.value}
         disableClose={formBusy}
-        handleClose={() => {
-          setWhichStatus(null);
-          confirmRejectDialog.onFalse();
-          setLeaveId('');
-        }}
+        guardUnsavedChanges={false}
+        hasForm={false}
+        handleClose={() => handleClose(null, false)}
       >
         <LeaveAbsent
           handleClose={handleClose}
           leaveId={leaveId}
           status={whichStatus}
           onBusyChange={setFormBusy}
+          onDirtyChange={setFormDirty}
+          requestData={decisionLeave}
         />
       </CustomDialog>
       {/* View Leave Details Dialog */}
@@ -658,7 +619,21 @@ const LeaveAndAbsentScreen = ({
         <DialogScrollContent sx={{ p: 0 }}>
           <StudentLeaveViewDetail data={viewData} />
         </DialogScrollContent>
+        <DialogActions>
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            onClick={() => {
+              viewDialog.onFalse();
+              setViewData(null);
+            }}
+          >
+            Close
+          </Button>
+        </DialogActions>
       </CustomDialog>
+      {confirmation}
     </Box>
   );
 };
@@ -666,6 +641,7 @@ const LeaveAndAbsentScreen = ({
 export default LeaveAndAbsentScreen;
 
 const LeaveRequestForm = ({
+  onDirtyChange,
   onBusyChange,
   handleClose,
   editData,
@@ -674,6 +650,7 @@ const LeaveRequestForm = ({
   selectedStandardId,
   selectedDivisionId,
 }: {
+  onDirtyChange: (dirty: boolean) => void;
   handleClose: (e: any, isSubmit: boolean) => void;
   onBusyChange: (busy: boolean) => void;
   editData?: any;
@@ -682,12 +659,13 @@ const LeaveRequestForm = ({
   selectedStandardId?: string;
   selectedDivisionId?: string;
 }) => {
+  const descriptionLabelId = useId();
+  const supportingDocumentLabelId = useId();
+  const supportingDocumentHelpId = useId();
   // State to store all available organizations
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
   // State to store the selected organization
   const [organization, setOrganization] = useState<string>('');
-  const dialog = useBoolean();
-  const [formBusy, setFormBusy] = useState(false);
   // State to store all available classes
   const [allClass, setAllClass] = useState<Standards[]>([]);
   // State to store the selected class
@@ -752,119 +730,120 @@ const LeaveRequestForm = ({
     currentQueryAndMutation: useUpdateStudentLeaveMutation,
   });
 
-  const { initialValues, errors, touched, setFieldValue, values, handleSubmit } =
-    useFormik<IFormValues>({
-      initialValues: {
-        leaveType: editData?.studentLeaveTypeId ?? '',
-        description: editData?.description ?? '',
-        startDate: editData?.leaveDate ? dayjs(editData.leaveDate) : null,
-        endDate: editData?.endDate ? dayjs(editData.endDate) : null,
-        isHalfDay: editData?.isHalfDay ?? false,
-        rejectionReason: '',
-        status: null,
-        docs: '',
-      },
-      validationSchema: Yup.object({
-        leaveType: Yup.string().required('Leave Type is required'),
-        isHalfDay: Yup.boolean(),
-        startDate: Yup.mixed()
-          .nullable()
-          .test('is-valid-dayjs', (value, testContext) => {
-            const label = testContext.parent.isHalfDay ? 'Date' : 'Start Date';
-            if (!value) return testContext.createError({ message: `${label} is required` });
-            if (!dayjs(value as any).isValid()) {
-              return testContext.createError({ message: `${label} must be a valid date` });
-            }
-            return true;
-          }),
-        endDate: Yup.mixed()
-          .nullable()
-          .test(
-            'is-valid-dayjs',
-            'End Date must be a valid date',
-            (value) => !value || dayjs(value as any).isValid()
-          )
-          .test('endDate', '', (value, context) => {
-            const { isHalfDay } = context.parent;
-            const { startDate } = context.parent;
-            if (isHalfDay) return true;
-            if (startDate && value) {
-              const fullStartDate = dayjs(startDate);
-              const endDate = dayjs(value as any);
-
-              const isSameOrAfter =
-                endDate.isSame(fullStartDate, 'day') || endDate.isAfter(fullStartDate, 'day');
-
-              return (
-                isSameOrAfter ||
-                context.createError({ message: 'End date must be same or after start date' })
-              );
-            }
-            if (!value && !isHalfDay) {
-              return context.createError({ message: 'End Date is required' });
-            }
-            return true;
-          }),
-        description: Yup.string().required('Leave Description is required'),
-        status: Yup.string().nullable(),
-        rejectionReason: Yup.string().test(
-          'rejectionReason',
-          'Rejection reason is required',
-          (value, context) => {
-            const { status } = context.parent;
-            if (status === EmployeeLeaveStatusType.Rejected) {
-              return !!value || context.createError({ message: 'Rejection reason is required' });
-            }
-            return true;
+  const { dirty, errors, touched, setFieldValue, values, handleSubmit } = useFormik<IFormValues>({
+    initialValues: {
+      leaveType: editData?.studentLeaveTypeId ?? '',
+      description: editData?.description ?? '',
+      startDate: editData?.leaveDate ? dayjs(editData.leaveDate) : null,
+      endDate: editData?.endDate ? dayjs(editData.endDate) : null,
+      isHalfDay: editData?.isHalfDay ?? false,
+      rejectionReason: '',
+      status: null,
+      docs: '',
+    },
+    validationSchema: Yup.object({
+      leaveType: Yup.string().required('Leave type is required'),
+      isHalfDay: Yup.boolean(),
+      startDate: Yup.mixed()
+        .nullable()
+        .test('is-valid-dayjs', (value, testContext) => {
+          const label = testContext.parent.isHalfDay ? 'Date' : 'Start date';
+          if (!value) return testContext.createError({ message: `${label} is required` });
+          if (!dayjs(value as any).isValid()) {
+            return testContext.createError({ message: `${label} must be a valid date` });
           }
-        ),
-      }),
-      onSubmit: async (val) => {
-        try {
-          const payload = {
-            studentLeaveTypeId: val.leaveType,
-            isHalfDay: val.isHalfDay,
-            description: val.description,
-            ...(val.docs
-              ? {
-                  attachment: val.docs.replace(/^data:[^;]+;base64,/, ''),
-                  attachmentFileName: `${editData?.studentName || student?.firstName || 'Student'} ${val.leaveType} ${val.startDate?.format(dateFormat)}`,
-                  attachmentContentType: 'application/octet-stream',
-                }
-              : {}),
-            leaveDate: dateConvertor(val?.startDate?.format(dateFormat) || ''),
-            ...(!val.isHalfDay
-              ? {
-                  endDate: dateConvertor(val?.endDate?.format(dateFormat) || ''),
-                }
-              : { endDate: null }),
-          };
-          if (editData?.id) {
-            await updateLeaveRequest({ id: editData.id, data: payload }).unwrap();
-          } else {
-            if (!student?.studentId) return;
-            await addLeaveRequest({ studentId: student.studentId, ...payload }).unwrap();
+          return true;
+        }),
+      endDate: Yup.mixed()
+        .nullable()
+        .test(
+          'is-valid-dayjs',
+          'End date must be a valid date',
+          (value) => !value || dayjs(value as any).isValid()
+        )
+        .test('endDate', '', (value, context) => {
+          const { isHalfDay } = context.parent;
+          const { startDate } = context.parent;
+          if (isHalfDay) return true;
+          if (startDate && value) {
+            const fullStartDate = dayjs(startDate);
+            const endDate = dayjs(value as any);
+
+            const isSameOrAfter =
+              endDate.isSame(fullStartDate, 'day') || endDate.isAfter(fullStartDate, 'day');
+
+            return (
+              isSameOrAfter ||
+              context.createError({ message: 'End date must be same or after start date' })
+            );
           }
-          shikshaMitraToast.success({
-            message: editData ? 'Leave request updated.' : 'Leave request submitted as pending.',
-          });
-          handleClose(null, true);
-        } catch (err) {
-          shikshaMitraToast.error({
-            message:
-              (err as any)?.data?.detail || 'Leave request could not be saved. Please retry.',
-          });
+          if (!value && !isHalfDay) {
+            return context.createError({ message: 'End date is required' });
+          }
+          return true;
+        }),
+      description: Yup.string().required('Leave description is required'),
+      status: Yup.string().nullable(),
+      rejectionReason: Yup.string().test(
+        'rejectionReason',
+        'Rejection reason is required',
+        (value, context) => {
+          const { status } = context.parent;
+          if (status === EmployeeLeaveStatusType.Rejected) {
+            return !!value || context.createError({ message: 'Rejection reason is required' });
+          }
+          return true;
         }
-      },
-    });
+      ),
+    }),
+    onSubmit: async (val) => {
+      try {
+        const payload = {
+          studentLeaveTypeId: val.leaveType,
+          isHalfDay: val.isHalfDay,
+          description: val.description,
+          ...(val.docs
+            ? {
+                attachment: val.docs.replace(/^data:[^;]+;base64,/, ''),
+                attachmentFileName: `${editData?.studentName || student?.firstName || 'Student'} ${val.leaveType} ${val.startDate?.format(dateFormat)}`,
+                attachmentContentType: 'application/octet-stream',
+              }
+            : {}),
+          leaveDate: dateConvertor(val?.startDate?.format(dateFormat) || ''),
+          ...(!val.isHalfDay
+            ? {
+                endDate: dateConvertor(val?.endDate?.format(dateFormat) || ''),
+              }
+            : { endDate: null }),
+        };
+        if (editData?.id) {
+          await updateLeaveRequest({ id: editData.id, data: payload }).unwrap();
+        } else {
+          if (!student?.studentId) return;
+          await addLeaveRequest({ studentId: student.studentId, ...payload }).unwrap();
+        }
+        shikshaMitraToast.success({
+          message: editData ? 'Leave request updated.' : 'Leave request submitted as pending.',
+        });
+        handleClose(null, true);
+      } catch (err) {
+        shikshaMitraToast.error({
+          message: (err as any)?.data?.detail || 'Leave request could not be saved. Please retry.',
+        });
+      }
+    },
+  });
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   useEffect(() => {
-    onBusyChange(addStudentLeaveLoading || updateStudentLeaveLoading || formBusy);
-  }, [addStudentLeaveLoading, updateStudentLeaveLoading, formBusy, onBusyChange]);
+    onBusyChange(addStudentLeaveLoading || updateStudentLeaveLoading);
+  }, [addStudentLeaveLoading, updateStudentLeaveLoading, onBusyChange]);
   useEffect(() => () => onBusyChange(false), [onBusyChange]);
+  useEffect(() => {
+    onDirtyChange(dirty);
+  }, [dirty, onDirtyChange]);
   return (
-    <BackPopUpChecked initialValues={initialValues} currentValues={values}>
+    <>
       <DialogScrollContent>
         <FormBusyRegion
           busy={addStudentLeaveLoading || updateStudentLeaveLoading}
@@ -877,133 +856,147 @@ const LeaveRequestForm = ({
             </Typography>
           )}
           {!editData && (
-            <Grid container spacing={2}>
-              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                <CustomSelect
-                  label="Organization"
-                  disabled={!medium}
-                  options={allOrganization || []}
-                  value={organization}
-                  labelKey="name"
-                  valueKey="id"
-                  onChange={(value: any) => {
-                    setOrganization(value || '');
-                    setStudent(null);
-                  }}
-                  formControlProps={{ sx: { width: '100%' } }}
-                />
-              </Grid>
-
-              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                <CustomSelect
-                  label="Class"
-                  disabled={!organization}
-                  options={allClass || []}
-                  value={classes}
-                  labelKey="name"
-                  valueKey="id"
-                  onChange={(value: any) => {
-                    setClass(value || '');
-                    setStudent(null);
-                  }}
-                  formControlProps={{ sx: { width: '100%' } }}
-                />
-              </Grid>
-
-              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                <CustomSelect
-                  label="Division"
-                  disabled={!classes}
-                  options={allDivision || []}
-                  value={division}
-                  labelKey="name"
-                  valueKey="id"
-                  onChange={(value: any) => {
-                    setDivision(value || '');
-                    setStudent(null);
-                  }}
-                  formControlProps={{ sx: { width: '100%' } }}
-                />
-              </Grid>
-
-              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                <CustomTooltip
-                  placement="top"
-                  title={
-                    student
-                      ? `${student?.firstName || ''} ${student?.lastName || ''}`.trim()
-                      : undefined
-                  }
-                >
-                  <PaginatedSearchSelect
-                    key={`${organization}-${classes}-${division}`}
-                    label="Student"
-                    isLoading={isStudentsLoading}
-                    noOptionsText="No Student Found"
-                    disabled={!division}
-                    fetchOptions={async (query: string, page: number) => {
-                      if (!division) return { data: [], hasMore: false };
-                      try {
-                        const res = await getStudents(division).unwrap();
-
-                        let filteredItems = res?.items || [];
-                        if (query) {
-                          const lowerQuery = query.toLowerCase();
-                          filteredItems = filteredItems.filter((item: any) =>
-                            `${item.firstName || ''} ${item.lastName || ''} ${item.middleName || ''}`
-                              .toLowerCase()
-                              .includes(lowerQuery)
-                          );
-                        }
-
-                        return {
-                          data: filteredItems?.map((item: any) => ({
-                            label: `${item?.firstName || ''} ${item?.lastName || ''}`,
-                            id: item.studentId,
-                            originalData: item,
-                          })),
-                          hasMore: false,
-                        };
-                      } catch {
-                        return { data: [], hasMore: false };
-                      }
+            <FormSectionCard
+              title="Student Details"
+              icon={GlobalIcons.notebook}
+              descriptionTooltip="Choose the student's class and division before searching for a student."
+              titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+            >
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                  <CustomSelect
+                    label="Organization"
+                    disabled={!medium}
+                    options={allOrganization || []}
+                    value={organization}
+                    labelKey="name"
+                    valueKey="id"
+                    onChange={(value: any) => {
+                      setOrganization(value || '');
+                      setStudent(null);
                     }}
-                    value={
-                      student
-                        ? {
-                            label: `${student.firstName || ''} ${student.lastName || ''}`,
-                            id: student.studentId as string,
-                          }
-                        : null
-                    }
-                    isOptionEqualToValue={(option, value) => option.id === value?.id}
-                    getOptionLabel={(option: any) => option?.label || ''}
-                    renderOption={(prop, option: any) => (
-                      <li {...prop} key={option.id}>
-                        {option.label}
-                      </li>
-                    )}
-                    minChars={0}
-                    onChange={(_, value: any) => {
-                      setStudent(value?.originalData || null);
-                    }}
-                    fullWidth
-                    sx={{ width: '100%' }}
-                    size="small"
+                    formControlProps={{ sx: { width: '100%' } }}
                   />
-                </CustomTooltip>
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                  <CustomSelect
+                    label="Class"
+                    disabled={!organization}
+                    options={allClass || []}
+                    value={classes}
+                    labelKey="name"
+                    valueKey="id"
+                    onChange={(value: any) => {
+                      setClass(value || '');
+                      setStudent(null);
+                    }}
+                    formControlProps={{ sx: { width: '100%' } }}
+                  />
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                  <CustomSelect
+                    label="Division"
+                    disabled={!classes}
+                    options={allDivision || []}
+                    value={division}
+                    labelKey="name"
+                    valueKey="id"
+                    onChange={(value: any) => {
+                      setDivision(value || '');
+                      setStudent(null);
+                    }}
+                    formControlProps={{ sx: { width: '100%' } }}
+                  />
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                  <CustomTooltip
+                    placement="top"
+                    title={
+                      student
+                        ? `${student?.firstName || ''} ${student?.lastName || ''}`.trim()
+                        : undefined
+                    }
+                  >
+                    <PaginatedSearchSelect
+                      key={`${organization}-${classes}-${division}`}
+                      label="Student"
+                      isLoading={isStudentsLoading}
+                      noOptionsText="No students found"
+                      disabled={!division}
+                      fetchOptions={async (query: string, page: number) => {
+                        if (!division) return { data: [], hasMore: false };
+                        try {
+                          const res = await getStudents(division).unwrap();
+
+                          let filteredItems = res?.items || [];
+                          if (query) {
+                            const lowerQuery = query.toLowerCase();
+                            filteredItems = filteredItems.filter((item: any) =>
+                              `${item.firstName || ''} ${item.lastName || ''} ${item.middleName || ''}`
+                                .toLowerCase()
+                                .includes(lowerQuery)
+                            );
+                          }
+
+                          return {
+                            data: filteredItems?.map((item: any) => ({
+                              label: `${item?.firstName || ''} ${item?.lastName || ''}`,
+                              id: item.studentId,
+                              originalData: item,
+                            })),
+                            hasMore: false,
+                          };
+                        } catch {
+                          return { data: [], hasMore: false };
+                        }
+                      }}
+                      value={
+                        student
+                          ? {
+                              label: `${student.firstName || ''} ${student.lastName || ''}`,
+                              id: student.studentId as string,
+                            }
+                          : null
+                      }
+                      isOptionEqualToValue={(option, value) => option.id === value?.id}
+                      getOptionLabel={(option: any) => option?.label || ''}
+                      renderOption={(prop, option: any) => (
+                        <li {...prop} key={option.id}>
+                          {option.label}
+                        </li>
+                      )}
+                      minChars={0}
+                      onChange={(_, value: any) => {
+                        setStudent(value?.originalData || null);
+                      }}
+                      fullWidth
+                      sx={{ width: '100%' }}
+                      size="small"
+                    />
+                  </CustomTooltip>
+                </Grid>
               </Grid>
-            </Grid>
+            </FormSectionCard>
           )}
 
           {(editData || student?.studentId) && (
-            <Box component="form" mt={2}>
+            <FormSectionCard
+              title="Leave Details"
+              icon={GlobalIcons.notebook}
+              descriptionTooltip="Choose the leave type, dates, reason, and supporting attachment."
+              titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+              sx={{ mt: 2 }}
+            >
               <Grid container spacing={2}>
                 {/* Row 1: Leave Type and Half Day Button */}
                 <Grid size={{ xs: 12, sm: values.isHalfDay ? 4 : 3 }}>
                   <ShakingTextField error={!!(touched.leaveType && errors.leaveType)}>
                     <CustomSelect
-                      label="Leave Type *"
+                      label="Leave type"
+                      required
                       options={attendanceTypes?.items || []}
                       value={values.leaveType}
                       labelKey="leaveTypeName"
@@ -1016,19 +1009,6 @@ const LeaveRequestForm = ({
                       formControlProps={{ sx: { width: '100%' } }}
                     />
                   </ShakingTextField>
-
-                  <CustomDialog
-                    open={dialog.value}
-                    disableClose={formBusy}
-                    handleClose={dialog.onFalse}
-                    title="Leave Type"
-                  >
-                    <AttendanceTypeForm
-                      handleClose={dialog.onFalse}
-                      editData={null}
-                      onBusyChange={setFormBusy}
-                    />
-                  </CustomDialog>
                 </Grid>
 
                 <Grid size={{ xs: 12, sm: values.isHalfDay ? 4 : 3 }}>
@@ -1037,24 +1017,13 @@ const LeaveRequestForm = ({
                     color={values.isHalfDay ? 'primary' : 'inherit'}
                     size="small"
                     fullWidth
+                    aria-pressed={values.isHalfDay}
                     onClick={() => {
                       setFieldValue('isHalfDay', !values.isHalfDay);
                       if (!values.isHalfDay) setFieldValue('endDate', null);
                     }}
-                    sx={{
-                      height: '36px',
-                      borderRadius: '8px',
-                      textTransform: 'none',
-                      fontWeight: 500,
-                      fontSize: '0.875rem',
-                      border: values.isHalfDay ? 0 : 1,
-                      borderColor: 'divider',
-                      '&:hover': {
-                        backgroundColor: values.isHalfDay ? 'primary.dark' : 'action.hover',
-                      },
-                    }}
                   >
-                    Half Day
+                    Half day
                   </Button>
                 </Grid>
 
@@ -1062,15 +1031,16 @@ const LeaveRequestForm = ({
                 <Grid size={{ xs: 12, sm: values.isHalfDay ? 4 : 3 }}>
                   <ShakingTextField error={touched.startDate && Boolean(errors.startDate)}>
                     <DatePicker
-                      label={values.isHalfDay ? 'Date *' : 'Start Date *'}
+                      label={values.isHalfDay ? 'Date' : 'Start date'}
                       value={values.startDate}
                       onChange={(value) => setFieldValue('startDate', value)}
-                      format="DD-MM-YYYY"
+                      format={formatStr.split.date}
                       minDate={dayjs(currentYear?.startDate)}
                       maxDate={dayjs(currentYear?.endDate)}
                       disablePast={!editData}
                       slotProps={{
                         textField: {
+                          required: true,
                           size: 'small',
                           fullWidth: true,
                           helperText: touched.startDate && errors.startDate,
@@ -1085,15 +1055,16 @@ const LeaveRequestForm = ({
                   <Grid size={{ xs: 12, sm: values.isHalfDay ? 4 : 3 }}>
                     <ShakingTextField error={touched.endDate && Boolean(errors.endDate)}>
                       <DatePicker
-                        label="End Date *"
+                        label="End date"
                         value={values.endDate}
-                        format="DD-MM-YYYY"
+                        format={formatStr.split.date}
                         minDate={dayjs(currentYear?.startDate)}
                         maxDate={dayjs(currentYear?.endDate)}
                         disablePast={!editData}
                         onChange={(value) => setFieldValue('endDate', value)}
                         slotProps={{
                           textField: {
+                            required: true,
                             size: 'small',
                             fullWidth: true,
                             helperText: touched.endDate && errors.endDate,
@@ -1107,7 +1078,9 @@ const LeaveRequestForm = ({
 
                 {/* Row 3: Description and Upload */}
                 <Grid size={{ xs: 12 }} mb={-1}>
-                  <Typography variant="subtitle2">Leave Description</Typography>
+                  <Typography id={descriptionLabelId} variant="subtitle2">
+                    Leave description *
+                  </Typography>
                 </Grid>
 
                 <Grid size={{ xs: 12 }}>
@@ -1115,7 +1088,14 @@ const LeaveRequestForm = ({
                     <Editor
                       value={values.description}
                       onChange={(value) => setFieldValue('description', value)}
-                      placeholder="Leave description *"
+                      placeholder="Describe the reason for leave."
+                      editorProps={{
+                        attributes: {
+                          role: 'textbox',
+                          'aria-labelledby': descriptionLabelId,
+                          'aria-required': 'true',
+                        },
+                      }}
                       error={touched.description && Boolean(errors.description)}
                       helperText={touched.description && errors.description}
                       sx={{
@@ -1144,16 +1124,28 @@ const LeaveRequestForm = ({
                 </Grid>
 
                 <Grid size={{ xs: 12 }}>
+                  <Typography id={supportingDocumentLabelId} variant="subtitle2" sx={{ mb: 1 }}>
+                    Supporting document (optional)
+                  </Typography>
                   <FileUploader
                     value={typeof values.docs === 'string' ? undefined : values.docs}
                     multiple={false}
                     onChange={(value) => setFieldValue('docs', value)}
-                    primaryText="Please Upload Your File"
-                    secondaryText="Maximum file size is 5MB"
+                    primaryText="Choose supporting document"
+                    disabled={addStudentLeaveLoading || updateStudentLeaveLoading}
+                    parentsProps={{ role: 'group', 'aria-labelledby': supportingDocumentLabelId }}
+                    dragProps={{ 'aria-describedby': supportingDocumentHelpId }}
                   />
+                  <Typography
+                    id={supportingDocumentHelpId}
+                    variant="caption"
+                    color="text.secondary"
+                  >
+                    One PNG, JPG, JPEG or PDF file, up to 5 MB.
+                  </Typography>
                 </Grid>
               </Grid>
-            </Box>
+            </FormSectionCard>
           )}
         </FormBusyRegion>
       </DialogScrollContent>
@@ -1162,7 +1154,7 @@ const LeaveRequestForm = ({
         <Button
           startIcon={<Iconify icon="mdi:close" />}
           size="small"
-          disabled={addStudentLeaveLoading || updateStudentLeaveLoading || formBusy}
+          disabled={addStudentLeaveLoading || updateStudentLeaveLoading}
           onClick={() => {
             handleClose(null, false);
           }}
@@ -1182,16 +1174,20 @@ const LeaveRequestForm = ({
           Submit
         </LoadingButton>
       </DialogActions>
-    </BackPopUpChecked>
+    </>
   );
 };
 
 const LeaveAbsent = ({
+  onDirtyChange,
+  requestData,
   onBusyChange,
   handleClose,
   status,
   leaveId,
 }: {
+  onDirtyChange: (dirty: boolean) => void;
+  requestData: LeaveDecisionContext | null;
   handleClose: (e: any, isSubmit: boolean) => void;
   status: EmployeeLeaveStatusType | null;
   leaveId: string;
@@ -1216,7 +1212,7 @@ const LeaveAbsent = ({
     onBusyChange(busy);
   }, [busy, onBusyChange]);
   useEffect(() => () => onBusyChange(false), [onBusyChange]);
-  const { initialValues, values, errors, touched, handleChange, handleSubmit } = useFormik({
+  const { dirty, values, errors, touched, handleChange, handleSubmit } = useFormik({
     initialValues: {
       remarks: '',
     },
@@ -1256,61 +1252,82 @@ const LeaveAbsent = ({
       }
     },
   });
+  useEffect(() => {
+    onDirtyChange(dirty);
+  }, [dirty, onDirtyChange]);
 
   return (
-    <BackPopUpChecked initialValues={initialValues} currentValues={values}>
-      <Box component="form" onSubmit={handleSubmit}>
-        <DialogScrollContent>
-          <FormBusyRegion busy={busy} label="Recording leave decision…">
-            <TextField
-              disabled={busy}
-              value={values.remarks}
-              onChange={handleChange}
-              name="remarks"
-              label={status === EmployeeLeaveStatusType.Rejected ? 'Remarks *' : 'Remarks'}
-              multiline
-              fullWidth
-              rows={4}
-              error={touched.remarks && !!errors.remarks}
-              helperText={touched.remarks && (errors.remarks as string)}
-              sx={{ mb: 2 }}
-            />
-          </FormBusyRegion>
-        </DialogScrollContent>
-        <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-          <Button
-            variant="outlined"
-            size="small"
-            color="inherit"
-            disabled={busy}
-            onClick={() => {
-              handleClose(null, false);
-            }}
-            startIcon={<Iconify icon="mdi:close" />}
+    <Box component="form" onSubmit={handleSubmit}>
+      <DialogScrollContent>
+        <FormBusyRegion busy={busy} label="Recording leave decision…">
+          <FormSectionCard
+            title="Leave Decision"
+            icon={GlobalIcons.notebook}
+            descriptionTooltip="Confirm the request and enter a reason when rejecting."
+            titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
           >
-            Cancel
-          </Button>
-          <LoadingButton
-            type="submit"
-            startIcon={
-              <Iconify
-                icon={
-                  status === EmployeeLeaveStatusType.Rejected
-                    ? 'mdi:close-circle-outline'
-                    : 'mdi:check-circle-outline'
-                }
+            <Typography variant="body2" sx={{ mb: 2 }}>
+              {requestData?.studentName} · {requestData?.leaveTypeName || 'Leave'} ·{' '}
+              {requestData?.leaveDate
+                ? dayjs(requestData.leaveDate).format(formatStr.split.date)
+                : 'Date unavailable'}
+              {requestData?.endDate
+                ? ` – ${dayjs(requestData.endDate).format(formatStr.split.date)}`
+                : ''}
+            </Typography>
+            <ShakingTextField error={Boolean(touched.remarks && errors.remarks)}>
+              <TextField
+                disabled={busy}
+                value={values.remarks}
+                onChange={handleChange}
+                name="remarks"
+                label="Remarks"
+                required={status === EmployeeLeaveStatusType.Rejected}
+                size="small"
+                multiline
+                fullWidth
+                rows={4}
+                error={touched.remarks && !!errors.remarks}
+                helperText={touched.remarks && (errors.remarks as string)}
+                sx={{ mb: 2 }}
               />
-            }
-            onClick={(e: any) => handleSubmit(e)}
-            variant="contained"
-            size="small"
-            loading={isApproveLeaveLoading || isRejectLeaveLoading}
-          >
-            {status === EmployeeLeaveStatusType.Rejected ? 'Reject' : 'Approve'}
-          </LoadingButton>
-        </DialogActions>
-      </Box>
-    </BackPopUpChecked>
+            </ShakingTextField>
+          </FormSectionCard>
+        </FormBusyRegion>
+      </DialogScrollContent>
+      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+        <Button
+          variant="outlined"
+          size="small"
+          color="inherit"
+          disabled={busy}
+          onClick={() => {
+            handleClose(null, false);
+          }}
+          startIcon={<Iconify icon="mdi:close" />}
+        >
+          Cancel
+        </Button>
+        <LoadingButton
+          type="submit"
+          startIcon={
+            <Iconify
+              icon={
+                status === EmployeeLeaveStatusType.Rejected
+                  ? 'mdi:close-circle-outline'
+                  : 'mdi:check-circle-outline'
+              }
+            />
+          }
+          onClick={(e: any) => handleSubmit(e)}
+          variant="contained"
+          size="small"
+          loading={isApproveLeaveLoading || isRejectLeaveLoading}
+        >
+          {status === EmployeeLeaveStatusType.Rejected ? 'Reject' : 'Approve'}
+        </LoadingButton>
+      </DialogActions>
+    </Box>
   );
 };
 
@@ -1327,7 +1344,7 @@ const LeaveDetailField = ({
     <Typography variant="caption" color="text.secondary" display="block" mb={0.25}>
       {label}
     </Typography>
-    <Typography variant="body2" fontWeight={600} sx={{ overflowWrap: 'anywhere' }}>
+    <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
       {value}
     </Typography>
   </Box>
@@ -1352,7 +1369,7 @@ const StudentLeaveViewDetail = ({ data }: { data: any }) => {
     : null;
 
   return (
-    <Box>
+    <Stack spacing={2} sx={{ p: 2 }}>
       <Box sx={{ px: { xs: 2, sm: 3 }, py: 2.5 }}>
         <Stack
           direction="row"
@@ -1379,11 +1396,13 @@ const StudentLeaveViewDetail = ({ data }: { data: any }) => {
 
       <Divider />
 
-      <Box sx={{ px: { xs: 2, sm: 3 }, py: 2.5 }}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between" mb={2} gap={1}>
-          <Typography variant="subtitle2" fontWeight={700}>
-            Leave Details
-          </Typography>
+      <FormSectionCard
+        title="Leave Details"
+        icon={GlobalIcons.notebook}
+        descriptionTooltip="Saved leave type, duration, and dates."
+        titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+      >
+        <Stack direction="row" alignItems="center" justifyContent="flex-end" mb={2} gap={1}>
           {totalDays != null && (
             <Chip
               label={`${totalDays} ${totalDays === 1 || totalDays === 0.5 ? 'day' : 'days'}`}
@@ -1404,50 +1423,59 @@ const StudentLeaveViewDetail = ({ data }: { data: any }) => {
           <LeaveDetailField label="Session" value={isHalfDay ? 'Half day' : 'Full day'} />
           <LeaveDetailField
             label={isHalfDay ? 'Date' : 'Start date'}
-            value={startDate ? dayjs(startDate).format('DD MMM YYYY') : '-'}
+            value={startDate ? dayjs(startDate).format(formatStr.split.date) : '-'}
             fullWidth={isHalfDay || !endDate}
           />
           {!isHalfDay && endDate && (
-            <LeaveDetailField label="End date" value={dayjs(endDate).format('DD MMM YYYY')} />
+            <LeaveDetailField
+              label="End date"
+              value={dayjs(endDate).format(formatStr.split.date)}
+            />
           )}
         </Box>
-      </Box>
+      </FormSectionCard>
 
       {plainDescription && (
         <>
           <Divider />
-          <Box sx={{ px: { xs: 2, sm: 3 }, py: 2.5 }}>
-            <Typography variant="subtitle2" fontWeight={700} mb={1}>
-              Reason
-            </Typography>
+          <FormSectionCard
+            title="Reason"
+            icon={GlobalIcons.notebook}
+            descriptionTooltip="The reason recorded when this request was created."
+            titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+          >
             <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
               {plainDescription}
             </Typography>
-          </Box>
+          </FormSectionCard>
         </>
       )}
 
       {data.remarks && (
         <>
           <Divider />
-          <Box sx={{ px: { xs: 2, sm: 3 }, py: 2.5 }}>
-            <Typography variant="subtitle2" fontWeight={700} mb={1}>
-              Remarks
-            </Typography>
+          <FormSectionCard
+            title="Remarks"
+            icon={GlobalIcons.notebook}
+            descriptionTooltip="Remarks recorded with the leave decision."
+            titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+          >
             <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
               {data.remarks}
             </Typography>
-          </Box>
+          </FormSectionCard>
         </>
       )}
 
       {data.attachmentUrl && (
         <>
           <Divider />
-          <Box sx={{ px: { xs: 2, sm: 3 }, py: 2.5 }}>
-            <Typography variant="subtitle2" fontWeight={700} mb={1}>
-              Attachment
-            </Typography>
+          <FormSectionCard
+            title="Attachment"
+            icon={GlobalIcons.documentIcon}
+            descriptionTooltip="The supporting file attached to this leave request."
+            titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+          >
             <Button
               component="a"
               href={data.attachmentUrl}
@@ -1459,9 +1487,9 @@ const StudentLeaveViewDetail = ({ data }: { data: any }) => {
             >
               View attachment
             </Button>
-          </Box>
+          </FormSectionCard>
         </>
       )}
-    </Box>
+    </Stack>
   );
 };
