@@ -11,6 +11,7 @@ export default function RecordsStudentPicker({
   disabled = false,
   selectedId,
   includeActiveStudentList = false,
+  toastRecovery = false,
   size = 'medium',
   helperText = 'Search across active and former records.',
 }: {
@@ -18,6 +19,7 @@ export default function RecordsStudentPicker({
   disabled?: boolean;
   selectedId?: string;
   includeActiveStudentList?: boolean;
+  toastRecovery?: boolean;
   size?: 'small' | 'medium';
   helperText?: string | null;
 }) {
@@ -44,6 +46,16 @@ export default function RecordsStudentPicker({
           ? localSelection
           : null))
       : localSelection;
+  const selectedRecovery = (
+    <Button color="inherit" onClick={() => selectedQuery.refetch()}>
+      Retry
+    </Button>
+  );
+  const choicesRecovery = (
+    <Button color="inherit" onClick={() => query.refetch()}>
+      Retry
+    </Button>
+  );
   return (
     <Stack spacing={1}>
       <Autocomplete
@@ -71,7 +83,9 @@ export default function RecordsStudentPicker({
         }}
         noOptionsText={
           query.isError
-            ? 'Students could not be loaded. Use Retry below.'
+            ? toastRecovery
+              ? 'Students could not be loaded. Use Retry in the notification.'
+              : 'Students could not be loaded. Use Retry below.'
             : includeActiveStudentList
               ? debounced
                 ? 'No matching active or records-eligible student found.'
@@ -94,11 +108,8 @@ export default function RecordsStudentPicker({
           notificationKey="STU-0823"
           presentation="toast"
           severity="error"
-          action={
-            <Button color="inherit" onClick={() => selectedQuery.refetch()}>
-              Retry
-            </Button>
-          }
+          action={!toastRecovery ? selectedRecovery : undefined}
+          toastAction={toastRecovery ? selectedRecovery : undefined}
         >
           The selected student could not be restored.
         </StudentFeedback>
@@ -108,11 +119,8 @@ export default function RecordsStudentPicker({
           notificationKey="STU-0824"
           presentation="toast"
           severity="error"
-          action={
-            <Button color="inherit" onClick={() => query.refetch()}>
-              Retry
-            </Button>
-          }
+          action={!toastRecovery ? choicesRecovery : undefined}
+          toastAction={toastRecovery ? choicesRecovery : undefined}
         >
           Student choices could not be loaded.
         </StudentFeedback>

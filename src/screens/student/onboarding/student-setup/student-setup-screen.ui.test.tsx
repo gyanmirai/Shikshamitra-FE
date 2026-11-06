@@ -440,7 +440,7 @@ describe('Student Setup workspace selection wiring', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Open setup case-1' }));
     fireEvent.click(screen.getByRole('button', { name: 'Edit quick setup' }));
     fireEvent.click(screen.getByRole('button', { name: 'Back' }));
-    expect(screen.getByRole('heading', { name: 'Discard unsaved changes?' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Discard Unsaved Changes?' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
     expect(screen.getByTestId('quick-case')).toHaveTextContent('case-1');
     fireEvent.click(screen.getByRole('button', { name: 'Start quick save' }));
@@ -457,7 +457,7 @@ describe('Student Setup workspace selection wiring', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Details & History' }));
     expect(screen.getByRole('dialog', { name: 'Details & History' })).toBeInTheDocument();
     expect(
-      screen.queryByRole('heading', { name: 'Discard unsaved changes?' })
+      screen.queryByRole('dialog', { name: 'Discard Unsaved Changes?' })
     ).not.toBeInTheDocument();
     expect(draft).toBeInTheDocument();
     expect(draft).toHaveValue('Unsaved GR change');
@@ -528,13 +528,13 @@ describe('Student Setup workspace selection wiring', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Open setup case-1' }));
     fireEvent.click(screen.getByRole('button', { name: 'Edit quick setup' }));
     fireEvent.click(screen.getByRole('button', { name: 'Close quick setup' }));
-    expect(screen.getByRole('heading', { name: 'Discard unsaved changes?' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Discard Unsaved Changes?' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
     expect(screen.getByTestId('quick-case')).toHaveTextContent('case-1');
     fireEvent.click(screen.getByRole('button', { name: 'Start quick save' }));
     fireEvent.click(screen.getByRole('button', { name: 'Close quick setup' }));
     expect(
-      screen.queryByRole('heading', { name: 'Discard unsaved changes?' })
+      screen.queryByRole('dialog', { name: 'Discard Unsaved Changes?' })
     ).not.toBeInTheDocument();
     expect(screen.getByTestId('quick-case')).toHaveTextContent('case-1');
   });
@@ -841,7 +841,7 @@ describe('Student Setup workspace selection wiring', () => {
     mocks.manualEditing = true;
     render(element);
     fireEvent.click(screen.getByRole('tab', { name: 'GR Number' }));
-    expect(screen.getByRole('heading', { name: 'Discard unsaved changes?' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Discard Unsaved Changes?' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
     expect(mocks.cancel).not.toHaveBeenCalled();
     expect(mocks.params.get('view')).toBe('division');
@@ -890,7 +890,7 @@ describe('Student Setup workspace selection wiring', () => {
     mocks.manualEditing = true;
     render(element);
     fireEvent.click(screen.getByRole('button', { name: 'Next page' }));
-    expect(screen.getByRole('heading', { name: 'Discard unsaved changes?' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Discard Unsaved Changes?' })).toBeInTheDocument();
     expect(screen.getByTestId('worklist')).toHaveAttribute('data-page', '1');
     fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
     expect(screen.getByTestId('worklist')).toHaveAttribute('data-page', '1');

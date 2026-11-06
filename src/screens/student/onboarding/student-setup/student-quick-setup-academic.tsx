@@ -71,6 +71,16 @@ export default function StudentQuickSetupAcademic({
   useEffect(() => setEditing(false), [item?.id]);
   const { values } = form;
   const numberDisabled = disabled || !values.divisionId;
+  const loadingRecovery = (
+    <Button size="small" onClick={editor.retry}>
+      Retry
+    </Button>
+  );
+  const formRecovery = (
+    <Button size="small" disabled={editor.busy} onClick={editor.retry}>
+      Retry
+    </Button>
+  );
   if (!item || editor.loading) {
     return (
       <Stack spacing={1.5} aria-label="Loading academic setup">
@@ -80,11 +90,8 @@ export default function StudentQuickSetupAcademic({
             notificationKey="STU-1029"
             presentation={editor.errorPresentation}
             severity="error"
-            action={
-              <Button size="small" onClick={editor.retry}>
-                Retry
-              </Button>
-            }
+            action={editor.errorPresentation === 'inline' ? loadingRecovery : undefined}
+            toastAction={editor.errorPresentation === 'toast' ? loadingRecovery : undefined}
           >
             {editor.error}
           </StudentFeedback>
@@ -155,11 +162,8 @@ export default function StudentQuickSetupAcademic({
           notificationKey="STU-1030"
           presentation={editor.errorPresentation}
           severity="error"
-          action={
-            <Button size="small" disabled={editor.busy} onClick={editor.retry}>
-              Retry
-            </Button>
-          }
+          action={editor.errorPresentation === 'inline' ? formRecovery : undefined}
+          toastAction={editor.errorPresentation === 'toast' ? formRecovery : undefined}
         >
           {editor.error}
         </StudentFeedback>
@@ -279,7 +283,7 @@ export default function StudentQuickSetupAcademic({
                 notificationKey="STU-1031"
                 presentation="toast"
                 severity="error"
-                action={
+                toastAction={
                   <Button size="small" onClick={editor.retry}>
                     Retry
                   </Button>
@@ -388,7 +392,7 @@ export default function StudentQuickSetupAcademic({
                     notificationKey="STU-1032"
                     presentation="toast"
                     severity="error"
-                    action={
+                    toastAction={
                       <Button size="small" onClick={editor.retry}>
                         Retry
                       </Button>

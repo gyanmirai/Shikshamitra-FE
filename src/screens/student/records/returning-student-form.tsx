@@ -442,7 +442,7 @@ export default function ReturningStudentForm() {
             {failure}
           </StudentFeedback>
         )}
-        <RecordsStudentPicker onSelect={selectStudent} disabled={busy} />
+        <RecordsStudentPicker toastRecovery onSelect={selectStudent} disabled={busy} />
         {student && (
           <Button
             component={RouterLink}
@@ -458,7 +458,7 @@ export default function ReturningStudentForm() {
             notificationKey="STU-0839"
             presentation="toast"
             severity="error"
-            action={
+            toastAction={
               <Button color="inherit" disabled={busy} onClick={() => options.refetch()}>
                 Retry
               </Button>

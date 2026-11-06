@@ -1,5 +1,8 @@
+import type { ReactNode } from 'react';
+import type { AlertProps } from '@mui/material';
+
 import { vi, it, expect, beforeEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import RenewalPortalAccounts from './renewal-portal-accounts';
 
@@ -10,13 +13,17 @@ const mocks = vi.hoisted(() => ({
   options: vi.fn(),
   dirty: vi.fn(),
   busy: vi.fn(),
+  error: vi.fn(
+    (_options: { message: ReactNode; alertProps: (id: string | number) => AlertProps }) =>
+      'renewal-error'
+  ),
 }));
 vi.mock('react-redux', () => ({
   useSelector: (select: any) => select({ auth: { permissions: mocks.permissions } }),
 }));
 vi.mock('src/components/toast', () => ({
   shikshaMitraToast: {
-    error: vi.fn(),
+    error: mocks.error,
     warning: vi.fn(),
     info: vi.fn(),
     dismiss: vi.fn(),
@@ -199,9 +206,22 @@ it('blocks stale mailbox verification when the saved email changes during review
   expect(mocks.provision).not.toHaveBeenCalled();
 });
 
-it('hides cached person details when the protected options request fails', () => {
+it('hides cached person details when the protected options request fails and retries from its delivered toast', async () => {
   mocks.query.isError = true;
   renderForm();
   expect(screen.queryByLabelText('Saved profile email')).not.toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Retry portal status' })).toBeVisible();
+  await waitFor(() =>
+    expect(mocks.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'Portal account status could not be loaded with your current access.',
+      })
+    )
+  );
+  expect(screen.queryByRole('button', { name: 'Retry portal status' })).not.toBeInTheDocument();
+  const recovery = render(
+    <>{mocks.error.mock.calls.at(-1)?.[0].alertProps('renewal-error').action}</>
+  );
+  fireEvent.click(within(recovery.container).getByRole('button', { name: 'Retry portal status' }));
+  expect(mocks.query.refetch).toHaveBeenCalledOnce();
+  expect(screen.queryByLabelText('Saved profile email')).not.toBeInTheDocument();
 });

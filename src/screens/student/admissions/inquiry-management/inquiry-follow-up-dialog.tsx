@@ -16,10 +16,10 @@ import { useRef, useState, useEffect } from 'react';
 import { fDate, fTime } from 'src/utils/format-time';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { LoadingButton } from 'src/components/loading-button';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
+import { FormSectionCard } from 'src/components/form-section-card';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { useGetAdmissionInquiryQuery } from 'src/redux/student/admissions/admission-inquiries-api';
@@ -41,6 +41,8 @@ import {
 } from 'src/redux/student/admissions/admission-inquiry-management-api';
 
 import { getAdmissionInquiryAccess } from '../inquiry-access';
+import { ADMISSION_DATE_FORMAT } from '../admission-date-formats';
+import { useAdmissionDraftGuard } from '../use-admission-draft-guard';
 import {
   inquiryStatusLabel,
   INQUIRY_STATUS_OPTIONS,
@@ -96,7 +98,6 @@ function InquiryFollowUpContent({
   );
   const { canManage } = getAdmissionInquiryAccess(permissions);
   const initialized = useBoolean();
-  const discard = useBoolean();
   const [requestError, setRequestError] = useState('');
   const current = detail.currentData;
   const state = management.currentData;
@@ -194,11 +195,12 @@ function InquiryFollowUpContent({
 
   const saving = recording.isLoading || formik.isSubmitting;
   const locked = saving || !ready || !initialized.value || Boolean(readOnlyReason);
-  const close = () => {
-    if (saving) return;
-    if (formik.dirty) discard.onTrue();
-    else onClose();
-  };
+  const guard = useAdmissionDraftGuard({
+    dirty: formik.dirty,
+    busy: saving,
+    reset: formik.resetForm,
+  });
+  const close = () => guard.requestNavigation(onClose);
   const reload = () => {
     // Skipping/resubscribing the detail query refetches it after management succeeds.
     management.refetch();
@@ -216,6 +218,7 @@ function InquiryFollowUpContent({
       <CustomDialog
         open
         title="Follow-Up"
+        titleInfo="Review contact history and record a note, reminder and follow-up status for this inquiry."
         maxWidth="sm"
         hasForm={false}
         handleClose={close}
@@ -228,144 +231,156 @@ function InquiryFollowUpContent({
       >
         <Box component="form" noValidate onSubmit={formik.handleSubmit}>
           <DialogScrollContent aria-label="Follow-Up Notes, Newest First">
-            <Stack spacing={1.5}>
-              {(fetching || !initialized.value) && !queryError && (
-                <Stack spacing={1} aria-label="Loading Follow-Up Notes">
-                  <Skeleton variant="rounded" height={110} />
-                  <Skeleton variant="rounded" height={110} />
-                </Stack>
-              )}
-              {queryError && (
-                <StudentFeedback
-                  notificationKey="STU-0406"
-                  presentation="toast"
-                  severity="error"
-                  action={
-                    <Button size="small" color="inherit" onClick={reload}>
-                      Retry
-                    </Button>
-                  }
-                >
-                  Follow-up notes could not be loaded.
-                </StudentFeedback>
-              )}
-              {readOnlyReason && (
-                <StudentFeedback
-                  notificationKey="STU-0407"
-                  presentation="persistent"
-                  severity="info"
-                >
-                  {readOnlyReason}
-                </StudentFeedback>
-              )}
-              {!queryError && initialized.value && !notes.length && !fetching && (
-                <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
-                  No follow-up notes yet.
-                </Typography>
-              )}
-              {!queryError &&
-                initialized.value &&
-                notes.map((note) => <FollowUpNoteCard key={note.id} note={note} />)}
-            </Stack>
+            <FormSectionCard
+              title="Follow-Up History"
+              icon={GlobalIcons.history}
+              descriptionTooltip="Saved notes appear newest first, with their recorded author, status and reminder."
+            >
+              <Stack spacing={1.5}>
+                {(fetching || !initialized.value) && !queryError && (
+                  <Stack spacing={1} aria-label="Loading Follow-Up Notes">
+                    <Skeleton variant="rounded" height={110} />
+                    <Skeleton variant="rounded" height={110} />
+                  </Stack>
+                )}
+                {queryError && (
+                  <StudentFeedback
+                    notificationKey="STU-0406"
+                    presentation="toast"
+                    severity="error"
+                    toastAction={
+                      <Button size="small" color="inherit" onClick={reload}>
+                        Retry
+                      </Button>
+                    }
+                  >
+                    Follow-up notes could not be loaded.
+                  </StudentFeedback>
+                )}
+                {readOnlyReason && (
+                  <StudentFeedback
+                    notificationKey="STU-0407"
+                    presentation="persistent"
+                    severity="info"
+                  >
+                    {readOnlyReason}
+                  </StudentFeedback>
+                )}
+                {!queryError && initialized.value && !notes.length && !fetching && (
+                  <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
+                    No follow-up notes yet.
+                  </Typography>
+                )}
+                {!queryError &&
+                  initialized.value &&
+                  notes.map((note) => <FollowUpNoteCard key={note.id} note={note} />)}
+              </Stack>
+            </FormSectionCard>
           </DialogScrollContent>
           <Box
             sx={{ position: 'relative', p: 2, borderTop: 1, borderColor: 'divider', flexShrink: 0 }}
           >
-            <Stack spacing={1.5}>
-              {requestError && (
-                <StudentFeedback
-                  notificationKey="STU-0408"
-                  presentation="inline"
-                  severity="error"
-                  action={
-                    <Button
-                      size="small"
-                      color="inherit"
-                      onClick={reload}
-                      disabled={saving || fetching}
-                    >
-                      Reload
-                    </Button>
-                  }
-                >
-                  {requestError}
-                </StudentFeedback>
-              )}
-              <ShakingTextField error={noteError}>
-                <TextField
-                  required
-                  fullWidth
-                  multiline
-                  minRows={2}
-                  maxRows={4}
-                  size="small"
-                  label="Notes"
-                  name="note"
-                  disabled={locked}
-                  value={formik.values.note}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={noteError}
-                  helperText={
-                    <Box
-                      component="span"
-                      sx={{ display: 'flex', justifyContent: 'space-between', gap: 1 }}
-                    >
-                      <span>{noteError ? formik.errors.note : ''}</span>
-                      <span>{formik.values.note.length}/500</span>
-                    </Box>
-                  }
-                  slotProps={{ htmlInput: { maxLength: 500 } }}
-                />
-              </ShakingTextField>
-              <Box
-                sx={{
-                  display: 'grid',
-                  gridTemplateColumns: { xs: '1fr', sm: 'minmax(0, 1fr) minmax(0, 1fr)' },
-                  gap: 1.5,
-                }}
-              >
-                <ShakingTextField error={dateError}>
-                  <DatePicker
-                    label="Next Reminder Date"
-                    format="DD-MM-YYYY"
-                    value={formik.values.reminderDate}
-                    minDate={dayjs().add(1, 'day').startOf('day')}
-                    disabled={locked || formik.values.status === 6}
-                    onChange={(value) => formik.setFieldValue('reminderDate', value)}
-                    slotProps={{
-                      textField: {
-                        name: 'reminderDate',
-                        size: 'small',
-                        fullWidth: true,
-                        required: formik.values.status !== 6,
-                        onBlur: () => formik.setFieldTouched('reminderDate', true),
-                        error: dateError,
-                        helperText: dateError ? String(formik.errors.reminderDate) : undefined,
-                      },
-                    }}
+            <FormSectionCard
+              title="Follow-Up Details"
+              icon={GlobalIcons.admissionDetails}
+              descriptionTooltip="Add a note and choose the inquiry status. Pending or Interested requires a future reminder; Not interested clears it."
+            >
+              <Stack spacing={1.5}>
+                {requestError && (
+                  <StudentFeedback
+                    notificationKey="STU-0408"
+                    presentation="inline"
+                    severity="error"
+                    action={
+                      <Button
+                        size="small"
+                        color="inherit"
+                        onClick={reload}
+                        disabled={saving || fetching}
+                      >
+                        Reload
+                      </Button>
+                    }
+                  >
+                    {requestError}
+                  </StudentFeedback>
+                )}
+                <ShakingTextField error={noteError}>
+                  <TextField
+                    required
+                    fullWidth
+                    multiline
+                    minRows={2}
+                    maxRows={4}
+                    size="small"
+                    label="Notes"
+                    name="note"
+                    disabled={locked}
+                    value={formik.values.note}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    error={noteError}
+                    helperText={
+                      <Box
+                        component="span"
+                        sx={{ display: 'flex', justifyContent: 'space-between', gap: 1 }}
+                      >
+                        <span>{noteError ? formik.errors.note : ''}</span>
+                        <span>{formik.values.note.length}/500</span>
+                      </Box>
+                    }
+                    slotProps={{ htmlInput: { maxLength: 500 } }}
                   />
                 </ShakingTextField>
-                <CustomSelect
-                  required
-                  fullWidth
-                  size="small"
-                  label="Status"
-                  name="status"
-                  value={formik.values.status}
-                  options={INQUIRY_STATUS_OPTIONS}
-                  disabled={locked}
-                  onChange={(value) => {
-                    const status = Number(value) as InquiryFollowUpValues['status'];
-                    formik.setFieldValue('status', status);
-                    if (status === 6) formik.setFieldValue('reminderDate', null);
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gridTemplateColumns: { xs: '1fr', sm: 'minmax(0, 1fr) minmax(0, 1fr)' },
+                    gap: 1.5,
                   }}
-                  onBlur={formik.handleBlur}
-                  error={Boolean(formik.touched.status && formik.errors.status)}
-                  helperText={formik.touched.status ? formik.errors.status : undefined}
-                />
-              </Box>
-            </Stack>
+                >
+                  <ShakingTextField error={dateError}>
+                    <DatePicker
+                      label="Next reminder date"
+                      format={ADMISSION_DATE_FORMAT}
+                      value={formik.values.reminderDate}
+                      minDate={dayjs().add(1, 'day').startOf('day')}
+                      disabled={locked || formik.values.status === 6}
+                      onChange={(value) => formik.setFieldValue('reminderDate', value)}
+                      slotProps={{
+                        textField: {
+                          name: 'reminderDate',
+                          size: 'small',
+                          fullWidth: true,
+                          required: formik.values.status !== 6,
+                          onBlur: () => formik.setFieldTouched('reminderDate', true),
+                          error: dateError,
+                          helperText: dateError ? String(formik.errors.reminderDate) : undefined,
+                        },
+                      }}
+                    />
+                  </ShakingTextField>
+                  <CustomSelect
+                    required
+                    fullWidth
+                    size="small"
+                    label="Status"
+                    name="status"
+                    value={formik.values.status}
+                    options={INQUIRY_STATUS_OPTIONS}
+                    disabled={locked}
+                    onChange={(value) => {
+                      const status = Number(value) as InquiryFollowUpValues['status'];
+                      formik.setFieldValue('status', status);
+                      if (status === 6) formik.setFieldValue('reminderDate', null);
+                    }}
+                    onBlur={formik.handleBlur}
+                    error={Boolean(formik.touched.status && formik.errors.status)}
+                    helperText={formik.touched.status ? formik.errors.status : undefined}
+                  />
+                </Box>
+              </Stack>
+            </FormSectionCard>
             {saving && (
               <Box
                 role="status"
@@ -407,28 +422,7 @@ function InquiryFollowUpContent({
           </DialogActions>
         </Box>
       </CustomDialog>
-      <ConfirmDialog
-        open={discard.value}
-        onClose={discard.onFalse}
-        icon="warning"
-        disableBackdropClick
-        title="Discard Unsaved Changes?"
-        content="Your follow-up note and reminder changes will be discarded."
-        action={
-          <Button
-            variant="contained"
-            color="error"
-            onClick={() => {
-              discard.onFalse();
-              formik.resetForm();
-              onClose();
-            }}
-            startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          >
-            Discard Changes
-          </Button>
-        }
-      />
+      {guard.confirmation}
     </>
   );
 }
@@ -454,7 +448,7 @@ function FollowUpNoteCard({ note }: { note: InquiryFollowUpNote }) {
         sx={{ flexShrink: 0, width: { sm: 88 }, pt: { sm: 1 } }}
       >
         <Typography variant="caption" color="text.secondary">
-          {fDate(note.occurredAt)}
+          {fDate(note.occurredAt, ADMISSION_DATE_FORMAT)}
         </Typography>
         <Typography variant="caption" color="text.secondary">
           {fTime(note.occurredAt)}
@@ -515,7 +509,7 @@ function FollowUpNoteCard({ note }: { note: InquiryFollowUpNote }) {
               <Stack direction="row" spacing={0.5} alignItems="center">
                 <Iconify icon={GlobalIcons.calendar} width={14} color="text.secondary" />
                 <Typography variant="caption" color="text.secondary">
-                  Remind Date: {fDate(note.reminderAt)}
+                  Remind Date: {fDate(note.reminderAt, ADMISSION_DATE_FORMAT)}
                 </Typography>
               </Stack>
             )}

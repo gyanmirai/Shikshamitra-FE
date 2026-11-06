@@ -30,6 +30,7 @@ import {
   Typography,
 } from '@mui/material';
 
+import { useAdmissionCloseGuard } from './use-admission-close-guard';
 import { admissionOfferingSchema } from './admission-offering-schema';
 import { getAdmissionHierarchyOptions } from './admission-hierarchy-options';
 import { useAdmissionOfferingEditor } from './use-admission-offering-editor';
@@ -62,10 +63,10 @@ type Props = {
 const EDIT_STEPS = ['Configure', 'Preview'];
 
 export function AdmissionOfferingEditDrawer(props: Props) {
-  const { offering, open, cycle, loadingDetail, onClose, detailError, onRetryDetail } = props;
+  const { offering, open, cycle, onClose, detailError, onRetryDetail, saving } = props;
   if (!offering) {
     return (
-      <AdmissionOfferingEditShell open={open} busy={Boolean(loadingDetail)} onClose={onClose}>
+      <AdmissionOfferingEditShell open={open} busy={saving} onClose={onClose}>
         <Stack spacing={2} sx={{ p: 2, flex: 1, minHeight: 0, overflow: 'auto' }}>
           <Skeleton variant="rounded" height={56} />
           <AdmissionOfferingCycleContext cycle={cycle} showCode={false} />
@@ -74,7 +75,7 @@ export function AdmissionOfferingEditDrawer(props: Props) {
               notificationKey="STU-0121"
               presentation="toast"
               severity="error"
-              action={
+              toastAction={
                 <Button size="small" color="inherit" onClick={onRetryDetail}>
                   Retry
                 </Button>
@@ -195,6 +196,9 @@ function AdmissionOfferingEditForm({
   const [activeStep, setActiveStep] = useState(0);
   const [dirty, setDirty] = useState(false);
   const [optionsFailed, setOptionsFailed] = useState(false);
+  const [savingIntent, setSavingIntent] = useState(false);
+  const savingIntentRef = useRef(false);
+  const previewRequest = useRef<{ cancel: () => void } | null>(null);
   const formikRef = useRef<FormikProps<AdmissionOfferingFormValues> | null>(null);
   const editor = useAdmissionOfferingEditor({ open, cycle, offering, onSave });
   useAdmissionUnsavedChanges(open, dirty);
@@ -206,21 +210,35 @@ function AdmissionOfferingEditForm({
       setOptionsFailed(false);
       editor.clearReadiness();
     }
+    return () => {
+      previewRequest.current?.cancel();
+      previewRequest.current = null;
+    };
     // The editor is intentionally reset only when a different record opens.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, offering.id]);
 
+  const writeBusy = saving || savingIntent;
+  const cancelPreview = () => {
+    previewRequest.current?.cancel();
+    previewRequest.current = null;
+    editor.cancelValidation();
+  };
+  const guard = useAdmissionCloseGuard(dirty, writeBusy, open);
   const requestClose = () => {
-    if (saving || editor.validating) return;
-    if (dirty && !window.confirm('You have unsaved changes. Do you want to discard them?')) return;
-    onClose();
+    if (savingIntentRef.current) return;
+    guard.requestNavigation(() => {
+      cancelPreview();
+      onClose();
+    });
   };
 
   const requestDeactivate = () => {
-    if (!onDeactivate || saving || editor.validating) return;
-    if (dirty && !window.confirm('You have unsaved changes. Do you want to discard them?')) return;
-    onClose();
-    onDeactivate();
+    if (!onDeactivate || writeBusy || savingIntentRef.current || editor.validating) return;
+    guard.requestNavigation(() => {
+      onClose();
+      onDeactivate();
+    });
   };
 
   const handleNext = async (
@@ -229,15 +247,29 @@ function AdmissionOfferingEditForm({
     _formik: FormikProps<AdmissionOfferingFormValues>,
     setIsLoading: (value: boolean) => void
   ) => {
+    if (!open || savingIntentRef.current) return;
     setIsLoading(true);
-    try {
-      if (activeStep === 0) {
+    if (activeStep === 0) {
+      const request = { cancel: () => setIsLoading(false) };
+      previewRequest.current = request;
+      try {
         const validation = await editor.validateForReview(values);
-        if (validation) setActiveStep(1);
-        return;
+        if (previewRequest.current === request && validation) setActiveStep(1);
+      } finally {
+        if (previewRequest.current === request) {
+          previewRequest.current = null;
+          setIsLoading(false);
+        }
       }
+      return;
+    }
+    savingIntentRef.current = true;
+    setSavingIntent(true);
+    try {
       await editor.save(values);
     } finally {
+      savingIntentRef.current = false;
+      setSavingIntent(false);
       setIsLoading(false);
     }
   };
@@ -245,7 +277,7 @@ function AdmissionOfferingEditForm({
   return (
     <AdmissionOfferingEditShell
       open={open}
-      busy={saving || editor.validating}
+      busy={writeBusy}
       onClose={requestClose}
       isActive={offering.isActive}
     >
@@ -268,11 +300,12 @@ function AdmissionOfferingEditForm({
           backButtonProps={{ sx: { ml: 'auto', '& + .MuiBox-root': { ml: 0 } } }}
           nextButtonLabel="Continue"
           finalButtonLabel="Save Changes"
+          loadingLabel={writeBusy ? 'Saving offering changes…' : 'Checking offering configuration…'}
           disableSubmit={Boolean(
             activeStep === 1 && formikRef.current?.values.isActive && !editor.readiness?.isValid
           )}
           saveAndNextButtonProps={{
-            loading: saving || editor.validating,
+            loading: writeBusy || editor.validating,
             disabled: editor.queryFailed || editor.hierarchyEmpty || optionsFailed,
             // Keep the shared stepper's forward and save icons.
           }}
@@ -295,6 +328,7 @@ function AdmissionOfferingEditForm({
           }}
         />
       </Box>
+      {guard.confirmation}
     </AdmissionOfferingEditShell>
   );
 }
@@ -352,7 +386,7 @@ function AdmissionOfferingEditStep({
                 notificationKey="STU-0123"
                 presentation="toast"
                 severity="error"
-                action={
+                toastAction={
                   <Button
                     size="small"
                     color="inherit"

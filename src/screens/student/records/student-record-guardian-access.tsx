@@ -11,7 +11,7 @@ import { useState } from 'react';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
-import { fDate } from 'src/utils/format-time';
+import { fDate, formatStr } from 'src/utils/format-time';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { StudentFeedback } from 'src/components/student-feedback';
@@ -60,7 +60,7 @@ export default function StudentRecordGuardianAccess({ studentId }: { studentId: 
           notificationKey="STU-0892"
           presentation="toast"
           severity="error"
-          action={
+          toastAction={
             <Button
               onClick={() => {
                 links.refetch();
@@ -96,7 +96,7 @@ export default function StudentRecordGuardianAccess({ studentId }: { studentId: 
           <Stack spacing={1}>
             <Stack direction="row" justifyContent="space-between" alignItems="center">
               <Typography variant="subtitle2">
-                Guardian change · {fDate(review.creationTime)}
+                Guardian change · {fDate(review.creationTime, formatStr.split.date)}
               </Typography>
               <Label color={review.status === 'Completed' ? 'success' : 'warning'}>
                 {review.status}

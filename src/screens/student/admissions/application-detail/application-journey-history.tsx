@@ -19,7 +19,7 @@ export function ApplicationJourneyHistory({ applicantId }: { applicantId: string
           notificationKey="STU-0200"
           presentation="toast"
           severity="error"
-          action={
+          toastAction={
             <Button size="small" onClick={() => query.refetch()}>
               Retry
             </Button>

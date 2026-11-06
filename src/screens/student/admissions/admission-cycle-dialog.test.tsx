@@ -73,14 +73,14 @@ describe('admission cycle dialog', () => {
     expect(
       screen.queryByText('Uppercase letters, numbers, hyphen and underscore')
     ).not.toBeInTheDocument();
-    expect(screen.getByRole('textbox', { name: 'Description (Optional)' })).toHaveAttribute(
+    expect(screen.getByRole('textbox', { name: 'Description (optional)' })).toHaveAttribute(
       'placeholder',
       'Internal purpose or audience, e.g. Nursery to Grade 9'
     );
 
-    await user.click(screen.getByRole('button', { name: 'Admission Cycle Information' }));
+    await user.click(screen.getByRole('button', { name: 'Admission cycle information' }));
     expect(await screen.findByRole('tooltip')).toHaveTextContent(
-      'Save the Cycle as a Draft First.'
+      'Save the cycle as a draft first.'
     );
 
     expect(screen.queryByRole('textbox', { name: 'Cycle code' })).not.toBeInTheDocument();
@@ -112,9 +112,9 @@ describe('admission cycle dialog', () => {
       </Provider>
     );
 
-    await user.clear(screen.getByRole('textbox', { name: 'Cycle Name' }));
-    await user.type(screen.getByRole('textbox', { name: 'Cycle Name' }), 'Updated cycle');
-    await user.click(screen.getByRole('button', { name: 'Save as Draft' }));
+    await user.clear(screen.getByRole('textbox', { name: 'Cycle name' }));
+    await user.type(screen.getByRole('textbox', { name: 'Cycle name' }), 'Updated cycle');
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
 
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(onSave.mock.calls[0][0]).toMatchObject({

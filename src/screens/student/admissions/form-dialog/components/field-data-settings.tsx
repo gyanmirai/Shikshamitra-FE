@@ -142,7 +142,7 @@ export function FieldDataSettings({ formik, sectionIndex, fieldIndex }: FieldSet
               notificationKey="STU-0360"
               presentation="toast"
               severity="error"
-              action={
+              toastAction={
                 <Button size="small" onClick={() => refetch()}>
                   Retry
                 </Button>

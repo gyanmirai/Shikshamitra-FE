@@ -171,7 +171,7 @@ export default function RenewalPortalAccounts({ renewal, onDirtyChange, onBusyCh
             notificationKey="STU-0826"
             presentation="toast"
             severity="error"
-            action={
+            toastAction={
               <Button color="inherit" onClick={() => query.refetch()}>
                 Retry portal status
               </Button>

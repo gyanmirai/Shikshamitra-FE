@@ -11,6 +11,7 @@ import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { formatStr } from 'src/utils/format-time';
 import { useMemo, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
@@ -19,12 +20,15 @@ import { FormBusyRegion } from 'src/components/form-busy-region';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { FormSectionCard } from 'src/components/form-section-card';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import ColorPickerCircle from 'src/components/static-color/colorPickerCircle';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { attendanceError } from 'src/redux/student/attendance-management/types';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
+import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 import {
   Box,
   Stack,
@@ -97,6 +101,12 @@ export default function AttendanceType() {
     setEditing(null);
     setFormDirty(false);
   };
+  const { requestNavigation, confirmation } = useUnsavedNavigation(formOpen && formDirty, {
+    blockNavigation: formBusy,
+    guardContextChanges: true,
+    renderConfirmation: renderUnsavedConfirmation,
+  });
+  const requestClose = () => requestNavigation(closeForm);
 
   const columns: IColumn[] = useMemo(
     () => [
@@ -122,7 +132,7 @@ export default function AttendanceType() {
         isSort: false,
         // The list contract accepts search/isActive; it has no modification-date criterion.
         isFilter: false,
-        render: (value) => (value ? dayjs(value).format('DD-MM-YYYY') : '—'),
+        render: (value) => (value ? dayjs(value).format(formatStr.split.date) : '—'),
       },
       {
         id: 'isActive',
@@ -155,6 +165,8 @@ export default function AttendanceType() {
         excludeFromExport: true,
         render: (_, row) => (
           <AdaptiveThreeDotsActions
+            directActionLimit={2}
+            collapseOnOverflow={false}
             moreLabel={`More Actions for ${row.leaveTypeName}`}
             actions={[
               ...(canWrite
@@ -217,7 +229,7 @@ export default function AttendanceType() {
           notificationKey="STU-0633"
           presentation="toast"
           severity="error"
-          action={
+          toastAction={
             <Button startIcon={<Iconify icon={GlobalIcons.refresh} />} onClick={() => refetch()}>
               Retry
             </Button>
@@ -232,7 +244,11 @@ export default function AttendanceType() {
         exportLabel="Export"
         columns={columns}
         data={rows}
-        isLoading={isLoading || isFetching}
+        isLoading={isLoading || (isFetching && !currentData)}
+        isRefreshing={isFetching && Boolean(currentData)}
+        errorContent={
+          isError ? <Box role="region" aria-label="Leave types unavailable" /> : undefined
+        }
         serverSidePagination
         serverSideSearch
         serverSideSort
@@ -275,7 +291,8 @@ export default function AttendanceType() {
         open={formOpen}
         title={editing ? 'Edit Leave Type' : 'Add Leave Type'}
         titleInfo="Choose a name and color to identify this leave type in attendance."
-        handleClose={closeForm}
+        handleClose={requestClose}
+        guardUnsavedChanges={false}
         disableClose={formBusy}
         hasUnsavedChanges={formDirty}
       >
@@ -286,12 +303,13 @@ export default function AttendanceType() {
               setFormOpen(false);
               setEditing(null);
               setFormDirty(false);
-            } else closeForm();
+            } else requestClose();
           }}
           onBusyChange={setFormBusy}
           onDirtyChange={setFormDirty}
         />
       </CustomDialog>
+      {confirmation}
       <ConfirmDialog
         open={Boolean(deleting)}
         title="Delete Leave Type?"
@@ -377,57 +395,61 @@ export function AttendanceTypeForm({
   useEffect(() => {
     onDirtyChange?.(formik.dirty);
   }, [formik.dirty, onDirtyChange]);
-  const cancel = () => {
-    if (formik.dirty && !window.confirm('Discard unsaved leave type changes?')) return;
-    handleClose(null, false);
-  };
 
   return (
-    <Box>
+    <Box sx={{ minHeight: 0, flex: 1, display: 'flex', flexDirection: 'column' }}>
       <DialogScrollContent>
         <FormBusyRegion busy={busy} label="Saving Leave Type…">
-          <Stack spacing={2}>
-            <ShakingTextField error={formik.touched.type && Boolean(formik.errors.type)}>
-              <TextField
-                fullWidth
-                size="small"
-                label="Leave Type *"
-                name="type"
-                value={formik.values.type}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={formik.touched.type && Boolean(formik.errors.type)}
-                helperText={formik.touched.type && formik.errors.type}
-                disabled={busy}
-              />
-            </ShakingTextField>
-            <Box>
-              <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                Leave Type Color *
-              </Typography>
-              <ColorPickerCircle
-                key={editData?.id ?? 'new'}
-                initialColor={formik.values.color}
-                onSelect={(color) => formik.setFieldValue('color', color)}
-                disabled={busy}
-              />
-              {formik.submitCount > 0 && formik.errors.color && (
-                <Typography variant="caption" color="error.main">
-                  {formik.errors.color}
-                </Typography>
-              )}
-            </Box>
-            <FormControlLabel
-              label="Active"
-              control={
-                <Switch
-                  checked={formik.values.isActive}
+          <FormSectionCard
+            title="Leave Type Details"
+            icon={GlobalIcons.notebook}
+            descriptionTooltip="Set the leave type name, identifying color, and availability."
+            titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+          >
+            <Stack spacing={2}>
+              <ShakingTextField error={formik.touched.type && Boolean(formik.errors.type)}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Leave type"
+                  required
+                  name="type"
+                  value={formik.values.type}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.type && Boolean(formik.errors.type)}
+                  helperText={formik.touched.type && formik.errors.type}
                   disabled={busy}
-                  onChange={(_, value) => formik.setFieldValue('isActive', value)}
                 />
-              }
-            />
-          </Stack>
+              </ShakingTextField>
+              <ShakingTextField error={formik.submitCount > 0 && Boolean(formik.errors.color)}>
+                <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                  Leave type color *
+                </Typography>
+                <ColorPickerCircle
+                  key={editData?.id ?? 'new'}
+                  initialColor={formik.values.color}
+                  onSelect={(color) => formik.setFieldValue('color', color)}
+                  disabled={busy}
+                />
+                {formik.submitCount > 0 && formik.errors.color && (
+                  <Typography variant="caption" color="error.main">
+                    {formik.errors.color}
+                  </Typography>
+                )}
+              </ShakingTextField>
+              <FormControlLabel
+                label="Active"
+                control={
+                  <Switch
+                    checked={formik.values.isActive}
+                    disabled={busy}
+                    onChange={(_, value) => formik.setFieldValue('isActive', value)}
+                  />
+                }
+              />
+            </Stack>
+          </FormSectionCard>
         </FormBusyRegion>
       </DialogScrollContent>
       <DialogActions>
@@ -436,19 +458,20 @@ export function AttendanceTypeForm({
           variant="outlined"
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
           disabled={busy}
-          onClick={cancel}
+          onClick={() => handleClose(null, false)}
         >
           Cancel
         </Button>
         <Button
           size="small"
           variant="contained"
-          startIcon={<Iconify icon={editData ? GlobalIcons.submit : 'mdi:plus'} />}
+          startIcon={<Iconify icon={GlobalIcons.submit} />}
+          type="submit"
           loading={busy}
           disabled={busy}
           onClick={() => formik.submitForm()}
         >
-          {editData ? 'Save Changes' : 'Add Leave Type'}
+          Submit
         </Button>
       </DialogActions>
     </Box>

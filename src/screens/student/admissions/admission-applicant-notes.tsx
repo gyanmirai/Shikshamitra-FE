@@ -14,6 +14,8 @@ import {
   useUpdateAdmissionApplicantNoteMutation,
 } from 'src/redux/student/admissions/admission-applicants-api';
 
+import { ADMISSION_DATE_TIME_FORMAT } from './admission-date-formats';
+
 export type ApplicantNote = {
   id: string;
   text: string;
@@ -156,8 +158,8 @@ export default function AdmissionApplicantNotes({
                 sx={{ mt: 1 }}
               >
                 <Typography variant="caption" color="text.secondary">
-                  {fDateTime(note.creationTime) || 'Time Not Recorded'}
-                  {note.lastEditedAt ? ` · edited ${fDateTime(note.lastEditedAt)}` : ''}
+                  {fDateTime(note.creationTime, ADMISSION_DATE_TIME_FORMAT) || 'Time Not Recorded'}
+                  {note.lastEditedAt ? ` · edited ${fDateTime(note.lastEditedAt, ADMISSION_DATE_TIME_FORMAT)}` : ''}
                 </Typography>
                 {!readOnly && (
                   <Button

@@ -1,8 +1,10 @@
-import { it, expect, describe } from 'vitest';
+import { vi, it, expect, describe } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { screen, waitFor } from '@testing-library/react';
 
 import { renderConditionRoute } from './transition-condition-test-fixture';
+
+vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 
 const firstRule = { field: 'application.status', operator: 'Equals', value: 'approved' };
 const secondRule = { field: 'application.CATEGORY', operator: 'Equals', value: 'transfer' };
@@ -44,6 +46,7 @@ describe('saved transition condition preservation', { timeout: 15000 }, () => {
     const user = userEvent.setup();
     const { onSave } = renderConditionRoute(grouped);
     expect(screen.getByRole('heading', { name: 'Application form' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'About What Happens Next?' })).toBeVisible();
     expect(screen.queryByRole('combobox', { name: 'From Stage *' })).not.toBeInTheDocument();
     expect(screen.getByText('Its rule is preserved', { exact: false })).toBeVisible();
     expect(screen.queryByLabelText('Default Route')).not.toBeInTheDocument();
@@ -57,11 +60,25 @@ describe('saved transition condition preservation', { timeout: 15000 }, () => {
     });
   });
 
-  it('displays the preserved condition with no editable rule or save action for a published route', () => {
-    renderConditionRoute(grouped, true);
-    expect(screen.getByText('This saved condition', { exact: false })).toBeVisible();
-    expect(screen.getByRole('heading', { name: 'Application form' })).toBeInTheDocument();
-    expect(screen.queryByRole('combobox', { name: 'From Stage *' })).not.toBeInTheDocument();
+  it('shows a named read-only published route with saved facts, help and one clean Close action', async () => {
+    const user = userEvent.setup();
+    const { onSave, onClose } = renderConditionRoute(grouped, true);
+    expect(screen.getByRole('dialog', { name: 'Next-step Details' })).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Next-step Details', level: 2 })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'About Next-step Details' })).toBeVisible();
+    expect(screen.getByText('Application form')).toBeVisible();
+    expect(screen.getByText('Decision')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Route Details information' })).toBeVisible();
+    expect(
+      screen.getByRole('dialog', { name: 'Next-step Details' }).querySelector('pre')?.textContent
+    ).toBe(grouped);
+    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Save Path' })).not.toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'Close' })).toHaveLength(1);
+    await user.click(screen.getByRole('button', { name: 'Close' }));
+    expect(onClose).toHaveBeenCalledOnce();
+    expect(onSave).not.toHaveBeenCalled();
   });
 });

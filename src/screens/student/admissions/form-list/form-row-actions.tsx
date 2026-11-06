@@ -127,7 +127,8 @@ export function FormRowActions({
     <AdaptiveThreeDotsActions
       placement="right-top"
       moreLabel={`More Actions `}
-      mobileDirectActionLimit={0}
+      directActionLimit={2}
+      collapseOnOverflow={false}
       sx={{
         gap: 0,
         '& .MuiIconButton-root': { width: { xs: 44, sm: 30 }, height: { xs: 44, sm: 30 } },

@@ -789,6 +789,9 @@ describe('public inquiry link details and actions', () => {
       screen.getByRole('button', { name: `Set Inquiry Form For ${activeLink.name}` })
     );
     expect(screen.getByRole('dialog', { name: 'Set Inquiry Form' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'About Set Inquiry Form' })).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Inquiry Form' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Inquiry Form information' })).toBeVisible();
     expect(
       screen.queryByRole('dialog', { name: `Inquiry Link: ${activeLink.name}` })
     ).not.toBeInTheDocument();
@@ -801,7 +804,10 @@ describe('public inquiry link details and actions', () => {
     hooks.revokeLoading = true;
     renderList();
     expect(screen.getByTestId('table-action-form')).toBeDisabled();
-    expect(screen.getByTestId('table-action-revoke')).toBeDisabled();
+    await userEvent.click(
+      screen.getByRole('button', { name: `More Actions For ${activeLink.name}` })
+    );
+    expect(screen.getByTestId('menu-action-revoke')).toHaveAttribute('aria-disabled', 'true');
   });
 
   it('restricts replacement forms to compatible offerings in the existing link period', async () => {
@@ -823,12 +829,12 @@ describe('public inquiry link details and actions', () => {
       'cycle-1',
       expect.objectContaining({ skip: false })
     );
-    await user.click(screen.getByRole('combobox', { name: 'Published Inquiry Form' }));
+    await user.click(screen.getByRole('combobox', { name: 'Published inquiry form' }));
     expect(screen.getByRole('option', { name: 'Inquiry form · v1' })).toBeVisible();
     expect(screen.getByRole('option', { name: 'Second inquiry · v2' })).toBeVisible();
     expect(screen.queryByRole('option', { name: 'Unlinked inquiry · v1' })).not.toBeInTheDocument();
     await user.click(screen.getByRole('option', { name: 'Second inquiry · v2' }));
-    await user.click(screen.getByRole('button', { name: 'Save Form' }));
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
     await waitFor(() =>
       expect(hooks.setForm).toHaveBeenCalledWith({
         id: activeLink.id,
@@ -849,7 +855,7 @@ describe('public inquiry link details and actions', () => {
       await user.click(
         screen.getByRole('button', { name: `Set Inquiry Form For ${activeLink.name}` })
       );
-      expect(screen.getByRole('button', { name: 'Save Form' })).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
       if (state === 'loading')
         expect(
           screen.getByRole('status', { name: 'Loading Published Inquiry Forms' })
@@ -860,7 +866,7 @@ describe('public inquiry link details and actions', () => {
             /Attach a published Inquiry form to an active inquiry offering in this admission period/
           )
         ).toBeVisible();
-        await user.click(screen.getByRole('button', { name: 'Refresh Offerings' }));
+        await user.click(screen.getByRole('button', { name: 'Refresh offerings' }));
         expect(hooks.options.refetch).toHaveBeenCalledOnce();
       }
       if (state === 'error') {
@@ -904,13 +910,24 @@ describe('public inquiry link details and actions', () => {
       renderList();
       await user.click(screen.getByRole('button', { name: `More Actions For ${activeLink.name}` }));
       const menu = screen.getByRole('menu', { name: `More Actions For ${activeLink.name}` });
-      expect(within(menu).getByRole('menuitem', { name: 'Set Inquiry Form' })).toBeVisible();
+      expect(
+        within(menu).queryByRole('menuitem', { name: 'Set Inquiry Form' })
+      ).not.toBeInTheDocument();
       expect(within(menu).getByRole('menuitem', { name: 'Revoke Link' })).toBeVisible();
-      await user.click(within(menu).getByRole('menuitem', { name: 'Set Inquiry Form' }));
+      await user.keyboard('{Escape}');
+      await user.click(screen.getByRole('button', { name: 'Set Inquiry Form' }));
       expect(screen.getByRole('dialog', { name: 'Set Inquiry Form' })).toBeVisible();
       expect(hooks.setForm).not.toHaveBeenCalled();
     } finally {
       window.matchMedia = originalMatchMedia;
     }
+  });
+  it('formats expiry consistently in the table and clean read-only details', async () => {
+    hooks.links = [{ ...activeLink, expiresAtUtc: '2027-01-02T03:04:00Z' }];
+    const user = userEvent.setup();
+    renderList();
+    expect(screen.getByText('02/01/2027')).toBeVisible();
+    await user.click(screen.getByRole('cell', { name: activeLink.name }));
+    expect(within(screen.getByRole('dialog')).getByText('02/01/2027 08:34 AM')).toBeVisible();
   });
 });

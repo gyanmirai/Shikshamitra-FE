@@ -1,4 +1,5 @@
-import React from 'react';
+import type { StudentRecordProfile } from 'src/redux/student/student-profile-types';
+
 import { useTabs } from 'src/hooks/use-tabs';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -33,7 +34,13 @@ const TABS = [
   },
 ];
 
-const AcademicTabs = ({ student }: { student?: any }) => {
+const AcademicTabs = ({
+  student,
+  onOverview,
+}: {
+  student?: StudentRecordProfile;
+  onOverview?: () => void;
+}) => {
   const tabs = useTabs('timetable');
 
   return (
@@ -115,16 +122,20 @@ const AcademicTabs = ({ student }: { student?: any }) => {
         >
           <Card sx={{ p: 1, flexGrow: 1, height: '100%', overflow: 'hidden' }}>
             <Scrollbar sx={{ height: '100%' }}>
-              <Box sx={{ p: 1, gap: 1, minWidth: 360, display: 'flex', flexDirection: 'column' }}>
+              <Box sx={{ p: 1, gap: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
                 {tabs.value === 'timetable' && (
                   <AcademicTimetable
-                    standardId={student?.standardId}
-                    divisionId={student?.divisionId}
+                    standardId={student?.standardId ?? undefined}
+                    divisionId={student?.divisionId ?? undefined}
                   />
                 )}
-                {tabs.value === 'subjectPerformace' && <SubjectPerformance />}
-                {tabs.value === 'homework/assignments' && <MyProfileSubmission />}
-                {tabs.value === 'examination' && <ProfileExamination />}
+                {tabs.value === 'subjectPerformace' && (
+                  <SubjectPerformance onOverview={onOverview} />
+                )}
+                {tabs.value === 'homework/assignments' && (
+                  <MyProfileSubmission onOverview={onOverview} />
+                )}
+                {tabs.value === 'examination' && <ProfileExamination onOverview={onOverview} />}
               </Box>
             </Scrollbar>
           </Card>

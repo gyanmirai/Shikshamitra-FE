@@ -54,8 +54,11 @@ import {
 
 import { AdmissionTableText } from './admission-table-text';
 import { AdmissionQueryError } from './admission-query-error';
+import { AdmissionDialogTitle } from './admission-dialog-title';
 import { AdmissionIntakeNotice } from './admission-intake-notice';
+import { useAdmissionCloseGuard } from './use-admission-close-guard';
 import { INQUIRY_SOURCE_OPTIONS } from './inquiry-management/admission-inquiry-list-options';
+import { ADMISSION_DATE_FORMAT, ADMISSION_DATE_TIME_FORMAT } from './admission-date-formats';
 
 const publicSources = INQUIRY_SOURCE_OPTIONS.filter((item) =>
   [0, 3, 4, 10, 11, 12].includes(item.value)
@@ -128,8 +131,6 @@ export function AdmissionPublicInquiryLinks({
   const [create, createState] = useCreateAdmissionPublicInquiryLinkMutation();
   const [setLinkForm, setLinkFormState] = useSetAdmissionPublicInquiryLinkFormMutation();
   const [revoke, revokeState] = useRevokeAdmissionPublicInquiryLinkMutation();
-  const [discardOpen, setDiscardOpen] = useState(false);
-  const [formDiscardOpen, setFormDiscardOpen] = useState(false);
   const [formTarget, setFormTarget] = useState<AdmissionPublicInquiryLink | null>(null);
   const [revokeTarget, setRevokeTarget] = useState<AdmissionPublicInquiryLink | null>(null);
   const [viewLink, setViewLink] = useState<LinkRow | null>(null);
@@ -265,15 +266,17 @@ export function AdmissionPublicInquiryLinks({
     formEditor.resetForm({ values: { formId: link.inquiryFormDefinitionId ?? '' } });
     setFormTarget(link);
   };
-  const closeFormEditor = () => {
-    if (setLinkFormState.isLoading) return;
-    if (formEditor.dirty) {
-      setFormDiscardOpen(true);
-      return;
-    }
-    setFormTarget(null);
-    setError('');
-  };
+  const formGuard = useAdmissionCloseGuard(
+    formEditor.dirty,
+    setLinkFormState.isLoading,
+    Boolean(formTarget)
+  );
+  const closeFormEditor = () =>
+    formGuard.requestNavigation(() => {
+      formEditor.resetForm();
+      setFormTarget(null);
+      setError('');
+    });
 
   useEffect(() => {
     setFormMenuOpen(false);
@@ -284,19 +287,12 @@ export function AdmissionPublicInquiryLinks({
   }, [createOpen, isMobile]);
 
   const discardAndClose = () => {
-    setDiscardOpen(false);
     formik.resetForm();
     setError('');
     onCreateClose();
   };
-  const closeDrawer = () => {
-    if (createState.isLoading) return;
-    if (dirty) {
-      setDiscardOpen(true);
-      return;
-    }
-    discardAndClose();
-  };
+  const createGuard = useAdmissionCloseGuard(dirty, createState.isLoading, createOpen);
+  const closeDrawer = () => createGuard.requestNavigation(discardAndClose);
 
   const createLink = async () => {
     const errors = await formik.validateForm();
@@ -406,8 +402,10 @@ export function AdmissionPublicInquiryLinks({
         const { expiresAtUtc } = row as LinkRow;
         return (
           <AdmissionTableText
-            text={expiresAtUtc ? (fDate(expiresAtUtc, 'DD-MM-YYYY') ?? '—') : 'No expiry'}
-            tooltip={expiresAtUtc ? fDateTime(expiresAtUtc) : 'No Expiry'}
+            text={expiresAtUtc ? (fDate(expiresAtUtc, ADMISSION_DATE_FORMAT) ?? '—') : 'No expiry'}
+            tooltip={
+              expiresAtUtc ? fDateTime(expiresAtUtc, ADMISSION_DATE_TIME_FORMAT) : 'No Expiry'
+            }
           />
         );
       },
@@ -447,13 +445,14 @@ export function AdmissionPublicInquiryLinks({
       excludeFromExport: true,
       align: 'right',
       minWidth: 120,
-      headerSx: { width: { xs: 76, sm: 120 }, minWidth: { xs: 76, sm: 120 } },
-      cellSx: { width: { xs: 76, sm: 120 }, minWidth: { xs: 76, sm: 120 } },
+      headerSx: { width: { xs: 132, sm: 120 }, minWidth: { xs: 132, sm: 120 } },
+      cellSx: { width: { xs: 132, sm: 120 }, minWidth: { xs: 132, sm: 120 } },
       render: (_value, row) => {
         const link = row as LinkRow;
         return (
           <AdaptiveThreeDotsActions
-            mobileDirectActionLimit={0}
+            directActionLimit={2}
+            collapseOnOverflow={false}
             placement="top-right"
             moreLabel={`More Actions For ${link.name}`}
             sx={{
@@ -575,6 +574,7 @@ export function AdmissionPublicInquiryLinks({
         open={Boolean(viewLink)}
         handleClose={() => setViewLink(null)}
         title={viewLink ? `Inquiry Link: ${viewLink.name}` : 'Inquiry Link Details'}
+        titleInfo="Review the saved admission period, inquiry form, source and availability of this link."
         hasForm={false}
         maxWidth="sm"
         paperProps={{ sx: { '& .MuiTypography-h6': { overflowWrap: 'anywhere' } } }}
@@ -609,7 +609,9 @@ export function AdmissionPublicInquiryLinks({
                   { label: 'Source', value: viewLink?.sourceDisplay },
                   {
                     label: 'Expires',
-                    value: viewLink?.expiresAtUtc ? fDateTime(viewLink.expiresAtUtc) : 'No expiry',
+                    value: viewLink?.expiresAtUtc
+                      ? fDateTime(viewLink.expiresAtUtc, ADMISSION_DATE_TIME_FORMAT)
+                      : 'No expiry',
                   },
                 ].map(({ label, value }) => (
                   <Box key={label} sx={{ minWidth: 0 }}>
@@ -873,7 +875,7 @@ export function AdmissionPublicInquiryLinks({
                   notificationKey="STU-0144"
                   presentation="toast"
                   severity="error"
-                  action={
+                  toastAction={
                     <Button
                       size="small"
                       onClick={() => {
@@ -945,6 +947,7 @@ export function AdmissionPublicInquiryLinks({
                 <Grid size={12}>
                   <DateTimePicker
                     label="Link Expiry"
+                    format="DD/MM/YYYY hh:mm A"
                     value={formik.values.expiresAt}
                     onChange={(value) => formik.setFieldValue('expiresAt', value)}
                     slotProps={{
@@ -1022,8 +1025,11 @@ export function AdmissionPublicInquiryLinks({
       >
         <Stack direction="row" spacing={1} alignItems="center" sx={{ px: 2, py: 1.5 }}>
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography id="set-inquiry-form-title" variant="h6">
-              Set Inquiry Form
+            <Typography id="set-inquiry-form-title" component="h2" variant="h6">
+              <AdmissionDialogTitle
+                title="Set Inquiry Form"
+                helpText="Choose the published inquiry form used for future responses from this link. Earlier responses keep their saved answers."
+              />
             </Typography>
             <Typography variant="body2" color="text.secondary">
               {formTarget?.name}
@@ -1041,72 +1047,82 @@ export function AdmissionPublicInquiryLinks({
         </Stack>
         <Divider />
         <Stack spacing={2} sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: 2 }}>
-          <AdmissionIntakeNotice notificationKey="STU-0146" presentation="inline" severity="info">
-            Future inquiries from this link will use the selected published form. Earlier responses
-            keep their saved answers.
-          </AdmissionIntakeNotice>
-          {error && (
-            <StudentFeedback notificationKey="STU-0141" presentation="persistent" severity="error">
-              {error}
-            </StudentFeedback>
-          )}
-          {replacementLoading ? (
-            <Stack role="status" aria-live="polite" aria-label="Loading Published Inquiry Forms">
-              <Skeleton variant="rounded" height={40} />
-            </Stack>
-          ) : (
-            <TextField
-              select
-              fullWidth
-              required
-              size="small"
-              label="Published Inquiry Form"
-              name="formId"
-              value={
-                replacementForms.some((form) => form.id === formEditor.values.formId)
-                  ? formEditor.values.formId
-                  : ''
-              }
-              disabled={!replacementReady}
-              onChange={formEditor.handleChange}
-              onBlur={formEditor.handleBlur}
-              error={Boolean(formEditor.touched.formId && formEditor.errors.formId)}
-              helperText={
-                (formEditor.touched.formId && formEditor.errors.formId) ||
-                (replacementReady && replacementForms.length === 0
-                  ? noEligibleFormsHelp
-                  : formEligibilityHelp)
-              }
-            >
-              <MenuItem value="">Choose Form</MenuItem>
-              {replacementForms.map((form) => (
-                <MenuItem key={form.id} value={form.id}>
-                  {form.name} · v{form.version}
-                </MenuItem>
-              ))}
-            </TextField>
-          )}
-          {replacementReady && replacementForms.length === 0 && (
-            <Button size="small" onClick={() => replacementOptions.refetch()}>
-              Refresh Offerings
-            </Button>
-          )}
-          {(forms.isError || replacementOptions.isError) && (
-            <Stack spacing={1}>
-              <StudentFeedback notificationKey="STU-0148" presentation="toast" severity="error">
-                Unable to load published inquiry forms.
-              </StudentFeedback>
-              <Button
-                size="small"
-                onClick={() => {
-                  if (forms.isError) forms.refetch();
-                  if (replacementOptions.isError) replacementOptions.refetch();
-                }}
+          <FormSectionCard
+            title="Inquiry Form"
+            icon="mdi:form-select"
+            descriptionTooltip="Choose a published form attached to an active inquiry offering in this link's admission period."
+          >
+            <AdmissionIntakeNotice notificationKey="STU-0146" presentation="inline" severity="info">
+              Future inquiries from this link will use the selected published form. Earlier
+              responses keep their saved answers.
+            </AdmissionIntakeNotice>
+            {error && (
+              <StudentFeedback
+                notificationKey="STU-0141"
+                presentation="persistent"
+                severity="error"
               >
-                Retry
+                {error}
+              </StudentFeedback>
+            )}
+            {replacementLoading ? (
+              <Stack role="status" aria-live="polite" aria-label="Loading Published Inquiry Forms">
+                <Skeleton variant="rounded" height={40} />
+              </Stack>
+            ) : (
+              <TextField
+                select
+                fullWidth
+                required
+                size="small"
+                label="Published inquiry form"
+                name="formId"
+                value={
+                  replacementForms.some((form) => form.id === formEditor.values.formId)
+                    ? formEditor.values.formId
+                    : ''
+                }
+                disabled={!replacementReady}
+                onChange={formEditor.handleChange}
+                onBlur={formEditor.handleBlur}
+                error={Boolean(formEditor.touched.formId && formEditor.errors.formId)}
+                helperText={
+                  (formEditor.touched.formId && formEditor.errors.formId) ||
+                  (replacementReady && replacementForms.length === 0
+                    ? noEligibleFormsHelp
+                    : formEligibilityHelp)
+                }
+              >
+                <MenuItem value="">Choose form</MenuItem>
+                {replacementForms.map((form) => (
+                  <MenuItem key={form.id} value={form.id}>
+                    {form.name} · v{form.version}
+                  </MenuItem>
+                ))}
+              </TextField>
+            )}
+            {replacementReady && replacementForms.length === 0 && (
+              <Button size="small" onClick={() => replacementOptions.refetch()}>
+                Refresh offerings
               </Button>
-            </Stack>
-          )}
+            )}
+            {(forms.isError || replacementOptions.isError) && (
+              <Stack spacing={1}>
+                <StudentFeedback notificationKey="STU-0148" presentation="toast" severity="error">
+                  Unable to load published inquiry forms.
+                </StudentFeedback>
+                <Button
+                  size="small"
+                  onClick={() => {
+                    if (forms.isError) forms.refetch();
+                    if (replacementOptions.isError) replacementOptions.refetch();
+                  }}
+                >
+                  Retry
+                </Button>
+              </Stack>
+            )}
+          </FormSectionCard>
         </Stack>
         <Divider />
         <Stack
@@ -1120,6 +1136,7 @@ export function AdmissionPublicInquiryLinks({
             variant="outlined"
             onClick={closeFormEditor}
             disabled={setLinkFormState.isLoading}
+            startIcon={<Iconify icon="mdi:close" />}
           >
             Cancel
           </Button>
@@ -1128,48 +1145,19 @@ export function AdmissionPublicInquiryLinks({
             size="small"
             variant="contained"
             type="submit"
+            startIcon={<Iconify icon="mdi:check" />}
             loading={setLinkFormState.isLoading || formEditor.isSubmitting}
             disabled={
               !replacementReady ||
               !replacementForms.some((form) => form.id === formEditor.values.formId)
             }
           >
-            Save Form
+            Submit
           </LoadingButton>
         </Stack>
       </Drawer>
-      <ConfirmDialog
-        open={formDiscardOpen}
-        onClose={() => setFormDiscardOpen(false)}
-        title="Discard Form Selection?"
-        content="The new form selection will not be saved."
-        action={
-          <Button
-            size="small"
-            color="error"
-            variant="contained"
-            onClick={() => {
-              setFormDiscardOpen(false);
-              formEditor.resetForm();
-              setFormTarget(null);
-              setError('');
-            }}
-          >
-            Discard Selection
-          </Button>
-        }
-      />
-      <ConfirmDialog
-        open={discardOpen}
-        onClose={() => setDiscardOpen(false)}
-        title="Discard Inquiry Link Details?"
-        content="The link details you entered will be lost."
-        action={
-          <Button size="small" color="error" variant="contained" onClick={discardAndClose}>
-            Discard Details
-          </Button>
-        }
-      />
+      {formGuard.confirmation}
+      {createGuard.confirmation}
       <ConfirmDialog
         open={Boolean(revokeTarget)}
         onClose={() => !revokeState.isLoading && setRevokeTarget(null)}

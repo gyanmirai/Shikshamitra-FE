@@ -1,23 +1,13 @@
-import { Box } from '@mui/material';
-import { EmptyContent } from 'src/components/empty-content';
+import { StudentRelatedUnavailable } from './student-related-unavailable';
 
 import type { StudentTabsComponentType } from '.';
 
-const Communication = (props: StudentTabsComponentType) => (
-  <Box
-    sx={{
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center',
-      height: 'calc(100vh - 280px)',
-    }}
-  >
-    <EmptyContent
-      title="No Announcements"
-      description="No announcements found for this student."
-      imgUrl="/assets/icons/empty/ic_content.svg"
+export default function Communication({ tabs }: StudentTabsComponentType) {
+  return (
+    <StudentRelatedUnavailable
+      title="Communications"
+      message="Student announcements are unavailable here."
+      onOverview={tabs ? () => tabs.setValue('overview') : undefined}
     />
-  </Box>
-);
-
-export default Communication;
+  );
+}

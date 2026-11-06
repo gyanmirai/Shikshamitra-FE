@@ -1,7 +1,9 @@
 import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { Stack, Button, Skeleton } from '@mui/material';
 import { StudentFeedback } from 'src/components/student-feedback';
-import { Stack, Paper, Button, Skeleton, Typography } from '@mui/material';
+import { FormSectionCard } from 'src/components/form-section-card';
 import { useGetAdmissionInquiryTimelineQuery } from 'src/redux/student/admissions/admission-inquiries-api';
 
 import { isInquiryFormActivity } from './inquiry-form-history';
@@ -22,22 +24,17 @@ export function InquiryTimeline({
   const title = scope === 'form' ? 'Form History' : 'Timeline and Communications';
 
   return (
-    <Paper variant="outlined" sx={{ p: 2 }}>
+    <FormSectionCard
+      title={title}
+      icon={GlobalIcons.history}
+      descriptionTooltip={
+        scope === 'form'
+          ? 'Inquiry form creation and saved changes, newest first.'
+          : 'Staff handling, follow-ups and communications in one place, newest first.'
+      }
+      action={!loading && <Label color="default">{activities.length}</Label>}
+    >
       <Stack spacing={1.5}>
-        <Stack direction="row" alignItems="flex-start" justifyContent="space-between" spacing={2}>
-          <Stack spacing={0.25} sx={{ minWidth: 0 }}>
-            <Typography variant="subtitle1" component="h2">
-              {title}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {scope === 'form'
-                ? 'Inquiry Form Creation and Saved Changes, Newest First.'
-                : 'Staff Handling, Follow-ups, and Communications in One Place.'}
-            </Typography>
-          </Stack>
-          {!loading && <Label color="default">{activities.length}</Label>}
-        </Stack>
-
         {loading && (
           <Stack spacing={1} aria-label="Loading Inquiry Timeline">
             <Skeleton variant="rounded" height={64} />
@@ -50,7 +47,7 @@ export function InquiryTimeline({
             notificationKey="STU-0430"
             presentation="toast"
             severity="error"
-            action={
+            toastAction={
               <Button
                 color="inherit"
                 size="small"
@@ -70,12 +67,12 @@ export function InquiryTimeline({
             initiallyVisible={5}
             emptyDescription={
               scope === 'form'
-                ? 'Saved Inquiry Form Changes Will Appear Here.'
-                : 'Contact Notes, Follow-ups, and Communications Will Appear Here.'
+                ? 'Saved inquiry form changes will appear here.'
+                : 'Contact notes, follow-ups and communications will appear here.'
             }
           />
         )}
       </Stack>
-    </Paper>
+    </FormSectionCard>
   );
 }

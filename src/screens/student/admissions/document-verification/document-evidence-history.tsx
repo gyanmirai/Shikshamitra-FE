@@ -10,10 +10,12 @@ export function DocumentEvidenceHistory({
   evidence,
   allowDownload,
   studentId,
+  dateTimeFormat,
 }: {
   evidence: AdmissionDocumentEvidence[];
   allowDownload: boolean;
   studentId?: string;
+  dateTimeFormat?: string;
 }) {
   return (
     <Stack spacing={1}>
@@ -33,7 +35,7 @@ export function DocumentEvidenceHistory({
                 : version.fileName || 'Physical Original Recorded'}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              Recorded {fDateTime(version.submittedAt)}
+              Recorded {fDateTime(version.submittedAt, dateTimeFormat)}
             </Typography>
             {version.parentRegistrationId && (
               <Typography
@@ -47,7 +49,9 @@ export function DocumentEvidenceHistory({
             {version.originalSeen && (
               <Typography variant="body2">
                 Original Sighted
-                {version.originalSeenAt ? ` · ${fDateTime(version.originalSeenAt)}` : ''}
+                {version.originalSeenAt
+                  ? ` · ${fDateTime(version.originalSeenAt, dateTimeFormat)}`
+                  : ''}
               </Typography>
             )}
             {version.notes && (
@@ -69,7 +73,7 @@ export function DocumentEvidenceHistory({
                 <Divider />
                 <Typography variant="caption" color="text.secondary">
                   {review.decision === 'accepted' ? 'Accepted' : 'Replacement Requested'} ·{' '}
-                  {fDateTime(review.reviewedAt)}
+                  {fDateTime(review.reviewedAt, dateTimeFormat)}
                 </Typography>
                 {review.reason && (
                   <Typography

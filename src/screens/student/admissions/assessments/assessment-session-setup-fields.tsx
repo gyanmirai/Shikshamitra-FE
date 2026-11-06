@@ -114,7 +114,7 @@ export function AssessmentSessionSetupFields({
                 size="small"
                 fullWidth
                 required
-                label="Session Name"
+                label="Session name"
                 disabled={disabled}
                 {...formik.getFieldProps('name')}
                 onChange={(event) => update('name', event.target.value)}
@@ -128,7 +128,7 @@ export function AssessmentSessionSetupFields({
                 size="small"
                 fullWidth
                 required
-                label="Assessment Type"
+                label="Assessment type"
                 options={[
                   { value: 'exam', label: 'School Exam' },
                   { value: 'individualInterview', label: 'Individual Interview' },
@@ -254,7 +254,7 @@ export function AssessmentSessionSetupFields({
                 {separateDate ? (
                   <TimePicker
                     format="hh:mm A"
-                    label={key === 'startsAt' ? 'Starts At' : 'Ends At'}
+                    label={key === 'startsAt' ? 'Starts at' : 'Ends at'}
                     value={formik.values[key]}
                     disabled={
                       disabled ||
@@ -283,7 +283,7 @@ export function AssessmentSessionSetupFields({
                   />
                 ) : (
                   <DateTimePicker
-                    label={key === 'startsAt' ? 'Starts At' : 'Ends At'}
+                    label={key === 'startsAt' ? 'Starts at' : 'Ends at'}
                     format={ADMISSION_DATE_TIME_FORMAT}
                     value={formik.values[key]}
                     onChange={(value) => update(key, value)}
@@ -320,7 +320,7 @@ export function AssessmentSessionSetupFields({
                 required
                 minChars={0}
                 debounceMs={150}
-                label="Institute Room"
+                label="Institute room"
                 name="roomId"
                 placeholder="Search Room or Building"
                 value={room ?? null}
@@ -380,7 +380,7 @@ export function AssessmentSessionSetupFields({
                 size="small"
                 fullWidth
                 required
-                label={pipeline ? 'Capacity' : 'Session Capacity'}
+                label={pipeline ? 'Capacity' : 'Session capacity'}
                 name="capacity"
                 prefix=""
                 decimalScale={0}

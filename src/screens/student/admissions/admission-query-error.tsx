@@ -13,7 +13,7 @@ export function AdmissionQueryError({ onRetry }: AdmissionQueryErrorProps) {
       notificationKey="STU-0152"
       presentation="toast"
       severity="error"
-      action={
+      toastAction={
         <Button color="inherit" size="small" onClick={onRetry}>
           Retry
         </Button>

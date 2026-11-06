@@ -4,6 +4,8 @@ import { Label } from 'src/components/label';
 import { fDateTime } from 'src/utils/format-time';
 import { Stack, Paper, Button, Typography } from '@mui/material';
 
+import { ADMISSION_DATE_TIME_FORMAT } from '../admission-date-formats';
+
 export function EligibilityExceptions({
   exceptions,
   canReview = false,
@@ -39,7 +41,7 @@ export function EligibilityExceptions({
                     : 'Declined'}
               </Label>
               <Typography variant="caption" color="text.secondary">
-                Requested {fDateTime(exception.requestedAt)}
+                Requested {fDateTime(exception.requestedAt, ADMISSION_DATE_TIME_FORMAT)}
               </Typography>
             </Stack>
             <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
@@ -52,7 +54,7 @@ export function EligibilityExceptions({
             )}
             {exception.reviewedAt && (
               <Typography variant="caption" color="text.secondary">
-                Reviewed {fDateTime(exception.reviewedAt)}
+                Reviewed {fDateTime(exception.reviewedAt, ADMISSION_DATE_TIME_FORMAT)}
               </Typography>
             )}
             {canReview && exception.canReview && onReview && (

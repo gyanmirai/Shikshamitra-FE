@@ -76,7 +76,7 @@ export function InquiryFollowUpScheduler({
             )}
             <DateTimePicker
               desktopModeMediaQuery={theme.breakpoints.up('sm')}
-              label="Next Follow-Up"
+              label="Next follow-up"
               format={ADMISSION_DATE_TIME_FORMAT}
               value={scheduledAt}
               disabled={locked}
@@ -124,7 +124,7 @@ export function InquiryFollowUpScheduler({
             loading={scheduling}
             disabled={locked || dateError || !purpose.trim() || !scheduledAt?.isValid()}
           >
-            {onClose ? 'Schedule' : 'Schedule Follow-Up'}
+            {onClose ? 'Schedule' : 'Schedule follow-up'}
           </LoadingButton>
         </Stack>
       </FormBusyRegion>

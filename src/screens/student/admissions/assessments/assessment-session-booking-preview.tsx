@@ -6,6 +6,8 @@ import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, Stack, Button, Checkbox, Typography } from '@mui/material';
 
+import { ADMISSION_DATE_TIME_FORMAT } from '../admission-date-formats';
+
 import type {
   SessionBookingPreview,
   SessionBookingCandidate,
@@ -115,7 +117,7 @@ export function AssessmentSessionBookingPreview({
       render: (_, raw) => {
         const item = selected.find((row) => key(row) === key(raw as SessionBookingCandidate));
         return item?.slotStartsAt
-          ? fDateTime(item.slotStartsAt)
+          ? fDateTime(item.slotStartsAt, ADMISSION_DATE_TIME_FORMAT)
           : preview.slots.length
             ? 'Assigned on Confirmation'
             : 'Shared Session Time';
@@ -213,7 +215,7 @@ export function AssessmentSessionBookingPreview({
                 notificationKey="STU-0275"
                 presentation="toast"
                 severity="error"
-                action={
+                toastAction={
                   <Button size="small" onClick={onRetry} disabled={disabled}>
                     Retry
                   </Button>

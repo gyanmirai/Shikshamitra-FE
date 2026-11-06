@@ -7,6 +7,7 @@ import { Stack, Typography } from '@mui/material';
 import { fDateTime } from 'src/utils/format-time';
 
 import { formatAdmissionReference } from '../admission-reference';
+import { ADMISSION_DATE_TIME_FORMAT } from '../admission-date-formats';
 import {
   getAdmissionApplicationStatusColor,
   getAdmissionApplicationStatusLabel,
@@ -120,7 +121,7 @@ export function buildAdmissionApplicationsColumns({
       defaultHidden: true,
       minWidth: 170,
       isSort: true,
-      render: (_, row) => (row.lastSavedAt ? fDateTime(row.lastSavedAt) : '—'),
+      render: (_, row) => (row.lastSavedAt ? fDateTime(row.lastSavedAt, ADMISSION_DATE_TIME_FORMAT) : '—'),
     },
     {
       id: 'status',

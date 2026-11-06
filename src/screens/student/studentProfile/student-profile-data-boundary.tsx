@@ -73,7 +73,7 @@ export function StudentProfileDataBoundary({
           notificationKey="STU-0757"
           presentation="toast"
           severity="error"
-          action={
+          toastAction={
             <Button
               color="inherit"
               onClick={() => query.refetch()}
@@ -134,7 +134,7 @@ export function StudentProfileDataBoundary({
           notificationKey="STU-0759"
           presentation="toast"
           severity="error"
-          action={
+          toastAction={
             <Button onClick={() => query.refetch()} disabled={query.isFetching}>
               Retry profile
             </Button>

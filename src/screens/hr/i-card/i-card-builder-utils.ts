@@ -1,3 +1,9 @@
+import type {
+  IdentityCardLayout,
+  IdentityCardElement,
+  IdentityCardPrintSettings,
+} from 'src/components/identity-card-designer/types';
+
 export const clampCardsPerPage = (value: number) => {
   if (!Number.isFinite(value)) return 1;
   return Math.min(10, Math.max(1, Math.trunc(value)));
@@ -31,53 +37,9 @@ export type ICardFieldBinding =
   | 'schoolAddress'
   | 'static';
 
-export type ICardLayoutElement = {
-  id: string;
-  type: ICardLayoutElementType;
-  fieldKey?: ICardFieldBinding;
-  label?: string;
-  value?: string;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  z: number;
-  visible: boolean;
-  locked?: boolean;
-  paletteBindings?: Partial<Record<ICardPaletteStyleKey, ICardPaletteKey>>;
-  style?: {
-    color?: string;
-    backgroundColor?: string;
-    borderColor?: string;
-    borderWidth?: number;
-    borderRadius?: number;
-    fontSize?: number;
-    fontWeight?: number | string;
-    textAlign?: 'left' | 'center' | 'right';
-    showLabel?: boolean;
-    separator?: string;
-    photoShape?: 'square' | 'rounded' | 'circle';
-  };
-};
-
-export type ICardLayout = {
-  presetKey?: string;
-  orientation: 'Horizontal' | 'Vertical';
-  width: number;
-  height: number;
-  backgroundColor: string;
-  themeColor: string;
-  front: { elements: ICardLayoutElement[] };
-  back?: { elements: ICardLayoutElement[] };
-};
-
-export type ICardPrintSettings = {
-  pageSize: 'A4';
-  cardsPerPage: number;
-  margin: number;
-  gap: number;
-  showCutMarks: boolean;
-};
+export type ICardLayoutElement = IdentityCardElement;
+export type ICardLayout = IdentityCardLayout;
+export type ICardPrintSettings = IdentityCardPrintSettings;
 
 type ICardLayoutPresetOptions = {
   orientation?: 'Horizontal' | 'Vertical';
@@ -91,10 +53,18 @@ type ICardLayoutPresetOptions = {
 
 export const DEFAULT_PRINT_SETTINGS: ICardPrintSettings = {
   pageSize: 'A4',
+  units: 'mm',
   cardsPerPage: 8,
-  margin: 18,
-  gap: 10,
+  margin: 10,
+  gap: 3,
   showCutMarks: true,
+  bleedMm: 0,
+  safeInsetMm: 3,
+  duplexFlip: 'long-edge',
+  backRotation: 0,
+  backOffsetXmm: 0,
+  backOffsetYmm: 0,
+  sideMode: 'both',
 };
 export const DEFAULT_ICARD_TEXT_COLOR = '#111827';
 const paletteStyleKeys: ICardPaletteStyleKey[] = ['color', 'backgroundColor', 'borderColor'];
@@ -170,7 +140,12 @@ export const parseLayoutJson = (value?: string | null): ICardLayout | null => {
   try {
     const parsed = JSON.parse(value) as ICardLayout;
     if (!parsed?.front || !Array.isArray(parsed.front.elements)) return null;
-    return normalizeLayoutTextStyles(parsed);
+    const portrait = parsed.orientation === 'Vertical';
+    return normalizeLayoutTextStyles({
+      ...parsed,
+      widthMm: parsed.widthMm ?? (portrait ? 53.98 : 85.6),
+      heightMm: parsed.heightMm ?? (portrait ? 85.6 : 53.98),
+    });
   } catch {
     return null;
   }
@@ -354,18 +329,32 @@ const bindLayoutPaletteStyles = (layout: ICardLayout): ICardLayout => {
 };
 
 export const parsePrintSettingsJson = (value?: string | null): ICardPrintSettings => {
-  if (!value?.trim()) return DEFAULT_PRINT_SETTINGS;
+  if (!value?.trim()) return { ...DEFAULT_PRINT_SETTINGS };
   try {
     const parsed = JSON.parse(value) as Partial<ICardPrintSettings>;
+    const numeric = (input: unknown, fallback: number, min: number, max: number) =>
+      typeof input === 'number' && Number.isFinite(input)
+        ? Math.min(max, Math.max(min, input))
+        : fallback;
+    const scale = parsed.units === 'mm' ? 1 : 25.4 / 72;
     return {
-      pageSize: 'A4',
+      ...DEFAULT_PRINT_SETTINGS,
+      pageSize: parsed.pageSize === 'Card' ? 'Card' : 'A4',
       cardsPerPage: clampCardsPerPage(parsed.cardsPerPage ?? DEFAULT_PRINT_SETTINGS.cardsPerPage),
-      margin: Math.min(60, Math.max(0, Math.trunc(parsed.margin ?? DEFAULT_PRINT_SETTINGS.margin))),
-      gap: Math.min(40, Math.max(0, Math.trunc(parsed.gap ?? DEFAULT_PRINT_SETTINGS.gap))),
+      margin: numeric(parsed.margin, DEFAULT_PRINT_SETTINGS.margin / scale, 0, 60) * scale,
+      gap: numeric(parsed.gap, DEFAULT_PRINT_SETTINGS.gap / scale, 0, 40) * scale,
       showCutMarks: parsed.showCutMarks ?? DEFAULT_PRINT_SETTINGS.showCutMarks,
+      bleedMm: numeric(parsed.bleedMm, 0, 0, 10),
+      safeInsetMm: numeric(parsed.safeInsetMm, 3, 0, 20),
+      duplexFlip: parsed.duplexFlip === 'short-edge' ? 'short-edge' : 'long-edge',
+      backRotation: parsed.backRotation === 180 ? 180 : 0,
+      backOffsetXmm: numeric(parsed.backOffsetXmm, 0, -30, 30),
+      backOffsetYmm: numeric(parsed.backOffsetYmm, 0, -30, 30),
+      sideMode:
+        parsed.sideMode === 'front' || parsed.sideMode === 'back' ? parsed.sideMode : 'both',
     };
   } catch {
-    return DEFAULT_PRINT_SETTINGS;
+    return { ...DEFAULT_PRINT_SETTINGS };
   }
 };
 
@@ -414,7 +403,16 @@ export const createICardLayoutPreset = (
   const backgroundColor = options.backgroundColor ?? '#F8FAFC';
   const qrCodeEnabled = options.qrCodeEnabled ?? true;
   const barcodeEnabled = options.barcodeEnabled ?? true;
-  const base = { presetKey, orientation, width, height, backgroundColor, themeColor };
+  const base = {
+    presetKey,
+    orientation,
+    width,
+    height,
+    backgroundColor,
+    themeColor,
+    widthMm: orientation === 'Vertical' ? 53.98 : 85.6,
+    heightMm: orientation === 'Vertical' ? 85.6 : 53.98,
+  };
 
   if (orientation === 'Vertical') {
     const photoFirst = presetKey === 'photo-first';

@@ -91,6 +91,13 @@ vi.mock('@mui/icons-material', async () => {
   'solar:maximize-square-3-outline',
   'solar:trash-bin-trash-bold',
   'fluent:filter-12-filled',
+  'basil:cross-solid',
+  'material-symbols-light:save',
+  'solar:notebook-bold',
+  'eva:checkmark-fill',
+  'ic:round-arrow-forward',
+  'mdi:arrow-left',
+  'mdi:check-circle-outline',
 ].forEach((name) => {
   addIcon(name, { body: '<path d="M0 0h16v16H0z"/>', width: 16, height: 16 });
 });

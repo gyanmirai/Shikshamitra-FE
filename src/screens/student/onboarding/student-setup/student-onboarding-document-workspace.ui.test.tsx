@@ -5,6 +5,7 @@ import { addIcon } from '@iconify/react';
 import { mswServer } from 'src/test/mswServer';
 import { it, vi, expect, beforeEach } from 'vitest';
 import userEvent from '@testing-library/user-event';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { screen, within, cleanup, waitFor, fireEvent } from '@testing-library/react';
 import { renderDocumentUi } from 'src/screens/student/admissions/document-verification/document-ui-test-fixture';
 import {
@@ -90,16 +91,20 @@ function renderWorkspace({
   return { store, onAction };
 }
 
-it('uses three compact columns and only icon actions without changing document status', () => {
-  renderWorkspace();
+it('keeps View and Download direct while History remains reachable in overflow', async () => {
+  const { store } = renderWorkspace();
+  const confirm = vi.fn(() => false);
+  vi.stubGlobal('confirm', confirm);
   const table = screen.getByRole('table');
   expect(within(table).getAllByRole('columnheader')).toHaveLength(3);
   expect(within(table).getByText('Accepted')).toBeVisible();
   expect(screen.getByText('1 of 1 required documents resolved')).toBeVisible();
   const view = screen.getByRole('button', { name: 'View Birth certificate' });
   const download = screen.getByRole('button', { name: 'Download Birth certificate' });
-  const history = screen.getByRole('button', { name: 'History for Birth certificate' });
-  [view, download, history].forEach((button) => expect(button).toHaveTextContent(''));
+  expect(
+    screen.queryByRole('button', { name: 'History for Birth certificate' })
+  ).not.toBeInTheDocument();
+  [view, download].forEach((button) => expect(button).toHaveTextContent(''));
   const actionCell = view.closest('td')!;
   expect(actionCell).toHaveStyle({ textAlign: 'left' });
   expect(within(table).getAllByRole('columnheader')[2]).toHaveStyle({ textAlign: 'left' });
@@ -113,6 +118,20 @@ it('uses three compact columns and only icon actions without changing document s
   expect(
     screen.queryByText('This document verification stage is read-only.')
   ).not.toBeInTheDocument();
+  store.dispatch(setIsChanges(true));
+  await userEvent.click(screen.getByRole('button', { name: 'More actions for Birth certificate' }));
+  await userEvent.click(screen.getByRole('menuitem', { name: 'History for Birth certificate' }));
+  const history = screen.getByRole('dialog');
+  expect(within(history).getByText('Version 1 · Latest')).toBeVisible();
+  expect(within(history).getByText(/^Recorded 10\/09\/2026 \d{1,2}:\d{2} (am|pm)$/)).toBeVisible();
+  await userEvent.click(within(history).getByRole('button', { name: 'Close' }));
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  await userEvent.click(screen.getByRole('button', { name: 'More actions for Birth certificate' }));
+  await userEvent.click(screen.getByRole('menuitem', { name: 'History for Birth certificate' }));
+  await userEvent.keyboard('{Escape}');
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  expect(confirm).not.toHaveBeenCalled();
+  expect(store.getState().confirmPopup.isChanges).toBe(true);
 });
 
 it('keeps Document and icon Actions readable on mobile while retaining status in the document cell', () => {
@@ -154,6 +173,26 @@ it('loads only selected protected evidence in a dialog and releases the private 
   expect(screen.queryByRole('img', { name: 'Birth certificate preview' })).not.toBeInTheDocument();
   expect(revokeUrl).toHaveBeenCalledWith('blob:student-private-preview');
   await waitFor(() => expect(view).toHaveFocus());
+});
+
+it('closes a pending protected preview from the footer without waiting for the read', async () => {
+  let finishRead: (() => void) | undefined;
+  mswServer.use(
+    http.get(endpoint, async () => {
+      await new Promise<void>((resolve) => {
+        finishRead = resolve;
+      });
+      return new HttpResponse('image', { headers: { 'Content-Type': 'image/png' } });
+    })
+  );
+  renderWorkspace();
+  await userEvent.click(screen.getByRole('button', { name: 'View Birth certificate' }));
+  await waitFor(() => expect(finishRead).toBeDefined());
+  expect(screen.getByLabelText('Loading document preview')).toBeVisible();
+  await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Close' }));
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  finishRead?.();
+  expect(createUrl).not.toHaveBeenCalled();
 });
 
 it('embeds an authorized PDF with fallback instead of treating it as an image', async () => {
@@ -240,9 +279,10 @@ it('preserves uploaded copy when a later original was recorded and shows all evi
   });
   renderWorkspace({ summary });
   expect(screen.getByRole('button', { name: 'View Birth certificate' })).toBeEnabled();
-  await userEvent.click(screen.getByRole('button', { name: 'History for Birth certificate' }));
+  await userEvent.click(screen.getByRole('button', { name: 'More actions for Birth certificate' }));
+  await userEvent.click(screen.getByRole('menuitem', { name: 'History for Birth certificate' }));
   const history = await screen.findByRole('dialog');
-  expect(within(history).getByText('Physical original recorded')).toBeVisible();
+  expect(within(history).getByText(/Physical original recorded/i)).toBeVisible();
   expect(within(history).getByText('birth-certificate.pdf')).toBeVisible();
   expect(within(history).getByText('Version 2 · Latest')).toBeVisible();
 });
@@ -268,12 +308,21 @@ it('respects read-only and access guards without fetching private bytes', async 
     })
   );
   renderWorkspace({ summary: documentSummary, readOnly: true });
-  expect(screen.queryByRole('button', { name: /More actions/ })).not.toBeInTheDocument();
+  await userEvent.click(screen.getByRole('button', { name: /More actions/ }));
+  expect(screen.queryByRole('menuitem', { name: 'Upload document' })).not.toBeInTheDocument();
+  expect(screen.getByRole('menuitem', { name: 'History for Birth certificate' })).toHaveAttribute(
+    'aria-disabled',
+    'true'
+  );
   cleanup();
   renderWorkspace({ access: { ...permissions, view: false, download: false } });
   expect(screen.getByRole('button', { name: /View Birth certificate:/ })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Download Birth certificate' })).toBeDisabled();
-  expect(screen.getByRole('button', { name: 'History for Birth certificate' })).toBeDisabled();
+  await userEvent.click(screen.getByRole('button', { name: /More actions/ }));
+  expect(screen.getByRole('menuitem', { name: 'History for Birth certificate' })).toHaveAttribute(
+    'aria-disabled',
+    'true'
+  );
   expect(request).not.toHaveBeenCalled();
 });
 
@@ -357,7 +406,7 @@ it('hides not-applicable documents by default and closes their preview when hidd
   expect(screen.queryByRole('button', { name: 'View Birth certificate' })).not.toBeInTheDocument();
   expect(createUrl).not.toHaveBeenCalled();
   await userEvent.click(screen.getByRole('button', { name: 'Show not applicable (1)' }));
-  expect(screen.getByText('Not applicable')).toBeVisible();
+  expect(screen.getByText(/^Not applicable$/i)).toBeVisible();
   await userEvent.click(screen.getByRole('button', { name: 'View Birth certificate' }));
   expect(await screen.findByRole('img', { name: 'Birth certificate preview' })).toBeVisible();
   await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'close' }));

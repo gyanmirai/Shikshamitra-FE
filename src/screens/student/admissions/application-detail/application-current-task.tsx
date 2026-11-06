@@ -10,6 +10,7 @@ import { fDateTime } from 'src/utils/format-time';
 import { LoadingButton } from 'src/components/loading-button';
 import { Box, Stack, Button, Divider, Typography } from '@mui/material';
 
+import { ADMISSION_DATE_TIME_FORMAT } from '../admission-date-formats';
 import {
   isFormStage,
   getStageGuidance,
@@ -86,7 +87,7 @@ export function ApplicationCurrentTask({
               {getStageGuidance(stage, applicationStatus, nextRequiredAction)}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-              Entered {fDateTime(stage.enteredAt) || 'Time Not Recorded'}
+              Entered {fDateTime(stage.enteredAt, ADMISSION_DATE_TIME_FORMAT) || 'Time Not Recorded'}
             </Typography>
           </Box>
           <Button

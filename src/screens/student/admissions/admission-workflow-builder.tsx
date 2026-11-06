@@ -26,6 +26,7 @@ import {
 } from 'src/redux/student/admissions/admission-workflows-api';
 
 import { findMatchingWorkflowTemplate } from './workflow-template';
+import { useAdmissionDraftGuard } from './use-admission-draft-guard';
 import { AdmissionWorkflowDialog } from './admission-workflow-dialog';
 import { useAdmissionDefinitionOptions } from './use-admission-definition-options';
 import { WorkflowSidePanel } from './workflow-builder/components/workflow-side-panel';
@@ -101,6 +102,15 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
     }
   );
   const commands = useWorkflowBuilderCommands(workflowId, workflow, draft);
+  const leaveGuard = useAdmissionDraftGuard({
+    dirty: draft.dirty,
+    push: router.push,
+    reset: draft.resetDraft,
+    busy:
+      commands.updateState.isLoading ||
+      commands.validateState.isLoading ||
+      commands.publishState.isLoading,
+  });
   const statusReadOnly = Boolean(workflow && ![0, 3].includes(workflow.status));
   const readOnly = !canEdit || !workflow || statusReadOnly;
 
@@ -181,7 +191,10 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
             ? () => detailsCloseRef.current?.()
             : createSetup && !readOnly
               ? openDetails
-              : () => router.push(studentPaths.enrollment.settings.workflows)
+              : () =>
+                  leaveGuard.requestNavigation(() =>
+                    router.push(studentPaths.enrollment.settings.workflows)
+                  )
         }
       >
         {!detailsDialog.value && (
@@ -276,7 +289,9 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
           if (!readOnly)
             draft.applyWorkflowTemplate(templateId, formDefinitionId, inquiryFormDefinitionId);
         }}
-        onOpenFormBuilder={() => router.push(studentPaths.enrollment.settings.forms)}
+        onOpenFormBuilder={() =>
+          leaveGuard.requestNavigation(() => router.push(studentPaths.enrollment.settings.forms))
+        }
       />
       <WorkflowBuilderEditors
         stageOpen={draft.stageDrawerOpen}
@@ -328,6 +343,7 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
         governanceLoading={false}
         onClose={() => draft.setSidePanel(null)}
       />
+      {leaveGuard.confirmation}
     </Box>
   );
 }

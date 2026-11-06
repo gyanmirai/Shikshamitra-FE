@@ -35,6 +35,7 @@ Use this map to find the first screen and client:
 | Employee profile dashboard | Employee profile Dashboard tab       | `employeeApi.ts`                             |
 | Employee documents         | Employee profile documents tab                                              | `employeeApi.ts`                             |
 | I-card generation          | `/hr/i-card`                                                                | `employee-icard-template-api.ts`             |
+
 | Payroll component setup    | `/hr/payroll/setting/*`                                                     | `employee-payroll-api.ts`                    |
 | ESI statutory setup        | `/hr/payroll/setting/statutory-schemes`                                     | `statutory-scheme-api.ts`                    |
 | Compensation revisions     | `/hr/payroll/structure`                                                     | `compensation-revision-api.ts`                |
@@ -49,6 +50,14 @@ Use this map to find the first screen and client:
 | Policy management          | `/hr/calendars`, `/hr/payrollPolicies`, `/hr/attendance`, `/hr/assignments` | `hr-policy-api.ts`                           |
 | Professional management    | `/hr/professional-management/**`                                            | `professional-management-api.ts`             |
 | HR reports                 | `/hr/reports`                                                               | `hrReportingWorkspaceApi.ts`                 |
+
+## Staff card designs
+
+New staff templates start with the Staff Professional front and back. Existing templates retain their saved design; legacy field-only templates use the existing adapter. Designer keeps the preview in a bounded region beside the independently scrolling configuration panel, or above it on narrow screens. School, Layout, Elements and Print tabs organize the controls. The compact element selector retains access to hidden and locked elements without a second scrolling layer list. Designer supports side selection, bound or static text, photos, logos, codes, shapes, layers, and element styling. School Identity inheritance, custom logo upload, and the option to hide the logo remain organization-aware.
+
+Finished width and height are configured in millimetres independently of the design canvas and preview size. Review and Export show both configured sides and the calculated A4 capacity. Paper size, margins, gaps, bleed, safe inset, output side, duplex flip, back rotation, and alignment offsets are configured in Designer. Geometry errors block saving and export with corrective guidance.
+
+Organization changes clear staff selection. Staff pagination and filtering retain explicitly selected cards, and the preview offers one card or a searchable list of selected staff. A global academic-year change retains the original draft and blocks save/export until that year is restored or the operator closes and discards the draft. Missing sample values and images remain visibly unavailable. Back and internal navigation use the shared unsaved-change confirmation; save, upload, and export lock the editor until settlement. Failed saves retain the draft. Exporting a PDF does not record physical printing or distribution.
 
 ## Leave Center balance and history
 

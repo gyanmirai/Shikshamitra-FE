@@ -712,6 +712,10 @@ The standalone I-card designer opens new designs in the selected academic year a
 
 Editable I-card scope uses shared single-select Board/Medium and All Classes/All Divisions choices, with Division enabled only for one class and plain division names. Changing a parent clears its dependent filters and student selection. Visible default Board/Medium context does not attach assignments to metadata-only design saves. Legacy saved multiple scopes retain their assignments; roster reads pause until staff choose a valid single scope. Locked Student List bulk handoffs keep their existing read-only fields.
 Review shows one complete, proportionally scaled card with a selected-student chooser and bounded Previous/Next controls, rather than a clipped gallery plus duplicate Live Preview. Photo availability stays explicit. Export shows the selected count, cards per A4 page and a paged sheet preview aligned to the PDF layout; downloading the PDF and issuing numbered cards remain separate commands. Directory printing does not save template changes automatically.
+
+New designs start with Classic Identity and independently configurable front and back layouts. The Template step requires a name; School name is entered and validated in Designer. The preview stays in its own bounded region while the configuration panel scrolls independently. School, Layout, Elements and Print tabs group the controls; School contains the existing branding and logo controls, and Elements uses a compact selector for visible, hidden and locked elements. On narrow screens the preview stays above the scrolling configuration. Staff can configure physical dimensions, content bindings and static text, positions, sizes, layers, visibility, locks, colours, typography and photo shape. Bound school headings and return instructions use School Identity values; static labels remain editable in the element inspector. Temporarily disabling a back side preserves its design for re-enabling.
+
+Review can switch between configured sides. Export uses the saved physical dimensions and A4 or card-sized profile; sheet capacity includes margins, gaps and bleed and never scales the credential to increase the count. Back previews reflect the selected duplex direction and alignment offsets. Print at actual size / 100% and verify a measured front/back test sheet before a production batch. Card-sized output includes configured bleed around the finished trim. The page's shared dirty-close guard preserves unsaved design and assignment changes, and saving remains distinct from physical printing and distribution.
 Approved historical records retain their existing eligibility path; missing admission or onboarding evidence is displayed as unavailable rather than synthesized.
 Student List keeps Student, GR number, Class / Division, Roll number, Status and Actions as its compact core columns; school-specific fields appear only in the profile.
 
@@ -881,3 +885,26 @@ Inquiry rows expose **Handling history** through the existing action menu, inclu
 5. Admin corrections use the existing editable draft or Edit form and Save changes through the audited correction editor, with a reason after formal submission. Staff document lists, replacement requests, verification and approval stay in the Documents stage; Registration and Application Record do not embed a document checklist. Request parent documents grants only the chosen current-stage uploads, using saved recipients and instructions. A later parent answer proposal already awaiting review remains explicitly reviewable/applicable with a reason. Completed verification stages stay read-only.
 
 The optional parent panel preserves the existing manual workflow when no invitation exists or its status read fails. Expiry, revoked access, pending/failed email, stale snapshots and incomplete data remain distinct. Email and document instructions retain dirty values on conflict and protect Cancel, close and browser Back through the existing unsaved-navigation owner. UI follows `DESIGN.md` and existing dialogs, form sections, steppers, upload controls and dirty-navigation patterns.
+
+
+## Compliance reports and real job history
+
+1. Open Reports, choose Compliance, then select the baseline, GSEB reconciliation, Aadhaar/APAAR exceptions or benefit-tracking purpose.
+2. Review the visible academic year, optional academic selectors and the Report Columns help before Preview.
+3. Preview reads a deterministic server page; Generate Excel queues the complete selected scope rather than just that page.
+4. The accepted command opens the real current-user report history, with polling only while jobs are Queued or Generating.
+5. View request scope shows the saved job scope, Download appears only when the server allows it, Cancel generation applies to pending jobs, and Generate again creates a new job from the saved scope.
+
+These are factual baseline/status projections, not official submissions, state certification or eligibility decisions.
+Missing data remains unavailable and the report action does not change identity verification or UDISE export statuses.
+Existing Directory/Changes/Documents/Transitions jobs are named as those Records jobs in shared history; no synthetic legacy history is displayed.
+The remaining legacy categories retain their catalog descriptions and explain generation unavailability without enabled unsupported controls.
+
+## Admission builder exit and published-stage details
+
+The main form wizard and workflow builder own their draft guards; child wizard content no longer registers a second Redux-only navigation owner.
+Back, close and opted-in academic-context navigation use the shared styled discard decision, preserving the local draft on Keep editing and resetting only its owner after Discard changes.
+The active Document Requirement and Form Clone surfaces use that same guard and block exit during pending writes.
+Published Stage view displays saved stage facts and readable Form, Assessment or Document policy sections with help and a single Close footer action.
+Unsupported saved policy JSON is disclosed; viewing does not normalize or persist the stage.
+Dormant workflow governance, standalone Standard Template, Review Checklist and Eligibility Criterion settings have no active opener and remain unchanged.

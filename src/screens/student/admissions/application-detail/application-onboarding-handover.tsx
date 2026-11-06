@@ -119,7 +119,7 @@ export function ApplicationOnboardingHandover({
           presentation="toast"
           severity="error"
           sx={{ mt: 1.5 }}
-          action={
+          toastAction={
             <Button size="small" color="inherit" onClick={onRetry}>
               Retry
             </Button>

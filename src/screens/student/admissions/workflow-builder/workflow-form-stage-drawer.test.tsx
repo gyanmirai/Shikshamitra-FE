@@ -105,13 +105,9 @@ describe('single-page stage drawer', { timeout: 15000 }, () => {
         onSave={vi.fn()}
       />
     );
-    expect(screen.getByRole('combobox', { name: 'Published Form Version *' })).toHaveTextContent(
-      'Application form · v2'
-    );
-    expect(screen.getByRole('combobox', { name: 'Published Form Version *' })).toHaveAttribute(
-      'aria-disabled',
-      'true'
-    );
+    expect(screen.getByText('Published form version')).toBeVisible();
+    expect(screen.getByText('Application form · v2')).toBeVisible();
+    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
   });
   it('offers only published registration forms and excludes inquiry forms and drafts', async () => {
     const inquiry = { ...form, id: 'inquiry', name: 'Inquiry form', purpose: 0 as const };
@@ -320,9 +316,9 @@ describe('single-page stage drawer', { timeout: 15000 }, () => {
     await user.type(screen.getByRole('textbox', { name: 'Stage Name *' }), ' changed');
     await user.click(screen.getByRole('button', { name: 'Back' }));
     expect(
-      await screen.findByRole('heading', { name: 'Discard Stage Changes?', level: 2 })
+      await screen.findByRole('heading', { name: 'Discard Unsaved Changes?', level: 2 })
     ).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    await user.click(screen.getByRole('button', { name: 'Keep editing' }));
     expect(screen.getByRole('textbox', { name: 'Stage Name *' })).toHaveValue('Form changed');
     expect(onSave).not.toHaveBeenCalled();
   });
@@ -340,8 +336,10 @@ describe('single-page stage drawer', { timeout: 15000 }, () => {
         onSave={onSave}
       />
     );
-    expect(screen.getByRole('textbox', { name: 'Stage Name *' })).toBeDisabled();
-    expect(screen.getByRole('switch', { name: 'Required Stage' })).toBeDisabled();
+    expect(screen.getByText('Stage name')).toBeVisible();
+    expect(screen.getByText('Required stage')).toBeVisible();
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('switch')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Apply Changes' })).not.toBeInTheDocument();
     await userEvent.setup().click(screen.getByRole('button', { name: 'Close' }));
     expect(onClose).toHaveBeenCalledOnce();

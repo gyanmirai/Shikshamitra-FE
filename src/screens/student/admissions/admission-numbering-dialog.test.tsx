@@ -29,6 +29,7 @@ vi.mock('src/components/toast', () => ({
   GlobalIcons.eye,
   GlobalIcons.submit,
   GlobalIcons.cancel,
+  GlobalIcons.delete,
   GlobalIcons.info,
 ].forEach((name) => addIcon(name, { body: '<path d="M0 0h16v16H0z"/>', width: 16, height: 16 }));
 const settings = {
@@ -240,7 +241,7 @@ describe('application numbering dialog', () => {
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(screen.getByText('Discard Unsaved Changes?')).toBeVisible();
     expect(onClose).not.toHaveBeenCalled();
-    await user.click(screen.getByRole('button', { name: 'Discard Changes' }));
+    await user.click(screen.getByRole('button', { name: 'Discard changes' }));
     expect(onClose).toHaveBeenCalledOnce();
   });
   it('offers retry after load failure and does not enable submission', async () => {

@@ -2,10 +2,10 @@
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { fDateTime } from 'src/utils/format-time';
 import { useRef, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { fDateTime, formatStr } from 'src/utils/format-time';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { LoadingButton } from 'src/components/loading-button';
 import { StudentFeedback } from 'src/components/student-feedback';
@@ -116,7 +116,7 @@ export default function StudentOnboardingCredentialEmails({
           notificationKey="STU-0983"
           presentation="toast"
           severity="error"
-          action={
+          toastAction={
             <Button size="small" onClick={() => emails.refetch()}>
               Retry email status
             </Button>
@@ -197,8 +197,8 @@ export default function StudentOnboardingCredentialEmails({
             )}
             {email.sentAt && (
               <Typography variant="caption" color="text.secondary">
-                Accepted by the email sender · {fDateTime(email.sentAt)} · {email.attemptCount}{' '}
-                attempt(s)
+                Accepted by the email sender · {fDateTime(email.sentAt, formatStr.split.dateTime)} ·{' '}
+                {email.attemptCount} attempt(s)
               </Typography>
             )}
             {email.status === 'Pending' && (

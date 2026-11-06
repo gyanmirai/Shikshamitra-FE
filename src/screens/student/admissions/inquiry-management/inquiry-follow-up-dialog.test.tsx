@@ -2,9 +2,9 @@ import type { AdmissionInquiry } from 'src/redux/student/admissions/admission-in
 import type { AdmissionInquiryManagement } from 'src/redux/student/admissions/admission-inquiry-management-api';
 
 import dayjs from 'dayjs';
-import { it, vi, expect, beforeEach } from 'vitest';
 import userEvent from '@testing-library/user-event';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { it, vi, expect, afterEach, beforeEach } from 'vitest';
+import { act, render, screen, cleanup, waitFor, fireEvent } from '@testing-library/react';
 
 import { InquiryFollowUpDialog } from './inquiry-follow-up-dialog';
 
@@ -55,8 +55,15 @@ vi.mock('src/components/toast', () => ({
 }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span /> }));
 vi.mock('src/components/customDialog', () => ({
-  default: ({ title, children, handleClose, disableClose, guardUnsavedChanges }: any) => {
-    mocks.shell({ guardUnsavedChanges });
+  default: ({
+    title,
+    children,
+    handleClose,
+    disableClose,
+    guardUnsavedChanges,
+    titleInfo,
+  }: any) => {
+    mocks.shell({ guardUnsavedChanges, titleInfo });
     return (
       <div role="dialog" aria-label={title}>
         <button type="button" aria-label="close" disabled={disableClose} onClick={handleClose}>
@@ -130,7 +137,7 @@ const management = {
 } as unknown as AdmissionInquiryManagement;
 const future = dayjs().add(3, 'day').startOf('day');
 const changeReminder = () =>
-  fireEvent.change(screen.getByLabelText('Next Reminder Date'), {
+  fireEvent.change(screen.getByLabelText('Next reminder date'), {
     target: { value: future.format('YYYY-MM-DD') },
   });
 
@@ -238,7 +245,7 @@ it('prefills the active reminder when the detail response has no queue projectio
   };
   render(<InquiryFollowUpDialog inquiry={inquiry} onClose={mocks.close} />);
   await waitFor(() =>
-    expect(screen.getByLabelText('Next Reminder Date')).toHaveValue(future.format('YYYY-MM-DD'))
+    expect(screen.getByLabelText('Next reminder date')).toHaveValue(future.format('YYYY-MM-DD'))
   );
 });
 
@@ -252,7 +259,7 @@ it('uses the offset-safe reminder projection ahead of legacy scheduled timestamp
   };
   render(<InquiryFollowUpDialog inquiry={inquiry} onClose={mocks.close} />);
   await waitFor(() =>
-    expect(screen.getByLabelText('Next Reminder Date')).toHaveValue(future.format('YYYY-MM-DD'))
+    expect(screen.getByLabelText('Next reminder date')).toHaveValue(future.format('YYYY-MM-DD'))
   );
 });
 
@@ -271,7 +278,7 @@ it('waits for both opening GETs before using defaults and preserves edits on lat
   };
   const view = render(<InquiryFollowUpDialog inquiry={inquiry} onClose={mocks.close} />);
   expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
-  expect(screen.getByLabelText('Next Reminder Date')).toHaveValue('');
+  expect(screen.getByLabelText('Next reminder date')).toHaveValue('');
 
   // Inquiry finishes first; the old management cache must not initialize the form.
   mocks.detail = {
@@ -281,7 +288,7 @@ it('waits for both opening GETs before using defaults and preserves edits on lat
   };
   view.rerender(<InquiryFollowUpDialog inquiry={inquiry} onClose={mocks.close} />);
   expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
-  expect(screen.getByLabelText('Next Reminder Date')).toHaveValue('');
+  expect(screen.getByLabelText('Next reminder date')).toHaveValue('');
 
   mocks.management = {
     ...mocks.management,
@@ -291,13 +298,13 @@ it('waits for both opening GETs before using defaults and preserves edits on lat
   view.rerender(<InquiryFollowUpDialog inquiry={inquiry} onClose={mocks.close} />);
   await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled());
   expect(screen.getByRole('combobox', { name: 'Status' })).toHaveValue('2');
-  expect(screen.getByLabelText('Next Reminder Date')).toHaveValue(
+  expect(screen.getByLabelText('Next reminder date')).toHaveValue(
     freshReminder.format('YYYY-MM-DD')
   );
   expect(mocks.refetch).not.toHaveBeenCalled();
 
   await user.type(screen.getByRole('textbox', { name: 'Notes' }), 'Keep this draft after refresh');
-  fireEvent.change(screen.getByLabelText('Next Reminder Date'), {
+  fireEvent.change(screen.getByLabelText('Next reminder date'), {
     target: { value: editedReminder.format('YYYY-MM-DD') },
   });
   mocks.detail = {
@@ -315,7 +322,7 @@ it('waits for both opening GETs before using defaults and preserves edits on lat
     'Keep this draft after refresh'
   );
   expect(screen.getByRole('combobox', { name: 'Status' })).toHaveValue('2');
-  expect(screen.getByLabelText('Next Reminder Date')).toHaveValue(
+  expect(screen.getByLabelText('Next reminder date')).toHaveValue(
     editedReminder.format('YYYY-MM-DD')
   );
 });
@@ -335,7 +342,11 @@ it.each(['management', 'inquiry'])(
       })
     );
     const toastProps = mocks.error.mock.calls[0][0].alertProps('load-error');
-    expect(toastProps.action).toBeUndefined();
+    expect(toastProps.action).toBeTruthy();
+    const recovery = render(<>{toastProps.action}</>);
+    await user.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(mocks.refetch).toHaveBeenCalledOnce();
+    recovery.unmount();
     expect(toastProps.onClose).toEqual(expect.any(Function));
     expect(screen.queryByText('Follow-up notes could not be loaded.')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
@@ -370,7 +381,7 @@ it.each(['management', 'inquiry'])(
         reminderAt: future.toISOString(),
       })
     );
-    expect(mocks.refetch).not.toHaveBeenCalled();
+    expect(mocks.refetch).toHaveBeenCalledOnce();
   }
 );
 
@@ -384,7 +395,7 @@ it('blocks empty notes and requires a future reminder for Pending', async () => 
   expect(await screen.findByText('Notes are required')).toBeVisible();
   expect(screen.getByText('Next reminder date is required')).toBeVisible();
   await user.type(screen.getByRole('textbox', { name: 'Notes' }), 'Call again');
-  fireEvent.change(screen.getByLabelText('Next Reminder Date'), {
+  fireEvent.change(screen.getByLabelText('Next reminder date'), {
     target: { value: dayjs().format('YYYY-MM-DD') },
   });
   await user.click(screen.getByRole('button', { name: 'Submit' }));
@@ -398,7 +409,7 @@ it('saves Not interested without a reminder and clears any previously chosen dat
   await user.type(screen.getByRole('textbox', { name: 'Notes' }), 'Family chose another school');
   changeReminder();
   fireEvent.change(screen.getByRole('combobox', { name: 'Status' }), { target: { value: '6' } });
-  expect(screen.getByLabelText('Next Reminder Date')).toBeDisabled();
+  expect(screen.getByLabelText('Next reminder date')).toBeDisabled();
   await user.click(screen.getByRole('button', { name: 'Submit' }));
   await waitFor(() =>
     expect(mocks.record).toHaveBeenCalledWith(
@@ -488,7 +499,7 @@ it('preserves the draft and shows a plain error for a failed network request', a
     screen.getByText('Unable to save the follow-up. Your draft is preserved; try again.')
   ).toBeVisible();
   expect(screen.getByRole('textbox', { name: 'Notes' })).toHaveValue('Keep this note');
-  expect(screen.getByLabelText('Next Reminder Date')).toHaveValue(future.format('YYYY-MM-DD'));
+  expect(screen.getByLabelText('Next reminder date')).toHaveValue(future.format('YYYY-MM-DD'));
   expect(screen.getByRole('combobox', { name: 'Status' })).toHaveValue('0');
   expect(mocks.close).not.toHaveBeenCalled();
 });
@@ -499,9 +510,14 @@ it('uses the shared discard dialog instead of native confirmation for unsaved no
   await user.type(screen.getByRole('textbox', { name: 'Notes' }), 'Draft note');
   await user.click(screen.getByRole('button', { name: /^Cancel$/ }));
   expect(screen.getByRole('dialog', { name: 'Discard Unsaved Changes?' })).toBeVisible();
-  expect(mocks.shell).toHaveBeenLastCalledWith({ guardUnsavedChanges: false });
+  expect(mocks.shell).toHaveBeenLastCalledWith(
+    expect.objectContaining({ guardUnsavedChanges: false })
+  );
   expect(mocks.close).not.toHaveBeenCalled();
-  await user.click(screen.getByRole('button', { name: 'Discard Changes' }));
+  await user.click(screen.getByRole('button', { name: 'Keep editing' }));
+  expect(screen.getByRole('textbox', { name: 'Notes' })).toHaveValue('Draft note');
+  await user.click(screen.getByRole('button', { name: /^Cancel$/ }));
+  await user.click(screen.getByRole('button', { name: 'Discard changes' }));
   expect(mocks.close).toHaveBeenCalledOnce();
 });
 
@@ -542,7 +558,7 @@ it('blocks submit during loading and query failure, then recovers without losing
       alertProps: expect.any(Function),
     })
   );
-  expect(mocks.error.mock.calls[0][0].alertProps('load-error').action).toBeUndefined();
+  expect(mocks.error.mock.calls[0][0].alertProps('load-error').action).toBeTruthy();
   expect(screen.queryByText('Follow-up notes could not be loaded.')).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
@@ -555,7 +571,7 @@ it('blocks submit during loading and query failure, then recovers without losing
   expect(screen.getByRole('textbox', { name: 'Notes' })).toHaveValue(
     'Keep this note during refresh'
   );
-  expect(screen.getByLabelText('Next Reminder Date')).toHaveValue(future.format('YYYY-MM-DD'));
+  expect(screen.getByLabelText('Next reminder date')).toHaveValue(future.format('YYYY-MM-DD'));
   await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled());
   await user.click(screen.getByRole('button', { name: 'Submit' }));
   await waitFor(() =>
@@ -605,4 +621,18 @@ it('allows permitted staff to follow up an inquiry assigned to another counsello
     })
   );
   await waitFor(() => expect(mocks.close).toHaveBeenCalledOnce());
+});
+
+afterEach(async () => {
+  cleanup();
+  await act(() => new Promise((resolve) => setTimeout(resolve, 0)));
+});
+it('groups follow-up history and editable details under shared title and section guidance', () => {
+  render(<InquiryFollowUpDialog inquiry={inquiry} onClose={mocks.close} />);
+  expect(mocks.shell).toHaveBeenLastCalledWith(
+    expect.objectContaining({ titleInfo: expect.any(String) })
+  );
+  expect(screen.getByRole('heading', { name: 'Follow-Up History' })).toBeVisible();
+  expect(screen.getByRole('heading', { name: 'Follow-Up Details' })).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Follow-Up Details information' })).toBeVisible();
 });

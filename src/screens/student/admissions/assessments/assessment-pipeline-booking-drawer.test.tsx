@@ -373,8 +373,11 @@ it('guards unsaved slot changes and returns to booking without leaving Pipeline'
     target: { value: 'My slot' },
   });
   fireEvent.click(screen.getByRole('button', { name: 'Back to Booking' }));
-  expect(screen.getByRole('dialog', { name: 'Discard Changes?' })).toBeVisible();
-  fireEvent.click(screen.getByRole('button', { name: 'Discard' }));
+  expect(screen.getByRole('dialog', { name: 'Discard Unsaved Changes?' })).toBeVisible();
+  fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
+  expect(screen.getByRole('textbox', { name: 'Session name' })).toHaveValue('My slot');
+  fireEvent.click(screen.getByRole('button', { name: 'Back to Booking' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
   expect(await screen.findByRole('dialog', { name: 'Book Assessment Slot' })).toBeInTheDocument();
   expect(onClose).not.toHaveBeenCalled();
 });
@@ -385,3 +388,24 @@ it('does not offer Add Slot without session-management permission', () => {
   expect(screen.queryByRole('button', { name: 'Add Slot' })).not.toBeInTheDocument();
   expect(screen.getByText('No Slots Available')).toBeVisible();
 });
+
+it.each(['Cancel', 'Back to Booking', 'Close Assessment Booking'])(
+  'allows %s while Add Slot resources are still loading without creating a booking',
+  (control) => {
+    const onClose = vi.fn();
+    mocks.resources.mockReturnValue({ isLoading: true, isError: false, refetch: vi.fn() });
+    draw(onClose);
+    fireEvent.click(screen.getByRole('button', { name: 'Add Slot' }));
+    expect(screen.getByRole('button', { name: 'Create & Book' })).toBeDisabled();
+    const button = screen.getByRole('button', { name: control });
+    expect(button).toBeEnabled();
+    fireEvent.click(button);
+    if (control === 'Back to Booking') {
+      expect(screen.getByRole('dialog', { name: 'Book Assessment Slot' })).toBeVisible();
+      expect(onClose).not.toHaveBeenCalled();
+    } else expect(onClose).toHaveBeenCalledOnce();
+    expect(mocks.preview).not.toHaveBeenCalled();
+    expect(mocks.confirm).not.toHaveBeenCalled();
+    expect(mocks.run).not.toHaveBeenCalled();
+  }
+);

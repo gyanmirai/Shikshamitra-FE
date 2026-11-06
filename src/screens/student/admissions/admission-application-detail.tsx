@@ -12,10 +12,10 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { LoadingButton } from 'src/components/loading-button';
-import { useId, useState, useEffect, useCallback } from 'react';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useId, useRef, useState, useEffect, useCallback } from 'react';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { useParams, usePathname, useSearchParams } from 'next/navigation';
 import { studentPaths, studentPermissions } from 'src/constants/student-menu';
@@ -24,6 +24,7 @@ import { useGetAdmissionOfferingQuery } from 'src/redux/student/admissions/admis
 
 import { AdmissionQueryError } from './admission-query-error';
 import { formatAdmissionReference } from './admission-reference';
+import { ADMISSION_DATE_TIME_FORMAT } from './admission-date-formats';
 import { FormHistoryCard } from './application-detail/form-history-card';
 import { useApplicationDetail } from './application-detail/use-application-detail';
 import { TransitionHistoryCard } from './application-detail/transition-history-card';
@@ -146,6 +147,10 @@ export default function AdmissionApplicationDetailScreen({
     refetchApplication();
     if (!formUninitialized) refetchForm();
   }, [refetchApplication, refetchForm, formUninitialized]);
+  const closedWorkspace = useRef(false);
+  useEffect(() => {
+    closedWorkspace.current = false;
+  }, [applicationId, params.id]);
   const application = applicationQuery.data;
   const canReadOfferingContext =
     Boolean(application?.admissionOfferingId) &&
@@ -205,13 +210,10 @@ export default function AdmissionApplicationDetailScreen({
     detail.endJourneyState.isLoading ||
     (stageReadiness?.stageId === selectedStage?.id && Boolean(stageReadiness?.busy));
   const navigationLocked =
-    workspaceBusy ||
-    isLoading ||
-    finalizationOpen ||
-    resumeJourneyDialog.value ||
-    correctionDrawer.value;
+    workspaceBusy || finalizationOpen || resumeJourneyDialog.value || correctionDrawer.value;
   useEffect(() => {
     if (
+      closedWorkspace.current ||
       ((applicationId || onClose) && !isDrawer) ||
       !application ||
       !workspaceKnown ||
@@ -268,6 +270,7 @@ export default function AdmissionApplicationDetailScreen({
     {
       push: router.push,
       blockNavigation: navigationLocked,
+      guardContextChanges: true,
       title: feeEditorState.dirty
         ? 'Discard Unsaved Fee Selection?'
         : 'Discard Unsaved Application Changes?',
@@ -280,6 +283,7 @@ export default function AdmissionApplicationDetailScreen({
     setFeeEditorState({ dirty: false, busy: false });
     setStageReadiness(null);
     if (target.view === 'close') {
+      closedWorkspace.current = true;
       if (onClose) onClose();
       else router.push(returnUrl);
     } else setWorkspace(target);
@@ -463,7 +467,7 @@ export default function AdmissionApplicationDetailScreen({
                     </Typography>
                     {application.decisionAt && (
                       <Typography variant="caption" color="text.secondary">
-                        {fDateTime(application.decisionAt)}
+                        {fDateTime(application.decisionAt, ADMISSION_DATE_TIME_FORMAT)}
                       </Typography>
                     )}
                   </Stack>
@@ -506,7 +510,7 @@ export default function AdmissionApplicationDetailScreen({
             </Label>
             {selectedStage.completedAt && (
               <Typography variant="caption" color="text.secondary">
-                {fDateTime(selectedStage.completedAt)}
+                {fDateTime(selectedStage.completedAt, ADMISSION_DATE_TIME_FORMAT)}
               </Typography>
             )}
             {selectedStage.completionReason && (

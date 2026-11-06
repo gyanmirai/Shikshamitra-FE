@@ -11,13 +11,13 @@ import type {
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { fDateTime } from 'src/utils/format-time';
 import { RouterLink } from 'src/routes/components';
 import { useRef, useState, useEffect } from 'react';
 import { CustomTabs } from 'src/components/custom-tabs';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { studentPaths } from 'src/constants/student-menu';
+import { fDateTime, formatStr } from 'src/utils/format-time';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { StudentFeedback } from 'src/components/student-feedback';
@@ -45,6 +45,10 @@ import {
 
 import RecordsStudentPicker from './records-student-picker';
 import { recordsQueryUrl, positivePageValue } from './records-url-state';
+import {
+  studentReportTitle,
+  studentReportSourceGrants,
+} from '../reports/utils/compliance-report-model';
 
 const types: { value: RecordsReportType; label: string; grants: string[] }[] = [
   { value: 'Directory', label: 'Student directory', grants: ['Students.Records.StudentList.View'] },
@@ -79,9 +83,8 @@ export default function StudentRecordReports() {
   const canGenerate = hasGrantedPermission(permissions, 'Students.Records.Reports.Add');
   const canCancel = hasGrantedPermission(permissions, 'Students.Records.Reports.Add');
   const canRead = (type: RecordsReportType) =>
-    types
-      .find((x) => x.value === type)!
-      .grants.every((grant) => hasGrantedPermission(permissions, grant));
+    studentReportSourceGrants(type).length > 0 &&
+    studentReportSourceGrants(type).every((grant) => hasGrantedPermission(permissions, grant));
   const input: RecordsReportInput = {
     reportType,
     academicYearId: year === 'all' ? undefined : year,
@@ -169,7 +172,7 @@ export default function StudentRecordReports() {
     {
       id: 'reportType',
       label: 'Report',
-      render: (value) => types.find((x) => x.value === value)?.label ?? value,
+      render: (value) => studentReportTitle(value as RecordsReportType),
     },
     {
       id: 'status',
@@ -181,8 +184,16 @@ export default function StudentRecordReports() {
       ),
     },
     { id: 'rowCount', label: 'Rows', render: (value) => value ?? '—' },
-    { id: 'creationTime', label: 'Created', render: (value) => fDateTime(value) },
-    { id: 'expiresAt', label: 'Expires', render: (value) => fDateTime(value) },
+    {
+      id: 'creationTime',
+      label: 'Created',
+      render: (value) => fDateTime(value, formatStr.split.dateTime),
+    },
+    {
+      id: 'expiresAt',
+      label: 'Expires',
+      render: (value) => fDateTime(value, formatStr.split.dateTime),
+    },
     {
       id: 'actions',
       label: 'Actions',
@@ -314,6 +325,7 @@ export default function StudentRecordReports() {
               </Button>
             </Stack>
             <RecordsStudentPicker
+              toastRecovery
               selectedId={studentId}
               onSelect={(student) => update({ student: student?.studentId, page: 0 })}
             />
@@ -340,7 +352,7 @@ export default function StudentRecordReports() {
           notificationKey="STU-0903"
           presentation="toast"
           severity="error"
-          action={
+          toastAction={
             <Button
               color="inherit"
               onClick={() => (tab === 'preview' ? preview.refetch() : jobs.refetch())}
@@ -358,7 +370,8 @@ export default function StudentRecordReports() {
       {tab === 'preview' && preview.currentData && (
         <Typography variant="caption">
           {preview.currentData.totalCount} matching rows · Updated{' '}
-          {fDateTime(preview.currentData.asOf)} · Excel generation includes every matching row.
+          {fDateTime(preview.currentData.asOf, formatStr.split.dateTime)} · Excel generation
+          includes every matching row.
         </Typography>
       )}
       <Box
@@ -416,7 +429,8 @@ export default function StudentRecordReports() {
         content={
           <Stack spacing={1}>
             <Typography variant="body2">
-              Generate {types.find((x) => x.value === generation?.reportType)?.label} as Excel for{' '}
+              Generate {generation ? studentReportTitle(generation.reportType) : 'report'} as Excel
+              for{' '}
               {generation?.academicYearId
                 ? 'the selected academic year'
                 : 'all years in your scope'}{' '}

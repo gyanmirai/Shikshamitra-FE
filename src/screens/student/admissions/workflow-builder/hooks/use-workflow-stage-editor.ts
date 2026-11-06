@@ -5,9 +5,7 @@ import type {
 } from 'src/redux/student/admissions/admission-workflows-api';
 
 import * as Yup from 'yup';
-import { useEffect } from 'react';
 import { useFormik } from 'formik';
-import { useBoolean } from 'src/hooks/use-boolean';
 import { getDocumentConfigurationError } from 'src/redux/student/admissions/admission-document-policy-validation';
 import { getAdmissionFormStageConfigurationError } from 'src/redux/student/admissions/admission-form-stage-policy';
 import {
@@ -15,6 +13,7 @@ import {
   getAssessmentConfigurationError,
 } from 'src/redux/student/admissions/admission-assessment-policy';
 
+import { useAdmissionDraftGuard } from '../../use-admission-draft-guard';
 import {
   isApplicationStageType,
   normalizeStageConfiguration,
@@ -64,7 +63,6 @@ export function useWorkflowStageEditor({
   onClose,
   onSave,
 }: Props) {
-  const discard = useBoolean();
   const formik = useFormik<AdmissionWorkflowStage>({
     enableReinitialize: true,
     initialValues: normalizeStageConfiguration(stage ?? emptyStage),
@@ -91,17 +89,14 @@ export function useWorkflowStageEditor({
     },
   });
 
-  useEffect(() => {
-    if (!open || !formik.dirty) return undefined;
-    const warn = (event: BeforeUnloadEvent) => {
-      event.preventDefault();
-    };
-    window.addEventListener('beforeunload', warn);
-    return () => window.removeEventListener('beforeunload', warn);
-  }, [open, formik.dirty]);
+  const guard = useAdmissionDraftGuard({
+    active: open && !readOnly,
+    dirty: formik.dirty,
+    busy: formik.isSubmitting,
+    reset: formik.resetForm,
+  });
 
   const close = () => {
-    discard.onFalse();
     formik.resetForm();
     onClose();
   };
@@ -114,14 +109,11 @@ export function useWorkflowStageEditor({
     formik,
     validationSchema: schema,
     metadata,
-    discard,
+    confirmation: guard.confirmation,
     close,
     formDefinitionId,
     forms,
-    requestClose: () => {
-      if (!readOnly && formik.dirty) discard.onTrue();
-      else close();
-    },
+    requestClose: () => guard.requestNavigation(close),
   };
 }
 

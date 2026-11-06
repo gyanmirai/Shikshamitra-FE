@@ -7,10 +7,11 @@ import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { EmptyContent } from 'src/components/empty-content';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { Box, Stack, Button, Skeleton, Typography, CircularProgress } from '@mui/material';
+import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 import {
   useSaveAdmissionFeeSelectionMutation,
   useGetAdmissionFeeSelectionCandidatesQuery,
@@ -44,7 +45,6 @@ export function AdmissionFeeSelectionEditor({
   });
   const [save, saving] = useSaveAdmissionFeeSelectionMutation();
   const [saveError, setSaveError] = useState<string>();
-  const [discard, setDiscard] = useState(false);
   const formik = useFormik({
     initialValues: {
       structureId: state.selection?.structureId ?? '',
@@ -95,17 +95,25 @@ export function AdmissionFeeSelectionEditor({
     },
   });
   useAdmissionUnsavedChanges(true, formik.dirty);
-  const { setFieldValue } = formik;
+  const { resetForm, dirty } = formik;
   const currentStructureId = formik.values.structureId;
   useEffect(() => {
-    if (!currentStructureId && candidates.currentData?.length === 1) {
-      setFieldValue('structureId', candidates.currentData[0].structureId);
+    if (!currentStructureId && !dirty && candidates.currentData?.length === 1) {
+      resetForm({
+        values: { ...formik.initialValues, structureId: candidates.currentData[0].structureId },
+      });
     }
-  }, [candidates.currentData, currentStructureId, setFieldValue]);
+  }, [candidates.currentData, currentStructureId, dirty, resetForm, formik.initialValues]);
   const chosen = candidates.currentData?.find(
     (item) => item.structureId === formik.values.structureId
   );
   const busy = saving.isLoading || formik.isSubmitting;
+  const closeGuard = useUnsavedNavigation(formik.dirty, {
+    blockNavigation: busy,
+    guardContextChanges: true,
+    renderConfirmation: (keepEditing, discard) =>
+      renderUnsavedConfirmation(keepEditing, discard, { busy }),
+  });
   useEffect(() => {
     onEditorStateChange?.({ dirty: formik.dirty, busy });
   }, [formik.dirty, busy, onEditorStateChange]);
@@ -153,7 +161,7 @@ export function AdmissionFeeSelectionEditor({
             notificationKey="STU-0342"
             presentation="toast"
             severity="error"
-            action={
+            toastAction={
               <Button size="small" disabled={busy} onClick={() => candidates.refetch()}>
                 Retry
               </Button>
@@ -310,7 +318,7 @@ export function AdmissionFeeSelectionEditor({
             variant="outlined"
             startIcon={<Iconify icon="mdi:close" width={16} />}
             disabled={busy}
-            onClick={() => (formik.dirty ? setDiscard(true) : onClose())}
+            onClick={() => closeGuard.requestNavigation(onClose)}
           >
             Cancel
           </Button>
@@ -343,18 +351,7 @@ export function AdmissionFeeSelectionEditor({
           )}
         </Stack>
       </Stack>
-      <ConfirmDialog
-        open={discard}
-        onClose={() => setDiscard(false)}
-        title="Discard Unsaved Changes?"
-        icon="warning"
-        content="Your saved fee selection remains available. Unsaved changes will be discarded."
-        action={
-          <Button size="small" color="error" variant="contained" disabled={busy} onClick={onClose}>
-            Discard Changes
-          </Button>
-        }
-      />
+      {closeGuard.confirmation}
       {busy && (
         <Box
           sx={{

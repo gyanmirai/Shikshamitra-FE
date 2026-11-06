@@ -29,6 +29,31 @@ vi.mock('./form-dialog/components/form-builder-review', () => ({
   FormBuilderReview: () => <h2>Review draft</h2>,
 }));
 
+it('keeps the form draft on Keep editing and discards only after an explicit styled decision', async () => {
+  const user = userEvent.setup();
+  const onClose = vi.fn();
+  render(
+    <ThemeProvider theme={createTheme(defaultSettings)}>
+      <AdmissionFormDialog
+        open
+        saving={false}
+        onClose={onClose}
+        onSave={vi.fn()}
+        onPublishNow={vi.fn()}
+      />
+    </ThemeProvider>
+  );
+  await user.type(screen.getByRole('textbox', { name: 'Form Name *' }), 'Unsaved registration');
+  await user.click(screen.getByRole('button', { name: 'close' }));
+  expect(await screen.findByText('Discard Unsaved Changes?')).toBeVisible();
+  expect(onClose).not.toHaveBeenCalled();
+  await user.click(screen.getByRole('button', { name: 'Keep editing' }));
+  expect(screen.getByRole('textbox', { name: 'Form Name *' })).toHaveValue('Unsaved registration');
+  await user.click(screen.getByRole('button', { name: 'close' }));
+  await user.click(screen.getByRole('button', { name: 'Discard changes' }));
+  expect(onClose).toHaveBeenCalledTimes(1);
+});
+
 it.each([
   { purpose: 0 as const, type: 'Inquiry', starter: 'Use Inquiry Form: Inquiry Form' },
   { purpose: 1 as const, type: 'Registration', starter: 'Use Recommended: Registration Form' },

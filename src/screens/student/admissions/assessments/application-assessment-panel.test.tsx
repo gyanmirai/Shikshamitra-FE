@@ -389,7 +389,7 @@ it('shows the booked session, school-local date/time and room in the attempt car
   panel();
   const card = screen.getByRole('article', { name: 'Assessment Attempt 1' });
   expect(within(card).getByText('School exam · Entrance assessment · 15 Oct 2026')).toBeVisible();
-  expect(within(card).getByText('15 Oct 2026')).toBeVisible();
+  expect(within(card).getByText('15/10/2026')).toBeVisible();
   expect(within(card).getByText('3:10 PM–3:15 PM IST')).toBeVisible();
   expect(within(card).getByText('A001')).toBeVisible();
   expect(within(card).getByText('Result Pending')).toHaveClass('mnl__label__root');

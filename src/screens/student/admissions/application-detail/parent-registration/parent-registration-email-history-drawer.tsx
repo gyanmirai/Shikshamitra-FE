@@ -5,9 +5,9 @@ import type { ParentRegistrationEmailHistory } from 'src/redux/student/admission
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { fDateTime } from 'src/utils/format-time';
 import { Scrollbar } from 'src/components/scrollbar';
 import { EmptyContent } from 'src/components/empty-content';
+import { fDateTime, formatStr } from 'src/utils/format-time';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
 import {
@@ -150,16 +150,16 @@ export function ParentRegistrationEmailHistoryDrawer({
                         {item.recipientEmail || 'Email unavailable'}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
-                        Link expires {fDateTime(item.expiresAt)}
+                        Link expires {fDateTime(item.expiresAt, formatStr.split.dateTime)}
                       </Typography>
                       {item.lastSavedAt && (
                         <Typography variant="caption" color="text.secondary">
-                          Parent last saved {fDateTime(item.lastSavedAt)}
+                          Parent last saved {fDateTime(item.lastSavedAt, formatStr.split.dateTime)}
                         </Typography>
                       )}
                       {item.handedInAt && (
                         <Typography variant="caption" color="text.secondary">
-                          Sent to school {fDateTime(item.handedInAt)}
+                          Sent to school {fDateTime(item.handedInAt, formatStr.split.dateTime)}
                         </Typography>
                       )}
                     </Box>
@@ -197,7 +197,7 @@ export function ParentRegistrationEmailHistoryDrawer({
                             </Typography>
                             {attempt.attemptedAt && (
                               <Typography variant="caption" color="text.secondary">
-                                {fDateTime(attempt.attemptedAt)}
+                                {fDateTime(attempt.attemptedAt, formatStr.split.dateTime)}
                               </Typography>
                             )}
                           </Stack>

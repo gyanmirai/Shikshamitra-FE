@@ -82,7 +82,7 @@ export function WorkflowAssessmentProfiles({
             notificationKey="STU-0534"
             presentation="toast"
             severity="error"
-            action={
+            toastAction={
               <Button size="small" disabled={query.isFetching} onClick={() => query.refetch()}>
                 Retry
               </Button>

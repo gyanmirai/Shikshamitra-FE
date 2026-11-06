@@ -10,6 +10,10 @@ audience: humans-and-agents
 
 # Find HR frontend API clients
 
+`employee-icard-template-api.ts` retains the existing template, scoped school-logo, protected asset, and PDF endpoints. The staff builder writes schema version 2 through `employee-builder-state.ts`: `layoutJson` preserves front/back canvas elements and explicit `widthMm`/`heightMm`; `printSettingsJson` declares millimetre units and duplex/output settings. The legacy adapter converts prior margin/gap points once and keeps custom styles and palette bindings. The saved legacy field list is synchronized with visible configured staff bindings so backend field gates remain meaningful. Backend rendering and validation remain owned by [HR API documentation](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md).
+
+The PDF response handler keeps successful responses as blobs and parses failed responses as JSON so structured configuration details reach the builder. An unreadable error body receives safe export guidance.
+
 `esi-policy-api.ts` loads `GET /payroll/statutory-schemes/esi/policies/{id}/archive-review` when the archive confirmation mounts, refetching cached reviews. The dialog uses `currentData`, rejects loading/failed/wrong-policy reviews, and submits the reviewed concurrency stamp with `confirmed: true`. Reviews share statutory and salary-template invalidation tags; failed mutations refresh dependencies before retry. See the [backend policy contract](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md#named-esic-policies).
 
 `hr-setup-readiness-api.ts` reads `/api/hr/setup-readiness` for the document-scoped HR setup wizard.

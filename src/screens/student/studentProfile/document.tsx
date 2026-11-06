@@ -4,11 +4,11 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { fDateTime } from 'src/utils/format-time';
 import base64ToFile from 'src/utils/base64ToFile';
 import UploadButton from 'src/components/upload-button';
 import { useResponsive } from 'src/hooks/use-responsive';
 import { shikshaMitraToast } from 'src/components/toast';
+import { fDateTime, formatStr } from 'src/utils/format-time';
 import { useRef, useMemo, useState, useEffect } from 'react';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -83,7 +83,7 @@ function StudentDocumentPreview({
         notificationKey="STU-0740"
         presentation="toast"
         severity="error"
-        action={
+        toastAction={
           <Button size="small" color="inherit" onClick={query.refetch}>
             Retry preview
           </Button>
@@ -284,7 +284,7 @@ const Document = ({ student }: StudentTabsComponentType) => {
       label: 'Recorded',
       minWidth: 155,
       filterType: 'dateTime',
-      render: (value) => (value ? fDateTime(value) : '—'),
+      render: (value) => (value ? fDateTime(value, formatStr.split.dateTime) : '—'),
     },
     {
       id: 'status',
@@ -422,7 +422,7 @@ const Document = ({ student }: StudentTabsComponentType) => {
           notificationKey="STU-0745"
           presentation="toast"
           severity="error"
-          action={
+          toastAction={
             <Button size="small" color="inherit" onClick={documents.refetch}>
               Retry Student Documents
             </Button>
@@ -436,7 +436,7 @@ const Document = ({ student }: StudentTabsComponentType) => {
           notificationKey="STU-0746"
           presentation="toast"
           severity="error"
-          action={
+          toastAction={
             <Button size="small" color="inherit" onClick={evidence.refetch}>
               Retry Admission Documents
             </Button>
@@ -551,6 +551,7 @@ const Document = ({ student }: StudentTabsComponentType) => {
           <DialogScrollContent>
             {selected.evidence && canViewEvidence ? (
               <DocumentEvidenceHistory
+                dateTimeFormat={formatStr.split.dateTime}
                 evidence={selected.evidence}
                 studentId={studentId}
                 allowDownload={admissionPermissions.download}

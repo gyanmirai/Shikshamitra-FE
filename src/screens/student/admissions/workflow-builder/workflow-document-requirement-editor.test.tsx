@@ -60,14 +60,15 @@ describe('compact document requirement editor', { timeout: 15000 }, () => {
     });
     expect(requirementDialog.closest('.MuiPopover-root')).toBeInTheDocument();
     const dialog = within(requirementDialog);
+    expect(dialog.getByRole('button', { name: 'Document requirement information' })).toBeVisible();
     expect(dialog.getByRole('textbox', { name: 'Document Name *' })).toHaveValue(
       'Birth certificate'
     );
-    await user.click(dialog.getByRole('button', { name: 'Save Requirement' }));
+    await user.click(dialog.getByRole('button', { name: 'Submit' }));
     await user.click(await screen.findByRole('button', { name: 'Edit Birth certificate' }));
     const editor = within(screen.getByRole('dialog', { name: 'Configure Document Requirement' }));
     await user.type(editor.getByRole('textbox', { name: 'Instructions (Optional)' }), 'Clear scan');
-    await user.click(editor.getByRole('button', { name: 'Save Requirement' }));
+    await user.click(editor.getByRole('button', { name: 'Submit' }));
     await user.click(await screen.findByRole('button', { name: 'Remove Birth certificate' }));
     const confirmation = within(
       screen.getByRole('dialog', { name: 'Remove Document Requirement?' })
@@ -95,7 +96,7 @@ describe('compact document requirement editor', { timeout: 15000 }, () => {
     await user.click(screen.getByRole('button', { name: 'Edit Birth certificate' }));
     await chooseDocumentOption(user, 'Applies to Classes', 'Selected Classes');
     const dialog = within(screen.getByRole('dialog', { name: 'Configure Document Requirement' }));
-    await user.click(dialog.getByRole('button', { name: 'Save Requirement' }));
+    await user.click(dialog.getByRole('button', { name: 'Submit' }));
     expect(
       await dialog.findByText('Select at least one class, or choose all classes')
     ).toBeInTheDocument();
@@ -110,7 +111,7 @@ describe('compact document requirement editor', { timeout: 15000 }, () => {
     await waitFor(() =>
       expect(screen.queryByRole('dialog', { name: 'Select Classes' })).not.toBeInTheDocument()
     );
-    await user.click(dialog.getByRole('button', { name: 'Save Requirement' }));
+    await user.click(dialog.getByRole('button', { name: 'Submit' }));
     await waitFor(() =>
       expect(
         screen.queryByRole('dialog', { name: 'Configure Document Requirement' })
@@ -133,9 +134,7 @@ describe('compact document requirement editor', { timeout: 15000 }, () => {
           .getByRole('dialog', { name: 'Configure Document Requirement' })
           .closest('.MuiPopover-root')
       ).toBeInTheDocument();
-      expect(dialog.getByRole('button', { name: 'Save Requirement' })).toHaveClass(
-        'MuiButton-sizeSmall'
-      );
+      expect(dialog.getByRole('button', { name: 'Submit' })).toHaveClass('MuiButton-sizeSmall');
       expect(dialog.queryByRole('textbox', { name: 'Document code *' })).not.toBeInTheDocument();
       expect(
         dialog.queryByRole('combobox', { name: 'Evidence to collect' })
@@ -148,8 +147,8 @@ describe('compact document requirement editor', { timeout: 15000 }, () => {
       ).toBeInTheDocument();
       await user.type(dialog.getByRole('textbox', { name: 'Document Name *' }), name);
       if (name === 'Address evidence')
-        await user.click(dialog.getByRole('switch', { name: 'Required Document' }));
-      await user.click(dialog.getByRole('button', { name: 'Save Requirement' }));
+        await user.click(dialog.getByRole('switch', { name: 'Required document' }));
+      await user.click(dialog.getByRole('button', { name: 'Submit' }));
       await waitFor(() =>
         expect(
           screen.queryByRole('dialog', { name: 'Configure Document Requirement' })
@@ -176,8 +175,8 @@ describe('compact document requirement editor', { timeout: 15000 }, () => {
       'Bring a clear scan'
     );
     await user.click(within(dialog).getByRole('button', { name: 'Cancel' }));
-    const discard = screen.getByRole('dialog', { name: 'Discard Document Changes?' });
-    await user.click(within(discard).getByRole('button', { name: 'Cancel' }));
+    const discard = screen.getByRole('dialog', { name: 'Discard Unsaved Changes?' });
+    await user.click(within(discard).getByRole('button', { name: 'Keep editing' }));
     expect(within(dialog).getByRole('textbox', { name: 'Instructions (Optional)' })).toHaveValue(
       'Bring a clear scan'
     );
@@ -186,7 +185,7 @@ describe('compact document requirement editor', { timeout: 15000 }, () => {
     const { user, onSave } = await setupDocumentEditor();
     await user.click(screen.getByRole('button', { name: 'Add Custom Document' }));
     const dialog = within(screen.getByRole('dialog', { name: 'Configure Document Requirement' }));
-    await user.click(dialog.getByRole('button', { name: 'Save Requirement' }));
+    await user.click(dialog.getByRole('button', { name: 'Submit' }));
     expect(await dialog.findByText('Document name is required')).toBeInTheDocument();
     expect(onSave).not.toHaveBeenCalled();
   });

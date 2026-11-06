@@ -137,16 +137,11 @@ export const buildDirectoryColumns = ({
     excludeFromExport: true,
     render: (_value, row) => {
       const actions = rowActions?.(row as StudentDirectoryItem) ?? [];
-      const directCount = actions.filter((action) =>
-        ['edit-details', 'attendance-history', 'certificate'].includes(action.id)
-      ).length;
       return (
         <AdaptiveThreeDotsActions
           actions={actions}
           moreLabel={`More actions for ${directoryStudentName(row as StudentDirectoryItem)}`}
-          directActionLimit={
-            directCount >= 3 ? 3 : directCount === 2 ? 2 : directCount === 1 ? 1 : 0
-          }
+          directActionLimit={2}
           collapseOnOverflow={false}
           sx={{ justifyContent: 'flex-end' }}
         />

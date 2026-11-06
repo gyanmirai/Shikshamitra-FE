@@ -72,10 +72,10 @@ describe('parent-message persistence during display-copy changes', () => {
       renderMessages();
       const user = userEvent.setup();
       await user.click(screen.getByRole('button', { name: 'Edit Message' }));
-      expect(screen.getByRole('textbox', { name: 'Subject *' })).toHaveValue(
+      expect(screen.getByRole('textbox', { name: 'Subject' })).toHaveValue(
         'Saved subject exactly as entered'
       );
-      await user.click(screen.getByRole('button', { name: 'Save Message' }));
+      await user.click(screen.getByRole('button', { name: 'Submit' }));
       await waitFor(() =>
         expect(mocks.update).toHaveBeenCalledWith({
           id: 'saved-template',
@@ -95,10 +95,8 @@ describe('parent-message persistence during display-copy changes', () => {
     renderMessages();
     const user = userEvent.setup();
     await user.click(screen.getAllByRole('button', { name: 'Configure' })[0]);
-    expect(screen.getByRole('textbox', { name: 'Subject *' })).toHaveValue(
-      'Inquiry acknowledgement'
-    );
-    await user.click(screen.getByRole('button', { name: 'Save Message' }));
+    expect(screen.getByRole('textbox', { name: 'Subject' })).toHaveValue('Inquiry acknowledgement');
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
     await waitFor(() =>
       expect(mocks.add).toHaveBeenCalledWith(
         expect.objectContaining({

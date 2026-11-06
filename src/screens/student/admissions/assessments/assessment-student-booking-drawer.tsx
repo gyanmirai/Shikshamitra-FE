@@ -4,10 +4,10 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { LoadingButton } from 'src/components/loading-button';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
+import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 import {
   Box,
   Stack,
@@ -383,27 +383,20 @@ export function AssessmentStudentBookingDrawer(props: StudentBookingProps) {
           </Stack>
         </Box>
       </Drawer>
-      <ConfirmDialog
-        open={!!data.discard}
-        title="Discard Changes?"
-        content={
-          data.retryPending
-            ? 'The last booking response was not received. Retry checks the same request safely before you close.'
-            : 'Your booking selection has not been submitted.'
-        }
-        onClose={() => data.setDiscard(false)}
-        action={
-          <Button
-            size="small"
-            variant="contained"
-            color="error"
-            startIcon={<Iconify icon={GlobalIcons.cancel} width={18} />}
-            onClick={data.discardChanges}
-          >
-            Discard
-          </Button>
-        }
-      />
+      {data.discard &&
+        renderUnsavedConfirmation(
+          () => data.setDiscard(false),
+          () => {
+            if (!locked) data.discardChanges();
+          },
+          {
+            busy: locked,
+            title: 'Discard Changes?',
+            description: data.retryPending
+              ? 'The last booking response was not received. Retry checks the same request safely before you close.'
+              : 'Your booking selection has not been submitted.',
+          }
+        )}
     </>
   );
 }

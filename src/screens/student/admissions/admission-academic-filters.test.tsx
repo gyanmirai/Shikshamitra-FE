@@ -1,8 +1,12 @@
+import type { ReactNode } from 'react';
+import type { AlertProps } from '@mui/material';
+
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
-import { act, render, screen, renderHook } from '@testing-library/react';
+import { StudentFeedbackProvider } from 'src/components/student-feedback';
 import { defaultSettings } from 'src/components/settings/config-settings';
+import { act, render, screen, fireEvent, renderHook } from '@testing-library/react';
 
 import {
   AdmissionAcademicFilters,
@@ -13,11 +17,17 @@ const mocks = vi.hoisted(() => ({
   pathname: '/student/admissions/pipeline',
   query: 'board=board-1&medium=medium-1&class=class-1&search=ada',
   replace: vi.fn(),
+  hierarchyRefetch: vi.fn(),
   hierarchyPending: false,
   hierarchyError: false,
   hierarchyEmpty: false,
 }));
 
+const notices = vi.hoisted(() => ({
+  error: vi.fn((_options: {message: ReactNode; alertProps:(id:string)=>AlertProps})=>'academic-error'),
+  dismiss: vi.fn(), info: vi.fn(), warning: vi.fn(), success: vi.fn(),
+}));
+vi.mock('src/components/toast',()=>({shikshaMitraToast:notices}));
 vi.mock('react-redux', () => ({
   useSelector: (selector: (state: unknown) => unknown) =>
     selector({ globalState: { currentYear: { id: 'year-1' } } }),
@@ -47,7 +57,7 @@ vi.mock('src/redux/academicOrganizationOptions/academicOrganizationOptionsApi', 
         },
     isFetching: false,
     isError: mocks.hierarchyError,
-    refetch: vi.fn(),
+    refetch: mocks.hierarchyRefetch,
   }),
 }));
 
@@ -262,4 +272,15 @@ describe('admission academic filters', () => {
     expect(screen.getByRole('button', { name: 'Clear Academic Filters' })).toBeDisabled();
     expect(onChange).not.toHaveBeenCalled();
   });
+});
+
+it('keeps academic hierarchy Retry inside the error toast and invokes its existing refetch callback', () => {
+ mocks.hierarchyError=true;mocks.hierarchyRefetch.mockClear();notices.error.mockClear();
+ render(<ThemeProvider theme={createTheme(defaultSettings)}><StudentFeedbackProvider scopeKey="academic-retry-proof"><AdmissionAcademicFilters boardId="board-1" mediumId="medium-1" standardId="" onChange={vi.fn()}/></StudentFeedbackProvider></ThemeProvider>);
+ const notice=notices.error.mock.calls.at(-1)![0];
+ const {action} = notice.alertProps('academic-error');
+ expect(action).toBeTruthy();
+ render(<ThemeProvider theme={createTheme(defaultSettings)}>{action}</ThemeProvider>);
+ fireEvent.click(screen.getByRole('button',{name:'Retry'}));
+ expect(mocks.hierarchyRefetch).toHaveBeenCalledOnce();
 });

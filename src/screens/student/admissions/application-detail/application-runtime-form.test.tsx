@@ -672,7 +672,7 @@ describe('application form step navigation', () => {
     ).toBeInTheDocument();
     await user.type(screen.getByRole('textbox', { name: 'Basic details answer' }), 'Saved student');
     await user.click(screen.getByRole('button', { name: 'Save & Next' }));
-    expect(screen.getByText('Health details')).toBeVisible();
+    expect(await screen.findByText('Health details')).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Previous' }));
     expect(screen.getByRole('textbox', { name: 'Basic details answer' })).toHaveValue(
       'Saved student'

@@ -1,10 +1,9 @@
-import type { ReactNode } from 'react';
 import type { DialogProps } from '@mui/material';
+import type { ReactNode, ComponentProps } from 'react';
 
-import { Button } from '@mui/material';
-import { useState, useEffect } from 'react';
 import CustomDialog from 'src/components/customDialog';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
+import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 
 export function ReviewDialog({
   open = true,
@@ -16,6 +15,7 @@ export function ReviewDialog({
   onClose,
   children,
   actions,
+  formProps,
 }: {
   open?: boolean;
   title: string;
@@ -26,19 +26,15 @@ export function ReviewDialog({
   onClose: () => void;
   children: ReactNode;
   actions: (requestClose: () => void) => ReactNode;
+  formProps?: ComponentProps<typeof CustomDialog>['formProps'];
 }) {
-  const [discard, setDiscard] = useState(false);
-  useEffect(() => {
-    if (!open || !dirty) return undefined;
-    const warn = (event: BeforeUnloadEvent) => event.preventDefault();
-    window.addEventListener('beforeunload', warn);
-    return () => window.removeEventListener('beforeunload', warn);
-  }, [dirty, open]);
-  const requestClose = () => {
-    if (busy) return;
-    if (dirty) setDiscard(true);
-    else onClose();
-  };
+  const guard = useUnsavedNavigation(open && dirty, {
+    blockNavigation: open && busy,
+    guardContextChanges: open,
+    renderConfirmation: (keepEditing, discard) =>
+      renderUnsavedConfirmation(keepEditing, discard, { busy }),
+  });
+  const requestClose = () => guard.requestNavigation(onClose);
   return (
     <>
       <CustomDialog
@@ -49,29 +45,12 @@ export function ReviewDialog({
         handleClose={requestClose}
         guardUnsavedChanges={false}
         disableClose={busy}
+        formProps={formProps}
       >
         {children}
         {actions(requestClose)}
       </CustomDialog>
-      <ConfirmDialog
-        open={discard}
-        onClose={() => setDiscard(false)}
-        title="Discard Unsaved Changes?"
-        icon="warning"
-        content="Saved information remains available. Changes made in this dialog will be discarded."
-        action={
-          <Button
-            variant="contained"
-            color="warning"
-            onClick={() => {
-              setDiscard(false);
-              onClose();
-            }}
-          >
-            Discard Changes
-          </Button>
-        }
-      />
+      {guard.confirmation}
     </>
   );
 }

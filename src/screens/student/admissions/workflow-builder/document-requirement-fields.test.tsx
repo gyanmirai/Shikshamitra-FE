@@ -40,7 +40,7 @@ describe('document requirement fields', { timeout: 15000 }, () => {
     await user.click(screen.getByRole('option', { name: 'JPG' }));
     await user.keyboard('{Escape}');
     expect(formats).toHaveTextContent('PDF, JPEG, PNG');
-    await user.click(screen.getByRole('button', { name: 'Save Requirement' }));
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
     await waitFor(() => expect(save).toHaveBeenCalledOnce());
     expect(save.mock.calls[0][0].allowedExtensions).toEqual(['pdf', 'jpeg', 'png']);
   });
@@ -69,7 +69,7 @@ describe('document requirement fields', { timeout: 15000 }, () => {
     expect(
       within(dialog).getByRole('combobox', { name: 'Allowed File Formats' })
     ).toHaveTextContent('PDF, PNG');
-    await user.click(within(dialog).getByRole('button', { name: 'Save Requirement' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Submit' }));
     await waitFor(() => expect(save).toHaveBeenCalledOnce());
     expect(save.mock.calls[0][0]).toMatchObject({
       documentTypeId: category.id,
@@ -99,7 +99,7 @@ describe('document requirement fields', { timeout: 15000 }, () => {
     ).toHaveAttribute('aria-disabled', 'true');
     await user.click(screen.getByRole('option', { name: 'Keep as Admission Evidence' }));
     expect(selector).toHaveTextContent('Keep as Admission Evidence');
-    await user.click(screen.getByRole('button', { name: 'Save Requirement' }));
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
     await waitFor(() => expect(save).toHaveBeenCalledOnce());
     expect(save.mock.calls[0][0].documentTypeId).toBeUndefined();
   });
@@ -150,7 +150,7 @@ describe('document requirement fields', { timeout: 15000 }, () => {
     await user.keyboard('{Home}{Enter}');
     expect(selector).toHaveTextContent('Keep as Admission Evidence');
     expect(screen.getByRole('dialog', { name: 'Configure Document Requirement' })).toBeVisible();
-    await user.click(screen.getByRole('button', { name: 'Save Requirement' }));
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
     await waitFor(() => expect(save).toHaveBeenCalledOnce());
     expect(save.mock.calls[0][0]).toMatchObject({
       documentTypeId: undefined,

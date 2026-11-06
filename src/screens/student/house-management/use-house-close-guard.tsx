@@ -8,6 +8,7 @@ import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 export function useHouseCloseGuard(dirty: boolean, busy: boolean, onClose: () => void) {
   const router = useRouter();
   const guard = useUnsavedNavigation(dirty, {
+    guardContextChanges: true,
     push: router.push,
     blockNavigation: busy,
     renderConfirmation: (keepEditing, discard) => (

@@ -6,17 +6,19 @@ import type {
   AdmissionWorkflowTransition,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
-import { useEffect } from 'react';
 import { useFormik } from 'formik';
+import { useId, useEffect } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
 import { Box, Stack, Drawer, Button, Divider, IconButton, Typography } from '@mui/material';
 
 import { serializeSimpleCondition } from './workflow-builder-utils';
 import { getRouteSaveError } from './workflow-builder/workflow-route-diagnostics';
 import { isApplicationStageType } from './workflow-builder/workflow-stage-configuration';
 import { WorkflowTransitionFields } from './workflow-builder/components/workflow-transition-fields';
+import { SavedWorkflowTransitionDetails } from './workflow-builder/components/saved-workflow-transition-details';
 import {
   isValidRouteNumber,
   getRouteConditionFields,
@@ -56,6 +58,7 @@ export function AdmissionWorkflowTransitionDrawer({
   onClose,
   onSave,
 }: Props) {
+  const titleId = useId();
   const discard = useBoolean();
   const conditionState = getTransitionConditionEditorState(transition?.conditionRuleJson);
   const creatingConditionalPath = transition?.id === '' && transition.isDefault === false;
@@ -189,27 +192,39 @@ export function AdmissionWorkflowTransitionDrawer({
         anchor="right"
         open={open}
         onClose={requestClose}
-        PaperProps={{ sx: { width: { xs: 1, sm: 480 }, maxWidth: 1 } }}
+        PaperProps={{ 'aria-labelledby': titleId, sx: { width: { xs: 1, sm: 480 }, maxWidth: 1 } }}
       >
         <Box
-          component="form"
-          onSubmit={formik.handleSubmit}
+          component={locked ? 'div' : 'form'}
+          onSubmit={locked ? undefined : formik.handleSubmit}
           sx={{ height: 1, display: 'flex', flexDirection: 'column' }}
         >
           <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ p: 2 }}>
             <Box>
-              <Typography variant="h6">
-                {locked
-                  ? 'Next-step Details'
-                  : simpleNextStep
-                    ? 'Choose Next Step'
-                    : 'What Happens Next?'}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {simpleNextStep
-                  ? 'Choose Where the Applicant Continues After This Stage.'
-                  : 'Choose the Usual Next Step or Add a Path for a Specific Outcome.'}
-              </Typography>
+              <Stack direction="row" alignItems="center" spacing={0.5}>
+                <Typography id={titleId} variant="h6" component="h2">
+                  {locked
+                    ? 'Next-step Details'
+                    : simpleNextStep
+                      ? 'Choose Next Step'
+                      : 'What Happens Next?'}
+                </Typography>
+                <InfoTooltipIcon
+                  label={`About ${locked ? 'Next-step Details' : simpleNextStep ? 'Choose Next Step' : 'What Happens Next?'}`}
+                  title={
+                    locked
+                      ? 'Review the saved source, destination and conditions for this workflow version. Viewing does not change the applicant journey.'
+                      : 'Choose the usual next step or add a condition for continuing to another stage.'
+                  }
+                />
+              </Stack>
+              {!locked && (
+                <Typography variant="body2" color="text.secondary">
+                  {simpleNextStep
+                    ? 'Choose Where the Applicant Continues After This Stage.'
+                    : 'Choose the Usual Next Step or Add a Path for a Specific Outcome.'}
+                </Typography>
+              )}
             </Box>
             <IconButton
               aria-label="Close Next-Step Editor"
@@ -220,26 +235,50 @@ export function AdmissionWorkflowTransitionDrawer({
             </IconButton>
           </Stack>
           <Divider />
-          <WorkflowTransitionFields
-            formik={formik}
-            stages={stages}
-            conditionFields={conditionFields}
-            formsLoading={formsLoading}
-            formsError={formsError}
-            onRetryForms={onRetryForms}
-            competingPaths={
-              transitions.filter(
-                (item) =>
-                  item.id !== formik.values.id &&
-                  item.fromStageId === formik.values.fromStageId &&
-                  !item.isDefault
-              ).length
-            }
-            readOnly={locked}
-            simpleNextStep={simpleNextStep}
-            lockFromStage
-          />
-          {!locked && (
+          {locked ? (
+            <SavedWorkflowTransitionDetails
+              transition={transition}
+              stages={stages}
+              conditionFields={conditionFields}
+            />
+          ) : (
+            <WorkflowTransitionFields
+              formik={formik}
+              stages={stages}
+              conditionFields={conditionFields}
+              formsLoading={formsLoading}
+              formsError={formsError}
+              onRetryForms={onRetryForms}
+              competingPaths={
+                transitions.filter(
+                  (item) =>
+                    item.id !== formik.values.id &&
+                    item.fromStageId === formik.values.fromStageId &&
+                    !item.isDefault
+                ).length
+              }
+              readOnly={locked}
+              simpleNextStep={simpleNextStep}
+              lockFromStage
+            />
+          )}
+          {locked ? (
+            <Stack
+              direction="row"
+              justifyContent="flex-end"
+              sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}
+            >
+              <Button
+                size="small"
+                variant="outlined"
+                color="inherit"
+                startIcon={<Iconify icon="mdi:close" />}
+                onClick={requestClose}
+              >
+                Close
+              </Button>
+            </Stack>
+          ) : (
             <DrawerActions
               onCancel={requestClose}
               disabled={
@@ -259,11 +298,19 @@ export function AdmissionWorkflowTransitionDrawer({
       <ConfirmDialog
         open={discard.value}
         onClose={discard.onFalse}
-        title="Discard Next-Step Changes?"
+        title="Discard Unsaved Changes?"
+        icon="warning"
+        cancelText="Keep editing"
         content="Your unsaved next-step changes will be lost."
         action={
-          <Button color="error" variant="contained" onClick={close}>
-            Discard Changes
+          <Button
+            size="small"
+            color="error"
+            variant="contained"
+            onClick={close}
+            startIcon={<Iconify icon="mdi:delete-outline" />}
+          >
+            Discard changes
           </Button>
         }
       />

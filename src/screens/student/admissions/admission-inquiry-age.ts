@@ -1,5 +1,7 @@
 import { toDateOnly, parseDateOnly, formatDateOnly } from 'src/utils/date-only';
 
+import { ADMISSION_DATE_FORMAT } from './admission-date-formats';
+
 function calendarDate(value?: string | null) {
   if (!value || !/^\d{4}-\d{2}-\d{2}(?:$|T)/.test(value)) return null;
   const date = parseDateOnly(value);
@@ -16,7 +18,7 @@ export function getAdmissionInquiryAge(
   const start = calendarDate(academicYearStartDate);
   if (!birth || !start) return null;
 
-  const dateLabel = formatDateOnly(start);
+  const dateLabel = formatDateOnly(start, ADMISSION_DATE_FORMAT);
   const minimum =
     typeof minimumAgeYears === 'number' && Number.isFinite(minimumAgeYears) && minimumAgeYears > 0
       ? minimumAgeYears

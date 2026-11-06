@@ -1,19 +1,17 @@
-'use client';
+import { academicPaths } from 'src/constants/academic-menu';
+import { StudentRelatedUnavailable } from 'src/screens/student/studentProfile/student-related-unavailable';
 
-import React from 'react';
-import { Grid } from '@mui/material';
-import MyHomeworkSubmission from 'src/screens/academic/homework-assignment-management/mySubmission/myHomeworkSubmission';
-import MyAssignmentSubmission from 'src/screens/academic/homework-assignment-management/mySubmission/myAssignmentSubmission';
-
-const MyProfileSubmission = () => (
-  <Grid container spacing={2}>
-    <Grid size={{ xs: 12 }}>
-      <MyHomeworkSubmission />
-    </Grid>
-    <Grid size={{ xs: 12 }}>
-      <MyAssignmentSubmission />
-    </Grid>
-  </Grid>
-);
-
-export default MyProfileSubmission;
+export default function MyProfileSubmission({ onOverview }: { onOverview?: () => void }) {
+  return (
+    <StudentRelatedUnavailable
+      title="Homework and Assignments"
+      message="Student homework and assignments are unavailable here."
+      onOverview={onOverview}
+      destination={{
+        href: academicPaths.homework.learningTasks,
+        label: 'Open learning tasks',
+        permission: 'Academics.HomeworkAndAssignment.LearningTasks.View',
+      }}
+    />
+  );
+}

@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { Stack, Accordion, Typography, AccordionDetails, AccordionSummary } from '@mui/material';
 
+import { ADMISSION_DATE_FORMAT } from '../admission-date-formats';
 import { AssessmentHistoryDetails } from './assessment-history-details';
 import { ApplicationAssessmentPanel } from './application-assessment-panel';
 import { STAGE_STATUS_LABELS } from '../application-detail/application-progress-model';
@@ -73,7 +74,7 @@ export function ApplicationAssessments({ stages, currentStage, selectedStageId, 
               <Typography variant="subtitle2">{stage.name} · Assessment History</Typography>
               <Typography variant="caption" color="text.secondary">
                 {STAGE_STATUS_LABELS[stage.status] ?? 'Previous Step'}
-                {stage.completedAt ? ` · ${dayjs(stage.completedAt).format('DD MMM YYYY')}` : ''}
+                {stage.completedAt ? ` · ${dayjs(stage.completedAt).format(ADMISSION_DATE_FORMAT)}` : ''}
               </Typography>
             </Stack>
           </AccordionSummary>

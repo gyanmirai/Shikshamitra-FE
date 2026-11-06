@@ -1,12 +1,20 @@
 import type { StudentDirectoryItem } from 'src/redux/student/records/student-records-types';
+import type { ReactNode } from 'react';
 
 import { it, vi, expect, beforeEach } from 'vitest';
+import { Provider } from 'react-redux';
+import { configureStore } from '@reduxjs/toolkit';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render as testingRender, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import StudentICardBuilder, { StudentCardPreview } from './student-icard-builder';
+
+const store = configureStore({ reducer: { confirmPopup: () => ({ isChanges: false }) } });
+const render = (ui: ReactNode) => testingRender(ui, {
+  wrapper: ({ children }) => <Provider store={store}>{children}</Provider>,
+});
 
 const mocks = vi.hoisted(() => ({
   save: vi.fn(),
@@ -163,6 +171,28 @@ const preparePreviews = () =>
       cardNumber: 'Preview',
     }))
   );
+
+it('offers the approved Classic Identity design when creating a student template', async () => {
+  renderDirectory({ initialStudents: undefined, initialTemplate: null });
+  expect(await screen.findByRole('button', { name: /Classic Identity/ })).toBeVisible();
+});
+
+it('retains the selected cohort and shows the named element when PDF text does not fit', async () => {
+  preparePreviews();
+  const detail = "Text in 'Student name' does not fit. Enlarge the element or reduce its font size.";
+  mocks.export.mockRejectedValue({ status: 400,
+    data: { error: { code: 'ShikshaMitra:IdentityCard:InvalidConfiguration', data: { detail } } } });
+  renderDirectory();
+  await screen.findByText('2/100 selected');
+  nextStep();
+  await screen.findByRole('heading', { name: 'Review Cards' });
+  nextStep();
+  await screen.findByRole('heading', { name: 'A4 Print Preview' });
+  fireEvent.click(screen.getByRole('button', { name: 'Export bulk PDF' }));
+  expect(await screen.findByText(detail)).toBeVisible();
+  expect(mocks.export).toHaveBeenCalledWith(expect.objectContaining({ studentIds: ['student-1', 'student-2'] }));
+  expect(mocks.issue).not.toHaveBeenCalled();
+});
 
 it('pins every academic field to the captured Student List scope for bulk printing', async () => {
   renderDirectory({ initialAcademicScope: academicScope, lockAcademicScope: true });
@@ -369,9 +399,9 @@ it('retains the entered name when the save response omits it', async () => {
     target: { value: 'QA Student I-Card' },
   });
   fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-  expect(await screen.findByRole('textbox', { name: 'School name' })).toBeVisible();
+  expect(await screen.findByRole('textbox', { name: /^School name/ })).toBeVisible();
 
-  fireEvent.click(screen.getByRole('button', { name: 'Save template' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Save' }));
   await waitFor(() => expect(mocks.toast).toHaveBeenCalled());
   fireEvent.click(screen.getByRole('button', { name: 'Back' }));
 

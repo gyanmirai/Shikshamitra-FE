@@ -360,9 +360,9 @@ describe('Onboarding numbering settings', () => {
     expect(screen.queryByRole('combobox', { name: /Numbering scope/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('spinbutton', { name: /Starting number/ })).not.toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: 'Grouping' })).toBeInTheDocument();
-    expect(screen.getByRole('combobox', { name: 'Name Format' })).toBeInTheDocument();
-    choose('Grouping', 'Boys First'); choose('Name Format', 'Surname First');
-    choose('Sort Direction', 'Z–A');
+    expect(screen.getByRole('combobox', { name: 'Name format' })).toBeInTheDocument();
+    choose('Grouping', 'Boys First'); choose('Name format', 'Surname First');
+    choose('Sort direction', 'Z–A');
     expect(screen.getByRole('switch', { name: /Require reason for roll number changes/i })).toBeChecked();
     fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
     await waitFor(() => expect(persist).toHaveBeenCalledTimes(1));

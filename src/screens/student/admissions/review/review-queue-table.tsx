@@ -12,6 +12,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 
 import { reviewStatusLabels } from './review-model';
 import { formatAdmissionReference } from '../admission-reference';
+import { ADMISSION_DATE_TIME_FORMAT } from '../admission-date-formats';
 
 export function ReviewQueueTable({
   items,
@@ -68,7 +69,7 @@ export function ReviewQueueTable({
       isSort: false,
       render: (value, row) => (
         <Stack spacing={0.5} alignItems="flex-start">
-          {value ? dayjs(String(value)).format('DD MMM YYYY, h:mm A') : 'No Deadline'}
+          {value ? dayjs(String(value)).format(ADMISSION_DATE_TIME_FORMAT) : 'No Deadline'}
           {row.isOverdue && <Chip size="small" color="warning" label="Overdue" />}
         </Stack>
       ),

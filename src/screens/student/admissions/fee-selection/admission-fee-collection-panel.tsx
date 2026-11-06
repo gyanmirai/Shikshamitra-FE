@@ -9,6 +9,7 @@ import type {
 } from 'src/redux/student/admissions/admission-fee-collection-types';
 
 import { useSelector } from 'react-redux';
+import { useRouter } from 'next/navigation';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { fDateTime } from 'src/utils/format-time';
@@ -23,9 +24,11 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { DetailGrid, DetailField, DetailSection } from 'src/components/detail-view';
 import { Box, Stack, Button, Skeleton, IconButton, Typography } from '@mui/material';
 import { useDownloadReceiptPdfMutation } from 'src/redux/feeCollection/feeCollection';
+import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 import FeeProrationResult from 'src/screens/finance/FeeCollection/FeeCollectionComponent/FeeProrationResult';
 import FeeCollectComponentForm from 'src/screens/finance/FeeCollection/FeeCollectionComponent/FeeCollectionForm';
 import {
@@ -36,6 +39,7 @@ import {
 } from 'src/redux/student/admissions/admission-fee-collection-api';
 
 import { useAdmissionJoiningDate } from './use-admission-joining-date';
+import { ADMISSION_DATE_TIME_FORMAT } from '../admission-date-formats';
 import { AdmissionJoiningDateField } from './admission-joining-date-field';
 import { AdmissionFeePreparationDialog } from './admission-fee-preparation-dialog';
 import { getAdmissionFeeCollectionAccess } from './admission-fee-collection-permissions';
@@ -96,6 +100,7 @@ export default function AdmissionFeeCollectionPanel({
   stretch = false,
   footerAction,
 }: Props) {
+  const router = useRouter();
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const access = getAdmissionFeeCollectionAccess(permissions);
   const summary = useGetAdmissionFeeCollectionSummaryQuery(applicationId, {
@@ -124,6 +129,14 @@ export default function AdmissionFeeCollectionPanel({
     setFormDirty(false);
     onOpenChange?.(false);
   }, [collecting.isLoading, dialog, formBusy, onOpenChange]);
+  const closeGuard = useUnsavedNavigation(dialog.value && formDirty, {
+    push: router.push,
+    blockNavigation: dialog.value && (formBusy || collecting.isLoading),
+    guardContextChanges: dialog.value,
+    renderConfirmation: (keepEditing, discard) =>
+      renderUnsavedConfirmation(keepEditing, discard, { busy: formBusy || collecting.isLoading }),
+  });
+  const requestClose = () => closeGuard.requestNavigation(close);
   useEffect(() => {
     if ((dialog.value || variableAmounts.value) && !access.canCollect) {
       dialog.onFalse();
@@ -579,7 +592,7 @@ export default function AdmissionFeeCollectionPanel({
                 isFilter: true,
                 isSort: false,
                 minWidth: 160,
-                render: (value) => fDateTime(value),
+                render: (value) => fDateTime(value, ADMISSION_DATE_TIME_FORMAT),
               },
               {
                 id: 'amount',
@@ -703,12 +716,13 @@ export default function AdmissionFeeCollectionPanel({
       <CustomDialog
         open={dialog.value}
         title={`Collect Fees · ${state.applicantName}`}
+        titleInfo="Review the applicant's current dues and payment details before recording collection through Finance."
         fullScreen
         hasForm={false}
         transitionDuration={{ enter: 0, exit: 0 }}
-        handleClose={close}
+        handleClose={requestClose}
         disableClose={formBusy || collecting.isLoading}
-        hasUnsavedChanges={formDirty}
+        guardUnsavedChanges={false}
       >
         {dialog.value && (
           <FeeCollectComponentForm
@@ -717,10 +731,11 @@ export default function AdmissionFeeCollectionPanel({
             collectionAdapter={adapter}
             onBusyChange={setFormBusy}
             onDirtyChange={setFormDirty}
-            onCancel={close}
+            onCancel={(_event, submitted) => (submitted ? close() : requestClose())}
           />
         )}
       </CustomDialog>
+      {closeGuard.confirmation}
     </Stack>
   );
 }

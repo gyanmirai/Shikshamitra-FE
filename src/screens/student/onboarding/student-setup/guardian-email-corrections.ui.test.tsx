@@ -4,16 +4,19 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import GuardianProfileEmailDialog from './guardian-profile-email-dialog';
 import GuardianCredentialEmailDialog from './guardian-credential-email-dialog';
 
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
+
 const mocks = vi.hoisted(() => ({
   snapshot: {} as any,
   save: vi.fn(),
   enable: vi.fn(),
   success: vi.fn(),
+  error: vi.fn(),
 }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span /> }));
 vi.mock('src/components/toast', () => ({
   shikshaMitraToast: {
-    error: vi.fn(),
+    error: mocks.error,
     warning: vi.fn(),
     info: vi.fn(),
     dismiss: vi.fn(),
@@ -21,9 +24,11 @@ vi.mock('src/components/toast', () => ({
   },
 }));
 vi.mock('src/components/customDialog', () => ({
-  default: ({ children, title }: any) => (
+  default: ({ children, title, formProps }: any) => (
     <div role="dialog" aria-label={title}>
-      {children}
+      <form noValidate={formProps?.noValidate} onSubmit={formProps?.onSubmit}>
+        {children}
+      </form>
     </div>
   ),
   DialogScrollContent: ({ children }: any) => <div>{children}</div>,
@@ -58,6 +63,44 @@ beforeEach(() => {
 });
 
 describe('Case-scoped guardian email corrections', () => {
+  it.each(['profile', 'credential'] as const)(
+    'uses one styled discard choice for dirty %s email changes',
+    (kind) => {
+      const close = vi.fn();
+      const nativeConfirm = vi.fn(() => true);
+      window.confirm = nativeConfirm;
+      render(
+        kind === 'profile' ? (
+          <GuardianProfileEmailDialog
+            studentId="student-1"
+            relationship="father"
+            caseLabel="APP-1"
+            onClose={close}
+            onSaved={vi.fn()}
+          />
+        ) : (
+          <GuardianCredentialEmailDialog
+            caseId="case-1"
+            concurrencyStamp="version"
+            onClose={close}
+          />
+        )
+      );
+      fireEvent.change(screen.getByRole('textbox', { name: 'Correction reason' }), {
+        target: { value: 'Verified parent request' },
+      });
+      fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+      expect(close).not.toHaveBeenCalled();
+      expect(nativeConfirm).not.toHaveBeenCalled();
+      fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
+      expect(screen.getByRole('textbox', { name: 'Correction reason' })).toHaveValue(
+        'Verified parent request'
+      );
+      fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
+      expect(close).toHaveBeenCalledOnce();
+    }
+  );
   it('explains the activation prerequisite instead of offering an ineffective retry', () => {
     mocks.snapshot = {
       isError: true,
@@ -99,7 +142,7 @@ describe('Case-scoped guardian email corrections', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Correction reason' }), {
       target: { value: 'Father confirmed the mailbox' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Save correction' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
     await waitFor(() => expect(mocks.save).toHaveBeenCalledOnce());
     expect(mocks.save).toHaveBeenCalledWith({
       studentId: 'student-1',
@@ -145,14 +188,14 @@ describe('Case-scoped guardian email corrections', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Correction reason' }), {
       target: { value: 'Verified mailbox correction' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Save correction' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
     expect(await screen.findByText('Reload the saved profile.')).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Profile email' })).toHaveValue(
       'father@example.test'
     );
     expect(close).not.toHaveBeenCalled();
     mocks.save.mockReturnValue({ unwrap: async () => ({ id: 'change-1', status: 'Pending' }) });
-    fireEvent.click(screen.getByRole('button', { name: 'Save correction' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
     await waitFor(() =>
       expect(mocks.success).toHaveBeenCalledWith({
         message: expect.stringContaining('after approval'),
@@ -197,7 +240,7 @@ describe('Case-scoped guardian email corrections', () => {
         onSaved={vi.fn()}
       />
     );
-    expect(screen.getByRole('button', { name: 'Save correction' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
     unmount();
     mocks.snapshot = { isError: true, refetch: vi.fn() };
     render(
@@ -209,6 +252,9 @@ describe('Case-scoped guardian email corrections', () => {
         onSaved={vi.fn()}
       />
     );
+    const notice = mocks.error.mock.calls.at(-1)?.[0];
+    expect(notice.message).toBe('The current family profile could not be loaded.');
+    render(notice.alertProps('toast-1').action);
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
     expect(mocks.snapshot.refetch).toHaveBeenCalledOnce();
     expect(mocks.save).not.toHaveBeenCalled();
@@ -231,7 +277,7 @@ describe('Case-scoped guardian email corrections', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Correction reason' }), {
       target: { value: 'Verified mailbox correction' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Save correction' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
     expect(await screen.findByText(/recorded but could not be applied/)).toBeInTheDocument();
     expect(mocks.success).not.toHaveBeenCalled();
     expect(close).not.toHaveBeenCalled();

@@ -7,11 +7,11 @@ import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
-import { fDate } from 'src/utils/format-time';
 import { GenderType } from 'src/enums/gender';
 import { Iconify } from 'src/components/iconify';
 import { RouterLink } from 'src/routes/components';
 import calculateAge from 'src/utils/calculate-age';
+import { fDate, formatStr } from 'src/utils/format-time';
 import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { StudentFeedback } from 'src/components/student-feedback';
@@ -179,7 +179,7 @@ export function EnrollmentMilestones({ student }: { student: StudentRecordProfil
                 textAlign: 'right',
               }}
             >
-              {item.date ? fDate(item.date) : '—'}
+              {item.date ? fDate(item.date, formatStr.split.date) : '—'}
             </Typography>
           </Box>
         ))}
@@ -307,7 +307,7 @@ export function StudentProfileOverview({
             values={[
               {
                 label: 'Date of birth',
-                value: validBirthDate ? fDate(student.dateOfBirth) : null,
+                value: validBirthDate ? fDate(student.dateOfBirth, formatStr.split.date) : null,
               },
               {
                 label: 'Age',
@@ -402,7 +402,7 @@ export function StudentProfileOverview({
                         {change.status}
                       </Label>
                       <Typography variant="caption" color="text.secondary">
-                        {fDate(change.appliedAt ?? change.creationTime)}
+                        {fDate(change.appliedAt ?? change.creationTime, formatStr.split.date)}
                       </Typography>
                     </Stack>
                   </Stack>

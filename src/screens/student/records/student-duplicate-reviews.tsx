@@ -6,9 +6,9 @@ import { useState } from 'react';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
-import { fDateTime } from 'src/utils/format-time';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import { fDateTime, formatStr } from 'src/utils/format-time';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -75,7 +75,7 @@ export default function StudentDuplicateReviews({
           notificationKey="STU-0854"
           presentation="toast"
           severity="error"
-          action={
+          toastAction={
             <Button color="inherit" onClick={() => list.refetch()}>
               Retry
             </Button>
@@ -122,7 +122,11 @@ export default function StudentDuplicateReviews({
               ),
             },
             { id: 'reviewReason', label: 'Review reason' },
-            { id: 'creationTime', label: 'Flagged', render: (value) => fDateTime(value) },
+            {
+              id: 'creationTime',
+              label: 'Flagged',
+              render: (value) => fDateTime(value, formatStr.split.dateTime),
+            },
             {
               id: 'action',
               label: 'Action',
@@ -201,12 +205,14 @@ function FlagDuplicateForm({ onClose }: { onClose: () => void }) {
           )}
           <Typography variant="subtitle2">First permanent profile</Typography>
           <RecordsStudentPicker
+            toastRecovery
             selectedId={form.values.studentId}
             onSelect={(student) => form.setFieldValue('studentId', student?.studentId ?? '')}
             disabled={state.isLoading}
           />
           <Typography variant="subtitle2">Possible duplicate profile</Typography>
           <RecordsStudentPicker
+            toastRecovery
             selectedId={form.values.otherStudentId}
             onSelect={(student) => form.setFieldValue('otherStudentId', student?.studentId ?? '')}
             disabled={state.isLoading}

@@ -96,7 +96,7 @@ describe('Staff I-Card builder utilities', () => {
     expect(parsePrintSettingsJson('{"cardsPerPage":12,"margin":99,"gap":-4}')).toMatchObject({
       pageSize: 'A4',
       cardsPerPage: 10,
-      margin: 60,
+      margin: 60 * (25.4 / 72),
       gap: 0,
     });
   });

@@ -3,6 +3,7 @@ import type { StudentRecordDetails } from 'src/redux/student/records/student-rec
 
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
+import { GlobalIcons } from 'src/utils/icons';
 import { useId, useRef, useState, useEffect } from 'react';
 import { EmptyContent } from 'src/components/empty-content';
 import { hasGrantedPermission } from 'src/utils/permissions';
@@ -138,7 +139,7 @@ export function StudentRegistrationFormPanel({
                 notificationKey="STU-0779"
                 presentation="toast"
                 severity="error"
-                action={
+                toastAction={
                   <Button size="small" onClick={() => snapshot.refetch()}>
                     Retry
                   </Button>
@@ -169,9 +170,11 @@ export function StudentRegistrationFormPanel({
             sources.map((source) => (
               <Box key={source.formInstanceId}>
                 <FormSectionHeader
-                  icon="mdi:form-select"
+                  icon={GlobalIcons.admissionDetails}
                   title={source.formName}
                   description={`Version ${source.formVersion}`}
+                  descriptionTooltip="Saved responses from this registration form, with restricted fields controlled by your current record access."
+                  titleTypographyProps={{ fontWeight: 600 }}
                 />
                 <Divider sx={{ my: 2 }} />
                 {source.definition ? (

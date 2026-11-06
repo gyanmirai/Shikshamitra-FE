@@ -1,6 +1,7 @@
 import type { AdmissionApplication } from 'src/redux/student/admissions/admission-applications-api';
 
 import dayjs from 'dayjs';
+import { useState } from 'react';
 import { http, HttpResponse } from 'msw';
 import { mswServer } from 'src/test/mswServer';
 import { vi, it, expect, beforeEach } from 'vitest';
@@ -91,6 +92,139 @@ const renderDrawer = (permissions = grants, props = {}) =>
     permissions
   );
 
+it.each(['footer', 'header', 'Escape'])(
+  'allows %s closing while the initial activity reads are pending',
+  async (control) => {
+    let finishRead: () => void = () => {};
+    const pending = new Promise<void>((resolve) => {
+      finishRead = resolve;
+    });
+    const reads = vi.fn();
+    mswServer.use(
+      http.get(notesPath, async () => {
+        reads();
+        await pending;
+        return HttpResponse.json({ notes: [note] });
+      }),
+      http.get(followPath, async () => {
+        reads();
+        await pending;
+        return HttpResponse.json(followValue);
+      })
+    );
+    const onClose = vi.fn();
+    const onBusyChange = vi.fn();
+    function Harness() {
+      const [open, setOpen] = useState(true);
+      return (
+        <ApplicationActivityDrawer
+          open={open}
+          application={application}
+          onBusyChange={onBusyChange}
+          onClose={() => {
+            onClose();
+            setOpen(false);
+          }}
+        />
+      );
+    }
+    renderDocumentUi(<Harness />, grants);
+    await waitFor(() => expect(reads).toHaveBeenCalledTimes(2));
+    expect(screen.getByRole('status', { name: 'Loading Notes and Follow-Ups' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Close' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Close Notes & Follow-Ups' })).toBeEnabled();
+    expect(onBusyChange).not.toHaveBeenCalledWith(true);
+    if (control === 'Escape') fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
+    else
+      fireEvent.click(
+        screen.getByRole('button', {
+          name: control === 'header' ? 'Close Notes & Follow-Ups' : 'Close',
+        })
+      );
+    expect(onClose).toHaveBeenCalledOnce();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    await act(async () => finishRead());
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.queryByText(note.text)).not.toBeInTheDocument();
+    expect(onBusyChange).toHaveBeenLastCalledWith(false);
+  }
+);
+
+it('does not display a closed read result after another application activity opens', async () => {
+  let finishOld: () => void = () => {};
+  const pending = new Promise<void>((resolve) => {
+    finishOld = resolve;
+  });
+  const oldReads = vi.fn();
+  const other = {
+    ...application,
+    id: 'application-2',
+    applicantId: 'applicant-2',
+    applicantName: 'Other applicant',
+  };
+  mswServer.use(
+    http.get(notesPath, async () => {
+      oldReads();
+      await pending;
+      return HttpResponse.json({ notes: [note] });
+    }),
+    http.get(followPath, async () => {
+      oldReads();
+      await pending;
+      return HttpResponse.json(followValue);
+    }),
+    http.get('*/api/student/enrollment/admissions/applicants/applicant-2', () =>
+      HttpResponse.json({ notes: [{ ...note, id: 'other-note', text: 'Other application note' }] })
+    ),
+    http.get('*/api/student/enrollment/admissions/applications/application-2/follow-ups', () =>
+      HttpResponse.json({ ...followValue, followUps: [] })
+    )
+  );
+  function Harness() {
+    const [open, setOpen] = useState(true);
+    const [current, setCurrent] = useState(application);
+    return (
+      <>
+        <button
+          type="button"
+          onClick={() => {
+            setCurrent(other);
+            setOpen(true);
+          }}
+        >
+          Open other activity
+        </button>
+        <ApplicationActivityDrawer
+          open={open}
+          application={current}
+          onClose={() => setOpen(false)}
+        />
+      </>
+    );
+  }
+  const store = renderDocumentUi(<Harness />, grants);
+  await waitFor(() => expect(oldReads).toHaveBeenCalledTimes(2));
+  fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Open other activity' }));
+  expect(await screen.findByText('Other application note')).toBeVisible();
+  await act(async () => finishOld());
+  await waitFor(() => {
+    const {
+      queries,
+    }: { queries: Record<string, { originalArgs?: unknown; status?: string } | undefined> } =
+      store.getState().api;
+    const originalReads = Object.values(queries).filter(
+      (query) =>
+        query?.originalArgs === application.id || query?.originalArgs === application.applicantId
+    );
+    expect(originalReads).toHaveLength(2);
+    expect(originalReads.every((query) => query?.status !== 'pending')).toBe(true);
+  });
+  expect(screen.getByText('Other application note')).toBeVisible();
+  expect(screen.queryByText(note.text)).not.toBeInTheDocument();
+  expect(screen.queryByText(followUp.purpose)).not.toBeInTheDocument();
+});
+
 it('does not request notes or follow-ups until the drawer opens', () => {
   renderDrawer(grants, { open: false });
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
@@ -135,13 +269,13 @@ it('schedules a follow-up through the existing application route with an ISO dat
   await screen.findByText(followUp.purpose);
   fireEvent.click(screen.getByRole('tab', { name: 'Follow-Up' }));
   expect(screen.queryByRole('textbox', { name: 'Add Note' })).not.toBeInTheDocument();
-  fireEvent.change(screen.getByLabelText('Next Follow-Up'), {
+  fireEvent.change(screen.getByLabelText('Next follow-up'), {
     target: { value: '2026-10-12T16:00' },
   });
   fireEvent.change(screen.getByRole('textbox', { name: /Purpose/ }), {
     target: { value: '  Check fee structure  ' },
   });
-  fireEvent.click(screen.getByRole('button', { name: 'Schedule Follow-Up' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Schedule follow-up' }));
   await waitFor(() =>
     expect(writes).toHaveBeenCalledWith({
       purpose: 'Check fee structure',
@@ -168,7 +302,7 @@ it.each(['complete', 'cancel'])(
       name: action === 'complete' ? 'Complete' : 'Cancel',
     });
     expect(button).toBeDisabled();
-    fireEvent.change(screen.getByRole('textbox', { name: /Completion or Cancellation Note/ }), {
+    fireEvent.change(screen.getByRole('textbox', { name: /Completion or cancellation note/ }), {
       target: { value: 'Parent contacted' },
     });
     fireEvent.click(button);
@@ -237,11 +371,20 @@ it('keeps failed-save drafts when a failed follow-up query recovers independentl
   expect(await screen.findByText(note.text)).toBeVisible();
   await expectStudentErrorToast('Follow-ups unavailable');
   expect(screen.queryByRole('button', { name: 'Retry Follow-Ups' })).not.toBeInTheDocument();
+  await waitFor(() => expect(screen.getByRole('textbox', { name: 'Add Note' })).toBeEnabled(), {
+    timeout: 10000,
+  });
   fireEvent.change(screen.getByRole('textbox', { name: 'Add Note' }), {
     target: { value: 'Keep this note' },
   });
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Add Note' })).toBeEnabled(), {
+    timeout: 10000,
+  });
   fireEvent.click(screen.getByRole('button', { name: 'Add Note' }));
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Add Note' })).toBeEnabled());
+  await expectStudentErrorToast('Could not save note');
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Add Note' })).toBeEnabled(), {
+    timeout: 10000,
+  });
   expect(screen.getByRole('textbox', { name: 'Add Note' })).toHaveValue('Keep this note');
   const previousNotesReads = notesReads;
   failFollow = false;
@@ -302,6 +445,42 @@ it('locks closing and duplicate note submissions until the save finishes', async
   await waitFor(() => expect(screen.getByRole('button', { name: 'Close' })).toBeEnabled());
   fireEvent.click(screen.getByRole('button', { name: 'Close' }));
   expect(onClose).toHaveBeenCalledOnce();
+});
+
+it('keeps parent and child close locks until a follow-up write finishes', async () => {
+  let finishWrite: () => void = () => {};
+  const pending = new Promise<void>((resolve) => {
+    finishWrite = resolve;
+  });
+  const writes = vi.fn();
+  const onClose = vi.fn();
+  const onBusyChange = vi.fn();
+  mswServer.use(
+    http.post(followPath, async () => {
+      writes();
+      await pending;
+      return HttpResponse.json(followValue);
+    })
+  );
+  renderDrawer(grants, { onClose, onBusyChange });
+  await screen.findByText(followUp.purpose);
+  fireEvent.click(screen.getByRole('tab', { name: 'Follow-Up' }));
+  fireEvent.change(screen.getByLabelText('Next follow-up'), {
+    target: { value: '2026-10-12T16:00' },
+  });
+  fireEvent.change(screen.getByRole('textbox', { name: /Purpose/ }), {
+    target: { value: 'Keep this follow-up write' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Schedule follow-up' }));
+  await waitFor(() => expect(writes).toHaveBeenCalledOnce());
+  expect(screen.getByRole('button', { name: 'Close' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Close Notes & Follow-Ups' })).toBeDisabled();
+  expect(onBusyChange).toHaveBeenLastCalledWith(true);
+  fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
+  expect(onClose).not.toHaveBeenCalled();
+  finishWrite();
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Close' })).toBeEnabled());
+  expect(onBusyChange).toHaveBeenLastCalledWith(false);
 });
 
 it('does not show an empty history as confirmed when a source cannot be loaded', async () => {

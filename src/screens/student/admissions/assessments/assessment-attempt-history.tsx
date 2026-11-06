@@ -5,6 +5,7 @@ import { Label } from 'src/components/label';
 import { Box, Stack, Typography } from '@mui/material';
 
 import { normalizeAssessmentDateTime } from './assessment-date-time';
+import { ADMISSION_DATE_TIME_FORMAT } from '../admission-date-formats';
 import { AssessmentSubjectScoreHistory } from './assessment-subject-score-history';
 
 export function AssessmentAttemptHistory({
@@ -48,17 +49,17 @@ export function AssessmentAttemptHistory({
               (attempt.sessionId ? 'Scheduled session' : 'Without scheduled session')}{' '}
             · Attendance: {attempt.attendance}
             {attempt.marks != null ? ` · Marks: ${attempt.marks}` : ''}
-            {` · Created ${dayjs(attempt.createdAt).format('DD MMM YYYY, h:mm A')}`}
+            {` · Created ${dayjs(attempt.createdAt).format(ADMISSION_DATE_TIME_FORMAT)}`}
           </Typography>
           {attempt.effectiveProfile && <AssessmentSubjectScoreHistory attempt={attempt} />}
           {attempt.sessionStartsAt && (
             <Typography variant="body2" sx={{ mt: 0.5 }}>
               Scheduled:{' '}
               {dayjs(normalizeAssessmentDateTime(attempt.sessionStartsAt)).format(
-                'DD MMM YYYY, h:mm A'
+                ADMISSION_DATE_TIME_FORMAT
               )}
               {attempt.sessionEndsAt
-                ? ` – ${dayjs(normalizeAssessmentDateTime(attempt.sessionEndsAt)).format('DD MMM YYYY, h:mm A')}`
+                ? ` – ${dayjs(normalizeAssessmentDateTime(attempt.sessionEndsAt)).format(ADMISSION_DATE_TIME_FORMAT)}`
                 : ''}
               {attempt.sessionLocation ? ` · ${attempt.sessionLocation}` : ''}
             </Typography>
@@ -75,7 +76,7 @@ export function AssessmentAttemptHistory({
           )}
           {attempt.reviewedAt && (
             <Typography variant="caption" color="text.secondary">
-              Reviewed {dayjs(attempt.reviewedAt).format('DD MMM YYYY, h:mm A')}
+              Reviewed {dayjs(attempt.reviewedAt).format(ADMISSION_DATE_TIME_FORMAT)}
             </Typography>
           )}
         </Box>

@@ -34,6 +34,7 @@ export function BulkPipelineCounsellor({ assignment, disabled }: Props) {
     if (!assignment.dialogOpen) resetForm();
   }, [assignment.dialogOpen, resetForm]);
   const closeGuard = useUnsavedNavigation(assignment.dialogOpen && formik.dirty, {
+    guardContextChanges: assignment.dialogOpen,
     push: router.push,
     blockNavigation: assignment.busy,
     title: 'Discard Counsellor Change?',
@@ -131,7 +132,7 @@ export function BulkPipelineCounsellor({ assignment, disabled }: Props) {
                   notificationKey="STU-0450"
                   presentation="toast"
                   severity="error"
-                  action={
+                  toastAction={
                     <Button size="small" disabled={blocked} onClick={assignment.reloadOptions}>
                       Retry
                     </Button>

@@ -5,10 +5,10 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { LoadingButton } from 'src/components/loading-button';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { Box, Stack, Alert, Button, Skeleton, Typography, DialogActions } from '@mui/material';
+import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 
 import { buildInquiryFamilyReviews } from '../admission-inquiry-parent-review-model';
 import {
@@ -192,28 +192,11 @@ function InquiryFamilyConfirmationContent(props: InquiryFamilyConfirmationProps)
           </DialogActions>
         </CustomDialog>
       )}
-      <ConfirmDialog
-        open={state.discardOpen}
-        title="Discard Unsaved Changes?"
-        icon="warning"
-        content="Your unsaved sibling selection will be lost."
-        cancelText="Keep Editing"
-        onClose={state.keepEditing}
-        disableCancel={state.saving}
-        action={
-          <Button
-            type="button"
-            size="small"
-            variant="contained"
-            color="error"
-            startIcon={<Iconify icon={GlobalIcons.delete} width={18} />}
-            disabled={state.saving}
-            onClick={state.close}
-          >
-            Discard Changes
-          </Button>
-        }
-      />
+      {state.discardOpen &&
+        renderUnsavedConfirmation(state.keepEditing, state.close, {
+          busy: state.saving,
+          description: 'Your unsaved sibling selection will be lost.',
+        })}
     </>
   );
 }

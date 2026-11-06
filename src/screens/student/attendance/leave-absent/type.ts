@@ -1,5 +1,12 @@
 import type { Dayjs } from 'dayjs';
 
+export type LeaveDecisionContext = {
+  studentName?: string;
+  leaveTypeName?: string;
+  leaveDate?: string;
+  endDate?: string;
+};
+
 export interface IFormValues {
   leaveType: string;
   description: string;

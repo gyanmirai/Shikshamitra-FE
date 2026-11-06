@@ -7,8 +7,8 @@ import type {
   AdmissionOfferingWriteInput,
 } from 'src/redux/student/admissions/admission-offerings-api';
 
-import { useState } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { useValidateAdmissionOfferingMutation } from 'src/redux/student/admissions/admission-offerings-api';
 import { useGetAcademicOrganizationOptionsQuery } from 'src/redux/academicOrganizationOptions/academicOrganizationOptionsApi';
 
@@ -26,7 +26,20 @@ type Input = {
 
 export function useAdmissionOfferingEditor({ open, cycle, offering, onSave }: Input) {
   const [readiness, setReadiness] = useState<AdmissionOfferingValidation | null>(null);
-  const [validateOffering, validationState] = useValidateAdmissionOfferingMutation();
+  const [validateOffering] = useValidateAdmissionOfferingMutation();
+  const [validating, setValidating] = useState(false);
+  const validationRequest = useRef(0);
+  const cancelValidation = useCallback(() => {
+    validationRequest.current += 1;
+    setReadiness(null);
+    setValidating(false);
+  }, []);
+  useEffect(() => {
+    cancelValidation();
+    return () => {
+      validationRequest.current += 1;
+    };
+  }, [open, cycle.id, offering.id, cancelValidation]);
   const hierarchyQuery = useGetAcademicOrganizationOptionsQuery(
     { academicYearId: cycle.academicYearId },
     { skip: !open, refetchOnMountOrArgChange: true }
@@ -34,19 +47,26 @@ export function useAdmissionOfferingEditor({ open, cycle, offering, onSave }: In
   const definitionOptions = useAdmissionDefinitionOptions(open);
 
   const validateForReview = async (values: AdmissionOfferingFormValues) => {
+    validationRequest.current += 1;
+    const request = validationRequest.current;
+    setValidating(true);
     try {
       const validation = await validateOffering({
         ...toOfferingWriteInput(values),
         admissionCycleId: cycle.id,
         excludingOfferingId: offering.id,
       }).unwrap();
+      if (request !== validationRequest.current) return null;
       setReadiness(validation);
       return validation;
     } catch (error) {
+      if (request !== validationRequest.current) return null;
       shikshaMitraToast.error({
         message: getAdmissionApiError(error, 'Unable to validate the offering configuration.'),
       });
       return null;
+    } finally {
+      if (request === validationRequest.current) setValidating(false);
     }
   };
 
@@ -69,7 +89,8 @@ export function useAdmissionOfferingEditor({ open, cycle, offering, onSave }: In
     hierarchyLoading: hierarchyQuery.isFetching,
     queryFailed: hierarchyQuery.isError,
     retryHierarchy: hierarchyQuery.refetch,
-    validating: validationState.isLoading,
+    validating,
+    cancelValidation,
     ...definitionOptions,
   };
 }

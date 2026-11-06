@@ -5,6 +5,7 @@ import type { RootState } from 'src/redux/store';
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
+import { fDate, formatStr } from 'src/utils/format-time';
 import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
@@ -100,7 +101,7 @@ export default function Attendance({ student }: StudentTabsComponentType) {
           notificationKey="STU-0729"
           presentation="toast"
           severity="error"
-          action={<Button onClick={() => query.refetch()}>Retry</Button>}
+          toastAction={<Button onClick={() => query.refetch()}>Retry</Button>}
         >
           {attendanceError(query.error, 'Attendance summary could not be loaded.')}
         </StudentFeedback>
@@ -115,7 +116,12 @@ export default function Attendance({ student }: StudentTabsComponentType) {
           data={rows}
           noDataText="No eligible attendance days in this month."
           columns={[
-            { id: 'date', label: 'Date', filterType: 'date' },
+            {
+              id: 'date',
+              label: 'Date',
+              filterType: 'date',
+              render: (value) => fDate(value, formatStr.split.date),
+            },
             {
               id: 'statusLabel',
               label: 'Attendance',

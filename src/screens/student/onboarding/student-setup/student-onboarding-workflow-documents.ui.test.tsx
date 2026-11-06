@@ -1,7 +1,16 @@
 import { it, vi, expect, beforeEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { ThemeProvider } from '@mui/material/styles';
+import { createTheme } from 'src/theme/create-theme';
+import { defaultSettings } from 'src/components/settings/config-settings';
+import { screen, waitFor, fireEvent, render as renderView } from '@testing-library/react';
 
 import StudentOnboardingWorkflowDocuments from './student-onboarding-workflow-documents';
+
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
+
+const render = (view: React.ReactNode) =>
+  renderView(<ThemeProvider theme={createTheme(defaultSettings)}>{view}</ThemeProvider>);
+vi.mock('src/components/iconify', () => ({ Iconify: () => <span /> }));
 
 const mocks = vi.hoisted(() => ({
   empty: false,
@@ -70,7 +79,17 @@ vi.mock('src/screens/student/admissions/document-verification/document-checklist
   },
 }));
 vi.mock('src/components/customDialog', () => ({
-  default: ({ children }: { children: React.ReactNode }) => <div role="dialog">{children}</div>,
+  default: ({
+    children,
+    formProps,
+  }: {
+    children: React.ReactNode;
+    formProps?: { onSubmit?: React.FormEventHandler<HTMLFormElement> };
+  }) => (
+    <div role="dialog">
+      <form onSubmit={formProps?.onSubmit}>{children}</form>
+    </div>
+  ),
   DialogScrollContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 vi.mock('src/redux/student/onboarding/student-onboarding-api', () => ({
@@ -94,10 +113,25 @@ it('reuses Offering requirements and disables the waiver capability', () => {
     expect.objectContaining({ permissions: expect.objectContaining({ waive: false }) })
   );
 });
+it('retains document notes on Cancel and only closes after an explicit discard', () => {
+  render(<StudentOnboardingWorkflowDocuments caseId="case-1" canManage />);
+  fireEvent.click(screen.getByRole('button', { name: 'Record physical original' }));
+  fireEvent.change(screen.getByLabelText(/Original verification notes/i), {
+    target: { value: 'Keep these notes' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+  expect(screen.getByLabelText(/Original verification notes/i)).toHaveValue('Keep these notes');
+  fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
+  expect(screen.getByLabelText(/Original verification notes/i)).toHaveValue('Keep these notes');
+  fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
+  expect(screen.queryByLabelText(/Original verification notes/i)).not.toBeInTheDocument();
+  expect(mocks.original).not.toHaveBeenCalled();
+});
 it('records originals using the captured application evidence stamp', async () => {
   render(<StudentOnboardingWorkflowDocuments caseId="case-1" canManage />);
   fireEvent.click(screen.getByRole('button', { name: 'Record physical original' }));
-  fireEvent.change(screen.getByLabelText(/Original verification notes/), {
+  fireEvent.change(screen.getByLabelText(/Original verification notes/i), {
     target: { value: 'Physical birth certificate checked' },
   });
   fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
@@ -118,7 +152,11 @@ it('shows the selected file before submitting through the shared Admission uploa
   const file = new File(['birth certificate'], 'birth-certificate.pdf', {
     type: 'application/pdf',
   });
-  fireEvent.change(screen.getByLabelText(/Document/), { target: { files: [file] } });
+  const fileInput = screen
+    .getByRole('group', { name: 'Document' })
+    .querySelector('input[type="file"]');
+  expect(fileInput).not.toBeNull();
+  fireEvent.change(fileInput!, { target: { files: [file] } });
   expect(screen.getByRole('status')).toHaveTextContent('Selected file: birth-certificate.pdf');
   expect(mocks.upload).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('button', { name: 'Submit' }));

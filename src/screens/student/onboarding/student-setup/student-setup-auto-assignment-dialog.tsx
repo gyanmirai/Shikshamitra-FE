@@ -8,6 +8,7 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { Stack, Button, Typography, DialogActions, LinearProgress } from '@mui/material';
+import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 import { useGetStudentOnboardingPlacementOptionsQuery } from 'src/redux/student/onboarding/student-onboarding-api';
 
 import StudentAssignmentDrawer from './student-assignment-drawer';
@@ -64,6 +65,8 @@ export default function StudentSetupAutoAssignmentDialog({
   const failed = results.filter((result) => result.status === 'failed').length;
   const saving = busy || form.isSubmitting;
   const { requestNavigation, confirmation } = useUnsavedNavigation(form.dirty && !finished, {
+    guardContextChanges: true,
+    renderConfirmation: renderUnsavedConfirmation,
     blockNavigation: saving,
   });
   const close = () => {
@@ -111,7 +114,7 @@ export default function StudentSetupAutoAssignmentDialog({
                   notificationKey="STU-1045"
                   presentation="toast"
                   severity="error"
-                  action={
+                  toastAction={
                     <Button size="small" onClick={() => divisions.refetch()}>
                       Retry
                     </Button>

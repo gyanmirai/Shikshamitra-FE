@@ -179,7 +179,7 @@ export function AdmissionOfferingFilters({
               notificationKey="STU-0126"
               presentation="toast"
               severity="error"
-              action={<Button onClick={() => hierarchyQuery.refetch()}>Retry</Button>}
+              toastAction={<Button onClick={() => hierarchyQuery.refetch()}>Retry</Button>}
             >
               Could not load Board and Medium options.
             </StudentFeedback>
@@ -191,7 +191,7 @@ export function AdmissionOfferingFilters({
               notificationKey="STU-0127"
               presentation="toast"
               severity="error"
-              action={<Button onClick={() => standardsQuery.refetch()}>Retry</Button>}
+              toastAction={<Button onClick={() => standardsQuery.refetch()}>Retry</Button>}
             >
               Could not load Class options.
             </StudentFeedback>

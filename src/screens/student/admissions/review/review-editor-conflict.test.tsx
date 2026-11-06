@@ -84,7 +84,7 @@ it('protects unsaved notes when closing without leaking the page-wide dirty guar
   const confirmation = within(
     await screen.findByRole('dialog', { name: 'Discard Unsaved Changes?' })
   );
-  await user.click(confirmation.getByRole('button', { name: 'Cancel' }));
+  await user.click(confirmation.getByRole('button', { name: 'Keep editing' }));
   expect(onClose).not.toHaveBeenCalled();
   expect(dialog.getByLabelText('Review Notes')).toHaveValue('Still reviewing.');
 });

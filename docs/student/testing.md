@@ -10,6 +10,12 @@ audience: humans-and-agents
 
 # Validate Student Enrollment Admissions changes
 
+## Configurable student ID cards (5 November 2026)
+
+Run `student-icard-design.test.ts`, `student-icard-builder.test.tsx`, `student-icard-selection.test.tsx`, `student-directory-documents.test.tsx` and the shared `src/components/identity-card-designer` tests. Coverage includes Classic Identity defaults, exact millimetre metadata, front/back JSON round trips, invalid-draft preservation, disabled-back visibility restoration, existing scope/cohort checks and actionable text-overflow errors. The shared geometry tests cover capacity and fixed dimensions; backend PDF page-box and duplex tests remain owned by the backend module. The new Template-to-Designer path validates School name in its owning Designer step, superseding the historical startup blocker recorded below.
+
+Browser acceptance should exercise the actual controlled designer, saving both sides, read-only recipient selection, A4/card-sized settings, configured preview, failed-save draft retention, dirty close, light/dark themes and phone/tablet/desktop widths. Synthetic API fixtures establish client behavior only; physical print calibration and live-school acceptance require their own evidence.
+
 ## I-Card and Certificates academic dropdown alignment (4 November 2026)
 
 Focused coverage uses `student-icard-selection.test.tsx`, `student-icard-builder.test.tsx`, `student-certificate-form.test.tsx`, `student-directory-documents.test.tsx` and `student-icard-route.test.tsx`. Check single Board/Medium context, All Classes/All Divisions, class-dependent plain division choices, parent resets, saved/opaque/legacy assignments, locked bulk scope, and unchanged preview/generation retry contracts. Certificates retains School level and specific class/division requirements for student selection and generation; All scopes allow browsing.
@@ -1874,6 +1880,21 @@ Assert that fragment tokens never become path/query parameters or staff session 
 The refinement cases cover email-only save with expected-contact/stamp/retry payload, no implicit send, capability/dirty guards, conflict retention, one primary delivery action plus overflow, direct Edit form/Save changes, and staff document controls confined to Documents. Public screen coverage progresses from form answers through required uploads on the same URL. Real shared unsaved-navigation tests exercise browser Back for typed email and document instructions, Keep editing and explicit discard; the component supplies the project router push to enable traversal protection.
 
 Finish local in-app-browser checks at 390x844, 768x1024 and 1440x900 with synthetic data. Verify keyboard/focus, contained scrolling, fixed footer, no document horizontal overflow, loading/empty/error/permission states and parent-to-staff persistence. Backend integration tests, a UI mockup, actual browser acceptance and mailbox delivery are separate evidence boundaries. This section lists required checks and does not claim they have passed.
+
+
+## Report and builder regression checks
+
+| Area | Focused source tests | Coverage |
+|---|---|---|
+| Compliance catalog and scope | `reports/index.test.tsx`, `reports/hooks/use-compliance-report-form.test.tsx` | Four distinct real mappings; 21 explicitly unavailable legacy mappings; frozen visible year; cascade scope; read errors and missing grants |
+| Preview and export | `reports/hooks/use-student-compliance-preview.test.tsx`, `reports/utils/compliance-report-model.test.ts` | Page versus full-scope command, retry key, duplicate submission, lifecycle actions and truthful type names |
+| Shared Records history | `records/student-record-reports.test.tsx` | Existing four Records types remain supported |
+| Published Stage view | `admissions/workflow-builder/workflow-saved-stage-view.test.tsx`, `workflow-form-stage-drawer.test.tsx`, `workflow-document-editor.test.tsx` | Saved readable values, help, one Close action and no disabled editor controls |
+| Draft exit | `admissions/admission-form-dialog.test.tsx`, `workflow-builder/workflow-next-stage-flow.test.tsx`, `workflow-document-requirement-editor.test.tsx` | Local draft retention and explicit styled discard across active owners |
+
+Report tests use mocked API boundaries; backend authority, tenant scope, masking and XLSX lifecycle proofs are owned by [backend testing](../../../Shikshamitra-BE/docs/modules/student/testing.md#compliance-report-tests).
+A frontend connected to the remote development API cannot prove newly added backend report types until that API runs the matching backend source.
+Local end-to-end verification needs the backend HTTPS launch profile on `https://localhost:44332` and the matching `NEXT_PUBLIC_API_URL`; no deployment is implied by these tests.
 
 ## Inquiry parent-match popup checks
 

@@ -12,7 +12,7 @@ export function assessmentDateTimeTimestamp(value: string) {
 const schoolDate = new Intl.DateTimeFormat('en-GB', {
   timeZone: 'Asia/Kolkata',
   day: '2-digit',
-  month: 'short',
+  month: '2-digit',
   year: 'numeric',
 });
 const schoolTime = new Intl.DateTimeFormat('en-US', {

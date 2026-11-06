@@ -440,6 +440,19 @@ it('uses the standard request-error toast without an inline Retry row or endless
   expect(screen.queryByText('Student setup could not be loaded.')).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
   expect(document.querySelector('.MuiSkeleton-root')).not.toBeInTheDocument();
+  const notice = mocks.toastError.mock.calls.findLast(
+    ([options]) => options.message === 'Student setup could not be loaded.'
+  )?.[0];
+  const recovery = render(
+    <ThemeProvider theme={createTheme(defaultSettings)}>
+      {notice?.alertProps('academic-error').action}
+    </ThemeProvider>
+  );
+  fireEvent.click(within(recovery.container).getByRole('button', { name: 'Retry' }));
+  expect(mocks.caseQuery.refetch).toHaveBeenCalledOnce();
+  expect(mocks.settingsQuery.refetch).not.toHaveBeenCalled();
+  expect(mocks.placementQuery.refetch).not.toHaveBeenCalled();
+  expect(mocks.seriesQuery.refetch).not.toHaveBeenCalled();
 });
 
 it('preserves manual-only school policy and disables all edit controls during an external lock', async () => {

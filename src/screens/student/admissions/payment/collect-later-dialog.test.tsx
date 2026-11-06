@@ -1,9 +1,17 @@
 import { Provider } from 'react-redux';
 import { vi, it, expect } from 'vitest';
+import { addIcon } from '@iconify/react';
+import { GlobalIcons } from 'src/utils/icons';
 import { configureStore } from '@reduxjs/toolkit';
 import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import { CollectLaterDialog } from './collect-later-dialog';
+
+[GlobalIcons.admissionDetails, GlobalIcons.cancel, GlobalIcons.submit, GlobalIcons.delete].forEach(
+  (icon) => addIcon(icon, { body: '<path d="M0 0h16v16H0z"/>', width: 16, height: 16 })
+);
+
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
 vi.mock('@mui/icons-material', async () => ({
   Close: (await import('@mui/icons-material/Close')).default,
@@ -25,6 +33,23 @@ it('rejects an empty or whitespace-only reason', async () => {
   expect(await screen.findByText('Enter a reason for collecting later.')).toBeVisible();
   expect(onSubmit).not.toHaveBeenCalled();
   expect(onClose).not.toHaveBeenCalled();
+});
+
+it('keeps a deferral reason until the user explicitly discards it', () => {
+  const { onClose, onSubmit } = renderDialog();
+  fireEvent.change(screen.getByRole('textbox', { name: /Reason/ }), {
+    target: { value: 'Parent requested collection next week.' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+  expect(onClose).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
+  expect(screen.getByRole('textbox', { name: /Reason/ })).toHaveValue(
+    'Parent requested collection next week.'
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
+  expect(onClose).toHaveBeenCalledOnce();
+  expect(onSubmit).not.toHaveBeenCalled();
 });
 
 it('submits one trimmed reason while duplicate clicks are blocked', async () => {

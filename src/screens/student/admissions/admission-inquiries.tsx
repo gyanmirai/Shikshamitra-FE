@@ -373,6 +373,7 @@ export default function AdmissionInquiriesScreen() {
           hasForm={false}
           guardUnsavedChanges={false}
           title={`Handling History: ${historyInquiry.applicantName}`}
+          titleInfo="Review recorded staff handling, follow-up notes and communications for this inquiry."
           handleClose={() => setHistoryInquiry(null)}
         >
           <DialogScrollContent>

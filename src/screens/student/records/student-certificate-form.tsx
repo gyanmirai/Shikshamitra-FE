@@ -16,6 +16,8 @@ import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
+import { useRouter } from 'next/navigation';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useRef, useState, useEffect } from 'react';
@@ -23,9 +25,13 @@ import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { FormSectionCard } from 'src/components/form-section-card';
+import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 import { useGetStudentRecordTransitionsQuery } from 'src/redux/student/records/student-record-transitions-api';
 import {
   Box,
@@ -81,6 +87,7 @@ export default function StudentCertificateForm({
   initialStudents?: StudentDirectoryItem[];
   academicYearId?: string;
 }) {
+  const router = useRouter();
   const globals = useSelector((state: RootState) => state.globalState);
   const academicYearId = requestedAcademicYearId ?? globals.currentYear?.id;
   const sourceYearChanged =
@@ -109,13 +116,23 @@ export default function StudentCertificateForm({
   const [focusedStudent, setFocusedStudent] = useState(initialSelection[0]?.studentId ?? '');
   const [previews, setPreviews] = useState<CertificateResponse[]>([]);
   const [error, setError] = useState('');
-  const [busy, setBusy] = useState(false);
+  const [preparing, setPreparing] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const busy = preparing || generating;
+  const previewVersion = useRef(0);
+  const writeInFlight = useRef(false);
   const [progress, setProgress] = useState('');
   const previewDialog = useBoolean();
   const keys = useRef<Record<string, string>>({});
   const defaultsApplied = useRef(false);
   const [previewCertificate] = usePreviewRecordCertificateMutation();
   const [issueCertificate] = useIssueRecordCertificateMutation();
+  useEffect(
+    () => () => {
+      previewVersion.current += 1;
+    },
+    []
+  );
   const form = useFormik({
     initialValues: {
       boardId: '',
@@ -153,18 +170,22 @@ export default function StudentCertificateForm({
       ),
     }),
     onSubmit: async (values) => {
+      if (preparing || writeInFlight.current) return;
       if (sourceYearChanged) {
         setError('The academic year changed. Close this form and select students again.');
         return;
       }
       setError('');
       setPreviews([]);
-      setBusy(true);
+      const version = previewVersion.current + 1;
+      previewVersion.current = version;
+      setPreparing(true);
       previewDialog.onTrue();
       try {
         const prepared = await values.studentIds.reduce<Promise<CertificateResponse[]>>(
           async (previous, id) => {
             const completed = await previous;
+            if (previewVersion.current !== version) return completed;
             setProgress(
               `Preparing ${completed.length + 1} of ${values.studentIds.length} previews…`
             );
@@ -182,21 +203,33 @@ export default function StudentCertificateForm({
               },
               transitionId: certificateType === 3 ? values.exitCases[id] : undefined,
             }).unwrap();
-            return [...completed, preview];
+            return previewVersion.current === version ? [...completed, preview] : completed;
           },
           Promise.resolve([])
         );
+        if (previewVersion.current !== version) return;
         setPreviews(prepared);
       } catch {
+        if (previewVersion.current !== version) return;
         setError(
           'Preview could not be prepared. Check student access and the selected exit cases, then retry.'
         );
       } finally {
-        setBusy(false);
-        setProgress('');
+        if (previewVersion.current === version) {
+          setPreparing(false);
+          setProgress('');
+        }
       }
     },
   });
+  const closeGuard = useUnsavedNavigation(form.dirty, {
+    push: router.push,
+    blockNavigation: busy,
+    guardContextChanges: true,
+    renderConfirmation: (keepEditing, discard) =>
+      renderUnsavedConfirmation(keepEditing, discard, { busy }),
+  });
+  const requestClose = () => closeGuard.requestNavigation(onClose);
   const { values } = form;
   const options = optionsQuery.currentData;
   const boards = (options?.boards ?? []).filter((item) => item.parentId === academicYearId);
@@ -318,25 +351,32 @@ export default function StudentCertificateForm({
     enabled = true
   ) => (
     <Grid size={{ xs: 12, sm: 6, md: 2.4 }} key={field}>
-      <CustomSelect
-        size="small"
-        label={label}
-        value={values[field] || (field === 'standardId' || field === 'divisionId' ? 'all' : '')}
-        options={
-          field === 'standardId' || field === 'divisionId'
-            ? [
-                { id: 'all', name: field === 'standardId' ? 'All Classes' : 'All Divisions' },
-                ...choices,
-              ]
-            : choices
-        }
-        labelKey="name"
-        valueKey="id"
-        onChange={(value) => changeScope(patch(value === 'all' ? '' : String(value)))}
-        isLoading={optionsQuery.isFetching}
-        disabled={busy || !academicYearId || optionsQuery.isError || !enabled}
-        formControlProps={{ fullWidth: true }}
-      />
+      <ShakingTextField error={Boolean(form.touched[field] && form.errors[field])}>
+        <CustomSelect
+          size="small"
+          name={field}
+          required
+          label={label}
+          value={values[field] || (field === 'standardId' || field === 'divisionId' ? 'all' : '')}
+          options={
+            field === 'standardId' || field === 'divisionId'
+              ? [
+                  { id: 'all', name: field === 'standardId' ? 'All Classes' : 'All Divisions' },
+                  ...choices,
+                ]
+              : choices
+          }
+          labelKey="name"
+          valueKey="id"
+          onChange={(value) => changeScope(patch(value === 'all' ? '' : String(value)))}
+          onBlur={() => form.setFieldTouched(field, true)}
+          error={Boolean(form.touched[field] && form.errors[field])}
+          helperText={form.touched[field] ? form.errors[field] : undefined}
+          isLoading={optionsQuery.isFetching}
+          disabled={busy || !academicYearId || optionsQuery.isError || !enabled}
+          formControlProps={{ fullWidth: true }}
+        />
+      </ShakingTextField>
     </Grid>
   );
   const toggleRows = (students: StudentDirectoryItem[]) => {
@@ -396,6 +436,7 @@ export default function StudentCertificateForm({
     { id: 'divisionName', label: 'Division', isSort: false, isFilter: false },
   ];
   const generate = async () => {
+    if (writeInFlight.current || preparing) return;
     if (sourceYearChanged) {
       setError('The academic year changed. Close this form and select students again.');
       return;
@@ -404,7 +445,8 @@ export default function StudentCertificateForm({
     const key = keys.current[fingerprint] ?? crypto.randomUUID();
     keys.current[fingerprint] = key;
     setError('');
-    setBusy(true);
+    writeInFlight.current = true;
+    setGenerating(true);
     let count = 0;
     try {
       await values.studentIds.reduce<Promise<void>>(async (previous, id) => {
@@ -438,19 +480,27 @@ export default function StudentCertificateForm({
         `${count} of ${values.studentIds.length} certificates generated. Retry to finish this batch without duplicating certificates.`
       );
     } finally {
-      setBusy(false);
+      writeInFlight.current = false;
+      setGenerating(false);
       setProgress('');
     }
+  };
+  const closePreview = () => {
+    if (writeInFlight.current) return;
+    previewVersion.current += 1;
+    setPreparing(false);
+    setProgress('');
+    previewDialog.onFalse();
   };
   return (
     <CustomDialog
       open
-      handleClose={onClose}
+      handleClose={requestClose}
       title={`Create ${certificateLabel} Certificates`}
       titleInfo="Choose the academic filters and select up to 100 students. Preview their certificates before generating them."
       maxWidth="lg"
       disableClose={busy}
-      hasUnsavedChanges={form.dirty}
+      guardUnsavedChanges={false}
       onSubmit={(event) => {
         event.preventDefault();
         form.submitForm();
@@ -463,112 +513,128 @@ export default function StudentCertificateForm({
               The academic year changed. Close this form and select students again.
             </Typography>
           )}
-          <Grid container spacing={1}>
-            {scopeSelect(
-              'Board',
-              'boardId',
-              boards,
-              (boardId) => firstAcademicScope(options, boardId),
-              !!boards.length
-            )}
-            {scopeSelect(
-              'Medium',
-              'mediumId',
-              mediums,
-              (mediumId) => firstAcademicScope(options, values.boardId, mediumId),
-              !!values.boardId
-            )}
-            {scopeSelect(
-              'School level',
-              'academicMediumStageId',
-              stages,
-              (academicMediumStageId) =>
-                firstAcademicScope(options, values.boardId, values.mediumId, academicMediumStageId),
-              !!values.mediumId
-            )}
-            {scopeSelect(
-              'Class',
-              'standardId',
-              classes,
-              (standardId) =>
-                firstAcademicScope(
-                  options,
-                  values.boardId,
-                  values.mediumId,
-                  values.academicMediumStageId,
-                  standardId
-                ),
-              !!values.academicMediumStageId
-            )}
-            {scopeSelect(
-              'Division',
-              'divisionId',
-              divisions,
-              (divisionId) => ({ divisionId }),
-              !!values.standardId
-            )}
-            <Grid size={{ xs: 12, md: 8 }}>
+          <FormSectionCard
+            title="Certificate Details"
+            icon={GlobalIcons.admissionStudent}
+            descriptionTooltip="Choose the academic scope, certificate purpose and issue date before selecting students."
+          >
+            <Grid container spacing={1}>
+              {scopeSelect(
+                'Board',
+                'boardId',
+                boards,
+                (boardId) => firstAcademicScope(options, boardId),
+                !!boards.length
+              )}
+              {scopeSelect(
+                'Medium',
+                'mediumId',
+                mediums,
+                (mediumId) => firstAcademicScope(options, values.boardId, mediumId),
+                !!values.boardId
+              )}
+              {scopeSelect(
+                'School level',
+                'academicMediumStageId',
+                stages,
+                (academicMediumStageId) =>
+                  firstAcademicScope(
+                    options,
+                    values.boardId,
+                    values.mediumId,
+                    academicMediumStageId
+                  ),
+                !!values.mediumId
+              )}
+              {scopeSelect(
+                'Class',
+                'standardId',
+                classes,
+                (standardId) =>
+                  firstAcademicScope(
+                    options,
+                    values.boardId,
+                    values.mediumId,
+                    values.academicMediumStageId,
+                    standardId
+                  ),
+                !!values.academicMediumStageId
+              )}
+              {scopeSelect(
+                'Division',
+                'divisionId',
+                divisions,
+                (divisionId) => ({ divisionId }),
+                !!values.standardId
+              )}
+              <Grid size={{ xs: 12, md: 8 }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  name="reason"
+                  label="Purpose / reason"
+                  value={values.reason}
+                  disabled={busy}
+                  onChange={form.handleChange}
+                  onBlur={form.handleBlur}
+                  error={!!form.touched.reason && !!form.errors.reason}
+                  helperText={form.touched.reason && form.errors.reason}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <ShakingTextField error={Boolean(form.touched.issueDate && form.errors.issueDate)}>
+                  <DatePicker
+                    label="Issue date"
+                    format="DD/MM/YYYY"
+                    value={dayjs(values.issueDate)}
+                    disabled={busy}
+                    onChange={(value) =>
+                      form.setFieldValue('issueDate', value?.isValid() ? value.toISOString() : '')
+                    }
+                    slotProps={{
+                      textField: {
+                        size: 'small',
+                        required: true,
+                        onBlur: () => form.setFieldTouched('issueDate', true),
+                        fullWidth: true,
+                        error: !!form.touched.issueDate && !!form.errors.issueDate,
+                        helperText: form.touched.issueDate && form.errors.issueDate,
+                      },
+                    }}
+                  />
+                </ShakingTextField>
+              </Grid>
+            </Grid>
+            {(certificateType === 2 || certificateType === 4) && (
               <TextField
                 fullWidth
                 size="small"
-                name="reason"
-                label="Purpose / reason"
-                value={values.reason}
+                multiline
+                minRows={2}
+                name="particulars"
+                label={
+                  certificateType === 2
+                    ? 'Conduct assessment (optional)'
+                    : 'First trial particulars (optional)'
+                }
+                value={values.particulars}
                 disabled={busy}
                 onChange={form.handleChange}
                 onBlur={form.handleBlur}
-                error={!!form.touched.reason && !!form.errors.reason}
-                helperText={form.touched.reason && form.errors.reason}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 4 }}>
-              <DatePicker
-                label="Issue date"
-                value={dayjs(values.issueDate)}
-                disabled={busy}
-                onChange={(value) =>
-                  form.setFieldValue('issueDate', value?.isValid() ? value.toISOString() : '')
+                error={!!form.touched.particulars && !!form.errors.particulars}
+                helperText={
+                  (form.touched.particulars && form.errors.particulars) ||
+                  'Enter verified information. This text will appear on every selected student’s certificate.'
                 }
-                slotProps={{
-                  textField: {
-                    size: 'small',
-                    fullWidth: true,
-                    error: !!form.touched.issueDate && !!form.errors.issueDate,
-                    helperText: form.touched.issueDate && form.errors.issueDate,
-                  },
-                }}
               />
-            </Grid>
-          </Grid>
-          {(certificateType === 2 || certificateType === 4) && (
-            <TextField
-              fullWidth
-              size="small"
-              multiline
-              minRows={2}
-              name="particulars"
-              label={
-                certificateType === 2
-                  ? 'Conduct assessment (optional)'
-                  : 'First trial particulars (optional)'
-              }
-              value={values.particulars}
-              disabled={busy}
-              onChange={form.handleChange}
-              onBlur={form.handleBlur}
-              error={!!form.touched.particulars && !!form.errors.particulars}
-              helperText={
-                (form.touched.particulars && form.errors.particulars) ||
-                'Enter verified information. This text will appear on every selected student’s certificate.'
-              }
-            />
-          )}
+            )}
+          </FormSectionCard>
           {optionsQuery.isError && (
             <StudentFeedback
               notificationKey="STU-0844"
               presentation="toast"
               severity="error"
-              action={
+              toastAction={
                 <Button
                   size="small"
                   startIcon={<Iconify icon="solar:restart-bold" />}
@@ -586,68 +652,71 @@ export default function StudentCertificateForm({
               Select an academic year in the header to load students.
             </StudentFeedback>
           )}
-          <Typography variant="subtitle2">
-            Students ({values.studentIds.length}/100 selected)
-          </Typography>
-          <Box sx={{ height: 360, minHeight: 0 }}>
-            <CustomizableTable
-              tableId="certificate-student-selection"
-              tableTitle="Select students"
-              columns={
-                validSelection ? columns : columns.filter((column) => column.id !== 'selection')
-              }
-              data={rows}
-              isLoading={validRoster && directory.isFetching}
-              isPagination
-              isSearch
-              serverSidePagination
-              serverSideSearch
-              page={page}
-              rowsPerPage={pageSize}
-              totalCount={validRoster ? (directory.currentData?.totalCount ?? 0) : 0}
-              rowsPerPageOptions={[10, 25, 50, 100]}
-              onServerPagination={(nextPage, nextSize) => {
-                setPage(nextPage);
-                setPageSize(nextSize);
-              }}
-              onServerSearch={(value) => {
-                setSearch(value);
-                setPage(0);
-              }}
-              noDataText={
-                validRoster
-                  ? 'No active students match the selected filters.'
-                  : 'Choose a board, medium and school level to load students.'
-              }
-              errorContent={
-                validRoster && directory.isError ? (
-                  <StudentFeedback
-                    notificationKey="STU-0846"
-                    presentation="toast"
-                    severity="error"
-                    action={
-                      <Button
-                        size="small"
-                        startIcon={<Iconify icon="solar:restart-bold" />}
-                        onClick={() => directory.refetch()}
-                      >
-                        Retry
-                      </Button>
-                    }
-                  >
-                    Students could not be loaded.
-                  </StudentFeedback>
-                ) : undefined
-              }
-              wrapperProps={{ sx: { height: 1 } }}
-              tableContainerProps={{ sx: { height: 1 } }}
-            />
-          </Box>
-          {form.touched.studentIds && form.errors.studentIds && (
-            <StudentFeedback notificationKey="STU-0847" presentation="inline" severity="error">
-              {String(form.errors.studentIds)}
-            </StudentFeedback>
-          )}
+          <FormSectionCard
+            title={`Students (${values.studentIds.length}/100 selected)`}
+            icon={GlobalIcons.admissionStudent}
+            descriptionTooltip="Select up to 100 students from this academic scope. Preview certificates before generating the batch."
+          >
+            <Box sx={{ height: 360, minHeight: 0 }}>
+              <CustomizableTable
+                tableId="certificate-student-selection"
+                tableTitle="Select students"
+                columns={
+                  validSelection ? columns : columns.filter((column) => column.id !== 'selection')
+                }
+                data={rows}
+                isLoading={validRoster && directory.isFetching}
+                isPagination
+                isSearch
+                serverSidePagination
+                serverSideSearch
+                page={page}
+                rowsPerPage={pageSize}
+                totalCount={validRoster ? (directory.currentData?.totalCount ?? 0) : 0}
+                rowsPerPageOptions={[10, 25, 50, 100]}
+                onServerPagination={(nextPage, nextSize) => {
+                  setPage(nextPage);
+                  setPageSize(nextSize);
+                }}
+                onServerSearch={(value) => {
+                  setSearch(value);
+                  setPage(0);
+                }}
+                noDataText={
+                  validRoster
+                    ? 'No active students match the selected filters.'
+                    : 'Choose a board, medium and school level to load students.'
+                }
+                errorContent={
+                  validRoster && directory.isError ? (
+                    <StudentFeedback
+                      notificationKey="STU-0846"
+                      presentation="toast"
+                      severity="error"
+                      toastAction={
+                        <Button
+                          size="small"
+                          startIcon={<Iconify icon="solar:restart-bold" />}
+                          onClick={() => directory.refetch()}
+                        >
+                          Retry
+                        </Button>
+                      }
+                    >
+                      Students could not be loaded.
+                    </StudentFeedback>
+                  ) : undefined
+                }
+                wrapperProps={{ sx: { height: 1 } }}
+                tableContainerProps={{ sx: { height: 1 } }}
+              />
+            </Box>
+            {form.touched.studentIds && form.errors.studentIds && (
+              <StudentFeedback notificationKey="STU-0847" presentation="inline" severity="error">
+                {String(form.errors.studentIds)}
+              </StudentFeedback>
+            )}
+          </FormSectionCard>
           {certificateType === 3 && values.studentIds.length > 0 && (
             <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
               <CustomSelect
@@ -703,8 +772,9 @@ export default function StudentCertificateForm({
         <Button
           size="small"
           variant="outlined"
+          color="inherit"
           startIcon={<Iconify icon="mingcute:close-line" />}
-          onClick={onClose}
+          onClick={requestClose}
           disabled={busy}
         >
           Cancel
@@ -713,6 +783,7 @@ export default function StudentCertificateForm({
           size="small"
           type="submit"
           variant="contained"
+          color="inherit"
           startIcon={<Iconify icon="solar:eye-bold" />}
           loading={busy}
           disabled={busy || !validSelection}
@@ -725,11 +796,13 @@ export default function StudentCertificateForm({
         title={`${certificateLabel} Certificate Preview`}
         certificates={previews}
         busy={busy}
+        closeLocked={generating}
         progress={progress}
         error={error}
-        onClose={previewDialog.onFalse}
+        onClose={closePreview}
         onGenerate={generate}
       />
+      {closeGuard.confirmation}
     </CustomDialog>
   );
 }

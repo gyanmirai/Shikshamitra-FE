@@ -9,6 +9,7 @@ import { Paper, Stack, Button, Collapse, Typography } from '@mui/material';
 import { DocumentStatusLabel } from './document-status';
 import { DocumentDownloadButton } from './document-download-button';
 import { DocumentEvidenceHistory } from './document-evidence-history';
+import { ADMISSION_DATE_TIME_FORMAT } from '../admission-date-formats';
 import { DocumentRequirementActions } from './document-requirement-actions';
 
 import type { DocumentAction } from './document-action-model';
@@ -80,12 +81,12 @@ export function DocumentRequirementCard({
                 (latest.kind === 'waiver' ? 'Requirement Waived' : 'Physical Original Recorded')}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              Version {latest.versionNumber} · Recorded {fDateTime(latest.submittedAt)}
+              Version {latest.versionNumber} · Recorded {fDateTime(latest.submittedAt, ADMISSION_DATE_TIME_FORMAT)}
             </Typography>
             {latest.originalSeen && (
               <Typography variant="body2">
                 Original Sighted
-                {latest.originalSeenAt ? ` · ${fDateTime(latest.originalSeenAt)}` : ''}
+                {latest.originalSeenAt ? ` · ${fDateTime(latest.originalSeenAt, ADMISSION_DATE_TIME_FORMAT)}` : ''}
               </Typography>
             )}
             {latest.kind === 'waiver' && latest.notes && (

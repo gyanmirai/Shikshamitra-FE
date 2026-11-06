@@ -9,6 +9,7 @@ import { ReviewEvidence } from './review-evidence';
 import { reviewStatusLabels } from './review-model';
 import { ReviewRecordDetails } from './review-record-details';
 import { useReviewPermissions } from './use-review-permissions';
+import { ADMISSION_DATE_TIME_FORMAT } from '../admission-date-formats';
 
 export type ReviewAction = 'edit' | 'assign' | 'correct';
 export function ReviewSummaryContent({
@@ -37,7 +38,7 @@ export function ReviewSummaryContent({
         </Typography>
         <Typography variant="body2" color="text.secondary">
           {summary.dueAt
-            ? `Due ${dayjs(summary.dueAt).format('DD MMM YYYY, h:mm A')}`
+            ? `Due ${dayjs(summary.dueAt).format(ADMISSION_DATE_TIME_FORMAT)}`
             : 'No Deadline'}
         </Typography>
       </Stack>

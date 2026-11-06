@@ -230,6 +230,7 @@ export default function AdmissionOfferingsScreen() {
       <AdmissionOfferingActionDialog
         pendingAction={screen.pendingAction}
         commanding={screen.commanding}
+        checkingRequirements={screen.checkingRequirements}
         onClose={screen.cancelAction}
         onConfirm={screen.confirmAction}
         activationErrors={screen.activationErrors}

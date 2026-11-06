@@ -33,17 +33,17 @@ it('keeps a waiver visibly pending, locks dismissal and preserves its reason aft
       />
     </ThemeProvider>
   );
-  const notes = screen.getByRole('textbox', { name: 'Notes / Reason' });
+  const notes = screen.getByRole('textbox', { name: /Notes \/ Reason/ });
   fireEvent.change(notes, { target: { value: 'Prior school assessment accepted' } });
-  fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
   await waitFor(() => expect(mocks.run).toHaveBeenCalledOnce());
   expect(screen.getByRole('status', { name: 'Saving Assessment…' })).toBeVisible();
   expect(notes).toBeDisabled();
-  expect(screen.getByRole('button', { name: 'Saving…' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'close' })).toBeDisabled();
   fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
-  fireEvent.click(screen.getByRole('button', { name: 'Saving…' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
   expect(onClose).not.toHaveBeenCalled();
   expect(mocks.run).toHaveBeenCalledOnce();
 
@@ -51,8 +51,8 @@ it('keeps a waiver visibly pending, locks dismissal and preserves its reason aft
   expect(screen.queryByRole('status', { name: 'Saving Assessment…' })).not.toBeInTheDocument();
   expect(notes).toHaveValue('Prior school assessment accepted');
   expect(notes).toBeEnabled();
-  expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled();
   expect(onClose).not.toHaveBeenCalled();
-  fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
   await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
 });

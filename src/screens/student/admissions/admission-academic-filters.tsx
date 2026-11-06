@@ -185,7 +185,7 @@ export function AdmissionAcademicFilters({
           notificationKey="STU-0002"
           presentation="toast"
           severity="error"
-          action={
+          toastAction={
             <Button disabled={disabled} onClick={() => hierarchy.refetch()}>
               Retry
             </Button>
@@ -199,7 +199,7 @@ export function AdmissionAcademicFilters({
           notificationKey="STU-0003"
           presentation="toast"
           severity="error"
-          action={
+          toastAction={
             <Button disabled={disabled} onClick={() => classes.refetch()}>
               Retry
             </Button>

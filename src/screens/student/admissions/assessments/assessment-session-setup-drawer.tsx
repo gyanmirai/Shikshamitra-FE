@@ -5,17 +5,16 @@ import type { AssessmentScope } from 'src/redux/student/admissions/admission-ass
 import { useFormik } from 'formik';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { useId, useRef, useState, useEffect } from 'react';
 import { LoadingButton } from 'src/components/loading-button';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { Box, Stack, Drawer, Button, Divider, Typography, IconButton } from '@mui/material';
 
 import { assessmentErrorMessage } from './assessment-utils';
 import { AdmissionDialogTitle } from '../admission-dialog-title';
+import { useAdmissionCloseGuard } from '../use-admission-close-guard';
 import { AssessmentSessionSetupFields } from './assessment-session-setup-fields';
 import {
   sessionSetupSchema,
@@ -106,7 +105,6 @@ function SessionSetupContent({
       mayWrite.current = false;
     };
   }, [readOnly, resourcesError, resourcesLoading]);
-  const discard = useBoolean();
   const locked = busy || resourcesLoading;
   const editing = Boolean(session) && mode === 'edit';
   const resolvedScopes = [
@@ -174,11 +172,16 @@ function SessionSetupContent({
     validationSchema: sessionSetupSchema(resolvedScopes, rooms, session?.bookedCount ?? 0),
     onSubmit: submit,
   });
-  const close = () => {
-    if (locked || form.isSubmitting) return;
-    if (form.dirty || pending.current) discard.onTrue();
-    else onClose();
-  };
+  const guard = useAdmissionCloseGuard(
+    form.dirty || Boolean(pending.current),
+    busy || form.isSubmitting,
+    true,
+    undefined,
+    pending.current
+      ? 'The last confirmation response was not received. Retry Submit to check the same request safely before closing.'
+      : undefined
+  );
+  const close = () => guard.requestNavigation(onClose);
   const disabled =
     locked || form.isSubmitting || readOnly || Boolean(resourcesError) || (editing && !onSave);
   return (
@@ -224,7 +227,7 @@ function SessionSetupContent({
               size="small"
               sx={{ width: 44, height: 44 }}
               onClick={close}
-              disabled={locked}
+              disabled={busy || form.isSubmitting}
             >
               <Iconify icon={GlobalIcons.cancel} />
             </IconButton>
@@ -338,7 +341,7 @@ function SessionSetupContent({
               color="inherit"
               startIcon={<Iconify icon={GlobalIcons.cancel} />}
               onClick={close}
-              disabled={locked}
+              disabled={busy || form.isSubmitting}
             >
               Cancel
             </Button>
@@ -356,22 +359,7 @@ function SessionSetupContent({
           </Stack>
         </Box>
       </Drawer>
-      <ConfirmDialog
-        open={discard.value}
-        onClose={discard.onFalse}
-        title="Discard Session Changes?"
-        icon="warning"
-        content={
-          pending.current
-            ? 'The last confirmation response was not received. Retry Submit to check the same request safely before closing.'
-            : 'Your session details have not been submitted.'
-        }
-        action={
-          <Button size="small" variant="contained" color="error" onClick={onClose}>
-            Discard Changes
-          </Button>
-        }
-      />
+      {guard.confirmation}
     </>
   );
 }

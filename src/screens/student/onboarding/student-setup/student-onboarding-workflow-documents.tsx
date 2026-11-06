@@ -11,10 +11,16 @@ import type {
 
 import { useState } from 'react';
 import { useFormik } from 'formik';
+import { useRouter } from 'next/navigation';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import { StudentFeedback } from 'src/components/student-feedback';
+import { FormSectionCard } from 'src/components/form-section-card';
+import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { Stack, Button, Skeleton, Typography, DialogActions } from '@mui/material';
+import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 import { DocumentActionFields } from 'src/screens/student/admissions/document-verification/document-action-fields';
 import { useDocumentPermissions } from 'src/screens/student/admissions/document-verification/use-document-permissions';
 import { DocumentChecklistContent } from 'src/screens/student/admissions/document-verification/document-checklist-content';
@@ -47,6 +53,7 @@ function WorkflowDocumentAction({
   selection: Selection;
   onClose: () => void;
 }) {
+  const router = useRouter();
   const [upload] = useUploadStudentOnboardingWorkflowDocumentMutation();
   const [original] = useRecordStudentOnboardingWorkflowOriginalMutation();
   const [review] = useReviewStudentOnboardingWorkflowDocumentMutation();
@@ -102,14 +109,30 @@ function WorkflowDocumentAction({
       }
     },
   });
+  const closeGuard = useUnsavedNavigation(form.dirty, {
+    push: router.push,
+    blockNavigation: form.isSubmitting,
+    guardContextChanges: true,
+    renderConfirmation: (keepEditing, discard) =>
+      renderUnsavedConfirmation(keepEditing, discard, { busy: form.isSubmitting }),
+  });
+  const requestClose = () => closeGuard.requestNavigation(onClose);
   return (
     <CustomDialog
       open
       title={documentActionLabels[action]}
-      handleClose={onClose}
+      titleInfo="Record evidence for the selected admission requirement. Changes are saved when you submit."
+      handleClose={requestClose}
       maxWidth="sm"
-      hasUnsavedChanges={form.dirty}
+      guardUnsavedChanges={false}
       disableClose={form.isSubmitting}
+      formProps={{
+        onSubmit: (event) => {
+          event.preventDefault();
+          form.submitForm();
+        },
+        noValidate: true,
+      }}
     >
       <DialogScrollContent>
         {form.status && (
@@ -117,32 +140,49 @@ function WorkflowDocumentAction({
             {form.status}
           </StudentFeedback>
         )}
-        <DocumentActionFields
-          action={action}
-          requirement={requirement}
-          formik={form}
-          extensions={extensions}
-          maxFileSizeMb={maxFileSizeMb}
-        />
-        {action === 'upload' && form.values.file && (
-          <Typography role="status" variant="body2" sx={{ mt: 1, overflowWrap: 'anywhere' }}>
-            Selected file: {form.values.file.name}
-          </Typography>
-        )}
+        <FormSectionCard
+          title="Document Details"
+          icon={GlobalIcons.admissionDetails}
+          descriptionTooltip="Record evidence for this requirement. Uploads create a new version; original checks and review notes remain in the document history."
+        >
+          <DocumentActionFields
+            action={action}
+            requirement={requirement}
+            formik={form}
+            extensions={extensions}
+            maxFileSizeMb={maxFileSizeMb}
+          />
+          {action === 'upload' && form.values.file && (
+            <Typography role="status" variant="body2" sx={{ mt: 1, overflowWrap: 'anywhere' }}>
+              Selected file: {form.values.file.name}
+            </Typography>
+          )}
+        </FormSectionCard>
       </DialogScrollContent>
       <DialogActions sx={{ p: 2 }}>
-        <Button variant="outlined" size="small" disabled={form.isSubmitting} onClick={onClose}>
+        <Button
+          type="button"
+          variant="outlined"
+          color="inherit"
+          size="small"
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          disabled={form.isSubmitting}
+          onClick={requestClose}
+        >
           Cancel
         </Button>
         <Button
           variant="contained"
+          color="inherit"
           size="small"
+          type="submit"
+          startIcon={<Iconify icon={GlobalIcons.submit} />}
           loading={form.isSubmitting}
-          onClick={() => form.submitForm()}
         >
           Submit
         </Button>
       </DialogActions>
+      {closeGuard.confirmation}
     </CustomDialog>
   );
 }
@@ -167,7 +207,7 @@ export default function StudentOnboardingWorkflowDocuments({
         notificationKey="STU-1026"
         presentation="toast"
         severity="error"
-        action={
+        toastAction={
           <Button size="small" onClick={() => query.refetch()}>
             Retry
           </Button>

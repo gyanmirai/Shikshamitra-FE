@@ -2,14 +2,14 @@ import type { AdmissionDocumentTypeOption } from 'src/redux/student/admissions/a
 import type { AdmissionDocumentRequirementPolicy } from 'src/redux/student/admissions/admission-document-policy';
 
 import { useFormik } from 'formik';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import { useResponsive } from 'src/hooks/use-responsive';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomPopover } from 'src/components/custom-popover';
 import { StudentFeedback } from 'src/components/student-feedback';
+import { FormSectionCard } from 'src/components/form-section-card';
 import { documentRequirementSchema } from 'src/redux/student/admissions/admission-document-policy-validation';
 import {
   Box,
@@ -23,6 +23,8 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
+import { AdmissionDialogTitle } from '../../admission-dialog-title';
+import { useAdmissionDraftGuard } from '../../use-admission-draft-guard';
 import { DocumentRequirementBasics } from './document-requirement-basics';
 import { DocumentRequirementClasses } from './document-requirement-classes';
 import { DocumentRequirementCollection } from './document-requirement-collection';
@@ -50,7 +52,6 @@ export function DocumentRequirementDialog({
   onRetryDocumentTypes,
 }: Props) {
   const desktop = useResponsive('up', 'sm');
-  const discard = useBoolean();
   const formik = useFormik<AdmissionDocumentRequirementPolicy>({
     initialValues: initial,
     validationSchema: documentRequirementSchema,
@@ -81,10 +82,8 @@ export function DocumentRequirementDialog({
       onClose();
     },
   });
-  const requestClose = () => {
-    if (formik.dirty) discard.onTrue();
-    else onClose();
-  };
+  const guard = useAdmissionDraftGuard({ dirty: formik.dirty, reset: formik.resetForm });
+  const requestClose = () => guard.requestNavigation(onClose);
   const body = (
     <Box
       component="form"
@@ -107,8 +106,12 @@ export function DocumentRequirementDialog({
           justifyContent="space-between"
           sx={{ px: 2, py: 1.5 }}
         >
-          <Typography id="document-requirement-title" variant="subtitle1">
-            Configure Document Requirement
+          <Typography id="document-requirement-title" variant="subtitle1" component="h2">
+            <AdmissionDialogTitle
+              title="Configure Document Requirement"
+              helpText="Configure one evidence requirement in the current workflow draft."
+              helpLabel="Document requirement information"
+            />
           </Typography>
           <IconButton size="small" aria-label="Close Document Requirement" onClick={requestClose}>
             <Iconify icon="mdi:close" />
@@ -117,51 +120,58 @@ export function DocumentRequirementDialog({
       )}
       {desktop && anchorEl && <Divider />}
       <Scrollbar sx={{ minHeight: 0 }}>
-        <Stack spacing={1.5} sx={{ p: 2 }}>
-          <DocumentRequirementBasics formik={formik} />
-          {formik.values.requirement === 'conditional' && (
-            <StudentFeedback notificationKey="STU-0510" presentation="inline" severity="warning">
-              Choose required or optional for this document.
-            </StudentFeedback>
-          )}
-          <Grid container spacing={1.5}>
-            <Grid size={{ xs: 12 }}>
-              <DocumentRequirementClasses formik={formik} />
+        <FormSectionCard
+          title="Requirement Details"
+          icon={GlobalIcons.documentIcon}
+          descriptionTooltip="Choose the document evidence, applicable classes and accepted upload category. This updates the workflow draft; it does not verify an applicant's document."
+          sx={{ m: 2 }}
+        >
+          <Stack spacing={1.5} sx={{ p: 2 }}>
+            <DocumentRequirementBasics formik={formik} />
+            {formik.values.requirement === 'conditional' && (
+              <StudentFeedback notificationKey="STU-0510" presentation="inline" severity="warning">
+                Choose required or optional for this document.
+              </StudentFeedback>
+            )}
+            <Grid container spacing={1.5}>
+              <Grid size={{ xs: 12 }}>
+                <DocumentRequirementClasses formik={formik} />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <FormControlLabel
+                  label="Required document"
+                  sx={{
+                    m: 0,
+                    width: 1,
+                    justifyContent: 'space-between',
+                    flexDirection: 'row-reverse',
+                  }}
+                  control={
+                    <Switch
+                      size="small"
+                      slotProps={{ input: { 'aria-label': 'Required document' } }}
+                      checked={formik.values.requirement === 'required'}
+                      onChange={(_, checked) =>
+                        formik.setValues({
+                          ...formik.values,
+                          requirement: checked ? 'required' : 'optional',
+                          conditionJson: undefined,
+                        })
+                      }
+                    />
+                  }
+                />
+              </Grid>
             </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <FormControlLabel
-                label="Required Document"
-                sx={{
-                  m: 0,
-                  width: 1,
-                  justifyContent: 'space-between',
-                  flexDirection: 'row-reverse',
-                }}
-                control={
-                  <Switch
-                    size="small"
-                    slotProps={{ input: { 'aria-label': 'Required Document' } }}
-                    checked={formik.values.requirement === 'required'}
-                    onChange={(_, checked) =>
-                      formik.setValues({
-                        ...formik.values,
-                        requirement: checked ? 'required' : 'optional',
-                        conditionJson: undefined,
-                      })
-                    }
-                  />
-                }
-              />
-            </Grid>
-          </Grid>
-          <DocumentRequirementCollection
-            formik={formik}
-            documentTypes={documentTypes}
-            documentTypesLoading={documentTypesLoading}
-            documentTypesError={documentTypesError}
-            onRetryDocumentTypes={onRetryDocumentTypes}
-          />
-        </Stack>
+            <DocumentRequirementCollection
+              formik={formik}
+              documentTypes={documentTypes}
+              documentTypesLoading={documentTypesLoading}
+              documentTypesError={documentTypesError}
+              onRetryDocumentTypes={onRetryDocumentTypes}
+            />
+          </Stack>
+        </FormSectionCard>
       </Scrollbar>
       <Stack
         direction="row"
@@ -169,11 +179,22 @@ export function DocumentRequirementDialog({
         justifyContent="flex-end"
         sx={{ p: 1.5, borderTop: 1, borderColor: 'divider', flexShrink: 0 }}
       >
-        <Button size="small" variant="outlined" onClick={requestClose}>
+        <Button
+          size="small"
+          variant="outlined"
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          onClick={requestClose}
+        >
           Cancel
         </Button>
-        <Button size="small" variant="contained" type="submit">
-          Save Requirement
+        <Button
+          size="small"
+          variant="contained"
+          color="inherit"
+          startIcon={<Iconify icon={GlobalIcons.submit} />}
+          type="submit"
+        >
+          Submit
         </Button>
       </Stack>
     </Box>
@@ -199,6 +220,7 @@ export function DocumentRequirementDialog({
           open
           hasForm={false}
           title="Configure Document Requirement"
+          titleInfo="Configure one evidence requirement in the current workflow draft."
           handleClose={requestClose}
           maxWidth="sm"
           guardUnsavedChanges={false}
@@ -206,17 +228,7 @@ export function DocumentRequirementDialog({
           {body}
         </CustomDialog>
       )}
-      <ConfirmDialog
-        open={discard.value}
-        onClose={discard.onFalse}
-        title="Discard Document Changes?"
-        content="Your changes to this requirement have not been saved."
-        action={
-          <Button size="small" color="error" variant="contained" onClick={onClose}>
-            Discard Changes
-          </Button>
-        }
-      />
+      {guard.confirmation}
     </>
   );
 }

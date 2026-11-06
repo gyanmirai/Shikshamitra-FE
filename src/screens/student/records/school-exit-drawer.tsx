@@ -2,33 +2,34 @@
 
 import type { RootState } from 'src/redux/store';
 import type { RecordsOutcome } from 'src/redux/student/records/student-records-types';
-import type { StudentTransition, TransitionRow } from 'src/redux/student/records/student-record-transitions-api';
+import type { TransitionRow, StudentTransition } from 'src/redux/student/records/student-record-transitions-api';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import { useSelector } from 'react-redux';
 import { useRef, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
-import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
-import { Box, Stack, Alert, Button, Skeleton, TextField, Typography, Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
-import { hasGrantedPermission } from 'src/utils/permissions';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { formatNumber } from 'src/utils/formate_number';
+import { fDate, formatStr } from 'src/utils/format-time';
+import { shikshaMitraToast } from 'src/components/toast';
+import { hasGrantedPermission } from 'src/utils/permissions';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import { FormSectionCard } from 'src/components/form-section-card';
-import { shikshaMitraToast } from 'src/components/toast';
+import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
+import { Box, Stack, Alert, Button, Skeleton, TextField, Accordion, Typography, AccordionSummary, AccordionDetails } from '@mui/material';
 import {
   useGetSchoolExitSummaryQuery,
   useGetStudentRecordTransitionQuery,
-  usePreviewStudentRecordTransitionsMutation,
-  useSubmitStudentRecordTransitionsMutation,
   useDecideStudentRecordTransitionMutation,
+  useSubmitStudentRecordTransitionsMutation,
+  usePreviewStudentRecordTransitionsMutation,
 } from 'src/redux/student/records/student-record-transitions-api';
 
 import StudentAssignmentDrawer from '../onboarding/student-setup/student-assignment-drawer';
@@ -177,7 +178,7 @@ export default function SchoolExitDrawer({ studentId, academicYearId, studentNam
             </FormSectionCard>}
             {Boolean(pending) && <Alert severity="info">An exit request is already pending. Review it in Year-End &amp; Transitions.</Alert>}
             <FormSectionCard title="Exit Details" icon={GlobalIcons.transfer} descriptionTooltip="The submitted exit type, leaving date and reason are reviewed under the school's transition rules.">
-              {transition ? <Stack spacing={1}><Typography variant="body2">Exit type: {exitTypes.find((x) => x.value === outcome)?.label ?? outcome}</Typography><Typography variant="body2">Leaving date: {dayjs(effectiveDate).format('DD MMM YYYY')}</Typography><Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>Reason: {saved?.reason ?? 'Loading submitted reason…'}</Typography></Stack> : <Stack spacing={2}>
+              {transition ? <Stack spacing={1}><Typography variant="body2">Exit type: {exitTypes.find((x) => x.value === outcome)?.label ?? outcome}</Typography><Typography variant="body2">Leaving date: {fDate(effectiveDate, formatStr.split.date)}</Typography><Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>Reason: {saved?.reason ?? 'Loading submitted reason…'}</Typography></Stack> : <Stack spacing={2}>
                 <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
                   <ShakingTextField error={errorFor('outcome')}><CustomSelect label="Exit type" required value={form.values.outcome} options={exitTypes} onChange={(value) => form.setFieldValue('outcome', value)} disabled={editLocked} error={errorFor('outcome')} helperText={form.touched.outcome ? form.errors.outcome : undefined} /></ShakingTextField>
                   <ShakingTextField error={errorFor('date')}><TextField fullWidth size="small" required type="date" name="date" label="Leaving date" value={form.values.date} onChange={form.handleChange} onBlur={form.handleBlur} disabled={editLocked} error={errorFor('date')} helperText={form.touched.date ? form.errors.date : undefined} slotProps={{ inputLabel: { shrink: true } }} /></ShakingTextField>

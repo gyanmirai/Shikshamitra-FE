@@ -56,7 +56,7 @@ describe('single managed document checklist', { timeout: 15000 }, () => {
     expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument();
     await chooseDocumentOption(user, 'Add a Standard Document', 'Birth Certificate');
     const dialog = screen.getByRole('dialog', { name: 'Configure Document Requirement' });
-    await user.click(within(dialog).getByRole('button', { name: 'Save Requirement' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Submit' }));
     await waitFor(() =>
       expect(
         screen.queryByRole('dialog', { name: 'Configure Document Requirement' })
@@ -140,6 +140,8 @@ describe('single managed document checklist', { timeout: 15000 }, () => {
       screen.queryByRole('button', { name: 'Edit Birth certificate' })
     ).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Apply Changes' })).not.toBeInTheDocument();
-    screen.getAllByRole('switch').forEach((option) => expect(option).toBeDisabled());
+    expect(screen.queryByRole('switch')).not.toBeInTheDocument();
+    expect(screen.getAllByText('Document verification').find((item) => item.tagName === 'DT')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Document Requirements information' })).toBeVisible();
   });
 });

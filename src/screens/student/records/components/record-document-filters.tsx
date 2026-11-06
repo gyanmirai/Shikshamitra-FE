@@ -73,7 +73,7 @@ export default function RecordDocumentFilters({
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <RecordsStudentPicker key={showCertificateBatch ? batch.length : 'single'}
             size="small" helperText={null} disabled={busy} onSelect={onSelect}
-            includeActiveStudentList={certificates} />
+            includeActiveStudentList={certificates} toastRecovery={certificates} />
         </Box>
         {canIssue && (
           <>

@@ -24,17 +24,17 @@ import {
 import StudentPendingTasks from './student-pending-tasks';
 import StudentSetupDivisionEditor from './student-setup-division-editor';
 import { hasAssignedDivision, type StudentSetupView } from './student-setup-view';
-import {
-  getStudentPendingTasks,
-  getStudentSetupSummary,
-  getStudentSetupStatusDisplayLabel,
-} from './student-setup-summary';
 import { studentSetupSortFields, studentSetupStatusOptions } from './student-setup-worklist-config';
 import {
   accountStatusMeta,
   onboardingStageMeta,
   type StudentOnboardingItem,
 } from './student-onboarding-model';
+import {
+  getStudentPendingTasks,
+  getStudentSetupSummary,
+  getStudentSetupStatusDisplayLabel,
+} from './student-setup-summary';
 
 export default function StudentSetupTable({
   rows,
@@ -843,7 +843,7 @@ export default function StudentSetupTable({
             notificationKey="STU-1055"
             presentation="toast"
             severity="error"
-            action={
+            toastAction={
               <Button color="inherit" onClick={onRetry}>
                 Retry
               </Button>

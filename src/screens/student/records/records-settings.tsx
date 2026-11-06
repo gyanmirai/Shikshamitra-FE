@@ -71,7 +71,7 @@ export default function RecordsSettings({ task = 'changes' }: { task?: RecordsSe
             notificationKey="STU-0816"
             presentation="toast"
             severity="error"
-            action={
+            toastAction={
               <Button color="inherit" onClick={() => query.refetch()}>
                 Retry
               </Button>
@@ -328,7 +328,7 @@ function RecordsSettingsEditor({
           notificationKey="STU-0821"
           presentation="toast"
           severity="error"
-          action={
+          toastAction={
             <Button color="inherit" onClick={() => roleQuery.refetch()}>
               Retry
             </Button>

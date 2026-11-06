@@ -298,6 +298,7 @@ export function ParentRegistrationPanel({
   });
   const router = useRouter();
   const guard = useUnsavedNavigation(Boolean(action && formik.dirty), {
+    guardContextChanges: Boolean(action),
     push: router.push,
     blockNavigation: busy,
   });

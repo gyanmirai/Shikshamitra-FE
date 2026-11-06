@@ -12,6 +12,7 @@ import { StudentFeedback } from 'src/components/student-feedback';
 import { Stack, Button, Skeleton, DialogActions } from '@mui/material';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 import { useGetAdmissionApplicant360Query } from 'src/redux/student/admissions/admission-applicants-api';
 
 import AdmissionApplicantNotes from '../admission-applicant-notes';
@@ -34,12 +35,14 @@ export function ApplicationApplicantNotesDialog({
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
   const router = useRouter();
-  const busy = open && (query.isFetching || saving);
+  const busy = open && saving;
   useEffect(() => {
     onBusyChange?.(busy);
   }, [busy, onBusyChange]);
   useEffect(() => () => onBusyChange?.(false), [onBusyChange]);
   const closeGuard = useUnsavedNavigation(open && dirty, {
+    guardContextChanges: open,
+    renderConfirmation: renderUnsavedConfirmation,
     push: router.push,
     blockNavigation: busy,
     title: 'Discard Unsaved Note?',

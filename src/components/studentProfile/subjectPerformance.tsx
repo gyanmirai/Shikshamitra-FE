@@ -1,11 +1,17 @@
-import React from 'react';
-import { Box } from '@mui/material';
-import CourseProgressComponent from 'src/screens/academic/courseProgress/courseProgress';
+import { academicPaths, academicActionPermissions } from 'src/constants/academic-menu';
+import { StudentRelatedUnavailable } from 'src/screens/student/studentProfile/student-related-unavailable';
 
-const SubjectPerformance = () => (
-  <Box>
-    <CourseProgressComponent courseData={[]} isAction={false} layout="vertical" />
-  </Box>
-);
-
-export default SubjectPerformance;
+export default function SubjectPerformance({ onOverview }: { onOverview?: () => void }) {
+  return (
+    <StudentRelatedUnavailable
+      title="Subject Performance"
+      message="Student subject performance is unavailable here."
+      onOverview={onOverview}
+      destination={{
+        href: academicPaths.studentAcademic360,
+        label: 'Open student academic overview',
+        permission: academicActionPermissions.studentAcademic360,
+      }}
+    />
+  );
+}

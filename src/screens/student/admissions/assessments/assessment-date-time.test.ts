@@ -20,13 +20,13 @@ describe('formatAssessmentSchedule', () => {
     'formats school time consistently for %s',
     (start) => {
       expect(formatAssessmentSchedule(start, '2026-10-15T09:45:00Z')).toEqual({
-        date: '15 Oct 2026',
+        date: '15/10/2026',
         time: '3:10 PM–3:15 PM IST',
       });
     }
   );
   it('uses the school calendar date across the UTC day boundary', () => {
-    expect(formatAssessmentSchedule('2026-10-14T20:00:00Z')?.date).toBe('15 Oct 2026');
+    expect(formatAssessmentSchedule('2026-10-14T20:00:00Z')?.date).toBe('15/10/2026');
   });
   it.each([null, undefined, '', 'invalid'])('omits an unavailable start %s', (value) => {
     expect(formatAssessmentSchedule(value)).toBeNull();

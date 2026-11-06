@@ -3,6 +3,7 @@ import type { ManagedApplicationAssessment } from 'src/redux/student/admissions/
 
 import { Stack, TextField } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
+import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 
@@ -83,49 +84,58 @@ export function AssessmentActionFields({
             }
           />
         ) : assessment.policy.scoringEnabled ? (
-          <NumericFormatCustom
-            fullWidth
-            required
-            size="small"
-            prefix=""
-            decimalScale={2}
-            label={`Marks Out Of ${assessment.policy.totalMarks}`}
-            value={values.marks}
-            name="marks"
-            disabled={isSubmitting}
-            onBlur={formik.handleBlur}
-            onValueChange={({ floatValue }) => formik.setFieldValue('marks', floatValue ?? '')}
-            error={Boolean(touched.marks && errors.marks)}
-            helperText={
-              (touched.marks && errors.marks) || `Passing marks: ${assessment.policy.passingMarks}.`
-            }
-          />
+          <ShakingTextField error={Boolean(touched.marks && errors.marks)}>
+            <NumericFormatCustom
+              fullWidth
+              required
+              size="small"
+              prefix=""
+              decimalScale={2}
+              label={`Marks Out Of ${assessment.policy.totalMarks}`}
+              value={values.marks}
+              name="marks"
+              disabled={isSubmitting}
+              onBlur={formik.handleBlur}
+              onValueChange={({ floatValue }) => formik.setFieldValue('marks', floatValue ?? '')}
+              error={Boolean(touched.marks && errors.marks)}
+              helperText={
+                (touched.marks && errors.marks) ||
+                `Passing marks: ${assessment.policy.passingMarks}.`
+              }
+            />
+          </ShakingTextField>
         ) : (
-          <CustomSelect
-            label="Result"
-            value={values.outcome}
-            disabled={isSubmitting}
-            error={Boolean(touched.outcome && errors.outcome)}
-            helperText={touched.outcome ? errors.outcome : undefined}
-            onChange={(value) => formik.setFieldValue('outcome', value)}
-            options={[
-              { value: 'passed', label: 'Passed' },
-              { value: 'failed', label: 'Failed' },
-            ]}
-          />
+          <ShakingTextField error={Boolean(touched.outcome && errors.outcome)}>
+            <CustomSelect
+              label="Result"
+              required
+              value={values.outcome}
+              disabled={isSubmitting}
+              error={Boolean(touched.outcome && errors.outcome)}
+              helperText={touched.outcome ? errors.outcome : undefined}
+              onChange={(value) => formik.setFieldValue('outcome', value)}
+              options={[
+                { value: 'passed', label: 'Passed' },
+                { value: 'failed', label: 'Failed' },
+              ]}
+            />
+          </ShakingTextField>
         ))}
       {action !== 'book' && (
-        <TextField
-          fullWidth
-          size="small"
-          multiline
-          minRows={3}
-          label="Notes / Reason"
-          disabled={isSubmitting}
-          {...formik.getFieldProps('notes')}
-          error={Boolean(touched.notes && errors.notes)}
-          helperText={touched.notes ? errors.notes : undefined}
-        />
+        <ShakingTextField error={Boolean(touched.notes && errors.notes)}>
+          <TextField
+            fullWidth
+            size="small"
+            multiline
+            minRows={3}
+            label="Notes / Reason"
+            required={action === 'waive' || action === 'retake' || action === 'cancel'}
+            disabled={isSubmitting}
+            {...formik.getFieldProps('notes')}
+            error={Boolean(touched.notes && errors.notes)}
+            helperText={touched.notes ? errors.notes : undefined}
+          />
+        </ShakingTextField>
       )}
     </Stack>
   );

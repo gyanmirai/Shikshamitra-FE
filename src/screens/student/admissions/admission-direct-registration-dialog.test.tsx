@@ -179,12 +179,12 @@ const renderDrawer = () =>
   render(<AdmissionDirectRegistrationDialog open academicYearId="year-1" onClose={state.close} />);
 const selectOffering = async () => {
   await screen.findByRole('option', { name: cycle.name });
-  fireEvent.change(screen.getByLabelText('Admission Cycle'), { target: { value: cycle.id } });
+  fireEvent.change(screen.getByLabelText('Admission cycle'), { target: { value: cycle.id } });
   await screen.findByRole('option', { name: offering.name });
-  fireEvent.change(screen.getByLabelText('Admission Offering'), { target: { value: offering.id } });
+  fireEvent.change(screen.getByLabelText('Admission offering'), { target: { value: offering.id } });
 };
 const fillApplicant = () => {
-  const firstNames = screen.getAllByLabelText(/First Name/);
+  const firstNames = screen.getAllByLabelText(/First name/);
   fireEvent.change(firstNames[0], { target: { value: 'Riya' } });
   fireEvent.change(firstNames[1], { target: { value: 'Aarti' } });
   fireEvent.change(screen.getByLabelText('Date of birth'), { target: { value: '2018-01-01' } });
@@ -212,9 +212,9 @@ describe('Special direct-registration entry', () => {
     await selectOffering();
     fillApplicant();
     fireEvent.change(screen.getByLabelText('Gender'), { target: { value: 'Other' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Check Existing Families' }));
-    await screen.findByText(/No Family Is Available to Link/);
-    fireEvent.click(await screen.findByRole('button', { name: 'Start Registration' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Check existing families' }));
+    await screen.findByText(/No family is available to link/);
+    fireEvent.click(await screen.findByRole('button', { name: 'Start registration' }));
     await waitFor(() => expect(state.start).toHaveBeenCalledOnce());
     expect(state.start).toHaveBeenCalledWith(expect.objectContaining({ applicantGender: 'Other' }));
   });
@@ -222,31 +222,31 @@ describe('Special direct-registration entry', () => {
     renderDrawer();
     await selectOffering();
     fillApplicant();
-    fireEvent.click(screen.getByRole('button', { name: 'Check Existing Families' }));
-    await screen.findByText(/No Family Is Available to Link/);
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Add Other Guardian' }));
-    fireEvent.change(screen.getByLabelText(/Guardian Full Name/), {
+    fireEvent.click(screen.getByRole('button', { name: 'Check existing families' }));
+    await screen.findByText(/No family is available to link/);
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Add other guardian' }));
+    fireEvent.change(screen.getByLabelText(/Guardian full name/), {
       target: { value: 'Pooja Shah' },
     });
-    fireEvent.change(screen.getByLabelText(/Guardian Relationship/), { target: { value: 'Aunt' } });
-    fireEvent.change(screen.getByLabelText('Guardian Email'), {
+    fireEvent.change(screen.getByLabelText(/Guardian relationship/), { target: { value: 'Aunt' } });
+    fireEvent.change(screen.getByLabelText('Guardian email'), {
       target: { value: 'AUNT@Example.COM' },
     });
-    fireEvent.change(screen.getByLabelText('Main School Contact'), {
+    fireEvent.change(screen.getByLabelText('Main school contact'), {
       target: { value: 'guardian' },
     });
     const confirmation = screen.getByRole('dialog', { name: 'Confirm Guardian Responsibility' });
-    expect(screen.getByLabelText('Main School Contact')).toHaveValue('mother');
+    expect(screen.getByLabelText('Main school contact')).toHaveValue('mother');
     fireEvent.click(within(confirmation).getByRole('button', { name: 'Cancel' }));
-    expect(screen.getByLabelText('Main School Contact')).toHaveValue('mother');
-    expect(screen.getByLabelText(/Guardian Full Name/)).toHaveValue('Pooja Shah');
+    expect(screen.getByLabelText('Main school contact')).toHaveValue('mother');
+    expect(screen.getByLabelText(/Guardian full name/)).toHaveValue('Pooja Shah');
     expect(state.start).not.toHaveBeenCalled();
-    fireEvent.change(screen.getByLabelText('Main School Contact'), {
+    fireEvent.change(screen.getByLabelText('Main school contact'), {
       target: { value: 'guardian' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Confirm Guardian' }));
     expect(state.start).not.toHaveBeenCalled();
-    fireEvent.click(await screen.findByRole('button', { name: 'Start Registration' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Start registration' }));
     await waitFor(() => expect(state.start).toHaveBeenCalledOnce());
     expect(state.start).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -271,17 +271,17 @@ describe('Special direct-registration entry', () => {
     renderDrawer();
     await selectOffering();
     fillApplicant();
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Add Other Guardian' }));
-    fireEvent.change(screen.getByLabelText('Main School Contact'), {
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Add other guardian' }));
+    fireEvent.change(screen.getByLabelText('Main school contact'), {
       target: { value: 'guardian' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Confirm Guardian' }));
-    fireEvent.click(await screen.findByRole('checkbox', { name: 'Add Other Guardian' }));
-    expect(screen.getByLabelText('Main School Contact')).toHaveValue('mother');
-    expect(screen.queryByLabelText(/Guardian Full Name/)).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Check Existing Families' }));
-    await screen.findByText(/No Family Is Available to Link/);
-    fireEvent.click(screen.getByRole('button', { name: 'Start Registration' }));
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'Add other guardian' }));
+    expect(screen.getByLabelText('Main school contact')).toHaveValue('mother');
+    expect(screen.queryByLabelText(/Guardian full name/)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Check existing families' }));
+    await screen.findByText(/No family is available to link/);
+    fireEvent.click(screen.getByRole('button', { name: 'Start registration' }));
     await waitFor(() => expect(state.start).toHaveBeenCalledOnce());
     expect(state.start).toHaveBeenCalledWith(
       expect.objectContaining({ familyContacts: { mainContactRelationship: 'mother' } })
@@ -292,10 +292,10 @@ describe('Special direct-registration entry', () => {
     renderDrawer();
     await selectOffering();
     fillApplicant();
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Add Other Parent' }));
-    expect(screen.getByLabelText('Main School Contact')).toHaveValue('mother');
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Add other parent' }));
+    expect(screen.getByLabelText('Main school contact')).toHaveValue('mother');
     fireEvent.change(screen.getByLabelText('Relationship'), { target: { value: 'father' } });
-    expect(screen.getByLabelText('Main School Contact')).toHaveValue('father');
+    expect(screen.getByLabelText('Main school contact')).toHaveValue('father');
   });
 
   it('requires reviewing optional parent details before a sibling confirmation can change parent roles', async () => {
@@ -320,10 +320,10 @@ describe('Special direct-registration entry', () => {
     renderDrawer();
     await selectOffering();
     fillApplicant();
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Add Other Parent' }));
-    fireEvent.change(screen.getByLabelText(/Father Full Name/), { target: { value: 'Raj' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Check Existing Families' }));
-    await screen.findByText(/Existing Family Found/);
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Add other parent' }));
+    fireEvent.change(screen.getByLabelText(/Father full name/), { target: { value: 'Raj' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Check existing families' }));
+    await screen.findByText(/Existing family found/);
     fireEvent.change(screen.getByLabelText('Parent'), { target: { value: 'sibling-1:father' } });
     fireEvent.click(screen.getByRole('button', { name: 'Add Sibling' }));
     const dialog = await screen.findByRole('dialog', { name: 'Add Sibling?' });
@@ -335,9 +335,9 @@ describe('Special direct-registration entry', () => {
       )
     ).toBeVisible();
     expect(screen.getByLabelText('Relationship')).toHaveValue('mother');
-    expect(screen.getByLabelText(/Father Full Name/)).toHaveValue('Raj');
+    expect(screen.getByLabelText(/Father full name/)).toHaveValue('Raj');
     expect(state.start).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Add Other Parent' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Add other parent' }));
     fireEvent.click(screen.getByRole('button', { name: 'Add Sibling' }));
     const reviewed = await screen.findByRole('dialog', { name: 'Add Sibling?' });
     fireEvent.click(within(reviewed).getByRole('button', { name: 'Add Sibling' }));
@@ -363,15 +363,15 @@ describe('Special direct-registration entry', () => {
       }));
       renderDrawer();
       await screen.findByRole('option', { name: cycle.name });
-      fireEvent.change(screen.getByLabelText('Admission Cycle'), { target: { value: cycle.id } });
-      fireEvent.change(screen.getByLabelText('Admission Type'), {
+      fireEvent.change(screen.getByLabelText('Admission cycle'), { target: { value: cycle.id } });
+      fireEvent.change(screen.getByLabelText('Admission type'), {
         target: { value: String(track) },
       });
       await screen.findByRole('option', { name: specialOffering.name });
-      fireEvent.change(screen.getByLabelText('Admission Offering'), {
+      fireEvent.change(screen.getByLabelText('Admission offering'), {
         target: { value: specialOffering.id },
       });
-      expect(screen.getByRole('button', { name: 'Start Registration' })).toBeEnabled();
+      expect(screen.getByRole('button', { name: 'Start registration' })).toBeEnabled();
       expect(state.loadOfferings).toHaveBeenLastCalledWith(
         expect.objectContaining({ track, entryMode: undefined })
       );
@@ -430,17 +430,17 @@ describe('Special direct-registration entry', () => {
     }));
     renderDrawer();
     await selectOffering();
-    fireEvent.click(screen.getByRole('button', { name: 'More Admission Offering' }));
+    fireEvent.click(screen.getByRole('button', { name: 'More Admission offering' }));
     await screen.findByRole('option', { name: 'Class 26 RTE' });
     expect(state.loadOfferings).toHaveBeenCalledWith(
       expect.objectContaining({ skipCount: 25, maxResultCount: 25 })
     );
-    fireEvent.change(screen.getByLabelText('Admission Type'), { target: { value: '2' } });
+    fireEvent.change(screen.getByLabelText('Admission type'), { target: { value: '2' } });
     await waitFor(() =>
       expect(state.loadOfferings).toHaveBeenLastCalledWith(expect.objectContaining({ track: 2 }))
     );
-    expect(screen.getByLabelText('Admission Offering')).toHaveValue('');
-    expect(screen.getByRole('button', { name: 'Start Registration' })).toBeDisabled();
+    expect(screen.getByLabelText('Admission offering')).toHaveValue('');
+    expect(screen.getByRole('button', { name: 'Start registration' })).toBeDisabled();
   });
   it.each([2, 3])(
     'requests server-filtered legacy Both offerings for type %s on the first page',
@@ -467,8 +467,8 @@ describe('Special direct-registration entry', () => {
       }));
       renderDrawer();
       await screen.findByRole('option', { name: cycle.name });
-      fireEvent.change(screen.getByLabelText('Admission Cycle'), { target: { value: cycle.id } });
-      fireEvent.change(screen.getByLabelText('Admission Type'), {
+      fireEvent.change(screen.getByLabelText('Admission cycle'), { target: { value: cycle.id } });
+      fireEvent.change(screen.getByLabelText('Admission type'), {
         target: { value: String(track) },
       });
       await waitFor(() =>
@@ -478,10 +478,10 @@ describe('Special direct-registration entry', () => {
       );
       expect(screen.queryByRole('option', { name: inquiryOffering.name })).not.toBeInTheDocument();
       await screen.findByRole('option', { name: legacyOffering.name });
-      fireEvent.change(screen.getByLabelText('Admission Offering'), {
+      fireEvent.change(screen.getByLabelText('Admission offering'), {
         target: { value: legacyOffering.id },
       });
-      expect(screen.getByRole('button', { name: 'Start Registration' })).toBeEnabled();
+      expect(screen.getByRole('button', { name: 'Start registration' })).toBeEnabled();
       expect(state.loadOfferings).toHaveBeenLastCalledWith(
         expect.objectContaining({ track, skipCount: 0 })
       );
@@ -490,29 +490,29 @@ describe('Special direct-registration entry', () => {
   it('focuses the editable date field when its invalid picker group is the first error', async () => {
     renderDrawer();
     await selectOffering();
-    fireEvent.change(screen.getAllByLabelText(/First Name/)[0], { target: { value: 'Riya' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Start Registration' }));
+    fireEvent.change(screen.getAllByLabelText(/First name/)[0], { target: { value: 'Riya' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Start registration' }));
     await waitFor(() => expect(screen.getByLabelText('Date of birth')).toHaveFocus());
     expect(state.start).not.toHaveBeenCalled();
   });
   it('blocks invalid identity and unchecked family submissions; succeeds only after API returns an application', async () => {
     renderDrawer();
     await selectOffering();
-    fireEvent.click(screen.getByRole('button', { name: 'Start Registration' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Start registration' }));
     await screen.findByText('Applicant first name is required.');
-    await waitFor(() => expect(screen.getAllByLabelText(/First Name/)[0]).toHaveFocus());
+    await waitFor(() => expect(screen.getAllByLabelText(/First name/)[0]).toHaveFocus());
     expect(state.start).not.toHaveBeenCalled();
     fillApplicant();
     fireEvent.change(screen.getByRole('textbox', { name: 'Email' }), {
       target: { value: 'Parent+Direct@Example.COM' },
     });
     expect(screen.getByRole('textbox', { name: 'Email' })).toHaveValue('parent+direct@example.com');
-    fireEvent.click(screen.getByRole('button', { name: 'Start Registration' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Start registration' }));
     await screen.findByText(/Check existing families using these parent contact details/);
     expect(state.start).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole('button', { name: 'Check Existing Families' }));
-    await screen.findByText(/No Family Is Available to Link/);
-    fireEvent.click(screen.getByRole('button', { name: 'Start Registration' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Check existing families' }));
+    await screen.findByText(/No family is available to link/);
+    fireEvent.click(screen.getByRole('button', { name: 'Start registration' }));
     await waitFor(() => expect(state.close).toHaveBeenCalledOnce());
     expect(state.start).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -534,9 +534,9 @@ describe('Special direct-registration entry', () => {
     renderDrawer();
     await selectOffering();
     fillApplicant();
-    fireEvent.click(screen.getByRole('button', { name: 'Check Existing Families' }));
-    await screen.findByText(/No Family Is Available to Link/);
-    fireEvent.click(screen.getByRole('button', { name: 'Start Registration' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Check existing families' }));
+    await screen.findByText(/No family is available to link/);
+    fireEvent.click(screen.getByRole('button', { name: 'Start registration' }));
     await waitFor(() =>
       expect(state.error).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -546,9 +546,9 @@ describe('Special direct-registration entry', () => {
     );
     expect(state.success).not.toHaveBeenCalled();
     expect(state.close).not.toHaveBeenCalled();
-    expect(screen.getAllByLabelText(/First Name/)[0]).toHaveValue('Riya');
+    expect(screen.getAllByLabelText(/First name/)[0]).toHaveValue('Riya');
     const firstRequestId = state.start.mock.calls[0][0].requestId;
-    fireEvent.click(screen.getByRole('button', { name: 'Start Registration' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Start registration' }));
     await waitFor(() => expect(state.start).toHaveBeenCalledTimes(2));
     expect(state.start.mock.calls[1][0].requestId).toBe(firstRequestId);
   });
@@ -576,13 +576,13 @@ describe('Special direct-registration entry', () => {
     renderDrawer();
     await selectOffering();
     fillApplicant();
-    fireEvent.click(screen.getByRole('button', { name: 'Check Existing Families' }));
-    await screen.findByText(/Existing Family Found/);
-    fireEvent.click(screen.getByRole('button', { name: 'Start Registration' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Check existing families' }));
+    await screen.findByText(/Existing family found/);
+    fireEvent.click(screen.getByRole('button', { name: 'Start registration' }));
     await screen.findByText(/Link an existing family or choose/);
     expect(state.start).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole('button', { name: 'Create a Separate Family' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Start Registration' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Create a separate family' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Start registration' }));
     await screen.findByText('Reason for separate family is required.');
     expect(state.start).not.toHaveBeenCalled();
     fireEvent.change(screen.getByLabelText('Parent'), {
@@ -595,7 +595,7 @@ describe('Special direct-registration entry', () => {
       expect(screen.queryByRole('dialog', { name: 'Add Sibling?' })).not.toBeInTheDocument()
     );
     await screen.findByText(/Sibling family confirmed/);
-    fireEvent.click(screen.getByRole('button', { name: 'Start Registration' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Start registration' }));
     await waitFor(() =>
       expect(state.start).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -611,10 +611,10 @@ describe('Special direct-registration entry', () => {
     renderDrawer();
     await selectOffering();
     fillApplicant();
-    fireEvent.click(screen.getByRole('button', { name: 'Check Existing Families' }));
-    await screen.findByText(/No Family Is Available to Link/);
+    fireEvent.click(screen.getByRole('button', { name: 'Check existing families' }));
+    await screen.findByText(/No family is available to link/);
     fireEvent.change(screen.getByLabelText(/Mobile/), { target: { value: '9876543211' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Start Registration' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Start registration' }));
     await screen.findByText(/Check existing families using these parent contact details/);
     expect(state.start).not.toHaveBeenCalled();
   });
@@ -625,8 +625,8 @@ describe('Special direct-registration entry', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Email' }), {
       target: { value: 'Parent@Example.COM' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Check Existing Families' }));
-    await screen.findByText(/No Family Is Available to Link/);
+    fireEvent.click(screen.getByRole('button', { name: 'Check existing families' }));
+    await screen.findByText(/No family is available to link/);
     expect(state.findFamilies).toHaveBeenLastCalledWith({
       offeringId: offering.id,
       guardianMobile: '9876543210',
@@ -635,7 +635,7 @@ describe('Special direct-registration entry', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Email' }), {
       target: { value: 'changed@example.com' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Start Registration' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Start registration' }));
     await screen.findByText(/Check existing families using these parent contact details/);
     expect(state.start).not.toHaveBeenCalled();
     expect(screen.queryByRole('option', { name: 'Guardian' })).not.toBeInTheDocument();
@@ -645,7 +645,7 @@ describe('Special direct-registration entry', () => {
     await selectOffering();
     fillApplicant();
     fireEvent.change(screen.getByLabelText('Relationship'), { target: { value: '' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Start Registration' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Start registration' }));
     await screen.findByText('Select Father or Mother.');
     expect(state.start).not.toHaveBeenCalled();
   });
@@ -660,13 +660,13 @@ describe('Special direct-registration entry', () => {
     renderDrawer();
     await selectOffering();
     fillApplicant();
-    fireEvent.click(screen.getByRole('button', { name: 'Check Existing Families' }));
-    await screen.findByText(/No Family Is Available to Link/);
-    fireEvent.click(screen.getByRole('button', { name: 'Start Registration' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Check existing families' }));
+    await screen.findByText(/No family is available to link/);
+    fireEvent.click(screen.getByRole('button', { name: 'Start registration' }));
     await waitFor(() => expect(state.start).toHaveBeenCalledOnce());
     expect(screen.getByRole('button', { name: 'Close Direct Registration' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
-    expect(screen.getByLabelText('Admission Type')).toBeDisabled();
+    expect(screen.getByLabelText('Admission type')).toBeDisabled();
     reject({ data: { detail: 'This offering is no longer open.' } });
     await waitFor(() =>
       expect(state.error).toHaveBeenCalledWith({ message: 'This offering is no longer open.' })
@@ -688,7 +688,7 @@ describe('Special direct-registration entry', () => {
         message: expect.stringMatching(/Admission choices could not be loaded/),
       })
     );
-    expect(screen.getByRole('button', { name: 'Start Registration' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Start registration' })).toBeDisabled();
     await waitFor(() => expect(state.loadCycles).toHaveBeenCalledOnce());
     state.cyclesError = false;
     state.loadCycles.mockImplementation(() => ({
@@ -705,7 +705,10 @@ describe('Special direct-registration entry', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(screen.getByText('Discard Unsaved Registration?')).toBeInTheDocument();
     expect(state.close).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole('button', { name: 'Discard Changes' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
+    expect(state.close).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
     expect(state.close).toHaveBeenCalledOnce();
   });
 });

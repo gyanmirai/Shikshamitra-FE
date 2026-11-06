@@ -5,14 +5,15 @@ import type { RecordRegistrationSource } from 'src/redux/student/records/student
 import { useId, useState } from 'react';
 import Timeline from '@mui/lab/Timeline';
 import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import TimelineDot from '@mui/lab/TimelineDot';
 import { Iconify } from 'src/components/iconify';
-import { fDateTime } from 'src/utils/format-time';
 import { Scrollbar } from 'src/components/scrollbar';
 import TimelineContent from '@mui/lab/TimelineContent';
 import TimelineSeparator from '@mui/lab/TimelineSeparator';
 import TimelineConnector from '@mui/lab/TimelineConnector';
 import { EmptyContent } from 'src/components/empty-content';
+import { fDateTime, formatStr } from 'src/utils/format-time';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
 import TimelineItem, { timelineItemClasses } from '@mui/lab/TimelineItem';
@@ -109,8 +110,10 @@ export function StudentRecordHistoryPanel({
     <>
       {canReadChanges ? (
         <FormSectionCard
-          icon="mdi:history"
-          title="Audit history"
+          icon={GlobalIcons.history}
+          title="Audit History"
+          descriptionTooltip="Student record changes across academic years, with their recorded status, actor and dates."
+          titleTypographyProps={{ fontWeight: 600 }}
           action={
             <Typography variant="caption" color="text.secondary">
               All academic years · Newest first
@@ -128,7 +131,7 @@ export function StudentRecordHistoryPanel({
               notificationKey="STU-0771"
               presentation="toast"
               severity="error"
-              action={
+              toastAction={
                 onRetry ? (
                   <Button size="small" onClick={onRetry}>
                     Retry History
@@ -187,11 +190,12 @@ export function StudentRecordHistoryPanel({
                       <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
                         <Typography variant="caption" color="text.secondary">
                           Submitted by {change.requestedByName ?? 'Staff member'} ·{' '}
-                          {fDateTime(change.creationTime) || 'Time not recorded'}
+                          {fDateTime(change.creationTime, formatStr.split.dateTime) ||
+                            'Time not recorded'}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
                           {change.appliedAt
-                            ? `Applied ${fDateTime(change.appliedAt)}`
+                            ? `Applied ${fDateTime(change.appliedAt, formatStr.split.dateTime)}`
                             : 'Not applied'}
                         </Typography>
                       </Stack>
@@ -277,7 +281,7 @@ export function StudentRecordHistoryPanel({
                 notificationKey="STU-0774"
                 presentation="toast"
                 severity="error"
-                action={
+                toastAction={
                   <Button size="small" onClick={() => detail.refetch()}>
                     Retry
                   </Button>
@@ -302,10 +306,15 @@ export function StudentRecordHistoryPanel({
                 <ProfileValues
                   values={[
                     { label: 'Submitted by', value: selected.requestedByName ?? 'Staff member' },
-                    { label: 'Submitted on', value: fDateTime(selected.creationTime) },
+                    {
+                      label: 'Submitted on',
+                      value: fDateTime(selected.creationTime, formatStr.split.dateTime),
+                    },
                     {
                       label: 'Applied on',
-                      value: selected.appliedAt ? fDateTime(selected.appliedAt) : 'Not applied',
+                      value: selected.appliedAt
+                        ? fDateTime(selected.appliedAt, formatStr.split.dateTime)
+                        : 'Not applied',
                     },
                   ]}
                 />
@@ -332,7 +341,7 @@ export function StudentRecordHistoryPanel({
                           notificationKey="STU-0777"
                           presentation="toast"
                           severity="error"
-                          action={
+                          toastAction={
                             <Button size="small" onClick={retryLabels}>
                               Retry Labels
                             </Button>
@@ -380,7 +389,8 @@ export function StudentRecordHistoryPanel({
                       >
                         <Typography variant="body2">{decision.decision}</Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {decision.actorName ?? 'Reviewer'} · {fDateTime(decision.creationTime)}
+                          {decision.actorName ?? 'Reviewer'} ·{' '}
+                          {fDateTime(decision.creationTime, formatStr.split.dateTime)}
                         </Typography>
                         {!selected.payloadMasked && (
                           <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>

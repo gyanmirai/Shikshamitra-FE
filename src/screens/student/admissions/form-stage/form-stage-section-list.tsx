@@ -6,6 +6,8 @@ import { fDateTime } from 'src/utils/format-time';
 import { Stack, Button, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 
+import { ADMISSION_DATE_TIME_FORMAT } from '../admission-date-formats';
+
 export function FormStageSectionList({
   sections,
   disabled,
@@ -52,7 +54,7 @@ export function FormStageSectionList({
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
                     {section.verifiedAt
-                      ? `Verified ${fDateTime(section.verifiedAt)}`
+                      ? `Verified ${fDateTime(section.verifiedAt, ADMISSION_DATE_TIME_FORMAT)}`
                       : 'Waiting for Staff Verification'}
                   </Typography>
                 </Stack>

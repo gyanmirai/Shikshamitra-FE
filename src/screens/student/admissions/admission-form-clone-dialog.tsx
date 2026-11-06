@@ -2,11 +2,16 @@ import type { AdmissionForm } from 'src/redux/student/admissions/admission-forms
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { LoadingButton } from 'src/components/loading-button';
-import ShakingTextField from 'src/components/shaking-text-field';
+import { FormBusyRegion } from 'src/components/form-busy-region';
+import { FormSectionCard } from 'src/components/form-section-card';
+import { Stack, Button, Typography, DialogActions } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
+
+import { useAdmissionDraftGuard } from './use-admission-draft-guard';
+import { FormCloneFields } from './form-dialog/components/form-clone-fields';
 
 export type AdmissionFormCloneValues = {
   name: string;
@@ -66,75 +71,68 @@ function AdmissionFormCloneEditor({
       if (saved) onClose();
     },
   });
+  const busy = saving || formik.isSubmitting;
+  const guard = useAdmissionDraftGuard({ dirty: formik.dirty, busy, reset: formik.resetForm });
+  const requestClose = () => guard.requestNavigation(onClose);
 
   return (
-    <CustomDialog
-      open
-      handleClose={onClose}
-      disableClose={saving}
-      title="Clone Form as Draft"
-      maxWidth="sm"
-    >
-      <DialogScrollContent onSubmit={() => formik.handleSubmit()}>
-        <Stack spacing={2}>
-          <Typography variant="body2" color="text.secondary">
-            Copy Version {source.version} into a new independent draft. The original form and its
-            applications remain unchanged.
-          </Typography>
-          <ShakingTextField error={Boolean(formik.touched.name && formik.errors.name)}>
-            <TextField
-              fullWidth
-              autoFocus
-              required
-              size="small"
-              label="Form Name"
-              {...formik.getFieldProps('name')}
-              error={Boolean(formik.touched.name && formik.errors.name)}
-              helperText={
-                formik.touched.name ? formik.errors.name : 'A name your team will recognize.'
-              }
-            />
-          </ShakingTextField>
-          <ShakingTextField
-            error={Boolean(formik.touched.description && formik.errors.description)}
+    <>
+      <CustomDialog
+        open
+        handleClose={requestClose}
+        guardUnsavedChanges={false}
+        disableClose={busy}
+        title="Clone Form as Draft"
+        titleInfo="Copy the selected form version into an independent draft."
+        maxWidth="sm"
+        formProps={{
+          noValidate: true,
+          onSubmit: (event) => {
+            event.preventDefault();
+            formik.submitForm();
+          },
+        }}
+      >
+        <DialogScrollContent>
+          <FormBusyRegion busy={busy} label="Cloning form…">
+            <FormSectionCard
+              title="Draft Details"
+              icon={GlobalIcons.copy}
+              descriptionTooltip="The clone receives a new generated identity. The source form and existing applications keep their original version."
+            >
+              <Stack spacing={2}>
+                <Typography variant="body2" color="text.secondary">
+                  Copy {source.name} · Version {source.version} into a new independent draft. The
+                  original form and its applications remain unchanged.
+                </Typography>
+                <FormCloneFields formik={formik} />
+              </Stack>
+            </FormSectionCard>
+          </FormBusyRegion>
+        </DialogScrollContent>
+        <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<Iconify icon="mdi:close" />}
+            disabled={busy}
+            onClick={requestClose}
           >
-            <TextField
-              fullWidth
-              multiline
-              minRows={3}
-              size="small"
-              label="Description (Optional)"
-              {...formik.getFieldProps('description')}
-              error={Boolean(formik.touched.description && formik.errors.description)}
-              helperText={
-                formik.touched.description && formik.errors.description
-                  ? formik.errors.description
-                  : 'Leave blank to keep the original description.'
-              }
-            />
-          </ShakingTextField>
-        </Stack>
-      </DialogScrollContent>
-      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-        <Button
-          size="small"
-          variant="outlined"
-          startIcon={<Iconify icon="mdi:close" />}
-          disabled={saving}
-          onClick={onClose}
-        >
-          Cancel
-        </Button>
-        <LoadingButton
-          size="small"
-          variant="contained"
-          loading={saving}
-          startIcon={<Iconify icon="mdi:content-copy" />}
-          onClick={() => formik.handleSubmit()}
-        >
-          Clone Draft
-        </LoadingButton>
-      </DialogActions>
-    </CustomDialog>
+            Cancel
+          </Button>
+          <LoadingButton
+            size="small"
+            variant="contained"
+            type="submit"
+            color="inherit"
+            loading={busy}
+            startIcon={<Iconify icon="mdi:content-copy" />}
+          >
+            Submit
+          </LoadingButton>
+        </DialogActions>
+      </CustomDialog>
+      {guard.confirmation}
+    </>
   );
 }

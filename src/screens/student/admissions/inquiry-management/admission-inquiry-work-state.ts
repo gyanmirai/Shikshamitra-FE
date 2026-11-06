@@ -3,6 +3,8 @@ import type { AdmissionInquiry } from 'src/redux/student/admissions/admission-in
 
 import { fDateTime } from 'src/utils/format-time';
 
+import { ADMISSION_DATE_TIME_FORMAT } from '../admission-date-formats';
+
 export type AdmissionInquiryWorkState = {
   color: LabelColor;
   label: string;
@@ -11,7 +13,7 @@ export type AdmissionInquiryWorkState = {
 
 const datedDetail = (value?: string | null, prefix?: string) => {
   if (!value) return undefined;
-  const formatted = fDateTime(value);
+  const formatted = fDateTime(value, ADMISSION_DATE_TIME_FORMAT);
   if (!formatted) return undefined;
   return prefix ? `${prefix} ${formatted}` : formatted;
 };

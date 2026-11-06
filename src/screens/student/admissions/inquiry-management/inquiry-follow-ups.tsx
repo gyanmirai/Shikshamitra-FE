@@ -22,6 +22,7 @@ import {
 } from 'src/redux/student/admissions/admission-inquiry-management-api';
 
 import { useFollowUpScheduler } from './use-follow-up-scheduler';
+import { ADMISSION_DATE_TIME_FORMAT } from '../admission-date-formats';
 import { InquiryFollowUpScheduler } from './inquiry-follow-up-scheduler';
 
 export function InquiryFollowUps({
@@ -145,7 +146,7 @@ export function InquiryFollowUpsPanel({
               aria-controls={scheduler.open ? schedulerId : undefined}
               onClick={scheduler.onOpen}
             >
-              Schedule Follow-Up
+              Schedule follow-up
             </Button>
           )}
         </Stack>
@@ -291,7 +292,7 @@ export function FollowUpCard({
           </Label>
         </Stack>
         <Typography variant="caption" color="text.secondary">
-          {fDateTime(item.scheduledAt)}
+          {fDateTime(item.scheduledAt, ADMISSION_DATE_TIME_FORMAT)}
         </Typography>
         {item.completionNote && (
           <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
@@ -302,7 +303,8 @@ export function FollowUpCard({
           <>
             <TextField
               size="small"
-              label="Completion or Cancellation Note *"
+              required
+              label="Completion or cancellation note"
               value={note}
               disabled={busy}
               onChange={(event) => setNote(event.target.value)}

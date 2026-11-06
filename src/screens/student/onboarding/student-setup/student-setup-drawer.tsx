@@ -12,11 +12,11 @@ import { useSelector } from 'react-redux';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { fDateTime } from 'src/utils/format-time';
 import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { studentPaths } from 'src/constants/student-menu';
+import { fDateTime, formatStr } from 'src/utils/format-time';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
@@ -671,7 +671,9 @@ export default function StudentSetupDrawer({
                       ['Admission route', activeStudent.admissionRoute],
                       [
                         'Admission date',
-                        activeStudent.admissionDate ? fDateTime(activeStudent.admissionDate) : '—',
+                        activeStudent.admissionDate
+                          ? fDateTime(activeStudent.admissionDate, formatStr.split.dateTime)
+                          : '—',
                       ],
                       ...(activeStudent.source === 'onboarding-case'
                         ? (admissionDetails?.capturedStudentFields ?? []).map(
@@ -693,7 +695,7 @@ export default function StudentSetupDrawer({
                         notificationKey="STU-1048"
                         presentation="toast"
                         severity="error"
-                        action={
+                        toastAction={
                           <Button size="small" onClick={() => capturedFieldsQuery.refetch()}>
                             Retry
                           </Button>
@@ -988,7 +990,7 @@ export default function StudentSetupDrawer({
                       notificationKey="STU-1049"
                       presentation="toast"
                       severity="error"
-                      action={
+                      toastAction={
                         <Button size="small" onClick={() => capturedFieldsQuery.refetch()}>
                           Retry
                         </Button>
@@ -1047,7 +1049,7 @@ export default function StudentSetupDrawer({
                             >
                               {Number.isNaN(Date.parse(event.occurredAt))
                                 ? event.occurredAt
-                                : fDateTime(event.occurredAt)}
+                                : fDateTime(event.occurredAt, formatStr.split.dateTime)}
                             </Typography>
                           </Stack>
                         ))}

@@ -1,9 +1,9 @@
 import type { CertificateResponse } from 'src/redux/student/records/student-record-documents-api';
 
 import { useState } from 'react';
-import { fDate } from 'src/utils/format-time';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import { fDate, formatStr } from 'src/utils/format-time';
 import { StudentFeedback } from 'src/components/student-feedback';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
@@ -21,6 +21,7 @@ export default function CertificatePreviewDialog({
   title,
   certificates,
   busy,
+  closeLocked = false,
   progress,
   error,
   onClose,
@@ -30,6 +31,7 @@ export default function CertificatePreviewDialog({
   title: string;
   certificates: CertificateResponse[];
   busy?: boolean;
+  closeLocked?: boolean;
   progress?: string;
   error?: string;
   onClose: () => void;
@@ -45,7 +47,7 @@ export default function CertificatePreviewDialog({
       : certificate.template.renderedHeaderContent.replaceAll(certificate.certificateNo, number)
     : '';
   const showNumber = !header.includes(number);
-  const issueDateLabel = certificate ? fDate(certificate.issueDate) : null;
+  const issueDateLabel = certificate ? fDate(certificate.issueDate, formatStr.split.date) : null;
   const showDate =
     certificate &&
     !header.includes(certificate.certificateData.IssueDate || certificate.issueDate.slice(0, 10)) &&
@@ -62,7 +64,7 @@ export default function CertificatePreviewDialog({
       }
       maxWidth="md"
       hasForm={false}
-      disableClose={busy}
+      disableClose={closeLocked}
       hasUnsavedChanges={false}
     >
       <DialogScrollContent>
@@ -123,7 +125,7 @@ export default function CertificatePreviewDialog({
                   <Stack direction="row" justifyContent="space-between" gap={1} flexWrap="wrap">
                     <Typography variant="caption">Certificate no: {number}</Typography>
                     <Typography variant="caption">
-                      Issue date: {certificate.issueDate.slice(0, 10)}
+                      Issue date: {issueDateLabel || certificate.issueDate.slice(0, 10)}
                     </Typography>
                   </Stack>
                   {certificate.template.headerContent !==
@@ -215,7 +217,7 @@ export default function CertificatePreviewDialog({
           variant="outlined"
           startIcon={<Iconify icon="mingcute:close-line" />}
           onClick={onClose}
-          disabled={busy}
+          disabled={closeLocked}
         >
           Close
         </Button>

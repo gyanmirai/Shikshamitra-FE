@@ -21,6 +21,7 @@ import {
 } from 'src/redux/student/admissions/admission-fee-selection-api';
 
 import { AdmissionDialogTitle } from '../admission-dialog-title';
+import { ADMISSION_DATE_TIME_FORMAT } from '../admission-date-formats';
 import AdmissionFeeCollectionPanel from './admission-fee-collection-panel';
 import { AdmissionFeeSelectionEditor } from './admission-fee-selection-editor';
 import { getAdmissionFeeCollectionAccess } from './admission-fee-collection-permissions';
@@ -169,7 +170,7 @@ export default function AdmissionFeeSelectionPanel({
           notificationKey="STU-0349"
           presentation="toast"
           severity="error"
-          action={
+          toastAction={
             <Button size="small" onClick={() => query.refetch()}>
               Retry
             </Button>
@@ -294,7 +295,7 @@ export default function AdmissionFeeSelectionPanel({
             notificationKey="STU-0350"
             presentation="toast"
             severity="error"
-            action={
+            toastAction={
               <Button size="small" onClick={() => query.refetch()}>
                 Retry
               </Button>
@@ -384,7 +385,7 @@ export default function AdmissionFeeSelectionPanel({
                   <AdmissionDialogTitle
                     title={`${selection.structureName} · Revision ${selection.revisionNumber}`}
                     helpLabel="Fee Selection Details"
-                    helpText={`Fee structure confirmed ${fDateTime(selection.savedAt)}${state.ownerStageName ? ` in ${state.ownerStageName}` : ''}.${state.isLocked ? ' Payment has been recorded. This fee selection is locked; ask Finance to review any adjustment or refund.' : ''}`}
+                    helpText={`Fee structure confirmed ${fDateTime(selection.savedAt, ADMISSION_DATE_TIME_FORMAT)}${state.ownerStageName ? ` in ${state.ownerStageName}` : ''}.${state.isLocked ? ' Payment has been recorded. This fee selection is locked; ask Finance to review any adjustment or refund.' : ''}`}
                   />
                 </Typography>
                 {compact && mode === 'admissions' ? (
@@ -508,7 +509,7 @@ export default function AdmissionFeeSelectionPanel({
                 {state.feeCollectionDeferral.reason}
               </Typography>
               <Typography variant="caption">
-                {fDateTime(state.feeCollectionDeferral.deferredAt)}
+                {fDateTime(state.feeCollectionDeferral.deferredAt, ADMISSION_DATE_TIME_FORMAT)}
               </Typography>
             </Stack>
           </StudentFeedback>

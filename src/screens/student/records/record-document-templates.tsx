@@ -9,10 +9,16 @@ import type {
 import * as Yup from 'yup';
 import { useState } from 'react';
 import { useFormik } from 'formik';
+import { useRouter } from 'next/navigation';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import { StudentFeedback } from 'src/components/student-feedback';
+import { FormSectionCard } from 'src/components/form-section-card';
+import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 import { TemplateIdentityAsset } from 'src/screens/setting/school-identity/components/template-identity-asset';
 import {
   selectionSchema,
@@ -73,7 +79,8 @@ export default function RecordDocumentTemplates({
             notificationKey="STU-0803"
             presentation="toast"
             severity="error"
-            action={<Button onClick={() => query.refetch()}>Retry</Button>}
+            action={kind === 'ids' ? <Button onClick={() => query.refetch()}>Retry</Button> : undefined}
+            toastAction={kind === 'certificates' ? <Button onClick={() => query.refetch()}>Retry</Button> : undefined}
           >
             Template could not be loaded.
           </StudentFeedback>
@@ -244,6 +251,7 @@ function CertificateTemplateForm({
   initial: CertificateTemplate;
   onClose: () => void;
 }) {
+  const router = useRouter();
   const [uploading, setUploading] = useState(false);
   const [save, mutation] = useSaveRecordCertificateTemplateMutation();
   const state = { ...mutation, isLoading: mutation.isLoading || uploading };
@@ -270,86 +278,110 @@ function CertificateTemplateForm({
       }
     },
   });
+  const closeGuard = useUnsavedNavigation(form.dirty, {
+    push: router.push,
+    blockNavigation: state.isLoading,
+    guardContextChanges: true,
+    renderConfirmation: (keepEditing, discard) =>
+      renderUnsavedConfirmation(keepEditing, discard, { busy: state.isLoading }),
+  });
+  const requestClose = () => closeGuard.requestNavigation(onClose);
   return (
     <CustomDialog
       open
-      handleClose={onClose}
-      title="Certificate template"
+      handleClose={requestClose}
+      title="Certificate Template"
+      titleInfo="Configure the content and identity assets used for new certificates. Existing certificates retain their saved template."
       maxWidth="md"
       onSubmit={(event) => {
         event.preventDefault();
         form.submitForm();
       }}
-      hasUnsavedChanges={form.dirty}
+      guardUnsavedChanges={false}
       disableClose={state.isLoading}
     >
       <DialogScrollContent>
         <FormBusyRegion busy={state.isLoading} label="Saving template…">
-          <Stack spacing={2}>
-            <StudentFeedback notificationKey="STU-0809" presentation="inline" severity="info">
-              Use placeholders such as {'{{StudentName}}'}, {'{{GRNo}}'}, {'{{Class}}'},{' '}
-              {'{{IssueDate}}'}, and {'{{CertificateNo}}'} in the text.
-            </StudentFeedback>
-            <TextField
-              fullWidth
-              multiline
-              minRows={3}
-              label="Header text"
-              name="headerContent"
-              value={form.values.headerContent}
-              onChange={form.handleChange}
-              onBlur={form.handleBlur}
-              error={!!form.touched.headerContent && !!form.errors.headerContent}
-              helperText={form.touched.headerContent && form.errors.headerContent}
-            />
-            <TextField
-              fullWidth
-              multiline
-              minRows={4}
-              label="Certificate text / footer"
-              name="footerContent"
-              value={form.values.footerContent}
-              onChange={form.handleChange}
-              onBlur={form.handleBlur}
-              error={!!form.touched.footerContent && !!form.errors.footerContent}
-              helperText={form.touched.footerContent && form.errors.footerContent}
-            />
-            <TextField
-              fullWidth
-              label="School address"
-              name="schoolAddress"
-              value={form.values.schoolAddress ?? ''}
-              onChange={form.handleChange}
-              onBlur={form.handleBlur}
-              error={!!form.touched.schoolAddress && !!form.errors.schoolAddress}
-              helperText={form.touched.schoolAddress && form.errors.schoolAddress}
-            />
-            <CertificateIdentityAssets
-              value={form.values}
-              disabled={state.isLoading}
-              onBusy={setUploading}
-              onChange={(choices) => {
-                form.setFieldValue('identityChoices', choices);
-              }}
-            />
-            {error && (
-              <StudentFeedback
-                notificationKey="STU-0810"
-                presentation="persistent"
-                severity="error"
-              >
-                Template could not be saved. Check the fields and your access before retrying.
+          <FormSectionCard
+            title="Template Content"
+            icon={GlobalIcons.admissionDetails}
+            descriptionTooltip="Enter the school address and certificate text, and choose the school identity assets."
+          >
+            <Stack spacing={2}>
+              <StudentFeedback notificationKey="STU-0809" presentation="inline" severity="info">
+                Use placeholders such as {'{{StudentName}}'}, {'{{GRNo}}'}, {'{{Class}}'},{' '}
+                {'{{IssueDate}}'}, and {'{{CertificateNo}}'} in the text.
               </StudentFeedback>
-            )}
-          </Stack>
+              <TextField
+                fullWidth
+                multiline
+                minRows={3}
+                label="Header text"
+                name="headerContent"
+                value={form.values.headerContent}
+                onChange={form.handleChange}
+                onBlur={form.handleBlur}
+                error={!!form.touched.headerContent && !!form.errors.headerContent}
+                helperText={form.touched.headerContent && form.errors.headerContent}
+              />
+              <TextField
+                fullWidth
+                multiline
+                minRows={4}
+                label="Certificate text / footer"
+                name="footerContent"
+                value={form.values.footerContent}
+                onChange={form.handleChange}
+                onBlur={form.handleBlur}
+                error={!!form.touched.footerContent && !!form.errors.footerContent}
+                helperText={form.touched.footerContent && form.errors.footerContent}
+              />
+              <TextField
+                fullWidth
+                label="School address"
+                name="schoolAddress"
+                value={form.values.schoolAddress ?? ''}
+                onChange={form.handleChange}
+                onBlur={form.handleBlur}
+                error={!!form.touched.schoolAddress && !!form.errors.schoolAddress}
+                helperText={form.touched.schoolAddress && form.errors.schoolAddress}
+              />
+              <CertificateIdentityAssets
+                value={form.values}
+                disabled={state.isLoading}
+                onBusy={setUploading}
+                onChange={(choices) => {
+                  form.setFieldValue('identityChoices', choices);
+                }}
+              />
+              {error && (
+                <StudentFeedback
+                  notificationKey="STU-0810"
+                  presentation="persistent"
+                  severity="error"
+                >
+                  Template could not be saved. Check the fields and your access before retrying.
+                </StudentFeedback>
+              )}
+            </Stack>
+          </FormSectionCard>
         </FormBusyRegion>
       </DialogScrollContent>
       <DialogActions>
-        <Button disabled={state.isLoading} onClick={onClose}>
+        <Button
+          type="button"
+          variant="outlined"
+          color="inherit"
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          disabled={state.isLoading}
+          onClick={requestClose}
+        >
           Cancel
         </Button>
         <Button
           variant="contained"
+          color="inherit"
+          startIcon={<Iconify icon={GlobalIcons.submit} />}
           type="submit"
           loading={state.isLoading}
           disabled={state.isLoading}
@@ -357,6 +389,7 @@ function CertificateTemplateForm({
           Submit
         </Button>
       </DialogActions>
+      {closeGuard.confirmation}
     </CustomDialog>
   );
 }

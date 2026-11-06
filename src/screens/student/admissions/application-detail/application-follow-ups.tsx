@@ -42,7 +42,7 @@ export function ApplicationFollowUps({
           notificationKey="STU-0199"
           presentation="toast"
           severity="error"
-          action={
+          toastAction={
             !sourceUnavailable && (
               <Button
                 size="small"

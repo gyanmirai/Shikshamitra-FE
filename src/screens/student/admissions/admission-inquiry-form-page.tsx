@@ -29,6 +29,7 @@ import {
 
 import AdmissionRuntimeField from './admission-runtime-field';
 import { useAdmissionInquiryAge } from './use-admission-inquiry-age';
+import { useAdmissionCloseGuard } from './use-admission-close-guard';
 import { isAdmissionRuleVisible } from './admission-visibility-rules';
 import { useAdmissionFormLanguage } from './use-admission-form-language';
 import { useAdmissionInquiryDialog } from './use-admission-inquiry-dialog';
@@ -73,11 +74,8 @@ export default function AdmissionInquiryFormPage() {
   const lastPreferredClassToast = useRef('');
   const [dismissedCapacityOfferingId, setDismissedCapacityOfferingId] = useState('');
   const [interestExpanded, setInterestExpanded] = useState(true);
-  const handleCancel = () => {
-    if (controller.busy) return;
-    if (formik.dirty && !window.confirm('Discard this unfinished inquiry?')) return;
-    router.push(returnUrl);
-  };
+  const guard = useAdmissionCloseGuard(formik.dirty, controller.busy, true, router.push);
+  const handleCancel = () => guard.requestNavigation(() => router.push(returnUrl));
   const fieldErrors = formik.errors.fields as Record<string, string> | undefined;
   const touchedFields = formik.touched.fields as Record<string, boolean> | undefined;
   const validationMessages = collectValidationMessages(formik.errors);
@@ -180,7 +178,7 @@ export default function AdmissionInquiryFormPage() {
                   notificationKey="STU-0076"
                   presentation="toast"
                   severity="error"
-                  action={
+                  toastAction={
                     <Button
                       color="inherit"
                       size="small"
@@ -212,7 +210,7 @@ export default function AdmissionInquiryFormPage() {
                   notificationKey="STU-0078"
                   presentation="toast"
                   severity="error"
-                  action={<Button onClick={controller.retryAcademic}>Retry</Button>}
+                  toastAction={<Button onClick={controller.retryAcademic}>Retry</Button>}
                 >
                   Academic choices could not be loaded.
                 </StudentFeedback>
@@ -482,7 +480,7 @@ export default function AdmissionInquiryFormPage() {
                   notificationKey="STU-0082"
                   presentation="toast"
                   severity="error"
-                  action={
+                  toastAction={
                     <Button size="small" onClick={controller.retryRuntime}>
                       Retry
                     </Button>
@@ -582,10 +580,11 @@ export default function AdmissionInquiryFormPage() {
                 busy={controller.busy}
                 onUseExisting={controller.useExistingFamily}
                 onOpenExisting={(inquiryId) => {
-                  if (formik.dirty && !window.confirm('Discard this unfinished inquiry?')) return;
                   const next = new URLSearchParams(searchParams.toString());
                   next.set('inquiryId', inquiryId);
-                  router.push(`${studentPaths.enrollment.inquiries}?${next.toString()}`);
+                  guard.requestNavigation(() =>
+                    router.push(`${studentPaths.enrollment.inquiries}?${next.toString()}`)
+                  );
                 }}
               />
               {controller.requestError && (
@@ -643,6 +642,7 @@ export default function AdmissionInquiryFormPage() {
         </Stack>
       </Paper>
       {controller.primaryContactConfirmation}
+      {guard.confirmation}
     </Box>
   );
 }

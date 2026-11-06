@@ -1,10 +1,9 @@
-import Close from '@mui/icons-material/Close';
-import DeleteOutline from '@mui/icons-material/DeleteOutline';
 import { useRef, useState, useEffect, useCallback } from 'react';
-import { Button, Typography, DialogActions } from '@mui/material';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Iconify } from 'src/components/iconify';
-import { GlobalIcons } from 'src/utils/icons';
+import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
+
+import { useUnsavedRouteGuard } from './use-unsaved-route-guard';
+import { useAcademicContextGuard } from './use-academic-context-guard';
+import { UnsavedNavigationConfirmation } from './unsaved-navigation-confirmation';
 
 type Options = {
   title?: string;
@@ -13,27 +12,31 @@ type Options = {
   discardLabel?: string;
   push?: (href: string) => void;
   blockNavigation?: boolean;
+  guardContextChanges?: boolean;
+  onNavigationApproved?: () => void;
   onBeforeTraversal?: () => void;
   renderConfirmation?: (keepEditing: () => void, discard: () => void) => React.ReactNode;
 };
 
-type TraversalEvent = Event & {
-  navigationType: string;
-  destination: { key: string; url: string };
-};
-
-type BrowserNavigation = EventTarget & {
-  traverseTo: (key: string) => { finished: Promise<unknown> };
-};
-
 export function useUnsavedNavigation(isDirty: boolean, options: Options = {}) {
-  const { title, description, push, blockNavigation = false, renderConfirmation } = options;
+  const { title, description, push, blockNavigation = false } = options;
+  const guardContextChanges = options.guardContextChanges ?? false;
+  const renderConfirmation =
+    options.renderConfirmation ??
+    (guardContextChanges
+      ? (keepEditing: () => void, discard: () => void) =>
+          renderUnsavedConfirmation(keepEditing, discard, {
+            title,
+            description,
+            busy: blockNavigation,
+          })
+      : undefined);
   const [pending, setPending] = useState<(() => void) | null>(null);
+  const approvedCallback = useRef(options.onNavigationApproved);
+  approvedCallback.current = options.onNavigationApproved;
+  /** Memoization Justification: Finance and Academic dialog close effects depend on this reset callback. */
   const cancelNavigation = useCallback(() => setPending(null), []);
-  const permittedTraversal = useRef<string | null>(null);
-  const beforeTraversal = useRef(options.onBeforeTraversal);
-  beforeTraversal.current = options.onBeforeTraversal;
-  const handlesTraversal = Boolean(options.onBeforeTraversal);
+  /** Memoization Justification: Route and academic guard subscriptions depend on this callback's dirty/busy snapshot. */
   const requestNavigation = useCallback(
     (proceed: () => void) => {
       if (blockNavigation) return;
@@ -41,6 +44,26 @@ export function useUnsavedNavigation(isDirty: boolean, options: Options = {}) {
       else setPending(() => proceed);
     },
     [isDirty, blockNavigation]
+  );
+  /** Memoization Justification: Local close owners depend on a stable approved-navigation callback. */
+  const requestApprovedNavigation = useCallback(
+    (proceed: () => void) =>
+      requestNavigation(() => {
+        approvedCallback.current?.();
+        proceed();
+      }),
+    [requestNavigation]
+  );
+  const localRequestNavigation = options.onNavigationApproved
+    ? requestApprovedNavigation
+    : requestNavigation;
+
+  useAcademicContextGuard(
+    guardContextChanges,
+    isDirty,
+    blockNavigation,
+    requestNavigation,
+    options.onNavigationApproved
   );
 
   useEffect(() => {
@@ -50,151 +73,42 @@ export function useUnsavedNavigation(isDirty: boolean, options: Options = {}) {
     return () => window.removeEventListener('beforeunload', warn);
   }, [isDirty, blockNavigation]);
 
-  useEffect(() => {
-    if ((!isDirty && !blockNavigation && !handlesTraversal) || !push) return undefined;
-
-    const guardLink = (event: MouseEvent) => {
-      if (
-        event.defaultPrevented ||
-        event.button !== 0 ||
-        event.metaKey ||
-        event.ctrlKey ||
-        event.shiftKey ||
-        event.altKey ||
-        !(event.target instanceof Element)
-      ) {
-        return;
-      }
-      const anchor = event.target.closest<HTMLAnchorElement>('a[href]');
-      if (
-        !anchor ||
-        anchor.hasAttribute('download') ||
-        (anchor.target && anchor.target !== '_self')
-      ) {
-        return;
-      }
-      const destination = new URL(anchor.href, window.location.href);
-      const current = new URL(window.location.href);
-      if (!['http:', 'https:'].includes(destination.protocol)) return;
-      if (
-        destination.origin === current.origin &&
-        destination.pathname === current.pathname &&
-        destination.search === current.search
-      ) {
-        return;
-      }
-
-      event.preventDefault();
-      event.stopPropagation();
-      requestNavigation(() => {
-        if (destination.origin === current.origin) {
-          push(`${destination.pathname}${destination.search}${destination.hash}`);
-        } else {
-          window.location.assign(destination.href);
-        }
-      });
-    };
-
-    const { navigation } = window as Window & { navigation?: BrowserNavigation };
-    const guardTraversal = (event: Event) => {
-      const traversal = event as TraversalEvent;
-      if (traversal.navigationType !== 'traverse' || !event.cancelable) return;
-      if (permittedTraversal.current === traversal.destination.key) {
-        permittedTraversal.current = null;
-        return;
-      }
-      if (traversal.destination.url === window.location.href) return;
-      event.preventDefault();
-      requestNavigation(() => {
-        permittedTraversal.current = traversal.destination.key;
-        beforeTraversal.current?.();
-        navigation?.traverseTo(traversal.destination.key).finished.catch(() => {
-          permittedTraversal.current = null;
-        });
-      });
-    };
-
-    document.addEventListener('click', guardLink, true);
-    navigation?.addEventListener('navigate', guardTraversal);
-    return () => {
-      document.removeEventListener('click', guardLink, true);
-      navigation?.removeEventListener('navigate', guardTraversal);
-    };
-  }, [isDirty, blockNavigation, handlesTraversal, push, requestNavigation]);
+  useUnsavedRouteGuard({
+    dirty: isDirty,
+    busy: blockNavigation,
+    push,
+    allowWithoutRouter: guardContextChanges,
+    onBeforeTraversal: options.onBeforeTraversal,
+    requestNavigation: guardContextChanges ? requestNavigation : localRequestNavigation,
+  });
 
   const confirmation =
     pending && renderConfirmation ? (
       renderConfirmation(
         () => setPending(null),
         () => {
+          if (blockNavigation) return;
           const proceed = pending;
           setPending(null);
           proceed();
         }
       )
     ) : pending ? (
-      <CustomDialog
-        open
-        title={title || 'Discard unsaved changes?'}
-        handleClose={() => setPending(null)}
-        hasForm={false}
-        guardUnsavedChanges={false}
-        disableClose={blockNavigation}
-        maxWidth="xs"
-        aria-describedby="unsaved-changes-description"
-        paperProps={{ sx: { maxWidth: 460 } }}
-      >
-        <DialogScrollContent sx={{ py: 2, px: 2.5 }}>
-          <Typography
-            id="unsaved-changes-description"
-            variant="body2"
-            color="text.secondary"
-            sx={{ lineHeight: 1.6 }}
-          >
-            {description ||
-              'Your changes have not been saved. Keep editing, or discard them and continue.'}
-          </Typography>
-        </DialogScrollContent>
-        <DialogActions
-          sx={{
-            px: 2,
-            py: 1.5,
-            gap: 1,
-            borderTop: 1,
-            flexWrap: 'wrap',
-            borderColor: 'divider',
-            '& > :not(style) ~ :not(style)': { ml: 0 },
-          }}
-        >
-          <Button
-            autoFocus
-            size="small"
-            variant="outlined"
-            color="inherit"
-            disabled={blockNavigation}
-            onClick={() => setPending(null)}
-            startIcon={<Close fontSize="small" />}
-          >
-            {options.keepEditingLabel ?? 'Keep editing'}
-          </Button>
-          <Button
-            size="small"
-            color="error"
-            variant="contained"
-            disabled={blockNavigation}
-            startIcon={<Iconify icon={GlobalIcons.delete} />}
-            onClick={() => {
-              if (blockNavigation) return;
-              const proceed = pending;
-              setPending(null);
-              proceed();
-            }}
-          >
-            {options.discardLabel ?? 'Discard changes'}
-          </Button>
-        </DialogActions>
-      </CustomDialog>
+      <UnsavedNavigationConfirmation
+        title={title}
+        description={description}
+        busy={blockNavigation}
+        keepEditingLabel={options.keepEditingLabel}
+        discardLabel={options.discardLabel}
+        onKeepEditing={() => setPending(null)}
+        onDiscard={() => {
+          if (blockNavigation) return;
+          const proceed = pending;
+          setPending(null);
+          proceed();
+        }}
+      />
     ) : null;
 
-  return { requestNavigation, cancelNavigation, confirmation };
+  return { requestNavigation: localRequestNavigation, cancelNavigation, confirmation };
 }

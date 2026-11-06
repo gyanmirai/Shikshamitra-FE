@@ -74,7 +74,7 @@ export function FormStageVerificationSettings({
               notificationKey="STU-0522"
               presentation="toast"
               severity="error"
-              action={
+              toastAction={
                 <Button color="inherit" size="small" onClick={onRetrySections}>
                   Retry
                 </Button>

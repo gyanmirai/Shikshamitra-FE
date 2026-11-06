@@ -4,6 +4,7 @@ import type { RootState } from 'src/redux/store';
 
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
+import { formatStr } from 'src/utils/format-time';
 import { RouterLink } from 'src/routes/components';
 import { formatDateOnly } from 'src/utils/date-only';
 import { studentPaths } from 'src/constants/student-menu';
@@ -84,7 +85,7 @@ export default function AttendanceRegisterQueue() {
           notificationKey="STU-0643"
           presentation="toast"
           severity="error"
-          action={<Button onClick={() => context.refetch()}>Retry</Button>}
+          toastAction={<Button onClick={() => context.refetch()}>Retry</Button>}
         >
           Academic filters could not be loaded.
         </StudentFeedback>
@@ -104,7 +105,7 @@ export default function AttendanceRegisterQueue() {
               label: 'Date',
               isSort: false,
               isFilter: false,
-              render: (value) => formatDateOnly(value),
+              render: (value) => formatDateOnly(value, formatStr.split.date),
             },
             {
               id: 'status',
@@ -152,7 +153,7 @@ export default function AttendanceRegisterQueue() {
                 notificationKey="STU-0644"
                 presentation="toast"
                 severity="error"
-                action={<Button onClick={() => query.refetch()}>Retry</Button>}
+                toastAction={<Button onClick={() => query.refetch()}>Retry</Button>}
               >
                 Pending registers could not be loaded. Check your access or retry.
               </StudentFeedback>

@@ -148,7 +148,11 @@ export function HeaderBase({
               <MenuButton
                 data-slot="menu-button"
                 onClick={onOpenNav}
-                sx={{ mr: 1, ml: -1, [theme.breakpoints.up(layoutQuery)]: { display: 'none' } }}
+                sx={{
+                  mr: { xs: 0, sm: 1 },
+                  ml: -1,
+                  [theme.breakpoints.up(layoutQuery)]: { display: 'none' },
+                }}
               />
             )}
 
@@ -161,11 +165,18 @@ export function HeaderBase({
             {/* -- Workspace popover -- */}
             {/* {workspaces && <WorkspacesPopover data-slot="workspaces" data={data?.workspaces} />} */}
             {isLoading ? (
-              <Box sx={{ width: 200 }}>
+              <Box sx={{ width: 200, display: { xs: 'none', sm: 'block' } }}>
                 <Skeleton animation="wave" />
               </Box>
             ) : (
-              <Typography fontWeight={600}> {schoolName}</Typography>
+              <Typography
+                fontWeight={600}
+                noWrap
+                title={schoolName}
+                sx={{ minWidth: 0, display: { xs: 'none', sm: 'block' } }}
+              >
+                {schoolName}
+              </Typography>
             )}
 
             {slots?.leftAreaEnd}
@@ -181,8 +192,8 @@ export function HeaderBase({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'flex-end',
-                gap: { xs: 1, sm: 1.5 },
-                flex: '0 1 auto',
+                gap: { xs: 0, sm: 1.5 },
+                flex: '0 0 auto',
                 minWidth: 0,
                 maxWidth: '100%',
               }}

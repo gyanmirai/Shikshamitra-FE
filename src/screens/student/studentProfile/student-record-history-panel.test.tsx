@@ -1,11 +1,13 @@
+import type { ReactNode } from 'react';
+import type { AlertProps } from '@mui/material';
 import type { RecordChange } from 'src/redux/student/records/student-record-changes-api';
 
 import { vi, it, expect, beforeEach } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
-import { render, screen, within } from '@testing-library/react';
 import { defaultSettings } from 'src/components/settings/config-settings';
+import { act, render, screen, within, waitFor } from '@testing-library/react';
 
 import { StudentRecordHistoryPanel } from './student-record-history-panel';
 import { customSource, customStudentId } from './student-custom-details-test-fixture';
@@ -17,6 +19,14 @@ const query = vi.hoisted(() => ({
   read: vi.fn(),
   refetch: vi.fn(),
 }));
+const toast = vi.hoisted(() => ({
+  error: vi.fn(
+    (_options: { message: ReactNode; alertProps: (id: string | number) => AlertProps }) =>
+      'history-error'
+  ),
+  dismiss: vi.fn(),
+}));
+vi.mock('src/components/toast', () => ({ shikshaMitraToast: toast }));
 const diff = vi.hoisted(() => ({
   diffs: [{ label: 'Blood group', before: 'B+', after: 'O+' }],
   isLoading: false,
@@ -88,6 +98,14 @@ function renderAudit(overrides: Partial<Props> = {}) {
   );
 }
 
+function renderToastAction() {
+  return render(
+    <ThemeProvider theme={createTheme(defaultSettings)}>
+      {toast.error.mock.calls.at(-1)?.[0].alertProps('history-error').action}
+    </ThemeProvider>
+  );
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
   query.currentData = change;
@@ -118,6 +136,23 @@ it('shows a newest-first read-only audit timeline without an enrollment table or
   expect(screen.queryByText('Enrollment history')).not.toBeInTheDocument();
   expect(screen.queryByRole('table')).not.toBeInTheDocument();
   expect(screen.queryAllByRole('link')).toHaveLength(0);
+  expect(query.read).toHaveBeenCalledWith('', { skip: true });
+});
+
+it('offers keyboard-accessible audit scope help while retaining the saved timeline', async () => {
+  renderAudit();
+  expect(screen.getByRole('heading', { name: 'Audit History' })).toBeVisible();
+  const timeline = screen.getByRole('list', { name: 'Student record audit history' });
+  const help = screen.getByRole('button', { name: 'Audit History information' });
+  await userEvent.keyboard('{Tab}');
+  act(() => help.focus());
+  expect(help).toHaveFocus();
+  expect(await screen.findByRole('tooltip')).toHaveTextContent(
+    'Student record changes across academic years, with their recorded status, actor and dates.'
+  );
+  await userEvent.keyboard('{Escape}');
+  await waitFor(() => expect(screen.queryByRole('tooltip')).not.toBeInTheDocument());
+  expect(screen.getByRole('list', { name: 'Student record audit history' })).toBe(timeline);
   expect(query.read).toHaveBeenCalledWith('', { skip: true });
 });
 
@@ -177,18 +212,20 @@ it('does not fetch or render audit entries when access is unavailable', () => {
   expect(screen.queryByText('Verified with guardian')).not.toBeInTheDocument();
 });
 
-it('distinguishes a list error from empty history and retries without leaving the profile', async () => {
+it('keeps list recovery in the error toast without empty history or an orphan retry', async () => {
   const retry = vi.fn();
   renderAudit({ changes: [], isError: true, onRetry: retry });
-  expect(
-    screen.getByText('Record change history could not be loaded.', { exact: false })
-  ).toBeVisible();
+  expect(toast.error).toHaveBeenCalledWith(
+    expect.objectContaining({ message: 'Record change history could not be loaded.' })
+  );
+  expect(screen.queryByRole('button', { name: /Retry history/i })).not.toBeInTheDocument();
   expect(screen.queryByText('No record changes yet')).not.toBeInTheDocument();
-  await userEvent.click(screen.getByRole('button', { name: 'Retry History' }));
+  const recovery = renderToastAction();
+  await userEvent.click(within(recovery.container).getByRole('button', { name: /Retry history/i }));
   expect(retry).toHaveBeenCalledOnce();
 });
 
-it('locks dismissal during the detail read and provides a local retry for read failures', async () => {
+it('locks dismissal during the detail read and reports read failures as a toast', async () => {
   query.currentData = undefined;
   query.isFetching = true;
   const view = renderAudit();
@@ -209,12 +246,23 @@ it('locks dismissal during the detail read and provides a local retry for read f
       />
     </ThemeProvider>
   );
-  await userEvent.click(within(dialog).getByRole('button', { name: 'Retry' }));
+  expect(toast.error).toHaveBeenCalledWith(
+    expect.objectContaining({ message: 'This audit entry could not be loaded.' })
+  );
+  expect(within(dialog).queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+  expect(
+    within(dialog).queryByText('This audit entry is not available for this student.')
+  ).not.toBeInTheDocument();
+  const recovery = renderToastAction();
+  await userEvent.click(within(recovery.container).getByRole('button', { name: 'Retry' }));
   expect(query.refetch).toHaveBeenCalledOnce();
+  recovery.unmount();
   expect(within(dialog).getByRole('button', { name: 'Close' })).toBeEnabled();
+  await userEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
+  expect(query.read).toHaveBeenLastCalledWith('', { skip: true });
 });
 
-it('retries source labels without displaying a partial diff when label resolution fails', async () => {
+it('reports a label lookup error as a toast without displaying a partial diff', async () => {
   diff.isError = true;
   renderAudit();
   await userEvent.click(
@@ -222,7 +270,13 @@ it('retries source labels without displaying a partial diff when label resolutio
   );
   const dialog = screen.getByRole('dialog');
   expect(within(dialog).queryByText('B+')).not.toBeInTheDocument();
-  await userEvent.click(within(dialog).getByRole('button', { name: 'Retry Labels' }));
+  expect(within(dialog).queryByText('O+')).not.toBeInTheDocument();
+  expect(toast.error).toHaveBeenCalledWith(
+    expect.objectContaining({ message: 'Changed field labels could not be loaded.' })
+  );
+  expect(within(dialog).queryByRole('button', { name: /Retry labels/i })).not.toBeInTheDocument();
+  const recovery = renderToastAction();
+  await userEvent.click(within(recovery.container).getByRole('button', { name: /Retry labels/i }));
   expect(diff.retry).toHaveBeenCalledOnce();
 });
 

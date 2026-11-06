@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
+import { useRouter } from 'src/routes/hooks';
 import { Iconify } from 'src/components/iconify';
 import { RouterLink } from 'src/routes/components';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -20,6 +21,7 @@ import { Box, Alert, Button, Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { useGetStudentRecordsDirectoryQuery } from 'src/redux/student/records/student-records-api';
 import {
   useGetRecordIdTemplatesQuery,
@@ -32,6 +34,15 @@ export default function StudentICardTemplates() {
   const form = useBoolean();
   const preview = useBoolean();
   const [selected, setSelected] = useState<IdCardTemplate | null>(null);
+  const [dirty, setDirty] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const router = useRouter();
+  const { requestNavigation, confirmation } = useUnsavedNavigation(form.value && dirty, {
+    blockNavigation: form.value && busy,
+    push: router.push,
+    title: 'Discard Student I-Card Changes?',
+    description: 'Your card design and student assignments have not been saved. Keep editing or discard these changes.',
+  });
   const [templateToDelete, setTemplateToDelete] = useState<IdCardTemplate | null>(null);
   const yearId = useSelector((state: RootState) => state.globalState.currentYear?.id);
   const [openerYearId, setOpenerYearId] = useState<string | undefined>();
@@ -66,11 +77,13 @@ export default function StudentICardTemplates() {
   );
 
   const openCreate = () => {
+    setDirty(false);
     setOpenerYearId(yearId);
     setSelected(null);
     form.onTrue();
   };
   const openEdit = (row: IdCardTemplate) => {
+    setDirty(false);
     setOpenerYearId(yearId);
     setSelected(row);
     form.onTrue();
@@ -82,6 +95,7 @@ export default function StudentICardTemplates() {
   const closeForm = () => {
     form.onFalse();
     setSelected(null);
+    setDirty(false);
   };
   const closeDeleteDialog = () => {
     if (!deleting.isLoading) setTemplateToDelete(null);
@@ -170,7 +184,8 @@ export default function StudentICardTemplates() {
               { name: 'Student I-Card' },
             ]}
             isBack
-            onBack={closeForm}
+            onBack={() => requestNavigation(closeForm)}
+            backDisabled={busy}
           />
           <Box sx={{ flex: 1, minHeight: 0 }}>
             <StudentICardBuilder
@@ -178,7 +193,9 @@ export default function StudentICardTemplates() {
               initialTemplate={selected}
               academicYearId={openerYearId}
               contextInvalid={yearId !== openerYearId}
-              onClose={closeForm}
+              onClose={() => requestNavigation(closeForm)}
+              onBusyChange={setBusy}
+              onDirtyChange={setDirty}
             />
           </Box>
         </>
@@ -251,6 +268,7 @@ export default function StudentICardTemplates() {
           )}
         </>
       )}
+      {confirmation}
       <CustomDialog
         open={preview.value}
         handleClose={preview.onFalse}

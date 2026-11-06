@@ -89,6 +89,7 @@ export function AdmissionApplicantProfileDialog({
   });
   const router = useRouter();
   const closeGuard = useUnsavedNavigation(open && formik.dirty, {
+    guardContextChanges: open,
     push: router.push,
     blockNavigation: busy,
     title: 'Discard Unsaved Identity Changes?',

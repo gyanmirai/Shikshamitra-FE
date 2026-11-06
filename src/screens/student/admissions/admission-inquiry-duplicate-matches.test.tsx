@@ -206,3 +206,21 @@ it('prevents repeated writes and locks close while confirming', async () => {
   finish();
   await waitFor(() => expect(add).toBeEnabled());
 });
+
+it('keeps children informational without exposing their birth dates in parent match review', () => {
+  render(
+    <AdmissionInquiryDuplicateMatches
+      matches={[{ ...match, dateOfBirth: '2016-04-05' }]}
+      guardianPhone="9876543210"
+      parentRelationship="father"
+      busy={false}
+      onUseExisting={vi.fn()}
+      onOpenExisting={vi.fn()}
+    />
+  );
+  expect(screen.getByRole('list', { name: 'Children in this family' })).toHaveTextContent(
+    'Asha Patel'
+  );
+  expect(screen.queryByText(/DOB:/)).not.toBeInTheDocument();
+  expect(screen.queryByText(/2016/)).not.toBeInTheDocument();
+});

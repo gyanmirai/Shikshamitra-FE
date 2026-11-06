@@ -17,7 +17,6 @@ import { normalizeEmail } from 'src/utils/input-format';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { studentPaths } from 'src/constants/student-menu';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { LoadingButton } from 'src/components/loading-button';
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { FormBusyRegion } from 'src/components/form-busy-region';
@@ -27,6 +26,7 @@ import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { FormSectionCard, FormFieldSpacing } from 'src/components/form-section-card';
 import { useLazyGetAdmissionCyclesQuery } from 'src/redux/student/admissions/admission-cycles-api';
+import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 import {
   Box,
   Stack,
@@ -471,7 +471,7 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
             <Typography id="special-registration-title" variant="h6" component="h2">
               <AdmissionDialogTitle
                 title="Start Special Registration"
-                helpText="Register RTE, Management or Staff Applicants Without an Inquiry. The Selected Offering's Published Workflow Continues From Its Registration Form Stage."
+                helpText="Register RTE, Management or Staff applicants without an inquiry. The selected offering's published workflow continues from its registration form stage."
               />
             </Typography>
           </Box>
@@ -499,7 +499,7 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
                     notificationKey="STU-0054"
                     presentation="toast"
                     severity="error"
-                    action={
+                    toastAction={
                       <Button
                         size="small"
                         type="button"
@@ -516,7 +516,7 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
                 <FormSectionCard
                   icon={GlobalIcons.admissionInterest}
                   title="Offering"
-                  descriptionTooltip="Choose an Open Admission Cycle, Then an Active RTE, Management or Staff Offering That Starts with Registration. General Offerings Start From Inquiries."
+                  descriptionTooltip="Choose an open admission cycle, then an active RTE, Management or Staff offering that starts with registration. General offerings start from inquiries."
                   action={
                     <Button
                       size="small"
@@ -526,7 +526,7 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
                       startIcon={<Iconify icon="mdi:refresh" />}
                       onClick={() => setReload((value) => value + 1)}
                     >
-                      Refresh Choices
+                      Refresh choices
                     </Button>
                   }
                 >
@@ -537,7 +537,7 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
                       key={`cycles-${academicYearId}-${reload}`}
                       fullWidth
                       size="small"
-                      label="Admission Cycle"
+                      label="Admission cycle"
                       required
                       value={formik.values.admissionCycle}
                       fetchOptions={fetchCycles}
@@ -567,7 +567,7 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
                     <CustomSelect
                       fullWidth
                       size="small"
-                      label="Admission Type"
+                      label="Admission type"
                       required
                       options={[
                         { value: 1, label: 'RTE' },
@@ -591,7 +591,7 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
                       fullWidth
                       required
                       size="small"
-                      label="Admission Offering"
+                      label="Admission offering"
                       value={selectedOffering}
                       disabled={!formik.values.admissionCycle}
                       fetchOptions={fetchOfferings}
@@ -653,19 +653,19 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
                 <FormSectionCard
                   icon={GlobalIcons.admissionStudent}
                   title="Applicant"
-                  descriptionTooltip="Enter the Student's Basic Identity. These Details Will Be Carried Into the Registration Form."
+                  descriptionTooltip="Enter the student's basic identity. These details will be carried into the registration form."
                 >
                   <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                    {field('applicantFirstName', 'First Name', true)}
-                    {field('applicantMiddleName', 'Middle Name')}
-                    {field('applicantLastName', 'Last Name')}
+                    {field('applicantFirstName', 'First name', true)}
+                    {field('applicantMiddleName', 'Middle name')}
+                    {field('applicantLastName', 'Last name')}
                   </Stack>
                   <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                     <ShakingTextField
                       error={Boolean(formik.submitCount && formik.errors.applicantDateOfBirth)}
                     >
                       <DatePicker
-                        label="Date of Birth"
+                        label="Date of birth"
                         format={ADMISSION_DATE_FORMAT}
                         value={
                           formik.values.applicantDateOfBirth
@@ -718,11 +718,11 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
                 <FormSectionCard
                   icon={GlobalIcons.family}
                   title="Parent Details"
-                  descriptionTooltip="Check the Parent's Email and Mobile for an Existing Family. Confirm the Parent Before Adding a Sibling."
+                  descriptionTooltip="Check the parent's email and mobile for an existing family. Confirm the parent before adding a sibling."
                 >
                   <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                    {field('guardianFirstName', corePolicy ? 'Parent Name' : 'First Name', true)}
-                    {field('guardianLastName', 'Last Name')}
+                    {field('guardianFirstName', corePolicy ? 'Parent name' : 'First name', true)}
+                    {field('guardianLastName', 'Last name')}
                   </Stack>
                   <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                     <ShakingTextField
@@ -732,7 +732,7 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
                         fullWidth
                         required
                         size="small"
-                        label={corePolicy ? 'Parent Contact Number' : 'Mobile'}
+                        label={corePolicy ? 'Parent contact number' : 'Mobile'}
                         name="guardianMobile"
                         inputProps={{ inputMode: 'numeric', maxLength: 10 }}
                         value={formik.values.guardianMobile}
@@ -744,7 +744,7 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
                         helperText={formik.touched.guardianMobile && formik.errors.guardianMobile}
                       />
                     </ShakingTextField>
-                    {field('guardianEmail', corePolicy ? 'Parent Email' : 'Email', corePolicy)}
+                    {field('guardianEmail', corePolicy ? 'Parent email' : 'Email', corePolicy)}
                   </Stack>
                   <ShakingTextField
                     error={Boolean(
@@ -755,7 +755,7 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
                     <CustomSelect
                       fullWidth
                       size="small"
-                      label={corePolicy ? 'Relationship to Student' : 'Relationship'}
+                      label={corePolicy ? 'Relationship to student' : 'Relationship'}
                       required
                       name="parentRelationship"
                       value={formik.values.parentRelationship}
@@ -785,7 +785,7 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
                     startIcon={<Iconify icon="mdi:account-search-outline" />}
                     sx={{ alignSelf: 'flex-start' }}
                   >
-                    {familyLookup.isFetching ? 'Checking Families…' : 'Check Existing Families'}
+                    {familyLookup.isFetching ? 'Checking Families…' : 'Check existing families'}
                   </Button>
                   {familyMatches && (
                     <StudentFeedback
@@ -794,8 +794,8 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
                       severity={familyMatches.length ? 'warning' : 'success'}
                     >
                       {familyMatches.length
-                        ? 'Existing Family Found. Link It or Explain Why This Is a Separate Family.'
-                        : 'No Family Is Available to Link in Your Scope. You Can Continue with a New Family.'}
+                        ? 'Existing family found. Link it or explain why this is a separate family.'
+                        : 'No family is available to link in your scope. You can continue with a new family.'}
                     </StudentFeedback>
                   )}
                   {familyMatches?.map((family) => (
@@ -860,11 +860,11 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
                         formik.setFieldValue('createSeparateFamily', true);
                       }}
                     >
-                      Create a Separate Family
+                      Create a separate family
                     </Button>
                   )}
                   {formik.values.createSeparateFamily &&
-                    field('separateFamilyReason', 'Reason For Separate Family', true)}
+                    field('separateFamilyReason', 'Reason for separate family', true)}
                 </FormSectionCard>
                 <AdmissionFamilyContacts
                   parentRelationship={formik.values.parentRelationship}
@@ -932,7 +932,7 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
             disabled={familyLookup.isFetching || !selectedOffering}
             startIcon={<Iconify icon="mdi:account-plus-outline" />}
           >
-            Start Registration
+            Start registration
           </LoadingButton>
         </Stack>
       </Drawer>
@@ -950,25 +950,18 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
           setPendingGuardian(null);
         }}
       />
-      <ConfirmDialog
-        open={discard.value}
-        onClose={discard.onFalse}
-        title="Discard Unsaved Registration?"
-        content="The applicant and parent details entered here will be lost."
-        icon="warning"
-        disableBackdropClick
-        action={
-          <Button
-            size="small"
-            variant="contained"
-            color="error"
-            startIcon={<Iconify icon="mdi:delete-outline" />}
-            onClick={onClose}
-          >
-            Discard Changes
-          </Button>
-        }
-      />
+      {discard.value &&
+        renderUnsavedConfirmation(
+          discard.onFalse,
+          () => {
+            if (!busy) onClose();
+          },
+          {
+            busy,
+            title: 'Discard Unsaved Registration?',
+            description: 'The applicant and parent details entered here will be lost.',
+          }
+        )}
     </>
   );
 }

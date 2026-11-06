@@ -54,6 +54,7 @@ import {
 import { AdmissionTableText } from './admission-table-text';
 import { AdmissionQueryError } from './admission-query-error';
 import { AdmissionCycleDialog } from './admission-cycle-dialog';
+import { ADMISSION_DATE_FORMAT } from './admission-date-formats';
 import { AdmissionNumberingDialog } from './admission-numbering-dialog';
 import { useAdmissionCycleFilters } from './use-admission-cycle-filters';
 import { AdmissionCycleActionDialog } from './admission-cycle-action-dialog';
@@ -321,7 +322,7 @@ export default function AdmissionCyclesScreen() {
       filterType: 'date',
       render: (_, row) => {
         const cycle = row as unknown as AdmissionCycle;
-        const date = formatDateOnly(cycle.startDate);
+        const date = formatDateOnly(cycle.startDate, ADMISSION_DATE_FORMAT);
         const schedule = cycleScheduleSummary(cycle);
         return (
           <AdmissionTableText text={date} tooltip={schedule ? `${date} · ${schedule}` : date} />
@@ -334,7 +335,7 @@ export default function AdmissionCyclesScreen() {
       minWidth: 145,
       isFilter: true,
       filterType: 'date',
-      render: (value) => <AdmissionTableText text={formatDateOnly(value)} />,
+      render: (value) => <AdmissionTableText text={formatDateOnly(value, ADMISSION_DATE_FORMAT)} />,
     },
     {
       id: 'linkedOfferingCount',
@@ -531,12 +532,10 @@ export default function AdmissionCyclesScreen() {
         return (
           <AdaptiveThreeDotsActions
             placement="right-top"
-            moreLabel={`More Actions `}
-            mobileDirectActionLimit={0}
-            sx={{
-              gap: 0,
-              '& .MuiIconButton-root': { width: { xs: 44, sm: 30 }, height: { xs: 44, sm: 30 } },
-            }}
+            moreLabel={`More actions for ${cycle.name}`}
+            directActionLimit={2}
+            collapseOnOverflow={false}
+            sx={{ justifyContent: 'flex-end' }}
             actions={actions}
           />
         );
@@ -693,10 +692,14 @@ export default function AdmissionCyclesScreen() {
           wrapperProps={{ sx: { flex: 1, height: 1, minHeight: 0, minWidth: 0 } }}
           tableContainerProps={{ sx: { height: 1 } }}
           errorContent={isError ? <AdmissionQueryError onRetry={() => refetch()} /> : undefined}
-          isLoading={isLoading || isFetching}
+          isLoading={isLoading || (isFetching && !data)}
+          isRefreshing={isFetching && !isLoading && Boolean(data)}
           isPagination
           isSearch
           isFilter={false}
+          showColumns
+          showExport
+          showFullScreen
           serverSidePagination
           serverSideSearch
           serverSideFilter

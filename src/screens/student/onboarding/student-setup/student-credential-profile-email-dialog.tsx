@@ -16,6 +16,7 @@ import { FormSectionCard } from 'src/components/form-section-card';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 import { useUpdateStudentCredentialsEmailMutation } from 'src/redux/student/onboarding/student-onboarding-api';
 import {
   Stack,
@@ -159,6 +160,8 @@ export default function StudentCredentialProfileEmailDialog({
     }
   };
   const { requestNavigation, confirmation } = useUnsavedNavigation(formik.dirty, {
+    guardContextChanges: true,
+    renderConfirmation: renderUnsavedConfirmation,
     blockNavigation: busy,
     push: router.push,
   });
@@ -176,6 +179,7 @@ export default function StudentCredentialProfileEmailDialog({
   return (
     <>
       <CustomDialog
+        titleInfo="Updates the recipient's saved profile email. Linked app-login changes require verification."
         open
         title={recipient.email ? 'Update Email' : 'Add Email'}
         maxWidth="sm"
@@ -195,6 +199,7 @@ export default function StudentCredentialProfileEmailDialog({
             <FormSectionCard
               title="App Login Email"
               icon={GlobalIcons.email}
+              descriptionTooltip="Check the recipient and address. Shared parent accounts also require confirmation for linked children."
               titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
             >
               <Stack spacing={2}>

@@ -9,14 +9,20 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useRouter } from 'next/navigation';
 import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { FormSectionCard } from 'src/components/form-section-card';
+import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { Box, Stack, Button, TextField, DialogActions } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 import {
   downloadRecordPdf,
   useVoidRecordDocumentMutation,
@@ -40,6 +46,7 @@ export default function CertificateBatchDialog({
   label: string;
   onClose: () => void;
 }) {
+  const router = useRouter();
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canIssue = hasGrantedPermission(permissions, 'Students.Records.Certificates.Add');
   const canVoid = hasGrantedPermission(permissions, 'Students.Records.Certificates.Add');
@@ -102,6 +109,14 @@ export default function CertificateBatchDialog({
       }
     },
   });
+  const decisionGuard = useUnsavedNavigation(Boolean(decision) && form.dirty, {
+    push: router.push,
+    blockNavigation: busy,
+    guardContextChanges: true,
+    renderConfirmation: (keepEditing, discard) =>
+      renderUnsavedConfirmation(keepEditing, discard, { busy }),
+  });
+  const requestCloseDecision = () => decisionGuard.requestNavigation(closeDecision);
   const downloadCertificate = async (certificate: CertificateResponse) => {
     if (!certificate.certificateId) return;
     setError('');
@@ -195,7 +210,7 @@ export default function CertificateBatchDialog({
     <CustomDialog
       open
       handleClose={onClose}
-      title={`${label} Certificates — Students`}
+      title={`${label} Certificates: Students`}
       titleInfo="Review students in this batch, download certificates, and use the available actions to manage issued certificates."
       maxWidth="lg"
       hasForm={false}
@@ -225,7 +240,7 @@ export default function CertificateBatchDialog({
                     notificationKey="STU-0790"
                     presentation="toast"
                     severity="error"
-                    action={
+                    toastAction={
                       <Button
                         size="small"
                         startIcon={<Iconify icon="solar:restart-bold" />}
@@ -259,13 +274,14 @@ export default function CertificateBatchDialog({
       <CertificatePreviewDialog
         open={!!view}
         title="Generated Certificate"
+        closeLocked={busy}
         certificates={view ? [view] : []}
         onClose={() => setView(null)}
       />
       <CustomDialog
         open={!!decision}
-        handleClose={closeDecision}
-        title={`${decision?.action ?? 'Review'} Certificate${decision ? ` — ${decision.certificate.certificateNo}` : ''}`}
+        handleClose={requestCloseDecision}
+        title={`${decision?.action ?? 'Review'} Certificate${decision ? `: ${decision.certificate.certificateNo}` : ''}`}
         titleInfo={
           decision?.action === 'Void'
             ? 'Enter a reason to void this certificate. Voided certificates cannot be downloaded or reprinted.'
@@ -273,7 +289,7 @@ export default function CertificateBatchDialog({
         }
         maxWidth="sm"
         disableClose={busy}
-        hasUnsavedChanges={form.dirty}
+        guardUnsavedChanges={false}
         onSubmit={(event) => {
           event.preventDefault();
           form.submitForm();
@@ -281,20 +297,28 @@ export default function CertificateBatchDialog({
       >
         <DialogScrollContent>
           <Stack spacing={2}>
-            <TextField
-              size="small"
-              label="Reason"
-              required
-              multiline
-              minRows={2}
-              name="reason"
-              value={form.values.reason}
-              onChange={form.handleChange}
-              onBlur={form.handleBlur}
-              disabled={busy}
-              error={!!form.touched.reason && !!form.errors.reason}
-              helperText={form.touched.reason && form.errors.reason}
-            />
+            <FormSectionCard
+              title="Certificate Action"
+              icon={GlobalIcons.admissionDetails}
+              descriptionTooltip="The reason is recorded with this action for the certificate identified in the dialog title."
+            >
+              <ShakingTextField error={!!form.touched.reason && !!form.errors.reason}>
+                <TextField
+                  size="small"
+                  label="Reason"
+                  required
+                  multiline
+                  minRows={2}
+                  name="reason"
+                  value={form.values.reason}
+                  onChange={form.handleChange}
+                  onBlur={form.handleBlur}
+                  disabled={busy}
+                  error={!!form.touched.reason && !!form.errors.reason}
+                  helperText={form.touched.reason && form.errors.reason}
+                />
+              </ShakingTextField>
+            </FormSectionCard>
             {error && (
               <StudentFeedback
                 notificationKey="STU-0789"
@@ -311,7 +335,7 @@ export default function CertificateBatchDialog({
             size="small"
             variant="outlined"
             startIcon={<Iconify icon="mingcute:close-line" />}
-            onClick={closeDecision}
+            onClick={requestCloseDecision}
             disabled={busy}
           >
             Cancel
@@ -331,7 +355,7 @@ export default function CertificateBatchDialog({
                 }
               />
             }
-            color={decision?.action === 'Void' ? 'error' : 'primary'}
+            color={decision?.action === 'Void' ? 'error' : 'inherit'}
             loading={busy}
             disabled={busy}
           >
@@ -339,6 +363,7 @@ export default function CertificateBatchDialog({
           </Button>
         </DialogActions>
       </CustomDialog>
+      {decisionGuard.confirmation}
     </CustomDialog>
   );
 }

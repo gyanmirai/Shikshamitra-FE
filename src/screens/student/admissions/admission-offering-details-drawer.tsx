@@ -11,9 +11,9 @@ import { useMemo, useState, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import { formatDateOnly } from 'src/utils/date-only';
 import { shikshaMitraToast } from 'src/components/toast';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 import {
   Box,
   Grid,
@@ -32,6 +32,8 @@ import {
   useUpdateAdmissionClassRoomsMutation,
 } from 'src/redux/student/admissions/admission-offerings-api';
 
+import { AdmissionDialogTitle } from './admission-dialog-title';
+import { ADMISSION_DATE_FORMAT } from './admission-date-formats';
 import { AdmissionOfferingReadiness } from './admission-offering-readiness';
 import { admissionTrackLabels, admissionEntryModeLabels } from './admission-offering-model';
 
@@ -175,7 +177,11 @@ export function AdmissionOfferingDetailsDrawer({ open, offering, canManage, onCl
               Admission Offering
             </Typography>
             <Typography id="admission-offering-details-title" variant="h6" component="h2">
-              {offering?.name || offering?.code || 'Offering Details'}
+              <AdmissionDialogTitle
+                title={offering?.name || offering?.code || 'Offering Details'}
+                helpText="Review this offering’s class, admission dates, published forms, capacity and readiness."
+                helpLabel="Admission offering details information"
+              />
             </Typography>
             {offering && (
               <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
@@ -249,13 +255,13 @@ export function AdmissionOfferingDetailsDrawer({ open, offering, canManage, onCl
                   <Grid size={{ xs: 6 }}>
                     <DetailItem
                       label="Opens"
-                      value={formatDateOnly(offering.effectiveOpenDate, 'DD MMM YYYY')}
+                      value={formatDateOnly(offering.effectiveOpenDate, ADMISSION_DATE_FORMAT)}
                     />
                   </Grid>
                   <Grid size={{ xs: 6 }}>
                     <DetailItem
                       label="Closes"
-                      value={formatDateOnly(offering.effectiveCloseDate, 'DD MMM YYYY')}
+                      value={formatDateOnly(offering.effectiveCloseDate, ADMISSION_DATE_FORMAT)}
                     />
                   </Grid>
                   <Grid size={{ xs: 6 }}>
@@ -338,7 +344,7 @@ export function AdmissionOfferingDetailsDrawer({ open, offering, canManage, onCl
                     notificationKey="STU-0113"
                     presentation="toast"
                     severity="error"
-                    action={
+                    toastAction={
                       <Button size="small" onClick={() => capacityQuery.refetch()}>
                         Retry
                       </Button>
@@ -411,7 +417,7 @@ export function AdmissionOfferingDetailsDrawer({ open, offering, canManage, onCl
                         notificationKey="STU-0116"
                         presentation="toast"
                         severity="error"
-                        action={
+                        toastAction={
                           <Button size="small" onClick={() => roomsQuery.refetch()}>
                             Retry
                           </Button>
@@ -496,17 +502,18 @@ export function AdmissionOfferingDetailsDrawer({ open, offering, canManage, onCl
           )}
         </Stack>
       </Drawer>
-      <ConfirmDialog
-        open={Boolean(discardTarget)}
-        onClose={() => setDiscardTarget(null)}
-        title="Discard Room Changes?"
-        content="Your changes to the assigned rooms have not been saved."
-        action={
-          <Button variant="contained" size="small" color="error" onClick={discardChanges}>
-            Discard Changes
-          </Button>
-        }
-      />
+      {discardTarget &&
+        renderUnsavedConfirmation(
+          () => setDiscardTarget(null),
+          () => {
+            if (!updateState.isLoading) discardChanges();
+          },
+          {
+            busy: updateState.isLoading,
+            title: 'Discard Room Changes?',
+            description: 'Your changes to the assigned rooms have not been saved.',
+          }
+        )}
     </>
   );
 }

@@ -8,17 +8,17 @@ describe('formatWorkflowDateTime', () => {
   });
 
   it('formats a valid timestamp', () => {
-    expect(formatWorkflowDateTime('2026-08-20T06:37:00Z')).toContain('20 Aug 2026');
+    expect(formatWorkflowDateTime('2026-08-20T06:37:00Z')).toContain('20/08/2026');
   });
 
   it('treats timezone-less API timestamps as UTC before displaying local time', () => {
-    expect(formatWorkflowDateTime('2026-09-30T11:30:00')).toBe('30 Sep 2026 5:00 pm');
+    expect(formatWorkflowDateTime('2026-09-30T11:30:00')).toBe('30/09/2026 05:00 PM');
   });
 });
 
 describe('formatWorkflowListDate', () => {
   it('shows dates in the admission table format and keeps empty values neutral', () => {
-    expect(formatWorkflowListDate('2026-09-24T11:30:00Z')).toBe('24-09-2026');
+    expect(formatWorkflowListDate('2026-09-24T11:30:00Z')).toBe('24/09/2026');
     expect(formatWorkflowListDate(null)).toBe('—');
   });
 });

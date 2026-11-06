@@ -10,6 +10,7 @@ import { StudentFeedback } from 'src/components/student-feedback';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { Stack, Button, TextField, DialogActions } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 import { useSetStudentOnboardingIdentifierLockMutation } from 'src/redux/student/onboarding/student-onboarding-api';
 
 import { getOnboardingErrorMessage } from './student-onboarding-messages';
@@ -87,6 +88,8 @@ export default function StudentIdentifierLockControls({
     },
   });
   const { requestNavigation, confirmation } = useUnsavedNavigation(form.dirty, {
+    guardContextChanges: true,
+    renderConfirmation: renderUnsavedConfirmation,
     blockNavigation: saving.isLoading,
   });
   const close = () => {

@@ -10,6 +10,7 @@ import TimelineConnector from '@mui/lab/TimelineConnector';
 import { EmptyContent } from 'src/components/empty-content';
 import TimelineItem, { timelineItemClasses } from '@mui/lab/TimelineItem';
 
+import { ADMISSION_DATE_TIME_FORMAT } from './admission-date-formats';
 import { getActivityPresentation } from './applicant-360/admission-applicant-360-model';
 
 export type AdmissionActivityTimelineItem = {
@@ -83,7 +84,7 @@ export function AdmissionActivityTimeline({
                   {activity.actorName ||
                     (activity.creatorId ? 'Staff Name Unavailable' : 'No Staff Recorded')}
                   {' · '}
-                  {fDateTime(activity.occurredAt) || 'Time Not Recorded'}
+                  {fDateTime(activity.occurredAt, ADMISSION_DATE_TIME_FORMAT) || 'Time Not Recorded'}
                 </Typography>
               </TimelineContent>
             </TimelineItem>

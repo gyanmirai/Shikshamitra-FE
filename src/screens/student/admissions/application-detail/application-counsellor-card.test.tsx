@@ -329,10 +329,11 @@ it('keeps entered header assignment values after a failed save and protects dirt
   const confirm = vi.fn().mockReturnValue(false);
   vi.stubGlobal('confirm', confirm);
   await user.click(screen.getByRole('button', { name: 'Cancel' }));
-  expect(confirm).toHaveBeenCalledOnce();
-  expect(screen.getByRole('dialog')).toBeVisible();
-  confirm.mockReturnValue(true);
+  expect(confirm).not.toHaveBeenCalled();
+  await user.click(screen.getByRole('button', { name: 'Keep editing' }));
+  expect(screen.getByRole('dialog', { name: 'Assign Journey Counsellor' })).toBeVisible();
   await user.click(screen.getByRole('button', { name: 'Cancel' }));
+  await user.click(screen.getByRole('button', { name: 'Discard changes' }));
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 });
 

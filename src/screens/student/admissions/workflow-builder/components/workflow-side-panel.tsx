@@ -6,10 +6,12 @@ import type {
   AdmissionWorkflowGovernanceHistory,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
+import { useId } from 'react';
 import { Iconify } from 'src/components/iconify';
-import { Box, Stack, Drawer, Divider, IconButton, Typography } from '@mui/material';
+import { Box, Stack, Drawer, Button, Divider, IconButton, Typography } from '@mui/material';
 
 import { WorkflowPanelContent } from './workflow-panel-content';
+import { AdmissionDialogTitle } from '../../admission-dialog-title';
 
 import type { WorkflowSidePanel } from '../workflow-builder-types';
 
@@ -58,12 +60,15 @@ export function WorkflowSidePanel({
   governanceLoading,
   onClose,
 }: Props) {
+  const titleId = useId();
+  const readOnlyPanel = Boolean(panel && panel !== 'simulation');
   return (
     <Drawer
       anchor="right"
       open={Boolean(panel)}
       onClose={onClose}
       PaperProps={{
+        'aria-labelledby': titleId,
         sx: {
           width: { xs: 1, sm: 560 },
           maxWidth: 1,
@@ -82,12 +87,15 @@ export function WorkflowSidePanel({
         sx={{ px: 2.5, py: 2 }}
       >
         <Box sx={{ minWidth: 0 }}>
-          <Typography variant="h6">{panel ? TITLES[panel] : ''}</Typography>
-          {panel && (
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
-              {DESCRIPTIONS[panel]}
-            </Typography>
-          )}
+          <Typography id={titleId} variant="h6" component="h2">
+            {panel && (
+              <AdmissionDialogTitle
+                title={TITLES[panel]}
+                helpText={DESCRIPTIONS[panel]}
+                helpLabel={`${TITLES[panel]} information`}
+              />
+            )}
+          </Typography>
         </Box>
         <IconButton
           aria-label="Close Panel"
@@ -119,6 +127,23 @@ export function WorkflowSidePanel({
           />
         </Stack>
       </Box>
+      {readOnlyPanel && (
+        <Stack
+          direction="row"
+          justifyContent="flex-end"
+          sx={{ p: 2, borderTop: 1, borderColor: 'divider', flexShrink: 0 }}
+        >
+          <Button
+            size="small"
+            variant="outlined"
+            color="inherit"
+            startIcon={<Iconify icon="mdi:close" />}
+            onClick={onClose}
+          >
+            Close
+          </Button>
+        </Stack>
+      )}
     </Drawer>
   );
 }

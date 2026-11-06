@@ -60,7 +60,7 @@ export function DocumentRequirementClasses({
               notificationKey="STU-0505"
               presentation="toast"
               severity="error"
-              action={
+              toastAction={
                 <Button size="small" onClick={() => refetch()}>
                   Retry
                 </Button>

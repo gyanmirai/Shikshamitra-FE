@@ -1,5 +1,7 @@
 export type AttendanceScope = { academicYearId: string; standardId?: string; divisionId?: string };
 export type AttendanceRange = AttendanceScope & {
+  boardId?: string;
+  educationMediumId?: string;
   startDate: string;
   endDate: string;
   skipCount?: number;

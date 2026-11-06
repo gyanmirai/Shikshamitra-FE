@@ -4,11 +4,13 @@ import { Stack, Button } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { EmptyContent } from 'src/components/empty-content';
+import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { useGetAssessmentSessionsQuery } from 'src/redux/student/admissions/admission-assessment-sessions-api';
 import { useGetAssessmentSessionSlotsQuery } from 'src/redux/student/admissions/admission-assessment-planning-api';
 
 import { normalizeAssessmentDateTime } from './assessment-date-time';
+import { ADMISSION_DATE_TIME_FORMAT } from '../admission-date-formats';
 import { getAvailableAssessmentSessions } from './assessment-session-availability';
 
 type Props = {
@@ -68,7 +70,7 @@ export function AssessmentBookingField({
           notificationKey="STU-0250"
           presentation="toast"
           severity="error"
-          action={
+          toastAction={
             <Button size="small" color="inherit" onClick={sessions.refetch}>
               Retry
             </Button>
@@ -77,27 +79,30 @@ export function AssessmentBookingField({
           Unable to load sessions. Retry before booking.
         </StudentFeedback>
       )}
-      <CustomSelect
-        label="Assessment Session"
-        value={value}
-        onChange={(next) => {
-          onChange(String(next));
-          onSlotChange?.('');
-        }}
-        disabled={disabled || sessions.isError || sessions.isFetching}
-        isLoading={sessions.isLoading}
-        error={Boolean(error)}
-        helperText={error}
-        options={available.map((session) => ({
-          value: session.id,
-          label: `${session.name} · ${dayjs(normalizeAssessmentDateTime(session.startsAt)).format('DD MMM, h:mm A')} · ${session.location} · ${session.capacity - session.bookedCount} Places`,
-        }))}
-        noOptionsMessage={
-          inlineBooking
-            ? 'No Slots Available'
-            : 'No Available Sessions. Create a Session Under Admissions → Assessments.'
-        }
-      />
+      <ShakingTextField error={Boolean(error)}>
+        <CustomSelect
+          label="Assessment Session"
+          required
+          value={value}
+          onChange={(next) => {
+            onChange(String(next));
+            onSlotChange?.('');
+          }}
+          disabled={disabled || sessions.isError || sessions.isFetching}
+          isLoading={sessions.isLoading}
+          error={Boolean(error)}
+          helperText={error}
+          options={available.map((session) => ({
+            value: session.id,
+            label: `${session.name} · ${dayjs(normalizeAssessmentDateTime(session.startsAt)).format(ADMISSION_DATE_TIME_FORMAT)} · ${session.location} · ${session.capacity - session.bookedCount} Places`,
+          }))}
+          noOptionsMessage={
+            inlineBooking
+              ? 'No Slots Available'
+              : 'No Available Sessions. Create a Session Under Admissions → Assessments.'
+          }
+        />
+      </ShakingTextField>
       {inlineBooking &&
         !sessions.isFetching &&
         !sessions.isError &&
@@ -154,7 +159,7 @@ export function AssessmentBookingField({
               notificationKey="STU-0252"
               presentation="toast"
               severity="error"
-              action={
+              toastAction={
                 <Button size="small" color="inherit" onClick={slots.refetch}>
                   Retry
                 </Button>
@@ -163,22 +168,25 @@ export function AssessmentBookingField({
               Unable to load interview slots. Retry before booking.
             </StudentFeedback>
           )}
-          <CustomSelect
-            label="Interview Time Slot"
-            error={Boolean(slotError)}
-            helperText={slotError}
-            value={slotStartsAt}
-            isLoading={slots.isLoading}
-            disabled={disabled || slots.isFetching || slots.isError}
-            onChange={(next) => onSlotChange?.(String(next))}
-            options={(slots.currentData ?? []).map((slot) => ({
-              value: slot.startsAt,
-              label: `${dayjs(slot.startsAt).format('DD MMM, h:mm A')} – ${dayjs(
-                slot.endsAt
-              ).format('h:mm A')}`,
-            }))}
-            noOptionsMessage="No Interview Slots Are Available. Choose Another Session."
-          />
+          <ShakingTextField error={Boolean(slotError)}>
+            <CustomSelect
+              label="Interview Time Slot"
+              required
+              error={Boolean(slotError)}
+              helperText={slotError}
+              value={slotStartsAt}
+              isLoading={slots.isLoading}
+              disabled={disabled || slots.isFetching || slots.isError}
+              onChange={(next) => onSlotChange?.(String(next))}
+              options={(slots.currentData ?? []).map((slot) => ({
+                value: slot.startsAt,
+                label: `${dayjs(slot.startsAt).format(ADMISSION_DATE_TIME_FORMAT)} – ${dayjs(
+                  slot.endsAt
+                ).format('h:mm A')}`,
+              }))}
+              noOptionsMessage="No Interview Slots Are Available. Choose Another Session."
+            />
+          </ShakingTextField>
         </>
       )}
     </Stack>

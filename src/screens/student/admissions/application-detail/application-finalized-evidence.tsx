@@ -62,7 +62,7 @@ export function ApplicationFinalizedEvidence({
               notificationKey="STU-0197"
               presentation="toast"
               severity="error"
-              action={
+              toastAction={
                 <Button size="small" color="inherit" onClick={() => feeQuery.refetch()}>
                   Retry
                 </Button>

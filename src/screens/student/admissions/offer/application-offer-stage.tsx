@@ -3,6 +3,7 @@ import type { AdmissionApplicationStage } from 'src/redux/student/admissions/adm
 
 import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
+import { fDateTime } from 'src/utils/format-time';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { Card, Chip, Stack, Button, Divider, Skeleton, Typography } from '@mui/material';
@@ -11,6 +12,7 @@ import { useGetAdmissionOfferStageQuery } from 'src/redux/student/admissions/adm
 import { OfferHistory } from './offer-history';
 import { OfferActionDialog } from './offer-action-dialog';
 import { useApplicationOffer } from './use-application-offer';
+import { ADMISSION_DATE_TIME_FORMAT } from '../admission-date-formats';
 import AdmissionFeeSelectionPanel, {
   useFeeSelectionEditorState,
 } from '../fee-selection/admission-fee-selection-panel';
@@ -169,7 +171,7 @@ export function ApplicationOfferStage({
               color={state.status === 'expired' ? 'error' : 'text.secondary'}
             >
               {state.status === 'expired' ? 'Expired' : 'Expires'}{' '}
-              {new Date(state.expiresAt).toLocaleString()}
+              {fDateTime(state.expiresAt, ADMISSION_DATE_TIME_FORMAT)}
             </Typography>
           )}
           {state.blockers.map((item) => (

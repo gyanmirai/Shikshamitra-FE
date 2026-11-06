@@ -21,6 +21,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { studentPaths, studentPermissions } from 'src/constants/student-menu';
 import { Box, Stack, Button, Switch, TextField, Typography, FormControlLabel } from '@mui/material';
+import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 
 import RollOrderingFields from './roll-ordering-fields';
 import { useOnboardingSettings } from '../onboarding-settings-context';
@@ -263,6 +264,8 @@ function NumberingRulesScreen({
     },
   });
   const navigationGuard = useUnsavedNavigation(editorOpen && formik.dirty, {
+    guardContextChanges: true,
+    renderConfirmation: renderUnsavedConfirmation,
     push: router.push,
     blockNavigation: formik.isSubmitting || Boolean(publishingId),
   });

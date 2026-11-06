@@ -103,6 +103,10 @@ export function ApplicationFormCorrectionEditor({
   const guard = useUnsavedNavigation(dirty, {
     push: router.push,
     blockNavigation: locked,
+    guardContextChanges: true,
+    onNavigationApproved: () => {
+      if (unconfirmed) onRefresh();
+    },
     renderConfirmation: (keepEditing, discard) => (
       <ConfirmDialog
         open
@@ -113,18 +117,18 @@ export function ApplicationFormCorrectionEditor({
             ? 'The save result is unconfirmed. Closing will refresh the application so you can check its latest details.'
             : 'Your unsaved form corrections will be discarded.'
         }
-        cancelText="Keep Editing"
+        cancelText="Keep editing"
+        disableCancel={locked}
         onClose={keepEditing}
         action={
           <Button
             variant="contained"
-            color="inherit"
-            onClick={() => {
-              if (unconfirmed) onRefresh();
-              discard();
-            }}
+            color="error"
+            size="small"
+            disabled={locked}
+            onClick={discard}
           >
-            Discard Changes
+            Discard changes
           </Button>
         }
       />

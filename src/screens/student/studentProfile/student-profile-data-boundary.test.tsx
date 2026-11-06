@@ -1,9 +1,14 @@
-import { it, vi, expect } from 'vitest';
+import type { ReactNode } from 'react';
+import type { AlertProps } from '@mui/material';
+
 import { http, HttpResponse } from 'msw';
 import { mswServer } from 'src/test/mswServer';
+import { it, vi, expect, beforeEach } from 'vitest';
 import userEvent from '@testing-library/user-event';
-import { shikshaMitraToast } from 'src/components/toast';
-import { screen, waitFor } from '@testing-library/react';
+import { ThemeProvider } from '@mui/material/styles';
+import { createTheme } from 'src/theme/create-theme';
+import { defaultSettings } from 'src/components/settings/config-settings';
+import { act, render, screen, within, waitFor } from '@testing-library/react';
 
 import {
   profilePath,
@@ -17,6 +22,34 @@ import {
 vi.hoisted(() => {
   process.env.NEXT_PUBLIC_API_URL = 'http://localhost:5000';
 });
+const feedback = vi.hoisted(() => ({
+  error: vi.fn(
+    (_options: { message: ReactNode; alertProps: (id: string | number) => AlertProps }) =>
+      'profile-error'
+  ),
+  info: vi.fn(),
+  warning: vi.fn(),
+  success: vi.fn(),
+  dismiss: vi.fn(),
+}));
+vi.mock('src/components/toast', () => ({ shikshaMitraToast: feedback }));
+const loadFailure =
+  'Unable to load this student profile. Please try again. If the problem continues, check your student record access.';
+async function deliveredRecovery(message: string) {
+  await waitFor(() =>
+    expect(feedback.error).toHaveBeenCalledWith(expect.objectContaining({ message }))
+  );
+  const notice = feedback.error.mock.calls.findLast(
+    ([options]) => options.message === message
+  )?.[0];
+  const action = render(
+    <ThemeProvider theme={createTheme(defaultSettings)}>
+      {notice?.alertProps('profile-error').action}
+    </ThemeProvider>
+  );
+  return within(action.container);
+}
+beforeEach(() => vi.clearAllMocks());
 
 it('loads the protected profile and passes its canonical GUID to both real Documents queries only after selection', async () => {
   const requests: string[] = [];
@@ -53,8 +86,7 @@ it('loads the protected profile and passes its canonical GUID to both real Docum
   );
 });
 
-it('keeps tabs unmounted on a failed read, reports the toast and recovers on profile reload', async () => {
-  const toast = vi.spyOn(shikshaMitraToast, 'error');
+it('keeps tabs unmounted on a failed read and retries the actual profile request from its toast', async () => {
   let attempts = 0;
   mswServer.use(
     http.get(profilePath, () => {
@@ -64,25 +96,17 @@ it('keeps tabs unmounted on a failed read, reports the toast and recovers on pro
         : HttpResponse.json({ data: studentProfile });
     })
   );
-  try {
-    const profile = renderStudentProfile();
-    await waitFor(() =>
-      expect(toast).toHaveBeenCalledWith(
-        expect.objectContaining({
-          message: expect.stringContaining('Unable to load this student profile'),
-        })
-      )
-    );
-    expect(screen.queryByRole('tablist')).not.toBeInTheDocument();
-    expect(screen.queryByText('Admission evidence')).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
-    profile.unmount();
-    renderStudentProfile();
-    expect(await screen.findByText('Aanya Patel')).toBeInTheDocument();
-    expect(attempts).toBe(2);
-  } finally {
-    toast.mockRestore();
-  }
+  renderStudentProfile();
+  const recovery = await deliveredRecovery(loadFailure);
+  expect(
+    screen.queryByText('Unable to load this student profile', { exact: false })
+  ).not.toBeInTheDocument();
+  expect(screen.queryByRole('tablist')).not.toBeInTheDocument();
+  expect(screen.queryByText('Admission evidence')).not.toBeInTheDocument();
+  await userEvent.click(recovery.getByRole('button', { name: 'Retry' }));
+  expect(await screen.findByText('Aanya Patel')).toBeInTheDocument();
+  expect(attempts).toBe(2);
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument();
 });
 
 it.each([
@@ -95,27 +119,51 @@ it.each([
 ])(
   'rejects malformed or mismatched profile identity without a URL-only fallback',
   async (response) => {
-    const toast = vi.spyOn(shikshaMitraToast, 'error');
-    mswServer.use(http.get(profilePath, () => HttpResponse.json({ data: response })));
-    const profile = renderStudentProfile();
-    try {
-      await waitFor(() =>
-        expect(toast).toHaveBeenCalledWith(
-          expect.objectContaining({
-            message: expect.stringContaining('Unable to load this student profile'),
-          })
-        )
-      );
-      expect(screen.queryByRole('tablist')).not.toBeInTheDocument();
-      expect(screen.queryByText('Admission evidence')).not.toBeInTheDocument();
-    } finally {
-      profile.unmount();
-      // Student notices release on the next task to bridge StrictMode remounts.
-      await new Promise((resolve) => setTimeout(resolve, 0));
-      toast.mockRestore();
-    }
+    let attempts = 0;
+    mswServer.use(
+      http.get(profilePath, () => {
+        attempts += 1;
+        return HttpResponse.json({ data: attempts === 1 ? response : studentProfile });
+      })
+    );
+    renderStudentProfile();
+    const recovery = await deliveredRecovery(loadFailure);
+    expect(
+      screen.queryByText('Unable to load this student profile', { exact: false })
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('tablist')).not.toBeInTheDocument();
+    expect(screen.queryByText('Admission evidence')).not.toBeInTheDocument();
+    await userEvent.click(recovery.getByRole('button', { name: 'Retry' }));
+    expect(await screen.findByText('Aanya Patel')).toBeVisible();
+    expect(attempts).toBe(2);
   }
 );
+
+it('retries a failed refresh from the delivered toast without unmounting the current profile', async () => {
+  let reads = 0;
+  mswServer.use(
+    http.get(profilePath, () => {
+      reads += 1;
+      return reads === 2
+        ? HttpResponse.json({ detail: 'Unavailable' }, { status: 503 })
+        : HttpResponse.json({ data: studentProfile });
+    })
+  );
+  const view = renderStudentProfile();
+  await screen.findByText('Aanya Patel');
+  const overview = screen.getByRole('tab', { name: 'Overview' });
+  await act(async () => {
+    view.invalidateProfile();
+  });
+  const recovery = await deliveredRecovery(
+    'The profile could not be refreshed. Your current view and draft have been kept.'
+  );
+  expect(screen.getByRole('tab', { name: 'Overview' })).toBe(overview);
+  expect(screen.getByText('Aanya Patel')).toBeVisible();
+  await userEvent.click(recovery.getByRole('button', { name: 'Retry profile' }));
+  await waitFor(() => expect(reads).toBe(3));
+  expect(screen.getByRole('tab', { name: 'Overview' })).toBe(overview);
+});
 
 it('keeps protected section queries unmounted during summary-only provisioning', async () => {
   const protectedRequests: string[] = [];

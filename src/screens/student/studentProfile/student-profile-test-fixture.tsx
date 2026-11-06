@@ -1,9 +1,11 @@
+import type { AlertProps } from '@mui/material';
 import type { StudentRecordProfile } from 'src/redux/student/student-profile-types';
 
 import { Provider } from 'react-redux';
 import { api } from 'src/redux/service';
 import { http, HttpResponse } from 'msw';
 import { mswServer } from 'src/test/mswServer';
+import { studentType } from 'src/redux/tagTypes';
 import { configureStore } from '@reduxjs/toolkit';
 import { vi, afterEach, beforeEach } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
@@ -159,7 +161,7 @@ export function renderStudentProfile(
       }))
     )
   );
-  return render(
+  const view = render(
     <Provider store={store}>
       <ThemeProvider theme={createTheme(defaultSettings)}>
         <StudentProfileDataBoundary studentId={studentId}>
@@ -169,6 +171,25 @@ export function renderStudentProfile(
         </StudentProfileDataBoundary>
       </ThemeProvider>
     </Provider>
+  );
+  return {
+    ...view,
+    invalidateProfile: () => {
+      store.dispatch(
+        api.util.invalidateTags([{ type: studentType.student, id: `RECORDS-PROFILE-${studentId}` }])
+      );
+    },
+  };
+}
+export function renderProfileToastAction(
+  notice: { alertProps?: AlertProps | ((id: string | number) => AlertProps) } | undefined
+) {
+  const props =
+    typeof notice?.alertProps === 'function'
+      ? notice.alertProps('profile-test')
+      : notice?.alertProps;
+  return render(
+    <ThemeProvider theme={createTheme(defaultSettings)}>{props?.action}</ThemeProvider>
   );
 }
 afterEach(() => {

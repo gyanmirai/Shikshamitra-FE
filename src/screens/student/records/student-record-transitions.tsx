@@ -14,12 +14,12 @@ import { Iconify } from 'src/components/iconify';
 import { RouterLink } from 'src/routes/components';
 import { CustomTabs } from 'src/components/custom-tabs';
 import CustomSelect from 'src/components/custom-select';
-import { fDate, fDateTime } from 'src/utils/format-time';
 import { shikshaMitraToast } from 'src/components/toast';
 import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { fDate, fDateTime, formatStr } from 'src/utils/format-time';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
@@ -41,8 +41,8 @@ import {
   useCorrectStudentRecordTransitionMutation,
 } from 'src/redux/student/records/student-record-transitions-api';
 
-import TransitionBatchForm from './transition-batch-form';
 import SchoolExitDrawer from './school-exit-drawer';
+import TransitionBatchForm from './transition-batch-form';
 import ReturningStudentForm from './returning-student-form';
 import RenewalPortalAccounts from './renewal-portal-accounts';
 import { recordsQueryUrl, positivePageValue } from './records-url-state';
@@ -301,7 +301,7 @@ export default function StudentRecordTransitions() {
               notificationKey="STU-0911"
               presentation="toast"
               severity="error"
-              action={
+              toastAction={
                 <Button color="inherit" onClick={() => list.refetch()}>
                   Retry
                 </Button>
@@ -432,7 +432,11 @@ export default function StudentRecordTransitions() {
                       </Label>
                     ),
                   },
-                  { id: 'effectiveDate', label: 'Effective date', render: (value) => fDate(value) },
+                  {
+                    id: 'effectiveDate',
+                    label: 'Effective date',
+                    render: (value) => fDate(value, formatStr.split.date),
+                  },
                   { id: 'reason', label: 'Reason', minWidth: 220 },
                   {
                     id: 'currentApprovalStage',
@@ -503,7 +507,9 @@ export default function StudentRecordTransitions() {
                   {selected.status}
                 </Typography>
                 <Typography variant="body2">{selected.reason}</Typography>
-                <Typography variant="body2">Effective: {fDate(selected.effectiveDate)}</Typography>
+                <Typography variant="body2">
+                  Effective: {fDate(selected.effectiveDate, formatStr.split.date)}
+                </Typography>
                 {selected.status === 'AwaitingAdmission' && (
                   <StudentFeedback notificationKey="STU-0912" presentation="inline" severity="info">
                     Records approval is complete. Finish Admissions and Onboarding before this
@@ -540,7 +546,8 @@ export default function StudentRecordTransitions() {
                 )}
                 {selected.history.map((event, index) => (
                   <Typography key={index} variant="body2">
-                    {event.action} · {event.remarks} · {fDateTime(event.occurredAt)}
+                    {event.action} · {event.remarks} ·{' '}
+                    {fDateTime(event.occurredAt, formatStr.split.dateTime)}
                   </Typography>
                 ))}
               </>
@@ -619,15 +626,19 @@ export default function StudentRecordTransitions() {
         <DialogActions sx={{ flexWrap: 'wrap', gap: 1 }}>
           {!command ? (
             <>
-              {selected?.canApprove && canApprove &&
-                !(selected.status === 'Submitted' && ['Withdraw', 'Transfer', 'Graduate'].includes(selected.outcome)) && (
-                <>
-                  <Button onClick={() => setCommand('reject')} color="error">
-                    Reject
-                  </Button>
-                  <Button onClick={() => setCommand('approve')}>Approve stage</Button>
-                </>
-              )}
+              {selected?.canApprove &&
+                canApprove &&
+                !(
+                  selected.status === 'Submitted' &&
+                  ['Withdraw', 'Transfer', 'Graduate'].includes(selected.outcome)
+                ) && (
+                  <>
+                    <Button onClick={() => setCommand('reject')} color="error">
+                      Reject
+                    </Button>
+                    <Button onClick={() => setCommand('approve')}>Approve stage</Button>
+                  </>
+                )}
               {selected?.canCancel && canCancel && (
                 <Button onClick={() => setCommand('cancel')}>Cancel transition</Button>
               )}

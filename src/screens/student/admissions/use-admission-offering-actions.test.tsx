@@ -271,8 +271,97 @@ describe('Offering edit detail loading', () => {
 describe('Offering activation confirmation', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.load.mockReset();
     mocks.granted = [{ name: 'Students.Admissions.Offerings.Add', isGranted: true }];
     mocks.other.mockReturnValue({ unwrap: async () => detail });
+  });
+
+  it('keeps requirement checks cancellable and ignores the closed read without activating', async () => {
+    const request = deferred();
+    mocks.load.mockReturnValue({ unwrap: () => request.promise });
+    const { result } = renderHook(() => useAdmissionOfferingActions(cycle));
+    act(() =>
+      result.current.requestAction({
+        ...row,
+        isActive: false,
+        canActivate: false,
+        configurationStatus: 0,
+      })
+    );
+    expect(result.current.commanding).toBe(false);
+    expect(result.current.checkingRequirements).toBe(true);
+    await act(async () => {
+      await result.current.confirmAction();
+    });
+    expect(mocks.other).not.toHaveBeenCalled();
+    expect(mocks.load).toHaveBeenCalledOnce();
+    act(() => result.current.cancelAction());
+    expect(result.current.pendingAction).toBeNull();
+    expect(result.current.checkingRequirements).toBe(false);
+    await act(async () =>
+      request.resolve({
+        ...detail,
+        configuration: {
+          isValid: false,
+          status: 0,
+          errors: [{ code: 'Old', message: 'Closed request' }],
+        },
+      })
+    );
+    expect(result.current.pendingAction).toBeNull();
+    expect(result.current.activationErrors).toEqual([]);
+    expect(mocks.other).not.toHaveBeenCalled();
+  });
+
+  it('does not let an older requirements response overwrite a newer offering check', async () => {
+    const older = deferred();
+    const newer = deferred();
+    mocks.load
+      .mockReturnValueOnce({ unwrap: () => older.promise })
+      .mockReturnValueOnce({ unwrap: () => newer.promise });
+    const { result } = renderHook(() => useAdmissionOfferingActions(cycle));
+    act(() =>
+      result.current.requestAction({
+        ...row,
+        isActive: false,
+        canActivate: false,
+        configurationStatus: 0,
+      })
+    );
+    act(() => result.current.cancelAction());
+    act(() =>
+      result.current.requestAction({
+        ...row,
+        id: 'offering-2',
+        isActive: false,
+        canActivate: false,
+        configurationStatus: 0,
+      })
+    );
+    await act(async () =>
+      older.resolve({
+        ...detail,
+        configuration: {
+          isValid: false,
+          status: 0,
+          errors: [{ code: 'Old', message: 'Old requirement' }],
+        },
+      })
+    );
+    expect(result.current.pendingAction?.row.id).toBe('offering-2');
+    expect(result.current.checkingRequirements).toBe(true);
+    expect(result.current.activationErrors).toEqual([]);
+    const errors = [{ code: 'New', message: 'Current requirement' }];
+    await act(async () =>
+      newer.resolve({
+        ...detail,
+        id: 'offering-2',
+        configuration: { isValid: false, status: 0, errors },
+      })
+    );
+    expect(result.current.checkingRequirements).toBe(false);
+    expect(result.current.activationErrors).toEqual(errors);
+    expect(mocks.other).not.toHaveBeenCalled();
   });
 
   it('locks the entire command, including the detail request, against cancellation and duplicate clicks', async () => {

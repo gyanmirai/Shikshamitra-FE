@@ -6,6 +6,8 @@ import type {
 
 import dayjs from 'dayjs';
 
+import { ADMISSION_DATE_TIME_FORMAT } from './admission-date-formats';
+
 export const lifecycleLabels: Record<AdmissionCycleStatus, string> = {
   0: 'Draft',
   1: 'Published',
@@ -56,10 +58,10 @@ export const canDeleteCycle = (cycle: AdmissionCycle): boolean =>
 
 export const cycleScheduleSummary = (cycle: AdmissionCycle): string | null => {
   if (cycle.scheduledPublishAt) {
-    return `Publishes ${dayjs(cycle.scheduledPublishAt).format('DD MMM YYYY, hh:mm A')}`;
+    return `Publishes ${dayjs(cycle.scheduledPublishAt).format(ADMISSION_DATE_TIME_FORMAT)}`;
   }
   if (cycle.scheduledCloseAt) {
-    return `Closes ${dayjs(cycle.scheduledCloseAt).format('DD MMM YYYY, hh:mm A')}`;
+    return `Closes ${dayjs(cycle.scheduledCloseAt).format(ADMISSION_DATE_TIME_FORMAT)}`;
   }
   return null;
 };

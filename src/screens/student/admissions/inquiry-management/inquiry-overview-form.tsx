@@ -564,7 +564,7 @@ export function InquiryOverviewForm({
                 notificationKey="STU-0421"
                 presentation="toast"
                 severity="error"
-                action={<Button onClick={retry}>Retry</Button>}
+                toastAction={<Button onClick={retry}>Retry</Button>}
               >
                 Inquiry form or academic choices could not be loaded.
               </StudentFeedback>

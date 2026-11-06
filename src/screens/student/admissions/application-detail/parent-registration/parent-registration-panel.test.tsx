@@ -278,6 +278,8 @@ it.each(['inline', 'header'] as const)(
     expect(screen.getByRole('button', { name: 'Email history' })).toBeVisible();
     fireEvent.click(screen.getByRole('button', { name: 'Email history' }));
     expect(await screen.findByRole('dialog', { name: 'Email History' })).toBeVisible();
+    expect(screen.getByText(/Link expires/)).toHaveTextContent('11/11/2026');
+    expect(screen.getByText(/04\/11\/2026/)).toBeVisible();
     expect(screen.getByText('saved@example.test')).toBeVisible();
     expect(
       screen.getByText('Accepted by the email sender. Inbox delivery is not confirmed.')

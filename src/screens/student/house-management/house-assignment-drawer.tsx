@@ -5,9 +5,9 @@ import type {
 } from 'src/redux/student/house-management/house-management-types';
 
 import { GlobalIcons } from 'src/utils/icons';
-import { useId, useRef, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import { useId, useRef, useState, useEffect } from 'react';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { FormSectionCard } from 'src/components/form-section-card';
@@ -37,23 +37,40 @@ export default function HouseAssignmentDrawer({
 }: Props) {
   const titleId = useId();
   const submitting = useRef(false);
+  const requestVersion = useRef(0);
   const [mode, setMode] = useState(initialMode);
   const [house, setHouse] = useState<House | null>(null);
   const [preview, setPreview] = useState<HouseAssignmentPreview | null>(null);
   const [busy, setBusy] = useState(false);
+  const [writing, setWriting] = useState(false);
   const [error, setError] = useState('');
   const [touched, setTouched] = useState(false);
+  useEffect(
+    () => () => {
+      requestVersion.current += 1;
+    },
+    []
+  );
+  const closeDraft = () => {
+    requestVersion.current += 1;
+    submitting.current = false;
+    setBusy(false);
+    onClose();
+  };
   const { close, confirmation } = useHouseCloseGuard(
     Boolean(house || preview || mode !== initialMode),
-    busy,
-    onClose
+    writing,
+    closeDraft
   );
   const submit = async () => {
     if (submitting.current) return;
     setTouched(true);
     if (mode === 'assign' && !house) return;
     submitting.current = true;
+    requestVersion.current += 1;
+    const version = requestVersion.current;
     setBusy(true);
+    setWriting(Boolean(preview));
     setError('');
     try {
       const input = assignmentInput(
@@ -63,14 +80,21 @@ export default function HouseAssignmentDrawer({
       );
       if (preview) {
         await onCommit({ ...input, previewToken: preview.previewToken });
-        onClose();
-      } else setPreview(await onPreview(input));
+        if (version === requestVersion.current) onClose();
+      } else {
+        const result = await onPreview(input);
+        if (version === requestVersion.current) setPreview(result);
+      }
     } catch (failure) {
+      if (version !== requestVersion.current) return;
       setPreview(null);
       setError(parseApiProblemDetail(failure).detail);
     } finally {
-      submitting.current = false;
-      setBusy(false);
+      if (version === requestVersion.current) {
+        submitting.current = false;
+        setBusy(false);
+        setWriting(false);
+      }
     }
   };
   return (
@@ -93,9 +117,9 @@ export default function HouseAssignmentDrawer({
           <InfoTooltipIcon
             title="Preview the selected students and leadership consequences before confirming this change."
             label="Membership change information"
-            disabled={busy}
+            disabled={writing}
           />
-          <IconButton aria-label="Close Change House Membership" disabled={busy} onClick={close}>
+          <IconButton aria-label="Close Change House Membership" disabled={writing} onClick={close}>
             <Iconify icon={GlobalIcons.cancel} />
           </IconButton>
         </Stack>
@@ -187,7 +211,7 @@ export default function HouseAssignmentDrawer({
             size="small"
             variant="outlined"
             color="inherit"
-            disabled={busy}
+            disabled={writing}
             onClick={close}
             startIcon={<Iconify icon={GlobalIcons.cancel} />}
           >

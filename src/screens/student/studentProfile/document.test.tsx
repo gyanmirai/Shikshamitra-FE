@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+import type { AlertProps } from '@mui/material';
 import type { StudentAdmissionEvidence } from 'src/redux/student/admissions/student-admission-evidence-api';
 
 import { Provider } from 'react-redux';
@@ -21,6 +23,12 @@ import Document from './document';
 import { studentDocumentUploadStatuses } from './student-document-table-model';
 
 const responsive = vi.hoisted(() => ({ compact: false }));
+const feedback = vi.hoisted(() => ({
+  error: vi.fn(
+    (_options: { message: ReactNode; alertProps: (id: string | number) => AlertProps }) =>
+      'document-error'
+  ),
+}));
 vi.mock('src/hooks/use-responsive', () => ({ useResponsive: () => responsive.compact }));
 vi.hoisted(() => {
   process.env.NEXT_PUBLIC_API_URL = 'http://localhost:5000';
@@ -51,11 +59,25 @@ vi.mock('src/components/toast', () => ({
     info: vi.fn(),
     dismiss: vi.fn(),
     success: vi.fn(),
-    error: vi.fn(),
+    error: feedback.error,
   },
 }));
 
 const studentId = 'ad400001-0000-4000-8000-000000000001';
+async function deliveredRecovery(message: string) {
+  await waitFor(() =>
+    expect(feedback.error).toHaveBeenCalledWith(expect.objectContaining({ message }))
+  );
+  const notice = feedback.error.mock.calls.findLast(
+    ([options]) => options.message === message
+  )?.[0];
+  const action = render(
+    <ThemeProvider theme={createTheme(defaultSettings)}>
+      {notice?.alertProps('document-error').action}
+    </ThemeProvider>
+  );
+  return within(action.container);
+}
 const documentsPath = '*/api/app/student-document/required-documents-status/:studentId';
 const filePath = '*/api/app/student-document/document';
 const uploadPath = '*/api/app/student-document/upload-document/:studentId';
@@ -147,6 +169,7 @@ const showDocuments = (
   );
 };
 beforeEach(() => {
+  feedback.error.mockClear();
   responsive.compact = false;
   clearCachedAuthSession();
   mswServer.use(
@@ -302,11 +325,14 @@ describe('Student profile documents', { timeout: 15000 }, () => {
     );
     showDocuments();
     expect(await screen.findByText('Birth certificate')).toBeVisible();
-    expect(await screen.findByRole('button', { name: 'Retry Student Documents' })).toBeVisible();
+    expect(
+      screen.queryByRole('button', { name: 'Retry Student Documents' })
+    ).not.toBeInTheDocument();
+    const recovery = await deliveredRecovery('Unable to load student documents.');
     expect(
       screen.queryByText('No documents are available for this student.')
     ).not.toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: 'Retry Student Documents' }));
+    await userEvent.click(recovery.getByRole('button', { name: 'Retry Student Documents' }));
     expect(await screen.findByText('Student photo')).toBeVisible();
     expect(documentReads).toBe(2);
     expect(evidenceReads).toBe(1);
@@ -339,16 +365,26 @@ describe('Student profile documents', { timeout: 15000 }, () => {
   );
 
   it('shows a blocking source failure instead of presenting an empty success', async () => {
+    let reads = 0;
     mswServer.use(
-      http.get(evidencePath, () =>
-        HttpResponse.json({ detail: 'Temporary outage' }, { status: 503 })
-      )
+      http.get(evidencePath, () => {
+        reads += 1;
+        return reads === 1
+          ? HttpResponse.json({ detail: 'Temporary outage' }, { status: 503 })
+          : HttpResponse.json({ data: [evidence] });
+      })
     );
     showDocuments();
-    expect(await screen.findByRole('button', { name: 'Retry Admission Documents' })).toBeVisible();
+    expect(
+      screen.queryByRole('button', { name: 'Retry Admission Documents' })
+    ).not.toBeInTheDocument();
+    const recovery = await deliveredRecovery('Unable to load admission documents.');
     expect(
       screen.queryByText('No documents are available for this student.')
     ).not.toBeInTheDocument();
+    await userEvent.click(recovery.getByRole('button', { name: 'Retry Admission Documents' }));
+    expect(await screen.findByText('Birth certificate')).toBeVisible();
+    expect(reads).toBe(2);
   });
 
   it('retains loaded rows after a transient refetch failure and masks them when the retry loses access', async () => {
@@ -372,9 +408,9 @@ describe('Student profile documents', { timeout: 15000 }, () => {
           ])
         );
     });
-    expect(await screen.findByRole('button', { name: 'Retry Student Documents' })).toBeVisible();
+    const recovery = await deliveredRecovery('Unable to load student documents.');
     expect(screen.getByText('Student photo')).toBeVisible();
-    await userEvent.click(screen.getByRole('button', { name: 'Retry Student Documents' }));
+    await userEvent.click(recovery.getByRole('button', { name: 'Retry Student Documents' }));
     await waitFor(() => expect(screen.queryByText('Student photo')).not.toBeInTheDocument());
     expect(reads).toBe(3);
   });
@@ -460,8 +496,9 @@ describe('Student profile documents', { timeout: 15000 }, () => {
     showDocuments();
     await userEvent.click(await screen.findByRole('button', { name: 'View Student photo' }));
     const dialog = await screen.findByRole('dialog');
-    expect(await within(dialog).findByRole('button', { name: 'Retry preview' })).toBeVisible();
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Retry preview' }));
+    expect(within(dialog).queryByRole('button', { name: 'Retry preview' })).not.toBeInTheDocument();
+    const recovery = await deliveredRecovery('Unable to preview this document.');
+    await userEvent.click(recovery.getByRole('button', { name: 'Retry preview' }));
     expect(await within(dialog).findByTitle('Student document')).toBeVisible();
     expect(fileReads).toBe(2);
   });

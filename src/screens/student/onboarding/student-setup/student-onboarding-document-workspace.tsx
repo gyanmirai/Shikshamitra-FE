@@ -9,17 +9,19 @@ import type {
 } from 'src/redux/student/admissions/admission-document-types';
 
 import { useMemo, useState } from 'react';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { formatStr } from 'src/utils/format-time';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useResponsive } from 'src/hooks/use-responsive';
 import { shikshaMitraToast } from 'src/components/toast';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Box, Stack, Button, MenuItem, Typography } from '@mui/material';
+import { FormSectionCard } from 'src/components/form-section-card';
+import { Box, Stack, Button, Typography, DialogActions } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { getDocumentTableFile } from 'src/screens/student/admissions/document-verification/document-table-model';
-import { documentActionLabels } from 'src/screens/student/admissions/document-verification/document-action-model';
 import { useDownloadAdmissionDocumentMutation } from 'src/redux/student/admissions/admission-document-download-api';
 import { DocumentEvidenceHistory } from 'src/screens/student/admissions/document-verification/document-evidence-history';
 import {
@@ -51,6 +53,12 @@ const actionIcons: Record<WriteAction, string> = {
   original: 'mdi:file-check-outline',
   accept: 'mdi:check',
   reject: 'mdi:undo-variant',
+};
+const actionLabels: Record<WriteAction, string> = {
+  upload: 'Upload document',
+  original: 'Record physical original',
+  accept: 'Accept document',
+  reject: 'Request replacement',
 };
 
 function DocumentWorkspaceActions({
@@ -91,13 +99,19 @@ function DocumentWorkspaceActions({
     ? 'No uploaded copy is available.'
     : 'Document access is not available.';
   return (
-    <ThreeDotsActions
-      showViewIcon
-      viewIcon="mdi:eye-outline"
-      viewLabel={allowed ? `View ${requirement.name}` : `View ${requirement.name}: ${unavailable}`}
-      disableViewIcon={!allowed}
-      handleViewClick={onView}
-      directActions={[
+    <AdaptiveThreeDotsActions
+      directActionLimit={2}
+      mobileDirectActionLimit={2}
+      collapseOnOverflow={false}
+      actions={[
+        {
+          id: 'view',
+          icon: 'mdi:eye-outline',
+          label: allowed ? `View ${requirement.name}` : `View ${requirement.name}: ${unavailable}`,
+          tooltip: allowed ? `View ${requirement.name}` : unavailable,
+          disabled: !allowed,
+          onClick: onView,
+        },
         {
           id: 'download',
           icon: 'mdi:download',
@@ -111,30 +125,24 @@ function DocumentWorkspaceActions({
           id: 'history',
           icon: 'mdi:history',
           label: `History for ${requirement.name}`,
-          tooltip: requirement.evidence.length
-            ? `History for ${requirement.name}`
-            : 'No document history yet.',
+          tooltip: !permissions.view
+            ? 'Document history access is not available.'
+            : requirement.evidence.length
+              ? `History for ${requirement.name}`
+              : 'No document history yet.',
           disabled: !permissions.view || !requirement.evidence.length,
           onClick: onHistory,
         },
+        ...writes.map((action) => ({
+          id: action,
+          icon: actionIcons[action],
+          label: actionLabels[action],
+          disabled,
+          tooltip: disabled ? 'Wait for the current operation to finish.' : undefined,
+          onClick: () => onAction(action, requirement),
+        })),
       ]}
-      showThreeDots={writes.length > 0}
       moreLabel={`More actions for ${requirement.name}`}
-      actions={({ popover }) =>
-        writes.map((action) => (
-          <MenuItem
-            key={action}
-            disabled={disabled}
-            onClick={() => {
-              popover.onClose();
-              onAction(action, requirement);
-            }}
-          >
-            <Iconify icon={actionIcons[action]} width={18} />
-            {documentActionLabels[action]}
-          </MenuItem>
-        ))
-      }
       sx={{ justifyContent: 'flex-start', gap: 0.5 }}
     />
   );
@@ -319,23 +327,42 @@ export function StudentOnboardingDocumentWorkspace({
         <CustomDialog
           open
           title={`${history.name} · Document History`}
+          titleInfo="Review recorded evidence versions and decisions for this admission requirement. Download only the copies you are authorized to access."
           handleClose={() => setHistoryCode(null)}
           maxWidth="sm"
           hasForm={false}
           guardUnsavedChanges={false}
         >
           <DialogScrollContent>
-            <Stack spacing={1.5}>
-              <DocumentStatusLabel status={history.status} />
-              {history.description && (
-                <Typography variant="body2">{history.description}</Typography>
-              )}
-              <DocumentEvidenceHistory
-                evidence={history.evidence}
-                allowDownload={permissions.download}
-              />
-            </Stack>
+            <FormSectionCard
+              title="Document History"
+              icon={GlobalIcons.history}
+              descriptionTooltip="The latest version appears first. Previous uploads, original checks and review decisions remain in this history."
+            >
+              <Stack spacing={1.5}>
+                <DocumentStatusLabel status={history.status} />
+                {history.description && (
+                  <Typography variant="body2">{history.description}</Typography>
+                )}
+                <DocumentEvidenceHistory
+                  dateTimeFormat={formatStr.split.dateTime}
+                  evidence={history.evidence}
+                  allowDownload={permissions.download}
+                />
+              </Stack>
+            </FormSectionCard>
           </DialogScrollContent>
+          <DialogActions>
+            <Button
+              size="small"
+              variant="outlined"
+              color="inherit"
+              startIcon={<Iconify icon={GlobalIcons.cancel} />}
+              onClick={() => setHistoryCode(null)}
+            >
+              Close
+            </Button>
+          </DialogActions>
         </CustomDialog>
       )}
     </Stack>

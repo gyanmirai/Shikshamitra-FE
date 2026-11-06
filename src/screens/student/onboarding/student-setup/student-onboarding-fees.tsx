@@ -7,11 +7,11 @@ import { useFormik } from 'formik';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { fDateTime } from 'src/utils/format-time';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { fDateTime, formatStr } from 'src/utils/format-time';
 import CustomAccordion from 'src/components/custom-accordian';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
@@ -246,7 +246,7 @@ export default function StudentOnboardingFees({
         notificationKey="STU-0995"
         presentation="toast"
         severity="error"
-        action={
+        toastAction={
           <Button size="small" onClick={retry}>
             Retry
           </Button>
@@ -318,7 +318,8 @@ export default function StudentOnboardingFees({
             {feeState.feeCollectionDeferral.reason}
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            Deferred {fDateTime(feeState.feeCollectionDeferral.deferredAt)}
+            Deferred{' '}
+            {fDateTime(feeState.feeCollectionDeferral.deferredAt, formatStr.split.dateTime)}
           </Typography>
         </Stack>
       )}
@@ -327,7 +328,7 @@ export default function StudentOnboardingFees({
           notificationKey="STU-0997"
           presentation="toast"
           severity="error"
-          action={
+          toastAction={
             <Button size="small" onClick={retry}>
               Retry
             </Button>
