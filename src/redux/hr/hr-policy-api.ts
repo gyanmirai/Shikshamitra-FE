@@ -1190,4 +1190,3 @@ export const {
   useGetPolicyAssignmentResolutionPreviewQuery,
   useGetPolicyHolidayImpactPreviewQuery,
 } = hrPolicyApi;
-

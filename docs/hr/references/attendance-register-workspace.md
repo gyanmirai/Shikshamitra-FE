@@ -35,4 +35,3 @@ Incomplete/contradictory acknowledgements and rejected bulk requests retain the 
 ## Regression checks
 
 `src/redux/hr/attendance-register-query.test.ts` covers indexed HTTP array serialization and reset/legacy compatibility. The fixture in `e2e/fixtures/attendance-register` mounts the actual screen with synthetic data and supports repeatable desktop/mobile checks for filter composition, reset/empty, editing, paging, sorting, month navigation and captured export scope. See its README for commands and test-double limitations. The backend register API regression covers OR divisions combined with staff/group/search/department, paging/reset and unauthorized-stage rejection against an in-memory test database.
-

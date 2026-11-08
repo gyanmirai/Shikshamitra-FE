@@ -829,4 +829,3 @@ Payroll Settings opens `/hr/payroll/setting` with permission-filtered tasks for 
 The component library links to the existing earning and deduction screens; statutory settings links to the existing PF, ESIC, and Professional Tax destinations.
 Template editing stays on one continuous page, with the default Monthly salary or Monthly cost to school (CTC) choice in Basic Information.
 The sample preview identifies its basis and does not assign an amount to staff.
-

@@ -166,4 +166,3 @@ export interface IReportingInformationResponse {
   employeeId: string;
   reportingManager: IReportingManager;
 }
-
