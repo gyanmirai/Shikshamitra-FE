@@ -70,6 +70,8 @@ My Requests owns the single searchable request/history table, including applied 
 Submitted By, Organization, and Remarks remain available through Columns without crowding the default request view.
 The staff-profile leave tab retains its existing employee-specific history.
 
+Apply Leave reads the selected paid-type rule from the current staff/date policy preview for minimum notice, including zero-day and one-day rules. Loading or failed previews remain submission prerequisites. Requested days and balance warnings are advisory estimates: the server validates the request-date policy and staff work calendar, including weekends and holidays. A local estimate must not block submission; server notice and balance errors stay attached to the draft.
+
 ## HR setup wizard
 
 Authorized HR operators receive the **Complete HR Setup** wizard on any HR route when the readiness summary reports unresolved configuration.

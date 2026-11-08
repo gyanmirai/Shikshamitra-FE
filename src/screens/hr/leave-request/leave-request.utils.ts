@@ -14,7 +14,6 @@ export const LEAVE_PAST_DATE = 'HR:Leave:020013';
 export const LEAVE_POLICY_INACTIVE = 'HR:Leave:020019';
 export const LEAVE_DATES_OUTSIDE_ACADEMIC_YEAR = 'HR:Leave:020028';
 export const LEAVE_NO_BUSINESS_DAYS_IN_RANGE = 'HR:Leave:020032';
-export const MIN_LEAVE_NOTICE_DAYS = 2;
 export const SELF_EMPLOYEE_ID = 'self';
 export const SELF_OPTION = { id: SELF_EMPLOYEE_ID, label: 'Self' } as const;
 export const APPLY_LEAVE_ROW_ACTION_LABELS = ['View', 'Cancel'] as const;
@@ -104,23 +103,41 @@ export function formatLeaveCalendarDateForDisplay(
   return parsed.isValid() ? parsed.format(outputFormat) : '-';
 }
 
-export function getMinimumLeaveStartDate(today: dayjs.ConfigType = dayjs()): dayjs.Dayjs {
-  return dayjs(today).startOf('day').add(MIN_LEAVE_NOTICE_DAYS, 'day');
+export function getLeavePolicyMinNoticeDays(
+  policy: LeavePolicyOption | null | undefined,
+  paidType: string | null | undefined
+): number | undefined {
+  const rule = getActiveLeavePolicyRules(policy).find((item) => item.paidType === paidType);
+  const noticeDays = rule?.minNoticeDays;
+  return typeof noticeDays === 'number' && Number.isInteger(noticeDays) && noticeDays >= 0
+    ? noticeDays
+    : undefined;
+}
+
+export function getMinimumLeaveStartDate(
+  minNoticeDays = 0,
+  today: dayjs.ConfigType = dayjs()
+): dayjs.Dayjs {
+  return dayjs(today).startOf('day').add(minNoticeDays, 'day');
 }
 
 export function isLeaveNoticePeriodSatisfied(
   startDate: dayjs.Dayjs | null,
+  minNoticeDays = 0,
   today: dayjs.ConfigType = dayjs()
 ): boolean {
   if (!startDate?.isValid()) {
     return true;
   }
 
-  return !startDate.startOf('day').isBefore(getMinimumLeaveStartDate(today), 'day');
+  return !startDate.startOf('day').isBefore(getMinimumLeaveStartDate(minNoticeDays, today), 'day');
 }
 
-export function getLeaveNoticePeriodMessage(today: dayjs.ConfigType = dayjs()): string {
-  return `Leave must be requested at least ${MIN_LEAVE_NOTICE_DAYS} days in advance. Earliest available date is ${getMinimumLeaveStartDate(today).format('DD/MM/YYYY')}.`;
+export function getLeaveNoticePeriodMessage(
+  minNoticeDays = 0,
+  today: dayjs.ConfigType = dayjs()
+): string {
+  return `Leave must be requested at least ${minNoticeDays} day(s) in advance. Earliest available date is ${getMinimumLeaveStartDate(minNoticeDays, today).format('DD/MM/YYYY')}.`;
 }
 
 export function shouldEnforceLeaveNoticePeriod(
@@ -228,10 +245,10 @@ function isUnlimitedBalanceBucket(bucket: LeaveBalanceBucket): boolean {
   const remainingDays = toFiniteNumber(bucket.remainingDays);
   return Boolean(
     bucket.isUnlimited ||
-    bucket.unlimited ||
-    String(bucket.entitlementMode || '').toLowerCase() === 'unlimited' ||
-    bucket.remainingDays === null ||
-    remainingDays === null
+      bucket.unlimited ||
+      String(bucket.entitlementMode || '').toLowerCase() === 'unlimited' ||
+      bucket.remainingDays === null ||
+      remainingDays === null
   );
 }
 
@@ -252,6 +269,8 @@ export function findLeaveBalanceBucket(
   );
 }
 
+// This is advisory: balance and local day estimates may differ from the request-date
+// policy and work calendar used by server validation.
 export function getLeaveRequestBalanceWarning(
   balanceData: any,
   paidType: string | null | undefined,
@@ -272,7 +291,7 @@ export function getLeaveRequestBalanceWarning(
     return null;
   }
 
-  return `${paidTypeLabel(String(paidType))} leave balance is ${remainingDays} day(s), but this request is for ${requestedUnits} day(s). Reduce the dates or ask HR to enable negative balance.`;
+  return `${paidTypeLabel(String(paidType))} leave balance is ${remainingDays} day(s), and the estimated request is ${requestedUnits} day(s). Final days and eligibility depend on the effective policy and staff work calendar, including weekends and holidays, and will be checked on submission.`;
 }
 
 export function buildCreateLeaveRequestFormData(
@@ -300,6 +319,7 @@ export function buildCreateLeaveRequestFormData(
   return formData;
 }
 
+// Display estimate only. The server owns working days, holidays and eligibility.
 export function countLeaveUnits(
   startDate: dayjs.Dayjs | null,
   endDate: dayjs.Dayjs | null,
