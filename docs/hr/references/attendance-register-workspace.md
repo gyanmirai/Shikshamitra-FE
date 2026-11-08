@@ -3,7 +3,7 @@ module: hr
 domain: attendance-register
 content_type: Reference
 status: canonical
-updated_on: 2026-10-26
+updated_on: 2026-11-08
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -24,6 +24,13 @@ Excel/PDF use the existing complete HR export workflow with the same query, incl
 
 Requires the companion backend multi-division/sorting contract before the frontend is released. No migration or database change is needed. Shared table, dialog, selector and export-hook implementations are not modified; concurrent table and keyboard work may overlap the owning register screen or its API client.
 
+## Adjustment recovery and capture modes
+
+Single and bulk correction dialogs use the selected editable days' capture modes. Status-only selections hide punch fields and send null times. Mixed selections require times for time-based days and explain that status-only days do not store those times; locked selected days do not add a time requirement. Unmarked days keep the existing employee/date payload, including an empty attendance-ID array when every selected day is unmarked.
+
+A single-row HTTP success is not enough to close the draft. The screen checks the updated/skipped outcome, retains the dialog and entered values when no change occurred, and displays the server's skip reason. Only a confirmed update shows success and closes the draft. The backend remains authoritative for locks and scope.
+
 ## Regression checks
 
 `src/redux/hr/attendance-register-query.test.ts` covers indexed HTTP array serialization and reset/legacy compatibility. The fixture in `e2e/fixtures/attendance-register` mounts the actual screen with synthetic data and supports repeatable desktop/mobile checks for filter composition, reset/empty, editing, paging, sorting, month navigation and captured export scope. See its README for commands and test-double limitations. The backend register API regression covers OR divisions combined with staff/group/search/department, paging/reset and unauthorized-stage rejection against an in-memory test database.
+

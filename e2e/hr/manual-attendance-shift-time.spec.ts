@@ -171,7 +171,7 @@ test.describe('HR manual attendance shift time automation', () => {
     ).toHaveCount(0);
   });
 
-  test('restores an approved-leave row when Reset discards an unsaved override', async ({
+  test('keeps approved-leave rows read-only instead of allowing a rejected override', async ({
     page,
   }) => {
     await page.route('**/api/hr/attendance/take-attendance/day?**', async (route) => {
@@ -180,16 +180,45 @@ test.describe('HR manual attendance shift time automation', () => {
 
     await gotoManualAttendance(page);
     await expect(page.getByText('Approved Leave Staff')).toBeVisible({ timeout: 60_000 });
-    await expect(page.getByText('On Leave')).toBeVisible();
+    await expect(page.getByText('On Leave').first()).toBeVisible();
+    for (const action of [
+      'present',
+      'half-day',
+      'absent',
+      'pending',
+      'timeIn-edit',
+      'timeOut-edit',
+    ]) {
+      await expect(page.getByTestId(`manual-attendance-employee-on-leave-${action}`)).toHaveCount(
+        0
+      );
+    }
+    await expect(page.getByRole('button', { name: /^Save$/i })).toBeDisabled();
+    await expect(page.getByTestId('manual-attendance-mark-all-present')).toHaveAttribute(
+      'aria-disabled',
+      'true'
+    );
+  });
 
-    await page.getByTestId('manual-attendance-employee-on-leave-present').click();
-    await expect(page.getByText('No remarks needed')).toBeVisible();
-
-    await page.getByRole('button', { name: /^Reset$/ }).click();
-    await page.getByRole('button', { name: /Yes, Reset/i }).click();
-
-    await expect(page.getByText('On Leave')).toBeVisible();
-    await expect(page.getByText('No remarks needed')).toHaveCount(0);
+  test('does not offer Pending as a way to silently clear saved attendance', async ({ page }) => {
+    await page.route('**/api/hr/attendance/take-attendance/day?**', async (route) => {
+      await route.fulfill({
+        status: 200,
+        json: {
+          ...dayResponse,
+          totalCount: 1,
+          items: [{ ...dayResponse.items[0], status: 1, inTime: '09:00:00', outTime: '17:00:00' }],
+        },
+      });
+    });
+    await gotoManualAttendance(page);
+    const pending = page.getByTestId('manual-attendance-employee-present-pending');
+    await expect(pending).toHaveAttribute('aria-disabled', 'true');
+    await pending.focus();
+    await pending.press('Enter');
+    await expect(page.getByText('09:00')).toBeVisible();
+    await expect(page.getByText('17:00')).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Save$/i })).toBeDisabled();
   });
 
   test('preserves a manually edited half-day time across status toggles', async ({ page }) => {
