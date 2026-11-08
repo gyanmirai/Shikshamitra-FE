@@ -3,7 +3,7 @@ module: hr
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-11-05
+updated_on: 2026-11-08
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -268,3 +268,12 @@ EmployeeWorkShift and EmployeeShiftAssignment cache tags are independent of the 
 Employee creation sends initialWorkShiftAssignment with a workShiftId and effectiveFrom date.
 Profile updates do not send a schedule change.
 See [backend contracts](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md) for validation and ownership.
+
+
+## Staff personal-info preservation
+
+Both the Staff Directory edit form and profile Information tab use `personalInformationInitialValues` from `src/screens/hr/employee/personal-info-initial-values.ts` (re-exported by `employee-form.tsx`) and the shared update payload builder.
+`personal-info-supplementary-fields.ts` retains loaded designation, qualification, and identification-mark values, including explicit nulls, without inventing blank defaults for fields absent from a response.
+The update builder includes known values and leaves undefined fields out of serialized JSON.
+The [backend personal-info contract](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md#employee-api-families) owns omission-versus-clear behavior for older clients.
+Run `npm test -- src/screens/hr/employee/personal-info-update-payload.test.ts` for saved-value round trips, null/empty clearing, partial responses, and stale-form resets.

@@ -1,6 +1,8 @@
 import { ReligionType } from 'src/enums/religion';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 
+import { getPersonalInfoSupplementaryFields } from './personal-info-supplementary-fields';
+
 const toRawMobile = (value: string | null | undefined) => {
   if (!value) return '';
   return value.replace(/\s/g, '').replace(/^\+91/, '');
@@ -47,6 +49,7 @@ export function buildProfilePersonalInfoUpdatePayload(
     mobileNo: toRawMobile(values.mobileNo),
     email: values.email,
     department: values.department,
+    ...getPersonalInfoSupplementaryFields(values),
     doj: dateConvertor(values.dateOfJoining.format(dateFormat)),
     isTeaching: values.employeeGroup === 0,
     roleId: values.role,
@@ -56,7 +59,6 @@ export function buildProfilePersonalInfoUpdatePayload(
     state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
     city: values?.city?.name,
     pinCode: String(values.pincode),
-
   };
 
   if (values.secondaryMobileNo) {

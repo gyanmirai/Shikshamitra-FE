@@ -22,6 +22,9 @@ export interface IPersonalInformationResponse {
   doj: string;
   isTeaching: boolean;
   department: string;
+  designation?: string | null;
+  qualification?: string | null;
+  identificationMark1?: string | null;
   roleId: string;
   shiftId: string;
   organizationIds: string[];
@@ -163,3 +166,4 @@ export interface IReportingInformationResponse {
   employeeId: string;
   reportingManager: IReportingManager;
 }
+
