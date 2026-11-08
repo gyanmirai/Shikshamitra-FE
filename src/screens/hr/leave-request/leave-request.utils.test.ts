@@ -23,6 +23,7 @@ import {
   getLeaveCenterVisibleTabs,
   isSelectedPaidTypeVisible,
   buildEmployeeSelectOptions,
+  getLeavePolicyMinNoticeDays,
   getLeaveNoticePeriodMessage,
   isLeaveNoticePeriodSatisfied,
   getLeaveRequestBalanceWarning,
@@ -125,6 +126,19 @@ describe('leave request payload mapping', () => {
 });
 
 describe('leave request balance warning', () => {
+  it('labels the Friday-to-Monday estimate as advisory when the server may exclude Saturday', () => {
+    const units = countLeaveUnits(dayjs('2026-11-13'), dayjs('2026-11-16'), false);
+    expect(units).toBe(3);
+    const warning = getLeaveRequestBalanceWarning(
+      { items: [{ paidType: 'Paid', remainingDays: 2 }] },
+      'Paid',
+      units
+    );
+    expect(warning).toContain('estimated request is 3 day(s)');
+    expect(warning).toContain('effective policy and staff work calendar');
+    expect(warning).toContain('checked on submission');
+    expect(warning).not.toContain('Reduce the dates');
+  });
   it('warns when a finite bucket does not have enough remaining balance', () => {
     expect(
       getLeaveRequestBalanceWarning(
@@ -305,8 +319,8 @@ describe('leave attachment helpers', () => {
   });
 });
 
-describe('leave unit calculation', () => {
-  it('counts full-day ranges excluding Sundays and including Saturdays', () => {
+describe('leave unit estimates', () => {
+  it('estimates full-day ranges excluding Sundays and including Saturdays', () => {
     expect(countLeaveUnits(dayjs('2026-06-06'), dayjs('2026-06-08'), false)).toBe(2);
   });
 
@@ -322,23 +336,48 @@ describe('leave unit calculation', () => {
 describe('leave notice period helpers', () => {
   const today = dayjs('2026-05-28');
 
-  it('requires at least two days advance notice', () => {
-    expect(isLeaveNoticePeriodSatisfied(dayjs('2026-05-28'), today)).toBe(false);
-    expect(isLeaveNoticePeriodSatisfied(dayjs('2026-05-29'), today)).toBe(false);
-    expect(isLeaveNoticePeriodSatisfied(dayjs('2026-05-30'), today)).toBe(true);
+  it.each([0, 1, 2, 5])('uses the configured %i-day notice boundary', (noticeDays) => {
+    const earliest = today.add(noticeDays, 'day');
+    expect(isLeaveNoticePeriodSatisfied(earliest, noticeDays, today)).toBe(true);
+    expect(isLeaveNoticePeriodSatisfied(earliest.subtract(1, 'day'), noticeDays, today)).toBe(
+      false
+    );
+    expect(getMinimumLeaveStartDate(noticeDays, today).isSame(earliest, 'day')).toBe(true);
+    expect(getLeaveNoticePeriodMessage(noticeDays, today)).toContain(`${noticeDays} day(s)`);
+    expect(getLeaveNoticePeriodMessage(noticeDays, today)).toContain(earliest.format('DD/MM/YYYY'));
   });
 
-  it('builds the earliest available leave date message', () => {
-    expect(getMinimumLeaveStartDate(today).format('YYYY-MM-DD')).toBe('2026-05-30');
-    expect(getLeaveNoticePeriodMessage(today)).toContain('Earliest available date is 30/05/2026.');
+  it('selects the active rule for the chosen paid type, preserving zero', () => {
+    const policy = {
+      rules: [
+        { paidType: 'Paid', minNoticeDays: 7, isActive: false },
+        { paidType: 'Paid', minNoticeDays: 0, isActive: true },
+        { paidType: 'Unpaid', minNoticeDays: 5, isActive: true },
+      ],
+    };
+    expect(getLeavePolicyMinNoticeDays(policy, 'Paid')).toBe(0);
+    expect(getLeavePolicyMinNoticeDays(policy, 'Unpaid')).toBe(5);
+  });
+
+  it('does not invent a notice period for unresolved or malformed rules', () => {
+    expect(getLeavePolicyMinNoticeDays(null, 'Paid')).toBeUndefined();
+    expect(getLeavePolicyMinNoticeDays({ rules: [] }, 'Paid')).toBeUndefined();
+    expect(
+      getLeavePolicyMinNoticeDays({ rules: [{ paidType: 'Paid' }] }, 'Unpaid')
+    ).toBeUndefined();
+    [null, -1, Number.NaN, 1.5].forEach((minNoticeDays) => {
+      expect(
+        getLeavePolicyMinNoticeDays({ rules: [{ paidType: 'Paid', minNoticeDays }] }, 'Paid')
+      ).toBeUndefined();
+    });
+    expect(isLeaveNoticePeriodSatisfied(today, undefined, today)).toBe(true);
+    expect(isLeaveNoticePeriodSatisfied(today.subtract(1, 'day'), undefined, today)).toBe(false);
   });
 
   it('enforces notice only for self-created leave requests', () => {
     expect(shouldEnforceLeaveNoticePeriod('self', false, SELF_OPTION)).toBe(true);
     expect(shouldEnforceLeaveNoticePeriod('self', true, SELF_OPTION)).toBe(true);
-    expect(shouldEnforceLeaveNoticePeriod('hr', true, { id: 'emp-1', label: 'Staff' })).toBe(
-      false
-    );
+    expect(shouldEnforceLeaveNoticePeriod('hr', true, { id: 'emp-1', label: 'Staff' })).toBe(false);
     expect(shouldEnforceLeaveNoticePeriod('hr', false, { id: 'emp-1', label: 'Staff' })).toBe(
       false
     );

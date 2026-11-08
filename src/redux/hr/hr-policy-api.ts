@@ -131,6 +131,7 @@ export type LeavePolicySummary = {
     requiresApproval?: boolean;
     allowHalfDay?: boolean;
     allowNegativeBalance?: boolean;
+    minNoticeDays?: number | null;
     maxDaysPerRequest?: number | null;
     attachmentRequiredAfterDays?: number | null;
   }>;
@@ -1189,3 +1190,4 @@ export const {
   useGetPolicyAssignmentResolutionPreviewQuery,
   useGetPolicyHolidayImpactPreviewQuery,
 } = hrPolicyApi;
+

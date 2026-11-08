@@ -928,6 +928,10 @@ Verify numeric, date, boolean and enum filters, sort direction, column visibilit
 Check complete filtered Excel/PDF exports against rows on later pages.
 Repeat on desktop and mobile, then finish in the signed-in Codex browser.
 
+## Leave request policy validation
+
+Run `leave-request.utils.test.ts` and `leave-request.validation.test.tsx`. Cover 0/1/2/5-day notice boundaries, paid-type changes, and live date-policy transitions in the same mounted form: select a future zero-notice policy after today's stricter rule, move back from a stricter future rule, and block pending previews before applying the resolved rule. Picker test doubles must enforce emitted date bounds rather than bypass them. Also cover a Friday-to-Monday request with an estimated three days and two days displayed balance. The estimate must not disable Submit or prevent the mutation; backend insufficient-balance errors must preserve the draft. These mocked component tests do not replace authenticated in-app checks with assigned work calendars and policy changes.
+
 ## Leave Center card layout
 
 Run `leave-center-overview.test.tsx`, `leave-request.utils.test.ts`, and `leave-status.utils.test.ts` for loading, allocation, per-type pending days, fractional/negative balances, unlimited entitlement, read-error retry, and balance details.
