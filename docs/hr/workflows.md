@@ -3,7 +3,7 @@ module: hr
 domain: workflows
 content_type: Reference
 status: canonical
-updated_on: 2026-11-04
+updated_on: 2026-11-08
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -24,6 +24,8 @@ Staff Onboarding invites use Organization / work assignment: Specific organizati
 Candidate, application detail/list and HR review show the saved assignment. The Review step lets HR revise it and requires explicit confirmation below the reviewed selection before continuing/finalizing. Lookup invalidation clears prior confirmation; recovery requires HR to confirm again. Confirmation refreshes display labels from the current scoped catalogue; requests send only mode, academic-year ID and organization IDs. The picker enforces the server limit of 100 distinct organizations. Choosing another year clears specific selections only through the explicit Use current year action. Functional Department stays separate; legacy invitation text is labeled and never prefilled into that field. Assignment does not prefill Academic Permission. See the [backend contract](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md#application-work-assignment) for validation and release order.
 
 For register layout, filter composition and synthetic browser checks, see [Attendance register workspace](references/attendance-register-workspace.md).
+
+Mark Attendance preserves the status loaded for each staff row. Pending can undo a local mark only when that row was originally unmarked; it cannot clear already saved attendance. Approved-leave rows are read-only in this screen, including time and remarks, with guidance to update the leave request first. Bulk marking skips those rows and disables an action when it cannot change any eligible row.
 
 Use this map to find the first screen and client:
 
@@ -819,3 +821,4 @@ Payroll Settings opens `/hr/payroll/setting` with permission-filtered tasks for 
 The component library links to the existing earning and deduction screens; statutory settings links to the existing PF, ESIC, and Professional Tax destinations.
 Template editing stays on one continuous page, with the default Monthly salary or Monthly cost to school (CTC) choice in Basic Information.
 The sample preview identifies its basis and does not assign an amount to staff.
+

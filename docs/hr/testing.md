@@ -3,7 +3,7 @@ module: hr
 domain: testing
 content_type: Reference
 status: canonical
-updated_on: 2026-11-05
+updated_on: 2026-11-08
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -13,6 +13,12 @@ audience: humans-and-agents
 Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vitest/vitest.mjs run src/screens/hr/i-card src/components/identity-card-designer --pool=threads --maxWorkers=1` for preset geometry, front/back saved-design round trips, explicit physical sizes, one-time legacy print-unit conversion, duplex settings, field synchronization, and dirty draft signatures. Run changed-file lint, frontend typecheck, and `npm run docs:hr:check` separately.
 
 Browser acceptance must review both sides, edit and reopen a custom back, verify physical dimensions remain independent of preview size, change paper/duplex settings, preserve scoped staff selections across pages, exercise Keep editing/Discard and failed saves, and export a configured front/back PDF. Use synthetic or authorized staff only. Automated adapter tests do not establish authenticated rendering, printed alignment, or physical distribution.
+
+## Attendance correction contracts
+
+Run `npx vitest run src/screens/hr/attendance/manual-attendance/status-mapper.test.ts src/screens/hr/attendance-tracking/adjustment-state.test.ts src/screens/hr/attendance-tracking/adjustment-workflow.test.tsx` for saved-versus-unsaved Pending transitions, approved-leave guards, status-only and mixed capture modes, all-unmarked bulk payloads, single-row skipped acknowledgements, and bulk partial/all-skipped recovery with draft retention and retry. Bulk cases verify per-row reasons, exclusion of successful targets from retry, unmarked employee/date matching, query-refresh resilience, incomplete or failed responses, and submission/dismissal locks. The workflow tests mount the real register screen with synthetic mutation responses and mocked UI/query dependencies; they do not validate backend persistence, visual layout, or authentication.
+
+Run the normal full typecheck, changed-file lint, production build and HR documentation validator in a complete checkout. Browser acceptance must verify disabled Pending/help text, approved-leave read-only rows, mixed-selection punch controls and a concurrent-lock skip without losing remarks. Finish with the Codex in-app browser; isolated utility and component tests are not browser acceptance.
 
 ## Mark Attendance filters
 
@@ -1025,3 +1031,4 @@ Use `SalaryStructureBuilder.test.tsx`, `salary-editor-screen.test.tsx`, `salary-
 ## Salary document viewing (Task 6594)
 
 Run `node node_modules/@playwright/test/cli.js test --config e2e/hr/salary-documents.config.ts` for seven synthetic browser scenarios using the production document center and PDF.js viewer. They cover 390/768/1440-pixel layouts in light/dark themes, Fit width, keyboard scrolling at larger zoom, stationary grouped actions, version/staff changes, reachable history, body overflow and PDF loading/error/retry. Run the payslip component suites for current-revision permissions, stale reads, print readiness and cancellation. The fixture is loopback-only and serves synthetic PDFs; it does not certify authenticated tenant access, actual payroll mutation, email delivery or native printing.
+

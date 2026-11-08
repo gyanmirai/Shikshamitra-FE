@@ -34,6 +34,7 @@ import {
   useUnlockDayAttendanceMutation,
 } from 'src/redux/hr/attendanceApi';
 import {
+  APPROVED_LEAVE_EDIT_REASON,
   toAttendanceTableTimeValue,
   isManualAttendanceRowDirty,
   restoreManualAttendanceRows,
@@ -47,6 +48,7 @@ import {
   isManualAttendanceBulkStatusDisabled,
   mapManualAttendanceDayResponseToRows,
   MANUAL_ATTENDANCE_UI_STATUS as STATUS,
+  getManualAttendanceStatusDisabledReason,
 } from 'src/screens/hr/attendance/manual-attendance/status-mapper';
 
 import { useHrSubstitution } from './substitution/use-hr-substitution';
@@ -61,7 +63,11 @@ type AttendanceStatusType = (typeof STATUS)[keyof typeof STATUS];
 // ---------------------------------------------------------------------------
 // Editing cell type for inline time editing
 // ---------------------------------------------------------------------------
-type EditingCell = { rowId: string; field: 'timeIn' | 'timeOut'; value: Dayjs | null } | null;
+type EditingCell = {
+  rowId: string;
+  field: 'timeIn' | 'timeOut';
+  value: Dayjs | null;
+} | null;
 
 // ---------------------------------------------------------------------------
 // Shared segmented-control button styles
@@ -118,7 +124,10 @@ const ManualAttendanceScreen = () => {
     currentQueryAndMutation: useUnlockDayAttendanceMutation,
   });
 
-  const [draftFilters, setDraftFilters] = useState({ group: 'all', department: '' });
+  const [draftFilters, setDraftFilters] = useState({
+    group: 'all',
+    department: '',
+  });
   const [query, setQuery] = useState({
     skipCount: 0,
     maxResultCount: 50,
@@ -201,10 +210,10 @@ const ManualAttendanceScreen = () => {
     (selectedDate: Dayjs | null) =>
       Boolean(
         selectedDate &&
-        academicYearStart &&
-        academicYearEnd &&
-        (dayjs(selectedDate).isBefore(academicYearStart, 'day') ||
-          dayjs(selectedDate).isAfter(academicYearEnd, 'day'))
+          academicYearStart &&
+          academicYearEnd &&
+          (dayjs(selectedDate).isBefore(academicYearStart, 'day') ||
+            dayjs(selectedDate).isAfter(academicYearEnd, 'day'))
       ),
     [academicYearStart, academicYearEnd]
   );
@@ -299,7 +308,13 @@ const ManualAttendanceScreen = () => {
   // Helpers to update a single row's status
   // -------------------------------------------------------------------------
   const updateRow = React.useCallback((id: string, patch: any) => {
-    setEmployeeData((prev) => prev.map((emp) => (emp.id === id ? { ...emp, ...patch } : emp)));
+    setEmployeeData((prev) =>
+      prev.map((emp) =>
+        emp.id === id && !emp.isApprovedLeave && emp.status !== STATUS.OnLeave
+          ? { ...emp, ...patch }
+          : emp
+      )
+    );
   }, []);
 
   const setRowStatus = (id: string, status: AttendanceStatusType) => {
@@ -560,7 +575,10 @@ const ManualAttendanceScreen = () => {
                           inputProps: {
                             'data-testid': `manual-attendance-${row.id}-${field}-input`,
                           },
-                          sx: { width: '120px', '& input': { fontSize: '0.8rem', p: '4px 6px' } },
+                          sx: {
+                            width: '120px',
+                            '& input': { fontSize: '0.8rem', p: '4px 6px' },
+                          },
                         },
                       }}
                       viewRenderers={{
@@ -622,7 +640,9 @@ const ManualAttendanceScreen = () => {
                     !isLocked &&
                     !isHoliday &&
                     !isFutureDate &&
-                    !isOutsideAcademicYear && (
+                    !isOutsideAcademicYear &&
+                    !row.isApprovedLeave &&
+                    row.status !== STATUS.OnLeave && (
                       <CustomTooltip
                         title={`Edit ${field === 'timeIn' ? 'In-Time' : 'Out-Time'}`}
                         arrow
@@ -681,14 +701,11 @@ const ManualAttendanceScreen = () => {
                 isLocked ||
                 isHoliday ||
                 isFutureDate ||
-                isOutsideAcademicYear
+                isOutsideAcademicYear ||
+                row.isApprovedLeave
               }
               value={val || ''}
-              onChange={(e) =>
-                setEmployeeData((prev) =>
-                  prev.map((emp) => (emp.id === row.id ? { ...emp, remarks: e.target.value } : emp))
-                )
-              }
+              onChange={(e) => updateRow(row.id, { remarks: e.target.value })}
               label="Add remarks"
               multiline
               rows={2}
@@ -850,7 +867,9 @@ const ManualAttendanceScreen = () => {
                             border: (t) => `1px solid ${t.vars.palette.divider}`,
                             '& .MuiTooltip-arrow': {
                               color: 'background.paper',
-                              '&::before': { border: (t) => `1px solid ${t.vars.palette.divider}` },
+                              '&::before': {
+                                border: (t) => `1px solid ${t.vars.palette.divider}`,
+                              },
                             },
                           },
                         },
@@ -894,7 +913,9 @@ const ManualAttendanceScreen = () => {
                             border: (t) => `1px solid ${t.vars.palette.divider}`,
                             '& .MuiTooltip-arrow': {
                               color: 'background.paper',
-                              '&::before': { border: (t) => `1px solid ${t.vars.palette.divider}` },
+                              '&::before': {
+                                border: (t) => `1px solid ${t.vars.palette.divider}`,
+                              },
                             },
                           },
                         },
@@ -938,7 +959,9 @@ const ManualAttendanceScreen = () => {
                             border: (t) => `1px solid ${t.vars.palette.divider}`,
                             '& .MuiTooltip-arrow': {
                               color: 'background.paper',
-                              '&::before': { border: (t) => `1px solid ${t.vars.palette.divider}` },
+                              '&::before': {
+                                border: (t) => `1px solid ${t.vars.palette.divider}`,
+                              },
                             },
                           },
                         },
@@ -1012,7 +1035,9 @@ const ManualAttendanceScreen = () => {
                             border: (t) => `1px solid ${t.vars.palette.divider}`,
                             '& .MuiTooltip-arrow': {
                               color: 'background.paper',
-                              '&::before': { border: (t) => `1px solid ${t.vars.palette.divider}` },
+                              '&::before': {
+                                border: (t) => `1px solid ${t.vars.palette.divider}`,
+                              },
                             },
                           },
                         },
@@ -1177,6 +1202,19 @@ const ManualAttendanceScreen = () => {
               isSort: false,
               isFilter: false,
               render(value: any, row: any) {
+                if (row.isApprovedLeave || value === STATUS.OnLeave) {
+                  return (
+                    <CustomTooltip title={APPROVED_LEAVE_EDIT_REASON} arrow>
+                      <Box>
+                        <Label color="info">{row.approvedLeaveLabel || 'Approved leave'}</Label>
+                      </Box>
+                    </CustomTooltip>
+                  );
+                }
+                const pendingDisabledReason = getManualAttendanceStatusDisabledReason(
+                  row,
+                  STATUS.Pending
+                );
                 return (
                   <Box
                     sx={{
@@ -1259,17 +1297,24 @@ const ManualAttendanceScreen = () => {
                     </CustomTooltip>
 
                     {/* Pending */}
-                    <CustomTooltip title="Pending" arrow placement="top">
+                    <CustomTooltip title={pendingDisabledReason || 'Pending'} arrow placement="top">
                       <Box
                         component="button"
                         type="button"
                         aria-label={`Mark ${row.employeeCode || row.fullName || row.id} Pending`}
                         data-testid={`manual-attendance-${row.id}-pending`}
+                        aria-disabled={Boolean(pendingDisabledReason)}
                         onClick={() => setRowStatus(row.id, STATUS.Pending)}
                         sx={{
                           ...segmentBtnBase,
-                          cursor: isLocked || isHoliday || isFutureDate ? 'not-allowed' : 'pointer',
-                          opacity: isLocked || isHoliday || isFutureDate ? 0.5 : 1,
+                          cursor:
+                            pendingDisabledReason || isLocked || isHoliday || isFutureDate
+                              ? 'not-allowed'
+                              : 'pointer',
+                          opacity:
+                            pendingDisabledReason || isLocked || isHoliday || isFutureDate
+                              ? 0.5
+                              : 1,
                           border: 0,
                           font: 'inherit',
                           bgcolor:
@@ -1416,14 +1461,22 @@ const ManualAttendanceScreen = () => {
   // Render
   // -------------------------------------------------------------------------
   return (
-    <Box sx={{ height: 1, minHeight: 0, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+    <Box
+      sx={{
+        height: 1,
+        minHeight: 0,
+        minWidth: 0,
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
       <CustomBreadcrumbs
         heading="Mark Attendance"
         links={[
           { name: 'Attendance Management', href: hrPaths.attendance.dashboard },
           { name: 'Mark Attendance' },
         ]}
-        description="Quickly record staff attendance manually: Choose the date, then mark each staff as Present, Pending, or Absent."
+        description="Choose the date, then mark staff as Present, Half Day, or Absent. Pending can undo an unsaved mark; approved leave is managed through the leave request."
       />
 
       {/* ── Top toolbar ── */}
@@ -1485,9 +1538,14 @@ const ManualAttendanceScreen = () => {
               valueKey="id"
               labelKey="name"
               onChange={(value) =>
-                setDraftFilters((current) => ({ ...current, group: String(value) }))
+                setDraftFilters((current) => ({
+                  ...current,
+                  group: String(value),
+                }))
               }
-              formControlProps={{ sx: { width: { xs: 1, sm: 180 }, flexShrink: 0 } }}
+              formControlProps={{
+                sx: { width: { xs: 1, sm: 180 }, flexShrink: 0 },
+              }}
             />
             <TextField
               fullWidth
@@ -1496,7 +1554,10 @@ const ManualAttendanceScreen = () => {
               value={draftFilters.department}
               disabled={isDirty || isFetching}
               onChange={(event) =>
-                setDraftFilters((current) => ({ ...current, department: event.target.value }))
+                setDraftFilters((current) => ({
+                  ...current,
+                  department: event.target.value,
+                }))
               }
               sx={{ width: { xs: 1, sm: 220 } }}
             />
@@ -1733,7 +1794,9 @@ const ManualAttendanceScreen = () => {
               setEmployeeData(restoreManualAttendanceRows(originalDataRef.current));
               setEditingCell(null);
               resetConfirmDialog.onFalse();
-              shikshaMitraToast.success({ message: 'Unsaved attendance changes discarded' });
+              shikshaMitraToast.success({
+                message: 'Unsaved attendance changes discarded',
+              });
             }}
           >
             Yes, Reset
