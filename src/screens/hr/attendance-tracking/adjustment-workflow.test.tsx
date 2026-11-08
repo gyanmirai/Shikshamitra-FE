@@ -32,7 +32,15 @@ vi.mock('src/components/toast', () => ({
   shikshaMitraToast: { success: state.success, error: state.error },
 }));
 vi.mock('src/components/customDialog', () => ({
-  default: ({ open, children }: any) => (open ? <div role="dialog">{children}</div> : null),
+  default: ({ open, children, handleClose }: any) =>
+    open ? (
+      <div role="dialog">
+        <button type="button" aria-label="Close dialog" onClick={handleClose}>
+          Close
+        </button>
+        {children}
+      </div>
+    ) : null,
   DialogScrollContent: ({ children }: any) => <div>{children}</div>,
 }));
 vi.mock('src/screens/hr/utils/table-values', () => ({ durationHours: () => 0 }));
@@ -87,13 +95,13 @@ vi.mock('@mui/material', () => {
     Collapse: ({ in: open, children }: any) => (open ? children : null),
     InputLabel: () => null,
     MenuItem: ({ value, children }: any) => <option value={value}>{children}</option>,
-    Select: ({ label, value, onChange, children }: any) => (
-      <select aria-label={label} value={value} onChange={onChange}>
+    Select: ({ label, value, onChange, children, disabled }: any) => (
+      <select disabled={disabled} aria-label={label} value={value} onChange={onChange}>
         {children}
       </select>
     ),
-    TextField: ({ label, value, onChange }: any) => (
-      <input aria-label={label} value={value} onChange={onChange} />
+    TextField: ({ label, value, onChange, disabled }: any) => (
+      <input disabled={disabled} aria-label={label} value={value} onChange={onChange} />
     ),
   };
 });
@@ -138,7 +146,7 @@ const show = (days: any[]) => {
       days,
     },
   ];
-  render(<AttendanceTrackingScreen />);
+  return render(<AttendanceTrackingScreen />);
 };
 const openSingle = () =>
   fireEvent.click(screen.getByRole('button', { name: 'Adjust', exact: true }));
@@ -148,8 +156,18 @@ beforeEach(() => {
   state.adjust.mockImplementation(() => ({
     unwrap: async () => ({ updatedCount: 1, skippedCount: 0, rows: [{ updated: true }] }),
   }));
-  state.bulk.mockImplementation(() => ({
-    unwrap: async () => ({ updatedCount: 1, skippedCount: 0 }),
+  state.bulk.mockImplementation((payload: any) => ({
+    unwrap: async () => {
+      const rows = [
+        ...payload.attendanceIds.map((attendanceId: string) => ({ attendanceId, updated: true })),
+        ...payload.employeeDates.map((row: any) => ({
+          ...row,
+          attendanceId: `created-${row.employeeId}-${row.attendanceDate}`,
+          updated: true,
+        })),
+      ];
+      return { updatedCount: rows.length, skippedCount: 0, rows };
+    },
   }));
 });
 afterEach(cleanup);
@@ -220,4 +238,137 @@ it('still requires punch times when a bulk selection contains an editable time-b
   fireEvent.click(screen.getByRole('button', { name: 'Save' }));
   expect(screen.getByText('In time is required.')).toBeTruthy();
   expect(state.bulk).not.toHaveBeenCalled();
+});
+
+it.each([false, true])(
+  'retains all-skipped bulk drafts and their specific reason (unmarked=%s)',
+  async (unmarked) => {
+    state.bulk.mockImplementationOnce(() => ({
+      unwrap: async () => ({
+        updatedCount: 0,
+        skippedCount: 1,
+        rows: [
+          {
+            attendanceId: unmarked ? null : 'attendance-1',
+            employeeId: 'employee-1',
+            attendanceDate: '2026-10-01',
+            updated: false,
+            reason: 'Attendance day is locked.',
+          },
+        ],
+      }),
+    }));
+    show([day('manual_status', { attendanceId: unmarked ? null : 'attendance-1' })]);
+    fireEvent.click(screen.getByRole('button', { name: 'Adjust attendance for Synthetic staff' }));
+    fireEvent.change(screen.getByLabelText('Remarks'), {
+      target: { value: 'Preserve these remarks' },
+    });
+    fireEvent.change(screen.getByLabelText('Reason'), {
+      target: { value: 'Preserve this reason' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() =>
+      expect(screen.getByRole('alert').textContent).toContain(
+        'Synthetic staff (2026-10-01): Attendance day is locked.'
+      )
+    );
+    expect((screen.getByLabelText('Remarks') as HTMLInputElement).value).toBe(
+      'Preserve these remarks'
+    );
+    expect((screen.getByLabelText('Reason') as HTMLInputElement).value).toBe(
+      'Preserve this reason'
+    );
+    expect(state.success).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(state.bulk).toHaveBeenCalledTimes(2);
+  }
+);
+
+it('retries only skipped bulk targets after query refresh removes the original rows', async () => {
+  state.bulk.mockImplementationOnce(() => ({
+    unwrap: async () => ({
+      updatedCount: 1,
+      skippedCount: 1,
+      rows: [
+        { attendanceId: 'attendance-1', updated: true },
+        {
+          employeeId: 'employee-1',
+          attendanceDate: '2026-10-02',
+          updated: false,
+          reason: 'Payroll is locked.',
+        },
+      ],
+    }),
+  }));
+  const view = show([
+    day('manual_status'),
+    day('manual_status', { attendanceId: null, attendanceDate: '2026-10-02', status: 'NotMarked' }),
+  ]);
+  fireEvent.click(screen.getByRole('button', { name: 'Adjust attendance for Synthetic staff' }));
+  fireEvent.change(screen.getByLabelText('Remarks'), { target: { value: 'Correction draft' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+  await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('Confirmed 1 of 2'));
+  state.rows = [];
+  view.rerender(<AttendanceTrackingScreen />);
+  expect((screen.getByLabelText('Remarks') as HTMLInputElement).value).toBe('Correction draft');
+  fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+  await waitFor(() => expect(state.bulk).toHaveBeenCalledTimes(2));
+  expect(state.bulk.mock.calls[1][0]).toMatchObject({
+    attendanceIds: [],
+    employeeDates: [{ employeeId: 'employee-1', attendanceDate: '2026-10-02' }],
+    remarks: 'Correction draft',
+  });
+  await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  expect(state.success).toHaveBeenCalledTimes(1);
+});
+
+it.each(['missing acknowledgement', 'network rejection'])(
+  'retains bulk draft and blocks blind retry after %s',
+  async (failure) => {
+    state.bulk.mockImplementationOnce(() => ({
+      unwrap: async () => {
+        if (failure === 'network rejection') throw new Error('Lost response');
+        return {};
+      },
+    }));
+    show([day('manual_status')]);
+    fireEvent.click(screen.getByRole('button', { name: 'Adjust attendance for Synthetic staff' }));
+    fireEvent.change(screen.getByLabelText('Remarks'), { target: { value: 'Keep this draft' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() =>
+      expect(screen.getByRole('alert').textContent).toContain('Close and refresh')
+    );
+    expect((screen.getByLabelText('Remarks') as HTMLInputElement).value).toBe('Keep this draft');
+    expect((screen.getByRole('button', { name: 'Save' }) as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    expect(state.bulk).toHaveBeenCalledTimes(1);
+    expect(state.success).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.queryByRole('dialog')).toBeNull();
+  }
+);
+
+it('blocks repeated submission, field changes and dialog dismissal during the bulk request', async () => {
+  let resolve: (value: any) => void = () => {};
+  const response = new Promise((done) => {
+    resolve = done;
+  });
+  state.bulk.mockImplementationOnce(() => ({ unwrap: () => response }));
+  show([day('manual_status')]);
+  fireEvent.click(screen.getByRole('button', { name: 'Adjust attendance for Synthetic staff' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+  expect((screen.getByRole('button', { name: 'Save' }) as HTMLButtonElement).disabled).toBe(true);
+  expect((screen.getByLabelText('Remarks') as HTMLInputElement).disabled).toBe(true);
+  expect((screen.getByLabelText('Status') as HTMLSelectElement).disabled).toBe(true);
+  fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Close dialog' }));
+  expect(screen.getByRole('dialog')).toBeTruthy();
+  expect(state.bulk).toHaveBeenCalledTimes(1);
+  resolve({
+    updatedCount: 1,
+    skippedCount: 0,
+    rows: [{ attendanceId: 'attendance-1', updated: true }],
+  });
+  await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
 });

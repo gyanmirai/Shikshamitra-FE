@@ -28,7 +28,9 @@ Requires the companion backend multi-division/sorting contract before the fronte
 
 Single and bulk correction dialogs use the selected editable days' capture modes. Status-only selections hide punch fields and send null times. Mixed selections require times for time-based days and explain that status-only days do not store those times; locked selected days do not add a time requirement. Unmarked days keep the existing employee/date payload, including an empty attendance-ID array when every selected day is unmarked.
 
-A single-row HTTP success is not enough to close the draft. The screen checks the updated/skipped outcome, retains the dialog and entered values when no change occurred, and displays the server's skip reason. Only a confirmed update shows success and closes the draft. The backend remains authoritative for locks and scope.
+HTTP success alone does not close an adjustment draft. Single-row corrections check the updated/skipped outcome and retain the dialog and server skip reason when no change occurred. Bulk corrections reconcile every submitted attendance ID or employee/date against the returned row outcomes. Partial/all-skipped results keep remarks, reason and remaining targets, display staff/date-specific reasons, and remove confirmed successes from the next request. Target snapshots survive query refreshes, including a newly created ID for a formerly unmarked day. Only fully confirmed updates close the draft and show success.
+
+Incomplete/contradictory acknowledgements and rejected bulk requests retain the draft, disable immediate retry and instruct the user to close and refresh the register before submitting again; they must not be blindly retried because some writes may already have completed. Submitting locks fields, repeat submission and dialog dismissal. The backend remains authoritative for locks and scope.
 
 ## Regression checks
 

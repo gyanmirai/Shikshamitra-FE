@@ -65,7 +65,13 @@ export const validateAttendanceDraft = (
 type AttendanceAdjustmentResult = {
   updatedCount?: number;
   skippedCount?: number;
-  rows?: { updated?: boolean; reason?: string | null }[];
+  rows?: {
+    attendanceId?: string | null;
+    employeeId?: string | null;
+    attendanceDate?: string | null;
+    updated?: boolean;
+    reason?: string | null;
+  }[];
 };
 
 // An HTTP 200 can contain a skipped row after a concurrent day/payroll lock.
@@ -78,4 +84,61 @@ export const getSingleAttendanceAdjustmentFailure = (
     skipped?.reason?.trim() ||
     'Attendance was not adjusted. Refresh the register and check whether the day is still editable.'
   );
+};
+
+type AttendanceAdjustmentTarget = {
+  attendanceId?: string | null;
+  employeeId: string;
+  attendanceDate: string;
+  employeeName?: string;
+  employeeCode?: string;
+};
+
+export const reconcileBulkAttendanceAdjustment = <TRow extends AttendanceAdjustmentTarget>(
+  submittedRows: TRow[],
+  result?: AttendanceAdjustmentResult | null
+) => {
+  const outcomes = submittedRows.map((target) => {
+    const matches = (result?.rows ?? []).filter((row) =>
+      target.attendanceId
+        ? row.attendanceId === target.attendanceId
+        : row.employeeId === target.employeeId && row.attendanceDate === target.attendanceDate
+    );
+    const response = matches.length === 1 ? matches[0] : undefined;
+    return { target, response };
+  });
+  const updatedCount = outcomes.filter(({ response }) => response?.updated === true).length;
+  const skippedCount = outcomes.filter(({ response }) => response?.updated === false).length;
+  const pending = outcomes.filter(({ response }) => response?.updated !== true);
+  const retryBlocked =
+    submittedRows.length === 0 ||
+    updatedCount + skippedCount !== submittedRows.length ||
+    result?.rows?.length !== submittedRows.length ||
+    result?.updatedCount !== updatedCount ||
+    result?.skippedCount !== skippedCount;
+  const complete = !retryBlocked && pending.length === 0;
+  const details = pending.map(({ target, response }) => {
+    const staff = target.employeeName || target.employeeCode || 'Staff';
+    const reason =
+      response?.updated === false
+        ? response.reason?.trim() || 'Not adjusted. Check whether the day is still editable.'
+        : "The server did not confirm this row's outcome.";
+    return `${staff} (${target.attendanceDate}): ${reason}`;
+  });
+  const summary = `Confirmed ${updatedCount} of ${submittedRows.length} update(s); ${skippedCount} skipped.`;
+  return {
+    complete,
+    updatedCount,
+    pendingRows: pending.map(({ target }) => target),
+    retryBlocked,
+    message: complete
+      ? null
+      : [
+          summary,
+          ...details,
+          retryBlocked
+            ? 'The response is incomplete or inconsistent. Close and refresh the register before submitting again to avoid repeating successful updates.'
+            : 'Your draft is retained. Retry only the remaining days after resolving the reasons above.',
+        ].join('\n'),
+  };
 };

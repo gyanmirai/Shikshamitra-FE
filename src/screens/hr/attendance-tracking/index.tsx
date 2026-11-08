@@ -57,6 +57,7 @@ import {
   validateAttendanceDraft,
   getAttendanceAdjustmentTimes,
   usesAttendanceAdjustmentTimes,
+  reconcileBulkAttendanceAdjustment,
   getSingleAttendanceAdjustmentFailure,
 } from './adjustment-state';
 
@@ -280,6 +281,10 @@ const AttendanceTrackingScreen = () => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [editRow, setEditRow] = useState<AttendanceRegisterRow | null>(null);
   const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkRows, setBulkRows] = useState<AttendanceRegisterRow[] | null>(null);
+  const [bulkRetryBlocked, setBulkRetryBlocked] = useState(false);
+  const [isSavingAdjustment, setIsSavingAdjustment] = useState(false);
+  const adjustmentInFlight = React.useRef(false);
   const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false);
   const [draft, setDraft] = useState<AttendanceDraft>({
     status: 'Present' as RegisterStatus,
@@ -415,23 +420,25 @@ const AttendanceTrackingScreen = () => {
     () => allDayRows.filter((row) => selectedIds.includes(getDayIdentifier(row))),
     [allDayRows, selectedIds, getDayIdentifier]
   );
-  const blockedSelectedCount = selectedRows.filter((row) => !row.canEdit).length;
+  // Retain target identities through mutation-triggered query refreshes, including unmarked days.
+  const bulkTargetRows = bulkRows ?? selectedRows;
+  const blockedSelectedCount = bulkTargetRows.filter((row) => !row.canEdit).length;
   const editableSelectedIds = useMemo(
     () =>
-      selectedRows
+      bulkTargetRows
         .filter((row) => row.canEdit && row.attendanceId)
         .map((row) => row.attendanceId as string),
-    [selectedRows]
+    [bulkTargetRows]
   );
   const editableSelectedEmployeeDates = useMemo(
     () =>
-      selectedRows
+      bulkTargetRows
         .filter((row) => row.canEdit && !row.attendanceId)
         .map((row) => ({
           employeeId: row.employeeId,
           attendanceDate: row.attendanceDate,
         })),
-    [selectedRows]
+    [bulkTargetRows]
   );
 
   const resetPaging = () => {
@@ -518,11 +525,14 @@ const AttendanceTrackingScreen = () => {
   const closeDialogs = () => {
     setEditRow(null);
     setBulkOpen(false);
+    setBulkRows(null);
+    setBulkRetryBlocked(false);
     setDraftErrors({});
     setAdjustmentError(null);
   };
 
-  const adjustmentRows = editRow ? [editRow] : selectedRows;
+  const adjustmentRows = editRow ? [editRow] : bulkTargetRows;
+  const savingAdjustment = isSavingAdjustment || isAdjusting || isBulkAdjusting;
   const showAdjustmentTimes = usesAttendanceAdjustmentTimes(adjustmentRows);
   const adjustmentTimes = getAttendanceAdjustmentTimes(draft, adjustmentRows);
 
@@ -543,7 +553,7 @@ const AttendanceTrackingScreen = () => {
   });
 
   const saveInline = async () => {
-    if (!editRow) return;
+    if (!editRow || adjustmentInFlight.current) return;
 
     const errors = validateAttendanceDraft(draft, adjustmentRows);
     if (Object.keys(errors).length) {
@@ -554,6 +564,8 @@ const AttendanceTrackingScreen = () => {
       return;
     }
 
+    adjustmentInFlight.current = true;
+    setIsSavingAdjustment(true);
     try {
       const result = await adjustAttendance(buildAdjustmentPayload(editRow)).unwrap();
       const failure = getSingleAttendanceAdjustmentFailure(result);
@@ -566,10 +578,14 @@ const AttendanceTrackingScreen = () => {
       closeDialogs();
     } catch {
       shikshaMitraToast.error({ message: 'Failed to adjust attendance.' });
+    } finally {
+      adjustmentInFlight.current = false;
+      setIsSavingAdjustment(false);
     }
   };
 
   const saveBulk = async () => {
+    if (adjustmentInFlight.current || bulkRetryBlocked) return;
     if (!editableSelectedIds.length && !editableSelectedEmployeeDates.length) {
       shikshaMitraToast.error({ message: 'No editable rows selected.' });
       return;
@@ -584,15 +600,30 @@ const AttendanceTrackingScreen = () => {
       return;
     }
 
+    const submittedRows = bulkTargetRows.filter((row) => row.canEdit);
+    adjustmentInFlight.current = true;
+    setIsSavingAdjustment(true);
     try {
       const result = await bulkAdjustAttendance(buildAdjustmentPayload()).unwrap();
-      shikshaMitraToast.success({
-        message: `Updated ${result?.updatedCount || 0} row(s), skipped ${result?.skippedCount || 0}.`,
-      });
+      const outcome = reconcileBulkAttendanceAdjustment(submittedRows, result);
+      if (!outcome.complete) {
+        setBulkRows(outcome.pendingRows);
+        setSelectedIds(outcome.pendingRows.map(getDayIdentifier));
+        setBulkRetryBlocked(outcome.retryBlocked);
+        setAdjustmentError(outcome.message);
+        return;
+      }
+      shikshaMitraToast.success({ message: `Updated ${outcome.updatedCount} row(s).` });
       setSelectedIds([]);
       closeDialogs();
     } catch {
-      shikshaMitraToast.error({ message: 'Failed to bulk adjust attendance.' });
+      setBulkRetryBlocked(true);
+      setAdjustmentError(
+        'The bulk adjustment outcome could not be confirmed. Your draft is retained. Close and refresh the register before submitting again to avoid repeating successful updates.'
+      );
+    } finally {
+      adjustmentInFlight.current = false;
+      setIsSavingAdjustment(false);
     }
   };
 
@@ -1147,6 +1178,16 @@ const AttendanceTrackingScreen = () => {
               disabled={getEditableDayIds(row).length === 0}
               onClick={() => {
                 toggleGroupSelection(row, true);
+                const groupIds = getEditableDayIds(row);
+                setBulkRows(
+                  allDayRows.filter(
+                    (day) =>
+                      selectedIds.includes(getDayIdentifier(day)) ||
+                      groupIds.includes(getDayIdentifier(day))
+                  )
+                );
+                setBulkRetryBlocked(false);
+                setAdjustmentError(null);
                 setDraft({
                   status: 'Present',
                   inTime: '',
@@ -1169,7 +1210,9 @@ const AttendanceTrackingScreen = () => {
   const renderAdjustmentDialog = (isBulk: boolean) => (
     <CustomDialog
       open={isBulk ? bulkOpen : Boolean(editRow)}
-      handleClose={closeDialogs}
+      handleClose={() => {
+        if (!adjustmentInFlight.current) closeDialogs();
+      }}
       title={
         <Box display="flex" flexDirection="row" gap={1} alignItems="center">
           <Typography variant="h5">
@@ -1209,6 +1252,7 @@ const AttendanceTrackingScreen = () => {
               <InputLabel>Status</InputLabel>
               <Select
                 label="Status"
+                disabled={savingAdjustment}
                 value={draft.status}
                 onChange={(event) => {
                   const nextStatus = event.target.value as RegisterStatus;
@@ -1250,6 +1294,7 @@ const AttendanceTrackingScreen = () => {
               <ShakingTextField error={Boolean(draftErrors.inTime)}>
                 <TimePicker
                   label="In time"
+                  disabled={savingAdjustment}
                   value={draft.inTime ? dayjs(`2000-01-01T${draft.inTime}`) : null}
                   onChange={(newValue) => {
                     setDraft((prev) => ({
@@ -1280,6 +1325,7 @@ const AttendanceTrackingScreen = () => {
               <ShakingTextField error={Boolean(draftErrors.outTime)}>
                 <TimePicker
                   label="Out time"
+                  disabled={savingAdjustment}
                   value={draft.outTime ? dayjs(`2000-01-01T${draft.outTime}`) : null}
                   onChange={(newValue) => {
                     setDraft((prev) => ({
@@ -1313,6 +1359,7 @@ const AttendanceTrackingScreen = () => {
             <TextField
               size="small"
               label="Remarks"
+              disabled={savingAdjustment}
               multiline
               minRows={2}
               value={draft.remarks}
@@ -1331,6 +1378,7 @@ const AttendanceTrackingScreen = () => {
             <TextField
               size="small"
               label="Reason"
+              disabled={savingAdjustment}
               value={draft.reason}
               fullWidth
               onChange={(event) => {
@@ -1344,7 +1392,12 @@ const AttendanceTrackingScreen = () => {
             />
           </ShakingTextField>
           {adjustmentError && (
-            <Typography role="alert" variant="body2" color="error.main">
+            <Typography
+              role="alert"
+              variant="body2"
+              color="error.main"
+              sx={{ whiteSpace: 'pre-line' }}
+            >
               {adjustmentError}
             </Typography>
           )}
@@ -1352,7 +1405,10 @@ const AttendanceTrackingScreen = () => {
       </DialogScrollContent>
       <DialogActions>
         <Button
-          onClick={closeDialogs}
+          onClick={() => {
+            if (!adjustmentInFlight.current) closeDialogs();
+          }}
+          disabled={savingAdjustment}
           size="small"
           variant="outlined"
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
@@ -1363,7 +1419,7 @@ const AttendanceTrackingScreen = () => {
           variant="contained"
           size="small"
           startIcon={<Iconify icon={GlobalIcons.submit} />}
-          disabled={isAdjusting || isBulkAdjusting}
+          disabled={savingAdjustment || (isBulk && bulkRetryBlocked)}
           onClick={isBulk ? saveBulk : saveInline}
         >
           Save
@@ -1392,6 +1448,9 @@ const AttendanceTrackingScreen = () => {
             startIcon={<Iconify icon="solar:pen-2-bold" />}
             disabled={!editableSelectedIds.length && !editableSelectedEmployeeDates.length}
             onClick={() => {
+              setBulkRows(selectedRows);
+              setBulkRetryBlocked(false);
+              setAdjustmentError(null);
               setDraft({
                 status: 'Present',
                 inTime: '',
