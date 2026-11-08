@@ -26,6 +26,8 @@ jobs:
       - name: Run Security Regression
         run: npx vitest run src/screens/security/role src/utils/permissions.test.ts src/components/progress-bar/progress-bar.history.test.tsx src/components/three-dots-actions/index.test.tsx --maxWorkers=2 --no-file-parallelism
       - name: Security lint
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
         run: npx eslint --quiet src/screens/security/role src/screens/security/user src/components/progress-bar/progress-bar.tsx src/components/progress-bar/progress-bar.history.test.tsx src/components/three-dots-actions/index.tsx src/components/three-dots-actions/index.test.tsx src/utils/permissions.ts src/utils/permissions.test.ts
       - name: Validate Security documentation
         run: node scripts/docs/validate-docs.mjs --module security
