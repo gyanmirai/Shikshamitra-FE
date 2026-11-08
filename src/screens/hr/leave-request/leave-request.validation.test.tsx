@@ -10,6 +10,7 @@ import AddLeaveRequest from './leave-requst';
 const mocks = vi.hoisted(() => ({
   create: vi.fn(),
   preview: {} as any,
+  previewForDate: undefined as ((date: string) => any) | undefined,
   stalePreview: undefined as any,
   fetching: false,
   previewError: undefined as any,
@@ -34,13 +35,14 @@ vi.mock('src/redux/customQueryAndMutation', () => ({
 }));
 vi.mock('src/redux/hr/employeeApi', () => ({ useLazyGetEmployeeQuery: vi.fn() }));
 vi.mock('src/redux/hr/hr-policy-api', () => ({
-  useGetPolicyAssignmentPreviewQuery: () => ({
-    currentData: mocks.preview,
-    data: mocks.stalePreview ?? mocks.preview,
-    isFetching: mocks.fetching,
-    error: mocks.previewError,
-    refetch: vi.fn(),
-  }),
+  useGetPolicyAssignmentPreviewQuery: ({ date }: { date: string }) =>
+    mocks.previewForDate?.(date) ?? {
+      currentData: mocks.preview,
+      data: mocks.stalePreview ?? mocks.preview,
+      isFetching: mocks.fetching,
+      error: mocks.previewError,
+      refetch: vi.fn(),
+    },
 }));
 vi.mock('src/redux/hr/leaveApi', () => ({
   useGetSelfLeaveBalanceQuery: () => ({ data: mocks.balance, isFetching: false }),
@@ -99,7 +101,7 @@ vi.mock('src/components/custom-select', () => ({
   ),
 }));
 vi.mock('@mui/x-date-pickers', () => ({
-  DatePicker: ({ label, value, onChange, minDate, slotProps }: any) => (
+  DatePicker: ({ label, value, onChange, minDate, disablePast, disabled, slotProps }: any) => (
     <label htmlFor={label.replace(/\W/g, '')}>
       {label}
       <input
@@ -107,9 +109,21 @@ vi.mock('@mui/x-date-pickers', () => ({
         aria-label={label}
         value={value?.format('YYYY-MM-DD') || ''}
         data-min-date={minDate?.format('YYYY-MM-DD') || ''}
-        onChange={(event) => onChange(event.target.value ? dayjs(event.target.value) : null)}
+        data-disable-past={String(Boolean(disablePast))}
+        onChange={(event) => {
+          const candidate = event.target.value ? dayjs(event.target.value) : null;
+          // Model the calendar's selectable-date constraints rather than letting
+          // the test bypass a policy-derived minDate through a plain input.
+          if (
+            disabled ||
+            (candidate && minDate && candidate.isBefore(minDate, 'day')) ||
+            (candidate && disablePast && candidate.isBefore(dayjs(), 'day'))
+          )
+            return;
+          onChange(candidate);
+        }}
       />
-      {slotProps?.textField?.helperText}
+      <span>{slotProps?.textField?.helperText}</span>
     </label>
   ),
 }));
@@ -157,8 +171,8 @@ vi.mock('@mui/material', () => {
   };
 });
 
-function setNoticeDays(paid: number, unpaid = paid) {
-  mocks.preview = {
+function policyPreview(paid: number, unpaid = paid) {
+  return {
     leavePolicy: {
       id: 'policy-1',
       allowedPaidTypes: ['Paid', 'Unpaid'],
@@ -168,6 +182,10 @@ function setNoticeDays(paid: number, unpaid = paid) {
       ],
     },
   };
+}
+
+function setNoticeDays(paid: number, unpaid = paid) {
+  mocks.preview = policyPreview(paid, unpaid);
 }
 
 async function fillRequest(start: string, end = start, paidType = 'Paid') {
@@ -187,6 +205,7 @@ beforeEach(() => {
   mocks.fetching = false;
   mocks.previewError = undefined;
   mocks.stalePreview = undefined;
+  mocks.previewForDate = undefined;
   mocks.balance = { items: [{ paidType: 'Paid', remainingDays: 2 }] };
   setNoticeDays(0);
 });
@@ -205,7 +224,7 @@ describe('Leave request policy-aware validation', () => {
     setNoticeDays(Number(noticeDays));
     render(<AddLeaveRequest mode="self" />);
     await fillRequest(String(date));
-    expect(screen.getByLabelText('Start Date *')).toHaveAttribute('data-min-date', String(date));
+    expect(screen.getByLabelText('Start Date *')).toHaveAttribute('data-min-date', '');
     expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled();
     fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
     await waitFor(() => expect(mocks.create).toHaveBeenCalledTimes(1));
@@ -220,23 +239,78 @@ describe('Leave request policy-aware validation', () => {
     fireEvent.submit(screen.getByRole('button', { name: 'Submit' }).closest('form')!);
     expect(mocks.create).not.toHaveBeenCalled();
     fireEvent.change(screen.getByLabelText('Paid Type *'), { target: { value: 'Unpaid' } });
-    expect(screen.getByLabelText('Start Date *')).toHaveAttribute('data-min-date', '2026-11-09');
+    expect(screen.getByLabelText('Start Date *')).toHaveAttribute('data-min-date', '');
     fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
     await waitFor(() => expect(mocks.create).toHaveBeenCalledTimes(1));
   });
 
-  it('does not reuse a previous date policy while current preview is loading', async () => {
+  it('selects a future zero-notice policy even when today requires five days', async () => {
+    mocks.previewForDate = (date) => ({
+      currentData: policyPreview(date >= '2026-11-10' ? 0 : 5),
+      isFetching: false,
+    });
     render(<AddLeaveRequest mode="self" />);
+    // Paid is chosen before the candidate date, as it is in the real form.
+    await fillRequest('2026-11-10');
+    expect(screen.getByLabelText('Start Date *')).toHaveValue('2026-11-10');
+    expect(screen.getByLabelText('Start Date *')).toHaveAttribute('data-disable-past', 'true');
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+    await waitFor(() => expect(mocks.create).toHaveBeenCalledTimes(1));
+    expect(mocks.create.mock.calls[0][0].body.get('startDate')).toBe('2026-11-10');
+  });
+
+  it('can move back from a stricter future policy and clears the obsolete notice error', async () => {
+    mocks.previewForDate = (date) => ({
+      currentData: policyPreview(date >= '2026-11-10' ? 5 : 0),
+      isFetching: false,
+    });
+    render(<AddLeaveRequest mode="self" />);
+    await fillRequest('2026-11-10');
+    await waitFor(() => expect(screen.getByText(/at least 5 day\(s\)/)).toBeInTheDocument());
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+    fireEvent.change(screen.getByLabelText('Start Date *'), { target: { value: '2026-11-09' } });
+    fireEvent.change(screen.getByLabelText('End Date *'), { target: { value: '2026-11-09' } });
+    expect(screen.getByLabelText('Start Date *')).toHaveValue('2026-11-09');
+    await waitFor(() => expect(screen.queryByText(/at least 5 day\(s\)/)).not.toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+    await waitFor(() => expect(mocks.create).toHaveBeenCalledTimes(1));
+    expect(mocks.create.mock.calls[0][0].body.get('startDate')).toBe('2026-11-09');
+  });
+
+  it('blocks submission during a live date-preview transition, then applies the resolved rule', async () => {
+    const previousPolicy = policyPreview(0);
+    let resolved = false;
+    mocks.previewForDate = (date) =>
+      date >= '2026-11-10'
+        ? {
+            currentData: resolved ? policyPreview(5) : undefined,
+            data: previousPolicy,
+            isFetching: !resolved,
+          }
+        : { currentData: previousPolicy, data: previousPolicy, isFetching: false };
+    const { rerender } = render(<AddLeaveRequest mode="self" />);
     await fillRequest('2026-11-09');
-    setNoticeDays(8);
-    mocks.stalePreview = mocks.preview;
-    mocks.preview = undefined;
-    mocks.fetching = true;
-    cleanup();
-    render(<AddLeaveRequest mode="self" />);
-    expect(screen.getByLabelText('Start Date *')).toHaveAttribute('data-min-date', '2026-11-08');
+    fireEvent.change(screen.getByLabelText('Start Date *'), { target: { value: '2026-11-10' } });
+    fireEvent.change(screen.getByLabelText('End Date *'), { target: { value: '2026-11-10' } });
     expect(screen.getByLabelText('Paid Type *')).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+    await waitFor(() =>
+      expect(screen.getByText('Resolving effective leave policy. Please wait.')).toBeInTheDocument()
+    );
     expect(mocks.create).not.toHaveBeenCalled();
+    resolved = true;
+    rerender(<AddLeaveRequest mode="self" />);
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled());
+    expect(screen.getByText(/at least 5 day\(s\)/)).toBeInTheDocument();
+    fireEvent.submit(screen.getByRole('button', { name: 'Submit' }).closest('form')!);
+    expect(mocks.create).not.toHaveBeenCalled();
+    expect(screen.getByLabelText('Reason for leave *')).toHaveValue('Family appointment');
+    fireEvent.change(screen.getByLabelText('Start Date *'), { target: { value: '2026-11-13' } });
+    fireEvent.change(screen.getByLabelText('End Date *'), { target: { value: '2026-11-13' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+    await waitFor(() => expect(mocks.create).toHaveBeenCalledTimes(1));
+    expect(mocks.create.mock.calls[0][0].body.get('startDate')).toBe('2026-11-13');
   });
 
   it('submits Friday-to-Monday despite the three-day estimate exceeding a two-day balance', async () => {

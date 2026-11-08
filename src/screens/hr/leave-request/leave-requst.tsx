@@ -62,7 +62,6 @@ import {
   LEAVE_POLICY_INACTIVE,
   LEAVE_POLICY_NOT_FOUND,
   LEAVE_MAX_DAYS_EXCEEDED,
-  getMinimumLeaveStartDate,
   isDateWithinAcademicYear,
   isSelectedPaidTypeVisible,
   LEAVE_INSUFFICIENT_BALANCE,
@@ -163,6 +162,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
     isValidating,
     submitCount,
     setFieldError,
+    validateField,
   } = useFormik({
     enableReinitialize: true,
     initialValues: {
@@ -202,6 +202,17 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
             return true;
           }
 
+          // A candidate date can belong to a different effective policy. Do not
+          // validate it with the preview captured before Formik changes that date.
+          if (
+            (value && dayjs(value as any).format('YYYY-MM-DD') !== effectivePreviewDate) ||
+            resolveLeavePolicyPreviewEmployeeId(this.parent.employee, authEmployeeId, mode) !==
+              effectivePreviewEmployeeId ||
+            isEffectivePolicyFetching ||
+            effectivePolicyError
+          ) {
+            return true;
+          }
           const minNoticeDays = getLeavePolicyMinNoticeDays(
             effectivePolicyPreview?.leavePolicy,
             this.parent.paidType
@@ -442,8 +453,24 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
     effectivePolicyPreview?.leavePolicy,
     values.paidType
   );
-  const minimumLeaveStartDate = getMinimumLeaveStartDate(minNoticeDays);
   const leaveNoticePeriodMessage = getLeaveNoticePeriodMessage(minNoticeDays);
+
+  useEffect(() => {
+    if (!editData && values.startDate && !isEffectivePolicyFetching) {
+      // Refresh errors after the candidate date's own policy resolves, including
+      // when moving from a stricter policy back to a shorter notice requirement.
+      validateField('startDate');
+    }
+  }, [
+    editData,
+    effectivePreviewDate,
+    effectivePreviewEmployeeId,
+    effectivePolicyError,
+    isEffectivePolicyFetching,
+    minNoticeDays,
+    validateField,
+    values.startDate,
+  ]);
 
   const hasResolvedEffectivePreviewEmployee =
     Boolean(effectivePreviewEmployeeId) || isEffectivePreviewEmployeeResolutionBlocked;
@@ -553,6 +580,8 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
   const hasLeaveNoticePeriodError =
     !editData &&
     enforceLeaveNoticePeriod &&
+    !isEffectivePolicyFetching &&
+    !effectivePolicyError &&
     !isLeaveNoticePeriodSatisfied(values.startDate, minNoticeDays);
 
   return (
@@ -737,14 +766,17 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <ShakingTextField error={!!touched.startDate && !!errors.startDate}>
+              <ShakingTextField
+                error={hasLeaveNoticePeriodError || (!!touched.startDate && !!errors.startDate)}
+              >
                 <DatePicker
                   label="Start Date *"
                   value={values.startDate}
                   disabled={!!editData}
                   format="DD/MM/YYYY"
                   disablePast
-                  minDate={enforceLeaveNoticePeriod ? minimumLeaveStartDate : undefined}
+                  // Notice depends on the date being selected, so it cannot be a
+                  // global bound derived from today's or the previous date's policy.
                   onChange={(value) => {
                     setFieldValue('startDate', value);
                     if (values.halfDay) {
@@ -755,8 +787,11 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                     textField: {
                       fullWidth: true,
                       size: 'small',
-                      error: !!touched.startDate && !!errors.startDate,
-                      helperText: touched.startDate && (errors.startDate as string),
+                      error:
+                        hasLeaveNoticePeriodError || (!!touched.startDate && !!errors.startDate),
+                      helperText: hasLeaveNoticePeriodError
+                        ? leaveNoticePeriodMessage
+                        : touched.startDate && (errors.startDate as string),
                     },
                   }}
                 />
