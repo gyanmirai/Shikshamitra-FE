@@ -148,8 +148,7 @@ const show = (days: any[]) => {
   ];
   return render(<AttendanceTrackingScreen />);
 };
-const openSingle = () =>
-  fireEvent.click(screen.getByRole('button', { name: 'Adjust', exact: true }));
+const openSingle = () => fireEvent.click(screen.getByRole('button', { name: 'Adjust' }));
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -171,6 +170,20 @@ beforeEach(() => {
   }));
 });
 afterEach(cleanup);
+
+it('opens the exact single-day Adjust action rather than the employee bulk action', () => {
+  show([day('manual_status')]);
+  expect(screen.getAllByRole('button', { name: /^Adjust/ })).toHaveLength(2);
+  openSingle();
+  expect(
+    screen.getByText('Use this form to correct attendance details for the selected day.')
+  ).toBeTruthy();
+  expect(
+    screen.queryByText(
+      'Apply one adjustment across selected editable days. Any locked day remains unchanged.'
+    )
+  ).toBeNull();
+});
 
 it('saves a status-only single adjustment without requiring or sending punch times', async () => {
   show([day('manual_status')]);
