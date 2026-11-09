@@ -5,23 +5,12 @@ import type { DateValidationError } from '@mui/x-date-pickers';
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
-import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
-import { SetupInlineDialog } from 'src/screens/hr/setup/hr-setup-editor-context';
-import {
-  Alert,
-  Stack,
-  Paper,
-  Button,
-  Divider,
-  TextField,
-  Typography,
-  IconButton,
-  DialogActions,
-  DialogContent,
-} from '@mui/material';
+import { DatePicker } from '@mui/x-date-pickers';
+import { SetupInlineDrawer } from 'src/screens/hr/setup/hr-setup-editor-context';
+import { Box, Alert, Stack, Paper, Button, Divider, TextField, Typography } from '@mui/material';
 
-import { FieldLabel, InfoTooltipIcon, DrawerDialogTitle } from './HRPolicySharedUI';
+import { FieldLabel, DrawerHeader } from './HRPolicySharedUI';
 
 import type { HRPolicyWorkspaceContext } from '../hooks/useHRPolicyWorkspace';
 
@@ -49,29 +38,22 @@ export function ManualHolidayDialog({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
   const hasDateError = Boolean(fromDateError) || Boolean(toDateError);
 
   return (
-    <SetupInlineDialog
+    <SetupInlineDrawer
+      anchor="right"
       open={manualHolidayDialogOpen}
       onClose={closeManualHolidayDialog}
-      fullWidth
-      maxWidth="sm"
+      PaperProps={{
+        'aria-label': isEdit ? 'Edit Manual Holiday' : 'Add Manual Holiday',
+        sx: { width: { xs: '100%', sm: 'min(560px, 92vw)' }, maxWidth: '100%' },
+      }}
     >
-      <DrawerDialogTitle onClose={closeManualHolidayDialog}>
-        <Stack direction="row" spacing={0.75} alignItems="center">
-          <Typography variant="h6">
-            {isEdit ? 'Edit Manual Holiday' : 'Add Manual Holiday'}
-          </Typography>
-          <InfoTooltipIcon title="Add dates that should be treated as holidays in this work calendar." />
-          <IconButton
-            aria-label="Close dialog"
-            onClick={closeManualHolidayDialog}
-            sx={{ position: 'absolute', top: 12, right: 12 }}
-          >
-            <Iconify icon="mdi:close" />
-          </IconButton>
-        </Stack>
-      </DrawerDialogTitle>
+      <DrawerHeader
+        title={isEdit ? 'Edit Manual Holiday' : 'Add Manual Holiday'}
+        helpText="Add dates that should be treated as holidays in this work calendar."
+        onClose={closeManualHolidayDialog}
+      />
       <Divider />
-      <DialogContent sx={{ pb: 2 }}>
+      <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto', p: 2 }}>
         <Stack spacing={2} sx={{ pt: 1 }}>
           {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
           <TextField
@@ -170,12 +152,18 @@ export function ManualHolidayDialog({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
             minRows={2}
           />
         </Stack>
-      </DialogContent>
-      <DialogActions>
+      </Box>
+      <Divider />
+      <Stack
+        direction="row"
+        spacing={1.5}
+        justifyContent="flex-end"
+        sx={{ px: { xs: 2, sm: 3 }, py: 1.5, flexShrink: 0 }}
+      >
         <Button
           onClick={closeManualHolidayDialog}
           size="small"
-          startIcon={<Iconify icon="eva:close-outline" />}
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
           variant="outlined"
         >
           Cancel
@@ -187,9 +175,9 @@ export function ManualHolidayDialog({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
           size="small"
           startIcon={<Iconify icon={GlobalIcons.submit} />}
         >
-          Save
+          Submit
         </Button>
-      </DialogActions>
-    </SetupInlineDialog>
+      </Stack>
+    </SetupInlineDrawer>
   );
 }

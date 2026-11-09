@@ -3,7 +3,7 @@ module: hr
 domain: testing
 content_type: Reference
 status: canonical
-updated_on: 2026-11-05
+updated_on: 2026-11-08
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -13,6 +13,12 @@ audience: humans-and-agents
 Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vitest/vitest.mjs run src/screens/hr/i-card src/components/identity-card-designer --pool=threads --maxWorkers=1` for preset geometry, front/back saved-design round trips, explicit physical sizes, one-time legacy print-unit conversion, duplex settings, field synchronization, and dirty draft signatures. Run changed-file lint, frontend typecheck, and `npm run docs:hr:check` separately.
 
 Browser acceptance must review both sides, edit and reopen a custom back, verify physical dimensions remain independent of preview size, change paper/duplex settings, preserve scoped staff selections across pages, exercise Keep editing/Discard and failed saves, and export a configured front/back PDF. Use synthetic or authorized staff only. Automated adapter tests do not establish authenticated rendering, printed alignment, or physical distribution.
+
+## Attendance correction contracts
+
+Run `npx vitest run src/screens/hr/attendance/manual-attendance/status-mapper.test.ts src/screens/hr/attendance-tracking/adjustment-state.test.ts src/screens/hr/attendance-tracking/adjustment-workflow.test.tsx` for saved-versus-unsaved Pending transitions, approved-leave guards, status-only and mixed capture modes, all-unmarked bulk payloads, single-row skipped acknowledgements, and bulk partial/all-skipped recovery with draft retention and retry. Bulk cases verify per-row reasons, exclusion of successful targets from retry, unmarked employee/date matching, query-refresh resilience, incomplete or failed responses, and submission/dismissal locks. The workflow tests mount the real register screen with synthetic mutation responses and mocked UI/query dependencies; they do not validate backend persistence, visual layout, or authentication.
+
+Run the normal full typecheck, changed-file lint, production build and HR documentation validator in a complete checkout. Browser acceptance must verify disabled Pending/help text, approved-leave read-only rows, mixed-selection punch controls and a concurrent-lock skip without losing remarks. Finish with the Codex in-app browser; isolated utility and component tests are not browser acceptance.
 
 ## Mark Attendance filters
 
@@ -921,6 +927,10 @@ Run `report-table-query.test.ts`, the shared table controlled-state tests and `u
 Verify numeric, date, boolean and enum filters, sort direction, column visibility, reload and browser Back/Forward.
 Check complete filtered Excel/PDF exports against rows on later pages.
 Repeat on desktop and mobile, then finish in the signed-in Codex browser.
+
+## Leave request policy validation
+
+Run `leave-request.utils.test.ts` and `leave-request.validation.test.tsx`. Cover 0/1/2/5-day notice boundaries, paid-type changes, and live date-policy transitions in the same mounted form: select a future zero-notice policy after today's stricter rule, move back from a stricter future rule, and block pending previews before applying the resolved rule. Picker test doubles must enforce emitted date bounds rather than bypass them. Also cover a Friday-to-Monday request with an estimated three days and two days displayed balance. The estimate must not disable Submit or prevent the mutation; backend insufficient-balance errors must preserve the draft. These mocked component tests do not replace authenticated in-app checks with assigned work calendars and policy changes.
 
 ## Leave Center card layout
 

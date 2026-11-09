@@ -1,7 +1,8 @@
 import dayjs from 'dayjs';
-import { describe, expect, it } from 'vitest';
+import { it, expect, describe } from 'vitest';
 import { ReligionType } from 'src/enums/religion';
 
+import { personalInformationInitialValues } from './personal-info-initial-values';
 import { buildProfilePersonalInfoUpdatePayload } from './personal-info-update-payload';
 
 describe('profile personal-info update payload', () => {
@@ -33,6 +34,69 @@ describe('profile personal-info update payload', () => {
     pincode: '380001',
     shift: 'shift-1',
     ...overrides,
+  });
+
+  it('round-trips supplementary fields initialized from the saved profile on an unrelated edit', () => {
+    const savedProfile = {
+      dob: '1990-01-01',
+      doj: '2024-06-01',
+      designation: 'Senior Teacher',
+      qualification: 'M.Ed.',
+      identificationMark1: 'Mole on left cheek',
+    };
+    const values = buildValues({
+      ...personalInformationInitialValues(savedProfile),
+      lastName: 'Shah',
+    });
+
+    const payload = buildProfilePersonalInfoUpdatePayload(values);
+
+    expect(payload.designation).toBe(savedProfile.designation);
+    expect(payload.qualification).toBe(savedProfile.qualification);
+    expect(payload.identificationMark1).toBe(savedProfile.identificationMark1);
+    expect(payload.lastName).toBe('Shah');
+  });
+
+  it.each([null, ''])('preserves intentional clearing with %s', (cleared) => {
+    const values = buildValues({
+      designation: cleared,
+      qualification: cleared,
+      identificationMark1: cleared,
+    });
+
+    const payload = buildProfilePersonalInfoUpdatePayload(values);
+
+    expect(payload.designation).toBe(cleared);
+    expect(payload.qualification).toBe(cleared);
+    expect(payload.identificationMark1).toBe(cleared);
+  });
+
+  it('does not send clears for fields missing from an older or partial profile response', () => {
+    const values = buildValues(
+      personalInformationInitialValues({
+        dob: '1990-01-01',
+        doj: '2024-06-01',
+        designation: 'Teacher',
+      })
+    );
+    const payload = JSON.parse(JSON.stringify(buildProfilePersonalInfoUpdatePayload(values)));
+
+    expect(payload.designation).toBe('Teacher');
+    expect(payload).not.toHaveProperty('qualification');
+    expect(payload).not.toHaveProperty('identificationMark1');
+  });
+
+  it('resets previous supplementary form values when the next profile omits them', () => {
+    const fields = {
+      designation: 'Previous teacher',
+      qualification: 'Previous qualification',
+      identificationMark1: 'Previous mark',
+      ...personalInformationInitialValues(),
+    };
+
+    expect(fields.designation).toBeUndefined();
+    expect(fields.qualification).toBeUndefined();
+    expect(fields.identificationMark1).toBeUndefined();
   });
 
   it('omits PAN and Aadhaar fields when profile identity values are unchanged', () => {

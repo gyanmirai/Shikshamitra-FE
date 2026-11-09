@@ -62,11 +62,11 @@ import {
   LEAVE_POLICY_INACTIVE,
   LEAVE_POLICY_NOT_FOUND,
   LEAVE_MAX_DAYS_EXCEEDED,
-  getMinimumLeaveStartDate,
   isDateWithinAcademicYear,
   isSelectedPaidTypeVisible,
   LEAVE_INSUFFICIENT_BALANCE,
   buildEmployeeSelectOptions,
+  getLeavePolicyMinNoticeDays,
   getLeaveNoticePeriodMessage,
   isLeaveNoticePeriodSatisfied,
   getLeaveRequestBalanceWarning,
@@ -150,9 +150,6 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
   const isAdminUser = isAdminFromProfile((session as any)?.profile);
   const shouldUseAdminSelectionRules = isAdminUser && !isSelfMode;
 
-  const minimumLeaveStartDate = getMinimumLeaveStartDate();
-  const leaveNoticePeriodMessage = getLeaveNoticePeriodMessage();
-
   const {
     initialValues,
     errors,
@@ -165,6 +162,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
     isValidating,
     submitCount,
     setFieldError,
+    validateField,
   } = useFormik({
     enableReinitialize: true,
     initialValues: {
@@ -192,8 +190,9 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
           (value) => value && dayjs(value as any).isValid()
         )
         // eslint-disable-next-line func-names
-        .test('minimum-notice-period', leaveNoticePeriodMessage, function (value) {
+        .test('minimum-notice-period', function (value) {
           if (
+            editData ||
             !shouldEnforceLeaveNoticePeriod(
               mode,
               isAdminUser,
@@ -203,7 +202,25 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
             return true;
           }
 
-          return isLeaveNoticePeriodSatisfied(value ? dayjs(value as any) : null);
+          // A candidate date can belong to a different effective policy. Do not
+          // validate it with the preview captured before Formik changes that date.
+          if (
+            (value && dayjs(value as any).format('YYYY-MM-DD') !== effectivePreviewDate) ||
+            resolveLeavePolicyPreviewEmployeeId(this.parent.employee, authEmployeeId, mode) !==
+              effectivePreviewEmployeeId ||
+            isEffectivePolicyFetching ||
+            effectivePolicyError
+          ) {
+            return true;
+          }
+          const minNoticeDays = getLeavePolicyMinNoticeDays(
+            effectivePolicyPreview?.leavePolicy,
+            this.parent.paidType
+          );
+          return (
+            isLeaveNoticePeriodSatisfied(value ? dayjs(value as any) : null, minNoticeDays) ||
+            this.createError({ message: getLeaveNoticePeriodMessage(minNoticeDays) })
+          );
         }),
 
       endDate: Yup.mixed()
@@ -320,10 +337,6 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
             );
             return;
           }
-          if (leaveBalanceWarning) {
-            setFieldError('paidType', leaveBalanceWarning);
-            return;
-          }
 
           // --- Create flow: build multipart/form-data body as per API contract ---
           const formData = buildCreateLeaveRequestFormData({
@@ -421,7 +434,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
       ? values.startDate.format('YYYY-MM-DD')
       : dayjs().format('YYYY-MM-DD');
   const {
-    data: effectivePolicyPreview,
+    currentData: effectivePolicyPreview,
     isFetching: isEffectivePolicyFetching,
     error: effectivePolicyError,
     refetch: refetchEffectivePolicy,
@@ -435,6 +448,29 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
       skip: !catalogAcademicYearId || !effectivePreviewEmployeeId || Boolean(editData),
     }
   );
+
+  const minNoticeDays = getLeavePolicyMinNoticeDays(
+    effectivePolicyPreview?.leavePolicy,
+    values.paidType
+  );
+  const leaveNoticePeriodMessage = getLeaveNoticePeriodMessage(minNoticeDays);
+
+  useEffect(() => {
+    if (!editData && values.startDate && !isEffectivePolicyFetching) {
+      // Refresh errors after the candidate date's own policy resolves, including
+      // when moving from a stricter policy back to a shorter notice requirement.
+      validateField('startDate');
+    }
+  }, [
+    editData,
+    effectivePreviewDate,
+    effectivePreviewEmployeeId,
+    effectivePolicyError,
+    isEffectivePolicyFetching,
+    minNoticeDays,
+    validateField,
+    values.startDate,
+  ]);
 
   const hasResolvedEffectivePreviewEmployee =
     Boolean(effectivePreviewEmployeeId) || isEffectivePreviewEmployeeResolutionBlocked;
@@ -542,7 +578,11 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
     values.employee as EmployeeOption | null
   );
   const hasLeaveNoticePeriodError =
-    !editData && enforceLeaveNoticePeriod && !isLeaveNoticePeriodSatisfied(values.startDate);
+    !editData &&
+    enforceLeaveNoticePeriod &&
+    !isEffectivePolicyFetching &&
+    !effectivePolicyError &&
+    !isLeaveNoticePeriodSatisfied(values.startDate, minNoticeDays);
 
   return (
     <Box
@@ -550,12 +590,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
       noValidate
       onSubmit={(event) => {
         event.preventDefault();
-        if (
-          !editData &&
-          !isLeaveRequestSubmitting &&
-          !hasLeaveNoticePeriodError &&
-          !leaveBalanceWarning
-        )
+        if (!editData && !isLeaveRequestSubmitting && !hasLeaveNoticePeriodError)
           handleSubmit(event);
       }}
       sx={{ display: 'flex', flexDirection: 'column', minHeight: 0, height: '100%' }}
@@ -731,14 +766,17 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <ShakingTextField error={!!touched.startDate && !!errors.startDate}>
+              <ShakingTextField
+                error={hasLeaveNoticePeriodError || (!!touched.startDate && !!errors.startDate)}
+              >
                 <DatePicker
                   label="Start Date *"
                   value={values.startDate}
                   disabled={!!editData}
                   format="DD/MM/YYYY"
                   disablePast
-                  minDate={enforceLeaveNoticePeriod ? minimumLeaveStartDate : undefined}
+                  // Notice depends on the date being selected, so it cannot be a
+                  // global bound derived from today's or the previous date's policy.
                   onChange={(value) => {
                     setFieldValue('startDate', value);
                     if (values.halfDay) {
@@ -749,8 +787,11 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                     textField: {
                       fullWidth: true,
                       size: 'small',
-                      error: !!touched.startDate && !!errors.startDate,
-                      helperText: touched.startDate && (errors.startDate as string),
+                      error:
+                        hasLeaveNoticePeriodError || (!!touched.startDate && !!errors.startDate),
+                      helperText: hasLeaveNoticePeriodError
+                        ? leaveNoticePeriodMessage
+                        : touched.startDate && (errors.startDate as string),
                     },
                   }}
                 />
@@ -810,7 +851,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                   label="Half day"
                 />
                 <Typography variant="body2" color="text.secondary">
-                  Total requested days: {requestedUnits}
+                  Estimated requested days: {requestedUnits} (final days checked on submission)
                 </Typography>
               </Stack>
             </Grid>
@@ -988,9 +1029,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
           <LoadingButton
             loading={isLeaveRequestSubmitting}
             startIcon={<Iconify icon={GlobalIcons.submit} width={20} height={20} />}
-            disabled={
-              isLeaveRequestSubmitting || hasLeaveNoticePeriodError || Boolean(leaveBalanceWarning)
-            }
+            disabled={isLeaveRequestSubmitting || hasLeaveNoticePeriodError}
             type="submit"
             size="small"
             variant="contained"

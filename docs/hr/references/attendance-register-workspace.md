@@ -3,7 +3,7 @@ module: hr
 domain: attendance-register
 content_type: Reference
 status: canonical
-updated_on: 2026-10-26
+updated_on: 2026-11-08
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -23,6 +23,14 @@ Every filter/search/sort change resets paging and day selection. Page changes cl
 Excel/PDF use the existing complete HR export workflow with the same query, including the division array and sort. The backend export source calls the same grouped reader and replaces paging with each export batch. Selection/action controls are excluded from the exported columns. Expanded day tables retain their existing filtered day export.
 
 Requires the companion backend multi-division/sorting contract before the frontend is released. No migration or database change is needed. Shared table, dialog, selector and export-hook implementations are not modified; concurrent table and keyboard work may overlap the owning register screen or its API client.
+
+## Adjustment recovery and capture modes
+
+Single and bulk correction dialogs use the selected editable days' capture modes. Status-only selections hide punch fields and send null times. Mixed selections require times for time-based days and explain that status-only days do not store those times; locked selected days do not add a time requirement. Unmarked days keep the existing employee/date payload, including an empty attendance-ID array when every selected day is unmarked.
+
+HTTP success alone does not close an adjustment draft. Single-row corrections check the updated/skipped outcome and retain the dialog and server skip reason when no change occurred. Bulk corrections reconcile every submitted attendance ID or employee/date against the returned row outcomes. Partial/all-skipped results keep remarks, reason and remaining targets, display staff/date-specific reasons, and remove confirmed successes from the next request. Target snapshots survive query refreshes, including a newly created ID for a formerly unmarked day. Only fully confirmed updates close the draft and show success.
+
+Incomplete/contradictory acknowledgements and rejected bulk requests retain the draft, disable immediate retry and instruct the user to close and refresh the register before submitting again; they must not be blindly retried because some writes may already have completed. Submitting locks fields, repeat submission and dialog dismissal. The backend remains authoritative for locks and scope.
 
 ## Regression checks
 

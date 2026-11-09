@@ -53,9 +53,23 @@ import {
 } from '@mui/material';
 
 import { isRegisterQueryLocked } from './table-query-guard';
+import {
+  validateAttendanceDraft,
+  getAttendanceAdjustmentTimes,
+  usesAttendanceAdjustmentTimes,
+  reconcileBulkAttendanceAdjustment,
+  getSingleAttendanceAdjustmentFailure,
+} from './adjustment-state';
+
+import type { AttendanceDraftErrors } from './adjustment-state';
 
 type RegisterStatus =
-  'NotMarked' | 'Present' | 'HalfDay' | 'Absent' | 'HalfDayLeave' | 'FullDayLeave';
+  | 'NotMarked'
+  | 'Present'
+  | 'HalfDay'
+  | 'Absent'
+  | 'HalfDayLeave'
+  | 'FullDayLeave';
 type PayrollState = 'All' | 'Editable' | 'Locked';
 type ExceptionFilter = 'All' | 'NeedsAttention' | 'Absent' | 'HalfDay' | 'MissingPunch' | 'Locked';
 
@@ -110,7 +124,12 @@ type GroupedAttendanceRegisterRow = {
 
 const STATUS_OPTIONS = [
   { label: 'Present', value: 'Present', wire: 'PRESENT', color: 'success' },
-  { label: 'Half day', value: 'HalfDayLeave', wire: 'HALF_DAY', color: 'warning' },
+  {
+    label: 'Half day',
+    value: 'HalfDayLeave',
+    wire: 'HALF_DAY',
+    color: 'warning',
+  },
   { label: 'Absent', value: 'FullDayLeave', wire: 'ABSENT', color: 'error' },
 ] as const;
 
@@ -231,43 +250,6 @@ type AttendanceDraft = {
   reason: string;
 };
 
-type AttendanceDraftErrors = {
-  inTime?: string;
-  outTime?: string;
-  remarks?: string;
-  reason?: string;
-};
-
-const validateAttendanceDraft = (draft: AttendanceDraft): AttendanceDraftErrors => {
-  const errors: AttendanceDraftErrors = {};
-  const inTime = draft.inTime?.trim();
-  const outTime = draft.outTime?.trim();
-  const requiresTime = draft.status === 'Present' || draft.status === 'HalfDayLeave';
-
-  if (requiresTime) {
-    if (!inTime) errors.inTime = 'In time is required.';
-    if (!outTime) errors.outTime = 'Out time is required.';
-  }
-
-  if ((inTime && !outTime) || (!inTime && outTime)) {
-    if (!inTime) errors.inTime = 'In time is required when out time is provided.';
-    if (!outTime) errors.outTime = 'Out time is required when in time is provided.';
-  }
-
-  if (inTime && outTime) {
-    const parsedIn = dayjs(inTime, 'HH:mm', true);
-    const parsedOut = dayjs(outTime, 'HH:mm', true);
-
-    if (!parsedIn.isValid()) errors.inTime = 'Invalid in time.';
-    if (!parsedOut.isValid()) errors.outTime = 'Invalid out time.';
-
-    if (parsedIn.isValid() && parsedOut.isValid() && !parsedOut.isAfter(parsedIn)) {
-      errors.outTime = 'Out time must be after in time.';
-    }
-  }
-  return errors;
-};
-
 const AttendanceTrackingScreen = () => {
   const dashboardParams = useSearchParams();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
@@ -299,6 +281,10 @@ const AttendanceTrackingScreen = () => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [editRow, setEditRow] = useState<AttendanceRegisterRow | null>(null);
   const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkRows, setBulkRows] = useState<AttendanceRegisterRow[] | null>(null);
+  const [bulkRetryBlocked, setBulkRetryBlocked] = useState(false);
+  const [isSavingAdjustment, setIsSavingAdjustment] = useState(false);
+  const adjustmentInFlight = React.useRef(false);
   const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false);
   const [draft, setDraft] = useState<AttendanceDraft>({
     status: 'Present' as RegisterStatus,
@@ -308,6 +294,7 @@ const AttendanceTrackingScreen = () => {
     reason: '',
   });
   const [draftErrors, setDraftErrors] = useState<AttendanceDraftErrors>({});
+  const [adjustmentError, setAdjustmentError] = useState<string | null>(null);
   // A dashboard link carries an explicit date; let the register resolve that date's calendar.
   const academicYearId =
     filters.employeeId &&
@@ -320,8 +307,15 @@ const AttendanceTrackingScreen = () => {
   const [findEmployees] = useLazyGetEmployeeQuery();
   const fetchStaffOptions = useCallback(
     async (search: string, nextPage: number) => {
-      const result = await findEmployees({ page: nextPage, pageSize: 50, search }).unwrap();
-      return { data: result.items || [], hasMore: nextPage * 50 < result.totalCount };
+      const result = await findEmployees({
+        page: nextPage,
+        pageSize: 50,
+        search,
+      }).unwrap();
+      return {
+        data: result.items || [],
+        hasMore: nextPage * 50 < result.totalCount,
+      };
     },
     [findEmployees]
   );
@@ -374,7 +368,12 @@ const AttendanceTrackingScreen = () => {
     currentQueryAndMutation: useBulkAdjustAttendanceRegisterMutation,
   });
 
-  const queryLocked = isRegisterQueryLocked({ editRow, bulkOpen, isAdjusting, isBulkAdjusting });
+  const queryLocked = isRegisterQueryLocked({
+    editRow,
+    bulkOpen,
+    isAdjusting,
+    isBulkAdjusting,
+  });
   const {
     currentData: data,
     isLoading,
@@ -421,23 +420,25 @@ const AttendanceTrackingScreen = () => {
     () => allDayRows.filter((row) => selectedIds.includes(getDayIdentifier(row))),
     [allDayRows, selectedIds, getDayIdentifier]
   );
-  const blockedSelectedCount = selectedRows.filter((row) => !row.canEdit).length;
+  // Retain target identities through mutation-triggered query refreshes, including unmarked days.
+  const bulkTargetRows = bulkRows ?? selectedRows;
+  const blockedSelectedCount = bulkTargetRows.filter((row) => !row.canEdit).length;
   const editableSelectedIds = useMemo(
     () =>
-      selectedRows
+      bulkTargetRows
         .filter((row) => row.canEdit && row.attendanceId)
         .map((row) => row.attendanceId as string),
-    [selectedRows]
+    [bulkTargetRows]
   );
   const editableSelectedEmployeeDates = useMemo(
     () =>
-      selectedRows
+      bulkTargetRows
         .filter((row) => row.canEdit && !row.attendanceId)
         .map((row) => ({
           employeeId: row.employeeId,
           attendanceDate: row.attendanceDate,
         })),
-    [selectedRows]
+    [bulkTargetRows]
   );
 
   const resetPaging = () => {
@@ -511,6 +512,7 @@ const AttendanceTrackingScreen = () => {
     if (!row.canEdit) return;
     setEditRow(row);
     setDraftErrors({});
+    setAdjustmentError(null);
     setDraft({
       status: toEditableStatus(row.status),
       inTime: toTimeValue(row.inTime),
@@ -523,8 +525,16 @@ const AttendanceTrackingScreen = () => {
   const closeDialogs = () => {
     setEditRow(null);
     setBulkOpen(false);
+    setBulkRows(null);
+    setBulkRetryBlocked(false);
     setDraftErrors({});
+    setAdjustmentError(null);
   };
+
+  const adjustmentRows = editRow ? [editRow] : bulkTargetRows;
+  const savingAdjustment = isSavingAdjustment || isAdjusting || isBulkAdjusting;
+  const showAdjustmentTimes = usesAttendanceAdjustmentTimes(adjustmentRows);
+  const adjustmentTimes = getAttendanceAdjustmentTimes(draft, adjustmentRows);
 
   const buildAdjustmentPayload = (row?: AttendanceRegisterRow) => ({
     ...(row
@@ -536,53 +546,84 @@ const AttendanceTrackingScreen = () => {
           employeeDates: editableSelectedEmployeeDates,
         }),
     statusWire: editableStatusMeta(draft.status).wire,
-    inTime: toWireTime(draft.inTime),
-    outTime: toWireTime(draft.outTime),
+    inTime: toWireTime(adjustmentTimes.inTime),
+    outTime: toWireTime(adjustmentTimes.outTime),
     remarks: draft.remarks,
     reason: draft.reason,
   });
 
   const saveInline = async () => {
-    if (!editRow) return;
+    if (!editRow || adjustmentInFlight.current) return;
 
-    const errors = validateAttendanceDraft(draft);
+    const errors = validateAttendanceDraft(draft, adjustmentRows);
     if (Object.keys(errors).length) {
       setDraftErrors(errors);
-      shikshaMitraToast.error({ message: 'Please fix the validation errors before saving.' });
+      shikshaMitraToast.error({
+        message: 'Please fix the validation errors before saving.',
+      });
       return;
     }
 
+    adjustmentInFlight.current = true;
+    setIsSavingAdjustment(true);
     try {
-      await adjustAttendance(buildAdjustmentPayload(editRow)).unwrap();
+      const result = await adjustAttendance(buildAdjustmentPayload(editRow)).unwrap();
+      const failure = getSingleAttendanceAdjustmentFailure(result);
+      if (failure) {
+        setAdjustmentError(failure);
+        return;
+      }
+      setAdjustmentError(null);
       shikshaMitraToast.success({ message: 'Attendance adjusted.' });
       closeDialogs();
     } catch {
       shikshaMitraToast.error({ message: 'Failed to adjust attendance.' });
+    } finally {
+      adjustmentInFlight.current = false;
+      setIsSavingAdjustment(false);
     }
   };
 
   const saveBulk = async () => {
+    if (adjustmentInFlight.current || bulkRetryBlocked) return;
     if (!editableSelectedIds.length && !editableSelectedEmployeeDates.length) {
       shikshaMitraToast.error({ message: 'No editable rows selected.' });
       return;
     }
 
-    const errors = validateAttendanceDraft(draft);
+    const errors = validateAttendanceDraft(draft, adjustmentRows);
     if (Object.keys(errors).length) {
       setDraftErrors(errors);
-      shikshaMitraToast.error({ message: 'Please fix the validation errors before saving.' });
+      shikshaMitraToast.error({
+        message: 'Please fix the validation errors before saving.',
+      });
       return;
     }
 
+    const submittedRows = bulkTargetRows.filter((row) => row.canEdit);
+    adjustmentInFlight.current = true;
+    setIsSavingAdjustment(true);
     try {
       const result = await bulkAdjustAttendance(buildAdjustmentPayload()).unwrap();
-      shikshaMitraToast.success({
-        message: `Updated ${result?.updatedCount || 0} row(s), skipped ${result?.skippedCount || 0}.`,
-      });
+      const outcome = reconcileBulkAttendanceAdjustment(submittedRows, result);
+      if (!outcome.complete) {
+        setBulkRows(outcome.pendingRows);
+        setSelectedIds(outcome.pendingRows.map(getDayIdentifier));
+        setBulkRetryBlocked(outcome.retryBlocked);
+        setAdjustmentError(outcome.message);
+        return;
+      }
+      shikshaMitraToast.success({ message: `Updated ${outcome.updatedCount} row(s).` });
       setSelectedIds([]);
       closeDialogs();
     } catch {
-      shikshaMitraToast.error({ message: 'Failed to bulk adjust attendance.' });
+      setBulkRetryBlocked(true);
+      setAdjustmentError(
+        'The bulk adjustment outcome could not be confirmed. Your draft is retained. Close and refresh the register before submitting again to avoid repeating successful updates.'
+      );
+    } finally {
+      adjustmentInFlight.current = false;
+      setIsSavingAdjustment(false);
     }
   };
 
@@ -936,7 +977,9 @@ const AttendanceTrackingScreen = () => {
       label: (
         <Checkbox
           size="small"
-          inputProps={{ 'aria-label': 'Select editable attendance on this page' }}
+          inputProps={{
+            'aria-label': 'Select editable attendance on this page',
+          }}
           checked={
             selectableDayRows.length > 0 &&
             selectableDayRows.every((row) => selectedIds.includes(getDayIdentifier(row)))
@@ -967,7 +1010,9 @@ const AttendanceTrackingScreen = () => {
         <Checkbox
           size="small"
           disabled={getEditableDayIds(row).length === 0}
-          inputProps={{ 'aria-label': `Select editable attendance for ${row.employeeName}` }}
+          inputProps={{
+            'aria-label': `Select editable attendance for ${row.employeeName}`,
+          }}
           checked={isGroupSelected(row)}
           indeterminate={isGroupIndeterminate(row)}
           onChange={(event) => toggleGroupSelection(row, event.target.checked)}
@@ -1133,7 +1178,23 @@ const AttendanceTrackingScreen = () => {
               disabled={getEditableDayIds(row).length === 0}
               onClick={() => {
                 toggleGroupSelection(row, true);
-                setDraft({ status: 'Present', inTime: '', outTime: '', remarks: '', reason: '' });
+                const groupIds = getEditableDayIds(row);
+                setBulkRows(
+                  allDayRows.filter(
+                    (day) =>
+                      selectedIds.includes(getDayIdentifier(day)) ||
+                      groupIds.includes(getDayIdentifier(day))
+                  )
+                );
+                setBulkRetryBlocked(false);
+                setAdjustmentError(null);
+                setDraft({
+                  status: 'Present',
+                  inTime: '',
+                  outTime: '',
+                  remarks: '',
+                  reason: '',
+                });
                 setDraftErrors({});
                 setBulkOpen(true);
               }}
@@ -1149,7 +1210,9 @@ const AttendanceTrackingScreen = () => {
   const renderAdjustmentDialog = (isBulk: boolean) => (
     <CustomDialog
       open={isBulk ? bulkOpen : Boolean(editRow)}
-      handleClose={closeDialogs}
+      handleClose={() => {
+        if (!adjustmentInFlight.current) closeDialogs();
+      }}
       title={
         <Box display="flex" flexDirection="row" gap={1} alignItems="center">
           <Typography variant="h5">
@@ -1189,6 +1252,7 @@ const AttendanceTrackingScreen = () => {
               <InputLabel>Status</InputLabel>
               <Select
                 label="Status"
+                disabled={savingAdjustment}
                 value={draft.status}
                 onChange={(event) => {
                   const nextStatus = event.target.value as RegisterStatus;
@@ -1197,7 +1261,11 @@ const AttendanceTrackingScreen = () => {
                     status: nextStatus,
                     ...(nextStatus === 'FullDayLeave' ? { inTime: '', outTime: '' } : {}),
                   }));
-                  setDraftErrors((prev) => ({ ...prev, inTime: '', outTime: '' }));
+                  setDraftErrors((prev) => ({
+                    ...prev,
+                    inTime: '',
+                    outTime: '',
+                  }));
                 }}
               >
                 {STATUS_OPTIONS.map((item) => (
@@ -1208,72 +1276,90 @@ const AttendanceTrackingScreen = () => {
               </Select>
             </FormControl>
           </ShakingTextField>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-            <ShakingTextField error={Boolean(draftErrors.inTime)}>
-              <TimePicker
-                label="In time"
-                value={draft.inTime ? dayjs(`2000-01-01T${draft.inTime}`) : null}
-                onChange={(newValue) => {
-                  setDraft((prev) => ({
-                    ...prev,
-                    inTime: newValue && newValue.isValid() ? newValue.format('HH:mm') : '',
-                  }));
-                  if (draftErrors.inTime) {
-                    setDraftErrors((prev) => ({ ...prev, inTime: '' }));
-                  }
-                }}
-                format="HH:mm"
-                ampm={false}
-                viewRenderers={{
-                  hours: renderTimeViewClock,
-                  minutes: renderTimeViewClock,
-                  seconds: renderTimeViewClock,
-                }}
-                slotProps={{
-                  textField: {
-                    size: 'small',
-                    fullWidth: true,
-                    error: Boolean(draftErrors.inTime),
-                    helperText: draftErrors.inTime,
-                  },
-                }}
-              />
-            </ShakingTextField>
-            <ShakingTextField error={Boolean(draftErrors.outTime)}>
-              <TimePicker
-                label="Out time"
-                value={draft.outTime ? dayjs(`2000-01-01T${draft.outTime}`) : null}
-                onChange={(newValue) => {
-                  setDraft((prev) => ({
-                    ...prev,
-                    outTime: newValue && newValue.isValid() ? newValue.format('HH:mm') : '',
-                  }));
-                  if (draftErrors.outTime) {
-                    setDraftErrors((prev) => ({ ...prev, outTime: '' }));
-                  }
-                }}
-                format="HH:mm"
-                ampm={false}
-                viewRenderers={{
-                  hours: renderTimeViewClock,
-                  minutes: renderTimeViewClock,
-                  seconds: renderTimeViewClock,
-                }}
-                slotProps={{
-                  textField: {
-                    size: 'small',
-                    fullWidth: true,
-                    error: Boolean(draftErrors.outTime),
-                    helperText: draftErrors.outTime,
-                  },
-                }}
-              />
-            </ShakingTextField>
-          </Stack>
+          {!showAdjustmentTimes && (
+            <Typography variant="body2" color="text.secondary">
+              Status-only attendance does not record in or out times.
+            </Typography>
+          )}
+          {isBulk &&
+            showAdjustmentTimes &&
+            adjustmentRows.some((row) => row.canEdit && row.captureMode === 'manual_status') && (
+              <Typography variant="body2" color="text.secondary">
+                Times apply only to selected days with time-based attendance. Status-only days keep
+                no punch times.
+              </Typography>
+            )}
+          {showAdjustmentTimes && (
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+              <ShakingTextField error={Boolean(draftErrors.inTime)}>
+                <TimePicker
+                  label="In time"
+                  disabled={savingAdjustment}
+                  value={draft.inTime ? dayjs(`2000-01-01T${draft.inTime}`) : null}
+                  onChange={(newValue) => {
+                    setDraft((prev) => ({
+                      ...prev,
+                      inTime: newValue && newValue.isValid() ? newValue.format('HH:mm') : '',
+                    }));
+                    if (draftErrors.inTime) {
+                      setDraftErrors((prev) => ({ ...prev, inTime: '' }));
+                    }
+                  }}
+                  format="HH:mm"
+                  ampm={false}
+                  viewRenderers={{
+                    hours: renderTimeViewClock,
+                    minutes: renderTimeViewClock,
+                    seconds: renderTimeViewClock,
+                  }}
+                  slotProps={{
+                    textField: {
+                      size: 'small',
+                      fullWidth: true,
+                      error: Boolean(draftErrors.inTime),
+                      helperText: draftErrors.inTime,
+                    },
+                  }}
+                />
+              </ShakingTextField>
+              <ShakingTextField error={Boolean(draftErrors.outTime)}>
+                <TimePicker
+                  label="Out time"
+                  disabled={savingAdjustment}
+                  value={draft.outTime ? dayjs(`2000-01-01T${draft.outTime}`) : null}
+                  onChange={(newValue) => {
+                    setDraft((prev) => ({
+                      ...prev,
+                      outTime: newValue && newValue.isValid() ? newValue.format('HH:mm') : '',
+                    }));
+                    if (draftErrors.outTime) {
+                      setDraftErrors((prev) => ({ ...prev, outTime: '' }));
+                    }
+                  }}
+                  format="HH:mm"
+                  ampm={false}
+                  viewRenderers={{
+                    hours: renderTimeViewClock,
+                    minutes: renderTimeViewClock,
+                    seconds: renderTimeViewClock,
+                  }}
+                  slotProps={{
+                    textField: {
+                      size: 'small',
+                      fullWidth: true,
+                      error: Boolean(draftErrors.outTime),
+                      helperText: draftErrors.outTime,
+                    },
+                  }}
+                />
+              </ShakingTextField>
+            </Stack>
+          )}
           <ShakingTextField error={Boolean(draftErrors.remarks)}>
             <TextField
               size="small"
               label="Remarks"
+              disabled={savingAdjustment}
               multiline
               minRows={2}
               value={draft.remarks}
@@ -1292,6 +1378,7 @@ const AttendanceTrackingScreen = () => {
             <TextField
               size="small"
               label="Reason"
+              disabled={savingAdjustment}
               value={draft.reason}
               fullWidth
               onChange={(event) => {
@@ -1304,11 +1391,24 @@ const AttendanceTrackingScreen = () => {
               helperText={draftErrors.reason}
             />
           </ShakingTextField>
+          {adjustmentError && (
+            <Typography
+              role="alert"
+              variant="body2"
+              color="error.main"
+              sx={{ whiteSpace: 'pre-line' }}
+            >
+              {adjustmentError}
+            </Typography>
+          )}
         </Stack>
       </DialogScrollContent>
       <DialogActions>
         <Button
-          onClick={closeDialogs}
+          onClick={() => {
+            if (!adjustmentInFlight.current) closeDialogs();
+          }}
+          disabled={savingAdjustment}
           size="small"
           variant="outlined"
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
@@ -1319,7 +1419,7 @@ const AttendanceTrackingScreen = () => {
           variant="contained"
           size="small"
           startIcon={<Iconify icon={GlobalIcons.submit} />}
-          disabled={isAdjusting || isBulkAdjusting}
+          disabled={savingAdjustment || (isBulk && bulkRetryBlocked)}
           onClick={isBulk ? saveBulk : saveInline}
         >
           Save
@@ -1348,7 +1448,16 @@ const AttendanceTrackingScreen = () => {
             startIcon={<Iconify icon="solar:pen-2-bold" />}
             disabled={!editableSelectedIds.length && !editableSelectedEmployeeDates.length}
             onClick={() => {
-              setDraft({ status: 'Present', inTime: '', outTime: '', remarks: '', reason: '' });
+              setBulkRows(selectedRows);
+              setBulkRetryBlocked(false);
+              setAdjustmentError(null);
+              setDraft({
+                status: 'Present',
+                inTime: '',
+                outTime: '',
+                remarks: '',
+                reason: '',
+              });
               setDraftErrors({});
               setBulkOpen(true);
             }}
@@ -1383,7 +1492,11 @@ const AttendanceTrackingScreen = () => {
               dateFormat="DD/MM/YYYY"
               onChange={(value) => {
                 if (queryLocked) return;
-                setFilters((prev) => ({ ...prev, startDate: value[0], endDate: value[1] }));
+                setFilters((prev) => ({
+                  ...prev,
+                  startDate: value[0],
+                  endDate: value[1],
+                }));
                 resetPaging();
               }}
             />
@@ -1465,7 +1578,10 @@ const AttendanceTrackingScreen = () => {
               label="Divisions"
               isLoading={stagesLoading}
               value={filters.educationMediumStageIds}
-              options={stages.map((stage) => ({ value: stage.id, label: stage.label }))}
+              options={stages.map((stage) => ({
+                value: stage.id,
+                label: stage.label,
+              }))}
               onChange={(value) => setFilter('educationMediumStageIds', value)}
               renderValue={(value) => (value.length ? `${value.length} selected` : 'All divisions')}
               helperText="All divisions, or any selected academic organization assignment."
