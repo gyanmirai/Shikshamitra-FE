@@ -6,9 +6,11 @@ import { Iconify } from 'src/components/iconify';
 import { Stack, Accordion, Typography, AccordionDetails, AccordionSummary } from '@mui/material';
 
 import { ADMISSION_DATE_FORMAT } from '../admission-date-formats';
-import { AssessmentHistoryDetails } from './assessment-history-details';
-import { ApplicationAssessmentPanel } from './application-assessment-panel';
 import { STAGE_STATUS_LABELS } from '../application-detail/application-progress-model';
+import {
+  AssessmentHistoryDetails,
+  ApplicationAssessmentPanel,
+} from '../application-detail/application-workspace-panels';
 
 import type { ApplicationStageReadinessHandler } from '../application-detail/application-stage-readiness';
 
@@ -74,7 +76,9 @@ export function ApplicationAssessments({ stages, currentStage, selectedStageId, 
               <Typography variant="subtitle2">{stage.name} · Assessment History</Typography>
               <Typography variant="caption" color="text.secondary">
                 {STAGE_STATUS_LABELS[stage.status] ?? 'Previous Step'}
-                {stage.completedAt ? ` · ${dayjs(stage.completedAt).format(ADMISSION_DATE_FORMAT)}` : ''}
+                {stage.completedAt
+                  ? ` · ${dayjs(stage.completedAt).format(ADMISSION_DATE_FORMAT)}`
+                  : ''}
               </Typography>
             </Stack>
           </AccordionSummary>

@@ -39,7 +39,6 @@ vi.mock('src/redux/student/admissions/admission-cycles-api', () => ({
 }));
 vi.mock('src/redux/student/admissions/admission-offerings-api', () => ({
   useLazyGetAdmissionOfferingsQuery: () => [state.loadOfferings, { isError: state.offeringsError }],
-  useGetAdmissionClassCapacityQuery: () => ({}),
 }));
 vi.mock('src/redux/student/admissions/admission-applications-api', () => ({
   useLazyFindAdmissionDirectFamiliesQuery: () => [state.findFamilies, { isFetching: false }],

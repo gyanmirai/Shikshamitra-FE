@@ -25,6 +25,7 @@ const context = vi.hoisted(() => ({
   readonlyInherited: false,
   formOverride: null as Record<string, unknown> | null,
   staleForm: false,
+  staleWorkflow: false,
   stamp: 'current',
 }));
 const toast = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn(), info: vi.fn() }));
@@ -126,16 +127,18 @@ vi.mock('src/redux/student/admissions/admission-applications-api', () => {
     },
     useGetAdmissionApplicationWorkflowQuery: (input: unknown) => {
       requests.workflow(input);
+      const data = {
+        currentStageInstanceId: context.stageId,
+        stages: [
+          { id: 'current-form', stageType: 1, formStageEnabled: true },
+          { id: 'future-form', stageType: 1, formStageEnabled: true },
+          { id: 'documents', stageType: 5, formStageEnabled: false },
+        ],
+      };
       return {
         refetch: requests.workflowRefetch,
-        data: {
-          currentStageInstanceId: context.stageId,
-          stages: [
-            { id: 'current-form', stageType: 1, formStageEnabled: true },
-            { id: 'future-form', stageType: 1, formStageEnabled: true },
-            { id: 'documents', stageType: 5, formStageEnabled: false },
-          ],
-        },
+        data,
+        currentData: context.staleWorkflow ? undefined : data,
       };
     },
     useGetAdmissionApplicationFormHistoryQuery: (input: unknown) => {
@@ -157,6 +160,7 @@ describe('application answer validation timing', () => {
     context.canEndJourney = true;
     context.stageId = 'current-form';
     context.applicationLoaded = true;
+    context.staleWorkflow = false;
     context.emailForm = false;
     context.readonlyInherited = false;
     context.formOverride = null;
@@ -496,47 +500,62 @@ describe('application answer validation timing', () => {
     expect(result.current.currentValues.EMAIL).toBe('Existing@Example.COM');
   });
 
-  it('starts workflow without waiting for the application response', () => {
+  it('starts workflow and its selected form without waiting for the application response', () => {
     context.applicationLoaded = false;
     renderHook(() => useApplicationDetail('application'));
     expect(requests.workflow).toHaveBeenLastCalledWith('application');
-    expect(requests.form).toHaveBeenLastCalledWith(skipToken);
+    expect(requests.form).toHaveBeenLastCalledWith('application');
     expect(requests.history).toHaveBeenLastCalledWith(skipToken);
   });
 
-  it('keeps Continue pending through preflight, the write and destination refresh, without duplicate writes', async () => {
-    const { result } = renderHook(() => useApplicationDetail('application'));
-    const workflow = {
-      ...result.current.workflowQuery.data,
-      currentStageInstanceId: 'current-form',
-    };
-    const resolveApplication = { ...application, status: 1, concurrencyStamp: 'latest' };
-    let finishRefresh!: (value: unknown) => void;
-    const refresh = new Promise((resolve) => {
-      finishRefresh = resolve;
-    });
-    requests.applicationRefetch
-      .mockReturnValueOnce({ unwrap: async () => resolveApplication })
-      .mockReturnValueOnce({ unwrap: () => refresh });
-    requests.workflowRefetch.mockReturnValue({ unwrap: async () => workflow });
-    requests.advance.mockReturnValue({ unwrap: async () => workflow });
-    let pending!: Promise<boolean>;
-    await act(async () => {
-      pending = result.current.advance();
-    });
-    expect(requests.advance).toHaveBeenCalledOnce();
-    expect(result.current.advanceState.isLoading).toBe(true);
-    await act(async () => {
-      expect(await result.current.advance()).toBe(false);
-    });
-    expect(requests.advance).toHaveBeenCalledOnce();
-    await act(async () => {
-      finishRefresh(resolveApplication);
-      await pending;
-    });
-    expect(result.current.advanceState.isLoading).toBe(false);
-    expect(await pending).toBe(true);
+  it('does not use a previous record workflow to load a form for the next record', () => {
+    context.applicationLoaded = false;
+    context.staleWorkflow = true;
+    renderHook(() => useApplicationDetail('next-application'));
+    expect(requests.form).toHaveBeenLastCalledWith(skipToken);
+    expect(requests.formStage).toHaveBeenLastCalledWith(skipToken);
   });
+
+  it.each([
+    { stageId: 'current-form', status: 1 },
+    { stageId: 'documents', status: 0 },
+  ])(
+    'keeps $stageId Continue pending through preflight, write and refresh without duplicate writes',
+    async ({ stageId, status }) => {
+      context.stageId = stageId;
+      const { result } = renderHook(() => useApplicationDetail('application'));
+      const workflow = {
+        ...result.current.workflowQuery.data,
+        currentStageInstanceId: stageId,
+      };
+      const resolveApplication = { ...application, status, concurrencyStamp: 'latest' };
+      let finishRefresh!: (value: unknown) => void;
+      const refresh = new Promise((resolve) => {
+        finishRefresh = resolve;
+      });
+      requests.applicationRefetch
+        .mockReturnValueOnce({ unwrap: async () => resolveApplication })
+        .mockReturnValueOnce({ unwrap: () => refresh });
+      requests.workflowRefetch.mockReturnValue({ unwrap: async () => workflow });
+      requests.advance.mockReturnValue({ unwrap: async () => workflow });
+      let pending!: Promise<boolean>;
+      await act(async () => {
+        pending = result.current.advance();
+      });
+      expect(requests.advance).toHaveBeenCalledOnce();
+      expect(result.current.advanceState.isLoading).toBe(true);
+      await act(async () => {
+        expect(await result.current.advance()).toBe(false);
+      });
+      expect(requests.advance).toHaveBeenCalledOnce();
+      await act(async () => {
+        finishRefresh(resolveApplication);
+        await pending;
+      });
+      expect(result.current.advanceState.isLoading).toBe(false);
+      expect(await pending).toBe(true);
+    }
+  );
 
   it('unlocks Continue after preflight failure without posting a transition', async () => {
     requests.applicationRefetch.mockReturnValue({

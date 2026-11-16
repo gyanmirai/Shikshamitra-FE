@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { Stack, Accordion, Typography, AccordionSummary, AccordionDetails } from '@mui/material';
 
-import { ApplicationDocumentsPanel } from './application-documents-panel';
+import { ApplicationDocumentsPanel } from '../application-detail/application-workspace-panels';
 
 import type { ApplicationStageReadinessHandler } from '../application-detail/application-stage-readiness';
 

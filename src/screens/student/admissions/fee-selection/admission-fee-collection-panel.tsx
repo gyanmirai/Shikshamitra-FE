@@ -168,7 +168,7 @@ export default function AdmissionFeeCollectionPanel({
     const prepared = await prepare({
       applicationId,
       variableFeeHeads,
-      ...(joiningDate.state?.canSelectProrationPolicy && {
+      ...(joiningDate.state?.canSelectProrationPolicy && joiningDate.prorationPolicyEligible && {
         prorationPolicyVersionId: joiningDate.selectedPolicyVersionId,
       }),
     }).unwrap();
@@ -405,7 +405,7 @@ export default function AdmissionFeeCollectionPanel({
             preparing.isLoading
           }
         />
-        {Boolean(joiningDate.date) &&
+        {joiningDate.prorationPolicyEligible &&
           joiningDate.state?.canSelectProrationPolicy &&
           access.canOverridePolicies && (
             <Stack spacing={1} sx={{ maxWidth: { xs: '100%', sm: 520 } }}>
@@ -475,8 +475,16 @@ export default function AdmissionFeeCollectionPanel({
           </DetailSection>
         ) : !prorationResult && feeCalculationReady ? (
           <StudentFeedback notificationKey="STU-0340" presentation="inline" severity="info">
-            No active default proration policy is configured for this academic year. Fees use the
-            existing full-charge treatment.
+            {joiningDate.date &&
+            joiningDate.state?.academicYearStartDate &&
+            !joiningDate.prorationPolicyEligible ? (
+              'Full fees apply because the joining date is before the school start date.'
+            ) : (
+              <>
+                No active default proration policy is configured for this academic year. Fees use the
+                existing full-charge treatment.
+              </>
+            )}
           </StudentFeedback>
         ) : null}
         <Box
@@ -699,7 +707,7 @@ export default function AdmissionFeeCollectionPanel({
               ? {
                   applicationId,
                   joiningDate: joiningDate.date,
-                  ...(joiningDate.state.canSelectProrationPolicy && {
+                  ...(joiningDate.state.canSelectProrationPolicy && joiningDate.prorationPolicyEligible && {
                     prorationPolicyVersionId: joiningDate.selectedPolicyVersionId,
                   }),
                 }

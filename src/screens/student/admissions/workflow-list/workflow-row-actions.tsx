@@ -28,6 +28,7 @@ type Props = WorkflowActionPermissions & {
   onDelete: () => void;
   onPublish?: () => void;
   publishing?: boolean;
+  creatingVersion?: boolean;
   busy?: boolean;
 };
 
@@ -42,6 +43,7 @@ export function WorkflowRowActions({
   canViewUsage,
   canPublish,
   publishing = false,
+  creatingVersion = false,
   busy = false,
   onEdit,
   onClone,
@@ -104,6 +106,7 @@ export function WorkflowRowActions({
       id: 'new-version',
       label: 'Create New Version',
       icon: 'mdi:file-plus-outline',
+      loading: creatingVersion,
       onClick: onCreateVersion,
     });
   if (canViewUsage)

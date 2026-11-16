@@ -5,6 +5,11 @@ import { render, screen } from '@testing-library/react';
 
 import { ApplicationAssessments } from './application-assessments';
 
+vi.mock('../application-detail/application-workspace-panels', async () => ({
+  ...(await import('./application-assessment-panel')),
+  ...(await import('./assessment-history-details')),
+}));
+
 vi.mock('./application-assessment-panel', () => ({
   ApplicationAssessmentPanel: ({
     stage,

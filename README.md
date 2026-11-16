@@ -21,8 +21,10 @@ With dependencies installed and the local backend running, use Node.js 22.15+ or
 npm run dev:local
 ```
 
-This development command uses the operating system's trusted certificate store for the local
-HTTPS backend. The ASP.NET development certificate must already be trusted by the operating
+This development command uses Turbopack, matching `npm run dev`, and the operating system's
+trusted certificate store for the local HTTPS backend. It starts without reinstalling dependencies.
+For webpack-specific debugging, use `npm run dev:local:webpack`.
+The ASP.NET development certificate must already be trusted by the operating
 system. Certificate validation stays enabled; keep `NODE_TLS_REJECT_UNAUTHORIZED=1` in
 `.env.local`. Production build and start commands are unchanged.
 
@@ -37,7 +39,6 @@ TODO: Describe and show how to build your code and run the tests.
 # MacOs and Ubuntu
 
 Give execution permissions to the shell script by running
-
 
 ```
 chmod +x build-and-copy.sh

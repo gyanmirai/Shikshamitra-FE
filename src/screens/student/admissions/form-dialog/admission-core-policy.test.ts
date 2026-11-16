@@ -124,7 +124,6 @@ describe('versioned admission core fields', () => {
         offeringId: 'o',
         source: 0,
         sourceDetail: '',
-        sendAcknowledgement: false,
         fields: {},
       },
       fields

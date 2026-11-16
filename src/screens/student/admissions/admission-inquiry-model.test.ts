@@ -55,7 +55,6 @@ const values: AdmissionInquiryFormValues = {
   offeringId: 'offering-1',
   source: 0,
   sourceDetail: '',
-  sendAcknowledgement: true,
   fields: {
     FIRST_NAME: 'Aanya',
     DOB: '2016-04-12T00:00:00+05:30',

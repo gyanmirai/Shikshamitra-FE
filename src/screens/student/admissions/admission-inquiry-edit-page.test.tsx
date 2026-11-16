@@ -257,6 +257,23 @@ const inquiry = {
 } as AdmissionInquiry;
 
 describe('Edit inquiry page', () => {
+  it('keeps live fields mounted with typed values and focus during same-context refresh', async () => {
+    const view = render(<AdmissionInquiryEditPage />);
+    const field = await screen.findByRole('textbox', { name: 'Family notes' });
+    await userEvent.clear(field);
+    await userEvent.type(field, 'Draft note');
+    const response = vi
+      .mocked(useGetAdmissionInquiryCaptureContextQuery)
+      .mock.results.at(-1)!.value;
+    vi.mocked(useGetAdmissionInquiryCaptureContextQuery).mockReturnValue({
+      ...response,
+      isFetching: true,
+    });
+    view.rerender(<AdmissionInquiryEditPage />);
+    expect(screen.getByRole('textbox', { name: 'Family notes' })).toBe(field);
+    expect(field).toHaveValue('Draft note');
+    expect(field).toHaveFocus();
+  });
   it('refreshes a server-rejected target stamp without prop injection or a parent PUT, then explicitly confirms the clean inquiry', async () => {
     const pending = { ...inquiry, applicantId: 'target-child', status: 0 as const };
     vi.mocked(useGetAdmissionInquiryQuery).mockReturnValue({
@@ -942,7 +959,7 @@ describe('Edit inquiry page', () => {
     render(<AdmissionInquiryManagementPage inquiry={inquiry} onClose={close} />);
 
     expect(screen.queryByRole('heading', { name: 'Form History' })).not.toBeInTheDocument();
-    expect(screen.getByText('Original inquiry · version 1')).toBeVisible();
+    expect(await screen.findByText('Original inquiry · version 1')).toBeVisible();
     const name = screen.getByRole('textbox', { name: 'Applicant name' });
     await user.clear(name);
     await user.type(name, 'Unsaved inquiry edit');

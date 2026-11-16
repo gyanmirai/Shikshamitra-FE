@@ -141,9 +141,12 @@ export async function saveQuickAcademic({
   if (current.studentEnrollmentId || [4, 5, 6].includes(current.status))
     throw new Error('This student is no longer editable in Student Setup.');
 
+  let dependentWrite = false;
   const refresh = async () => {
+    if (!dependentWrite) return current;
     current = await services.getCase(baseline.id);
     checkCase(current, baseline);
+    dependentWrite = false;
     return current;
   };
   if (divisionChanged) {
@@ -156,6 +159,7 @@ export async function saveQuickAcademic({
         divisionId: values.divisionId,
         reason: values.divisionReason.trim() || undefined,
       });
+      dependentWrite = true;
     }
     // A successful placement command clears an unlocked Roll number. This is our own
     // dependent change, not another user's identifier edit. Do not reuse its old status.
@@ -207,6 +211,7 @@ export async function saveQuickAcademic({
         ...(values.grMode === 'manual' ? { manualValue: requested } : {}),
         reason: values.grReason.trim() || undefined,
       });
+      dependentWrite = true;
       onSaved('gr', current);
     }
   }

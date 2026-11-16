@@ -125,13 +125,22 @@ export function AdmissionPublicInquiryLinks({
   const nameInputRef = useRef<HTMLInputElement>(null);
   const cycleInputRef = useRef<HTMLInputElement>(null);
   const formInputRef = useRef<HTMLInputElement>(null);
-  const cycles = useGetAdmissionCyclesQuery({ maxResultCount: 100, skipCount: 0 });
-  const forms = useGetAdmissionFormsQuery({ status: 1, purpose: 0, maxResultCount: 100 });
   const links = useGetAdmissionPublicInquiryLinksQuery();
   const [create, createState] = useCreateAdmissionPublicInquiryLinkMutation();
   const [setLinkForm, setLinkFormState] = useSetAdmissionPublicInquiryLinkFormMutation();
   const [revoke, revokeState] = useRevokeAdmissionPublicInquiryLinkMutation();
   const [formTarget, setFormTarget] = useState<AdmissionPublicInquiryLink | null>(null);
+  // Existing links carry IDs, so their visible labels need these lookups even in read-only lists.
+  const needsPeriodLabels = Boolean(links.currentData?.length);
+  const needsFormLabels = Boolean(links.currentData?.some((link) => link.inquiryFormDefinitionId));
+  const cycles = useGetAdmissionCyclesQuery(
+    { maxResultCount: 100, skipCount: 0 },
+    { skip: !createOpen && !needsPeriodLabels }
+  );
+  const forms = useGetAdmissionFormsQuery(
+    { status: 1, purpose: 0, maxResultCount: 100 },
+    { skip: !createOpen && !formTarget && !needsFormLabels }
+  );
   const [revokeTarget, setRevokeTarget] = useState<AdmissionPublicInquiryLink | null>(null);
   const [viewLink, setViewLink] = useState<LinkRow | null>(null);
   const [optionalOpen, setOptionalOpen] = useState(true);

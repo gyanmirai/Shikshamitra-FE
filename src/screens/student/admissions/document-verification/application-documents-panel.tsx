@@ -9,7 +9,8 @@ import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { StudentFeedback } from 'src/components/student-feedback';
-import { Card, Stack, Button, Skeleton, Typography, LinearProgress } from '@mui/material';
+import { skeletonReducedMotionSx } from 'src/theme/styles/skeleton';
+import { Card, Stack, Button, Skeleton, Typography } from '@mui/material';
 import { useGetApplicationDocumentsQuery } from 'src/redux/student/admissions/admission-document-verification-api';
 
 import { AdmissionQueryError } from '../admission-query-error';
@@ -85,7 +86,9 @@ export function ApplicationDocumentsPanel({
   });
   return (
     <Card
+      aria-busy={query.isFetching}
       sx={{
+        ...skeletonReducedMotionSx,
         p: historical ? 0 : 2,
         boxShadow: historical ? 'none' : undefined,
         ...(layout === 'table' && {
@@ -114,7 +117,10 @@ export function ApplicationDocumentsPanel({
             Document access is required to view this checklist. Contact an admissions administrator.
           </StudentFeedback>
         ) : query.isLoading ? (
-          <Skeleton variant="rounded" height={180} />
+          <Stack role="status" aria-label="Loading Document Checklist" spacing={1}>
+            <Skeleton variant="text" width="40%" />
+            <Skeleton variant="rounded" height={140} />
+          </Stack>
         ) : query.isError || !summary ? (
           <AdmissionQueryError onRetry={query.refetch} />
         ) : !summary.documentVerificationEnabled || !summary.policy ? (
@@ -124,7 +130,18 @@ export function ApplicationDocumentsPanel({
           </StudentFeedback>
         ) : (
           <>
-            {query.isFetching && <LinearProgress aria-label="Refreshing Document Checklist" />}
+            {query.isFetching && (
+              <Stack
+                direction="row"
+                spacing={1}
+                role="status"
+                aria-label="Refreshing Document Checklist"
+              >
+                <Skeleton variant="text" width="32%" />
+                <Skeleton variant="text" width="24%" />
+                <Skeleton variant="text" width="20%" />
+              </Stack>
+            )}
             {!historical && canManageParentRegistration && (
               <ParentRegistrationPanel
                 applicationId={applicationId}

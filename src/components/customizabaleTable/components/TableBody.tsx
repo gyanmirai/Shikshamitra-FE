@@ -8,6 +8,7 @@ import {
   Collapse,
   TableCell,
   IconButton,
+  CircularProgress,
   TableBody as MuiTableBody,
 } from '@mui/material';
 
@@ -121,8 +122,11 @@ export const TableBody = ({
     <MuiTableBody>
       {data.map((row, index) => {
         const action = getRowAction?.(row, index);
-        const clickable = Boolean(action && !action.disabled);
+        const clickable = Boolean(action && !action.disabled && !action.pending);
         const props = rowProps(row, index);
+        const feedbackColumn =
+          columns.find((column) => columnVisibility[column.id] && column.rowHeader) ??
+          columns.find((column) => columnVisibility[column.id]);
         return (
           <React.Fragment key={row.id ?? index}>
             <TableRow
@@ -131,6 +135,7 @@ export const TableBody = ({
               {...props}
               tabIndex={clickable ? 0 : (props?.tabIndex ?? -1)}
               aria-label={action?.label ?? props?.['aria-label']}
+              aria-busy={action?.pending || props?.['aria-busy']}
               onClick={(event: React.MouseEvent<HTMLTableRowElement>) => {
                 if (
                   event.defaultPrevented ||
@@ -159,6 +164,7 @@ export const TableBody = ({
                   event.nativeEvent.isComposing
                 )
                   return;
+                if (action?.pending || action?.disabled) return;
                 props?.onKeyDown?.(event);
                 if (
                   !event.defaultPrevented &&
@@ -229,6 +235,24 @@ export const TableBody = ({
                       {column.render
                         ? column.render(_.get(row, column.id, '-') ?? '-', row)
                         : (_.get(row, column.id, '-') ?? '-')}
+                      {action?.pending && feedbackColumn?.id === column.id && (
+                        <Box
+                          component="span"
+                          role="status"
+                          aria-label={action.pendingLabel || 'Opening Record'}
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 0.75,
+                            mt: 0.5,
+                            typography: 'caption',
+                            color: 'text.secondary',
+                          }}
+                        >
+                          <CircularProgress size={12} aria-hidden="true" />
+                          {action.pendingLabel || 'Opening…'}
+                        </Box>
+                      )}
                     </TableCell>
                   )
               )}

@@ -1,17 +1,18 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
+import type { RootState, AppDispatch } from 'src/redux/store';
 import type { IParams } from 'src/components/customizabaleTable/types';
 
-import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
+import { useDispatch, useSelector } from 'react-redux';
 import { studentPaths } from 'src/constants/student-menu';
 import { useRouter, useSearchParams } from 'next/navigation';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { skeletonReducedMotionSx } from 'src/theme/styles/skeleton';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
+import { Box, Stack, Button, Skeleton, DialogActions } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Box, Stack, Button, DialogActions, LinearProgress } from '@mui/material';
 import { academicClassFilterInput } from 'src/utils/student-academic-filter-query';
 import {
   type AdmissionInquiry,
@@ -25,6 +26,8 @@ import { formatAdmissionReference } from './admission-reference';
 import { InquiryTimeline } from './inquiry-management/inquiry-timeline';
 import { useInquiryHandoff } from './inquiry-management/use-inquiry-handoff';
 import { InquiryFollowUpDialog } from './inquiry-management/inquiry-follow-up-dialog';
+import { loadInquiryOverviewForm } from './inquiry-management/inquiry-overview-loader';
+import { preloadInquiryWorkspace } from './inquiry-management/preload-inquiry-workspace';
 import { buildAdmissionInquiryColumns } from './inquiry-management/admission-inquiry-columns';
 import { buildAdmissionInquiryRowOptions } from './inquiry-management/admission-inquiry-list-options';
 import { AdmissionInquiryManagementPage } from './inquiry-management/admission-inquiry-management-page';
@@ -41,15 +44,19 @@ import {
 } from './inquiry-management/admission-inquiry-table-filters';
 
 export default function AdmissionInquiriesScreen() {
+  const dispatch = useDispatch<AppDispatch>();
   const academic = useAdmissionAcademicFilters();
   const previousYear = useRef(academic.academicYearId);
-  const yearChanging = previousYear.current !== academic.academicYearId;
+  const yearChanged = previousYear.current !== academic.academicYearId;
+  const yearChanging = Boolean(previousYear.current) && yearChanged;
   useEffect(() => {
-    if (!yearChanging) return;
+    if (!yearChanged) return;
     previousYear.current = academic.academicYearId;
+    // Initial session restoration must preserve a deep link's academic filters.
+    if (!yearChanging) return;
     setPage(0);
     academic.update('board', '');
-  }, [academic, yearChanging]);
+  }, [academic, yearChanged, yearChanging]);
   const router = useRouter();
   const searchParams = useSearchParams();
   const linkedInquiryId = searchParams.get('inquiryId') ?? '';
@@ -62,7 +69,13 @@ export default function AdmissionInquiriesScreen() {
   const [selectedInquiry, setSelectedInquiry] = useState<AdmissionInquiry | null>(null);
   const [followUpInquiry, setFollowUpInquiry] = useState<AdmissionInquiry | null>(null);
   const [historyInquiry, setHistoryInquiry] = useState<AdmissionInquiry | null>(null);
-  const [dismissedInquiryId, setDismissedInquiryId] = useState('');
+  const [pendingInquiryOrigin, setPendingInquiryOrigin] = useState<string | null>(null);
+  useEffect(() => {
+    if (pendingInquiryOrigin !== null && linkedInquiryId !== pendingInquiryOrigin) {
+      setSelectedInquiry(null);
+      setPendingInquiryOrigin(null);
+    }
+  }, [linkedInquiryId, pendingInquiryOrigin]);
   const [scopeLoading, setScopeLoading] = useState(true);
   const [sorts, setSorts] = useState<
     Array<{ column: string; direction: 'asc' | 'desc'; originalId?: string }>
@@ -93,7 +106,7 @@ export default function AdmissionInquiriesScreen() {
   const currentUserId = useSelector(
     (state: RootState) => state.auth.user?.sub as string | undefined
   );
-  const { canManage } = getAdmissionInquiryAccess(permissions);
+  const { canView, canManage } = getAdmissionInquiryAccess(permissions);
   const dashboardFollowUps = searchParams.get('dashboard') === 'inquiry-followups';
   const listFilters = buildAdmissionInquiryListFilters(tableFilters, search, currentUserId, {
     excludePostApplication: !dashboardFollowUps,
@@ -127,7 +140,11 @@ export default function AdmissionInquiriesScreen() {
       skip: skipList,
     }
   );
-  const { data: linkedInquiry } = useGetAdmissionInquiryQuery(linkedInquiryId, {
+  const {
+    currentData: linkedInquiry,
+    isError: linkedInquiryError,
+    refetch: refetchLinkedInquiry,
+  } = useGetAdmissionInquiryQuery(linkedInquiryId, {
     skip: !linkedInquiryId,
   });
   const rowOptions = useMemo(
@@ -136,13 +153,18 @@ export default function AdmissionInquiriesScreen() {
   );
   const openInquiry = useCallback(
     (inquiry: AdmissionInquiry) => {
-      setDismissedInquiryId('');
+      if (canView) {
+        preloadInquiryWorkspace(dispatch, inquiry.id);
+        loadInquiryOverviewForm().catch(() => undefined);
+      }
+      setPendingInquiryOrigin(linkedInquiryId);
       setSelectedInquiry(inquiry);
-      const next = new URLSearchParams(searchParams.toString());
-      next.set('inquiryId', inquiry.id);
-      router.push(`${studentPaths.enrollment.inquiries}?${next.toString()}`);
+      const next = new URL(window.location.href);
+      next.searchParams.set('inquiryId', inquiry.id);
+      // Selecting an Inquiry changes client state on this route, not its server content.
+      window.history.pushState(null, '', next);
     },
-    [router, searchParams]
+    [linkedInquiryId, canView, dispatch]
   );
 
   const columns = useMemo(() => {
@@ -171,28 +193,44 @@ export default function AdmissionInquiriesScreen() {
     openInquiry,
   ]);
   const activeInquiry =
-    selectedInquiry ??
-    (linkedInquiryId && linkedInquiryId !== dismissedInquiryId ? linkedInquiry : null) ??
-    null;
+    (pendingInquiryOrigin === linkedInquiryId ? selectedInquiry : null) ??
+    (linkedInquiry?.id === linkedInquiryId ? linkedInquiry : null);
   if (activeInquiry) {
     return (
       <AdmissionInquiryManagementPage
+        key={activeInquiry.id}
         inquiry={activeInquiry}
         onClose={() => {
-          setDismissedInquiryId(activeInquiry.id);
+          setPendingInquiryOrigin(null);
           setSelectedInquiry(null);
-          const next = new URLSearchParams(searchParams.toString());
-          next.delete('inquiryId');
-          const query = next.toString();
-          router.push(
-            query
-              ? `${studentPaths.enrollment.inquiries}?${query}`
-              : studentPaths.enrollment.inquiries
-          );
+          const next = new URL(window.location.href);
+          next.searchParams.delete('inquiryId');
+          window.history.pushState(null, '', next);
         }}
       />
     );
   }
+  if (linkedInquiryId)
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <CustomBreadcrumbs
+          heading="Edit Inquiry"
+          description="Review and update the selected inquiry."
+          links={[
+            { name: 'Inquiries', href: studentPaths.enrollment.inquiries },
+            { name: 'Edit Inquiry' },
+          ]}
+        />
+        {linkedInquiryError ? (
+          <AdmissionQueryError onRetry={() => refetchLinkedInquiry()} />
+        ) : (
+          <Stack aria-label="Loading Inquiry" aria-busy="true" spacing={2}>
+            <Skeleton variant="rounded" height={84} />
+            <Skeleton variant="rounded" height={280} />
+          </Stack>
+        )}
+      </Box>
+    );
   return (
     <Box
       sx={{
@@ -275,7 +313,20 @@ export default function AdmissionInquiriesScreen() {
           flexDirection: 'column',
         }}
       >
-        {handoff.moving && <LinearProgress aria-label="Moving Inquiry to the Next Stage" />}
+        {handoff.moving && (
+          <Stack
+            role="status"
+            aria-label="Moving Inquiry to the Next Stage"
+            aria-busy
+            direction="row"
+            spacing={2}
+            sx={{ px: 2, py: 1, ...skeletonReducedMotionSx }}
+          >
+            <Skeleton width="40%" height={24} />
+            <Skeleton width="25%" height={24} />
+            <Skeleton width="20%" height={24} />
+          </Stack>
+        )}
         <CustomizableTable
           tableId="admission-inquiries"
           tableTitle="Admission Inquiries"
@@ -286,6 +337,7 @@ export default function AdmissionInquiriesScreen() {
           isRefreshing={
             Boolean(data) && isFetching && !scopeLoading && !skipList && !handoff.moving
           }
+          refreshIndicator="skeleton"
           errorContent={
             isError && !skipList && !scopeLoading && !data?.items.length ? (
               <AdmissionQueryError onRetry={() => refetch()} />

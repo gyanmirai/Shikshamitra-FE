@@ -60,10 +60,10 @@ export function canStageTypeCompleteForStatus(
     case 7: // Approval
       return RECORDED_DECISION_STATUSES.has(applicationStatus);
     case 4: // Finance fee structure confirmation
+    case 5: // Document verification can precede form submission
       return applicationStatus === 0 || ACTIVE_POST_SUBMISSION_STATUSES.has(applicationStatus);
     case 9: // Existing seat/identity handoff
     case 10: // Existing enrollment handoff
-    case 5: // Document verification
       return ACTIVE_POST_SUBMISSION_STATUSES.has(applicationStatus);
     default:
       return false;

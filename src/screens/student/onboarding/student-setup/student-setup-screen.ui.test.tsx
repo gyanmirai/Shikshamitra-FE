@@ -8,10 +8,13 @@ import { defaultSettings } from 'src/components/settings/config-settings';
 import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import StudentSetupScreen from './index';
+import { preloadStudentSetup } from './preload-student-setup';
 import { useStudentSetupAssignment } from './use-student-setup-assignment';
 import { studentOnboardingTestData } from './student-onboarding-test-fixtures';
 
 import type StudentSetupTable from './student-setup-table';
+
+vi.mock('./preload-student-setup', () => ({ preloadStudentSetup: vi.fn() }));
 
 const mocks = vi.hoisted(() => ({
   params: new URLSearchParams(),
@@ -21,6 +24,8 @@ const mocks = vi.hoisted(() => ({
   casesAvailable: true,
   casesFetching: false,
   casesError: false,
+  optionsFetching: false,
+  optionsAvailable: true,
   focusedCaseFetching: false,
   focusedCaseError: false,
   toastError: vi.fn(),
@@ -143,9 +148,9 @@ vi.mock('src/redux/student/onboarding/student-onboarding-api', () => ({
     refetch: mocks.refetchCase,
   }),
   useGetStudentOnboardingFilterOptionsQuery: () => ({
-    currentData: mocks.options,
+    currentData: mocks.optionsAvailable ? mocks.options : undefined,
     isLoading: false,
-    isFetching: false,
+    isFetching: mocks.optionsFetching,
     isError: false,
   }),
   useActivateStudentOnboardingMutation: () => [vi.fn(), { isLoading: false }],
@@ -264,6 +269,7 @@ vi.mock('./student-setup-table', () => ({
     onColumnFilterChange,
     columnFilters,
     isLoading,
+    isRefreshing,
     onOpen,
     onOpenTask,
   }: ComponentProps<typeof StudentSetupTable>) => (
@@ -272,6 +278,7 @@ vi.mock('./student-setup-table', () => ({
       data-selection={String(showSelection)}
       data-page={page}
       data-loading={String(isLoading)}
+      data-refreshing={String(isRefreshing)}
     >
       <input aria-label="Search table" />
       <output data-testid="selected-students">{selectedStudentIds.join(',')}</output>
@@ -344,6 +351,8 @@ describe('Student Setup workspace selection wiring', () => {
     mocks.casesAvailable = true;
     mocks.casesFetching = false;
     mocks.casesError = false;
+    mocks.optionsFetching = false;
+    mocks.optionsAvailable = true;
     mocks.focusedCaseFetching = false;
     mocks.focusedCaseError = false;
     mocks.rows = [
@@ -368,6 +377,69 @@ describe('Student Setup workspace selection wiring', () => {
       mocks.dirty = false;
       mocks.manualEditing = false;
     });
+  });
+
+  it.each([true, false])(
+    'prepares the selected case only with the existing View grant (%s)',
+    async (canView) => {
+      setRoute('readiness');
+      mocks.permissions.push({ name: 'Students.Onboarding.View', isGranted: canView });
+      render(element);
+      await userEvent.click(screen.getByRole('button', { name: 'Open setup case-1' }));
+      expect(preloadStudentSetup).toHaveBeenCalledTimes(canView ? 1 : 0);
+      if (canView) expect(preloadStudentSetup).toHaveBeenCalledWith(expect.any(Function), 'case-1');
+    }
+  );
+
+  it('does not prepare case endpoints for a legacy student row', async () => {
+    setRoute('readiness');
+    mocks.permissions.push({ name: 'Students.Onboarding.View', isGranted: true });
+    mocks.rows = [{ ...studentOnboardingTestData[0], id: 'legacy-1', source: 'legacy-student' }];
+    render(element);
+    await userEvent.click(screen.getByRole('button', { name: 'Open setup legacy-1' }));
+    expect(preloadStudentSetup).not.toHaveBeenCalled();
+  });
+
+  it.each(['readiness', 'fees', 'credentials'])('shows prerequisite loading for %s', (view) => {
+    setRoute(view);
+    mocks.optionsAvailable = false;
+    mocks.optionsFetching = true;
+    render(element);
+    expect(screen.getByTestId('worklist')).toHaveAttribute('data-loading', 'true');
+  });
+
+  it('shows refreshing while keeping valid worklist rows', () => {
+    mocks.casesFetching = true;
+    render(element);
+    expect(screen.getByTestId('worklist')).toHaveAttribute('data-loading', 'false');
+    expect(screen.getByTestId('worklist')).toHaveAttribute('data-refreshing', 'true');
+  });
+
+  it('suspends hidden worklist polling while the student workspace is open', async () => {
+    setRoute('readiness');
+    mocks.rows = [
+      {
+        ...studentOnboardingTestData[0],
+        id: 'case-1',
+        source: 'onboarding-case',
+        studentEnrollmentId: 'enrollment',
+        credentialsPending: true,
+        status: 3,
+      },
+    ];
+    vi.useFakeTimers();
+    try {
+      const view = render(element);
+      fireEvent.click(screen.getByRole('button', { name: 'Open setup case-1' }));
+      view.rerender(element);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(30_000);
+      });
+      expect(mocks.refetchList).not.toHaveBeenCalled();
+      view.unmount();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('maps the simple status label to the existing numeric URL filter', () => {

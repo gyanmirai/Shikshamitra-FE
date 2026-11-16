@@ -2,17 +2,10 @@ import { parseDateOnly } from 'src/utils/date-only';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
+import { skeletonReducedMotionSx } from 'src/theme/styles/skeleton';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
-import {
-  Stack,
-  Button,
-  Skeleton,
-  TextField,
-  Typography,
-  LinearProgress,
-  InputAdornment,
-} from '@mui/material';
+import { Stack, Button, Skeleton, TextField, Typography, InputAdornment } from '@mui/material';
 
 import { ADMISSION_DATE_FORMAT } from '../admission-date-formats';
 
@@ -27,7 +20,16 @@ export function AdmissionJoiningDateField({
 }) {
   const { state, query, value, error, stale, previewPending, previewQuery } = controller;
   if (!state && (query.isLoading || query.isFetching))
-    return <Skeleton aria-label="Loading Actual Joining Date" variant="rounded" height={44} />;
+    return (
+      <Stack
+        role="status"
+        aria-label="Loading Actual Joining Date"
+        aria-busy
+        sx={skeletonReducedMotionSx}
+      >
+        <Skeleton aria-hidden variant="rounded" height={44} />
+      </Stack>
+    );
   if (!state || query.isError || stale)
     return (
       <Stack spacing={1} alignItems="flex-start">
@@ -51,7 +53,7 @@ export function AdmissionJoiningDateField({
       </Stack>
     );
   return (
-    <Stack spacing={1}>
+    <Stack spacing={1} sx={skeletonReducedMotionSx}>
       {state.isLocked || !state.canEdit ? (
         <TextField
           label="Actual Joining Date"
@@ -106,7 +108,12 @@ export function AdmissionJoiningDateField({
           />
         </ShakingTextField>
       )}
-      {previewPending && <LinearProgress aria-label="Calculating Fee Preview" />}
+      {previewPending && (
+        <Stack role="status" aria-label="Calculating Fee Preview" aria-busy spacing={0.5}>
+          <Skeleton aria-hidden variant="text" width="45%" height={18} />
+          <Skeleton aria-hidden variant="text" width="65%" height={24} />
+        </Stack>
+      )}
       {state.canPreview && !state.isLocked && controller.previewFailed && (
         <Stack spacing={1} alignItems="flex-start">
           <StudentFeedback

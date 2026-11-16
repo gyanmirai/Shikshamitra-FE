@@ -51,7 +51,8 @@ export function useApplicationDetail(
 ) {
   const applicationQuery = useGetAdmissionApplicationQuery(id);
   // Both endpoints enforce application access. Neither response depends on the other.
-  const workflowQuery = useGetAdmissionApplicationWorkflowQuery(id);
+  const workflowQueryResult = useGetAdmissionApplicationWorkflowQuery(id);
+  const workflowQuery = { ...workflowQueryResult, data: workflowQueryResult.currentData };
   const selectedStage =
     workflowQuery.data?.stages.find(
       (stage) => stage.id === (selectedStageId ?? workflowQuery.data?.currentStageInstanceId)
@@ -62,7 +63,9 @@ export function useApplicationDetail(
     [...(workflowQuery.data?.stages ?? [])].reverse().find((stage) => stage.status >= 2);
   const requiresForm = view === 'form' || (view === 'journey' && selectedStage?.stageType === 1);
   const formQueryResult = useGetAdmissionApplicationFormQuery(
-    applicationQuery.data?.id === id && requiresForm ? id : skipToken
+    // Form reads independently enforce application access; only the server's
+    // selected workflow stage is needed, not the separate application response.
+    requiresForm ? id : skipToken
   );
   // RTK Query's data may retain the preceding argument's result while the new
   // application loads. Only currentData belongs to this application's form.

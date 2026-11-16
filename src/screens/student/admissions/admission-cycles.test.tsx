@@ -8,7 +8,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { render, screen, within, waitFor, fireEvent } from '@testing-library/react';
+import { act, render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import AdmissionCyclesScreen from './admission-cycles';
 
@@ -45,6 +45,8 @@ const mocks = vi.hoisted(() => ({
   },
   errorToast: vi.fn(),
   dismissToast: vi.fn(),
+  validate: vi.fn(),
+  guardedProps: null as null | { action: string | null; validation: unknown; onClose: () => void },
 }));
 
 vi.mock('./use-admission-cycle-filters', () => ({
@@ -86,6 +88,7 @@ vi.mock('src/redux/student/admissions/admission-cycles-api', () => ({
       () => [vi.fn(), { isLoading: false }],
     ])
   ),
+  useValidateAdmissionCycleMutation: () => [mocks.validate, { isLoading: false }],
 }));
 vi.mock('src/components/toast', () => ({
   shikshaMitraToast: { error: mocks.errorToast, dismiss: mocks.dismissToast },
@@ -93,7 +96,12 @@ vi.mock('src/components/toast', () => ({
 // Dialog workflows have their own tests. Keep the real table, toolbar, row actions,
 // skeletons, empty-state illustration and Student error presentation mounted here.
 vi.mock('./admission-cycle-dialog', () => ({ AdmissionCycleDialog: () => null }));
-vi.mock('./admission-cycle-action-dialog', () => ({ AdmissionCycleActionDialog: () => null }));
+vi.mock('./admission-cycle-action-dialog', () => ({
+  AdmissionCycleActionDialog: (props: NonNullable<typeof mocks.guardedProps>) => {
+    mocks.guardedProps = props;
+    return null;
+  },
+}));
 vi.mock('./admission-cycle-configuration-dialog', () => ({
   AdmissionCycleConfigurationDialog: () => null,
 }));
@@ -170,6 +178,62 @@ describe('Admission periods table states', () => {
     });
   });
 
+  it.each(['success', 'failure'])(
+    'ignores an older validation %s after cancel and reopening another cycle',
+    async (outcome) => {
+      let resolve!: (value: unknown) => void;
+      let reject!: (reason: Error) => void;
+      const stale = new Promise((accept, fail) => {
+        resolve = accept;
+        reject = fail;
+      });
+      const fresh = { isValid: true, errors: [], warnings: [] };
+      mocks.validate
+        .mockReturnValueOnce({ unwrap: () => stale })
+        .mockReturnValueOnce({ unwrap: async () => fresh });
+      mocks.result.data = { items: [cycle], totalCount: 1 };
+      const view = renderScreen();
+      const openPublish = async () => {
+        const direct = screen.queryByRole('button', { name: 'Validate & Publish' });
+        if (direct) fireEvent.click(direct);
+        else {
+          fireEvent.click(screen.getByRole('button', { name: /More actions/i }));
+          fireEvent.click(await screen.findByRole('menuitem', { name: 'Validate & Publish' }));
+        }
+      };
+      await openPublish();
+      expect(mocks.guardedProps?.validation).toBeNull();
+      act(() => mocks.guardedProps?.onClose());
+      mocks.result.data = { items: [{ ...cycle, id: 'cycle-2' }], totalCount: 1 };
+      // A table-state update refreshes rows without replacing the owning screen state.
+      view.rerender(
+        <Provider
+          store={configureStore({
+            reducer: () => ({
+              globalState: { currentYear: { id: 'year-1' } },
+              auth: { permissions: [{ name: 'Students.Admissions.Add', isGranted: true }] },
+            }),
+          })}
+        >
+          <ThemeProvider theme={theme}>
+            <AdmissionCyclesScreen />
+          </ThemeProvider>
+        </Provider>
+      );
+      await openPublish();
+      await waitFor(() => expect(mocks.guardedProps?.validation).toEqual(fresh));
+      await act(async () => {
+        if (outcome === 'success')
+          resolve({ isValid: false, errors: [{ message: 'Old failure' }], warnings: [] });
+        else reject(new Error('Old failure'));
+        await Promise.resolve();
+      });
+      expect(mocks.guardedProps?.action).toBe('publish');
+      expect(mocks.guardedProps?.validation).toEqual(fresh);
+      expect(mocks.errorToast).not.toHaveBeenCalled();
+    }
+  );
+
   it.each(['isLoading', 'isFetching'] as const)(
     'keeps the known header, filters, table columns and pagination during %s without claiming empty',
     (loadingFlag) => {
@@ -211,6 +275,14 @@ describe('Admission periods table states', () => {
     expect(screen.getByRole('button', { name: 'Columns' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Export' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /full.?screen/i })).toBeInTheDocument();
+  });
+
+  it('retains records and avoids first-load skeletons during refresh', () => {
+    mocks.result.data = { items: [cycle], totalCount: 1 };
+    mocks.result.isFetching = true;
+    renderScreen();
+    expect(screen.getByText('Fresh Admission')).toBeInTheDocument();
+    expect(screen.getByRole('table').querySelector('.MuiSkeleton-root')).not.toBeInTheDocument();
   });
 
   it('shows the successful first-use empty state only after loading completes', () => {

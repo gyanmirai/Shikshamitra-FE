@@ -108,6 +108,20 @@ function fixture(overrides: Partial<StudentOnboardingCase> = {}) {
 }
 
 describe('quick academic save', () => {
+  it.each([{ rollNumber: 7 }, { grNumber: '001' }])(
+    'uses the initial fresh case for the first identifier command',
+    async (existing) => {
+      const { services, initial } = fixture(existing);
+      await saveQuickAcademic({
+        baseline: initial,
+        values: quickAcademicInitialValues(initial, 'both'),
+        grPolicy: 'both',
+        services,
+        onSaved: vi.fn(),
+      });
+      expect(services.getCase).toHaveBeenCalledOnce();
+    }
+  );
   it('rejects identifier assignment before any writes when division is missing', async () => {
     const { services, initial } = fixture({ divisionId: null });
     await expect(

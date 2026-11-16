@@ -276,7 +276,7 @@ export default function StudentQuickSetupPage({
           saveAcademic: editor.save,
           saveFees: async (options) => {
             if (!feesRef.current) throw new Error('Wait for fee structures to load, then retry.');
-            await feesRef.current.save(options);
+            return feesRef.current.save(options);
           },
           getCase: () => getCase(student.id, false).unwrap(),
           previewActivation: () => previewActivation(student.id, false).unwrap(),

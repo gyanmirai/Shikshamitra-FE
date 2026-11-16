@@ -194,6 +194,8 @@ export function StudentProfileView({
           alignItems: { xs: 'stretch', sm: 'center' },
           flexShrink: 0,
           minWidth: 0,
+          borderRadius: 1,
+          overflow: 'hidden',
         }}
       >
         <CustomTabs

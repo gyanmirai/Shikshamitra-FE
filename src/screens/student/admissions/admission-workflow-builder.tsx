@@ -70,13 +70,21 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
   const workflowQuery = useGetAdmissionWorkflowQuery(workflowId);
   const stageTypesQuery = useGetAdmissionWorkflowStageTypesQuery();
   const publishedFormsQuery = useGetAdmissionFormsQuery({ status: 1, maxResultCount: 100 });
-  const usageQuery = useGetAdmissionWorkflowUsageQuery(workflowId, { skip: !canViewUsage });
-  const versionsQuery = useGetAdmissionWorkflowVersionsQuery(workflowId);
   const workflow = workflowQuery.data;
   const draft = useWorkflowBuilderDraft(
     workflow,
-    searchParams.get('panel') === 'usage' ? 'usage' : null
+    searchParams.get('panel') === 'usage'
+      ? 'usage'
+      : searchParams.get('panel') === 'preview'
+        ? 'preview'
+        : null
   );
+  const usageQuery = useGetAdmissionWorkflowUsageQuery(workflowId, {
+    skip: !canViewUsage || draft.sidePanel !== 'usage',
+  });
+  const versionsQuery = useGetAdmissionWorkflowVersionsQuery(workflowId, {
+    skip: draft.sidePanel !== 'versions',
+  });
   const registrationStageConfigurationJson = [...draft.stages]
     .sort((left, right) => left.displayOrder - right.displayOrder)
     .find((stage) => stage.stageType === 1)?.configurationJson;
@@ -336,6 +344,9 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
         stages={draft.stages}
         transitions={draft.transitions}
         versions={versionsQuery.data}
+        versionsLoading={versionsQuery.isFetching}
+        versionsError={versionsQuery.isError}
+        onRetryVersions={() => versionsQuery.refetch()}
         usage={usageQuery.currentData}
         usageLoading={usageQuery.isLoading}
         usageError={usageQuery.isError}

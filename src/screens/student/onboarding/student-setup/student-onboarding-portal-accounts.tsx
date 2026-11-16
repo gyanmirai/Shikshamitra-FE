@@ -262,10 +262,7 @@ const StudentOnboardingPortalAccounts = forwardRef<StudentOnboardingPortalAccoun
     const unavailable =
       credentials.isFetching || credentials.isError || mustRefresh || !workspace?.concurrencyStamp;
     const canEnableStudentAccess = Boolean(
-      canManage &&
-      workspace?.canEnableStudentAccess &&
-      workspace.studentAccessEnabled === false &&
-      !unavailable
+      canManage && workspace?.canEnableStudentAccess && workspace.studentAccessEnabled === false
     );
     useEffect(() => {
       if (!canEnableStudentAccess || accessEditorCase !== student.id) setAccessEditorCase(null);
@@ -1441,7 +1438,7 @@ const StudentOnboardingPortalAccounts = forwardRef<StudentOnboardingPortalAccoun
                     size="small"
                     color="inherit"
                     sx={{ alignSelf: 'flex-start' }}
-                    disabled={busy}
+                    disabled={busy || unavailable}
                     startIcon={<Iconify icon={GlobalIcons.admissionStudent} width={18} />}
                     onClick={() => setAccessEditorCase(student.id)}
                   >
@@ -1494,7 +1491,7 @@ const StudentOnboardingPortalAccounts = forwardRef<StudentOnboardingPortalAccoun
                   <Button
                     size="small"
                     color="inherit"
-                    disabled={busy}
+                    disabled={busy || unavailable}
                     onClick={() => setAccessEditorCase(student.id)}
                   >
                     Enable student login
@@ -1573,6 +1570,13 @@ const StudentOnboardingPortalAccounts = forwardRef<StudentOnboardingPortalAccoun
             caseId={student.id}
             caseLabel={student.studentName}
             concurrencyStamp={workspace.concurrencyStamp}
+            unavailable={unavailable}
+            validateAccess={async () => {
+              const current = await refetchCurrent(student.id);
+              if (!current?.canEnableStudentAccess || current.studentAccessEnabled !== false)
+                throw new Error('Refresh App Login and review Student access before enabling it.');
+              return current.concurrencyStamp;
+            }}
             onClose={() => setAccessEditorCase(null)}
             onSaved={() => {
               refetchCurrent(student.id).catch(() => {});

@@ -8,13 +8,15 @@ import type {
 
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useRef, useState, useEffect } from 'react';
 import CustomTooltip from 'src/components/custom-tooltip';
 import CustomAccordion from 'src/components/custom-accordian';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { StudentFeedback } from 'src/components/student-feedback';
+import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
 import { Box, Card, Chip, Paper, Stack, IconButton, Typography, CardContent } from '@mui/material';
 import { useLazyGetAdmissionApplicationQuery } from 'src/redux/student/admissions/admission-applications-api';
 
+import { ApplicationDecisionForm } from './application-decision-form';
 import { ApplicationDecisionDialog } from './application-decision-dialog';
 import { ApplicationDecisionStatus } from './application-decision-status';
 import { ApplicationDecisionActions } from './application-decision-actions';
@@ -40,6 +42,7 @@ type Props = {
   disabled?: boolean;
   navigationDisabled?: boolean;
   onBusyChange?: (busy: boolean) => void;
+  onDirtyChange?: (dirty: boolean) => void;
   workflow?: AdmissionApplicationWorkflow;
   onSelectStage?: (stageId: string) => void;
   onFinalizationOpenChange?: (open: boolean) => void;
@@ -56,6 +59,7 @@ export function ApplicationDecisionCard({
   disabled = false,
   navigationDisabled = disabled,
   onBusyChange,
+  onDirtyChange,
   workflow,
   onSelectStage,
   onFinalizationOpenChange,
@@ -74,12 +78,21 @@ export function ApplicationDecisionCard({
   const [action, setAction] = useState<AdmissionDecisionAction | null>(null);
   const [decisionApplication, setDecisionApplication] = useState(application);
   const [preparingFinalization, setPreparingFinalization] = useState(false);
+  const [decisionFormBusy, setDecisionFormBusy] = useState(false);
+  const [inlineDraftDirty, setInlineDraftDirty] = useState(false);
+  const onDecisionDirtyChange = useCallback(
+    (dirty: boolean) => {
+      setInlineDraftDirty(dirty);
+      onDirtyChange?.(dirty);
+    },
+    [onDirtyChange]
+  );
   const [preparationError, setPreparationError] = useState(false);
   const preparingRef = useRef(false);
   const { canDecide, canFinalize } = decisions;
   useEffect(() => {
-    onBusyChange?.(decisions.isBusy || preparingFinalization);
-  }, [decisions.isBusy, preparingFinalization, onBusyChange]);
+    onBusyChange?.(decisions.isBusy || preparingFinalization || decisionFormBusy);
+  }, [decisions.isBusy, preparingFinalization, decisionFormBusy, onBusyChange]);
   useEffect(() => () => onBusyChange?.(false), [onBusyChange]);
   useEffect(() => {
     onFinalizationOpenChange?.(compact && finalizationDialog.value && application.status !== 11);
@@ -88,6 +101,8 @@ export function ApplicationDecisionCard({
   const visibleActions = ACTIONS.filter(
     (item) => canDecide && canPerformAdmissionDecision(application.status, item)
   );
+  // Approved cases keep the guarded change-decision dialog beside finalization.
+  const inlineDecision = compact && (application.status !== 6 || inlineDraftDirty);
   const openFinalization = async () => {
     if (preparingRef.current) return;
     finalizationDialog.onTrue();
@@ -145,7 +160,7 @@ export function ApplicationDecisionCard({
     />
   );
 
-  if (application.status === 11)
+  if (application.status === 11 && !inlineDraftDirty)
     return (
       <ApplicationFinalizedSummary
         application={application}
@@ -163,6 +178,30 @@ export function ApplicationDecisionCard({
     );
 
   if (compact && finalizationDialog.value) return finalization;
+
+  const decisionHistory = compact ? (
+    <CustomAccordion
+      title="Decision History"
+      expanded={history.value}
+      onChange={history.onToggle}
+      content={
+        <ApplicationDecisionHistory
+          isLoading={decisions.historyQuery.isLoading}
+          isError={decisions.historyQuery.isError}
+          data={decisions.historyQuery.data}
+          onRetry={() => decisions.historyQuery.refetch()}
+          compact
+        />
+      }
+    />
+  ) : (
+    <ApplicationDecisionHistory
+      isLoading={decisions.historyQuery.isLoading}
+      isError={decisions.historyQuery.isError}
+      data={decisions.historyQuery.data}
+      onRetry={() => decisions.historyQuery.refetch()}
+    />
+  );
 
   return (
     <Card
@@ -196,7 +235,7 @@ export function ApplicationDecisionCard({
                 </CustomTooltip>
               )}
             </Stack>
-            {compact && (
+            {compact && (application.status === 6 || !visibleActions.length) && (
               <Typography variant="body2" color="text.secondary">
                 {application.status === 6
                   ? 'Approved. Finalize Admission Once the Journey Is Complete.'
@@ -234,6 +273,7 @@ export function ApplicationDecisionCard({
                   },
                   gap: 1.5,
                   mt: 1.5,
+                  alignItems: 'start',
                 }
               : undefined
           }
@@ -261,9 +301,15 @@ export function ApplicationDecisionCard({
                 gap={1}
                 sx={{ mb: 1.5, pb: 1, borderBottom: 1, borderColor: 'divider' }}
               >
-                <Typography variant="subtitle1" component="h3">
-                  Record Decision
-                </Typography>
+                <Stack direction="row" alignItems="center" spacing={0.5}>
+                  <Typography variant="subtitle1" component="h3">
+                    Record Decision
+                  </Typography>
+                  <InfoTooltipIcon
+                    label="Record Decision Information"
+                    title="Choose an outcome, then record the decision. Waitlist and rejection require a reason. Each decision is saved in the application history."
+                  />
+                </Stack>
                 <Chip
                   label={getAdmissionApplicationStatusLabel(application.status)}
                   color={getAdmissionApplicationStatusColor(application.status)}
@@ -272,35 +318,40 @@ export function ApplicationDecisionCard({
               </Stack>
             )}
             <ApplicationDecisionStatus application={application} compact={compact} />
-            {compact && visibleActions.length > 0 && (
-              <>
-                <Typography variant="subtitle2">Choose an Outcome</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Each decision is recorded in the application history.
-                </Typography>
-              </>
+            {inlineDecision && (visibleActions.length > 0 || inlineDraftDirty) && (
+              <ApplicationDecisionForm
+                key={application.id}
+                application={application}
+                actions={visibleActions}
+                busy={disabled || decisions.isBusy}
+                onBusyChange={setDecisionFormBusy}
+                onDirtyChange={onDecisionDirtyChange}
+                onReload={() => reloadApplication(application.id).unwrap()}
+                onSubmit={async (next, input) => {
+                  if (decisions.isBusy || !visibleActions.includes(next)) return false;
+                  const success = await decisions.runDecision(next, input);
+                  if (success && next === 'approve') openFinalization();
+                  return success;
+                }}
+              >
+                {decisionHistory}
+              </ApplicationDecisionForm>
             )}
-            {visibleActions.length > 0 && (
+            {!inlineDecision && visibleActions.length > 0 && (
               <ApplicationDecisionActions
                 actions={visibleActions}
                 busy={disabled || decisions.isBusy}
-                compact={compact}
                 onSelect={(next) => {
                   setDecisionApplication(application);
                   setAction(next);
                 }}
               />
             )}
-            {compact && visibleActions.some((item) => item === 'waitlist' || item === 'reject') && (
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-                Waitlist and rejection require a reason.
-              </Typography>
-            )}
             {application.status === 6 &&
               canFinalize &&
               (journeyCompleted || onPrepareFinalization) && (
                 <ApplicationFinalizationCallout
-                  busy={disabled || decisions.isBusy}
+                  busy={disabled || decisions.isBusy || inlineDraftDirty}
                   onOpen={() => {
                     openFinalization();
                   }}
@@ -318,29 +369,8 @@ export function ApplicationDecisionCard({
                 application details.
               </StudentFeedback>
             )}
-            {compact ? (
-              <CustomAccordion
-                title="Decision History"
-                expanded={history.value}
-                onChange={history.onToggle}
-                content={
-                  <ApplicationDecisionHistory
-                    isLoading={decisions.historyQuery.isLoading}
-                    isError={decisions.historyQuery.isError}
-                    data={decisions.historyQuery.data}
-                    onRetry={() => decisions.historyQuery.refetch()}
-                    compact
-                  />
-                }
-              />
-            ) : (
-              <ApplicationDecisionHistory
-                isLoading={decisions.historyQuery.isLoading}
-                isError={decisions.historyQuery.isError}
-                data={decisions.historyQuery.data}
-                onRetry={() => decisions.historyQuery.refetch()}
-              />
-            )}
+            {(!inlineDecision || (visibleActions.length === 0 && !inlineDraftDirty)) &&
+              decisionHistory}
           </Box>
         </Box>
       </CardContent>
