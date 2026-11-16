@@ -23,6 +23,8 @@ type Props = {
   caseId: string;
   caseLabel: string;
   concurrencyStamp: string;
+  unavailable?: boolean;
+  validateAccess?: () => Promise<string>;
   onClose: () => void;
   onSaved: () => void;
 };
@@ -31,6 +33,8 @@ export default function StudentAppAccessDialog({
   caseId,
   caseLabel,
   concurrencyStamp,
+  unavailable = false,
+  validateAccess,
   onClose,
   onSaved,
 }: Props) {
@@ -55,10 +59,16 @@ export default function StudentAppAccessDialog({
         .required('Enter a correction reason.'),
     }),
     onSubmit: async ({ reason }, helpers) => {
-      if (submitting.current || !mounted.current) return;
+      if (submitting.current || !mounted.current || unavailable) return;
       submitting.current = true;
       try {
-        await enable({ id: caseId, reason: reason.trim(), concurrencyStamp }).unwrap();
+        const currentStamp = validateAccess ? await validateAccess() : concurrencyStamp;
+        if (!mounted.current) return;
+        await enable({
+          id: caseId,
+          reason: reason.trim(),
+          concurrencyStamp: currentStamp,
+        }).unwrap();
         if (!mounted.current) return;
         helpers.resetForm();
         shikshaMitraToast.success({
@@ -101,7 +111,7 @@ export default function StudentAppAccessDialog({
           noValidate: true,
           onSubmit: async (event) => {
             event.preventDefault();
-            if (busy || submitting.current) return;
+            if (busy || submitting.current || unavailable) return;
             const errors = await formik.validateForm();
             if (errors.reason) {
               await formik.setTouched({ reason: true });
@@ -173,7 +183,7 @@ export default function StudentAppAccessDialog({
             variant="contained"
             color="inherit"
             loading={busy}
-            disabled={busy}
+            disabled={busy || unavailable}
             startIcon={<Iconify icon={GlobalIcons.submit} width={18} />}
           >
             Submit

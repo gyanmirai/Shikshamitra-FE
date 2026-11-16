@@ -56,7 +56,18 @@ export function FormBuilderDetailFields({
             chip: {
               size: 'small',
               color: 'default',
-              sx: { bgcolor: 'action.selected', color: 'text.primary' },
+              variant: 'soft',
+              sx: {
+                bgcolor: 'action.selected',
+                color: 'text.primary',
+                border: 1,
+                borderColor: 'divider',
+                '& .MuiChip-deleteIcon': {
+                  color: 'text.secondary',
+                  opacity: 1,
+                  '&:hover': { color: 'text.primary' },
+                },
+              },
             },
           }}
           options={AVAILABLE_ADMISSION_FORM_LANGUAGES}

@@ -1,7 +1,7 @@
 import { it, vi, expect, describe, beforeEach } from 'vitest';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { render, screen, within, waitFor, fireEvent } from '@testing-library/react';
+import { act, render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import OnboardingSettingsPage from './onboarding-settings-page';
 import { defaultOnboardingSettings } from '../onboarding-settings-model';
@@ -271,6 +271,27 @@ describe('Onboarding numbering settings', () => {
       .toMatchObject({ status: 'draft', isActive: false });
     expect(persist.mock.calls[1][1][section].configurations[0])
       .toMatchObject({ status: 'published', isActive: true });
+  });
+
+  it('announces the publishing row while persistence is pending', async () => {
+    let finish!: () => void;
+    const persist = vi
+      .fn()
+      .mockResolvedValue(undefined)
+      .mockImplementationOnce(
+        () =>
+          new Promise<void>((resolve) => {
+            finish = resolve;
+          })
+      );
+    renderSettings(<GrNumberSettingsScreen />, persist);
+    const publish = screen.getByRole('button', { name: 'Publish Default GR series' });
+    fireEvent.click(publish);
+    expect(publish).toHaveAttribute('aria-busy', 'true');
+    expect(publish).toBeDisabled();
+    await act(async () => {
+      finish();
+    });
   });
 
   it('does not publish if saving the inherited draft fails and shows the backend reason', async () => {

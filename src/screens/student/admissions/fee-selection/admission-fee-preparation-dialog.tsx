@@ -11,13 +11,14 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
+import { skeletonReducedMotionSx } from 'src/theme/styles/skeleton';
 import { DetailGrid, DetailField } from 'src/components/detail-view';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
+import { Box, Stack, Button, Skeleton, TextField, DialogActions } from '@mui/material';
 import { amountError } from 'src/screens/finance/settings/FeeStructure/feeStructureModel';
-import { Box, Stack, Button, TextField, DialogActions, LinearProgress } from '@mui/material';
 import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 import AssignmentMoneyInput from 'src/screens/finance/FeeStructureAssign/Components/AssignmentMoneyInput';
 import FeeProrationResult from 'src/screens/finance/FeeCollection/FeeCollectionComponent/FeeProrationResult';
@@ -194,7 +195,21 @@ export function AdmissionFeePreparationDialog({
                 })}
               </Stack>
             </FormSectionCard>
-            {preview.pending && <LinearProgress aria-label="Calculating variable fee preview" />}
+            {preview.pending && (
+              <Box
+                role="status"
+                aria-label="Calculating Variable Fee Preview"
+                aria-busy
+                sx={skeletonReducedMotionSx}
+              >
+                <DetailGrid>
+                  <DetailField
+                    label="Scheduled Fees"
+                    value={<Skeleton aria-hidden variant="text" width="60%" height={24} />}
+                  />
+                </DetailGrid>
+              </Box>
+            )}
             {preview.result && (
               <>
                 <FeeProrationResult result={preview.result.proration} />

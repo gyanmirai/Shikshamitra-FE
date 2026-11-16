@@ -425,6 +425,7 @@ function NumberingRulesScreen({
                       label: `Publish ${rowName(configuration)}`,
                       icon: 'mdi:publish',
                       disabled: Boolean(publishingId),
+                      loading: publishingId === configuration.id,
                       onClick: () => publish(configuration),
                     },
                   ]

@@ -2,7 +2,8 @@ import type { StudentOnboardingCase } from 'src/redux/student/onboarding/student
 
 export type StudentQuickSetupSaveServices = {
   saveAcademic: () => Promise<StudentOnboardingCase>;
-  saveFees: (options: { allowIncomplete: boolean }) => Promise<void>;
+  /** False explicitly acknowledges that no fee command changed the case. */
+  saveFees: (options: { allowIncomplete: boolean }) => Promise<boolean | void>;
   getCase: () => Promise<StudentOnboardingCase>;
   previewActivation: () => Promise<StudentOnboardingCase>;
   activateStudent: (
@@ -23,11 +24,11 @@ export async function runStudentQuickSetupSave({
   idempotencyKey,
   services,
 }: StudentQuickSetupSaveOptions): Promise<StudentOnboardingCase> {
-  await services.saveAcademic();
+  const current = await services.saveAcademic();
   // Fees may remain pending; an explicitly edited fee draft still validates and saves.
-  await services.saveFees({ allowIncomplete: true });
+  const feesWritten = await services.saveFees({ allowIncomplete: true });
 
-  if (!activate) return services.getCase();
+  if (!activate) return feesWritten === false ? current : services.getCase();
 
   const preview = await services.previewActivation();
   if (preview.status === 5) {

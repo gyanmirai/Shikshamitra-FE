@@ -545,6 +545,7 @@ export default function AdmissionAssessmentsScreen() {
                     ) : undefined
                   }
                   isRefreshing={applicants.isFetching && !!applicants.currentData}
+                  refreshIndicator="skeleton"
                   filters={tableFilters}
                   onServerFilter={(next) =>
                     updateWorkbench({

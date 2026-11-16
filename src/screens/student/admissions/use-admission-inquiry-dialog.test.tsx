@@ -12,6 +12,7 @@ import { it, vi, expect, afterEach, beforeEach } from 'vitest';
 import { clearCachedAuthSession } from 'src/redux/session-cache';
 import { act, cleanup, waitFor, renderHook } from '@testing-library/react';
 
+import { admissionInquirySchema } from './admission-inquiry-model';
 import { useAdmissionInquiryDialog } from './use-admission-inquiry-dialog';
 import { getInquiryOfferingUnavailableReason } from './use-admission-inquiry-class-offerings';
 
@@ -51,12 +52,12 @@ const catalogue = (offerings: AdmissionOfferingListItem[] = []) => ({
   })),
   offerings,
 });
-const createStore = () =>
+const createStore = (permissions: Array<{ name: string; isGranted: boolean }> = []) =>
   configureStore({
     reducer: {
       [api.reducerPath]: api.reducer,
       globalState: () => ({ currentYear: { id: 'year' } }),
-      auth: () => ({ permissions: [] }),
+      auth: () => ({ permissions }),
     },
     middleware: (defaults) => defaults().concat(api.middleware),
   });
@@ -92,6 +93,98 @@ const selectClass = async (
     );
   });
 };
+
+it.each([null, 'qa@example.invalid'])(
+  'creates an inquiry without automatic communication for staff with Send permission (email: %s)',
+  async (email) => {
+    store = createStore([
+      { name: 'Communication.Campaigns.Add', isGranted: true },
+      { name: 'Communication.Campaigns.Send', isGranted: true },
+    ]);
+    const available = offering('class-a');
+    const onClose = vi.fn();
+    let created = 0;
+    let communicationRequests = 0;
+    mswServer.use(
+      http.get(`${root}/capture-catalogue`, () =>
+        HttpResponse.json({ data: catalogue([available]) })
+      ),
+      http.get(`${root}/capture-context/${available.id}`, () =>
+        HttpResponse.json({
+          data: {
+            offering: available,
+            availability: { canCreateInquiry: true },
+            form: {
+              sections: [
+                {
+                  fields: [
+                    {
+                      code: 'CHILD',
+                      label: 'Student name',
+                      bindingKey: 'Applicant.FirstName',
+                      fieldType: 0,
+                    },
+                    {
+                      code: 'ADULT',
+                      label: 'Parent name',
+                      bindingKey: 'Guardian.FirstName',
+                      fieldType: 0,
+                    },
+                    {
+                      code: 'PHONE',
+                      label: 'Parent mobile',
+                      bindingKey: 'Guardian.Mobile',
+                      fieldType: 4,
+                    },
+                  ],
+                },
+              ],
+            },
+          },
+        })
+      ),
+      http.post(`${root}/duplicate-check`, () => HttpResponse.json({ data: [] })),
+      http.post(root, () => {
+        created += 1;
+        return HttpResponse.json({ data: { id: 'new-inquiry', applicantName: 'QA child', email } });
+      }),
+      http.post(`${root}/new-inquiry/communications`, () => {
+        communicationRequests += 1;
+        return HttpResponse.json({
+          data: {
+            campaignId: 'unexpected-campaign',
+            deliveryStarted: false,
+            message: 'Communication draft created, but delivery could not start.',
+          },
+        });
+      })
+    );
+    const { result } = renderHook(() => useAdmissionInquiryDialog(onClose), { wrapper });
+    await waitFor(() => expect(result.current.periods).toHaveLength(1));
+    await selectClass(result, 'class-a');
+    await waitFor(() => expect(result.current.canCreateInquiry).toBe(true));
+    await act(async () => {
+      await result.current.formik.setFieldValue(
+        'fields',
+        {
+          CHILD: 'QA child',
+          ADULT: 'QA parent',
+          PHONE: '9876543210',
+        },
+        false
+      );
+    });
+    await act(async () => {
+      await result.current.formik.submitForm();
+    });
+    await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
+    expect(created).toBe(1);
+    expect(communicationRequests).toBe(0);
+    expect(shikshaMitraToast.success).toHaveBeenCalledWith({ message: 'Inquiry created' });
+    expect(shikshaMitraToast.warning).not.toHaveBeenCalled();
+    expect(result.current.formik.values).not.toHaveProperty('sendAcknowledgement');
+  }
+);
 
 it.each(['guardian', 'father', 'mother'] as const)(
   'blocks blank %s mobile before either API and creates after it is corrected',
@@ -198,7 +291,7 @@ it.each(['guardian', 'father', 'mother'] as const)(
       await result.current.formik.setFieldValue('fields.PHONE', '9876543210', false);
     });
     await act(async () => {
-      await result.current.formik.submitForm();
+      await Promise.all([result.current.formik.submitForm(), result.current.formik.submitForm()]);
     });
     await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
     expect(duplicateChecks).toBe(1);
@@ -795,4 +888,32 @@ it('creates a sibling only after review using the saved parent source and never 
     createSeparateFamily: false,
     duplicateOverrideReason: null,
   });
+});
+
+it('reports busy for the entire held Formik validation before any mutation starts', async () => {
+  mswServer.use(
+    http.get(`${root}/capture-catalogue`, () => HttpResponse.json({ data: catalogue() }))
+  );
+  type ValidatedValues = Awaited<ReturnType<typeof admissionInquirySchema.validate>>;
+  let release!: (value: ValidatedValues) => void;
+  const validate = vi.spyOn(admissionInquirySchema, 'validate').mockImplementationOnce(
+    () =>
+      new Promise<ValidatedValues>((resolve) => {
+        release = resolve;
+      })
+  );
+  const { result } = renderHook(() => useAdmissionInquiryDialog(vi.fn()), { wrapper });
+  let submitted!: Promise<unknown>;
+  await act(async () => {
+    submitted = result.current.formik.submitForm();
+  });
+  expect(validate).toHaveBeenCalled();
+  expect(result.current.formik.isSubmitting).toBe(true);
+  expect(result.current.busy).toBe(true);
+  await act(async () => {
+    release(admissionInquirySchema.cast(result.current.formik.values));
+    await submitted;
+  });
+  expect(result.current.busy).toBe(false);
+  validate.mockRestore();
 });

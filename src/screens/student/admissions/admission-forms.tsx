@@ -107,6 +107,7 @@ export default function AdmissionFormsScreen() {
     canManage: actions.canManage,
     canPublish: actions.canPublish,
     canDelete: actions.canDelete,
+    creatingVersionId: actions.creatingVersionId,
     onEdit: (form) => actions.edit(form.id),
     onClone: actions.requestClone,
     onValidate: (form) => actions.validate(form.id),
@@ -209,6 +210,12 @@ export default function AdmissionFormsScreen() {
             ) : undefined
           }
           handleRowClick={(row) => preview((row as AdmissionForm).id)}
+          getRowAction={(row) => ({
+            label: `Preview ${(row as AdmissionForm).name}`,
+            onClick: () => preview((row as AdmissionForm).id),
+            pending: actions.pendingNavigationId === row.id,
+            pendingLabel: 'Opening form…',
+          })}
           rowProps={(row) => ({
             tabIndex: 0,
             sx: { cursor: 'pointer' },

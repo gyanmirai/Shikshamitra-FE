@@ -53,7 +53,7 @@ export function DocumentChecklistContent({
           />
         </Stack>
       )}
-      {layout !== 'table' && !readOnly && summary.blockers.length > 0 && (
+      {!readOnly && summary.blockers.length > 0 && (
         <StudentFeedback notificationKey="STU-0312" presentation="inline" severity="info">
           <Stack spacing={0.5}>
             {summary.blockers.map((blocker) => (

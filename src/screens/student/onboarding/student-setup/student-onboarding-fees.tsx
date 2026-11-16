@@ -28,7 +28,7 @@ import {
 import AdmissionFeeCollectionPanel from '../../admissions/fee-selection/admission-fee-collection-panel';
 
 export type StudentOnboardingFeesHandle = {
-  save: (options?: { allowIncomplete?: boolean }) => Promise<void>;
+  save: (options?: { allowIncomplete?: boolean }) => Promise<boolean | void>;
 };
 
 export type StudentOnboardingFeesState = {
@@ -74,15 +74,31 @@ export default function StudentOnboardingFees({
   const automaticallyConfirmed = feeState?.automaticallyConfirmedFromAdmissions === true;
   const lockedSnapshot =
     feeState?.isLocked || automaticallyConfirmed ? feeState?.selection : undefined;
+  const canLoadCandidates = Boolean(
+    caseState &&
+    feeState &&
+    !item.isError &&
+    !selection.isError &&
+    canManage &&
+    !feeState.isLocked &&
+    !automaticallyConfirmed &&
+    !lockedSnapshot &&
+    !caseState.studentEnrollmentId &&
+    ![4, 5, 6].includes(caseState.status)
+  );
   const candidates = useGetStudentOnboardingFeeCandidatesQuery(caseId, {
-    skip: Boolean(lockedSnapshot),
+    skip: !canLoadCandidates,
   });
-  const structures = lockedSnapshot ? [lockedSnapshot] : (candidates.currentData ?? []);
-  const readError = item.isError || selection.isError || (!lockedSnapshot && candidates.isError);
+  const structures = lockedSnapshot
+    ? [lockedSnapshot]
+    : !canLoadCandidates && feeState?.selection
+      ? [feeState.selection]
+      : (candidates.currentData ?? []);
+  const readError = item.isError || selection.isError || (canLoadCandidates && candidates.isError);
   const retry = () => {
     item.refetch();
     selection.refetch();
-    if (!lockedSnapshot) candidates.refetch();
+    if (canLoadCandidates) candidates.refetch();
   };
   const [confirm, saving] = useConfirmStudentOnboardingFeeStructureMutation();
   const form = useFormik({
@@ -123,7 +139,7 @@ export default function StudentOnboardingFees({
     !feeState ||
     item.isFetching ||
     selection.isFetching ||
-    (!lockedSnapshot && candidates.isFetching);
+    (canLoadCandidates && candidates.isFetching);
   const chosen = structures.find((candidate) => candidate.structureId === form.values.structureId);
   const confirmedUnchanged = Boolean(
     (feeState?.onboardingConfirmed ||
@@ -159,10 +175,10 @@ export default function StudentOnboardingFees({
         !form.dirty &&
         (confirmedUnchanged || !form.values.structureId || !canManage)
       )
-        return;
+        return false;
       if (readError || !caseState || !feeState)
         throw new Error('Refresh fee structures before saving.');
-      if (confirmedUnchanged) return;
+      if (confirmedUnchanged) return false;
       if (!canManage) throw new Error('You do not have permission to confirm the fee structure.');
       if (lockedSnapshot && form.dirty)
         throw new Error('The confirmed fee structure cannot be changed here.');
@@ -200,6 +216,7 @@ export default function StudentOnboardingFees({
       form.setStatus(undefined);
       if (!compact)
         shikshaMitraToast.success({ message: 'Fee structure confirmed for onboarding.' });
+      return true;
     } catch (error) {
       const message =
         (error instanceof Error ? error.message : parseApiProblemDetail(error).detail) ||
@@ -367,15 +384,17 @@ export default function StudentOnboardingFees({
             No published fee structure matches this student&apos;s academic year and Class. Ask
             Finance to publish the matching structure.
           </Typography>
-          <Button
-            size="small"
-            sx={{ alignSelf: 'flex-start' }}
-            disabled={externallyDisabled || busy || loading}
-            startIcon={<Iconify icon="mdi:refresh" width={18} />}
-            onClick={() => candidates.refetch()}
-          >
-            Refresh fee structures
-          </Button>
+          {canLoadCandidates && (
+            <Button
+              size="small"
+              sx={{ alignSelf: 'flex-start' }}
+              disabled={externallyDisabled || busy || loading}
+              startIcon={<Iconify icon="mdi:refresh" width={18} />}
+              onClick={() => candidates.refetch()}
+            >
+              Refresh fee structures
+            </Button>
+          )}
         </Stack>
       )}
       {!showStructurePicker && chosen ? (

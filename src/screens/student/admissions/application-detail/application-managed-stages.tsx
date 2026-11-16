@@ -6,11 +6,10 @@ import type {
 
 import { Stack } from '@mui/material';
 
-import { ApplicationSeatStage } from '../seat/application-seat-stage';
 import { ApplicationFormStage } from '../form-stage/application-form-stage';
-import { ApplicationPaymentStage } from '../payment/application-payment-stage';
 import { ApplicationAssessments } from '../assessments/application-assessments';
 import { ApplicationDocuments } from '../document-verification/application-documents';
+import { ApplicationSeatStage, ApplicationPaymentStage } from './application-workspace-panels';
 
 import type { ApplicationStageReadinessHandler } from './application-stage-readiness';
 import type { AdmissionFeeSelectionEditorState } from '../fee-selection/admission-fee-selection-editor';

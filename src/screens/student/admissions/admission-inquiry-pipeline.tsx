@@ -1,17 +1,18 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
+import type { RootState, AppDispatch } from 'src/redux/store';
 import type { AdmissionPipelineItem } from 'src/redux/student/admissions/admission-pipeline-api';
 
 import Link from 'next/link';
-import { useSelector } from 'react-redux';
 import { Box, Button } from '@mui/material';
+import { useDispatch, useSelector } from 'react-redux';
 import { studentPaths } from 'src/constants/student-menu';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { usePendingNavigation } from 'src/hooks/use-pending-navigation';
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { academicClassFilterInput } from 'src/utils/student-academic-filter-query';
 import {
@@ -26,6 +27,8 @@ import { serializeQueueColumnFilters } from './admission-queue-column-filters';
 import { buildAdmissionPipelineColumns } from './pipeline/admission-pipeline-columns';
 import { ADMISSION_APPLICATION_PERMISSIONS } from './admission-application-permissions';
 import { AdmissionPipelineMoreFilters } from './pipeline/admission-pipeline-more-filters';
+import { loadApplicationRuntimeForm } from './application-detail/application-workspace-panels';
+import { preloadAdmissionApplication } from './application-detail/preload-admission-application';
 import {
   AdmissionAcademicFilters,
   useAdmissionAcademicFilters,
@@ -41,6 +44,8 @@ const EMPTY_PIPELINE_ROWS: AdmissionPipelineItem[] = [];
 export default function AdmissionInquiryPipelineScreen() {
   const academic = useAdmissionAcademicFilters();
   const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
+  const { pendingKey, isPending, navigate } = usePendingNavigation(router.push);
   const params = useSearchParams();
   const applicationId = params.get('application');
   const worklistRef = useRef<HTMLDivElement>(null);
@@ -52,6 +57,7 @@ export default function AdmissionInquiryPipelineScreen() {
   const userId = useSelector((value: RootState) => value.auth.user?.sub);
   const canView = hasGrantedPermission(permissions, ADMISSION_APPLICATION_PERMISSIONS.view);
   const interactionLocked = useRef(false);
+  interactionLocked.current = isPending;
   const update = useCallback(
     (changes: Record<string, string | undefined>, resetPage = true) => {
       router.replace(
@@ -145,9 +151,15 @@ export default function AdmissionInquiryPipelineScreen() {
   );
   const openWorkspace = useCallback(
     (id: string) => {
-      if (canView && !interactionLocked.current) router.push(applicationUrl(id), { scroll: false });
+      if (canView && !interactionLocked.current) {
+        preloadAdmissionApplication(dispatch, id);
+        // The list is only a code-loading hint; the server workflow still owns routing/access.
+        if (data?.items.find((row) => row.id === id)?.stageType === 1)
+          loadApplicationRuntimeForm().catch(() => undefined);
+        navigate(id, applicationUrl(id), { scroll: false });
+      }
     },
-    [canView, applicationUrl, router]
+    [canView, applicationUrl, data, dispatch, navigate]
   );
   const columns = useMemo(
     () => buildAdmissionPipelineColumns(applicationUrl, openWorkspace),
@@ -302,6 +314,7 @@ export default function AdmissionInquiryPipelineScreen() {
               isRefreshing={
                 Boolean(data) && listQuery.isFetching && !scopeLoading && !skip && !applicationId
               }
+              refreshIndicator="skeleton"
               errorContent={
                 listQuery.isError && !skip && !scopeLoading && !data?.items.length ? (
                   <AdmissionQueryError
@@ -361,6 +374,12 @@ export default function AdmissionInquiryPipelineScreen() {
                 )
               }
               handleRowClick={(row) => openApplication(row as AdmissionPipelineItem)}
+              getRowAction={(row) => ({
+                label: `Continue ${row.applicationNumber}`,
+                onClick: () => openApplication(row as AdmissionPipelineItem),
+                disabled: isPending,
+                pending: pendingKey === row.id,
+              })}
               rowProps={(row) => ({
                 tabIndex: 0,
                 role: 'link',

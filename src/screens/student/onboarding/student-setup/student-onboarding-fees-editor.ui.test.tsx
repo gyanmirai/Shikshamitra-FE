@@ -289,7 +289,7 @@ it('guards repeated parent saves while the first confirmation is running', async
   const ref = setup();
   fireEvent.change(screen.getByLabelText('Fee structure'), { target: { value: 'structure-1' } });
   await waitFor(() => expect(screen.getByText('Class 1 · Revision 2')).toBeVisible());
-  let first!: Promise<void>;
+  let first!: ReturnType<StudentOnboardingFeesHandle['save']>;
   await act(async () => {
     first = ref.current!.save();
   });

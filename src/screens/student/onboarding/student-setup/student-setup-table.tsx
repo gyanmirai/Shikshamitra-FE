@@ -39,6 +39,7 @@ import {
 export default function StudentSetupTable({
   rows,
   isLoading,
+  isRefreshing = false,
   isError,
   onRetry,
   view,
@@ -79,6 +80,7 @@ export default function StudentSetupTable({
 }: {
   rows: StudentOnboardingItem[];
   isLoading: boolean;
+  isRefreshing?: boolean;
   isError: boolean;
   onRetry: () => void;
   view: StudentSetupView;
@@ -798,6 +800,7 @@ export default function StudentSetupTable({
       columns={columns}
       data={tableData}
       isLoading={isLoading}
+      isRefreshing={isRefreshing}
       isFilter
       isSearch
       serverSide={isServerBacked}

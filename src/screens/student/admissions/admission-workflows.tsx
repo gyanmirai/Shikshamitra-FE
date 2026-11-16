@@ -89,6 +89,7 @@ export default function AdmissionWorkflowsScreen() {
     onDelete: (workflow) => actions.requestConfirmation(workflow, 'delete'),
     onPublish: actions.publish,
     publishingId: actions.publishingId,
+    creatingVersionId: actions.creatingVersionId,
   });
   return (
     <Box
@@ -161,6 +162,12 @@ export default function AdmissionWorkflowsScreen() {
               ) : undefined
             }
             handleRowClick={(row) => actions.navigate(row as AdmissionWorkflow, 'preview')}
+            getRowAction={(row) => ({
+              label: `Preview ${(row as AdmissionWorkflow).name}`,
+              onClick: () => actions.navigate(row as AdmissionWorkflow, 'preview'),
+              pending: actions.pendingNavigationId === row.id,
+              pendingLabel: 'Opening workflow…',
+            })}
             rowProps={(row) => ({
               tabIndex: 0,
               sx: { cursor: 'pointer' },

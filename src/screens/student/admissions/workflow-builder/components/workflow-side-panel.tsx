@@ -37,6 +37,9 @@ type Props = {
   stages: AdmissionWorkflowStage[];
   transitions: AdmissionWorkflowTransition[];
   versions?: AdmissionWorkflow[];
+  versionsLoading?: boolean;
+  versionsError?: boolean;
+  onRetryVersions?: () => void;
   usage?: AdmissionWorkflowUsage;
   usageLoading: boolean;
   usageError?: boolean;
@@ -52,6 +55,9 @@ export function WorkflowSidePanel({
   stages,
   transitions,
   versions,
+  versionsLoading,
+  versionsError,
+  onRetryVersions,
   usage,
   usageLoading,
   usageError = false,
@@ -114,6 +120,9 @@ export function WorkflowSidePanel({
         <Stack spacing={1.5}>
           <WorkflowPanelContent
             panel={panel}
+            versionsLoading={versionsLoading}
+            versionsError={versionsError}
+            onRetryVersions={onRetryVersions}
             workflow={workflow}
             stages={stages}
             transitions={transitions}

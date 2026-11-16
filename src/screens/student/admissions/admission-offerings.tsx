@@ -223,8 +223,10 @@ export default function AdmissionOfferingsScreen() {
       )}
       <AdmissionOfferingDetailsDrawer
         open={screen.detailsOpen}
+        loadingDetail={screen.loadingDetail}
+        detailError={screen.detailError}
+        onRetryDetail={screen.retryDetail}
         offering={screen.selected}
-        canManage={screen.permissions.edit}
         onClose={screen.closeDetails}
       />
       <AdmissionOfferingActionDialog

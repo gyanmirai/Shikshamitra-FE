@@ -2,12 +2,12 @@
 
 import { useEffect } from 'react';
 import { studentPaths } from 'src/constants/student-menu';
-import { LoadingScreen } from 'src/components/loading-screen';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 
 import { admissionPipelineApplicationUrl } from './admission-pipeline-state';
 import AdmissionApplicationDetailScreen from '../admission-application-detail';
 import { getApplicationReturnUrl } from '../application-detail/application-return-url';
+import { ApplicationWorkspaceSkeleton } from '../application-detail/application-workspace-skeleton';
 
 /** Retain legacy deep links while opening Pipeline-origin cases over their original worklist. */
 export function AdmissionPipelineWorkspaceRoute() {
@@ -26,5 +26,5 @@ export function AdmissionPipelineWorkspaceRoute() {
   useEffect(() => {
     if (fromPipeline) router.replace(destination, { scroll: false });
   }, [destination, fromPipeline, router]);
-  return fromPipeline ? <LoadingScreen /> : <AdmissionApplicationDetailScreen />;
+  return fromPipeline ? <ApplicationWorkspaceSkeleton /> : <AdmissionApplicationDetailScreen />;
 }

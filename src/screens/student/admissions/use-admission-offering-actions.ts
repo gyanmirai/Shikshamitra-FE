@@ -42,7 +42,7 @@ export function useAdmissionOfferingActions(
   onSavedScopeChange?: (offering: AdmissionOffering) => void
 ) {
   const granted = useSelector((state: RootState) => state.auth.permissions);
-  const [loadOffering, detailState] = useLazyGetAdmissionOfferingQuery();
+  const [loadOffering] = useLazyGetAdmissionOfferingQuery();
   const [createOffering, createState] = useCreateAdmissionOfferingMutation();
   const [updateOffering, updateState] = useUpdateAdmissionOfferingMutation();
   const [cloneOffering, cloneState] = useCloneAdmissionOfferingMutation();
@@ -52,8 +52,13 @@ export function useAdmissionOfferingActions(
   const [dialogMode, setDialogMode] = useState<OfferingDialogMode | null>(null);
   const [selected, setSelected] = useState<AdmissionOffering | null>(null);
   const [detailError, setDetailError] = useState<string | null>(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+  const activeDetail = useRef<{
+    mode: 'view' | 'edit' | 'clone';
+    row: AdmissionOfferingListItem;
+  } | null>(null);
+  const detailLock = useRef<string | null>(null);
   const detailRequest = useRef(0);
-  const editRow = useRef<AdmissionOfferingListItem | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [bulkOpen, setBulkOpen] = useState(initialBulkOpen);
   const [pendingAction, setPendingAction] = useState<PendingOfferingAction>(null);
@@ -70,30 +75,30 @@ export function useAdmissionOfferingActions(
   };
 
   const openDetailed = async (mode: 'view' | 'edit' | 'clone', row: AdmissionOfferingListItem) => {
+    const key = `${mode}:${row.id}`;
+    if (detailLock.current === key) return;
+    detailLock.current = key;
+    activeDetail.current = { mode, row };
     detailRequest.current += 1;
     const request = detailRequest.current;
     setDetailError(null);
-    if (mode === 'edit') {
-      editRow.current = row;
-      setSelected(null);
-      setDialogMode('edit');
-    }
+    setLoadingDetail(true);
+    setSelected(null);
+    setDetailsOpen(mode === 'view');
+    setDialogMode(mode === 'view' ? null : mode);
     try {
       const detail = await loadOffering(row.id).unwrap();
       if (request !== detailRequest.current) return;
       setSelected(detail);
-      if (mode === 'view') setDetailsOpen(true);
-      else setDialogMode(mode);
     } catch (error) {
       if (request !== detailRequest.current) return;
       const message = getAdmissionApiError(error, 'Unable to load the offering.');
-      if (mode === 'edit') {
-        setDetailError(message);
-        return;
+      setDetailError(message);
+    } finally {
+      if (request === detailRequest.current) {
+        setLoadingDetail(false);
+        detailLock.current = null;
       }
-      shikshaMitraToast.error({
-        message,
-      });
     }
   };
 
@@ -199,7 +204,8 @@ export function useAdmissionOfferingActions(
     selected,
     detailError,
     retryDetail: () => {
-      if (editRow.current) return openDetailed('edit', editRow.current);
+      if (activeDetail.current)
+        return openDetailed(activeDetail.current.mode, activeDetail.current.row);
       return undefined;
     },
     dialogMode,
@@ -218,7 +224,7 @@ export function useAdmissionOfferingActions(
       setActivationErrors([]);
       return openDetailed('edit', row);
     },
-    loadingDetail: detailState.isFetching,
+    loadingDetail,
     saving: createState.isLoading || updateState.isLoading || cloneState.isLoading,
     commanding:
       commandBusy.value ||
@@ -228,6 +234,9 @@ export function useAdmissionOfferingActions(
     permissions,
     openCreate: () => {
       detailRequest.current += 1;
+      detailLock.current = null;
+      activeDetail.current = null;
+      setLoadingDetail(false);
       setDetailError(null);
       setSelected(null);
       setDialogMode('create');
@@ -246,12 +255,19 @@ export function useAdmissionOfferingActions(
     },
     closeDialog: () => {
       detailRequest.current += 1;
-      editRow.current = null;
+      detailLock.current = null;
+      activeDetail.current = null;
+      setLoadingDetail(false);
       setDetailError(null);
       setDialogMode(null);
       setSelected(null);
     },
     closeDetails: () => {
+      detailRequest.current += 1;
+      detailLock.current = null;
+      activeDetail.current = null;
+      setLoadingDetail(false);
+      setDetailError(null);
       setDetailsOpen(false);
       setSelected(null);
     },

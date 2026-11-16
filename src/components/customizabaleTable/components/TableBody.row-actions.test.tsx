@@ -39,6 +39,20 @@ function renderBody(overrides: Partial<ComponentProps<typeof TableBody>> = {}) {
 }
 
 describe('table record row actions', () => {
+  it('retains record context, announces pending opening, and blocks its row shortcuts', () => {
+    const open = vi.fn();
+    renderBody({
+      getRowAction: () => ({ label: 'Open Quarterly term', onClick: open, pending: true }),
+    });
+    const row = screen.getByRole('row', { name: 'Open Quarterly term' });
+    expect(row).toHaveAttribute('aria-busy', 'true');
+    expect(screen.getByText('Quarterly term')).toBeVisible();
+    expect(screen.getByRole('status', { name: 'Opening Record' })).toHaveTextContent('Opening…');
+    fireEvent.click(row);
+    fireEvent.keyDown(row, { key: 'Enter' });
+    expect(open).not.toHaveBeenCalled();
+  });
+
   it('isolates legacy row shortcuts and mouse handlers from editable controls', () => {
     const legacyClick = vi.fn();
     const legacyKey = vi.fn((event) => event.preventDefault());

@@ -4,6 +4,7 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { StudentFeedback } from 'src/components/student-feedback';
+import { skeletonReducedMotionSx } from 'src/theme/styles/skeleton';
 import {
   Box,
   Paper,
@@ -13,7 +14,6 @@ import {
   Skeleton,
   IconButton,
   Typography,
-  LinearProgress,
 } from '@mui/material';
 
 import {
@@ -64,8 +64,9 @@ export function ApplicationOnboardingHandover({
     <Paper
       component="section"
       aria-label="Onboarding Handover"
+      aria-busy={hasCase && canView && (loading || refreshing)}
       variant="outlined"
-      sx={{ p: 1.5, minWidth: 0, boxShadow: 'none' }}
+      sx={{ p: 1.5, minWidth: 0, boxShadow: 'none', ...skeletonReducedMotionSx }}
     >
       <Stack direction="row" alignItems="center" spacing={0.5} useFlexGap flexWrap="wrap">
         <Typography variant="subtitle1" component="h3">
@@ -107,11 +108,17 @@ export function ApplicationOnboardingHandover({
           Onboarding viewing access is required to see placement, identifiers and activation status.
         </Typography>
       ) : loading ? (
-        <Stack spacing={1} sx={{ mt: 1.5 }} aria-label="Loading Onboarding Handover">
-          <Skeleton height={32} />
-          <Skeleton height={32} />
-          <Skeleton height={32} />
-          <Skeleton variant="rounded" height={56} />
+        <Stack
+          role="status"
+          spacing={1}
+          sx={{ mt: 1.5 }}
+          aria-label="Loading Onboarding Handover"
+          aria-busy
+        >
+          <Skeleton aria-hidden height={32} />
+          <Skeleton aria-hidden height={32} />
+          <Skeleton aria-hidden height={32} />
+          <Skeleton aria-hidden variant="rounded" height={56} />
         </Stack>
       ) : error || !value ? (
         <StudentFeedback
@@ -130,7 +137,9 @@ export function ApplicationOnboardingHandover({
       ) : (
         <>
           {refreshing && (
-            <LinearProgress aria-label="Refreshing Onboarding Handover" sx={{ mt: 1 }} />
+            <Box role="status" aria-label="Refreshing Onboarding Handover" aria-busy sx={{ mt: 1 }}>
+              <Skeleton aria-hidden variant="text" width="35%" height={24} />
+            </Box>
           )}
           <Box component="dl" sx={{ m: 0 }}>
             {[

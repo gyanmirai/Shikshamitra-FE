@@ -51,7 +51,11 @@ export function FormBuilderField({
   reorderEnabled = true,
 }: Props) {
   const field = formik.values.sections[sectionIndex].fields[fieldIndex];
-  const locked = isLockedInquiryField(formik.values.purpose, field, formik.values.coreFieldPolicyVersion);
+  const locked = isLockedInquiryField(
+    formik.values.purpose,
+    field,
+    formik.values.coreFieldPolicyVersion
+  );
   const fieldType = FIELD_TYPES.find(([, value]) => value === field.fieldType)?.[0] ?? 'Field';
   const name = field.label || `Field ${fieldIndex + 1}`;
   const compactFourColumnCard = formik.values.fieldsPerRow === 4;
@@ -128,19 +132,28 @@ export function FormBuilderField({
             display: 'block',
             borderRadius: 1,
             p: 0.5,
-            pt: { lg: compactFourColumnCard ? 5.5 : 0.5 },
             '&:focus-visible': { outline: 2, outlineColor: 'success.main', outlineOffset: 1 },
           }}
         >
           <Stack spacing={0.5} sx={{ minWidth: 0 }}>
-            <Typography variant="subtitle2" component="span" sx={{ overflowWrap: 'anywhere' }}>
-              {name}
-              {field.required && (
-                <Box component="span" sx={{ color: 'error.main', ml: 0.5 }} aria-label="Required">
-                  *
-                </Box>
-              )}
-            </Typography>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                minHeight: { lg: compactFourColumnCard ? 44 : undefined },
+                pl: { lg: compactFourColumnCard && reorderEnabled ? 5.5 : 0 },
+                pr: { lg: compactFourColumnCard ? 5.5 : 0 },
+              }}
+            >
+              <Typography variant="subtitle2" component="span" sx={{ overflowWrap: 'anywhere' }}>
+                {name}
+                {field.required && (
+                  <Box component="span" sx={{ color: 'error.main', ml: 0.5 }} aria-label="Required">
+                    *
+                  </Box>
+                )}
+              </Typography>
+            </Box>
             <Stack
               direction="row"
               alignItems="center"

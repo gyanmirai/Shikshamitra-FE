@@ -1,8 +1,27 @@
+import type { AdmissionPipelineItem } from 'src/redux/student/admissions/admission-pipeline-api';
+
 import { useEffect } from 'react';
 import { vi, it, expect, describe, beforeEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import AdmissionInquiryPipelineScreen from '../admission-inquiry-pipeline';
+import { loadApplicationRuntimeForm } from '../application-detail/application-workspace-panels';
+import { preloadAdmissionApplication } from '../application-detail/preload-admission-application';
+
+vi.mock('../application-detail/application-workspace-panels', () => ({
+  loadApplicationRuntimeForm: vi.fn(async () => undefined),
+}));
+
+vi.mock('../application-detail/preload-admission-application', () => ({
+  preloadAdmissionApplication: vi.fn(),
+}));
+
+vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
+
+type PipelineFixtureRow = Pick<
+  AdmissionPipelineItem,
+  'id' | 'applicationNumber' | 'applicantName' | 'status' | 'stageType'
+>;
 
 const context = vi.hoisted(() => ({
   params: new URLSearchParams(),
@@ -18,7 +37,9 @@ const context = vi.hoisted(() => ({
   list: vi.fn(),
   options: vi.fn(),
   data: {
-    items: [{ id: 'app-1', applicationNumber: 'APP-1', applicantName: 'QA Applicant', status: 0 }],
+    items: [
+      { id: 'app-1', applicationNumber: 'APP-1', applicantName: 'QA Applicant', status: 0 },
+    ] as PipelineFixtureRow[],
     totalCount: 31,
   },
   error: false,
@@ -45,6 +66,7 @@ vi.mock('next/navigation', () => ({
   useSearchParams: () => context.params,
 }));
 vi.mock('react-redux', () => ({
+  useDispatch: () => vi.fn(),
   useSelector: (selector: (state: unknown) => unknown) =>
     selector({
       auth: {
@@ -178,6 +200,41 @@ beforeEach(() => {
 });
 
 describe('Pipeline worklist', () => {
+  it('starts the Form renderer on row intent without waiting for workflow data', () => {
+    context.data.items[0].stageType = 1;
+    render(<AdmissionInquiryPipelineScreen />);
+    fireEvent.click(screen.getByRole('button', { name: 'Open row' }));
+    expect(loadApplicationRuntimeForm).toHaveBeenCalledOnce();
+    expect(vi.mocked(loadApplicationRuntimeForm).mock.invocationCallOrder[0]).toBeLessThan(
+      context.push.mock.invocationCallOrder[0]
+    );
+  });
+  it('does not preload the Form renderer for another stage', () => {
+    context.data.items[0].stageType = 4;
+    render(<AdmissionInquiryPipelineScreen />);
+    fireEvent.click(screen.getByRole('button', { name: 'Open row' }));
+    expect(loadApplicationRuntimeForm).not.toHaveBeenCalled();
+  });
+  it('marks the opening record and ignores repeated requests while navigation is pending', async () => {
+    let finish!: () => void;
+    context.push.mockImplementationOnce(
+      () =>
+        new Promise<void>((resolve) => {
+          finish = resolve;
+        })
+    );
+    render(<AdmissionInquiryPipelineScreen />);
+    fireEvent.click(screen.getByRole('button', { name: 'Open row' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Open row' }));
+    expect(context.push).toHaveBeenCalledTimes(1);
+    expect(preloadAdmissionApplication).toHaveBeenCalledTimes(1);
+    expect(context.table.getRowAction(context.data.items[0])).toMatchObject({
+      pending: true,
+      disabled: true,
+    });
+    await act(async () => finish());
+  });
+
   it('keeps the scoped worklist mounted below the drawer and closes without losing list filters', async () => {
     context.params = new URLSearchParams(
       'board=board-1&medium=medium-1&page=2&search=Jay&application=app-1'

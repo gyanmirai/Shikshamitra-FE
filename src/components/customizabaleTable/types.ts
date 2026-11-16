@@ -65,6 +65,8 @@ export interface TableRowAction {
   label: string;
   onClick: () => void;
   disabled?: boolean;
+  pending?: boolean;
+  pendingLabel?: string;
 }
 
 export type CustomizableTableRowProps = TableRowProps & {
@@ -127,6 +129,8 @@ export interface ICustomizableTableProps {
   isLoading?: boolean;
   /** Same-scope refresh: retain safe rows and show a labelled progress indicator. */
   isRefreshing?: boolean;
+  /** Opt-in content skeletons for refreshes; other consumers retain linear progress. */
+  refreshIndicator?: 'linear' | 'skeleton';
   isPagination?: boolean;
   isFilter?: boolean;
   isSearch?: boolean;

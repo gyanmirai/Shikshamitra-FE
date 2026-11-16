@@ -261,7 +261,7 @@ describe('public admission availability gate', () => {
       expect(shikshaMitraToast.error).toHaveBeenCalledWith(
         expect.objectContaining({
           message: expect.stringContaining(
-            'missing linked fields: Student name, Parent / Guardian name'
+            'missing linked fields: Student Name, Parent / Guardian Name'
           ),
         })
       )

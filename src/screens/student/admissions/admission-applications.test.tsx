@@ -5,13 +5,20 @@ import { Table } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { vi, it, expect, describe, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { act, render, screen, fireEvent } from '@testing-library/react';
 import { defaultSettings } from 'src/components/settings/config-settings';
 import { TableBody } from 'src/components/customizabaleTable/components/TableBody';
 
 import AdmissionApplicationsScreen from './admission-applications';
+import { preloadAdmissionApplication } from './application-detail/preload-admission-application';
+
+vi.mock('./application-detail/preload-admission-application', () => ({
+  preloadAdmissionApplication: vi.fn(),
+}));
 
 const theme = createTheme(defaultSettings);
+
+vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 
 const state = vi.hoisted(() => ({
   push: vi.fn(),
@@ -29,6 +36,7 @@ const state = vi.hoisted(() => ({
   queryResult: {} as Record<string, unknown>,
 }));
 vi.mock('react-redux', () => ({
+  useDispatch: () => vi.fn(),
   useSelector: () => [
     { name: 'Students.Admissions.Applications.View', isGranted: state.canView },
     { name: 'Students.Admissions.Applications.Add', isGranted: state.canStart },
@@ -196,6 +204,26 @@ beforeEach(() => {
 });
 
 describe('Applications decision workspace', () => {
+  it('shows opening feedback and suppresses repeated row and identity-link navigation', async () => {
+    let finish!: () => void;
+    state.push.mockImplementationOnce(
+      () =>
+        new Promise<void>((resolve) => {
+          finish = resolve;
+        })
+    );
+    render(<AdmissionApplicationsScreen />);
+    const row = screen.getByRole('row', { name: /Open APP-2026-000001/ });
+    fireEvent.click(row);
+    fireEvent.click(row);
+    fireEvent.click(screen.getByRole('link', { name: 'Parth Patel' }));
+    expect(state.push).toHaveBeenCalledTimes(1);
+    expect(preloadAdmissionApplication).toHaveBeenCalledWith(expect.any(Function), 'application-1');
+    expect(row).toHaveAttribute('aria-busy', 'true');
+    expect(screen.getByRole('status', { name: 'Opening Record' })).toBeVisible();
+    await act(async () => finish());
+  });
+
   it('opens special registration only with the existing Start/Add permission and current academic year', () => {
     state.canStart = true;
     render(<AdmissionApplicationsScreen />);
@@ -252,6 +280,7 @@ describe('Applications decision workspace', () => {
     fireEvent.click(screen.getByRole('link', { name: 'Parth Patel' }), { button: 0 });
     expect(state.push).toHaveBeenCalledWith(links[0].getAttribute('href'), { scroll: false });
     expect(state.push).toHaveBeenCalledTimes(1);
+    expect(preloadAdmissionApplication).toHaveBeenCalledWith(expect.any(Function), 'application-1');
     expect(state.tableProps?.columns.some(({ id }) => id === 'actions')).toBe(false);
   });
   it('opens the same detail and retained list context by clicking a row data cell', () => {

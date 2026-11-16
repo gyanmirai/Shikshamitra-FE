@@ -50,6 +50,59 @@ const deferred = () => {
 
 describe('Offering edit detail loading', () => {
   beforeEach(() => vi.clearAllMocks());
+  it('guards duplicate detail requests, retains the shell on error, and retries', async () => {
+    let reject!: (error: Error) => void;
+    const pending = new Promise<AdmissionOffering>((_, fail) => {
+      reject = fail;
+    });
+    mocks.load.mockReturnValue({ unwrap: () => pending });
+    const { result } = renderHook(() => useAdmissionOfferingActions(cycle));
+    let first!: Promise<void>;
+    act(() => {
+      first = result.current.openDetailed('view', row);
+      result.current.openDetailed('view', row);
+    });
+    expect(mocks.load).toHaveBeenCalledTimes(1);
+    await act(async () => {
+      reject(new Error('Unavailable'));
+      await first;
+    });
+    expect(result.current.detailsOpen).toBe(true);
+    expect(result.current.detailError).toBeTruthy();
+    mocks.load.mockReturnValue({ unwrap: async () => detail });
+    await act(async () => {
+      await result.current.retryDetail();
+    });
+    expect(result.current.selected).toEqual(detail);
+    expect(result.current.detailError).toBeNull();
+  });
+  it.each(['view', 'clone'] as const)(
+    'opens %s immediately and ignores results after close',
+    async (mode) => {
+      const request = deferred();
+      mocks.load.mockReturnValue({ unwrap: () => request.promise });
+      const { result } = renderHook(() => useAdmissionOfferingActions(cycle));
+      let pending!: Promise<void>;
+      act(() => {
+        pending = result.current.openDetailed(mode, row);
+      });
+      expect(
+        mode === 'view' ? result.current.detailsOpen : result.current.dialogMode === 'clone'
+      ).toBe(true);
+      expect(result.current.loadingDetail).toBe(true);
+      act(() => {
+        if (mode === 'view') result.current.closeDetails();
+        else result.current.closeDialog();
+      });
+      await act(async () => {
+        request.resolve(detail);
+        await pending;
+      });
+      expect(result.current.selected).toBeNull();
+      expect(result.current.detailsOpen).toBe(false);
+      expect(result.current.dialogMode).toBeNull();
+    }
+  );
   it('routes unused active setup changes through the existing deactivation confirmation', async () => {
     mocks.granted = [{ name: 'Students.Admissions.Offerings.Add', isGranted: true }];
     const unusedActive = {
