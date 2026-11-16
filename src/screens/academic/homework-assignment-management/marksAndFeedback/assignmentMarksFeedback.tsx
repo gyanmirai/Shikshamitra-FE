@@ -132,6 +132,7 @@ const AssignmentMarksAndFeedback = ({ actionsContainer }: MarksFeedbackTabProps)
       DivisionId: division,
       SubjectId: subject,
       AssignmentId: selectedAssignment?.id,
+      Lightweight: true,
     },
     options: { skip: !selectedAssignment?.id || !classes || !division || !subject },
   });

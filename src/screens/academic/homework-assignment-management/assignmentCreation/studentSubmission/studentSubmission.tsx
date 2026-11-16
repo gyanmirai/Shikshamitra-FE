@@ -36,6 +36,7 @@ import {
 
 import AssignGrade from './assignMarksForm';
 import AssignmentRubricEvaluationContent from './assignmentRubricEvaluationContent';
+import EvaluationSubmissionDetail from '../../marksAndFeedback/evaluationSubmissionDetail';
 import {
   saveAssignmentRubricAndFeedback,
   submitAssignmentRubricEvaluation,
@@ -99,6 +100,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
       DivisionId: selectedDivision,
       SubjectId: selectedSubject,
       AssignmentId: selectedAssignment?.id,
+      Lightweight: true,
     },
   });
   const [updateSubmissionFeedback] = useQueryAndMutation({
@@ -430,13 +432,19 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         paperProps={{ sx: { maxHeight: '90vh' } }}
         hasForm={false}
       >
+        <EvaluationSubmissionDetail
+          mode="assignment" open={viewSubmissionDialog.value} academicMediumId={medium?.id}
+          taskId={selectedAssignment?.id} classId={selectedClass} divisionId={selectedDivision}
+          subjectId={selectedSubject} student={selectedStudent}
+        >
+          {(student) => <>
         {usesRubric &&
           selectedStudent &&
           selectedClass &&
           selectedSubject &&
           selectedAssignment?.id && (
             <AssignmentRubricEvaluationContent
-              student={selectedStudent}
+              student={student}
               standardId={selectedClass}
               subjectId={selectedSubject}
               assignmentId={selectedAssignment.id}
@@ -462,7 +470,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           <AssignGrade
             onBusyChange={setIsFeedbackSaving}
             key={selectedStudent?.studentId}
-            data={selectedStudent}
+            data={student}
             onClose={handleClose}
             isEdit={isEditMode}
             assignmentId={selectedAssignment?.id}
@@ -473,6 +481,8 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             onNext={() => moveStudent(1)}
           />
         )}
+          </>}
+        </EvaluationSubmissionDetail>
       </CustomDialog>
     </>
   );

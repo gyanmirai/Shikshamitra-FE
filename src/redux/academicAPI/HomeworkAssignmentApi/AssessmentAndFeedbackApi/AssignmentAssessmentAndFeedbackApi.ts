@@ -6,7 +6,7 @@ export const assessmentAndFeedbackApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
     // GET assignment submissions
     getAssignmentSubmissions: builder.query({
-      query: ({ academicMediumId, ClassId, DivisionId, SubjectId, AssignmentId }) => ({
+      query: ({ academicMediumId, ClassId, DivisionId, SubjectId, AssignmentId, Lightweight = false }) => ({
         url: `/assignments/submissions`,
         method: 'GET',
         params: {
@@ -15,10 +15,22 @@ export const assessmentAndFeedbackApi = academicApi.injectEndpoints({
           DivisionId,
           SubjectId,
           AssignmentId,
+          ...(Lightweight && { Lightweight }),
         },
       }),
       providesTags: (_result, _error, input) => [academicType.assignmentSubmissions,
         { type: academicType.assignmentSubmissions, id: input.AssignmentId || 'LIST' }],
+    }),
+
+    getAssignmentSubmission: builder.query({
+      query: ({ academicMediumId, ClassId, DivisionId, SubjectId, AssignmentId, studentId }) => ({
+        url: `/assignments/${AssignmentId}/submissions/${studentId}`,
+        method: 'GET',
+        params: { academicMediumId, ClassId, DivisionId, SubjectId },
+      }),
+      providesTags: (_result, _error, input) => [
+        { type: academicType.assignmentSubmissions, id: input.AssignmentId },
+      ],
     }),
 
     // Bulk update assessment status and feedback
@@ -90,6 +102,7 @@ export const assessmentAndFeedbackApi = academicApi.injectEndpoints({
 
 export const {
   useGetAssignmentSubmissionsQuery,
+  useGetAssignmentSubmissionQuery,
   useBulkUpdateAssessmentMutation,
   useUpdateAssignmentAssessmentMutation,
   useUpdateSubmissionFeedbackMutation,
