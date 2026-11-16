@@ -7,7 +7,7 @@ on:
 
 env:
   APPLICATION_PUBLISH_PROFILE: ${{ secrets.APP_PUBLISH_PROFILE }}
-  WEBAPP_NAME: 'dev-gyanmirai-fe'
+  WEBAPP_NAME: 'shikshamitra-dev-fe'
   HUSKY: 0 # ✅ disable husky in CI
 
 concurrency:
