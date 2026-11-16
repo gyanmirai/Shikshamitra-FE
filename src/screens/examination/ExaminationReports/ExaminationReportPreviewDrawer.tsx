@@ -2,19 +2,12 @@
 
 import { alpha } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
-import { shikshaMitraToast } from 'src/components/toast';
+import React, { useState, useEffect } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import React, { useRef, useState, useEffect, useCallback } from 'react';
-import {
-  startAcademicReportDownload,
-  saveAcademicStandardReportFile as saveFile,
-} from 'src/screens/academic/curriculum-management/reports/ai-report-utils';
 import {
   usePreviewAcademicReportMutation,
-  useLazyDownloadAcademicReportQuery,
-  useCreateAcademicReportExportMutation,
-  useLazyGetAcademicReportExportJobQuery,
 } from 'src/redux/academicAPI/AcademicReportApi';
+import { useAcademicReportDownload } from 'src/screens/academic/components/reports/useAcademicReportDownload';
 import {
   Box,
   Chip,
@@ -82,8 +75,6 @@ interface ExaminationReportPreviewDrawerProps {
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50];
 
-type DownloadPhase = 'idle' | 'creating' | 'polling' | 'downloading';
-
 const ExaminationReportPreviewDrawerContent = ({
   open,
   onClose,
@@ -94,9 +85,7 @@ const ExaminationReportPreviewDrawerContent = ({
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
-  const [downloadPhase, setDownloadPhase] = useState<DownloadPhase>('idle');
-  const [jobStatusLabel, setJobStatusLabel] = useState('');
-  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const { downloadPhase, jobStatusLabel, handleDownload: downloadJob, handleCreateDownload } = useAcademicReportDownload();
 
   const [previewReport, { data: previewData, isLoading: isPreviewLoading }] = useQueryAndMutation<
     typeof usePreviewAcademicReportMutation
@@ -106,26 +95,6 @@ const ExaminationReportPreviewDrawerContent = ({
     popupConfig: { error: true, errorMessage: 'Failed to load report preview' },
   });
 
-  const [createExport, { isLoading: isExportCreating }] = useQueryAndMutation<
-    typeof useCreateAcademicReportExportMutation
-  >({
-    type: 'mutation',
-    currentQueryAndMutation: useCreateAcademicReportExportMutation,
-    popupConfig: { error: true, errorMessage: 'Failed to initiate export' },
-  });
-
-  const [pollJobStatus] = useLazyGetAcademicReportExportJobQuery();
-  const [triggerDownload] = useLazyDownloadAcademicReportQuery();
-
-  const stopPolling = useCallback(() => {
-    if (pollIntervalRef.current !== null) {
-      clearInterval(pollIntervalRef.current);
-      pollIntervalRef.current = null;
-    }
-  }, []);
-
-  useEffect(() => () => stopPolling(), [stopPolling]);
-
   useEffect(() => {
     if (open && reportRequest) {
       previewReport({ ...reportRequest, page: page + 1, pageSize: rowsPerPage });
@@ -133,84 +102,11 @@ const ExaminationReportPreviewDrawerContent = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, reportRequest, page, rowsPerPage]);
 
-  useEffect(() => {
-    if (open) {
-      setPage(0);
-      stopPolling();
-      setDownloadPhase('idle');
-      setJobStatusLabel('');
-    }
-  }, [open, reportRequest, stopPolling]);
-
-
-  const handleDownload = useCallback(async () => {
+  const handleDownload = async () => {
     if (!reportRequest || downloadPhase !== 'idle') return;
-
-    if (existingExportJobId) {
-      try {
-        startAcademicReportDownload(existingExportJobId);
-      } catch {
-        shikshaMitraToast.error({ message: 'Download failed. Please try again.' });
-      }
-      return;
-    }
-
-    setDownloadPhase('creating');
-    setJobStatusLabel('');
-
-    const exportResult = await createExport({ ...reportRequest, format: 'pdf' });
-    if (!('data' in exportResult) || !exportResult.data?.jobId) {
-      setDownloadPhase('idle');
-      return;
-    }
-
-    const { jobId } = exportResult.data;
-    setDownloadPhase('polling');
-    setJobStatusLabel(exportResult.data.status || 'Queued');
-
-    pollIntervalRef.current = setInterval(async () => {
-      try {
-        const statusResult = await pollJobStatus({ jobId }, false);
-        if (!('data' in statusResult) || !statusResult.data) return;
-
-        const { status } = statusResult.data;
-        setJobStatusLabel(status || '');
-
-        if (status === 'Completed') {
-          stopPolling();
-          setDownloadPhase('downloading');
-          try {
-            const dlResult = await triggerDownload({ jobId }, false);
-            if ('data' in dlResult && dlResult.data?.blob) {
-              saveFile(dlResult.data);
-            }
-          } catch {
-            shikshaMitraToast.error({ message: 'Download failed. Please try again.' });
-          } finally {
-            setDownloadPhase('idle');
-            setJobStatusLabel('');
-          }
-        } else if (status === 'Failed') {
-          stopPolling();
-          setDownloadPhase('idle');
-          setJobStatusLabel('');
-          shikshaMitraToast.error({
-            message: statusResult.data.errorMessage || 'Export job failed',
-          });
-        }
-      } catch {
-        // transient poll error — retry on next tick
-      }
-    }, 2000);
-  }, [
-    reportRequest,
-    existingExportJobId,
-    downloadPhase,
-    createExport,
-    pollJobStatus,
-    triggerDownload,
-    stopPolling,
-  ]);
+    if (existingExportJobId) await downloadJob(existingExportJobId, 'Completed', true);
+    else await handleCreateDownload(reportRequest);
+  };
 
   const handleChangePage = (_: unknown, newPage: number) => setPage(newPage);
   const handleChangeRowsPerPage = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -226,7 +122,7 @@ const ExaminationReportPreviewDrawerContent = ({
   const isDownloadInProgress = downloadPhase !== 'idle';
 
   const downloadStatusText =
-    downloadPhase === 'creating' || isExportCreating
+    downloadPhase === 'creating'
       ? 'Creating export...'
       : downloadPhase === 'polling'
         ? `Generating PDF${jobStatusLabel ? ` (${jobStatusLabel})` : '...'}`

@@ -25,6 +25,7 @@ import {
 } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/HomeworkAssessmentAndFeedbackApi';
 
 import AssignGrade from '../component/assignGradeForm';
+import EvaluationSubmissionDetail from '../../marksAndFeedback/evaluationSubmissionDetail';
 
 import type { TStudentGrade, IStudentSubmissionsProps } from '../type';
 
@@ -60,6 +61,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
       DivisionId: selectedDivision,
       SubjectId: selectedSubject,
       HomeworkId: selectedHomework?.id,
+      Lightweight: true,
     },
     options: {
       skip: !selectedClass || !selectedDivision || !selectedSubject || !selectedHomework?.id,
@@ -291,9 +293,14 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         maxWidth="md"
         paperProps={{ sx: { maxHeight: '90vh' } }}
       >
-        <AssignGrade
+        <EvaluationSubmissionDetail
+          mode="homework" open={viewSubmissionDialog.value} academicMediumId={medium?.id}
+          taskId={selectedHomework?.id} classId={selectedClass} divisionId={selectedDivision}
+          subjectId={selectedSubject} student={selectedStudent}
+        >
+          {(student) => <AssignGrade
           key={selectedStudent?.studentId}
-          data={selectedStudent}
+          data={student}
           onClose={handleClose}
           isEdit={isEditMode}
           homeworkId={selectedHomework?.id}
@@ -307,7 +314,8 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           hasRubricAssessment={hasRubricAssessment}
           isSelectedInPerson={isSelectedInPerson}
           ensureInPersonSubmissionId={ensureInPersonSubmissionId}
-        />
+        />}
+        </EvaluationSubmissionDetail>
       </CustomDialog>
     </Box>
   );

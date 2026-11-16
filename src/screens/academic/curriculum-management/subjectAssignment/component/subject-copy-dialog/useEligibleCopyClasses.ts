@@ -1,4 +1,5 @@
 import type { Standards } from 'src/types/school';
+import type { AppDispatch } from 'src/redux/store';
 
 import { useDispatch } from 'react-redux';
 import { useMemo, useState, useEffect } from 'react';
@@ -11,7 +12,7 @@ type Props = {
 };
 
 export function useEligibleCopyClasses({ open, allClass, sourceClassId }: Props) {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const [eligibleClassIds, setEligibleClassIds] = useState<Set<string>>(new Set());
   const [isFilteringClasses, setIsFilteringClasses] = useState(false);
   const [filterError, setFilterError] = useState(false);
@@ -42,17 +43,17 @@ export function useEligibleCopyClasses({ open, allClass, sourceClassId }: Props)
         const results = await Promise.all(
           candidateClasses.map((item) =>
             dispatch(
-              (subjectAssignmentsApi.endpoints as any).getSubjectAssignments.initiate(
+              subjectAssignmentsApi.endpoints.getSubjectAssignments.initiate(
                 { standardId: item.id, page: 0, pageSize: 1, status: 'all' },
-                { track: false }
+                { subscribe: false }
               )
-            )
+            ).unwrap()
           )
         );
         if (!active) return;
         const eligible = new Set<string>();
-        (results as any[]).forEach((result, index) => {
-          if ((result?.data?.data?.totalCount ?? 0) > 0) {
+        results.forEach((result, index) => {
+          if ((result?.data?.totalCount ?? 0) > 0) {
             eligible.add(String(candidateClasses[index].id));
           }
         });

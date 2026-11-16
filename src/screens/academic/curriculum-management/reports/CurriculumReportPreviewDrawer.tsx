@@ -1,14 +1,12 @@
 'use client';
 
-import { toast } from 'sonner';
 import { Iconify } from 'src/components/iconify';
+import React, { useState, useEffect } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import React, { useRef, useState, useEffect, useCallback } from 'react';
 import {
   usePreviewAcademicReportMutation,
-  useCreateAcademicReportExportMutation,
-  useLazyGetAcademicReportExportJobQuery,
 } from 'src/redux/academicAPI/AcademicReportApi';
+import { useAcademicReportDownload } from 'src/screens/academic/components/reports/useAcademicReportDownload';
 import {
   Box,
   Chip,
@@ -23,7 +21,6 @@ import {
   CircularProgress,
 } from '@mui/material';
 
-import { startAcademicReportDownload } from './ai-report-utils';
 import { CurriculumReportPreviewTable } from './CurriculumReportPreviewTable';
 
 import type {
@@ -42,8 +39,6 @@ interface CurriculumReportPreviewDrawerProps {
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50];
 
-type DownloadPhase = 'idle' | 'creating' | 'polling' | 'downloading';
-
 const CurriculumReportPreviewDrawerContent = ({
   open,
   onClose,
@@ -54,9 +49,7 @@ const CurriculumReportPreviewDrawerContent = ({
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
-  const [downloadPhase, setDownloadPhase] = useState<DownloadPhase>('idle');
-  const [jobStatusLabel, setJobStatusLabel] = useState('');
-  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const { downloadPhase, jobStatusLabel, handleDownload: downloadJob, handleCreateDownload } = useAcademicReportDownload();
 
   const [previewReport, { data: previewData, isLoading: isPreviewLoading }] = useQueryAndMutation<
     typeof usePreviewAcademicReportMutation
@@ -66,30 +59,6 @@ const CurriculumReportPreviewDrawerContent = ({
     popupConfig: { error: true, errorMessage: 'Failed to load report preview' },
   });
 
-  const [createExport, { isLoading: isExportCreating }] = useQueryAndMutation<
-    typeof useCreateAcademicReportExportMutation
-  >({
-    type: 'mutation',
-    currentQueryAndMutation: useCreateAcademicReportExportMutation,
-    popupConfig: { error: true, errorMessage: 'Failed to initiate export' },
-  });
-
-  const [pollJobStatus] = useLazyGetAcademicReportExportJobQuery();
-
-  /**
-   * Memoization Justification:
-   * - The cleanup callback is shared by effects and the asynchronous polling workflow.
-   * - A stable reference prevents cleanup effects from restarting on each render.
-   */
-  const stopPolling = useCallback(() => {
-    if (pollIntervalRef.current !== null) {
-      clearInterval(pollIntervalRef.current);
-      pollIntervalRef.current = null;
-    }
-  }, []);
-
-  useEffect(() => () => stopPolling(), [stopPolling]);
-
   useEffect(() => {
     if (open && reportRequest) {
       previewReport({ ...reportRequest, page: page + 1, pageSize: rowsPerPage });
@@ -97,73 +66,10 @@ const CurriculumReportPreviewDrawerContent = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, reportRequest, page, rowsPerPage]);
 
-  useEffect(() => {
-    if (open) {
-      setPage(0);
-      stopPolling();
-      setDownloadPhase('idle');
-      setJobStatusLabel('');
-    }
-  }, [open, reportRequest, stopPolling]);
-
   const handleDownload = async () => {
     if (!reportRequest || downloadPhase !== 'idle') return;
-
-    if (existingExportJobId) {
-      setDownloadPhase('downloading');
-      try {
-        startAcademicReportDownload(existingExportJobId);
-      } catch {
-        toast.error('Download failed. Please try again.');
-      } finally {
-        setDownloadPhase('idle');
-        setJobStatusLabel('');
-      }
-      return;
-    }
-
-    setDownloadPhase('creating');
-    setJobStatusLabel('');
-
-    const exportResult = await createExport({ ...reportRequest, format: 'pdf' });
-    if (!('data' in exportResult) || !exportResult.data?.jobId) {
-      setDownloadPhase('idle');
-      return;
-    }
-
-    const { jobId } = exportResult.data;
-    setDownloadPhase('polling');
-    setJobStatusLabel(exportResult.data.status || 'Queued');
-
-    pollIntervalRef.current = setInterval(async () => {
-      try {
-        const statusResult = await pollJobStatus({ jobId }, false);
-        if (!('data' in statusResult) || !statusResult.data) return;
-
-        const { status } = statusResult.data;
-        setJobStatusLabel(status || '');
-
-        if (status === 'Completed') {
-          stopPolling();
-          setDownloadPhase('downloading');
-          try {
-            startAcademicReportDownload(jobId);
-          } catch {
-            toast.error('Download failed. Please try again.');
-          } finally {
-            setDownloadPhase('idle');
-            setJobStatusLabel('');
-          }
-        } else if (status === 'Failed') {
-          stopPolling();
-          setDownloadPhase('idle');
-          setJobStatusLabel('');
-          toast.error(statusResult.data.errorMessage || 'Export job failed');
-        }
-      } catch {
-        // transient poll error — retry on next tick
-      }
-    }, 2000);
+    if (existingExportJobId) await downloadJob(existingExportJobId, 'Completed', true);
+    else await handleCreateDownload(reportRequest, true);
   };
 
   const handleChangePage = (_: unknown, newPage: number) => setPage(newPage);
@@ -180,7 +86,7 @@ const CurriculumReportPreviewDrawerContent = ({
   const isDownloadInProgress = downloadPhase !== 'idle';
 
   const downloadStatusText =
-    downloadPhase === 'creating' || isExportCreating
+    downloadPhase === 'creating'
       ? 'Creating export...'
       : downloadPhase === 'polling'
         ? `Generating PDF${jobStatusLabel ? ` (${jobStatusLabel})` : '...'}`

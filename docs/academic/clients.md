@@ -3,7 +3,7 @@ module: academic
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-11-04
+updated_on: 2026-11-08
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -99,9 +99,11 @@ These clients replace broad initial reads while retaining existing mutation tags
 | --- | --- | --- |
 | Assign Class Teacher | `src/redux/classManagementApi/classTeacherAssignmentApi/classTeacherAssignmentApi.ts` | Read rows, summary and eligible teachers through one workspace query. |
 | Subject and chapter selectors | `src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi.ts`, `src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api.ts` | Request lightweight lookup options; management lists keep full records. |
+| Copy Subject Allocations | `src/screens/academic/curriculum-management/subjectAssignment/component/subject-copy-dialog/useEligibleCopyClasses.ts` | Eligibility checks use non-subscribing imperative queries. Closing the dialog does not retain background subscriptions that refetch candidate classes after later mutations. |
 | Lesson List, Teacher Diary and Review Queue | `src/screens/academic/course-management/lessonPlan/hooks/use-lesson-plan-workspace.ts` | Send current page/search/filter/sort and visible search columns; use global response counts/options and only page-associated diaries. Review queue is independent of selected medium. |
 | Rubric templates | `src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricTemplateReadApi.ts`, `src/screens/academic/homework-assignment-management/setting/rubricConfig/hooks/useRubricTemplateDetails.ts` | Page summary rows; fetch criterion details only for the selected action. |
 | Rubric scoring | `src/screens/academic/homework-assignment-management/marksAndFeedback/useRubricEvaluationQueries.ts` | Read the selected submission/student evaluation; refresh the saved evaluation chain after mutations. |
+| Evaluation and Feedback | `HomeworkAssessmentAndFeedbackApi.ts`, `AssignmentAssessmentAndFeedbackApi.ts`, `marksAndFeedback/evaluationSubmissionDetail.tsx` | Request `Lightweight=true` for the complete scalar roster and summary. Keep local cohort filtering, sorting, exports and previous/next navigation. Read answer text and attachments only for the selected student; current-query data prevents a previous student's content appearing while selection changes. Backend contracts remain in the [read reference](../../../Shikshamitra-BE/docs/modules/academic/references/ui-read-performance.md#read-contracts). |
 | Elective assignments and exam readiness | `src/redux/classManagementApi/studentElectiveAssignment/studentElectiveAssignment.ts`, `src/screens/examination/scheduleExam/components/use-elective-readiness.ts` | Reuse shared options and grouped selection counts instead of downloading student selections to count them. |
 | Locked elective corrections | `studentElectiveAssignment.ts`, `electiveCorrectionTypes.ts`, `assignElectiveSubject/hooks/useLockedElectiveCorrection.ts` | Typed preview/confirm mutations use the roster capability and backend review token. Confirmation invalidates elective assignment and timetable tags; preview does not mutate or invalidate data. |
 | Rooms and approvals | `src/redux/academicAPI/timetableApi/roomAvailabilityApi.ts`, `src/screens/academic/timetable-schedule-management/roomAvailability/useRoomReservationPage.ts` | Page active reservation/approval views; read badge summaries separately; mount audit reads on demand. Room Availability filters use `getRoomBuildingLookup` at `/academics/timetable/room-availability/buildings/lookup`, with the existing building cache tag, instead of the Institute Setup management list. See the [backend lookup contract](../../../Shikshamitra-BE/docs/modules/academic/references/ui-read-performance.md#read-contracts). |
@@ -117,8 +119,9 @@ Existing server refresh choices remain explicit; a warm cache does not replace r
 ## Report preview and download lifecycle
 
 `src/redux/academicAPI/AcademicReportApi.ts` consumes completed exports as native Blobs, retaining content type and filename headers.
-`src/screens/academic/components/reports/useAcademicReportDownload.ts` shares job polling across report lists, stops timers on unmount/account changes, ignores stale completions and backs off transient failures.
+`src/screens/academic/components/reports/useAcademicReportDownload.ts` owns job creation, serialized status polling and download coordination for the active preview drawers as well as report-list downloads. It aborts pending work and stops timers on unmount/account changes, ignores stale completions and backs off transient failures. A creation response arriving after close cannot install a new polling loop. Creating, generating and downloading states remain visible in the owning drawer.
 Completed jobs download directly without creating another export.
+Curriculum previews, including the active timetable and homework consumers of that shared drawer, retain the protected native download route. Generated Examination previews retain their Blob download behavior.
 
 Curriculum history View uses `hooks/useCurriculumReportPreview.ts` to fetch fresh job details before opening the drawer.
 History summaries omit `requestJson`; the detail request supplies the saved parameters. Pascal-case stored DTO keys and camel-case keys normalize to the preview request without dropping class, division, subject or chapter filters.
