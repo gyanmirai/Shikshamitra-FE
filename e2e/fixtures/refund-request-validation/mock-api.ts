@@ -180,3 +180,11 @@ export const useSubmitFeeRefundMutation = hook;
 export const useUpdateFeeRefundMutation = hook;
 export const usePreviewFeeRefundMutation = hook;
 export const useLazyGetRefundEligibilityQuery = hook;
+export const useDownloadRefundReceiptPdfMutation = () => [
+  () => ({
+    unwrap: async () => {
+      throw new Error('No synthetic receipt PDF');
+    },
+  }),
+  { isLoading: false },
+];

@@ -55,6 +55,13 @@ describe('charge amount validation', () => {
 });
 
 describe('charge form validation', () => {
+  it('attaches an empty selected-student error to the student field', async () => {
+    const schema = createUpdateChargeValidationSchema(currentYear, false);
+    await expect(
+      schema.validate({ ...validValues, studentIds: [], selectedStudents: [] })
+    ).rejects.toMatchObject({ path: 'studentIds' });
+  });
+
   it.each([false, true])('validates without financial routing inputs (edit: %s)', async (isEdit) => {
     const schema = createUpdateChargeValidationSchema(currentYear, isEdit);
     const values = { ...validValues, chargeId: isEdit ? 'charge-id' : '' };

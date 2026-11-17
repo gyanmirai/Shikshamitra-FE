@@ -24,6 +24,7 @@ import {
 } from '@mui/material';
 
 import { financeExposurePreview } from '../finance-admin-dashboard-preview-data';
+import { financeDashboardCardSx, financeDashboardTileSx } from './finance-dashboard-card-styles';
 
 function academicYearLabel(year: Record<string, any>) {
   if (year.name || year.academicYearName || year.yearName) {
@@ -72,12 +73,7 @@ export default function ExposureAtlas() {
     : 'No academic year selected';
 
   return (
-    <Card
-      component="section"
-      aria-labelledby="outstanding-fees-title"
-      variant="outlined"
-      sx={{ height: '100%', boxShadow: 'none' }}
-    >
+    <Card component="section" aria-labelledby="outstanding-fees-title" sx={financeDashboardCardSx}>
       <CardHeader
         title={
           <Typography id="outstanding-fees-title" variant="h6">
@@ -95,7 +91,8 @@ export default function ExposureAtlas() {
           ) : null
         }
         sx={{
-          p: 2,
+          p: 0,
+          mb: 2,
           display: 'flex',
           flexWrap: 'wrap',
           gap: 1,
@@ -108,32 +105,37 @@ export default function ExposureAtlas() {
           No board and medium options are available for this year.
         </Typography>
       )}
-      <Divider />
-      <CardContent sx={{ p: 2 }}>
-        <Grid container spacing={2}>
+      <CardContent sx={{ p: '0 !important', mb: 2 }}>
+        <Grid container spacing={1.5}>
           <Grid size={{ xs: 6, sm: 4 }}>
-            <Typography variant="caption" color="text.secondary">
-              Total outstanding
-            </Typography>
-            <Typography component="p" variant="h6" sx={{ fontVariantNumeric: 'tabular-nums' }}>
-              {formatNumber(financeExposurePreview.outstanding, 'INR')}
-            </Typography>
+            <Stack sx={financeDashboardTileSx}>
+              <Typography variant="caption" color="text.secondary">
+                Total outstanding
+              </Typography>
+              <Typography component="p" variant="h6" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+                {formatNumber(financeExposurePreview.outstanding, 'INR')}
+              </Typography>
+            </Stack>
           </Grid>
           <Grid size={{ xs: 6, sm: 4 }}>
-            <Typography variant="caption" color="text.secondary">
-              Overdue
-            </Typography>
-            <Typography component="p" variant="h6" sx={{ fontVariantNumeric: 'tabular-nums' }}>
-              {formatNumber(financeExposurePreview.overdue, 'INR')}
-            </Typography>
+            <Stack sx={financeDashboardTileSx}>
+              <Typography variant="caption" color="text.secondary">
+                Overdue
+              </Typography>
+              <Typography component="p" variant="h6" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+                {formatNumber(financeExposurePreview.overdue, 'INR')}
+              </Typography>
+            </Stack>
           </Grid>
           <Grid size={{ xs: 12, sm: 4 }}>
-            <Typography variant="caption" color="text.secondary">
-              Students with overdue fees
-            </Typography>
-            <Typography component="p" variant="h6">
-              {financeExposurePreview.overdueStudents}
-            </Typography>
+            <Stack sx={financeDashboardTileSx}>
+              <Typography variant="caption" color="text.secondary">
+                Students with overdue fees
+              </Typography>
+              <Typography component="p" variant="h6">
+                {financeExposurePreview.overdueStudents}
+              </Typography>
+            </Stack>
           </Grid>
         </Grid>
       </CardContent>
@@ -170,7 +172,7 @@ export default function ExposureAtlas() {
         direction={{ xs: 'column', sm: 'row' }}
         justifyContent="space-between"
         spacing={0.5}
-        sx={{ p: 2 }}
+        sx={{ pt: 2 }}
       >
         <Typography variant="caption" color="text.secondary">
           Separate charges total: {formatNumber(financeExposurePreview.separateCharges, 'INR')}

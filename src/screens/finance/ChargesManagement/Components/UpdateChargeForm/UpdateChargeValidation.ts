@@ -90,14 +90,17 @@ export const createUpdateChargeValidationSchema = (currentYear: any, isEditMode:
     ),
   }).test(
     'selection-required',
-    'Please select at least one student, division, or class',
-    (values) => {
+    'Please select at least one student',
+    function (values) {
       const hasStudents =
         values.selectionMode === 'selected' && values.studentIds && values.studentIds.length > 0;
       const explicitlyAll = values.selectionMode === 'all';
       const hasClass = Array.isArray(values.standardId) && values.standardId.length > 0;
 
-      return !!((hasStudents || explicitlyAll) && hasClass);
+      return (
+        !!((hasStudents || explicitlyAll) && hasClass) ||
+        this.createError({ path: 'studentIds' })
+      );
     }
   );
 

@@ -3,21 +3,17 @@
 import Link from 'next/link';
 import { Iconify } from 'src/components/iconify';
 import { financePaths } from 'src/constants/finance-menu';
-import { Box, Card, Chip, Stack, Divider, CardHeader, Typography } from '@mui/material';
+import { Box, Card, Chip, Grid, Stack, CardHeader, Typography } from '@mui/material';
 
 import {
   financeQueuePreview,
   financeReportShortcuts,
 } from '../finance-admin-dashboard-preview-data';
+import { financeDashboardCardSx, financeDashboardTileSx } from './finance-dashboard-card-styles';
 
 export function FinanceAttentionQueue() {
   return (
-    <Card
-      component="section"
-      aria-labelledby="finance-attention-title"
-      variant="outlined"
-      sx={{ height: '100%', boxShadow: 'none' }}
-    >
+    <Card component="section" aria-labelledby="finance-attention-title" sx={financeDashboardCardSx}>
       <CardHeader
         title={
           <Typography id="finance-attention-title" variant="h6">
@@ -26,25 +22,23 @@ export function FinanceAttentionQueue() {
         }
         subheader="Finance items to review"
         action={<Chip size="small" label={`${financeQueuePreview.needsAttention.length} items`} />}
-        sx={{ p: 2, '& .MuiCardHeader-action': { m: 0 } }}
+        sx={{ p: 0, mb: 2, '& .MuiCardHeader-action': { m: 0 } }}
       />
-      <Divider />
-      <Stack divider={<Divider flexItem />}>
+      <Stack spacing={1}>
         {financeQueuePreview.needsAttention.map((item) => (
           <Box
             key={item.id}
             component={Link}
             href={item.route}
             sx={{
-              px: 2.5,
-              py: 1.5,
+              ...financeDashboardTileSx,
               display: 'grid',
               gridTemplateColumns: 'minmax(0, 1fr) auto',
               gap: 1,
               alignItems: 'center',
               textDecoration: 'none',
               color: 'inherit',
-              '&:hover': { bgcolor: 'action.hover' },
+              '&:hover': { bgcolor: 'action.hover', borderColor: 'text.disabled' },
               '&:focus-visible': {
                 outline: '2px solid',
                 outlineColor: 'primary.main',
@@ -84,12 +78,7 @@ export function FinanceAttentionQueue() {
 
 export function FinanceReportRail() {
   return (
-    <Card
-      component="section"
-      aria-labelledby="finance-report-title"
-      variant="outlined"
-      sx={{ boxShadow: 'none' }}
-    >
+    <Card component="section" aria-labelledby="finance-report-title" sx={financeDashboardCardSx}>
       <CardHeader
         title={
           <Typography id="finance-report-title" variant="h6">
@@ -97,42 +86,43 @@ export function FinanceReportRail() {
           </Typography>
         }
         subheader="Open Finance Reports to choose a period and filters"
-        sx={{ p: 2 }}
+        sx={{ p: 0, mb: 2 }}
       />
-      <Divider />
-      <Stack divider={<Divider flexItem />}>
+      <Grid container spacing={1.5}>
         {financeReportShortcuts.map((report) => (
-          <Box
-            key={report}
-            component={Link}
-            href={financePaths.reports}
-            sx={{
-              px: 2.5,
-              py: 1.5,
-              display: 'grid',
-              gridTemplateColumns: 'minmax(0, 1fr) auto',
-              alignItems: 'center',
-              gap: 1,
-              color: 'inherit',
-              textDecoration: 'none',
-              '&:hover': { bgcolor: 'action.hover' },
-              '&:focus-visible': {
-                outline: '2px solid',
-                outlineColor: 'primary.main',
-                outlineOffset: -2,
-              },
-            }}
-          >
-            <Typography variant="body2">{report}</Typography>
-            <Iconify
-              icon="mdi:chevron-right"
-              width={18}
-              aria-hidden
-              sx={{ color: 'text.secondary' }}
-            />
-          </Box>
+          <Grid key={report} size={{ xs: 12, sm: 6, lg: 3 }}>
+            <Box
+              component={Link}
+              href={financePaths.reports}
+              sx={{
+                ...financeDashboardTileSx,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 1,
+                color: 'inherit',
+                textDecoration: 'none',
+                '&:hover': { bgcolor: 'action.hover', borderColor: 'text.disabled' },
+                '&:focus-visible': {
+                  outline: '2px solid',
+                  outlineColor: 'primary.main',
+                  outlineOffset: -2,
+                },
+              }}
+            >
+              <Typography variant="body2" fontWeight={600}>
+                {report}
+              </Typography>
+              <Iconify
+                icon="mdi:chevron-right"
+                width={18}
+                aria-hidden
+                sx={{ color: 'text.secondary', flexShrink: 0 }}
+              />
+            </Box>
+          </Grid>
         ))}
-      </Stack>
+      </Grid>
     </Card>
   );
 }

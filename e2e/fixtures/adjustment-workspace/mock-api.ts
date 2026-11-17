@@ -139,6 +139,12 @@ function record(
     remainingAmount: amount - applied,
     requestedByUserId: 'maker',
     requestedByName: 'Creator',
+    availableActions:
+      status === AdjustmentStatusEnum.Pending
+        ? ['Approve', 'Reject']
+        : status === AdjustmentStatusEnum.PartiallyApplied
+          ? ['Approve']
+          : [],
     createdAt: '2026-11-03T09:00:00Z',
     sourceLines: [
       {
@@ -174,6 +180,21 @@ const response = <T>(data: T | undefined, skip = false, error = false) => ({
   error: error ? { data: { error: { message: 'Synthetic read failure.' } } } : undefined,
   refetch,
 });
+export function useGetFinanceWorkContextQuery(args: { academicYearId: string }) {
+  const capability = { view: true, add: true, submit: true, approve: true, reject: true };
+  return response({
+    academicYearId: args.academicYearId,
+    scopeLabel: 'Class 1 · A',
+    canViewAllTenant: false,
+    scopeOptions: [{ boardId: 'cbse', mediumId: 'english', stageId: 'primary', standardId: 'class-1', divisionId: 'division-a' }],
+    requestCapabilities: {
+      charge: capability,
+      concession: capability,
+      refund: capability,
+      adjustment: capability,
+    },
+  });
+}
 export function useGetAdjustmentEligibilityQuery(_: unknown, options?: { skip?: boolean }) {
   useObserve();
   return response(eligibility, options?.skip);
