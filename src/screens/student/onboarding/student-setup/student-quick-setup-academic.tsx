@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { DetailField } from 'src/components/detail-view';
+import { studentPaths } from 'src/constants/student-menu';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
@@ -20,6 +21,8 @@ import {
   InputAdornment,
   CircularProgress,
 } from '@mui/material';
+
+import { getOnboardingErrorMessage } from './student-onboarding-messages';
 
 import type { QuickAcademicMode } from './student-quick-setup-academic-model';
 import type { StudentQuickSetupAcademicEditor } from './use-student-quick-setup-academic';
@@ -71,6 +74,14 @@ export default function StudentQuickSetupAcademic({
   useEffect(() => setEditing(false), [item?.id]);
   const { values } = form;
   const numberDisabled = disabled || !values.divisionId;
+  const grLoadError = editor.seriesQuery.isError
+    ? getOnboardingErrorMessage(
+        editor.seriesQuery.error,
+        'GR numbers could not be loaded. Try again.'
+      )
+    : editor.settingsQuery.isError
+      ? 'GR settings could not be loaded. Try again.'
+      : undefined;
   const loadingRecovery = (
     <Button size="small" onClick={editor.retry}>
       Retry
@@ -353,7 +364,9 @@ export default function StudentQuickSetupAcademic({
                       grAssigned
                         ? item.grNumber
                         : values.grMode === 'automatic'
-                          ? grSeries?.nextPreview || 'Next available on save'
+                          ? grLoadError || (!editor.seriesQuery.isFetching && !series.length)
+                            ? ''
+                            : grSeries?.nextPreview || 'Next available on save'
                           : values.grValue
                     }
                     slotProps={{
@@ -368,37 +381,55 @@ export default function StudentQuickSetupAcademic({
                     disabled={numberDisabled && !grAssigned}
                   />
                 </ShakingTextField>
-                {!grAssigned && !closed && !editor.settingsQuery.isFetching && !grPolicy && (
-                  <Typography variant="caption" color="text.secondary">
-                    GR settings are unavailable. Ask an administrator to check the settings.
-                  </Typography>
-                )}
                 {!grAssigned &&
                   !closed &&
+                  !grLoadError &&
+                  !editor.settingsQuery.isFetching &&
+                  !grPolicy && (
+                    <Typography variant="caption" color="text.secondary">
+                      GR settings are unavailable. Ask an administrator to check the settings.
+                    </Typography>
+                  )}
+                {!grAssigned &&
+                  !closed &&
+                  !grLoadError &&
                   !editor.seriesQuery.isFetching &&
                   !editor.seriesQuery.isError &&
                   !series.length && (
                     <Typography variant="caption" color="text.secondary">
-                      No GR numbering rule is available. Ask an administrator to check the settings.
+                      No published GR series covers this student. Ask your administrator to check
+                      the academic path in Onboarding Settings.
                     </Typography>
                   )}
-                {!grAssigned && !closed && values.grMode === 'automatic' && grSeries && (
-                  <Typography variant="caption" color="text.secondary">
-                    Preview only · confirmed when saved.
-                  </Typography>
-                )}
-                {(editor.seriesQuery.isError || editor.settingsQuery.isError) && !closed && (
+                {!grAssigned &&
+                  !closed &&
+                  !grLoadError &&
+                  values.grMode === 'automatic' &&
+                  grSeries && (
+                    <Typography variant="caption" color="text.secondary">
+                      Preview only · confirmed when saved.
+                    </Typography>
+                  )}
+                {grLoadError && !closed && (
                   <StudentFeedback
                     notificationKey="STU-1032"
-                    presentation="toast"
+                    presentation="inline"
                     severity="error"
-                    toastAction={
-                      <Button size="small" onClick={editor.retry}>
-                        Retry
-                      </Button>
+                    action={
+                      <Stack direction="row" spacing={1}>
+                        <Button size="small" onClick={editor.retry}>
+                          Retry
+                        </Button>
+                        <Button
+                          size="small"
+                          href={studentPaths.onboarding.settingsSections.grNumber}
+                        >
+                          GR settings
+                        </Button>
+                      </Stack>
                     }
                   >
-                    Could not load GR settings. Try again.
+                    {grLoadError}
                   </StudentFeedback>
                 )}
                 {editor.editingGr && values.grValue !== item.grNumber && (

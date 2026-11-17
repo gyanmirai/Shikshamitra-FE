@@ -1,10 +1,14 @@
 import type { AdmissionApplicationDecisionHistory } from 'src/redux/student/admissions/admission-applications-api';
 
+import { Label } from 'src/components/label';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { Stack, Button, Skeleton, Typography } from '@mui/material';
 
-import { getAdmissionApplicationStatusLabel } from '../application-status';
 import { formatWorkflowDateTime } from '../workflow-list/workflow-list-format';
+import {
+  getAdmissionApplicationStatusColor,
+  getAdmissionApplicationStatusLabel,
+} from '../application-status';
 
 type Props = {
   isLoading: boolean;
@@ -21,7 +25,7 @@ export function ApplicationDecisionHistory({
   onRetry,
   compact = false,
 }: Props) {
-  if (isLoading) return <Skeleton variant="rounded" height={40} sx={{ mt: 2 }} />;
+  if (isLoading) return <Skeleton variant="rounded" height={40} sx={{ mt: compact ? 0 : 2 }} />;
 
   if (isError) {
     return (
@@ -29,7 +33,7 @@ export function ApplicationDecisionHistory({
         notificationKey="STU-0189"
         presentation="toast"
         severity="error"
-        sx={{ mt: 2 }}
+        sx={{ mt: compact ? 0 : 2 }}
         toastAction={
           <Button color="inherit" size="small" onClick={onRetry}>
             Retry
@@ -49,16 +53,57 @@ export function ApplicationDecisionHistory({
     );
 
   return (
-    <Stack spacing={0.75} sx={{ mt: compact ? 0 : 2, overflowWrap: 'anywhere' }}>
+    <Stack spacing={1.5} sx={{ mt: compact ? 0 : 2, minWidth: 0, overflowWrap: 'anywhere' }}>
       {!compact && <Typography variant="subtitle2">Decision History</Typography>}
-      {data.slice(0, 5).map((item) => (
-        <Typography key={item.id} variant="caption" color="text.secondary">
-          {getAdmissionApplicationStatusLabel(item.status)} ·{' '}
-          {formatWorkflowDateTime(item.occurredAt)}
-          {item.actorName ? ` · ${item.actorName}` : ''}
-          {item.reason ? ` · ${item.reason}` : ''}
-        </Typography>
-      ))}
+      <Stack
+        component="ol"
+        spacing={1.5}
+        sx={{ p: 0, m: 0, listStyle: 'none' }}
+        aria-label="Recorded decisions"
+      >
+        {data.slice(0, 5).map((item) => (
+          <Stack
+            component="li"
+            key={item.id}
+            spacing={0.5}
+            sx={{
+              minWidth: 0,
+              '&:not(:last-child)': { pb: 1.5, borderBottom: 1, borderColor: 'divider' },
+            }}
+          >
+            <Stack
+              direction="row"
+              alignItems="center"
+              justifyContent="space-between"
+              gap={1}
+              useFlexGap
+              flexWrap="wrap"
+            >
+              <Label color={getAdmissionApplicationStatusColor(item.status)}>
+                {getAdmissionApplicationStatusLabel(item.status)}
+              </Label>
+              <Typography
+                component="time"
+                dateTime={item.occurredAt}
+                variant="caption"
+                color="text.secondary"
+              >
+                {formatWorkflowDateTime(item.occurredAt)}
+              </Typography>
+            </Stack>
+            {item.actorName && (
+              <Typography variant="caption" color="text.secondary">
+                Recorded by {item.actorName}
+              </Typography>
+            )}
+            {item.reason && (
+              <Typography variant="body2" color="text.primary" sx={{ whiteSpace: 'pre-wrap' }}>
+                {item.reason}
+              </Typography>
+            )}
+          </Stack>
+        ))}
+      </Stack>
     </Stack>
   );
 }

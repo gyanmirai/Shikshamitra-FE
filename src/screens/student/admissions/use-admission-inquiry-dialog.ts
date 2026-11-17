@@ -2,7 +2,6 @@
 
 import type { RootState } from 'src/redux/store';
 import type { AdmissionFormField } from 'src/redux/student/admissions/admission-forms-api';
-import type { AdmissionSiblingParentSelection } from 'src/redux/student/admissions/admission-parent-family-types';
 
 import { useSelector } from 'react-redux';
 import { useRef, useState, useEffect } from 'react';
@@ -24,7 +23,6 @@ import {
 import { useAdmissionPhotoReads } from './use-admission-photo-reads';
 import { useInquiryPrimaryContact } from './use-inquiry-primary-contact';
 import { useAdmissionUnsavedChanges } from './use-admission-unsaved-changes';
-import { getAdmissionSiblingParentReviewError } from './admission-family-contacts-model';
 import { getConfiguredInquiryParentRelationship } from './admission-inquiry-field-bindings';
 import { useAdmissionInquiryClassOfferings } from './use-admission-inquiry-class-offerings';
 import {
@@ -239,7 +237,7 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
 
   async function submit(
     existingFamilyId?: string | null,
-    parentSelection?: AdmissionSiblingParentSelection,
+    familySourceApplicantId?: string,
     ownsOperation = false
   ) {
     if (!ownsOperation && operation.current) return;
@@ -262,7 +260,8 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
           existingFamilyId,
           false,
           undefined,
-          parentSelection
+          undefined,
+          familySourceApplicantId
         );
         if (reportIdentityErrors(payload, formik.values)) return;
         await create(payload).unwrap();
@@ -360,39 +359,19 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
       readingPhoto ||
       createState.isLoading ||
       duplicateState.isLoading,
-    useExistingFamily: async (familyId: string, parent: AdmissionSiblingParentSelection) => {
+    useExistingFamily: async (familyId: string, sourceApplicantId: string) => {
       if (
         !currentMatches.some(
           (match) =>
             match.familyId === familyId &&
             canLinkAdmissionInquiryFamily(match, currentGuardianPhone, currentGuardianEmail) &&
-            match.parents?.some(
-              (candidate) =>
-                candidate.sourceApplicantId === parent.sourceApplicantId &&
-                (!candidate.relationship || candidate.relationship === parent.relationship)
-            )
+            match.applicantId === sourceApplicantId
         )
       ) {
-        setRequestError('Check the parent details again before linking this family.');
+        setRequestError('Check the family matches again before confirming siblings.');
         return;
       }
-      const parentReviewError = getAdmissionSiblingParentReviewError(
-        formik.values.familyContacts,
-        (() => {
-          const relationship = getConfiguredInquiryParentRelationship(
-            fields,
-            formik.values.fields,
-            formik.values.parentRelationship
-          );
-          return relationship === 'guardian' ? undefined : relationship;
-        })(),
-        parent.relationship
-      );
-      if (parentReviewError) {
-        setRequestError(parentReviewError);
-        return;
-      }
-      await submit(familyId, parent);
+      await submit(familyId, sourceApplicantId);
     },
   };
 }

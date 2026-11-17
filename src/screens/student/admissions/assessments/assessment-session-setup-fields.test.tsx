@@ -140,6 +140,8 @@ it.each([false, true])(
     fireEvent.click(option);
     await waitFor(() => expect(input).toHaveValue('A002'));
     expect(screen.getByLabelText(pipeline ? 'Capacity' : 'Session capacity')).toHaveValue('40');
+    expect(screen.getByText('Room capacity')).toBeVisible();
+    expect(screen.getByText('40 seats')).toBeVisible();
     expect(screen.getByText('Main Academic Block / Ground Floor')).toBeInTheDocument();
   }
 );

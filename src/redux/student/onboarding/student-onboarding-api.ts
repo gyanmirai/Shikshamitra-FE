@@ -13,6 +13,7 @@ import type {
   StudentOnboardingCase,
   StudentCredentialEmail,
   SendStudentCredentials,
+  StudentGrNumberPreview,
   StudentIdentifierSeries,
   StudentOnboardingPolicy,
   StudentOnboardingCasePage,
@@ -219,6 +220,9 @@ export const studentOnboardingApi = api.injectEndpoints({
       invalidatesTags: (_result, _error, { id }) => [
         ...caseTags(id, _error),
         { type: studentOnboardingType.onboardingIdentifierSeries, id },
+        ...(!_error
+          ? [{ type: studentOnboardingType.onboardingIdentifierSeries, id: 'GR-PREVIEWS' }]
+          : []),
       ],
     }),
     assignStudentOnboardingRoll: builder.mutation<
@@ -701,6 +705,9 @@ export const studentOnboardingApi = api.injectEndpoints({
       invalidatesTags: (_result, _error, { id }) => [
         ...caseTags(id, _error),
         { type: studentOnboardingType.onboardingIdentifierSeries, id },
+        ...(!_error
+          ? [{ type: studentOnboardingType.onboardingIdentifierSeries, id: 'GR-PREVIEWS' }]
+          : []),
       ],
     }),
     previewStudentOnboardingActivation: builder.query<StudentOnboardingCase, string>({
@@ -888,6 +895,18 @@ export const studentOnboardingApi = api.injectEndpoints({
               { type: studentOnboardingType.onboardingAnalytics, id: 'SUMMARY' },
             ],
     }),
+    getStudentGrNumberPreviews: builder.query<StudentGrNumberPreview[], string>({
+      query: (academicYearId) => ({
+        url: '/student/onboarding/settings/gr-number-previews',
+        params: { academicYearId },
+      }),
+      transformResponse: (response: Result<StudentGrNumberPreview[]> | StudentGrNumberPreview[]) =>
+        unwrap(response),
+      providesTags: [
+        { type: studentOnboardingType.onboardingSettings, id: 'SCOPES' },
+        { type: studentOnboardingType.onboardingIdentifierSeries, id: 'GR-PREVIEWS' },
+      ],
+    }),
     getStudentIdentifierSeries: builder.query<StudentIdentifierSeries[], string>({
       query: (academicYearId) => ({
         url: '/student/onboarding/settings/identifier-series',
@@ -1047,6 +1066,7 @@ export const {
   useSaveStudentOnboardingSettingsMutation,
   useDeleteStudentOnboardingSettingsMutation,
   useGetStudentIdentifierSeriesQuery,
+  useGetStudentGrNumberPreviewsQuery,
   useCreateStudentIdentifierSeriesMutation,
   useDeactivateStudentIdentifierSeriesMutation,
   useGetHistoricalAdmissionReconciliationQuery,

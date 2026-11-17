@@ -9,9 +9,31 @@ import { OnboardingSettingsProvider } from '../onboarding-settings-context';
 import { GrNumberSettingsScreen, RollNumberSettingsScreen } from './onboarding-number-settings';
 
 const auth = vi.hoisted(() => ({ canConfigure: true }));
+const grPreviews = vi.hoisted(() => ({
+  currentData: [] as Array<{
+    ruleId: string;
+    nextSequence: number;
+    maximumNumber: number | null;
+    limitReached: boolean;
+    isEffective: boolean;
+    nextPreview: string | null;
+  }>,
+  isError: false,
+  isFetching: false,
+  refetch: vi.fn(),
+}));
+vi.mock('src/redux/student/onboarding/student-onboarding-api', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('src/redux/student/onboarding/student-onboarding-api')>()),
+  useGetStudentGrNumberPreviewsQuery: () => grPreviews,
+}));
+beforeEach(() => {
+  grPreviews.currentData = [];
+  grPreviews.isError = false;
+  grPreviews.isFetching = false;
+});
 beforeEach(() => { auth.canConfigure = true; });
 vi.mock('react-redux', () => ({
-  useSelector: (select: any) => select({ auth: { permissions: [
+  useSelector: (select: any) => select({ globalState: { currentYear: { id: 'year' } }, auth: { permissions: [
     { name: 'Students.Onboarding.View', isGranted: true },
     { name: 'Students.Onboarding.Add', isGranted: auth.canConfigure },
   ] } }),
@@ -207,6 +229,29 @@ const renderSettings = (children: React.ReactNode, onPersist?: any, initialSetti
 );
 
 describe('Onboarding numbering settings', () => {
+  it.each([false, true])(
+    'shows the saved next number or exhausted limit instead of the starting sample (exhausted=%s)',
+    (exhausted) => {
+      const initial = structuredClone(defaultOnboardingSettings);
+      const rule = initial.grNumber.configurations[0];
+      rule.status = 'published';
+      rule.isActive = true;
+      grPreviews.currentData = [
+        {
+          ruleId: rule.id,
+          nextSequence: 8,
+          maximumNumber: exhausted ? 5 : null,
+          limitReached: exhausted,
+          isEffective: true,
+          nextPreview: exhausted ? null : 'GR-000008AD',
+        },
+      ];
+      renderSettings(<GrNumberSettingsScreen />, undefined, initial);
+      expect(screen.getByText(exhausted ? 'Limit reached (5)' : 'GR-000008AD')).toBeInTheDocument();
+      expect(screen.getByText('Next number')).toBeInTheDocument();
+    }
+  );
+
   it.each(['create', 'edit'] as const)('saves a cleared optional GR maximum as null on %s', async (mode) => {
     const persist = vi.fn().mockResolvedValue(undefined);
     const initial = structuredClone(defaultOnboardingSettings);

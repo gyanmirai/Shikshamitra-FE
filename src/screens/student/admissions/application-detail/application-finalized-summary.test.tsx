@@ -6,6 +6,7 @@ import type {
 
 import { vi, it, expect, beforeEach } from 'vitest';
 import userEvent from '@testing-library/user-event';
+import { studentPaths } from 'src/constants/student-menu';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { expectStudentErrorToast } from 'src/test/student-toast-test-fixture';
@@ -266,4 +267,88 @@ it('preserves the guarded back action and disables onward navigation while the w
   view.rerender(<ApplicationFinalizedActions application={application} onBack={onBack} />);
   fireEvent.click(screen.getByRole('button', { name: 'Back to Applications' }));
   expect(onBack).toHaveBeenCalledOnce();
+});
+
+it.each([0, 1, 2, 3, 6] as const)(
+  'retains onboarding navigation for unfinished case status %s, including active provisioning',
+  (status) => {
+    mocks.caseQuery.mockReturnValue({
+      currentData: {
+        ...onboardingCase,
+        status,
+        studentEnrollmentId: status === 6 ? 'enrollment-1' : null,
+      },
+      refetch: mocks.retryCase,
+    });
+    render(<ApplicationFinalizedActions application={application} />);
+    expect(screen.getByRole('link', { name: 'Continue Onboarding' })).toHaveAttribute(
+      'href',
+      `${studentPaths.onboarding.setup}?search=${encodeURIComponent(application.applicationNumber)}`
+    );
+    expect(screen.queryByRole('link', { name: 'View in Student Records' })).not.toBeInTheDocument();
+  }
+);
+
+it('replaces both completed summary and footer navigation with the exact Student Records profile', () => {
+  mocks.permissions.push({ name: 'Students.Records.StudentList.View', isGranted: true });
+  mocks.caseQuery.mockReturnValue({
+    currentData: {
+      ...onboardingCase,
+      status: 4,
+      completedAt: '2026-10-12T09:30:00Z',
+      studentEnrollmentId: 'enrollment-1',
+    },
+    refetch: mocks.retryCase,
+  });
+  const view = renderSummary();
+  expect(
+    screen.getByText('Onboarding completed. Review the student in Student Records.')
+  ).toBeVisible();
+  expect(screen.queryByRole('link', { name: 'Continue Onboarding' })).not.toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'View in Student Records' })).toHaveAttribute(
+    'href',
+    `${studentPaths.records.studentList}?student=student-1`
+  );
+  view.unmount();
+  render(<ApplicationFinalizedActions application={application} />);
+  expect(screen.getByText('Onboarding Completed')).toBeVisible();
+  expect(screen.getByRole('link', { name: 'View in Student Records' })).toHaveAttribute(
+    'href',
+    `${studentPaths.records.studentList}?student=student-1`
+  );
+});
+
+it('updates the action when the same case changes from in progress to completed', () => {
+  mocks.permissions.push({ name: 'Students.Records.StudentList.View', isGranted: true });
+  mocks.caseQuery.mockReturnValue({ currentData: { ...onboardingCase, status: 1 } });
+  const view = render(<ApplicationFinalizedActions application={application} />);
+  expect(screen.getByRole('link', { name: 'Continue Onboarding' })).toBeVisible();
+  mocks.caseQuery.mockReturnValue({ currentData: { ...onboardingCase, status: 4 } });
+  view.rerender(<ApplicationFinalizedActions application={application} />);
+  expect(screen.queryByRole('link', { name: 'Continue Onboarding' })).not.toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'View in Student Records' })).toBeVisible();
+});
+
+it('keeps completion informational without Records access and locks the replacement while busy', () => {
+  mocks.caseQuery.mockReturnValue({ currentData: { ...onboardingCase, status: 4 } });
+  const view = render(<ApplicationFinalizedActions application={application} />);
+  expect(screen.getByText('Onboarding Completed')).toBeVisible();
+  expect(screen.queryByRole('link')).not.toBeInTheDocument();
+  mocks.permissions.push({ name: 'Students.Records.StudentList.View', isGranted: true });
+  view.rerender(<ApplicationFinalizedActions application={application} disabled />);
+  expect(screen.getByRole('button', { name: 'View in Student Records' })).toBeDisabled();
+  expect(screen.queryByRole('link')).not.toBeInTheDocument();
+});
+
+it.each([
+  { isLoading: true },
+  { isError: true, currentData: { ...onboardingCase, status: 4 } },
+  { currentData: { ...onboardingCase, applicationId: 'previous-application', status: 4 } },
+  { currentData: { ...onboardingCase, id: 'previous-case', status: 4 } },
+])('does not navigate using unavailable or mismatched onboarding status: %j', (query) => {
+  mocks.permissions.push({ name: 'Students.Records.StudentList.View', isGranted: true });
+  mocks.caseQuery.mockReturnValue(query);
+  render(<ApplicationFinalizedActions application={application} />);
+  expect(screen.queryByRole('link')).not.toBeInTheDocument();
+  expect(screen.queryByText('Onboarding Completed')).not.toBeInTheDocument();
 });

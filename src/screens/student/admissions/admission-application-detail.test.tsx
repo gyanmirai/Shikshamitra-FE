@@ -24,9 +24,14 @@ let permissions = [{ name: 'Students.Admissions.Applicants.View', isGranted: tru
 const offeringContext = vi.hoisted(() => vi.fn());
 const decisionCardProps = vi.hoisted(() => ({ current: null as any }));
 const responsive = vi.hoisted(() => ({ desktop: true }));
+const onboardingCaseQuery = vi.hoisted(() => vi.fn());
+vi.mock('src/redux/student/onboarding/student-onboarding-api', () => ({
+  useGetStudentOnboardingCaseQuery: onboardingCaseQuery,
+}));
 vi.mock('src/hooks/use-responsive', () => ({ useResponsive: () => responsive.desktop }));
 beforeEach(() => {
   responsive.desktop = true;
+  onboardingCaseQuery.mockReturnValue({ currentData: undefined });
 });
 vi.mock('src/redux/student/admissions/admission-offerings-api', () => ({
   useGetAdmissionOfferingQuery: offeringContext,
@@ -499,6 +504,51 @@ const addCompletedRegistrationStage = () => {
     status: 2,
   });
 };
+
+describe('finalized application footer onboarding status', () => {
+  it.each([0, 1, 4])(
+    'uses the current onboarding status %s in the actual workspace footer',
+    (status) => {
+      loadPaymentDetail();
+      pathname = '/student/admissions/applications/application-1';
+      returnParams = new URLSearchParams();
+      permissions = [
+        { name: 'Students.Onboarding.View', isGranted: true },
+        { name: 'Students.Records.StudentList.View', isGranted: true },
+      ];
+      Object.assign(detailState.applicationQuery.data, {
+        status: 11,
+        hasReachedDecision: true,
+        onboardingCaseId: 'case-1',
+      });
+      onboardingCaseQuery.mockReturnValue({
+        currentData: {
+          id: 'case-1',
+          applicationId: 'application-1',
+          studentId: 'student-1',
+          status,
+        },
+      });
+      render(<AdmissionApplicationDetailScreen />);
+      expect(decisionCardProps.current.hideFinalizedActions).toBe(true);
+      if (status === 4) {
+        expect(screen.queryByRole('link', { name: 'Continue Onboarding' })).not.toBeInTheDocument();
+        expect(screen.getByRole('link', { name: 'View in Student Records' })).toHaveAttribute(
+          'href',
+          '/student/profile?student=student-1'
+        );
+      } else {
+        expect(screen.getByRole('link', { name: 'Continue Onboarding' })).toHaveAttribute(
+          'href',
+          '/student/onboarding/setup?search=APP%2F2026%2F001'
+        );
+        expect(
+          screen.queryByRole('link', { name: 'View in Student Records' })
+        ).not.toBeInTheDocument();
+      }
+    }
+  );
+});
 
 describe('AdmissionApplicationDetailScreen', () => {
   it('mounts one parent registration controller in the current Form header before record actions', () => {

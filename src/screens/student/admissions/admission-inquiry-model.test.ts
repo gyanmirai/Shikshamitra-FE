@@ -81,6 +81,34 @@ const offering = {
 } as AdmissionOfferingListItem;
 
 describe('admission inquiry model', () => {
+  it('links a sibling family without replacing the entered parent role, contacts or form answers', () => {
+    const own = {
+      ...values,
+      parentRelationship: 'mother' as const,
+      fields: { ...values.fields, GUARDIAN_NAME: 'Pradeep' },
+    };
+    const before = buildAdmissionInquiryPayload(own, fields, offering);
+    const linked = buildAdmissionInquiryPayload(
+      own,
+      fields,
+      offering,
+      'saved-family',
+      false,
+      undefined,
+      undefined,
+      'source-child'
+    );
+    expect(linked).toEqual({
+      ...before,
+      existingFamilyId: 'saved-family',
+      existingParentApplicantId: 'source-child',
+      familyLinkOnly: true,
+    });
+    expect(linked.parentRelationship).toBe('mother');
+    expect(linked.formValues).toEqual(before.formValues);
+    expect(linked.guardianFirstName).toBe(before.guardianFirstName);
+    expect(linked.guardianPhone).toBe(before.guardianPhone);
+  });
   it.each(['Father', 'Mother'] as const)(
     'preserves a partial explicitly bound %s mobile without inventing a parent name',
     (role) => {

@@ -25,6 +25,90 @@ afterEach(() => {
   clearCachedAuthSession();
 });
 
+it.each(['create', 'confirm'] as const)(
+  'refreshes the existing child sibling status after a successful family-only %s',
+  async (operation) => {
+    let linked = false;
+    let reads = 0;
+    let unrelatedReads = 0;
+    const source = { id: 'source', familyId: 'family', hasLinkedSiblings: false };
+    mswServer.use(
+      http.get('*/api/student/enrollment/admissions/inquiries/source', () => {
+        reads += 1;
+        return HttpResponse.json({ data: { ...source, hasLinkedSiblings: linked } });
+      }),
+      http.get('*/api/student/enrollment/admissions/inquiries/unrelated', () => {
+        unrelatedReads += 1;
+        return HttpResponse.json({
+          data: { id: 'unrelated', familyId: 'another-family', hasLinkedSiblings: false },
+        });
+      }),
+      http.post('*/api/student/enrollment/admissions/inquiries', () => {
+        linked = true;
+        return HttpResponse.json({ data: { id: 'target', familyId: 'family' } });
+      }),
+      http.post('*/api/student/enrollment/admissions/inquiries/target/confirm-family', () => {
+        linked = true;
+        return HttpResponse.json({ data: { id: 'target', familyId: 'family' } });
+      })
+    );
+    const subscription = store.dispatch(
+      admissionInquiriesApi.endpoints.getAdmissionInquiry.initiate('source')
+    );
+    await subscription.unwrap();
+    const unrelated = store.dispatch(
+      admissionInquiriesApi.endpoints.getAdmissionInquiry.initiate('unrelated')
+    );
+    await unrelated.unwrap();
+    expect(reads).toBe(1);
+    const body = {
+      existingFamilyId: 'family',
+      existingParentApplicantId: 'source-child',
+      familyLinkOnly: true,
+    };
+    if (operation === 'create') {
+      await store
+        .dispatch(
+          admissionInquiriesApi.endpoints.createAdmissionInquiry.initiate({
+            ...body,
+            admissionCycleId: 'cycle',
+            admissionOfferingId: 'offering',
+            boardId: 'board',
+            mediumId: 'medium',
+            standardId: 'class',
+            applicantName: 'QA New Child',
+            applicantFirstName: 'QA New Child',
+            guardianFirstName: 'QA Mother',
+            guardianPhone: '9876543210',
+            phone: '9876543210',
+            preferredLanguageCode: 'en',
+            source: 0,
+          })
+        )
+        .unwrap();
+    } else {
+      await store
+        .dispatch(
+          admissionInquiriesApi.endpoints.confirmAdmissionInquiryFamily.initiate({
+            id: 'target',
+            body: { ...body, concurrencyStamp: 'stamp' },
+          })
+        )
+        .unwrap();
+    }
+    await vi.waitFor(() => {
+      expect(
+        admissionInquiriesApi.endpoints.getAdmissionInquiry.select('source')(store.getState()).data
+          ?.hasLinkedSiblings
+      ).toBe(true);
+    });
+    expect(reads).toBe(2);
+    expect(unrelatedReads).toBe(1);
+    subscription.unsubscribe();
+    unrelated.unsubscribe();
+  }
+);
+
 it('omits the class predicate for All Classes and preserves the scoped union across class reads', async () => {
   const inquiries = [
     { id: 'inquiry-class-8', standardId: 'class-8' },

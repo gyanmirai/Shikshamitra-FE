@@ -394,9 +394,20 @@ export function AssessmentSessionSetupFields({
           </Grid>
           {room && (
             <Grid size={{ xs: 12, sm: 6 }}>
-              <Typography variant="body2" color="text.secondary">
-                Room Capacity: {room.capacity}
-              </Typography>
+              <Stack
+                direction="row"
+                alignItems="center"
+                justifyContent="space-between"
+                spacing={1}
+                sx={{ p: 1, borderRadius: 1, bgcolor: 'background.neutral' }}
+              >
+                <Typography variant="body2" color="text.primary">
+                  Room capacity
+                </Typography>
+                <Label color="default" sx={{ color: 'text.primary' }}>
+                  {room.capacity} seats
+                </Label>
+              </Stack>
             </Grid>
           )}
         </Grid>

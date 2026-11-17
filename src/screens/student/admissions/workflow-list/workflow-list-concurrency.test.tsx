@@ -7,6 +7,7 @@ import { http, HttpResponse } from 'msw';
 import auth from 'src/redux/auth/authSlice';
 import { mswServer } from 'src/test/mswServer';
 import { configureStore } from '@reduxjs/toolkit';
+import { shikshaMitraToast } from 'src/components/toast';
 import { it, vi, expect, afterEach, beforeEach } from 'vitest';
 import { act, waitFor, renderHook } from '@testing-library/react';
 
@@ -53,6 +54,7 @@ const makeStore = () =>
 let store: ReturnType<typeof makeStore>;
 
 beforeEach(() => {
+  vi.clearAllMocks();
   store = makeStore();
 });
 
@@ -117,4 +119,34 @@ it('rechecks the archived version before reopening that same record with its cur
   });
   expect(reopenStamps).toEqual(['fresh-stamp']);
   expect(result.current.pendingConfirmation).toBeNull();
+});
+
+it.each([1, 13])('retains the archive confirmation with the exact active offering count (%i), then allows retry', async (count) => {
+  const published = { ...staleWorkflow, status: 1 as const };
+  let blocked = true;
+  let calls = 0;
+  mswServer.use(
+    http.get('*/api/student/enrollment/admissions/workflows/workflow-1', () =>
+      HttpResponse.json({ data: published })),
+    http.post('*/api/student/enrollment/admissions/workflows/workflow-1/archive', () => {
+      calls += 1;
+      return blocked
+        ? HttpResponse.json({ errorCode: 'Admissions.WorkflowInUse', detail: 'One or more business rules were violated.', data: { ActiveOfferingCount: count } }, { status: 403 })
+        : HttpResponse.json({ data: { ...published, status: 2 } });
+    })
+  );
+  const wrapper = ({ children }: { children: ReactNode }) => <Provider store={store}>{children}</Provider>;
+  const { result } = renderHook(() => useWorkflowListActions(), { wrapper });
+  act(() => result.current.requestConfirmation(published, 'archive'));
+  await act(async () => { await Promise.all([result.current.confirm(), result.current.confirm()]); });
+  expect(calls).toBe(1);
+  expect(result.current.pendingConfirmation?.workflow.status).toBe(1);
+  expect(result.current.confirmationNotice).toContain(`${count} active admission offering${count === 1 ? '.' : 's.'}`);
+  expect(shikshaMitraToast.error).not.toHaveBeenCalled();
+  expect(shikshaMitraToast.success).not.toHaveBeenCalled();
+  blocked = false;
+  await act(async () => result.current.confirm());
+  expect(result.current.pendingConfirmation).toBeNull();
+  expect(result.current.confirmationNotice).toBeNull();
+  expect(shikshaMitraToast.success).toHaveBeenCalledWith({ message: 'Workflow archived' });
 });

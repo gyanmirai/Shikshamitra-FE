@@ -44,14 +44,19 @@ export function FormBuilderSectionFields({
     : formik;
   const removeField = (fieldId: string) => {
     const field = formik.values.sections[sectionIndex].fields.find((item) => item.id === fieldId);
-    if (!field || field.inheritedFrom || isLockedInquiryField(formik.values.purpose, field, formik.values.coreFieldPolicyVersion)) return;
+    if (
+      !field ||
+      field.inheritedFrom ||
+      isLockedInquiryField(formik.values.purpose, field, formik.values.coreFieldPolicyVersion)
+    )
+      return;
     formik.setFieldValue(
       `sections[${sectionIndex}].fields`,
       formik.values.sections[sectionIndex].fields.filter((item) => item.id !== fieldId)
     );
   };
   return (
-    <Stack spacing={1} sx={{ px: 2, pb: 2 }}>
+    <Stack spacing={1} sx={{ px: 1.5, pb: 1.5 }}>
       <SortableContext
         items={section.fields.map((field) => `field:${section.id}:${field.id}`)}
         strategy={rectSortingStrategy}

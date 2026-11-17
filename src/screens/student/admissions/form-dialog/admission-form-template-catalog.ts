@@ -353,8 +353,8 @@ const DEFINITIONS: TemplateDefinition[] = [
               { code: 'ADDRESS_LINE_1', label: 'Address line 1', required: true },
               { code: 'ADDRESS_LINE_2', label: 'Address line 2' },
               { code: 'COUNTRY', label: 'Country', required: true },
-              { code: 'CITY', label: 'City', required: true },
               { code: 'STATE', label: 'State', required: true },
+              { code: 'CITY', label: 'City', required: true },
               {
                 code: 'PIN_CODE',
                 label: 'PIN code',

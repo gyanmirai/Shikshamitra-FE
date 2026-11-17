@@ -10,27 +10,27 @@ import { useRef, useState, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
 import { StudentFeedback } from 'src/components/student-feedback';
-import { Box, Stack, Avatar, Button, Skeleton, Typography, LinearProgress } from '@mui/material';
+import { Box, Stack, Avatar, Button, Skeleton, Typography } from '@mui/material';
 import {
   useActivateStudentOnboardingMutation,
-  useGetStudentOnboardingCredentialsQuery,
-  useGetStudentOnboardingWorkflowDocumentsQuery,
-  useRefreshStudentOnboardingReadinessMutation,
   useLazyGetStudentOnboardingCaseQuery,
+  useGetStudentOnboardingCredentialsQuery,
+  useRefreshStudentOnboardingReadinessMutation,
+  useGetStudentOnboardingWorkflowDocumentsQuery,
   useLazyPreviewStudentOnboardingActivationQuery,
 } from 'src/redux/student/onboarding/student-onboarding-api';
 
 import StudentOnboardingFees from './student-onboarding-fees';
 import { mapOnboardingCaseToItem } from './student-onboarding-model';
-import { getStudentSetupStatusDisplayLabel, studentSetupStatusMeta } from './student-setup-summary';
+import StudentQuickSetupSection from './student-quick-setup-section';
 import { runStudentQuickSetupSave } from './student-quick-setup-save';
 import StudentQuickSetupAcademic from './student-quick-setup-academic';
-import StudentQuickSetupSection from './student-quick-setup-section';
 import StudentQuickSetupFeesSection from './student-quick-setup-fees-section';
 import { useStudentQuickSetupAcademic } from './use-student-quick-setup-academic';
 import StudentOnboardingPortalAccounts from './student-onboarding-portal-accounts';
 import StudentOnboardingWorkflowDocuments from './student-onboarding-workflow-documents';
 import { getOnboardingMessage, getOnboardingErrorMessage } from './student-onboarding-messages';
+import { studentSetupStatusMeta, getStudentSetupStatusDisplayLabel } from './student-setup-summary';
 
 import type { StudentSetupView } from './student-setup-view';
 import type { StudentOnboardingItem } from './student-onboarding-model';
@@ -581,7 +581,11 @@ export default function StudentQuickSetupPage({
                 </StudentFeedback>
               )}
               {saving && (
-                <LinearProgress
+                <Stack
+                  direction="row"
+                  spacing={2}
+                  role="status"
+                  aria-busy
                   aria-label={
                     saving === 'activate'
                       ? 'Saving and activating student'
@@ -589,7 +593,10 @@ export default function StudentQuickSetupPage({
                         ? 'Sending login details'
                         : 'Saving student setup'
                   }
-                />
+                >
+                  <Skeleton width={160} height={24} sx={{ maxWidth: '50%' }} />
+                  <Skeleton width={120} height={24} sx={{ maxWidth: '35%' }} />
+                </Stack>
               )}
               <>
                 <Box

@@ -544,9 +544,7 @@ describe('Student Setup workspace selection wiring', () => {
     mocks.params.set('case', 'outside-current-page');
     mocks.focusedCaseFetching = true;
     render(element);
-    expect(
-      screen.getByRole('progressbar', { name: 'Loading selected onboarding student' })
-    ).toBeInTheDocument();
+    expect(screen.getByRole('status', { name: 'Loading student setup' })).toBeInTheDocument();
     expect(screen.getByTestId('student-setup-worklist')).not.toBeVisible();
     fireEvent.click(screen.getByRole('button', { name: 'Back' }));
     expect(mocks.params.get('case')).toBeNull();

@@ -46,9 +46,8 @@ export function FormBuilderPalette({
   const tabId = useId();
   const [activeTab, setActiveTab] = useState<'system' | 'custom'>('system');
   return (
-    <Stack sx={{ height: 1, minHeight: 0, p: 1.5, bgcolor: 'background.paper' }}>
-      
-          <Tabs
+    <Stack sx={{ flex: 1, minHeight: 0, p: 1.5, bgcolor: 'background.paper' }}>
+      <Tabs
         value={activeTab}
         variant="fullWidth"
         aria-label="Field Library"

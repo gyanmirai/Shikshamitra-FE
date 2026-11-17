@@ -403,7 +403,8 @@ export function buildAdmissionInquiryPayload(
   existingFamilyId?: string | null,
   createSeparateFamily = false,
   duplicateOverrideReason?: string,
-  parentSelection?: AdmissionSiblingParentSelection
+  parentSelection?: AdmissionSiblingParentSelection,
+  familySourceApplicantId?: string
 ): CreateAdmissionInquiry {
   const contact = getAdmissionInquiryPrimaryContact(fields, values);
   const configuredRelationship = getConfiguredInquiryParentRelationship(
@@ -477,7 +478,8 @@ export function buildAdmissionInquiryPayload(
     mediumId: values.mediumId,
     standardId: values.standardId,
     existingFamilyId,
-    existingParentApplicantId: parentSelection?.sourceApplicantId,
+    existingParentApplicantId: familySourceApplicantId || parentSelection?.sourceApplicantId,
+    ...(familySourceApplicantId ? { familyLinkOnly: true } : {}),
     parentRelationship: relationship === 'guardian' ? undefined : relationship,
     guardianResponsibilityConfirmed:
       relationship === 'guardian' && values.guardianResponsibilityConfirmed === true,

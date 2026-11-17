@@ -3,12 +3,16 @@ module: student
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-11-16
+updated_on: 2026-11-17
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Find Student Enrollment Admissions clients
+
+Inquiry family review sends additive `familyLinkOnly: true` on create or `confirm-family`, with `existingFamilyId` and `existingParentApplicantId` identifying the reviewed family/source child. Create retains the current inquiry's `parentRelationship` and all entered contacts/answers; family-only confirmation does not submit a source-parent role. The detail/list `hasLinkedSiblings` value drives informational linked status on either child without replacing the older `siblingFamilyConfirmed` account-proof field. Deploy the matching backend first; family membership is not client permission or portal authorization. See the [backend Student API](../../../Shikshamitra-BE/docs/modules/student/api.md) for validation and scope rules.
+
+Inquiry list arguments accept optional `creationTimeFrom` (inclusive) and `creationTimeBefore` (exclusive) UTC timestamps. The date-range control serializes local day boundaries, sending the day after the selected end as the exclusive bound. Backend list count/paging and CSV queries share these predicates. Deploy the matching FE and BE changes together; old servers do not implement this filter. No database migration is needed.
 
 ## Student setup guide client
 
@@ -95,6 +99,10 @@ Historical stages remain read-only and existing card-layout consumers retain the
 
 The Student-owned document workspace reuses Admissions document requirements, permissions, action commands and evidence history. View uses the existing authenticated `useDocumentPreview` blob hook; images support zoom, PDFs use an embedded browser preview, and unsupported formats retain Download. View and Download require the existing file-access permissions and evidence eligibility. The icon-only row actions keep specific accessible labels and tooltips; no public file URL, new download client or backend permission is introduced. Below `sm`, status moves into the Document cell so the sticky icon actions do not crowd out the file name. Non-applicable documents stay collapsed by default. The inactive-stage read-only notice is a compact caption; genuine missing-document and approval blockers remain visible.
 
+## GR number availability
+
+The GR settings table reads `getStudentGrNumberPreviews` for the selected academic year and displays the live **Next number**, or **Limit reached**. Draft editor output is labelled **Format example** and is not an availability claim. The read-only preview query refreshes on mount/focus, settings saves and successful GR assignment. Setup uses one inline GR recovery message with Retry and GR settings actions; a failed series read does not emit a second generic load toast or show “Next available on save”. The Onboarding message mapper distinguishes the server's `SeriesLimitReached` reason from generic unavailability. Existing save/assignment checks remain authoritative. See the [backend contract](../../../Shikshamitra-BE/docs/modules/student/api.md).
+
 ## App Login settings
 
 Student Setup prepares case and fee-selection reads only for known onboarding-case rows with the existing Onboarding View permission, after the unsaved-navigation guard permits opening. Credentials and workflow-document summaries prepare only after successful exact-case resolution in the same auth context. These are the same keys used by the destination hooks; legacy rows, placement/candidate lookups, delivery polling and save/activation preflights retain their existing owners.
@@ -104,6 +112,8 @@ Onboarding Settings contains GR Number and Roll Number only. Retired App Login b
 Student Setup uses the existing credentials workspace and send/link commands. Recipient checkboxes start unselected. Save & Activate captures the reviewed selection, commits activation, then requests only selected login emails. A selected verified existing sibling Parent is linked through the existing command without another email or password. With nobody selected, activation does not prepare accounts or send emails. Pending delivery refreshes independently of setup completion; active unfinished cases expose Check completion through the existing readiness mutation. See [the backend contract](../../../Shikshamitra-BE/docs/modules/student/api.md#app-login-settings).
 
 ## Payment collection and deferral
+
+The proration selector represents the valid no-policy state with a non-empty display-only option, so No policy · Full charge remains visible on initial load and after selection. `use-admission-joining-date` and the preview/preparation contracts continue to receive `null` for that choice; named policies retain their immutable version IDs. The academic-year default, policy permissions, joining-date cutoff and Finance calculation remain unchanged.
 
 `admission-joining-date-api.ts` owns the Admissions joining-date state, policy options, read-only proposed-date preview and concurrency-guarded confirmation endpoints. `use-admission-joining-date.ts` keeps the date draft and selected active policy version separate from the saved source; `use-admission-fee-preview.ts` debounces exact date, policy-version and variable-amount arguments and never displays an earlier input's result. Server `canEdit`, `canPreview`, `canSelectProrationPolicy` and `isLocked` capabilities govern capture. Staff with `Finance.Fees.StructureAssign.OverridePolicies` can choose from the active academic-year options; the default is preselected, and a non-default choice requires a reason. The same version is sent to preview and preparation, then displayed from the Finance-pinned snapshot. Confirmation refreshes application, collection and Onboarding state; a failed confirmation refreshes capabilities without preparing fees. A locked/read-only date displays the server value even if a local draft existed. Finance remains authoritative for options, permission, amounts, preparation, payments and receipts. See the [backend Student API contract](../../../Shikshamitra-BE/docs/modules/student/api.md).
 
@@ -117,6 +127,8 @@ Session row click and Enter/Space in `assessment-sessions-panel.tsx` use the exi
 
 Successful roster refreshes reconcile selected students by both application and stage identity before opening booking/bulk actions. Refreshed capabilities replace old selected snapshots; disappeared, inactive or unconfigured rows leave selection. Loading, failed and paused reads retain the selection until current evidence is available.
 
+Student table selection remains available for its existing batch actions. Bulk Book Session derives its count, enabled state and drawer rows from the existing `studentBookingReason` rule: active managed assessment, scheduling enabled, current server booking capability and exact Offering/stage context. A zero-eligible selection cannot open booking and exposes the reason through the shared tooltip with a focusable disabled-control wrapper. Mixed selections retain every selected table row while passing only eligible students into booking. Individual booking guidance, drawer/server validation and booking commands retain their existing contracts.
+
 `assessment-sessions-panel.tsx` owns the Session worklist and `assessment-session-setup-drawer.tsx` creates/edits sessions without assigning students. `assessment-student-booking-drawer.tsx` and `use-assessment-student-booking.ts` own Student selection and existing-session booking only. Student is first/default; Session/Student URL state controls active-panel reads, with independent search/paging. Required Board/Medium gate list reads; linked scope/session hierarchy restores atomically without clearing link identity. Known booked selections show existing details and skip booking-preview/confirmation reads until eligible students remain. Both Export controls retain loaded-page semantics. Pipeline retains its separate Add Slot/Create & Book flow. `admission-assessment-planning-api.ts` sends optional `stageInstanceIds` to preview; selected rows retain their exact application/stage identity and use fresh server stamps. Confirmation reuses the existing atomic endpoint and cache tags. Uncertain responses replay the exact durable command; no confirmed payment or admission transition is performed by booking.
 
 `admission-assessment-catalog-api.ts` reads `/student/enrollment/admissions/workflows/assessment-catalog` only when the stage uses subject-wise marks.
@@ -129,6 +141,8 @@ UI result helpers keep nullable blanks, exact decimal totals and frozen attempt 
 ## Finalized application summary reads
 
 The finalized application summary reuses the application/workflow and decision-history reads, plus `getStudentOnboardingCase` only with the exact `Students.Onboarding.View` grant and a linked case. Case and fee-selection evidence use `currentData`, withhold failed or mismatched results, and refetch on mount. Decision history includes nullable `actorName` from the recorded actor; the assigned counsellor is never substituted for finalizing staff. No write, monetary calculation or new endpoint is introduced.
+
+The summary and separate workspace footer share the same case-read guard and existing RTK Query cache. Onboarding status `Completed` replaces Continue Onboarding with View in Student Records, targeting the case's exact Student through the existing profile route and Student List View permission. The completion label remains informational without Records access. Pending, in-progress and provisioning cases keep their existing Setup link; loading, failed and mismatched case reads cannot supply an onward link. Workspace navigation locks apply to both destinations.
 
 ## Daily Attendance workspace reads
 
@@ -204,7 +218,7 @@ Registration relationship projections use the same value/hint contract without a
 `inquiry-management/inquiry-family-confirmation.tsx` adds staff confirmation for an already-saved pending inquiry. It uses the existing duplicate-check mutation only on explicit open/reload, then posts the selected family, source applicant, explicit Father/Mother relationship and target stamp through `confirmAdmissionInquiryFamily`. Success consumes the returned inquiry and optional `siblingFamilyConfirmed` flag. Target detail/timeline and list tags refresh; source detail is not refetched. Read or mutation failures preserve the selection and invalidate nothing. Dirty/busy, stale target and no-permission states cannot submit; the contextual dialog does not submit the underlying Inquiry form.
 Inquiry duplicate checks add `parentContacts`; Direct Registration family checks add `guardianEmail` alongside the retained mobile field.
 Match responses expose saved parent candidates identified by `sourceApplicantId` and nullable relationship, plus email/mobile match flags.
-The owning forms send `existingFamilyId`, `existingParentApplicantId` and explicit `parentRelationship` only after staff confirms Add sibling; autofill uses that saved parent contact and does not replace the other parent's authored answers.
+Staff Inquiry create/edit send `existingFamilyId`, `existingParentApplicantId` (a source-child witness) and `familyLinkOnly: true` after Confirm siblings. Create retains its own entered `parentRelationship`; family confirmation omits that field. Successful family linking invalidates cached details for that family so an already-open source inquiry receives the linked status; unrelated families are not refetched. Family-only linking does not autofill saved-parent contacts or establish account proof. Other legacy callers retain their explicit saved-parent contract.
 Matching keys include the current academic/admission identity and contact inputs so late responses cannot confirm an edited family.
 
 The existing credentials workspace adds `parentSibling`; `student-parent-sibling-state.ts` derives activation readiness from that same case-bound query without another lookup.

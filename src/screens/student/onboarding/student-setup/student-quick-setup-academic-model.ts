@@ -202,7 +202,7 @@ export async function saveQuickAcademic({
         throw new Error(
           available.length
             ? 'Select the GR numbering rule.'
-            : 'No GR numbering rule is available. Ask an administrator to check the settings.'
+            : 'No published GR series covers this student. Ask your administrator to check the academic path in Onboarding Settings.'
         );
       current = await services.assignGr({
         id: current.id,

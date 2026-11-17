@@ -53,6 +53,9 @@ type Props = {
   footerAction?: ReactNode;
 };
 
+// A valid no-policy choice needs a non-empty select value; Finance still receives null.
+const NO_PRORATION_POLICY_OPTION = '__no_proration_policy__';
+
 const collectionGuardError = (status: number, detail: string) =>
   Object.assign(new Error(detail), { status, data: { detail } });
 
@@ -168,9 +171,10 @@ export default function AdmissionFeeCollectionPanel({
     const prepared = await prepare({
       applicationId,
       variableFeeHeads,
-      ...(joiningDate.state?.canSelectProrationPolicy && joiningDate.prorationPolicyEligible && {
-        prorationPolicyVersionId: joiningDate.selectedPolicyVersionId,
-      }),
+      ...(joiningDate.state?.canSelectProrationPolicy &&
+        joiningDate.prorationPolicyEligible && {
+          prorationPolicyVersionId: joiningDate.selectedPolicyVersionId,
+        }),
     }).unwrap();
     variableAmounts.onFalse();
     if (prepared.isSettled) {
@@ -411,10 +415,10 @@ export default function AdmissionFeeCollectionPanel({
             <Stack spacing={1} sx={{ maxWidth: { xs: '100%', sm: 520 } }}>
               <CustomSelect<'value' | 'label', false>
                 label="Proration policy"
-                value={joiningDate.selectedPolicyVersionId ?? ''}
+                value={joiningDate.selectedPolicyVersionId ?? NO_PRORATION_POLICY_OPTION}
                 options={[
                   ...(!joiningDate.state.defaultProrationPolicyVersionId
-                    ? [{ value: '', label: 'No policy · Full charge' }]
+                    ? [{ value: NO_PRORATION_POLICY_OPTION, label: 'No policy · Full charge' }]
                     : []),
                   ...(joiningDate.state.prorationPolicies ?? []).map((policy) => ({
                     value: policy.policyVersionId,
@@ -432,7 +436,9 @@ export default function AdmissionFeeCollectionPanel({
                 isSearch={(joiningDate.state.prorationPolicies?.length ?? 0) > 6}
                 noOptionsMessage="No active proration policies are available for this academic year."
                 onChange={(value) => {
-                  joiningDate.changePolicy(String(value) || null);
+                  joiningDate.changePolicy(
+                    value === NO_PRORATION_POLICY_OPTION ? null : String(value) || null
+                  );
                 }}
                 helperText="Used to calculate fees from the actual joining date."
               />
@@ -481,8 +487,8 @@ export default function AdmissionFeeCollectionPanel({
               'Full fees apply because the joining date is before the school start date.'
             ) : (
               <>
-                No active default proration policy is configured for this academic year. Fees use the
-                existing full-charge treatment.
+                No active default proration policy is configured for this academic year. Fees use
+                the existing full-charge treatment.
               </>
             )}
           </StudentFeedback>
@@ -707,9 +713,10 @@ export default function AdmissionFeeCollectionPanel({
               ? {
                   applicationId,
                   joiningDate: joiningDate.date,
-                  ...(joiningDate.state.canSelectProrationPolicy && joiningDate.prorationPolicyEligible && {
-                    prorationPolicyVersionId: joiningDate.selectedPolicyVersionId,
-                  }),
+                  ...(joiningDate.state.canSelectProrationPolicy &&
+                    joiningDate.prorationPolicyEligible && {
+                      prorationPolicyVersionId: joiningDate.selectedPolicyVersionId,
+                    }),
                 }
               : undefined
           }

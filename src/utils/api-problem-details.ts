@@ -14,6 +14,8 @@ export interface ParsedApiProblemDetail {
 }
 
 const KNOWN_ERROR_MESSAGES: Record<string, string> = {
+  'Admissions.InquiryDuplicateStudent':
+    'An inquiry for this student already exists in this admission cycle. Review the student name and date of birth or open the existing inquiry. A shared parent mobile is allowed for a different child; use Confirm Siblings to link their family.',
   'HR:Payroll:SalaryTemplateNameExists':
     'A salary template already uses this name. Enter a different template name.',
   'HR:Payroll:SalaryTemplatePreviewRequired':

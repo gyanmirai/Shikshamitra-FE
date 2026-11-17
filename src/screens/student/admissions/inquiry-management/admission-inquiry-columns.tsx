@@ -110,7 +110,7 @@ export function getAdmissionInquiryActions(
   if (options.onHistory)
     actions.push({
       id: 'history',
-      label: `Handling History For ${reference}`,
+      label: 'Handling History',
       icon: 'mdi:history',
       disabled: options.isMoving,
       onClick: () => options.onHistory?.(inquiry),

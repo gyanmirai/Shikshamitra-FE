@@ -460,7 +460,7 @@ it('explains missing legacy identity mappings on submit without sending an empty
 });
 
 it.each([false, true])(
-  'retains a partial father phone and creates only with a verified saved parent: %s',
+  'does not replace a missing parent name from a matching family: %s',
   async (useSavedParent) => {
     const available = offering('class-a');
     const duplicate = vi.fn();
@@ -510,7 +510,14 @@ it.each([false, true])(
         duplicate(await request.json());
         return HttpResponse.json({
           data: useSavedParent
-            ? [{ familyId: 'saved-family', guardianPhone: parent.mobile, parents: [parent] }]
+            ? [
+                {
+                  familyId: 'saved-family',
+                  applicantId: 'saved-applicant',
+                  guardianPhone: parent.mobile,
+                  parents: [parent],
+                },
+              ]
             : [],
         });
       }),
@@ -541,18 +548,9 @@ it.each([false, true])(
     if (useSavedParent) {
       expect(shikshaMitraToast.error).not.toHaveBeenCalled();
       await act(async () => {
-        await result.current.useExistingFamily('saved-family', parent);
+        await result.current.useExistingFamily('saved-family', parent.sourceApplicantId);
       });
-      expect(create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          existingFamilyId: 'saved-family',
-          existingParentApplicantId: 'saved-applicant',
-          parentRelationship: 'father',
-          guardianFirstName: 'Amit',
-          guardianPhone: parent.mobile,
-        })
-      );
-      return;
+      expect(create).not.toHaveBeenCalled();
     }
     expect(shikshaMitraToast.error).toHaveBeenCalledWith({
       message:
@@ -838,7 +836,7 @@ it('selects a newly opened offering after a fresh class check and preserves the 
   expect(result.current.canCreateInquiry).toBe(false);
 });
 
-it('creates a sibling only after review using the saved parent source and never a separate-family override', async () => {
+it('links a reviewed sibling family while preserving a different entered parent name and Mother relationship', async () => {
   const available = offering('class-a');
   const parent = {
     sourceApplicantId: 'saved-child',
@@ -897,10 +895,10 @@ it('creates a sibling only after review using the saved parent source and never 
     await result.current.formik.setValues(
       (values) => ({
         ...values,
-        parentRelationship: 'father',
+        parentRelationship: 'mother',
         fields: {
           CHILD: 'New child',
-          ADULT: 'Amit Shah',
+          ADULT: 'Pradeep',
           MOBILE: parent.mobile,
           EMAIL: parent.email,
         },
@@ -914,20 +912,26 @@ it('creates a sibling only after review using the saved parent source and never 
   await waitFor(() => expect(result.current.matches).toHaveLength(1));
   expect(submitted).toHaveLength(0);
   await act(async () => {
-    await result.current.useExistingFamily('saved-family', parent);
+    await result.current.useExistingFamily('saved-family', parent.sourceApplicantId);
   });
   await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
   expect(submitted).toHaveLength(1);
   expect(submitted[0]).toMatchObject({
     existingFamilyId: 'saved-family',
     existingParentApplicantId: 'saved-child',
-    parentRelationship: 'father',
+    familyLinkOnly: true,
+    parentRelationship: 'mother',
+    guardianFirstName: 'Pradeep',
     applicantName: 'New child',
     guardianPhone: parent.mobile,
     guardianEmail: parent.email,
     createSeparateFamily: false,
     duplicateOverrideReason: null,
   });
+  expect(result.current.formik.values.fields.ADULT).toBe('Pradeep');
+  expect(submitted[0].formValues).toEqual(
+    expect.arrayContaining([{ fieldCode: 'ADULT', valueJson: '"Pradeep"' }])
+  );
 });
 
 it('reports busy for the entire held Formik validation before any mutation starts', async () => {

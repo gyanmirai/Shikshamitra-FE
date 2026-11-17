@@ -36,6 +36,67 @@ const inherited = {
     sourceReadOnly: false,
   },
 };
+
+function ReusePanel({ enabled = false, failed = false }: { enabled?: boolean; failed?: boolean }) {
+  return (
+    <ThemeProvider theme={createTheme(defaultSettings)}>
+      <Formik initialValues={getBlankAdmissionFormInitialValues(1)} onSubmit={() => undefined}>
+        {(formik) => {
+          inheritanceContext.value = {
+            formik,
+            enabled,
+            setEnabled: vi.fn(),
+            sourceId: null,
+            selectSource: vi.fn(),
+            canViewSources: false,
+            connected: [],
+            loading: false,
+            connectionsFailed: failed,
+            fetchSources: async () => ({ data: [], hasMore: false }),
+            refresh: vi.fn(),
+          };
+          return (
+            <>
+              <FormInheritancePanel />
+              <output data-testid="reuse-draft">{JSON.stringify(formik.values)}</output>
+            </>
+          );
+        }}
+      </Formik>
+    </ThemeProvider>
+  );
+}
+
+it('starts unused Inquiry reuse collapsed and toggles disclosure without changing the form', async () => {
+  render(<ReusePanel />);
+  const original = screen.getByTestId('reuse-draft').textContent;
+  expect(
+    screen.queryByRole('switch', { name: 'Include Inquiry Questions in Registration' })
+  ).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Expand Reuse Inquiry Questions' }));
+  expect(
+    screen.getByRole('switch', { name: 'Include Inquiry Questions in Registration' })
+  ).not.toBeChecked();
+  fireEvent.click(screen.getByRole('button', { name: 'Collapse Reuse Inquiry Questions' }));
+  await waitFor(() =>
+    expect(
+      screen.queryByRole('switch', { name: 'Include Inquiry Questions in Registration' })
+    ).not.toBeInTheDocument()
+  );
+  expect(screen.getByTestId('reuse-draft').textContent).toBe(original);
+});
+
+it('reopens reused Inquiry details when a new recovery error arrives', async () => {
+  const view = render(<ReusePanel enabled />);
+  fireEvent.click(screen.getByRole('button', { name: 'Collapse Reuse Inquiry Questions' }));
+  await waitFor(() =>
+    expect(screen.queryByRole('button', { name: /^Check Again$/ })).not.toBeInTheDocument()
+  );
+  view.rerender(<ReusePanel enabled failed />);
+  expect(await screen.findByRole('button', { name: /^Check Again$/ })).toBeVisible();
+  expect(screen.getByRole('alert')).toHaveTextContent('Inquiry versions could not be loaded.');
+});
+
 function setup(
   sourceRequired = false,
   registrationRequired = false,

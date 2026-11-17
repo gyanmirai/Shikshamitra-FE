@@ -18,10 +18,10 @@ import { StudentFeedback } from 'src/components/student-feedback';
 import { useUrlFilterValue } from 'src/hooks/use-url-filter-value';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
+import { Box, Stack, Button, Skeleton, Typography } from '@mui/material';
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { readOnboardingDashboardQueue } from 'src/utils/student-dashboard-drilldown';
-import { Box, Stack, Button, Skeleton, Typography, LinearProgress } from '@mui/material';
 import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 import {
   readAcademicFilterIds,
@@ -940,11 +940,8 @@ export default function StudentSetupScreen() {
         />
       </Box>
 
-      {singleStudentMode && focusedCaseId && !selectedRow && focusedCaseQuery.isFetching && (
-        <LinearProgress aria-label="Loading selected onboarding student" />
-      )}
       {singleStudentMode && !selectedStudent && !focusedCaseQuery.isError && (
-        <Stack spacing={1.5} role="status" aria-label="Loading student setup">
+        <Stack spacing={1.5} role="status" aria-label="Loading student setup" aria-busy>
           <Skeleton variant="rounded" height={64} />
           <Skeleton variant="rounded" height={220} />
           <Skeleton variant="rounded" height={240} />
