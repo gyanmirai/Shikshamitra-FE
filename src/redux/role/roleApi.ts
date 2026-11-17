@@ -1,6 +1,8 @@
 import { api } from 'src/redux/service';
 import { roleType } from 'src/redux/tagTypes';
 
+import type { IdentityPage, IdentityListQuery } from '../identity-list';
+
 export type IdentityRoleOption = {
   id: string;
   name: string;
@@ -23,6 +25,10 @@ type IdentityRoleListResponse = {
 
 export const roleApi = api.injectEndpoints({
   endpoints: (builder) => ({
+    getRolePage: builder.query<IdentityPage<IdentityRoleOption>, IdentityListQuery>({
+      query: (params) => ({ url: '/identity/roles', params }),
+      providesTags: [roleType.role],
+    }),
     getRoles: builder.query<IdentityRoleListResponse, void>({
       query: () => ({ url: '/identity/roles/all' }),
       providesTags: [roleType.role],
@@ -54,6 +60,7 @@ export const roleApi = api.injectEndpoints({
 });
 
 export const {
+  useGetRolePageQuery,
   useGetRolesQuery,
   useAddRoleMutation,
   useDeleteRoleMutation,

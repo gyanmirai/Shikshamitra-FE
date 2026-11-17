@@ -3,7 +3,7 @@ module: security
 domain: permissions
 content_type: Reference
 status: canonical
-updated_on: 2026-10-30
+updated_on: 2026-11-17
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -12,9 +12,13 @@ audience: humans-and-agents
 
 ## User directory
 
-`getUserDirectory` in `src/redux/user/userApi.ts` reads every page from the [backend directory endpoint](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/common/multi-tenancy/roles.md#read-user-role-assignments). A failed or incomplete page fails the whole read instead of presenting a partial directory as complete. The existing `getUsers` client remains available to other workflows.
+`getUserDirectory` in `src/redux/user/userApi.ts` requests one page from the [backend directory endpoint](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/common/multi-tenancy/roles.md#read-user-role-assignments), with `skipCount`, `maxResultCount`, `filter`, and `sorting`. `getRolePage` in `src/redux/role/roleApi.ts` uses the same query shape with `/identity/roles`. Role mutations invalidate both paged lists and the existing `getRoles` lookup at `/identity/roles/all`. Other workflows retain their existing role/user lookup clients.
 
-`user-table.tsx` uses the complete result for shared-table search, filtering, sorting, pagination, and exports. It also reads the existing `getRoles` client for saved role colors. `user-role-column.tsx` renders exact assigned role names with the same `SubjectColorIndicator` used by Role Management and supplies comma-separated text for filtering, alphabetic sorting, and export. Missing or unavailable color metadata uses a neutral marker without hiding assignments or blocking the directory.
+Both management tables use server pagination, debounced global search, supported identity-field sorting, and backend totals. Search, sorting, and page-size changes return to the first page. Each query argument has a separate cache entry; rows from an earlier page or search are not displayed while the new query loads. A reduced total moves an out-of-range page back to the last available page. Column filters and assigned-role sorting remain unavailable because the identity list APIs do not support those operations; the tables never apply them only to the loaded page. Full Name sorting is also unavailable: displayed names can fall back to usernames or email, which cannot be ordered faithfully through the identity API's field sorting. Email, phone, and role-name sorting remain server-backed.
+
+`user-table.tsx` also reads `getRoles` for saved role colors. `user-role-column.tsx` renders exact assigned role names with the same `SubjectColorIndicator` used by Role Management and supplies comma-separated export text. Missing color metadata uses a neutral marker without hiding assignments or blocking the directory.
+
+`identity-table-export.ts` retrieves every matching page only when Export is requested, preserving search, ordering, visible columns, and user display names. A failed or incomplete page prevents a partial download. Cancellation aborts the active request and prevents downloading. Normal table navigation never loads all records for export.
 
 ## Permission-denied feedback
 

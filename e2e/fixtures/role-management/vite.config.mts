@@ -68,6 +68,18 @@ export default defineConfig({
             return send({ ok: true });
           }
           if (url.pathname === '/fixture/state') return send({ roles, writes });
+          if (url.pathname === '/api/identity/roles' && request.method === 'GET') {
+            if (failRead)
+              return send({ detail: 'Synthetic role list unavailable. Retry the request.' }, 503);
+            const filter = (url.searchParams.get('filter') || '').toLowerCase();
+            const matches = roles
+              .filter((role) => role.name.toLowerCase().includes(filter))
+              .sort((a, b) => a.name.localeCompare(b.name));
+            if (url.searchParams.get('sorting')?.includes('desc')) matches.reverse();
+            const skip = Number(url.searchParams.get('skipCount'));
+            const size = Number(url.searchParams.get('maxResultCount'));
+            return send({ items: matches.slice(skip, skip + size), totalCount: matches.length });
+          }
           if (url.pathname === '/api/identity/roles/all')
             return failRead
               ? send({ detail: 'Synthetic role list unavailable. Retry the request.' }, 503)
