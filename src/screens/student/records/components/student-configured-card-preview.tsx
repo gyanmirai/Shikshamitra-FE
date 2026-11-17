@@ -14,6 +14,7 @@ export type StudentCardPreviewProps = {
   card?: Pick<IdCard, 'studentSnapshot' | 'hasPhoto' | 'cardNumber'>;
   side?: 'front' | 'back';
   interactive?: boolean;
+  photoUrl?: string;
 };
 
 export function StudentConfiguredCardPreview({
@@ -21,6 +22,7 @@ export function StudentConfiguredCardPreview({
   card,
   side,
   interactive = true,
+  photoUrl,
 }: StudentCardPreviewProps) {
   const [selected, setSelected] = useState<'front' | 'back'>('front');
   const activeSide = template.backSideEnabled ? (side ?? selected) : 'front';
@@ -50,6 +52,7 @@ export function StudentConfiguredCardPreview({
       )}
       <Box sx={{ width: 1, minWidth: 0 }}>
         <IdentityCardPreview
+          photoUrl={photoUrl}
           layout={getStudentICardLayout(template)}
           side={activeSide}
           values={values}

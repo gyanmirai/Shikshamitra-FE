@@ -16,6 +16,7 @@ import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
+import { useCardPhotoEdits } from 'src/components/identity-card-designer/photo-editor/use-card-photo-edits';
 import {
   IdentityCardDesigner,
   validateIdentityCardLayout,
@@ -35,6 +36,7 @@ import {
   FormControlLabel,
 } from '@mui/material';
 import {
+  useLazyGetEmployeeICardPhotoQuery,
   useUploadEmployeeICardAssetMutation,
   useDownloadEmployeeICardsPdfMutation,
   useCreateEmployeeICardTemplateMutation,
@@ -101,11 +103,24 @@ export const EmployeeICardBuilder = ({
   const [uploadPending, setUploadPending] = useState(false);
   const [baseline, setBaseline] = useState(() => getEmployeeCardDraftSignature(state));
   const savingRef = useRef(false);
+  const { photoEdits, onPhotoEdit } = useCardPhotoEdits(
+    JSON.stringify({
+      draftAcademicYearId,
+      academicYearId,
+      organization: state.organization,
+      scopeChanged,
+    }),
+    state.selectedEmployeeIds,
+    (message) => shikshaMitraToast.error({ message })
+  );
   const router = useRouter();
-  const navigation = useUnsavedNavigation(getEmployeeCardDraftSignature(state) !== baseline, {
-    push: router.push,
-    blockNavigation: isSaving || exportPending || uploadPending,
-  });
+  const navigation = useUnsavedNavigation(
+    photoEdits.length > 0 || getEmployeeCardDraftSignature(state) !== baseline,
+    {
+      push: router.push,
+      blockNavigation: isSaving || exportPending || uploadPending,
+    }
+  );
   const logo = useEmployeeCardLogo(state);
   const designErrors = [
     ...validateIdentityCardLayout(state.layout, employeeCardFields),
@@ -139,6 +154,17 @@ export const EmployeeICardBuilder = ({
   const [updateTemplate] = useUpdateEmployeeICardTemplateMutation();
   const [uploadAsset] = useUploadEmployeeICardAssetMutation();
   const [downloadPdf, { isLoading: isExporting }] = useDownloadEmployeeICardsPdfMutation();
+  const [loadRecordPhoto] = useLazyGetEmployeeICardPhotoQuery();
+  const photoRecords = scopeChanged
+    ? []
+    : selectedPreviewEmployees
+        .filter((employee) => employee.thumbnailPicture)
+        .map((employee) => ({
+          id: employee.id,
+          name: employee.fullName || 'Staff',
+          values: getEmployeeCardPreviewValues(state, employee, draftAcademicYearName),
+          load: () => loadRecordPhoto(employee.id).unwrap(),
+        }));
 
   useEffect(
     () => () => {
@@ -275,6 +301,7 @@ export const EmployeeICardBuilder = ({
         templateId,
         body: {
           employeeIds: state.selectedEmployeeIds,
+          ...(photoEdits.length ? { photoEdits } : {}),
           cardsPerPage: getIdentityCardSheetLayout(state.layout, state.printSettings)
             .effectiveCardsPerPage,
           excludeIncompleteEmployees: state.excludeIncompleteEmployees,
@@ -338,10 +365,18 @@ export const EmployeeICardBuilder = ({
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
-          pt: 1.5,
+          pt: { xs: 1, sm: 1.5 },
           boxSizing: 'border-box',
+          '& .MuiStepper-root': { display: { xs: 'none', sm: 'flex' } },
         }}
       >
+        <Typography
+          variant="subtitle2"
+          aria-live="polite"
+          sx={{ display: { xs: 'block', sm: 'none' }, px: 2, pb: 0.5 }}
+        >
+          Step {activeStep + 1} of {steps.length}: {steps[activeStep]}
+        </Typography>
         <CustomStepperWithFormik
           contentScrollMode={activeStep === 1 ? 'regions' : 'step'}
           initialValues={{}}
@@ -365,7 +400,8 @@ export const EmployeeICardBuilder = ({
                 const savedId = await handleSave();
                 if (savedId) {
                   markCurrentStepCompleted();
-                  handleClose();
+                  if (photoEdits.length) navigation.requestNavigation(handleClose);
+                  else handleClose();
                 }
               } finally {
                 setLoading(false);
@@ -483,6 +519,9 @@ export const EmployeeICardBuilder = ({
 
                   {currentStep === 1 && (
                     <IdentityCardDesigner
+                      photoRecords={photoRecords}
+                      photoEdits={photoEdits}
+                      onPhotoEdit={onPhotoEdit}
                       brandingContent={
                         <FormSectionCard
                           title="School Identity"
@@ -739,6 +778,7 @@ export const EmployeeICardBuilder = ({
                 {currentStep !== 1 && (
                   <Grid size={{ xs: 12, md: 5 }}>
                     <EmployeePreviewWorkspace
+                      photoEdits={photoEdits}
                       state={state}
                       employees={selectedPreviewEmployees}
                       sampleEmployee={sampleEmployee}

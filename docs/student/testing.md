@@ -3,12 +3,22 @@ module: student
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-11-04
+updated_on: 2026-11-16
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Validate Student Enrollment Admissions changes
+
+## Visual studio and cardholder photo edits (16 November 2026)
+
+Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vitest/vitest.mjs run src/components/identity-card-designer/photo-editor src/screens/student/records/student-icard-builder.test.tsx src/screens/hr/i-card/employee-card-builder.test.tsx --pool=threads --maxWorkers=2 --testTimeout=20000` for photo geometry/matte conversion, scoped draft pruning, stale callbacks, student export payloads and personal-photo exclusion from staff templates.
+Run the shared studio command/history/control suites for selection, undo/redo, grouping and geometry independently of image processing.
+Browser acceptance must cover real crop and tone output, erase/restore, reset/original comparison, apply/discard, PNG output bounds, both themes and narrow layouts.
+Invoke Remove background explicitly and verify a real model result, download progress, cancel, failed-download retry and no photo transmission to inference services.
+Check both selected-student Designer and Student List Review paths, matching record/source hashes, deselection/scope changes, dirty close, template save exclusion and export/issue overrides.
+Supporting Chrome checks with synthetic pixels verified source transparency, erased alpha, solid background compositing, PNG export and external-URL rejection; a real local-worker MODNet run and cancellation succeeded with Transformers.js 4.3.2.
+These checks do not establish real-person edge quality, authenticated tenant access, deployment behavior or physical printing; finish workflow acceptance in the Codex in-app browser.
 
 ## Configurable student ID cards (5 November 2026)
 

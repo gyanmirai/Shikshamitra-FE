@@ -999,3 +999,9 @@ Source: https://www.apache.org/licenses/LICENSE-2.0.txt
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
+
+ID-card studio icons (mdi)
+Author: Pictogrammers
+Source: https://github.com/Templarian/MaterialDesign
+License: Apache 2.0 - https://github.com/Templarian/MaterialDesign/blob/master/LICENSE
+Bundled glyphs: undo, redo, content-paste, pencil, eye, eye-off, lock, lock-open, format-align-left, layers-outline, group, ungroup, content-copy, delete, cursor-default-outline, hand-back-right-outline, format-text, image-plus, account-box-outline, domain, rectangle-outline, circle-outline, minus, qrcode, barcode.

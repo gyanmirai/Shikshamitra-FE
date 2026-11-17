@@ -13,9 +13,11 @@ import { getStudentICardLayout, getStudentICardPrintSettings } from '../student-
 export function StudentICardSheetPreview({
   template,
   cards,
+  photoUrls = [],
 }: {
   template: IdCardTemplate;
   cards: Array<Pick<IdCard, 'studentSnapshot' | 'hasPhoto' | 'cardNumber'> | undefined>;
+  photoUrls?: Array<string | undefined>;
 }) {
   const [selectedSide, setSelectedSide] = useState<'front' | 'back'>('front');
   const layout = getStudentICardLayout(template);
@@ -52,6 +54,7 @@ export function StudentICardSheetPreview({
         <StudentConfiguredCardPreview
           template={template}
           card={cards[0]}
+          photoUrl={photoUrls[0]}
           side={side}
           interactive={false}
         />
@@ -102,6 +105,7 @@ export function StudentICardSheetPreview({
                 <StudentConfiguredCardPreview
                   template={template}
                   card={card}
+                  photoUrl={photoUrls[index]}
                   side={side}
                   interactive={false}
                 />

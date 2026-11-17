@@ -1,3 +1,4 @@
+import type { IdentityCardPhotoEdit } from 'src/components/identity-card-designer/types';
 import type { IdentityChoices, IdentitySelection } from 'src/screens/setting/school-identity/types';
 
 import { api } from 'src/redux/service';
@@ -57,14 +58,15 @@ export const studentRecordDocumentsApi = api.injectEndpoints({
     issueRecordCertificate: builder.mutation<CertificateResponse, CertificatePreviewInput & { idempotencyKey: string }>({ query: body => ({ url: '/students/records/certificates', method: 'POST', body }), transformResponse: unwrap<CertificateResponse>, invalidatesTags: (_result, error) => error ? [] : documentTags }),
     getRecordCertificateHistory: builder.query<CertificateHistory[], string>({ query: studentId => `/students/records/certificates/students/${studentId}/history`, transformResponse: unwrap<CertificateHistory[]>, providesTags: documentTags }),
     getRecordIdTemplate: builder.query<IdCardTemplate, void>({ query: () => '/students/records/ids/templates', transformResponse: unwrap<IdCardTemplate>, providesTags: documentTags }),
+    getRecordIdPhoto: builder.query<IdentityCardPhotoEdit, string>({ query: studentId => `/students/records/ids/photos/${encodeURIComponent(studentId)}`, transformResponse: unwrap<IdentityCardPhotoEdit>, keepUnusedDataFor: 0 }),
     saveRecordIdTemplate: builder.mutation<IdCardTemplate, IdCardTemplate>({ query: body => ({ url: '/students/records/ids/templates', method: 'PUT', body }), transformResponse: unwrap<IdCardTemplate>, invalidatesTags: (_result, error) => error ? [] : documentTags }),
     getRecordIdTemplates: builder.query<IdCardTemplate[], void>({ query: () => '/students/records/ids/templates/list', transformResponse: unwrap<IdCardTemplate[]>, providesTags: documentTags }),
     createRecordIdTemplate: builder.mutation<IdCardTemplate, IdCardTemplate>({ query: body => ({ url: '/students/records/ids/templates', method: 'POST', body }), transformResponse: unwrap<IdCardTemplate>, invalidatesTags: (_result, error) => error ? [] : documentTags }),
     updateRecordIdTemplate: builder.mutation<IdCardTemplate, { id: string; body: IdCardTemplate }>({ query: ({ id, body }) => ({ url: `/students/records/ids/templates/${id}`, method: 'PUT', body }), transformResponse: unwrap<IdCardTemplate>, invalidatesTags: (_result, error) => error ? [] : documentTags }),
     deleteRecordIdTemplate: builder.mutation<void, string>({ query: id => ({ url: `/students/records/ids/templates/${id}`, method: 'DELETE' }), invalidatesTags: (_result, error) => error ? [] : documentTags }),
     previewRecordIds: builder.mutation<IdCard[], { studentIds: string[]; templateId?: string }>({ query: body => ({ url: '/students/records/ids/preview', method: 'POST', body }), transformResponse: unwrap<IdCard[]> }),
-    issueRecordIds: builder.mutation<IdCard[], { studentIds: string[]; idempotencyKey: string; templateId?: string }>({ query: body => ({ url: '/students/records/ids/issue', method: 'POST', body }), transformResponse: unwrap<IdCard[]>, invalidatesTags: (_result, error) => error ? [] : documentTags }),
-    exportRecordIds: builder.mutation<Blob, { studentIds: string[]; cardsPerPage: number; templateId?: string }>({ query: body => ({ url: '/students/records/ids/export', method: 'POST', body, responseHandler: blobResponse }) }),
+    issueRecordIds: builder.mutation<IdCard[], { studentIds: string[]; idempotencyKey: string; templateId?: string; photoEdits?: IdentityCardPhotoEdit[] }>({ query: body => ({ url: '/students/records/ids/issue', method: 'POST', body }), transformResponse: unwrap<IdCard[]>, invalidatesTags: (_result, error) => error ? [] : documentTags }),
+    exportRecordIds: builder.mutation<Blob, { studentIds: string[]; cardsPerPage: number; templateId?: string; photoEdits?: IdentityCardPhotoEdit[] }>({ query: body => ({ url: '/students/records/ids/export', method: 'POST', body, responseHandler: blobResponse }) }),
     getRecordIdHistory: builder.query<IdCard[], string>({ query: studentId => `/students/records/ids/students/${studentId}/history`, transformResponse: unwrap<IdCard[]>, providesTags: documentTags }),
     downloadRecordDocument: builder.mutation<Blob, { kind: 'certificates' | 'ids'; id: string }>({ query: ({ kind, id }) => ({ url: `/students/records/${kind}/${id}/pdf`, responseHandler: blobResponse }) }),
     reprintRecordDocument: builder.mutation<Blob, { kind: 'certificates' | 'ids'; id: string; reason: string }>({ query: ({ kind, id, reason }) => ({ url: `/students/records/${kind}/${id}/reprint`, method: 'POST', body: { reason }, responseHandler: blobResponse }), invalidatesTags: (_result, error) => error ? [] : documentTags }),
@@ -79,6 +81,7 @@ export const studentRecordDocumentsApi = api.injectEndpoints({
 export const { useGetRecordCertificateTemplateQuery, useSaveRecordCertificateTemplateMutation, usePreviewRecordCertificateMutation, useIssueRecordCertificateMutation, useExportRecordIdsMutation, useGetRecordCertificateHistoryQuery, useGetRecordIdTemplateQuery, useSaveRecordIdTemplateMutation, useGetRecordIdTemplatesQuery, useCreateRecordIdTemplateMutation, useUpdateRecordIdTemplateMutation, useDeleteRecordIdTemplateMutation, usePreviewRecordIdsMutation, useIssueRecordIdsMutation, useGetRecordIdHistoryQuery, useDownloadRecordDocumentMutation, useReprintRecordDocumentMutation, useVoidRecordDocumentMutation, useDuplicateRecordCertificateMutation, useGetRecordGuardianLinksQuery, useGetRecordGuardianReviewsQuery, useGetRecordGuardianCandidateQuery, useResolveRecordGuardianReviewMutation } = studentRecordDocumentsApi;
 
 export const { useGetRecordCertificateBatchesQuery, useGetRecordCertificateBatchQuery } = studentRecordDocumentsApi;
+export const { useLazyGetRecordIdPhotoQuery } = studentRecordDocumentsApi;
 
 export function downloadRecordPdf(blob: Blob, fileName: string) {
   const url = URL.createObjectURL(blob); const link = document.createElement('a');

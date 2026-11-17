@@ -3,7 +3,7 @@ module: student
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-11-04
+updated_on: 2026-11-16
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -323,6 +323,13 @@ Activation also invalidates the Student Records directory tag so the newly activ
 `src/redux/student/records/student-record-documents-api.ts` owns the Student I-Card template, preview, issue, history and bulk PDF export calls. The standalone designer saves the design before requesting previews or exports. Directory printing does not save a template: successful previews use the returned `templateSnapshot` for the displayed design and sheet orientation while retaining the user's current cards-per-page choice. Issue retains a stable idempotency key for retries. `student-records-api.ts` serializes multi-select Board, Medium, Class and Division IDs as repeated directory query parameters.
 
 Configurable Classic Identity templates add `schemaVersion`, `layoutJson`, `printSettingsJson` and `backSideEnabled` to the existing template type. `student-icard-design.ts` adapts these fields to the shared `src/components/identity-card-designer` models; per-element bindings remain limited to the Student field catalogue. The designer, configured-card preview and physical sheet preview live in `records/components/student-icard-*` and `student-configured-card-preview.tsx`. Structurally readable invalid drafts remain editable while validation blocks saving. Legacy templates retain their original renderer until the user enters the configurable designer. PDF failures retain the backend's actionable identity-card configuration detail. See the [backend Student I-Card contract](../../../Shikshamitra-BE/docs/modules/student/api.md#student-records-api-families) for validation and issued-snapshot behavior.
+
+`student-record-documents-api.ts` lazily reads `/students/records/ids/photos/{studentId}` through the existing Records Result adapter.
+The photo query uses `keepUnusedDataFor: 0`; full photos are requested only when editing an accessible selected student.
+`use-card-photo-edits.ts` holds record-keyed photo drafts in component memory, prunes deselected students, and clears drafts when the academic/filter context changes.
+Export and issue requests carry optional `photoEdits` separately from the reusable template, preserving each read's `recordId` and `sourceHash`.
+Template save requests do not receive personal photo drafts, and saving a template does not mark those drafts as saved.
+The shared photo editor loads its Transformers.js worker and the pinned MODNet model only after an explicit Remove background action; processing uses local pixels and public model/runtime downloads.
 
 `student-icard-templates.tsx` captures the opener's academic year for a new design. `student-icard-builder.tsx` restores a saved selection's year, academic filters and complete student ID set once; authorized directory labels load in chunks of at most 100 IDs. Paging, search, missing labels, refetches and rejected saves do not silently drop saved IDs or overwrite the design draft. Saves serialize the current year, filters and selected IDs. A `selectionRestricted` response contains no readable cohort: the designer omits `selection` on design-only writes, disables assignment editing and deletion with a scope explanation, and shows Restricted in the list. A save response that newly restricts assignments clears cohort previews and stops the pending card command. Directory bulk printing keeps its independently captured students and oldest-template compatibility path. Backend scope, masking, transfer and validation remain authoritative; see the [Student I-Card contract](../../../Shikshamitra-BE/docs/modules/student/api.md#student-records-api-families).
 

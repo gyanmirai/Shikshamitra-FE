@@ -11,10 +11,12 @@ export function EmployeeCardPreview({
   state,
   employee,
   academicYearName,
+  photoUrl,
 }: {
   state: BuilderState;
   employee?: EmployeeICardRow;
   academicYearName?: string;
+  photoUrl?: string;
 }) {
   const logo = useEmployeeCardLogo(state);
   const values = getEmployeeCardPreviewValues(state, employee, academicYearName);
@@ -46,7 +48,7 @@ export function EmployeeCardPreview({
               side={side}
               values={values}
               logoUrl={logo.url}
-              photoUrl={getEmployeeCardPhotoUrl(employee)}
+              photoUrl={photoUrl ?? getEmployeeCardPhotoUrl(employee)}
               logoHidden={state.logoMode === 2}
               qrCodeEnabled={state.qrCodeEnabled}
               barcodeEnabled={state.barcodeEnabled}

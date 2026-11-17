@@ -1,13 +1,13 @@
-import type { StudentDirectoryItem } from 'src/redux/student/records/student-records-types';
 import type { ReactNode } from 'react';
+import type { StudentDirectoryItem } from 'src/redux/student/records/student-records-types';
 
-import { it, vi, expect, beforeEach } from 'vitest';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
+import { it, vi, expect, beforeEach } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { render as testingRender, screen, waitFor, fireEvent } from '@testing-library/react';
+import { screen, waitFor, fireEvent, render as testingRender } from '@testing-library/react';
 
 import StudentICardBuilder, { StudentCardPreview } from './student-icard-builder';
 
@@ -23,6 +23,7 @@ const mocks = vi.hoisted(() => ({
   export: vi.fn(),
   issue: vi.fn(),
   download: vi.fn(),
+  photo: vi.fn(),
   options: {
     boards: [{ id: 'board-1', name: 'CBSE' }],
     mediums: [{ id: 'medium-1', name: 'English', parentId: 'board-1' }],
@@ -58,6 +59,15 @@ vi.mock('src/components/toast', () => ({
 }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span /> }));
 vi.mock('src/components/custom-stepper', () => ({ default: () => <div /> }));
+vi.mock('src/components/identity-card-designer/photo-editor/card-photo-action', () => ({
+  CardPhotoAction: ({ record, onPhotoEdit }: {
+    record?: { id: string; load: () => Promise<{ recordId: string; sourceHash: string; imageData: string }> };
+    onPhotoEdit: (edit: { recordId: string; sourceHash: string; imageData: string }) => void;
+  }) => record ? <button type="button" onClick={async () => {
+    const source = await record.load();
+    onPhotoEdit({ ...source, imageData: 'data:image/png;base64,BBBB' });
+  }}>Apply test photo</button> : null,
+}));
 vi.mock('src/screens/setting/school-identity/components/template-identity-asset', () => ({
   TemplateIdentityAsset: () => <div />,
 }));
@@ -96,6 +106,7 @@ vi.mock('src/redux/student/records/student-records-api', () => ({
   }),
 }));
 vi.mock('src/redux/student/records/student-record-documents-api', () => ({
+  useLazyGetRecordIdPhotoQuery: () => [(id: string) => ({ unwrap: () => mocks.photo(id) })],
   useGetRecordIdTemplateQuery: () => ({
     currentData: mocks.template,
     isError: false,
@@ -256,6 +267,26 @@ it('exports the selected cohort with A4 capacity without issuing cards or saving
     templateId: undefined,
   });
   expect(mocks.issue).not.toHaveBeenCalled();
+  expect(mocks.save).not.toHaveBeenCalled();
+});
+
+it('keeps a cardholder photo out of templates and sends it only for the selected export', async () => {
+  preparePreviews();
+  mocks.photo.mockResolvedValue({ recordId: 'student-1', sourceHash: 'original-hash', imageData: 'data:image/png;base64,AAAA' });
+  mocks.export.mockResolvedValue(new Blob(['pdf'], { type: 'application/pdf' }));
+  const onDirtyChange = vi.fn();
+  renderDirectory({ initialStudents: [{ ...selectedStudents[0], hasPhoto: true }], onDirtyChange });
+  await screen.findByText('1/100 selected');
+  nextStep();
+  fireEvent.click(await screen.findByRole('button', { name: 'Apply test photo' }));
+  await waitFor(() => expect(onDirtyChange).toHaveBeenLastCalledWith(true));
+  expect(mocks.photo).toHaveBeenCalledWith('student-1');
+  nextStep();
+  fireEvent.click(await screen.findByRole('button', { name: 'Export bulk PDF' }));
+  await waitFor(() => expect(mocks.export).toHaveBeenCalledWith(expect.objectContaining({
+    studentIds: ['student-1'],
+    photoEdits: [{ recordId: 'student-1', sourceHash: 'original-hash', imageData: 'data:image/png;base64,BBBB' }],
+  })));
   expect(mocks.save).not.toHaveBeenCalled();
 });
 

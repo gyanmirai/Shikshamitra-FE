@@ -1,3 +1,5 @@
+import { validateEditorElement } from './editor/validate-editor-element';
+
 import type { IdentityCardLayout, IdentityCardFieldOption } from './types';
 
 export function validateIdentityCardLayout(
@@ -6,6 +8,8 @@ export function validateIdentityCardLayout(
 ): string[] {
   const errors: string[] = [];
   if (!layout || typeof layout !== 'object') return ['Card layout is missing.'];
+  if (new TextEncoder().encode(JSON.stringify(layout)).length > 2 * 1024 * 1024)
+    errors.push('The design must be smaller than 2 MB. Reduce uploaded image sizes.');
   if (!Array.isArray(layout.front?.elements)) return ['The front must contain an elements array.'];
   if (!['Horizontal', 'Vertical'].includes(layout.orientation))
     errors.push('Card orientation is invalid.');
@@ -43,7 +47,10 @@ export function validateIdentityCardLayout(
       const name = element.label || element.id;
       if (typeof element.id !== 'string' || !element.id.trim())
         errors.push(`${side}: every element needs an identifier.`);
-      if (!['text', 'photo', 'logo', 'qr', 'barcode', 'shape', 'line'].includes(element.type))
+      errors.push(...validateEditorElement(element).map((error) => `${side}: ${name}: ${error}`));
+      if (
+        !['text', 'photo', 'logo', 'image', 'qr', 'barcode', 'shape', 'line'].includes(element.type)
+      )
         errors.push(`${side}: ${name} has an unsupported element type.`);
       if (element.style) {
         if (

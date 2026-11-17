@@ -7,6 +7,8 @@ import { IdentityCardDesigner } from './designer';
 import { createIdentityCardPreset } from './presets';
 import { DEFAULT_IDENTITY_CARD_PRINT_SETTINGS } from './geometry';
 
+import type { IdentityCardPhotoRecord } from './types';
+
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span aria-hidden /> }));
 
 vi.mock('src/components/custom-tabs', async () => {
@@ -16,12 +18,20 @@ vi.mock('src/components/custom-tabs', async () => {
   };
 });
 
-function Fixture({ branding = false }: { branding?: boolean }) {
+function Fixture({
+  branding = false,
+  photoRecords,
+}: {
+  branding?: boolean;
+  photoRecords?: IdentityCardPhotoRecord[];
+}) {
   const [layout, setLayout] = useState(createIdentityCardPreset('classic-identity'));
   const [print, setPrint] = useState(DEFAULT_IDENTITY_CARD_PRINT_SETTINGS);
   const [school, setSchool] = useState('School');
   return (
     <IdentityCardDesigner
+      photoRecords={photoRecords}
+      onPhotoEdit={vi.fn()}
       layout={layout}
       onLayoutChange={setLayout}
       printSettings={print}
@@ -48,6 +58,32 @@ function Fixture({ branding = false }: { branding?: boolean }) {
 }
 
 describe('identity card designer', () => {
+  it('dismisses a source photo error without changing the design', async () => {
+    render(
+      <Fixture
+        photoRecords={[
+          {
+            id: 'person',
+            name: 'Recipient',
+            values: {},
+            load: async () => {
+              throw new Error('Unavailable');
+            },
+          },
+        ]}
+      />
+    );
+    fireEvent.click(
+      screen
+        .getAllByRole('button', { name: 'Edit photo' })
+        .find((element) => element.tagName === 'BUTTON')!
+    );
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('The original photo could not be loaded.');
+    fireEvent.click(within(alert).getByRole('button', { name: 'Close' }));
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+  });
   it('keeps branding and configuration in a separate region from the persistent card preview', () => {
     render(<Fixture branding />);
     const configuration = screen.getByRole('region', { name: 'Card configuration' });
