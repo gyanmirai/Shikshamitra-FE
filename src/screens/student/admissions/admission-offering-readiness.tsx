@@ -2,11 +2,19 @@ import type { AdmissionOfferingValidation } from 'src/redux/student/admissions/a
 
 import { Iconify } from 'src/components/iconify';
 import { StudentFeedback } from 'src/components/student-feedback';
-import { List, ListItem, AlertTitle, ListItemIcon, ListItemText } from '@mui/material';
+import { List, ListItem, AlertTitle, Typography, ListItemIcon, ListItemText } from '@mui/material';
 
-type Props = { result?: AdmissionOfferingValidation | null; onClose?: () => void };
+import { AdmissionOfferingConfigurationIssues } from './admission-offering-configuration-issues';
 
-export function AdmissionOfferingReadiness({ result, onClose }: Props) {
+import type { AdmissionOfferingRecoveryAccess } from './admission-offering-configuration-issues';
+
+type Props = AdmissionOfferingRecoveryAccess & {
+  result?: AdmissionOfferingValidation | null;
+  onClose?: () => void;
+  cycleName?: string;
+};
+
+export function AdmissionOfferingReadiness({ result, onClose, cycleName, ...access }: Props) {
   if (!result) {
     return (
       <StudentFeedback
@@ -49,21 +57,21 @@ export function AdmissionOfferingReadiness({ result, onClose }: Props) {
   return (
     <StudentFeedback
       notificationKey="STU-0131"
-      presentation="persistent"
+      presentation="inline"
       severity="warning"
       onClose={onClose}
     >
       <AlertTitle>Configuration incomplete</AlertTitle>
-      <List dense disablePadding>
-        {result.errors.map((error) => (
-          <ListItem key={`${error.code}-${error.message}`} disableGutters alignItems="flex-start">
-            <ListItemIcon sx={{ minWidth: 28, mt: 0.25 }}>
-              <Iconify icon="mdi:alert-circle-outline" width={18} />
-            </ListItemIcon>
-            <ListItemText primary={error.message} />
-          </ListItem>
-        ))}
-      </List>
+      {result.errors.length > 0 && (
+        <Typography variant="body2" role="status" sx={{ mb: 1 }}>
+          {result.errors.length} {result.errors.length === 1 ? 'issue' : 'issues'} to fix
+        </Typography>
+      )}
+      <AdmissionOfferingConfigurationIssues
+        errors={result.errors}
+        cycleName={cycleName}
+        {...access}
+      />
     </StudentFeedback>
   );
 }

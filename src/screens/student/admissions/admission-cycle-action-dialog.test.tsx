@@ -67,6 +67,19 @@ const renderDelete = (onConfirm = vi.fn(), onClose = vi.fn()) =>
   );
 
 describe('admission cycle publish confirmation', () => {
+  it('blocks publication and announces readiness checking until fresh validation arrives', () => {
+    render(
+      <AdmissionCycleActionDialog
+        action="publish"
+        cycle={cycle}
+        busy={false}
+        onClose={vi.fn()}
+        onConfirm={vi.fn()}
+      />
+    );
+    expect(screen.getByRole('button', { name: 'Publish' })).toBeDisabled();
+    expect(screen.getByText('Checking Admission Cycle Readiness…')).toBeVisible();
+  });
   it('uses the neutral primary action and omits the cycle identity line', () => {
     render(
       <AdmissionCycleActionDialog

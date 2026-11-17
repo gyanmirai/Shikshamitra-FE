@@ -3,6 +3,7 @@ import type {
   AdmissionApplicationWorkflow,
 } from 'src/redux/student/admissions/admission-applications-api';
 
+import { useState } from 'react';
 import { vi, it, expect, beforeEach } from 'vitest';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
@@ -82,6 +83,7 @@ const application = {
   applicationNumber: 'APP-QA',
   applicantId: 'applicant-1',
   status: 1,
+  concurrencyStamp: 'stamp',
 } as AdmissionApplication;
 const decisions = (extra = {}) => ({
   canDecide: true,
@@ -142,8 +144,8 @@ it('opens finalization immediately after approval and keeps it loading while the
       />
     </ThemeProvider>
   );
-  fireEvent.click(screen.getByRole('button', { name: 'Approve' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Confirm decision' }));
+  fireEvent.click(screen.getByRole('radio', { name: 'Approve' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Record Decision' }));
   expect(await screen.findByRole('region', { name: 'Finalization inline' })).toBeVisible();
   expect(screen.getByRole('status')).toHaveTextContent('Loading finalization');
   expect(prepare).toHaveBeenCalledOnce();
@@ -178,12 +180,97 @@ it('does not open finalization after a failed approval', async () => {
       />
     </ThemeProvider>
   );
-  fireEvent.click(screen.getByRole('button', { name: 'Approve' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Confirm decision' }));
+  fireEvent.click(screen.getByRole('radio', { name: 'Approve' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Record Decision' }));
   await waitFor(() => expect(mocks.decisions().runDecision).toHaveBeenCalledOnce());
   expect(screen.queryByRole('region', { name: 'Finalization inline' })).not.toBeInTheDocument();
   expect(prepare).not.toHaveBeenCalled();
 });
+
+it('records an inline decision when its busy state also locks the owning workspace', async () => {
+  const runDecision = vi.fn().mockResolvedValue(true);
+  mocks.decisions.mockReturnValue(decisions({ runDecision }));
+  function Workspace() {
+    const [busy, setBusy] = useState(false);
+    return (
+      <ApplicationDecisionCard
+        compact
+        application={application}
+        journeyCompleted={false}
+        disabled={busy}
+        onBusyChange={setBusy}
+      />
+    );
+  }
+  render(
+    <ThemeProvider theme={createTheme()}>
+      <Workspace />
+    </ThemeProvider>
+  );
+  fireEvent.click(screen.getByRole('radio', { name: 'Waitlist' }));
+  fireEvent.change(screen.getByRole('textbox', { name: 'Reason' }), {
+    target: { value: 'No seats yet' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Record Decision' }));
+  await waitFor(() =>
+    expect(runDecision).toHaveBeenCalledWith('waitlist', {
+      concurrencyStamp: 'stamp',
+      reason: 'No seats yet',
+    })
+  );
+  expect(screen.queryByRole('region', { name: 'Finalization inline' })).not.toBeInTheDocument();
+});
+
+it.each([0, 2, 3, 7, 8, 9, 10])(
+  'does not offer decision choices for locked application status %s',
+  (status) => {
+    panel(status);
+    expect(screen.queryByRole('radio')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Record Decision' })).not.toBeInTheDocument();
+  }
+);
+
+it('keeps status-specific choices for waitlisted and approved applications', () => {
+  const view = panel(5);
+  expect(screen.getAllByRole('radio')).toHaveLength(2);
+  expect(screen.getByRole('radio', { name: 'Approve' })).toBeEnabled();
+  expect(screen.queryByRole('radio', { name: 'Waitlist' })).not.toBeInTheDocument();
+  view.unmount();
+  panel(6, true);
+  expect(screen.queryByRole('radio')).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Reject' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: 'Finalize Admission' })).toBeEnabled();
+  fireEvent.click(screen.getByRole('button', { name: 'Reject' }));
+  expect(screen.getByRole('dialog')).toHaveTextContent('Decision reject');
+});
+
+it.each([2, 3, 6])(
+  'retains an inline draft when a background update changes the status to %s',
+  async (status) => {
+    const element = (nextStatus: number) => (
+      <ThemeProvider theme={createTheme()}>
+        <ApplicationDecisionCard
+          compact
+          application={{ ...application, status: nextStatus as AdmissionApplication['status'] }}
+          journeyCompleted
+        />
+      </ThemeProvider>
+    );
+    const view = render(element(1));
+    fireEvent.click(screen.getByRole('radio', { name: 'Waitlist' }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Reason' }), {
+      target: { value: 'Retain this decision draft' },
+    });
+    view.rerender(element(status));
+    expect(screen.getByRole('textbox', { name: 'Reason' })).toHaveValue(
+      'Retain this decision draft'
+    );
+    expect(screen.getByRole('button', { name: 'Record Decision' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Reload Latest application' })).toBeVisible();
+    if (status === 6)
+      expect(screen.getByRole('button', { name: 'Finalize Admission' })).toBeDisabled();
+  }
+);
 
 it('releases preparation loading and offers retry if the workflow cannot complete', async () => {
   const prepare = vi.fn().mockResolvedValue(false);
@@ -234,23 +321,23 @@ it('uses authoritative workflow completion to recover from a lost preparation re
 
 it('keeps compact decisions actionable while disclosing history on request', async () => {
   panel();
-  expect(
-    screen.getByText('Review the Application, Then Choose Approve, Waitlist, or Reject.')
-  ).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Record Decision' })).toBeDisabled();
   expect(screen.getAllByRole('heading', { name: 'Admission Decision' })).toHaveLength(1);
-  expect(screen.getByRole('button', { name: 'Approve' })).toBeEnabled();
-  expect(screen.getByRole('button', { name: 'Waitlist' })).toBeEnabled();
+  expect(screen.getByRole('radio', { name: 'Approve' })).toBeEnabled();
+  expect(screen.getByRole('radio', { name: 'Waitlist' })).toBeEnabled();
   expect(screen.getByText(/Verified documents/)).not.toBeVisible();
   fireEvent.click(screen.getByRole('button', { name: 'Decision History' }));
   await waitFor(() => expect(screen.getByText(/Verified documents/)).toBeVisible());
-  fireEvent.click(screen.getByRole('button', { name: 'Reject' }));
-  expect(screen.getByRole('dialog')).toHaveTextContent('Decision reject');
+  fireEvent.click(screen.getByRole('radio', { name: 'Reject' }));
+  expect(screen.getByRole('textbox', { name: 'Reason' })).toBeVisible();
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  expect(mocks.decisions().runDecision).not.toHaveBeenCalled();
 });
 
 it('preserves role and busy guards in compact mode', () => {
   mocks.decisions.mockReturnValue(decisions({ isBusy: true }));
   const { unmount } = panel();
-  expect(screen.getByRole('button', { name: 'Approve' })).toBeDisabled();
+  expect(screen.getByRole('radio', { name: 'Approve' })).toBeDisabled();
   unmount();
   mocks.decisions.mockReturnValue(decisions({ canDecide: false, canFinalize: false }));
   panel();
@@ -284,7 +371,7 @@ it('reports its pending decision to the workspace and clears the busy flag on un
     </ThemeProvider>
   );
   expect(onBusyChange).toHaveBeenLastCalledWith(true);
-  expect(screen.getByRole('button', { name: 'Approve' })).toBeDisabled();
+  expect(screen.getByRole('radio', { name: 'Approve' })).toBeDisabled();
   view.unmount();
   expect(onBusyChange).toHaveBeenLastCalledWith(false);
 });
@@ -300,8 +387,8 @@ it('blocks a new admission decision while another workspace operation is pending
       />
     </ThemeProvider>
   );
-  expect(screen.getByRole('button', { name: 'Approve' })).toBeDisabled();
-  fireEvent.click(screen.getByRole('button', { name: 'Reject' }));
+  expect(screen.getByRole('radio', { name: 'Approve' })).toBeDisabled();
+  fireEvent.click(screen.getByRole('radio', { name: 'Reject' }));
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 });
 
@@ -320,9 +407,9 @@ it('opens full-page finalization and restores journey actions on cancel and unmo
   fireEvent.click(screen.getByRole('button', { name: 'Finalize Admission' }));
   expect(screen.getByRole('region', { name: 'Finalization inline' })).toBeVisible();
   expect(onFinalizationOpenChange).toHaveBeenLastCalledWith(true);
-  expect(screen.queryByText('Record Decision')).not.toBeInTheDocument();
+  expect(screen.queryByRole('heading', { name: 'Record Decision' })).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Return to decision' }));
-  expect(screen.getByText('Record Decision')).toBeVisible();
+  expect(screen.getByRole('heading', { name: 'Record Decision' })).toBeVisible();
   expect(onFinalizationOpenChange).toHaveBeenLastCalledWith(false);
   view.unmount();
   expect(onFinalizationOpenChange).toHaveBeenLastCalledWith(false);
@@ -384,7 +471,7 @@ it('permits read-only stage review without permitting mutations and locks both w
     </ThemeProvider>
   );
   const view = render(element());
-  expect(screen.getByRole('button', { name: 'Approve' })).toBeDisabled();
+  expect(screen.getByRole('radio', { name: 'Approve' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Review Application form' })).toBeEnabled();
   fireEvent.click(screen.getByRole('button', { name: 'Review Application form' }));
   expect(onSelectStage).toHaveBeenCalledWith('form');

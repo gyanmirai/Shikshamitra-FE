@@ -8,7 +8,7 @@ import { Box, Button } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { StudentSetupManagerHeader as CustomBreadcrumbs } from 'src/screens/student/setup/embedding';
 
 import { AdmissionPublicInquiryLinks } from './admission-public-inquiry-links';
 
@@ -29,6 +29,7 @@ export default function AdmissionPublicInquiryLinksScreen() {
       }}
     >
       <CustomBreadcrumbs
+        editorOpen={createOpen}
         heading="Public Inquiry Links"
         description="Create and Manage Public Admission Inquiry Forms and Links."
         links={[

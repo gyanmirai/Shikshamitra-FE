@@ -54,6 +54,7 @@ export function useStudentQuickSetupAcademic({
   reportSaveErrors?: boolean;
 }) {
   const caseQuery = useGetStudentOnboardingCaseQuery(caseId, { skip: !caseId });
+  const { refetch: refetchCase } = caseQuery;
   const remoteCase = caseQuery.currentData;
   useEffect(() => {
     if (
@@ -63,11 +64,11 @@ export function useStudentQuickSetupAcademic({
     )
       return undefined;
     const interval = window.setInterval(() => {
-      if (document.visibilityState === 'visible') void caseQuery.refetch();
+      if (document.visibilityState === 'visible') refetchCase();
     }, 15_000);
     return () => window.clearInterval(interval);
   }, [
-    caseQuery.refetch,
+    refetchCase,
     remoteCase?.credentialsPending,
     remoteCase?.id,
     remoteCase?.status,
@@ -92,10 +93,10 @@ export function useStudentQuickSetupAcademic({
   const item = savedCase?.id === caseId ? savedCase : remoteCase;
   const closed = Boolean(item?.studentEnrollmentId || (item && [4, 5, 6].includes(item.status)));
   const placements = useGetStudentOnboardingPlacementOptionsQuery(caseId, {
-    skip: !caseId || !canManage || closed || readError,
+    skip: !caseId || !item || !canManage || closed || readError,
   });
   const seriesQuery = useGetAvailableStudentIdentifierSeriesQuery(caseId, {
-    skip: !caseId || !canManage || closed || readError,
+    skip: !caseId || !item || !canManage || closed || readError || Boolean(item.grNumberLocked),
   });
   const settingsQuery = useGetStudentOnboardingSettingsQuery(
     { academicYearId: item?.academicYearId },
@@ -308,9 +309,9 @@ export function useStudentQuickSetupAcademic({
     retry: () => {
       setFailure(undefined);
       caseQuery.refetch();
-      if (canManage && !closed && !readError) {
+      if (item && canManage && !closed && !readError) {
         placements.refetch();
-        seriesQuery.refetch();
+        if (!item.grNumberLocked) seriesQuery.refetch();
         if (item?.academicYearId) settingsQuery.refetch();
       }
     },

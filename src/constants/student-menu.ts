@@ -16,6 +16,7 @@ export const studentVisibilityPermissions = {
 
 export const studentPaths = {
   dashboard: '/student/dashboard',
+  setupGuide: '/student/setup',
   enrollment: {
     root: '/student/admissions',
     inquiries: '/student/admissions/inquiries',
@@ -70,6 +71,7 @@ export const studentPaths = {
     },
     studentList: '/student/profile',
     studentICard: '/student/student-i-card',
+    studentICardIssued: '/student/student-i-card?view=issued',
     certificates: '/student/certificates',
     reports: '/student/reports',
   },
@@ -172,6 +174,16 @@ export const studentPermissions = {
     `${defaultStudentPermissionName}Notification.AttendanceManagement.View`,
   ],
 };
+
+export const studentSetupViewPermissions = [
+  studentPermissions.enrollment.settings.cycles,
+  studentPermissions.enrollment.settings.forms,
+  studentPermissions.enrollment.settings.workflows,
+  studentPermissions.enrollment.settings.offerings,
+  studentPermissions.onboarding.settings,
+  studentPermissions.records.houseManagement,
+  studentPermissions.records.setting,
+];
 
 // Permission-editor bundle only. Navigation and workflow guards keep their exact IDs.
 // Keep aligned with the backend Student List submodule registration.
@@ -338,7 +350,7 @@ const studentModule = () => ({
               title: 'House Management',
               permissionName: studentPermissions.records.houseManagement,
             },
-            { title: 'Student I-Card', permissionName: studentPermissions.records.studentICard },
+            { title: 'I-Card', permissionName: studentPermissions.records.studentICard },
             { title: 'Certificates', permissionName: studentPermissions.records.certificates },
             {
               title: 'Reports',
@@ -368,7 +380,7 @@ const studentModule = () => ({
               icon: menuIconView('mdi:home-group'),
             },
             {
-              title: 'Student I-Card',
+              title: 'I-Card',
               path: studentPaths.records.studentICard,
               _action: 'student-i-card',
               shortcutKey: 'Alt+S+R+3',
@@ -479,6 +491,13 @@ const studentModule = () => ({
             },
           ],
           icon: menuIconView('mdi:bell-outline'),
+        },
+        {
+          title: 'Setup guide',
+          path: studentPaths.setupGuide,
+          _action: 'student-setup-guide',
+          permissionName: studentSetupViewPermissions,
+          icon: menuIconView('mdi:clipboard-check-outline'),
         },
       ],
     },

@@ -56,6 +56,7 @@ describe('Admission Offering dialog routing', () => {
         <AdmissionOfferingDialog
           open
           mode={mode}
+          offering={mode === 'clone' ? ({ id: 'offering-1' } as AdmissionOffering) : undefined}
           cycle={cycle}
           cycles={[cycle]}
           saving={false}
@@ -80,6 +81,24 @@ describe('Admission Offering dialog routing', () => {
         'aria-required',
         'true'
       );
+  });
+  it('opens the clone shell immediately and keeps inputs absent until source details load', () => {
+    render(
+      <AdmissionOfferingDialog
+        open
+        mode="clone"
+        cycle={cycle}
+        cycles={[cycle]}
+        offering={null}
+        loadingDetail
+        saving={false}
+        onClose={vi.fn()}
+        onSave={vi.fn()}
+      />
+    );
+    expect(screen.getByRole('heading', { name: 'Clone Admission Offering' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Close Admission Offering' })).toBeEnabled();
+    expect(screen.queryByText('Offering class configuration')).not.toBeInTheDocument();
   });
   it('uses the edit shell while details are still loading instead of the create form', () => {
     render(

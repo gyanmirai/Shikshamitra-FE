@@ -254,28 +254,29 @@ function enablePolicySelection() {
     { name: 'Finance.Fees.StructureAssign.OverridePolicies', isGranted: true },
   ];
   const current = editableDate();
+  const policyState = {
+    ...current,
+    canSelectProrationPolicy: true,
+    defaultProrationPolicyVersionId: 'policy-default-v1',
+    prorationPolicies: [
+      {
+        policyId: 'policy-default',
+        policyVersionId: 'policy-default-v1',
+        policyName: 'Monthly Default',
+        policyVersion: 1,
+        isDefault: true,
+      },
+      {
+        policyId: 'policy-daily',
+        policyVersionId: 'policy-daily-v3',
+        policyName: 'Daily Option',
+        policyVersion: 3,
+        isDefault: false,
+      },
+    ],
+  };
   mocks.joiningDate.mockReturnValue({
-    currentData: {
-      ...current,
-      canSelectProrationPolicy: true,
-      defaultProrationPolicyVersionId: 'policy-default-v1',
-      prorationPolicies: [
-        {
-          policyId: 'policy-default',
-          policyVersionId: 'policy-default-v1',
-          policyName: 'Monthly Default',
-          policyVersion: 1,
-          isDefault: true,
-        },
-        {
-          policyId: 'policy-daily',
-          policyVersionId: 'policy-daily-v3',
-          policyName: 'Daily Option',
-          policyVersion: 3,
-          isDefault: false,
-        },
-      ],
-    },
+    currentData: policyState,
     isFetching: false,
     isError: false,
     refetch: mocks.refetch,
@@ -297,6 +298,7 @@ function enablePolicySelection() {
     isFetching: false,
     isError: false,
   });
+  return policyState;
 }
 
 it('previews the date without writing, then confirms it before preparing fees', async () => {
@@ -457,6 +459,39 @@ it('does not show policy choices until an actual joining date is available', () 
   renderPanel();
 
   expect(screen.queryByRole('combobox', { name: 'Proration policy' })).not.toBeInTheDocument();
+});
+
+it('explains full fees and hides policy choices before the school start date', async () => {
+  const current = enablePolicySelection();
+  mocks.joiningDate.mockReturnValue({
+    currentData: { ...current, joiningDate: '2026-05-31', academicYearStartDate: '2026-06-01' },
+    isFetching: false,
+    isError: false,
+    refetch: mocks.refetch,
+  });
+  mocks.previewDate.mockReturnValue({
+    currentData: {
+      joiningDate: '2026-05-31',
+      totalAmount: 10000,
+      scheduledAmount: 10000,
+      reductionAmount: 0,
+      proration: null,
+      prorationPolicy: null,
+      warnings: [],
+    },
+    isFetching: false,
+    isError: false,
+  });
+
+  renderPanel();
+
+  expect(screen.queryByRole('combobox', { name: 'Proration policy' })).not.toBeInTheDocument();
+  expect(
+    await screen.findByText('Full fees apply because the joining date is before the school start date.')
+  ).toBeVisible();
+  expect(
+    screen.queryByText(/No active default proration policy is configured/)
+  ).not.toBeInTheDocument();
 });
 
 it('places joining-date information inside the date field', () => {

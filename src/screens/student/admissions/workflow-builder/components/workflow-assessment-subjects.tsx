@@ -6,31 +6,34 @@ import { uuidv4 } from 'src/utils/uuidv4';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
-import CustomTooltip from 'src/components/custom-tooltip';
-import { Box, Grid, Stack, Button, TextField, IconButton, Typography } from '@mui/material';
+import { Stack, Button, Typography } from '@mui/material';
 
 import { WorkflowSettingLabel } from './workflow-setting-label';
-import { WorkflowAssessmentMarksField } from './workflow-assessment-marks-field';
+import { WorkflowAssessmentSubjectFields } from './workflow-assessment-subject-fields';
+
+import type { AssessmentFieldValidation } from '../hooks/use-assessment-field-validation';
 
 export function WorkflowAssessmentSubjects({
   subjects,
+  profileId,
   options,
   mediumId,
   standardIds,
   perSubjectPass,
   disabled,
   catalogUnavailable,
-  showErrors,
+  validation,
   onChange,
 }: {
   subjects: AdmissionAssessmentSubjectPolicy[];
+  profileId: string;
   options: AdmissionAssessmentSubjectOption[];
   mediumId: string;
   standardIds: string[];
   perSubjectPass: boolean;
   disabled: boolean;
   catalogUnavailable: boolean;
-  showErrors: boolean;
+  validation: AssessmentFieldValidation;
   onChange: (subjects: AdmissionAssessmentSubjectPolicy[]) => void;
 }) {
   const [showPicker, setShowPicker] = useState(false);
@@ -65,96 +68,29 @@ export function WorkflowAssessmentSubjects({
           help="Marks are required for every subject before submitting the combined result. School subjects suggested for the selected classes appear first; you may choose other subjects in the same medium or add a custom entrance-only subject."
         />
       </Typography>
-      {subjects.map((subject, index) => {
-        const unavailable = Boolean(
-          subject.subjectId &&
-          !catalogUnavailable &&
-          !available.some((option) => option.id === subject.subjectId)
-        );
-        return (
-          <Box key={subject.code} sx={{ py: 1, borderBottom: 1, borderColor: 'divider' }}>
-            <Grid container spacing={1} alignItems="center">
-              <Grid size={{ xs: 12, sm: perSubjectPass ? 5 : 7 }}>
-                {subject.subjectId ? (
-                  <Stack sx={{ minWidth: 0 }}>
-                    <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
-                      {subject.name}
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      color={unavailable ? 'error.main' : 'text.secondary'}
-                    >
-                      {unavailable
-                        ? 'Unavailable for This Medium. Remove or Replace This Subject.'
-                        : 'School Subject'}
-                    </Typography>
-                  </Stack>
-                ) : (
-                  <TextField
-                    fullWidth
-                    size="small"
-                    required
-                    label="Custom Subject Name"
-                    disabled={disabled}
-                    value={subject.name}
-                    onChange={(event) => update(index, { name: event.target.value })}
-                    error={showErrors && !subject.name.trim()}
-                    helperText={
-                      showErrors && !subject.name.trim()
-                        ? 'Enter a custom subject name.'
-                        : undefined
-                    }
-                    slotProps={{ htmlInput: { maxLength: 128 } }}
-                  />
-                )}
-              </Grid>
-              <Grid size={{ xs: perSubjectPass ? 5 : 10, sm: perSubjectPass ? 3 : 4 }}>
-                <WorkflowAssessmentMarksField
-                  label="Maximum Marks"
-                  ariaLabel={`Maximum marks — ${subject.name || `subject ${index + 1}`}`}
-                  value={subject.totalMarks}
-                  max={10000}
-                  positive
-                  disabled={disabled}
-                  showError={showErrors}
-                  onChange={(value) => update(index, { totalMarks: value ?? 0 })}
-                />
-              </Grid>
-              {perSubjectPass && (
-                <Grid size={{ xs: 5, sm: 3 }}>
-                  <WorkflowAssessmentMarksField
-                    label="Passing Marks"
-                    ariaLabel={`Passing marks — ${subject.name || `subject ${index + 1}`}`}
-                    value={subject.passingMarks}
-                    max={subject.totalMarks}
-                    disabled={disabled}
-                    showError={showErrors}
-                    onChange={(value) => update(index, { passingMarks: value })}
-                  />
-                </Grid>
-              )}
-              <Grid size={{ xs: 2, sm: 1 }} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <CustomTooltip title={`Remove ${subject.name || 'subject'}`}>
-                  <span>
-                    <IconButton
-                      size="small"
-                      sx={{ width: 44, height: 44 }}
-                      aria-label={`Remove ${subject.name || `subject ${index + 1}`}`}
-                      disabled={disabled}
-                      onClick={() => onChange(subjects.filter((_, i) => i !== index))}
-                    >
-                      <Iconify icon={GlobalIcons.delete} />
-                    </IconButton>
-                  </span>
-                </CustomTooltip>
-              </Grid>
-            </Grid>
-          </Box>
-        );
-      })}
+      {subjects.map((subject, index) => (
+        <WorkflowAssessmentSubjectFields
+          key={subject.code}
+          subject={subject}
+          index={index}
+          available={available}
+          disabled={disabled}
+          catalogUnavailable={catalogUnavailable}
+          perSubjectPass={perSubjectPass}
+          validation={validation}
+          fieldKey={`${profileId}:${subject.code}`}
+          onChange={(changes) => update(index, changes)}
+          onRemove={() => onChange(subjects.filter((_, i) => i !== index))}
+        />
+      ))}
       {subjects.length === 0 && (
-        <Typography variant="body2" color={showErrors ? 'error.main' : 'text.secondary'}>
-          No subjects added.
+        <Typography
+          variant="body2"
+          color={validation.showError(`${profileId}:subjects`) ? 'error.main' : 'text.secondary'}
+        >
+          {validation.showError(`${profileId}:subjects`)
+            ? 'Add at least one subject to this class profile.'
+            : 'No subjects added.'}
         </Typography>
       )}
       {showPicker && (

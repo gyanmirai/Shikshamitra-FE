@@ -59,10 +59,12 @@ import {
 
 import { recordsQueryUrl } from './records-url-state';
 import StudentICardBuilder from './student-icard-builder';
+import { useIssuedCardHistory } from './use-issued-card-history';
 import RecordDocumentTemplates from './record-document-templates';
 import RecordDocumentFilters from './components/record-document-filters';
 import StudentCertificateWorkspace from './student-certificate-workspace';
 import DocumentHistoryActions from './components/document-history-actions';
+import StudentDirectoryAcademicFilters from './student-directory-academic-filters';
 import { CertificateDecisionReason, CertificateDecisionSection } from './components/certificate-decision-layout';
 
 type HistoryRow = {
@@ -71,6 +73,9 @@ type HistoryRow = {
   type: string;
   date?: string | null;
   status: string;
+  studentName?: string;
+  grNumber?: string | null;
+  classDivision?: string;
 };
 
 const CERTIFICATE_TABS = [
@@ -118,7 +123,7 @@ function RecordDocuments({ fixedKind }: { fixedKind?: 'ids' | 'certificates' }) 
   const currentYearId = useSelector((state: RootState) => state.globalState.currentYear?.id);
   const kind = fixedKind ?? (params.get('view') === 'ids' ? 'ids' : 'certificates');
   const pageTitle =
-    fixedKind === 'ids' ? 'Student I-Card' : fixedKind ? 'Certificates' : 'Documents & IDs';
+    fixedKind === 'ids' ? 'I-Card' : fixedKind ? 'Certificates' : 'Documents & IDs';
   const studentId = params.get('student') ?? '';
   const certificateTab =
     CERTIFICATE_TABS.find((tab) => tab.value === params.get('certificate')) ?? CERTIFICATE_TABS[0];
@@ -134,6 +139,7 @@ function RecordDocuments({ fixedKind }: { fixedKind?: 'ids' | 'certificates' }) 
     permissions,
     kind === 'ids' ? 'Students.Records.StudentICard.Add' : 'Students.Records.Certificates.Add'
   );
+  const issued = useIssuedCardHistory(fixedKind === 'ids' && canView, currentYearId);
   const [selectedCertificateType, setSelectedCertificateType] = useState<CertificateType>(1);
   const certificateType =
     fixedKind === 'certificates'
@@ -165,7 +171,7 @@ function RecordDocuments({ fixedKind }: { fixedKind?: 'ids' | 'certificates' }) 
     skip: !studentId || !canView || kind !== 'certificates',
   });
   const ids = useGetRecordIdHistoryQuery(studentId, {
-    skip: !studentId || !canView || kind !== 'ids',
+    skip: fixedKind === 'ids' || !studentId || !canView || kind !== 'ids',
   });
   const exits = useGetStudentRecordTransitionsQuery(
     { studentId, maxResultCount: 100 },
@@ -352,30 +358,48 @@ function RecordDocuments({ fixedKind }: { fixedKind?: 'ids' | 'certificates' }) 
     }
   };
   const history: HistoryRow[] =
-    kind === 'ids'
-      ? (ids.currentData ?? []).map((row: IdCard) => ({
-          id: row.id!,
+    fixedKind === 'ids'
+      ? (issued.ready && !issued.query.isError ? (issued.query.currentData?.items ?? []) : []).map((row) => ({
+          id: row.id,
           number: row.cardNumber,
           type: 'Student ID',
           date: row.issuedAt,
           status: row.status,
+          studentName: row.studentName,
+          grNumber: row.grNumber,
+          classDivision: [row.standardName, row.divisionName].filter(Boolean).join(' / ') || '—',
         }))
-      : (certificates.currentData ?? [])
-          .filter(
-            (row: CertificateHistory) =>
-              fixedKind !== 'certificates' ||
-              row.certificateType === CERTIFICATE_TYPE_NAMES[certificateType]
-          )
-          .map((row: CertificateHistory) => ({
-            id: row.certificateId,
-            number: row.certificateNumber,
-            type: row.certificateType,
-            date: row.issueDate,
+      : kind === 'ids'
+        ? (ids.currentData ?? []).map((row: IdCard) => ({
+            id: row.id!,
+            number: row.cardNumber,
+            type: 'Student ID',
+            date: row.issuedAt,
             status: row.status,
-          }));
+          }))
+        : (certificates.currentData ?? [])
+            .filter(
+              (row: CertificateHistory) =>
+                fixedKind !== 'certificates' ||
+                row.certificateType === CERTIFICATE_TYPE_NAMES[certificateType]
+            )
+            .map((row: CertificateHistory) => ({
+              id: row.certificateId,
+              number: row.certificateNumber,
+              type: row.certificateType,
+              date: row.issueDate,
+              status: row.status,
+            }));
   const columns: IColumn[] = [
-    { id: 'number', label: 'Document number', minWidth: 200 },
-    { id: 'type', label: 'Type', minWidth: 120 },
+    ...(fixedKind === 'ids'
+      ? [
+          { id: 'studentName', label: 'Student', minWidth: 220 },
+          { id: 'grNumber', label: 'GR number', minWidth: 140, render: (value: string) => value || '—' },
+          { id: 'classDivision', label: 'Class / Division', minWidth: 160 },
+        ]
+      : []),
+    { id: 'number', label: fixedKind === 'ids' ? 'Card number' : 'Document number', minWidth: 200 },
+    ...(fixedKind === 'ids' ? [] : [{ id: 'type', label: 'Type', minWidth: 120 }]),
     { id: 'date', label: 'Issued', minWidth: 130, render: (value) => (value ? fDate(value, kind === 'certificates' ? formatStr.split.date : undefined) : '—') },
     {
       id: 'status',
@@ -457,14 +481,34 @@ function RecordDocuments({ fixedKind }: { fixedKind?: 'ids' | 'certificates' }) 
       },
     },
   ];
-  const query = kind === 'ids' ? ids : certificates;
+  const query = fixedKind === 'ids' ? issued.query : kind === 'ids' ? ids : certificates;
   return (
-    <Box sx={{ height: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
+    <Box
+      sx={{
+        height: fixedKind === 'ids' ? { xs: 'auto', sm: 1 } : 1,
+        minHeight: fixedKind === 'ids' ? { xs: 1, sm: 0 } : 0,
+        minWidth: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 1,
+      }}
+    >
       <CustomBreadcrumbs
         heading={pageTitle}
+        sx={fixedKind === 'ids' ? { flexShrink: 0 } : undefined}
+        slotProps={
+          fixedKind === 'ids'
+            ? {
+                action: { alignSelf: { xs: 'flex-end', md: 'center' } },
+                heading: {},
+                moreLink: {},
+                breadcrumbs: {},
+              }
+            : undefined
+        }
         description={
           fixedKind === 'ids'
-            ? 'Preview, issue, and track student identity cards.'
+            ? 'Browse issued cards by students’ current saved academic placement. Original issued card details are retained.'
             : fixedKind === 'certificates'
               ? 'Preview, issue, and track student certificates.'
               : 'Preview, issue, and track student certificates and identity cards.'
@@ -472,21 +516,48 @@ function RecordDocuments({ fixedKind }: { fixedKind?: 'ids' | 'certificates' }) 
         links={[
           { name: 'Student', href: studentPaths.dashboard },
           { name: 'Student Records', href: studentPaths.records.root },
-          { name: pageTitle },
+          {
+            name: pageTitle,
+            ...(fixedKind === 'ids' ? { href: studentPaths.records.studentICard } : {}),
+          },
+          ...(fixedKind === 'ids' ? [{ name: 'Issued cards' }] : []),
         ]}
         action={
-          canIssue ? (
-            <Button
-              onClick={() => {
-                if (kind === 'ids') {
-                  setBuilderYearId(currentYearId);
-                  setBuilderOpen(true);
-                } else setTemplatesOpen(true);
-              }}
-            >
-              {kind === 'ids' ? 'Create Student I-Card' : 'Configure template'}
-            </Button>
-          ) : undefined
+          <Stack
+            direction="row"
+            spacing={1}
+            flexWrap="wrap"
+            useFlexGap
+            justifyContent={fixedKind === 'ids' ? 'flex-end' : undefined}
+          >
+            {fixedKind === 'ids' && (
+              <Button
+                component={RouterLink}
+                href={studentPaths.records.studentICard}
+                size="small"
+                variant="outlined"
+                color="inherit"
+                startIcon={<Iconify icon={GlobalIcons.back} />}
+              >
+                View templates
+              </Button>
+            )}
+            {canIssue ? (
+              <Button
+                size={fixedKind === 'ids' ? 'small' : undefined}
+                variant={fixedKind === 'ids' ? 'contained' : undefined}
+                startIcon={fixedKind === 'ids' ? <Iconify icon={GlobalIcons.addIcon} /> : undefined}
+                onClick={() => {
+                  if (kind === 'ids') {
+                    setBuilderYearId(currentYearId);
+                    setBuilderOpen(true);
+                  } else setTemplatesOpen(true);
+                }}
+              >
+                {kind === 'ids' ? 'Create I-Card' : 'Configure template'}
+              </Button>
+            ) : undefined}
+          </Stack>
         }
       />
       {!fixedKind && (
@@ -569,9 +640,19 @@ function RecordDocuments({ fixedKind }: { fixedKind?: 'ids' | 'certificates' }) 
                 : `${kind}-tab`
           }
           aria-label={fixedKind === 'ids' ? pageTitle : undefined}
-          sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 1 }}
+          sx={{ flex: 1, minHeight: 0, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}
         >
-          {fixedKind !== 'ids' && (
+          {fixedKind === 'ids' ? (
+            <Paper variant="outlined" sx={{ p: 1, flexShrink: 0 }}>
+              <StudentDirectoryAcademicFilters
+                scope={issued.scope}
+                options={issued.options.currentData}
+                isLoading={issued.options.isLoading || (issued.options.isFetching && !issued.options.currentData)}
+                disabled={busy || !currentYearId || issued.options.isError}
+                onChange={(changes) => issued.update({ ...changes, page: 0 })}
+              />
+            </Paper>
+          ) : (
             <RecordDocumentFilters
               kind={kind}
               busy={busy}
@@ -693,6 +774,18 @@ function RecordDocuments({ fixedKind }: { fixedKind?: 'ids' | 'certificates' }) 
               onIssue={issue}
             />
           )}
+          {fixedKind === 'ids' && issued.options.isError && (
+            <StudentFeedback notificationKey="STU-0853" presentation="toast" severity="error"
+              toastAction={<Button onClick={() => issued.options.refetch()}>Retry</Button>}>
+              Academic filters could not be loaded. Your selections have been kept.
+            </StudentFeedback>
+          )}
+          {fixedKind === 'ids' && currentYearId && issued.options.currentData && !issued.options.isError && !issued.scope.ready && (
+            <StudentFeedback notificationKey="STU-0854" presentation="inline" severity="warning"
+              action={<Button onClick={() => issued.update({ board: undefined, medium: undefined, class: undefined, division: undefined, page: 0 })}>Reset academic filters</Button>}>
+              Some academic selections are unavailable. Choose an available board and medium.
+            </StudentFeedback>
+          )}
           {certificateType === 3 &&
             kind === 'certificates' &&
             !hasGrantedPermission(permissions, 'Students.Records.Transitions.View') && (
@@ -711,13 +804,12 @@ function RecordDocuments({ fixedKind }: { fixedKind?: 'ids' | 'certificates' }) 
               {failure}
             </StudentFeedback>
           )}
-          {query.isError && (
+          {query.isError && (fixedKind !== 'ids' || issued.ready) && (
             <StudentFeedback
               notificationKey="STU-0888"
               presentation="toast"
               severity="error"
-              action={kind === 'ids' ? <Button onClick={() => query.refetch()}>Retry</Button> : undefined}
-              toastAction={kind === 'certificates' ? <Button onClick={() => query.refetch()}>Retry</Button> : undefined}
+              toastAction={<Button onClick={() => query.refetch()}>Retry</Button>}
             >
               Issue history could not be loaded.
             </StudentFeedback>
@@ -799,7 +891,13 @@ function RecordDocuments({ fixedKind }: { fixedKind?: 'ids' | 'certificates' }) 
             </Box>
           )}
           <CustomizableTable
-            key={fixedKind === 'certificates' ? certificateTab.value : kind}
+            key={
+              fixedKind === 'ids'
+                ? `${kind}:${currentYearId}:${issued.scope.board}:${issued.scope.medium}:${issued.scope.classes.join()}:${issued.scope.divisions.join()}`
+                : fixedKind === 'certificates'
+                  ? certificateTab.value
+                  : kind
+            }
             tableId={
               fixedKind === 'certificates'
                 ? `student-record-${certificateTab.value}-certificate-history`
@@ -808,24 +906,41 @@ function RecordDocuments({ fixedKind }: { fixedKind?: 'ids' | 'certificates' }) 
             tableTitle={
               fixedKind === 'certificates'
                 ? `${certificateTab.label} certificate history`
-                : 'Issued document history'
+                : fixedKind === 'ids'
+                  ? 'Issued cards'
+                  : 'Issued document history'
             }
             columns={columns}
             data={history}
-            isLoading={query.isLoading}
+            isLoading={
+              query.isLoading || (fixedKind === 'ids' && (issued.options.isLoading || (query.isFetching && !query.currentData)))
+            }
+            {...(fixedKind === 'ids' ? issued.tableProps : {})}
             isPagination
             isSearch
             noDataText={
-              studentId
-                ? fixedKind === 'certificates'
-                  ? `No ${certificateTab.label.toLowerCase()} certificates have been issued for this student.`
-                  : 'No documents have been issued for this student.'
-                : fixedKind === 'ids'
-                  ? 'No student I-Cards to display.'
+              fixedKind === 'ids'
+                ? !currentYearId ? 'Select an academic year to see issued cards.'
+                : issued.options.isError ? 'Academic filters could not be loaded. Use Retry in the notification.'
+                : !issued.ready ? 'Choose an available board and medium to see issued cards.'
+                : query.isError
+                  ? 'Issued cards could not be loaded. Use Retry in the notification.'
+                  : 'No issued cards match your search or academic filters.'
+                : studentId
+                  ? fixedKind === 'certificates'
+                    ? `No ${certificateTab.label.toLowerCase()} certificates have been issued for this student.`
+                    : 'No documents have been issued for this student.'
                   : 'Select a student to see issued history.'
             }
             wrapperProps={{
-              sx: { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' },
+              sx: {
+                flex: fixedKind === 'ids' ? { xs: '0 0 auto', sm: 1 } : 1,
+                height: fixedKind === 'ids' ? { xs: 400, sm: 'auto' } : undefined,
+                minHeight: fixedKind === 'ids' ? { xs: 400, sm: 0 } : 0,
+                minWidth: 0,
+                display: 'flex',
+                flexDirection: 'column',
+              },
             }}
             tableContainerProps={{ sx: { height: 1 } }}
           />
@@ -840,7 +955,7 @@ function RecordDocuments({ fixedKind }: { fixedKind?: 'ids' | 'certificates' }) 
       <CustomDialog
         fullScreen
         hasForm={false}
-        title="Create Student I-Card"
+        title="Create I-Card"
         open={builderOpen}
         handleClose={() => setBuilderOpen(false)}
       >

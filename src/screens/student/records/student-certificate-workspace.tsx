@@ -1,267 +1,168 @@
 'use client';
 
-import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
-import type { IColumn } from 'src/components/customizabaleTable/types';
-import type { CertificateType } from 'src/redux/student/records/student-record-documents-api';
+import type { StudentDirectoryItem } from 'src/redux/student/records/student-records-types';
 
-import dayjs from 'dayjs';
-import Link from 'next/link';
-import { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Label } from 'src/components/label';
+import { useState, useEffect } from 'react';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
-import { CustomTabs } from 'src/components/custom-tabs';
 import { studentPaths } from 'src/constants/student-menu';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { fDateTime, formatStr } from 'src/utils/format-time';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import { usePathname, useSearchParams } from 'next/navigation';
-import { Box, Tab, Stack, Paper, Button } from '@mui/material';
-import { StudentFeedback } from 'src/components/student-feedback';
-import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Stack, Paper, Button, Typography } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { useGetRecordCertificateBatchesQuery } from 'src/redux/student/records/student-record-documents-api';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useGetStudentRecordsDirectoryQuery } from 'src/redux/student/records/student-records-api';
 
 import { recordsQueryUrl } from './records-url-state';
-import StudentCertificateForm from './student-certificate-form';
-import CertificateBatchDialog from './components/certificate-batch-dialog';
-
-const tabs: { value: string; label: string; type: CertificateType; icon: string }[] = [
-  { value: 'bonafide', label: 'Bonafide', type: 1, icon: 'tdesign:certificate' },
-  { value: 'first-trial', label: 'First Trial', type: 4, icon: 'ph:certificate-light' },
-  { value: 'leaving', label: 'Leaving', type: 3, icon: 'streamline-cyber:wedding-certificate' },
-  { value: 'character', label: 'Character', type: 2, icon: 'la:certificate' },
-];
+import RecordsStudentPicker from './records-student-picker';
+import CertificateHistoryTable from './components/certificate-history-table';
+import CertificateGenerationDrawer from './components/certificate-generation-drawer';
 
 export default function StudentCertificateWorkspace() {
+  const year = useSelector((state: RootState) => state.globalState.currentYear?.id);
+  return <CertificateSearchWorkspace key={year ?? 'no-year'} academicYearId={year} />;
+}
+
+function CertificateSearchWorkspace({ academicYearId }: { academicYearId?: string }) {
+  const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
-  const tab = tabs.find((item) => item.value === params.get('certificate')) ?? tabs[0];
   const permissions = useSelector((state: RootState) => state.auth.permissions);
-  const academicYearId = useSelector((state: RootState) => state.globalState.currentYear?.id);
   const canView = hasGrantedPermission(permissions, 'Students.Records.Certificates.View');
   const canIssue =
     canView && hasGrantedPermission(permissions, 'Students.Records.Certificates.Add');
-  const formDialog = useBoolean();
-  const [month, setMonth] = useState<Dayjs | null>(dayjs().startOf('month'));
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
-  const [batchId, setBatchId] = useState('');
-  const validMonth = month?.isValid() ? month : null;
-  const query = useGetRecordCertificateBatchesQuery(
+  const currentQuery = params.toString();
+  const [pendingSelection, setPendingSelection] = useState<{
+    from: string;
+    studentId: string;
+  } | null>(null);
+  useEffect(() => {
+    if (pendingSelection && pendingSelection.from !== currentQuery) setPendingSelection(null);
+  }, [currentQuery, pendingSelection]);
+  const [generation, setGeneration] = useState<StudentDirectoryItem | null>(null);
+  const selectedId =
+    pendingSelection?.from === currentQuery
+      ? pendingSelection.studentId
+      : params.get('year') === academicYearId
+        ? (params.get('student') ?? '')
+        : '';
+  const selected = useGetStudentRecordsDirectoryQuery(
     {
-      certificateType: tab.type,
-      generatedFrom: validMonth ? validMonth.startOf('month').toISOString() : '',
-      generatedTo: validMonth ? validMonth.startOf('month').add(1, 'month').toISOString() : '',
-      skipCount: page * pageSize,
-      maxResultCount: pageSize,
+      studentId: selectedId,
+      academicYearId,
+      population: 'All',
+      includeActiveStudentList: true,
+      maxResultCount: 1,
     },
-    { skip: !canView || !validMonth }
+    { skip: !canView || !selectedId || !academicYearId }
   );
-  const columns: IColumn[] = [
-    {
-      id: 'firstCertificateNumber',
-      label: 'Certificates',
-      isSort: false,
-      isFilter: false,
-      render: (_, row) =>
-        row.firstCertificateNumber === row.lastCertificateNumber
-          ? row.firstCertificateNumber
-          : `${row.firstCertificateNumber} — ${row.lastCertificateNumber}`,
-    },
-    {
-      id: 'generatedAt',
-      label: 'Generated',
-      isSort: false,
-      isFilter: false,
-      render: (value) => fDateTime(value, formatStr.split.dateTime),
-    },
-    { id: 'studentCount', label: 'Students', isSort: false, isFilter: false },
-    {
-      id: 'status',
-      label: 'Status',
-      isSort: false,
-      isFilter: false,
-      render: (value) => (
-        <Label
-          color={value === 'Voided' ? 'error' : value === 'Partly voided' ? 'warning' : 'success'}
-        >
-          {value}
-        </Label>
-      ),
-    },
-    {
-      id: 'actions',
-      label: 'Actions',
-      isSort: false,
-      isFilter: false,
-      excludeFromExport: true,
-      sticky: true,
-      render: (_, row) => (
-        <Button
-          size="small"
-          startIcon={<Iconify icon="solar:eye-bold" />}
-          aria-label={`View students for ${row.firstCertificateNumber}`}
-          onClick={() => setBatchId(row.id)}
-        >
-          View
-        </Button>
-      ),
-    },
-  ];
+  const student =
+    selectedId && !selected.isError
+      ? selected.currentData?.items.find(
+          (item) => item.studentId === selectedId && !item.maskedFields.includes('Identity')
+        )
+      : undefined;
+  const changeStudent = (value: StudentDirectoryItem | null) => {
+    setGeneration(null);
+    setPendingSelection({ from: currentQuery, studentId: value?.studentId ?? '' });
+    router.replace(
+      recordsQueryUrl(pathname, params.toString(), {
+        student: value?.studentId,
+        year: value ? academicYearId : undefined,
+        certificate: undefined,
+        type: undefined,
+      }),
+      { scroll: false }
+    );
+  };
   return (
     <Box sx={{ height: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
       <CustomBreadcrumbs
         heading="Certificates"
-        description="Select students, preview their certificates, and manage generated certificates by month."
+        description="Find a student, review all certificate history, or generate a certificate for that student."
         links={[
           { name: 'Student', href: studentPaths.dashboard },
           { name: 'Student Records', href: studentPaths.records.studentList },
           { name: 'Certificates' },
         ]}
         action={
-          canIssue && (
+          canIssue &&
+          student && (
             <Button
               size="small"
               variant="contained"
-              startIcon={<Iconify icon="mingcute:add-line" />}
-              onClick={formDialog.onTrue}
+              color="inherit"
+              startIcon={<Iconify icon={GlobalIcons.addIcon} />}
+              aria-label={`Generate certificate for ${[student.firstName, student.middleName, student.lastName].filter(Boolean).join(' ')}`}
+              onClick={() => setGeneration(student)}
             >
-              Create certificate
+              Generate certificate
             </Button>
           )
         }
       />
       {!canView ? (
-        <StudentFeedback notificationKey="STU-0849" presentation="inline" severity="warning">
-          You do not have access to certificates.
-        </StudentFeedback>
+        <Typography role="status">You do not have access to certificates.</Typography>
+      ) : !academicYearId ? (
+        <Typography role="status">
+          Select an academic year in the header to find students.
+        </Typography>
       ) : (
         <>
-          <Paper variant="outlined" sx={{ flexShrink: 0, overflow: 'hidden' }}>
-            <Stack direction={{ xs: 'column', md: 'row' }} alignItems={{ md: 'center' }}>
-              <CustomTabs
-                aria-label="Certificate types"
-                value={tab.value}
-                variant="scrollable"
-                scrollButtons="auto"
-                allowScrollButtonsMobile
-                sx={{ minWidth: 0, flex: '1 1 auto', '& .MuiTabs-flexContainer': { gap: 1 } }}
-                onChange={() => {
-                  setPage(0);
-                  setBatchId('');
-                  formDialog.onFalse();
-                }}
-              >
-                {tabs.map((item) => (
-                  <Tab
-                    key={item.value}
-                    component={Link}
-                    prefetch={false}
-                    replace
-                    scroll={false}
-                    href={recordsQueryUrl(pathname, params.toString(), { certificate: item.value })}
-                    value={item.value}
-                    id={`certificate-${item.value}-tab`}
-                    aria-controls={`certificate-${item.value}-panel`}
-                    label={item.label}
-                    icon={<Iconify icon={item.icon} width={20} />}
-                    iconPosition="start"
-                    sx={{ minHeight: 44, py: 1, textDecoration: 'none' }}
-                  />
-                ))}
-              </CustomTabs>
-              <Box sx={{ p: 1, flexShrink: 0 }}>
-                <DatePicker
-                  label="Generated month"
-                  views={['year', 'month']}
-                  format="MMM YYYY"
-                  value={month}
-                  onChange={(value) => {
-                    setMonth(value);
-                    setPage(0);
-                  }}
-                  slotProps={{ textField: { size: 'small', sx: { width: { xs: 1, md: 200 } } } }}
-                />
-              </Box>
-            </Stack>
-          </Paper>
-          <Box
-            role="tabpanel"
-            id={`certificate-${tab.value}-panel`}
-            aria-labelledby={`certificate-${tab.value}-tab`}
-            sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}
-          >
-            <CustomizableTable
-              key={tab.value}
-              tableId={`student-${tab.value}-certificate-batches`}
-              tableTitle={`${tab.label} generated certificates`}
-              columns={columns}
-              data={validMonth ? (query.currentData?.items ?? []) : []}
-              isLoading={query.isFetching}
-              isPagination
-              isSearch={false}
-              serverSidePagination
-              page={page}
-              rowsPerPage={pageSize}
-              totalCount={validMonth ? (query.currentData?.totalCount ?? 0) : 0}
-              onServerPagination={(nextPage, nextSize) => {
-                setPage(nextPage);
-                setPageSize(nextSize);
+          <Box sx={{ maxWidth: 560, width: 1, flexShrink: 0 }}>
+            <RecordsStudentPicker
+              selectedId={selectedId}
+              academicYearId={academicYearId}
+              includeActiveStudentList
+              toastRecovery
+              size="small"
+              label="Find student"
+              placeholder="Search name, GR or admission number"
+              helperText={null}
+              onSelect={changeStudent}
+              onSearchInput={() => {
+                if (selectedId) changeStudent(null);
+                else setGeneration(null);
               }}
-              noDataText={
-                validMonth
-                  ? `No ${tab.label.toLowerCase()} certificates generated in this month.`
-                  : 'Select a month to see generated certificates.'
-              }
-              errorContent={
-                query.isError ? (
-                  <StudentFeedback
-                    notificationKey="STU-0850"
-                    presentation="toast"
-                    severity="error"
-                    toastAction={
-                      <Button
-                        size="small"
-                        startIcon={<Iconify icon="solar:restart-bold" />}
-                        onClick={() => query.refetch()}
-                      >
-                        Retry
-                      </Button>
-                    }
-                  >
-                    Generated certificates could not be loaded.
-                  </StudentFeedback>
-                ) : undefined
-              }
-              wrapperProps={{
-                sx: { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' },
-              }}
-              tableContainerProps={{ sx: { height: 1 } }}
             />
           </Box>
+          {student ? (
+            <>
+              <Paper variant="outlined" sx={{ p: 1.5, flexShrink: 0 }}>
+                <Stack spacing={0.5}>
+                  <Typography variant="subtitle2">
+                    {[student.firstName, student.middleName, student.lastName]
+                      .filter(Boolean)
+                      .join(' ')}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {student.grNumber || student.grNo || '—'} ·{' '}
+                    {[student.standardName, student.divisionName].filter(Boolean).join(' / ') ||
+                      '—'}
+                  </Typography>
+                </Stack>
+              </Paper>
+              <CertificateHistoryTable
+                key={`${academicYearId}-${student.studentId}`}
+                studentId={student.studentId}
+              />
+            </>
+          ) : (
+            <Typography variant="body2" color="text.secondary" role="status">
+              {selectedId && selected.isFetching
+                ? 'Loading the selected student…'
+                : 'Search and select a student to view certificate history.'}
+            </Typography>
+          )}
         </>
       )}
-      {formDialog.value && canIssue && (
-        <StudentCertificateForm
-          key={`${academicYearId}-${tab.type}`}
-          certificateType={tab.type}
-          certificateLabel={tab.label}
-          onClose={formDialog.onFalse}
-          onGenerated={() => {
-            setMonth(dayjs().startOf('month'));
-            setPage(0);
-          }}
-        />
-      )}
-      {batchId && (
-        <CertificateBatchDialog
-          batchId={batchId}
-          certificateType={tab.type}
-          label={tab.label}
-          onClose={() => setBatchId('')}
+      {generation && canIssue && academicYearId && student?.studentId === generation.studentId && (
+        <CertificateGenerationDrawer
+          students={[generation]}
+          academicYearId={academicYearId}
+          onClose={() => setGeneration(null)}
+          onViewHistory={() => setGeneration(null)}
         />
       )}
     </Box>

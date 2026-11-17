@@ -47,6 +47,7 @@ type Handlers = {
   onDelete: (workflow: AdmissionWorkflow) => void;
   onPublish: (workflow: AdmissionWorkflow) => void;
   publishingId?: string | null;
+  creatingVersionId?: string | null;
 };
 
 export function createWorkflowColumns(
@@ -162,7 +163,8 @@ export function createWorkflowColumns(
             onDelete={() => handlers.onDelete(workflow)}
             onPublish={() => handlers.onPublish(workflow)}
             publishing={handlers.publishingId === workflow.id}
-            busy={Boolean(handlers.publishingId)}
+            creatingVersion={handlers.creatingVersionId === workflow.id}
+            busy={Boolean(handlers.publishingId || handlers.creatingVersionId)}
           />
         );
       },

@@ -17,8 +17,23 @@ import type {
 } from './admission-parent-family-types';
 
 const dashboardTag = { type: studentType.student, id: 'MODULE-DASHBOARD-admissions' } as const;
-const inquiryMutationTags = (_result: unknown, error: unknown) =>
-  error ? [] : [studentAdmissionsCrmType.admissionInquiry, dashboardTag];
+const inquiryMutationTags = (
+  _result: unknown,
+  error: unknown,
+  input: string | { id?: string; inquiryIds?: string[] }
+) =>
+  error
+    ? []
+    : [
+        dashboardTag,
+        { type: studentAdmissionsCrmType.admissionInquiry, id: 'LIST' },
+        { type: studentAdmissionsCrmType.admissionInquiry, id: 'ACTIVITY' },
+        { type: studentAdmissionsCrmType.admissionInquiry, id: 'PIPELINE' },
+        ...(typeof input === 'string'
+          ? [input]
+          : (input.inquiryIds ?? (input.id ? [input.id] : []))
+        ).map((id) => ({ type: studentAdmissionsCrmType.admissionInquiry, id })),
+      ];
 
 export type AdmissionInquiryCaptureContext = {
   academicYearStartDate?: string | null;
@@ -289,7 +304,7 @@ export const admissionInquiriesApi = api.injectEndpoints({
         response: Result<AdmissionInquiryCaptureContext> | AdmissionInquiryCaptureContext
       ) => unwrap(response),
       providesTags: [
-        studentAdmissionsCrmType.admissionInquiry,
+        { type: studentAdmissionsCrmType.admissionInquiry, id: 'CAPTURE' },
         studentAdmissionsCrmType.admissionOffering,
         studentAdmissionsCrmType.admissionForm,
       ],
@@ -306,7 +321,7 @@ export const admissionInquiriesApi = api.injectEndpoints({
         response: Result<AdmissionInquiryCaptureCatalogue> | AdmissionInquiryCaptureCatalogue
       ) => unwrap(response),
       providesTags: [
-        studentAdmissionsCrmType.admissionInquiry,
+        { type: studentAdmissionsCrmType.admissionInquiry, id: 'CAPTURE' },
         studentAdmissionsCrmType.admissionOffering,
         studentAdmissionsCrmType.admissionCycle,
       ],
@@ -352,7 +367,9 @@ export const admissionInquiriesApi = api.injectEndpoints({
           ? []
           : [
               dashboardTag,
-              studentAdmissionsCrmType.admissionInquiry,
+              { type: studentAdmissionsCrmType.admissionInquiry, id: 'LIST' },
+              { type: studentAdmissionsCrmType.admissionInquiry, id: 'ACTIVITY' },
+              { type: studentAdmissionsCrmType.admissionInquiry, id: 'PIPELINE' },
               studentAdmissionsCrmType.admissionApplicant,
             ],
     }),
@@ -399,6 +416,7 @@ export const admissionInquiriesApi = api.injectEndpoints({
           : [
               { type: studentAdmissionsCrmType.admissionInquiry, id },
               { type: studentAdmissionsCrmType.admissionInquiry, id: 'LIST' },
+              { type: studentAdmissionsCrmType.admissionInquiry, id: 'ACTIVITY' },
               studentAdmissionsCrmType.admissionApplicant,
             ],
     }),
@@ -441,7 +459,7 @@ export const admissionInquiriesApi = api.injectEndpoints({
       transformResponse: (
         response: Result<AdmissionInquiryCounsellor[]> | AdmissionInquiryCounsellor[]
       ) => unwrap(response),
-      providesTags: [studentAdmissionsCrmType.admissionInquiry],
+      providesTags: [{ type: studentAdmissionsCrmType.admissionInquiry, id: 'COUNSELLORS' }],
     }),
     assignAdmissionInquiryCounsellor: builder.mutation<
       AdmissionInquiry,

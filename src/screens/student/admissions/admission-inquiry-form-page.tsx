@@ -13,6 +13,7 @@ import { LoadingButton } from 'src/components/loading-button';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
+import { skeletonReducedMotionSx } from 'src/theme/styles/skeleton';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { FormSectionCard, FormFieldSpacing } from 'src/components/form-section-card';
 import {
@@ -24,7 +25,6 @@ import {
   MenuItem,
   TextField,
   Typography,
-  LinearProgress,
 } from '@mui/material';
 
 import AdmissionRuntimeField from './admission-runtime-field';
@@ -72,7 +72,6 @@ export default function AdmissionInquiryFormPage() {
   const formRef = useRef<HTMLFormElement>(null);
   const lastFocusedSubmit = useRef(0);
   const lastPreferredClassToast = useRef('');
-  const [dismissedCapacityOfferingId, setDismissedCapacityOfferingId] = useState('');
   const [interestExpanded, setInterestExpanded] = useState(true);
   const guard = useAdmissionCloseGuard(formik.dirty, controller.busy, true, router.push);
   const handleCancel = () => guard.requestNavigation(() => router.push(returnUrl));
@@ -165,7 +164,6 @@ export default function AdmissionInquiryFormPage() {
           bgcolor: 'background.paper',
         }}
       >
-        {controller.offeringsLoading && <LinearProgress aria-label="Loading Admission Offerings" />}
         <FormFieldSpacing
           role="region"
           aria-label="Inquiry Form Fields"
@@ -221,6 +219,27 @@ export default function AdmissionInquiryFormPage() {
                 expanded={interestExpanded}
                 onExpandedChange={setInterestExpanded}
               >
+                {controller.offeringsLoading && (
+                  <Box
+                    role="status"
+                    aria-label="Loading Admission Offerings"
+                    aria-busy
+                    sx={{
+                      ...skeletonReducedMotionSx,
+                      gridColumn: '1 / -1',
+                      display: 'grid',
+                      gridTemplateColumns: {
+                        xs: 'minmax(0, 1fr)',
+                        sm: 'repeat(2, minmax(0, 1fr))',
+                      },
+                      gap: 2,
+                    }}
+                  >
+                    {Array.from({ length: 2 }, (_, index) => (
+                      <Skeleton key={index} variant="rounded" height={48} />
+                    ))}
+                  </Box>
+                )}
                 <ShakingTextField
                   error={Boolean(formik.touched.admissionCycleId && formik.errors.admissionCycleId)}
                 >
@@ -368,7 +387,6 @@ export default function AdmissionInquiryFormPage() {
                       onChange={(event) => {
                         formik.setFieldValue('offeringId', event.target.value);
                         formik.setFieldValue('fields', {});
-                        setDismissedCapacityOfferingId('');
                       }}
                     >
                       {controller.offerings.map((offering) => (
@@ -435,32 +453,6 @@ export default function AdmissionInquiryFormPage() {
                     >
                       {controller.unavailableReason ||
                         'Admission Is Not Open for the Selected Class.'}
-                    </StudentFeedback>
-                  )}
-                {controller.classCapacity &&
-                  formik.values.offeringId &&
-                  dismissedCapacityOfferingId !== formik.values.offeringId && (
-                    <StudentFeedback
-                      notificationKey="STU-0081"
-                      presentation={controller.classCapacity.isFull ? 'persistent' : 'inline'}
-                      severity={controller.classCapacity.isFull ? 'warning' : 'info'}
-                      onClose={() => setDismissedCapacityOfferingId(formik.values.offeringId)}
-                      sx={{
-                        gridColumn: '1 / -1',
-                        display: 'grid',
-                        gridTemplateColumns: 'minmax(0, 1fr) auto',
-                        alignItems: 'center',
-                        columnGap: 1,
-                        '& > :not(style) ~ :not(style)': { mt: 0 },
-                      }}
-                    >
-                      {controller.classCapacity.capacity == null
-                        ? 'Admission Room Capacity Is Not Set. Division Seats Are Checked During Onboarding. You Can Continue This Inquiry.'
-                        : `${controller.classCapacity.remainingSeats} of ${controller.classCapacity.capacity} admission room seats available.`}
-                      {controller.classCapacity.isFull &&
-                        (controller.canCreateInquiry
-                          ? ` ${controller.unavailableReason || 'The configured admission capacity rules allow this inquiry. Division allocation is checked during onboarding.'}`
-                          : ' Capacity Is Full and This Offering Does Not Accept Further Inquiries.')}
                     </StudentFeedback>
                   )}
               </InquiryFormSection>

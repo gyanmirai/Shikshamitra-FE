@@ -86,7 +86,7 @@ export const admissionApplicantsApi = api.injectEndpoints({
         response: Result<AdmissionJourneyActivity[]> | AdmissionJourneyActivity[]
       ) => unwrap(response),
       providesTags: [
-        studentAdmissionsCrmType.admissionInquiry,
+        { type: studentAdmissionsCrmType.admissionInquiry, id: 'ACTIVITY' },
         studentAdmissionsCrmType.admissionApplicant,
         studentAdmissionsCrmType.admissionApplication,
       ],

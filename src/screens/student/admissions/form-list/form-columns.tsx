@@ -11,6 +11,7 @@ type Handlers = {
   canManage: boolean;
   canPublish: boolean;
   canDelete: boolean;
+  creatingVersionId?: string | null;
   onEdit: (form: AdmissionForm) => void;
   onClone: (form: AdmissionForm) => void;
   onValidate: (form: AdmissionForm) => void;
@@ -109,6 +110,8 @@ export function createFormColumns(handlers: Handlers): IColumn[] {
         return (
           <FormRowActions
             form={form}
+            creatingVersion={handlers.creatingVersionId === form.id}
+            versionBusy={Boolean(handlers.creatingVersionId)}
             canManage={handlers.canManage}
             canPublish={handlers.canPublish}
             canDelete={handlers.canDelete}

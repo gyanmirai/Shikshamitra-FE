@@ -68,7 +68,7 @@ describe('student navigation', () => {
     expect(records.children?.map((item) => item.title)).toEqual([
       'Student List',
       'House Management',
-      'Student I-Card',
+      'I-Card',
       'Certificates',
       'Reports',
     ]);

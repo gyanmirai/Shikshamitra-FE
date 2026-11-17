@@ -678,7 +678,7 @@ export default function StudentICardBuilder({
         setStep((current) => Math.min(current, 2));
       }
       setError('');
-      shikshaMitraToast.success({ message: 'Student I-Card template saved.' });
+      shikshaMitraToast.success({ message: 'I-Card template saved.' });
       return saved;
     } catch (failure: unknown) {
       const problem = parseApiProblemDetail(failure);
@@ -783,7 +783,7 @@ export default function StudentICardBuilder({
       if (!isCurrentContext(generation)) return;
       if (!pdf.size || (pdf.type && !pdf.type.includes('pdf'))) throw new Error('Invalid PDF');
       downloadRecordPdf(pdf, `Student-I-Cards-${new Date().toISOString().slice(0, 10)}.pdf`);
-      shikshaMitraToast.success({ message: 'Student I-Card PDF downloaded.' });
+      shikshaMitraToast.success({ message: 'I-Card PDF downloaded.' });
     } catch (failure: unknown) {
       const problem = parseApiProblemDetail(failure);
       if (isCurrentContext(generation))
@@ -813,7 +813,7 @@ export default function StudentICardBuilder({
       }).unwrap();
       if (!isCurrentContext(generation)) return;
       shikshaMitraToast.success({
-        message: 'Student I-Cards issued. Select a student to view history.',
+        message: 'I-Cards issued. Select a student to view history.',
       });
       onClose();
     } catch {
@@ -830,10 +830,10 @@ export default function StudentICardBuilder({
         severity="error"
         action={<Button onClick={() => templateQuery.refetch()}>Retry</Button>}
       >
-        Student I-Card template could not be loaded.
+        I-Card template could not be loaded.
       </StudentFeedback>
     );
-  if (!template) return <LinearProgress aria-label="Loading student I-Card template" />;
+  if (!template) return <LinearProgress aria-label="Loading I-Card template" />;
 
   const columns: IColumn[] = [
     {
@@ -892,7 +892,7 @@ export default function StudentICardBuilder({
         <CustomStepper
           steps={visibleSteps}
           activeStep={step - firstStep}
-          ariaLabel="Student I-Card creation steps"
+          ariaLabel="I-Card creation steps"
           stepStates={visibleSteps.map((_, index) =>
             completed.includes(index + firstStep)
               ? 'completed'
@@ -1289,7 +1289,7 @@ export default function StudentICardBuilder({
                 <Grid size={{ xs: 12, md: 6 }}>
                   <Stack spacing={2} sx={{ minWidth: 0 }}>
                     <FormSectionHeader
-                      title="Export Student I-Cards"
+                      title="Export I-Cards"
                       icon={GlobalIcons.printer}
                       titleTypographyProps={{ fontWeight: 600 }}
                       descriptionTooltip="Download a printable PDF or issue numbered cards to student history. These are separate actions."
@@ -1554,8 +1554,8 @@ export function StudentCardPreview({
       role="img"
       aria-label={
         card?.studentSnapshot.StudentName
-          ? `I-card preview for ${card.studentSnapshot.StudentName}`
-          : 'I-card composition preview'
+          ? `I-Card preview for ${card.studentSnapshot.StudentName}`
+          : 'I-Card composition preview'
       }
       sx={{
         width: 1,

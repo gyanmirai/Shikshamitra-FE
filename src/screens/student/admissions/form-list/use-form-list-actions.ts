@@ -8,11 +8,12 @@ import type {
 } from 'src/redux/student/admissions/admission-forms-api';
 
 import { useSelector } from 'react-redux';
-import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { useRef, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { usePendingNavigation } from 'src/hooks/use-pending-navigation';
 import {
   useGetAdmissionFormQuery,
   useLazyGetAdmissionFormQuery,
@@ -35,6 +36,7 @@ import {
 
 export function useFormListActions() {
   const router = useRouter();
+  const navigation = usePendingNavigation(router.push);
   const dialog = useBoolean();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingForm, setEditingForm] = useState<AdmissionForm | null>(null);
@@ -54,6 +56,8 @@ export function useFormListActions() {
   const [validate, validateState] = useValidateAdmissionFormMutation();
   const [publish, publishState] = usePublishAdmissionFormMutation();
   const [createVersion] = useCreateAdmissionFormVersionMutation();
+  const versionLock = useRef(false);
+  const [creatingVersionId, setCreatingVersionId] = useState<string | null>(null);
   const [deleteForm, deleteState] = useDeleteAdmissionFormMutation();
   const [loadDeleteForm] = useLazyGetAdmissionFormQuery();
   const [pendingDelete, setPendingDelete] = useState<AdmissionForm | null>(null);
@@ -138,8 +142,9 @@ export function useFormListActions() {
       setCreatingPurpose(purpose);
       dialog.onTrue();
     },
+    pendingNavigationId: navigation.pendingKey,
     preview: (id: string, returnTo?: string) =>
-      router.push(getAdmissionFormPreviewUrl(id, returnTo)),
+      navigation.navigate(id, getAdmissionFormPreviewUrl(id, returnTo)),
     requestClone: (form: AdmissionForm) => setPendingClone(form),
     pendingClone,
     clearPendingClone: () => setPendingClone(null),
@@ -207,8 +212,18 @@ export function useFormListActions() {
     historyForm,
     showHistory: (form: AdmissionForm) => setHistoryForm(form),
     closeHistory: () => setHistoryForm(null),
-    createVersion: (id: string) =>
-      run(() => createVersion(id).unwrap(), 'New form version created'),
+    creatingVersionId,
+    createVersion: async (id: string) => {
+      if (versionLock.current) return false;
+      versionLock.current = true;
+      setCreatingVersionId(id);
+      try {
+        return await run(() => createVersion(id).unwrap(), 'New form version created');
+      } finally {
+        versionLock.current = false;
+        setCreatingVersionId(null);
+      }
+    },
     requestDelete: (form: AdmissionForm) => {
       setDeleteError(null);
       setPendingDelete(form);

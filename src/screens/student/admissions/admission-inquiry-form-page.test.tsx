@@ -47,7 +47,6 @@ function controller(overrides: Record<string, unknown> = {}) {
         offeringId: 'offering-1',
         source: 0,
         sourceDetail: '',
-        sendAcknowledgement: false,
         fields: { FIRST_NAME: '', GUARDIAN_MOBILE: '', PREFERRED_CLASS: 'Class 2' },
       },
       errors: {
@@ -142,7 +141,6 @@ function controller(overrides: Record<string, unknown> = {}) {
     runtimeError: false,
     formLoading: false,
     workflowLoading: false,
-    canAutoAcknowledge: false,
     allowedSources: [0],
     policy: { requireSourceDetailFor: [] },
     matches: [],
@@ -208,7 +206,8 @@ it('copies a checked address into the Inquiry create values sent by Formik', asy
   vi.mocked(useAdmissionInquiryDialog).mockImplementation(useAddressController);
   render(<AdmissionInquiryFormPage />);
   const user = userEvent.setup();
-  await user.type(screen.getByRole('textbox', { name: 'Current street' }), 'Inquiry current road');
+  await user.click(screen.getByRole('textbox', { name: 'Current street' }));
+  await user.paste('Inquiry current road');
   await user.click(screen.getByRole('checkbox', { name: 'Same address' }));
   await waitFor(() =>
     expect(screen.getByRole('textbox', { name: 'Permanent street' })).toHaveValue(
@@ -365,21 +364,17 @@ describe('New inquiry form', () => {
     expect(screen.getByRole('heading', { name: /^Student details$/i })).toBeVisible();
   });
 
-  it('retains the full-capacity restriction after dismissing its compact notice', () => {
+  it('does not show room capacity or restrict an available inquiry', () => {
     vi.mocked(useAdmissionInquiryDialog).mockReturnValue(
       controller({
         classCapacity: { capacity: 24, remainingSeats: 0, isFull: true },
-        canCreateInquiry: false,
-        unavailableReason: 'No admission seats remain.',
       }) as unknown as ReturnType<typeof useAdmissionInquiryDialog>
     );
     render(<AdmissionInquiryFormPage />);
-    expect(screen.getByText(/0 of 24 admission room seats available/)).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Create Inquiry' })).toBeDisabled();
-    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
-    expect(screen.queryByText(/0 of 24 admission room seats available/)).not.toBeInTheDocument();
-    expect(screen.getByText('No admission seats remain.')).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Create Inquiry' })).toBeDisabled();
+    expect(
+      screen.queryByText(/admission room seats|Admission Room Capacity/i)
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Create Inquiry' })).toBeEnabled();
   });
 
   it('reports failed prerequisite requests through standard toasts without inline errors or Retry rows', () => {
@@ -461,7 +456,7 @@ describe('New inquiry form', () => {
   });
 
   it('shows the latest unavailable reason once, without the old generic helper', () => {
-    const reason = 'Admission offering setup is incomplete.';
+    const reason = "Inquiry Form 'QA Inquiry' is archived. Restore it in Admission forms.";
     const fixture = controller({
       offerings: [],
       sections: [],
@@ -475,6 +470,7 @@ describe('New inquiry form', () => {
     render(<AdmissionInquiryFormPage />);
     expect(screen.getAllByText(reason)).toHaveLength(1);
     expect(screen.queryByText('Selected Class has no Admission open.')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Create Inquiry' })).toBeDisabled();
   });
 
   it('shows academic-start age with configured DOB help and permits creating an underage inquiry', async () => {
@@ -584,7 +580,7 @@ describe('New inquiry form', () => {
     });
   });
 
-  it('shows a loading skeleton and allows capacity information to be dismissed', () => {
+  it('shows a loading skeleton and then the configured form without capacity notices', () => {
     vi.mocked(useAdmissionInquiryDialog).mockReturnValue(
       controller({ runtimeLoading: true, sections: [] }) as unknown as ReturnType<
         typeof useAdmissionInquiryDialog
@@ -597,9 +593,8 @@ describe('New inquiry form', () => {
       controller() as unknown as ReturnType<typeof useAdmissionInquiryDialog>
     );
     rerender(<AdmissionInquiryFormPage />);
-    expect(screen.getByText('24 of 24 admission room seats available.')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
-    expect(screen.queryByText('24 of 24 admission room seats available.')).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /^Student details$/i })).toBeVisible();
+    expect(screen.queryByText(/admission room seats/i)).not.toBeInTheDocument();
   });
 
   it('warns when preferred class differs from the offering', () => {

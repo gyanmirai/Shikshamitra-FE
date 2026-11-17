@@ -96,7 +96,8 @@ function Fixture() {
       ) : (
         <Typography>
           Charges list · last charge{' '}
-          {new URLSearchParams(window.location.search).has('approvalNotRequired')
+          {new URLSearchParams(window.location.search).has('approvalNotRequired') &&
+          new URLSearchParams(window.location.search).has('admin')
             ? 'Approved'
             : 'Pending'}
         </Typography>

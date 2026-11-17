@@ -47,6 +47,20 @@ const makeServices = () => ({
 });
 
 describe('single-student setup save coordination', () => {
+  it('returns the current academic case when fees explicitly report no write', async () => {
+    const services = makeServices();
+    const current = makeCase({ concurrencyStamp: 'current-academic' });
+    services.saveAcademic.mockResolvedValue(current);
+    const noWriteServices = { ...services, saveFees: vi.fn(async () => false) };
+    await expect(
+      runStudentQuickSetupSave({
+        activate: false,
+        idempotencyKey: 'unused',
+        services: noWriteServices,
+      })
+    ).resolves.toBe(current);
+    expect(services.getCase).not.toHaveBeenCalled();
+  });
   it('saves academic work and fees in sequence, then activates with the fresh preview', async () => {
     const services = makeServices();
     const events: string[] = [];

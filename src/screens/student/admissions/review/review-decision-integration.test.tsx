@@ -4,7 +4,7 @@ import { it, vi, expect } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import { mswServer } from 'src/test/mswServer';
 import userEvent from '@testing-library/user-event';
-import { screen, within, waitFor } from '@testing-library/react';
+import { screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import { renderReviewUi } from './review-ui-test-fixture';
 import { ApplicationDecisionCard } from '../application-detail/application-decision-card';
@@ -85,3 +85,34 @@ it('does not expose decisions or finalization without application manage permiss
   expect(screen.queryByRole('button', { name: 'Approve' })).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Finalize Admission' })).not.toBeInTheDocument();
 });
+
+it.each(['waitlist', 'reject'] as const)(
+  'records inline %s through the existing API contract',
+  async (action) => {
+    const requests: unknown[] = [];
+    mswServer.use(
+      http.get(`${path}/decision-history`, () => HttpResponse.json([])),
+      http.post(`${path}/decision/${action}`, async ({ request }) => {
+        requests.push(await request.json());
+        return HttpResponse.json({ ...application, status: action === 'reject' ? 3 : 5 });
+      })
+    );
+    renderReviewUi(
+      <ApplicationDecisionCard compact application={application} journeyCompleted={false} />,
+      ['Students.Admissions.Applications.Add']
+    );
+    fireEvent.click(
+      screen.getByRole('radio', { name: action === 'reject' ? 'Reject' : 'Waitlist' })
+    );
+    expect(requests).toEqual([]);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    fireEvent.change(screen.getByRole('textbox', { name: 'Reason' }), {
+      target: { value: '  School review reason  ' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Record Decision' }));
+    await waitFor(() =>
+      expect(requests).toEqual([{ concurrencyStamp: 'stamp', reason: 'School review reason' }])
+    );
+    await waitFor(() => expect(screen.queryByRole('textbox')).not.toBeInTheDocument());
+  }
+);

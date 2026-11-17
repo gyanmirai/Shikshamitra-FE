@@ -12,11 +12,12 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, Paper, Stack, Button, Typography } from '@mui/material';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { studentSetupReturnUrl } from 'src/screens/student/setup/embedding/student-setup-return';
 import {
   useGetAdmissionFormQuery,
   useGetAdmissionFormsQuery,
 } from 'src/redux/student/admissions/admission-forms-api';
+import { useStudentSetupEmbedding , StudentSetupManagerHeader as CustomBreadcrumbs } from 'src/screens/student/setup/embedding';
 
 import { createFormColumns } from './form-list/form-columns';
 import { AdmissionFormDialog } from './admission-form-dialog';
@@ -39,6 +40,7 @@ import {
 
 export default function AdmissionFormsScreen() {
   const searchParams = useSearchParams();
+  const { embedded } = useStudentSetupEmbedding();
   const router = useRouter();
   const actions = useFormListActions();
   const lifecycle = useFormLifecycleActions(actions.canManage);
@@ -50,7 +52,7 @@ export default function AdmissionFormsScreen() {
   });
   const requestLifecycle = lifecycle.request;
   useEffect(() => {
-    if (!actions.canManage) return;
+    if (!actions.canManage || embedded) return;
     const form = restoreEntry.currentData;
     if (!requestedRestoreId) {
       restoreEntryHandled.current = null;
@@ -79,6 +81,7 @@ export default function AdmissionFormsScreen() {
     router,
     searchParams,
     actions.canManage,
+    embedded,
   ]);
   const [restoredState] = useState(() => readAdmissionFormListReturnState(searchParams));
   const [page, setPage] = useState(restoredState.page);
@@ -88,7 +91,7 @@ export default function AdmissionFormsScreen() {
   const preview = (id: string) =>
     actions.preview(
       id,
-      getAdmissionFormListReturnUrl({
+      embedded ? studentSetupReturnUrl('admission-forms', searchParams.get('guideYear'), searchParams.get('returnTo')) : getAdmissionFormListReturnUrl({
         page,
         rowsPerPage,
         search,
@@ -107,6 +110,7 @@ export default function AdmissionFormsScreen() {
     canManage: actions.canManage,
     canPublish: actions.canPublish,
     canDelete: actions.canDelete,
+    creatingVersionId: actions.creatingVersionId,
     onEdit: (form) => actions.edit(form.id),
     onClone: actions.requestClone,
     onValidate: (form) => actions.validate(form.id),
@@ -130,6 +134,7 @@ export default function AdmissionFormsScreen() {
       }}
     >
       <CustomBreadcrumbs
+        editorOpen={actions.dialog.value || Boolean(actions.pendingClone) || Boolean(actions.pendingPublish) || Boolean(actions.pendingDelete) || Boolean(lifecycle.pending)} busy={actions.saving || actions.cloning || actions.publishing || actions.deleting || Boolean(actions.creatingVersionId) || lifecycle.busy}
         heading="Admission Forms"
         description="Create and Publish the Inquiry and Registration Forms Used Across Admissions."
         links={[
@@ -209,6 +214,12 @@ export default function AdmissionFormsScreen() {
             ) : undefined
           }
           handleRowClick={(row) => preview((row as AdmissionForm).id)}
+          getRowAction={(row) => ({
+            label: `Preview ${(row as AdmissionForm).name}`,
+            onClick: () => preview((row as AdmissionForm).id),
+            pending: actions.pendingNavigationId === row.id,
+            pendingLabel: 'Opening form…',
+          })}
           rowProps={(row) => ({
             tabIndex: 0,
             sx: { cursor: 'pointer' },

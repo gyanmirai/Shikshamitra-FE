@@ -1,5 +1,7 @@
+import type { ReactNode } from 'react';
 import type { RootState } from 'src/redux/store';
 import type { RecordSnapshot } from 'src/redux/student/records/student-record-changes-api';
+import type { AdmissionFormSection } from 'src/redux/student/admissions/admission-forms-api';
 import type {
   CustomRecordPayload,
   StudentRecordDetails,
@@ -28,8 +30,8 @@ import {
 } from '@mui/material';
 
 import { StudentCustomRuntimeField } from './student-custom-runtime-field';
-import { dependentAdmissionFieldValues } from '../admissions/admission-field-dependencies';
 import { StudentRegistrationFormFields } from './student-registration-form-fields';
+import { dependentAdmissionFieldValues } from '../admissions/admission-field-dependencies';
 import {
   profileRuleValues,
   decodeProfileValue,
@@ -57,6 +59,8 @@ export function CustomRecordChangeForm({
   hideSubmit = false,
   onCanSubmitChange,
   direct = false,
+  sectionTarget,
+  renderSectionAction,
 }: {
   studentId: string;
   snapshot: RecordSnapshot;
@@ -70,6 +74,8 @@ export function CustomRecordChangeForm({
   hideSubmit?: boolean;
   onCanSubmitChange?: (canSubmit: boolean) => void;
   direct?: boolean;
+  sectionTarget?: { instanceId: string; sectionId: string };
+  renderSectionAction?: (instanceId: string, section: AdmissionFormSection) => ReactNode;
 }) {
   // Keep the values, source schema and concurrency token from the same read for this draft.
   const [snapshot] = useState(loadedSnapshot);
@@ -205,6 +211,26 @@ export function CustomRecordChangeForm({
     },
     [onBusyChange]
   );
+  const reasonField = (
+    <TextField
+      size="small"
+      fullWidth
+      label="Reason for change"
+      required
+      multiline
+      minRows={2}
+      value={reason}
+      disabled={busy}
+      onChange={(event) => setReason(event.target.value)}
+      inputProps={{ maxLength: 2000 }}
+      error={form.submitCount > 0 && reason.trim().length < 3}
+      helperText={
+        form.submitCount > 0 && reason.trim().length < 3
+          ? 'Explain the requested change using at least 3 characters.'
+          : undefined
+      }
+    />
+  );
   if (!canCreate || (!direct && loadedDetails.customDetailsMasked))
     return (
       <StudentFeedback notificationKey="STU-0734" presentation="inline" severity="info">
@@ -247,12 +273,16 @@ export function CustomRecordChangeForm({
               if (direct)
                 return (
                   <Box key={source.formInstanceId}>
-                    <FormSectionHeader
-                      icon="mdi:form-select"
-                      title={source.formName}
-                      description={`Version ${source.formVersion}`}
-                    />
-                    <Divider sx={{ my: 2 }} />
+                    {!sectionTarget && (
+                      <>
+                        <FormSectionHeader
+                          icon="mdi:form-select"
+                          title={source.formName}
+                          description={`Version ${source.formVersion}`}
+                        />
+                        <Divider sx={{ my: 2 }} />
+                      </>
+                    )}
                     {source.differences
                       .filter(
                         (difference) =>
@@ -289,6 +319,71 @@ export function CustomRecordChangeForm({
                       values={values}
                       editing
                       busy={busy}
+                      initialSectionId={
+                        sectionTarget?.instanceId === source.formInstanceId
+                          ? sectionTarget.sectionId
+                          : undefined
+                      }
+                      sectionAction={
+                        renderSectionAction
+                          ? (section) => renderSectionAction(source.formInstanceId, section)
+                          : undefined
+                      }
+                      sectionFooter={(section) =>
+                        sectionTarget?.instanceId === source.formInstanceId &&
+                        section.fields.some((field) =>
+                          source.editableFieldCodes.includes(field.code)
+                        )
+                          ? reasonField
+                          : null
+                      }
+                      validationAttempt={form.submitCount}
+                      validationPending={form.isValidating}
+                      onValidateStep={async (sectionIds) => {
+                        const codes =
+                          source.definition?.sections
+                            .filter((section) => sectionIds.includes(section.id))
+                            .flatMap((section) => [
+                              section.code,
+                              ...section.fields.map((field) => field.code),
+                            ]) ?? [];
+                        const errors = await form.validateForm();
+                        const stepErrors = Object.keys(errors).filter((key) =>
+                          codes.some(
+                            (code) =>
+                              key === fieldKey(source.formInstanceId, code) ||
+                              key.startsWith(`${fieldKey(source.formInstanceId, code)}[`)
+                          )
+                        );
+                        await form.setTouched(
+                          {
+                            ...form.touched,
+                            ...Object.fromEntries(
+                              stepErrors.map((key) => [key.split('[')[0], true])
+                            ),
+                          },
+                          false
+                        );
+                        if (!stepErrors.length) return true;
+                        return (
+                          sectionIds.find((id) => {
+                            const section = source.definition?.sections.find(
+                              (item) => item.id === id
+                            );
+                            return (
+                              section &&
+                              [section.code, ...section.fields.map((field) => field.code)].some(
+                                (code) =>
+                                  stepErrors.some(
+                                    (key) =>
+                                      key === fieldKey(source.formInstanceId, code) ||
+                                      key.startsWith(`${fieldKey(source.formInstanceId, code)}[`)
+                                  )
+                              )
+                            );
+                          }) ?? false
+                        );
+                      }}
                       errors={Object.fromEntries(
                         Object.entries(form.errors)
                           .filter(
@@ -513,24 +608,7 @@ export function CustomRecordChangeForm({
                 </FormSectionCard>
               );
             })}
-          <TextField
-            size="small"
-            fullWidth
-            label="Reason for change"
-            required
-            multiline
-            minRows={2}
-            value={reason}
-            disabled={busy}
-            onChange={(event) => setReason(event.target.value)}
-            inputProps={{ maxLength: 2000 }}
-            error={form.submitCount > 0 && reason.trim().length < 3}
-            helperText={
-              form.submitCount > 0 && reason.trim().length < 3
-                ? 'Explain the requested change using at least 3 characters.'
-                : undefined
-            }
-          />
+          {!sectionTarget && reasonField}
           {busy && (
             <LinearProgress
               aria-label={direct ? 'Saving student form' : 'Submitting student details change'}

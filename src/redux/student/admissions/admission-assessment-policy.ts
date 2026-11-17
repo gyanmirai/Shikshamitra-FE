@@ -114,9 +114,20 @@ export function assessmentProfileTotal(profile: AdmissionAssessmentClassProfile)
   return sumDecimal(profile.subjects.map(({ totalMarks }) => totalMarks));
 }
 
+export function getAssessmentSubjectNameError(name: string) {
+  return !name.trim() || name.length > 128 ? 'Enter a subject name (1–128 characters).' : undefined;
+}
+
+export function getAssessmentSubjectMaximumError(value: number) {
+  return !Number.isFinite(value) || value <= 0 || value > 10000
+    ? 'Enter maximum marks greater than 0 and no more than 10,000.'
+    : undefined;
+}
+
 export function getAssessmentClassProfileError(
   profile: AdmissionAssessmentClassProfile,
-  profiles: AdmissionAssessmentClassProfile[] = []
+  profiles: AdmissionAssessmentClassProfile[] = [],
+  includeFieldErrors = true
 ): string | undefined {
   if (!profile.id.trim() || profile.id.length > 64)
     return 'The class profile identity is invalid. Re-add this profile.';
@@ -127,8 +138,10 @@ export function getAssessmentClassProfileError(
     !profile.mediumId ||
     profile.standardIds.length === 0 ||
     profile.standardIds.some((id) => !id.trim())
-  )
+  ) {
+    if (!includeFieldErrors) return undefined;
     return 'Choose the board, medium and at least one class for this profile.';
+  }
   if (
     new Set(profile.standardIds).size !== profile.standardIds.length ||
     profiles.some(
@@ -139,7 +152,8 @@ export function getAssessmentClassProfileError(
     return 'A class can belong to only one assessment profile.';
   if (!['overall', 'everySubject', 'both'].includes(profile.passRule))
     return 'Choose a valid pass rule.';
-  if (!profile.subjects.length) return 'Add at least one subject to this class profile.';
+  if (!profile.subjects.length)
+    return includeFieldErrors ? 'Add at least one subject to this class profile.' : undefined;
   const codes = new Set<string>();
   const names = new Set<string>();
   const subjectIds = new Set<string>();
@@ -147,30 +161,28 @@ export function getAssessmentClassProfileError(
     .map((subject) => {
       const name = subject.name.trim().toLocaleLowerCase();
       const code = subject.code.trim().toLocaleLowerCase();
-      if (!name || subject.name.length > 128) return 'Use a subject name of 1 to 128 characters.';
+      const nameError = getAssessmentSubjectNameError(subject.name);
+      if (includeFieldErrors && nameError) return nameError;
       if (!code || subject.code.length > 64)
         return 'A subject identity is invalid. Remove and re-add the subject.';
       if (
         codes.has(code) ||
-        names.has(name) ||
+        (Boolean(name) && names.has(name)) ||
         (subject.subjectId && subjectIds.has(subject.subjectId))
       )
         return 'Each subject can appear only once in a class profile.';
       codes.add(code);
-      names.add(name);
+      if (name) names.add(name);
       if (subject.subjectId) subjectIds.add(subject.subjectId);
+      const maximumError = getAssessmentSubjectMaximumError(subject.totalMarks);
+      if (includeFieldErrors && maximumError) return maximumError;
       if (
-        !Number.isFinite(subject.totalMarks) ||
-        subject.totalMarks <= 0 ||
-        subject.totalMarks > 10000
-      )
-        return 'Each subject maximum must be greater than zero and no more than 10,000.';
-      if (
-        (profile.passRule !== 'overall' && subject.passingMarks == null) ||
-        (subject.passingMarks != null &&
-          (!Number.isFinite(subject.passingMarks) ||
-            subject.passingMarks < 0 ||
-            subject.passingMarks > subject.totalMarks))
+        (includeFieldErrors || profile.passRule === 'overall') &&
+        ((profile.passRule !== 'overall' && subject.passingMarks == null) ||
+          (subject.passingMarks != null &&
+            (!Number.isFinite(subject.passingMarks) ||
+              subject.passingMarks < 0 ||
+              subject.passingMarks > subject.totalMarks)))
       )
         return 'Enter passing marks between zero and the maximum for every subject.';
       return undefined;
@@ -178,12 +190,18 @@ export function getAssessmentClassProfileError(
     .find(Boolean);
   if (subjectError) return subjectError;
   const total = assessmentProfileTotal(profile);
-  if (total <= 0 || total > 10000)
+  if (
+    (includeFieldErrors && total <= 0) ||
+    (total > 10000 &&
+      (includeFieldErrors ||
+        !profile.subjects.some((subject) => getAssessmentSubjectMaximumError(subject.totalMarks))))
+  )
     return 'Combined subject marks must be greater than zero and no more than 10,000.';
   if (
-    !Number.isFinite(profile.passingMarks) ||
-    profile.passingMarks < 0 ||
-    profile.passingMarks > total
+    (includeFieldErrors || profile.passRule === 'everySubject') &&
+    (!Number.isFinite(profile.passingMarks) ||
+      profile.passingMarks < 0 ||
+      profile.passingMarks > total)
   )
     return 'Overall passing marks must be between zero and the combined subject marks.';
   return undefined;

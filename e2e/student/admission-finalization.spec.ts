@@ -4,11 +4,10 @@ import type { Page } from '@playwright/test';
 import { test, expect } from '@playwright/test';
 
 async function approve(page: Page) {
-  await page.getByRole('button', { name: 'Approve', exact: true }).click();
-  await page
-    .getByRole('dialog', { name: 'Approve application', exact: true })
-    .getByRole('button', { name: 'Approve application', exact: true })
-    .click();
+  await expect(page.getByRole('button', { name: 'Record Decision', exact: true })).toBeDisabled();
+  await page.getByRole('radio', { name: 'Approve', exact: true }).check();
+  await expect(page.getByLabel('Decision requests')).toHaveText('[]');
+  await page.getByRole('button', { name: 'Record Decision', exact: true }).click();
   await expect(
     page.getByRole('heading', { name: 'Finalize admission', exact: true })
   ).toBeVisible();

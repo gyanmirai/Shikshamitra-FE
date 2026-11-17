@@ -50,7 +50,7 @@ export default function GlobalAcademicSearch() {
             arrow
             title={
               !selectedOption
-                ? data.isStudentModule
+                ? data.isStudentModule && data.isYearOnly
                   ? 'Select academic year'
                   : 'Select Academic Year, Board and Medium'
                 : undefined

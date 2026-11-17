@@ -114,7 +114,7 @@ export default function StudentDirectoryTable({
             {
               id: 'print-id',
               icon: 'mdi:card-account-details-outline',
-              label: 'Print I-card',
+              label: 'Print I-Card',
               onClick: () => onDocumentAction('id-card', [row]),
             },
           ]

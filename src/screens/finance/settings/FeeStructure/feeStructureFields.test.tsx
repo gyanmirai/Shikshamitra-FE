@@ -221,6 +221,30 @@ it('requires a payment frequency for every head and has no admission collection 
   expect(state.mutate).not.toHaveBeenCalled();
 });
 
+it('keeps Policies pending when creating a structure and first opening that step', () => {
+  render(ui());
+  const policies = screen.getByRole('button', { name: /^Step 2: Policies$/i });
+  expect(policies).not.toHaveAttribute('aria-invalid', 'true');
+  fireEvent.click(policies);
+  expect(policies).toHaveAttribute('aria-current', 'step');
+  expect(policies).not.toHaveAttribute('aria-invalid', 'true');
+  expect(screen.getByRole('button', { name: 'Review & Continue' })).toBeDisabled();
+  expect(state.mutate).not.toHaveBeenCalled();
+});
+
+it('keeps missing policy setup guidance visible without marking the new Policies step invalid', () => {
+  state.lookups.catalogs.collection = { ...catalog, ready: true };
+  render(ui());
+  fireEvent.click(screen.getByRole('button', { name: /^Step 2: Policies$/i }));
+  expect(screen.getByText('Set up a collection policy first')).toBeVisible();
+  expect(screen.getByRole('button', { name: /^Step 2: Policies$/i })).not.toHaveAttribute(
+    'aria-invalid',
+    'true'
+  );
+  expect(screen.getByRole('button', { name: 'Review & Continue' })).toBeDisabled();
+  expect(state.mutate).not.toHaveBeenCalled();
+});
+
 it('blocks Next and direct Review when collection is missing while allowing incomplete draft saves', () => {
   render(ui());
   fireEvent.click(screen.getByRole('button', { name: /^Step 2: Policies$/i }));
@@ -231,6 +255,10 @@ it('blocks Next and direct Review when collection is missing while allowing inco
   expect(screen.getByRole('button', { name: /^Step 2: Policies$/i })).toHaveAttribute(
     'aria-current',
     'step'
+  );
+  expect(screen.getByRole('button', { name: /^Step 2: Policies$/i })).toHaveAttribute(
+    'aria-invalid',
+    'true'
   );
   expect(state.mutate).not.toHaveBeenCalled();
 });
@@ -387,6 +415,10 @@ it('keeps the current step and entered name when Save & next fails', async () =>
     'step'
   );
   expect(screen.queryByRole('combobox', { name: 'Collection Policy' })).toBeNull();
+  expect(screen.getByRole('button', { name: /^Step 2: Policies$/i })).not.toHaveAttribute(
+    'aria-invalid',
+    'true'
+  );
 });
 
 it('advances after a successful save and restores the canonical name when navigating back', async () => {

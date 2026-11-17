@@ -3,17 +3,19 @@ import type { AdmissionInquiry } from 'src/redux/student/admissions/admission-in
 
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useRouter } from 'next/navigation';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { studentPaths } from 'src/constants/student-menu';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { Box, Paper, Stack, Button, Skeleton } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { useGetAdmissionInquiryQuery } from 'src/redux/student/admissions/admission-inquiries-api';
 import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 import { useGetAdmissionInquiryManagementQuery } from 'src/redux/student/admissions/admission-inquiry-management-api';
 
 import { getAdmissionInquiryAccess } from '../inquiry-access';
-import { InquiryOverviewForm } from './inquiry-overview-form';
+import { InquiryOverviewForm } from './inquiry-overview-loader';
 import { formatAdmissionReference } from '../admission-reference';
 
 export function AdmissionInquiryManagementPage({
@@ -27,10 +29,17 @@ export function AdmissionInquiryManagementPage({
 }) {
   const query = useGetAdmissionInquiryManagementQuery(inquiry.id);
   const detail = useGetAdmissionInquiryQuery(inquiry.id);
-  const current = detail.data ?? inquiry;
+  const detailData =
+    detail.currentData ?? (detail.data?.id === inquiry.id ? detail.data : undefined);
+  const current = detailData ?? inquiry;
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const { canManage } = getAdmissionInquiryAccess(permissions);
   const [draft, setDraft] = useState({ dirty: false, busy: false });
+  const router = useRouter();
+  const navigation = useUnsavedNavigation(draft.dirty, {
+    push: router.push,
+    blockNavigation: draft.busy,
+  });
   const discard = useBoolean();
   const close = () => {
     if (draft.busy) return;
@@ -99,7 +108,7 @@ export function AdmissionInquiryManagementPage({
             Inquiry form could not be loaded. Try again.
           </StudentFeedback>
         )}
-        {query.data && detail.data && !query.isError && !detail.isError && (
+        {query.data && detailData && (
           <InquiryOverviewForm
             inquiry={current}
             readOnly={readOnly}
@@ -110,6 +119,7 @@ export function AdmissionInquiryManagementPage({
           />
         )}
       </Paper>
+      {navigation.confirmation}
       {discard.value &&
         renderUnsavedConfirmation(
           discard.onFalse,

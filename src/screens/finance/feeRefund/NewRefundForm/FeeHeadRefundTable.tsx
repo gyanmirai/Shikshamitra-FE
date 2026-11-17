@@ -419,27 +419,29 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
       kind: adjustmentKinds.get(item.dueFeeId) ?? 0,
     }))
   );
-  const applyAdjustmentAmounts = (amounts: Record<string, string>, bulkMode: 'perInstallment' | 'equalTotal') => {
-    const updated = bulkMode === 'equalTotal'
-      ? feeHeadsWithPayments.map((head) => ({
-          feeHeadId: head.feeHeadId,
-          months: head.items.filter((item) => item.dueFeeId && amounts[item.dueFeeId])
-            .map((item) => ({
-              month: item.month,
-              dueFeeId: item.dueFeeId,
-              amount: amounts[item.dueFeeId],
-            })),
-        })).filter((head) => head.months.length > 0)
-      : formik.values.feeHeadRefunds.map((head) => ({
-          ...head,
-          months: head.months.map((month) =>
-            month.dueFeeId && amounts[month.dueFeeId] !== undefined
-              ? { ...month, amount: amounts[month.dueFeeId] }
-              : month
-          ),
-        }));
+  const applyAdjustmentAmounts = (amounts: Record<string, string>) => {
+    const updated = feeHeadsWithPayments.map((head) => ({
+      feeHeadId: head.feeHeadId,
+      months: head.items.filter((item) => item.dueFeeId && amounts[item.dueFeeId])
+        .map((item) => {
+          const existing = formik.values.feeHeadRefunds
+            .find((selectedHead) => selectedHead.feeHeadId === head.feeHeadId)
+            ?.months.find((month) => month.dueFeeId === item.dueFeeId);
+          return {
+            ...existing,
+            month: item.month,
+            dueFeeId: item.dueFeeId,
+            amount: amounts[item.dueFeeId],
+          };
+        }),
+    })).filter((head) => head.months.length > 0);
     formik.setFieldValue('feeHeadRefunds', updated);
     formik.setFieldTouched('feeHeadRefunds', true, false);
+  };
+  const clearAdjustmentAmounts = () => {
+    formik.setFieldValue('feeHeadRefunds', [], false);
+    formik.setFieldTouched('feeHeadRefunds', false, false);
+    formik.setFieldError?.('feeHeadRefunds', undefined);
   };
 
   useEffect(() => {
@@ -586,7 +588,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
       {isAdj && feeHeadsWithPayments.length > 0 && (
         <AdjustmentBulkActions key={String(studentId)} lines={adjustmentLines}
           selectedIds={adjustmentSelectedIds} entries={adjustmentEntries}
-          onApply={applyAdjustmentAmounts} />
+          onApply={applyAdjustmentAmounts} onClearAll={clearAdjustmentAmounts} />
       )}
 
       {feeHeadsWithPayments.map((feeHead) => (

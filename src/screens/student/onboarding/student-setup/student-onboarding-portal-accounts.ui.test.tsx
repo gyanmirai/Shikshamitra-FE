@@ -211,6 +211,22 @@ it('offers a case-specific Student enable action only when the server allows it'
   expect(screen.queryByRole('button', { name: 'Enable student login' })).not.toBeInTheDocument();
 });
 
+it('keeps the Student access editor mounted during a credentials refresh', () => {
+  setRecipients([{ ...studentRecipient, canSend: false }]);
+  mocks.query.currentData!.studentAccessEnabled = false;
+  mocks.query.currentData!.canEnableStudentAccess = true;
+  const view = panel();
+  fireEvent.click(screen.getByRole('button', { name: 'Enable student login' }));
+  const dialog = screen.getByRole('dialog', { name: 'Enable Student case-1' });
+  mocks.query.isFetching = true;
+  view.rerender(
+    <ThemeProvider theme={createTheme()}>
+      <StudentOnboardingPortalAccounts student={student} canManage />
+    </ThemeProvider>
+  );
+  expect(screen.getByRole('dialog', { name: 'Enable Student case-1' })).toBe(dialog);
+});
+
 it('closes the Student access editor when the case or permission changes', () => {
   setRecipients([{ ...studentRecipient, canSend: false }]);
   mocks.query.currentData!.studentAccessEnabled = false;

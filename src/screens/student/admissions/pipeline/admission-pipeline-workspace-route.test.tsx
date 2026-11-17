@@ -9,9 +9,6 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace: state.replace }),
   useSearchParams: () => state.params,
 }));
-vi.mock('src/components/loading-screen', () => ({
-  LoadingScreen: () => <div>Loading workspace</div>,
-}));
 vi.mock('../admission-application-detail', () => ({
   default: () => <div>Standalone workspace</div>,
 }));
@@ -32,6 +29,8 @@ it('opens a legacy Pipeline link as a drawer while retaining the list query exac
     { scroll: false }
   );
   expect(screen.queryByText('Standalone workspace')).not.toBeInTheDocument();
+  expect(screen.getByRole('status', { name: 'Loading Admission Workspace' })).toBeVisible();
+  expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
 });
 
 it('supports a bare legacy applicant link without creating an open redirect', () => {

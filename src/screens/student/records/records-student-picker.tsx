@@ -1,9 +1,9 @@
 import type { StudentDirectoryItem } from 'src/redux/student/records/student-records-types';
 
-import { useMemo, useState, useCallback } from 'react';
 import { useDebounceEffect } from 'src/hooks/use-debounce';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { Stack, Button, TextField, Autocomplete } from '@mui/material';
+import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { useGetStudentRecordsDirectoryQuery } from 'src/redux/student/records/student-records-api';
 
 export default function RecordsStudentPicker({
@@ -14,6 +14,10 @@ export default function RecordsStudentPicker({
   toastRecovery = false,
   size = 'medium',
   helperText = 'Search across active and former records.',
+  academicYearId,
+  onSearchInput,
+  label = 'Student',
+  placeholder,
 }: {
   onSelect: (student: StudentDirectoryItem | null) => void;
   disabled?: boolean;
@@ -22,9 +26,16 @@ export default function RecordsStudentPicker({
   toastRecovery?: boolean;
   size?: 'small' | 'medium';
   helperText?: string | null;
+  academicYearId?: string;
+  onSearchInput?: () => void;
+  label?: string;
+  placeholder?: string;
 }) {
   const [localSelection, setLocalSelection] = useState<StudentDirectoryItem | null>(null);
   const [search, setSearch] = useState('');
+  const [inputText, setInputText] = useState('');
+  const typing = useRef(false);
+  const displayedStudentId = useRef('');
   const [debounced, setDebounced] = useState('');
   const debounceSearch = useCallback(() => setDebounced(search), [search]);
   const debounceDeps = useMemo(() => [search], [search]);
@@ -33,10 +44,17 @@ export default function RecordsStudentPicker({
     search: debounced,
     population: 'All',
     includeActiveStudentList,
+    academicYearId,
     maxResultCount: 100,
   });
   const selectedQuery = useGetStudentRecordsDirectoryQuery(
-    { studentId: selectedId, population: 'All', includeActiveStudentList, maxResultCount: 1 },
+    {
+      studentId: selectedId,
+      academicYearId,
+      population: 'All',
+      includeActiveStudentList,
+      maxResultCount: 1,
+    },
     { skip: !selectedId }
   );
   const selection =
@@ -46,6 +64,16 @@ export default function RecordsStudentPicker({
           ? localSelection
           : null))
       : localSelection;
+  const studentLabel = (student: StudentDirectoryItem) =>
+    `${[student.firstName, student.middleName, student.lastName].filter(Boolean).join(' ') || 'Restricted identity'}${student.grNumber ? ` · ${student.grNumber}` : ''}`;
+  useEffect(() => {
+    if (!selectedId) displayedStudentId.current = '';
+    else if (onSearchInput && selection && displayedStudentId.current !== selectedId) {
+      displayedStudentId.current = selectedId;
+      typing.current = false;
+      setInputText(studentLabel(selection));
+    }
+  }, [selectedId, selection, onSearchInput]);
   const selectedRecovery = (
     <Button color="inherit" onClick={() => selectedQuery.refetch()}>
       Retry
@@ -61,6 +89,7 @@ export default function RecordsStudentPicker({
       <Autocomplete
         size={size}
         value={selection}
+        inputValue={onSearchInput ? inputText : undefined}
         options={query.currentData?.items ?? []}
         loading={query.isFetching || selectedQuery.isFetching}
         loadingText="Loading students…"
@@ -71,15 +100,44 @@ export default function RecordsStudentPicker({
         disabled={disabled}
         filterOptions={(options) => options}
         isOptionEqualToValue={(left, right) => left.studentId === right.studentId}
-        getOptionLabel={(student) =>
-          `${[student.firstName, student.middleName, student.lastName].filter(Boolean).join(' ') || 'Restricted identity'}${student.grNumber ? ` · ${student.grNumber}` : ''}`
+        getOptionLabel={studentLabel}
+        getOptionKey={(student) => student.studentId}
+        getOptionDisabled={(student) =>
+          includeActiveStudentList && (student.maskedFields ?? []).includes('Identity')
         }
         onInputChange={(_event, value, reason) => {
-          if (reason === 'input' || reason === 'clear') setSearch(value);
+          if (reason === 'input' || reason === 'clear') {
+            typing.current = reason === 'input';
+            setInputText(value);
+            setSearch(value);
+            onSearchInput?.();
+          } else if (!typing.current) {
+            setInputText(value);
+          }
         }}
         onChange={(_event, value) => {
+          typing.current = false;
+          if (onSearchInput) setInputText(value ? studentLabel(value) : '');
           setLocalSelection(value);
           onSelect(value);
+        }}
+        renderOption={(props, student) => {
+          const { key, ...optionProps } = props;
+          return (
+            <li key={key} {...optionProps}>
+              <Stack>
+                <span>
+                  {[student.firstName, student.middleName, student.lastName]
+                    .filter(Boolean)
+                    .join(' ') || 'Restricted identity'}
+                </span>
+                <span>
+                  {student.grNumber || student.grNo || '—'} ·{' '}
+                  {[student.standardName, student.divisionName].filter(Boolean).join(' / ') || '—'}
+                </span>
+              </Stack>
+            </li>
+          );
         }}
         noOptionsText={
           query.isError
@@ -97,9 +155,9 @@ export default function RecordsStudentPicker({
         renderInput={(params) => (
           <TextField
             {...params}
-            label="Student"
+            label={label}
             helperText={helperText}
-            placeholder={size === 'small' ? 'Search name or GR number' : undefined}
+            placeholder={placeholder ?? (size === 'small' ? 'Search name or GR number' : undefined)}
           />
         )}
       />

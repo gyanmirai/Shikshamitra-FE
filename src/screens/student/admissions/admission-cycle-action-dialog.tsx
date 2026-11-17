@@ -86,12 +86,15 @@ export function AdmissionCycleActionDialog({
   const impact = impactReady ? impactQuery.data : null;
   const needsReason = action === 'reopen' || action === 'archive';
   const hasBlockingValidation = action === 'publish' && Boolean(validation?.errors.length);
+  const publishPending = action === 'publish' && !validation;
   const cannotArchive = action === 'archive' && Boolean(impact?.activeOfferingCount);
   const cannotDelete =
     action === 'delete' &&
     Boolean((impact?.linkedOfferingCount ?? 0) > 0 || (impact?.applicationCount ?? 0) > 0);
   const disabled =
     busy ||
+    publishPending ||
+    (action === 'publish' && !validation?.isValid) ||
     impactPending ||
     impactError ||
     hasBlockingValidation ||
@@ -101,6 +104,7 @@ export function AdmissionCycleActionDialog({
     (action === 'reopen' && (!newEndDate || dayjs(newEndDate).isBefore(dayjs(), 'day')));
 
   const confirm = async () => {
+    if (disabled) return;
     await onConfirm({
       concurrencyStamp: cycle.concurrencyStamp,
       // Close cycle is the staff confirmation; keep the required audit and API acknowledgement.
@@ -130,6 +134,14 @@ export function AdmissionCycleActionDialog({
       title={titles[action]}
       content={
         <Stack spacing={1.5}>
+          {publishPending && (
+            <Stack direction="row" spacing={1} alignItems="center" role="status" aria-live="polite">
+              <CircularProgress size={18} aria-label="Checking Admission Cycle Readiness" />
+              <Typography variant="body2" color="text.secondary">
+                Checking Admission Cycle Readiness…
+              </Typography>
+            </Stack>
+          )}
           {action === 'delete' ? (
             <Typography variant="body2">
               The Draft Admission Cycle <strong>&ldquo;{cycle.name}&rdquo;</strong> will be

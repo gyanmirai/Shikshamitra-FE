@@ -36,6 +36,9 @@ export function useAdmissionJoiningDate(
   const selectedPolicyVersionId = selection?.applicationId === applicationId
     ? selection.versionId
     : state?.defaultProrationPolicyVersionId ?? null;
+  const prorationPolicyEligible = Boolean(
+    date && state?.academicYearStartDate && date >= toDateOnly(state.academicYearStartDate)
+  );
   const yearEnd = toDateOnly(state?.academicYearEndDate);
   const validation = !value
     ? 'Actual joining date is required.'
@@ -53,7 +56,9 @@ export function useAdmissionJoiningDate(
       applicationId,
       joiningDate: date,
       variableFeeHeads: [],
-      ...(state?.canSelectProrationPolicy && { prorationPolicyVersionId: selectedPolicyVersionId }),
+      ...(state?.canSelectProrationPolicy && prorationPolicyEligible && {
+        prorationPolicyVersionId: selectedPolicyVersionId,
+      }),
     },
     needsPreview && !validation && !stale && !query.isFetching
   );
@@ -114,6 +119,7 @@ export function useAdmissionJoiningDate(
     date,
     change,
     selectedPolicyVersionId,
+    prorationPolicyEligible,
     changePolicy,
     confirm,
     retry,

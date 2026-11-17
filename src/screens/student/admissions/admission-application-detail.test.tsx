@@ -1,8 +1,16 @@
 import { createPortal } from 'react-dom';
 import { vi, it, expect, describe, beforeEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import AdmissionApplicationDetailScreen from './admission-application-detail';
+
+// Navigation/business fixtures use their existing panel doubles; browser checks
+// exercise the real asynchronous code-loading boundaries.
+vi.mock('./application-detail/application-workspace-panels', async () => ({
+  ...(await import('./application-detail/application-runtime-form')),
+  ...(await import('./application-detail/application-decision-card')),
+  loadApplicationRuntimeForm: vi.fn(async () => undefined),
+}));
 
 const push = vi.fn();
 const replace = vi.fn();
@@ -363,6 +371,55 @@ describe('approval finalization handoff', () => {
     render(<AdmissionApplicationDetailScreen />);
     expect(decisionCardProps.current.onPrepareFinalization).toBeUndefined();
     expect(detailState.advance).not.toHaveBeenCalled();
+  });
+
+  it('protects an unsaved inline decision through the existing workspace navigation guard', () => {
+    const onClose = vi.fn();
+    render(<AdmissionApplicationDetailScreen applicationId="application-1" onClose={onClose} />);
+    act(() => decisionCardProps.current.onDirtyChange(true));
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+    expect(
+      screen.getByRole('dialog', { name: 'Discard Unsaved Application Changes?' })
+    ).toBeVisible();
+    expect(onClose).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
+    expect(onClose).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
+    expect(onClose).toHaveBeenCalledOnce();
+    expect(detailState.advance).not.toHaveBeenCalled();
+  });
+
+  it('guards ending a journey while a decision draft is open and blocks stage continuation', () => {
+    render(<AdmissionApplicationDetailScreen />);
+    act(() => decisionCardProps.current.onDirtyChange(true));
+    expect(screen.getByRole('button', { name: 'Continue Admission' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'End Journey' }));
+    expect(
+      screen.getByRole('dialog', { name: 'Discard Unsaved Application Changes?' })
+    ).toBeVisible();
+    expect(screen.queryByRole('dialog', { name: 'End Admission Journey' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
+    expect(detailState.endJourney).not.toHaveBeenCalled();
+    expect(decisionCardProps.current.onPrepareFinalization).toBeDefined();
+    fireEvent.click(screen.getByRole('button', { name: 'End Journey' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
+    expect(screen.getByRole('dialog', { name: 'End Admission Journey' })).toBeVisible();
+    expect(detailState.endJourney).not.toHaveBeenCalled();
+  });
+
+  it('guards manually skipping a decision stage while a decision draft is open', () => {
+    detailState.canSkip = true;
+    detailState.workflowQuery.data.stages[0].allowManualSkip = true;
+    render(<AdmissionApplicationDetailScreen />);
+    act(() => decisionCardProps.current.onDirtyChange(true));
+    fireEvent.click(screen.getByRole('button', { name: 'Skip Current Step' }));
+    expect(
+      screen.getByRole('dialog', { name: 'Discard Unsaved Application Changes?' })
+    ).toBeVisible();
+    expect(detailState.setRuntimeAction).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
+    expect(detailState.setRuntimeAction).toHaveBeenCalledWith('skip');
   });
 });
 

@@ -11,6 +11,7 @@ import { Iconify } from 'src/components/iconify';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { Box, Card, Stack, Skeleton, Typography } from '@mui/material';
 
+import { AdmissionQueryError } from '../../admission-query-error';
 import { WorkflowVersionHistory } from './workflow-version-history';
 import { WorkflowSimulationPanel } from './workflow-simulation-panel';
 import { WorkflowRuntimeAnalytics } from './workflow-runtime-analytics';
@@ -24,6 +25,9 @@ type Props = {
   stages: AdmissionWorkflowStage[];
   transitions: AdmissionWorkflowTransition[];
   versions?: AdmissionWorkflow[];
+  versionsLoading?: boolean;
+  versionsError?: boolean;
+  onRetryVersions?: () => void;
   usage?: AdmissionWorkflowUsage;
   usageLoading: boolean;
   usageError?: boolean;
@@ -38,6 +42,9 @@ export function WorkflowPanelContent({
   stages,
   transitions,
   versions,
+  versionsLoading,
+  versionsError,
+  onRetryVersions,
   usage,
   usageLoading,
   usageError = false,
@@ -48,6 +55,15 @@ export function WorkflowPanelContent({
   if (panel === 'preview') return <WorkflowPreview stages={stages} transitions={transitions} />;
   if (panel === 'simulation')
     return <WorkflowSimulationPanel stages={stages} transitions={transitions} />;
+  if (panel === 'versions' && versionsLoading)
+    return (
+      <Stack spacing={2} aria-label="Loading Workflow Versions" role="status">
+        <Skeleton height={56} />
+        <Skeleton variant="rounded" height={160} />
+      </Stack>
+    );
+  if (panel === 'versions' && versionsError)
+    return <AdmissionQueryError onRetry={() => onRetryVersions?.()} />;
   if (panel === 'versions')
     return (
       <WorkflowVersionHistory

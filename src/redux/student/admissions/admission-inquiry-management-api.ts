@@ -71,16 +71,29 @@ type Result<T> = T | { data: T };
 const unwrap = <T>(response: Result<T>) =>
   'data' in (response as { data?: T }) ? (response as { data: T }).data : (response as T);
 const url = (id: string) => `/student/enrollment/admissions/inquiries/${id}/management`;
-const tags = [studentAdmissionsCrmType.admissionInquiry];
-const invalidateManagement = (_result: unknown, error: unknown) =>
-  error ? [] : [...tags, { type: studentType.student, id: 'MODULE-DASHBOARD-admissions' } as const];
+const invalidateManagement = (
+  _result: unknown,
+  error: unknown,
+  { inquiryId }: { inquiryId: string }
+) =>
+  error
+    ? []
+    : [
+        { type: studentAdmissionsCrmType.admissionInquiry, id: inquiryId },
+        { type: studentAdmissionsCrmType.admissionInquiry, id: 'LIST' },
+        { type: studentAdmissionsCrmType.admissionInquiry, id: 'ACTIVITY' },
+        { type: studentAdmissionsCrmType.admissionInquiry, id: 'PIPELINE' },
+        { type: studentType.student, id: 'MODULE-DASHBOARD-admissions' } as const,
+      ];
 
 export const admissionInquiryManagementApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getAdmissionInquiryManagement: builder.query<AdmissionInquiryManagement, string>({
       query: url,
       transformResponse: unwrap<AdmissionInquiryManagement>,
-      providesTags: tags,
+      providesTags: (_result, _error, id) => [
+        { type: studentAdmissionsCrmType.admissionInquiry, id },
+      ],
     }),
     recordAdmissionInquiryFollowUpNote: builder.mutation<
       AdmissionInquiryManagement,

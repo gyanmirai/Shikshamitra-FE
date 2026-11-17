@@ -32,6 +32,7 @@ export type AdmissionOfferingListItem = {
   coreFieldPolicyVersion?: number | null;
   isActive: boolean;
   availabilityStatus: AdmissionOfferingAvailabilityStatus;
+  unavailableReason?: string | null;
   configurationStatus: AdmissionOfferingConfigurationStatus;
   canActivate: boolean;
   applicationCount: number;
@@ -57,7 +58,6 @@ export type AdmissionOfferingValidation = {
 };
 
 export type AdmissionOfferingAvailability = {
-  classCapacity?: AdmissionClassCapacity | null;
   isAvailable: boolean;
   status: AdmissionOfferingAvailabilityStatus;
   canCreateInquiry: boolean;
@@ -66,28 +66,10 @@ export type AdmissionOfferingAvailability = {
   reasonMessage?: string | null;
 };
 
-export type AdmissionClassCapacity = {
-  admissionCycleId: string;
-  academicYearId: string;
-  standardId: string;
-  rooms: Array<{ roomId: string; roomName: string; capacity: number }>;
-  capacity?: number | null;
-  occupiedCount: number;
-  remainingSeats?: number | null;
-  isFull: boolean;
-  isOverCapacity: boolean;
-  warning?: string | null;
-};
-
-export type AdmissionRoomChoice = AdmissionClassCapacity['rooms'][number] & {
-  isAllocatedToAnotherClass: boolean;
-};
-
 export type AdmissionOffering = AdmissionOfferingListItem & {
   inquiryCount?: number;
   hasConfigurationUsage?: boolean;
   canEditConfiguration?: boolean;
-  classCapacity?: AdmissionClassCapacity | null;
   useCycleDates: boolean;
   openDate?: string | null;
   closeDate?: string | null;
@@ -391,36 +373,6 @@ export const admissionOfferingsApi = api.injectEndpoints({
       ) => unwrapResult(response),
       providesTags: cycleDependentOfferingTags,
     }),
-    getAdmissionClassCapacity: builder.query<AdmissionClassCapacity, string>({
-      query: (id) => `/student/enrollment/admissions/offerings/${id}/class-capacity`,
-      transformResponse: (
-        response: ResultEnvelope<AdmissionClassCapacity> | AdmissionClassCapacity
-      ) => unwrapResult(response),
-      providesTags: [studentAdmissionsCrmType.admissionOffering],
-    }),
-    getAdmissionRoomChoices: builder.query<AdmissionRoomChoice[], { id: string; search?: string }>({
-      query: ({ id, search }) => ({
-        url: `/student/enrollment/admissions/offerings/${id}/class-capacity/rooms`,
-        params: search ? { search } : undefined,
-      }),
-      transformResponse: (
-        response: ResultEnvelope<AdmissionRoomChoice[]> | AdmissionRoomChoice[]
-      ) => unwrapResult(response),
-    }),
-    updateAdmissionClassRooms: builder.mutation<
-      AdmissionClassCapacity,
-      { id: string; roomIds: string[] }
-    >({
-      query: ({ id, roomIds }) => ({
-        url: `/student/enrollment/admissions/offerings/${id}/class-capacity`,
-        method: 'PUT',
-        body: { roomIds },
-      }),
-      transformResponse: (
-        response: ResultEnvelope<AdmissionClassCapacity> | AdmissionClassCapacity
-      ) => unwrapResult(response),
-      invalidatesTags: [studentAdmissionsCrmType.admissionOffering],
-    }),
     bulkCreateAdmissionOfferings: builder.mutation<
       BulkAdmissionOfferingResult,
       { admissionCycleId: string; body: BulkAdmissionOfferingInput }
@@ -454,8 +406,5 @@ export const {
   useCloneAdmissionOfferingMutation,
   useValidateAdmissionOfferingMutation,
   useGetAdmissionOfferingAvailabilityQuery,
-  useGetAdmissionClassCapacityQuery,
-  useGetAdmissionRoomChoicesQuery,
-  useUpdateAdmissionClassRoomsMutation,
   useBulkCreateAdmissionOfferingsMutation,
 } = admissionOfferingsApi;

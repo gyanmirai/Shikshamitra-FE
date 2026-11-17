@@ -28,8 +28,6 @@ import { ADMISSION_DATE_TIME_FORMAT } from './admission-date-formats';
 import { FormHistoryCard } from './application-detail/form-history-card';
 import { useApplicationDetail } from './application-detail/use-application-detail';
 import { TransitionHistoryCard } from './application-detail/transition-history-card';
-import { ApplicationRuntimeForm } from './application-detail/application-runtime-form';
-import { ApplicationDecisionCard } from './application-detail/application-decision-card';
 import { ApplicationManagedStages } from './application-detail/application-managed-stages';
 import { ApplicationResumeJourney } from './application-detail/application-resume-journey';
 import { ApplicationJourneySidebar } from './application-detail/application-journey-sidebar';
@@ -49,6 +47,11 @@ import {
   getAdmissionApplicationStatusColor,
   getAdmissionApplicationStatusLabel,
 } from './application-status';
+import {
+  ApplicationRuntimeForm,
+  ApplicationDecisionCard,
+  loadApplicationRuntimeForm,
+} from './application-detail/application-workspace-panels';
 import {
   getApplicationReturnUrl,
   getApplicationWorkspaceUrl,
@@ -98,6 +101,7 @@ export default function AdmissionApplicationDetailScreen({
   const activityDrawer = useBoolean();
   const correctionDrawer = useBoolean();
   const [finalizationOpen, setFinalizationOpen] = useState(false);
+  const [decisionDraftDirty, setDecisionDraftDirty] = useState(false);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canViewApplicantNotes = hasGrantedPermission(
     permissions,
@@ -188,6 +192,11 @@ export default function AdmissionApplicationDetailScreen({
     stageReadiness?.stageId === selectedStage?.id && stageReadiness?.dirty
   );
   const requiresForm = workspace.view === 'journey' && isFormStage(selectedStage);
+  useEffect(() => {
+    // Start the selected renderer alongside form data, not after that read completes.
+    // The rendered dynamic panel retains the framework's chunk-error recovery.
+    if (requiresForm) loadApplicationRuntimeForm().catch(() => undefined);
+  }, [requiresForm]);
   const isLoading = applicationQuery.isLoading || workflowQuery.isLoading;
   const refreshingDetails = !isLoading && (applicationQuery.isFetching || workflowQuery.isFetching);
   const formLoading = requiresForm && !formQuery.isError && (formQuery.isLoading || !form);
@@ -222,6 +231,7 @@ export default function AdmissionApplicationDetailScreen({
       workflowQuery.isFetching ||
       isError ||
       feeEditorState.dirty ||
+      decisionDraftDirty ||
       stageDraftDirty ||
       detail.hasUnsavedAnswers ||
       (workflow &&
@@ -249,6 +259,7 @@ export default function AdmissionApplicationDetailScreen({
     workflowQuery.isFetching,
     isError,
     feeEditorState.dirty,
+    decisionDraftDirty,
     stageDraftDirty,
     detail.hasUnsavedAnswers,
     workflow,
@@ -266,7 +277,9 @@ export default function AdmissionApplicationDetailScreen({
     !currentStage?.seatStageEnabled
   );
   const leaveGuard = useUnsavedNavigation(
-    Boolean(feeEditorState.dirty || stageDraftDirty || detail.hasUnsavedAnswers),
+    Boolean(
+      feeEditorState.dirty || decisionDraftDirty || stageDraftDirty || detail.hasUnsavedAnswers
+    ),
     {
       push: router.push,
       blockNavigation: navigationLocked,
@@ -281,6 +294,7 @@ export default function AdmissionApplicationDetailScreen({
 
   const navigate = (target: Navigation) => {
     setFeeEditorState({ dirty: false, busy: false });
+    setDecisionDraftDirty(false);
     setStageReadiness(null);
     if (target.view === 'close') {
       closedWorkspace.current = true;
@@ -384,7 +398,13 @@ export default function AdmissionApplicationDetailScreen({
     stageReadiness?.canComplete
   );
   const continueAdmission = () => {
-    if (!canLeaveFeeEditor || detail.hasUnsavedAnswers || !selectedCurrentStage || !currentStage)
+    if (
+      !canLeaveFeeEditor ||
+      decisionDraftDirty ||
+      detail.hasUnsavedAnswers ||
+      !selectedCurrentStage ||
+      !currentStage
+    )
       return;
     if (canRetryFormHandoff) detail.submitApplication();
     else if (managedCanComplete)
@@ -530,6 +550,7 @@ export default function AdmissionApplicationDetailScreen({
             disabled={workspaceBusy || (!selectedCurrentStage && workflow?.status !== 1)}
             navigationDisabled={navigationLocked}
             onBusyChange={onDecisionBusyChange}
+            onDirtyChange={setDecisionDraftDirty}
             application={application}
             journeyCompleted={workflow?.status === 1}
             workflow={workflow}
@@ -878,7 +899,7 @@ export default function AdmissionApplicationDetailScreen({
                         stageDraftDirty ||
                         detail.hasUnsavedAnswers
                       }
-                      onClick={endJourneyDialog.onTrue}
+                      onClick={() => leaveGuard.requestNavigation(endJourneyDialog.onTrue)}
                     >
                       End Journey
                     </Button>
@@ -890,7 +911,9 @@ export default function AdmissionApplicationDetailScreen({
                       color="inherit"
                       disabled={navigationLocked}
                       startIcon={<Iconify icon="mdi:skip-next-outline" />}
-                      onClick={() => detail.setRuntimeAction('skip')}
+                      onClick={() =>
+                        leaveGuard.requestNavigation(() => detail.setRuntimeAction('skip'))
+                      }
                     >
                       Skip Current Step
                     </Button>
@@ -921,6 +944,7 @@ export default function AdmissionApplicationDetailScreen({
                       loadingPosition="end"
                       disabled={
                         workspaceBusy ||
+                        decisionDraftDirty ||
                         detail.hasUnsavedAnswers ||
                         !active ||
                         !selectedCurrentStage ||

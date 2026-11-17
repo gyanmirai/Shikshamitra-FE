@@ -221,7 +221,7 @@ it.each([false, true])(
     const { rerender } = panel();
     const attempt = screen.getByRole('article', { name: 'Assessment Attempt 1' });
     expect(attempt).toBeVisible();
-    expect(screen.getByRole('progressbar', { name: 'Refreshing Assessment' })).toBeVisible();
+    expect(screen.getByRole('status', { name: 'Refreshing Assessment' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Refresh' })).toBeDisabled();
     mocks.query.mockReturnValue(query(assessment, { isError }));
     rerender(
@@ -237,9 +237,7 @@ it.each([false, true])(
         />
       </ThemeProvider>
     );
-    expect(
-      screen.queryByRole('progressbar', { name: 'Refreshing Assessment' })
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('status', { name: 'Refreshing Assessment' })).not.toBeInTheDocument();
     expect(screen.getByRole('article', { name: 'Assessment Attempt 1' })).toBe(attempt);
     expect(screen.getByRole('button', { name: 'Refresh' })).toBeEnabled();
   }

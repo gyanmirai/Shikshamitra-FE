@@ -17,12 +17,12 @@ import type {
 } from 'src/redux/student/admissions/admission-cycles-api';
 
 import dayjs from 'dayjs';
-import { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import { useRef, useMemo, useState } from 'react';
 import { fNumber } from 'src/utils/format-number';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { formatDateOnly } from 'src/utils/date-only';
@@ -33,9 +33,9 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { Box, Paper, Stack, Button, MenuItem, TextField, Typography } from '@mui/material';
+import { StudentSetupManagerHeader as CustomBreadcrumbs } from 'src/screens/student/setup/embedding';
 import {
   useGetAdmissionCyclesQuery,
   useCloseAdmissionCycleMutation,
@@ -100,6 +100,7 @@ export default function AdmissionCyclesScreen() {
   const [guardedAction, setGuardedAction] = useState<CycleGuardedAction | null>(null);
   const [configurationMode, setConfigurationMode] = useState<CycleConfigurationMode | null>(null);
   const [publishValidation, setPublishValidation] = useState<AdmissionCycleValidation | null>(null);
+  const validationRequest = useRef(0);
   const { filters, update: updateFilters, clear: clearFilters } = useAdmissionCycleFilters();
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
@@ -196,19 +197,25 @@ export default function AdmissionCyclesScreen() {
   const configurationBusy = cloning || updatingWindow || scheduling;
 
   const closeGuardedDialog = () => {
+    validationRequest.current += 1;
     setGuardedAction(null);
     setActionCycle(null);
     setPublishValidation(null);
   };
 
   const openGuardedAction = async (action: CycleGuardedAction, cycle: AdmissionCycle) => {
+    validationRequest.current += 1;
+    const request = validationRequest.current;
     setActionCycle(cycle);
     setGuardedAction(action);
     setPublishValidation(null);
     if (action === 'publish') {
       try {
-        setPublishValidation(await validateCycle(cycle.id).unwrap());
+        const validation = await validateCycle(cycle.id).unwrap();
+        if (request !== validationRequest.current) return;
+        setPublishValidation(validation);
       } catch (error) {
+        if (request !== validationRequest.current) return;
         closeGuardedDialog();
         shikshaMitraToast.error({ message: getErrorMessage(error) });
       }
@@ -236,6 +243,11 @@ export default function AdmissionCyclesScreen() {
 
   const confirmGuardedAction = async (payload: AdmissionCycleAction | ReopenAdmissionCycle) => {
     if (!actionCycle || !guardedAction) return;
+    if (
+      guardedAction === 'publish' &&
+      (!publishValidation?.isValid || publishValidation.errors.length)
+    )
+      return;
     try {
       if (guardedAction === 'publish') {
         await publishCycle({
@@ -555,6 +567,7 @@ export default function AdmissionCyclesScreen() {
       }}
     >
       <CustomBreadcrumbs
+        editorOpen={editDialog.value || numberingDialog.value || Boolean(guardedAction) || Boolean(configurationMode)} busy={creating || updating || actionBusy || configurationBusy}
         heading="Admission Periods"
         description="Create, Publish, Monitor, Close and Retain Controlled Admission Periods."
         links={[

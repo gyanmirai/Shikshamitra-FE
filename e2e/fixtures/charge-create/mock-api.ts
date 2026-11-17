@@ -67,7 +67,12 @@ export default function useQueryAndMutation({ type, currentQueryAndMutation: kin
         return {
           unwrap: async () => ({
             data: {
-              status: noApprovalMode && params.body?.chargeCategoryId === 'category' ? 1 : 0,
+              status:
+                noApprovalMode &&
+                new URLSearchParams(window.location.search).has('admin') &&
+                params.body?.chargeCategoryId === 'category'
+                  ? 1
+                  : 0,
             },
           }),
         };

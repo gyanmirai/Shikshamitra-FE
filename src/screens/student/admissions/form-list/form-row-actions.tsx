@@ -14,6 +14,8 @@ type Props = {
   onPublish: () => void;
   onHistory: () => void;
   onCreateVersion: () => void;
+  creatingVersion?: boolean;
+  versionBusy?: boolean;
   onArchive: () => void;
   onRestore: () => void;
   onDelete: () => void;
@@ -52,6 +54,8 @@ export function FormRowActions({
   onPublish,
   onHistory,
   onCreateVersion,
+  creatingVersion = false,
+  versionBusy = false,
   onArchive,
   onRestore,
   onDelete,
@@ -99,6 +103,8 @@ export function FormRowActions({
       id: 'new-version',
       label: `New Version`,
       icon: 'mdi:source-branch-plus',
+      loading: creatingVersion,
+      disabled: versionBusy,
       onClick: onCreateVersion,
     });
   if (visible.archive)

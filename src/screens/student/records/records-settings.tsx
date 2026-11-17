@@ -20,6 +20,7 @@ import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { Box, Stack, Paper, Button, Skeleton, Typography, DialogActions } from '@mui/material';
+import { useStudentSetupEmbedding, useStudentSetupFormState } from 'src/screens/student/setup/embedding';
 import {
   useGetStudentRecordsSettingsQuery,
   useSaveStudentRecordsDraftMutation,
@@ -46,26 +47,30 @@ const taskQuery = (scope: string, yearId?: string) =>
 
 export default function RecordsSettings({ task = 'changes' }: { task?: RecordsSettingsTask }) {
   const params = useSearchParams();
+  const { embedded } = useStudentSetupEmbedding();
+  const [embeddedTask, setEmbeddedTask] = useState<RecordsSettingsTask>(task);
   const currentYear = useSelector((state: RootState) => state.globalState.currentYear);
-  const scope = params.get('scope') === 'year' ? 'year' : 'school';
-  const academicYearId = scope === 'year' ? (params.get('year') ?? currentYear?.id) : undefined;
+  const [embeddedScope, setEmbeddedScope] = useState<'school' | 'year'>(() => currentYear?.id ? 'year' : 'school');
+  const activeTask = embedded ? embeddedTask : task;
+  const scope = embedded ? embeddedScope : params.get('scope') === 'year' ? 'year' : 'school';
+  const academicYearId = scope === 'year' ? (embedded ? currentYear?.id : (params.get('year') ?? currentYear?.id)) : undefined;
   const query = useGetStudentRecordsSettingsQuery(academicYearId ? { academicYearId } : undefined, {
     skip: scope === 'year' && !academicYearId,
   });
   if (scope === 'year' && !academicYearId)
     return (
-      <RecordsSettingsWorkspace task={task}>
+      <RecordsSettingsWorkspace task={activeTask} onTaskChange={embedded ? setEmbeddedTask : undefined}>
         <StudentFeedback notificationKey="STU-0815" presentation="persistent" severity="warning">
           Select an academic year in the school context before configuring an override.
         </StudentFeedback>
-        <Button component={RouterLink} href={sectionPath(task)}>
+        <Button {...(embedded ? { onClick: () => setEmbeddedScope('school') } : { component: RouterLink, href: sectionPath(task) })}>
           Open school defaults
         </Button>
       </RecordsSettingsWorkspace>
     );
   if (!query.currentData)
     return (
-      <RecordsSettingsWorkspace task={task} suffix={taskQuery(scope, academicYearId)}>
+      <RecordsSettingsWorkspace task={activeTask} onTaskChange={embedded ? setEmbeddedTask : undefined} suffix={taskQuery(scope, academicYearId)}>
         {query.isError ? (
           <StudentFeedback
             notificationKey="STU-0816"
@@ -89,8 +94,10 @@ export default function RecordsSettings({ task = 'changes' }: { task?: RecordsSe
     );
   return (
     <RecordsSettingsEditor
-      key={`${scope}-${academicYearId ?? 'school'}-${task}`}
-      task={task}
+      key={`${scope}-${academicYearId ?? 'school'}-${embedded ? 'embedded' : task}`}
+      task={activeTask}
+      onTaskChange={embedded ? setEmbeddedTask : undefined}
+      onScopeChange={embedded ? setEmbeddedScope : undefined}
       initial={query.currentData}
       academicYearId={academicYearId}
       reload={() => query.refetch().unwrap()}
@@ -103,8 +110,12 @@ function RecordsSettingsEditor({
   initial,
   academicYearId,
   reload,
+  onTaskChange,
+  onScopeChange,
 }: {
   task: RecordsSettingsTask;
+  onTaskChange?: (task: RecordsSettingsTask) => void;
+  onScopeChange?: (scope: 'school' | 'year') => void;
   initial: StudentRecordsSettings;
   academicYearId?: string;
   reload: () => Promise<StudentRecordsSettings>;
@@ -157,7 +168,8 @@ function RecordsSettingsEditor({
       }
     },
   });
-  const guard = useUnsavedNavigation(form.dirty, { push: router.push });
+  useStudentSetupFormState({ dirty: form.dirty || previewOpen || confirmPublish, busy });
+  const guard = useUnsavedNavigation(form.dirty, { push: router.push, blockNavigation: busy });
   const signature = JSON.stringify(form.values);
   const previewCurrent = preview?.signature === signature;
   const roleOptions =
@@ -232,6 +244,7 @@ function RecordsSettingsEditor({
   return (
     <RecordsSettingsWorkspace
       task={task}
+      onTaskChange={onTaskChange}
       suffix={taskQuery(academicYearId ? 'year' : 'school', academicYearId)}
     >
       <Paper variant="outlined" sx={{ p: 2 }}>
@@ -252,7 +265,7 @@ function RecordsSettingsEditor({
             ]}
             onChange={(value) =>
               guard.requestNavigation(() =>
-                router.push(
+                onScopeChange ? onScopeChange(value === 'year' ? 'year' : 'school') : router.push(
                   recordsQueryUrl(pathname, params.toString(), {
                     scope: value === 'year' ? 'year' : undefined,
                     year: value === 'year' ? currentYear?.id : undefined,
