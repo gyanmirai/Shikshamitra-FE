@@ -92,8 +92,27 @@ const SubLayout = ({ children }: any) => {
     <Box
       display="flex"
       height="100%"
-      sx={{ backgroundColor: (theme) => theme.vars.palette.background.neutral }}
+      sx={{
+        flexDirection: { xs: 'column', md: 'row' },
+        minWidth: 0,
+        minHeight: 0,
+        backgroundColor: (theme) => theme.vars.palette.background.neutral,
+      }}
     >
+      {compactNav && currentData?.length > 0 && (
+        <Box sx={{ px: 1, flexShrink: 0 }}>
+          <Tooltip title={`Open ${navigationLabel}`}>
+            <IconButton
+              aria-label={`Open ${navigationLabel}`}
+              onClick={() => setMobileNavOpen(true)}
+              size="small"
+              sx={{ width: 44, height: 44 }}
+            >
+              <Iconify icon="solar:hamburger-menu-outline" />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      )}
       <Drawer
         open={compactNav && mobileNavOpen}
         onClose={() => setMobileNavOpen(false)}
@@ -118,6 +137,7 @@ const SubLayout = ({ children }: any) => {
             aria-label={`Close ${navigationLabel}`}
             onClick={() => setMobileNavOpen(false)}
             size="small"
+            sx={{ width: 44, height: 44 }}
           >
             <Iconify icon="mingcute:close-line" />
           </IconButton>
@@ -127,7 +147,7 @@ const SubLayout = ({ children }: any) => {
         </Scrollbar>
       </Drawer>
 
-      {currentData?.length > 0 && (
+      {!compactNav && currentData?.length > 0 && (
         <motion.div
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
@@ -147,29 +167,11 @@ const SubLayout = ({ children }: any) => {
             borderRight: '1px solid var(--palette-divider)',
             position: 'relative',
             display: 'flex',
+            flexShrink: 0,
             flexDirection: 'column',
             overflow: 'hidden',
           }}
         >
-          <Box
-            sx={{
-              p: 1,
-              display: { xs: 'flex', md: 'none' },
-              justifyContent: 'center',
-              borderBottom: (theme) => `1px solid ${theme.vars.palette.divider}`,
-            }}
-          >
-            <Tooltip title={`Open ${navigationLabel}`} placement="right">
-              <IconButton
-                aria-label={`Open ${navigationLabel}`}
-                onClick={() => setMobileNavOpen(true)}
-                size="small"
-              >
-                <Iconify icon="solar:hamburger-menu-outline" />
-              </IconButton>
-            </Tooltip>
-          </Box>
-
           {/* -- Pin Button -- */}
           <Box
             sx={{
@@ -299,6 +301,8 @@ const SubLayout = ({ children }: any) => {
       <Box
         sx={{
           flexGrow: 1,
+          minWidth: 0,
+          minHeight: 0,
           height: '100%',
           overflow: 'hidden',
           '& .simplebar-content': { height: '100%' },

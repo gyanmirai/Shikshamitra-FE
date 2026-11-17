@@ -5,7 +5,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { studentPaths } from 'src/constants/student-menu';
 import { StudentFeedback } from 'src/components/student-feedback';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { StudentSetupManagerHeader as CustomBreadcrumbs } from 'src/screens/student/setup/embedding';
 
 import { AdmissionQueryError } from './admission-query-error';
 import { AdmissionOfferingTable } from './admission-offering-table';
@@ -51,6 +51,7 @@ export default function AdmissionOfferingsScreen() {
       }}
     >
       <CustomBreadcrumbs
+        editorOpen={Boolean(screen.dialogMode) || screen.bulkOpen || Boolean(screen.pendingAction)} busy={screen.saving || screen.commanding || screen.bulkActivation.busy}
         heading="Admission Offerings"
         description="Connect Classes, Admission Periods, Processes, and Forms Before Accepting Applications."
         links={[
@@ -228,6 +229,10 @@ export default function AdmissionOfferingsScreen() {
         onRetryDetail={screen.retryDetail}
         offering={screen.selected}
         onClose={screen.closeDetails}
+        canReviewForms={screen.formAccess?.canView}
+        canRestoreForms={screen.formAccess?.canView && screen.formAccess?.canManage}
+        canReviewWorkflows={screen.workflowAccess?.canView}
+        canReviewCycles={screen.canReviewCycles}
       />
       <AdmissionOfferingActionDialog
         pendingAction={screen.pendingAction}

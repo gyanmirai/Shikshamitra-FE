@@ -17,11 +17,11 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { studentPaths, studentPermissions } from 'src/constants/student-menu';
 import { Box, Stack, Button, Switch, TextField, Typography, FormControlLabel } from '@mui/material';
 import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
+import { useStudentSetupFormState, useStudentSetupEmbedding, StudentSetupManagerHeader as CustomBreadcrumbs } from 'src/screens/student/setup/embedding';
 
 import RollOrderingFields from './roll-ordering-fields';
 import { useOnboardingSettings } from '../onboarding-settings-context';
@@ -143,6 +143,7 @@ function NumberingRulesScreen({
   createActionRef,
 }: ScreenProps & { kind: 'gr' | 'roll' }) {
   const isGr = kind === 'gr';
+  const { embedded: guideEmbedded } = useStudentSetupEmbedding();
   const { permissions } = useSelector((state: RootState) => state.auth);
   const canConfigure = hasGrantedPermission(permissions, studentPermissions.onboarding.configure);
   const router = useRouter();
@@ -263,6 +264,7 @@ function NumberingRulesScreen({
       }
     },
   });
+  useStudentSetupFormState({ dirty: editorOpen, busy: formik.isSubmitting || Boolean(publishingId) });
   const navigationGuard = useUnsavedNavigation(editorOpen && formik.dirty, {
     guardContextChanges: true,
     renderConfirmation: renderUnsavedConfirmation,
@@ -445,7 +447,7 @@ function NumberingRulesScreen({
   const formatContext = { academicYearName: scope.academicYearName, schoolCode: scope.schoolCode };
   return (
     <Stack spacing={1.25} sx={{ minWidth: 0, minHeight: 0, height: 1, flex: 1 }}>
-      {!embedded && (
+      {(!embedded || guideEmbedded) && (
         <CustomBreadcrumbs
           heading={title}
           description="Create draft rules, then publish them for Onboarding. Existing numbers are preserved when rules change."
@@ -467,7 +469,7 @@ function NumberingRulesScreen({
           }
         />
       )}
-      {embedded && showWorkspaceBar && (
+      {embedded && !guideEmbedded && showWorkspaceBar && (
         <Button
           variant="contained"
           disabled={!canConfigure}

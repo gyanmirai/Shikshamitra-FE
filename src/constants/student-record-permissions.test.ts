@@ -57,7 +57,7 @@ describe('Student Records security navigation', () => {
     expect(records.children?.map((node) => [node.title, node.path])).toEqual([
       ['Student List', '/student/profile'],
       ['House Management', '/student/records/houses'],
-      ['Student I-Card', '/student/student-i-card'],
+      ['I-Card', '/student/student-i-card'],
       ['Certificates', '/student/certificates'],
       ['Reports', '/student/reports'],
     ]);
@@ -68,7 +68,7 @@ describe('Student Records security navigation', () => {
 
   it.each([
     ['House Management', 'HouseManagement'],
-    ['Student I-Card', 'StudentICard'],
+    ['I-Card', 'StudentICard'],
     ['Certificates', 'Certificates'],
     ['Reports', 'Reports'],
   ])('maps %s to its exact backend action bundle', (title, feature) => {
@@ -130,12 +130,12 @@ describe('Student Records security navigation', () => {
 
   it('does not invent unavailable actions in a partial catalogue', () => {
     const partial = [{ name: `${prefix}StudentICard.View`, isGranted: false }];
-    expect(getNodeActionPermissionNames(submodule('Student I-Card'), partial)).toEqual([
+    expect(getNodeActionPermissionNames(submodule('I-Card'), partial)).toEqual([
       `${prefix}StudentICard.View`,
     ]);
     expect(
       getNodeActionPermissionNamesForAction(
-        submodule('Student I-Card').permissionName!,
+        submodule('I-Card').permissionName!,
         'Add',
         partial
       )

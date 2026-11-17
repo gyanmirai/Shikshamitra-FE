@@ -123,6 +123,166 @@ const savedPolicy = (onSave: ReturnType<typeof vi.fn>) =>
     .assessment as AdmissionAssessmentPolicy;
 
 describe('class subject assessment configuration', { timeout: 20000 }, () => {
+  it('shows one field error after blur and never toasts local validation', async () => {
+    const { user } = setup(subjectPolicy);
+    await screen.findByRole('textbox', { name: 'Maximum marks — English' });
+    await user.click(screen.getByRole('button', { name: 'Add Custom Subject' }));
+    const name = screen.getByRole('textbox', { name: /Custom Subject Name/ });
+    const maximum = screen.getByRole('textbox', { name: 'Maximum marks — subject 2' });
+    expect(name).not.toHaveAttribute('aria-invalid', 'true');
+    expect(maximum).not.toHaveAttribute('aria-invalid', 'true');
+    await user.click(name);
+    await user.tab();
+    expect(name).toHaveAttribute('aria-invalid', 'true');
+    expect(maximum).not.toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getAllByText('Enter a subject name (1–128 characters).')).toHaveLength(1);
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
+    await waitFor(() => expect(maximum).toHaveAttribute('aria-invalid', 'true'));
+    expect(screen.getAllByText('Enter a subject name (1–128 characters).')).toHaveLength(1);
+    expect(toast.error).not.toHaveBeenCalled();
+  });
+
+  it('keeps a new row neutral after a failed attempt until blur or the next submission', async () => {
+    const { user } = setup(subjectPolicy);
+    await screen.findByRole('textbox', { name: 'Maximum marks — English' });
+    await user.click(screen.getByRole('button', { name: 'Add Custom Subject' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
+    await waitFor(() =>
+      expect(screen.getByRole('textbox', { name: /Custom Subject Name/ })).toHaveAttribute(
+        'aria-invalid',
+        'true'
+      )
+    );
+    await user.click(screen.getByRole('button', { name: 'Add Custom Subject' }));
+    const names = screen.getAllByRole('textbox', { name: /Custom Subject Name/ });
+    expect(names[1]).not.toHaveAttribute('aria-invalid', 'true');
+    const maximum = screen.getByRole('textbox', { name: 'Maximum marks — subject 3' });
+    expect(maximum).not.toHaveAttribute('aria-invalid', 'true');
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
+    await waitFor(() => expect(names[1]).toHaveAttribute('aria-invalid', 'true'));
+    expect(maximum).toHaveAttribute('aria-invalid', 'true');
+  });
+
+  it('does not transfer touched errors when a preceding subject is removed', async () => {
+    const { user } = setup(subjectPolicy);
+    await screen.findByRole('textbox', { name: 'Maximum marks — English' });
+    await user.click(screen.getByRole('button', { name: 'Add Custom Subject' }));
+    await user.click(screen.getByRole('button', { name: 'Add Custom Subject' }));
+    const names = screen.getAllByRole('textbox', { name: /Custom Subject Name/ });
+    await user.click(names[0]);
+    await user.tab();
+    expect(names[0]).toHaveAttribute('aria-invalid', 'true');
+    await user.click(screen.getByRole('button', { name: 'Remove subject 2' }));
+    expect(screen.getByRole('textbox', { name: /Custom Subject Name/ })).not.toHaveAttribute(
+      'aria-invalid',
+      'true'
+    );
+  });
+
+  it('retains a neutral disabled passing draft until a positive decimal total exists', async () => {
+    const { user, onSave } = setup({
+      ...subjectPolicy,
+      classProfiles: [{ ...configuredProfile, passingMarks: 40, subjects: [] }],
+    });
+    await screen.findByRole('combobox', { name: /Pass Rule/ });
+    await user.click(screen.getByRole('button', { name: 'Add Custom Subject' }));
+    const passing = screen.getByRole('textbox', { name: 'Overall Passing Marks' });
+    expect(passing).toBeDisabled();
+    expect(passing).toHaveValue('40');
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
+    expect(screen.queryByText('Enter 0 to 0.')).not.toBeInTheDocument();
+    expect(passing).not.toHaveAttribute('aria-invalid', 'true');
+    await user.type(screen.getByRole('textbox', { name: /Custom Subject Name/ }), 'Reasoning');
+    const maximum = screen.getByRole('textbox', { name: 'Maximum marks — Reasoning' });
+    await user.clear(maximum);
+    await user.type(maximum, '0.5');
+    expect(passing).toBeEnabled();
+    expect(passing).toHaveValue('40');
+    await user.clear(passing);
+    await user.type(passing, '0.25');
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
+    await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
+    expect(savedPolicy(onSave).classProfiles![0]).toMatchObject({
+      passingMarks: 0.25,
+      subjects: [{ totalMarks: 0.5 }],
+    });
+    expect(toast.error).not.toHaveBeenCalled();
+  });
+
+  it('retains existing row validation when profiles collapse or scoring controls remount', async () => {
+    const { user } = setup({
+      ...subjectPolicy,
+      classProfiles: [
+        { ...configuredProfile, subjects: [{ code: 'custom-1', name: '', totalMarks: 0 }] },
+      ],
+    });
+    await screen.findByRole('textbox', { name: /Custom Subject Name/ });
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
+    await waitFor(() =>
+      expect(screen.getByRole('textbox', { name: /Custom Subject Name/ })).toHaveAttribute(
+        'aria-invalid',
+        'true'
+      )
+    );
+    const summary = screen.getByRole('button', { name: /Class 5 1 Subjects/ });
+    await user.click(summary);
+    await user.click(summary);
+    expect(screen.getByRole('textbox', { name: /Custom Subject Name/ })).toHaveAttribute(
+      'aria-invalid',
+      'true'
+    );
+    await user.click(screen.getByRole('combobox', { name: /Scoring Method/ }));
+    await user.click(screen.getByRole('option', { name: 'Total Marks' }));
+    await user.click(screen.getByRole('combobox', { name: /Scoring Method/ }));
+    await user.click(screen.getByRole('option', { name: 'Subject-Wise Marks' }));
+    expect(screen.getByRole('textbox', { name: /Custom Subject Name/ })).toHaveAttribute(
+      'aria-invalid',
+      'true'
+    );
+    expect(screen.getByRole('textbox', { name: 'Maximum marks — subject 1' })).toHaveAttribute(
+      'aria-invalid',
+      'true'
+    );
+    expect(toast.error).not.toHaveBeenCalled();
+  });
+
+  it('localizes loaded name and maximum bounds without duplicate section errors', async () => {
+    const { user, onSave } = setup({
+      ...subjectPolicy,
+      classProfiles: [
+        {
+          ...configuredProfile,
+          subjects: [{ code: 'custom-1', name: 'n'.repeat(129), totalMarks: 10001 }],
+        },
+      ],
+    });
+    await screen.findByRole('textbox', { name: /Custom Subject Name/ });
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
+    await waitFor(() =>
+      expect(screen.getByRole('textbox', { name: /Custom Subject Name/ })).toHaveAttribute(
+        'aria-invalid',
+        'true'
+      )
+    );
+    expect(screen.getAllByText('Enter a subject name (1–128 characters).')).toHaveLength(1);
+    expect(
+      screen.getAllByText('Enter maximum marks greater than 0 and no more than 10,000.')
+    ).toHaveLength(1);
+    expect(onSave).not.toHaveBeenCalled();
+    expect(toast.error).not.toHaveBeenCalled();
+  });
+
+  it.each(['', '   '])('localizes a malformed saved class identity %j', async (standardId) => {
+    const { user, onSave } = setup({
+      ...subjectPolicy,
+      classProfiles: [{ ...configuredProfile, standardIds: [standardId] }],
+    });
+    await screen.findByRole('combobox', { name: /Applies to Classes/ });
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
+    expect(await screen.findAllByText('Choose at least one class.')).toHaveLength(1);
+    expect(onSave).not.toHaveBeenCalled();
+    expect(toast.error).not.toHaveBeenCalled();
+  });
   it('waits for the first catalog response before labeling saved profile selections', async () => {
     let resolveCatalog!: () => void;
     const responseGate = new Promise<void>((resolve) => {
@@ -163,7 +323,7 @@ describe('class subject assessment configuration', { timeout: 20000 }, () => {
   });
   it('keeps scalar mode default without fetching the subject catalog', async () => {
     const { user, onSave, request } = setup();
-    expect(screen.getByRole('spinbutton', { name: 'Total Marks *' })).toBeVisible();
+    expect(screen.getByRole('textbox', { name: 'Total Marks *' })).toBeVisible();
     expect(screen.queryByText('Class Assessment Profiles')).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
@@ -236,9 +396,13 @@ describe('class subject assessment configuration', { timeout: 20000 }, () => {
       screen.queryByRole('textbox', { name: 'Overall Passing Marks' })
     ).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Apply changes' }));
-    await screen.findAllByText(
-      'Enter passing marks between zero and the maximum for every subject.'
+    await waitFor(() =>
+      expect(screen.getByRole('textbox', { name: 'Passing marks — English' })).toHaveAttribute(
+        'aria-invalid',
+        'true'
+      )
     );
+    expect(screen.getAllByText('Enter passing marks between zero and 50.')).toHaveLength(1);
     expect(onSave).not.toHaveBeenCalled();
     await user.type(screen.getByRole('textbox', { name: 'Passing marks — English' }), '20');
     await user.click(screen.getByRole('button', { name: 'Apply changes' }));

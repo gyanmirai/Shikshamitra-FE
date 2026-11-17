@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 import { useGetYearQuery } from 'src/redux/year/yearApi';
+import { studentPaths } from 'src/constants/student-menu';
 import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetUserScopeHierarchyQuery } from 'src/redux/userScope/userScopeApi';
@@ -27,9 +28,12 @@ export function useAcademicOptions(refreshOnMount = true) {
   const session = data as AcademicSession | null;
   const pathname = usePathname();
   const isStudentModule = pathname === '/student' || pathname.startsWith('/student/');
-  const isYearOnly = ['/dashboard', '/finance', '/library', '/calendar', '/hr', '/student'].some(
-    (route) => pathname.startsWith(route)
-  );
+  const isStudentSetupGuide = pathname.replace(/\/+$/, '') === studentPaths.setupGuide;
+  const isYearOnly =
+    !isStudentSetupGuide &&
+    ['/dashboard', '/finance', '/library', '/calendar', '/hr', '/student'].some((route) =>
+      pathname.startsWith(route)
+    );
   const { data: years, isLoading: isYearLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetYearQuery,

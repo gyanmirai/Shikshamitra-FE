@@ -26,7 +26,9 @@ import { ADMISSION_DATE_FORMAT } from './admission-date-formats';
 import { AdmissionOfferingReadiness } from './admission-offering-readiness';
 import { admissionTrackLabels, admissionEntryModeLabels } from './admission-offering-model';
 
-type Props = {
+import type { AdmissionOfferingRecoveryAccess } from './admission-offering-configuration-issues';
+
+type Props = AdmissionOfferingRecoveryAccess & {
   open: boolean;
   offering: AdmissionOffering | null;
   onClose: () => void;
@@ -55,7 +57,12 @@ export function AdmissionOfferingDetailsDrawer({
   loadingDetail,
   detailError,
   onRetryDetail,
+  canReviewForms,
+  canRestoreForms,
+  canReviewWorkflows,
+  canReviewCycles,
 }: Props) {
+  const recoveryAvailable = !loadingDetail && !detailError;
   return (
     <Drawer
       anchor="right"
@@ -255,7 +262,7 @@ export function AdmissionOfferingDetailsDrawer({
 
             <FormSectionCard
               aria-label="Configuration Readiness"
-              icon={GlobalIcons.approvedIcon}
+              icon={offering.configuration?.isValid ? GlobalIcons.approvedIcon : GlobalIcons.warning}
               title="Configuration Readiness"
               descriptionTooltip="Whether the saved offering configuration is ready for its admission route."
             >
@@ -273,7 +280,14 @@ export function AdmissionOfferingDetailsDrawer({
                   </Typography>
                 </Stack>
               ) : (
-                <AdmissionOfferingReadiness result={offering.configuration} />
+                <AdmissionOfferingReadiness
+                  result={offering.configuration}
+                  cycleName={offering.admissionCycleName}
+                  canReviewForms={recoveryAvailable && canReviewForms}
+                  canRestoreForms={recoveryAvailable && canRestoreForms}
+                  canReviewWorkflows={recoveryAvailable && canReviewWorkflows}
+                  canReviewCycles={recoveryAvailable && canReviewCycles}
+                />
               )}
             </FormSectionCard>
           </Stack>

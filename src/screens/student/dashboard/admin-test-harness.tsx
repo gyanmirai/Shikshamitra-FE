@@ -5,6 +5,7 @@ import type {
   StudentModuleDashboardSection,
 } from 'src/redux/student/dashboard/student-module-dashboard-types';
 
+import { toast } from 'sonner';
 import { Provider } from 'react-redux';
 import { api } from 'src/redux/service';
 import { http, HttpResponse } from 'msw';
@@ -13,6 +14,7 @@ import { mswServer } from 'src/test/mswServer';
 import { configureStore } from '@reduxjs/toolkit';
 import { SessionProvider } from 'next-auth/react';
 import { vi, afterEach, beforeEach } from 'vitest';
+import { Snackbar } from 'src/components/snackbar';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { render, cleanup } from '@testing-library/react';
@@ -353,6 +355,7 @@ afterEach(async () => {
   await Promise.all(store.dispatch(api.util.getRunningQueriesThunk()));
   store.dispatch(api.util.resetApiState());
   clearCachedAuthSession();
+  toast.dismiss();
 });
 
 export function mountAdmin(permissions = adminPermissions, query = '') {
@@ -361,7 +364,10 @@ export function mountAdmin(permissions = adminPermissions, query = '') {
   const Wrapper = ({ children }: PropsWithChildren) => (
     <ThemeProvider theme={theme}>
       <SessionProvider session={session} refetchOnWindowFocus={false}>
-        <Provider store={store}>{children}</Provider>
+        <Provider store={store}>
+          <Snackbar />
+          {children}
+        </Provider>
       </SessionProvider>
     </ThemeProvider>
   );

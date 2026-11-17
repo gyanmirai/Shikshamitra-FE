@@ -64,7 +64,7 @@ describe('Student Records menu-aligned permission matrix', () => {
     expect(rows.filter((row) => !row.group).map((row) => row.title)).toEqual([
       'Student List',
       'House Management',
-      'Student I-Card',
+      'I-Card',
       'Certificates',
       'Records reports',
       'Student reports',

@@ -34,21 +34,21 @@ const StudentIcardScreen = () => {
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
-        heading="Student I-Card"
-        description="Create and manage student I-cards."
+        heading="I-Card"
+        description="Create and manage I-Cards."
         links={[
           { name: 'Student', href: '/student/dashboard' },
           { name: 'Student Record', href: '/student/dashboard' },
-          { name: 'Student I-Card' },
+          { name: 'I-Card' },
         ]}
         action={
           <Button onClick={dialog.onTrue} startIcon={<Add />} variant="contained">
-            Create I-card
+            Create I-Card
           </Button>
         }
       />
       <CustomizableTable
-        tableTitle="Student I-Card"
+        tableTitle="I-Card"
         tableId="student-icard"
         columns={[
           { label: 'Class', id: 'class' },
@@ -98,7 +98,7 @@ const StudentIcardScreen = () => {
           { class: 'Class 5', status: 'Pending' },
         ]}
       />
-      <CustomDialog fullScreen title="I-card" open={dialog.value} handleClose={dialog.onFalse}>
+      <CustomDialog fullScreen title="I-Card" open={dialog.value} handleClose={dialog.onFalse}>
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral' }}>
           <StudentICardForm handleClose={dialog.onFalse} />
         </Scrollbar>
@@ -193,7 +193,7 @@ const StudentICardForm = ({ handleClose }: { handleClose: () => void }): JSX.Ele
           )}
           {!isCustom.value && (
             <Button variant="contained" onClick={isCustom.onTrue}>
-              Create Custom I-card
+              Create Custom I-Card
             </Button>
           )}
         </Box>

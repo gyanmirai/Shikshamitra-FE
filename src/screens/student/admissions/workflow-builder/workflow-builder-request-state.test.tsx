@@ -24,11 +24,15 @@ vi.mock('../use-admission-definition-options', () => ({
 vi.mock('./hooks/use-workflow-builder-draft', () => ({
   useWorkflowBuilderDraft: (...args: unknown[]) => {
     hooks.draft(...args);
-    return { stages: [], sidePanel: hooks.sidePanel };
+    return { stages: [], sidePanel: hooks.sidePanel, dirty: false, resetDraft: vi.fn() };
   },
 }));
 vi.mock('./hooks/use-workflow-builder-commands', () => ({
-  useWorkflowBuilderCommands: () => ({}),
+  useWorkflowBuilderCommands: () => ({
+    updateState: { isLoading: false },
+    validateState: { isLoading: false },
+    publishState: { isLoading: false },
+  }),
 }));
 vi.mock('./components/workflow-builder-page-state', () => ({
   WorkflowBuilderPageState: () => null,

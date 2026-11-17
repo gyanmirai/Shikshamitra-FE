@@ -16,6 +16,8 @@ export default function StudentAssignmentDrawer({
   children,
   actions,
   wide = false,
+  expanded = false,
+  context,
   titleInfo,
   contentLayout = 'scroll',
 }: {
@@ -25,6 +27,8 @@ export default function StudentAssignmentDrawer({
   children: ReactNode;
   actions: ReactNode;
   wide?: boolean;
+  expanded?: boolean;
+  context?: ReactNode;
   titleInfo?: string;
   contentLayout?: 'scroll' | 'workspace';
 }) {
@@ -63,7 +67,7 @@ export default function StudentAssignmentDrawer({
           'aria-labelledby': titleId,
           'aria-busy': busy,
           sx: {
-            width: { xs: '100%', sm: wide ? 800 : 560 },
+            width: { xs: '100%', sm: expanded ? 'min(1440px, 96vw)' : wide ? 800 : 560 },
             maxWidth: '100%',
             display: 'flex',
             flexDirection: 'column',
@@ -78,10 +82,21 @@ export default function StudentAssignmentDrawer({
         alignItems="center"
         justifyContent="space-between"
         spacing={1}
-        sx={{ px: 2, py: 1.5, flexShrink: 0, borderBottom: 1, borderColor: 'divider' }}
+        sx={{
+          px: expanded ? { xs: 2, sm: 3 } : 2,
+          py: expanded ? 2 : 1.5,
+          flexShrink: 0,
+          borderBottom: 1,
+          borderColor: 'divider',
+        }}
       >
         <Stack direction="row" alignItems="center" spacing={0.5} sx={{ minWidth: 0 }}>
-          <Typography id={titleId} component="h2" variant="subtitle1" sx={{ minWidth: 0 }}>
+          <Typography
+            id={titleId}
+            component="h2"
+            variant={expanded ? 'h6' : 'subtitle1'}
+            sx={{ minWidth: 0 }}
+          >
             {title}
           </Typography>
           {titleInfo && <InfoTooltipIcon title={titleInfo} label={`${title} information`} />}
@@ -90,12 +105,13 @@ export default function StudentAssignmentDrawer({
           <Iconify icon="mdi:close" width={20} />
         </IconButton>
       </Stack>
+      {context}
       {contentLayout === 'workspace' ? (
         <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden', p: 2 }}>{children}</Box>
       ) : (
         <>
           <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
-            <Box sx={{ p: 2 }}>{children}</Box>
+            <Box sx={{ p: expanded ? { xs: 2, sm: 3 } : 2 }}>{children}</Box>
           </Scrollbar>
           <Box component="footer" sx={{ flexShrink: 0, borderTop: 1, borderColor: 'divider' }}>
             {actions}

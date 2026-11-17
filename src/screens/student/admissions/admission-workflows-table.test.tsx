@@ -18,6 +18,8 @@ const hooks = vi.hoisted(() => ({
   version: '',
 }));
 
+vi.mock('next/navigation', () => ({ useSearchParams: () => new URLSearchParams() }));
+
 vi.mock('src/redux/student/admissions/admission-workflows-api', () => ({
   useGetAdmissionWorkflowsQuery: (params: unknown) => {
     hooks.query(params);
@@ -50,6 +52,12 @@ vi.mock('./workflow-list/use-workflow-list-actions', () => ({
   useWorkflowListActions: () => ({
     allowed: { canCreate: true },
     createDialog: { value: false },
+    cloneDialog: { value: false },
+    createState: { isLoading: false },
+    cloneState: { isLoading: false },
+    archiveState: { isLoading: false },
+    reopenState: { isLoading: false },
+    deleteState: { isLoading: false },
     createCloseRef: { current: null },
   }),
 }));

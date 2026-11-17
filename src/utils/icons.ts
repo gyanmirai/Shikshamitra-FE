@@ -11,6 +11,7 @@ export const GlobalIcons = {
   floors: 'solar:layers-linear',
   moveUp: 'eva:arrow-upward-fill',
   expandMore: 'mdi:chevron-down',
+  fullPreview: 'mdi:arrow-expand',
   moveDown: 'eva:arrow-downward-fill',
   back: 'eva:arrow-back-fill',
   exit: 'mdi:exit-to-app',

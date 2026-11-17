@@ -32,6 +32,7 @@ export type AdmissionOfferingListItem = {
   coreFieldPolicyVersion?: number | null;
   isActive: boolean;
   availabilityStatus: AdmissionOfferingAvailabilityStatus;
+  unavailableReason?: string | null;
   configurationStatus: AdmissionOfferingConfigurationStatus;
   canActivate: boolean;
   applicationCount: number;

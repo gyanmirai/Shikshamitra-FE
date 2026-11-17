@@ -206,7 +206,8 @@ it('copies a checked address into the Inquiry create values sent by Formik', asy
   vi.mocked(useAdmissionInquiryDialog).mockImplementation(useAddressController);
   render(<AdmissionInquiryFormPage />);
   const user = userEvent.setup();
-  await user.type(screen.getByRole('textbox', { name: 'Current street' }), 'Inquiry current road');
+  await user.click(screen.getByRole('textbox', { name: 'Current street' }));
+  await user.paste('Inquiry current road');
   await user.click(screen.getByRole('checkbox', { name: 'Same address' }));
   await waitFor(() =>
     expect(screen.getByRole('textbox', { name: 'Permanent street' })).toHaveValue(
@@ -455,7 +456,7 @@ describe('New inquiry form', () => {
   });
 
   it('shows the latest unavailable reason once, without the old generic helper', () => {
-    const reason = 'Admission offering setup is incomplete.';
+    const reason = "Inquiry Form 'QA Inquiry' is archived. Restore it in Admission forms.";
     const fixture = controller({
       offerings: [],
       sections: [],
@@ -469,6 +470,7 @@ describe('New inquiry form', () => {
     render(<AdmissionInquiryFormPage />);
     expect(screen.getAllByText(reason)).toHaveLength(1);
     expect(screen.queryByText('Selected Class has no Admission open.')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Create Inquiry' })).toBeDisabled();
   });
 
   it('shows academic-start age with configured DOB help and permits creating an underage inquiry', async () => {

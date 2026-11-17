@@ -1,8 +1,10 @@
 import { http, HttpResponse } from 'msw';
-import { it, expect, describe } from 'vitest';
 import { mswServer } from 'src/test/mswServer';
+import { it, vi, expect, describe } from 'vitest';
+import { shikshaMitraToast } from 'src/components/toast';
 import { setCurrentYear } from 'src/redux/globalState/globalSlice';
-import { screen, waitFor, fireEvent } from '@testing-library/react';
+import { expectStudentErrorToast } from 'src/test/student-toast-test-fixture';
+import { render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import { mount, requests, getDashboardStore } from './dashboard-test-harness';
 import { dashboardSection, dashboardPermissions } from './dashboard-test-fixture';
@@ -40,31 +42,52 @@ describe('student dashboard with real RTK Query and network responses', () => {
   });
 
   it('shows no privileged data or link when context authorization fails', async () => {
+    let contextReads = 0;
     mswServer.use(
-      http.get('*/api/students/dashboard/context', () => HttpResponse.json({}, { status: 403 }))
+      http.get('*/api/students/dashboard/context', () => {
+        contextReads += 1;
+        return HttpResponse.json({}, { status: 403 });
+      })
     );
     mount();
-    await screen.findByText(/Unable to confirm/);
+    await expectStudentErrorToast(/Unable to confirm/);
     expect(screen.queryByRole('link', { name: /Active students/ })).not.toBeInTheDocument();
     expect(screen.queryByText('Student directory')).not.toBeInTheDocument();
+    expect(contextReads).toBe(1);
+    expect(requests).toEqual([]);
   });
 
   it('keeps other sections working when attendance fails and retries only the failed read', async () => {
     let fail = true;
+    let attendanceReads = 0;
     mswServer.use(
-      http.get('*/api/students/dashboard/sections/attendance', () =>
-        fail
+      http.get('*/api/students/dashboard/sections/attendance', () => {
+        attendanceReads += 1;
+        return fail
           ? HttpResponse.json({}, { status: 500 })
-          : HttpResponse.json(dashboardSection('attendance'))
-      )
+          : HttpResponse.json(dashboardSection('attendance'));
+      })
     );
     mount();
-    await screen.findByText(/Unable to load attendance/);
+    await waitFor(() => expect(shikshaMitraToast.error).toHaveBeenCalled());
+    const { message } = vi.mocked(shikshaMitraToast.error).mock.calls.at(-1)![0];
+    const notice = render(<div>{message}</div>);
+    expect(notice.container).toHaveTextContent(
+      'Unable to load attendance & leave. Other sections remain available.'
+    );
+    notice.unmount();
     await screen.findByRole('link', { name: /^Active students:/ });
+    expect(screen.queryByRole('link', { name: /^Draft registers:/ })).not.toBeInTheDocument();
+    expect(attendanceReads).toBe(1);
     fail = false;
-    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    const attendance = screen.getByText('Attendance & leave').closest('.MuiCard-root');
+    expect(attendance).not.toBeNull();
+    fireEvent.click(within(attendance as HTMLElement).getByRole('button', { name: 'Refresh' }));
     await screen.findByRole('link', { name: /^Draft registers:/ });
+    expect(attendanceReads).toBe(2);
+    expect(requests.filter((key) => key === 'context')).toHaveLength(1);
     expect(requests.filter((key) => key === 'records')).toHaveLength(1);
+    expect(requests.filter((key) => key === 'admissions')).toHaveLength(1);
   });
 
   it('clears the old year immediately while a new scoped response is pending', async () => {

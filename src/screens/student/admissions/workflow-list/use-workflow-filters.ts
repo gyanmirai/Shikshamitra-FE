@@ -5,6 +5,7 @@ import type { AdmissionWorkflowStatus } from 'src/redux/student/admissions/admis
 import dayjs from 'dayjs';
 import { useState } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useStudentSetupEmbedding } from 'src/screens/student/setup/embedding';
 
 import { workflowColumnFilters, serializeWorkflowColumnFilters } from './workflow-column-filters';
 
@@ -32,6 +33,7 @@ const areFiltersEqual = (current: WorkflowFilters, next: WorkflowFilters) =>
   (Object.keys(next) as (keyof WorkflowFilters)[]).every((key) => current[key] === next[key]);
 
 export function useWorkflowFilters() {
+  const { embedded } = useStudentSetupEmbedding();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -59,6 +61,7 @@ export function useWorkflowFilters() {
     if (areFiltersEqual(filters, next)) return;
 
     setFilters(next);
+    if (embedded) return;
     const params = new URLSearchParams();
     const values: Record<string, string> = {
       search: next.search,

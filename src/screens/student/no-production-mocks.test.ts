@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import ts from 'typescript';
 import path from 'node:path';
 import { it, expect, describe } from 'vitest';
 
@@ -70,15 +71,108 @@ function collectSourceFiles(dir: string): string[] {
   });
 }
 
+const testSupportSuffix = /[.-]test-(?:fixture|harness)\.tsx?$/;
+const testLibraryImport = /^(?:vitest(?:\/|$)|@testing-library\/|msw(?:\/|$)|src\/test\/)/;
+
+function moduleImports(source: string): string[] {
+  const imports: string[] = [];
+  const ast = ts.createSourceFile(
+    'surface.tsx',
+    source,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TSX
+  );
+  const visit = (node: ts.Node) => {
+    if (
+      (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) &&
+      node.moduleSpecifier &&
+      ts.isStringLiteral(node.moduleSpecifier)
+    ) {
+      imports.push(node.moduleSpecifier.text);
+    } else if (
+      ts.isCallExpression(node) &&
+      (node.expression.kind === ts.SyntaxKind.ImportKeyword ||
+        (ts.isIdentifier(node.expression) && node.expression.text === 'require')) &&
+      node.arguments[0] &&
+      ts.isStringLiteral(node.arguments[0])
+    ) {
+      imports.push(node.arguments[0].text);
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(ast);
+  return imports;
+}
+
+function isTestSupportFile(filePath: string): boolean {
+  return testSupportSuffix.test(filePath);
+}
+
+function productionTestImports(source: string) {
+  return moduleImports(source).filter(
+    (specifier) =>
+      testLibraryImport.test(specifier) ||
+      /(?:[.-]test-(?:fixture|harness)|\.test)(?:\.tsx?)?$/.test(specifier)
+  );
+}
+
 describe('student production surfaces', () => {
   it('do not import JSON fixtures or mock row collections', () => {
-    const offenders = productionRoots.flatMap(collectSourceFiles).flatMap((filePath) => {
-      const source = fs.readFileSync(filePath, 'utf8');
-      return blockedPatterns
-        .filter((pattern) => pattern.test(source))
-        .map((pattern) => `${path.relative(repoRoot, filePath)} matched ${pattern}`);
+    const sources = new Map(
+      productionRoots
+        .flatMap(collectSourceFiles)
+        .map((filePath) => [filePath, fs.readFileSync(filePath, 'utf8')])
+    );
+    const offenders = [...sources].flatMap(([filePath, source]) => {
+      if (isTestSupportFile(filePath)) return [];
+      const relativePath = path.relative(repoRoot, filePath);
+      return [
+        ...blockedPatterns
+          .filter((pattern) => pattern.test(source))
+          .map((pattern) => `${relativePath} matched ${pattern}`),
+        ...productionTestImports(source).map(
+          (specifier) => `${relativePath} imports test-only module ${specifier}`
+        ),
+      ];
     });
 
     expect(offenders).toEqual([]);
+  });
+});
+
+describe('production source classification', () => {
+  it.each([
+    'document-test-fixture.tsx',
+    'dashboard-test-harness.tsx',
+    'document-condition-test-fixture.ts',
+    'use-admission-draft-guard.test-fixture.tsx',
+  ])('classifies the strictly named render or data helper %s as test support', (name) => {
+    expect(isTestSupportFile(path.resolve(repoRoot, name))).toBe(true);
+  });
+
+  it.each(['StudentSummaryPanel.tsx', 'production-fixture.tsx', 'production-test-helper.tsx'])(
+    'continues scanning %s even when it imports a test library',
+    (name) => {
+      const filePath = path.resolve(repoRoot, name);
+      const source = "import { vi } from 'vitest'; const mockData = [{ name: 'Student' }];";
+      expect(isTestSupportFile(filePath)).toBe(false);
+      expect(blockedPatterns.some((pattern) => pattern.test(source))).toBe(true);
+      expect(productionTestImports(source)).toEqual(['vitest']);
+    }
+  );
+
+  it.each([
+    "import { rows } from './document-test-fixture';",
+    "export { rows } from './document-test-fixture';",
+    "const rows = import('./document-test-fixture');",
+    "const rows = require('./document-test-fixture');",
+    "import { rows } from 'src/screens/student/document-test-fixture.tsx';",
+    "import { renderUi } from './use-admission-draft-guard.test-fixture';",
+    "export { renderUi } from './use-admission-draft-guard.test-fixture';",
+    "const renderUi = import('./use-admission-draft-guard.test-fixture');",
+    "const renderUi = require('./use-admission-draft-guard.test-fixture.tsx');",
+  ])('rejects production dependencies on excluded helpers: %s', (source) => {
+    expect(productionTestImports(source)).toHaveLength(1);
   });
 });

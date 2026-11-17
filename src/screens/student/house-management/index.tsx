@@ -20,7 +20,6 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
@@ -28,6 +27,7 @@ import { studentPaths, studentPermissions } from 'src/constants/student-menu';
 import { useStudentAcademicScope } from 'src/hooks/use-student-academic-scope';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
+import { useStudentSetupEmbedding, StudentSetupManagerHeader as CustomBreadcrumbs } from 'src/screens/student/setup/embedding';
 import {
   Box,
   Tab,
@@ -71,7 +71,10 @@ type Session =
 export default function HouseManagement() {
   const router = useRouter();
   const pathname = usePathname();
-  const params = useSearchParams();
+  const routeParams = useSearchParams();
+  const { embedded } = useStudentSetupEmbedding();
+  const [embeddedQuery, setEmbeddedQuery] = useState('');
+  const params = embedded ? new URLSearchParams(embeddedQuery) : routeParams;
   const currentQuery = params.toString();
   const state = houseWorkspaceState(new URLSearchParams(currentQuery));
   const academic = useStudentAcademicScope();
@@ -187,14 +190,20 @@ export default function HouseManagement() {
     !query.isFetching && !query.isError ? query.currentData?.totalCount : undefined;
   useEffect(() => {
     if (!ready || settledTotal === undefined) return;
+    if (embedded) {
+      const lastPage = Math.max(0, Math.ceil(settledTotal / state.pageSize) - 1);
+      if (state.page > lastPage) setEmbeddedQuery(new URL(recordsQueryUrl(pathname, currentQuery, { page: lastPage || undefined }), 'https://local.invalid').search.slice(1));
+      return;
+    }
     const lastPage = Math.max(0, Math.ceil(settledTotal / state.pageSize) - 1);
     if (state.page > lastPage)
       router.replace(recordsQueryUrl(pathname, currentQuery, { page: lastPage || undefined }), {
         scroll: false,
       });
-  }, [ready, settledTotal, state.page, state.pageSize, router, pathname, currentQuery]);
+  }, [ready, settledTotal, state.page, state.pageSize, router, pathname, currentQuery, embedded]);
   const update = (changes: Record<string, string | number | undefined>) => {
     const url = recordsQueryUrl(pathname, currentQuery, changes);
+    if (embedded) { setEmbeddedQuery(new URL(url, 'https://local.invalid').search.slice(1)); return; }
     if (url !== `${pathname}${currentQuery ? `?${currentQuery}` : ''}`)
       router.push(url, { scroll: false });
   };
@@ -593,6 +602,7 @@ export default function HouseManagement() {
       }}
     >
       <CustomBreadcrumbs
+        editorOpen={Boolean(currentSession)} busy={deleting.isLoading}
         heading="House Management"
         description="Manage medium-wise houses, cross-class membership and independent leaders. Counts include only students in your academic scope; leadership outside your access is not shown."
         descriptionDisplay="tooltip"
@@ -631,6 +641,7 @@ export default function HouseManagement() {
           variant="scrollable"
           scrollButtons="auto"
           guardUnsavedChanges={false}
+          onChange={embedded ? (_, tab: string) => !currentSession && update({ tab, search: undefined, sort: undefined, page: undefined }) : undefined}
           aria-label="House management sections"
           sx={{
             bgcolor: 'transparent',
@@ -639,8 +650,8 @@ export default function HouseManagement() {
         >
           <Tab
             value="houses"
-            component={RouterLink}
-            href={recordsQueryUrl(pathname, currentQuery, {
+            component={embedded ? 'button' : RouterLink}
+            href={embedded ? undefined : recordsQueryUrl(pathname, currentQuery, {
               tab: 'houses',
               search: undefined,
               sort: undefined,
@@ -654,8 +665,8 @@ export default function HouseManagement() {
           />
           <Tab
             value="students"
-            component={RouterLink}
-            href={recordsQueryUrl(pathname, currentQuery, {
+            component={embedded ? 'button' : RouterLink}
+            href={embedded ? undefined : recordsQueryUrl(pathname, currentQuery, {
               tab: 'students',
               search: undefined,
               sort: undefined,
@@ -669,8 +680,8 @@ export default function HouseManagement() {
           />
           <Tab
             value="divisions"
-            component={RouterLink}
-            href={recordsQueryUrl(pathname, currentQuery, {
+            component={embedded ? 'button' : RouterLink}
+            href={embedded ? undefined : recordsQueryUrl(pathname, currentQuery, {
               tab: 'divisions',
               search: undefined,
               sort: undefined,

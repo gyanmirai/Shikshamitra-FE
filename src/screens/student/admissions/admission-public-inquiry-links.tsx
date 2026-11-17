@@ -24,6 +24,7 @@ import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { useStudentSetupFormState } from 'src/screens/student/setup/embedding';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
@@ -268,6 +269,11 @@ export function AdmissionPublicInquiryLinks({
         setError(parseApiProblemDetail(problem).detail || 'Unable to attach the inquiry form.');
       }
     },
+  });
+
+  useStudentSetupFormState({
+    dirty: createOpen || Boolean(formTarget) || Boolean(revokeTarget),
+    busy: createState.isLoading || setLinkFormState.isLoading || revokeState.isLoading,
   });
 
   const openFormEditor = (link: AdmissionPublicInquiryLink) => {

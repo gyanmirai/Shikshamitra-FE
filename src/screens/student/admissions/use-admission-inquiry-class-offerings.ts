@@ -27,6 +27,7 @@ export function getInquiryOfferingUnavailableReason(offerings: AdmissionOffering
     let reason: string;
     if (offering.entryMode === 1) reason = 'This offering accepts direct registration only.';
     else if (offering.availabilityStatus === 4) reason = 'This admission offering is inactive.';
+    else if (offering.unavailableReason?.trim()) reason = offering.unavailableReason.trim();
     else if (offering.availabilityStatus === 0 || offering.configurationStatus === 0)
       reason = 'Admission offering setup is incomplete.';
     else if (offering.availabilityStatus === 1) reason = 'Admission has not opened yet.';

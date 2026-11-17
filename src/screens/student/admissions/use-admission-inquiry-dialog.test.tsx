@@ -598,6 +598,46 @@ it.each([
   }
 );
 
+it.each(['Inquiry', 'Registration'])(
+  'shows the archived %s form and recovery from the fresh catalogue without enabling capture',
+  async (purpose) => {
+    const unavailableReason = `${purpose} Form 'QA ${purpose}' is archived. Restore it in Admission forms, or select another published form.`;
+    const blocked = {
+      ...offering('class-a', 0),
+      configurationStatus: 0 as const,
+      unavailableReason,
+    };
+    mswServer.use(
+      http.get(`${root}/capture-catalogue`, () => HttpResponse.json({ data: catalogue([blocked]) }))
+    );
+    const { result } = renderHook(() => useAdmissionInquiryDialog(vi.fn()), { wrapper });
+    await waitFor(() => expect(result.current.periods).toHaveLength(1));
+    await selectClass(result, 'class-a');
+    await waitFor(() => expect(result.current.noOfferingReason).toBe(unavailableReason));
+    expect(result.current.canCreateInquiry).toBe(false);
+    expect(result.current.offerings).toEqual([]);
+    expect(result.current.formik.values.offeringId).toBe('');
+    expect(result.current.formik.values.standardId).toBe('class-a');
+  }
+);
+
+it('keeps an inactive offering reason ahead of archived configuration and labels multiple choices', () => {
+  const inactive = {
+    ...offering('class-a', 4),
+    configurationStatus: 0 as const,
+    unavailableReason: 'This admission offering is inactive.',
+  };
+  const archived = {
+    ...offering('class-a', 0),
+    name: 'Second offering',
+    unavailableReason: "Inquiry Form 'QA Inquiry' is archived. Restore it in Admission forms.",
+  };
+  expect(getInquiryOfferingUnavailableReason([inactive, archived])).toBe(
+    `class-a: ${inactive.unavailableReason} Second offering: ${archived.unavailableReason}`
+  );
+  expect(getInquiryOfferingUnavailableReason([offering('class-a'), archived])).toBeUndefined();
+});
+
 it('keeps manual offering selection when more than one fresh offering is open', async () => {
   const alternatives = [offering('class-a'), { ...offering('class-a'), id: 'second-offering' }];
   mswServer.use(

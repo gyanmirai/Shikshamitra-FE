@@ -13,6 +13,8 @@ import { useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
+import { hasGrantedPermission } from 'src/utils/permissions';
+import { studentPermissions } from 'src/constants/student-menu';
 import {
   useLazyGetAdmissionOfferingQuery,
   useCloneAdmissionOfferingMutation,
@@ -216,6 +218,7 @@ export function useAdmissionOfferingActions(
     checkingRequirements,
     formAccess: getAdmissionFormAccess(granted),
     workflowAccess: getAdmissionWorkflowAccess(granted),
+    canReviewCycles: hasGrantedPermission(granted, studentPermissions.enrollment.settings.cycles),
     editBlockedOffering: () => {
       if (!pendingAction || commandLock.current || requirementsRead.current || !permissions.edit)
         return undefined;

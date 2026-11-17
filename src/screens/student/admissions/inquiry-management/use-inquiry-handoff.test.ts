@@ -136,3 +136,34 @@ it('clears loading after failure and allows retry without losing the inquiry', a
   });
   expect(mocks.start).toHaveBeenCalledTimes(2);
 });
+
+it.each([
+  {
+    errorCode: 'Admissions.Offering.Inactive',
+    detail: 'One or more business rules were violated.',
+  },
+  {
+    error: {
+      code: 'Admissions.Offering.Inactive',
+      message: 'One or more business rules were violated.',
+    },
+  },
+])(
+  'explains an inactive offering rejection without navigating or losing the inquiry',
+  async (data) => {
+    const error = Object.assign(new Error('Offering start rejected'), { status: 400, data });
+    mocks.start.mockReturnValue({ unwrap: () => Promise.reject(error) });
+    const { result } = renderHook(useInquiryHandoff);
+    await act(async () => {
+      await result.current.move(inquiry);
+    });
+    expect(mocks.error).toHaveBeenCalledWith({
+      message:
+        'This admission offering is inactive. Ask an admission administrator to activate it before starting a new inquiry or registration.',
+    });
+    expect(result.current.moving).toBe(false);
+    expect(mocks.push).not.toHaveBeenCalled();
+    expect(inquiry.status).toBe(2);
+    expect(inquiry.admissionOfferingId).toBe('offering-1');
+  }
+);

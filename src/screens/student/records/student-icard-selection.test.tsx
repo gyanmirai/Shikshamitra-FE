@@ -247,7 +247,7 @@ beforeEach(() => {
 
 it('passes the selected global academic year into the standalone template builder', async () => {
   render(wrap(<StudentICardTemplates />));
-  fireEvent.click(screen.getByRole('button', { name: 'Create Student I-Card' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Create I-Card' }));
   expect(await screen.findByRole('textbox', { name: /Template name/ })).toBeVisible();
   expect(mocks.options).toHaveBeenLastCalledWith({ academicYearId: 'year-1' });
 });
@@ -769,7 +769,7 @@ it('ignores a late preview response after the opener academic context changes', 
   });
   expect(screen.queryByRole('heading', { name: 'Review Cards' })).not.toBeInTheDocument();
   expect(
-    screen.queryByRole('img', { name: 'I-card preview for Late old-context pupil' })
+    screen.queryByRole('img', { name: 'I-Card preview for Late old-context pupil' })
   ).not.toBeInTheDocument();
 });
 
@@ -782,7 +782,7 @@ it.each([true, false])(
       );
     render(wrap(<StudentICardTemplates />));
     const history = screen.queryByRole('link', { name: 'View issued cards' });
-    if (canView) expect(history).toHaveAttribute('href', '/student/records/documents?view=ids');
+    if (canView) expect(history).toHaveAttribute('href', '/student/student-i-card?view=issued');
     else expect(history).not.toBeInTheDocument();
   }
 );
@@ -810,7 +810,7 @@ it.each(['create', 'legacy'] as const)(
 it('allows metadata-only Create to open without a global academic year', async () => {
   mocks.state.globalState.currentYear.id = undefined;
   render(wrap(<StudentICardTemplates />));
-  const create = screen.getByRole('button', { name: 'Create Student I-Card' });
+  const create = screen.getByRole('button', { name: 'Create I-Card' });
   expect(create).toBeEnabled();
   fireEvent.click(create);
   expect(await screen.findByRole('textbox', { name: /Template name/ })).toBeVisible();

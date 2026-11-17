@@ -67,32 +67,49 @@ describe('student production API wiring', () => {
     ).toEqual({ kpis: [{ id: 'total-students', value: 42 }] });
   });
 
-  it('polls the reporting dashboard preview only while refresh is active', () => {
-    const source = readSource('src/screens/student/dashboard/index.tsx');
+  it('keeps the live dashboard wired to manual refresh without reporting preview polling', () => {
+    const screenSource = readSource('src/screens/student/dashboard/index.tsx');
+    const hookSource = readSource('src/screens/student/dashboard/hooks/use-student-dashboard.ts');
+    const dashboardSources = collectSourceFiles(
+      path.join(repoRoot, 'src/screens/student/dashboard')
+    )
+      .map((filePath) => fs.readFileSync(filePath, 'utf8'))
+      .join('\n');
+    const apiSource = readSource('src/redux/student/dashboard/student-module-dashboard-api.ts');
 
-    expect(source).toContain('DASHBOARD_REFRESH_POLLING_INTERVAL = 5000');
-    expect(source).toContain('pollingInterval: dashboardPollingInterval');
-    expect(source).toContain('skipPollingIfUnfocused: true');
-    expect(source).toContain('isDashboardRefreshing(preview?.status)');
-    expect(source).not.toContain('window.setTimeout');
+    // Behavioral refresh/access coverage lives in student-dashboard.test.tsx.
+    expect(apiSource).toContain('/students/dashboard/context');
+    expect(apiSource).toContain(`/students/dashboard/sections/$${'{section}'}`);
+    expect(screenSource).toContain('onClick={refresh}');
+    expect(hookSource).toContain('studentModuleDashboardApi.util.invalidateTags');
+    expect(hookSource).toContain("id: 'MODULE-DASHBOARD'");
+    expect(dashboardSources).not.toContain('pollingInterval');
+    expect(dashboardSources).not.toContain('/students/dashboard/previews/');
+    expect(dashboardSources).not.toContain('useRefreshStudentDashboardPreviewMutation');
+    expect(dashboardSources).not.toContain('window.setTimeout');
   });
 
   it('keeps student leave list wired to server pagination and sorting params', () => {
     const apiSource = readSource('src/redux/student/student-leave/student-leave-api.ts');
-    const screenSource = readSource('src/screens/student/attendance/leave-absent/index.tsx');
+    const screenSource = readSource(
+      'src/screens/student/attendance/leave-absent/leave-requests.tsx'
+    );
 
     expect(apiSource).toContain('url: `/students/attendance/leaves`');
     expect(apiSource).toContain('params,');
-    expect(screenSource).toContain('params: query');
+    // The request suite verifies URL-backed paging, filters and scope through MSW.
+    expect(screenSource).toContain('params: { ...query, ...scope }');
     expect(screenSource).toContain('serverSidePagination');
     expect(screenSource).toContain('serverSideSort');
     expect(screenSource).toContain('totalCount={leaveData?.totalCount || 0}');
-    expect(screenSource).toContain('skipCount: (page - 1) * rowsPerPage');
+    expect(screenSource).toContain('skipCount: page * rowsPerPage');
+    expect(screenSource).toContain('maxResultCount: rowsPerPage');
   });
 
-  it('does not keep stale student document endpoints or multipart headers', () => {
+  it('keeps canonical student document JSON adapters without multipart headers', () => {
     const studentIdPlaceholder = `$${'{studentId}'}`;
-    const registrationDocumentEndpoint = `/student/enrollment/registrations/${studentIdPlaceholder}/documents`;
+    const requiredStatusEndpoint = `/app/student-document/required-documents-status/${studentIdPlaceholder}`;
+    const uploadEndpoint = `/app/student-document/upload-document/${studentIdPlaceholder}`;
     const sources = collectSourceFiles(path.join(repoRoot, 'src/redux/student')).map(
       (filePath) => ({
         relativePath: path.relative(repoRoot, filePath),
@@ -101,7 +118,6 @@ describe('student production API wiring', () => {
     );
     const offenders = sources.flatMap(({ relativePath, source }) =>
       [
-        '/app/student-document',
         "'Content-Type': 'multipart/form-data'",
         '"Content-Type": "multipart/form-data"',
         'multipart/form-data',
@@ -110,9 +126,19 @@ describe('student production API wiring', () => {
         .map((pattern) => `${relativePath} contains ${pattern}`)
     );
     const registrationSource = readSource('src/redux/student/registration/registration-api.ts');
+    const profileSource = readSource(
+      'src/redux/student/records/student-profile-information-api.ts'
+    );
 
     expect(offenders).toEqual([]);
-    expect(registrationSource).toContain(registrationDocumentEndpoint);
+    // Dedicated adapter suites verify JSON bytes, response envelopes and failed writes.
+    [registrationSource, profileSource].forEach((source) => {
+      expect(source).toContain(requiredStatusEndpoint);
+      expect(source).toContain(uploadEndpoint);
+    });
+    expect(registrationSource).toContain(
+      'body: await studentDocumentUploadPayload(file, documentTypeId)'
+    );
   });
 
   it('does not reintroduce 100-row capped student record fetches on changed screens', () => {

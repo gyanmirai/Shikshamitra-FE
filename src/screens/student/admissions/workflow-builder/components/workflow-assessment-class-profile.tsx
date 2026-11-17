@@ -9,6 +9,7 @@ import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
 import {
   assessmentProfileTotal,
@@ -28,6 +29,8 @@ import {
 import { WorkflowAssessmentSubjects } from './workflow-assessment-subjects';
 import { WorkflowAssessmentMarksField } from './workflow-assessment-marks-field';
 
+import type { AssessmentFieldValidation } from '../hooks/use-assessment-field-validation';
+
 const uniqueOptions = (options: { value: string; label: string }[]) =>
   options.filter(
     (option, index) => options.findIndex((item) => item.value === option.value) === index
@@ -40,7 +43,7 @@ export function WorkflowAssessmentClassProfile({
   catalogLoaded,
   catalogUnavailable,
   disabled,
-  showErrors,
+  validation,
   initiallyExpanded,
   onChange,
   onRemove,
@@ -51,16 +54,19 @@ export function WorkflowAssessmentClassProfile({
   catalogLoaded: boolean;
   catalogUnavailable: boolean;
   disabled: boolean;
-  showErrors: boolean;
+  validation: AssessmentFieldValidation;
   initiallyExpanded: boolean;
   onChange: (profile: AdmissionAssessmentClassProfile) => void;
   onRemove: () => void;
 }) {
   const [expanded, setExpanded] = useState(initiallyExpanded);
-  const error = getAssessmentClassProfileError(profile, profiles);
+  const showErrors = validation.showError(`${profile.id}:profile`);
+  const error = getAssessmentClassProfileError(profile, profiles, false);
+  const invalidClasses =
+    profile.standardIds.length === 0 || profile.standardIds.some((id) => !id.trim());
   useEffect(() => {
-    if (showErrors && error) setExpanded(true);
-  }, [error, showErrors]);
+    if (showErrors && getAssessmentClassProfileError(profile, profiles)) setExpanded(true);
+  }, [profile, profiles, showErrors]);
   const classes = catalog.classes.filter(
     (item) => item.boardId === profile.boardId && item.mediumId === profile.mediumId
   );
@@ -133,129 +139,151 @@ export function WorkflowAssessmentClassProfile({
         <Stack spacing={2}>
           <Grid container spacing={1}>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <CustomSelect
-                size="small"
-                fullWidth
-                required
-                label="Board"
-                value={profile.boardId}
-                options={[
-                  ...boards,
-                  ...(profile.boardId && !boards.some((item) => item.value === profile.boardId)
-                    ? [
-                        {
-                          value: profile.boardId,
-                          label: catalogLoaded ? 'Unavailable Board' : 'Saved Board',
-                        },
-                      ]
-                    : []),
-                ]}
-                disabled={disabled || catalogUnavailable}
-                onChange={(id) =>
-                  update({
-                    boardId: String(id),
-                    mediumId: '',
-                    standardIds: [],
-                    name: 'Class profile',
-                  })
-                }
-                error={showErrors && !profile.boardId}
-                helperText={showErrors && !profile.boardId ? 'Choose a board.' : undefined}
-              />
+              <ShakingTextField
+                error={validation.showError(`${profile.id}:boardId`) && !profile.boardId}
+              >
+                <CustomSelect
+                  size="small"
+                  fullWidth
+                  required
+                  label="Board"
+                  value={profile.boardId}
+                  options={[
+                    ...boards,
+                    ...(profile.boardId && !boards.some((item) => item.value === profile.boardId)
+                      ? [
+                          {
+                            value: profile.boardId,
+                            label: catalogLoaded ? 'Unavailable Board' : 'Saved Board',
+                          },
+                        ]
+                      : []),
+                  ]}
+                  disabled={disabled || catalogUnavailable}
+                  onChange={(id) =>
+                    update({
+                      boardId: String(id),
+                      mediumId: '',
+                      standardIds: [],
+                      name: 'Class profile',
+                    })
+                  }
+                  onBlur={() => validation.onBlur(`${profile.id}:boardId`)}
+                  error={validation.showError(`${profile.id}:boardId`) && !profile.boardId}
+                  helperText={
+                    validation.showError(`${profile.id}:boardId`) && !profile.boardId
+                      ? 'Choose a board.'
+                      : undefined
+                  }
+                />
+              </ShakingTextField>
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <CustomSelect
-                size="small"
-                fullWidth
-                required
-                label="Medium"
-                value={profile.mediumId}
-                options={[
-                  ...mediums,
-                  ...(profile.mediumId && !mediums.some((item) => item.value === profile.mediumId)
-                    ? [
-                        {
-                          value: profile.mediumId,
-                          label: catalogLoaded ? 'Unavailable Medium' : 'Saved Medium',
-                        },
-                      ]
-                    : []),
-                ]}
-                disabled={disabled || catalogUnavailable || !profile.boardId}
-                onChange={(id) =>
-                  update({ mediumId: String(id), standardIds: [], name: 'Class profile' })
-                }
-                error={showErrors && !profile.mediumId}
-                helperText={showErrors && !profile.mediumId ? 'Choose a medium.' : undefined}
-              />
+              <ShakingTextField
+                error={validation.showError(`${profile.id}:mediumId`) && !profile.mediumId}
+              >
+                <CustomSelect
+                  size="small"
+                  fullWidth
+                  required
+                  label="Medium"
+                  value={profile.mediumId}
+                  options={[
+                    ...mediums,
+                    ...(profile.mediumId && !mediums.some((item) => item.value === profile.mediumId)
+                      ? [
+                          {
+                            value: profile.mediumId,
+                            label: catalogLoaded ? 'Unavailable Medium' : 'Saved Medium',
+                          },
+                        ]
+                      : []),
+                  ]}
+                  disabled={disabled || catalogUnavailable || !profile.boardId}
+                  onChange={(id) =>
+                    update({ mediumId: String(id), standardIds: [], name: 'Class profile' })
+                  }
+                  onBlur={() => validation.onBlur(`${profile.id}:mediumId`)}
+                  error={validation.showError(`${profile.id}:mediumId`) && !profile.mediumId}
+                  helperText={
+                    validation.showError(`${profile.id}:mediumId`) && !profile.mediumId
+                      ? 'Choose a medium.'
+                      : undefined
+                  }
+                />
+              </ShakingTextField>
             </Grid>
             <Grid size={12}>
-              <CustomSelect
-                size="small"
-                fullWidth
-                multiple
-                required
-                isSearch
-                label="Applies to Classes"
-                value={profile.standardIds}
-                disabled={disabled || catalogUnavailable || !profile.mediumId}
-                options={[
-                  ...classes.map((item) => ({ value: item.id, label: item.name })),
-                  ...missingClasses.map((id) => ({
-                    value: id,
-                    label: catalogLoaded ? 'Unavailable Class (Remove or Replace)' : 'Saved Class',
-                  })),
-                ]}
-                disabledValues={assigned.filter((id) => !profile.standardIds.includes(id))}
-                disabledLabel="Already configured in another profile"
-                onChange={(ids) => {
-                  const selectedIds = ids as string[];
-                  const names = classes
-                    .filter((item) => selectedIds.includes(item.id))
-                    .map((item) => item.name);
-                  update({
-                    standardIds: selectedIds,
-                    name: names.join(', ').slice(0, 128) || 'Class profile',
-                  });
-                }}
-                renderValue={(ids) =>
-                  !catalogLoaded
-                    ? (ids as string[]).length
-                      ? `${(ids as string[]).length} saved ${(ids as string[]).length === 1 ? 'class' : 'classes'}`
-                      : ''
-                    : (ids as string[])
-                        .map(
-                          (id) =>
-                            classes.find((item) => item.id === id)?.name ?? 'Unavailable class'
-                        )
-                        .join(', ')
-                }
-                sx={{
-                  '& .MuiSelect-select': {
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  },
-                }}
-                error={showErrors && profile.standardIds.length === 0}
-                helperText={
-                  showErrors && profile.standardIds.length === 0
-                    ? 'Choose at least one class.'
-                    : undefined
-                }
-              />
+              <ShakingTextField
+                error={validation.showError(`${profile.id}:standardIds`) && invalidClasses}
+              >
+                <CustomSelect
+                  size="small"
+                  fullWidth
+                  multiple
+                  required
+                  isSearch
+                  label="Applies to Classes"
+                  value={profile.standardIds}
+                  disabled={disabled || catalogUnavailable || !profile.mediumId}
+                  options={[
+                    ...classes.map((item) => ({ value: item.id, label: item.name })),
+                    ...missingClasses.map((id) => ({
+                      value: id,
+                      label: catalogLoaded
+                        ? 'Unavailable Class (Remove or Replace)'
+                        : 'Saved Class',
+                    })),
+                  ]}
+                  disabledValues={assigned.filter((id) => !profile.standardIds.includes(id))}
+                  disabledLabel="Already configured in another profile"
+                  onChange={(ids) => {
+                    const selectedIds = ids as string[];
+                    const names = classes
+                      .filter((item) => selectedIds.includes(item.id))
+                      .map((item) => item.name);
+                    update({
+                      standardIds: selectedIds,
+                      name: names.join(', ').slice(0, 128) || 'Class profile',
+                    });
+                  }}
+                  renderValue={(ids) =>
+                    !catalogLoaded
+                      ? (ids as string[]).length
+                        ? `${(ids as string[]).length} saved ${(ids as string[]).length === 1 ? 'class' : 'classes'}`
+                        : ''
+                      : (ids as string[])
+                          .map(
+                            (id) =>
+                              classes.find((item) => item.id === id)?.name ?? 'Unavailable class'
+                          )
+                          .join(', ')
+                  }
+                  sx={{
+                    '& .MuiSelect-select': {
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    },
+                  }}
+                  onBlur={() => validation.onBlur(`${profile.id}:standardIds`)}
+                  error={validation.showError(`${profile.id}:standardIds`) && invalidClasses}
+                  helperText={
+                    validation.showError(`${profile.id}:standardIds`) && invalidClasses
+                      ? 'Choose at least one class.'
+                      : undefined
+                  }
+                />
+              </ShakingTextField>
             </Grid>
           </Grid>
           {unavailableScope && (
-            <StudentFeedback
-              notificationKey="STU-0532"
-              presentation="persistent"
-              severity="warning"
-            >
+            <StudentFeedback notificationKey="STU-0532" presentation="inline" severity="warning">
               A selected class or scope is unavailable. Remove or replace it before publishing.
             </StudentFeedback>
           )}
           <WorkflowAssessmentSubjects
+            profileId={profile.id}
             subjects={profile.subjects}
             options={catalog.subjects}
             mediumId={profile.mediumId}
@@ -263,35 +291,37 @@ export function WorkflowAssessmentClassProfile({
             perSubjectPass={profile.passRule !== 'overall'}
             disabled={disabled}
             catalogUnavailable={catalogUnavailable}
-            showErrors={showErrors}
+            validation={validation}
             onChange={(subjects) => update({ subjects })}
           />
-          <CustomSelect
-            size="small"
-            fullWidth
-            required
-            label="Pass Rule"
-            value={profile.passRule}
-            disabled={disabled}
-            options={[
-              { value: 'overall', label: 'Overall Marks Only' },
-              { value: 'everySubject', label: 'Every Subject' },
-              { value: 'both', label: 'Overall and Every Subject' },
-            ]}
-            onChange={(value) =>
-              update({
-                passRule: value as AdmissionAssessmentPassRule,
-                ...(value === 'overall'
-                  ? {
-                      subjects: profile.subjects.map((subject) => ({
-                        ...subject,
-                        passingMarks: null,
-                      })),
-                    }
-                  : {}),
-              })
-            }
-          />
+          <ShakingTextField error={false}>
+            <CustomSelect
+              size="small"
+              fullWidth
+              required
+              label="Pass Rule"
+              value={profile.passRule}
+              disabled={disabled}
+              options={[
+                { value: 'overall', label: 'Overall Marks Only' },
+                { value: 'everySubject', label: 'Every Subject' },
+                { value: 'both', label: 'Overall and Every Subject' },
+              ]}
+              onChange={(value) =>
+                update({
+                  passRule: value as AdmissionAssessmentPassRule,
+                  ...(value === 'overall'
+                    ? {
+                        subjects: profile.subjects.map((subject) => ({
+                          ...subject,
+                          passingMarks: null,
+                        })),
+                      }
+                    : {}),
+                })
+              }
+            />
+          </ShakingTextField>
           <Grid container spacing={1}>
             <Grid size={{ xs: 12, sm: profile.passRule === 'everySubject' ? 12 : 6 }}>
               <TextField size="small" fullWidth label="Total Marks" value={total} disabled />
@@ -300,17 +330,21 @@ export function WorkflowAssessmentClassProfile({
               <Grid size={{ xs: 12, sm: 6 }}>
                 <WorkflowAssessmentMarksField
                   label="Overall Passing Marks"
+                  fieldKey={`${profile.id}:passingMarks`}
+                  validation={validation}
                   value={profile.passingMarks < 0 ? null : profile.passingMarks}
                   max={total}
-                  disabled={disabled}
-                  showError={showErrors}
+                  disabled={disabled || !(total > 0)}
+                  disabledHint={
+                    !(total > 0) ? 'Add subject marks to set passing marks.' : undefined
+                  }
                   onChange={(value) => update({ passingMarks: value ?? -1 })}
                 />
               </Grid>
             )}
           </Grid>
           {showErrors && error && (
-            <StudentFeedback notificationKey="STU-0533" presentation="persistent" severity="error">
+            <StudentFeedback notificationKey="STU-0533" presentation="inline" severity="error">
               {error}
             </StudentFeedback>
           )}
