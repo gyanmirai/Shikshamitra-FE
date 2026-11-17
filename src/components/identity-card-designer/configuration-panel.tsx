@@ -1,6 +1,5 @@
 import { useId } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
-import { Iconify } from 'src/components/iconify';
 import { Box, Tab, Stack, Alert } from '@mui/material';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { FormSectionHeader } from 'src/components/form-section-card';
@@ -10,6 +9,8 @@ import { PrintSettings } from './print-settings';
 import { LayoutSettings } from './layout-settings';
 import { ElementInspector } from './element-inspector';
 import { validateIdentityCardLayout } from './geometry';
+import { StudioAppearance } from './editor/studio-appearance';
+import { ImageLayerAction } from './editor/image-layer-action';
 
 import type { IdentityCardConfigurationProps } from './types';
 
@@ -29,13 +30,15 @@ export function DesignerConfigurationPanel(props: IdentityCardConfigurationProps
     onAdd,
     onElementChange,
     onDelete,
+    side = 'front',
+    onLayoutChange,
   } = props;
   const errors = validateIdentityCardLayout(layout, fields);
   const tabs = [
-    ...(brandingContent ? [{ value: 'school', label: 'School', icon: GlobalIcons.building }] : []),
-    { value: 'layout', label: 'Layout', icon: GlobalIcons.academicFieldSettings },
-    { value: 'elements', label: 'Elements', icon: GlobalIcons.edit },
-    { value: 'print', label: 'Print', icon: GlobalIcons.printer },
+    ...(brandingContent ? [{ value: 'school', label: 'School' }] : []),
+    { value: 'layout', label: 'Layout' },
+    { value: 'elements', label: 'Elements' },
+    { value: 'print', label: 'Print' },
   ];
   return (
     <Box
@@ -69,10 +72,6 @@ export function DesignerConfigurationPanel(props: IdentityCardConfigurationProps
             value={item.value}
             label={item.label}
             disabled={disabled}
-            icon={
-              <Iconify icon={item.icon} width={18} sx={{ display: { xs: 'none', sm: 'block' } }} />
-            }
-            iconPosition="start"
             id={`${id}-${item.value}`}
             aria-controls={`${id}-panel-${item.value}`}
             sx={{ minWidth: 0, px: 1 }}
@@ -126,6 +125,14 @@ export function DesignerConfigurationPanel(props: IdentityCardConfigurationProps
                 fields={fields}
                 onChange={onElementChange}
                 onDelete={onDelete}
+                disabled={disabled}
+              />
+              <StudioAppearance element={selected} onChange={onElementChange} disabled={disabled} />
+              <ImageLayerAction
+                element={selected}
+                layout={layout}
+                side={side}
+                onLayoutChange={onLayoutChange}
                 disabled={disabled}
               />
             </>

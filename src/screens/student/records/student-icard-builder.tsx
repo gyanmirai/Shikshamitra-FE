@@ -5,6 +5,7 @@ import type {
   IdCard,
   IdCardTemplate,
 } from 'src/redux/student/records/student-record-documents-api';
+import type { IdentityCardPhotoEdit, IdentityCardPhotoRecord } from 'src/components/identity-card-designer/types';
 import type {
   StudentDirectoryItem,
   StudentDirectoryOption,
@@ -22,6 +23,8 @@ import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useRef, useMemo, useState, useEffect, useLayoutEffect } from 'react';
 import { getIdentityCardSheetLayout } from 'src/components/identity-card-designer';
 import { FormSectionHeader } from 'src/components/form-section-card/section-header';
+import { CardPhotoAction } from 'src/components/identity-card-designer/photo-editor/card-photo-action';
+import { useCardPhotoEdits } from 'src/components/identity-card-designer/photo-editor/use-card-photo-edits';
 import {
   useGetStudentRecordsDirectoryQuery,
   useGetStudentRecordsDirectoryOptionsQuery,
@@ -46,6 +49,7 @@ import {
   useExportRecordIdsMutation,
   useGetRecordIdTemplateQuery,
   usePreviewRecordIdsMutation,
+  useLazyGetRecordIdPhotoQuery,
   useSaveRecordIdTemplateMutation,
   useCreateRecordIdTemplateMutation,
   useUpdateRecordIdTemplateMutation,
@@ -214,6 +218,7 @@ export default function StudentICardBuilder({
   const [previewCards, previewState] = usePreviewRecordIdsMutation();
   const [exportCards, exportState] = useExportRecordIdsMutation();
   const [issueCards, issueState] = useIssueRecordIdsMutation();
+  const [loadRecordPhoto] = useLazyGetRecordIdPhotoQuery();
   const [template, setTemplate] = useState<IdCardTemplate | null>(() =>
     initialTemplate === undefined ? null : initialTemplate === null
       ? createStudentICardTemplate() : normalizeTemplate(initialTemplate)
@@ -281,6 +286,14 @@ export default function StudentICardBuilder({
   const [selectionChanged, setSelectionChanged] = useState(false);
   const [templateNameTouched, setTemplateNameTouched] = useState(false);
   const issueKey = useRef('');
+  const { photoEdits, onPhotoEdit } = useCardPhotoEdits(
+    JSON.stringify({ academicYearId, storedScope, contextInvalid, selectionRestricted }),
+    Object.keys(selected),
+    setError
+  );
+  const applyPhotoEdit = (edit: IdentityCardPhotoEdit) => {
+    onPhotoEdit(edit); issueKey.current = '';
+  };
   const latestContext = useRef({ invalid: contextInvalid, generation: 0 });
   useLayoutEffect(() => {
     latestContext.current = {
@@ -309,8 +322,8 @@ export default function StudentICardBuilder({
   }, [busy, onBusyChange]);
   const currentTemplateJson = JSON.stringify(template);
   useEffect(() => {
-    onDirtyChange?.(!directoryMode && (currentTemplateJson !== savedTemplateJson || selectionChanged));
-  }, [currentTemplateJson, directoryMode, onDirtyChange, savedTemplateJson, selectionChanged]);
+    onDirtyChange?.(photoEdits.length > 0 || (!directoryMode && (currentTemplateJson !== savedTemplateJson || selectionChanged)));
+  }, [currentTemplateJson, directoryMode, onDirtyChange, savedTemplateJson, selectionChanged, photoEdits.length]);
 
   useEffect(() => {
     if (initialTemplate === undefined && templateQuery.currentData && !template) {
@@ -442,6 +455,19 @@ export default function StudentICardBuilder({
   const selectedRows = Object.values(selected).filter((student): student is StudentDirectoryItem =>
     Boolean(student)
   );
+  const photoRecords: IdentityCardPhotoRecord[] = contextInvalid || selectionRestricted ? [] : selectedRows
+    .filter((student) => student.hasPhoto && !student.maskedFields.includes('Identity'))
+    .map((student) => ({
+      id: student.studentId, name: studentName(student),
+      values: {
+        ...previews.find((card) => card.studentId === student.studentId)?.studentSnapshot,
+        StudentName: studentName(student), GRNumber: student.grNumber,
+        Class: student.standardName, Division: student.divisionName,
+        schoolName: template?.schoolName, schoolAddress: template?.schoolAddress,
+        headerText: template?.headerText, footerText: template?.footerText,
+      },
+      load: () => loadRecordPhoto(student.studentId).unwrap(),
+    }));
   const isSelected = (studentId: string) =>
     Object.prototype.hasOwnProperty.call(selected, studentId);
   const missingPhotoCount = selectedRows.filter((row) => !row.hasPhoto).length;
@@ -750,6 +776,7 @@ export default function StudentICardBuilder({
     try {
       const pdf = await exportCards({
         studentIds: selectedIds,
+        ...(photoEdits.length ? { photoEdits } : {}),
         cardsPerPage: template.cardsPerPage,
         templateId: saved.id ?? undefined,
       }).unwrap();
@@ -780,6 +807,7 @@ export default function StudentICardBuilder({
       issueKey.current ||= crypto.randomUUID();
       await issueCards({
         studentIds: selectedIds,
+        ...(photoEdits.length ? { photoEdits } : {}),
         idempotencyKey: issueKey.current,
         templateId: saved.id ?? undefined,
       }).unwrap();
@@ -995,6 +1023,7 @@ export default function StudentICardBuilder({
             )}
             {step === 1 && (
               <StudentICardDesigner template={template} card={sample} disabled={busy}
+                photoRecords={photoRecords} photoEdits={photoEdits} onPhotoEdit={applyPhotoEdit}
                 onBusyChange={setIdentityUploading} onChange={patchTemplate} />
             )}
             {step === 2 && (
@@ -1232,6 +1261,12 @@ export default function StudentICardBuilder({
                     </Button>
                   </Stack>
                 </Stack>
+                <CardPhotoAction
+                  key={JSON.stringify({ academicYearId, storedScope })}
+                  record={photoRecords.find((record) => record.id === reviewStudent?.studentId)}
+                  onPhotoEdit={applyPhotoEdit}
+                  disabled={busy || contextInvalid}
+                />
                 <Box sx={{ p: { xs: 1.5, sm: 2 }, bgcolor: 'background.neutral', borderRadius: 2 }}>
                   <Box
                     sx={{
@@ -1240,7 +1275,8 @@ export default function StudentICardBuilder({
                       mx: 'auto',
                     }}
                   >
-                    <StudentCardPreview template={template} card={reviewCard} />
+                    <StudentCardPreview template={template} card={reviewCard}
+                      photoUrl={photoEdits.find((edit) => edit.recordId === reviewStudent?.studentId)?.imageData} />
                   </Box>
                 </Box>
                 <Typography variant="caption" color="text.secondary" textAlign="center">
@@ -1335,6 +1371,7 @@ export default function StudentICardBuilder({
                       {configuredSheet ? 'PDF Print Preview' : 'A4 Print Preview'}
                     </Typography>
                     {configuredSheet ? <StudentICardSheetPreview template={template}
+                      photoUrls={sheetStudents.map((student) => photoEdits.find((edit) => edit.recordId === student.studentId)?.imageData)}
                       cards={sheetStudents.map((student) => previews.find((item) => item.studentId === student.studentId))} /> : <Box
                       sx={{
                         width: 1,
@@ -1367,6 +1404,7 @@ export default function StudentICardBuilder({
                           return student ? (
                             <StudentCardPreview
                               key={student.studentId}
+                              photoUrl={photoEdits.find((edit) => edit.recordId === student.studentId)?.imageData}
                               template={template}
                               card={card}
                             />
@@ -1482,11 +1520,13 @@ export function StudentCardPreview({
   card,
   side,
   interactive = true,
+  photoUrl,
 }: {
   template: IdCardTemplate;
   card?: Pick<IdCard, 'studentSnapshot' | 'hasPhoto' | 'cardNumber'>;
   side?: 'front' | 'back';
   interactive?: boolean;
+  photoUrl?: string;
 }) {
   const vertical = template.orientation === 'Vertical';
   const containerRef = useRef<HTMLDivElement>(null);
@@ -1507,7 +1547,7 @@ export function StudentCardPreview({
     return () => observer.disconnect();
   }, []);
   if (template.schemaVersion === 2) return <StudentConfiguredCardPreview
-    template={template} card={card} side={side} interactive={interactive} />;
+    template={template} card={card} side={side} interactive={interactive} photoUrl={photoUrl} />;
   return (
     <Box
       ref={containerRef}
@@ -1577,6 +1617,7 @@ export function StudentCardPreview({
               }}
             >
               <Typography variant="caption">{card?.hasPhoto ? 'PHOTO' : 'NO PHOTO'}</Typography>
+              {photoUrl && <Box component="img" src={photoUrl} alt="Edited cardholder photo" sx={{ width: 1, height: 1, objectFit: 'cover', gridArea: '1 / 1' }} />}
             </Box>
           )}
           <Stack spacing={0.25} minWidth={0}>

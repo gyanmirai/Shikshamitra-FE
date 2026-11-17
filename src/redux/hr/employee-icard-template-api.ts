@@ -1,3 +1,5 @@
+import type { IdentityCardPhotoEdit } from 'src/components/identity-card-designer/types';
+
 import { api } from 'src/redux/service';
 import { employeeType, instituteSetupType } from 'src/redux/tagTypes';
 
@@ -57,6 +59,10 @@ export type EmployeeICardTemplateRequest = Omit<
 
 export const employeeICardTemplateApi = api.injectEndpoints({
   endpoints: (builder) => ({
+    getEmployeeICardPhoto: builder.query<IdentityCardPhotoEdit, string>({
+      query: (employeeId) => `/employees/i-card/templates/photos/${encodeURIComponent(employeeId)}`,
+      keepUnusedDataFor: 0,
+    }),
     getEmployeeICardSchoolLogo: builder.query<Blob | null, string | undefined>({
       query: (mediumStageId) => ({
         url: '/employees/i-card/templates/school-logo',
@@ -134,6 +140,7 @@ export const employeeICardTemplateApi = api.injectEndpoints({
 });
 
 export const {
+  useLazyGetEmployeeICardPhotoQuery,
   useGetEmployeeICardSchoolLogoQuery,
   useGetEmployeeICardTemplatesQuery,
   useCreateEmployeeICardTemplateMutation,

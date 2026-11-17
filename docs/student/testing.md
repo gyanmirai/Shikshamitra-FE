@@ -10,6 +10,15 @@ audience: humans-and-agents
 
 # Validate Student Enrollment Admissions changes
 
+## Visual studio and cardholder photo edits (16 November 2026)
+
+Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vitest/vitest.mjs run src/components/identity-card-designer/photo-editor src/screens/student/records/student-icard-builder.test.tsx src/screens/hr/i-card/employee-card-builder.test.tsx --pool=threads --maxWorkers=2 --testTimeout=20000` for photo geometry/matte conversion, scoped draft pruning, stale callbacks, student export payloads and personal-photo exclusion from staff templates.
+Run the shared studio command/history/control suites for selection, undo/redo, grouping and geometry independently of image processing.
+Browser acceptance must cover real crop and tone output, erase/restore, reset/original comparison, apply/discard, PNG output bounds, both themes and narrow layouts.
+Invoke Remove background explicitly and verify a real model result, download progress, cancel, failed-download retry and no photo transmission to inference services.
+Check both selected-student Designer and Student List Review paths, matching record/source hashes, deselection/scope changes, dirty close, template save exclusion and export/issue overrides.
+Supporting Chrome checks with synthetic pixels verified source transparency, erased alpha, solid background compositing, PNG export and external-URL rejection; a real local-worker MODNet run and cancellation succeeded with Transformers.js 4.3.2.
+These checks do not establish real-person edge quality, authenticated tenant access, deployment behavior or physical printing; finish workflow acceptance in the Codex in-app browser.
 ## Certificate search and selected-student generation
 
 Run `student-certificate-workspace.test.tsx`, `records-student-picker.test.tsx`, `student-directory-documents.test.tsx`, `components/certificate-generation-drawer.test.tsx` and `components/certificate-history-table.test.tsx` under `src/screens/student/records/` with one Vitest worker. Cover no default student, explicit selection and URL restoration, immediate clearing during delayed navigation, typed search retention, selected Student List handoff, source-year changes, preview retry, partial or uncertain issuance, PDF-only retry, permission revocation, saved snapshots and reasoned actions. An ambiguous duplicate retains its exact key and reason across dialog close/reopen in the mounted history session; leaving that student requires reviewing saved history before starting a new request.

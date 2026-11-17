@@ -748,7 +748,23 @@ At phone width, the shared module navigation uses its existing named drawer inst
 Editable I-card scope uses shared single-select Board/Medium and All Classes/All Divisions choices, with Division enabled only for one class and plain division names. Changing a parent clears its dependent filters and student selection. Visible default Board/Medium context does not attach assignments to metadata-only design saves. Legacy saved multiple scopes retain their assignments; roster reads pause until staff choose a valid single scope. Locked Student List bulk handoffs keep their existing read-only fields.
 Review shows one complete, proportionally scaled card with a selected-student chooser and bounded Previous/Next controls, rather than a clipped gallery plus duplicate Live Preview. Photo availability stays explicit. Export shows the selected count, cards per A4 page and a paged sheet preview aligned to the PDF layout; downloading the PDF and issuing numbered cards remain separate commands. Directory printing does not save template changes automatically.
 
-New designs start with Classic Identity and independently configurable front and back layouts. The Template step requires a name; School name is entered and validated in Designer. The preview stays in its own bounded region while the configuration panel scrolls independently. School, Layout, Elements and Print tabs group the controls; School contains the existing branding and logo controls, and Elements uses a compact selector for visible, hidden and locked elements. On narrow screens the preview stays above the scrolling configuration. Staff can configure physical dimensions, content bindings and static text, positions, sizes, layers, visibility, locks, colours, typography and photo shape. Bound school headings and return instructions use School Identity values; static labels remain editable in the element inspector. Temporarily disabling a back side preserves its design for re-enabling.
+New designs start with Classic Identity and independently configurable front and back layouts.
+The Template step requires a name; School name is entered and validated in Designer.
+The preview stays in its own bounded region while the configuration panel scrolls independently.
+The studio command bar, tool rail and visible layer list support direct canvas selection, moving, resizing and rotation, with undo/redo, duplication, grouping, ordering, alignment and zoom.
+School, Layout, Elements and Print tabs retain the existing branding, physical sizing, bindings and print settings.
+On narrow screens the preview stays above the scrolling configuration. The command bar scrolls horizontally with zoom and Fit first; compact controls preserve space for the canvas and properties. Fit follows workspace resizing until a manual zoom is chosen.
+Bound school headings and return instructions use School Identity values; static labels remain editable in the element inspector.
+Temporarily disabling a back side preserves its design for re-enabling.
+
+After selecting students, the studio's Preview person selector targets one accessible cardholder for photo editing.
+On phones, Photo opens a compact cardholder chooser and Edit photo action.
+Student List printing also exposes Edit photo beside the current Review recipient without opening template editing.
+The local photo dialog supports aspect presets, crop positioning, zoom, rotation, flips, brightness, contrast, saturation, transparent/solid backgrounds, original comparison, reset and erase/restore mask brushes.
+Remove background explicitly downloads a portrait matting model and runs on the device; cancellation stops its worker, failures retain the draft and offer retry, and closing or changing the source ignores late results.
+The edited copy appears in that student's review and sheet preview and travels only with selected export/issue requests.
+The profile photo and reusable template remain unchanged by personal photo edits.
+Changing the cohort removes deselected photo drafts, changing academic/filter scope clears them, and unsaved-photo state remains dirty after template saves.
 
 Review can switch between configured sides. Export uses the saved physical dimensions and A4 or card-sized profile; sheet capacity includes margins, gaps and bleed and never scales the credential to increase the count. Back previews reflect the selected duplex direction and alignment offsets. Print at actual size / 100% and verify a measured front/back test sheet before a production batch. Card-sized output includes configured bleed around the finished trim. The page's shared dirty-close guard preserves unsaved design and assignment changes, and saving remains distinct from physical printing and distribution.
 Approved historical records retain their existing eligibility path; missing admission or onboarding evidence is displayed as unavailable rather than synthesized.

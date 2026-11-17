@@ -3,7 +3,7 @@ module: hr
 domain: workflows
 content_type: Reference
 status: canonical
-updated_on: 2026-11-08
+updated_on: 2026-11-16
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -61,7 +61,22 @@ Use this map to find the first screen and client:
 
 ## Staff card designs
 
-New staff templates start with the Staff Professional front and back. Existing templates retain their saved design; legacy field-only templates use the existing adapter. Designer keeps the preview in a bounded region beside the independently scrolling configuration panel, or above it on narrow screens. School, Layout, Elements and Print tabs organize the controls. The compact element selector retains access to hidden and locked elements without a second scrolling layer list. Designer supports side selection, bound or static text, photos, logos, codes, shapes, layers, and element styling. School Identity inheritance, custom logo upload, and the option to hide the logo remain organization-aware.
+New staff templates start with the Staff Professional front and back.
+Existing templates retain their saved design; legacy field-only templates use the existing adapter.
+Designer keeps the preview in a bounded region beside the independently scrolling configuration panel, or above it on narrow screens.
+Phones use a compact step summary and a horizontally scrolling command bar with zoom and Fit first. Fit follows workspace resizing until a manual zoom is chosen.
+The studio command bar, tool rail and visible layer list support direct canvas selection, moving, resizing and rotation, with undo/redo, duplication, grouping, ordering, alignment and zoom.
+School, Layout, Elements and Print tabs retain the existing configuration controls.
+School Identity inheritance, custom logo upload, and the option to hide the logo remain organization-aware.
+
+Select staff in Employee, then return to Designer and choose the Preview person to edit that cardholder's photo.
+On phones, Photo opens a compact cardholder chooser and Edit photo action.
+The local dialog provides aspect crop presets, position/zoom, rotation/flips, tone adjustments, original comparison, reset, transparent/solid background and erase/restore mask brushes.
+Remove background explicitly loads a portrait model for on-device matting, with progress, cancellation and retry after failure.
+Inspect hair and edges before applying; portrait matting does not guarantee suitable results for non-person graphics.
+Applied copies appear in the selected person's Designer and Review/Export preview, and are sent only for selected PDF records.
+Profile photos and reusable templates retain their original data; personal photo drafts remain dirty after saving the template.
+Deselection removes the corresponding edit, and organization/academic context changes clear the scoped photo drafts.
 
 Finished width and height are configured in millimetres independently of the design canvas and preview size. Review and Export show both configured sides and the calculated A4 capacity. Paper size, margins, gaps, bleed, safe inset, output side, duplex flip, back rotation, and alignment offsets are configured in Designer. Geometry errors block saving and export with corrective guidance.
 

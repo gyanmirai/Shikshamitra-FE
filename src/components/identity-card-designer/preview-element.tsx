@@ -9,12 +9,13 @@ export function ElementContent({
   photoUrl,
 }: IdentityCardPreviewProps & { element: IdentityCardElement }) {
   const { style = {} } = element;
-  if (element.type === 'photo' || element.type === 'logo') {
-    const url = element.type === 'photo' ? photoUrl : logoUrl;
+  if (element.type === 'photo' || element.type === 'logo' || element.type === 'image') {
+    const url =
+      element.type === 'image' ? element.imageData : element.type === 'photo' ? photoUrl : logoUrl;
     return url ? (
       <img
         src={url}
-        alt={element.type === 'photo' ? 'Cardholder' : 'School logo'}
+        alt={element.type === 'photo' ? 'Cardholder' : element.type === 'image' ? element.label || 'Uploaded image' : 'School logo'}
         style={{
           width: '100%',
           height: '100%',
@@ -56,6 +57,8 @@ export function ElementContent({
     <div
       style={{
         fontFamily: style.fontFamily || 'Arial',
+        fontStyle: style.fontStyle,
+        textDecoration: style.textDecoration,
         fontSize: style.fontSize ?? 12,
         fontWeight: Number(style.fontWeight) || (style.fontWeight === 'bold' ? 700 : 400),
         textAlign: style.textAlign ?? 'left',

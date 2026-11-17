@@ -2,7 +2,11 @@ import type { ReactNode } from 'react';
 
 export type IdentityCardElement = {
   id: string;
-  type: 'text' | 'photo' | 'logo' | 'qr' | 'barcode' | 'shape' | 'line';
+  type: 'text' | 'photo' | 'logo' | 'image' | 'qr' | 'barcode' | 'shape' | 'line';
+  rotation?: number;
+  opacity?: number;
+  groupId?: string;
+  imageData?: string;
   fieldKey?: string;
   label?: string;
   value?: string;
@@ -25,6 +29,9 @@ export type IdentityCardElement = {
     fontSize?: number;
     fontWeight?: number | string;
     fontFamily?: string;
+    fontStyle?: 'normal' | 'italic';
+    textDecoration?: 'none' | 'underline' | 'line-through';
+    shape?: 'rectangle' | 'ellipse';
     textAlign?: 'left' | 'center' | 'right';
     showLabel?: boolean;
     separator?: string;
@@ -74,6 +81,10 @@ export type IdentityCardPreviewProps = {
 };
 
 export type IdentityCardDesignerProps = IdentityCardPreviewProps & {
+  photoRecords?: IdentityCardPhotoRecord[];
+  photoEdits?: IdentityCardPhotoEdit[];
+  onPhotoEdit?: (edit: IdentityCardPhotoEdit) => void;
+  onEditorBusyChange?: (busy: boolean) => void;
   brandingContent?: ReactNode;
   onLayoutChange: (layout: IdentityCardLayout) => void;
   printSettings: IdentityCardPrintSettings;
@@ -85,6 +96,15 @@ export type IdentityCardDesignerProps = IdentityCardPreviewProps & {
   qrCodeEnabled: boolean;
   onQrCodeEnabledChange: (enabled: boolean) => void;
   onBarcodeEnabledChange?: (enabled: boolean) => void;
+};
+
+export type IdentityCardPhotoEdit = { recordId: string; sourceHash: string; imageData: string };
+export type IdentityCardPhotoRecord = {
+  id: string;
+  name: string;
+  values: Record<string, string | null | undefined>;
+  imageData?: string;
+  load: () => Promise<IdentityCardPhotoEdit>;
 };
 
 export type IdentityCardConfigurationProps = IdentityCardDesignerProps & {

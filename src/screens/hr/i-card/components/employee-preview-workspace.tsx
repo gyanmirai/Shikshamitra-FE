@@ -1,3 +1,5 @@
+import type { IdentityCardPhotoEdit } from 'src/components/identity-card-designer/types';
+
 import { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import {
@@ -26,11 +28,13 @@ export function EmployeePreviewWorkspace({
   employees,
   sampleEmployee,
   academicYearName,
+  photoEdits = [],
 }: {
   state: BuilderState;
   employees: EmployeeICardRow[];
   sampleEmployee?: EmployeeICardRow;
   academicYearName?: string;
+  photoEdits?: IdentityCardPhotoEdit[];
 }) {
   const [previewIndex, setPreviewIndex] = useState(0);
   const [previewMode, setPreviewMode] = useState<'single' | 'scroll'>('single');
@@ -119,6 +123,7 @@ export function EmployeePreviewWorkspace({
                       {employee.fullName || employee.employeeIdentifier || 'Employee'}
                     </Typography>
                     <EmployeeCardPreview
+                      photoUrl={photoEdits.find((edit) => edit.recordId === employee.id)?.imageData}
                       state={state}
                       employee={employee}
                       academicYearName={academicYearName}
@@ -135,6 +140,7 @@ export function EmployeePreviewWorkspace({
         ) : (
           <>
             <EmployeeCardPreview
+              photoUrl={photoEdits.find((edit) => edit.recordId === previewEmployee?.id)?.imageData}
               state={state}
               employee={previewEmployee}
               academicYearName={academicYearName}

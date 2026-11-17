@@ -3,7 +3,7 @@ module: hr
 domain: testing
 content_type: Reference
 status: canonical
-updated_on: 2026-11-08
+updated_on: 2026-11-16
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -13,6 +13,13 @@ audience: humans-and-agents
 Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vitest/vitest.mjs run src/screens/hr/i-card src/components/identity-card-designer --pool=threads --maxWorkers=1` for preset geometry, front/back saved-design round trips, explicit physical sizes, one-time legacy print-unit conversion, duplex settings, field synchronization, and dirty draft signatures. Run changed-file lint, frontend typecheck, and `npm run docs:hr:check` separately.
 
 Browser acceptance must review both sides, edit and reopen a custom back, verify physical dimensions remain independent of preview size, change paper/duplex settings, preserve scoped staff selections across pages, exercise Keep editing/Discard and failed saves, and export a configured front/back PDF. Use synthetic or authorized staff only. Automated adapter tests do not establish authenticated rendering, printed alignment, or physical distribution.
+
+Include `src/components/identity-card-designer/photo-editor` and both student/staff builder suites for scoped photo drafts and template exclusion.
+Use `--maxWorkers=2 --testTimeout=20000` when running those focused suites together on Windows.
+The staff regression checks that a full photo is loaded for the selected staff record, editing leaves the draft dirty, and saving its reusable template includes neither `photoEdits` nor personal image data in `layoutJson`.
+Verify actual on-device Remove background and its cancellation/failure/retry states separately from mocked builder tests, then inspect edited staff previews and the PDF request's record/source hash association.
+The shared synthetic Chrome canvas and real MODNet worker checks are recorded in [Student photo-editor testing](../student/testing.md#visual-studio-and-cardholder-photo-edits-16-november-2026); they do not establish real-person edge quality or authenticated access.
+Finish browser acceptance in the Codex in-app browser, checking keyboard controls, dirty close, scope changes, disabled editing, both themes and phone/tablet/desktop layouts.
 
 ## Attendance correction contracts
 
