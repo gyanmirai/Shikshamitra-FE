@@ -10,6 +10,7 @@ import type {
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { hasGrantedPermission } from 'src/utils/permissions';
@@ -34,16 +35,7 @@ type Props = {
   hideActions?: boolean;
 };
 
-export function ApplicationFinalizedSummary({
-  application,
-  workflow,
-  history,
-  historyLoading,
-  historyError,
-  onRetryHistory,
-  navigationDisabled = false,
-  hideActions = false,
-}: Props) {
+function useFinalizedOnboardingCase(application: AdmissionApplication) {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canViewOnboarding = hasGrantedPermission(permissions, studentPermissions.onboarding.setup);
   const caseQuery = useGetStudentOnboardingCaseQuery(application.onboardingCaseId ?? '', {
@@ -54,10 +46,26 @@ export function ApplicationFinalizedSummary({
   const onboardingCase =
     canViewOnboarding &&
     !caseQuery.isError &&
+    caseQuery.currentData?.id === application.onboardingCaseId &&
     caseQuery.currentData?.applicationId === application.id
       ? caseQuery.currentData
       : undefined;
   const caseLoading = caseQuery.isLoading || (caseQuery.isFetching && !onboardingCase);
+  return { permissions, canViewOnboarding, caseQuery, onboardingCase, caseLoading };
+}
+
+export function ApplicationFinalizedSummary({
+  application,
+  workflow,
+  history,
+  historyLoading,
+  historyError,
+  onRetryHistory,
+  navigationDisabled = false,
+  hideActions = false,
+}: Props) {
+  const { canViewOnboarding, caseQuery, onboardingCase, caseLoading } =
+    useFinalizedOnboardingCase(application);
   const expanded = useBoolean();
   const finalization = historyError
     ? undefined
@@ -197,15 +205,24 @@ export function ApplicationFinalizedActions({
   onBack?: () => void;
   backLabel?: string;
 }) {
-  const permissions = useSelector((state: RootState) => state.auth.permissions);
-  const canContinue =
-    hasGrantedPermission(permissions, studentPermissions.onboarding.setup) &&
-    Boolean(application.onboardingCaseId);
+  const { permissions, canViewOnboarding, onboardingCase, caseLoading } =
+    useFinalizedOnboardingCase(application);
+  const completed = onboardingCase?.status === 4;
+  const canViewRecords = hasGrantedPermission(permissions, studentPermissions.records.studentList);
+  const onwardHref = !onboardingCase
+    ? undefined
+    : completed
+      ? canViewRecords && onboardingCase.studentId
+        ? `${studentPaths.records.studentList}?student=${encodeURIComponent(onboardingCase.studentId)}`
+        : undefined
+      : `${studentPaths.onboarding.setup}?search=${encodeURIComponent(application.applicationNumber)}`;
   return (
     <Stack
-      direction={{ xs: 'column', sm: 'row' }}
+      direction="row"
       spacing={1}
-      sx={{ width: 1, alignItems: { sm: 'center' }, justifyContent: 'flex-end' }}
+      useFlexGap
+      flexWrap="wrap"
+      sx={{ width: 1, alignItems: 'center', justifyContent: 'flex-end' }}
     >
       {onBack ? (
         <Button
@@ -219,28 +236,39 @@ export function ApplicationFinalizedActions({
           {backLabel}
         </Button>
       ) : null}
-      {canContinue ? (
-        <Button
-          component={disabled ? 'button' : Link}
-          href={
-            disabled
-              ? undefined
-              : `${studentPaths.onboarding.setup}?search=${encodeURIComponent(application.applicationNumber)}`
-          }
-          size="small"
-          color="inherit"
-          variant="contained"
-          disabled={disabled}
-          endIcon={<Iconify icon="mdi:arrow-right" />}
-        >
-          Continue Onboarding
-        </Button>
-      ) : (
+      {!canViewOnboarding || !application.onboardingCaseId ? (
         <Label color="default">
           {application.onboardingCaseId
             ? 'Onboarding Access Required'
             : 'Onboarding Case Unavailable'}
         </Label>
+      ) : caseLoading ? (
+        <Skeleton
+          variant="rounded"
+          width={180}
+          height={30}
+          role="status"
+          aria-label="Loading Onboarding Actions"
+        />
+      ) : !onboardingCase ? (
+        <Label color="default">Onboarding Status Unavailable</Label>
+      ) : (
+        <>
+          {completed && <Label color="success">Onboarding Completed</Label>}
+          {onwardHref && (
+            <Button
+              component={disabled ? 'button' : Link}
+              href={disabled ? undefined : onwardHref}
+              size="small"
+              color="inherit"
+              variant="contained"
+              disabled={disabled}
+              endIcon={<Iconify icon={completed ? GlobalIcons.eye : 'mdi:arrow-right'} />}
+            >
+              {completed ? 'View in Student Records' : 'Continue Onboarding'}
+            </Button>
+          )}
+        </>
       )}
     </Stack>
   );

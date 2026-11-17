@@ -56,22 +56,37 @@ it.each([
     )
   ).toBeTruthy();
 });
-it('removes self, invalid families and parents belonging to a different source child', () => {
+it('removes self, invalid families and unavailable family links', () => {
   const candidates = inquiryFamilyCandidates(inquiry, [
     { ...match, applicantId: inquiry.applicantId! },
     { ...match, existingInquiryId: inquiry.id },
     { ...match, familyId: '' },
     { ...match, canLinkFamily: false },
-    { ...match, parents: [{ ...parent, relationship: 'guardian' } as never] },
-    { ...match, parents: [{ ...parent, sourceApplicantId: inquiry.applicantId! }] as never },
     match,
   ]);
   expect(candidates).toHaveLength(1);
   expect(candidates[0]).toMatchObject({ applicantId: 'source-child', parents: [parent] });
 });
+it('keeps an accessible family without requiring a saved parent selection', () => {
+  const family = { ...match, parents: [] };
+  expect(inquiryFamilyCandidates(inquiry, [family])).toEqual([family]);
+});
 it('keeps an accessible legacy parent for explicit Father/Mother selection without inferring a role', () => {
   const candidates = inquiryFamilyCandidates(inquiry, [
     { ...match, parents: [{ ...parent, relationship: null }] as never },
   ]);
-  expect(candidates[0].parents[0].relationship).toBeNull();
+  expect(candidates[0]?.parents?.[0]?.relationship).toBeNull();
 });
+
+it('does not offer a child already in the current family for confirmation again', () => {
+  expect(inquiryFamilyCandidates({ ...inquiry, familyId: 'family' }, [match])).toEqual([]);
+});
+
+it.each([{ hasLinkedSiblings: true }, { siblingFamilyConfirmed: true }])(
+  'blocks repeat confirmation for saved family membership %j',
+  (patch) => {
+    expect(
+      inquiryFamilyConfirmationReason({ ...inquiry, ...patch }, false, false, false)
+    ).toBeTruthy();
+  }
+);

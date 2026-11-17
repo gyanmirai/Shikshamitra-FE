@@ -1,5 +1,4 @@
 import type { DuplicateMatch } from 'src/redux/student/admissions/admission-inquiries-api';
-import type { AdmissionSiblingParentSelection } from 'src/redux/student/admissions/admission-parent-family-types';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
@@ -12,11 +11,8 @@ import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 
 import { canLinkAdmissionInquiryFamily } from './admission-inquiry-model';
 import { isPossibleDuplicateInquiry } from './admission-inquiry-match-review';
+import { AdmissionInquiryFamilyReview } from './admission-inquiry-family-review';
 import { buildInquiryFamilyReviews } from './admission-inquiry-parent-review-model';
-import {
-  AdmissionInquiryParentReview,
-  AdmissionInquiryContactMatch,
-} from './admission-inquiry-parent-review';
 
 type Props = {
   matches: DuplicateMatch[];
@@ -29,10 +25,7 @@ type Props = {
   presentation?: 'inline' | 'dialog';
   reviewKey?: number;
   busy: boolean;
-  onUseExisting: (
-    familyId: string,
-    parent: AdmissionSiblingParentSelection
-  ) => void | Promise<void>;
+  onUseExisting: (familyId: string, sourceApplicantId: string) => void | Promise<void>;
   onOpenExisting: (inquiryId: string) => void;
 };
 
@@ -67,7 +60,6 @@ function InquiryMatchReview({
   applicantName,
   applicantDateOfBirth,
   admissionCycleId,
-  parentRelationship,
   presentation = 'inline',
   busy,
   onUseExisting,
@@ -84,40 +76,32 @@ function InquiryMatchReview({
     })
   );
   const families = buildInquiryFamilyReviews(
-    matches.filter((match) => canLinkAdmissionInquiryFamily(match, guardianPhone, guardianEmail)),
-    parentRelationship
+    matches.filter((match) => canLinkAdmissionInquiryFamily(match, guardianPhone, guardianEmail))
   );
-  const options = families.flatMap((family) => family.parents);
   const formik = useFormik({
-    initialValues: { parent: options.length === 1 ? options[0].key : '', relationship: '' },
+    initialValues: { family: families.length === 1 ? families[0].familyId : '' },
     validationSchema: Yup.object({
-      parent: Yup.string()
-        .oneOf(options.map((option) => option.key))
-        .required('Select a parent.'),
-      relationship: Yup.string().when('parent', {
-        is: (key: string) =>
-          options.some((option) => option.key === key && !option.parent.relationship),
-        then: (schema) => schema.oneOf(['father', 'mother']).required('Select Father or Mother.'),
-      }),
+      family: Yup.string()
+        .oneOf(families.map((family) => family.familyId))
+        .required('Select a family.'),
     }),
     onSubmit: async (values) => {
       if (busy || inFlight.current || (duplicate && !reviewDifferentChild)) return;
-      const option = options.find((item) => item.key === values.parent);
-      const relationship = option?.parent.relationship ?? values.relationship;
-      if (!option || (relationship !== 'father' && relationship !== 'mother')) return;
+      const family = families.find((item) => item.familyId === values.family);
+      const source = family?.children[0];
+      if (!family || !source) return;
       inFlight.current = true;
       try {
-        await onUseExisting(option.match.familyId, { ...option.parent, relationship });
+        await onUseExisting(family.familyId, source.applicantId);
       } finally {
         inFlight.current = false;
       }
     },
   });
-  const selected = options.find((option) => option.key === formik.values.parent);
-  const relationship = selected?.parent.relationship ?? formik.values.relationship;
+  const selectedFamily = families.find((family) => family.familyId === formik.values.family);
   const locked = busy || formik.isSubmitting;
   const canConfirm = Boolean(
-    selected && ['father', 'mother'].includes(relationship) && (!duplicate || reviewDifferentChild)
+    selectedFamily?.children.length && (!duplicate || reviewDifferentChild)
   );
   const close = () => {
     if (!locked && !inFlight.current) setOpen(false);
@@ -126,10 +110,9 @@ function InquiryMatchReview({
     <Stack spacing={2} sx={{ minWidth: 0 }}>
       {applicantName && (
         <Typography variant="body2">
-          New inquiry: <strong>{applicantName}</strong>
+          Inquiry: <strong>{applicantName}</strong>
         </Typography>
       )}
-      <AdmissionInquiryContactMatch matches={matches} phone={guardianPhone} email={guardianEmail} />
       {duplicate && !reviewDifferentChild && (
         <Stack spacing={1} alignItems="flex-start">
           <Typography variant="body2" color="warning.main">
@@ -153,20 +136,17 @@ function InquiryMatchReview({
             disabled={locked}
             onClick={() => setReviewDifferentChild(true)}
           >
-            Different Child? Review Parent
+            Different Child? Review Siblings
           </Button>
         </Stack>
       )}
       {(!duplicate || reviewDifferentChild) && (
-        <AdmissionInquiryParentReview
+        <AdmissionInquiryFamilyReview
           families={families}
-          selected={selected}
+          selectedFamily={selectedFamily}
           disabled={locked}
-          enteredMobile={guardianPhone}
-          onSelect={(option) => formik.setValues({ parent: option.key, relationship: '' })}
-          relationship={formik.values.relationship}
-          onRelationshipChange={(value) => formik.setFieldValue('relationship', value)}
-          relationshipError={formik.submitCount ? formik.errors.relationship : undefined}
+          onSelect={(familyId) => formik.setFieldValue('family', familyId)}
+          error={formik.submitCount ? formik.errors.family : undefined}
         />
       )}
     </Stack>
@@ -179,9 +159,9 @@ function InquiryMatchReview({
         variant="outlined"
         disabled={locked}
         onClick={close}
-        startIcon={<Iconify icon={GlobalIcons.edit} width={18} />}
+        startIcon={<Iconify icon={GlobalIcons.cancel} width={18} />}
       >
-        Edit Contact Details
+        Cancel
       </Button>
       <LoadingButton
         type="button"
@@ -191,9 +171,9 @@ function InquiryMatchReview({
         loading={locked}
         disabled={locked || !canConfirm}
         onClick={() => formik.submitForm()}
-        startIcon={<Iconify icon={GlobalIcons.addIcon} width={18} />}
+        startIcon={<Iconify icon={GlobalIcons.assigned} width={18} />}
       >
-        Add as Sibling
+        Confirm siblings
       </LoadingButton>
     </DialogActions>
   );
@@ -212,15 +192,15 @@ function InquiryMatchReview({
         }}
       >
         {families.length} possible existing {families.length === 1 ? 'family' : 'families'} found.
-        Check the saved parent details.
+        Review the siblings to link.
       </Box>
       {presentation === 'dialog' ? (
         <CustomDialog
           open
-          title="Check Parent Details"
-          titleInfo="Check the saved parent and children. Add as Sibling reuses this parent for the new inquiry."
+          title="Confirm Siblings"
+          titleInfo="Link this inquiry with the children in the selected family."
           handleClose={close}
-          maxWidth="sm"
+          maxWidth="xs"
           hasForm={false}
           guardUnsavedChanges={false}
           disableClose={locked}

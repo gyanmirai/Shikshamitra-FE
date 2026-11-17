@@ -96,6 +96,7 @@ const decisions = (extra = {}) => ({
         status: 6,
         occurredAt: '2026-10-08T10:00:00Z',
         reason: 'Verified documents',
+        actorName: 'Admission officer',
       },
     ],
     refetch: mocks.refetch,
@@ -326,8 +327,14 @@ it('keeps compact decisions actionable while disclosing history on request', asy
   expect(screen.getByRole('radio', { name: 'Approve' })).toBeEnabled();
   expect(screen.getByRole('radio', { name: 'Waitlist' })).toBeEnabled();
   expect(screen.getByText(/Verified documents/)).not.toBeVisible();
-  fireEvent.click(screen.getByRole('button', { name: 'Decision History' }));
+  const historyToggle = screen.getByRole('button', { name: 'Decision History' });
+  expect(historyToggle).toHaveAttribute('aria-expanded', 'false');
+  fireEvent.click(historyToggle);
   await waitFor(() => expect(screen.getByText(/Verified documents/)).toBeVisible());
+  expect(historyToggle).toHaveAttribute('aria-expanded', 'true');
+  expect(screen.getByRole('list', { name: 'Recorded decisions' })).toBeVisible();
+  expect(screen.getByText('Recorded by Admission officer')).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Decision History information' })).toBeVisible();
   fireEvent.click(screen.getByRole('radio', { name: 'Reject' }));
   expect(screen.getByRole('textbox', { name: 'Reason' })).toBeVisible();
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();

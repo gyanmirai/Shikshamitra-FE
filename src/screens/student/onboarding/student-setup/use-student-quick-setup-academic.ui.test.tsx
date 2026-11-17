@@ -61,6 +61,7 @@ const mocks = vi.hoisted(() => ({
     refetch: vi.fn(),
   },
   seriesQuery: {
+    error: undefined as unknown,
     data: [
       {
         id: 'series',
@@ -160,6 +161,8 @@ beforeEach(() => {
   mocks.caseQuery.isError = false;
   mocks.caseQuery.isLoading = false;
   mocks.caseQuery.error = undefined;
+  mocks.seriesQuery.isError = false;
+  mocks.seriesQuery.error = undefined;
   mocks.settingsQuery.currentData[0].configurationJson = JSON.stringify({
     grNumber: { assignmentMode: 'both' },
   });
@@ -226,6 +229,27 @@ function Harness({
     </ThemeProvider>
   );
 }
+
+it('shows one actionable GR limit message without a generic load toast or an available-number placeholder', async () => {
+  mocks.seriesQuery.isError = true;
+  mocks.seriesQuery.error = {
+    status: 400,
+    data: {
+      errorCode: 'Students.Onboarding.IdentifierSeriesUnavailable',
+      data: { ReasonCode: 'SeriesLimitReached', MaximumNumber: 5, NextSequence: 6 },
+    },
+  };
+  render(<Harness />);
+  expect(await screen.findByText(/The GR series limit of 5 has been reached/)).toBeVisible();
+  expect(screen.getByRole('link', { name: 'GR settings' })).toHaveAttribute(
+    'href',
+    '/student/onboarding/settings?tab=gr-number'
+  );
+  expect(screen.queryByText('Could not load GR settings. Try again.')).not.toBeInTheDocument();
+  expect(screen.getByRole('textbox', { name: 'GR number' })).toHaveValue('');
+  expect(mocks.toastError).not.toHaveBeenCalled();
+  expect(mocks.gr).not.toHaveBeenCalled();
+});
 
 it('shows readable academic values and opens the existing editor without saving', async () => {
   mocks.caseQuery.currentData = makeCase({ grNumber: '001', rollNumber: 3 });

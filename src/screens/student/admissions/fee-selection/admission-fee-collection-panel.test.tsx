@@ -433,6 +433,64 @@ it('shows the academic-year default preselected for staff authorized to override
   expect(screen.queryByRole('textbox', { name: /reason/i })).not.toBeInTheDocument();
 });
 
+it('displays full charge by default and after selecting the only no-policy option', async () => {
+  const current = enablePolicySelection();
+  mocks.joiningDate.mockReturnValue({
+    currentData: { ...current, defaultProrationPolicyVersionId: null, prorationPolicies: [] },
+    isFetching: false,
+    isError: false,
+    refetch: mocks.refetch,
+  });
+  renderPanel();
+  const policy = screen.getByRole('combobox', { name: 'Proration policy' });
+  expect(policy).toHaveTextContent('No policy · Full charge');
+  fireEvent.mouseDown(policy);
+  fireEvent.click(await screen.findByRole('option', { name: 'No policy · Full charge' }));
+  expect(policy).toHaveTextContent('No policy · Full charge');
+  await waitFor(() =>
+    expect(mocks.previewDate).toHaveBeenLastCalledWith(
+      expect.objectContaining({ prorationPolicyVersionId: null }),
+      expect.objectContaining({ skip: false })
+    )
+  );
+  expect(mocks.saveDate).not.toHaveBeenCalled();
+  expect(mocks.prepare).not.toHaveBeenCalled();
+  expect(mocks.collect).not.toHaveBeenCalled();
+});
+
+it('returns from a named policy to visible full charge and sends only null to preparation', async () => {
+  const current = enablePolicySelection();
+  mocks.joiningDate.mockReturnValue({
+    currentData: { ...current, defaultProrationPolicyVersionId: null },
+    isFetching: false,
+    isError: false,
+    refetch: mocks.refetch,
+  });
+  renderPanel();
+  const policy = screen.getByRole('combobox', { name: 'Proration policy' });
+  fireEvent.mouseDown(policy);
+  fireEvent.click(await screen.findByRole('option', { name: /Daily Option · v3/ }));
+  expect(policy).toHaveTextContent('Daily Option · v3');
+  fireEvent.mouseDown(policy);
+  fireEvent.click(await screen.findByRole('option', { name: 'No policy · Full charge' }));
+  expect(policy).toHaveTextContent('No policy · Full charge');
+  await waitFor(() =>
+    expect(mocks.previewDate).toHaveBeenLastCalledWith(
+      expect.objectContaining({ prorationPolicyVersionId: null }),
+      expect.objectContaining({ skip: false })
+    )
+  );
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Collect Fees' })).toBeEnabled());
+  fireEvent.click(screen.getByRole('button', { name: 'Collect Fees' }));
+  await waitFor(() =>
+    expect(mocks.prepare).toHaveBeenCalledWith({
+      applicationId: 'application-1',
+      variableFeeHeads: [],
+      prorationPolicyVersionId: null,
+    })
+  );
+});
+
 it('does not show policy choices until an actual joining date is available', () => {
   const current = editableDate();
   mocks.joiningDate.mockReturnValue({
@@ -487,7 +545,9 @@ it('explains full fees and hides policy choices before the school start date', a
 
   expect(screen.queryByRole('combobox', { name: 'Proration policy' })).not.toBeInTheDocument();
   expect(
-    await screen.findByText('Full fees apply because the joining date is before the school start date.')
+    await screen.findByText(
+      'Full fees apply because the joining date is before the school start date.'
+    )
   ).toBeVisible();
   expect(
     screen.queryByText(/No active default proration policy is configured/)

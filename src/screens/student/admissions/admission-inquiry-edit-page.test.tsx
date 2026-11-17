@@ -257,6 +257,27 @@ const inquiry = {
 } as AdmissionInquiry;
 
 describe('Edit inquiry page', () => {
+  it('keeps an actual duplicate rejection beside the applicant name and preserves the entered form', async () => {
+    update.mockReturnValueOnce({
+      unwrap: async () => {
+        throw Object.assign(new Error('Duplicate student'), {
+          status: 400,
+          data: {
+            errorCode: 'Admissions.InquiryDuplicateStudent',
+            detail: 'One or more business rules were violated.',
+          },
+        });
+      },
+    });
+    render(<AdmissionInquiryEditPage />);
+    const name = await screen.findByRole('textbox', { name: 'Applicant name' });
+    await userEvent.clear(name);
+    await userEvent.type(name, 'Existing child');
+    fireEvent.click(screen.getByRole('button', { name: 'Save Changes' }));
+    await waitFor(() => expect(name).toHaveAttribute('aria-invalid', 'true'));
+    expect(name).toHaveValue('Existing child');
+    expect(shikshaMitraToast.success).not.toHaveBeenCalled();
+  }, 30000);
   it('keeps live fields mounted with typed values and focus during same-context refresh', async () => {
     const view = render(<AdmissionInquiryEditPage />);
     const field = await screen.findByRole('textbox', { name: 'Family notes' });
@@ -319,34 +340,41 @@ describe('Edit inquiry page', () => {
     render(<AdmissionInquiryEditPage />);
     const notes = screen.getByRole('textbox', { name: 'Family notes' });
     fireEvent.click(await screen.findByRole('button', { name: 'Confirm Siblings' }));
-    const dialog = await screen.findByRole('dialog', { name: 'Check Parent Details' });
+    const dialog = await screen.findByRole('dialog', { name: 'Confirm Siblings' });
     expect(notes).toBeDisabled();
-    await within(dialog).findByText('Saved mother');
+    await within(dialog).findByText('Existing child');
+    expect(within(dialog).queryByText('Saved mother')).not.toBeInTheDocument();
     expect(
       within(dialog).queryByRole('combobox', { name: /Existing Child/ })
     ).not.toBeInTheDocument();
     expect(within(dialog).getByRole('list', { name: 'Children in this family' })).toHaveTextContent(
       'Existing child'
     );
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Add as Sibling' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Confirm siblings' }));
     await screen.findByText('The inquiry changed on the server.');
     fireEvent.click(within(dialog).getByRole('button', { name: 'Reload Matches' }));
     await waitFor(() => expect(familyRequests.refresh).toHaveBeenCalledWith('inquiry-1', false));
     await waitFor(() => expect(familyRequests.lookup).toHaveBeenCalledTimes(2));
-    expect(screen.queryByText('Sibling Confirmed')).not.toBeInTheDocument();
+    expect(screen.queryByText('Siblings linked')).not.toBeInTheDocument();
     expect(update).not.toHaveBeenCalled();
-    await within(dialog).findByText('Saved mother');
+    await within(dialog).findByText('Existing child');
     expect(
       within(dialog).queryByRole('combobox', { name: /Existing Child/ })
     ).not.toBeInTheDocument();
     expect(within(dialog).getByRole('list', { name: 'Children in this family' })).toHaveTextContent(
       'Existing child'
     );
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Add as Sibling' }));
-    await screen.findByText('Sibling Confirmed');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Confirm siblings' }));
+    await screen.findByText('Siblings linked');
     expect(familyRequests.confirm).toHaveBeenCalledTimes(2);
     expect(familyRequests.confirm.mock.calls[0][0].body.concurrencyStamp).toBe('stamp-1');
     expect(familyRequests.confirm.mock.calls[1][0].body.concurrencyStamp).toBe('server-B');
+    expect(familyRequests.confirm.mock.calls[1][0].body).toMatchObject({
+      familyLinkOnly: true,
+      existingFamilyId: 'family',
+      existingParentApplicantId: 'source-child',
+    });
+    expect(familyRequests.confirm.mock.calls[1][0].body).not.toHaveProperty('parentRelationship');
     expect(update).not.toHaveBeenCalled();
     expect(screen.getByRole('textbox', { name: 'Family notes' })).toHaveValue('Existing note');
     expect(screen.getByRole('button', { name: 'Save Changes' })).toBeDisabled();

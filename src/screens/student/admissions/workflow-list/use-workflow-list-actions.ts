@@ -24,6 +24,7 @@ import {
 import { getAdmissionWorkflowAccess } from '../workflow-access';
 import { getAdmissionWorkflowTemplate } from '../workflow-template';
 import { useWorkflowListPublish } from './use-workflow-list-publish';
+import { workflowArchiveErrorMessage } from './workflow-archive-error';
 
 import type { WorkflowDetails } from '../admission-workflow-dialog';
 
@@ -150,6 +151,7 @@ export function useWorkflowListActions(returnTo?: string) {
   const confirm = async () => {
     if (!pendingConfirmation || confirmingRef.current) return;
     confirmingRef.current = true;
+    setConfirmationNotice(null);
     const { workflow, action } = pendingConfirmation;
     try {
       const latest = await getLatestWorkflow(workflow.id, false).unwrap();
@@ -182,6 +184,10 @@ export function useWorkflowListActions(returnTo?: string) {
       closeConfirmation();
     } catch (error) {
       const problem = parseApiProblemDetail(error);
+      if (action === 'archive' && problem.errorCode === 'Admissions.WorkflowInUse') {
+        setConfirmationNotice(workflowArchiveErrorMessage(error));
+        return;
+      }
       if (problem.errorCode === 'Admissions.WorkflowConcurrencyConflict') {
         try {
           const latest = await getLatestWorkflow(workflow.id, false).unwrap();

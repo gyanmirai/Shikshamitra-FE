@@ -21,7 +21,12 @@ import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { studentPaths, studentPermissions } from 'src/constants/student-menu';
 import { Box, Stack, Button, Switch, TextField, Typography, FormControlLabel } from '@mui/material';
 import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
-import { useStudentSetupFormState, useStudentSetupEmbedding, StudentSetupManagerHeader as CustomBreadcrumbs } from 'src/screens/student/setup/embedding';
+import { useGetStudentGrNumberPreviewsQuery } from 'src/redux/student/onboarding/student-onboarding-api';
+import {
+  useStudentSetupFormState,
+  useStudentSetupEmbedding,
+  StudentSetupManagerHeader as CustomBreadcrumbs,
+} from 'src/screens/student/setup/embedding';
 
 import RollOrderingFields from './roll-ordering-fields';
 import { useOnboardingSettings } from '../onboarding-settings-context';
@@ -150,6 +155,13 @@ function NumberingRulesScreen({
   const filters = useOnboardingAcademicStructure({ includeCampuses: false });
   const { settings, scope, isInherited, saveGrNumberConfiguration, saveRollNumberConfiguration } =
     useOnboardingSettings();
+  const currentYear = useSelector((state: RootState) => state.globalState?.currentYear);
+  const previewYearId = scope.academicYearId ?? currentYear?.id;
+  const previews = useGetStudentGrNumberPreviewsQuery(previewYearId ?? '', {
+    skip: !isGr || !previewYearId,
+    refetchOnMountOrArgChange: true,
+    refetchOnFocus: true,
+  });
   const configurations = isGr
     ? settings.grNumber.configurations
     : settings.rollNumber.configurations;
@@ -264,7 +276,10 @@ function NumberingRulesScreen({
       }
     },
   });
-  useStudentSetupFormState({ dirty: editorOpen, busy: formik.isSubmitting || Boolean(publishingId) });
+  useStudentSetupFormState({
+    dirty: editorOpen,
+    busy: formik.isSubmitting || Boolean(publishingId),
+  });
   const navigationGuard = useUnsavedNavigation(editorOpen && formik.dirty, {
     guardContextChanges: true,
     renderConfirmation: renderUnsavedConfirmation,
@@ -369,7 +384,7 @@ function NumberingRulesScreen({
       : []),
     ...academicColumns(isGr),
     ...(isGr
-      ? [{ id: 'preview', label: 'Preview', minWidth: 150, filterType: 'string' as const }]
+      ? [{ id: 'preview', label: 'Next number', minWidth: 180, filterType: 'string' as const }]
       : []),
     { id: 'version', label: 'Version', minWidth: 90, filterType: 'number' },
     {
@@ -485,6 +500,20 @@ function NumberingRulesScreen({
           {error}
         </StudentFeedback>
       )}
+      {isGr && previews.isError && (
+        <StudentFeedback
+          notificationKey="STU-GR-PREVIEW"
+          presentation="inline"
+          severity="error"
+          action={
+            <Button size="small" onClick={() => previews.refetch()}>
+              Retry
+            </Button>
+          }
+        >
+          {getOnboardingErrorMessage(previews.error, 'Next GR numbers could not be loaded. Try again.')}
+        </StudentFeedback>
+      )}
       <Box sx={{ flex: 1, minHeight: 0, minWidth: 0, overflow: 'hidden', display: 'flex' }}>
         <CustomizableTable
           tableId={`student-onboarding-${isGr ? 'gr' : 'roll'}-number-settings`}
@@ -494,7 +523,20 @@ function NumberingRulesScreen({
             ...item,
             ...academicTableValues(item, filters.allBoards),
             ...(isGr
-              ? { preview: formatGrNumber(item as GrNumberConfiguration, 0, formatContext) }
+              ? {
+                  preview: (() => {
+                    const status = getNumberingRuleStatus(item);
+                    if (status === 'draft') return 'Publish to see next number';
+                    if (status === 'superseded') return '—';
+                    if (!previewYearId) return 'Select an academic year';
+                    if (previews.isError) return 'Unavailable';
+                    if (previews.isFetching) return 'Loading…';
+                    const preview = previews.currentData?.find((entry) => entry.ruleId === item.id);
+                    if (preview?.limitReached) return `Limit reached (${preview.maximumNumber})`;
+                    if (preview && !preview.isEffective) return 'Not effective yet';
+                    return preview?.nextPreview ?? 'Unavailable';
+                  })(),
+                }
               : {}),
           }))}
           isFilter
@@ -662,7 +704,7 @@ function NumberingRulesScreen({
                   ))}
                 </Box>
                 <Typography variant="body2">
-                  Preview: {formatGrNumber(gr, 0, formatContext)}
+                  Format example: {formatGrNumber(gr, 0, formatContext)}
                 </Typography>
               </SettingsSectionCard>
               <SettingsSectionCard

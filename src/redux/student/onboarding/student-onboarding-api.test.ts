@@ -52,14 +52,54 @@ afterEach(() => {
 });
 
 describe('student onboarding API', () => {
+  it('reads scoped GR previews and refreshes them after a successful GR assignment', async () => {
+    let reads = 0;
+    mswServer.use(
+      http.get('*/api/student/onboarding/settings/gr-number-previews', ({ request }) => {
+        expect(new URL(request.url).searchParams.get('academicYearId')).toBe('year-1');
+        reads += 1;
+        return HttpResponse.json({
+          data: [
+            {
+              ruleId: 'gr-rule',
+              nextSequence: reads,
+              maximumNumber: null,
+              limitReached: false,
+              isEffective: true,
+              nextPreview: `GR-${reads}`,
+            },
+          ],
+        });
+      }),
+      http.post('*/api/student/onboarding/case-1/gr-number', () =>
+        HttpResponse.json({ data: onboardingCase })
+      )
+    );
+    const query = store.dispatch(
+      studentOnboardingApi.endpoints.getStudentGrNumberPreviews.initiate('year-1')
+    );
+    expect((await query.unwrap())[0].nextPreview).toBe('GR-1');
+    await store
+      .dispatch(
+        studentOnboardingApi.endpoints.assignStudentOnboardingGr.initiate({
+          id: 'case-1',
+          concurrencyStamp: 'stamp',
+          numberSeriesId: 'series',
+        })
+      )
+      .unwrap();
+    await vi.waitFor(() => expect(reads).toBe(2));
+    query.unsubscribe();
+  });
   it('keeps the successful completion result when the following detail refresh fails', async () => {
     let reads = 0;
     mswServer.use(
-      http.get('*/api/student/onboarding/case-1', () =>
-        ++reads === 1
+      http.get('*/api/student/onboarding/case-1', () => {
+        reads += 1;
+        return reads === 1
           ? HttpResponse.json({ data: { ...onboardingCase, status: 3 } })
-          : HttpResponse.json({ message: 'Read unavailable' }, { status: 500 })
-      ),
+          : HttpResponse.json({ message: 'Read unavailable' }, { status: 500 });
+      }),
       http.post('*/api/student/onboarding/case-1/readiness/refresh', () =>
         HttpResponse.json({
           data: { ...onboardingCase, status: 4, concurrencyStamp: 'completed-stamp' },

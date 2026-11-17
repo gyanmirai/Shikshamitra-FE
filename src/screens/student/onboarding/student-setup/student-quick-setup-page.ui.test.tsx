@@ -737,9 +737,11 @@ describe('single-student setup page', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Save & Activate' }));
     expect(screen.getByRole('button', { name: 'Back to Students' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Save for Later' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Save & Activate' })).toBeDisabled();
     expect(
-      screen.getByRole('progressbar', { name: 'Saving and activating student' })
+      screen.getByRole('status', { name: 'Saving and activating student' })
     ).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Class & Numbers' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Save & Activate' }));
     expect(mocks.saveAcademic).toHaveBeenCalledOnce();
     expect(props.onClose).not.toHaveBeenCalled();

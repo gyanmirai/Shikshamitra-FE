@@ -10,9 +10,13 @@ import { hasGrantedPermission } from 'src/utils/permissions';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useStartAdmissionApplicationMutation } from 'src/redux/student/admissions/admission-applications-api';
 
+import { getAdmissionFormAccess } from '../form-access';
+import { readInquiryHandoffIssue } from './inquiry-handoff-issue';
 import { admissionPipelineApplicationUrl } from '../pipeline/admission-pipeline-state';
 import { ADMISSION_APPLICATION_PERMISSIONS } from '../admission-application-permissions';
 import { getApplicationWorkspaceUrl } from '../application-detail/application-return-url';
+
+import type { InquiryHandoffIssue } from './inquiry-handoff-issue';
 
 export function inquiryHandoffBlocker(inquiry: AdmissionInquiry): string | undefined {
   if (inquiry.isTransferred || inquiry.applicationId)
@@ -31,6 +35,8 @@ export function useInquiryHandoff() {
   const router = useRouter();
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canMove = hasGrantedPermission(permissions, ADMISSION_APPLICATION_PERMISSIONS.manage);
+  const formAccess = getAdmissionFormAccess(permissions);
+  const [issue, setIssue] = useState<InquiryHandoffIssue | null>(null);
   const [start, state] = useStartAdmissionApplicationMutation();
   const movingRef = useRef(false);
   const [movingInquiryId, setMovingInquiryId] = useState<string | null>(null);
@@ -46,6 +52,7 @@ export function useInquiryHandoff() {
     )
       return;
     movingRef.current = true;
+    setIssue(null);
     setMovingInquiryId(inquiry.id);
     setStarting(true);
     try {
@@ -67,6 +74,11 @@ export function useInquiryHandoff() {
         )
       );
     } catch (error) {
+      const recoveryIssue = readInquiryHandoffIssue(error, inquiry);
+      if (recoveryIssue) {
+        setIssue(recoveryIssue);
+        return;
+      }
       shikshaMitraToast.error({
         message:
           parseApiProblemDetail(error).detail ||
@@ -77,5 +89,13 @@ export function useInquiryHandoff() {
       setStarting(false);
     }
   };
-  return { canMove, moving: starting || state.isLoading || navigating, movingInquiryId, move };
+  return {
+    canMove,
+    moving: starting || state.isLoading || navigating,
+    movingInquiryId,
+    move,
+    issue,
+    formAccess,
+    dismissIssue: () => setIssue(null),
+  };
 }

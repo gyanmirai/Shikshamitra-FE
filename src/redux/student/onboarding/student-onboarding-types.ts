@@ -176,6 +176,15 @@ export type StudentOnboardingPlacementOption = {
   isFull: boolean;
 };
 
+export type StudentGrNumberPreview = {
+  ruleId: string;
+  nextSequence: number;
+  maximumNumber?: number | null;
+  limitReached: boolean;
+  isEffective: boolean;
+  nextPreview?: string | null;
+};
+
 export type StudentIdentifierSeries = {
   id: string;
   concurrencyStamp: string;

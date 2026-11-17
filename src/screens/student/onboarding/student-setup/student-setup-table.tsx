@@ -11,6 +11,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import {
   Box,
+  Link,
   Stack,
   Avatar,
   Button,
@@ -247,8 +248,8 @@ export default function StudentSetupTable({
               sx={{
                 width: 36,
                 height: 36,
-                bgcolor: 'primary.lighter',
-                color: 'primary.dark',
+                bgcolor: 'background.neutral',
+                color: 'text.secondary',
                 fontSize: 12,
                 fontWeight: 700,
               }}
@@ -263,9 +264,11 @@ export default function StudentSetupTable({
             </Avatar>
             <Stack spacing={0.25} sx={{ minWidth: 0 }}>
               {['readiness', 'division', 'gr-number', 'roll-number'].includes(view) ? (
-                <Button
-                  variant="text"
+                <Link
+                  component="button"
+                  type="button"
                   color="inherit"
+                  underline="hover"
                   aria-label={`Review ${String(value)}`}
                   disabled={assignmentBusy}
                   onClick={() => onOpen(String(row.id))}
@@ -277,10 +280,11 @@ export default function StudentSetupTable({
                     height: 'auto',
                     overflowWrap: 'anywhere',
                     typography: 'subtitle2',
+                    '&:disabled': { color: 'text.disabled', pointerEvents: 'none' },
                   }}
                 >
                   {value}
-                </Button>
+                </Link>
               ) : (
                 <Typography variant="subtitle2">{value}</Typography>
               )}
