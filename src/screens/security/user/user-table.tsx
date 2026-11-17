@@ -1,23 +1,34 @@
+import type { AppDispatch } from 'src/redux/store';
+
+import { useDispatch } from 'react-redux';
+import { Box, Avatar, Typography } from '@mui/material';
 import { useGetRolesQuery } from 'src/redux/role/roleApi';
 import { convertBase64Format } from 'src/utils/base64Formate';
 import { useGetUserDirectoryQuery } from 'src/redux/user/userApi';
 import CustomizableTable from 'src/components/customizabaleTable';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, Avatar, Typography, LinearProgress } from '@mui/material';
 
 import UserRowActions from './user-row-actions';
 import { getUserDisplayName } from './user-record';
 import { createUserRoleColumn } from './user-role-column';
+import { exportIdentityTable } from '../identity-table-export';
+import { useIdentityPageBounds, useIdentityTableState } from '../use-identity-table-state';
 
 import type { UserRecord, UserActionHandler } from './user-record';
 
 export default function UserTable({ onAction }: { onAction: UserActionHandler }) {
+  const dispatch = useDispatch<AppDispatch>();
+  const { params, tableProps, setPage } = useIdentityTableState('userName,id');
   const { data: roles } = useGetRolesQuery();
-  const { data, isLoading, isFetching, error, refetch } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetUserDirectoryQuery,
-    popupConfig: { error: false },
+  const {
+    currentData: data,
+    isFetching,
+    error,
+    refetch,
+  } = useGetUserDirectoryQuery(params, {
+    refetchOnMountOrArgChange: true,
+    refetchOnReconnect: true,
   });
+  useIdentityPageBounds(data?.totalCount, tableProps.page, tableProps.rowsPerPage, setPage);
   const users: UserRecord[] = data?.items ?? [];
   const tableData = users.map((user) => ({ ...user, userName: getUserDisplayName(user) }));
 
@@ -32,16 +43,19 @@ export default function UserTable({ onAction }: { onAction: UserActionHandler })
         overflow: 'hidden',
       }}
     >
-      {isFetching && !isLoading && data && (
-        <LinearProgress aria-label="Refreshing users" sx={{ flexShrink: 0 }} />
-      )}
       <CustomizableTable
+        {...tableProps}
         tableId="user-management-table"
         tableTitle="User Management"
         wrapperProps={{ sx: { height: 1, flex: 1, minHeight: 0, minWidth: 0 } }}
         tableContainerProps={{ sx: { height: 1 } }}
         data={tableData}
-        isLoading={isLoading || (isFetching && !data)}
+        totalCount={data?.totalCount}
+        isLoading={isFetching && !data}
+        isRefreshing={isFetching && Boolean(data)}
+        paginationDisabled={isFetching}
+        exportScope="all"
+        onExport={(request) => exportIdentityTable(dispatch, 'users', params, request)}
         error={isFetching ? undefined : error}
         onRetry={() => {
           refetch();
@@ -58,6 +72,7 @@ export default function UserTable({ onAction }: { onAction: UserActionHandler })
             id: 'userName',
             label: 'Full Name',
             align: 'left',
+            isSort: false,
             isFilter: true,
             filterType: 'string',
             minWidth: 220,
@@ -74,7 +89,7 @@ export default function UserTable({ onAction }: { onAction: UserActionHandler })
               </Box>
             ),
           },
-          createUserRoleColumn(roles?.items ?? []),
+          { ...createUserRoleColumn(roles?.items ?? []), isSort: false },
           {
             id: 'email',
             label: 'Email',

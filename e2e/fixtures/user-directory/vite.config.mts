@@ -64,9 +64,17 @@ export default defineConfig({
           if (url.pathname === '/api/security/user-directory') {
             if (fail) return send({ error: { message: 'Synthetic user list unavailable' } }, 500);
             const skip = Number(url.searchParams.get('skipCount'));
+            const size = Number(url.searchParams.get('maxResultCount'));
+            const filter = (url.searchParams.get('filter') || '').toLowerCase();
+            const matches = empty
+              ? []
+              : users.filter((user) =>
+                  `${user.userName} ${user.email}`.toLowerCase().includes(filter)
+                );
+            if (url.searchParams.get('sorting')?.includes('desc')) matches.reverse();
             return send({
-              items: empty ? [] : users.slice(skip, skip + 5),
-              totalCount: empty ? 0 : users.length,
+              items: matches.slice(skip, skip + size),
+              totalCount: matches.length,
             });
           }
           return next();

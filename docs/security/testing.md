@@ -3,12 +3,18 @@ module: security
 domain: permissions
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-11-03
+updated_on: 2026-11-17
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Validate Security frontend changes
+
+## User and role pagination
+
+Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vitest/vitest.mjs run src/screens/security/identity-pagination.test.tsx src/screens/security/identity-table-export.test.ts src/screens/security/user/user-table.test.tsx --pool=threads`.
+The tests cover bounded page requests, offsets, global search, page-size and sorting resets, error/retry without stale rows, last-page recovery after role cache invalidation, assigned roles, and complete/cancelled/incomplete exports.
+Run the synthetic browser suites with `node node_modules/@playwright/test/cli.js test --config e2e/user-directory.config.ts` and `node node_modules/@playwright/test/cli.js test --config e2e/security/role-management.config.ts`, then finish with an in-app browser smoke test. These fixtures exercise the production tables with simulated API data; they do not verify a deployed backend or school records.
 
 ## Protected admin permissions
 
