@@ -46,6 +46,12 @@ Backend rules, exact permissions, migration and API contracts are owned by [the 
 
 ## Common components and interaction rules
 
+The Policies step indicator remains pending on a new draft and on first entering
+the step, including when collection-policy setup is missing. It shows an error only
+after an attempt to continue to review fails policy validation. Saving or discarding
+the draft resets that attempted-validation state. Required policy selections, setup
+guidance, and review/publication blocking retain their existing behavior.
+
 The structure navigator places Search structures above Copy Structure and Add Structure,
 in that order. Rows use neutral theme backgrounds and borders, display their position
 in the full class list, and keep the existing Delete Draft action and status at the right.

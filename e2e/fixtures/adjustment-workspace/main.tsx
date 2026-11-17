@@ -24,7 +24,7 @@ function authState(actor: string) {
     loading: false,
     permissions: [
       'View',
-      ...(actor === 'maker' ? ['Add'] : []),
+      ...(actor === 'viewer' ? [] : ['Add', 'Delete']),
       ...(actor === 'checker' ? ['Approve', 'Reject'] : []),
     ].map((action) => ({
       name: `${financePermissions.fees.adjustment}.${action}`,

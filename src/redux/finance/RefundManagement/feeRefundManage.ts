@@ -119,6 +119,7 @@ export interface FeeRefundFeeHeadDto {
 export interface PagedRefundResult {
   totalCount: number;
   items: FeeRefundRequestDto[];
+  statusCounts?: Record<number, number>;
 }
 
 export interface RefundEligibilityMonthDto {

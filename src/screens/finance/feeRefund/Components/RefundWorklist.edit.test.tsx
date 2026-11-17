@@ -68,6 +68,7 @@ vi.mock('src/redux/finance/RefundManagement/feeRefundManage', () => ({
   useGetFeeRefundsQuery: ({ status }: any) => {
     const result = {
       totalCount: 1,
+      statusCounts: { 0: 2, 2: 1, 7: 12 },
       items: [
         {
           id: 'refund',
@@ -108,6 +109,12 @@ describe('refund worklist editing', () => {
     vi.clearAllMocks();
     mocks.actions = ['edit'];
     mocks.grants = true;
+  });
+
+  it('shows status totals from the current page response', () => {
+    render(<Worklist />);
+    expect(screen.getByRole('tab', { name: /Completed.*12/ })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /Pending.*2/ })).toBeInTheDocument();
   });
 
   it('opens the selected saved refund through the server-authorized Edit action', () => {

@@ -20,7 +20,7 @@ const formatPaise = (amount: number): string => {
   return fraction ? `${rupees}.${fraction}` : String(rupees);
 };
 
-/** Applies a per-line amount to checked rows or distributes a total across one source kind. */
+/** Applies to checked rows, or selects eligible rows when no source was checked. */
 export function allocateAdjustmentBulk(
   lines: AdjustmentLineCapacity[],
   selectedIds: string[],
@@ -37,21 +37,21 @@ export function allocateAdjustmentBulk(
   const checked = lines.filter((line) => ids.has(line.dueFeeId));
   if (checked.length !== ids.size)
     return { error: 'Selected installments have changed. Refresh the fees.' };
-  if (mode === 'perInstallment' && !ids.size)
-    return { error: 'Select eligible installments before applying an amount.' };
+  if (!lines.length)
+    return { error: 'No eligible installments are available.' };
   const kinds = new Set((ids.size ? checked : lines).map((line) => line.kind ?? 0));
-  if (mode === 'equalTotal' && kinds.size !== 1)
-    return { error: 'Select one pending/overdue or paid-credit installment before auto-distributing.' };
+  if (kinds.size !== 1)
+    return { error: 'Select one pending/overdue or paid-credit installment before applying an amount.' };
   const eligible = lines.filter((line) => (line.kind ?? 0) === [...kinds][0]);
-  const unpaidTransfer = mode === 'equalTotal' && [...kinds][0] === 1;
+  const unpaidTransfer = [...kinds][0] === 1;
   if (unpaidTransfer && eligible.length < 2)
     return { error: 'At least two pending or overdue installments are needed to move an unpaid amount.' };
   const destination = unpaidTransfer
     ? [...eligible].reverse().find((line) => !ids.has(line.dueFeeId)) ?? eligible[eligible.length - 1]
     : undefined;
-  const selected = mode === 'equalTotal'
+  const selected = mode === 'equalTotal' || !ids.size
     ? eligible.filter((line) => line.dueFeeId !== destination?.dueFeeId)
-    : checked;
+    : checked.filter((line) => line.dueFeeId !== destination?.dueFeeId);
   if (!selected.length)
     return { error: 'No eligible installments are available.' };
   const parsed = selected.map((line) => capacityPaise(line.capacity));
@@ -90,7 +90,10 @@ export function allocateAdjustmentBulk(
       }
     }
   }
-  const amounts = mode === 'equalTotal' ? {} as Record<string, string> : { ...existing };
+  const amounts = mode === 'equalTotal' || !ids.size
+    ? {} as Record<string, string>
+    : { ...existing };
+  if (destination) delete amounts[destination.dueFeeId];
   selected.forEach((line, index) => {
     if (allocated[index] > 0) amounts[line.dueFeeId] = formatPaise(allocated[index]);
   });

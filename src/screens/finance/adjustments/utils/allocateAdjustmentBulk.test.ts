@@ -15,6 +15,26 @@ describe('adjustment bulk amounts', () => {
     expect(result.amounts).toEqual({ june: '75', july: '75', august: '30' });
   });
 
+  it('enables per-installment allocation without a prior checkbox selection', () => {
+    expect(allocateAdjustmentBulk(lines, [], {}, '75', 'perInstallment')).toEqual({
+      amounts: { june: '75', july: '75', august: '75' },
+    });
+  });
+
+  it('reserves one unpaid destination even when all installments were checked', () => {
+    const unpaid = [
+      { dueFeeId: 'june', capacity: 500, kind: 1 },
+      { dueFeeId: 'july', capacity: 500, kind: 1 },
+      { dueFeeId: 'destination', capacity: 500, kind: 1 },
+    ];
+    expect(allocateAdjustmentBulk(unpaid, [], {}, '100', 'perInstallment')).toEqual({
+      amounts: { june: '100', july: '100' },
+    });
+    expect(allocateAdjustmentBulk(unpaid, ['june', 'july', 'destination'],
+      { june: '10', july: '10', destination: '10' }, '100', 'perInstallment'))
+      .toEqual({ amounts: { june: '100', july: '100' } });
+  });
+
   it('distributes an overall amount exactly and respects each line capacity', () => {
     expect(allocateAdjustmentBulk(lines, ['june'], {}, '500', 'equalTotal'))
       .toEqual({ amounts: { june: '100', july: '200', august: '200' } });
@@ -52,6 +72,17 @@ describe('adjustment bulk amounts', () => {
       .toMatch(/at least two pending or overdue installments/i);
     expect(allocateAdjustmentBulk(mixed, [], {}, '100', 'equalTotal').error)
       .toMatch(/select one/i);
+    expect(allocateAdjustmentBulk(mixed, [], {}, '100', 'perInstallment').error)
+      .toMatch(/select one/i);
+  });
+
+  it('validates the per-installment amount before selecting rows', () => {
+    expect(allocateAdjustmentBulk(lines, [], {}, '0', 'perInstallment').error)
+      .toMatch(/positive amount/i);
+    expect(allocateAdjustmentBulk(lines, [], {}, '1.234', 'perInstallment').error)
+      .toMatch(/two decimal places/i);
+    expect(allocateAdjustmentBulk(lines, [], {}, '101', 'perInstallment').error)
+      .toMatch(/available balance/i);
   });
 
   it('rejects an amount above the selected available balance without changing values', () => {
