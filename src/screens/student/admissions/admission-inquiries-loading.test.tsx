@@ -13,6 +13,7 @@ const state = vi.hoisted(() => ({
   linkedFetching: false,
   board: '',
   medium: '',
+  standard: '',
   scopeLoading: true,
   fetching: false,
   error: false,
@@ -20,6 +21,8 @@ const state = vi.hoisted(() => ({
   data: undefined as
     { items: { id: string; applicantName: string }[]; totalCount: number } | undefined,
   query: vi.fn(),
+  queryInput: vi.fn(),
+  academicFilterProps: {} as Record<string, unknown>,
   table: {} as Record<string, unknown>,
   push: vi.fn(),
   academicYearId: 'year' as string | undefined,
@@ -54,15 +57,17 @@ vi.mock('./admission-academic-filters', () => ({
     academicYearId: state.academicYearId,
     boardId: state.board,
     mediumId: state.medium,
-    standardId: '',
+    standardId: state.standard,
     dashboardScope: false,
     update: state.updateAcademic,
   }),
   AdmissionAcademicFilters: function Filters({
     onLoadingChange,
+    ...props
   }: {
     onLoadingChange: (value: boolean) => void;
   }) {
+    state.academicFilterProps = props;
     const loading = state.scopeLoading;
     useEffect(() => onLoadingChange(loading), [loading, onLoadingChange]);
     return <div>Academic filters</div>;
@@ -114,8 +119,9 @@ vi.mock('src/components/customizabaleTable', () => ({
   },
 }));
 vi.mock('src/redux/student/admissions/admission-inquiries-api', () => ({
-  useGetAdmissionInquiriesQuery: (_input: unknown, options: unknown) => {
+  useGetAdmissionInquiriesQuery: (input: unknown, options: unknown) => {
     state.query(options);
+    state.queryInput(input);
     return {
       currentData: state.data,
       isLoading: false,
@@ -131,6 +137,7 @@ vi.mock('src/redux/student/admissions/admission-inquiries-api', () => ({
 }));
 beforeEach(() => {
   vi.clearAllMocks();
+  state.updateAcademic.mockReset();
   window.history.replaceState(null, '', '/student/admissions/inquiries');
   Object.assign(state, {
     params: '',
@@ -140,12 +147,53 @@ beforeEach(() => {
     linkedFetching: false,
     board: '',
     medium: '',
+    standard: '',
     scopeLoading: true,
     fetching: false,
     error: false,
     moving: false,
     data: undefined,
   });
+});
+
+it('resets server paging and omits class IDs when returning to All Classes', () => {
+  Object.assign(state, {
+    board: 'board',
+    medium: 'medium',
+    standard: 'class-8',
+    params: 'board=board&medium=medium&class=class-8&search=ada&status=2',
+    scopeLoading: false,
+    data: { items: [], totalCount: 100 },
+  });
+  state.updateAcademic.mockImplementation((key: string, value: string) => {
+    if (key === 'class') state.standard = value;
+  });
+  render(<AdmissionInquiriesScreen />);
+  act(() => (state.table.onServerPagination as (page: number, size: number) => void)(3, 25));
+  expect(state.queryInput).toHaveBeenLastCalledWith(
+    expect.objectContaining({ standardId: 'class-8', skipCount: 50 })
+  );
+
+  act(() =>
+    (state.academicFilterProps.onChange as (key: string, value: string) => void)('class', '')
+  );
+
+  expect(state.updateAcademic).toHaveBeenLastCalledWith('class', '');
+  const input = state.queryInput.mock.lastCall?.[0];
+  expect(input).toMatchObject({
+    academicYearId: 'year',
+    boardId: 'board',
+    mediumId: 'medium',
+    search: 'ada',
+    status: 2,
+    excludePostApplication: true,
+    isTransferred: false,
+    skipCount: 0,
+    maxResultCount: 25,
+  });
+  expect(input.standardId).toBeUndefined();
+  expect(input.standardIds).toBeUndefined();
+  expect(state.table.page).toBe(0);
 });
 
 it('does not clear the linked inquiry scope when the initial academic year is restored', () => {

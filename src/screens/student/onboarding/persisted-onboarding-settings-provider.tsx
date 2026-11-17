@@ -11,8 +11,8 @@ import { hasGrantedPermission } from 'src/utils/permissions';
 import { useRef, useMemo, useEffect, useCallback } from 'react';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { Box, Stack, Button, LinearProgress } from '@mui/material';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { studentPaths, studentPermissions } from 'src/constants/student-menu';
+import { StudentSetupManagerHeader as CustomBreadcrumbs } from 'src/screens/student/setup/embedding';
 import {
   useGetStudentOnboardingSettingsQuery,
   useSaveStudentOnboardingSettingsMutation,

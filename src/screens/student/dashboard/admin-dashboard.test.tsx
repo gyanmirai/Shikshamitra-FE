@@ -56,7 +56,7 @@ describe('Admin Student dashboard with real shared components and scoped RTK rea
     expect(screen.getAllByRole('table')).toHaveLength(1);
     expect(
       within(screen.getByTestId('dashboard-attention-preview')).queryByRole('button', {
-        name: /filter/i,
+        name: 'Filters',
       })
     ).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /export/i })).not.toBeInTheDocument();
@@ -88,7 +88,7 @@ describe('Admin Student dashboard with real shared components and scoped RTK rea
     await screen.findByText('No setup cases need attention');
     expect(screen.getByText('No pending decisions')).toBeVisible();
     expect(screen.getByText('No pending setup tasks')).toBeVisible();
-    expect(screen.getAllByRole('img', { name: 'empty content' })).toHaveLength(3);
+    expect(screen.getByText('No setup blockers in the selected scope.')).toBeVisible();
     expect(screen.queryByText('Healthy')).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /Open setup for/ })).not.toBeInTheDocument();
   });
@@ -127,10 +127,15 @@ describe('Admin Student dashboard with real shared components and scoped RTK rea
     mountAdmin();
     await ready();
     await screen.findByText(/Onboarding tasks could not be loaded/);
+    expect(
+      screen.getByText(/Onboarding tasks could not be loaded/).closest('[role="alert"]')
+    ).not.toBeNull();
     expect(screen.queryByText('No pending setup tasks')).not.toBeInTheDocument();
     expect(screen.queryByText('No setup cases need attention')).not.toBeInTheDocument();
     expect(screen.queryByText('No pending decisions')).not.toBeInTheDocument();
-    expect(screen.getByText(/This queue may be incomplete/)).toBeVisible();
+    screen.getAllByText(/This queue may be incomplete/).forEach((message) => {
+      expect(message).toBeVisible();
+    });
   });
 
   it('retains the header and loading state while an authorized section is pending', async () => {
@@ -156,7 +161,7 @@ describe('Admin Student dashboard with real shared components and scoped RTK rea
     await screen.findByRole('link', { name: 'Open setup for Aarav Shah' });
   });
 
-  it('keeps successful sections usable and retries only the failed section', async () => {
+  it('keeps successful sections usable and recovers through the existing dashboard refresh', async () => {
     let attempts = 0;
     mswServer.use(
       http.get('*/api/students/dashboard/sections/attendance', () => {
@@ -168,19 +173,29 @@ describe('Admin Student dashboard with real shared components and scoped RTK rea
     );
     mountAdmin();
     await ready();
-    const error = await screen.findByText(/Today's attendance could not be loaded/);
+    await screen.findByText(/Today's attendance could not be loaded/);
     expect(screen.queryByText(/No priority actions/)).not.toBeInTheDocument();
-    fireEvent.click(
-      within(error.closest('[data-student-feedback]') as HTMLElement).getByRole('button', {
-        name: 'Retry',
-      })
-    );
+    expect(
+      screen.getByRole('link', { name: 'Active students: 111. Open workspace' })
+    ).toBeVisible();
+    expect(
+      screen.queryByRole('progressbar', { name: 'Expected registers submitted' })
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh dashboard' }));
     await waitFor(() => expect(attempts).toBe(2));
+    expect(
+      await screen.findByRole('progressbar', { name: 'Expected registers submitted' })
+    ).toHaveAttribute('aria-valuenow', '70');
+    expect(screen.getByRole('link', { name: 'Open pending registers' })).toHaveAttribute(
+      'href',
+      '/student/attendance/take-attendance?date=2026-10-14&view=pending'
+    );
     await waitFor(() =>
       expect(screen.queryByText(/Today's attendance could not be loaded/)).not.toBeInTheDocument()
     );
-    expect(adminRequests.filter(({ path }) => path === 'records')).toHaveLength(1);
-    expect(adminRequests.filter(({ path }) => path === 'admissions')).toHaveLength(1);
+    expect(adminRequests.filter(({ path }) => path === 'records')).toHaveLength(2);
+    expect(adminRequests.filter(({ path }) => path === 'admissions')).toHaveLength(2);
   });
 
   it('hydrates scope from URLs and sends all four hierarchy filters to every summary exactly once', async () => {
@@ -267,7 +282,8 @@ describe('Admin Student dashboard with real shared components and scoped RTK rea
       'aria-disabled',
       'true'
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Retry filters' }));
+    expect(screen.queryByRole('button', { name: 'Retry filters' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh dashboard' }));
     await waitFor(() => expect(attempts).toBe(2));
     expect(sectionRequests()).toEqual([]);
   });

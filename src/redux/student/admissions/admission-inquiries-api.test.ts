@@ -3,6 +3,7 @@ import { http, HttpResponse } from 'msw';
 import { mswServer } from 'src/test/mswServer';
 import { it, vi, expect, afterEach, beforeEach } from 'vitest';
 import { clearCachedAuthSession } from 'src/redux/session-cache';
+import { academicClassFilterInput } from 'src/utils/student-academic-filter-query';
 
 import { createDocumentTestStore } from './document-test-fixture';
 import { admissionInquiriesApi } from './admission-inquiries-api';
@@ -22,6 +23,58 @@ beforeEach(() => {
 afterEach(() => {
   store.dispatch(api.util.resetApiState());
   clearCachedAuthSession();
+});
+
+it('omits the class predicate for All Classes and preserves the scoped union across class reads', async () => {
+  const inquiries = [
+    { id: 'inquiry-class-8', standardId: 'class-8' },
+    { id: 'inquiry-class-9', standardId: 'class-9' },
+  ];
+  const queries: URLSearchParams[] = [];
+  mswServer.use(
+    http.get('*/api/student/enrollment/admissions/inquiries', ({ request }) => {
+      const params = new URL(request.url).searchParams;
+      queries.push(params);
+      const standardId = params.get('standardId');
+      const items = inquiries.filter((inquiry) => !standardId || inquiry.standardId === standardId);
+      return HttpResponse.json({ data: { totalCount: items.length, items } });
+    })
+  );
+  const scope = {
+    academicYearId: 'year',
+    boardId: 'board',
+    mediumId: 'medium',
+    search: 'ada',
+    excludePostApplication: true,
+    isTransferred: false,
+    maxResultCount: 25,
+    skipCount: 0,
+  };
+  const read = (standard: string) =>
+    store
+      .dispatch(
+        admissionInquiriesApi.endpoints.getAdmissionInquiries.initiate({
+          ...scope,
+          ...academicClassFilterInput(standard),
+        })
+      )
+      .unwrap();
+  const specific = await read('class-8');
+  const all = await read('');
+  const otherClass = await read('class-9');
+
+  expect(all.totalCount).toBe(2);
+  expect(all.items.map((item) => item.id)).toEqual(
+    expect.arrayContaining([...specific.items, ...otherClass.items].map((item) => item.id))
+  );
+  expect(specific.items.map((item) => item.id)).toEqual(['inquiry-class-8']);
+  expect(otherClass.items.map((item) => item.id)).toEqual(['inquiry-class-9']);
+  expect(queries[1].has('standardId')).toBe(false);
+  expect(queries[1].has('standardIds')).toBe(false);
+  expect(queries[1].toString()).not.toContain('__all__');
+  Object.entries(scope).forEach(([key, value]) => {
+    queries.forEach((params) => expect(params.get(key)).toBe(String(value)));
+  });
 });
 
 it('sends owner queue filters and offering-scoped counsellor assignment requests', async () => {

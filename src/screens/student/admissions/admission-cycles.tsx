@@ -33,9 +33,9 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { Box, Paper, Stack, Button, MenuItem, TextField, Typography } from '@mui/material';
+import { StudentSetupManagerHeader as CustomBreadcrumbs } from 'src/screens/student/setup/embedding';
 import {
   useGetAdmissionCyclesQuery,
   useCloseAdmissionCycleMutation,
@@ -567,6 +567,7 @@ export default function AdmissionCyclesScreen() {
       }}
     >
       <CustomBreadcrumbs
+        editorOpen={editDialog.value || numberingDialog.value || Boolean(guardedAction) || Boolean(configurationMode)} busy={creating || updating || actionBusy || configurationBusy}
         heading="Admission Periods"
         description="Create, Publish, Monitor, Close and Retain Controlled Admission Periods."
         links={[

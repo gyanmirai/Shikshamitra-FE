@@ -14,6 +14,7 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { studentPaths } from 'src/constants/student-menu';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { readStageConfiguration } from 'src/redux/student/admissions/admission-assessment-policy';
+import { getStudentSetupWorkflowReturnUrl } from 'src/screens/student/setup/embedding/student-setup-return';
 import {
   useGetAdmissionFormQuery,
   useGetAdmissionFormsQuery,
@@ -51,6 +52,7 @@ type Props = { workflowId: string };
 export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const returnTo = getStudentSetupWorkflowReturnUrl(searchParams.get('returnTo')) ?? studentPaths.enrollment.settings.workflows;
   const createSetup = searchParams.get('setup') === '1';
   const standardTemplateDialog = useBoolean();
   const detailsDialog = useBoolean();
@@ -132,7 +134,7 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
   const requestPublish = async () => {
     if (!canPublishCurrent) return;
     const published = await commands.publish();
-    if (published) router.push(studentPaths.enrollment.settings.workflows);
+    if (published) router.push(returnTo);
   };
   const openAddTransition = (stage: AdmissionWorkflowStage) => {
     if (
@@ -201,7 +203,7 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
               ? openDetails
               : () =>
                   leaveGuard.requestNavigation(() =>
-                    router.push(studentPaths.enrollment.settings.workflows)
+                    router.push(returnTo)
                   )
         }
       >

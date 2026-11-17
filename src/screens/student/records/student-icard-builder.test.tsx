@@ -217,17 +217,17 @@ it('reviews one complete selected card with a student chooser and bounded pager'
   await screen.findByText('2/100 selected');
   nextStep();
   expect(await screen.findByRole('heading', { name: 'Review Cards' })).toBeVisible();
-  expect(screen.getAllByRole('img', { name: /I-card preview for/ })).toHaveLength(1);
+  expect(screen.getAllByRole('img', { name: /I-Card preview for/ })).toHaveLength(1);
   expect(screen.queryByText('Live Preview')).not.toBeInTheDocument();
   expect(screen.getByText('2 missing photos')).toBeVisible();
   expect(screen.getByRole('button', { name: 'Previous student' })).toBeDisabled();
   fireEvent.click(screen.getByRole('button', { name: 'Next student' }));
-  expect(screen.getByRole('img', { name: 'I-card preview for Neha Patel' })).toBeVisible();
+  expect(screen.getByRole('img', { name: 'I-Card preview for Neha Patel' })).toBeVisible();
   expect(screen.getByRole('button', { name: 'Next student' })).toBeDisabled();
   fireEvent.change(screen.getByRole('combobox', { name: 'Student to preview' }), {
     target: { value: 'student-1' },
   });
-  expect(screen.getByRole('img', { name: 'I-card preview for Asha Patel' })).toBeVisible();
+  expect(screen.getByRole('img', { name: 'I-Card preview for Asha Patel' })).toBeVisible();
 });
 
 it('exports the selected cohort with A4 capacity without issuing cards or saving a template', async () => {
@@ -246,7 +246,7 @@ it('exports the selected cohort with A4 capacity without issuing cards or saving
   expect(screen.getByText('1 slot per page · 1 card on this page')).toBeVisible();
   expect(screen.getByText('Page 1 of 2')).toBeVisible();
   fireEvent.click(screen.getByRole('button', { name: 'Next A4 page' }));
-  expect(screen.getByRole('img', { name: 'I-card preview for Neha Patel' })).toBeVisible();
+  expect(screen.getByRole('img', { name: 'I-Card preview for Neha Patel' })).toBeVisible();
   expect(screen.getByText('Page 2 of 2')).toBeVisible();
   fireEvent.click(screen.getByRole('button', { name: 'Export bulk PDF' }));
   await waitFor(() => expect(mocks.download).toHaveBeenCalled());
@@ -324,7 +324,7 @@ it('scales the full card proportionally when its container is narrower than the 
       />
     </ThemeProvider>
   );
-  const preview = screen.getByRole('img', { name: 'I-card preview for Asha Patel' });
+  const preview = screen.getByRole('img', { name: 'I-Card preview for Asha Patel' });
   await waitFor(() =>
     expect(preview.firstElementChild).toHaveStyle({
       width: '420px',

@@ -603,7 +603,7 @@ describe('Student List workspace', () => {
     fireEvent.click(checkbox);
     expect(screen.getByText('1 student selected')).toBeVisible();
     expect(screen.queryByRole('button', { name: 'Export selected' })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Print I-cards' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Print I-Cards' }));
     expect(mocks.documentRequest).toMatchObject({
       kind: 'id-card',
       academicYearId: 'year-1',

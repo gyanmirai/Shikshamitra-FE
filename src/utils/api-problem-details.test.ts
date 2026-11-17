@@ -289,20 +289,30 @@ describe('parseApiProblemDetail', () => {
     expect(parsed.errorCode).toBe('ShikshaMitra.Submission.CannotEvaluateMissingSubmission');
   });
 
-  it('explains that a different user must review a form approval request', () => {
-    const parsed = parseApiProblemDetail({
-      data: {
+  it.each(['Admissions.FormMakerCheckerRequired', 'Admissions.FormAdminOverrideReasonRequired'])(
+    'preserves a legacy server reason for retired form approval error %s',
+    (errorCode) => {
+      const reason = 'This form action is no longer available. Refresh the form and try again.';
+      const parsed = parseApiProblemDetail({
         status: 400,
-        title: 'Business rule violated',
-        detail: 'One or more business rules were violated.',
-        errorCode: 'Admissions.FormMakerCheckerRequired',
-      },
-    });
+        data: {
+          error: {
+            code: errorCode,
+            message: 'One or more business rules were violated.',
+            details: reason,
+          },
+        },
+      });
 
-    expect(parsed.detail).toBe(
-      'A different authorized user must review this form. The user who requested approval cannot approve or reject the same form.'
-    );
-  });
+      expect(parsed).toEqual({ errorCode, detail: reason });
+      expect(
+        parseApiProblemDetail({
+          status: 400,
+          data: { errorCode, detail: reason },
+        })
+      ).toEqual({ errorCode, detail: reason });
+    }
+  );
 
   it('maps an admission workflow concurrency conflict to a safe retry message', () => {
     const parsed = parseApiProblemDetail({

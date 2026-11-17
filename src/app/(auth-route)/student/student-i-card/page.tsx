@@ -1,5 +1,5 @@
-import StudentICardTemplates from 'src/screens/student/records/student-icard-templates';
+import StudentICardWorkspace from 'src/screens/student/records/student-icard-workspace';
 
-const StudentICard = () => <StudentICardTemplates />;
+const StudentICard = () => <StudentICardWorkspace />;
 
 export default StudentICard;

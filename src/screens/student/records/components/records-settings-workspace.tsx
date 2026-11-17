@@ -7,7 +7,7 @@ import { RouterLink } from 'src/routes/components';
 import { Tab, Box, Paper, Stack } from '@mui/material';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { studentPaths } from 'src/constants/student-menu';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { StudentSetupManagerHeader as CustomBreadcrumbs } from 'src/screens/student/setup/embedding';
 
 import { settingsTasks } from '../records-settings-model';
 
@@ -16,10 +16,11 @@ import type { RecordsSettingsTask } from '../records-settings-model';
 type Props = {
   task: RecordsSettingsTask;
   suffix?: string;
+  onTaskChange?: (task: RecordsSettingsTask) => void;
   children: ReactNode;
 };
 
-export default function RecordsSettingsWorkspace({ task, suffix = '', children }: Props) {
+export default function RecordsSettingsWorkspace({ task, suffix = '', children, onTaskChange }: Props) {
   const selected = settingsTasks.find((item) => item.key === task)!;
   return (
     <Stack spacing={2} sx={{ minWidth: 0 }}>
@@ -35,6 +36,7 @@ export default function RecordsSettingsWorkspace({ task, suffix = '', children }
       <Paper variant="outlined" sx={{ flexShrink: 0, minWidth: 0, px: 1, overflow: 'hidden' }}>
         <CustomTabs
           value={task}
+          onChange={onTaskChange ? (_, value: RecordsSettingsTask) => onTaskChange(value) : undefined}
           guardUnsavedChanges={false}
           variant="scrollable"
           scrollButtons="auto"
@@ -49,9 +51,7 @@ export default function RecordsSettingsWorkspace({ task, suffix = '', children }
           {settingsTasks.map((item) => (
             <Tab
               key={item.key}
-              component={RouterLink}
-              href={`${studentPaths.records.settingsSections[item.key]}${suffix}`}
-              prefetch={false}
+              {...(!onTaskChange ? { component: RouterLink, href: `${studentPaths.records.settingsSections[item.key]}${suffix}`, prefetch: false } : {})}
               value={item.key}
               id={`records-settings-${item.key}-tab`}
               aria-controls={`records-settings-${item.key}-panel`}

@@ -50,6 +50,17 @@ const deferred = () => {
 
 describe('Offering edit detail loading', () => {
   beforeEach(() => vi.clearAllMocks());
+  it('derives cycle recovery from the existing cycle View grant and removes it after revocation', () => {
+    mocks.granted = [{ name: 'Students.Admissions.Offerings.View', isGranted: true }];
+    const { result, rerender } = renderHook(() => useAdmissionOfferingActions(cycle));
+    expect(result.current.canReviewCycles).toBe(false);
+    mocks.granted = [{ name: 'Students.Admissions.View', isGranted: true }];
+    rerender();
+    expect(result.current.canReviewCycles).toBe(true);
+    mocks.granted = [];
+    rerender();
+    expect(result.current.canReviewCycles).toBe(false);
+  });
   it('guards duplicate detail requests, retains the shell on error, and retries', async () => {
     let reject!: (error: Error) => void;
     const pending = new Promise<AdmissionOffering>((_, fail) => {

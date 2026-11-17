@@ -32,8 +32,9 @@ export type PendingWorkflowConfirmation = {
   action: 'archive' | 'delete' | 'reopen';
 } | null;
 
-export function useWorkflowListActions() {
+export function useWorkflowListActions(returnTo?: string) {
   const router = useRouter();
+  const withReturn = (href: string) => returnTo ? href + (href.includes('?') ? '&' : '?') + new URLSearchParams({ returnTo }) : href;
   const navigation = usePendingNavigation(router.push);
   const createDialog = useBoolean();
   const createCloseRef = useRef<(() => void) | null>(null);
@@ -69,7 +70,7 @@ export function useWorkflowListActions() {
   const navigate = (workflow: AdmissionWorkflow, panel?: 'preview' | 'usage') =>
     navigation.navigate(
       workflow.id,
-      `${studentPaths.enrollment.settings.workflows}/${workflow.id}${panel ? `?panel=${panel}` : ''}`
+      withReturn(`${studentPaths.enrollment.settings.workflows}/${workflow.id}${panel ? `?panel=${panel}` : ''}`)
     );
   const runAction = async (
     action: () => Promise<AdmissionWorkflow | void>,
@@ -105,7 +106,7 @@ export function useWorkflowListActions() {
       }).unwrap();
       shikshaMitraToast.success({ message: 'Workflow draft created' });
       setOpeningCreatedWorkflow(true);
-      router.push(`${studentPaths.enrollment.settings.workflows}/${result.id}?setup=1`);
+      router.push(withReturn(`${studentPaths.enrollment.settings.workflows}/${result.id}?setup=1`));
     } catch (error) {
       setOpeningCreatedWorkflow(false);
       shikshaMitraToast.error({

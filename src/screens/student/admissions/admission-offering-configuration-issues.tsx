@@ -6,11 +6,16 @@ import { studentPaths } from 'src/constants/student-menu';
 
 import { getAdmissionFormPreviewUrl } from './form-preview/form-preview-navigation';
 
-type Props = {
-  errors: AdmissionOfferingValidationError[];
+export type AdmissionOfferingRecoveryAccess = {
   canReviewForms?: boolean;
   canRestoreForms?: boolean;
   canReviewWorkflows?: boolean;
+  canReviewCycles?: boolean;
+};
+
+type Props = AdmissionOfferingRecoveryAccess & {
+  errors: AdmissionOfferingValidationError[];
+  cycleName?: string;
 };
 
 /** The same permission-aware recovery destinations are used by single and bulk activation. */
@@ -19,6 +24,8 @@ export function AdmissionOfferingConfigurationIssues({
   canReviewForms = false,
   canRestoreForms = false,
   canReviewWorkflows = false,
+  canReviewCycles = false,
+  cycleName,
 }: Props) {
   return (
     <Stack spacing={1.5}>
@@ -27,6 +34,14 @@ export function AdmissionOfferingConfigurationIssues({
           <Typography variant="body2" role="alert">
             {offeringConfigurationMessage(error)}
           </Typography>
+          {error.code === 'CycleUnavailable' && canReviewCycles && (
+            <Link
+              component={RouterLink}
+              href={`${studentPaths.enrollment.settings.cycles}${cycleName ? `?${new URLSearchParams({ search: cycleName })}` : ''}`}
+            >
+              Review admission cycle
+            </Link>
+          )}
           {error.formDefinitionId && canReviewForms && (
             <Link component={RouterLink} href={getAdmissionFormPreviewUrl(error.formDefinitionId)}>
               Review {error.formName || 'form'}
@@ -48,6 +63,25 @@ export function AdmissionOfferingConfigurationIssues({
               Review workflow{error.workflowStageName ? ` · ${error.workflowStageName}` : ''}
             </Link>
           )}
+          {!error.workflowDefinitionId &&
+            canReviewWorkflows &&
+            ['WorkflowMissing', 'WorkflowNotPublished'].includes(error.code) && (
+              <Link component={RouterLink} href={studentPaths.enrollment.settings.workflows}>
+                Review admission workflows
+              </Link>
+            )}
+          {!error.formDefinitionId &&
+            canReviewForms &&
+            [
+              'InquiryFormMissing',
+              'InquiryFormNotPublished',
+              'ApplicationFormMissing',
+              'ApplicationFormNotPublished',
+            ].includes(error.code) && (
+              <Link component={RouterLink} href={studentPaths.enrollment.settings.forms}>
+                Review admission forms
+              </Link>
+            )}
         </Stack>
       ))}
     </Stack>
@@ -56,6 +90,28 @@ export function AdmissionOfferingConfigurationIssues({
 
 /** Older APIs include binding identifiers and unrelated surname guidance in this error. */
 export function offeringConfigurationMessage(error: AdmissionOfferingValidationError) {
+  switch (error.code) {
+    case 'CycleUnavailable':
+      return 'Publish the admission cycle before activating this offering.';
+    case 'WorkflowMissing':
+      return 'Choose a published admission workflow.';
+    case 'WorkflowNotPublished':
+      return 'Choose an available published admission workflow.';
+    case 'InquiryFormMissing':
+      return 'Choose a published Inquiry form.';
+    case 'ApplicationFormMissing':
+      return 'Choose a published Registration form.';
+    case 'InquiryFormNotPublished':
+      return /archived/i.test(error.message)
+        ? `Inquiry form${error.formName ? ` "${error.formName}"` : ''} is archived. Restore it or choose another.`
+        : 'Choose an available published Inquiry form.';
+    case 'ApplicationFormNotPublished':
+      return /archived/i.test(error.message)
+        ? `Registration form${error.formName ? ` "${error.formName}"` : ''} is archived. Restore it or choose another.`
+        : 'Choose an available published Registration form.';
+    default:
+      break;
+  }
   if (error.code !== 'ApplicationFormIdentityIncomplete' || !error.message.includes('Applicant.'))
     return error.message;
   const fields = [

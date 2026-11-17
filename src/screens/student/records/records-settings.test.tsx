@@ -9,6 +9,8 @@ import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { vi, it, expect, describe, beforeEach } from 'vitest';
 import { defaultSettings } from 'src/components/settings/config-settings';
+import { StudentSetupEmbeddingProvider } from 'src/screens/student/setup/embedding';
+import { useGetStudentRecordsSettingsQuery } from 'src/redux/student/records/student-records-api';
 import {
   screen,
   within,
@@ -27,6 +29,7 @@ const mocks = vi.hoisted(() => ({
   params: new URLSearchParams(),
   permissions: [] as { name: string; isGranted: boolean }[],
   query: {} as any,
+  yearOnly: false,
   save: vi.fn(),
   preview: vi.fn(),
   publish: vi.fn(),
@@ -108,7 +111,7 @@ vi.mock('src/components/custom-select', () => ({
   ),
 }));
 vi.mock('src/redux/student/records/student-records-api', () => ({
-  useGetStudentRecordsSettingsQuery: () => mocks.query,
+  useGetStudentRecordsSettingsQuery: vi.fn((input?: { academicYearId?: string }) => mocks.yearOnly && input?.academicYearId !== 'year-1' ? { currentData: undefined, isError: true } : mocks.query),
   useGetStudentRecordsSettingsRolesQuery: () => ({ data: { items: [{ name: 'admin' }] } }),
   useSaveStudentRecordsDraftMutation: () => [mocks.save, { isLoading: false }],
   usePreviewStudentRecordsPolicyMutation: () => [mocks.preview, { isLoading: false }],
@@ -166,6 +169,7 @@ let saved: StudentRecordsSettings;
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.params = new URLSearchParams();
+  mocks.yearOnly = false;
   mocks.permissions = ['Students.Records.Settings.Add'].map((name) => ({ name, isGranted: true }));
   saved = {
     id: 'config-1',
@@ -214,6 +218,25 @@ describe('Student Records settings', () => {
     expect(tabs.getByRole('tab', { name: 'Year-End & Transitions' })).toBeVisible();
     expect(tabs.getByRole('tab', { name: 'Access & Visibility' })).toBeVisible();
     expect(tabs.queryByText(/^\d+$/)).not.toBeInTheDocument();
+  });
+  it('keeps the policy draft across embedded sections without navigating away from the guide', async () => {
+    const report = vi.fn();
+    render(<StudentSetupEmbeddingProvider onFormStateChange={report}><RecordsSettings task="documents" /></StudentSetupEmbeddingProvider>);
+    fireEvent.change(screen.getByLabelText('Certificate number prefix'), { target: { value: 'GUIDE' } });
+    await waitFor(() => expect(report).toHaveBeenLastCalledWith({ dirty: true, busy: false }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Change Rules & Approvals' }));
+    expect(screen.getByRole('tab', { name: 'Change Rules & Approvals' })).toHaveAttribute('aria-selected', 'true');
+    fireEvent.click(screen.getByRole('tab', { name: 'Documents & IDs' }));
+    expect(screen.getByLabelText('Certificate number prefix')).toHaveValue('GUIDE');
+    expect(mocks.navigate).not.toHaveBeenCalled();
+    expect(mocks.save).not.toHaveBeenCalled();
+  });
+  it('loads the selected year policy in the embedded guide before requesting school defaults', async () => {
+    mocks.yearOnly = true;
+    const readSettings = vi.mocked(useGetStudentRecordsSettingsQuery);
+    render(<StudentSetupEmbeddingProvider onFormStateChange={vi.fn()}><RecordsSettings /></StudentSetupEmbeddingProvider>);
+    expect(readSettings).toHaveBeenLastCalledWith({ academicYearId: 'year-1' }, expect.anything());
+    expect(screen.getByLabelText('Configuration scope')).toHaveValue('year');
   });
   it('restores the selected route and preserves academic-year scope in every tab link', () => {
     mocks.params = new URLSearchParams('scope=year&year=year-1');

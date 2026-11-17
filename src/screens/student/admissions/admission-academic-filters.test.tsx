@@ -228,6 +228,37 @@ describe('admission academic filters', () => {
     );
   });
 
+  it('round-trips a specific class through All Classes without changing year, hierarchy or search', () => {
+    mocks.pathname = '/student/admissions/inquiries';
+    mocks.query =
+      'year=year-1&board=board-1&medium=medium-1&class=class-1&search=ada&page=3&status=2';
+    const { result, rerender } = renderHook(() => useAdmissionAcademicFilters());
+
+    act(() => result.current.update('class', ''));
+
+    expect(result.current.standardId).toBe('');
+    expect(mocks.replace).toHaveBeenLastCalledWith(
+      '/student/admissions/inquiries?year=year-1&board=board-1&medium=medium-1&search=ada&status=2',
+      { scroll: false }
+    );
+    mocks.query = 'year=year-1&board=board-1&medium=medium-1&search=ada&status=2';
+    rerender();
+    expect(result.current).toMatchObject({
+      academicYearId: 'year-1',
+      boardId: 'board-1',
+      mediumId: 'medium-1',
+      standardId: '',
+    });
+
+    act(() => result.current.update('class', 'class-1'));
+
+    expect(result.current.standardId).toBe('class-1');
+    expect(mocks.replace).toHaveBeenLastCalledWith(
+      '/student/admissions/inquiries?year=year-1&board=board-1&medium=medium-1&search=ada&status=2&class=class-1',
+      { scroll: false }
+    );
+  });
+
   it('places an optional Filters action after Board, Medium and Class', () => {
     render(
       <ThemeProvider theme={createTheme(defaultSettings)}>

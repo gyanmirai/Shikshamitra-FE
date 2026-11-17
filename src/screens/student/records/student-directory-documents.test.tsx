@@ -1,9 +1,11 @@
 import type { StudentDirectoryItem } from 'src/redux/student/records/student-records-types';
 
 import { it, vi, expect, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 
 import StudentDirectoryDocuments from './student-directory-documents';
+
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
 const state = vi.hoisted(() => ({
   year: 'year-1',
@@ -47,10 +49,14 @@ vi.mock('./student-icard-builder', () => ({
     return <div>I-card builder</div>;
   },
 }));
-vi.mock('./student-certificate-form', () => ({
+vi.mock('./components/certificate-generation-drawer', () => ({
   default: (props: any) => {
     state.certificate(props);
-    return <div>Certificate form</div>;
+    return (
+      <section role="dialog" aria-label="Generate Certificate">
+        Certificate drawer
+      </section>
+    );
   },
 }));
 const student: StudentDirectoryItem = {
@@ -82,7 +88,7 @@ it('passes selected students and their source year to the existing I-card workfl
       onClose={vi.fn()}
     />
   );
-  expect(screen.getByRole('dialog', { name: 'Print Student I-Cards' })).toBeInTheDocument();
+  expect(screen.getByRole('dialog', { name: 'Print I-Cards' })).toBeInTheDocument();
   expect(state.builder.mock.lastCall?.[0]).toMatchObject({
     initialStudents: [student],
     academicYearId: 'year-1',
@@ -114,17 +120,16 @@ it('pins all four academic fields and provides heading help for a bulk I-card re
   });
   expect(state.drawer.mock.lastCall?.[0].titleInfo).toMatch(/review.*PDF.*issue/i);
 });
-it('keeps the selected students when choosing an existing certificate type', () => {
+it('opens the shared generation drawer for the selected students without a second selection form', () => {
   render(
     <StudentDirectoryDocuments
       request={{ kind: 'certificate', students: [student], academicYearId: 'year-1' }}
       onClose={vi.fn()}
     />
   );
-  fireEvent.click(screen.getByRole('button', { name: 'Bonafide' }));
+  expect(screen.getByRole('dialog', { name: 'Generate Certificate' })).toBeInTheDocument();
   expect(state.certificate.mock.lastCall?.[0]).toMatchObject({
-    certificateType: 1,
-    initialStudents: [student],
+    students: [student],
     academicYearId: 'year-1',
   });
 });

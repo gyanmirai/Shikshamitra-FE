@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useStudentSetupEmbedding } from 'src/screens/student/setup/embedding';
 import { readAcademicFilterIds } from 'src/utils/student-academic-filter-query';
 
 export type AdmissionOfferingFilters = {
@@ -27,6 +28,7 @@ const areFiltersEqual = (current: AdmissionOfferingFilters, next: AdmissionOffer
   );
 
 export function useAdmissionOfferingFilters() {
+  const { embedded } = useStudentSetupEmbedding();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -35,7 +37,7 @@ export function useAdmissionOfferingFilters() {
     campusId: searchParams.get('campus') ?? '',
     boardId: readAcademicFilterIds(searchParams.get('board'))[0] ?? '',
     mediumId: readAcademicFilterIds(searchParams.get('medium'))[0] ?? '',
-    stageId: searchParams.get('stage') ?? '',
+    stageId: embedded ? '' : (searchParams.get('stage') ?? ''),
     standardId: searchParams.get('standard') ?? '',
     isActive: searchParams.get('active') ?? '',
     availabilityStatus: searchParams.get('availability') ?? '',
@@ -51,6 +53,7 @@ export function useAdmissionOfferingFilters() {
     if (areFiltersEqual(filters, next)) return;
 
     setFilters(next);
+    if (embedded) return;
     const params = new URLSearchParams();
     const values: Record<string, string> = {
       cycle: next.admissionCycleId,

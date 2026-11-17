@@ -26,7 +26,6 @@ describe('managed inquiry policy', () => {
   });
 
   it.each([
-    { assignmentMode: 1, counsellorPoolUserIds: [] },
     { firstContactDueInHours: 0 },
     { qualificationDueInDays: 366 },
     { followUpDueInDays: 91 },
@@ -38,7 +37,7 @@ describe('managed inquiry policy', () => {
     ).toBeTruthy();
   });
 
-  it('accepts round robin, source rules and a qualification checklist', () => {
+  it('preserves allowed sources and a qualification checklist while retiring legacy routing', () => {
     expect(
       getInquiryConfigurationError(
         json({
@@ -61,28 +60,45 @@ describe('managed inquiry policy', () => {
     expect(() => writeAdmissionInquiryPolicy(value, DEFAULT_INQUIRY_POLICY)).toThrow('unsupported');
   });
 
-  it('retires legacy intake gates without changing timing, assignment, or allowed sources', () => {
-    const original = json({
-      ...DEFAULT_INQUIRY_POLICY,
-      applicationStartRequirement: 2,
-      duplicateRule: 2,
-      requireGuardianEmail: true,
-      requireApplicantDateOfBirth: true,
-      allowedSources: [0],
-      requireSourceDetailFor: [3],
-      firstContactDueInHours: 12,
-    });
-    const policy = readAdmissionInquiryPolicy(original)!;
-    expect(policy).toMatchObject({
-      applicationStartRequirement: 0,
-      duplicateRule: 1,
-      requireGuardianEmail: false,
-      requireApplicantDateOfBirth: false,
-      requireSourceDetailFor: [],
-      allowedSources: [0],
-      firstContactDueInHours: 12,
-    });
-    expect(getInquiryConfigurationError(original)).toBeUndefined();
-    expect(JSON.parse(writeAdmissionInquiryPolicy(original, policy)).inquiry).toMatchObject(policy);
-  });
+  it.each([
+    { counsellorPoolUserIds: [] },
+    { counsellorPoolUserIds: ['11111111-1111-4111-8111-111111111111'] },
+  ])(
+    'retires legacy intake gates and routing while preserving timing and allowed sources (%j)',
+    ({ counsellorPoolUserIds }) => {
+      const legacyPolicy: typeof DEFAULT_INQUIRY_POLICY = {
+        ...DEFAULT_INQUIRY_POLICY,
+        applicationStartRequirement: 2,
+        duplicateRule: 2,
+        requireGuardianEmail: true,
+        requireApplicantDateOfBirth: true,
+        assignmentMode: 1,
+        defaultCounsellorId: '11111111-1111-4111-8111-111111111111',
+        counsellorPoolUserIds,
+        restrictActionsToAssignedCounsellor: true,
+        allowedSources: [0],
+        requireSourceDetailFor: [3],
+        firstContactDueInHours: 12,
+      };
+      const original = json(legacyPolicy);
+      const policy = readAdmissionInquiryPolicy(original)!;
+      expect(policy).toMatchObject({
+        applicationStartRequirement: 0,
+        duplicateRule: 1,
+        requireGuardianEmail: false,
+        requireApplicantDateOfBirth: false,
+        requireSourceDetailFor: [],
+        assignmentMode: 0,
+        defaultCounsellorId: null,
+        counsellorPoolUserIds: [],
+        restrictActionsToAssignedCounsellor: false,
+        allowedSources: [0],
+        firstContactDueInHours: 12,
+      });
+      expect(getInquiryConfigurationError(original)).toBeUndefined();
+      expect(JSON.parse(writeAdmissionInquiryPolicy(original, legacyPolicy)).inquiry).toMatchObject(
+        policy
+      );
+    }
+  );
 });

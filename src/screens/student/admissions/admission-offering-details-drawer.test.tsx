@@ -6,6 +6,14 @@ import { render, screen, within, fireEvent } from '@testing-library/react';
 import { AdmissionOfferingDetailsDrawer } from './admission-offering-details-drawer';
 
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span aria-hidden="true" /> }));
+const notices = vi.hoisted(() => ({
+  warning: vi.fn(),
+  info: vi.fn(),
+  success: vi.fn(),
+  error: vi.fn(),
+  dismiss: vi.fn(),
+}));
+vi.mock('src/components/toast', () => ({ shikshaMitraToast: notices }));
 
 const offering: AdmissionOffering = {
   id: 'offering-1',
@@ -45,6 +53,73 @@ const offering: AdmissionOffering = {
 };
 
 describe('Admission offering details drawer', () => {
+  it('keeps saved configuration issues inline and removes recovery actions when ready', () => {
+    notices.warning.mockClear();
+    const invalid = {
+      ...offering,
+      configuration: {
+        isValid: false,
+        status: 1 as const,
+        errors: [
+          {
+            code: 'InquiryFormNotPublished',
+            message: 'Inquiry form is archived. Long server instructions.',
+            formDefinitionId: 'form-1',
+            formName: 'Inquiry 2026',
+          },
+        ],
+      },
+    };
+    const view = render(
+      <AdmissionOfferingDetailsDrawer
+        open
+        offering={invalid}
+        onClose={vi.fn()}
+        canReviewForms
+        canRestoreForms
+      />
+    );
+    const readiness = within(screen.getByRole('region', { name: 'Configuration Readiness' }));
+    expect(notices.warning).not.toHaveBeenCalled();
+    expect(readiness.getByRole('status')).toHaveTextContent('1 issue to fix');
+    expect(
+      readiness.getByText('Inquiry form "Inquiry 2026" is archived. Restore it or choose another.')
+    ).toBeVisible();
+    expect(readiness.getByRole('link', { name: 'Review Inquiry 2026' })).toHaveAttribute(
+      'href',
+      expect.stringContaining('form-1')
+    );
+    expect(readiness.getByRole('link', { name: 'Restore archived form' })).toHaveAttribute(
+      'href',
+      expect.stringContaining('restoreForm=form-1')
+    );
+
+    view.rerender(
+      <AdmissionOfferingDetailsDrawer
+        open
+        offering={invalid}
+        loadingDetail
+        onClose={vi.fn()}
+        canReviewForms
+        canRestoreForms
+      />
+    );
+    expect(readiness.queryByRole('link')).not.toBeInTheDocument();
+    view.rerender(<AdmissionOfferingDetailsDrawer open offering={invalid} onClose={vi.fn()} />);
+    expect(readiness.queryByRole('link')).not.toBeInTheDocument();
+    view.rerender(
+      <AdmissionOfferingDetailsDrawer
+        open
+        offering={{ ...invalid, configuration: { isValid: true, status: 0, errors: [] } }}
+        onClose={vi.fn()}
+        canReviewForms
+        canRestoreForms
+      />
+    );
+    expect(readiness.getByText('Ready', { exact: true })).toBeVisible();
+    expect(readiness.queryByText(/archived/)).not.toBeInTheDocument();
+    expect(readiness.queryByRole('link')).not.toBeInTheDocument();
+  });
   it('groups offering details in a right drawer and keeps read-only access', () => {
     const onClose = vi.fn();
     render(<AdmissionOfferingDetailsDrawer open offering={offering} onClose={onClose} />);

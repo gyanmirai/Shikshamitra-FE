@@ -43,7 +43,8 @@ it('keeps the form draft on Keep editing and discards only after an explicit sty
       />
     </ThemeProvider>
   );
-  await user.type(screen.getByRole('textbox', { name: 'Form Name *' }), 'Unsaved registration');
+  await user.click(screen.getByRole('textbox', { name: 'Form Name *' }));
+  await user.paste('Unsaved registration');
   await user.click(screen.getByRole('button', { name: 'close' }));
   expect(await screen.findByText('Discard Unsaved Changes?')).toBeVisible();
   expect(onClose).not.toHaveBeenCalled();

@@ -331,7 +331,7 @@ export default function StudentDirectory({ rowActions }: Props) {
               disabled={query.isFetching}
               onClick={() => openDocuments('id-card', selected, true)}
             >
-              Print I-cards
+              Print I-Cards
             </Button>
           )}
           {canGenerateCertificates && (
