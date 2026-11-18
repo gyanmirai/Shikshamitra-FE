@@ -29,6 +29,7 @@ import {
 } from '@mui/material';
 
 import { StudentProfileHeader } from './student-profile-header';
+import { StudentGrNumberAction } from './student-gr-number-dialog';
 import { StudentProfileOverview } from './student-profile-overview';
 import { LEGACY_PROFILE_SECTIONS } from './student-record-profile-model';
 import { StudentRecordHistoryPanel } from './student-record-history-panel';
@@ -102,6 +103,16 @@ export function StudentProfileView({
   const [relatedAnchor, setRelatedAnchor] = useState<HTMLElement | null>(null);
   const [historyPage, setHistoryPage] = useState(0);
   const canViewChanges = hasGrantedPermission(permissions, 'Students.Records.Changes.View');
+  const canAssignGrNumber =
+    view === 'overview' &&
+    canViewChanges &&
+    hasGrantedPermission(permissions, 'Students.Records.Changes.Add') &&
+    student.recordsAccess === 'Full' &&
+    student.status === 6 &&
+    !student.grNumber?.trim() &&
+    student.grNo == null &&
+    !student.maskedFields?.includes('Identity') &&
+    [student.firstName, student.middleName, student.lastName].some((name) => name?.trim());
   const detailsQuery = useGetStudentRecordDetailsQuery(
     {
       studentId: student.studentId,
@@ -185,7 +196,12 @@ export function StudentProfileView({
   );
   return (
     <>
-      <StudentProfileHeader student={student} />
+      <StudentProfileHeader
+        student={student}
+        grNumberAction={
+          canAssignGrNumber && <StudentGrNumberAction key={student.studentId} student={student} />
+        }
+      />
       <Paper
         variant="outlined"
         sx={{

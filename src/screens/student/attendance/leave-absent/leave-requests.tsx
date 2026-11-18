@@ -18,6 +18,7 @@ import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { formatStr } from 'src/utils/format-time';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { fileToBase64 } from 'src/utils/file-to-base64';
 import FileUploader from 'src/components/custom-upload';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -78,6 +79,14 @@ import {
 } from './leave-request-table-filters';
 
 import type { IFormValues, LeaveDecisionContext } from './type';
+
+const leaveAttachmentTypes: Readonly<Record<string, string>> = {
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.pdf': 'application/pdf',
+};
+const allowedLeaveAttachmentTypes = new Set([...Object.values(leaveAttachmentTypes), 'image/jpg']);
 
 const LeaveAndAbsentScreen = ({
   scope,
@@ -730,7 +739,7 @@ const LeaveRequestForm = ({
     currentQueryAndMutation: useUpdateStudentLeaveMutation,
   });
 
-  const { dirty, errors, touched, setFieldValue, values, handleSubmit } = useFormik<IFormValues>({
+  const form = useFormik<IFormValues>({
     initialValues: {
       leaveType: editData?.studentLeaveTypeId ?? '',
       description: editData?.description ?? '',
@@ -739,7 +748,7 @@ const LeaveRequestForm = ({
       isHalfDay: editData?.isHalfDay ?? false,
       rejectionReason: '',
       status: null,
-      docs: '',
+      docs: null,
     },
     validationSchema: Yup.object({
       leaveType: Yup.string().required('Leave type is required'),
@@ -798,17 +807,36 @@ const LeaveRequestForm = ({
     }),
     onSubmit: async (val) => {
       try {
+        let attachmentFields;
+        if (val.docs) {
+          const file = val.docs;
+          const extension = file.name.toLowerCase().match(/\.[^.]+$/)?.[0] ?? '';
+          const contentType = file.type.toLowerCase() || leaveAttachmentTypes[extension];
+          if (!contentType || !allowedLeaveAttachmentTypes.has(contentType)) {
+            shikshaMitraToast.error({
+              message: 'Select a PNG, JPG, JPEG or PDF supporting document.',
+            });
+            return;
+          }
+          const dataUrl = await fileToBase64(file).catch(() => null);
+          const attachment = dataUrl?.split(',', 2)[1];
+          if (!attachment) {
+            shikshaMitraToast.error({
+              message: 'The supporting document could not be read. Select the file again.',
+            });
+            return;
+          }
+          attachmentFields = {
+            attachment,
+            attachmentFileName: file.name,
+            attachmentContentType: contentType,
+          };
+        }
         const payload = {
           studentLeaveTypeId: val.leaveType,
           isHalfDay: val.isHalfDay,
           description: val.description,
-          ...(val.docs
-            ? {
-                attachment: val.docs.replace(/^data:[^;]+;base64,/, ''),
-                attachmentFileName: `${editData?.studentName || student?.firstName || 'Student'} ${val.leaveType} ${val.startDate?.format(dateFormat)}`,
-                attachmentContentType: 'application/octet-stream',
-              }
-            : {}),
+          ...attachmentFields,
           leaveDate: dateConvertor(val?.startDate?.format(dateFormat) || ''),
           ...(!val.isHalfDay
             ? {
@@ -834,10 +862,12 @@ const LeaveRequestForm = ({
     },
   });
 
+  const { dirty, errors, touched, setFieldValue, values, handleSubmit, isSubmitting } = form;
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const isSaving = isSubmitting || addStudentLeaveLoading || updateStudentLeaveLoading;
   useEffect(() => {
-    onBusyChange(addStudentLeaveLoading || updateStudentLeaveLoading);
-  }, [addStudentLeaveLoading, updateStudentLeaveLoading, onBusyChange]);
+    onBusyChange(isSaving);
+  }, [isSaving, onBusyChange]);
   useEffect(() => () => onBusyChange(false), [onBusyChange]);
   useEffect(() => {
     onDirtyChange(dirty);
@@ -845,10 +875,7 @@ const LeaveRequestForm = ({
   return (
     <>
       <DialogScrollContent>
-        <FormBusyRegion
-          busy={addStudentLeaveLoading || updateStudentLeaveLoading}
-          label="Saving leave request…"
-        >
+        <FormBusyRegion busy={isSaving} label="Saving leave request…">
           {editData && (
             <Typography variant="subtitle2" sx={{ mb: 2 }}>
               Student: {editData.studentName}
@@ -1128,11 +1155,13 @@ const LeaveRequestForm = ({
                     Supporting document (optional)
                   </Typography>
                   <FileUploader
-                    value={typeof values.docs === 'string' ? undefined : values.docs}
+                    value={values.docs ?? undefined}
                     multiple={false}
-                    onChange={(value) => setFieldValue('docs', value)}
+                    onChange={(value) =>
+                      setFieldValue('docs', value instanceof File ? value : null)
+                    }
                     primaryText="Choose supporting document"
-                    disabled={addStudentLeaveLoading || updateStudentLeaveLoading}
+                    disabled={isSaving}
                     parentsProps={{ role: 'group', 'aria-labelledby': supportingDocumentLabelId }}
                     dragProps={{ 'aria-describedby': supportingDocumentHelpId }}
                   />
@@ -1154,7 +1183,7 @@ const LeaveRequestForm = ({
         <Button
           startIcon={<Iconify icon="mdi:close" />}
           size="small"
-          disabled={addStudentLeaveLoading || updateStudentLeaveLoading}
+          disabled={isSaving}
           onClick={() => {
             handleClose(null, false);
           }}
@@ -1168,7 +1197,7 @@ const LeaveRequestForm = ({
           onClick={(e: any) => handleSubmit(e)}
           variant="contained"
           size="small"
-          loading={addStudentLeaveLoading || updateStudentLeaveLoading}
+          loading={isSaving}
           disabled={!editData && !student?.studentId}
         >
           Submit

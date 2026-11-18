@@ -74,6 +74,8 @@ const AdaptiveThreeDotsActions = ({
   onClickThreeDots,
   onClosePopover,
   placement = 'left-top',
+  popoverSlotProps,
+  popoverAction,
   sx,
 }: AdaptiveThreeDotsActionsProps) => {
   const theme = useTheme();
@@ -121,6 +123,8 @@ const AdaptiveThreeDotsActions = ({
       onClickThreeDots={onClickThreeDots}
       onClosePopover={onClosePopover}
       placement={placement}
+      popoverSlotProps={popoverSlotProps}
+      popoverAction={popoverAction}
       sx={sx}
     />
   );

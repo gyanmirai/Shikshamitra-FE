@@ -3,12 +3,18 @@ module: student
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-11-17
+updated_on: 2026-11-18
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Validate Student Enrollment Admissions changes
+
+## Inquiry Row Action Menu
+
+Run `inquiry-management/admission-inquiry-columns.test.ts`, `admission-inquiry-actions.ui.test.tsx`, `use-inquiry-handoff.test.ts` and the shared AdaptiveThreeDotsActions/ThreeDotsActions suites. Verify concise Move to Next Stage and Handling History menu labels, unchanged selected-record callbacks, permissions, disabled reasons and progress. The Inquiry menu opens below its trigger with a theme-spacing gap and a right-aligned arrow; insufficient space below opens it above. Check top and bottom rows at 390/768/1440px in both themes, deferred icon sizing, keyboard focus/activation/Escape and no document overflow. Use synthetic callbacks for browser geometry checks; do not advance real inquiries for presentation verification.
+
+On 18 November 2026, 52 focused tests, full TypeScript, scoped lint/format and Student docs validation pass. Isolated in-app-browser checks at 390/768/1440px verify contained menus, visible arrows, above/below placement, keyboard activation/Escape and unchanged selected-record callbacks; both themes were inspected. Browser geometry confirms no intersection with the originating row's action buttons and no horizontal document overflow. No real inquiry is advanced; deployed acceptance remains separate.
 
 ## Compact approval and finalization
 

@@ -96,6 +96,8 @@ export const getStudentSetupAssignmentValue = (
     type
   );
 
+const closedSetupReason = 'This student is no longer editable in Student Setup.';
+
 const closedReason = (student: StudentOnboardingItem): string | undefined => {
   if (student.source !== 'onboarding-case') return 'Manage this student through Student Records.';
   if (
@@ -105,7 +107,7 @@ const closedReason = (student: StudentOnboardingItem): string | undefined => {
     student.backendStatus === 6 ||
     ['completed', 'cancelled', 'provisioning'].includes(student.status)
   )
-    return 'This student is no longer editable in Student Setup.';
+    return closedSetupReason;
   return undefined;
 };
 
@@ -175,6 +177,34 @@ export const getStudentSetupAssignmentEligibility = (
   }
   return { eligible: !reason, reason };
 };
+
+export function getGrAutoUnavailableReason(
+  students: readonly StudentOnboardingItem[],
+  grAssignmentMode?: AssignmentModePolicy
+): string {
+  if (!students.length) return 'No students match these filters.';
+
+  const missingGr = students.filter(
+    (student) => getStudentSetupAssignmentValue(student, 'gr-number') === null
+  );
+  if (!missingGr.length) return 'Everyone on this page already has a GR number.';
+
+  const reasons = new Set(
+    missingGr.map(
+      (student) =>
+        getStudentSetupAssignmentEligibility(student, 'gr-number', 'automatic', grAssignmentMode)
+          .reason
+    )
+  );
+  if (reasons.size === 1) {
+    const [reason] = reasons;
+    if (reason === closedSetupReason) {
+      return 'Students without a GR number on this page are already enrolled or their setup is closed.';
+    }
+    if (reason) return reason;
+  }
+  return 'No students on this page are eligible for Auto GR assignment. Open a student’s setup to review.';
+}
 
 const inputError = (
   type: StudentSetupAssignmentType,

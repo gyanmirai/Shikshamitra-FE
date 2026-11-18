@@ -1,9 +1,11 @@
 import type { Standards, Organization } from 'src/types/school';
 
-import { Paper, Stack } from '@mui/material';
+import { Box, Paper } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useStudentAcademicScope } from 'src/hooks/use-student-academic-scope';
+
+import { studentAcademicFilterRowSx } from '../../student-academic-filter-layout';
 
 export function useAttendanceContext() {
   const params = useSearchParams();
@@ -49,7 +51,7 @@ export function AttendanceClassFilters({
 }) {
   return (
     <Paper variant="outlined" sx={{ p: 1 }}>
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+      <Box sx={studentAcademicFilterRowSx}>
         <CustomSelect
           fullWidth
           size="small"
@@ -116,7 +118,7 @@ export function AttendanceClassFilters({
             context.update({ division: String(value), student: undefined, page: undefined })
           }
         />
-      </Stack>
+      </Box>
     </Paper>
   );
 }

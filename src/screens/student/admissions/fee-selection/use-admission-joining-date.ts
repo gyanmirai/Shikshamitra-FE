@@ -33,9 +33,10 @@ export function useAdmissionJoiningDate(
   const value = currentDraft ? currentDraft.value : parseDateOnly(state?.joiningDate);
   const validDate = Boolean(value?.isValid());
   const date = validDate ? toDateOnly(value) : '';
-  const selectedPolicyVersionId = selection?.applicationId === applicationId
-    ? selection.versionId
-    : state?.defaultProrationPolicyVersionId ?? null;
+  const selectedPolicyVersionId =
+    selection?.applicationId === applicationId
+      ? selection.versionId
+      : (state?.defaultProrationPolicyVersionId ?? null);
   const prorationPolicyEligible = Boolean(
     date && state?.academicYearStartDate && date >= toDateOnly(state.academicYearStartDate)
   );
@@ -56,9 +57,10 @@ export function useAdmissionJoiningDate(
       applicationId,
       joiningDate: date,
       variableFeeHeads: [],
-      ...(state?.canSelectProrationPolicy && prorationPolicyEligible && {
-        prorationPolicyVersionId: selectedPolicyVersionId,
-      }),
+      ...(state?.canSelectProrationPolicy &&
+        prorationPolicyEligible && {
+          prorationPolicyVersionId: selectedPolicyVersionId,
+        }),
     },
     needsPreview && !validation && !stale && !query.isFetching
   );
@@ -89,11 +91,16 @@ export function useAdmissionJoiningDate(
       );
     if (state.isLocked || !state.canEdit) return;
     try {
-      await save({
+      const saved = await save({
         applicationId,
         joiningDate: date,
         concurrencyStamp: currentDraft?.stamp ?? state.concurrencyStamp,
       }).unwrap();
+      if (toDateOnly(saved?.joiningDate) !== date) {
+        throw new Error(
+          'Could not confirm the actual joining date. Check the saved date before retrying fee preparation.'
+        );
+      }
     } catch (failure) {
       // A lost response or a competing confirmation can already have changed the
       // source. Refresh capabilities while retaining the user's draft for recovery.

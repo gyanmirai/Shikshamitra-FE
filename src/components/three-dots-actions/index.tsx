@@ -15,6 +15,8 @@ const ThreeDotsActions = ({
   directActions = [],
   onClickThreeDots,
   onClosePopover,
+  popoverSlotProps,
+  popoverAction,
   placement = 'left-top',
   showViewIcon = false,
   showEditIcon = false,
@@ -166,6 +168,7 @@ const ThreeDotsActions = ({
         </Tooltip>
       )}
       <CustomPopover
+        action={popoverAction}
         open={popover.open}
         anchorEl={popover.anchorEl}
         onClick={(event) => event.stopPropagation()}
@@ -186,7 +189,8 @@ const ThreeDotsActions = ({
           onClosePopover?.();
         }}
         slotProps={{
-          arrow: { placement },
+          ...popoverSlotProps,
+          arrow: { ...popoverSlotProps?.arrow, placement },
         }}
       >
         {actions({ popover })}

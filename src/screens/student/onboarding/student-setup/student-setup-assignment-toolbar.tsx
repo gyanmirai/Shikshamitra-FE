@@ -2,6 +2,7 @@
 
 import type { ReactNode } from 'react';
 
+import { useId } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -16,6 +17,7 @@ export default function StudentSetupAssignmentToolbar({
   pendingLoading = false,
   selectedCount = 0,
   onClearSelection,
+  showAssignmentActions,
   automaticDisabledReason,
   busy,
   unavailable = false,
@@ -41,6 +43,7 @@ export default function StudentSetupAssignmentToolbar({
   pendingLoading?: boolean;
   selectedCount?: number;
   onClearSelection?: () => void;
+  showAssignmentActions: boolean;
   automaticDisabledReason?: string;
   busy: boolean;
   unavailable?: boolean;
@@ -65,6 +68,9 @@ export default function StudentSetupAssignmentToolbar({
     automaticDisabledReason === 'Select one class and division for Auto.'
       ? undefined
       : automaticDisabledReason;
+  const autoHelpId = useId();
+  const showAutomaticHelp =
+    showAssignmentActions && !manualEditing && Boolean(automaticHelp) && !busy && !unavailable;
   return (
     <Paper variant="outlined" sx={{ p: 1, minWidth: 0, flexShrink: 0 }}>
       <Stack spacing={1}>
@@ -116,7 +122,7 @@ export default function StudentSetupAssignmentToolbar({
                       Cancel Editing
                     </Button>
                   </>
-                ) : (
+                ) : showAssignmentActions ? (
                   <>
                     <Tooltip title={automaticHelp || ''}>
                       <Box component="span" sx={{ display: 'inline-flex' }}>
@@ -127,6 +133,7 @@ export default function StudentSetupAssignmentToolbar({
                           onClick={onAuto}
                           loading={automaticLoading}
                           disabled={busy || unavailable || !automaticCount}
+                          aria-describedby={showAutomaticHelp ? autoHelpId : undefined}
                         >
                           Auto
                         </Button>
@@ -142,7 +149,7 @@ export default function StudentSetupAssignmentToolbar({
                       Manual
                     </Button>
                   </>
-                ))}
+                ) : null)}
               {locks}
             </Stack>
           </Stack>
@@ -163,8 +170,8 @@ export default function StudentSetupAssignmentToolbar({
             </Button>
           </Stack>
         )}
-        {!manualEditing && automaticHelp && !busy && !unavailable && (
-          <Typography variant="caption" color="text.secondary" role="status">
+        {showAutomaticHelp && (
+          <Typography id={autoHelpId} variant="caption" color="text.secondary" role="status">
             {automaticHelp}
           </Typography>
         )}

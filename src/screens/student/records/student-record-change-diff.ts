@@ -15,6 +15,26 @@ import { recordDiffValue, recordFieldLabel } from './record-diff';
 
 export function profileChangeDiff(change: RecordChange, sources: RecordRegistrationSource[]) {
   if (change.payloadMasked || !change.before || !change.proposed) return [];
+  if (change.section === 'gr-number') {
+    const { grNumber, mode, registerReference } = change.proposed;
+    return [
+      { label: 'GR number', before: change.before.grNumber, after: grNumber },
+      {
+        label: 'Assignment method',
+        after:
+          mode === 'auto'
+            ? 'Auto from published series'
+            : mode === 'manual'
+              ? 'Manual from school register'
+              : undefined,
+      },
+      { label: 'Register reference', after: registerReference },
+    ].flatMap(({ label, before, after }) =>
+      typeof after === 'string' && after
+        ? [{ label, before: typeof before === 'string' && before ? before : '—', after }]
+        : []
+    );
+  }
   if (['custom-details', 'registration-form'].includes(change.section)) {
     const before = (change.before.sources ?? []) as {
       applicationId: string;

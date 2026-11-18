@@ -335,13 +335,14 @@ export default function AdmissionAssessmentsScreen() {
               flexWrap: 'wrap',
               flexShrink: 0,
               minWidth: 0,
+              borderRadius: 2,
             }}
           >
             <CustomTabs
               density="compact"
               value={state.tab}
               aria-label="Assessment Workspace"
-              sx={{ minWidth: 0 }}
+              sx={{ minWidth: 0, bgcolor: 'transparent' }}
               slotProps={{ flexContainer: { gap: 1 } }}
             >
               <Tab

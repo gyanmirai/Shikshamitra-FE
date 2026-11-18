@@ -5,6 +5,8 @@ import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { Box, IconButton, InputAdornment } from '@mui/material';
 
+import { studentAcademicFilterRowSx } from '../student-academic-filter-layout';
+
 export type DirectoryFilters = {
   board: string;
   medium: string;
@@ -17,6 +19,7 @@ type Props = {
   options?: StudentDirectoryOptions;
   isLoading: boolean;
   disabled?: boolean;
+  allowAllScope?: boolean;
   requireClassForDivision?: boolean;
   divisionHelpInTooltip?: boolean;
   onChange: (changes: Partial<DirectoryFilters>) => void;
@@ -24,23 +27,12 @@ type Props = {
 
 const scopeValue = (value: string | number) => (value === 'all' ? '' : String(value));
 
-const gridSx = {
-  display: 'grid',
-  gridTemplateColumns: {
-    xs: 'minmax(0, 1fr)',
-    sm: 'repeat(2, minmax(0, 1fr))',
-    lg: 'repeat(4, minmax(0, 1fr))',
-  },
-  gap: 1,
-  flex: 1,
-  minWidth: 0,
-};
-
 export default function StudentDirectoryFilterFields({
   values,
   options,
   isLoading,
   disabled = false,
+  allowAllScope = true,
   requireClassForDivision = false,
   divisionHelpInTooltip = false,
   onChange,
@@ -61,25 +53,37 @@ export default function StudentDirectoryFilterFields({
         classes.some((standard) => standard.id === division.parentId)
     );
   const resetScope = { board: '', medium: '', class: '', division: '' };
+  const hasBoard = Boolean(
+    values.board && options?.boards.some((item) => item.id === values.board)
+  );
+  const hasMedium =
+    hasBoard && Boolean(values.medium && mediums.some((item) => item.id === values.medium));
+  const hasClass =
+    hasMedium && Boolean(values.class && classes.some((item) => item.id === values.class));
+  const choices = (name: string, items: { id: string; name: string }[]) =>
+    allowAllScope ? [{ id: 'all', name }, ...items] : items;
+  const selected = (value: string) => value || (allowAllScope ? 'all' : '');
 
   return (
-    <Box sx={gridSx}>
+    <Box sx={{ ...studentAcademicFilterRowSx, flex: 1 }}>
       <CustomSelect
         label="Board"
-        value={values.board || 'all'}
+        value={selected(values.board)}
+        multiple={false}
         isLoading={isLoading}
         disabled={disabled}
-        options={[{ id: 'all', name: 'All boards' }, ...(options?.boards ?? [])]}
+        options={choices('All boards', options?.boards ?? [])}
         labelKey="name"
         valueKey="id"
         onChange={(value) => onChange({ ...resetScope, board: scopeValue(String(value)) })}
       />
       <CustomSelect
         label="Medium"
-        value={values.medium || 'all'}
+        value={selected(values.medium)}
+        multiple={false}
         isLoading={isLoading}
-        disabled={disabled}
-        options={[{ id: 'all', name: 'All mediums' }, ...mediums]}
+        disabled={disabled || (!allowAllScope && !hasBoard)}
+        options={choices('All mediums', allowAllScope || hasBoard ? mediums : [])}
         labelKey="name"
         valueKey="id"
         onChange={(value) =>
@@ -88,19 +92,23 @@ export default function StudentDirectoryFilterFields({
       />
       <CustomSelect
         label="Class"
-        value={values.class || 'all'}
+        value={selected(values.class)}
+        multiple={false}
         isLoading={isLoading}
-        disabled={disabled}
-        options={[{ id: 'all', name: 'All classes' }, ...classes]}
+        disabled={disabled || (!allowAllScope && !hasMedium)}
+        options={choices('All classes', allowAllScope || hasMedium ? classes : [])}
         labelKey="name"
         valueKey="id"
         onChange={(value) => onChange({ class: scopeValue(String(value)), division: '' })}
       />
       <CustomSelect
         label="Division"
-        value={values.division || 'all'}
+        value={selected(values.division)}
+        multiple={false}
         isLoading={isLoading}
-        disabled={disabled || (requireClassForDivision && !values.class)}
+        disabled={
+          disabled || (requireClassForDivision && !values.class) || (!allowAllScope && !hasClass)
+        }
         helperText={
           requireClassForDivision && !values.class && !divisionHelpInTooltip
             ? 'Select a class first'
@@ -129,7 +137,7 @@ export default function StudentDirectoryFilterFields({
             </InputAdornment>
           ) : undefined
         }
-        options={[{ id: 'all', name: 'All divisions' }, ...divisions]}
+        options={choices('All divisions', allowAllScope || hasClass ? divisions : [])}
         labelKey="name"
         valueKey="id"
         onChange={(value) => onChange({ division: scopeValue(String(value)) })}

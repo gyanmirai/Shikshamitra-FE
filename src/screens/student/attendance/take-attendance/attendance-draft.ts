@@ -18,19 +18,33 @@ export const getAttendanceCounts = (rows: AttendanceStudent[]) => {
   return {
     expected: eligible.length,
     unmarked: eligible.filter((row) => row.status === AttendanceStatus.Pending).length,
+    present: eligible.filter((row) => row.status === AttendanceStatus.Present && !row.halfDay)
+      .length,
+    halfDay: eligible.filter((row) => row.status === AttendanceStatus.Present && row.halfDay)
+      .length,
+    absent: eligible.filter((row) => row.status === AttendanceStatus.Absent).length,
   };
 };
 
-export const markRemainingPresent = (rows: AttendanceStudent[]) =>
-  rows.map((row) =>
-    row.isExpected &&
-    row.status === AttendanceStatus.Pending &&
-    !row.approvedLeaveId &&
-    !row.requiresCorrectionApproval &&
-    !row.needsCreditCorrection
-      ? { ...row, status: AttendanceStatus.Present, late: false, halfDay: false }
-      : row
-  );
+export type AttendanceCounts = ReturnType<typeof getAttendanceCounts>;
+
+export type AttendanceMarkChoice = 'full' | 'half' | 'absent' | 'pending';
+
+export const canEditAttendanceRow = (row: AttendanceStudent) =>
+  row.isExpected && !row.requiresCorrectionApproval && !row.needsCreditCorrection;
+
+export const canBulkMarkAttendanceRow = (row: AttendanceStudent) =>
+  canEditAttendanceRow(row) && !row.approvedLeaveId;
+
+export const getAttendanceMarkRestriction = (
+  mark: AttendanceMarkChoice,
+  allowHalfDay: boolean | undefined,
+  submitted: boolean
+) => {
+  if (mark === 'half' && !allowHalfDay) return 'Half-day attendance is disabled by school policy.';
+  if (mark === 'pending' && submitted) return 'Submitted attendance cannot be changed to Pending.';
+  return '';
+};
 
 export const changeAttendanceStatus = (row: AttendanceStudent, status: AttendanceStatus) => ({
   ...row,
@@ -41,7 +55,7 @@ export const changeAttendanceStatus = (row: AttendanceStudent, status: Attendanc
 
 export const changeAttendanceMark = (
   row: AttendanceStudent,
-  mark: 'full' | 'half' | 'absent' | 'pending'
+  mark: AttendanceMarkChoice
 ): AttendanceStudent => ({
   ...row,
   status:

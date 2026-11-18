@@ -2,7 +2,7 @@ import type { AttendanceDay } from 'src/redux/student/take-attendance/attendance
 
 import { shikshaMitraToast } from 'src/components/toast';
 import { vi, it, expect, describe, beforeEach } from 'vitest';
-import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { act, render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import TakeAttendanceScreen from './index';
 import { renderAttendanceErrorRecovery } from '../attendance-toast-test-fixture';
@@ -156,7 +156,13 @@ vi.mock('src/components/custom-breadcrumbs', () => ({
 }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 vi.mock('src/components/label', () => ({
-  Label: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
+  Label: ({
+    children,
+    'aria-label': ariaLabel,
+  }: {
+    children: React.ReactNode;
+    'aria-label'?: string;
+  }) => <span aria-label={ariaLabel}>{children}</span>,
 }));
 vi.mock('src/components/toast', () => ({
   shikshaMitraToast: {
@@ -286,7 +292,11 @@ vi.mock('src/components/customizabaleTable', () => ({
     ...rest
   }: {
     data: Record<string, unknown>[];
-    columns: { id: string; render?: (value: unknown, row: unknown) => React.ReactNode }[];
+    columns: {
+      id: string;
+      label?: React.ReactNode;
+      render?: (value: unknown, row: unknown) => React.ReactNode;
+    }[];
     isLoading: boolean;
     wrapperProps: { sx: { height: number; minHeight: number } };
     tableContainerProps: { sx: { height: number } };
@@ -302,6 +312,9 @@ vi.mock('src/components/customizabaleTable', () => ({
         data-minheight={wrapperProps.sx.minHeight}
         data-containerheight={tableContainerProps.sx.height}
       >
+        {columns.map((column) => (
+          <div key={column.id}>{column.label}</div>
+        ))}
         {errorContent ||
           (isLoading
             ? 'Loading register'
@@ -406,6 +419,189 @@ beforeEach(() => {
   }));
 });
 describe('Daily Attendance workspace', () => {
+  it('updates mutually exclusive header counts immediately for each individual mark', async () => {
+    render(<TakeAttendanceScreen />);
+    const summary = within(await screen.findByRole('group', { name: 'Class attendance counts' }));
+    const expectCounts = (present: number, half: number, pending: number, absent: number) => {
+      [
+        `Present: ${present}`,
+        `Half-day: ${half}`,
+        `Pending: ${pending}`,
+        `Absent: ${absent}`,
+      ].forEach((label) => expect(summary.getByLabelText(label)).toBeVisible());
+    };
+    expectCounts(0, 0, 2, 0);
+    fireEvent.click(screen.getByRole('button', { name: 'Present: Aarav' }));
+    expectCounts(1, 0, 1, 0);
+    fireEvent.click(screen.getByRole('button', { name: 'Half-day: Aarav' }));
+    expectCounts(0, 1, 1, 0);
+    fireEvent.click(screen.getByRole('button', { name: 'Absent: Aarav' }));
+    expectCounts(0, 0, 1, 1);
+    fireEvent.click(screen.getByRole('button', { name: 'Pending: Aarav' }));
+    expectCounts(0, 0, 2, 0);
+    expect(mocks.mark).not.toHaveBeenCalled();
+  });
+
+  it('counts the full class register even when the search hides a student', async () => {
+    mocks.params = new URLSearchParams(
+      'date=2026-09-30&class=class&division=division&search=Aarav'
+    );
+    render(<TakeAttendanceScreen />);
+    const summary = within(await screen.findByRole('group', { name: 'Class attendance counts' }));
+    expect(summary.getByLabelText('Pending: 2')).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Present: Meera' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Absent: Aarav' }));
+    expect(summary.getByLabelText('Pending: 1')).toBeVisible();
+    expect(summary.getByLabelText('Absent: 1')).toBeVisible();
+  });
+
+  it('applies all four header actions to the full editable class draft', async () => {
+    mocks.params = new URLSearchParams(
+      'date=2026-09-30&class=class&division=division&search=Aarav'
+    );
+    const register = day();
+    register.students[1].status = 2;
+    mocks.query = { ...mocks.query, currentData: register };
+    render(<TakeAttendanceScreen />);
+    const summary = within(await screen.findByRole('group', { name: 'Class attendance counts' }));
+    expect(screen.queryByRole('button', { name: 'Present: Meera' })).not.toBeInTheDocument();
+    ['Present', 'Half-day', 'Absent', 'Pending'].forEach((status) => {
+      fireEvent.click(
+        screen.getByRole('button', { name: `Mark all eligible students as ${status}` })
+      );
+      expect(summary.getByLabelText(`${status}: 2`)).toBeVisible();
+      expect(screen.getByRole('button', { name: `${status}: Aarav` })).toHaveAttribute(
+        'aria-pressed',
+        'true'
+      );
+    });
+    expect(mocks.mark).not.toHaveBeenCalled();
+  });
+
+  it('skips protected rows and respects school policy for bulk marks', async () => {
+    const register = day({ isSubmitted: true });
+    register.policy.allowHalfDay = false;
+    register.students[1].approvedLeaveId = 'leave';
+    register.students.push(
+      {
+        ...register.students[0],
+        studentId: 'approval',
+        firstName: 'Approval',
+        requiresCorrectionApproval: true,
+      },
+      {
+        ...register.students[0],
+        studentId: 'credit',
+        firstName: 'Credit',
+        needsCreditCorrection: true,
+      },
+      {
+        ...register.students[0],
+        studentId: 'ineligible',
+        firstName: 'Ineligible',
+        isExpected: false,
+      }
+    );
+    mocks.query = { ...mocks.query, currentData: register };
+    render(<TakeAttendanceScreen />);
+    const summary = within(await screen.findByRole('group', { name: 'Class attendance counts' }));
+    expect(
+      screen.getByRole('button', { name: 'Mark all eligible students as Half-day' })
+    ).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: 'Mark all eligible students as Pending' })
+    ).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Mark all eligible students as Present' }));
+    expect(summary.getByLabelText('Present: 1')).toBeVisible();
+    expect(summary.getByLabelText('Pending: 3')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Pending: Meera' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+  });
+  it('uses the HR marking order and keeps the selected status explicit', async () => {
+    render(<TakeAttendanceScreen />);
+    const group = await screen.findByRole('group', { name: 'Attendance: Aarav' });
+    expect(
+      within(group)
+        .getAllByRole('button')
+        .map((button) => button.getAttribute('aria-label'))
+    ).toEqual(['Present: Aarav', 'Half-day: Aarav', 'Pending: Aarav', 'Absent: Aarav']);
+    expect(within(group).getByRole('button', { name: 'Pending: Aarav' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+    fireEvent.click(within(group).getByRole('button', { name: 'Half-day: Aarav' }));
+    expect(within(group).getByRole('button', { name: 'Half-day: Aarav' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+    expect(within(group).getByRole('button', { name: 'Pending: Aarav' })).toHaveAttribute(
+      'aria-pressed',
+      'false'
+    );
+  });
+
+  it('groups the register buttons in an accessible controls card', () => {
+    render(<TakeAttendanceScreen />);
+    const controls = within(screen.getByRole('region', { name: 'Attendance controls' }));
+    expect(
+      screen.queryByRole('button', { name: 'Mark pending as Present' })
+    ).not.toBeInTheDocument();
+    expect(controls.getByRole('button', { name: 'Save draft' })).toBeVisible();
+    expect(controls.getByRole('button', { name: 'Submit' })).toBeVisible();
+    expect(controls.getByRole('button', { name: 'Lock' })).toBeVisible();
+  });
+
+  it('uses the shared skeleton refresh while keeping existing register rows visible', async () => {
+    mocks.query = { ...mocks.query, isFetching: true };
+    render(<TakeAttendanceScreen />);
+    await screen.findByRole('group', { name: 'Attendance: Aarav' });
+    expect(mocks.tableProps.mock.calls.at(-1)![0]).toMatchObject({
+      isRefreshing: true,
+      refreshIndicator: 'skeleton',
+    });
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+  });
+
+  it('offers only individual academic choices and enables children after their parents', () => {
+    mocks.params = new URLSearchParams('date=2026-09-30');
+    render(<TakeAttendanceScreen />);
+    expect(
+      screen.queryAllByRole('option', { name: /^All (boards|mediums|classes|divisions)$/i })
+    ).toHaveLength(0);
+    expect(screen.getByLabelText('Board')).toBeEnabled();
+    expect(screen.getByLabelText('Medium')).toBeDisabled();
+    expect(screen.getByLabelText('Class')).toBeDisabled();
+    expect(screen.getByLabelText('Division')).toBeDisabled();
+    fireEvent.change(screen.getByLabelText('Board'), { target: { value: 'board' } });
+    expect(screen.getByLabelText('Medium')).toBeEnabled();
+    expect(screen.getByLabelText('Class')).toBeDisabled();
+    fireEvent.change(screen.getByLabelText('Medium'), { target: { value: 'medium' } });
+    expect(screen.getByLabelText('Class')).toBeEnabled();
+    expect(screen.getByLabelText('Division')).toBeDisabled();
+    fireEvent.change(screen.getByLabelText('Class'), { target: { value: 'class' } });
+    expect(screen.getByLabelText('Division')).toBeEnabled();
+  });
+
+  it('restores the parent choices for a bookmarked class register', () => {
+    render(<TakeAttendanceScreen />);
+    expect(screen.getByLabelText('Board')).toHaveValue('board');
+    expect(screen.getByLabelText('Medium')).toHaveValue('medium');
+    expect(screen.getByLabelText('Class')).toHaveValue('class');
+    expect(screen.getByLabelText('Division')).toHaveValue('division');
+  });
+
+  it('keeps dependent fields and marking disabled for an invalid parent in a saved URL', () => {
+    mocks.params = new URLSearchParams(
+      'date=2026-09-30&board=not-in-scope&medium=medium&class=class&division=division'
+    );
+    render(<TakeAttendanceScreen />);
+    expect(screen.getByLabelText('Medium')).toBeDisabled();
+    expect(screen.getByLabelText('Class')).toBeDisabled();
+    expect(screen.getByLabelText('Division')).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Present: Aarav' })).not.toBeInTheDocument();
+  });
   it('requests daily facts without waiting for unused cumulative annual statistics', async () => {
     render(<TakeAttendanceScreen />);
     await screen.findByRole('button', { name: 'Present: Aarav' });
@@ -426,7 +622,14 @@ describe('Daily Attendance workspace', () => {
     await screen.findByRole('button', { name: 'Present: Aarav' });
     expect(screen.getByLabelText('Class')).toHaveValue('class');
     expect(screen.getByLabelText('Division')).toHaveValue('division');
-    expect(mocks.replace).not.toHaveBeenCalled();
+    const restored = new URL(mocks.replace.mock.calls.at(-1)![0], 'http://localhost');
+    expect(Object.fromEntries(restored.searchParams)).toMatchObject({
+      date: '2026-09-30',
+      board: 'board',
+      medium: 'medium',
+      class: 'class',
+      division: 'division',
+    });
   });
   it('keeps Attendance rightmost and sticky without an actions column or Draft breadcrumb', async () => {
     render(<TakeAttendanceScreen />);
@@ -434,7 +637,6 @@ describe('Daily Attendance workspace', () => {
     const { columns } = mocks.tableProps.mock.calls.at(-1)![0];
     expect(columns.at(-1)).toMatchObject({
       id: 'statusLabel',
-      label: 'Attendance',
       sticky: true,
       stickyPosition: 'right',
     });
@@ -482,7 +684,7 @@ describe('Daily Attendance workspace', () => {
     expect(screen.getByRole('button', { name: 'Absent: Aarav' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Present: Meera' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Save draft' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Submit attendance' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
   });
   it('does not submit a complete-looking search result when hidden students are still Pending', async () => {
     mocks.params = new URLSearchParams(
@@ -491,7 +693,7 @@ describe('Daily Attendance workspace', () => {
     render(<TakeAttendanceScreen />);
     fireEvent.click(await screen.findByRole('button', { name: 'Present: Aarav' }));
     expect(screen.queryByRole('button', { name: 'Present: Meera' })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Submit attendance' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
     expect(mocks.mark).not.toHaveBeenCalled();
   });
   it.each([false, undefined])(
@@ -504,11 +706,11 @@ describe('Daily Attendance workspace', () => {
       mocks.query = { ...mocks.query, currentData: register };
       render(<TakeAttendanceScreen />);
       await screen.findByRole('button', { name: 'Present: Aarav' });
-      expect(screen.getByRole('button', { name: 'Submit attendance' })).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
       expect(mocks.mark).not.toHaveBeenCalled();
     }
   );
-  it('marks only editable pending students Present and preserves leave, absent, and ineligible rows', async () => {
+  it('keeps individual marks independent and excludes ineligible students from header counts', async () => {
     const register = day();
     register.students = [
       ...register.students,
@@ -529,7 +731,11 @@ describe('Daily Attendance workspace', () => {
     mocks.query = { ...mocks.query, currentData: register };
     render(<TakeAttendanceScreen />);
     fireEvent.click(await screen.findByRole('button', { name: 'Absent: Aarav' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Mark pending as Present' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Present: Meera' }));
+    const summary = within(screen.getByRole('group', { name: 'Class attendance counts' }));
+    expect(summary.getByLabelText('Present: 1')).toBeVisible();
+    expect(summary.getByLabelText('Pending: 1')).toBeVisible();
+    expect(summary.getByLabelText('Absent: 1')).toBeVisible();
     expect(screen.getByRole('button', { name: 'Absent: Aarav' })).toHaveAttribute(
       'aria-pressed',
       'true'
@@ -553,14 +759,14 @@ describe('Daily Attendance workspace', () => {
     };
     render(<TakeAttendanceScreen />);
     await screen.findByRole('button', { name: 'Present: Aarav' });
-    expect(screen.getByRole('button', { name: 'Submit attendance' })).toBeVisible();
-    expect(screen.queryByRole('button', { name: 'Lock attendance' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Lock' })).not.toBeInTheDocument();
   });
   it('does not expose Lock without both the server capability and frontend permission', async () => {
     mocks.permissions = [{ name: 'Students.Attendance.MarkAttendance.Delete', isGranted: true }];
     render(<TakeAttendanceScreen />);
     await screen.findByRole('button', { name: 'Present: Aarav' });
-    expect(screen.queryByRole('button', { name: 'Lock attendance' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Lock' })).not.toBeInTheDocument();
   });
   it('allows an assigned teacher to lock with Add/Update and current server scope authority', async () => {
     mocks.permissions = [{ name: 'Students.Attendance.MarkAttendance.Add', isGranted: true }];
@@ -575,7 +781,7 @@ describe('Daily Attendance workspace', () => {
     });
     mocks.query = { ...mocks.query, currentData: registered };
     render(<TakeAttendanceScreen />);
-    expect(await screen.findByRole('button', { name: 'Lock attendance' })).toBeEnabled();
+    expect(await screen.findByRole('button', { name: 'Lock' })).toBeEnabled();
   });
   it('requires an audit reason for changing submitted attendance without a correction queue', async () => {
     const register = day({ isSubmitted: true, attendanceDayId: 'day' });
@@ -587,7 +793,7 @@ describe('Daily Attendance workspace', () => {
     render(<TakeAttendanceScreen />);
     fireEvent.click(await screen.findByRole('button', { name: 'Absent: Aarav' }));
     expect(screen.getByRole('button', { name: 'Save draft' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Submit attendance' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
     fireEvent.change(screen.getByRole('textbox', { name: 'Correction reason' }), {
       target: { value: 'Corrected after class confirmation' },
     });
@@ -627,8 +833,8 @@ describe('Daily Attendance workspace', () => {
     await screen.findByText('Aarav');
     expect(screen.queryByRole('button', { name: 'Present: Aarav' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Save draft' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Submit attendance' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Lock attendance' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Lock' })).toBeDisabled();
     expect(mocks.tableProps.mock.calls.at(-1)![0]).toMatchObject({
       serverSidePagination: true,
       serverSideSearch: true,
@@ -733,7 +939,7 @@ describe('Daily Attendance workspace', () => {
     );
     render(<TakeAttendanceScreen />);
     expect(screen.getByRole('button', { name: 'Save draft' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Lock attendance' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Lock' })).toBeDisabled();
     expect(screen.getAllByText('Attendance cannot be taken for a future date.')[0]).toBeVisible();
     expect(shikshaMitraToast.warning).toHaveBeenCalledWith(
       expect.objectContaining({ message: 'Attendance cannot be taken for a future date.' })
@@ -749,14 +955,14 @@ describe('Daily Attendance workspace', () => {
     expect(screen.getByLabelText('Medium')).toHaveValue('medium');
     expect(screen.queryByLabelText('School level')).not.toBeInTheDocument();
     fireEvent.change(screen.getByLabelText('Medium'), { target: { value: 'medium-2' } });
-    expect(screen.getByLabelText('Class')).toHaveValue('all');
-    expect(screen.getByLabelText('Division')).toHaveValue('all');
+    expect(screen.getByLabelText('Class')).toHaveValue('');
+    expect(screen.getByLabelText('Division')).toHaveValue('');
     expect(mocks.replace).toHaveBeenLastCalledWith(expect.stringContaining('medium=medium-2'), {
       scroll: false,
     });
     fireEvent.change(screen.getByLabelText('Board'), { target: { value: 'board-2' } });
-    expect(screen.getByLabelText('Medium')).toHaveValue('all');
-    expect(screen.getByLabelText('Class')).toHaveValue('all');
+    expect(screen.getByLabelText('Medium')).toHaveValue('');
+    expect(screen.getByLabelText('Class')).toHaveValue('');
     expect(mocks.replace).toHaveBeenLastCalledWith(expect.stringContaining('board=board-2'), {
       scroll: false,
     });
@@ -775,8 +981,8 @@ describe('Daily Attendance workspace', () => {
     expect(await screen.findByText('Leave correction needed')).toBeVisible();
     expect(screen.getByRole('button', { name: 'Present: Aarav' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Absent: Aarav' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Submit attendance' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Lock attendance' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Lock' })).toBeDisabled();
     expect(
       screen.queryByRole('button', { name: /Request attendance correction/ })
     ).not.toBeInTheDocument();
@@ -795,7 +1001,7 @@ describe('Daily Attendance workspace', () => {
     render(<TakeAttendanceScreen />);
     fireEvent.click(await screen.findByRole('button', { name: 'Present: Meera' }));
     expect(screen.getByRole('button', { name: 'Save draft' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: 'Lock attendance' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Lock' })).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
     await waitFor(() => expect(mocks.mark).toHaveBeenCalledOnce());
     expect(mocks.mark.mock.calls[0][0]).toMatchObject({
@@ -844,8 +1050,8 @@ describe('Daily Attendance workspace', () => {
     expect(
       await screen.findByText('Roster changed after submission. Review and submit again.')
     ).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Submit attendance' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: 'Lock attendance' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Lock' })).toBeDisabled();
   });
   it('keeps heading and flex table geometry during initial loading', () => {
     mocks.query = { ...mocks.query, currentData: undefined, isLoading: true };
@@ -871,7 +1077,7 @@ describe('Daily Attendance workspace', () => {
   it('saves a partial draft but requires the complete eligible roster before submit', async () => {
     render(<TakeAttendanceScreen />);
     fireEvent.click(await screen.findByRole('button', { name: 'Present: Aarav' }));
-    expect(screen.getByRole('button', { name: 'Lock attendance' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Lock' })).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
     await waitFor(() => expect(mocks.mark).toHaveBeenCalled());
     expect(mocks.mark.mock.calls[0][0]).toMatchObject({
@@ -889,13 +1095,13 @@ describe('Daily Attendance workspace', () => {
     render(<TakeAttendanceScreen />);
     fireEvent.click(await screen.findByRole('button', { name: 'Absent: Aarav' }));
     fireEvent.click(screen.getByRole('button', { name: 'Present: Meera' }));
-    expect(screen.getByRole('button', { name: 'Lock attendance' })).toBeDisabled();
-    fireEvent.click(screen.getByRole('button', { name: 'Submit attendance' }));
+    expect(screen.getByRole('button', { name: 'Lock' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
     expect(screen.getByRole('dialog', { name: 'Submit Attendance?' })).toBeVisible();
     expect(screen.getByRole('dialog', { name: 'Submit Attendance?' })).toHaveTextContent(
       '30/09/2026'
     );
-    fireEvent.click(screen.getAllByRole('button', { name: 'Submit attendance' }).at(-1)!);
+    fireEvent.click(screen.getAllByRole('button', { name: 'Submit' }).at(-1)!);
     await waitFor(() => expect(mocks.mark).toHaveBeenCalledOnce());
     expect(mocks.mark.mock.calls[0][0]).toMatchObject({
       submit: true,
@@ -916,11 +1122,11 @@ describe('Daily Attendance workspace', () => {
     });
     mocks.query = { ...mocks.query, currentData: registered };
     render(<TakeAttendanceScreen />);
-    fireEvent.click(await screen.findByRole('button', { name: 'Lock attendance' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Lock' }));
     expect(screen.getByRole('dialog', { name: 'Lock Attendance?' })).toHaveTextContent(
       '30/09/2026'
     );
-    fireEvent.click(screen.getAllByRole('button', { name: 'Lock attendance' }).at(-1)!);
+    fireEvent.click(screen.getAllByRole('button', { name: 'Lock' }).at(-1)!);
     await waitFor(() => expect(mocks.lock).toHaveBeenCalledOnce());
     expect(mocks.mark).not.toHaveBeenCalled();
   });

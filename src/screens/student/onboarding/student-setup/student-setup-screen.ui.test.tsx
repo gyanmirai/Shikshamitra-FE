@@ -55,7 +55,10 @@ const mocks = vi.hoisted(() => ({
       { id: 'grade-6', name: 'Grade 6', parentId: 'medium-cbse-english' },
       { id: 'grade-7', name: 'Grade 7', parentId: 'medium-cbse-english' },
     ],
-    divisions: [{ id: 'division-a', name: 'A', parentId: 'grade-6' }],
+    divisions: [
+      { id: 'division-a', name: 'A', parentId: 'grade-6' },
+      { id: 'division-b', name: 'B', parentId: 'grade-6' },
+    ],
   },
 }));
 
@@ -682,6 +685,7 @@ describe('Student Setup workspace selection wiring', () => {
   );
 
   it('shows table loading when current data is missing during a fetch even if isLoading is false', () => {
+    mocks.params.set('division', 'division-a');
     mocks.casesAvailable = false;
     mocks.casesFetching = true;
     render(element);
@@ -694,6 +698,7 @@ describe('Student Setup workspace selection wiring', () => {
   it.each(['fetching', 'error'] as const)(
     'disables starting assignments during a read %s with retained rows',
     (state) => {
+      mocks.params.set('division', 'division-a');
       mocks.casesFetching = state === 'fetching';
       mocks.casesError = state === 'error';
       render(element);
@@ -727,6 +732,7 @@ describe('Student Setup workspace selection wiring', () => {
   );
 
   it('limits Auto to selected IDs in the single-Class Division view', () => {
+    mocks.params.set('division', 'division-a');
     render(element);
     fireEvent.click(screen.getByRole('button', { name: 'Select case-1' }));
     expect(screen.getByTestId('selected-students')).toHaveTextContent(/^case-1$/);
@@ -802,6 +808,7 @@ describe('Student Setup workspace selection wiring', () => {
 
   it('runs GR Auto directly against visible eligible rows without opening the assignment drawer', async () => {
     setRoute('gr-number', 'grade-6');
+    mocks.params.set('division', 'division-a');
     render(element);
     fireEvent.click(screen.getByRole('button', { name: 'Auto' }));
     await waitFor(() => expect(mocks.runAutomatic).toHaveBeenCalledOnce());
@@ -841,11 +848,74 @@ describe('Student Setup workspace selection wiring', () => {
     });
   });
 
-  it('disables Division Auto when more than one Class is selected', () => {
-    setRoute('division', 'grade-6,grade-7');
+  it.each(['', 'grade-6,grade-7'])(
+    'ignores a bookmarked division without exactly one Class (%s)',
+    (classes) => {
+      setRoute('division', classes);
+      mocks.params.set('division', 'division-a');
+      render(element);
+      const division = screen.getByRole('combobox', { name: 'Division' });
+      expect(division).toHaveAttribute('aria-disabled', 'true');
+      expect(division).toHaveTextContent(/^All Divisions$/);
+      expect(mocks.params.get('division')).toBeNull();
+      expect(mocks.query).not.toHaveBeenCalledWith(
+        expect.objectContaining({ divisionId: 'division-a' }),
+        expect.anything()
+      );
+      expect(screen.queryByRole('button', { name: 'Auto' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Manual' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Select case-1' })).not.toBeInTheDocument();
+    }
+  );
+
+  it.each(['division', 'gr-number', 'roll-number'])(
+    'shows %s Auto and Manual for a selected division and hides them for All Divisions',
+    async (view) => {
+      setRoute(view);
+      const user = userEvent.setup();
+      const { rerender } = render(element);
+      const expectActions = (visible: boolean) => {
+        ['Auto', 'Manual'].forEach((name) => {
+          const action = screen.queryByRole('button', { name });
+          if (visible) expect(action).toBeVisible();
+          else expect(action).not.toBeInTheDocument();
+        });
+      };
+      expectActions(false);
+
+      const selectDivision = async (name: string) => {
+        await user.click(screen.getByRole('combobox', { name: 'Division' }));
+        await user.click(screen.getByRole('option', { name }));
+        rerender(element);
+      };
+      await selectDivision('A');
+      await waitFor(() => expectActions(true));
+      await selectDivision('B');
+      await waitFor(() => expectActions(true));
+      expect(mocks.params.get('division')).toBe('division-b');
+      await selectDivision('All Divisions');
+      await waitFor(() => expectActions(false));
+    }
+  );
+
+  it('retains a bookmarked multi-division filter until a single division replaces it', async () => {
+    setRoute('gr-number');
+    mocks.params.set('division', 'division-a,division-b');
+    const user = userEvent.setup();
     render(element);
-    expect(screen.getByRole('button', { name: 'Auto' })).toBeDisabled();
-    expect(screen.queryByRole('button', { name: 'Select case-1' })).not.toBeInTheDocument();
+
+    const division = screen.getByRole('combobox', { name: 'Division' });
+    expect(division).toHaveTextContent(/^Multiple Divisions$/);
+    expect(mocks.query).toHaveBeenCalledWith(
+      expect.objectContaining({ divisionIds: ['division-a', 'division-b'] }),
+      expect.anything()
+    );
+    expect(screen.queryByRole('button', { name: 'Auto' })).not.toBeInTheDocument();
+
+    await user.click(division);
+    await user.click(screen.getByRole('option', { name: 'B' }));
+    expect(mocks.params.get('division')).toBe('division-b');
+    expect(screen.getByRole('button', { name: 'Auto' })).toBeVisible();
   });
 
   it('clears selection on page, column-filter and task-view changes', async () => {
@@ -875,15 +945,17 @@ describe('Student Setup workspace selection wiring', () => {
     expect(screen.getByTestId('selected-students')).toBeEmptyDOMElement();
   });
 
-  it('clears selection when the real Class filter changes to multiple classes', async () => {
+  it('clears selected students and division when a different class is selected', async () => {
+    mocks.params.set('division', 'division-a');
     const user = userEvent.setup();
     render(element);
     fireEvent.click(screen.getByRole('button', { name: 'Select case-1' }));
     await user.click(screen.getByRole('combobox', { name: 'Class' }));
     await user.click(screen.getByRole('option', { name: 'Grade 7' }));
-    await user.keyboard('{Escape}');
     expect(screen.getByTestId('selected-students')).toBeEmptyDOMElement();
-    expect(screen.getByTestId('worklist')).toHaveAttribute('data-selection', 'false');
+    expect(screen.getByRole('combobox', { name: 'Class' })).toHaveTextContent(/^Grade 7$/);
+    expect(screen.getByRole('combobox', { name: 'Division' })).toHaveTextContent(/^All Divisions$/);
+    expect(mocks.params.get('division')).toBeNull();
   });
 
   it.each(

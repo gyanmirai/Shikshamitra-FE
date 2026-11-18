@@ -6,8 +6,8 @@ import type { Standards } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
 import { useEffect, useCallback } from 'react';
+import { Box, Paper, Button } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
-import { Box, Paper, Stack, Button } from '@mui/material';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { useUrlFilterValue } from 'src/hooks/use-url-filter-value';
 import { useGetClassByMediumQuery } from 'src/redux/class/classApi';
@@ -19,6 +19,7 @@ import {
 import { useGetAcademicOrganizationOptionsQuery } from 'src/redux/academicOrganizationOptions/academicOrganizationOptionsApi';
 
 import { getAdmissionHierarchyOptions } from './admission-hierarchy-options';
+import { studentAcademicFilterRowSx } from '../student-academic-filter-layout';
 
 const ALL = '__all__';
 
@@ -209,7 +210,7 @@ export function AdmissionAcademicFilters({
         </StudentFeedback>
       )}
       <Paper variant="outlined" sx={{ p: 1, borderRadius: 2, flexShrink: 0 }}>
-        <Stack direction={{ xs: 'column', lg: 'row' }} spacing={1}>
+        <Box sx={studentAcademicFilterRowSx}>
           <CustomSelect
             fullWidth
             label="Board"
@@ -272,12 +273,14 @@ export function AdmissionAcademicFilters({
                 alignItems: 'center',
                 justifyContent: 'flex-end',
                 flexShrink: 0,
+                ml: { sm: 'auto' },
+                maxWidth: '100%',
               }}
             >
               {filterAction}
             </Box>
           )}
-        </Stack>
+        </Box>
       </Paper>
     </>
   );
