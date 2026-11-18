@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
-import { Button, IconButton } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { Button, MenuItem, IconButton } from '@mui/material';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useDownloadAdmissionDocumentMutation } from 'src/redux/student/admissions/admission-document-download-api';
 
@@ -12,17 +12,25 @@ export function DocumentDownloadButton({
   studentId,
   compact = false,
   label = 'Download document',
+  menu = false,
+  disabled = false,
+  onComplete,
 }: {
   evidenceId: string;
   fileName: string;
   studentId?: string;
   compact?: boolean;
   label?: string;
+  menu?: boolean;
+  disabled?: boolean;
+  onComplete?: () => void;
 }) {
   const [download] = useDownloadAdmissionDocumentMutation();
   const [downloading, setDownloading] = useState(false);
+  const pending = useRef(false);
   const run = async () => {
-    if (downloading) return;
+    if (pending.current || disabled) return;
+    pending.current = true;
     setDownloading(true);
     try {
       await download({ evidenceId, fileName, studentId }).unwrap();
@@ -35,9 +43,19 @@ export function DocumentDownloadButton({
             : detail,
       });
     } finally {
+      pending.current = false;
       setDownloading(false);
+      onComplete?.();
     }
   };
+  if (menu) {
+    return (
+      <MenuItem disabled={disabled || downloading} onClick={run}>
+        <Iconify icon="mdi:download" width={16} sx={{ mr: 1 }} />
+        {downloading ? 'Downloading…' : 'Download'}
+      </MenuItem>
+    );
+  }
   if (compact) {
     return (
       <CustomTooltip title={downloading ? 'Downloading…' : label} placement="right" arrow>
@@ -46,7 +64,7 @@ export function DocumentDownloadButton({
           <IconButton
             size="small"
             aria-label={label}
-            disabled={downloading}
+            disabled={disabled || downloading}
             onClick={run}
             sx={{ p: 0, width: 30, height: 30 }}
           >
@@ -59,7 +77,7 @@ export function DocumentDownloadButton({
   return (
     <Button
       size="small"
-      disabled={downloading}
+      disabled={disabled || downloading}
       onClick={run}
       startIcon={<Iconify icon="mdi:download" />}
     >

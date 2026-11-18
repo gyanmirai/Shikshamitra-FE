@@ -34,7 +34,7 @@ function renderPreview() {
   );
 }
 
-it('previews the protected image bytes with zoom and fit and releases the URL on close', async () => {
+it('auto-fits protected image bytes without extra controls and releases the URL on close', async () => {
   mswServer.use(
     http.get(
       endpoint,
@@ -47,13 +47,10 @@ it('previews the protected image bytes with zoom and fit and releases the URL on
   const store = renderPreview();
   const image = await screen.findByRole('img', { name: 'Birth certificate Document Preview' });
   expect(image).toHaveAttribute('src', 'blob:private-preview');
-  expect(screen.getByText('birth-certificate.pdf · Copy Version 1')).toBeInTheDocument();
-  Object.defineProperty(image, 'naturalWidth', { configurable: true, value: 1000 });
-  fireEvent.load(image);
-  await userEvent.click(screen.getByRole('button', { name: 'Zoom In' }));
-  expect(screen.getByText('125%')).toBeInTheDocument();
-  await userEvent.click(screen.getByRole('button', { name: 'Fit to Page' }));
-  expect(screen.getByText('Fit', { exact: true })).toBeInTheDocument();
+  expect(screen.getByText('birth-certificate.pdf')).toBeInTheDocument();
+  expect(
+    screen.queryByRole('button', { name: /Zoom|Fit to Page|Download/ })
+  ).not.toBeInTheDocument();
   expect(JSON.stringify(store.getState().api)).not.toContain('blob:private-preview');
   expect(JSON.stringify(store.getState().api)).not.toContain('private image bytes');
   cleanup();
@@ -75,7 +72,7 @@ it('embeds a PDF from the same authorized endpoint with a native viewer fallback
   expect(pdf).toHaveAttribute('type', 'application/pdf');
   expect(pdf).toHaveAttribute('data', 'blob:private-preview');
   expect(screen.queryByRole('button', { name: 'Zoom In' })).not.toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Download' })).toBeEnabled();
+  expect(screen.queryByRole('button', { name: 'Download' })).not.toBeInTheDocument();
 });
 
 it('retains Close during loading and recovers from a failed request through Retry', async () => {

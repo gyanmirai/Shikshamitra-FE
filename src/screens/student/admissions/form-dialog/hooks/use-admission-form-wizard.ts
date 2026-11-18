@@ -9,10 +9,11 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 
-import { getAdmissionWizardSchema } from '../form-wizard-model';
+import { getAdmissionWizardSteps, getAdmissionWizardSchema } from '../form-wizard-model';
 import { getInquiryFormConfigurationIssues } from '../../admission-inquiry-field-bindings';
 import {
   getAdmissionFormInitialValues,
+  getAdmissionFormPrintSettings,
   getBlankAdmissionFormInitialValues,
 } from '../form-dialog-model';
 
@@ -58,6 +59,7 @@ export function useAdmissionFormWizard({
         name: values.name.trim(),
         code: editing?.code ?? '',
         inheritance: values.purpose === 1 ? values.inheritance : undefined,
+        printSettings: getAdmissionFormPrintSettings(values.printSettings),
       });
       formik.resetForm();
       onClose();
@@ -100,6 +102,7 @@ export function useAdmissionFormWizard({
     formik: FormikProps<CreateUpdateAdmissionForm>,
     setLoading: (loading: boolean) => void
   ) => {
+    if (savingRef.current) return;
     if (
       activeStep > 0 &&
       values.purpose === 1 &&
@@ -113,7 +116,7 @@ export function useAdmissionFormWizard({
       return;
     }
     if (!isLastStep) {
-      setActiveStep(Math.min(activeStep + 1, 2));
+      setActiveStep(Math.min(activeStep + 1, getAdmissionWizardSteps(values.purpose).length - 1));
       return;
     }
     // The shared stepper validates asynchronously, so lock before React updates busy state.
@@ -126,9 +129,12 @@ export function useAdmissionFormWizard({
     submitting: submitting.value,
     next,
     saveDraft,
-    back: () => setActiveStep((step) => Math.max(step - 1, 0)),
+    back: () => {
+      if (!savingRef.current) setActiveStep((step) => Math.max(step - 1, 0));
+    },
     goTo: (step: number) => {
-      if (step > activeStep && step === 2 && canContinue && !canContinue()) {
+      if (savingRef.current) return;
+      if (step > activeStep && step >= 2 && canContinue && !canContinue()) {
         shikshaMitraToast.error({
           message: 'Review and approve the current Inquiry field compatibility before continuing.',
         });

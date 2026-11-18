@@ -112,8 +112,10 @@ it('locks selection, removal, preview and close while the document upload is in 
   const uploadPending = new Promise<void>((resolve) => {
     releaseUpload = resolve;
   });
+  let uploads = 0;
   mswServer.use(
     http.post(`${documentStagePath}/requirements/BIRTH_CERTIFICATE/upload`, async () => {
+      uploads += 1;
       await uploadPending;
       return HttpResponse.json(documentSummary);
     })
@@ -134,8 +136,10 @@ it('locks selection, removal, preview and close while the document upload is in 
   fireEvent.change(dropzone.querySelector('input')!, {
     target: { files: [new File(['pdf'], 'birth.pdf', { type: 'application/pdf' })] },
   });
-  await userEvent.click(dialog.getByRole('button', { name: 'Upload Document' }));
+  await userEvent.dblClick(dialog.getByRole('button', { name: 'Upload Document' }));
   await waitFor(() => expect(dropzone).toHaveAttribute('aria-disabled', 'true'));
+  expect(dialog.getByRole('status', { name: 'Uploading document…' })).toBeVisible();
+  await waitFor(() => expect(uploads).toBe(1));
   expect(dropzone.querySelector('input')).toBeDisabled();
   expect(dialog.getByRole('button', { name: 'Remove birth.pdf' })).toBeDisabled();
   expect(dialog.getByRole('button', { name: 'Preview birth.pdf' })).toBeDisabled();
@@ -148,4 +152,39 @@ it('locks selection, removal, preview and close while the document upload is in 
   expect(onClose).not.toHaveBeenCalled();
   releaseUpload();
   await waitFor(() => expect(onSuccess).toHaveBeenCalledOnce());
+}, 15000);
+
+it('retains the chosen file and notes after an upload failure and allows retry', async () => {
+  let uploads = 0;
+  mswServer.use(
+    http.post(`${documentStagePath}/requirements/BIRTH_CERTIFICATE/upload`, () => {
+      uploads += 1;
+      return uploads === 1
+        ? HttpResponse.json({ detail: 'Upload unavailable. Please retry.' }, { status: 503 })
+        : HttpResponse.json(documentSummary);
+    })
+  );
+  const onSuccess = vi.fn();
+  renderDocumentUi(
+    <DocumentActionDialog
+      action="upload"
+      summary={documentSummary}
+      requirement={documentSummary.requirements[0]}
+      onClose={vi.fn()}
+      onSuccess={onSuccess}
+    />
+  );
+  const dialog = within(screen.getByRole('dialog'));
+  fireEvent.change(dialog.getByRole('group', { name: 'Document' }).querySelector('input')!, {
+    target: { files: [new File(['pdf'], 'retry.pdf', { type: 'application/pdf' })] },
+  });
+  await userEvent.type(dialog.getByLabelText('Notes'), 'Retain this note');
+  await userEvent.click(dialog.getByRole('button', { name: 'Upload Document' }));
+  expect(await dialog.findByText('Upload unavailable. Please retry.')).toBeVisible();
+  expect(dialog.getByText('retry.pdf')).toBeVisible();
+  expect(dialog.getByLabelText('Notes')).toHaveValue('Retain this note');
+  expect(dialog.queryByRole('status', { name: 'Uploading document…' })).not.toBeInTheDocument();
+  await userEvent.click(dialog.getByRole('button', { name: 'Upload Document' }));
+  await waitFor(() => expect(onSuccess).toHaveBeenCalledOnce());
+  expect(uploads).toBe(2);
 }, 15000);

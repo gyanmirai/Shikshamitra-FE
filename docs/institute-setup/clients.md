@@ -107,7 +107,7 @@ TL;DR: `schoolIdentityApi.ts` injects typed endpoints into the existing authenti
 | Preview | PDF Blob from current settings or an unsaved draft |
 | History | Latest 100 changes for the selected profile, including the administrator's username |
 | Copy | Explicit source and target contexts and target concurrency stamp |
-| Branding metadata | Small typed logo/banner metadata response, keyed by tenant |
+| Branding metadata | Typed schoolName/addressLines and logo/banner metadata response, keyed by tenant; print headers reuse this read without fetching Initial Setup management data |
 | Branding image | Authenticated `/branding/logo` or `/branding/banner` Blob; 204 becomes null; query cache is keyed by tenant and kind |
 
 Modes are numeric: 0 inherited, 1 custom, 2 omitted. Effective responses identify each asset's source. The SchoolIdentity cache tag invalidates configuration, history and header branding after writes. Binary asset entries have no unused-cache retention; session changes use the existing base API cache reset.

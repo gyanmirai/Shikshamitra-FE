@@ -5,6 +5,14 @@ import { academicReorderTags } from 'src/redux/academic-reorder-tags';
 export type AdmissionFormStatus = 0 | 1 | 2;
 export type AdmissionFormLayoutType = 0 | 1;
 export type AdmissionFormPurpose = 0 | 1;
+export type AdmissionFormPrintSettings = {
+  template?: 'simple' | 'boxed-grid' | 'structured-classic';
+  layout: 'compact' | 'spacious';
+  paperSize: 'A4';
+  showSchoolHeader: boolean;
+  showPhoto: boolean;
+  showSignature: boolean;
+};
 export type AdmissionFormFieldType = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
 export type AdmissionFormBindingType = 0 | 1;
 export type AdmissionFormInheritedOrigin = {
@@ -83,6 +91,7 @@ export type AdmissionFormSection = {
   translations?: Record<string, AdmissionFormTranslation>;
 };
 export type AdmissionForm = {
+  printSettings?: AdmissionFormPrintSettings | null;
   coreFieldPolicyVersion?: number | null;
   id: string;
   name: string;
@@ -104,6 +113,7 @@ export type AdmissionForm = {
   inheritance?: AdmissionFormInheritance | null;
 };
 export type CreateUpdateAdmissionForm = {
+  printSettings?: AdmissionFormPrintSettings | null;
   coreFieldPolicyVersion?: number | null;
   name: string;
   code: string;
