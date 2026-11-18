@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-30",
+  "generatedAt": "2026-11-19",
   "scope": "Academic module",
   "sources": [
     "src/constants/academic-menu.ts",
@@ -12,6 +12,21 @@
     {
       "module": "Academic",
       "submodules": [
+        {
+          "name": "Browser Notifications",
+          "routes": ["/academic/dashboard", "/dashboard"],
+          "apis": [
+            "/api/communication/notifications/me/push/public-key",
+            "/api/communication/notifications/me/push/subscriptions",
+            "/api/communication/notifications/me/push/subscriptions/{id}"
+          ],
+          "roles": ["academic-admin"],
+          "permissions": [],
+          "forms": ["browser notification device control"],
+          "businessActions": ["enable browser notifications", "turn off browser notifications"],
+          "risk": "high",
+          "status": "confirmed"
+        },
         {
           "name": "Setup Guide",
           "routes": ["/academic/setup"],

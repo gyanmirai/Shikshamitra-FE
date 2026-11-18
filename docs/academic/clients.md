@@ -3,7 +3,7 @@ module: academic
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-11-08
+updated_on: 2026-11-19
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -12,6 +12,16 @@ audience: humans-and-agents
 
 TL;DR: `src/redux/academic-setup/api.ts` persists guide position and reads configuration status; existing module clients continue to save the actual settings.
 Use the [backend API reference](../../../Shikshamitra-BE/docs/modules/academic/api.md) for endpoint semantics and authorization.
+
+## Browser notifications
+
+`src/redux/communication/notification/web-push-api.ts` injects the public-key, register and disable operations into the shared authenticated API.
+Each operation checks the expected school and account against the session that supplies the request token.
+`src/hooks/notifications/web-push-device.ts` stores the browser installation and subscription IDs for the signed-in account.
+Account changes and sign-out unsubscribe the browser locally so a previous account's endpoint can stop receiving pushes after its session expires.
+The root manifest and `public/notification-sw.js` use the school origin.
+The worker displays generic notices and opens or focuses the authenticated dashboard and Notifications drawer.
+The worker registers no fetch handler and keeps no authenticated cache.
 
 ## Student submission attachments
 

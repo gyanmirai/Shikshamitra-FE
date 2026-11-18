@@ -3,7 +3,7 @@ module: academic
 domain: validation
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-11-04
+updated_on: 2026-11-19
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -103,6 +103,19 @@ The synthetic browser regression runs with
 It uses the production division form, RTK Query clients and timetable board to check
 `B101` to `B2222`, drag-and-drop, reopening the builder and preservation of saved lecture overrides.
 Its local API does not establish deployed staging acceptance.
+
+## Browser notification checks
+
+```powershell
+npm test -- src/hooks/notifications src/redux/auth/load-session.test.tsx src/redux/auth/load-session-recovery.test.tsx
+npx eslint --no-config-lookup --global self --global URL --rule "no-undef:error" --rule "no-unused-vars:error" public/notification-sw.js --max-warnings 0
+npx playwright test --config e2e/academic/academic-notification-push.config.mjs
+```
+
+The synthetic school fixture verifies opt-in and opt-out in the authenticated desktop browser.
+It verifies that the same-origin notification launch URL opens the drawer at a mobile viewport.
+The student message stays inside the authenticated application.
+Physical Android delivery and iPhone Home Screen permission and delivery need a configured test school and real devices.
 
 ## Operational read regressions
 

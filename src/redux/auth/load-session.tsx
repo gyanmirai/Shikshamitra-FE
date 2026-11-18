@@ -4,6 +4,7 @@ import { useRef, useEffect } from 'react';
 import { signOut, useSession } from 'next-auth/react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useSelectedLayoutSegments } from 'next/navigation';
+import { webPushOwner, setWebPushOwner } from 'src/hooks/notifications/web-push-device';
 
 import { api } from '../service';
 import { clearCachedAuthSession } from '../session-cache';
@@ -47,6 +48,13 @@ export default function LoadSession() {
   }, [session]);
 
   useEffect(() => {
+    if (status === 'loading') return;
+    const owner = status === 'authenticated' && accessToken && !sessionError
+      ? webPushOwner(tenantId, userId) : null;
+    setWebPushOwner(owner).catch(() => undefined);
+  }, [accessToken, sessionError, status, tenantId, userId]);
+
+  useEffect(() => {
     const currentSession = sessionRef.current;
     const identity = userId ? `${userId}:${tenantId ?? 'host'}` : null;
     const usable = status === 'authenticated' && Boolean(userId && accessToken) && !sessionError;
@@ -74,7 +82,9 @@ export default function LoadSession() {
       if (invalidatedToken.current === key) return;
       invalidatedToken.current = key;
       clearCachedAuthSession();
-      signOut({ callbackUrl: inactiveTenant ? '/login?reason=tenant-inactive' : '/login' });
+      setWebPushOwner(null).catch(() => undefined).finally(() =>
+        signOut({ callbackUrl: inactiveTenant ? '/login?reason=tenant-inactive' : '/login' })
+      );
     };
     const handleFailure = (failure: unknown) => {
       if (!isCurrent() || typeof failure !== 'object' || failure === null) return;

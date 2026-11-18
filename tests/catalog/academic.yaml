@@ -1,6 +1,20 @@
 module: Academic
 generatedAt: 2026-07-29
 scenarios:
+  - id: ACM-NOTIFICATIONS-WEB-PUSH-001
+    module: Academic
+    submodule: Browser Notifications
+    title: Browser notifications require an explicit device opt-in and detach when turned off
+    risk: high
+    priority: P1
+    type: [functional, regression, responsive, accessibility]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/academic/dashboard, /dashboard]
+    automated: true
+    automationFile: e2e/academic/academic-notification-push.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-notifications', '@regression', '@responsive', '@accessibility']
   - id: ACM-INSIGHTS-LOADING-CACHE-001
     module: Academic
     submodule: Dashboard

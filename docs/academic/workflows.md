@@ -3,7 +3,7 @@ module: academic
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-11-04
+updated_on: 2026-11-19
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -95,6 +95,15 @@ Homework publish and due pickers use Asia/Kolkata (IST), including initial value
 On `/academic/assign-elective-subject`, newly admitted students remain editable beside previously locked students. Locked rows disable their subject controls and selection checkboxes. Individual edits, bulk assignment and clearing preserve locked rows, and saving excludes them from the update payload. Save new selections before using Review & Lock; refreshing after the final lock makes those students read-only too. The [backend product rules](../../../Shikshamitra-BE/docs/modules/academic/product.md#data-integrity) own lock enforcement.
 
 When the roster's server capability permits locked corrections, an edit action appears on locked rows. Save or discard other draft assignments before opening it. Select a new subject, a preference correction, or both, then choose Review changes. The review shows old/new values and backend-reported effects. Confirm changes submits that exact reviewed input and token. A failed or stale confirmation retains the draft and requires a new review; success refreshes the roster while keeping the row locked. Other roles retain the existing read-only locked rows. See [backend correction contracts](../../../Shikshamitra-BE/docs/modules/academic/api.md#locked-elective-corrections).
+
+## Enable notifications on a device
+
+Sign in to the school website on the device that should receive updates.
+Open the Notifications drawer and choose **Enable browser notifications**.
+Grant browser permission when prompted.
+On a supported iPhone or iPad, add the website to the Home Screen and open that installed site first.
+To remove the device, choose **Turn off browser notifications** in the same drawer.
+Signing out removes the device association for that browser session.
 
 ## Review the current scope
 

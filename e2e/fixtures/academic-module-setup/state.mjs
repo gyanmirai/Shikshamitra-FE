@@ -8,6 +8,8 @@ export function createAcademicFixture(options = {}) {
     settings: {},
     requests: [],
     insights: options.insights ?? {},
+    pushEnabled: options.pushEnabled === true,
+    pushActions: [],
     failNext: options.failNext ?? null,
     saveDelay: options.saveDelay ?? 0,
     progress: {

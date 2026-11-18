@@ -1,4 +1,5 @@
 import http from 'node:http';
+import { createECDH, randomUUID } from 'node:crypto';
 import { createAcademicFixture } from './state.mjs';
 import { handleManagers } from './managers.mjs';
 import { handleDashboard } from './dashboard.mjs';
@@ -6,6 +7,8 @@ import { insightsPermissions } from './insights.mjs';
 import { paged, year, board, medium, ids } from './data.mjs';
 
 const upstream = 'http://127.0.0.1:4469';
+const pushPath = '/api/communication/notifications/me/push';
+const fixtureVapid = createECDH('prime256v1').generateKeys().toString('base64url');
 let fixture = createAcademicFixture();
 export const server = http.createServer(async (request, response) => {
   response.setHeader(
@@ -72,6 +75,27 @@ export const server = http.createServer(async (request, response) => {
   }
   const token = request.headers.authorization?.split('.')[1];
   const claims = token ? JSON.parse(Buffer.from(token, 'base64url').toString()) : {};
+  if (url.pathname.startsWith(pushPath + '/')) {
+    if (!claims.sub) { send(401, {}); return; }
+    if (url.pathname === pushPath + '/public-key' && request.method === 'GET') {
+      send(200, fixture.state.pushEnabled
+        ? { isConfigured: true, publicKey: fixtureVapid, vapidKeyVersion: 'fixture-v1' }
+        : { isConfigured: false });
+      return;
+    }
+    if (fixture.state.pushEnabled && url.pathname === pushPath + '/subscriptions' && request.method === 'POST') {
+      const id = randomUUID();
+      fixture.state.pushActions.push({ action: 'register', id, user: claims.sub, version: body.vapidKeyVersion });
+      send(200, { id });
+      return;
+    }
+    if (fixture.state.pushEnabled && url.pathname.startsWith(pushPath + '/subscriptions/') && request.method === 'DELETE') {
+      fixture.state.pushActions.push({ action: 'disable', id: url.pathname.split('/').at(-1), user: claims.sub });
+      response.writeHead(204);
+      response.end();
+      return;
+    }
+  }
   if (await fixture.handle(url, request.method, body, send)) return;
   if (handleDashboard(url, request.method, send, fixture)) return;
   if (await handleManagers(url, request.method, body, send, fixture, claims)) return;

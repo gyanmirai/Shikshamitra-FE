@@ -12,7 +12,6 @@ import Button from '@mui/material/Button';
 import SvgIcon from '@mui/material/SvgIcon';
 import Tooltip from '@mui/material/Tooltip';
 import { Label } from 'src/components/label';
-import { useState, useCallback } from 'react';
 import { Iconify } from 'src/components/iconify';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
@@ -20,6 +19,8 @@ import { varHover } from 'src/components/animate';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
+import { useState, useEffect, useCallback } from 'react';
+import EnableNotifications from 'src/components/notification-inbox/enable-notifications';
 
 import { NotificationItem } from './notification-item';
 
@@ -75,6 +76,23 @@ export function NotificationsDrawer({
     { value: 'unread', label: 'Unread', count: totalUnRead },
   ];
   const drawer = useBoolean();
+  const openDrawer = drawer.onTrue;
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (url.searchParams.get('openNotifications') === '1') {
+      openDrawer();
+      url.searchParams.delete('openNotifications');
+      window.history.replaceState(window.history.state, '', url);
+    }
+    if (!('serviceWorker' in navigator)) return undefined;
+    const openFromWorker = (event: MessageEvent) => {
+      if (typeof ServiceWorker !== 'undefined' && event.source instanceof ServiceWorker &&
+        event.source.scriptURL === new URL('/notification-sw.js', window.location.origin).href &&
+        event.data?.type === 'OPEN_SCHOOL_NOTIFICATIONS') openDrawer();
+    };
+    navigator.serviceWorker.addEventListener('message', openFromWorker);
+    return () => navigator.serviceWorker.removeEventListener('message', openFromWorker);
+  }, [openDrawer]);
 
   const [currentTab, setCurrentTab] = useState('all');
 
@@ -196,6 +214,8 @@ export function NotificationsDrawer({
         PaperProps={{ sx: { width: 1, maxWidth: 420 } }}
       >
         {renderHead}
+
+        {drawer.value && <EnableNotifications />}
 
         {renderTabs}
 
