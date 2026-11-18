@@ -133,7 +133,7 @@ describe('background payroll preview', () => {
     const { result, rerender } = renderHook(({ month }) => usePayrollPreviewRun(month, 'year-1'), {
       initialProps: { month: '2026-08' },
     });
-    let pending!: Promise<void>;
+    let pending!: ReturnType<typeof result.current.refreshStatus>;
     act(() => {
       pending = result.current.refreshStatus();
     });

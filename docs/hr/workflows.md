@@ -229,7 +229,12 @@ Review, adjustment, lock and preview completions belong to the month/year and mo
 Navigating away and back does not authorize an earlier completion to reload payroll, clear a new selection or replace a later adjustment draft.
 Ignoring an obsolete UI completion does not cancel an already submitted server operation; reopening reads current server state.
 
-Generate preview and Refresh preview sit in the register action row alongside readiness, review, audit, and lock controls.
+Generate preview and Refresh preview sit in the register action row alongside readiness, review, activity, and lock controls.
+Payroll month precedes the View registrations action, which opens the PF and ESIC registration list without resizing the register.
+Select all applies to unlocked rows on the current page, and Mark Reviewed acts on the pending rows among them.
+Review operations retain the visible rows while the server saves and the current result reloads.
+After a saved review with a failed reread, Reload rows retries the read.
+Payroll Activity shows recorded reviews, removed reviews, and locks for the selected month and academic year to authorized users with school-wide HR scope.
 Vertical dividers separate preview, readiness/audit, and review/lock action groups on desktop.
 On smaller screens, dividers are hidden and action groups wrap.
 Payroll month stays in the context row.
@@ -389,7 +394,8 @@ After salary is ready, users with Employee Edit permission activate the employee
 Only effective revisions drive payroll, while one-time earning and deduction components remain a separate editable list.
 Salary-history lookup failures expose an explicit retry that retains salary/statutory drafts and loaded history. Retry shares the salary operation lock, keeps saving blocked on failure, and invalidates the preview before successful recovery so the user must calculate again.
 System-managed statutory lines stay visible in the calculation but are never persisted as editable employee components.
-Run Payroll shows compensation revision provenance and protected-target drift without silently changing salary or blocking lock.
+Run Payroll shows compensation revision provenance and preserves saved salary.
+A protected compensation target difference blocks locking when the server reports the corresponding issue code.
 Employee payslips omit employer cost and compensation protection details.
 Professional-tax settings also control whether tax is deducted in an employee's employment cessation month.
 Salary Template settings uses one full-height table for Active, Needs setup, and Archived templates.

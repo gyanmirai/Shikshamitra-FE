@@ -451,6 +451,7 @@ export type HrAuditEvent = {
 };
 
 export type HrAuditEventListArgs = {
+  payrollMonth?: string;
   academicYearId?: string;
   entityType?: string;
   entityId?: string;
@@ -1026,7 +1027,7 @@ export const hrPolicyApi = api.injectEndpoints({
         method: 'GET',
         params,
       }),
-      providesTags: policyTags,
+      providesTags: (_result, _error, args) => args.payrollMonth ? [employeeType.runPayroll] : policyTags,
     }),
     getHrEntityAuditEvents: builder.query<
       PagedResult<HrAuditEvent>,

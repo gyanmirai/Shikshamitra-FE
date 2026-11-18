@@ -23,6 +23,7 @@ const mocks = vi.hoisted(() => ({
     globalState: { currentYear: { id: 'year-1', name: '2026-27' } },
   },
   load: vi.fn(),
+  refresh: vi.fn(),
   replace: vi.fn(),
   success: vi.fn(),
   error: vi.fn(),
@@ -170,6 +171,7 @@ beforeEach(() => {
   };
   mocks.state.globalState.currentYear = { id: 'year-1', name: '2026-27' };
   mocks.load.mockResolvedValue({ id: 'run-2', status: 'QUEUED' });
+  mocks.refresh.mockResolvedValue(true);
   mocks.preview = {
     data: {
       isGenerated: false,
@@ -206,6 +208,7 @@ beforeEach(() => {
     fetching: false,
     error: null,
     loadPreview: mocks.load,
+    refreshStatus: mocks.refresh,
     page: 0,
     pageSize: 25,
     searchInput: '',
@@ -464,7 +467,8 @@ describe('Run Payroll preview feedback', () => {
     expect(mocks.mark).toHaveBeenCalledWith(
       expect.objectContaining({ previewRunId: 'run-1', employeeIds: ['employee-1'] })
     );
-    expect(mocks.load).toHaveBeenCalledWith();
+    expect(mocks.refresh).toHaveBeenCalledWith();
+    expect(mocks.load).not.toHaveBeenCalled();
     mocks.preview = {
       ...mocks.preview,
       data: {
@@ -475,6 +479,19 @@ describe('Run Payroll preview feedback', () => {
     ui.rerender(view());
     expect(screen.getByRole('button', { name: 'Lock Reviewed' })).toBeDisabled();
     expect(screen.getByText(/Marking reviewed does not resolve these issues/)).toBeVisible();
+  });
+
+  it('retries only the read if review saves and the row refresh fails', async () => {
+    mocks.preview.data.items[0].reviewStatus = 'PENDING';
+    mocks.refresh.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+    render(view());
+    await userEvent.click(screen.getByRole('checkbox'));
+    await userEvent.click(screen.getByRole('button', { name: 'Mark Reviewed' }));
+    expect(await screen.findByText(/Review changes were saved/)).toBeVisible();
+    await userEvent.click(screen.getByRole('button', { name: 'Reload rows' }));
+    expect(mocks.refresh).toHaveBeenCalledTimes(2);
+    expect(mocks.mark).toHaveBeenCalledTimes(1);
+    expect(mocks.load).not.toHaveBeenCalled();
   });
 
   it('keeps selection and durable partial-lock feedback without claiming full success', async () => {
@@ -726,10 +743,10 @@ describe('Run Payroll preview feedback', () => {
       })
     ).toBeVisible();
     const inspectionActions = within(
-      screen.getByRole('group', { name: 'Payroll readiness and audit' })
+      screen.getByRole('group', { name: 'Payroll readiness and activity' })
     );
     expect(inspectionActions.getByRole('button', { name: 'View readiness' })).toBeVisible();
-    expect(inspectionActions.getByRole('button', { name: 'Audit' })).toBeVisible();
+    expect(inspectionActions.getByRole('button', { name: 'Payroll activity' })).toBeVisible();
     const reviewActions = within(
       screen.getByRole('group', { name: 'Review and lock selected payroll rows' })
     );
@@ -1126,7 +1143,8 @@ describe('Run Payroll preview feedback', () => {
     await userEvent.click(screen.getByRole('checkbox'));
     await userEvent.click(screen.getByRole('button', { name: 'Unmark' }));
     expect(mocks.unmark).toHaveBeenCalled();
-    expect(mocks.load).toHaveBeenCalledWith();
+    expect(mocks.refresh).toHaveBeenCalledWith();
+    expect(mocks.load).not.toHaveBeenCalled();
     mocks.preview = { ...mocks.preview, requestedRunId: 'run-2', runId: 'run-2' };
     ui.rerender(view());
     expect(mocks.success).toHaveBeenCalledExactlyOnceWith({ message: 'Removed selected reviews.' });
