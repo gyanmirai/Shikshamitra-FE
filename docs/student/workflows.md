@@ -36,7 +36,7 @@ If Save and publish saves the draft but publication fails, the editor retains th
 
 Use **Edit application form** from the Registration/Form stage, Student record details in the finalization workspace, or the Application record header when the server permits correction. A completed Registration stage remains a read-only review; its Edit action opens the existing pinned registration form in a contextual correction drawer, without moving the current journey stage backwards. Its read-only fields and Finance joining-date restrictions remain enforced. Complete the highlighted fields, choose **Save corrections**, and supply an audit reason. This saves a correction without normal Submit/Reopen or replaying admission stages.
 
-After a confirmed save, finalization checks reload and staff must review identity/profile choices and guardian verification again. Approval and the application number remain visible. Form history shows the correction reason and field labels alongside prior entries. Cancel retains previous confirmations; unsaved answers use the existing discard confirmation. An unconfirmed network response permits exact-command retry, and closing refreshes the application without claiming success. Stale data requires reopening the latest form.
+After a confirmed save, finalization checks reload and staff review identity/profile choices again. Approval and the application number remain visible. Form history shows the correction reason and field labels alongside prior entries. Cancel retains previous confirmations; unsaved answers use the existing discard confirmation. An unconfirmed network response permits exact-command retry, and closing refreshes the application without claiming success. Stale data requires reopening the latest form.
 
 ## House Management
 
@@ -77,21 +77,21 @@ Only the current independent server-authorized approval stage can approve. Pendi
 
 ## Approval to Onboarding
 
-Pending Admission Decision uses three unselected outcome cards, the existing reason rules, and one **Record Decision** action. Choosing an outcome does not save it; the reason appears after selection and Decision History remains collapsed until requested. Unsaved decisions use the workspace's existing navigation, End Journey and Skip guards. Failed saves and status-changing refreshes retain the draft until an explicit reload; the reload confirmation clears the draft and uses the latest revision. Already approved cases keep their existing guarded Reject dialog beside Finalize Admission.
+The terminal Admission Decision uses one compact Admission Summary and a Student Setup note for Division, GR number and roll number. Small **Waitlist**, **Reject** and **Approve & Finalize** buttons stay right aligned in the workspace footer, outside its scroll body, and wrap on narrow screens. Waitlist/Reject retain their reason dialogs. Readiness shows actionable blockers and possible Student matches without repeating successful checks or requiring a manual contact-verification checkbox. Existing Student profile updates still require explicit review. Nonterminal decision and legacy handoff stages retain their existing decision/continuation flow.
 
-Successful approval opens the finalization workspace automatically. The current decision stage completes through the existing guarded workflow advance before finalization checks load; it does not skip configured future stages. Preparation, failed reads and final save have distinct loading/retry states. Identity matching, captured-profile choices and guardian verification remain required. Already approved cases can resume through Finalize admission.
+**Approve & Finalize** sends one transactional command. Only a terminal Approval or an already approved, completed journey uses it; configured future stages are never skipped. Valid saved primary contact details remain required, but this action does not claim contact ownership was verified. Identity, document, seat, Finance and duplicate-resolution guards remain server-owned. Failed requests preserve the exact payload/key; **Reload latest application** refreshes the application, workflow and readiness before renewed review.
 
-After a successful finalization response, staff with Onboarding View open the exact returned case at `/student/onboarding/setup?case=<onboardingCaseId>`. Staff without that grant retain the finalized summary. Failed finalization retains confirmations and the existing retry idempotency key; it never navigates as if the save succeeded.
+After a successful finalization response, staff with Onboarding View open the exact returned case at `/student/onboarding/setup?case=<onboardingCaseId>`. Progress remains mounted across cache updates until navigation, preventing a finalized-summary flash and unnecessary evidence reads. Navigation recovery opens Student Setup without repeating finalization. Staff without that grant, and later reopening finalized records, retain the read-only summary. Failed finalization never navigates as if the save succeeded.
 
 When reviewing a finalized application, Continue Onboarding remains available for unfinished onboarding cases. A completed case instead shows Onboarding Completed and View in Student Records when staff have Student List viewing access. That link opens the exact saved Student profile. Activation alone does not imply completion: pending provisioning still continues through Onboarding. Unknown or failed case reads do not offer status-dependent navigation.
 
 ## Admission document review
 
-The Document Verification table offers direct View and Upload actions using the shared row-action component. Missing files have an unavailable View action; authorized physical-original and waiver actions remain in the overflow menu. Historical stages remain read-only.
+The Document Verification table offers direct View and Upload actions using the shared row-action component. Missing files have an unavailable View action. More contains History, authorized Download, physical-original and waiver actions. Historical stages remain read-only. The heading information tooltip provides workflow guidance without a progress strip above the table.
 
-Continue uses server document readiness, including when Documents precedes the unsubmitted Registration form. It does not infer readiness from application submission status or the accepted-file count alone. Active table and card layouts display returned blockers (including missing evidence or an ineligible route) beside the checklist, so a disabled Continue action has an explanation.
+Continue uses server document readiness, including when Documents precedes the unsubmitted Registration form. It does not infer readiness from application submission status or the accepted-file count alone. Table-layout blockers and onboarding-deferral guidance are available in the heading information tooltip; card layouts retain inline guidance.
 
-View opens a full-width protected preview with compact file/version/status context and collapsed Evidence history. Approve saves the latest evidence decision directly without a notes form. Reject opens a compact dialog with a required rejection reason; cancelling returns to the same mounted preview. If a physical original is newer than the displayed upload, both evidence versions remain clearly identified. Existing collection notes, original attestations, waiver reasons and review history are retained. Save locks, independent review and server capabilities remain authoritative.
+View opens a protected, auto-fitted preview with the displayed filename and compact Close, Reject and Approve footer. Images have no separate zoom toolbar; PDFs retain their native viewer. History opens separately from More and identifies uploads, newer physical originals, collection notes, attestations, waiver reasons and decisions. Approve saves the latest evidence decision directly without a notes form. Reject opens a compact dialog with a required rejection reason; cancelling returns to the same mounted preview. Upload displays the shared form busy region until the request settles; failed writes retain the selected file and notes. Save locks, independent review and server capabilities remain authoritative.
 
 ## Admission form preview and section actions
 
@@ -513,6 +513,27 @@ Eligibility, Review, and Offer are retired Admission Stage types. New drafts can
 ## Managed Review setup and staff workflow
 
 Eligibility, Review, and Offer are retired Admission Stage types. New drafts cannot select them, publication rejects them, application workspaces do not mount their working panels, and their direct admission operations reject unsupported stages. Existing enum numbers and stored audit records remain intact. Inquiry qualification, Student Records reviews, division placement, and Finance ownership are separate contracts.
+
+## Registration print workflow
+
+Registration setup has four steps: Form details, Build form, Review and Print layout; Inquiry retains its three-step flow.
+The fourth step previews the composed Inquiry/Registration questions and saves the Boxed Grid, Structured Classic or previous Simple paper template independently of Compact/Spacious A4 spacing and school-header, photo-space and signature-area settings.
+New forms start with Boxed Grid; existing saved forms without a template retain Simple. Using a saved school form as a starter preserves its chosen template.
+Blank Boxed Grid writing-cell rows wrap to at most two paper columns to leave usable handwriting space; ordinary rows and filled copies retain configured columns and all field ordering.
+The school name, address, logo and banner come from the existing Institute Setup branding read. Registration No. uses an ordinary writing line in both new templates; filled application output uses the saved application number, while blank output leaves it empty.
+Saving a draft or publishing retains these settings through the existing form workflow.
+
+Pipeline row print actions open a full-screen saved-form preview as either Print filled form or Print blank form.
+The runtime Form panel also exposes Print for authenticated staff.
+Unsaved input prompts Use saved details or, when draft saving is available, Save and preview; failed saves retain the decision and entered work.
+Printing never submits the Registration form or advances the workflow.
+
+The preview selects a supported form language and the full form or a specific step, identifying the current runtime step where available.
+Blank mode clears answers, defaults and photos while retaining questions, static instructions and conditional-question indicators.
+Filled mode uses saved answers plus frozen Inquiry context, suppresses hidden questions and formats selected choices and repeated entries.
+Preview, download and print share the same paginated PDF.
+Loading, failed reads/generation and empty selections keep output actions unavailable; Retry preserves form data, and changing the source or mode hides the previous PDF.
+See [client ownership](./clients.md#registration-print-clients), [backend guarantees](../../../Shikshamitra-BE/docs/modules/student/product.md#registration-print-settings-and-saved-answers) and [checks](./testing.md#registration-print-checks).
 
 ## Dynamic form builder
 

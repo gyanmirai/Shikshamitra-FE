@@ -19,6 +19,23 @@ const permissions = {
 };
 
 describe('DocumentTableActions', () => {
+  it('opens History from More and hides Download without its permission', async () => {
+    renderDocumentUi(
+      <DocumentTableActions
+        requirement={{ ...documentSummary.requirements[0], evidence: [documentEvidence] }}
+        permissions={{ ...permissions, download: false }}
+        readOnly
+        onView={vi.fn()}
+      />
+    );
+    await userEvent.click(
+      screen.getByRole('button', { name: 'More Actions For Birth certificate' })
+    );
+    expect(screen.queryByRole('menuitem', { name: 'Download' })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('menuitem', { name: 'History' }));
+    expect(screen.getByRole('dialog', { name: /Birth certificate.*History/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Download' })).not.toBeInTheDocument();
+  });
   it('opens upload directly and leaves missing evidence View unavailable', async () => {
     const onAction = vi.fn();
     const onView = vi.fn();

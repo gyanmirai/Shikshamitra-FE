@@ -346,6 +346,7 @@ describe('approval finalization handoff', () => {
         id: 'decision',
         code: 'VERIFY_APPROVE_ADMISSION',
         name: 'Admission decision',
+        isTerminalStage: true,
         stageType: 7,
         status: 1,
       },
@@ -353,10 +354,10 @@ describe('approval finalization handoff', () => {
     decisionCardProps.current = null;
   });
 
-  it('reuses the guarded workflow advance and opens the exact returned Onboarding case', async () => {
+  it('leaves workflow completion to the atomic command and opens the exact returned Onboarding case', () => {
     render(<AdmissionApplicationDetailScreen />);
-    await decisionCardProps.current.onPrepareFinalization();
-    expect(detailState.advance).toHaveBeenCalledOnce();
+    expect(decisionCardProps.current.onPrepareFinalization).toBeUndefined();
+    expect(detailState.advance).not.toHaveBeenCalled();
     decisionCardProps.current.onFinalized({
       onboardingCaseId: 'case-finalized',
       studentId: 'student-finalized',
@@ -369,6 +370,28 @@ describe('approval finalization handoff', () => {
     render(<AdmissionApplicationDetailScreen />);
     decisionCardProps.current.onFinalized({ onboardingCaseId: 'case-finalized' });
     expect(push).not.toHaveBeenCalled();
+  });
+
+  it('retains the existing continuation path for a nonterminal approval', () => {
+    detailState.workflowQuery.data.stages[0].isTerminalStage = false;
+    render(<AdmissionApplicationDetailScreen />);
+    expect(decisionCardProps.current.simplified).toBe(false);
+    expect(decisionCardProps.current.onPrepareFinalization).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Continue Admission' })).toBeInTheDocument();
+  });
+
+  it('opens the single review for an approved completed workflow ending at another stage type', () => {
+    detailState.workflowQuery.data.status = 1;
+    detailState.workflowQuery.data.currentStageInstanceId = null;
+    detailState.workflowQuery.data.stages[0] = {
+      id: 'last-document',
+      name: 'Documents',
+      stageType: 5,
+      status: 2,
+    };
+    render(<AdmissionApplicationDetailScreen />);
+    expect(decisionCardProps.current.simplified).toBe(true);
+    expect(screen.queryByRole('button', { name: 'Continue Admission' })).not.toBeInTheDocument();
   });
 
   it('does not offer automatic stage completion while there are unsaved answers', () => {
@@ -395,36 +418,22 @@ describe('approval finalization handoff', () => {
     expect(detailState.advance).not.toHaveBeenCalled();
   });
 
-  it('guards ending a journey while a decision draft is open and blocks stage continuation', () => {
+  it('does not offer competing journey actions in the single admission decision workspace', () => {
     render(<AdmissionApplicationDetailScreen />);
     act(() => decisionCardProps.current.onDirtyChange(true));
-    expect(screen.getByRole('button', { name: 'Continue Admission' })).toBeDisabled();
-    fireEvent.click(screen.getByRole('button', { name: 'End Journey' }));
-    expect(
-      screen.getByRole('dialog', { name: 'Discard Unsaved Application Changes?' })
-    ).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Continue Admission' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'End Journey' })).not.toBeInTheDocument();
     expect(screen.queryByRole('dialog', { name: 'End Admission Journey' })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
-    expect(detailState.endJourney).not.toHaveBeenCalled();
-    expect(decisionCardProps.current.onPrepareFinalization).toBeDefined();
-    fireEvent.click(screen.getByRole('button', { name: 'End Journey' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
-    expect(screen.getByRole('dialog', { name: 'End Admission Journey' })).toBeVisible();
     expect(detailState.endJourney).not.toHaveBeenCalled();
   });
 
-  it('guards manually skipping a decision stage while a decision draft is open', () => {
+  it('does not expose manual skip beside the combined decision actions', () => {
     detailState.canSkip = true;
     detailState.workflowQuery.data.stages[0].allowManualSkip = true;
     render(<AdmissionApplicationDetailScreen />);
     act(() => decisionCardProps.current.onDirtyChange(true));
-    fireEvent.click(screen.getByRole('button', { name: 'Skip Current Step' }));
-    expect(
-      screen.getByRole('dialog', { name: 'Discard Unsaved Application Changes?' })
-    ).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Skip Current Step' })).not.toBeInTheDocument();
     expect(detailState.setRuntimeAction).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
-    expect(detailState.setRuntimeAction).toHaveBeenCalledWith('skip');
   });
 });
 
