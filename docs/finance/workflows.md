@@ -94,11 +94,19 @@ a genuinely different name clears that conflict without losing the installment s
 
 ## Refund request form presentation
 
+Paid charges and paid late fees follow the refund policy version explicitly assigned to the
+student. Editing the policy creates a new version; existing assignments require an explicit
+policy update before that version applies. Student-based eligibility includes settled sources
+from the linked account as well as historical student receipts. Receipts from different payment
+accounts must be refunded in separate requests; multiple receipts for one account remain
+selectable together.
+
 Refund detail drawers show only installments carrying a refund in the selected request, grouped under their fee heads.
 Shared accordions and embedded tables display Installment, Paid amount and Refund amount; paid values come from the selected installment response, and the summary uses the request refund amounts.
 Student-wide paid/refunded totals and due-collection statuses are excluded from this breakdown.
 Reject is offered only before approval, including when an older response still contains an approved Reject action hint.
 The refund worklist omits the Actions column on Completed, Rejected and Failed tabs; row opening still provides the refund detail view.
+The worklist sends the selected board, medium, class and division with the global academic year. Historical refund rows show the student's placement from that refund year after promotion.
 The [backend request-detail contract](../../../Shikshamitra-BE/docs/modules/finance/references/fee-refund-payout-workflow.md#edit-a-pending-request) owns the saved amount semantics.
 
 Pending refund rows expose Edit only when the server returns the `edit` action.
@@ -414,8 +422,11 @@ Collection Policy's **Automatic Payment Priority** section selects **Installment
 or **Fee head first (A–Z)**. The latter clears each head's earliest dues before the next head.
 The collect form receives the assignment's pinned `allocationBasis`, policy identity/version,
 `allocationDueFeeOrder` and `allocationRevision`. With no fees or charges selected, entering an
-amount allocates across eligible outstanding fees from the complete ledger in the returned order.
-Additional charges require explicit selection. Selecting any fees or charges limits collection to
+amount allocates across eligible outstanding fees from the complete ledger in the returned order,
+then eligible Additional Charges from top to bottom. Only funded fees and charges are highlighted
+and shown in review; validation and the command include the full eligible candidate set.
+Entering the full collectible outstanding amount includes the charges without an excess-amount error.
+Selecting any fees or charges explicitly limits collection to
 that selection. Entering an amount updates Pay now and Remaining; amount-only summaries show
 the funded fees, and the left ledger checks and highlights those same rows, including a partially
 funded final row. Changing or clearing the amount updates these highlights without converting them

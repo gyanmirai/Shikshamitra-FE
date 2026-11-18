@@ -1,16 +1,16 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { IData, IColumn, IParams } from 'src/components/customizabaleTable/types';
+import type { IColumn, IParams } from 'src/components/customizabaleTable/types';
 
+import React, { useMemo } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import React, { useMemo } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
-
+import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { financePermissions } from 'src/constants/finance-menu';
@@ -63,9 +63,9 @@ import {
   useUnarchiveConcessionPolicyMutation,
 } from 'src/redux/finance/concessionPolicy';
 
-import CustomTooltip from 'src/components/custom-tooltip';
 import { policyTableFilterArgs } from './policyTableQuery';
 import FinancePolicyAuditDrawer from './FinancePolicyAuditDrawer';
+import { usePolicyTableState } from '../hooks/usePolicyTableState';
 import FinancePolicyDetailsDrawer from './FinancePolicyDetailsDrawer';
 import FinancePolicyVersionDrawer from './FinancePolicyVersionDrawer';
 import {
@@ -150,18 +150,13 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
   const versionDialog = useBoolean();
 
   const [selected, setSelected] = React.useState<IFinancePolicyRow | null>(null);
-  const [queryParams, setQueryParams] = React.useState({
-    page: 1,
-    pageSize: 10,
-    search: '',
-    status: '' as FinancePolicyStatus | '',
-  });
   const [policyFilters, setPolicyFilters] = React.useState<IParams['filters']>([]);
   const [policySorts, setPolicySorts] = React.useState<IParams['sorts']>([]);
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const academicYearId = currentYear?.id || '';
+  const [queryParams, setQueryParams] = usePolicyTableState(`${policyType}:${academicYearId}`);
 
   // ── Queries / Mutations ──────────────────────────────────────────────────────
   // Each policy workspace uses its own list API. Hooks are gated with `skip` so

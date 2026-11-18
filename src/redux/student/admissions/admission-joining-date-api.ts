@@ -93,6 +93,7 @@ export const admissionJoiningDateApi = api.injectEndpoints({
         error
           ? []
           : [
+              financeModuleType.studentFeeAssignment,
               dateTag(applicationId),
               studentAdmissionsCrmType.admissionApplicant,
               { type: financeModuleType.feeCollection, id: applicationId },

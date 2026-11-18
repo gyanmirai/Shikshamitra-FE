@@ -4,6 +4,7 @@ import { financePolicyType } from 'src/redux/tagTypes';
 
 import { api } from '../service';
 import { policyCacheTags } from './policyCacheTags';
+import { policyVersionRequest, type PolicyVersionQueryArgs } from './policyVersionQuery';
 
 const policyTags = policyCacheTags(financePolicyType.concessionPolicy);
 
@@ -153,8 +154,10 @@ export const concessionPolicyApi = api.injectEndpoints({
       query: (id) => ({ url: `/finance/concession-policies/${id}/unarchive`, method: 'POST' }),
       invalidatesTags: policyTags.changed,
     }),
-    getConcessionPolicyVersions: builder.query<ConcessionPolicyVersionListResponse, string>({
-      query: (id) => `/finance/concession-policies/${id}/versions`,
+    getConcessionPolicyVersions: builder.query<ConcessionPolicyVersionListResponse,
+      PolicyVersionQueryArgs
+    >({
+      query: (args) => policyVersionRequest('concession', args),
       providesTags: policyTags.detail,
     }),
     getConcessionPolicyImpact: builder.query<ConcessionPolicyImpactResponse, string>({

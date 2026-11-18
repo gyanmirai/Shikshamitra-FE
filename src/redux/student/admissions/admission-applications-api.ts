@@ -2,6 +2,7 @@ import { api } from 'src/redux/service';
 import { studentAcademicFilterParams } from 'src/utils/student-academic-filter-query';
 import {
   studentType,
+  financeModuleType,
   studentOnboardingType,
   studentRegistrationType,
   studentAdmissionsCrmType,
@@ -33,7 +34,13 @@ export type AdmissionJourneyResumePreview = {
   warnings: string[];
 };
 const applicationMutationTags = (_result: unknown, error: unknown) =>
-  error ? [] : [studentAdmissionsCrmType.admissionApplication, dashboardTag];
+  error
+    ? []
+    : [
+        financeModuleType.studentFeeAssignment,
+        studentAdmissionsCrmType.admissionApplication,
+        dashboardTag,
+      ];
 
 export type AdmissionApplicationStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11;
 export type AdmissionDirectFamilyMatch = {
@@ -426,6 +433,7 @@ export const admissionApplicationsApi = api.injectEndpoints({
         error
           ? []
           : [
+              financeModuleType.studentFeeAssignment,
               dashboardTag,
               studentAdmissionsCrmType.admissionApplication,
               studentAdmissionsCrmType.admissionApplicant,
@@ -459,6 +467,7 @@ export const admissionApplicationsApi = api.injectEndpoints({
         error
           ? []
           : [
+              financeModuleType.studentFeeAssignment,
               dashboardTag,
               studentAdmissionsCrmType.admissionApplication,
               studentAdmissionsCrmType.admissionApplicant,
@@ -491,7 +500,11 @@ export const admissionApplicationsApi = api.injectEndpoints({
       invalidatesTags: (result, error) =>
         error
           ? []
-          : [...applicationMutationTags(result, error), studentAdmissionsCrmType.admissionInquiry],
+          : [
+              financeModuleType.studentFeeAssignment,
+              ...applicationMutationTags(result, error),
+              studentAdmissionsCrmType.admissionInquiry,
+            ],
     }),
     updateAdmissionApplicationFormValues: builder.mutation<
       AdmissionApplicationForm,
@@ -621,6 +634,7 @@ export const admissionApplicationsApi = api.injectEndpoints({
       invalidatesTags: (result) =>
         result
           ? [
+              financeModuleType.studentFeeAssignment,
               dashboardTag,
               studentAdmissionsCrmType.admissionApplication,
               studentAdmissionsCrmType.admissionApplicant,
@@ -645,6 +659,7 @@ export const admissionApplicationsApi = api.injectEndpoints({
       invalidatesTags: (result) =>
         result
           ? [
+              financeModuleType.studentFeeAssignment,
               dashboardTag,
               studentAdmissionsCrmType.admissionApplication,
               studentAdmissionsCrmType.admissionApplicant,
@@ -693,6 +708,7 @@ export const admissionApplicationsApi = api.injectEndpoints({
         error
           ? []
           : [
+              financeModuleType.studentFeeAssignment,
               dashboardTag,
               studentAdmissionsCrmType.admissionApplication,
               studentAdmissionsCrmType.admissionApplicant,

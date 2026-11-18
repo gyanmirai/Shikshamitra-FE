@@ -45,7 +45,7 @@ interface Props {
 
 const rowLayout = {
   display: 'grid',
-  gridTemplateColumns: '24px minmax(0, 1fr) 64px 70px 28px',
+  gridTemplateColumns: '24px minmax(0, 1fr) 96px 70px 28px',
   gap: 0.5,
   alignItems: 'center',
   px: 0.5,
@@ -107,7 +107,7 @@ function SortableRow({
       <Typography role="cell" variant="body2" sx={{ overflowWrap: 'anywhere' }}>
         {row.label}
       </Typography>
-      <Typography role="cell" variant="caption" color="text.secondary">
+      <Typography role="cell" variant="caption" color="text.secondary" noWrap title={row.term}>
         {row.term}
       </Typography>
       <Typography
@@ -116,7 +116,7 @@ function SortableRow({
         sx={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}
       >
         {formatNumber(row.amount, 'INR')}
-        {row.remainingAmount !== undefined && (
+        {row.remainingAmount !== undefined && row.remainingAmount > 0 && (
           <Typography
             component="span"
             variant="caption"

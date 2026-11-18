@@ -46,6 +46,7 @@ export interface IBankAccountTableProps {
   totalCount?: number;
   onServerPagination?: (page: number, rowsPerPage: number) => void;
   onServerSearch?: (searchTerm: string) => void;
+  searchTerm?: string;
   filters?: IParams['filters'];
   onServerFilter?: (filters: IParams['filters']) => void;
   page?: number;

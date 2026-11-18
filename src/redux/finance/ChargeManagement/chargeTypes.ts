@@ -134,7 +134,6 @@ export interface IGetChargesParams {
   educationMediumId?: string;
   standardId?: string;
   divisionId?: string;
-  _refetchTrigger?: number;
 }
 
 export interface IGetChargeLinesParams {

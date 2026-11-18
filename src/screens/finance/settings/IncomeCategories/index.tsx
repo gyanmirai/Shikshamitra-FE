@@ -46,18 +46,16 @@ const FinanceIncomeCategoriesScreen = () => {
 
   // Use custom hook to fetch income categories
   const {
-    data: incomeCategoryData,
+    currentData: incomeCategoryData,
     isLoading: incomeCategoryLoading,
     isFetching: incomeCategoryFetching,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetIncomeCategoriesQuery,
-    params: {
+    error: incomeCategoryError,
+    refetch,
+  } = useGetIncomeCategoriesQuery({
       academicYearId: currentYear?.id,
       ...queryParams,
       filters: serializeFinanceTableFilters(filters),
-    },
-  });
+    }, { skip: !currentYear?.id || !access.canView, refetchOnMountOrArgChange: 60 });
 
   // DELETE mutation
   const [deleteIncomeCategory, { isLoading: isDeleting }] = useQueryAndMutation({
@@ -89,9 +87,6 @@ const FinanceIncomeCategoriesScreen = () => {
     }
   );
 
-  if (incomeCategoryLoading) {
-    return <Box>Loading...</Box>;
-  }
 
   return (
     <Box height="100%" display="flex" flexDirection="column">
@@ -138,7 +133,10 @@ const FinanceIncomeCategoriesScreen = () => {
         editData={selectedIncomeCategory}
         setEditData={setSelectedIncomeCategory}
         data={incomeCategoryData?.items || []}
-        isLoading={incomeCategoryLoading || incomeCategoryFetching}
+        isLoading={incomeCategoryLoading || (incomeCategoryFetching && !incomeCategoryData)}
+        isRefreshing={incomeCategoryFetching && Boolean(incomeCategoryData)}
+        error={incomeCategoryError}
+        onRetry={() => refetch()}
         totalCount={incomeCategoryData?.totalCount}
         onServerPagination={handleServerPagination}
         onServerSearch={handleServerSearch}

@@ -143,7 +143,7 @@ function RegisterContent({
       page,
       pageSize,
     },
-    { skip: months.length === 0, refetchOnMountOrArgChange: true }
+    { skip: months.length === 0, refetchOnMountOrArgChange: 60 }
   );
   const columns: IColumn[] = (
     [

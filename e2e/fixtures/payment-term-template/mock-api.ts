@@ -2,12 +2,14 @@ import { useCallback } from 'react';
 import dayjs from 'dayjs';
 
 export const useGetYearQuery = () => ({
-  data: { items: [
-    { id: 'year', name: '2026-2027' },
-    { id: 'previous-year', name: '2025-2026' },
-    { id: 'older-year', name: '2024-2025' },
-    { id: 'future-year', name: '2027-2028' },
-  ] },
+  data: {
+    items: [
+      { id: 'year', name: '2026-2027' },
+      { id: 'previous-year', name: '2025-2026' },
+      { id: 'older-year', name: '2024-2025' },
+      { id: 'future-year', name: '2027-2028' },
+    ],
+  },
   isLoading: false,
   isFetching: false,
   isError: false,
@@ -152,7 +154,17 @@ export const useGetPaymentTermVersionHistoryQuery = () => ({
   refetch: () => undefined,
 });
 export const useGetPaymentTermsQuery = (params: any) => ({
-  data: params?.status === 'Archived' ? { items: list.items.map((item) => ({ ...item, id: 'archived-monthly', status: 'Archived' })), totalCount: list.items.length } : list,
+  data:
+    params?.status === 'Archived'
+      ? {
+          items: list.items.map((item) => ({
+            ...item,
+            id: 'archived-monthly',
+            status: 'Archived',
+          })),
+          totalCount: list.items.length,
+        }
+      : list,
   isLoading: false,
   isFetching: false,
   isError: false,
@@ -174,7 +186,17 @@ const boardsResult = {
     ],
   },
 };
-export const useGetBoardsQuery = () => boardsResult;
+export const useGetBoardsQuery = () => ({
+  data: {
+    items: Array.from({ length: 10 }, (_, index) => ({
+      id: `old-${index}`,
+      name: 'Other year board',
+      academicYearId: `old-year-${index}`,
+    })),
+  },
+});
+export const useGetAcademicHierarchyQuery = (academicYearId: string) =>
+  academicYearId === 'year' ? boardsResult : { data: { items: [] } };
 export const useGetPaymentTermUsageQuery = () => ({ currentData: usage });
 export const useGetPaymentTermDefaultImpactQuery = () => ({
   currentData: impact,
@@ -200,7 +222,10 @@ const mutation = () => [
         ) {
           throw {
             status: 400,
-            data: { errorCode: 'Finance:PaymentTerm:000042', detail: 'A payment term with this name already exists in this academic year.' },
+            data: {
+              errorCode: 'Finance:PaymentTerm:000042',
+              detail: 'A payment term with this name already exists in this academic year.',
+            },
           };
         }
         (window as any).paymentTermWrites = [...((window as any).paymentTermWrites ?? []), input];

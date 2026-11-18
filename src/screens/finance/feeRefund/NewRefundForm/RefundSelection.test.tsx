@@ -4,7 +4,7 @@ import { createTheme } from 'src/theme/create-theme';
 import { FeeMonth } from 'src/enums/fee-collection-type';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import FeeHeadRefundTable from './FeeHeadRefundTable';
 import { buildRefundInitialValues, buildFeeRefundApiPayload } from './initialValuesAndValidation';
@@ -97,6 +97,80 @@ describe('refund receipt selection', () => {
     fireEvent.click(savedReceipt);
     await waitFor(() => expect(savedReceipt).not.toBeChecked());
     expect(otherReceipt).toBeDisabled();
+  });
+
+  it('locks other payment accounts across rows and groups until selected installments are cleared', async () => {
+    const data = mocks.eligibility.currentData;
+    data.receipts = [
+      { receiptId: 'receipt-0', financeFeeAccountId: null },
+      { receiptId: 'receipt-1', financeFeeAccountId: 'account' },
+    ];
+    data.feeHeads.push({
+      feeHeadId: 'materials',
+      feeHeadName: 'Materials',
+      months: [{ ...data.feeHeads[0].months[1], sourceAllocationId: 'materials-payment' }],
+    });
+    render(<Request />);
+    const legacy = screen.getByRole('checkbox', { name: 'Select December 2026 · FIN-0' });
+    const accountGroup = screen.getByRole('checkbox', {
+      name: 'Select refundable installments for Materials',
+    });
+    await act(async () => {
+      fireEvent.click(legacy);
+    });
+    expect(accountGroup).toBeDisabled();
+    screen.getAllByRole('checkbox', { name: 'Select June 2026 · FIN-1' }).forEach((checkbox) => {
+      expect(checkbox).toBeDisabled();
+    });
+    await act(async () => {
+      fireEvent.click(legacy);
+    });
+    expect(accountGroup).toBeEnabled();
+    await act(async () => {
+      fireEvent.click(accountGroup);
+    });
+    expect(legacy).toBeDisabled();
+    expect(screen.getByLabelText('Selection total')).toHaveTextContent('1 installments · 200');
+    await act(async () => {
+      fireEvent.click(accountGroup);
+    });
+    expect(legacy).toBeEnabled();
+  });
+
+  it('bulk selects multiple receipts from one account without mixing a legacy payment in the same head', async () => {
+    const data = mocks.eligibility.currentData;
+    data.receipts = [
+      { receiptId: 'receipt-0', financeFeeAccountId: 'account' },
+      { receiptId: 'receipt-1', financeFeeAccountId: 'account' },
+      { receiptId: 'legacy', financeFeeAccountId: null },
+    ];
+    data.feeHeads[0].months.push({
+      ...data.feeHeads[0].months[0],
+      sourceReceiptId: 'legacy',
+      receiptNumber: 'FIN-LEGACY',
+      sourceAllocationId: 'legacy-allocation',
+    });
+    render(<Request />);
+    const group = screen.getByRole('checkbox', {
+      name: 'Select refundable installments for Examination fee',
+    });
+    const legacy = screen.getByRole('checkbox', { name: 'Select December 2026 · FIN-LEGACY' });
+    await act(async () => {
+      fireEvent.click(group);
+    });
+    expect(screen.getByLabelText('Selection total')).toHaveTextContent('2 installments · 400');
+    expect(group).toBeChecked();
+    expect(legacy).toBeDisabled();
+    const payload = JSON.parse(screen.getByLabelText('Request payload').textContent!);
+    expect(payload.lines.map((line: { sourceReceiptId: string }) => line.sourceReceiptId)).toEqual([
+      'receipt-0',
+      'receipt-1',
+    ]);
+    await act(async () => {
+      fireEvent.click(group);
+    });
+    expect(screen.getByLabelText('Selection total')).toHaveTextContent('0 installments · 0');
+    expect(legacy).toBeEnabled();
   });
 
   it('collapses a fee head independently of its selection and preserves entered amounts', async () => {

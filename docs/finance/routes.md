@@ -3,7 +3,7 @@ module: finance
 domain: routes
 content_type: Reference
 status: canonical
-updated_on: 2026-11-03
+updated_on: 2026-11-17
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -24,6 +24,18 @@ TL;DR: Finance routes are owned by `src/constants/finance-menu.ts` and `src/app/
 Use the menu source to decide whether a route is active navigation.
 
 Active Fee Structure editor, typed client and browser checks: [workspace implementation](./references/fee-structure-workspace.md).
+
+## Dashboard presentation
+
+The dashboard uses shared section and summary cards with info tooltips. Its activity date picker and
+presets filter the existing preview activity; queues and outstanding fees retain academic-year scope.
+The global academic selector is hidden only on this dashboard; other Finance pages keep it.
+Academic loading, default selection and saved-scope normalization remain active while it is hidden.
+Outstanding Fees by Class uses the embedded customizable table with class/search/column filters,
+sorting, columns, export, fullscreen, density and pagination. Board/medium context remains a preview
+control; fixture rows do not contain board/medium identifiers. Dashboard data is still supplied by
+`FinanceAdminDashboard/finance-admin-dashboard-preview-data.ts`, with that boundary explained in the
+statement tooltip and table exports.
 
 ## Active menu routes
 

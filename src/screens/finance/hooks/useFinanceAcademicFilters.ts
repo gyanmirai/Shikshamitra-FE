@@ -48,7 +48,9 @@ export interface UseFinanceAcademicFiltersResult {
   classesLoading: boolean;
 }
 
-export function useFinanceAcademicFilters(): UseFinanceAcademicFiltersResult {
+export function useFinanceAcademicFilters({
+  includeWorkContext = true,
+}: { includeWorkContext?: boolean } = {}): UseFinanceAcademicFiltersResult {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const {
     currentData: workContext,
@@ -56,7 +58,7 @@ export function useFinanceAcademicFilters(): UseFinanceAcademicFiltersResult {
     isError: contextError,
   } = useGetFinanceWorkContextQuery(
     { academicYearId: currentYear?.id ?? '' },
-    { skip: !currentYear?.id }
+    { skip: !currentYear?.id || !includeWorkContext }
   );
   const currentWorkContext = workContext?.academicYearId === currentYear?.id ? workContext : null;
 
@@ -74,7 +76,15 @@ export function useFinanceAcademicFilters(): UseFinanceAcademicFiltersResult {
     return (board as Board)?.educationMediums ?? [];
   }, [boards, selectedBoard]);
 
-  const isReady = Boolean(currentYear?.id && selectedBoard && selectedMedium);
+  const isReady = Boolean(
+    currentYear?.id &&
+    initializedYearId.current === currentYear.id &&
+    boards.some(
+      (board) =>
+        board.id === selectedBoard &&
+        board.educationMediums?.some((medium) => medium.id === selectedMedium)
+    )
+  );
 
   // Subscribe by medium so class/division changes and table remounts reuse the
   // same reference data. currentData excludes options belonging to a previous medium.

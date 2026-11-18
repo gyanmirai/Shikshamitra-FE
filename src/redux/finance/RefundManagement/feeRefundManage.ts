@@ -183,6 +183,8 @@ export interface FeeRefundPreviewDto {
 
 export interface RefundEligibleReceiptDto {
   receiptId: string;
+  /** Null identifies a legacy student payment; otherwise receipts share this payment account. */
+  financeFeeAccountId?: string | null;
   receiptNumber: string;
   receiptDate: string;
   paidAmount: number;
@@ -224,6 +226,7 @@ export interface ResolveRefundPayoutInput {
 export interface GetFeeRefundsInput {
   academicYearId?: string;
   studentId?: string;
+  boardId?: string;
   /** Filter to students enrolled in a specific academic medium. */
   academicMediumId?: string;
   standardId?: string;
@@ -252,6 +255,7 @@ export interface UpdateFeeRefundInput {
 type FeeRefundCreationPayload = IFeeRefundApiPayload & { idempotencyKey: string };
 
 const refundRequestChangedTags = [
+  financeModuleType.studentFeeAssignment,
   financeModuleType.feeRefund,
   financeModuleType.feeDetails,
   financeModuleType.feeCollection,
@@ -259,6 +263,7 @@ const refundRequestChangedTags = [
   financeModuleType.incomeTracking,
 ];
 const refundPayoutChangedTags = [
+  financeModuleType.studentFeeAssignment,
   ...refundRequestChangedTags,
   financeModuleType.charges,
   financeModuleType.accountPosting,
@@ -267,7 +272,11 @@ const refundRequestInvalidations = (result: FeeRefundRequestDto | undefined, err
   error
     ? []
     : result?.status === FeeRefundStatusType.Processed && result.refundMethod === 'Cash'
-      ? [...refundPayoutChangedTags, financeModuleType.cashManagement]
+      ? [
+          financeModuleType.studentFeeAssignment,
+          ...refundPayoutChangedTags,
+          financeModuleType.cashManagement,
+        ]
       : refundRequestChangedTags;
 
 // ─── API slice ────────────────────────────────────────────────────────────────
@@ -336,12 +345,12 @@ export const feeRefundApi = financeModuleApi.injectEndpoints({
 
     submitFeeRefund: builder.mutation<FeeRefundRequestDto, string>({
       query: (id) => ({ url: `/fee-refunds/${id}/submit`, method: 'POST' }),
-      invalidatesTags: [financeModuleType.feeRefund],
+      invalidatesTags: [financeModuleType.studentFeeAssignment, financeModuleType.feeRefund],
     }),
 
     startReviewFeeRefund: builder.mutation<FeeRefundRequestDto, string>({
       query: (id) => ({ url: `/fee-refunds/${id}/start-review`, method: 'POST' }),
-      invalidatesTags: [financeModuleType.feeRefund],
+      invalidatesTags: [financeModuleType.studentFeeAssignment, financeModuleType.feeRefund],
     }),
 
     approveFeeRefund: builder.mutation<
@@ -369,6 +378,7 @@ export const feeRefundApi = financeModuleApi.injectEndpoints({
         body: { notes },
       }),
       invalidatesTags: [
+        financeModuleType.studentFeeAssignment,
         financeModuleType.feeRefund,
         financeModuleType.feeDetails,
         financeModuleType.feeCollection,
@@ -382,6 +392,7 @@ export const feeRefundApi = financeModuleApi.injectEndpoints({
         body: { notes },
       }),
       invalidatesTags: [
+        financeModuleType.studentFeeAssignment,
         financeModuleType.feeRefund,
         financeModuleType.feeDetails,
         financeModuleType.feeCollection,
@@ -394,6 +405,7 @@ export const feeRefundApi = financeModuleApi.injectEndpoints({
     >({
       query: ({ id, body }) => ({ url: `/fee-refunds/${id}/process`, method: 'POST', body }),
       invalidatesTags: [
+        financeModuleType.studentFeeAssignment,
         financeModuleType.charges,
         financeModuleType.feeRefund,
         financeModuleType.feeDetails,
@@ -412,6 +424,7 @@ export const feeRefundApi = financeModuleApi.injectEndpoints({
         body: { settlementId, reason },
       }),
       invalidatesTags: [
+        financeModuleType.studentFeeAssignment,
         financeModuleType.charges,
         financeModuleType.feeRefund,
         financeModuleType.feeDetails,
@@ -426,7 +439,7 @@ export const feeRefundApi = financeModuleApi.injectEndpoints({
         method: 'PUT',
         body,
       }),
-      invalidatesTags: [financeModuleType.feeRefund],
+      invalidatesTags: [financeModuleType.studentFeeAssignment, financeModuleType.feeRefund],
     }),
 
     deleteFeeRefund: builder.mutation<void, string>({
@@ -434,7 +447,7 @@ export const feeRefundApi = financeModuleApi.injectEndpoints({
         url: `/fee-refunds/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: [financeModuleType.feeRefund],
+      invalidatesTags: [financeModuleType.studentFeeAssignment, financeModuleType.feeRefund],
     }),
 
     updateFeeRefundStatus: builder.mutation<
@@ -447,6 +460,7 @@ export const feeRefundApi = financeModuleApi.injectEndpoints({
         body,
       }),
       invalidatesTags: [
+        financeModuleType.studentFeeAssignment,
         financeModuleType.feeRefund,
         financeModuleType.accountPosting,
         financeModuleType.draftPosting,
@@ -461,7 +475,11 @@ export const feeRefundApi = financeModuleApi.injectEndpoints({
         error
           ? []
           : body.method === 'Cash'
-            ? [...refundPayoutChangedTags, financeModuleType.cashManagement]
+            ? [
+                financeModuleType.studentFeeAssignment,
+                ...refundPayoutChangedTags,
+                financeModuleType.cashManagement,
+              ]
             : refundPayoutChangedTags,
     }),
     confirmRefundPayout: builder.mutation<
@@ -474,6 +492,7 @@ export const feeRefundApi = financeModuleApi.injectEndpoints({
         body,
       }),
       invalidatesTags: [
+        financeModuleType.studentFeeAssignment,
         financeModuleType.charges,
         financeModuleType.feeRefund,
         financeModuleType.feeDetails,
@@ -491,6 +510,7 @@ export const feeRefundApi = financeModuleApi.injectEndpoints({
         body,
       }),
       invalidatesTags: [
+        financeModuleType.studentFeeAssignment,
         financeModuleType.charges,
         financeModuleType.feeRefund,
         financeModuleType.feeDetails,
@@ -509,6 +529,7 @@ export const feeRefundApi = financeModuleApi.injectEndpoints({
         body,
       }),
       invalidatesTags: [
+        financeModuleType.studentFeeAssignment,
         financeModuleType.charges,
         financeModuleType.feeRefund,
         financeModuleType.feeDetails,

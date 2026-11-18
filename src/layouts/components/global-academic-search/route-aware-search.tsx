@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import { settingPath, securityPath } from 'src/routes/paths';
+import { financePaths } from 'src/constants/finance-menu';
 
 import GlobalAcademicSearch from './index';
 
@@ -11,5 +12,7 @@ export default function RouteAwareAcademicSearch() {
     (path) => pathname === path || pathname?.startsWith(`${path}/`)
   );
 
-  return hidesAcademicContext ? null : <GlobalAcademicSearch />;
+  const isFinanceDashboard = pathname?.replace(/\/$/, '') === financePaths.dashboard;
+
+  return hidesAcademicContext ? null : <GlobalAcademicSearch hidden={isFinanceDashboard} />;
 }

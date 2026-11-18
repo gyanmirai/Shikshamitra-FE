@@ -231,7 +231,7 @@ function BankActivityContent({
     { bankAccountId: bank.id, query: selectedQuery },
     {
       skip: !open || !bank.id || !academicYearId || !access.canView || !hasOperationalAccess,
-      refetchOnMountOrArgChange: true,
+      refetchOnMountOrArgChange: 60,
       refetchOnFocus: true,
       refetchOnReconnect: true,
     }

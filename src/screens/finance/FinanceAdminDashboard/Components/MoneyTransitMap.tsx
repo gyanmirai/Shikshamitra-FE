@@ -3,16 +3,17 @@
 import { useMemo } from 'react';
 import { useTheme } from '@mui/material/styles';
 import { formatNumber } from 'src/utils/formate_number';
-import { Iconify } from 'src/components/iconify';
+import { DashboardCard } from 'src/components/dashboard-card/dashboard-card';
+import { FormSectionCard } from 'src/components/form-section-card';
 import { Chart, useChart, ChartLegends } from 'src/components/chart';
-import { Box, Card, Grid, Stack, CardHeader, Typography, CardContent } from '@mui/material';
+import { Box, Grid, Stack, Typography } from '@mui/material';
 
 import {
   financeQueuePreview,
   financePaymentMethods,
   type DailyFinancePreview,
 } from '../finance-admin-dashboard-preview-data';
-import { financeDashboardCardSx, financeDashboardTileSx } from './finance-dashboard-card-styles';
+import { financeDashboardCardSx } from './finance-dashboard-card-styles';
 
 type ActivitySummary = {
   received: number;
@@ -35,37 +36,38 @@ export default function MoneyTransitMap({ activity, rangeLabel }: Props) {
     financeQueuePreview.cashAwaitingDeposit + financeQueuePreview.nonCashAwaitingVerification;
   const stages = [
     {
-      label: 'Fees received',
+      label: 'Fees Received',
       icon: 'mdi:cash-multiple',
       value: formatNumber(activity.received, 'INR'),
-      detail: `${activity.transactions.toLocaleString('en-IN')} receipts`,
+      detail: 'Fee payments received within the selected activity dates.',
     },
     {
-      label: 'Pending confirmation',
+      label: 'Pending Confirmation',
       icon: 'mdi:clock-outline',
       value: formatNumber(awaitingConfirmation, 'INR'),
-      detail: `Year total · Cash ${formatNumber(
+      detail: `Awaiting confirmation for the selected academic year. Cash ${formatNumber(
         financeQueuePreview.cashAwaitingDeposit,
         'INR'
       )} · Other ${formatNumber(financeQueuePreview.nonCashAwaitingVerification, 'INR')}`,
     },
     {
-      label: 'Income confirmed',
+      label: 'Confirmed Income',
       icon: 'mdi:check-circle-outline',
       value: formatNumber(activity.confirmedIncome, 'INR'),
-      detail: 'Selected dates',
+      detail: 'Confirmed income within the selected activity dates.',
     },
     {
       label: 'Expenses',
       icon: 'mdi:receipt-text-outline',
       value: formatNumber(activity.expenses, 'INR'),
-      detail: 'Selected dates',
+      detail: 'Recorded expenses within the selected activity dates.',
     },
     {
-      label: 'Net movement',
+      label: 'Net Movement',
       icon: 'mdi:swap-horizontal',
       value: formatNumber(confirmedNet, 'INR'),
-      detail: 'Confirmed income less expenses',
+      detail:
+        'Confirmed income less recorded expenses for the selected activity dates. This is a register difference, not a bank balance.',
     },
   ];
   const channelRows = financePaymentMethods.map((method) => ({
@@ -122,77 +124,43 @@ export default function MoneyTransitMap({ activity, rangeLabel }: Props) {
   return (
     <Box component="section" aria-label="Collections and cash flow">
       <Stack spacing={2}>
-        <Card sx={financeDashboardCardSx}>
-          <CardHeader
-            title={
-              <Typography id="payment-flow-title" variant="h6">
-                Payment Flow
-              </Typography>
-            }
-            subheader={`Collections, confirmation and expenses · ${rangeLabel}`}
-            sx={{ p: 0, mb: 2 }}
-          />
-          <CardContent sx={{ p: '0 !important' }}>
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: {
-                  xs: '1fr',
-                  sm: 'repeat(2, minmax(0, 1fr))',
-                  md: 'repeat(5, minmax(0, 1fr))',
-                },
-                gap: 1.5,
-              }}
-            >
-              {stages.map((stage, index) => (
-                <Box
-                  key={stage.label}
-                  sx={{
-                    ...financeDashboardTileSx,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gridColumn: index === stages.length - 1 ? { sm: 'span 2', md: 'auto' } : 'auto',
-                  }}
-                >
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <Iconify icon={stage.icon} width={18} sx={{ color: 'text.secondary' }} />
-                    <Typography variant="caption" color="text.secondary" fontWeight={700}>
-                      {stage.label}
-                    </Typography>
-                  </Stack>
-                  <Typography
-                    component="p"
-                    variant="h5"
-                    sx={{ mt: 1.25, fontVariantNumeric: 'tabular-nums', overflowWrap: 'anywhere' }}
-                  >
-                    {stage.value}
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ display: 'block', mt: 'auto', pt: 1 }}
-                  >
-                    {stage.detail}
-                  </Typography>
-                </Box>
-              ))}
-            </Box>
-            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2 }}>
-              Pending confirmation is separate from confirmed income. Net movement is a register
-              difference, not a bank balance.
-            </Typography>
-          </CardContent>
-        </Card>
+        <FormSectionCard
+          title="Payment Flow"
+          descriptionTooltip="Collections, pending confirmation, confirmed income and recorded expenses. Pending confirmation is separate from confirmed income and covers the selected academic year."
+          sx={financeDashboardCardSx}
+        >
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: '1fr',
+                sm: 'repeat(2, minmax(0, 1fr))',
+                xl: 'repeat(5, minmax(0, 1fr))',
+              },
+              gap: 2,
+            }}
+          >
+            {stages.map((stage) => (
+              <DashboardCard
+                key={stage.label}
+                title={stage.label}
+                value={stage.value}
+                icon={stage.icon}
+                titleInfo={stage.detail}
+                density="compact"
+              />
+            ))}
+          </Box>
+        </FormSectionCard>
 
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, lg: 5 }}>
-            <Card sx={financeDashboardCardSx}>
-              <CardHeader
-                title={<Typography variant="h6">Payment Methods</Typography>}
-                subheader="Fees received by method"
-                sx={{ p: 0, mb: 1.5 }}
-              />
-              <CardContent sx={{ p: '0 !important', minWidth: 0 }}>
+            <FormSectionCard
+              title="Payment Methods"
+              descriptionTooltip="Fee payments received by method within the selected activity dates."
+              sx={financeDashboardCardSx}
+            >
+              <Box sx={{ minWidth: 0 }}>
                 {activity.received ? (
                   <Chart
                     type="bar"
@@ -207,17 +175,16 @@ export default function MoneyTransitMap({ activity, rangeLabel }: Props) {
                     </Typography>
                   </Box>
                 )}
-              </CardContent>
-            </Card>
+              </Box>
+            </FormSectionCard>
           </Grid>
           <Grid size={{ xs: 12, lg: 7 }}>
-            <Card sx={financeDashboardCardSx}>
-              <CardHeader
-                title={<Typography variant="h6">Daily Collections</Typography>}
-                subheader={`Fees received and income confirmed · ${rangeLabel}`}
-                sx={{ p: 0, mb: 1.5 }}
-              />
-              <CardContent sx={{ p: '0 !important', minWidth: 0 }}>
+            <FormSectionCard
+              title="Daily Collections"
+              descriptionTooltip={`Fee payments received and income confirmed for ${rangeLabel}.`}
+              sx={financeDashboardCardSx}
+            >
+              <Box sx={{ minWidth: 0 }}>
                 {activity.days.length ? (
                   <>
                     <Chart type="line" series={chart.series} options={chartOptions} height={310} />
@@ -242,8 +209,8 @@ export default function MoneyTransitMap({ activity, rangeLabel }: Props) {
                     </Typography>
                   </Box>
                 )}
-              </CardContent>
-            </Card>
+              </Box>
+            </FormSectionCard>
           </Grid>
         </Grid>
       </Stack>

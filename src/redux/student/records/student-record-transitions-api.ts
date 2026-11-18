@@ -182,9 +182,17 @@ export type SchoolExitSummary = {
   studentConcurrencyStamp: string;
   enrollmentConcurrencyStamp: string;
   canSubmit: boolean;
-  fees: { status: 'Clear' | 'Pending' | 'Unavailable' | 'Restricted'; detail: string; outstandingAmount: number | null };
+  fees: {
+    status: 'Clear' | 'Pending' | 'Unavailable' | 'Restricted';
+    detail: string;
+    outstandingAmount: number | null;
+  };
   library: { status: 'Clear' | 'Pending'; detail: string; pendingCount: number };
-  documents: { status: 'Available' | 'NotApplicable' | 'Restricted'; detail: string; items: { name: string; status: string }[] };
+  documents: {
+    status: 'Available' | 'NotApplicable' | 'Restricted';
+    detail: string;
+    items: { name: string; status: string }[];
+  };
   pendingTransitions: StudentTransition[];
 };
 const transitionsTag = [{ type: studentType.student, id: 'RECORDS-TRANSITIONS' }];
@@ -198,9 +206,18 @@ const withdrawalFinanceTags = [
 ];
 export const studentRecordTransitionsApi = api.injectEndpoints({
   endpoints: (builder) => ({
-    getSchoolExitSummary: builder.query<SchoolExitSummary, { studentId: string; academicYearId: string; outcome?: RecordsOutcome; effectiveDate?: string }>({
+    getSchoolExitSummary: builder.query<
+      SchoolExitSummary,
+      {
+        studentId: string;
+        academicYearId: string;
+        outcome?: RecordsOutcome;
+        effectiveDate?: string;
+      }
+    >({
       query: (params) => ({ url: '/students/records/transitions/school-exit-summary', params }),
-      transformResponse: (response: SchoolExitSummary | { data?: SchoolExitSummary }) => unwrapRecordsResult(response),
+      transformResponse: (response: SchoolExitSummary | { data?: SchoolExitSummary }) =>
+        unwrapRecordsResult(response),
       providesTags: transitionsTag,
     }),
     getStudentRecordTransitionOptions: builder.query<
@@ -253,6 +270,7 @@ export const studentRecordTransitionsApi = api.injectEndpoints({
         error
           ? []
           : [
+              financeModuleType.studentFeeAssignment,
               studentType.student,
               ...(result?.items.some(
                 (item) => item.outcome === 'Withdraw' && item.status === 'Applied'
@@ -282,6 +300,7 @@ export const studentRecordTransitionsApi = api.injectEndpoints({
         error
           ? []
           : [
+              financeModuleType.studentFeeAssignment,
               studentType.student,
               ...(result?.outcome === 'Withdraw' && result.status === 'Applied'
                 ? withdrawalFinanceTags
@@ -306,7 +325,9 @@ export const studentRecordTransitionsApi = api.injectEndpoints({
       transformResponse: (response: TransitionPreviewRow | { data?: TransitionPreviewRow }) =>
         unwrapRecordsResult(response),
       invalidatesTags: (_result, error, body) =>
-        error || body.previewOnly ? [] : [studentType.student, ...withdrawalFinanceTags],
+        error || body.previewOnly
+          ? []
+          : [financeModuleType.studentFeeAssignment, studentType.student, ...withdrawalFinanceTags],
     }),
     getStudentRecordRenewals: builder.query<RecordsPage<StudentRenewal>, TransitionQuery>({
       query: (params) => ({ url: '/students/records/transitions/renewals', params }),
@@ -346,7 +367,8 @@ export const studentRecordTransitionsApi = api.injectEndpoints({
       }),
       transformResponse: (response: StudentPortalAccount | { data?: StudentPortalAccount }) =>
         unwrapRecordsResult(response),
-      invalidatesTags: (_result, error) => (error ? [] : [studentType.student]),
+      invalidatesTags: (_result, error) =>
+        error ? [] : [financeModuleType.studentFeeAssignment, studentType.student],
     }),
     updateStudentRecordRenewal: builder.mutation<
       StudentRenewal,
@@ -359,14 +381,16 @@ export const studentRecordTransitionsApi = api.injectEndpoints({
       }),
       transformResponse: (response: StudentRenewal | { data?: StudentRenewal }) =>
         unwrapRecordsResult(response),
-      invalidatesTags: (_result, error) => (error ? [] : [studentType.student]),
+      invalidatesTags: (_result, error) =>
+        error ? [] : [financeModuleType.studentFeeAssignment, studentType.student],
     }),
     returnStudentRecord: builder.mutation<StudentRecordReturnResult, ReturnRequest>({
       query: (body) => ({ url: '/students/records/transitions/returns', method: 'POST', body }),
       transformResponse: (
         response: StudentRecordReturnResult | { data?: StudentRecordReturnResult }
       ) => unwrapRecordsResult(response),
-      invalidatesTags: (_result, error) => (error ? [] : [studentType.student]),
+      invalidatesTags: (_result, error) =>
+        error ? [] : [financeModuleType.studentFeeAssignment, studentType.student],
     }),
     previewReturningStudentRecord: builder.mutation<TransitionPreviewRow, ReturnRequest>({
       query: (body) => ({

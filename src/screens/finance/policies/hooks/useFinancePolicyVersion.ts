@@ -1,13 +1,13 @@
 'use client';
 
-import { useMemo, useState, useEffect } from 'react';
+import { useRef, useMemo, useState, useEffect } from 'react';
 import { useGetRefundPolicyVersionsQuery } from 'src/redux/finance/refundPolicy';
 import { useGetProrationPolicyVersionsQuery } from 'src/redux/finance/prorationPolicy';
 import { useGetConcessionPolicyVersionsQuery } from 'src/redux/finance/concessionPolicy';
 import { useGetCollectionPolicyVersionsQuery } from 'src/redux/finance/collectionPolicy';
 import { useGetFinanceEntityAuditEventsQuery } from 'src/redux/finance/audit/financeAuditApi';
 
-import { policyVersionValuesEqual } from '../components/version/finance-policy-version-formatters';
+import { buildPolicyVersionPage, materializePolicyVersion } from '../utils/policy-version-page';
 
 export interface PolicyVersion {
   versionNumber: number;
@@ -19,6 +19,8 @@ export interface PolicyVersion {
   status?: string;
   changeReason?: string | null;
   summary: string;
+  snapshotJson?: string;
+  previousSnapshotJson?: string;
   snapshotBefore?: Record<string, unknown>;
   snapshotAfter?: Record<string, unknown>;
   changedFields: Array<{
@@ -28,241 +30,79 @@ export interface PolicyVersion {
   }>;
 }
 
+
 interface UseFinancePolicyVersionProps {
   open: boolean;
   policyId?: string;
   policyType?: string;
 }
 
-const parseSnapshot = (snapshotJson?: string): Record<string, unknown> => {
-  try {
-    const snapshot = JSON.parse(snapshotJson || '{}');
-    return snapshot && typeof snapshot === 'object' && !Array.isArray(snapshot) ? snapshot : {};
-  } catch {
-    return {};
-  }
-};
+const PAGE_SIZE = 20;
 
-export function useFinancePolicyVersion({
-  open,
-  policyId,
-  policyType,
-}: UseFinancePolicyVersionProps) {
-  const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null);
-  const isConcession = policyType === 'concession';
+export function useFinancePolicyVersion({ open, policyId, policyType }: UseFinancePolicyVersionProps) {
+  const scopeKey = `${policyType  }:${  policyId}`;
+  const [state, setState] = useState({ scopeKey, page: 0, selected: null as string | null });
+  const current = state.scopeKey === scopeKey && open ? state : { scopeKey, page: 0, selected: null };
+  const {page} = current;
   const isCollection = policyType === 'collection';
+  const isConcession = policyType === 'concession';
   const isRefund = policyType === 'refund';
   const isProration = policyType === 'proration';
+  const isVersioned = isCollection || isConcession || isRefund || isProration;
+  const args = { id: policyId || '', skipCount: page * PAGE_SIZE, maxResultCount: PAGE_SIZE + 1 };
+  const collection = useGetCollectionPolicyVersionsQuery(args, { skip: !open || !policyId || !isCollection });
+  const concession = useGetConcessionPolicyVersionsQuery(args, { skip: !open || !policyId || !isConcession });
+  const refund = useGetRefundPolicyVersionsQuery(args, { skip: !open || !policyId || !isRefund });
+  const proration = useGetProrationPolicyVersionsQuery(args, { skip: !open || !policyId || !isProration });
+  const audit = useGetFinanceEntityAuditEventsQuery({
+    entityType: 'finance_policy', entityId: policyId || '',
+    skipCount: page * PAGE_SIZE, maxResultCount: PAGE_SIZE, sorting: 'occurredAt desc',
+  }, { skip: !open || !policyId || isVersioned });
+  const query = isCollection ? collection : isConcession ? concession : isRefund ? refund : isProration ? proration : audit;
+  const versionData = isCollection ? collection.currentData : isConcession ? concession.currentData :
+    isRefund ? refund.currentData : proration.currentData;
+  const lastCount = useRef({ scopeKey, totalCount: 0 });
+  if (lastCount.current.scopeKey !== scopeKey) lastCount.current = { scopeKey, totalCount: 0 };
+  if (query.currentData) lastCount.current.totalCount = query.currentData.totalCount;
+  const totalCount = query.currentData?.totalCount ?? lastCount.current.totalCount;
+  const setPage = (next: number) => setState({ scopeKey, page: next, selected: null });
 
-  // Query audit events for the policy.
-  const {
-    data: auditData,
-    isLoading: isAuditLoading,
-    isError: isAuditError,
-    refetch: refetchAudit,
-  } = useGetFinanceEntityAuditEventsQuery(
-    {
-      entityType: 'finance_policy',
-      entityId: policyId || '',
-      maxResultCount: 50,
-      sorting: 'occurredAt asc', // Chronological order to build versions properly
-    },
-    { skip: !open || !policyId || isConcession || isCollection || isRefund || isProration }
-  );
-  const {
-    data: concessionVersionData,
-    isLoading: isConcessionLoading,
-    isError: isConcessionError,
-    refetch: refetchConcession,
-  } = useGetConcessionPolicyVersionsQuery(policyId || '', {
-    skip: !open || !policyId || !isConcession,
-  });
-  const {
-    data: collectionVersionData,
-    isLoading: isCollectionLoading,
-    isError: isCollectionError,
-    refetch: refetchCollection,
-  } = useGetCollectionPolicyVersionsQuery(
-    { id: policyId || '', skipCount: 0, maxResultCount: 100 },
-    { skip: !open || !policyId || !isCollection }
-  );
-  const {
-    currentData: refundVersionData,
-    isFetching: isRefundLoading,
-    isError: isRefundError,
-    refetch: refetchRefund,
-  } = useGetRefundPolicyVersionsQuery(policyId || '', {
-    skip: !open || !policyId || !isRefund,
-  });
-  const {
-    data: prorationVersionData,
-    isLoading: isProrationLoading,
-    isError: isProrationError,
-    refetch: refetchProration,
-  } = useGetProrationPolicyVersionsQuery(policyId || '', {
-    skip: !open || !policyId || !isProration,
-  });
-
-  /**
-   * Memoization Justification:
-   * Re-evaluates and groups audit trail events into formatted version snapshots
-   * only when query results referentially change, avoiding expensive loops on other renders.
-   */
-  const versions: PolicyVersion[] = useMemo(() => {
-    if (isConcession || isCollection || isRefund || isProration) {
-      const versionData = isCollection
-        ? collectionVersionData
-        : isRefund
-          ? refundVersionData
-          : isProration
-            ? prorationVersionData
-            : concessionVersionData;
-      const items = [...(versionData?.items || [])].sort(
-        (a, b) => a.versionNumber - b.versionNumber
-      );
-      return items
-        .map((item, index) => {
-          const actorDetails = item as typeof item & {
-            creatorName?: string | null;
-            creatorDisplayName?: string | null;
-            status?: string;
-          };
-          const current = parseSnapshot(item.snapshotJson);
-          const previous = index ? parseSnapshot(items[index - 1].snapshotJson) : {};
-          const fields = Array.from(
-            new Set([...Object.keys(previous), ...Object.keys(current)])
-          ).filter(
-            (field) =>
-              !['feeheadnames', 'expensecategoryname', 'defaultpayingbankaccountname'].includes(
-                field.toLowerCase()
-              )
-          );
-          return {
-            versionNumber: item.versionNumber,
-            eventId: item.id,
-            actor:
-              item.creatorUserName ||
-              actorDetails.creatorName ||
-              actorDetails.creatorDisplayName ||
-              (item.creatorId ? 'Unknown user' : 'System'),
-            date: item.creationTime,
-            createdAt: item.creationTime,
-            action: item.changeAction || 'changed',
-            status: actorDetails.status,
-            changeReason: item.changeReason,
-            summary: item.changeReason || item.changeAction || 'Policy updated',
-            snapshotBefore: previous,
-            snapshotAfter: current,
-            changedFields: fields
-              .filter((field) => !policyVersionValuesEqual(field, previous[field], current[field]))
-              .map((field) => ({
-                field,
-                oldValue: index ? (previous[field] ?? null) : null,
-                newValue: current[field] ?? null,
-              })),
-          };
-        })
-        .reverse();
-    }
-
-    if (!auditData?.items) return [];
-
-    const result: PolicyVersion[] = [];
-    let ver = 1;
-
-    auditData.items.forEach((item) => {
-      const hasChanges = item.changedFields && item.changedFields.length > 0;
-      const isCreate = item.action?.toLowerCase() === 'create';
-      const isUpdate =
-        item.action?.toLowerCase() === 'update' ||
-        item.action?.toLowerCase() === 'patch' ||
-        item.action?.toLowerCase() === 'delete';
-
-      if (isCreate || isUpdate || hasChanges) {
-        result.push({
-          versionNumber: ver,
-          eventId: item.id,
-          actor: item.actorDisplayName || item.actorNameSnapshot || 'System',
-          date: item.occurredAt,
-          createdAt: item.occurredAt,
-          action: item.action || 'changed',
-          changeReason: item.reason,
-          summary: item.summary || (isCreate ? 'Policy Created' : 'Policy Updated'),
-          changedFields: item.changedFields || [],
-        });
-        ver += 1;
-      }
-    });
-
-    // Reverse so the latest version is at the top of the list
-    return result.reverse();
-  }, [
-    auditData,
-    collectionVersionData,
-    concessionVersionData,
-    refundVersionData,
-    prorationVersionData,
-    isCollection,
-    isConcession,
-    isRefund,
-    isProration,
-  ]);
-
-  // Set the default selected version to the latest version once loaded
   useEffect(() => {
-    if (versions.length > 0 && !selectedVersionId) {
-      setSelectedVersionId(versions[0].eventId);
-    }
+    if (!open || state.scopeKey !== scopeKey) setState({ scopeKey, page: 0, selected: null });
+  }, [open, scopeKey, state.scopeKey]);
+  useEffect(() => {
+    // A refreshed history can shrink. Never strand the user on an empty offset.
+    if (query.currentData && !query.isFetching && !query.isError && page > 0 && page * PAGE_SIZE >= totalCount)
+      setState({ scopeKey, page: Math.max(0, Math.ceil(totalCount / PAGE_SIZE) - 1), selected: null });
+  }, [page, totalCount, query.currentData, query.isFetching, query.isError, scopeKey]);
+
+  const versions = useMemo<PolicyVersion[]>(() => {
+    if (!open) return [];
+    if (isVersioned) return buildPolicyVersionPage(versionData?.items || [], PAGE_SIZE);
+    return (audit.currentData?.items || []).filter((item) =>
+      item.changedFields?.length || ['create', 'update', 'patch', 'delete'].includes(item.action?.toLowerCase() || '')
+    ).map((item, index) => ({
+      versionNumber: totalCount - page * PAGE_SIZE - index,
+      eventId: item.id,
+      actor: item.actorDisplayName || item.actorNameSnapshot || 'System',
+      date: item.occurredAt, createdAt: item.occurredAt,
+      action: item.action || 'changed', changeReason: item.reason,
+      summary: item.summary || 'Policy updated', changedFields: item.changedFields || [],
+    }));
+  }, [open, isVersioned, versionData, audit.currentData, page, totalCount]);
+  const selectedVersionId = versions.some((version) => version.eventId === current.selected)
+    ? current.selected : versions[0]?.eventId ?? null;
+  const selectedVersion = useMemo(() => {
+    const version = versions.find((item) => item.eventId === selectedVersionId);
+    return version ? materializePolicyVersion(version) : null;
   }, [versions, selectedVersionId]);
 
-  // Reset selected version when drawer opens/closes
-  useEffect(() => {
-    if (!open) {
-      setSelectedVersionId(null);
-    }
-  }, [open]);
-
-  /**
-   * Memoization Justification:
-   * Keeps search time to find the active version selection O(1) through references,
-   * re-evaluating only when selection or versions list updates.
-   */
-  const selectedVersion = useMemo(
-    () => versions.find((v) => v.eventId === selectedVersionId) || null,
-    [versions, selectedVersionId]
-  );
-
   return {
-    versions,
-    selectedVersion,
-    selectedVersionId,
-    setSelectedVersionId,
-    refetch: isCollection
-      ? refetchCollection
-      : isRefund
-        ? refetchRefund
-        : isProration
-          ? refetchProration
-          : isConcession
-            ? refetchConcession
-            : refetchAudit,
-    isLoading: isCollection
-      ? isCollectionLoading
-      : isRefund
-        ? isRefundLoading
-        : isProration
-          ? isProrationLoading
-          : isConcession
-            ? isConcessionLoading
-            : isAuditLoading,
-    isError: isCollection
-      ? isCollectionError
-      : isRefund
-        ? isRefundError
-        : isProration
-          ? isProrationError
-          : isConcession
-            ? isConcessionError
-            : isAuditError,
+    versions, selectedVersion, selectedVersionId,
+    setSelectedVersionId: (selected: string) => setState({ scopeKey, page, selected }),
+    page, pageSize: PAGE_SIZE, totalCount, setPage,
+    refetch: query.refetch,
+    isLoading: query.isFetching || Boolean(open && policyId && !query.currentData && !query.isError),
+    isError: query.isError,
   };
 }

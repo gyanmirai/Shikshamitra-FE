@@ -11,6 +11,7 @@ import { Box, Alert, Paper, Stack, Drawer, Button, Typography } from '@mui/mater
 import FinancePolicySkeleton from './FinancePolicySkeleton';
 import PolicyAuditTimeline from './version/PolicyAuditTimeline';
 import FinancePolicyDrawerHeader from './FinancePolicyDrawerHeader';
+import PolicyHistoryPagination from './version/PolicyHistoryPagination';
 import { useFinancePolicyVersion } from '../hooks/useFinancePolicyVersion';
 
 import type { IFinancePolicyRow } from '../types/finance-policy.types';
@@ -26,7 +27,7 @@ export default function FinancePolicyAuditDrawer({
   onClose,
   policy,
 }: FinancePolicyAuditDrawerProps) {
-  const { versions, isLoading, isError, refetch } = useFinancePolicyVersion({
+  const { versions, isLoading, isError, refetch, page, pageSize, totalCount, setPage } = useFinancePolicyVersion({
     open,
     policyId: policy?.id,
     policyType: policy?.policyType,
@@ -123,7 +124,7 @@ export default function FinancePolicyAuditDrawer({
             <Typography variant="subtitle2" component="h3">
               Recorded Activity
             </Typography>
-            {!isLoading && !isError && <Label color="default">{versions.length}</Label>}
+            {!isLoading && !isError && <Label color="default">{totalCount}</Label>}
           </Stack>
           <Typography variant="caption" color="text.secondary">
             Newest First
@@ -178,6 +179,7 @@ export default function FinancePolicyAuditDrawer({
               </Paper>
             ) : (
               <PolicyAuditTimeline
+                key={`${policy.id}:${page}`}
                 versions={versions}
                 valueContext={valueContext}
                 policyName={policy.policyName}
@@ -196,9 +198,14 @@ export default function FinancePolicyAuditDrawer({
             borderColor: 'divider',
             display: 'flex',
             justifyContent: 'flex-end',
+            alignItems: 'center',
+            gap: 1,
+            flexWrap: 'wrap',
             flexShrink: 0,
           }}
         >
+          <PolicyHistoryPagination page={page} pageSize={pageSize} totalCount={totalCount}
+            isLoading={isLoading} onPageChange={setPage} />
           <Button
             variant="outlined"
             size="small"

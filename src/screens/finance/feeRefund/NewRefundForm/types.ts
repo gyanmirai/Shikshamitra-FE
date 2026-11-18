@@ -16,6 +16,7 @@ export interface IMonthItem {
   lateFeeDueFeeId?: string;
   sourceAllocationId?: string;
   sourceReceiptId?: string;
+  sourcePayerKey?: string;
   receiptNumber?: string;
   month: string;
   year: number;

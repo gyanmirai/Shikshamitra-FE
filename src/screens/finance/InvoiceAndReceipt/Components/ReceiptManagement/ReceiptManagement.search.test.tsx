@@ -3,15 +3,22 @@ import { Provider } from 'react-redux';
 import { api } from 'src/redux/service';
 import { configureStore } from '@reduxjs/toolkit';
 import { it, vi, expect, describe, afterEach, beforeEach } from 'vitest';
-import { render, screen, cleanup, waitFor, fireEvent } from '@testing-library/react';
+import { act, render, screen, cleanup, waitFor, fireEvent } from '@testing-library/react';
 
 import ReceiptManagement from './index';
 
-vi.mock('@mui/material', () => ({ Box: ({ children }: any) => <div>{children}</div> }));
+vi.mock('@mui/material', () => ({
+  Box: ({ children }: any) => <div>{children}</div>,
+  Alert: ({ children, action }: any) => <div role="alert">{children}{action}</div>,
+  Button: ({ children, onClick }: any) => <button type="button" onClick={onClick}>{children}</button>,
+}));
 vi.mock('src/components/toast', () => ({
   shikshaMitraToast: { error: vi.fn(), success: vi.fn() },
 }));
-const transport = vi.hoisted(() => ({ calls: [] as any[], table: {} as any }));
+const transport = vi.hoisted(() => ({
+  calls: [] as any[], table: {} as any, failList: false,
+  pauseNext: false, release: null as null | (() => void),
+}));
 vi.mock('src/redux/service', async () => {
   const { createApi } = await import('@reduxjs/toolkit/query/react');
   const { tagTypes } = await import('src/redux/tagTypes');
@@ -22,6 +29,11 @@ vi.mock('src/redux/service', async () => {
       endpoints: () => ({}),
       baseQuery: async (args: any) => {
         transport.calls.push(args);
+        if (transport.pauseNext) {
+          transport.pauseNext = false;
+          await new Promise<void>((resolve) => { transport.release = resolve; });
+        }
+        if (transport.failList) return { error: { status: 503, data: { detail: 'Receipt service unavailable' } } };
         const all = Array.from({ length: 35 }, (_, i) => ({
           id: String(i),
           receiptNumber: `R-${String(i + 1).padStart(3, '0')}`,
@@ -91,6 +103,9 @@ vi.mock('src/components/customizabaleTable', () => ({
         <button type="button" onClick={() => props.onServerFilter?.([])}>Clear column filters</button>
         <output aria-label="Server pagination">{String(Boolean(serverSidePagination))}</output>
         <output aria-label="Page size">{rowsPerPage}</output>
+        <output aria-label="Table loading">{String(Boolean(props.isLoading))}</output>
+        <output aria-label="Table error">{String(Boolean(props.error))}</output>
+        <button type="button" onClick={() => props.onRetry?.()}>Retry receipts</button>
         {data.map((row: any) => <span key={row.id}>{row.receiptNumber}</span>)}
       </div>
     );
@@ -126,9 +141,44 @@ function show() {
 const listRequests = () => transport.calls.filter((call) => call.url === '/v1/fee-receipts');
 beforeEach(() => {
   transport.calls = [];
+  transport.failList = false;
+  transport.pauseNext = false;
+  transport.release = null;
 });
 afterEach(cleanup);
 describe('ReceiptManagement server table queries', () => {
+  it('keeps the current page visible while refreshing it', async () => {
+    const store = show();
+    await screen.findByText('R-001');
+    transport.pauseNext = true;
+    act(() => { store.dispatch(api.util.invalidateTags(['Receipt'])); });
+    await waitFor(() => expect(transport.release).not.toBeNull());
+    expect(screen.getByLabelText('Table loading')).toHaveTextContent('false');
+    expect(screen.getByText('R-001')).toBeInTheDocument();
+    await act(async () => { transport.release?.(); });
+  });
+  it('keeps loaded rows visible during refresh and exposes a retryable failure', async () => {
+    const store = show();
+    await screen.findByText('R-001');
+    transport.failList = true;
+    await act(async () => {
+      await store.dispatch(api.util.invalidateTags(['Receipt']));
+    });
+    expect(await screen.findByRole('alert')).toHaveTextContent('Unable to refresh receipts');
+    expect(screen.getByLabelText('Table error')).toHaveTextContent('false');
+    expect(screen.getByText('R-001')).toBeInTheDocument();
+    transport.failList = false;
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
+  });
+  it('shows the table error and retry when the first request fails', async () => {
+    transport.failList = true;
+    show();
+    await waitFor(() => expect(screen.getByLabelText('Table error')).toHaveTextContent('true'));
+    transport.failList = false;
+    fireEvent.click(screen.getByRole('button', { name: 'Retry receipts' }));
+    expect(await screen.findByText('R-001')).toBeInTheDocument();
+  });
   it('pages beyond the first API response without locally slicing the result again', async () => {
     show();
     await screen.findByText('R-001');

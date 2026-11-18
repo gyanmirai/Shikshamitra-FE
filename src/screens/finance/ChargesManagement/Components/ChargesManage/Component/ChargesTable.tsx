@@ -40,7 +40,6 @@ const ChargesTable = ({
   academicFilters,
   selectedTab,
   setSelectedTab,
-  refetchTrigger,
   primaryAction,
 }: {
   onView: (data: IChargeData) => void;
@@ -53,10 +52,9 @@ const ChargesTable = ({
   academicFilters?: UseFinanceAcademicFiltersResult;
   selectedTab: string | number;
   setSelectedTab: (value: string | number) => void;
-  refetchTrigger?: number;
   primaryAction?: React.ReactNode;
 }) => {
-  const localFilters = useFinanceAcademicFilters();
+  const localFilters = useFinanceAcademicFilters({ includeWorkContext: false });
   const filters = academicFilters || localFilters;
   const {
     boards,
@@ -128,7 +126,6 @@ const ChargesTable = ({
       filters: serializedFilters,
       sortBy: sorts[0]?.column,
       sortOrder: sorts[0]?.direction,
-      _refetchTrigger: refetchTrigger,
     },
     options: {
       skip:
@@ -204,36 +201,36 @@ const ChargesTable = ({
         </Box>
       </Card>
       <FinanceListActionRow action={primaryAction}>
-          <Tabs
-            variant="scrollable"
-            value={tabs.value}
-            onChange={(event, value) => {
-              tabs.onChange(event, value);
-              setPage(1);
-              setColumnFilters((current) =>
-                current.filter((filter) => filter.column !== 'workflowStatus')
-              );
-            }}
-            sx={{
-              '& .MuiTabs-flexContainer': { gap: 2 },
-              flexGrow: 1,
-              px: 1
-            }}
-          >
-            {TABS.map((tab) => (
-              <Tab
-                key={tab.value}
-                value={tab.value}
-                sx={{ fontSize: '12px' }}
-                label={
-                  <Box display="flex" justifyContent="center" gap={1} alignItems="center">
-                    {tab.label}
-                    <Label color={tab.color}>{tab.count}</Label>
-                  </Box>
-                }
-              />
-            ))}
-          </Tabs>
+        <Tabs
+          variant="scrollable"
+          value={tabs.value}
+          onChange={(event, value) => {
+            tabs.onChange(event, value);
+            setPage(1);
+            setColumnFilters((current) =>
+              current.filter((filter) => filter.column !== 'workflowStatus')
+            );
+          }}
+          sx={{
+            '& .MuiTabs-flexContainer': { gap: 2 },
+            flexGrow: 1,
+            px: 1,
+          }}
+        >
+          {TABS.map((tab) => (
+            <Tab
+              key={tab.value}
+              value={tab.value}
+              sx={{ fontSize: '12px' }}
+              label={
+                <Box display="flex" justifyContent="center" gap={1} alignItems="center">
+                  {tab.label}
+                  <Label color={tab.color}>{tab.count}</Label>
+                </Box>
+              }
+            />
+          ))}
+        </Tabs>
       </FinanceListActionRow>
 
       <CustomizableTable
@@ -245,7 +242,8 @@ const ChargesTable = ({
                   onView(row as IChargeData);
                 },
               }
-            : undefined}
+            : undefined
+        }
         tableId="charges-table"
         tableTitle="Charges"
         isLoading={chargesLoading || chargesFetching}
@@ -323,23 +321,30 @@ const ChargesTable = ({
             isSort: true,
             minWidth: 230,
             exportValue: (_value, row) =>
-              row.paidStudentCount == null || row.outstandingStudentCount == null || row.waivedStudentCount == null
+              row.paidStudentCount == null ||
+              row.outstandingStudentCount == null ||
+              row.waivedStudentCount == null
                 ? 'Payment progress unavailable'
                 : `${row.paidStudentCount} paid · ${row.outstandingStudentCount} outstanding · ${row.waivedStudentCount} with waiver`,
-            render: (_value, row) => row.paidStudentCount == null || row.outstandingStudentCount == null || row.waivedStudentCount == null
-              ? <Typography variant="body2" color="text.secondary">Payment progress unavailable</Typography>
-              : (
-              <Box>
-                <Typography variant="body2">
-                  {row.paidStudentCount} paid · {row.outstandingStudentCount} outstanding
+            render: (_value, row) =>
+              row.paidStudentCount == null ||
+              row.outstandingStudentCount == null ||
+              row.waivedStudentCount == null ? (
+                <Typography variant="body2" color="text.secondary">
+                  Payment progress unavailable
                 </Typography>
-                {!!row.waivedStudentCount && (
-                  <Typography variant="caption" color="text.secondary">
-                    {row.waivedStudentCount} with waiver
+              ) : (
+                <Box>
+                  <Typography variant="body2">
+                    {row.paidStudentCount} paid · {row.outstandingStudentCount} outstanding
                   </Typography>
-                )}
-              </Box>
-            ),
+                  {!!row.waivedStudentCount && (
+                    <Typography variant="caption" color="text.secondary">
+                      {row.waivedStudentCount} with waiver
+                    </Typography>
+                  )}
+                </Box>
+              ),
           },
           {
             id: 'categoryName',
@@ -433,73 +438,79 @@ const ChargesTable = ({
               const canApprove = isPending && permissions.canApprove && actions.includes('Approve');
               const canReject = isPending && permissions.canReject && actions.includes('Reject');
               const canVoid = permissions.canVoid && actions.includes('Void');
-              const showCancel = permissions.canVoid &&
-                (canVoid || row.workflowStatus === ChargeWorkflowStatus.InProcess ||
+              const showCancel =
+                permissions.canVoid &&
+                (canVoid ||
+                  row.workflowStatus === ChargeWorkflowStatus.InProcess ||
                   row.workflowStatus === ChargeWorkflowStatus.Completed ||
-                  row.paidStudentCount > 0 || row.outstandingStudentCount > 0 || row.waivedStudentCount > 0);
+                  row.paidStudentCount > 0 ||
+                  row.outstandingStudentCount > 0 ||
+                  row.waivedStudentCount > 0);
               const name = row.chargeName || 'charge';
               return (
-                <AdaptiveThreeDotsActions directActionLimit={3}
+                <AdaptiveThreeDotsActions
+                  directActionLimit={3}
                   moreLabel={`More actions for ${name}`}
                   placement="right-top"
                   sx={{ justifyContent: 'flex-start' }}
                   actions={[
                     ...(canEdit
                       ? [
-                        {
-                          id: 'edit',
-                          label: `Edit ${name}`,
-                          icon: GlobalIcons.edit,
-                          onClick: () => onEdit(row as IChargeData),
-                        },
-                      ]
+                          {
+                            id: 'edit',
+                            label: `Edit ${name}`,
+                            icon: GlobalIcons.edit,
+                            onClick: () => onEdit(row as IChargeData),
+                          },
+                        ]
                       : []),
                     ...(canApprove
                       ? [
-                        {
-                          id: 'approve',
-                          label: `Approve ${name}`,
-                          icon: 'mdi:approve',
-                          color: 'success.main',
-                          onClick: () => onApprove(row as IChargeData),
-                        },
-                      ]
+                          {
+                            id: 'approve',
+                            label: `Approve ${name}`,
+                            icon: 'mdi:approve',
+                            color: 'success.main',
+                            onClick: () => onApprove(row as IChargeData),
+                          },
+                        ]
                       : []),
                     ...(canReject
                       ? [
-                        {
-                          id: 'reject',
-                          label: `Reject ${name}`,
-                          icon: 'mdi:close',
-                          color: 'error.main',
-                          onClick: () => onReject(row as IChargeData),
-                        },
-                      ]
+                          {
+                            id: 'reject',
+                            label: `Reject ${name}`,
+                            icon: 'mdi:close',
+                            color: 'error.main',
+                            onClick: () => onReject(row as IChargeData),
+                          },
+                        ]
                       : []),
                     ...(canDelete
                       ? [
-                        {
-                          id: 'delete',
-                          label: 'Delete charge',
-                          icon: GlobalIcons.delete,
-                          color: 'error.main',
-                          onClick: () => onRemove(row as IChargeData),
-                        },
-                      ]
+                          {
+                            id: 'delete',
+                            label: 'Delete charge',
+                            icon: GlobalIcons.delete,
+                            color: 'error.main',
+                            onClick: () => onRemove(row as IChargeData),
+                          },
+                        ]
                       : []),
                     ...(showCancel
                       ? [
-                        {
-                          id: 'void',
-                          label: 'Cancel Charge',
-                          disabled: !canVoid,
-                          tooltip: canVoid ? `Cancel ${name}` :
-                            'Collected charges cannot be cancelled. Reverse the collection through reconciliation or use the refund workflow.',
-                          icon: 'mdi:cancel-circle-outline',
-                          color: 'warning.main',
-                          onClick: () => onVoid(row as IChargeData),
-                        },
-                      ]
+                          {
+                            id: 'void',
+                            label: 'Cancel Charge',
+                            disabled: !canVoid,
+                            tooltip: canVoid
+                              ? `Cancel ${name}`
+                              : 'Collected charges cannot be cancelled. Reverse the collection through reconciliation or use the refund workflow.',
+                            icon: 'mdi:cancel-circle-outline',
+                            color: 'warning.main',
+                            onClick: () => onVoid(row as IChargeData),
+                          },
+                        ]
                       : []),
                   ]}
                 />

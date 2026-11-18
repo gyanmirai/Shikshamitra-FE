@@ -3,27 +3,24 @@
 import Link from 'next/link';
 import { Iconify } from 'src/components/iconify';
 import { financePaths } from 'src/constants/finance-menu';
-import { Box, Card, Chip, Grid, Stack, CardHeader, Typography } from '@mui/material';
+import { FormSectionCard } from 'src/components/form-section-card';
+import { Box, Chip, Grid, Stack, Typography } from '@mui/material';
 
 import {
   financeQueuePreview,
   financeReportShortcuts,
 } from '../finance-admin-dashboard-preview-data';
+
 import { financeDashboardCardSx, financeDashboardTileSx } from './finance-dashboard-card-styles';
 
 export function FinanceAttentionQueue() {
   return (
-    <Card component="section" aria-labelledby="finance-attention-title" sx={financeDashboardCardSx}>
-      <CardHeader
-        title={
-          <Typography id="finance-attention-title" variant="h6">
-            Needs Attention
-          </Typography>
-        }
-        subheader="Finance items to review"
-        action={<Chip size="small" label={`${financeQueuePreview.needsAttention.length} items`} />}
-        sx={{ p: 0, mb: 2, '& .MuiCardHeader-action': { m: 0 } }}
-      />
+    <FormSectionCard
+      title="Needs Attention"
+      descriptionTooltip="Finance items requiring review. Open an item to continue in its existing workflow."
+      action={<Chip size="small" label={`${financeQueuePreview.needsAttention.length} items`} />}
+      sx={financeDashboardCardSx}
+    >
       <Stack spacing={1}>
         {financeQueuePreview.needsAttention.map((item) => (
           <Box
@@ -72,22 +69,17 @@ export function FinanceAttentionQueue() {
           </Box>
         ))}
       </Stack>
-    </Card>
+    </FormSectionCard>
   );
 }
 
 export function FinanceReportRail() {
   return (
-    <Card component="section" aria-labelledby="finance-report-title" sx={financeDashboardCardSx}>
-      <CardHeader
-        title={
-          <Typography id="finance-report-title" variant="h6">
-            Quick Reports
-          </Typography>
-        }
-        subheader="Open Finance Reports to choose a period and filters"
-        sx={{ p: 0, mb: 2 }}
-      />
+    <FormSectionCard
+      title="Quick Reports"
+      descriptionTooltip="Open Finance Reports to choose a reporting period and filters."
+      sx={financeDashboardCardSx}
+    >
       <Grid container spacing={1.5}>
         {financeReportShortcuts.map((report) => (
           <Grid key={report} size={{ xs: 12, sm: 6, lg: 3 }}>
@@ -123,6 +115,6 @@ export function FinanceReportRail() {
           </Grid>
         ))}
       </Grid>
-    </Card>
+    </FormSectionCard>
   );
 }

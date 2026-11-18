@@ -43,4 +43,22 @@ describe('charge student selection controls', () => {
     expect(onSelectionChange).toHaveBeenCalledWith(['one']);
     expect(screen.getByRole('checkbox', { name: /Aarav Shah/ })).toBeEnabled();
   });
+  it('selects all server-matching students, including students on other pages', () => {
+    const onSelectionChange = vi.fn();
+    render(
+      <StudentSelectionLayout
+        students={students}
+        matchingStudentIds={['one', 'two']}
+        totalCount={2}
+        candidateCount={30}
+        page={0}
+        onPageChange={vi.fn()}
+        selectedStudentIds={[]}
+        onSelectionChange={onSelectionChange}
+      />
+    );
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Select all results' }));
+    expect(onSelectionChange).toHaveBeenCalledWith(['one', 'two']);
+    expect(screen.getByText(/0 of 30 students selected/)).toBeVisible();
+  });
 });
