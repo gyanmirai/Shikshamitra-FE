@@ -14,6 +14,7 @@ export default defineConfig({
           (statement, names: string) => {
             const matches = names
               .split(',')
+              .filter((name) => name.trim())
               .map((name) => /^(\w+)(?:\s+as\s+(\w+))?$/.exec(name.trim()));
             if (matches.some((match) => !match)) return statement;
             return matches

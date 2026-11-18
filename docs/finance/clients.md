@@ -3,7 +3,7 @@ module: finance
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-11-04
+updated_on: 2026-11-17
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -97,6 +97,12 @@ receipt references when selecting one row or a whole group. `buildFeeRefundApiPa
 Selections span eligible receipts, heads and months. Edit and replacement payloads preserve the original lead `originalReceiptId` independently of selection order; responses expose `sourceReceipts` for receipt-number display and search.
 Replacement hydration and the refund detail table retain charge names and amounts.
 For Full requests, the client preserves selected source amounts and lets the server apportion formula limits and caps, including sources whose payout share rounds to zero. The legacy policy partial-refund flag does not lock the request's Full/Partial choice.
+
+Refund eligibility receipt entries include the original payment's nullable
+`financeFeeAccountId`. Selection uses this identity to keep legacy student receipts and
+account-linked receipts in separate requests while permitting multiple receipts for one payer.
+An explicit assigned-policy update invalidates cached refund eligibility; editing the policy
+alone does not replace the assignment's saved version.
 See the [backend contract](../../../Shikshamitra-BE/docs/modules/finance/api.md#paid-charges-in-refund-requests).
 Focused checks: `RefundSelection.test.tsx` and `RefundForm.test.tsx` in the refund form folder.
 
@@ -290,7 +296,7 @@ receipt scope does not select a separate charge-receipts API. Each preview track
 loading/failure state and retries only the PDF GET. Collection, receipt and refresh errors are
 handled in their owning regions so a PDF failure cannot report the accepted payment as failed.
 
-Receipt and reconciliation list clients carry serialized `filters` alongside the existing search/context/paging params. The reconciliation workspace passes numeric payment-method tab IDs; its shared query hook accepts those IDs, numeric strings and named methods, and enables server header filters for the six active methods. Unsupported legacy methods omit the server-filter callback. Applying/clearing criteria resets the page while preserving search and page size. Adjustment list requests carry existing `filter` text plus serialized `filters`, `page` and `pageSize`; the displayed total comes from the server.
+Receipt and reconciliation list clients carry serialized `filters` alongside the existing search/context/paging params. Receipts keeps loaded rows visible during a refresh, shows a persistent retry action if that refresh fails, and gives first-load failures the shared table error and retry state. The reconciliation workspace passes numeric payment-method tab IDs; its shared query hook accepts those IDs, numeric strings and named methods, and enables server header filters for the six active methods. Unsupported legacy methods omit the server-filter callback. Applying/clearing criteria resets the page while preserving search and page size. Adjustment list requests carry existing `filter` text plus serialized `filters`, `page` and `pageSize`; the displayed total comes from the server.
 
 Adjustment list and detail responses carry `availableActions` and `unavailableReason`. The client maps those fields into the worklist and detail view, and requires distinct Approve/Reject grants before offering a decision. The charge, concession and refund workspaces likewise intersect exact grants with each record's server actions. Existing list endpoints do not expose a request-owner or assigned-reviewer filter.
 
@@ -325,3 +331,39 @@ Owning mutation tags, editor closure, focus and explicit refresh update configur
 Backend contracts are owned by [Finance API documentation](../../../Shikshamitra-BE/docs/modules/finance/api.md).
 
 Finance table search fields use the exact placeholder `Search` through the shared table’s `searchFieldProps`. Keep search fields, existing accessible labels, query handling and filtering unchanged when applying this presentation convention.
+
+## Policy read performance
+
+Policy tables reset their offset before requesting a different academic year while preserving search, filters and page size. Collection default choices are skipped until its editor opens; Collection and Proration request only the first active default candidate.
+
+All four version clients accept either the existing policy ID argument or `{ id, skipCount, maxResultCount }`. Policy version and audit drawers page 20 records at a time and request one extra predecessor for an accurate comparison at the page boundary. Snapshot parsing/diffs occur for the selected version or expanded audit event. Only the first page marks its newest record as Latest; version search applies to the current page.
+
+## Accounts read freshness and history
+
+Read-only Accounts registers, cash workspaces and bank/category settings use a 60-second mount freshness window.
+Explicit retry, mutation invalidation and monetary form refreshes retain their authoritative re-read behavior.
+Cash bank selectors subscribe to the same `bankAccount` tag invalidated by bank-setting mutations.
+Category and bank lists render current-query data, skip missing/unauthorized academic context and keep failures distinct from empty results.
+
+Bank, income-category and expense-category version clients accept either a legacy string ID or `{ id, skipCount, maxResultCount }`.
+The history hook requests 50 records per page and resets on selection/close; the shared history surfaces expose total-count navigation.
+Backend history/count semantics remain owned by the [Accounts read architecture](../../../Shikshamitra-BE/docs/modules/finance/architecture.md#accounts-read-boundaries).
+
+Bank Accounts opens its activity drawer on demand through a lazy import.
+A saved bank outside the current list page resolves through the selected-detail endpoint and is checked against the active academic year.
+Changing years closes that selection; lookup failures support retry and clearing the saved selection.
+
+## Fee settings and assignment read boundaries
+
+The structure navigator requests summaries and activates full detail queries only for visited editors.
+Visited editors stay mounted so unsaved drafts survive structure switching.
+The scoped catalogue supplies complete lightweight choices; selected term schedules and selected collection/refund policy impact details load separately.
+Fee Head categories use active options plus the saved selection rather than the first paginated register page.
+Duplicate Fee Head names use the server's category-scoped validation and field error instead of an incomplete register-page hint.
+Payment Terms uses the selected year's Academic hierarchy query for boards.
+
+Assignment lists omit unused work context.
+A known single assigned view requests `includeEditDetails=false` and loads its canonical detail separately; editing and bulk selection retain full context.
+Assignment-specific cache tags identify year/student records and student lists.
+Successful assignment commands invalidate affected students, while external payment, admission and financial changes invalidate assignment eligibility through the dedicated tag.
+Existing balance and monetary invalidations remain in place.

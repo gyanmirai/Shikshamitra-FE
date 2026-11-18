@@ -1,6 +1,7 @@
 'use client';
 
 import { sanitizeFinanceName } from 'src/utils/finance-name';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import type { RootState } from 'src/redux/store';
 
 import { useFormik } from 'formik';
@@ -9,13 +10,13 @@ import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
-import React, { useRef, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { financePermissions } from 'src/constants/finance-menu';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetFeeCategoriesQuery } from 'src/redux/feeCategory/feeCategoryApi';
+import { useGetFeeCategoryOptionsQuery } from 'src/redux/feeCategory/feeCategoryApi';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { useGetFinanceRoutingOptionsQuery } from 'src/redux/finance/financeRoutingApi';
 import FinancePrerequisiteState from 'src/screens/finance/components/FinancePrerequisiteState';
@@ -24,7 +25,6 @@ import DownstreamUsageWarning from 'src/screens/finance/settings/components/Down
 import { setupOptionsMissing } from 'src/screens/finance/settings/components/financeSetupPrerequisites';
 import { useRefreshFinancePrerequisites } from 'src/screens/finance/hooks/useRefreshFinancePrerequisites';
 import {
-  useGetFeeHeadsQuery,
   useAddFeeHeadMutation,
   useUpdateFeeHeadMutation,
 } from 'src/redux/feeHeadManage/feeHeadManageApi';
@@ -45,8 +45,9 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
   // Custom hook to fetch fee category data
   const feeCategoryQuery = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetFeeCategoriesQuery,
-    params: { academicYearId: currentYear?.id },
+    currentQueryAndMutation: useGetFeeCategoryOptionsQuery,
+    params: { academicYearId: currentYear?.id, selectedId: editData?.feeCategoryId },
+    options: { skip: !currentYear?.id || !open?.value },
   });
 
   const incomeCategoryQuery = useQueryAndMutation({
@@ -122,26 +123,10 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
     currentQueryAndMutation: useUpdateFeeHeadMutation,
   });
 
-  const { data: feeHeadsData } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetFeeHeadsQuery,
-    params: { academicYearId: currentYear?.id },
-    options: {
-      skip: !currentYear?.id || !open?.value,
-    },
-  });
-
-  const existingNames = useMemo(
-    () => new Set<string>((feeHeadsData?.items ?? []).map((t: any) => t.name.trim().toLowerCase())),
-    [feeHeadsData]
-  );
-  const existingNamesRef = useRef<Set<string>>(new Set());
-  existingNamesRef.current = existingNames;
-
   const formik = useFormik({
     initialValues: getFeeHeadInitialValues(editData),
     enableReinitialize: true,
-    validationSchema: feeHeadValidationSchema(existingNames, editData),
+    validationSchema: feeHeadValidationSchema(new Set<string>(), editData),
     onSubmit: async (values) => {
       if (!access.canAdd || prerequisites.length) return;
       // Check if updating an item that is used downstream
@@ -192,6 +177,11 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
       }
       onClose(null, true);
     } catch (error) {
+      if (parseApiProblemDetail(error).errorCode === 'Finance:FeeCategory:010004') {
+        formik.setFieldError('name', 'This fee head name already exists in the selected category');
+        formik.setFieldTouched('name', true, false);
+        return;
+      }
       console.error('Save operation failed:', error);
       shikshaMitraToast.error({
         message: `Failed to ${editData ? 'update' : 'create'} fee head`,

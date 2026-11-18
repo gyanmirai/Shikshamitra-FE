@@ -40,6 +40,24 @@ Inquiry reads distinguish individual IDs, `LIST`, `ACTIVITY`, `PIPELINE`, `CAPTU
 
 Onboarding skips fee candidates and dependent choices until the current case and existing permission/eligibility checks allow them. Hidden worklists pause their polling while Quick Setup is open and refresh on return; active pending-case polling and fresh activation previews remain. Academic saves reuse the initially fresh case only until a dependent write occurs; unchanged fee saves report no write so the coordinator does not add another case read.
 
+## Registration print clients
+
+`src/redux/student/admissions/admission-forms-api.ts` carries optional `printSettings` through form reads and create/update payloads; `src/screens/student/admissions/form-dialog/form-dialog-model.ts` supplies defaults for historical definitions.
+Its optional `template` supports `simple`, `boxed-grid` and `structured-classic`; legacy reads normalize to `simple`, while new blank/system starters explicitly select `boxed-grid`. Template and spacing are independent radio choices using the existing section components.
+The backend owns validation, clone/version retention and frozen application metadata; see the [print contract](../../../Shikshamitra-BE/docs/modules/student/api.md#registration-print-contract).
+
+`src/screens/student/admissions/form-print/admission-application-print-dialog.tsx` refetches the existing application-form query on opening and uses `currentData` after fetching completes.
+It prints `persistedValues`, including an explicitly empty array, rather than editor-only automatic prefills in `values`; the absent-property fallback to `values` supports older responses but requires the matching backend for the persisted-answer guarantee.
+Inquiry context remains a separate frozen section/value input.
+The same application-form response supplies `applicationNumber`; no separate detail lookup is needed for the filled Registration No. line.
+
+`src/screens/student/admissions/form-print/use-admission-print-options.ts` uses the existing lazy form-options query for saved choice labels, selected sibling IDs and repeated-row parent scopes.
+It decodes saved runtime-string envelopes before array lookups and requests only the selected printable questions. Restricted sibling catalogue access does not widen permissions or block other answers: an explicit warning accompanies Unavailable values in the PDF.
+`src/screens/student/admissions/form-print/use-school-print-branding.ts` reads active-tenant Institute Setup school name/address and configured logo/banner blobs through the existing School Identity client, without an Initial Setup management read.
+Blank printing skips answer-label requests; disabled school headers skip branding reads.
+`src/screens/student/admissions/form-print/use-admission-print-preview.ts` generates the PDF locally, rejects superseded results and revokes preview object URLs when their request changes or the workspace closes.
+Print/download are read-only; only the explicit Save and preview choice calls the existing draft-save workflow.
+
 ## Admission form lifecycle
 
 `admission-forms-api.ts` exposes on-demand `getAdmissionFormArchiveImpact` and the existing archive plus new restore commands. The lifecycle confirmation uses the verified impact concurrency stamp, retains the decision after refusal, and blocks duplicate commands and closing during a write. Successful archive, restore and publish invalidate both Admission Form and Admission Offering tags so subscribed form history, offering availability, inquiry catalogue and capture context refresh. Failed writes keep cached state. Offering configuration errors retain form/workflow identifiers for permission-aware recovery links; `restoreForm` on the forms route opens the current archived form's restoration confirmation without submitting automatically. Backend contracts remain owned by the [Student API](../../../Shikshamitra-BE/docs/modules/student/api.md).
@@ -87,7 +105,7 @@ Staff/public Inquiry, direct Registration and Registration form save paths send 
 The backend normalizes known email answers at its existing form-save boundaries; no historical-data migration or identity/account change is introduced.
 
 The Admissions document table exposes one icon-only View control per requirement, including missing-file requirements.
-`document-review-dialog.tsx` reuses the protected blob preview, existing evidence history, Formik/Yup action fields and existing upload/original/review/waiver commands.
+`document-review-dialog.tsx` reuses the protected blob preview, Formik/Yup action fields and existing review commands. `document-table-actions.tsx` owns the More menu with History, Download and authorized original/waiver commands; History reuses `DocumentEvidenceHistory`. The upload dialog uses `FormBusyRegion` for the actual pending request.
 Approve and Reject are available inside View only when existing permissions and server capabilities allow them.
 Rejection retains the existing replacement-request decision and required reason; the evidence ID and concurrency stamp remain pinned while the dialog is open.
 Failed writes retain entered values, pending writes lock competing controls and dismissal, and successful writes refresh the existing checklist cache.
@@ -97,7 +115,7 @@ Historical stages remain read-only and existing card-layout consumers retain the
 
 `student-quick-setup-page.tsx` reuses the existing case, placement, identifier, fee, credentials and activation clients, with the optional sibling-parent activation identity described below. The owning screen retains the `case` URL parameter and keeps the worklist mounted but hidden while the full-page student workspace is open. `use-student-quick-setup-academic.ts` retains an editing baseline across refetches and acknowledges each saved field. `student-quick-setup-save.ts` sequences academic saves, fee confirmation, then a fresh activation preview and activation. These commands commit independently, not as a single atomic transaction; failed later steps preserve prior progress. Activation retries retain an idempotency key. The fee section exposes a focused editor handle so the shared page footer can save it with a fresh case stamp; its collection-open state locks navigation without disabling the existing payment adapter. Manual credential sending stays a separate command after activation. The lazy activation-preview hook is an additional export of the existing endpoint, not a new API.
 
-The Student-owned document workspace reuses Admissions document requirements, permissions, action commands and evidence history. View uses the existing authenticated `useDocumentPreview` blob hook; images support zoom, PDFs use an embedded browser preview, and unsupported formats retain Download. View and Download require the existing file-access permissions and evidence eligibility. The icon-only row actions keep specific accessible labels and tooltips; no public file URL, new download client or backend permission is introduced. Below `sm`, status moves into the Document cell so the sticky icon actions do not crowd out the file name. Non-applicable documents stay collapsed by default. The inactive-stage read-only notice is a compact caption; genuine missing-document and approval blockers remain visible.
+The Student-owned document workspace reuses Admissions document requirements, permissions, action commands and evidence history. View uses the existing authenticated `useDocumentPreview` blob hook; images auto-fit without a zoom toolbar, PDFs use an embedded browser preview, and unsupported formats retain authorized Download through the owning workspace. View and Download require the existing file-access permissions and evidence eligibility. The icon-only row actions keep specific accessible labels and tooltips; no public file URL, new download client or backend permission is introduced. Below `sm`, status moves into the Document cell so the sticky icon actions do not crowd out the file name. Non-applicable documents stay collapsed by default. The inactive-stage read-only notice is a compact caption; genuine missing-document and approval blockers remain visible.
 
 ## GR number availability
 
@@ -139,6 +157,8 @@ Both writes invalidate the existing assessment/application/applicant tags and us
 UI result helpers keep nullable blanks, exact decimal totals and frozen attempt profiles; backend contracts own validation and outcomes.
 
 ## Finalized application summary reads
+
+The compact terminal decision uses `getAdmissionApprovalPreview` (`finalization-preview?forApproval=true`) and `approveAndFinalizeAdmissionApplication` (`approve-and-finalize`). Both reuse `admission-applications-api.ts` and existing Manage permission. Workflow `isTerminalStage` is server-projected; nonterminal stages retain the legacy flow. One frozen idempotent command is sent without a guardian-attestation flag; its committed response updates the application and existing Admissions/Onboarding/Records tags. History is deferred until a finalized record is reviewed. Readiness, contact selection and Finance handover remain server-owned; see the [backend Student API](../../../Shikshamitra-BE/docs/modules/student/api.md).
 
 The finalized application summary reuses the application/workflow and decision-history reads, plus `getStudentOnboardingCase` only with the exact `Students.Onboarding.View` grant and a linked case. Case and fee-selection evidence use `currentData`, withhold failed or mismatched results, and refetch on mount. Decision history includes nullable `actorName` from the recorded actor; the assigned counsellor is never substituted for finalizing staff. No write, monetary calculation or new endpoint is introduced.
 

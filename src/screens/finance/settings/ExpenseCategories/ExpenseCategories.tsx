@@ -46,19 +46,16 @@ const FinanceExpenseCategoriesScreen = () => {
 
   // Use custom hook to fetch expense categories
   const {
-    data: expenseCategoryData,
+    currentData: expenseCategoryData,
     isLoading: expenseCategoryLoading,
     isFetching: expenseCategoryFetching,
+    error: expenseCategoryError,
     refetch,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetExpenseCategoryQuery,
-    params: {
+  } = useGetExpenseCategoryQuery({
       academicYearId: currentYear?.id,
       ...queryParams,
       filters: serializeFinanceTableFilters(filters),
-    },
-  });
+    }, { skip: !currentYear?.id || !access.canView, refetchOnMountOrArgChange: 60 });
 
   // DELETE mutation
   const [deleteExpenseCategory, { isLoading: isDeleting }] = useQueryAndMutation({
@@ -89,9 +86,6 @@ const FinanceExpenseCategoriesScreen = () => {
     }
   );
 
-  if (expenseCategoryLoading && !expenseCategoryFetching) {
-    return <Box>Loading...</Box>;
-  }
 
   return (
     <Box height="100%" display="flex" flexDirection="column">
@@ -138,7 +132,10 @@ const FinanceExpenseCategoriesScreen = () => {
         editData={selectedExpenseCategory}
         setEditData={setSelectedExpenseCategory}
         data={expenseCategoryData?.items || []}
-        isLoading={expenseCategoryLoading || expenseCategoryFetching}
+        isLoading={expenseCategoryLoading || (expenseCategoryFetching && !expenseCategoryData)}
+        isRefreshing={expenseCategoryFetching && Boolean(expenseCategoryData)}
+        error={expenseCategoryError}
+        onRetry={() => refetch()}
         totalCount={expenseCategoryData?.totalCount}
         onServerPagination={handleServerPagination}
         onServerSearch={handleServerSearch}

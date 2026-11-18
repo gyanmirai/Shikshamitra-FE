@@ -25,5 +25,7 @@ export interface AdaptiveThreeDotsActionsProps {
   onClickThreeDots?: MouseEventHandler<HTMLButtonElement>;
   onClosePopover?: () => void;
   placement?: ThreeDotsActionsOptions['placement'];
+  popoverSlotProps?: ThreeDotsActionsOptions['popoverSlotProps'];
+  popoverAction?: ThreeDotsActionsOptions['popoverAction'];
   sx?: SxProps<Theme>;
 }

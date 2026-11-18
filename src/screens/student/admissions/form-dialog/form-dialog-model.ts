@@ -2,6 +2,7 @@ import type {
   AdmissionForm,
   AdmissionFormField,
   CreateUpdateAdmissionForm,
+  AdmissionFormPrintSettings,
 } from 'src/redux/student/admissions/admission-forms-api';
 
 import * as Yup from 'yup';
@@ -83,6 +84,14 @@ const admissionFormSectionSchema = Yup.object({
 });
 
 export const admissionFormSchema = Yup.object({
+  printSettings: Yup.object({
+    template: Yup.string().oneOf(['simple', 'boxed-grid', 'structured-classic']).optional(),
+    layout: Yup.string().oneOf(['compact', 'spacious']).required(),
+    paperSize: Yup.string().oneOf(['A4']).required(),
+    showSchoolHeader: Yup.boolean().required(),
+    showPhoto: Yup.boolean().required(),
+    showSignature: Yup.boolean().required(),
+  }).nullable().default(undefined).optional(),
   name: Yup.string().trim().max(128).required('Form name is required'),
   layoutType: Yup.number().oneOf([0, 1]).required('Choose a form layout'),
   purpose: Yup.number().oneOf([0, 1]).required('Choose a form type'),
@@ -252,6 +261,10 @@ export function getAdmissionFormInitialValues(
   const sectionId = editing?.sections[0]?.id ?? crypto.randomUUID();
   const stepId = editing?.sections[0]?.stepId ?? crypto.randomUUID();
   const initialValues = ensureAdmissionCustomFieldIdentities({
+    printSettings: {
+      ...getAdmissionFormPrintSettings(editing?.printSettings),
+      ...(!editing ? { template: 'boxed-grid' as const } : {}),
+    },
     coreFieldPolicyVersion: editing?.coreFieldPolicyVersion,
     name: editing?.name ?? '',
     code: editing?.code ?? '',
@@ -281,6 +294,19 @@ export function getAdmissionFormInitialValues(
     ],
   });
   return withInquiryDefaultTranslations(initialValues);
+}
+
+export function getAdmissionFormPrintSettings(
+  settings?: AdmissionFormPrintSettings | null
+): AdmissionFormPrintSettings {
+  return {
+    template: settings?.template ?? 'simple',
+    layout: settings?.layout ?? 'compact',
+    paperSize: 'A4',
+    showSchoolHeader: settings?.showSchoolHeader ?? true,
+    showPhoto: settings?.showPhoto ?? true,
+    showSignature: settings?.showSignature ?? true,
+  };
 }
 
 export function getBlankAdmissionFormInitialValues(

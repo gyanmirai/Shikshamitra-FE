@@ -1,3 +1,4 @@
+import { useGetStructureDetailQuery } from 'src/redux/finance/feeStructureWorkspace';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -72,8 +73,31 @@ const mapToCardModel = (
   concessionApplicableFeeHeadIds: raw.concessionApplicableFeeHeadIds ?? [],
 });
 
-// Editors stay mounted while switching structures so unsaved candidates and
-// customized schedules survive local navigation. Only the selected one is visible.
+// Load a full record only after selection; keep visited editors mounted to preserve drafts.
+function ActivatedStructureEditor({
+  initialData: summary,
+  ...props
+}: React.ComponentProps<typeof FeeStructureWorkspaceCard>) {
+  const needsDetail = !!summary._id && !summary.record?.feeHeads;
+  const detail = useGetStructureDetailQuery(summary._id ?? '', { skip: !needsDetail });
+  if (needsDetail && detail.isError && !detail.currentData)
+    return (
+      <Alert severity="error" action={<Button onClick={() => detail.refetch()}>Retry</Button>}>
+        The fee structure could not be loaded.
+      </Alert>
+    );
+  if (needsDetail && !detail.currentData)
+    return (
+      <Stack spacing={2} sx={{ p: 2 }}>
+        <Skeleton height={50} />
+        <Skeleton height={200} />
+      </Stack>
+    );
+  const initialData = needsDetail
+    ? mapToCardModel(detail.currentData, summary.classId, summary.feeStructureMetaDataId)
+    : summary;
+  return <FeeStructureWorkspaceCard {...props} initialData={initialData} />;
+}
 export default function ClassAccordionPanel({
   classId,
   classes = [],
@@ -89,6 +113,7 @@ export default function ClassAccordionPanel({
   const copyDialog = useBoolean();
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
   const [selectedKey, setSelectedKey] = useState('');
+  const visitedKeys = useRef(new Set<string>());
   const [busy, setBusy] = useState(false);
   const [listOpen, setListOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -139,6 +164,7 @@ export default function ClassAccordionPanel({
     })),
   ];
   const activeKey = cards.some(({ key }) => key === selectedKey) ? selectedKey : cards[0]?.key;
+  if (activeKey) visitedKeys.current.add(activeKey);
   const addNew = useCallback(() => {
     draftCounter.current += 1;
     const key = `draft-${classId}-${draftCounter.current}`;
@@ -471,57 +497,59 @@ export default function ClassAccordionPanel({
               sx={{ flex: 1 }}
             />
           )}
-          {cards.map(({ card, key, isLocal, sourceStamp }, index) => (
-            <Box
-              key={key}
-              sx={{
-                display: key === activeKey ? 'flex' : 'none',
-                flexDirection: 'column',
-                flex: 1,
-                minHeight: 0,
-                minWidth: 0,
-                overflow: 'hidden',
-              }}
-            >
-              <FeeStructureWorkspaceCard
-                initialData={card}
-                isActive={key === activeKey}
-                actionsContainer={actionContainers[key]}
-                actionsInList
-                index={index}
-                viewOnly={viewOnly}
-                onNameChange={(name) =>
-                  setNames((previous) =>
-                    previous[key] === name ? previous : { ...previous, [key]: name }
-                  )
-                }
-                onBusyChange={busyChange}
-                onDirtyChange={(dirty) => dirtyChange(key, dirty)}
-                onSaved={(saved) => {
-                  dirtyChange(key, false);
-                  if (isLocal)
-                    setLocalDrafts((previous) =>
-                      previous.map((draft) =>
-                        draft.__draftId === key ? { ...saved, __draftId: key } : draft
-                      )
-                    );
-                  else
-                    setSavedCards((previous) => ({
-                      ...previous,
-                      [key]: { card: saved, previousStamp: sourceStamp },
-                    }));
+          {cards
+            .filter(({ key }) => visitedKeys.current.has(key))
+            .map(({ card, key, isLocal, sourceStamp }, index) => (
+              <Box
+                key={key}
+                sx={{
+                  display: key === activeKey ? 'flex' : 'none',
+                  flexDirection: 'column',
+                  flex: 1,
+                  minHeight: 0,
+                  minWidth: 0,
+                  overflow: 'hidden',
                 }}
-                onDeleted={() => {
-                  dirtyChange(key, false);
-                  if (isLocal)
-                    setLocalDrafts((previous) =>
-                      previous.filter((draft) => draft.__draftId !== key)
-                    );
-                  if (card._id) setDeletedIds((previous) => new Set([...previous, card._id!]));
-                }}
-              />
-            </Box>
-          ))}
+              >
+                <ActivatedStructureEditor
+                  initialData={card}
+                  isActive={key === activeKey}
+                  actionsContainer={actionContainers[key]}
+                  actionsInList
+                  index={index}
+                  viewOnly={viewOnly}
+                  onNameChange={(name) =>
+                    setNames((previous) =>
+                      previous[key] === name ? previous : { ...previous, [key]: name }
+                    )
+                  }
+                  onBusyChange={busyChange}
+                  onDirtyChange={(dirty) => dirtyChange(key, dirty)}
+                  onSaved={(saved) => {
+                    dirtyChange(key, false);
+                    if (isLocal)
+                      setLocalDrafts((previous) =>
+                        previous.map((draft) =>
+                          draft.__draftId === key ? { ...saved, __draftId: key } : draft
+                        )
+                      );
+                    else
+                      setSavedCards((previous) => ({
+                        ...previous,
+                        [key]: { card: saved, previousStamp: sourceStamp },
+                      }));
+                  }}
+                  onDeleted={() => {
+                    dirtyChange(key, false);
+                    if (isLocal)
+                      setLocalDrafts((previous) =>
+                        previous.filter((draft) => draft.__draftId !== key)
+                      );
+                    if (card._id) setDeletedIds((previous) => new Set([...previous, card._id!]));
+                  }}
+                />
+              </Box>
+            ))}
         </Box>
       </Box>
       {canAdd && copyDialog.value && (

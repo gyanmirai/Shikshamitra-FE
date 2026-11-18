@@ -25,7 +25,7 @@ export default function PdfCanvas({
   const controls = (
     <Stack
       direction="row"
-      sx={{ gap: '1px' }}
+      spacing={1}
       alignItems="center"
       justifyContent="center"
       flexWrap="wrap"

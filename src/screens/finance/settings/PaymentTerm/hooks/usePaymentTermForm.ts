@@ -11,7 +11,7 @@ import { useSelector } from 'react-redux';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import { shikshaMitraToast } from 'src/components/toast';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
-import { useGetBoardsQuery } from 'src/redux/board/boardApi';
+import { useGetAcademicHierarchyQuery } from 'src/redux/board/boardApi';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
@@ -199,7 +199,9 @@ export function usePaymentTermForm(
   );
   const [getDefaultImpact] = useLazyGetPaymentTermDefaultImpactQuery();
   // ── Data queries ──────────────────────────────────────────────────────────
-  const boardQuery = useGetBoardsQuery('');
+  const boardQuery = useGetAcademicHierarchyQuery(currentYear?.id ?? '', {
+    skip: !currentYear?.id,
+  });
   const { data: boardData } = boardQuery;
   const refreshPrerequisites = () => {
     if (!boardQuery.isUninitialized) boardQuery.refetch?.();
@@ -216,7 +218,7 @@ export function usePaymentTermForm(
    */
   const boards = useMemo<IBoard[]>(() => {
     if (!boardData?.items || !currentYear?.id) return [];
-    return boardData.items.filter((b: IBoard) => b.academicYearId === currentYear.id);
+    return boardData.items.filter((board) => board.academicYearId === currentYear.id);
   }, [boardData?.items, currentYear?.id]);
 
   // ── Mutations ─────────────────────────────────────────────────────────────

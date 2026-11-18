@@ -629,6 +629,49 @@ describe('Fee Collection automatic ledger selection', () => {
     mocks.data.allocationRevision = 'ledger-selection-revision';
   });
 
+  it('automatically funds additional charges in order and accepts the full 29000 outstanding', async () => {
+    mocks.data.allocationBasis = 'Installment';
+    mocks.data.allocationDueFeeOrder = ['due-0', 'transport-june', 'tuition-july'];
+    mocks.data.charges = [1000, 22000].map((amount, index) => ({
+      ...lateFees[0],
+      chargeId: 'charge-' + index,
+      sourceId: 'charge-' + index,
+      sourceType: 'Charge',
+      name: 'Additional charge ' + index,
+      amount,
+      pendingAmount: amount,
+    }));
+    render(<FeeCollectComponentForm student={student} />);
+    const amount = screen.getByLabelText(/Amount to collect/);
+    for (const [value, selected] of [
+      ['6000', []],
+      ['6500', ['charge-0']],
+      ['29000', ['charge-0', 'charge-1']],
+      ['6500', ['charge-0']],
+    ] as const) {
+      fireEvent.change(amount, { target: { value } });
+      await waitFor(() => expect(mocks.ledgerProps.mock.lastCall?.[0].charges).toEqual(selected));
+      fireEvent.blur(amount);
+      expect(screen.queryByText(/Amount cannot exceed/)).not.toBeInTheDocument();
+    }
+    fireEvent.change(amount, { target: { value: '29001' } });
+    fireEvent.blur(amount);
+    await screen.findByText(/Amount cannot exceed/);
+    fireEvent.change(amount, { target: { value: '29000' } });
+    await waitFor(() => expect(screen.queryByText(/Amount cannot exceed/)).not.toBeInTheDocument());
+    await selectReceivingBank();
+    fireEvent.click(screen.getByRole('button', { name: 'Collect Payment' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Review payment' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Confirm collection' }));
+    await waitFor(() => expect(mocks.collect).toHaveBeenCalled());
+    const command = mocks.collect.mock.lastCall?.[0];
+    expect(command.automaticAllocation.chargeIds).toEqual(['charge-0', 'charge-1']);
+    expect(command.chargePayments).toEqual([
+      { chargeId: 'charge-0', amount: 1000 },
+      { chargeId: 'charge-1', amount: 22000 },
+    ]);
+  }, 60_000);
+
   it('reviews only the funded installments in both dialogs without narrowing the collection candidates', async () => {
     mocks.data.allocationBasis = 'Installment';
     mocks.data.allocationDueFeeOrder = ['due-0', 'transport-june', 'tuition-july'];

@@ -19,6 +19,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { useGetFeeCollectionListQuery } from 'src/redux/feeCollection/feeCollection';
+import { feeCollectionRowId } from './feeCollectionRowId';
 import { serializeFinanceTableFilters } from 'src/screens/finance/components/financeTableQuery';
 import FinanceClassDivisionFilter from 'src/screens/finance/components/FinanceClassDivisionFilter';
 import FinanceAcademicContextFilter from 'src/screens/finance/components/FinanceAcademicContextFilter';
@@ -157,7 +158,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
     () =>
       feeCollectionItems?.map((item) => ({
         ...item,
-        id: item.studentId ?? item.financeFeeAccountId ?? item.id,
+        id: feeCollectionRowId(item),
         name: `${item.studentName || '-'}${item.grNumber ? ` (${item.grNumber})` : ''}`,
         standardDivision: item.standardDivision || '-',
         rollNumber: item.rollNumber || '-',

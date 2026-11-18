@@ -142,7 +142,7 @@ describe('document review commands', { timeout: 15000 }, () => {
       expect(dialog.getByRole('button', { name: 'close' })).toBeDisabled();
       expect(dialog.getByRole('button', { name: 'Reject' })).toBeDisabled();
       expect(dialog.getByRole('button', { name: 'close' })).toBeDisabled();
-      expect(dialog.getByRole('button', { name: 'Evidence History (1)' })).toBeDisabled();
+      expect(dialog.queryByRole('button', { name: /History/ })).not.toBeInTheDocument();
       await userEvent.keyboard('{Escape}');
       fireEvent.click(approve);
       expect(screen.getByRole('dialog')).toBeInTheDocument();
@@ -199,7 +199,7 @@ describe('document review commands', { timeout: 15000 }, () => {
       concurrencyStamp: 'application-stamp',
       reason: 'Version one is unclear',
     });
-    expect(screen.getByText('birth-certificate.pdf · Version 1')).toBeInTheDocument();
+    expect(screen.getByText('birth-certificate.pdf')).toBeInTheDocument();
   });
 
   it('returns to the same preview without a mutation when rejection is cancelled', async () => {
@@ -212,14 +212,14 @@ describe('document review commands', { timeout: 15000 }, () => {
       })
     );
     const preview = await openReview();
-    const history = preview.getByRole('button', { name: 'Evidence History (1)' });
+    const fileName = preview.getByText('birth-certificate.pdf');
     await userEvent.click(preview.getByRole('button', { name: 'Reject' }));
     const dialog = within(screen.getByRole('dialog', { name: 'Reject Document' }));
     await userEvent.click(dialog.getByRole('button', { name: 'Cancel' }));
     expect(
       screen.getByRole('dialog', { name: 'Birth certificate · Document Review' })
     ).toBeVisible();
-    expect(preview.getByRole('button', { name: 'Evidence History (1)' })).toBe(history);
+    expect(preview.getByText('birth-certificate.pdf')).toBe(fileName);
     expect(preview.getByRole('button', { name: 'Reject' })).toHaveFocus();
     expect(reviews).toBe(0);
     expect(preview.queryByRole('textbox')).not.toBeInTheDocument();

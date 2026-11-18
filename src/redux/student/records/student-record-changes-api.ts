@@ -15,6 +15,7 @@ export type RecordSection =
   | 'previous-school'
   | 'placement'
   | 'status'
+  | 'gr-number'
   | 'custom-details'
   | 'registration-form'
   | 'photo';
@@ -170,7 +171,20 @@ export const studentRecordChangesApi = api.injectEndpoints({
       }),
       transformResponse: (response: RecordChange | { data?: RecordChange }) =>
         unwrapRecordsResult(response),
-      invalidatesTags: (_result, error) => (error ? [] : [studentType.student]),
+      invalidatesTags: (result, error) =>
+        error
+          ? []
+          : [
+              studentType.student,
+              ...(result?.section === 'gr-number' && result.status === 'Applied'
+                ? [
+                    { type: studentOnboardingType.onboardingCaseList, id: 'LIST' },
+                    studentOnboardingType.onboardingCaseDetail,
+                    { type: studentOnboardingType.onboardingAnalytics, id: 'SUMMARY' },
+                    { type: studentOnboardingType.onboardingIdentifierSeries, id: 'GR-PREVIEWS' },
+                  ]
+                : []),
+            ],
     }),
   }),
 });

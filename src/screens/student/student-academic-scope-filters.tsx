@@ -1,10 +1,12 @@
 'use client';
 
-import { Stack } from '@mui/material';
+import { Box, Stack } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useStudentAcademicScope } from 'src/hooks/use-student-academic-scope';
+
+import { studentAcademicFilterRowSx } from './student-academic-filter-layout';
 
 export function StudentAcademicScopeFilters() {
   const scope = useStudentAcademicScope();
@@ -27,7 +29,7 @@ export function StudentAcademicScopeFilters() {
           Academic access could not be verified. Refresh to try again.
         </StudentFeedback>
       )}
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+      <Box sx={studentAcademicFilterRowSx}>
         <CustomSelect
           fullWidth
           size="small"
@@ -50,7 +52,7 @@ export function StudentAcademicScopeFilters() {
           isLoading={scope.isLoading}
           onChange={(value) => change('medium', String(value))}
         />
-      </Stack>
+      </Box>
     </Stack>
   );
 }

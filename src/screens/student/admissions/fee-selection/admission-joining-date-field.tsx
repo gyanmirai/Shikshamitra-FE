@@ -76,7 +76,12 @@ export function AdmissionJoiningDateField({
           }}
         />
       ) : (
-        <ShakingTextField error={Boolean(error)}>
+        <ShakingTextField
+          error={Boolean(error)}
+          onBlur={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget)) controller.blur();
+          }}
+        >
           <DatePicker
             label="Actual Joining Date"
             format="DD/MM/YYYY"
@@ -91,8 +96,8 @@ export function AdmissionJoiningDateField({
                 fullWidth: true,
                 size: 'small',
                 error: Boolean(error),
-                helperText: error || undefined,
-                onBlur: controller.blur,
+                helperText:
+                  error || (value === null ? 'Required before collecting fees.' : undefined),
                 InputProps: {
                   startAdornment: (
                     <InputAdornment position="start">

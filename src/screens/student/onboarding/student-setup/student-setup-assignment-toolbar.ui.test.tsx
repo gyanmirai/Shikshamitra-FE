@@ -14,6 +14,7 @@ const props = (): ComponentProps<typeof StudentSetupAssignmentToolbar> => ({
   view: 'division',
   title: 'Division',
   pendingCount: 3,
+  showAssignmentActions: true,
   busy: false,
   automaticCount: 2,
   manualCount: 2,
@@ -105,6 +106,9 @@ it('keeps a missing Auto prerequisite visible without generic helper paragraphs'
   show({ ...props(), automaticCount: 0, automaticDisabledReason: 'Select one class for Auto.' });
   expect(screen.getByRole('status')).toHaveTextContent('Select one class for Auto.');
   expect(screen.getByRole('button', { name: 'Auto' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Auto' })).toHaveAccessibleDescription(
+    'Select one class for Auto.'
+  );
   expect(screen.getByRole('button', { name: 'Manual' })).toBeEnabled();
 });
 

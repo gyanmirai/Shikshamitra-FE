@@ -14,8 +14,28 @@ import {
 } from './admission-form-template-catalog';
 
 describe('admission form template catalogue', () => {
+  it('retains print settings when using a saved school form as a starter', () => {
+    const source = {
+      ...getAdmissionFormInitialValues(),
+      id: 'saved',
+      version: 1,
+      status: 0,
+      printSettings: {
+        template: 'structured-classic',
+        layout: 'spacious',
+        paperSize: 'A4',
+        showSchoolHeader: false,
+        showPhoto: false,
+        showSignature: true,
+      },
+    } as AdmissionForm;
+    const cloned = cloneSchoolFormAsStarter(source);
+    expect(cloned.printSettings).toEqual(source.printSettings);
+    expect(cloned.printSettings).not.toBe(source.printSettings);
+  });
   it('orders new Home address selectors by their Country, State and City dependencies', () => {
     const form = getSystemAdmissionFormTemplate('admission-application');
+    expect(form.printSettings?.template).toBe('boxed-grid');
     const home = form.sections.find((section) => section.code === 'HOME_ADDRESS')!;
     const locations = home.fields.filter((field) =>
       ['Address.Country', 'Address.State', 'Address.City'].includes(field.bindingKey ?? '')

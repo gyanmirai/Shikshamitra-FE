@@ -1,6 +1,8 @@
 export type IdentityKind = 'logo' | 'banner' | 'signature';
 export type BrandingKind = Exclude<IdentityKind, 'signature'>;
 export type SchoolBranding = {
+  schoolName?: string;
+  addressLines?: string[];
   logo: Pick<IdentityAsset, 'id' | 'contentType' | 'width' | 'height'> | null;
   banner: Pick<IdentityAsset, 'id' | 'contentType' | 'width' | 'height'> | null;
 };

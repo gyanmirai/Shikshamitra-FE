@@ -7,6 +7,7 @@ import type {
 
 import { lockNewInquiryStarter } from './inquiry-default-fields';
 import { templateStudentBinding } from './template-student-fields';
+import { getAdmissionFormPrintSettings } from './form-dialog-model';
 import { getRegistrationFormTemplate } from './registration-form-template';
 import { ensureAdmissionCustomFieldIdentities } from './form-field-identity';
 import { configureStudentField, connectStudentAddressFields } from './student-field-configuration';
@@ -976,7 +977,10 @@ export function getSystemAdmissionFormTemplate(id: SystemAdmissionFormTemplateId
   const definition = DEFINITIONS.find((item) => item.id === id);
   if (!definition) throw new Error(`Unknown admission form template: ${id}`);
   const form = ensureAdmissionCustomFieldIdentities(definition.create());
-  return lockNewInquiryStarter(form);
+  return lockNewInquiryStarter({
+    ...form,
+    printSettings: { ...getAdmissionFormPrintSettings(form.printSettings), template: 'boxed-grid' },
+  });
 }
 
 export function cloneSchoolFormAsStarter(source: AdmissionForm): CreateUpdateAdmissionForm {
@@ -1006,6 +1010,7 @@ export function cloneSchoolFormAsStarter(source: AdmissionForm): CreateUpdateAdm
       name: `${source.name} copy`,
       code: copyCode,
       description: source.description,
+      printSettings: getAdmissionFormPrintSettings(source.printSettings),
       layoutType: source.layoutType,
       purpose:
         source.purpose ??

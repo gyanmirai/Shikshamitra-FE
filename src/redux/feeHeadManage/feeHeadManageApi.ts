@@ -80,6 +80,7 @@ export const FeeHeadManagementApi = financeModuleApi.injectEndpoints({
         },
       }),
       invalidatesTags: [
+        financeModuleType.studentFeeAssignment,
         financeModuleType.feeHead,
         financeModuleType.feeCategory,
         financeModuleType.incomeCategoryData,
@@ -100,6 +101,7 @@ export const FeeHeadManagementApi = financeModuleApi.injectEndpoints({
         body,
       }),
       invalidatesTags: [
+        financeModuleType.studentFeeAssignment,
         financeModuleType.feeHead,
         financeModuleType.feeCategory,
         financeModuleType.incomeCategoryData,
@@ -116,6 +118,7 @@ export const FeeHeadManagementApi = financeModuleApi.injectEndpoints({
         method: 'DELETE',
       }),
       invalidatesTags: [
+        financeModuleType.studentFeeAssignment,
         financeModuleType.feeHead,
         financeModuleType.feeCategory,
         financeModuleType.incomeCategoryData,
@@ -134,6 +137,7 @@ export const FeeHeadManagementApi = financeModuleApi.injectEndpoints({
         body,
       }),
       invalidatesTags: [
+        financeModuleType.studentFeeAssignment,
         financeModuleType.feeHead,
         financeModuleType.feeCategory,
         financeModuleType.incomeCategoryData,

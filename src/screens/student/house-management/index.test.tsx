@@ -3,11 +3,12 @@ import type { HouseCataloguePage } from 'src/redux/student/house-management/hous
 
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
+import userEvent from '@testing-library/user-event';
 import { vi, it, expect, beforeEach } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import HouseManagement from '.';
 
@@ -22,10 +23,12 @@ const fixture = vi.hoisted(() => ({
   housesFetching: false,
   housesError: false,
   academicError: false,
+  scopeRevision: 'original-scope',
   studentTotal: 1,
   studentsMissing: false,
   studentsFetching: false,
   studentsError: false,
+  columns: vi.fn<(columns: IColumn[]) => void>(),
   updateHouse: vi.fn(),
 }));
 vi.mock('next/navigation', () => ({
@@ -48,6 +51,7 @@ vi.mock('src/hooks/use-student-academic-scope', () => ({
     mediums: [{ id: 'm1', name: 'English' }],
     isLoading: false,
     isError: fixture.academicError,
+    scopeRevision: fixture.scopeRevision,
   }),
 }));
 vi.mock('src/routes/components', () => ({
@@ -70,22 +74,25 @@ vi.mock('src/components/customizabaleTable', () => ({
     isLoading: boolean;
     isRefreshing: boolean;
     noDataText: React.ReactNode;
-  }) => (
-    <section aria-label="Records">
-      {isLoading && <div role="progressbar" aria-label="Loading records" />}
-      {isRefreshing && <span>Refreshing records</span>}
-      {!isLoading && !data.length && noDataText}
-      {data.map((row, index) => (
-        <div key={index}>
-          {columns.map((column) => (
-            <span key={column.id}>
-              {column.render ? column.render(row[column.id], row) : String(row[column.id] ?? '')}
-            </span>
-          ))}
-        </div>
-      ))}
-    </section>
-  ),
+  }) => {
+    fixture.columns(columns);
+    return (
+      <section aria-label="Records">
+        {isLoading && <div role="progressbar" aria-label="Loading records" />}
+        {isRefreshing && <span>Refreshing records</span>}
+        {!isLoading && !data.length && noDataText}
+        {data.map((row, index) => (
+          <div key={index}>
+            {columns.map((column) => (
+              <span key={column.id}>
+                {column.render ? column.render(row[column.id], row) : String(row[column.id] ?? '')}
+              </span>
+            ))}
+          </div>
+        ))}
+      </section>
+    );
+  },
 }));
 vi.mock('./house-pickers', () => ({ HousePicker: () => null }));
 vi.mock('src/redux/student/house-management/house-management-api', () => {
@@ -104,9 +111,10 @@ vi.mock('src/redux/student/house-management/house-management-api', () => {
         studentId: 's1',
         studentName: 'Riya',
         standardName: '6',
+        divisionName: 'A',
         houseName: 'Falcon',
-        isHouseLeader: false,
-        isDivisionLeader: false,
+        isHouseLeader: true,
+        isDivisionLeader: true,
       },
     ],
     totalCount: 1,
@@ -175,6 +183,7 @@ beforeEach(() => {
   fixture.housesFetching = false;
   fixture.housesError = false;
   fixture.academicError = false;
+  fixture.scopeRevision = 'original-scope';
   fixture.studentTotal = 1;
   fixture.studentsMissing = false;
   fixture.studentsFetching = false;
@@ -189,6 +198,44 @@ it('lets House-only viewers read the scoped roster without exposing write action
   expect(screen.queryByRole('checkbox', { name: 'Select Riya' })).toBeNull();
   expect(fixture.input).toHaveBeenCalledWith(expect.objectContaining({ academicMediumId: 'm1' }));
 });
+
+it('shows and exports class with division under the existing class sort field', () => {
+  mount();
+  const columns = fixture.columns.mock.lastCall?.[0] ?? [];
+  expect(columns.map((column) => column.id)).toEqual([
+    'studentName',
+    'admissionNumber',
+    'standardName',
+    'rollNumber',
+    'houseName',
+  ]);
+  const classColumn = columns.find((column) => column.id === 'standardName');
+  expect(classColumn).toMatchObject({ label: 'Class / Division', isSort: true });
+  expect(classColumn?.exportValue?.('6', { divisionName: 'A' })).toBe('6 / A');
+  expect(classColumn?.exportValue?.('6', { divisionName: null })).toBe('6');
+  expect(screen.getByText('6 / A')).toBeVisible();
+});
+
+it('shows separate role icons beside a dual leader with hover and keyboard tooltips', async () => {
+  const user = userEvent.setup();
+  mount();
+  const house = screen.getByRole('img', { name: 'House leader · Falcon' });
+  const division = screen.getByRole('img', { name: 'Division leader · 6 / A' });
+  const identity = screen.getByText('Riya').parentElement;
+  expect(identity).toContainElement(house);
+  expect(identity).toContainElement(division);
+
+  await user.hover(house);
+  expect(await screen.findByRole('tooltip', { name: 'House leader · Falcon' })).toBeVisible();
+  await user.keyboard('{Escape}');
+  await user.unhover(house);
+
+  act(() => house.focus());
+  await user.tab();
+  expect(division).toHaveFocus();
+  expect(await screen.findByRole('tooltip', { name: 'Division leader · 6 / A' })).toBeVisible();
+});
+
 it('keeps class filter changes in the URL and resets the page', () => {
   fixture.query = 'tab=students&page=2';
   mount();
@@ -214,6 +261,23 @@ it('requires explicit medium capability before allowing house creation with Add'
   fixture.houseCapability = true;
   view.rerender(workspace());
   expect(screen.getByRole('button', { name: 'Create house' })).toBeEnabled();
+});
+
+it('discards an open house draft when academic access changes and keeps it closed on return', () => {
+  fixture.permissions.push('Students.Records.HouseManagement.Add');
+  fixture.query = 'tab=houses';
+  fixture.houseCapability = true;
+  const view = mount();
+  fireEvent.click(screen.getByRole('button', { name: 'Create house' }));
+  expect(screen.getByRole('dialog', { name: 'Add House' })).toBeVisible();
+
+  fixture.scopeRevision = 'changed-scope';
+  view.rerender(workspace());
+  expect(screen.queryByRole('dialog', { name: 'Add House' })).not.toBeInTheDocument();
+
+  fixture.scopeRevision = 'original-scope';
+  view.rerender(workspace());
+  expect(screen.queryByRole('dialog', { name: 'Add House' })).not.toBeInTheDocument();
 });
 
 it('shows loading records for a new query while previous-argument data is unavailable', () => {

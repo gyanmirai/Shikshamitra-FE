@@ -35,6 +35,7 @@ import { AdmissionSectionFields } from '../components/admission-section-fields';
 import { dependentAdmissionFieldValues } from '../admission-field-dependencies';
 import { waitForAdmissionValidationPaint } from '../admission-validation-feedback';
 import { AdmissionFormStepNavigation } from '../components/admission-form-step-navigation';
+import { AdmissionRuntimePrintActions } from '../form-print/admission-runtime-print-actions';
 import { isAdmissionRuleVisible, readAdmissionFormValue } from '../admission-visibility-rules';
 import { academicOptionsJson, isInstituteAcademicSource } from '../admission-academic-options';
 import { useAdmissionAddressSync, isAdmissionCopiedAddressField } from '../admission-address-sync';
@@ -84,6 +85,7 @@ type Props = {
   readOnly?: boolean;
   academicMediumId?: string;
   publicMode?: boolean;
+  allowPrint?: boolean;
   editableFieldCodes?: string[];
   canEditOverride?: boolean;
   submitLabel?: string;
@@ -95,7 +97,11 @@ type Props = {
 export function ApplicationRuntimeForm(props: Props) {
   const [loadOptions] = useLazyGetAdmissionFormOptionsQuery();
   return (
-    <ApplicationRuntimeFormCore {...props} loadOptions={(query) => loadOptions(query).unwrap()} />
+    <ApplicationRuntimeFormCore
+      {...props}
+      allowPrint
+      loadOptions={(query) => loadOptions(query).unwrap()}
+    />
   );
 }
 
@@ -129,6 +135,7 @@ export function ApplicationRuntimeFormCore({
   readOnly = false,
   academicMediumId,
   publicMode = false,
+  allowPrint = false,
   editableFieldCodes,
   canEditOverride,
   submitLabel,
@@ -730,6 +737,19 @@ export function ApplicationRuntimeFormCore({
               : { maxWidth: 1280, mx: 'auto' }
           }
         >
+          {allowPrint && !publicMode && (
+            <Stack direction="row" justifyContent="flex-end" sx={{ mb: 1 }}>
+              <AdmissionRuntimePrintActions
+                applicationId={application.id}
+                form={form}
+                values={values}
+                busy={interactionLocked}
+                currentStepId={visibleSteps[safeActiveStep]?.id}
+                onSave={onSave}
+                canSave={showSaveDraft && !readOnly && !correctionMode}
+              />
+            </Stack>
+          )}
           {!compact && (
             <Typography variant="h6" sx={{ mb: 0.5 }}>
               {form.definition.name} · v{form.formVersion}

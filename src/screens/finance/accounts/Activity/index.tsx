@@ -56,7 +56,7 @@ export default function AccountsActivity({ embedded = false }: { embedded?: bool
       page,
       pageSize,
     },
-    { skip: !canView || !currentYear?.id, refetchOnMountOrArgChange: true }
+    { skip: !canView || !currentYear?.id, refetchOnMountOrArgChange: 60 }
   );
 
   const columns: IColumn[] = useMemo(

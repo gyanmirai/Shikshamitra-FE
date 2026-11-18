@@ -1,5 +1,6 @@
+import { useTheme } from '@mui/material/styles';
+import { Box, useMediaQuery } from '@mui/material';
 import { useRef, useState, useEffect } from 'react';
-import { Box, useTheme, useMediaQuery } from '@mui/material';
 
 import { CanvasRulers } from './canvas-rulers';
 import { IdentityCardPreview } from '../preview';

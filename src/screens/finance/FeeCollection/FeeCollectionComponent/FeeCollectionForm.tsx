@@ -772,6 +772,10 @@ const FeeCollectComponentForm = ({
       usesAutomaticAllocation,
       formData?.allocationDueFeeOrder ?? []
     );
+  const resolveChargeIds = (items: SelectedItem[], charges: string[]) =>
+    usesAutomaticAllocation && !items.length && !charges.length
+      ? chargesData.filter(isChargeSelectable).map((charge) => charge.chargeId)
+      : charges;
   const hasInstallments = ledgerData.monthWise.some((group) =>
     group.items.some((item) => Boolean(item.installmentId || item.installmentLabel))
   );
@@ -787,14 +791,15 @@ const FeeCollectComponentForm = ({
     validate: (values) => {
       const errors: any = {};
       const resolvedItems = resolveItems(values.selectedItems, values.charges);
-      if (hasCollectibleItems && !resolvedItems.length && !values.charges.length)
+      const resolvedChargeIds = resolveChargeIds(values.selectedItems, values.charges);
+      if (hasCollectibleItems && !resolvedItems.length && !resolvedChargeIds.length)
         errors.charges = 'Select at least one fee item or charge to collect';
       const itemsTotal = resolvedItems.reduce(
         (s, i) => s + roundUpToRupee(i.dueAmount) + (i.lateFeeAmount ?? 0),
         0
       );
       const chargesTotal = (chargesData ?? [])
-        .filter((c) => values.charges.includes(c.chargeId))
+        .filter((c) => resolvedChargeIds.includes(c.chargeId))
         .reduce((s, c) => s + c.amount, 0);
       const total = itemsTotal + chargesTotal;
       const paid = Number(String(values.payment.amount).replace(/[₹,\s]/g, ''));
@@ -918,6 +923,7 @@ const FeeCollectComponentForm = ({
   );
 
   const orderedSelectedItems = resolveItems(formik.values.selectedItems, formik.values.charges);
+  const orderedChargeIds = resolveChargeIds(formik.values.selectedItems, formik.values.charges);
   const isAmountOnly =
     usesAutomaticAllocation && !formik.values.selectedItems.length && !formik.values.charges.length;
   const finalAmount =
@@ -925,7 +931,7 @@ const FeeCollectComponentForm = ({
       (sum, item) => sum + roundUpToRupee(item.dueAmount) + (item.lateFeeAmount ?? 0),
       0
     ) +
-    selectedChargesInOrder(chargesData, formik.values.charges).reduce(
+    selectedChargesInOrder(chargesData, orderedChargeIds).reduce(
       (sum, charge) => sum + charge.amount,
       0
     );
@@ -1007,21 +1013,22 @@ const FeeCollectComponentForm = ({
     );
   };
 
-  const handleChargesChange = (chargeIds: string[]) => {
+  const handleChargesChange = (chargeIds: string[], items = formik.values.selectedItems) => {
     if (adaptedOutcomeUnresolved) return;
     submissionRef.current = null;
     recordManualSelection(
       selectionOwnership.current,
       { items: formik.values.selectedItems, charges: formik.values.charges },
-      { items: formik.values.selectedItems, charges: chargeIds }
+      { items, charges: chargeIds }
     );
     formik.setValues(
       (values) => ({
         ...values,
+        selectedItems: items,
         charges: chargeIds,
         payment: {
           ...values.payment,
-          amount: selectionAmount(values.selectedItems, chargeIds, chargesData),
+          amount: selectionAmount(items, chargeIds, chargesData),
         },
       }),
       false
@@ -1139,7 +1146,7 @@ const FeeCollectComponentForm = ({
 
     const allocation = allocatePayment(
       orderedSelectedItems,
-      selectedChargesInOrder(chargesData, formik.values.charges),
+      selectedChargesInOrder(chargesData, orderedChargeIds),
       feeHeadMap,
       receivedAmount
     );
@@ -1196,12 +1203,12 @@ const FeeCollectComponentForm = ({
       paymentConfirmed: isCashierDecided ? confirmNonCash : undefined,
       ...(usesAutomaticAllocation
         ? {
-          automaticAllocation: {
-            revision: formData?.allocationRevision ?? '',
-            dueFeeIds: orderedSelectedItems.map((item) => item.dueFeeId ?? ''),
-            chargeIds: formik.values.charges,
-          },
-        }
+            automaticAllocation: {
+              revision: formData?.allocationRevision ?? '',
+              dueFeeIds: orderedSelectedItems.map((item) => item.dueFeeId ?? ''),
+              chargeIds: orderedChargeIds,
+            },
+          }
         : {}),
       dueFeePayments,
       lateFeePayments,
@@ -1472,17 +1479,11 @@ const FeeCollectComponentForm = ({
     () =>
       allocatePayment(
         orderedSelectedItems,
-        selectedChargesInOrder(chargesData, formik.values.charges),
+        selectedChargesInOrder(chargesData, orderedChargeIds),
         feeHeadMap,
         Number(formik.values.payment.amount) || 0
       ),
-    [
-      orderedSelectedItems,
-      chargesData,
-      formik.values.charges,
-      feeHeadMap,
-      formik.values.payment.amount,
-    ]
+    [orderedSelectedItems, chargesData, orderedChargeIds, feeHeadMap, formik.values.payment.amount]
   );
   const feeAllocationById = new Map(
     liveAllocation.allocatedRows
@@ -1493,14 +1494,20 @@ const FeeCollectComponentForm = ({
   // Highlight the funded rows without narrowing the automatic allocation candidate set.
   const ledgerSelectedItems = isAmountOnly
     ? orderedSelectedItems.filter(
-      (item) => (feeAllocationById.get(item.dueFeeId)?.paidAmount ?? 0) > 0
-    )
+        (item) => (feeAllocationById.get(item.dueFeeId)?.paidAmount ?? 0) > 0
+      )
     : formik.values.selectedItems;
+  const ledgerChargeIds = isAmountOnly
+    ? liveAllocation.allocatedRows
+        .filter((row) => row.type === 'charge' && row.paidAmount > 0)
+        .map((row) => row.key)
+    : formik.values.charges;
   // Reviews mirror the funded automatic highlights, while the command retains
   // every policy candidate and its revision for server-side validation.
   const allocationFormValues = {
     ...formik.values,
     selectedItems: isAmountOnly ? ledgerSelectedItems : orderedSelectedItems,
+    charges: ledgerChargeIds,
   };
   const handleLedgerSelectionChange = (items: SelectedItem[]) => {
     handleSelectionChange(items);
@@ -1545,7 +1552,7 @@ const FeeCollectComponentForm = ({
         >
           {collectFormError
             ? parseApiProblemDetail(collectFormError).detail ||
-            'Unable to load fees. Please try again.'
+              'Unable to load fees. Please try again.'
             : !currentYear?.id
               ? 'Academic year is required to collect fees.'
               : 'Fee collection details are unavailable. Please try again.'}
@@ -1569,17 +1576,17 @@ const FeeCollectComponentForm = ({
     setReceiptPreviewState({
       feeReceipt: hasFeeReceipt
         ? {
-          id: collectResponse.feeReceiptId!,
-          receiptNumber: collectResponse.feeReceiptNumber,
-          pdfFileName: collectResponse.feeReceiptPdfFileName,
-        }
+            id: collectResponse.feeReceiptId!,
+            receiptNumber: collectResponse.feeReceiptNumber,
+            pdfFileName: collectResponse.feeReceiptPdfFileName,
+          }
         : null,
       chargeReceipt: hasChargeReceipt
         ? {
-          id: collectResponse.chargeReceiptId!,
-          receiptNumber: collectResponse.chargeReceiptNumber,
-          pdfFileName: collectResponse.chargeReceiptPdfFileName,
-        }
+            id: collectResponse.chargeReceiptId!,
+            receiptNumber: collectResponse.chargeReceiptNumber,
+            pdfFileName: collectResponse.chargeReceiptPdfFileName,
+          }
         : null,
     });
 
@@ -1908,7 +1915,7 @@ const FeeCollectComponentForm = ({
                       });
                     }}
                     selectedItems={ledgerSelectedItems}
-                    charges={formik.values.charges}
+                    charges={ledgerChargeIds}
                     chargesData={filteredChargesData}
                     hasActiveFilters={
                       filters.status !== 'All' ||
@@ -1916,7 +1923,11 @@ const FeeCollectComponentForm = ({
                       filters.feeHead !== 'All'
                     }
                     onSelectionChange={handleLedgerSelectionChange}
-                    onChargesChange={handleChargesChange}
+                    onChargesChange={(ids) => {
+                      handleChargesChange(ids, isAmountOnly ? ledgerSelectedItems : undefined);
+                      if (isAmountOnly && !ids.length && !ledgerSelectedItems.length)
+                        updatePayment('amount', '');
+                    }}
                     year={currentYear?.year ?? new Date().getFullYear()}
                   />
                 </FeeCollectionWaiverContext.Provider>
@@ -2025,32 +2036,34 @@ const FeeCollectComponentForm = ({
                           onRemove: isAmountOnly
                             ? undefined
                             : () =>
-                              handleSelectionChange(
-                                formik.values.selectedItems.filter(
-                                  (selected) =>
-                                    selectionItemKey(selected) !== selectionItemKey(item)
-                                )
-                              ),
+                                handleSelectionChange(
+                                  formik.values.selectedItems.filter(
+                                    (selected) =>
+                                      selectionItemKey(selected) !== selectionItemKey(item)
+                                  )
+                                ),
                         }))}
-                      charges={selectedChargesInOrder(chargesData ?? [], formik.values.charges).map(
+                      charges={selectedChargesInOrder(chargesData ?? [], ledgerChargeIds).map(
                         (charge) => ({
                           id: charge.chargeId,
                           label: charge.chargeName,
                           term: charge.dueDate ? dayjs(charge.dueDate).format('MMM YYYY') : '—',
                           amount: showLiveAllocation
                             ? (liveAllocation.allocatedRows.find(
-                              (row) => row.type === 'charge' && row.key === charge.chargeId
-                            )?.paidAmount ?? 0)
+                                (row) => row.type === 'charge' && row.key === charge.chargeId
+                              )?.paidAmount ?? 0)
                             : charge.amount,
                           remainingAmount: showLiveAllocation
                             ? liveAllocation.allocatedRows.find(
-                              (row) => row.type === 'charge' && row.key === charge.chargeId
-                            )?.remainingAmount
+                                (row) => row.type === 'charge' && row.key === charge.chargeId
+                              )?.remainingAmount
                             : undefined,
-                          onRemove: () =>
-                            handleChargesChange(
-                              formik.values.charges.filter((id) => id !== charge.chargeId)
-                            ),
+                          onRemove: isAmountOnly
+                            ? undefined
+                            : () =>
+                                handleChargesChange(
+                                  formik.values.charges.filter((id) => id !== charge.chargeId)
+                                ),
                         })
                       )}
                       onMoveFee={(from, to) => {
@@ -2063,10 +2076,9 @@ const FeeCollectComponentForm = ({
                       }}
                       onMoveCharge={(from, to) => {
                         submissionRef.current = null;
-                        formik.setFieldValue(
-                          'charges',
-                          arrayMove(formik.values.charges, from, to),
-                          false
+                        handleChargesChange(
+                          arrayMove(ledgerChargeIds, from, to),
+                          isAmountOnly ? ledgerSelectedItems : undefined
                         );
                       }}
                     />

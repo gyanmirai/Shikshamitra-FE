@@ -11,11 +11,12 @@ import { formatNumber } from 'src/utils/formate_number';
 import { financePaths } from 'src/constants/finance-menu';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { CustomDateRangePicker } from 'src/components/custom-date-range-picker';
-import { Box, Chip, Grid, Alert, Paper, Stack, Button, Typography } from '@mui/material';
+import { Box, Grid, Alert, Paper, Stack, Button, Typography } from '@mui/material';
 
 import ExposureAtlas from './ExposureAtlas';
 import MoneyTransitMap from './MoneyTransitMap';
 import { FinanceReportRail, FinanceAttentionQueue } from './FinanceActionRail';
+import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
 import { financeNoteFrameSx, financeNoteInnerSx } from './finance-dashboard-note-styles';
 import {
   financeQueuePreview,
@@ -100,19 +101,19 @@ export default function FinanceAdminDashboardExperience() {
   const confirmedNet = activity.confirmedIncome - activity.expenses;
   const statementFacts = [
     {
-      label: 'Fee payments received · activity',
+      label: 'Fee Payments Received',
       value: formatNumber(activity.received, 'INR'),
-      detail: `${activity.transactions.toLocaleString('en-IN')} transactions · ${rangeLabel}`,
+      info: 'Fee payments received within the selected activity dates.',
     },
     {
-      label: 'Awaiting my decision · year queue',
+      label: 'Awaiting My Decision',
       value: String(financeQueuePreview.decisions),
-      detail: 'Requests needing an admin decision',
+      info: 'Requests awaiting an admin decision for the selected academic year. The activity date filter does not change this queue.',
     },
     {
-      label: 'Refunds awaiting payment · year queue',
+      label: 'Refunds Awaiting Payment',
       value: formatNumber(financeQueuePreview.refundAmount, 'INR'),
-      detail: `${financeQueuePreview.refundRequests} requests`,
+      info: `${financeQueuePreview.refundRequests} refund requests awaiting payment for the selected academic year. The activity date filter does not change this queue.`,
     },
   ];
 
@@ -143,31 +144,15 @@ export default function FinanceAdminDashboardExperience() {
         <Paper
           variant="outlined"
           sx={{
-            px: { xs: 2, md: 2.5 },
-            py: 1.5,
+            px: 1,
+            py: 1,
             display: 'flex',
             alignItems: { xs: 'stretch', md: 'center' },
-            justifyContent: 'space-between',
+            justifyContent: 'flex-end',
             gap: 1.5,
             flexDirection: { xs: 'column', md: 'row' },
           }}
         >
-          <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-            <Chip
-              size="small"
-              variant="outlined"
-              color={currentYear?.id ? 'primary' : 'default'}
-              label={`Global academic year · ${yearLabel}`}
-            />
-            <Chip
-              size="small"
-              variant="outlined"
-              color="warning"
-              label="UI preview · sample figures"
-              title="These sample figures are for the design preview and are not connected to live finance data."
-            />
-          </Stack>
-
           <Stack
             direction={{ xs: 'column', sm: 'row' }}
             spacing={1}
@@ -186,14 +171,24 @@ export default function FinanceAdminDashboardExperience() {
               showShortcuts={false}
               allowManualInput
             />
-            <Stack direction="row" spacing={0.5} justifyContent="flex-end">
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{
+                flexShrink: 0,
+                minWidth: 0,
+                maxWidth: '100%',
+                overflowX: 'auto',
+                '& .MuiButton-root': { whiteSpace: 'nowrap', flexShrink: 0 },
+              }}
+            >
               <Button
                 size="small"
                 color="inherit"
                 onClick={() => applyPreset('week')}
                 disabled={!hasValidAcademicYear}
               >
-                Last 7 days
+                Last Seven Days
               </Button>
               <Button
                 size="small"
@@ -201,7 +196,7 @@ export default function FinanceAdminDashboardExperience() {
                 onClick={() => applyPreset('month')}
                 disabled={!hasValidAcademicYear}
               >
-                This month
+                This Month
               </Button>
               <Button
                 size="small"
@@ -209,7 +204,7 @@ export default function FinanceAdminDashboardExperience() {
                 onClick={() => applyPreset('year')}
                 disabled={!hasValidAcademicYear}
               >
-                Full year
+                Full Year
               </Button>
             </Stack>
           </Stack>
@@ -217,8 +212,8 @@ export default function FinanceAdminDashboardExperience() {
 
         {!currentYear?.id ? (
           <Alert severity="info">
-            Choose an academic year from the global selector to view its board, medium and finance
-            context.
+            Choose an academic year using the global selector on another Finance page, then return
+            to this dashboard.
           </Alert>
         ) : !hasValidAcademicYear ? (
           <Alert severity="warning">
@@ -239,31 +234,33 @@ export default function FinanceAdminDashboardExperience() {
                 p: { xs: 2, md: 3 },
                 display: 'grid',
                 gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1fr) auto' },
-                gap: { xs: 3, md: 4 },
                 alignItems: 'center',
+                gap: { xs: 3, md: 4 },
               }}
             >
               <Box sx={{ minWidth: 0 }}>
-                <Typography variant="overline" color="success.main" sx={{ letterSpacing: 2 }}>
-                  Finance Statement · {yearLabel}
-                </Typography>
+                <Stack direction="row" alignItems="center">
+                  <Typography variant="overline" color="success.main" sx={{ letterSpacing: 2 }}>
+                    Finance Statement
+                  </Typography>
+                  <InfoTooltipIcon
+                    title={`Net movement is confirmed income less recorded expenses for the selected activity dates, not a bank balance. Outstanding fees cover ${yearLabel}. These figures use the existing dashboard preview data.`}
+                    label="Finance Statement information"
+                  />
+                </Stack>
                 <Typography variant="h6" sx={{ mt: 1 }}>
-                  Net movement · activity
+                  Net Movement
                 </Typography>
                 <Typography
                   variant="h1"
                   sx={{
                     mt: 0.5,
-                    color: 'text.primary',
                     lineHeight: 1.05,
+                    fontVariantNumeric: 'tabular-nums',
                     overflowWrap: 'anywhere',
                   }}
                 >
                   {formatNumber(confirmedNet, 'INR')}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                  Confirmed income {formatNumber(activity.confirmedIncome, 'INR')} less recorded
-                  expenses {formatNumber(activity.expenses, 'INR')} · {rangeLabel}
                 </Typography>
               </Box>
               <Box
@@ -277,30 +274,32 @@ export default function FinanceAdminDashboardExperience() {
                   bgcolor: (theme) => alpha(theme.palette.success.main, 0.055),
                   display: 'flex',
                   flexDirection: 'column',
-                  justifyContent: 'center',
                   alignItems: 'center',
-                  textAlign: 'center',
+                  justifyContent: 'center',
                   p: 2,
                   mx: { xs: 'auto', md: 0 },
                 }}
               >
-                <Typography variant="caption" color="text.secondary">
-                  Outstanding fees · year snapshot
-                </Typography>
-                <Typography variant="h5" sx={{ color: 'text.primary', mt: 0.5 }}>
+                <Stack direction="row" alignItems="center">
+                  <Typography variant="caption" color="text.secondary">
+                    Outstanding Fees
+                  </Typography>
+                  <InfoTooltipIcon
+                    title={`Outstanding fees for ${yearLabel}; unaffected by activity dates.`}
+                    label="Outstanding Fees information"
+                  />
+                </Stack>
+                <Typography variant="h5">
                   {formatNumber(financeExposurePreview.outstanding, 'INR')}
-                </Typography>
-                <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
-                  Across the selected academic year
                 </Typography>
               </Box>
             </Box>
             <Box
               sx={{
-                borderTop: '1px dashed',
-                borderColor: 'success.main',
                 display: 'grid',
                 gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, minmax(0, 1fr))' },
+                borderTop: '1px dashed',
+                borderColor: 'success.main',
               }}
             >
               {statementFacts.map((fact, index) => (
@@ -315,14 +314,14 @@ export default function FinanceAdminDashboardExperience() {
                     borderColor: (theme) => alpha(theme.palette.success.main, 0.3),
                   }}
                 >
-                  <Typography variant="caption" color="text.secondary">
-                    {fact.label}
-                  </Typography>
+                  <Stack direction="row" alignItems="center">
+                    <Typography variant="caption" color="text.secondary">
+                      {fact.label}
+                    </Typography>
+                    <InfoTooltipIcon title={fact.info} label={`${fact.label} information`} />
+                  </Stack>
                   <Typography variant="h5" sx={{ mt: 0.5, overflowWrap: 'anywhere' }}>
                     {fact.value}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {fact.detail}
                   </Typography>
                 </Box>
               ))}

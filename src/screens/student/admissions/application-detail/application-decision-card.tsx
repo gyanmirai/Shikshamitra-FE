@@ -21,6 +21,7 @@ import { useLazyGetAdmissionApplicationQuery } from 'src/redux/student/admission
 import { ApplicationDecisionForm } from './application-decision-form';
 import { ApplicationDecisionDialog } from './application-decision-dialog';
 import { ApplicationDecisionStatus } from './application-decision-status';
+import { ApplicationAdmissionReview } from './application-admission-review';
 import { ApplicationDecisionActions } from './application-decision-actions';
 import { ApplicationDecisionHistory } from './application-decision-history';
 import { ApplicationFinalizedSummary } from './application-finalized-summary';
@@ -41,6 +42,7 @@ type Props = {
   application: AdmissionApplication;
   journeyCompleted: boolean;
   compact?: boolean;
+  simplified?: boolean;
   disabled?: boolean;
   navigationDisabled?: boolean;
   onBusyChange?: (busy: boolean) => void;
@@ -50,11 +52,19 @@ type Props = {
   onFinalizationOpenChange?: (open: boolean) => void;
   hideFinalizedActions?: boolean;
   onPrepareFinalization?: () => Promise<boolean>;
-  onFinalized?: (result: AdmissionFinalizationResult) => void;
+  onFinalized?: (result: AdmissionFinalizationResult) => boolean | void;
+  footerElement?: HTMLElement | null;
+  onCancel?: () => void;
 };
 const ACTIONS: AdmissionDecisionAction[] = ['approve', 'waitlist', 'reject'];
 
-export function ApplicationDecisionCard({
+export function ApplicationDecisionCard(props: Props) {
+  const { compact, simplified = true, application } = props;
+  if (compact && simplified) return <ApplicationAdmissionReview key={application.id} {...props} />;
+  return <LegacyApplicationDecisionCard {...props} />;
+}
+
+function LegacyApplicationDecisionCard({
   application,
   journeyCompleted,
   compact = false,

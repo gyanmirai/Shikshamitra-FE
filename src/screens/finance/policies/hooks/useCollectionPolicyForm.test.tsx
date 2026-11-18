@@ -4,6 +4,7 @@ import { it, vi, expect, describe, beforeEach } from 'vitest';
 import { useCollectionPolicyForm } from './useCollectionPolicyForm';
 
 const mocks = vi.hoisted(() => ({
+  listQuery: vi.fn(() => ({ data: { items: [] }, currentData: { items: [] } })),
   createHook: vi.fn(),
   updateHook: vi.fn(),
   createPolicy: vi.fn(),
@@ -42,7 +43,7 @@ vi.mock('src/redux/finance/financeRoutingApi', () => ({
   }),
 }));
 vi.mock('src/redux/finance/collectionPolicy', () => ({
-  useGetCollectionPoliciesQuery: () => ({ data: { items: [] } }),
+  useGetCollectionPoliciesQuery: mocks.listQuery,
   useCreateCollectionPolicyMutation: mocks.createHook,
   useUpdateCollectionPolicyMutation: mocks.updateHook,
 }));
@@ -55,6 +56,18 @@ vi.mock('src/redux/customQueryAndMutation', () => ({
 }));
 
 describe('useCollectionPolicyForm submission validation', () => {
+  it('does not request default-policy choices until the editor opens and requests only one row', () => {
+    const { rerender } = renderHook(
+      ({ open }) => useCollectionPolicyForm({ open, onClose: vi.fn(), academicYearId: 'year' }),
+      { initialProps: { open: false } }
+    );
+    expect(mocks.listQuery).toHaveBeenLastCalledWith(expect.anything(), { skip: true });
+    rerender({ open: true });
+    expect(mocks.listQuery).toHaveBeenLastCalledWith(
+      { academicYearId: 'year', status: 'Active', skipCount: 0, maxResultCount: 1 },
+      { skip: false }
+    );
+  });
   it('saves a common late-fee rule without fee heads or per-head overrides', async () => {
     const { result } = renderHook(() =>
       useCollectionPolicyForm({

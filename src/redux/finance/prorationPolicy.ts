@@ -4,6 +4,7 @@ import { financePolicyType } from 'src/redux/tagTypes';
 
 import { api } from '../service';
 import { policyCacheTags } from './policyCacheTags';
+import { policyVersionRequest, type PolicyVersionQueryArgs } from './policyVersionQuery';
 
 const policyTags = policyCacheTags(financePolicyType.prorationPolicy);
 
@@ -169,9 +170,9 @@ export const prorationPolicyApi = api.injectEndpoints({
     }),
     getProrationPolicyVersions: builder.query<
       { totalCount: number; items: ProrationPolicyVersionResponse[] },
-      string
+      PolicyVersionQueryArgs
     >({
-      query: (id) => `/finance/proration-policies/${id}/versions`,
+      query: (args) => policyVersionRequest('proration', args),
       providesTags: policyTags.detail,
     }),
     getProrationPolicyImpact: builder.query<ProrationPolicyImpactResponse, string>({

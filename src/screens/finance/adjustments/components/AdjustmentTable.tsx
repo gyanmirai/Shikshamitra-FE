@@ -33,7 +33,7 @@ import {
 import type { AdjustmentRequest, IAdjustmentTableProps } from '../types/adjustment.types';
 import { useAdjustmentWorklistQuery } from '../hooks/useAdjustmentWorklistQuery';
 
-const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
+const AdjustmentTableContent: React.FC<IAdjustmentTableProps> = ({
   activeTab = AdjustmentTabEnum.Pending,
   onTabChange,
   tabCounts,
@@ -47,8 +47,7 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const currentUserId = useSelector((state: RootState) => state.auth.user?.sub);
 
-  const localFilters = useFinanceAcademicFilters();
-  const filters = academicFilters || localFilters;
+  const filters = academicFilters!;
 
   // Use the finance academic filters hook
   const {
@@ -449,4 +448,13 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
   );
 };
 
-export default AdjustmentTable;
+function AdjustmentTableWithLocalFilters(props: IAdjustmentTableProps) {
+  const academicFilters = useFinanceAcademicFilters();
+  return <AdjustmentTableContent {...props} academicFilters={academicFilters} />;
+}
+
+export default function AdjustmentTable(props: IAdjustmentTableProps) {
+  return props.academicFilters
+    ? <AdjustmentTableContent {...props} />
+    : <AdjustmentTableWithLocalFilters {...props} />;
+}

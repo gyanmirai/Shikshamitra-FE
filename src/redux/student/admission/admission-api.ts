@@ -49,7 +49,10 @@ export const StudentAdmissionApi = api.injectEndpoints({
         method: 'POST',
         body: { items: body },
       }),
-      invalidatesTags: [studentAdmissionType.studentAdmission],
+      invalidatesTags: [
+        financeModuleType.studentFeeAssignment,
+        studentAdmissionType.studentAdmission,
+      ],
     }),
     assignDivisionTOStudent: builder.mutation({
       query: ({ studentId, body }) => ({
@@ -57,7 +60,10 @@ export const StudentAdmissionApi = api.injectEndpoints({
         method: 'PUT',
         body,
       }),
-      invalidatesTags: [studentAdmissionType.studentAdmission],
+      invalidatesTags: [
+        financeModuleType.studentFeeAssignment,
+        studentAdmissionType.studentAdmission,
+      ],
     }),
     getDivisionForStandard: builder.query({
       query: (standardId) => ({
@@ -67,10 +73,10 @@ export const StudentAdmissionApi = api.injectEndpoints({
       providesTags: [studentAdmissionType.studentAdmission],
     }),
     getStudentFeeStructure: builder.query({
-		query: ({ studentId, academicYearId }) => ({
+      query: ({ studentId, academicYearId }) => ({
         url: `/student-fee-structure/student/${studentId}`,
         method: 'GET',
-		params: { academicYearId },
+        params: { academicYearId },
       }),
       providesTags: [studentAdmissionType.studentAdmission],
     }),
@@ -80,7 +86,11 @@ export const StudentAdmissionApi = api.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [studentAdmissionType.studentAdmission, financeModuleType.feeCollection],
+      invalidatesTags: [
+        financeModuleType.studentFeeAssignment,
+        studentAdmissionType.studentAdmission,
+        financeModuleType.feeCollection,
+      ],
     }),
     previewFeeStructureAssignment: builder.mutation<
       StudentFeeAssignmentPreview,
@@ -98,7 +108,11 @@ export const StudentAdmissionApi = api.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [studentAdmissionType.studentAdmission, financeModuleType.feeCollection],
+      invalidatesTags: [
+        financeModuleType.studentFeeAssignment,
+        studentAdmissionType.studentAdmission,
+        financeModuleType.feeCollection,
+      ],
     }),
   }),
 });

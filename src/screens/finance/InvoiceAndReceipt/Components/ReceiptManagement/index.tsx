@@ -6,7 +6,7 @@ import type {
 } from 'src/redux/invoiceAndReceipt/feeReceiptApi';
 
 import dayjs from 'dayjs';
-import { Box } from '@mui/material';
+import { Alert, Box, Button } from '@mui/material';
 import { useSelector } from 'react-redux';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomSelect from 'src/components/custom-select';
@@ -148,18 +148,21 @@ const ReceiptManagement = () => {
   }, [currentYear?.id, isReady, filterPayload, selectedMonth, selectedKind, search, filters, skipCount, maxResultCount]);
 
   const {
-    data,
+    currentData,
     isLoading: isReceiptListLoading,
     isFetching: isReceiptListFetching,
+    error: receiptListError,
+    refetch: refetchReceipts,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetFeeReceiptListQuery,
     params: queryParams,
     options: { skip: queryParams === null },
+    popupConfig: { error: false },
   });
 
-  const tableData: FeeReceiptListItem[] = data?.items ?? [];
-  const totalCount: number = data?.totalCount ?? 0;
+  const tableData: FeeReceiptListItem[] = currentData?.items ?? [];
+  const totalCount: number = currentData?.totalCount ?? 0;
 
   // ── Columns ───────────────────────────────────────────────────────────────
 
@@ -320,6 +323,15 @@ const ReceiptManagement = () => {
         />
       </Box>
 
+      {receiptListError && currentData && (
+        <Alert
+          severity="error"
+          action={<Button color="inherit" size="small" onClick={() => refetchReceipts()}>Retry</Button>}
+        >
+          Unable to refresh receipts. Showing the last loaded results.
+        </Alert>
+      )}
+
       {/* ── Table ────────────────────────────────────────────────────────────── */}
       <CustomizableTable
         getRowAction={(row) => ({
@@ -333,7 +345,9 @@ const ReceiptManagement = () => {
         exportLabel="Export current page"
         columns={columns}
         data={tableData}
-        isLoading={isReceiptListLoading || isReceiptListFetching}
+        isLoading={isReceiptListLoading || (isReceiptListFetching && !currentData)}
+        error={currentData ? undefined : receiptListError}
+        onRetry={() => refetchReceipts()}
         serverSidePagination
         serverSideSearch
         serverSideFilter

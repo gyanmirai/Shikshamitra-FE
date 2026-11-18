@@ -27,6 +27,7 @@ vi.mock('react-redux', () => ({
 vi.mock('src/redux/confirmPopup/confirmPopupSlice', () => ({ setIsChanges: vi.fn() }));
 vi.mock('src/hooks/useAccountSettingPermissions', () => ({
   useAccountSettingPermissions: () => ({
+    canView: true,
     canAdd: true,
     canEdit: true,
     canChangeStatus: true,
@@ -44,7 +45,7 @@ vi.mock('src/redux/customQueryAndMutation', () => ({
 }));
 vi.mock('src/redux/finance/incomeCategory', () => ({
   useGetIncomeCategoriesQuery: () => ({
-    data: {
+    currentData: {
       items: [
         {
           id: 'income',

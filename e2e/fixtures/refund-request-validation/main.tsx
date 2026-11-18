@@ -11,13 +11,23 @@ import RefundForm from 'src/screens/finance/feeRefund/NewRefundForm/RefundForm';
 import RefundRemarksForm from 'src/screens/finance/feeRefund/Components/RefundRemarksForm';
 import RefundWorklist from 'src/screens/finance/feeRefund/Components/RefundWorklist';
 import 'simplebar-react/dist/simplebar.min.css';
-import { getSubmittedRefund } from './mock-api';
+import {
+  getSavedRefund,
+  getLiveContext,
+  getSubmittedRefund,
+  initializeLiveContext,
+} from './mock-api';
 
 const store = configureStore({
   reducer: () => ({
     confirmPopup: { isChanges: false },
     globalState: {
-      currentYear: { id: 'year', name: '2026–27', startDate: '2026-04-01', endDate: '2027-03-31' },
+      currentYear: {
+        id: getLiveContext()?.academicYearId ?? 'year',
+        name: '2026–27',
+        startDate: '2026-04-01',
+        endDate: '2027-03-31',
+      },
     },
     auth: {
       permissions: [
@@ -29,6 +39,7 @@ const store = configureStore({
 });
 
 function Fixture() {
+  const liveContext = getLiveContext();
   const requestView = new URLSearchParams(window.location.search).get('view') === 'approved';
   const worklistView = new URLSearchParams(window.location.search).get('view') === 'worklist';
   const [saved, setSaved] = React.useState(false);
@@ -39,8 +50,9 @@ function Fixture() {
         <CssBaseline />
         <Box sx={{ height: '100dvh', display: 'flex', flexDirection: 'column', minWidth: 0 }}>
           <Alert severity="info">
-            Local regression harness · Synthetic student, receipt and payment data. No backend
-            writes.
+            {liveContext
+              ? 'Local API regression harness · Disposable synthetic database writes.'
+              : 'Local regression harness · Synthetic student, receipt and payment data. No backend writes.'}
           </Alert>
           <Typography variant="h5" sx={{ p: 2 }}>
             {worklistView
@@ -52,10 +64,25 @@ function Fixture() {
           <Button onClick={() => setViewRefund(true)}>View synthetic refund request</Button>
           {saved && (
             <>
-              <Alert severity="success">Synthetic cash refund completed.</Alert>
-              <output aria-label="Submitted refund payload">
+              <Alert severity="success">
+                {liveContext
+                  ? 'Local API refund request saved.'
+                  : 'Synthetic cash refund completed.'}
+              </Alert>
+              <output
+                aria-label="Submitted refund payload"
+                style={{ overflowWrap: 'anywhere', minWidth: 0 }}
+              >
                 {JSON.stringify(getSubmittedRefund())}
               </output>
+              {liveContext && (
+                <output
+                  aria-label="Saved API refund"
+                  style={{ overflowWrap: 'anywhere', minWidth: 0 }}
+                >
+                  {JSON.stringify(getSavedRefund())}
+                </output>
+              )}
             </>
           )}
           {worklistView && (
@@ -124,4 +151,11 @@ function Fixture() {
   );
 }
 
-createRoot(document.getElementById('root')!).render(<Fixture />);
+initializeLiveContext()
+  .then(() => {
+    store.dispatch({ type: 'fixture/live-context-ready' });
+    createRoot(document.getElementById('root')!).render(<Fixture />);
+  })
+  .catch(() => {
+    createRoot(document.getElementById('root')!).render(<p>Local API test server unavailable.</p>);
+  });

@@ -1,11 +1,11 @@
 'use client';
 
 import dayjs from 'dayjs';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { alpha, useTheme } from '@mui/material/styles';
+import CustomTooltip from 'src/components/custom-tooltip';
 import {
   Box,
   Stack,
@@ -20,6 +20,7 @@ import {
 } from '@mui/material';
 
 import VersionDiffTable from './VersionDiffTable';
+import { materializePolicyVersion } from '../../utils/policy-version-page';
 
 import type { PolicyVersion } from '../../hooks/useFinancePolicyVersion';
 import type { VersionValueContext } from './finance-policy-version-formatters';
@@ -75,12 +76,13 @@ export default function PolicyAuditTimeline({
 }) {
   const theme = useTheme();
   const [collapsedDates, setCollapsedDates] = useState<Set<string>>(new Set());
-  const grouped = versions.reduce<Record<string, PolicyVersion[]>>((groups, version) => {
+  const [expandedEvents, setExpandedEvents] = useState<Set<string>>(new Set());
+  const grouped = useMemo(() => versions.reduce<Record<string, PolicyVersion[]>>((groups, version) => {
     const date = dayjs(version.createdAt);
     const key = date.isValid() ? date.format('YYYY-MM-DD') : 'unknown';
     (groups[key] ||= []).push(version);
     return groups;
-  }, {});
+  }, {}), [versions]);
 
   const toggleDate = (date: string) => {
     setCollapsedDates((previous) => {
@@ -162,7 +164,9 @@ export default function PolicyAuditTimeline({
                     const timestamp = dayjs(version.createdAt);
                     const actor = version.actor || 'System';
                     const action = version.action.toLowerCase();
-                    const hasChanges = version.changedFields.length > 0;
+                    const eventExpanded = expandedEvents.has(version.eventId);
+                    const inspected = eventExpanded ? materializePolicyVersion(version) : version;
+                    const hasChanges = version.snapshotJson !== undefined || inspected.changedFields.length > 0;
                     return (
                       <Stack key={version.eventId} direction="row" spacing={1} alignItems="stretch">
                         <Stack alignItems="center" sx={{ width: 58, flexShrink: 0 }}>
@@ -198,6 +202,13 @@ export default function PolicyAuditTimeline({
                         </Stack>
                         <Accordion
                           disableGutters
+                          expanded={eventExpanded}
+                          onChange={(_event, isExpanded) => setExpandedEvents((previous) => {
+                            const next = new Set(previous);
+                            if (isExpanded) next.add(version.eventId);
+                            else next.delete(version.eventId);
+                            return next;
+                          })}
                           sx={{
                             flex: 1,
                             minWidth: 0,
@@ -286,7 +297,9 @@ export default function PolicyAuditTimeline({
                                   sx={{ mt: 0.5 }}
                                 >
                                   {hasChanges
-                                    ? `${version.changedFields.length} ${version.changedFields.length === 1 ? 'field changed' : 'fields changed'} · View changes`
+                                    ? version.snapshotJson !== undefined && !eventExpanded
+                                      ? 'View recorded changes'
+                                      : `${inspected.changedFields.length} ${inspected.changedFields.length === 1 ? 'field changed' : 'fields changed'} · View changes`
                                     : 'No changes recorded'}
                                 </Typography>
                               </Box>
@@ -316,11 +329,11 @@ export default function PolicyAuditTimeline({
                             >
                               {version.changeReason || 'No reason recorded'}
                             </Typography>
-                            <VersionDiffTable
-                              selectedVersion={version}
+                            {eventExpanded && <VersionDiffTable
+                              selectedVersion={inspected}
                               valueContext={valueContext}
                               showSummary={false}
-                            />
+                            />}
                           </AccordionDetails>
                         </Accordion>
                       </Stack>

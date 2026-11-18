@@ -4,7 +4,7 @@ import { financePermissions } from 'src/constants/finance-menu';
 
 import RefundWorklist from './RefundWorklist';
 
-const mocks = vi.hoisted(() => ({ actions: ['edit'], grants: true, edit: vi.fn(), view: vi.fn() }));
+const mocks = vi.hoisted(() => ({ actions: ['edit'], grants: true, edit: vi.fn(), view: vi.fn(), list: vi.fn() }));
 vi.mock('react-redux', () => ({
   useSelector: (select: any) =>
     select({
@@ -65,7 +65,9 @@ vi.mock('src/components/customizabaleTable', () => ({
   ),
 }));
 vi.mock('src/redux/finance/RefundManagement/feeRefundManage', () => ({
-  useGetFeeRefundsQuery: ({ status }: any) => {
+  useGetFeeRefundsQuery: (params: any) => {
+    mocks.list(params);
+    const { status } = params;
     const result = {
       totalCount: 1,
       statusCounts: { 0: 2, 2: 1, 7: 12 },
@@ -115,6 +117,22 @@ describe('refund worklist editing', () => {
     render(<Worklist />);
     expect(screen.getByRole('tab', { name: /Completed.*12/ })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: /Pending.*2/ })).toBeInTheDocument();
+  });
+
+  it('scopes the worklist to the selected academic board', () => {
+    render(
+      <RefundWorklist
+        filters={{ isReady: true, filterPayload: { boardId: 'board-1', educationMediumId: 'medium-1' } } as any}
+        onEdit={mocks.edit}
+        onView={mocks.view}
+        onApprove={vi.fn()}
+        onReject={vi.fn()}
+        onRecord={vi.fn()}
+        onReplace={vi.fn()}
+        onReturn={vi.fn()}
+      />
+    );
+    expect(mocks.list).toHaveBeenCalledWith(expect.objectContaining({ boardId: 'board-1' }));
   });
 
   it('opens the selected saved refund through the server-authorized Edit action', () => {

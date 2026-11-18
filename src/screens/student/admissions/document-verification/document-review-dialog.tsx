@@ -7,29 +7,14 @@ import { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { EmptyContent } from 'src/components/empty-content';
 import { StudentFeedback } from 'src/components/student-feedback';
+import { Box, Button, Typography, DialogActions } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import {
-  Box,
-  Stack,
-  Button,
-  Accordion,
-  Typography,
-  DialogActions,
-  AccordionSummary,
-  AccordionDetails,
-} from '@mui/material';
 
-import { DocumentStatusLabel } from './document-status';
 import { getDocumentTableFile } from './document-table-model';
 import { DocumentActionDialog } from './document-action-dialog';
 import { useDocumentActionForm } from './use-document-action-form';
 import { DocumentPreviewContent } from './document-preview-content';
-import { DocumentEvidenceHistory } from './document-evidence-history';
-import {
-  getDocumentReviewActions,
-  documentReviewActionIcons,
-  documentReviewActionLabels,
-} from './document-review-model';
+import { getDocumentReviewActions, documentReviewActionIcons } from './document-review-model';
 
 import type { DocumentAction } from './document-action-model';
 import type { useDocumentPermissions } from './use-document-permissions';
@@ -84,7 +69,9 @@ export function DocumentReviewDialog({
         disableClose={formik.isSubmitting || Boolean(action)}
         maxWidth="lg"
         hasForm={false}
-        paperProps={{ sx: { height: '85dvh' } }}
+        // A viewport bound avoids the shared wrapper inheriting and subtracting
+        // the Dialog's percentage-based max-height a second time.
+        paperProps={{ sx: { height: '85dvh', maxHeight: 'calc(100dvh - 64px)' } }}
       >
         <Box
           component="fieldset"
@@ -106,22 +93,11 @@ export function DocumentReviewDialog({
               gap: 1.5,
             }}
           >
-            <Stack direction="row" alignItems="center" useFlexGap flexWrap="wrap" gap={1}>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ flex: 1, minWidth: 0, overflowWrap: 'anywhere' }}
-              >
-                {latest
-                  ? `${latest.fileName || (latest.kind === 'original' ? 'Physical Original Recorded' : 'Requirement Waived')} · Version ${latest.versionNumber}`
-                  : current.name}
+            {file?.fileName && (
+              <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>
+                {file.fileName}
               </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {current.isRequired ? 'Required' : 'Optional'}
-              </Typography>
-              <DocumentStatusLabel status={current.status} />
-            </Stack>
-            {current.description && <Typography variant="body2">{current.description}</Typography>}
+            )}
             {error && (
               <StudentFeedback
                 notificationKey="STU-0320"
@@ -133,9 +109,9 @@ export function DocumentReviewDialog({
             )}
             <Box
               sx={{
-                flex: '1 0 300px',
+                flex: 1,
                 minWidth: 0,
-                minHeight: 300,
+                minHeight: { xs: 180, sm: 240 },
                 display: 'flex',
                 flexDirection: 'column',
               }}
@@ -145,7 +121,7 @@ export function DocumentReviewDialog({
                   key={file.id}
                   evidence={file}
                   name={current.name}
-                  showFileName={file.id !== latest?.id}
+                  showFileName={false}
                 />
               ) : (
                 <EmptyContent
@@ -162,57 +138,13 @@ export function DocumentReviewDialog({
                 />
               )}
             </Box>
-            {actions.some((item) => item !== 'accept' && item !== 'reject') && (
-              <Stack direction="row" gap={1} useFlexGap flexWrap="wrap">
-                {actions
-                  .filter((item) => item !== 'accept' && item !== 'reject')
-                  .map((item) => (
-                    <Button
-                      key={item}
-                      size="small"
-                      variant="outlined"
-                      disabled={locked}
-                      startIcon={<Iconify icon={documentReviewActionIcons[item]} />}
-                      onClick={() => chooseAction(item)}
-                    >
-                      {item === 'upload' && file
-                        ? 'Upload Replacement'
-                        : documentReviewActionLabels[item]}
-                    </Button>
-                  ))}
-              </Stack>
-            )}
-            {snapshot.summary.policy?.requireIndependentReview && (
-              <Typography variant="caption" color="text.secondary">
-                A different authorized reviewer must check collected evidence.
-              </Typography>
-            )}
-            {current.evidence.length > 0 && (
-              <Accordion
-                disableGutters
-                variant="outlined"
-                sx={{ boxShadow: 'none', flexShrink: 0 }}
-              >
-                <AccordionSummary expandIcon={<Iconify icon="mdi:chevron-down" />}>
-                  <Typography variant="subtitle2">
-                    Evidence History ({current.evidence.length})
-                  </Typography>
-                </AccordionSummary>
-                <AccordionDetails>
-                  <DocumentEvidenceHistory
-                    evidence={current.evidence}
-                    allowDownload={permissions.download}
-                  />
-                </AccordionDetails>
-              </Accordion>
-            )}
           </DialogScrollContent>
         </Box>
-        <DialogActions>
+        <DialogActions sx={{ px: 2, py: 1, flexWrap: 'wrap' }}>
           <Button
             size="small"
             variant="outlined"
-            disabled={locked}
+            disabled={formik.isSubmitting || Boolean(action)}
             startIcon={<Iconify icon="mdi:close" />}
             onClick={onClose}
             sx={{ mr: 'auto' }}

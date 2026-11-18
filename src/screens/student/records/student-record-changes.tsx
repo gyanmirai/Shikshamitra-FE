@@ -17,6 +17,7 @@ import { hasGrantedPermission } from 'src/utils/permissions';
 import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
@@ -65,6 +66,23 @@ export const changeSections: { value: RecordSection; label: string }[] = [
   { value: 'photo', label: 'Student photo' },
   { value: 'custom-details', label: 'School details captured at admission' },
 ];
+
+const grApplyConflicts: Record<string, string> = {
+  'Students:Records:GrAutoPreviewChanged':
+    'The proposed GR number is no longer available. Open the student profile to review a new proposal.',
+  'Students:Records:GrAlreadyAssigned':
+    'This student already has a GR number. Open the student profile to see the assignment.',
+  'Students:Records:GrAssignmentIneligible':
+    'This student is no longer eligible for GR number assignment. Review the current student record.',
+  'Students.Onboarding.IdentifierAlreadyAllocated':
+    'The proposed GR number is already assigned. Verify the school register or review a new automatic proposal.',
+  'Students:Records:StaleSnapshot':
+    'The student record changed before this request could be applied. Review the current student profile.',
+  'Students:Records:AuthorityChanged':
+    'The authorization for this GR number request changed. Contact an administrator to review access.',
+  'Students:Records:ConcurrencyConflict':
+    'The GR number could not be assigned because another update changed the record. Review the current student profile.',
+};
 
 export default function StudentRecordChanges() {
   const router = useRouter();
@@ -140,7 +158,7 @@ export default function StudentRecordChanges() {
     if (!decision || !current || !decisionReason.trim()) return;
     setFailure(null);
     try {
-      await decide({
+      const result = await decide({
         id: current.id,
         command: decision,
         concurrencyStamp: current.concurrencyStamp,
@@ -148,10 +166,20 @@ export default function StudentRecordChanges() {
       }).unwrap();
       setDecision(null);
       setDecisionReason('');
-      shikshaMitraToast.success({ message: 'Review decision recorded.' });
-    } catch {
+      if (result.section !== 'gr-number' || result.status !== 'Conflict') {
+        shikshaMitraToast.success({ message: 'Review decision recorded.' });
+      }
+    } catch (error) {
+      const { errorCode } = parseApiProblemDetail(error);
+      const grConflict =
+        current.section === 'gr-number' &&
+        errorCode &&
+        (errorCode === 'Students:Records:ConcurrencyConflict'
+          ? 'This request changed while you were reviewing it. Refresh the request and review the latest details.'
+          : grApplyConflicts[errorCode]);
       setFailure(
-        'The decision could not be recorded. This request may have changed or need a different reviewer. Refresh and retry.'
+        grConflict ||
+          'The decision could not be recorded. This request may have changed or need a different reviewer. Refresh and retry.'
       );
     }
   };
@@ -370,7 +398,9 @@ export default function StudentRecordChanges() {
                     id: 'section',
                     label: 'Record section',
                     render: (value) =>
-                      changeSections.find((item) => item.value === value)?.label ?? value,
+                      value === 'gr-number'
+                        ? recordFieldLabel(value)
+                        : (changeSections.find((item) => item.value === value)?.label ?? value),
                   },
                   {
                     id: 'status',
@@ -478,8 +508,9 @@ export default function StudentRecordChanges() {
                 </Typography>
                 <Typography variant="body2">{current.reason}</Typography>
                 <Typography variant="caption">
-                  Effective: {fDateTime(current.effectiveAt, formatStr.split.dateTime)} · Reviews:{' '}
-                  {current.approvalCount}/{current.requiredApprovals}
+                  {current.section !== 'gr-number' &&
+                    `Effective: ${fDateTime(current.effectiveAt, formatStr.split.dateTime)} · `}
+                  Reviews: {current.approvalCount}/{current.requiredApprovals}
                 </Typography>
                 {current.exceptionCode && (
                   <StudentFeedback
@@ -487,8 +518,10 @@ export default function StudentRecordChanges() {
                     presentation="persistent"
                     severity="warning"
                   >
-                    This change needs attention before it can apply. Review the current student
-                    record and submit a correction if necessary.
+                    {current.section === 'gr-number'
+                      ? (grApplyConflicts[current.exceptionCode] ??
+                        'The GR number could not be assigned. Review the current student profile.')
+                      : 'This change needs attention before it can apply. Review the current student record and submit a correction if necessary.'}
                   </StudentFeedback>
                 )}
                 {current.photoPreviewUrl && !current.payloadMasked && (
@@ -536,7 +569,7 @@ export default function StudentRecordChanges() {
                         (customDetails.isFetching || customDiff.isLoading)
                       }
                       data={
-                        current.section === 'custom-details'
+                        current.section === 'custom-details' || current.section === 'gr-number'
                           ? customDiff.diffs.map((item, index) => ({
                               id: String(index),
                               field: item.label,
@@ -625,7 +658,7 @@ export default function StudentRecordChanges() {
                 hasGrantedPermission(permissions, 'Students.Records.Changes.Add') && (
                   <Button onClick={() => setDecision('cancel')}>Cancel request</Button>
                 )}
-              {current?.status === 'Applied' && canCreate && (
+              {current?.status === 'Applied' && current.section !== 'gr-number' && canCreate && (
                 <Button
                   component={RouterLink}
                   href={recordsQueryUrl(pathname, '', {

@@ -534,6 +534,7 @@ export const feeCollectionApi = financeModuleApi.injectEndpoints({
         const admissionAccountId =
           collection?.financeFeeAccountId ?? collection?.data?.financeFeeAccountId;
         return [
+          ...(!error ? [financeModuleType.studentFeeAssignment] : []),
           receiptType.receipt,
           financeModuleType.feeCollection,
           financeModuleType.feeDetails,
@@ -562,6 +563,7 @@ export const feeCollectionApi = financeModuleApi.injectEndpoints({
         body,
       }),
       invalidatesTags: [
+        financeModuleType.studentFeeAssignment,
         financeModuleType.feeCollection,
         financeModuleType.feeDetails,
         financeModuleType.charges,

@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react';
+import type { FormikProps } from 'formik';
+import type { AdmissionForm, CreateUpdateAdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
 
 import { vi, it, expect } from 'vitest';
 import userEvent from '@testing-library/user-event';
@@ -8,6 +10,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { defaultSettings } from 'src/components/settings/config-settings';
 
 import { AdmissionFormDialog } from './admission-form-dialog';
+import { getBlankAdmissionFormInitialValues } from './form-dialog/form-dialog-model';
 
 const dispatch = vi.hoisted(() => vi.fn());
 vi.mock('react-redux', () => ({
@@ -27,6 +30,19 @@ vi.mock('./form-dialog/form-builder-sections', () => ({
 }));
 vi.mock('./form-dialog/components/form-builder-review', () => ({
   FormBuilderReview: () => <h2>Review draft</h2>,
+}));
+vi.mock('./form-dialog/components/form-builder-print-layout', () => ({
+  FormBuilderPrintLayout: ({ formik }: { formik: FormikProps<CreateUpdateAdmissionForm> }) => (
+    <>
+      <h2>Print layout preview</h2>
+      <label htmlFor="print-photo">
+        Show student photo
+        <input id="print-photo" type="checkbox" checked={formik.values.printSettings?.showPhoto ?? true}
+          onChange={(event) => formik.setFieldValue('printSettings.showPhoto', event.target.checked)} />
+      </label>
+      <button type="button" onClick={() => formik.setFieldValue('name', '')}>Clear earlier required name</button>
+    </>
+  ),
 }));
 
 it('keeps the form draft on Keep editing and discards only after an explicit styled decision', async () => {
@@ -90,7 +106,7 @@ it.each([
     expect(screen.getByRole('heading', { name: new RegExp(`Create ${type} Form`) })).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Continue' }));
     await screen.findByRole('heading', { name: 'Build fields' });
-    await user.click(screen.getByRole('button', { name: 'Save Draft' }));
+    await user.click(screen.getByRole('button', { name: 'Save draft' }));
     await waitFor(() =>
       expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ name, purpose }))
     );
@@ -130,9 +146,54 @@ it.each([
     await user.click(screen.getByRole('button', { name: 'Continue' }));
     await screen.findByRole('heading', { name: 'Review draft' });
     expect(screen.getByRole('heading', { name: new RegExp(`Create ${type} Form`) })).toBeVisible();
-    await user.click(screen.getByRole('button', { name: 'Publish Now' }));
+    if (purpose === 1) {
+      expect(screen.queryByRole('button', { name: 'Publish now' })).not.toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'Continue' }));
+      await screen.findByRole('heading', { name: 'Print layout preview' });
+      expect(onPublishNow).not.toHaveBeenCalled();
+    } else {
+      expect(screen.queryByRole('heading', { name: 'Print layout preview' })).not.toBeInTheDocument();
+    }
+    await user.click(screen.getByRole('button', { name: 'Publish now' }));
     await waitFor(() =>
       expect(onPublishNow).toHaveBeenCalledWith(expect.objectContaining({ purpose }))
     );
   }
 );
+
+it('restores print choices on reopen, retains them across Back and saves the changed draft', async () => {
+  const user = userEvent.setup();
+  const onSave = vi.fn().mockResolvedValue(undefined);
+  const editing = {
+    ...getBlankAdmissionFormInitialValues(1), id: 'form', name: 'Registration', version: 1,
+    sectionCount: 1, status: 0,
+    printSettings: { layout: 'spacious', paperSize: 'A4', showSchoolHeader: true, showPhoto: false, showSignature: true },
+  } as AdmissionForm;
+  render(<ThemeProvider theme={createTheme(defaultSettings)}><AdmissionFormDialog open editing={editing} saving={false} onClose={vi.fn()} onSave={onSave} onPublishNow={vi.fn()} /></ThemeProvider>);
+  await user.click(screen.getByRole('button', { name: 'Continue' }));
+  await user.click(screen.getByRole('button', { name: 'Continue' }));
+  await user.click(screen.getByRole('button', { name: 'Continue' }));
+  const photo = await screen.findByRole('checkbox', { name: 'Show student photo' });
+  expect(photo).not.toBeChecked();
+  await user.click(photo);
+  await user.click(screen.getByRole('button', { name: 'Back' }));
+  await screen.findByRole('heading', { name: 'Review draft' });
+  await user.click(screen.getByRole('button', { name: 'Continue' }));
+  expect(await screen.findByRole('checkbox', { name: 'Show student photo' })).toBeChecked();
+  await user.click(screen.getByRole('button', { name: 'Save draft' }));
+  await waitFor(() => expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ printSettings: { ...editing.printSettings, template: 'simple', showPhoto: true } })));
+});
+
+it('revalidates earlier stages before publishing from Print layout', async () => {
+  const user = userEvent.setup();
+  const onPublishNow = vi.fn();
+  const editing = { ...getBlankAdmissionFormInitialValues(1), id: 'form', name: 'Registration', version: 1, sectionCount: 1, status: 0 } as AdmissionForm;
+  render(<ThemeProvider theme={createTheme(defaultSettings)}><AdmissionFormDialog open editing={editing} saving={false} onClose={vi.fn()} onSave={vi.fn()} onPublishNow={onPublishNow} /></ThemeProvider>);
+  await user.click(screen.getByRole('button', { name: 'Continue' }));
+  await user.click(screen.getByRole('button', { name: 'Continue' }));
+  await user.click(screen.getByRole('button', { name: 'Continue' }));
+  await user.click(await screen.findByRole('button', { name: 'Clear earlier required name' }));
+  await user.click(screen.getByRole('button', { name: 'Publish now' }));
+  expect(onPublishNow).not.toHaveBeenCalled();
+  expect(screen.getByRole('heading', { name: 'Print layout preview' })).toBeVisible();
+});

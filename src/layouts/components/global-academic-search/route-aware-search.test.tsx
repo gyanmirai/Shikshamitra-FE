@@ -6,9 +6,9 @@ import RouteAwareAcademicSearch from './route-aware-search';
 const state = vi.hoisted(() => ({ pathname: '/setting', renderSearch: vi.fn() }));
 vi.mock('next/navigation', () => ({ usePathname: () => state.pathname }));
 vi.mock('./index', () => ({
-  default: () => {
-    state.renderSearch();
-    return <button type="button">Global academic context</button>;
+  default: ({ hidden = false }: { hidden?: boolean }) => {
+    state.renderSearch(hidden);
+    return hidden ? null : <button type="button">Global academic context</button>;
   },
 }));
 beforeEach(() => vi.clearAllMocks());
@@ -41,6 +41,16 @@ describe('global academic context in the authenticated header', () => {
     expect(view.container).toBeEmptyDOMElement();
     expect(state.renderSearch).not.toHaveBeenCalled();
   });
+
+  it.each(['/finance/dashboard', '/finance/dashboard/'])(
+    'keeps context mounted without a selector on %s',
+    (pathname) => {
+      state.pathname = pathname;
+      const view = render(<RouteAwareAcademicSearch />);
+      expect(view.container).toBeEmptyDOMElement();
+      expect(state.renderSearch).toHaveBeenCalledWith(true);
+    }
+  );
 
   it.each([
     '/dashboard',

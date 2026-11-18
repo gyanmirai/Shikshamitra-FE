@@ -10,6 +10,7 @@ export default defineConfig({
   cacheDir: `${repo}/tmp/account-settings-qa-vite`,
   resolve: {
     alias: [
+      { find: /^src\/redux\/finance\/BankAccountManage\/bankAccountActivityApi$/, replacement: `${here}/mock-activity.ts` },
       { find: 'next/navigation', replacement: `${here}/mock-navigation.tsx` },
       { find: /^@mui\/icons-material$/, replacement: `${here}/icon-barrel.ts` },
       { find: /^src\/routes\/(components|hooks)$/, replacement: `${here}/mock-navigation.tsx` },

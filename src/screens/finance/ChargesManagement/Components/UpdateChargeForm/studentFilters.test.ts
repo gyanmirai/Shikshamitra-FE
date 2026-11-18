@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   emptyStudentFilters,
   filterChargeStudents,
+  keepValidDivisionFilter,
   toggleFilteredStudents,
 } from './studentFilters';
 
@@ -59,6 +60,14 @@ describe('charge student filters', () => {
     expect(filterChargeStudents(unknown, '', { ...emptyStudentFilters, gender: '1' })).toEqual([]);
     expect(filterChargeStudents(unknown, '', { ...emptyStudentFilters, rollFrom: '1' })).toEqual(
       []
+    );
+  });
+  it('clears a hidden division filter after the class scope changes', () => {
+    const selected = { ...emptyStudentFilters, division: 'division-a' };
+    expect(keepValidDivisionFilter(selected, ['class-a'], ['division-a'])).toBe(selected);
+    expect(keepValidDivisionFilter(selected, ['class-b'], ['division-b']).division).toBe('');
+    expect(keepValidDivisionFilter(selected, ['class-a', 'class-b'], ['division-a']).division).toBe(
+      ''
     );
   });
 });

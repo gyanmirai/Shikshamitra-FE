@@ -3,12 +3,53 @@ module: student
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-11-17
+updated_on: 2026-11-18
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Validate Student Enrollment Admissions changes
+
+## Inquiry Row Action Menu
+
+Run `inquiry-management/admission-inquiry-columns.test.ts`, `admission-inquiry-actions.ui.test.tsx`, `use-inquiry-handoff.test.ts` and the shared AdaptiveThreeDotsActions/ThreeDotsActions suites. Verify concise Move to Next Stage and Handling History menu labels, unchanged selected-record callbacks, permissions, disabled reasons and progress. The Inquiry menu opens below its trigger with a theme-spacing gap and a right-aligned arrow; insufficient space below opens it above. Check top and bottom rows at 390/768/1440px in both themes, deferred icon sizing, keyboard focus/activation/Escape and no document overflow. Use synthetic callbacks for browser geometry checks; do not advance real inquiries for presentation verification.
+
+On 18 November 2026, 52 focused tests, full TypeScript, scoped lint/format and Student docs validation pass. Isolated in-app-browser checks at 390/768/1440px verify contained menus, visible arrows, above/below placement, keyboard activation/Escape and unchanged selected-record callbacks; both themes were inspected. Browser geometry confirms no intersection with the originating row's action buttons and no horizontal document overflow. No real inquiry is advanced; deployed acceptance remains separate.
+
+## Compact approval and finalization
+
+Run `application-admission-review.test.tsx`, `application-decision-card.test.tsx`, `admission-application-detail.test.tsx`, `application-finalization-dialog.test.tsx`, `application-finalized-summary.test.tsx` and `admission-approve-finalize-api.test.ts`. Cover terminal/nonterminal routing, approved completed workflows ending at other stage types, missing readiness/permissions, explicit duplicate resolution, footer recovery outside the busy fieldset, committed cache updates without summary mounting, failed submission retention and the combined command contract. Legacy finalization remains separately covered. Use only QA applicants for browser saves; do not change school configuration or collect fees.
+
+## Compact Document Verification
+
+Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vitest/vitest.mjs run src/screens/student/admissions/document-verification --pool=threads --maxWorkers=1` for table/card guidance, permission-aware More actions, protected previews and PDF fallback, required rejection reasons, pinned evidence/concurrency, upload duplicate-click locks and failure/retry draft retention. Check preview and History at 390×844, 768×1024 and 1440×900 in both themes: contained images, reachable compact footer, no horizontal page overflow and focus restoration to More. Isolated browser fixtures verify layout and UI interaction only; finish authenticated acceptance in the Codex in-app browser when its control tool is available.
+
+## Registration print checks
+
+Run the focused print, Pipeline action and builder tests from the frontend repository:
+
+```powershell
+node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vitest/vitest.mjs run src/screens/student/admissions/form-print src/screens/student/admissions/pipeline/admission-pipeline-print.test.tsx src/screens/student/admissions/admission-form-dialog.test.tsx src/screens/student/admissions/form-dialog/form-dialog-model.test.ts src/screens/student/admissions/form-dialog/form-wizard-model.test.ts src/screens/student/admissions/form-dialog/hooks/use-admission-form-wizard.test.tsx --pool=threads --maxWorkers=1 --testTimeout=20000
+npm run ts
+npm run docs:check
+```
+
+Cover legacy Simple versus new Boxed Grid defaults, Structured Classic persistence, template/spacing independence, the Registration fourth step and unchanged Inquiry flow, settings payloads, saved versus suggested answers (including empty `persistedValues`), explicit save versus last-saved decisions, failed saves and duplicate-save locks.
+Exercise translated static/dynamic choices, selected siblings beyond the first result page, repeated dependent choices, visibility, blank-answer isolation, frozen Inquiry context and actual PDF page flow.
+Hook tests cover failed/retried branding and options, source changes, stale generation, disabled/re-enabled requests, unmount cleanup and object-URL revocation.
+These commands describe required checks; record the actual executed result separately.
+
+Finish browser acceptance in the Codex in-app browser at desktop, tablet and 390px widths in both themes: permission-aware Pipeline/Form entry points, saved/unsaved/readonly forms, language/scope controls, loading/error/empty states, keyboard access and no horizontal overflow.
+Inspect downloaded Compact/Spacious A4 PDFs with English, Gujarati and Hindi content over multiple physical pages; native print-dialog behavior and physical printer output require their own acceptance.
+Backend persistence and authorization checks are owned by the [Student backend test guide](../../../Shikshamitra-BE/docs/modules/student/testing.md#registration-print-validation).
+
+Local acceptance on 17 November 2026 used the user-approved Playwright fallback because the Codex browser-control tool was unavailable. The recommended **QA Registration Print 17 Nov** form retained Spacious/A4 settings after Save draft, reload, Edit and publishing. An isolated **PrintQA Sample / APP-024** application verified both Pipeline print actions, unchanged saved answers after Use saved details, explicit Save and preview, saved-answer reopening, two-page full output, one-page Family output and a 390px dialog without horizontal overflow. Downloaded PDFs confirm that blank output excludes saved answers and unsaved edits appear only after saving. Artifacts are ignored under `.artifacts/registration-print-browser-results/`. Headless native printing created the PDF iframe but subsequently crashed the test page; subsequent native Windows inspection stopped automatically because it could not verify the browser URL. Native-dialog and physical-printer acceptance remain separate from PDF-generation evidence.
+
+Native follow-up on the same date opened Chrome's real print dialog from Pipeline, but its preview remained Loading preview with the configured local printer. A controlled PDF-page rendering probe also stalled; PDF-viewer timing is therefore not a confirmed cause, and the experimental replacement was removed. Windows Computer Use again stopped because it could not verify the browser URL. All four blank/filled Pipeline/Registration native-dialog cases remain unverified. The next manual diagnostic is to select Save as PDF and check whether the preview renders, without sending a printer job. Local evidence is under `.artifacts/registration-print-native/` and `.artifacts/native-print-browser.log`.
+
+The user subsequently confirmed that all four Pipeline/Registration blank/filled native previews render correctly with Save as PDF in the regular browser. Automated Chrome still stalled with that destination; this does not prove a printer-driver root cause or physical-printer acceptance. The restored printing implementation passes its 55 focused tests; no experimental print-path replacement remains.
+
+Boxed-template acceptance on 17 November 2026 passes 166 focused frontend cases and 60 backend print/branding cases. The real-PDF matrix covers all three templates, blank/filled answers, Compact/Spacious spacing, long branding, multilingual text, photos, repeated/long answers and page footers. Local Playwright created the recommended **QA Boxed Print 17 Nov** Registration, saved/reloaded/reopened Structured Classic + Spacious, changed/saved/reloaded/reopened Boxed Grid + Compact and published it through the table action. Downloads contain every configured section over two Boxed/Compact pages and three Classic/Spacious pages. A 390px preview has no document overflow. The browser used the rebuilt isolated API on 44335 through a request proxy for the affected existing endpoints, leaving the shared 44332 API untouched. Existing APP-024 Pipeline blank/filled output remains available. Evidence is ignored under `.artifacts/boxed-print/`; these checks do not claim new physical-printer acceptance.
 
 ## Visual studio and cardholder photo edits (16 November 2026)
 

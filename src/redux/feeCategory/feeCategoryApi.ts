@@ -76,6 +76,14 @@ export interface IFeeCategoryStatusUpdateBody {
 
 export const feeCategoryApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
+    getFeeCategoryOptions: builder.query<
+      { items: { id: string; name: string; isActive: boolean }[] },
+      { academicYearId: string; selectedId?: string }
+    >({
+      query: (params) => ({ url: '/fee-categories/options', params }),
+      transformResponse: (items: { id: string; name: string; isActive: boolean }[]) => ({ items }),
+      providesTags: [financeModuleType.feeCategory],
+    }),
     // Get fee category list
     getFeeCategories: builder.query<IFeeCategoryListResponse, Record<string, unknown>>({
       query: (params) => ({
@@ -109,6 +117,7 @@ export const feeCategoryApi = financeModuleApi.injectEndpoints({
         },
       }),
       invalidatesTags: [
+        financeModuleType.studentFeeAssignment,
         financeModuleType.feeCategory,
         financeModuleType.feeHead,
         financeModuleType.incomeCategoryData,
@@ -129,6 +138,7 @@ export const feeCategoryApi = financeModuleApi.injectEndpoints({
         body,
       }),
       invalidatesTags: [
+        financeModuleType.studentFeeAssignment,
         financeModuleType.feeCategory,
         financeModuleType.feeHead,
         financeModuleType.incomeCategoryData,
@@ -145,6 +155,7 @@ export const feeCategoryApi = financeModuleApi.injectEndpoints({
         method: 'DELETE',
       }),
       invalidatesTags: [
+        financeModuleType.studentFeeAssignment,
         financeModuleType.feeCategory,
         financeModuleType.feeHead,
         financeModuleType.incomeCategoryData,
@@ -165,6 +176,7 @@ export const feeCategoryApi = financeModuleApi.injectEndpoints({
         body,
       }),
       invalidatesTags: [
+        financeModuleType.studentFeeAssignment,
         financeModuleType.feeCategory,
         financeModuleType.feeHead,
         financeModuleType.incomeCategoryData,
@@ -177,6 +189,7 @@ export const feeCategoryApi = financeModuleApi.injectEndpoints({
 });
 
 export const {
+  useGetFeeCategoryOptionsQuery,
   useGetFeeCategoriesQuery,
   useGetFeeCategoryByIdQuery,
   useAddFeeCategoryMutation,

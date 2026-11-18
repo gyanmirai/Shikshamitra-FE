@@ -8,6 +8,7 @@ import { it, vi, expect, describe } from 'vitest';
 import { mapOnboardingCaseToItem } from './student-onboarding-model';
 import {
   runStudentSetupAssignment,
+  getGrAutoUnavailableReason,
   getStudentSetupAssignmentValue,
   getStudentSetupRollAutoTargets,
   type StudentSetupAssignmentType,
@@ -92,6 +93,26 @@ const makeServices = (current = makeCase()) => ({
 });
 
 describe('Student Setup assignment orchestration', () => {
+  it('explains why an active student without a GR number cannot use Auto in Student Setup', () => {
+    const active = mapOnboardingCaseToItem(makeCase({ status: 4, studentEnrollmentId: 'active' }));
+    const assigned = mapOnboardingCaseToItem(makeCase({ grNumber: 'GR-0001' }));
+
+    expect(getGrAutoUnavailableReason([assigned, active], 'both')).toBe(
+      'Students without a GR number on this page are already enrolled or their setup is closed.'
+    );
+  });
+
+  it('distinguishes assigned students from a manual-only policy', () => {
+    const assigned = mapOnboardingCaseToItem(makeCase({ grNumber: 'GR-0001' }));
+    const pending = mapOnboardingCaseToItem(makeCase());
+    expect(getGrAutoUnavailableReason([assigned], 'both')).toBe(
+      'Everyone on this page already has a GR number.'
+    );
+    expect(getGrAutoUnavailableReason([assigned, pending], 'manual')).toBe(
+      'The school rule requires manual GR entry.'
+    );
+  });
+
   it.each(['automatic', 'manual'] as const)(
     'blocks %s GR assignment without Division in the shared tab flow',
     async (mode) => {

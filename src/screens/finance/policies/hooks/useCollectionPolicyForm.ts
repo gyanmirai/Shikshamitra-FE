@@ -1,6 +1,5 @@
 'use client';
 
-import { financeNameSchema } from 'src/utils/finance-name';
 import type { RootState } from 'src/redux/store';
 
 import * as Yup from 'yup';
@@ -9,6 +8,7 @@ import { useSelector } from 'react-redux';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
 import { useFormik, setNestedObjectValues } from 'formik';
+import { financeNameSchema } from 'src/utils/finance-name';
 import { roundUpWithinAmount } from 'src/utils/whole-rupee-amount';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
@@ -250,9 +250,9 @@ export function useCollectionPolicyForm({
 
   // Load the current academic-year default so the form can explain that saving
   // this selection will transfer the default designation to the new policy.
-  const { data: existingPoliciesData } = useGetCollectionPoliciesQuery(
-    { academicYearId: effectiveAcademicYearId, status: 'Active' },
-    { skip: !effectiveAcademicYearId }
+  const { currentData: existingPoliciesData } = useGetCollectionPoliciesQuery(
+    { academicYearId: effectiveAcademicYearId, status: 'Active', skipCount: 0, maxResultCount: 1 },
+    { skip: !open || !effectiveAcademicYearId }
   );
   const otherDefaultPolicyName = useMemo(() => {
     const items = existingPoliciesData?.items || [];

@@ -1,7 +1,7 @@
 import type { IconButtonOwnProps } from '@mui/material';
 import type { ReactNode, MouseEventHandler } from 'react';
 
-import type { UsePopoverReturn } from '../custom-popover';
+import type { UsePopoverReturn, CustomPopoverProps } from '../custom-popover';
 
 export interface ThreeDotsActionContext {
   popover: UsePopoverReturn;
@@ -20,6 +20,9 @@ export interface ThreeDotsDirectAction {
 }
 
 export interface ThreeDotsActionsOptions {
+  /** Optional surface/transition configuration for feature-owned menu positioning. */
+  popoverSlotProps?: CustomPopoverProps['slotProps'];
+  popoverAction?: CustomPopoverProps['action'];
   actions?: (context: ThreeDotsActionContext) => ReactNode;
   directActions?: readonly ThreeDotsDirectAction[];
   onClickThreeDots?: MouseEventHandler<HTMLButtonElement>;

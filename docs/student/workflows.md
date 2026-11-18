@@ -36,13 +36,13 @@ If Save and publish saves the draft but publication fails, the editor retains th
 
 Use **Edit application form** from the Registration/Form stage, Student record details in the finalization workspace, or the Application record header when the server permits correction. A completed Registration stage remains a read-only review; its Edit action opens the existing pinned registration form in a contextual correction drawer, without moving the current journey stage backwards. Its read-only fields and Finance joining-date restrictions remain enforced. Complete the highlighted fields, choose **Save corrections**, and supply an audit reason. This saves a correction without normal Submit/Reopen or replaying admission stages.
 
-After a confirmed save, finalization checks reload and staff must review identity/profile choices and guardian verification again. Approval and the application number remain visible. Form history shows the correction reason and field labels alongside prior entries. Cancel retains previous confirmations; unsaved answers use the existing discard confirmation. An unconfirmed network response permits exact-command retry, and closing refreshes the application without claiming success. Stale data requires reopening the latest form.
+After a confirmed save, finalization checks reload and staff review identity/profile choices again. Approval and the application number remain visible. Form history shows the correction reason and field labels alongside prior entries. Cancel retains previous confirmations; unsaved answers use the existing discard confirmation. An unconfirmed network response permits exact-command retry, and closing refreshes the application without claiming success. Stale data requires reopening the latest form.
 
 ## House Management
 
 1. Open Student Records → House Management and select an accessible medium.
 2. Use Houses to review membership and the optional house leader. Add/Update enables house configuration and leadership controls when the server's scope capabilities also allow them; Delete is available only for an empty house.
-3. Use Students to filter and select active enrolled students across classes. Preview assignment or removal, review any house leader being cleared and explicitly confirm the current preview.
+3. Use Students to filter and select active enrolled students across classes. Class / Division shows the placement together. Hover or focus the role icons beside a student's name to identify their house or division leadership. Preview assignment or removal, review any house leader being cleared and explicitly confirm the current preview.
 4. Use Division Leaders to appoint, replace or clear the independent optional division leader. Review the current leader before replacing them.
 
 View-only access retains readable workspaces without mutation controls. Busy commands lock dismissal; failed reads expose Retry, and failed writes retain the draft. Context changes discard stale selections and previews. See the [backend rules](../../../Shikshamitra-BE/docs/modules/student/product.md#house-management) for eligibility, scope and independent leadership.
@@ -77,21 +77,21 @@ Only the current independent server-authorized approval stage can approve. Pendi
 
 ## Approval to Onboarding
 
-Pending Admission Decision uses three unselected outcome cards, the existing reason rules, and one **Record Decision** action. Choosing an outcome does not save it; the reason appears after selection and Decision History remains collapsed until requested. Unsaved decisions use the workspace's existing navigation, End Journey and Skip guards. Failed saves and status-changing refreshes retain the draft until an explicit reload; the reload confirmation clears the draft and uses the latest revision. Already approved cases keep their existing guarded Reject dialog beside Finalize Admission.
+The terminal Admission Decision uses one compact Admission Summary and a Student Setup note for Division, GR number and roll number. Small **Waitlist**, **Reject** and **Approve & Finalize** buttons stay right aligned in the workspace footer, outside its scroll body, and wrap on narrow screens. Waitlist/Reject retain their reason dialogs. Readiness shows actionable blockers and possible Student matches without repeating successful checks or requiring a manual contact-verification checkbox. Existing Student profile updates still require explicit review. Nonterminal decision and legacy handoff stages retain their existing decision/continuation flow.
 
-Successful approval opens the finalization workspace automatically. The current decision stage completes through the existing guarded workflow advance before finalization checks load; it does not skip configured future stages. Preparation, failed reads and final save have distinct loading/retry states. Identity matching, captured-profile choices and guardian verification remain required. Already approved cases can resume through Finalize admission.
+**Approve & Finalize** sends one transactional command. Only a terminal Approval or an already approved, completed journey uses it; configured future stages are never skipped. Valid saved primary contact details remain required, but this action does not claim contact ownership was verified. Identity, document, seat, Finance and duplicate-resolution guards remain server-owned. Failed requests preserve the exact payload/key; **Reload latest application** refreshes the application, workflow and readiness before renewed review.
 
-After a successful finalization response, staff with Onboarding View open the exact returned case at `/student/onboarding/setup?case=<onboardingCaseId>`. Staff without that grant retain the finalized summary. Failed finalization retains confirmations and the existing retry idempotency key; it never navigates as if the save succeeded.
+After a successful finalization response, staff with Onboarding View open the exact returned case at `/student/onboarding/setup?case=<onboardingCaseId>`. Progress remains mounted across cache updates until navigation, preventing a finalized-summary flash and unnecessary evidence reads. Navigation recovery opens Student Setup without repeating finalization. Staff without that grant, and later reopening finalized records, retain the read-only summary. Failed finalization never navigates as if the save succeeded.
 
 When reviewing a finalized application, Continue Onboarding remains available for unfinished onboarding cases. A completed case instead shows Onboarding Completed and View in Student Records when staff have Student List viewing access. That link opens the exact saved Student profile. Activation alone does not imply completion: pending provisioning still continues through Onboarding. Unknown or failed case reads do not offer status-dependent navigation.
 
 ## Admission document review
 
-The Document Verification table offers direct View and Upload actions using the shared row-action component. Missing files have an unavailable View action; authorized physical-original and waiver actions remain in the overflow menu. Historical stages remain read-only.
+The Document Verification table offers direct View and Upload actions using the shared row-action component. Missing files have an unavailable View action. More contains History, authorized Download, physical-original and waiver actions. Historical stages remain read-only. The heading information tooltip provides workflow guidance without a progress strip above the table.
 
-Continue uses server document readiness, including when Documents precedes the unsubmitted Registration form. It does not infer readiness from application submission status or the accepted-file count alone. Active table and card layouts display returned blockers (including missing evidence or an ineligible route) beside the checklist, so a disabled Continue action has an explanation.
+Continue uses server document readiness, including when Documents precedes the unsubmitted Registration form. It does not infer readiness from application submission status or the accepted-file count alone. Table-layout blockers and onboarding-deferral guidance are available in the heading information tooltip; card layouts retain inline guidance.
 
-View opens a full-width protected preview with compact file/version/status context and collapsed Evidence history. Approve saves the latest evidence decision directly without a notes form. Reject opens a compact dialog with a required rejection reason; cancelling returns to the same mounted preview. If a physical original is newer than the displayed upload, both evidence versions remain clearly identified. Existing collection notes, original attestations, waiver reasons and review history are retained. Save locks, independent review and server capabilities remain authoritative.
+View opens a protected, auto-fitted preview with the displayed filename and compact Close, Reject and Approve footer. Images have no separate zoom toolbar; PDFs retain their native viewer. History opens separately from More and identifies uploads, newer physical originals, collection notes, attestations, waiver reasons and decisions. Approve saves the latest evidence decision directly without a notes form. Reject opens a compact dialog with a required rejection reason; cancelling returns to the same mounted preview. Upload displays the shared form busy region until the request settles; failed writes retain the selected file and notes. Save locks, independent review and server capabilities remain authoritative.
 
 ## Admission form preview and section actions
 
@@ -228,7 +228,9 @@ Custom-subject names and marks validate after blur or Apply Changes. A newly add
 Offering Configuration Readiness keeps concise unresolved issues in its owning section without opening a duplicate toast. Existing grants control form preview, archive-restore confirmation, workflow review and cycle review links. Opening a recovery destination performs no publish, restore or activation command. A refreshed valid configuration replaces the issue list with Ready.
 ## Academic filters
 
-Admissions Inquiries, Pipeline, Applications, and Admission Offering use one Board and one Medium, with no All option for either. Empty or invalid parent selections default to an available school option; changing a parent resets its descendants. Class supports multiple selections within the selected Medium. Student Setup uses the same parent rules and supports multiple classes and divisions, with class names included in division labels. Class and Division retain All options within the selected academic scope. Clear filters retains Board and Medium; URL selections survive reload. Identifier locks still require exactly one Division. The retained Review queue component uses the shared filters, but `/student/admissions/reviews` currently has no active route. Assessments explicitly allows all Boards/Mediums within the selected year; its workspace Clear Filters resets academic and assessment filters together.
+Student worklist filters use the compact Assessments Session layout across Admissions, Onboarding, Records, and Attendance. Academic dropdowns cap at 248 px on tablet and desktop, wrap as needed, and stack full width on phones.
+
+Admissions Inquiries, Pipeline, Applications, and Admission Offering use one Board and one Medium, with no All option for either. Empty or invalid parent selections default to an available school option; changing a parent resets its descendants. Class supports multiple selections within the selected Medium. Student Setup uses the same parent rules and offers one Class and one Division at a time, with division names displayed on their own. Division is enabled only after staff select one Class, and changing or clearing Class resets Division to All Divisions. Bookmarked division filters require one matching Class. Class and Division retain All options within the selected academic scope. Clear filters retains Board and Medium; URL selections survive reload. Identifier locks still require exactly one Division. The retained Review queue component uses the shared filters, but `/student/admissions/reviews` currently has no active route. Assessments explicitly allows all Boards/Mediums within the selected year; its workspace Clear Filters resets academic and assessment filters together.
 
 Offering Board/Medium selections are compulsory context, not removable table chips. Clear and individual chip removal affect Class and other optional criteria without resetting that context. Inquiry tables show Phone without an Email column; email remains part of the existing contact capture contract.
 
@@ -408,11 +410,12 @@ Simple status labels reflect the server lifecycle, never the number of pending t
 Setup Status has no student-selection checkboxes, and Added today sits inside the academic filters card.
 Student drawers combine Details and Checks into Details & Checks, retaining Tasks and History.
 
-Division, GR Number, Roll Number, Fees and App Login show all students matching the academic and table filters, without an All/Remaining Students scope filter or a View all students empty-state action. Legacy `scope=pending` URLs do not narrow the worklist, and task navigation drops that retired query parameter. Pending counts remain separate; Auto/Manual eligibility, checkbox selection, locks and backend checks are unchanged.
+All Student Setup tabs use the same Board, Medium, Class and Division filter row. Class and Division use plain single-select menus.
+Division, GR Number, Roll Number, Fees and App Login show all students matching the academic and table filters, without an All/Remaining Students scope filter or a View all students empty-state action. Legacy `scope=pending` URLs do not narrow the worklist, and task navigation drops that retired query parameter. Pending counts remain separate.
 The compact row keeps only the task heading, pending count and controls; static descriptions, policy badges and selection guidance are omitted.
 All buttons stay aligned on one line, with contained horizontal scrolling on narrow screens rather than document overflow; required manual-change reasons and validation remain visible when applicable.
 GR, Roll and Division tables have no separate Select all visible button or Actions column; the student-name button still opens the case.
-Auto operates on eligible students on the current page, or selected Division rows when exactly one Class is selected.
+Division, GR Number and Roll Number show toolbar Auto and Manual only when exactly one Division is selected. Auto operates on eligible students on the current page, or selected Division rows when exactly one Class is selected. The GR pending count excludes completed and already enrolled cases. If no visible student is eligible for GR Auto, the toolbar explains the reason.
 Division checkboxes appear only with that single-Class filter; selecting multiple classes or changing the worklist clears selection.
 The selection count offers **Clear selection**; checkboxes and clearing are locked during a Manual draft so visible targets stay aligned with the saved draft.
 Auto Division requires an explicit target with current server capacity checks; it does not invent an automatic placement policy or Division lock.
@@ -513,6 +516,27 @@ Eligibility, Review, and Offer are retired Admission Stage types. New drafts can
 ## Managed Review setup and staff workflow
 
 Eligibility, Review, and Offer are retired Admission Stage types. New drafts cannot select them, publication rejects them, application workspaces do not mount their working panels, and their direct admission operations reject unsupported stages. Existing enum numbers and stored audit records remain intact. Inquiry qualification, Student Records reviews, division placement, and Finance ownership are separate contracts.
+
+## Registration print workflow
+
+Registration setup has four steps: Form details, Build form, Review and Print layout; Inquiry retains its three-step flow.
+The fourth step previews the composed Inquiry/Registration questions and saves the Boxed Grid, Structured Classic or previous Simple paper template independently of Compact/Spacious A4 spacing and school-header, photo-space and signature-area settings.
+New forms start with Boxed Grid; existing saved forms without a template retain Simple. Using a saved school form as a starter preserves its chosen template.
+Blank Boxed Grid writing-cell rows wrap to at most two paper columns to leave usable handwriting space; ordinary rows and filled copies retain configured columns and all field ordering.
+The school name, address, logo and banner come from the existing Institute Setup branding read. Registration No. uses an ordinary writing line in both new templates; filled application output uses the saved application number, while blank output leaves it empty.
+Saving a draft or publishing retains these settings through the existing form workflow.
+
+Pipeline row print actions open a full-screen saved-form preview as either Print filled form or Print blank form.
+The runtime Form panel also exposes Print for authenticated staff.
+Unsaved input prompts Use saved details or, when draft saving is available, Save and preview; failed saves retain the decision and entered work.
+Printing never submits the Registration form or advances the workflow.
+
+The preview selects a supported form language and the full form or a specific step, identifying the current runtime step where available.
+Blank mode clears answers, defaults and photos while retaining questions, static instructions and conditional-question indicators.
+Filled mode uses saved answers plus frozen Inquiry context, suppresses hidden questions and formats selected choices and repeated entries.
+Preview, download and print share the same paginated PDF.
+Loading, failed reads/generation and empty selections keep output actions unavailable; Retry preserves form data, and changing the source or mode hides the previous PDF.
+See [client ownership](./clients.md#registration-print-clients), [backend guarantees](../../../Shikshamitra-BE/docs/modules/student/product.md#registration-print-settings-and-saved-answers) and [checks](./testing.md#registration-print-checks).
 
 ## Dynamic form builder
 
@@ -726,9 +750,13 @@ The runtime screen and field adapter are `admission-application-detail.tsx` and 
 
 Daily Attendance uses the same active Student List population and Board, Medium, Class and Division filters in the selected global academic year. Admins begin with a paged read-only student table; marking requires one class and division. Teachers with one active assignment open that register automatically. Assignment, permission and academic scope remain server-enforced.
 
+Daily Attendance's four academic dropdowns select one value each and offer no All/multiple selection. Medium requires a valid Board, Class requires a valid Medium, and Division requires a valid Class; changing a parent clears its descendants. Existing class/division bookmarks restore their scoped Board/Medium parents. Save draft, Submit and Lock sit on the right in one responsive controls card below the academic filters. Submit and Lock use the same concise labels in their confirmation buttons. The shared filter component retains its previous all-scope defaults for other callers.
+
 The rightmost sticky Attendance column contains Present, Absent, Pending and policy-enabled Half-day icons. Absent rows expose optional inline remarks in Details (maximum 500 characters). There is no Edit/Actions column or Draft breadcrumb badge. Ineligible students remain visible with a reason and disabled marking; they do not count as pending expected attendance.
 
-Save draft permits partial marking. Submit attendance requires the complete eligible register, including rows outside the current search or page. Lock is separate and applies to a submitted reviewed register; it requires Add/Update and the same assigned-class scope as marking. Mark pending as Present acts on eligible pending rows across the class while preserving saved marks, approved leave and rows requiring review. Existing correction safeguards remain; this change adds no correction queue, menu or Student List shortcut.
+Daily Attendance uses the HR Mark Attendance segmented controls. In a class register, the header places the Present, Half-day, Pending and Absent bulk icons below their matching count badges. A bulk action replaces the draft mark across all eligible rows in the selected class and division, including rows outside the current search or page. It skips approved leave and rows requiring approval or credit correction. Half-day follows school policy, and submitted registers cannot return marks to Pending. Counts update immediately and exclude ineligible rows. Initial and linked-year loading use skeletons, and table refresh retains safe rows with the shared skeleton indicator.
+
+Save draft permits partial marking. Submit attendance requires the complete eligible register, including rows outside the current search or page. Lock is separate and applies to a submitted reviewed register; it requires Add/Update and the same assigned-class scope as marking. Individual and bulk marks use the same save and submission flow.
 
 ## Student List and profile
 
@@ -742,6 +770,8 @@ Save draft permits partial marking. Submit attendance requires the complete elig
    Student, GR number and Class / Division have text column filters; Roll number supports comparisons and inclusive ranges; Status offers Active, Inactive and Left. Column criteria combine with academic/population scope and search on the server before counting and paging. Column chips clear only their own criteria, and the filtered-empty recovery clears search and column filters together while retaining academic scope. Actions has neither filtering nor sorting.
 5. Click a row or Student name, or use the row's keyboard action, to open the profile; there is no separate View icon. Overview shows permanent identity, selected-year placement and linked admission/onboarding milestones.
 6. Use Details, Documents or History without losing list context; related school/service views remain reachable through Related.
+
+Active students with a blank permanent GR can use **Assign GR Number** from the profile with Records Changes access. Auto previews the next free number from the matching published series. Manual restores a verified school-register number and requires a register reference. Both require a reason and independent review in **Changes & Approvals**. The profile shows the number only after the request is applied. If a number becomes unavailable during review, start a new request with a fresh preview or verified register value.
 
 Activated students remain discoverable while credential preparation or email work is pending in Onboarding.
 Former students retain their permanent identity and selected-year history.

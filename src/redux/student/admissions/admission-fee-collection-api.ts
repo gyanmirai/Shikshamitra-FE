@@ -23,6 +23,7 @@ const collectionTags = (applicationId: string) => [
 ];
 
 const changedTags = (applicationId: string) => [
+  financeModuleType.studentFeeAssignment,
   ...collectionTags(applicationId),
   financeModuleType.feeCollection,
   financeModuleType.feeDetails,

@@ -14,6 +14,23 @@ import { getBlankAdmissionFormInitialValues } from '../form-dialog-model';
 vi.mock('src/components/toast', () => ({ shikshaMitraToast: { error: vi.fn() } }));
 
 describe('admission form wizard identity', () => {
+  it.each([{ purpose: 0 as const, lastStep: 2 }, { purpose: 1 as const, lastStep: 3 }])('advances through all purpose $purpose stages before publishing', async ({ purpose, lastStep }) => {
+    const onPublishNow = vi.fn().mockResolvedValue(undefined);
+    const { result } = renderHook(() => useAdmissionFormWizard({ initialPurpose: purpose, onSave: vi.fn(), onPublishNow, onClose: vi.fn() }));
+    const values = { ...getBlankAdmissionFormInitialValues(purpose), name: 'Application' };
+    const formik = { resetForm: vi.fn() } as unknown as FormikProps<CreateUpdateAdmissionForm>;
+    await act(async () => result.current.next(false, values, formik, vi.fn()));
+    expect(result.current.activeStep).toBe(1);
+    await act(async () => result.current.next(false, values, formik, vi.fn()));
+    expect(result.current.activeStep).toBe(2);
+    if (lastStep === 3) {
+      await act(async () => result.current.next(false, values, formik, vi.fn()));
+      expect(result.current.activeStep).toBe(3);
+    }
+    expect(onPublishNow).not.toHaveBeenCalled();
+    await act(async () => result.current.next(true, values, formik, vi.fn()));
+    expect(onPublishNow).toHaveBeenCalledWith(expect.objectContaining({ printSettings: values.printSettings }));
+  });
   it('omits dormant Registration inheritance when saving a new form switched to Inquiry', async () => {
     const onSave = vi.fn().mockResolvedValue(undefined);
     const values = {

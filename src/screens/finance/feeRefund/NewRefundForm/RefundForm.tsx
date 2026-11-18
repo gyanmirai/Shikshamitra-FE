@@ -581,7 +581,7 @@ const FeeRefundFormComponent = ({
   const refundEligibility = useGetRefundEligibilityQuery(
     { studentId: formik.values.studentId, academicYearId: currentYear?.id ?? '' },
     {
-      refetchOnMountOrArgChange: true,
+      refetchOnMountOrArgChange: 60,
       skip:
         isEdit ||
         Boolean(replacementRefundId && editRefundDetail?.concessionRequestId) ||

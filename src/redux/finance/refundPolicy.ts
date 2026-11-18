@@ -4,6 +4,7 @@ import { financePolicyType } from 'src/redux/tagTypes';
 
 import { api } from '../service';
 import { policyCacheTags } from './policyCacheTags';
+import { policyVersionRequest, type PolicyVersionQueryArgs } from './policyVersionQuery';
 
 const policyTags = policyCacheTags(financePolicyType.refundPolicy);
 
@@ -151,9 +152,9 @@ export const refundPolicyApi = api.injectEndpoints({
     }),
     getRefundPolicyVersions: builder.query<
       { totalCount: number; items: RefundPolicyVersionResponse[] },
-      string
+      PolicyVersionQueryArgs
     >({
-      query: (id) => `/finance/refund-policies/${id}/versions`,
+      query: (args) => policyVersionRequest('refund', args),
       providesTags: policyTags.detail,
     }),
     getRefundPolicyImpact: builder.query<RefundPolicyImpactResponse, string>({

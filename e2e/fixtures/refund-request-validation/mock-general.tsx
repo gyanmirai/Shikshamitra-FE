@@ -1,7 +1,9 @@
 import React from 'react';
 import { Button, Typography } from '@mui/material';
+import { getLiveContext } from './mock-api';
 
 export default function TestStudent({ formik }: any) {
+  const liveContext = getLiveContext();
   return (
     <>
       <Typography variant="body2">
@@ -12,7 +14,7 @@ export default function TestStudent({ formik }: any) {
         onClick={() =>
           formik.setValues({
             ...formik.values,
-            studentId: 'student',
+            studentId: liveContext?.studentId ?? 'student',
             studentName: 'Synthetic Student',
             refundMethod: 'Cash',
             paymentDetails: { receivedBy: 'Synthetic Parent' },

@@ -41,7 +41,7 @@ export function AssessmentWorkspaceControls({
         standardId={academic.standardId}
         onChange={academic.update}
         filterAction={
-          <Box sx={{ width: { xs: '100%', lg: 260 }, minWidth: 0 }}>
+          <Box sx={{ width: { xs: '100%', sm: 248 }, minWidth: 0 }}>
             <CustomSelect
               label="Session"
               isSearch

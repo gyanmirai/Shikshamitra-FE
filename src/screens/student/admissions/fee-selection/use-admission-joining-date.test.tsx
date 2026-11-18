@@ -113,7 +113,8 @@ it('does not send a proration policy before the Institute Setup academic-year st
 });
 
 it.each(['2026-06-01', '2026-06-02'])(
-  'allows proration policy use on or after academic-year start (%s)', (date) => {
+  'allows proration policy use on or after academic-year start (%s)',
+  (date) => {
     const view = renderDate();
     act(() => view.result.current.change(dayjs(date)));
     expect(view.result.current.prorationPolicyEligible).toBe(true);
@@ -154,6 +155,20 @@ it('uses the immutable prepared date without previewing or saving a replacement'
   expect(mocks.preview.mock.lastCall?.[1].skip).toBe(true);
   await act(() => view.result.current.confirm());
   expect(mocks.save).not.toHaveBeenCalled();
+});
+
+it('keeps the variable-fee date draft when save does not confirm the selected date', async () => {
+  const view = renderDate({ requiresVariableAmounts: true });
+  act(() => view.result.current.change(dayjs('2026-06-02')));
+  mocks.unwrap.mockResolvedValueOnce({ ...state, joiningDate: null });
+
+  await act(async () => {
+    await expect(view.result.current.confirm()).rejects.toThrow(/could not confirm/i);
+  });
+
+  expect(view.result.current.date).toBe('2026-06-02');
+  await act(() => view.result.current.confirm());
+  expect(mocks.save).toHaveBeenCalledTimes(2);
 });
 
 it('displays the saved date when concurrent preparation locks an unsaved date draft', async () => {
