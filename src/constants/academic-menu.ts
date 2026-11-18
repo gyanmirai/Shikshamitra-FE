@@ -204,6 +204,13 @@ export const academicActionPermissions = {
   notification: 'Academics.Notification.View',
 };
 
+export const academicNotificationPermissions = {
+  view: 'Academics.Notification.View',
+  manage: 'Academics.Notification.Add',
+  remove: 'Academics.Notification.Delete',
+  send: 'Academics.Notification.Send',
+} as const;
+
 export const academicSetupViewPermissions = [
   `${academicPermissions.curriculum.settings.subjectsCreation}.View`,
   `${academicPermissions.curriculum.settings.electiveGroupCreation}.View`,
