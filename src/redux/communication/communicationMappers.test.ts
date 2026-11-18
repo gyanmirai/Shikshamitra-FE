@@ -14,6 +14,16 @@ import {
 } from './communicationMappers';
 
 describe('communication mappers', () => {
+  it('keeps persisted channel values stable and distinguishes website push from the inbox', () => {
+    expect(CommunicationChannelType.WhatsApp).toBe(0);
+    expect(CommunicationChannelType.Sms).toBe(1);
+    expect(CommunicationChannelType.Email).toBe(2);
+    expect(CommunicationChannelType.InApp).toBe(3);
+    expect(CommunicationChannelType[4]).toBe('WebPush');
+    expect(toChannelValue('Website push')).toBe(4);
+    expect(toChannelValue('WebPush')).toBe(4);
+    expect(channelLabel(4)).toBe('Website push');
+  });
   it('normalizes channel labels and values', () => {
     expect(toChannelValue('SMS')).toBe(CommunicationChannelType.Sms);
     expect(toChannelValue('In-App')).toBe(CommunicationChannelType.InApp);

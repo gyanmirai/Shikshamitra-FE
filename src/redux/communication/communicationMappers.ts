@@ -49,6 +49,8 @@ export function channelLabel(channel?: CommunicationChannelType | string | numbe
       return 'Email';
     case CommunicationChannelType.InApp:
       return 'In-App';
+    case CommunicationChannelType.WebPush:
+      return 'Website push';
     default:
       return String(channel ?? '--');
   }
@@ -72,6 +74,9 @@ export function toChannelValue(
       return CommunicationChannelType.Sms;
     case 'email':
       return CommunicationChannelType.Email;
+    case 'webpush':
+    case 'websitepush':
+      return CommunicationChannelType.WebPush;
     case 'inapp':
     case 'app':
     case 'push':
