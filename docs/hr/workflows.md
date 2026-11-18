@@ -3,7 +3,7 @@ module: hr
 domain: workflows
 content_type: Reference
 status: canonical
-updated_on: 2026-11-16
+updated_on: 2026-11-17
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -97,9 +97,15 @@ Apply Leave reads the selected paid-type rule from the current staff/date policy
 
 ## HR setup wizard
 
-Authorized HR operators receive the **Complete HR Setup** wizard on any HR route when the readiness summary reports unresolved configuration.
+Authorized HR operators receive the **Let’s Complete Your HR Setup** wizard on any HR route when the readiness summary reports unresolved configuration.
 The wizard opens at the first unresolved step and marks usable existing configuration complete without requiring acknowledgement.
-Checklist steps use shared section cards with readable saved-state labels, step headings and completion counts. Desktop checklists fit their content; embedded editors retain a bounded scrolling body and fixed actions. Phones show the current step and a position indicator, which does not imply saved completion. Optional deductions remain separate from required checks.
+Checklist steps use shared section cards with readable saved-state labels, step headings and completion counts.
+Three short bullets explain the setup purpose, optional dismissal to explore HR, and retention of saved configuration.
+Checklists, embedded editors and completion share the same viewport-bounded height, with a fixed header, navigation and footer and one scrolling body.
+Phones use the full viewport and show the current step and its position as text.
+The overall progress bar counts only server-reported ready checks; navigating between steps does not increase completion, and read failures do not display completion progress.
+Unfinished items appear first and completed items can be expanded for review.
+Optional deductions remain separate from required checks.
 Users can configure shifts, policies and calendars, earning components, and salary templates through embedded versions of the existing editors.
 The Earning Components step also exposes optional deduction setup to operators with exact Deduction Components View and Add access, including before a template exists. Deductions are not an additional readiness requirement.
 Salary Template's Add Earning and Add Deduction actions open the shared modal picker above the wizard. Empty catalogues and components already added have visible guidance. Authorized operators can create another component within setup and return to the mounted salary draft; reopening the picker shows refreshed choices. Cancelling the picker preserves the draft and returns focus to its launcher.
@@ -116,7 +122,7 @@ Saving refreshes server readiness; missing current-month coverage prevents compl
 Role repair remains an explicitly authorized Role Management task in another tab.
 Each step saves independently through existing APIs, and the final action rechecks server readiness.
 Failed background catalogue reads keep earning and salary-template editors mounted with their entries and an explicit retry action. The earning selector loads the complete paginated catalogue; embedded template loading uses only the wizard's navigation footer.
-Closing preserves saved configuration, protects unsaved entries with the existing discard confirmation, leaves the current route intact, and shows no banner.
+Closing preserves saved configuration, protects unsaved entries with the existing discard confirmation, leaves the current route intact, and offers **Continue HR setup** on the HR dashboard when configuration still needs attention or readiness could not be checked.
 Dismissal lasts for the document lifetime across HR navigation and resets on refresh or a user, tenant, or academic-year change.
 Self-service-only users receive no popup and make no readiness request.
 Read failures display a dismissible retry state rather than missing-setup claims.

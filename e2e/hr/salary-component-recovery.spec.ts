@@ -127,9 +127,10 @@ test.describe('Adjacent salary component recovery with synthetic APIs', () => {
   }) => {
     await request.post('/fixture/seed', { data: { earnings: 1 } });
     await page.goto('/');
-    const wizard = page.getByRole('dialog', { name: 'Complete HR Setup', exact: true });
+    const wizard = page.getByRole('dialog', { name: 'Let’s Complete Your HR Setup', exact: true });
     await wizard.getByRole('button', { name: 'Earning Components', exact: true }).click();
-    await wizard.getByRole('button', { name: 'Review setup', exact: true }).click();
+    await wizard.getByText(/^View completed setup/).click();
+    await wizard.getByRole('button', { name: 'Review Earning Components', exact: true }).click();
     await wizard.getByRole('combobox', { name: /^Earning component/ }).click();
     await page.getByRole('option', { name: 'Earning 1', exact: true }).click();
     await wizard.getByLabel('Amount *', { exact: true }).fill('175');
