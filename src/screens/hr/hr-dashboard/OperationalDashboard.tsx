@@ -10,6 +10,7 @@ import { hasGrantedPermission } from 'src/utils/permissions';
 import { useRef, useMemo, useState, useEffect } from 'react';
 import { HrNotice } from 'src/screens/hr/components/hr-notice';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { HrSetupCoordinator } from 'src/screens/hr/setup/hr-setup-coordinator';
 import { Box, Stack, Alert, Button, Typography, LinearProgress } from '@mui/material';
 import { useGetHROperationalOverviewQuery } from 'src/redux/hr/hrOperationalDashboardApi';
 
@@ -168,6 +169,7 @@ export default function OperationalDashboard({ cacheIdentity }: { cacheIdentity:
           </Box>
         )}
       </Box>
+      <HrSetupCoordinator onDashboard />
       {!canView || accessDenied ? (
         <Alert severity="warning">You do not have permission to view the HR dashboard.</Alert>
       ) : (

@@ -42,7 +42,7 @@ const HRLayout: React.FC<{ children: React.ReactNode }> = ({
   return hasPermission ? (
     <TableExportContext.Provider value={exportContext}>
       <HrRecoveryProvider key={hrRecoveryScope(auth)}>
-        <HrSetupCoordinator onDashboard={pathname === hrPaths.dashboard} />
+        {pathname !== hrPaths.dashboard && <HrSetupCoordinator />}
         {children}
       </HrRecoveryProvider>
     </TableExportContext.Provider>
