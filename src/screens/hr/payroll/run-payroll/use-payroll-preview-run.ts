@@ -286,23 +286,33 @@ export function usePayrollPreviewRun(month: string, academicYearId: string) {
       busy ||
       statusRefreshRequest.current === context.current
     )
-      return;
+      return false;
     const requestedContext = context.current;
     statusRefreshRequest.current = requestedContext;
     setRefreshingContext(requestedContext);
     setFailure(null);
     try {
       const result = await statusQuery.refetch();
-      if (
-        mounted.current &&
-        context.current === requestedContext &&
-        result.data?.status === 'SUCCEEDED' &&
-        completedId
-      )
-        await pageQuery.refetch();
+      if (!mounted.current || context.current !== requestedContext) return false;
+      if (result.error) {
+        setFailure({ key, ...normalizePreviewFailure(result.error) });
+        return false;
+      }
+      if (result.data?.status !== 'SUCCEEDED' || !completedId) return false;
+
+      const rows = await pageQuery.refetch();
+      if (!mounted.current || context.current !== requestedContext) return false;
+      if (rows.error) {
+        setFailure({ key, ...normalizePreviewFailure(rows.error) });
+        return false;
+      }
+      return Boolean(
+        result.data.isCurrent && rows.data?.previewRunId === completedId && rows.data.isCurrent
+      );
     } catch (caught) {
       if (mounted.current && context.current === requestedContext)
         setFailure({ key, ...normalizePreviewFailure(caught) });
+      return false;
     } finally {
       if (statusRefreshRequest.current === requestedContext) statusRefreshRequest.current = null;
       if (mounted.current)

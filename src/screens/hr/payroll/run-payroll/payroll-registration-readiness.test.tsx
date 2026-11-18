@@ -1,5 +1,5 @@
 import { it, vi, expect, describe } from 'vitest';
-import { act, render } from '@testing-library/react';
+import { act, render, screen, fireEvent } from '@testing-library/react';
 
 import { PayrollRegistrationReadiness } from './payroll-registration-readiness';
 
@@ -26,6 +26,7 @@ vi.mock('src/components/customizabaleTable', () => ({
 describe('payroll readiness server search', () => {
   it('resets the page and captures the same search for complete export', () => {
     render(<PayrollRegistrationReadiness month="2026-10" />);
+    fireEvent.click(screen.getByRole('button', { name: 'View registrations' }));
     act(() => captured.table.onServerPagination(4, 10));
     expect(captured.query.page).toBe(4);
     act(() => captured.table.onServerSearch('Synthetic'));
@@ -40,6 +41,7 @@ describe('payroll readiness server search', () => {
   });
   it('resets pagination when the owning payroll month changes', () => {
     const view = render(<PayrollRegistrationReadiness month="2026-10" />);
+    fireEvent.click(screen.getByRole('button', { name: 'View registrations' }));
     act(() => captured.table.onServerPagination(4, 10));
     view.rerender(<PayrollRegistrationReadiness month="2026-11" />);
     expect(captured.query).toMatchObject({ month: '2026-11', page: 1 });
