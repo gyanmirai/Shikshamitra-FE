@@ -10,6 +10,20 @@ export const emptyStudentFilters = {
 };
 export type StudentFilters = typeof emptyStudentFilters;
 
+export function keepValidDivisionFilter(
+  filters: StudentFilters,
+  standardIds: string[],
+  availableDivisionIds: string[]
+): StudentFilters {
+  if (
+    !filters.division ||
+    (standardIds.length === 1 && availableDivisionIds.includes(filters.division))
+  ) {
+    return filters;
+  }
+  return { ...filters, division: '' };
+}
+
 export function filterChargeStudents(
   students: IStudentOption[],
   search: string,

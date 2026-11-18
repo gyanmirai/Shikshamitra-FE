@@ -4,7 +4,7 @@ import type { PolicyVersion } from 'src/screens/finance/policies/hooks/useFinanc
 
 import { useId, useMemo, useState, useEffect } from 'react';
 import { alpha } from '@mui/material/styles';
-import { Box, Alert, Stack, Paper, Drawer, Button, Typography } from '@mui/material';
+import { Box, Alert, Stack, Paper, Drawer, Button, Typography, TablePagination } from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
 import { Label } from 'src/components/label';
@@ -28,6 +28,9 @@ interface Props {
   recordType: string;
   hiddenFields?: string[];
   data?: { items?: AccountSettingHistoryItem[]; totalCount?: number };
+  page?: number;
+  pageSize?: number;
+  onPageChange?: (page: number) => void;
   isLoading?: boolean;
   isError?: boolean;
   onRetry?: () => void;
@@ -52,6 +55,9 @@ export default function AccountCategoryVersionDrawer({
   recordType,
   hiddenFields,
   data,
+  page = 0,
+  pageSize = 50,
+  onPageChange,
   isLoading,
   isError,
   onRetry,
@@ -172,8 +178,9 @@ export default function AccountCategoryVersionDrawer({
               }}
             >
               <VersionSidebar
-                key={`${title}-${open}`}
+                key={`${title}-${open}-${page}`}
                 versions={versions}
+                isLatestPage={page === 0}
                 selectedVersionId={selectedVersion.eventId}
                 onSelectVersion={setSelectedVersionId}
               />
@@ -216,15 +223,28 @@ export default function AccountCategoryVersionDrawer({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
+            flexWrap: 'wrap',
             gap: 1,
             flexShrink: 0,
           }}
         >
           <Typography variant="caption" color="text.secondary" role="status">
             {!isLoading && !isError && versions.length > 0
-              ? `Showing ${versions.length} of ${data?.totalCount ?? versions.length} recorded versions`
+              ? `Showing ${page * pageSize + 1}–${page * pageSize + versions.length} of ${data?.totalCount ?? versions.length} recorded versions`
               : 'Read-only history'}
           </Typography>
+          {onPageChange && (
+            <TablePagination
+              component="div"
+              sx={{ maxWidth: '100%' }}
+              count={data?.totalCount ?? (page + 1) * pageSize}
+              page={page}
+              rowsPerPage={pageSize}
+              rowsPerPageOptions={[]}
+              onPageChange={(_, nextPage) => onPageChange(nextPage)}
+              slotProps={{ actions: { previousButton: { disabled: isLoading || page === 0 }, nextButton: { disabled: isLoading || (page + 1) * pageSize >= (data?.totalCount ?? 0) } } }}
+            />
+          )}
           <Button
             variant="outlined"
             size="small"

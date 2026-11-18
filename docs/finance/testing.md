@@ -812,6 +812,13 @@ Audit Trail search/reset regression: `src/screens/finance/AuditTrail/hooks/useFi
 
 ## Refund editing regressions
 
+Paid-source refund coverage uses `refundEligibility.assignmentCache.test.ts` for successful and
+rejected assignment-policy updates, plus `RefundSelection.test.tsx` for charge/late-fee rows and
+source IDs. Run `e2e/finance/refund-request-validation.config.ts` for desktop/mobile selection,
+amounts, confirmation and submission payloads (`?paidSources=1`). The fixture uses synthetic
+responses; persisted eligibility, policy pins and settlement evidence are verified by the backend
+`FeeRefundApi.AssignedPolicyTests.cs` regression.
+
 `RefundRemarksForm.test.tsx`, `RefundFeeHeadViewTable.test.tsx` and `RefundWorklist.edit.test.tsx` cover approved Reject removal, request-only installment rows, exclusion of cumulative historical totals, and accordion behavior.
 The synthetic refund harness's `?view=approved` mode supplies a ₹3,750 request alongside old ₹50,000 history and a stale Reject hint for in-app browser checks.
 

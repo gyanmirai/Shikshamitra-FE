@@ -15,7 +15,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useFinanceFormClose } from 'src/hooks/use-finance-form-close';
-import React, { useRef, useState, useEffect, useCallback } from 'react';
+import React, { lazy, Suspense, useRef, useState, useEffect, useCallback } from 'react';
 import { useAccountSettingPermissions } from 'src/hooks/useAccountSettingPermissions';
 import { serializeFinanceTableFilters } from 'src/screens/finance/components/financeTableQuery';
 import { FinanceSetupManagerHeader } from 'src/screens/finance/setup/embedding/FinanceSetupManagerHeader';
@@ -28,15 +28,16 @@ import {
 
 import BankAccountForm from './Components/BankManageForm';
 import BankAccountTable from './Components/BankAccountTable';
-// import BankAccountActivityDrawer from './Components/BankAccountActivityDrawer';
 
 import type { IBankAccount } from './Components/type';
+
+const BankAccountActivityDrawer = lazy(() => import('./Components/BankAccountActivityDrawer'));
 
 function replaceActivitySelection(bankId?: string) {
   const url = new URL(window.location.href);
   if (bankId) url.searchParams.set('bankActivity', bankId);
   else url.searchParams.delete('bankActivity');
-  window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
+  window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
 }
 
 const BankAccountManagement: React.FC = () => {
@@ -44,11 +45,16 @@ const BankAccountManagement: React.FC = () => {
   const access = useAccountSettingPermissions('BankAccount');
   const searchParams = useSearchParams();
   const [activityBank, setActivityBank] = useState<IBankAccount | null>(null);
-  const openActivity = useCallback((_bank: IBankAccount) => {
-    // Bank account view opening is temporarily disabled.
-    // replaceActivitySelection(_bank.id);
-    // setActivityBank(_bank);
-  }, []);
+  const openActivity = useCallback((bank: IBankAccount) => {
+    if (!access.canView) return;
+    replaceActivitySelection(bank.id);
+    setActivityBank(bank);
+  }, [access.canView]);
+  const activityId = searchParams.get('bankActivity') || '';
+  const previousYear = useRef(currentYear?.id);
+  const [activitySelectionError, setActivitySelectionError] = useState<'unavailable' | 'failed' | null>(null);
+  const [activitySelectionAttempt, setActivitySelectionAttempt] = useState(0);
+  const [activitySelectionLoading, setActivitySelectionLoading] = useState(false);
 
   const [queryParams, setQueryParams] = useState(() => ({
     page: Math.max(1, Number(searchParams.get('bankListPage')) || 1),
@@ -81,7 +87,7 @@ const BankAccountManagement: React.FC = () => {
   }, []);
 
   const handleServerSearch = useCallback((search: string) => {
-    setQueryParams((prev) => ({ ...prev, search, page: 1 }));
+    setQueryParams((prev) => prev.search === search ? prev : ({ ...prev, search, page: 1 }));
   }, []);
 
   // Get bank accounts data
@@ -97,7 +103,7 @@ const BankAccountManagement: React.FC = () => {
       ...queryParams,
       filters: serializeFinanceTableFilters(filters),
     },
-    { skip: !currentYear?.id, refetchOnMountOrArgChange: true }
+    { skip: !currentYear?.id || !access.canView, refetchOnMountOrArgChange: 60 }
   );
 
   // DELETE mutation
@@ -106,18 +112,38 @@ const BankAccountManagement: React.FC = () => {
     currentQueryAndMutation: useDeleteBankAccountMutation,
   });
   const [getBankAccountDetail] = useLazyGetBankAccountByIdQuery();
+  const selectedListBank = bankAccountData?.items?.find((item: IBankAccount) => item.id === activityId);
 
   useEffect(() => {
-    const id = searchParams.get('bankActivity');
-    if (!id) {
+    let cancelled = false;
+    setActivitySelectionError(null);
+    if (!activityId || !currentYear?.id || !access.canView || (previousYear.current && previousYear.current !== currentYear.id)) {
       setActivityBank(null);
-      return;
+      setActivitySelectionLoading(false);
+      return undefined;
     }
-    const bank = bankAccountData?.items?.find((item: IBankAccount) => item.id === id);
-    if (bank) setActivityBank(bank);
-  }, [searchParams, bankAccountData]);
+    if (selectedListBank) {
+      setActivityBank(selectedListBank);
+      setActivitySelectionLoading(false);
+      return undefined;
+    }
+    setActivityBank(null);
+    setActivitySelectionLoading(true);
+    getBankAccountDetail(activityId, activitySelectionAttempt === 0).unwrap().then((detail) => {
+      if (cancelled) return;
+      if (detail.academicYearId !== currentYear.id) {
+        setActivitySelectionError('unavailable');
+        return;
+      }
+      setActivityBank(detail);
+    }).catch(() => {
+      if (!cancelled) setActivitySelectionError('failed');
+    }).finally(() => {
+      if (!cancelled) setActivitySelectionLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, [activityId, currentYear?.id, access.canView, selectedListBank, getBankAccountDetail, activitySelectionAttempt]);
 
-  const previousYear = useRef(currentYear?.id);
   useEffect(() => {
     if (previousYear.current !== currentYear?.id) {
       const hadYear = Boolean(previousYear.current);
@@ -129,10 +155,12 @@ const BankAccountManagement: React.FC = () => {
     }
   }, [currentYear?.id]);
 
-  // const closeActivity = () => {
-  //   replaceActivitySelection();
-  //   setActivityBank(null);
-  // };
+  const closeActivity = () => {
+    replaceActivitySelection();
+    setActivityBank(null);
+    setActivitySelectionError(null);
+    setActivitySelectionLoading(false);
+  };
 
   // Dialog control states
   const deleteBankAccountDialog = useBoolean();
@@ -188,14 +216,24 @@ const BankAccountManagement: React.FC = () => {
         sx={{ px: 1 }}
       />
 
-      {searchParams.get('bankActivity') &&
-        !bankAccountFetching &&
-        bankAccountData &&
-        !activityBank && (
-          <Alert severity="info">
-            The selected bank account is unavailable in the current academic year or list filters.
-          </Alert>
-        )}
+      {activitySelectionLoading && <Box role="status">Loading selected bank account…</Box>}
+      {activitySelectionError && (
+        <Alert
+          severity={activitySelectionError === 'failed' ? 'error' : 'info'}
+          action={
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              {activitySelectionError === 'failed' && (
+                <Button size="small" color="inherit" onClick={() => setActivitySelectionAttempt((attempt) => attempt + 1)}>Retry selected bank</Button>
+              )}
+              <Button size="small" color="inherit" onClick={closeActivity}>Clear selection</Button>
+            </Box>
+          }
+        >
+          {activitySelectionError === 'failed'
+            ? 'The selected bank account could not be loaded. Please try again.'
+            : 'The selected bank account is unavailable in the current academic year.'}
+        </Alert>
+      )}
       {!currentYear?.id ? (
         <Alert severity="info">Select an academic year to load bank accounts.</Alert>
       ) : (
@@ -227,6 +265,7 @@ const BankAccountManagement: React.FC = () => {
           totalCount={bankAccountData?.totalCount}
           onServerPagination={handleServerPagination}
           onServerSearch={handleServerSearch}
+          searchTerm={queryParams.search}
           filters={filters}
           page={queryParams.page - 1}
           rowsPerPage={queryParams.pageSize}
@@ -237,7 +276,7 @@ const BankAccountManagement: React.FC = () => {
         />
       )}
 
-      {/* Bank account view drawer temporarily disabled, including saved URL selection.
+      <Suspense fallback={<Box role="status">Loading bank activity…</Box>}>
       {activityBank && currentYear?.id && previousYear.current === currentYear.id && (
         <BankAccountActivityDrawer
           open
@@ -246,7 +285,7 @@ const BankAccountManagement: React.FC = () => {
           onClose={closeActivity}
         />
       )}
-      */}
+      </Suspense>
 
       <CustomDialog
         titleInfo="Maintain bank, account, and payment details used by Finance."

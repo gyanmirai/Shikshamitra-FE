@@ -45,7 +45,7 @@ export default function FeeStructureAssignTable({
     permissions,
     `${financePermissions.fees.structureAssign}.OverridePolicies`
   );
-  const context = useFinanceAcademicFilters();
+  const context = useFinanceAcademicFilters({ includeWorkContext: false });
   const [pagination, setPagination] = useState({ page: 1, scope: '' });
   const [pageSize, setPageSize] = useState(10);
   const [search, setSearch] = useState('');

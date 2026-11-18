@@ -186,7 +186,10 @@ export default function FeeStructureWorkspaceCard({
     scheduleTerm,
     termDetail,
     refreshPrerequisites,
-  } = useFeeStructureLookups(scope, !record || tab === 'policies', scheduleLine, locked, isActive);
+  } = useFeeStructureLookups(scope, !record || tab === 'policies', scheduleLine, locked, isActive, {
+    collection: candidate.collectionPolicyId,
+    refund: candidate.refundPolicyId,
+  });
   const publicationPrerequisites = structurePublicationPrerequisites({
     locked: !!locked || viewOnly,
     heads,

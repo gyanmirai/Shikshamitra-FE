@@ -59,7 +59,11 @@ export const adjustmentApi = financeModuleApi.injectEndpoints({
         params: { academicYearId },
         body,
       }),
-      invalidatesTags: [financeModuleType.feeAdjustment, financeModuleType.feeCollection],
+      invalidatesTags: [
+        financeModuleType.studentFeeAssignment,
+        financeModuleType.feeAdjustment,
+        financeModuleType.feeCollection,
+      ],
     }),
 
     updateFeeAdjustment: builder.mutation<
@@ -72,7 +76,7 @@ export const adjustmentApi = financeModuleApi.injectEndpoints({
         params: { academicYearId },
         body,
       }),
-      invalidatesTags: [financeModuleType.feeAdjustment],
+      invalidatesTags: [financeModuleType.studentFeeAssignment, financeModuleType.feeAdjustment],
     }),
 
     deleteFeeAdjustment: builder.mutation<void, string>({
@@ -80,7 +84,7 @@ export const adjustmentApi = financeModuleApi.injectEndpoints({
         url: `/fee-adjustments/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: [financeModuleType.feeAdjustment],
+      invalidatesTags: [financeModuleType.studentFeeAssignment, financeModuleType.feeAdjustment],
     }),
 
     getAdjustmentApplyContext: builder.query<FeeAdjustmentApplyContextDto, string>({
@@ -104,6 +108,7 @@ export const adjustmentApi = financeModuleApi.injectEndpoints({
         },
       }),
       invalidatesTags: [
+        financeModuleType.studentFeeAssignment,
         financeModuleType.feeAdjustment,
         financeModuleType.feeDetails,
         financeModuleType.feeCollection,
@@ -119,7 +124,7 @@ export const adjustmentApi = financeModuleApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [financeModuleType.feeAdjustment],
+      invalidatesTags: [financeModuleType.studentFeeAssignment, financeModuleType.feeAdjustment],
     }),
   }),
   overrideExisting: false,

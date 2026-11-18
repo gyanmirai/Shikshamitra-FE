@@ -223,7 +223,7 @@ export function CashContent({ academicYearId }: { academicYearId: string }) {
       sortBy,
       sortOrder: sortBy ? sortOrder : undefined,
     },
-    { refetchOnMountOrArgChange: true }
+    { skip: !academicYearId, refetchOnMountOrArgChange: 60 }
   );
   const summary = query.isError ? undefined : query.currentData?.activitySummary;
   const availableCash = query.isError ? undefined : query.currentData?.availableCash;

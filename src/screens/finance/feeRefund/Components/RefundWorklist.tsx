@@ -134,11 +134,11 @@ export default function RefundWorklist({
   const {
     currentData: data,
     isLoading,
-    isFetching,
     isError,
   } = useGetFeeRefundsQuery(
     {
       academicYearId: currentYear?.id,
+      boardId: filters.filterPayload?.boardId,
       academicMediumId: filters.filterPayload?.educationMediumId,
       standardId: filters.filterPayload?.standardId,
       divisionId: filters.filterPayload?.divisionId,
@@ -382,7 +382,7 @@ export default function RefundWorklist({
                 FeeRefundStatusType.Failed,
               ].includes(status) || column.id !== 'actions'
           )}
-          isLoading={isLoading || isFetching}
+          isLoading={isLoading}
           noDataText={isError ? 'Could not load refunds. Retry the page.' : 'No refunds found.'}
           serverSide
           serverSidePagination

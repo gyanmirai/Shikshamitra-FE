@@ -1,3 +1,4 @@
+import { useAccountSettingHistoryPage } from 'src/screens/finance/settings/components/useAccountSettingHistoryPage';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import { LoadingButton } from '@mui/lab';
@@ -29,6 +30,9 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
   onDelete,
   onEdit,
   isLoading,
+  isRefreshing,
+  error,
+  onRetry,
   totalCount,
   onServerPagination,
   onServerSearch,
@@ -47,7 +51,8 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
   const [statusData, setStatusData] = useState<null | IExpenseCategory>(null);
   const [deactivationReason, setDeactivationReason] = useState('');
   const [historyItem, setHistoryItem] = useState<IExpenseCategory | null>(null);
-  const history = useGetExpenseCategoryVersionsQuery(historyItem?.id || '', { skip: !historyItem });
+  const historyPage = useAccountSettingHistoryPage(historyItem?.id);
+  const history = useGetExpenseCategoryVersionsQuery(historyPage.query, { skip: !historyItem || !access.canView });
 
   const handleOpenStatusConfirm = (row: IExpenseCategory) => {
     setStatusData(row);
@@ -224,6 +229,9 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
         columns={columns}
         data={data || []}
         isLoading={isLoading}
+        isRefreshing={isRefreshing}
+        error={error}
+        onRetry={onRetry}
         serverSideFilter
         filters={filters}
         onServerFilter={onServerFilter}
@@ -306,6 +314,9 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
         title={historyItem?.name || 'Expense category'}
         recordType="Expense category"
         data={history.currentData}
+        page={historyPage.page}
+        pageSize={historyPage.pageSize}
+        onPageChange={historyPage.onPageChange}
         isLoading={history.isFetching}
         isError={history.isError}
         onRetry={() => {

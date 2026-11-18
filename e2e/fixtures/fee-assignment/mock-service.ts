@@ -365,6 +365,10 @@ export const api = createApi({
   ],
   baseQuery: async (args: { url: string; body?: any; params?: any }, queryApi, extraOptions) => {
     if (realApi) return realBaseQuery(args, queryApi, extraOptions);
+    (window as any).assignmentReadRequests = [
+      ...((window as any).assignmentReadRequests ?? []),
+      { url: args.url, body: args.body, params: args.params },
+    ];
     if (args.body?.editAssignmentId && paidEdit && args.body.studentId === 'student-one')
       return { error: { status: 409, data: { code: 'Finance:Assignment:StructureEditBlocked' } } };
     if (args.url.endsWith('/contexts')) {
@@ -372,7 +376,22 @@ export const api = createApi({
         return {
           error: { status: 503, data: { detail: 'Synthetic context service unavailable.' } },
         };
-      return { data: args.body.studentIds.map(assignmentContext) };
+      return {
+        data: args.body.studentIds.map((id: string) => {
+          const context = assignmentContext(id);
+          if (args.body.includeEditDetails !== false || context.status !== 'Assigned')
+            return context;
+          const {
+            assignedAssignment,
+            preparedAssignment,
+            canEditStructure,
+            structureEditBlocker,
+            prorationPolicy,
+            ...lightweight
+          } = context;
+          return lightweight;
+        }),
+      };
     }
     if (args.url.endsWith('/policy-options')) return { data: policyOptions };
     if (args.url.endsWith('/policies')) {
@@ -401,8 +420,12 @@ export const api = createApi({
     }
     if (args.url.includes('/student/')) {
       const id = args.url.split('/').at(-1)!;
+      const context = assignmentContext(id);
       return {
         data: {
+          studentFeeStructureId: context.assignmentId,
+          canEditStructure: context.canEditStructure,
+          structureEditBlocker: context.structureEditBlocker,
           assignment: saved.get(id)?.assignment,
           warnings: [],
           concurrencyStamp: String(stamps.get(id) ?? 0),

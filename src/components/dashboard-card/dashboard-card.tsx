@@ -7,6 +7,8 @@ import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { Box, Card, Avatar, Typography } from '@mui/material';
 
+import { InfoTooltipIcon } from '../custom-tooltip/info-tooltip-icon';
+
 import { SubjectColorIndicator } from '../subject-color/SubejctColor';
 
 interface LabelItem {
@@ -23,6 +25,7 @@ interface DashboardCardProps {
   href?: string;
   labels?: LabelItem[];
   description?: string;
+  titleInfo?: string;
   density?: 'default' | 'compact';
   valueTypographyProps?: TypographyProps;
   sx?: SxProps<Theme>;
@@ -37,6 +40,7 @@ export const DashboardCard = ({
   href = '',
   labels = [],
   description,
+  titleInfo,
   density = 'default',
   valueTypographyProps,
   sx,
@@ -101,9 +105,14 @@ export const DashboardCard = ({
         {/* Content */}
         <Box sx={{ flex: 1, minWidth: 0 }}>
           {compact && (
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.75 }}>
-              {title}
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.75 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
+                {title}
+              </Typography>
+              {titleInfo && !href && (
+                <InfoTooltipIcon title={titleInfo} label={`${title} information`} />
+              )}
+            </Box>
           )}
           <Typography
             variant="h6"

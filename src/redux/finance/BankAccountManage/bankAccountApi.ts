@@ -1,3 +1,5 @@
+import { accountSettingHistoryRequest, type AccountSettingHistoryQuery } from '../accountSettingHistoryQuery';
+
 import { financeModuleType } from 'src/redux/tagTypes';
 
 import { financeModuleApi } from '../financeModuleApi';
@@ -73,7 +75,7 @@ export const bankAccountApi = financeModuleApi.injectEndpoints({
       invalidatesTags: [financeModuleType.bankAccount],
     }),
     getBankAccountVersions: builder.query({
-      query: (id: string) => ({ url: `/bank-accounts/${id}/versions`, method: 'GET' }),
+      query: (input: AccountSettingHistoryQuery) => accountSettingHistoryRequest('bank-accounts', input),
       providesTags: [financeModuleType.bankAccount],
     }),
   }),

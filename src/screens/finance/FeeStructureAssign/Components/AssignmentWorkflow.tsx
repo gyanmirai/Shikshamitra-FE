@@ -171,6 +171,10 @@ export default function AssignmentWorkflow({
     {
       academicYearId,
       studentIds: selectedStudents.map((student) => student.studentId),
+      includeEditDetails:
+        selectedStudents.length > 1 ||
+        !!editorProps.editAssignedPolicies ||
+        !selectedStudents[0]?.isFeeStructureAssigned,
     },
     { skip: !academicYearId || selectedStudents.length === 0, refetchOnMountOrArgChange: true }
   );
@@ -1605,10 +1609,11 @@ function AssignmentEditor({
                               {editAssignedStructure
                                 ? 'Changes apply to all '
                                 : contexts.some((source) => source.source === 'Admission')
-                                ? 'Each student keeps their admission dates and confirmed fee choices. Other settings apply to all '
-                                : 'The same policies, fees and dates apply to all '}
+                                  ? 'Each student keeps their admission dates and confirmed fee choices. Other settings apply to all '
+                                  : 'The same policies, fees and dates apply to all '}
                               {committedIds.size ? 'remaining' : 'selected'} students.
-                              {editAssignedStructure && ' Each student keeps their saved service dates unless you change them.'}
+                              {editAssignedStructure &&
+                                ' Each student keeps their saved service dates unless you change them.'}
                             </Typography>
                           ) : (
                             (isBulk || (outcome && (showResults || outcome.result))) && (

@@ -3,6 +3,7 @@ import { api } from 'src/redux/service';
 import { configureStore } from '@reduxjs/toolkit';
 
 import { cashManagementApi } from './cashManagementApi';
+import { bankAccountApi } from './BankAccountManage/bankAccountApi';
 
 const transport = vi.hoisted(() => ({ calls: [] as any[] }));
 vi.mock('src/redux/service', async () => {
@@ -153,3 +154,24 @@ it('scopes cash queries and posts exact approval, deposit and partial bank credi
   });
   store.dispatch(api.util.resetApiState());
 });
+
+for (const [endpoint, input] of [
+  ['postBankAccount', { academicYearId: 'year', body: { bankName: 'New bank' } }],
+  ['putBankAccount', { bankAccountId: 'bank', body: { bankName: 'Changed bank' } }],
+  ['deleteBankAccount', 'bank'],
+  ['patchBankAccountStatus', { id: 'bank', body: { isActive: false } }],
+] as const) {
+  it('refreshes subscribed cash bank options after ' + endpoint, async () => {
+    transport.calls = [];
+    const store = configureStore({
+      reducer: { [api.reducerPath]: api.reducer },
+      middleware: (getDefault) => getDefault().concat(api.middleware),
+    });
+    const subscription = store.dispatch(cashManagementApi.endpoints.getCashOptions.initiate({ academicYearId: 'year', operation: 'deposit' }));
+    await subscription.unwrap();
+    await store.dispatch((bankAccountApi.endpoints[endpoint].initiate as any)(input)).unwrap();
+    await vi.waitFor(() => expect(transport.calls.filter((call) => call.url === '/finance/cash-management/options')).toHaveLength(2));
+    subscription.unsubscribe();
+    store.dispatch(api.util.resetApiState());
+  });
+}

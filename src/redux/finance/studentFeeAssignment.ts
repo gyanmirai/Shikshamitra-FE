@@ -260,14 +260,37 @@ const tags = [
   financeModuleType.feeDetails,
 ];
 const assignmentMutationTags = [...tags, financeModuleType.feeHead, financeModuleType.feeCategory];
+const assignmentStudentTag = ({
+  studentId,
+  academicYearId,
+}: {
+  studentId: string;
+  academicYearId: string;
+}) => ({
+  type: financeModuleType.studentFeeAssignment,
+  id: `${academicYearId}:student:${studentId}`,
+});
+const assignmentYearTag = (academicYearId: string) => ({
+  type: financeModuleType.studentFeeAssignment,
+  id: `${academicYearId}:students`,
+});
+const assignmentChangedTags = (items: { studentId: string; academicYearId: string }[]) => [
+  ...assignmentMutationTags,
+  ...items.map(assignmentStudentTag),
+  ...Array.from(new Set(items.map((x) => x.academicYearId))).map(assignmentYearTag),
+];
 export const studentFeeAssignmentApi = api.injectEndpoints({
   endpoints: (builder) => ({
     assignmentContexts: builder.query<
       AssignmentContext[],
-      { academicYearId: string; studentIds: string[] }
+      { academicYearId: string; studentIds: string[]; includeEditDetails?: boolean }
     >({
       query: (body) => ({ url: '/student-fee-structure/contexts', method: 'POST', body }),
-      providesTags: [...tags, financePolicyType.prorationPolicy, financeModuleType.feeStructure],
+      providesTags: (_r, _e, { academicYearId, studentIds }) => [
+        ...studentIds.map((studentId) => assignmentStudentTag({ studentId, academicYearId })),
+        { type: financePolicyType.prorationPolicy, id: `year:${academicYearId}` },
+        financeModuleType.feeStructure,
+      ],
     }),
     assignmentPolicyOptions: builder.query<
       AssignmentPolicy[],
@@ -299,7 +322,7 @@ export const studentFeeAssignmentApi = api.injectEndpoints({
         method: 'PUT',
         body,
       }),
-      invalidatesTags: (result) => (result ? tags : []),
+      invalidatesTags: (result, _error, arg) => (result ? assignmentChangedTags([arg]) : []),
     }),
     assignmentStudents: builder.query<
       { items: AssignmentStudent[]; totalCount: number },
@@ -319,7 +342,7 @@ export const studentFeeAssignmentApi = api.injectEndpoints({
       }
     >({
       query: (params) => ({ url: '/student-fee-structure/students', params }),
-      providesTags: tags,
+      providesTags: (_r, _e, { academicYearId }) => [assignmentYearTag(academicYearId)],
     }),
     assignmentCandidates: builder.query<
       AssignmentCandidate[],
@@ -342,7 +365,7 @@ export const studentFeeAssignmentApi = api.injectEndpoints({
         url: `/student-fee-structure/student/${studentId}`,
         params: { academicYearId },
       }),
-      providesTags: tags,
+      providesTags: (_r, _e, arg) => [assignmentStudentTag(arg)],
     }),
     assignmentPreview: builder.mutation<AssignmentPreview, AssignmentRequest>({
       query: (body) => ({ url: '/student-fee-structure/preview', method: 'POST', body }),
@@ -352,12 +375,18 @@ export const studentFeeAssignmentApi = api.injectEndpoints({
     }),
     assignmentCommit: builder.mutation<AssignmentCommit, AssignmentRequest>({
       query: (body) => ({ url: '/student-fee-structure/assign', method: 'POST', body }),
-      invalidatesTags: (result) => (result ? assignmentMutationTags : []),
+      invalidatesTags: (result, _error, arg) => (result ? assignmentChangedTags([arg]) : []),
     }),
     assignmentBulkCommit: builder.mutation<AssignmentBulkResult, { items: AssignmentRequest[] }>({
       query: (body) => ({ url: '/student-fee-structure/assign-bulk', method: 'POST', body }),
-      invalidatesTags: (result) =>
-        result?.results.some((r) => r.result) ? assignmentMutationTags : [],
+      invalidatesTags: (result, _error, { items }) => {
+        const succeeded = new Set(
+          result?.results.filter((r) => r.result).map((r) => r.studentId) ?? []
+        );
+        return succeeded.size
+          ? assignmentChangedTags(items.filter((item) => succeeded.has(item.studentId)))
+          : [];
+      },
     }),
   }),
 });

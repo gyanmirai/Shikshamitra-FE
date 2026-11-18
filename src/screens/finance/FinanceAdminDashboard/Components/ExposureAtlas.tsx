@@ -7,34 +7,45 @@ import { useSelector } from 'react-redux';
 import { useMemo, useState, useEffect } from 'react';
 import { formatNumber } from 'src/utils/formate_number';
 import BoardMediumDropdown from 'src/components/boardMediumDropdown';
-import {
-  Card,
-  Grid,
-  Stack,
-  Table,
-  Divider,
-  TableRow,
-  TableBody,
-  TableCell,
-  TableHead,
-  CardHeader,
-  Typography,
-  CardContent,
-  TableContainer,
-} from '@mui/material';
+import CustomizableTable from 'src/components/customizabaleTable';
+import CustomSelect from 'src/components/custom-select';
+import { FormSectionCard } from 'src/components/form-section-card';
+import { DashboardCard } from 'src/components/dashboard-card/dashboard-card';
+import type { IColumn } from 'src/components/customizabaleTable/types';
+import { Box, Stack, Typography } from '@mui/material';
 
 import { financeExposurePreview } from '../finance-admin-dashboard-preview-data';
-import { financeDashboardCardSx, financeDashboardTileSx } from './finance-dashboard-card-styles';
+import { financeDashboardCardSx } from './finance-dashboard-card-styles';
 
-function academicYearLabel(year: Record<string, any>) {
-  if (year.name || year.academicYearName || year.yearName) {
-    return year.name || year.academicYearName || year.yearName;
-  }
-
-  const start = year.startDate ? new Date(year.startDate).getFullYear() : '';
-  const end = year.endDate ? new Date(year.endDate).getFullYear() : '';
-  return start && end ? `AY ${start}–${end}` : 'Selected academic year';
-}
+const outstandingColumns: IColumn[] = [
+  { id: 'className', label: 'Class', rowHeader: true, minWidth: 140, isFilter: true, isSort: true },
+  ...[
+    { id: 'outstanding', label: 'Outstanding' },
+    { id: 'overdue', label: 'Overdue' },
+    { id: 'charges', label: 'Separate Charges' },
+  ].map((column): IColumn => ({
+    ...column,
+    minWidth: 150,
+    align: 'right',
+    headerAlign: 'left',
+    filterType: 'number',
+    valueType: 'money',
+    isFilter: true,
+    isSort: true,
+    render: (value) => formatNumber(value, 'INR'),
+  })),
+  {
+    id: 'students',
+    label: 'Students With Overdue Fees',
+    minWidth: 180,
+    align: 'right',
+    headerAlign: 'left',
+    filterType: 'number',
+    valueType: 'number',
+    isFilter: true,
+    isSort: true,
+  },
+];
 
 export default function ExposureAtlas() {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
@@ -68,119 +79,104 @@ export default function ExposureAtlas() {
     }
   }, [activeBoardMedium, selectedBoardMedium?.boardId, selectedBoardMedium?.mediumId]);
 
-  const yearLabel = currentYear?.id
-    ? academicYearLabel(currentYear as Record<string, any>)
-    : 'No academic year selected';
+  const [selectedClass, setSelectedClass] = useState('all');
+  const [page, setPage] = useState(0);
+  const classOptions = [
+    { label: 'All classes', value: 'all' },
+    ...financeExposurePreview.classes.map((item) => ({
+      label: item.className,
+      value: item.className,
+    })),
+  ];
+  const rows = financeExposurePreview.classes.filter(
+    (item) => selectedClass === 'all' || item.className === selectedClass
+  );
 
   return (
-    <Card component="section" aria-labelledby="outstanding-fees-title" sx={financeDashboardCardSx}>
-      <CardHeader
-        title={
-          <Typography id="outstanding-fees-title" variant="h6">
-            Outstanding Fees by Class
-          </Typography>
-        }
-        subheader={`Current academic year · ${yearLabel}`}
-        action={
-          options.length ? (
-            <BoardMediumDropdown
-              value={activeBoardMedium}
-              onChange={setSelectedBoardMedium}
-              minWidth={240}
-            />
-          ) : null
-        }
-        sx={{
-          p: 0,
-          mb: 2,
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: 1,
-          '& .MuiCardHeader-content': { minWidth: 0 },
-          '& .MuiCardHeader-action': { m: 0, width: { xs: '100%', md: 'auto' } },
-        }}
-      />
+    <FormSectionCard
+      title="Outstanding Fees by Class"
+      descriptionTooltip="Outstanding and overdue fees for the selected academic year, independent of activity dates. Separate charges are shown separately. These preview rows are not scoped by board and medium. Use class, search or column filters to refine the table."
+      sx={financeDashboardCardSx}
+    >
+      <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" alignItems="center">
+        {options.length > 0 && (
+          <BoardMediumDropdown
+            value={activeBoardMedium}
+            onChange={setSelectedBoardMedium}
+            minWidth={200}
+          />
+        )}
+        <CustomSelect
+          label="Class"
+          value={selectedClass}
+          onChange={(value) => {
+            setSelectedClass(String(value));
+            setPage(0);
+          }}
+          options={classOptions}
+          size="small"
+          sx={{ minWidth: 160 }}
+        />
+      </Stack>
       {!options.length && (
-        <Typography role="status" variant="body2" color="text.secondary" sx={{ px: 2, pb: 2 }}>
+        <Typography role="status" variant="body2" color="text.secondary">
           No board and medium options are available for this year.
         </Typography>
       )}
-      <CardContent sx={{ p: '0 !important', mb: 2 }}>
-        <Grid container spacing={1.5}>
-          <Grid size={{ xs: 6, sm: 4 }}>
-            <Stack sx={financeDashboardTileSx}>
-              <Typography variant="caption" color="text.secondary">
-                Total outstanding
-              </Typography>
-              <Typography component="p" variant="h6" sx={{ fontVariantNumeric: 'tabular-nums' }}>
-                {formatNumber(financeExposurePreview.outstanding, 'INR')}
-              </Typography>
-            </Stack>
-          </Grid>
-          <Grid size={{ xs: 6, sm: 4 }}>
-            <Stack sx={financeDashboardTileSx}>
-              <Typography variant="caption" color="text.secondary">
-                Overdue
-              </Typography>
-              <Typography component="p" variant="h6" sx={{ fontVariantNumeric: 'tabular-nums' }}>
-                {formatNumber(financeExposurePreview.overdue, 'INR')}
-              </Typography>
-            </Stack>
-          </Grid>
-          <Grid size={{ xs: 12, sm: 4 }}>
-            <Stack sx={financeDashboardTileSx}>
-              <Typography variant="caption" color="text.secondary">
-                Students with overdue fees
-              </Typography>
-              <Typography component="p" variant="h6">
-                {financeExposurePreview.overdueStudents}
-              </Typography>
-            </Stack>
-          </Grid>
-        </Grid>
-      </CardContent>
-      <Divider />
-      <TableContainer sx={{ maxWidth: '100%' }}>
-        <Table size="small" aria-label="Outstanding fees by class" sx={{ minWidth: 580 }}>
-          <TableHead>
-            <TableRow>
-              <TableCell>Class</TableCell>
-              <TableCell align="right">Outstanding</TableCell>
-              <TableCell align="right">Overdue</TableCell>
-              <TableCell align="right">Separate charges</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {financeExposurePreview.classes.map((item) => (
-              <TableRow key={item.className} hover>
-                <TableCell component="th" scope="row">
-                  <Typography variant="subtitle2">{item.className}</Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {item.students} students overdue
-                  </Typography>
-                </TableCell>
-                <TableCell align="right">{formatNumber(item.outstanding, 'INR')}</TableCell>
-                <TableCell align="right">{formatNumber(item.overdue, 'INR')}</TableCell>
-                <TableCell align="right">{formatNumber(item.charges, 'INR')}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-      <Divider />
-      <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        justifyContent="space-between"
-        spacing={0.5}
-        sx={{ pt: 2 }}
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, minmax(0, 1fr))' },
+          gap: 2,
+        }}
       >
-        <Typography variant="caption" color="text.secondary">
-          Separate charges total: {formatNumber(financeExposurePreview.separateCharges, 'INR')}
-        </Typography>
-        <Typography variant="caption" color="text.secondary">
-          The activity date filter does not change these year totals.
-        </Typography>
-      </Stack>
-    </Card>
+        <DashboardCard
+          title="Overdue"
+          value={formatNumber(financeExposurePreview.overdue, 'INR')}
+          icon="mdi:clock-alert-outline"
+          titleInfo="Total overdue fees across the selected academic year; unaffected by table filters."
+          density="compact"
+        />
+        <DashboardCard
+          title="Students With Overdue Fees"
+          value={financeExposurePreview.overdueStudents}
+          icon="mdi:account-alert-outline"
+          titleInfo="Students with overdue fees across the selected academic year; unaffected by table filters."
+          density="compact"
+        />
+        <DashboardCard
+          title="Separate Charges"
+          value={formatNumber(financeExposurePreview.separateCharges, 'INR')}
+          icon="mdi:receipt-text-outline"
+          titleInfo="Separate charges across the selected academic year; unaffected by table filters."
+          density="compact"
+        />
+      </Box>
+      <CustomizableTable
+        tableId="finance-outstanding-fees-by-class"
+        tableTitle="Outstanding Fees by Class"
+        columns={outstandingColumns}
+        data={rows}
+        page={page}
+        onPaginationChange={(nextPage) => setPage(nextPage)}
+        onSearchInputChange={() => setPage(0)}
+        onFiltersChange={() => setPage(0)}
+        onSortChange={() => setPage(0)}
+        variant="embedded"
+        exportScope="all"
+        exportContext={[
+          'Dashboard preview data',
+          `Academic year: ${currentYear?.name ?? 'Selected year'}`,
+        ]}
+        searchableFields={['className']}
+        searchFieldProps={{
+          placeholder: 'Search classes...',
+          inputProps: { 'aria-label': 'Search outstanding fees by class' },
+        }}
+        noDataText="No outstanding fees match these filters."
+        wrapperProps={{ sx: { minWidth: 0 } }}
+        tableContainerProps={{ sx: { maxHeight: 420 } }}
+      />
+    </FormSectionCard>
   );
 }
