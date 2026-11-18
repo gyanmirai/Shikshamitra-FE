@@ -91,6 +91,7 @@ const CustomDialog = ({
       PaperProps={{
         sx: {
           display: 'flex',
+          outline: 0,
           overflow: 'hidden',
           flexDirection: 'column',
           '& .MuiDialogActions-root': { flexShrink: 0 },
@@ -140,7 +141,9 @@ const CustomDialog = ({
               <CustomTooltip arrow placement="bottom" title={titleInfo}>
                 <IconButton
                   size="small"
-                  aria-label={typeof title === 'string' ? `${title} information` : 'Dialog information'}
+                  aria-label={
+                    typeof title === 'string' ? `${title} information` : 'Dialog information'
+                  }
                   sx={{ color: 'info.main', flexShrink: 0 }}
                 >
                   <InfoOutlined sx={{ fontSize: 18 }} />
@@ -165,7 +168,9 @@ const CustomDialog = ({
         </Box>
 
         {/* Subtle separator using border instead of full Divider for cleaner look */}
-        <Box sx={{ borderBottom: `1px solid ${theme.palette.divider}`, width: '100%', flexShrink: 0 }} />
+        <Box
+          sx={{ borderBottom: `1px solid ${theme.palette.divider}`, width: '100%', flexShrink: 0 }}
+        />
 
         {children}
       </FormComponent>

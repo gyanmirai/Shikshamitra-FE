@@ -37,7 +37,7 @@ vi.mock('next/dynamic', () => ({
   default: () =>
     function Wizard({ onClose, error }: { onClose: () => void; error: boolean }) {
       return (
-        <div role="dialog" aria-label="Complete HR Setup">
+        <div role="dialog" aria-label="Let’s Complete Your HR Setup">
           {error && <p>Unable to check HR setup</p>}
           <button type="button" onClick={onClose}>
             Close for now
@@ -47,14 +47,14 @@ vi.mock('next/dynamic', () => ({
     },
 }));
 
-function Workspace() {
+function Workspace({ onDashboard = false }: { onDashboard?: boolean }) {
   const [hr, setHr] = useState(true);
   return (
     <HrSetupSessionProvider>
       <button type="button" onClick={() => setHr((value) => !value)}>
         Navigate
       </button>
-      {hr && <HrSetupCoordinator />}
+      {hr && <HrSetupCoordinator onDashboard={onDashboard} />}
     </HrSetupSessionProvider>
   );
 }
@@ -77,6 +77,18 @@ describe('HR setup reminder lifetime', () => {
     fireEvent.click(screen.getByText('Navigate'));
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(mocks.read.mock.calls.at(-1)?.[1].skip).toBe(true);
+  });
+  it('offers dashboard resume after dismissal without relaunching automatically', () => {
+    const view = render(<Workspace />);
+    fireEvent.click(screen.getByText('Close for now'));
+    expect(screen.queryByRole('button', { name: 'Continue HR setup' })).toBeNull();
+    view.rerender(<Workspace onDashboard />);
+    expect(screen.queryByRole('dialog')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Continue HR setup' }));
+    expect(screen.getByRole('dialog')).toBeTruthy();
+    mocks.query.currentData.isReady = true;
+    fireEvent.click(screen.getByText('Close for now'));
+    expect(screen.queryByRole('button', { name: 'Continue HR setup' })).toBeNull();
   });
   it('returns after a new document lifetime', () => {
     const view = render(<Workspace />);
@@ -114,9 +126,11 @@ describe('HR setup reminder lifetime', () => {
     existing.setAttribute('aria-label', 'Existing staff form');
     document.body.appendChild(existing);
     render(<Workspace />);
-    expect(screen.queryByRole('dialog', { name: 'Complete HR Setup' })).toBeNull();
+    expect(screen.queryByRole('dialog', { name: 'Let’s Complete Your HR Setup' })).toBeNull();
     existing.remove();
-    expect(await screen.findByRole('dialog', { name: 'Complete HR Setup' })).toBeTruthy();
+    expect(
+      await screen.findByRole('dialog', { name: 'Let’s Complete Your HR Setup' })
+    ).toBeTruthy();
   });
   it('reports a failed check without claiming configuration is missing', () => {
     mocks.query.isError = true;

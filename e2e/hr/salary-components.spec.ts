@@ -4,7 +4,7 @@ import type { Page } from '@playwright/test';
 import { test, expect } from '@playwright/test';
 
 const wizardFor = (page: Page) =>
-  page.getByRole('dialog', { name: 'Complete HR Setup', exact: true });
+  page.getByRole('dialog', { name: 'Let’s Complete Your HR Setup', exact: true });
 const pickerFor = (page: Page, kind: string) =>
   page.getByRole('dialog', { name: `Add ${kind} Component`, exact: true });
 
@@ -19,7 +19,7 @@ async function createDeduction(page: Page, name: string) {
 async function openTemplate(page: Page) {
   const wizard = wizardFor(page);
   await wizard.getByRole('button', { name: 'Salary Template', exact: true }).click();
-  await wizard.getByRole('button', { name: 'Set up', exact: true }).click();
+  await wizard.getByRole('button', { name: /^Configure / }).click();
   await wizard.getByLabel(/^Template name/).fill('Retained salary draft');
 }
 
@@ -34,7 +34,7 @@ test.describe('Bug 6484 with synthetic APIs and real setup editors', () => {
   }) => {
     await page.goto('/');
     const wizard = wizardFor(page);
-    await wizard.getByRole('button', { name: 'Set up', exact: true }).click();
+    await wizard.getByRole('button', { name: /^Configure / }).click();
     await wizard.getByLabel('Earning Name *', { exact: true }).fill('Synthetic Basic');
     await wizard.getByRole('combobox', { name: 'Calculation Type *', exact: true }).click();
     await page.getByRole('option', { name: 'Amount Based', exact: true }).click();
@@ -77,8 +77,8 @@ test.describe('Bug 6484 with synthetic APIs and real setup editors', () => {
     await wizard.getByRole('button', { name: 'Preview salary', exact: true }).click();
     await expect(wizard.getByText('Preview ready', { exact: true }).first()).toBeVisible();
     await wizard.getByRole('button', { name: 'Save and next', exact: true }).click();
-    await expect(wizard.getByRole('button', { name: 'Finish setup', exact: true })).toBeEnabled();
-    await wizard.getByRole('button', { name: 'Finish setup', exact: true }).click();
+    await expect(wizard.getByRole('button', { name: 'Explore HR', exact: true })).toBeEnabled();
+    await wizard.getByRole('button', { name: 'Explore HR', exact: true }).click();
     await expect(wizard).toHaveCount(0);
     const saved = await (await request.get('/fixture/state')).json();
     expect(saved.deductions).toHaveLength(1);
@@ -172,7 +172,7 @@ test.describe('Bug 6484 with synthetic APIs and real setup editors', () => {
     await page.goto('/');
     const wizard = wizardFor(page);
     await wizard.getByRole('button', { name: 'Salary Template', exact: true }).click();
-    await wizard.getByRole('button', { name: 'Set up', exact: true }).click();
+    await wizard.getByRole('button', { name: /^Configure / }).click();
     await expect(wizard.getByRole('alert')).toContainText(
       'Unable to load salary components. Retry to continue configuring the template.'
     );
@@ -278,11 +278,11 @@ test.describe('Bug 6484 with synthetic APIs and real setup editors', () => {
         await page.goto(`/?theme=${theme}`);
         const wizard = wizardFor(page);
         if (viewport.width < 600) {
-          await wizard.getByRole('button', { name: 'Next', exact: true }).click();
+          await wizard.getByTestId('hr-setup-next').click();
         } else {
           await wizard.getByRole('button', { name: 'Salary Template', exact: true }).click();
         }
-        await wizard.getByRole('button', { name: 'Set up', exact: true }).click();
+        await wizard.getByRole('button', { name: /^Configure / }).click();
         await wizard.getByLabel(/^Template name/).fill('Responsive draft');
         for (const kind of ['Earning', 'Deduction']) {
           const launcher = wizard.getByRole('button', { name: `Add ${kind}`, exact: true });

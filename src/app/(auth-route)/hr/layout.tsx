@@ -5,9 +5,10 @@ import type { RootState } from 'src/redux/store';
 import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { View403 } from 'src/sections/error';
-import { hrPermissions } from 'src/constants/hr-menus';
+import { usePathname } from 'next/navigation';
 import { SplashScreen } from 'src/components/loading-screen';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 import { useGetTenantByIdQuery } from 'src/redux/tenant/tenantApi';
 import { hrRecoveryScope } from 'src/screens/hr/recovery/hr-recovery-events';
 import { HrSetupCoordinator } from 'src/screens/hr/setup/hr-setup-coordinator';
@@ -19,6 +20,7 @@ const HRLayout: React.FC<{ children: React.ReactNode }> = ({
 }: {
   children: React.ReactNode;
 }) => {
+  const pathname = usePathname();
   const auth = useSelector((state: RootState) => state.auth);
   const { permissions, loading, permissionsInitialized, user } = useSelector(
     (state: RootState) => state.auth
@@ -40,8 +42,8 @@ const HRLayout: React.FC<{ children: React.ReactNode }> = ({
   return hasPermission ? (
     <TableExportContext.Provider value={exportContext}>
       <HrRecoveryProvider key={hrRecoveryScope(auth)}>
+        <HrSetupCoordinator onDashboard={pathname === hrPaths.dashboard} />
         {children}
-        <HrSetupCoordinator />
       </HrRecoveryProvider>
     </TableExportContext.Provider>
   ) : (
