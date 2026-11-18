@@ -1,7 +1,7 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { IColumn } from 'src/components/customizabaleTable/types';
+import type { IData, IColumn } from 'src/components/customizabaleTable/types';
 import type {
   House,
   HouseStudent,
@@ -17,6 +17,7 @@ import { useRef, useState, useEffect } from 'react';
 import { CustomTabs } from 'src/components/custom-tabs';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -60,6 +61,7 @@ import HouseLogoAvatar from './house-logo-avatar';
 import HouseLeaderDialog from './house-leader-dialog';
 import HouseAssignmentDrawer from './house-assignment-drawer';
 import { recordsQueryUrl } from '../records/records-url-state';
+import { studentAcademicFilterRowSx } from '../student-academic-filter-layout';
 import { houseWorkspaceState, selectionForContext } from './house-management-model';
 
 type Session =
@@ -67,6 +69,48 @@ type Session =
   | { kind: 'leader'; type: 'house' | 'division'; record: House | HouseDivision }
   | { kind: 'assignment'; mode: 'assign' | 'remove'; ids: string[] }
   | { kind: 'delete'; house: House };
+
+function classDivisionLabel(standardName: string, divisionName?: string | null) {
+  return divisionName ? `${standardName} / ${divisionName}` : standardName;
+}
+
+const classDivisionValue = (value: unknown, row: IData) =>
+  classDivisionLabel(String(value ?? '—'), row.divisionName);
+
+function StudentLeaderIcon({
+  title,
+  icon,
+  color,
+}: {
+  title: string;
+  icon: 'mdi:shield-star-outline' | 'mdi:account-star';
+  color: 'info.main' | 'warning.main';
+}) {
+  return (
+    <CustomTooltip title={title} placement="right" arrow>
+      <Box
+        component="span"
+        role="img"
+        tabIndex={0}
+        aria-label={title}
+        sx={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          flexShrink: 0,
+          color,
+          borderRadius: 0.5,
+          '&:focus-visible': {
+            outline: '2px solid',
+            outlineColor: 'primary.main',
+            outlineOffset: 2,
+          },
+        }}
+      >
+        <Iconify icon={icon} width={16} aria-hidden />
+      </Box>
+    </CustomTooltip>
+  );
+}
 
 export default function HouseManagement() {
   const router = useRouter();
@@ -168,6 +212,9 @@ export default function HouseManagement() {
   const selected =
     canManage && ready && !query.isError ? selectionForContext(selection, context) : [];
   const currentSession = session?.context === context ? session.value : null;
+  useEffect(() => {
+    setSession((previous) => (previous?.context === context ? previous : null));
+  }, [context]);
   const previousData = useRef<{ context: string; page: number; data: unknown } | null>(null);
   useEffect(() => {
     if (academic.isError || query.isError) {
@@ -433,29 +480,56 @@ export default function HouseManagement() {
       isSort: true,
       isFilter: true,
       filterType: 'string',
-      minWidth: 180,
-      render: (_, row) => (
-        <Stack direction="row" spacing={1} alignItems="center">
-          <Avatar
-            sx={{
-              width: 32,
-              height: 32,
-              bgcolor: 'background.neutral',
-              color: 'text.secondary',
-              fontSize: 12,
-            }}
-          >
-            {String((row as HouseStudent).studentName)
-              .split(' ')
-              .filter(Boolean)
-              .map((part) => part.charAt(0))
-              .join('')
-              .slice(0, 2)
-              .toUpperCase() || '—'}
-          </Avatar>
-          {name(row as HouseStudent)}
-        </Stack>
-      ),
+      minWidth: 220,
+      width: '34%',
+      render: (_, data) => {
+        const row = data as HouseStudent;
+        return (
+          <Stack direction="row" spacing={1} alignItems="center">
+            <Avatar
+              sx={{
+                width: 32,
+                height: 32,
+                flexShrink: 0,
+                bgcolor: 'background.neutral',
+                color: 'text.secondary',
+                fontSize: 12,
+              }}
+            >
+              {String(row.studentName)
+                .split(' ')
+                .filter(Boolean)
+                .map((part) => part.charAt(0))
+                .join('')
+                .slice(0, 2)
+                .toUpperCase() || '—'}
+            </Avatar>
+            <Stack
+              component="span"
+              direction="row"
+              gap={0.75}
+              alignItems="center"
+              sx={{ minWidth: 0 }}
+            >
+              {name(row)}
+              {row.isHouseLeader && (
+                <StudentLeaderIcon
+                  title={row.houseName ? `House leader · ${row.houseName}` : 'House leader'}
+                  icon="mdi:shield-star-outline"
+                  color="info.main"
+                />
+              )}
+              {row.isDivisionLeader && (
+                <StudentLeaderIcon
+                  title={`Division leader · ${classDivisionLabel(row.standardName, row.divisionName)}`}
+                  icon="mdi:account-star"
+                  color="warning.main"
+                />
+              )}
+            </Stack>
+          </Stack>
+        );
+      },
     },
     {
       id: 'admissionNumber',
@@ -468,20 +542,14 @@ export default function HouseManagement() {
     },
     {
       id: 'standardName',
-      label: 'Class',
+      label: 'Class / Division',
       isSort: true,
       isFilter: true,
       filterType: 'string',
-      minWidth: 100,
-    },
-    {
-      id: 'divisionName',
-      label: 'Division',
-      minWidth: 100,
-      isSort: false,
-      isFilter: true,
-      filterType: 'string',
-      render: (value) => value || '—',
+      minWidth: 140,
+      render: classDivisionValue,
+      filterValue: classDivisionValue,
+      exportValue: classDivisionValue,
     },
     {
       id: 'rollNumber',
@@ -510,18 +578,6 @@ export default function HouseManagement() {
             Unassigned
           </Label>
         ),
-    },
-    {
-      id: 'leadership',
-      label: 'Leadership',
-      minWidth: 180,
-      render: (_, row) => (
-        <Stack direction="row" spacing={0.5} useFlexGap flexWrap="wrap">
-          {row.isHouseLeader && <Label color="info">House leader</Label>}
-          {row.isDivisionLeader && <Label color="warning">Division leader</Label>}
-          {!row.isHouseLeader && !row.isDivisionLeader && '—'}
-        </Stack>
-      ),
     },
   ];
   const divisionColumns: IColumn[] = [
@@ -599,6 +655,7 @@ export default function HouseManagement() {
         flexShrink: { xs: 0, md: 1 },
         display: 'flex',
         flexDirection: 'column',
+        gap: 1,
       }}
     >
       <CustomBreadcrumbs
@@ -630,7 +687,6 @@ export default function HouseManagement() {
         variant="outlined"
         sx={{
           borderRadius: 2,
-          mb: 1.5,
           borderColor: 'divider',
           bgcolor: 'background.paper',
           flexShrink: 0,
@@ -643,10 +699,8 @@ export default function HouseManagement() {
           guardUnsavedChanges={false}
           onChange={embedded ? (_, tab: string) => !currentSession && update({ tab, search: undefined, sort: undefined, page: undefined }) : undefined}
           aria-label="House management sections"
-          sx={{
-            bgcolor: 'transparent',
-            '& .MuiTabs-scroller': { px: 1, py: 0.75 },
-          }}
+          sx={{ bgcolor: 'transparent' }}
+          slotProps={{ scroller: { px: 0.75, py: 0.5 }, tab: { px: 1.25 } }}
         >
           <Tab
             value="houses"
@@ -698,8 +752,8 @@ export default function HouseManagement() {
       <Card
         variant="outlined"
         sx={{
-          p: 2,
-          mb: 1.5,
+          px: 2,
+          py: 1.25,
           borderRadius: 2,
           borderColor: 'divider',
           bgcolor: 'background.paper',
@@ -708,30 +762,10 @@ export default function HouseManagement() {
       >
         <Stack
           direction={{ xs: 'column', lg: 'row' }}
-          spacing={1.5}
+          gap={1}
           alignItems={{ xs: 'stretch', lg: 'center' }}
         >
-          <Box
-            sx={{
-              display: 'grid',
-              gap: 1.5,
-              gridTemplateColumns: {
-                xs: 'minmax(0, 1fr)',
-                sm:
-                  state.tab === 'houses'
-                    ? 'repeat(2, minmax(0, 1fr))'
-                    : 'repeat(2, minmax(0, 1fr))',
-                lg:
-                  state.tab === 'houses'
-                    ? 'repeat(2, minmax(0, 1fr))'
-                    : state.tab === 'divisions'
-                      ? 'repeat(3, minmax(0, 1fr))'
-                      : 'repeat(4, minmax(0, 1fr))',
-              },
-              flex: 1,
-              minWidth: 0,
-            }}
-          >
+          <Box sx={{ ...studentAcademicFilterRowSx, flex: 1 }}>
             <CustomSelect
               label="Board"
               value={academic.currentBoard?.id ?? ''}
@@ -1000,8 +1034,7 @@ export default function HouseManagement() {
           variant="outlined"
           sx={{
             px: 2,
-            py: 1,
-            mb: 1.5,
+            py: 0.75,
             borderRadius: 2,
             borderColor: 'divider',
             bgcolor: selected.length > 0 ? 'action.selected' : 'background.paper',
@@ -1012,8 +1045,7 @@ export default function HouseManagement() {
             role="toolbar"
             aria-label="Selected students"
             direction="row"
-            spacing={1}
-            useFlexGap
+            gap={0.5}
             flexWrap="wrap"
             alignItems="center"
           >

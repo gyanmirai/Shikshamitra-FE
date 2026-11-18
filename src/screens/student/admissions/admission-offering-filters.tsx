@@ -5,7 +5,7 @@ import type { Standards } from 'src/types/school';
 import type { AdmissionCycle } from 'src/redux/student/admissions/admission-cycles-api';
 
 import { useEffect } from 'react';
-import { Grid, Paper, Button } from '@mui/material';
+import { Box, Paper, Button } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { useGetClassByMediumQuery } from 'src/redux/class/classApi';
@@ -13,6 +13,7 @@ import { readAcademicFilterIds } from 'src/utils/student-academic-filter-query';
 import { useGetAcademicOrganizationOptionsQuery } from 'src/redux/academicOrganizationOptions/academicOrganizationOptionsApi';
 
 import { getAdmissionHierarchyOptions } from './admission-hierarchy-options';
+import { studentAcademicFilterRowSx } from '../student-academic-filter-layout';
 
 import type { AdmissionOfferingFilters as FilterValues } from './use-admission-offering-filters';
 
@@ -80,124 +81,114 @@ export function AdmissionOfferingFilters({
 
   return (
     <Paper variant="outlined" sx={{ p: 1, borderRadius: 2 }}>
-      <Grid container spacing={1} alignItems="center">
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <CustomSelect
-            options={cycleOptions}
-            label="Admission Cycle"
-            labelKey="name"
-            valueKey="id"
-            value={cycle?.id ?? ''}
-            isLoading={cyclesLoading}
-            disabled={!cycleOptions.length}
-            onChange={(id) =>
-              onChange({
-                admissionCycleId: String(id),
-                campusId: '',
-                boardId: '',
-                mediumId: '',
-                stageId: '',
-                standardId: '',
-              })
-            }
-          />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 2 }}>
-          <CustomSelect
-            options={boards}
-            label="Board"
-            labelKey="name"
-            valueKey="id"
-            value={values.boardId}
-            isLoading={hierarchyQuery.isFetching}
-            disabled={!cycle || hierarchyQuery.isError}
-            onChange={(id) =>
-              onChange({
-                boardId: String(id),
-                mediumId: '',
-                stageId: '',
-                standardId: '',
-              })
-            }
-          />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 2 }}>
-          <CustomSelect
-            options={mediums}
-            label="Medium"
-            labelKey="name"
-            valueKey="id"
-            value={values.mediumId}
-            disabled={!values.boardId || hierarchyQuery.isFetching || hierarchyQuery.isError}
-            onChange={(id) =>
-              onChange({
-                mediumId: String(id),
-                stageId: '',
-                standardId: '',
-              })
-            }
-          />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <CustomSelect
-            multiple
-            allowSelectAll
-            options={standards}
-            label="Class"
-            labelKey="name"
-            valueKey="id"
-            value={selectedClassIds.length ? selectedClassIds : [ALL_FILTER_VALUE]}
-            renderValue={() =>
-              !selectedClassIds.length || allClassesSelected
-                ? `All classes${standards.length ? ` (${standards.length})` : ''}`
-                : `${selectedClassIds.length} selected`
-            }
-            MenuProps={{
-              PaperProps: { sx: { maxHeight: 360, maxWidth: 'calc(100% - 32px)' } },
-              MenuListProps: {
-                sx: {
-                  display: 'grid',
-                  gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))' },
-                  '& [data-select-all]': { gridColumn: '1 / -1' },
-                  '& .MuiMenuItem-root': { whiteSpace: 'normal' },
-                },
+      <Box sx={studentAcademicFilterRowSx}>
+        <CustomSelect
+          options={cycleOptions}
+          label="Admission Cycle"
+          labelKey="name"
+          valueKey="id"
+          value={cycle?.id ?? ''}
+          isLoading={cyclesLoading}
+          disabled={!cycleOptions.length}
+          onChange={(id) =>
+            onChange({
+              admissionCycleId: String(id),
+              campusId: '',
+              boardId: '',
+              mediumId: '',
+              stageId: '',
+              standardId: '',
+            })
+          }
+        />
+        <CustomSelect
+          options={boards}
+          label="Board"
+          labelKey="name"
+          valueKey="id"
+          value={values.boardId}
+          isLoading={hierarchyQuery.isFetching}
+          disabled={!cycle || hierarchyQuery.isError}
+          onChange={(id) =>
+            onChange({
+              boardId: String(id),
+              mediumId: '',
+              stageId: '',
+              standardId: '',
+            })
+          }
+        />
+        <CustomSelect
+          options={mediums}
+          label="Medium"
+          labelKey="name"
+          valueKey="id"
+          value={values.mediumId}
+          disabled={!values.boardId || hierarchyQuery.isFetching || hierarchyQuery.isError}
+          onChange={(id) =>
+            onChange({
+              mediumId: String(id),
+              stageId: '',
+              standardId: '',
+            })
+          }
+        />
+        <CustomSelect
+          multiple
+          allowSelectAll
+          options={standards}
+          label="Class"
+          labelKey="name"
+          valueKey="id"
+          value={selectedClassIds.length ? selectedClassIds : [ALL_FILTER_VALUE]}
+          renderValue={() =>
+            !selectedClassIds.length || allClassesSelected
+              ? `All classes${standards.length ? ` (${standards.length})` : ''}`
+              : `${selectedClassIds.length} selected`
+          }
+          MenuProps={{
+            PaperProps: { sx: { maxHeight: 360, maxWidth: 'calc(100% - 32px)' } },
+            MenuListProps: {
+              sx: {
+                display: 'grid',
+                gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))' },
+                '& [data-select-all]': { gridColumn: '1 / -1' },
+                '& .MuiMenuItem-root': { whiteSpace: 'normal' },
               },
-            }}
-            isLoading={standardsQuery.isFetching && Boolean(values.mediumId)}
-            disabled={!values.mediumId || standardsQuery.isError}
-            onChange={(ids) =>
-              onChange({ standardId: ids.filter((id) => id !== ALL_FILTER_VALUE).join(',') })
-            }
-          />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 12, md: 2 }} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+            },
+          }}
+          isLoading={standardsQuery.isFetching && Boolean(values.mediumId)}
+          disabled={!values.mediumId || standardsQuery.isError}
+          onChange={(ids) =>
+            onChange({ standardId: ids.filter((id) => id !== ALL_FILTER_VALUE).join(',') })
+          }
+        />
+        <Box
+          sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', ml: { sm: 'auto' } }}
+        >
           {filterAction}
-        </Grid>
+        </Box>
         {hierarchyQuery.isError && (
-          <Grid size={12}>
-            <StudentFeedback
-              notificationKey="STU-0126"
-              presentation="toast"
-              severity="error"
-              toastAction={<Button onClick={() => hierarchyQuery.refetch()}>Retry</Button>}
-            >
-              Could not load Board and Medium options.
-            </StudentFeedback>
-          </Grid>
+          <StudentFeedback
+            notificationKey="STU-0126"
+            presentation="toast"
+            severity="error"
+            toastAction={<Button onClick={() => hierarchyQuery.refetch()}>Retry</Button>}
+          >
+            Could not load Board and Medium options.
+          </StudentFeedback>
         )}
         {standardsQuery.isError && values.mediumId && (
-          <Grid size={12}>
-            <StudentFeedback
-              notificationKey="STU-0127"
-              presentation="toast"
-              severity="error"
-              toastAction={<Button onClick={() => standardsQuery.refetch()}>Retry</Button>}
-            >
-              Could not load Class options.
-            </StudentFeedback>
-          </Grid>
+          <StudentFeedback
+            notificationKey="STU-0127"
+            presentation="toast"
+            severity="error"
+            toastAction={<Button onClick={() => standardsQuery.refetch()}>Retry</Button>}
+          >
+            Could not load Class options.
+          </StudentFeedback>
         )}
-      </Grid>
+      </Box>
     </Paper>
   );
 }

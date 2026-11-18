@@ -6,17 +6,127 @@ import type {
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { AttendanceStatus } from 'src/enums/student-attendace-status';
-import { Box, Stack, Avatar, Tooltip, TextField, IconButton, Typography } from '@mui/material';
+import { Box, Stack, Avatar, TextField, ButtonBase, Typography } from '@mui/material';
 
-import { changeAttendanceMark, attendanceStudentName } from './attendance-draft';
+import {
+  changeAttendanceMark,
+  attendanceStudentName,
+  getAttendanceMarkRestriction,
+} from './attendance-draft';
+
+import type { AttendanceCounts, AttendanceMarkChoice } from './attendance-draft';
 
 const marks = [
-  { value: 'full', label: 'Present', icon: 'eva:checkmark-fill', color: 'success' },
-  { value: 'absent', label: 'Absent', icon: 'eva:close-fill', color: 'error' },
-  { value: 'pending', label: 'Pending', icon: 'eva:minus-fill', color: 'warning' },
+  { value: 'full', label: 'Present', icon: 'mdi:check', color: 'success' },
   { value: 'half', label: 'Half-day', icon: 'mdi:fraction-one-half', color: 'info' },
+  { value: 'pending', label: 'Pending', icon: 'mdi:minus', color: 'warning' },
+  { value: 'absent', label: 'Absent', icon: 'mdi:close', color: 'error' },
 ] as const;
+
+const segmentGridSx = {
+  display: 'grid',
+  gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+  width: 1,
+  maxWidth: 230,
+  p: 0.25,
+  gap: 0.25,
+} as const;
+
+const segmentButtonSx = {
+  width: 1,
+  height: { xs: 44, sm: 32 },
+  borderRadius: 0.5,
+  '&.Mui-focusVisible': {
+    outline: '2px solid',
+    outlineColor: 'text.primary',
+    outlineOffset: 2,
+  },
+} as const;
+
+function AttendanceColumnHeader({
+  counts,
+  canBulkMark,
+  allowHalfDay,
+  submitted,
+  onBulkMark,
+}: {
+  counts: AttendanceCounts;
+  canBulkMark: boolean;
+  allowHalfDay?: boolean;
+  submitted: boolean;
+  onBulkMark: (mark: AttendanceMarkChoice) => void;
+}) {
+  const totals = {
+    full: counts.present,
+    half: counts.halfDay,
+    pending: counts.unmarked,
+    absent: counts.absent,
+  };
+  return (
+    <Stack role="group" aria-label="Attendance" spacing={0.25} sx={{ width: 1, maxWidth: 230 }}>
+      <Box
+        role="group"
+        aria-label="Class attendance counts"
+        aria-live="polite"
+        aria-atomic
+        sx={segmentGridSx}
+      >
+        {marks.map((mark) => (
+          <CustomTooltip
+            key={mark.value}
+            title={`${mark.label}: ${totals[mark.value]}`}
+            arrow
+            disableInteractive
+          >
+            <Label
+              color={mark.color}
+              aria-label={`${mark.label}: ${totals[mark.value]}`}
+              sx={{ width: 1, height: 20, borderRadius: 10 }}
+            >
+              {totals[mark.value]}
+            </Label>
+          </CustomTooltip>
+        ))}
+      </Box>
+      <Box role="group" aria-label="Bulk attendance actions" sx={segmentGridSx}>
+        {marks.map((mark) => {
+          const label = `Mark all eligible students as ${mark.label}`;
+          const restriction = getAttendanceMarkRestriction(mark.value, allowHalfDay, submitted);
+          const tooltip =
+            restriction || (canBulkMark ? label : 'No students are available for bulk marking.');
+          return (
+            <CustomTooltip
+              key={mark.value}
+              title={tooltip}
+              arrow
+              placement="top"
+              disableInteractive
+            >
+              <span>
+                <ButtonBase
+                  type="button"
+                  aria-label={label}
+                  disabled={!canBulkMark || Boolean(restriction)}
+                  onClick={() => onBulkMark(mark.value)}
+                  sx={{
+                    ...segmentButtonSx,
+                    color: 'text.secondary',
+                    '&:hover': { bgcolor: 'action.hover', color: 'text.primary' },
+                    '&.Mui-disabled': { color: 'text.disabled' },
+                  }}
+                >
+                  <Iconify icon={mark.icon} width={20} />
+                </ButtonBase>
+              </span>
+            </CustomTooltip>
+          );
+        })}
+      </Box>
+    </Stack>
+  );
+}
 
 export const attendanceStatusLabel = (row: AttendanceStudent) =>
   !row.isExpected && row.status === AttendanceStatus.Pending
@@ -30,19 +140,25 @@ export const attendanceStatusLabel = (row: AttendanceStudent) =>
           : 'Present';
 
 type Options = {
+  counts: AttendanceCounts;
   editable: boolean;
+  canBulkMark: boolean;
   broad: boolean;
   submitted: boolean;
   policy?: AttendancePolicySummary;
   onChange: (studentId: string, change: (row: AttendanceStudent) => AttendanceStudent) => void;
+  onBulkMark: (mark: AttendanceMarkChoice) => void;
 };
 
 export const buildAttendanceColumns = ({
+  counts,
   editable,
+  canBulkMark,
   broad,
   submitted,
   policy,
   onChange,
+  onBulkMark,
 }: Options): IColumn[] => [
   {
     id: 'name',
@@ -161,9 +277,31 @@ export const buildAttendanceColumns = ({
   },
   {
     id: 'statusLabel',
-    label: 'Attendance',
-    width: 200,
-    minWidth: 200,
+    label: broad ? (
+      <Box
+        component="span"
+        sx={{
+          position: 'absolute',
+          width: '1px',
+          height: '1px',
+          overflow: 'hidden',
+          clipPath: 'inset(50%)',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        Attendance
+      </Box>
+    ) : (
+      <AttendanceColumnHeader
+        counts={counts}
+        canBulkMark={canBulkMark}
+        allowHalfDay={policy?.allowHalfDay}
+        submitted={submitted}
+        onBulkMark={onBulkMark}
+      />
+    ),
+    width: 264,
+    minWidth: 216,
     align: 'center',
     cellSx: { px: { xs: 0.5, sm: 2 } },
     headerSx: { px: { xs: 0.5, sm: 2 } },
@@ -218,7 +356,11 @@ export const buildAttendanceColumns = ({
           <Box
             role="group"
             aria-label={`Attendance: ${attendanceStudentName(row)}`}
-            sx={{ display: 'flex', justifyContent: 'center', gap: 0.5 }}
+            sx={{
+              ...segmentGridSx,
+              bgcolor: 'background.neutral',
+              borderRadius: 0.75,
+            }}
           >
             {marks.map((mark) => {
               const selected =
@@ -231,18 +373,20 @@ export const buildAttendanceColumns = ({
                       ? row.status === AttendanceStatus.Absent
                       : row.status === AttendanceStatus.Pending);
               const unavailable =
-                mark.value === 'half' && !policy?.allowHalfDay
-                  ? 'Half-day attendance is disabled by school policy.'
-                  : mark.value === 'pending' && submitted
-                    ? 'Submitted attendance cannot be changed to Pending.'
-                    : blockedReason;
+                getAttendanceMarkRestriction(mark.value, policy?.allowHalfDay, submitted) ||
+                blockedReason;
               return (
-                <Tooltip key={mark.value} title={unavailable || mark.label}>
+                <CustomTooltip
+                  key={mark.value}
+                  title={unavailable || mark.label}
+                  arrow
+                  placement="top"
+                >
                   <span>
-                    <IconButton
+                    <ButtonBase
+                      type="button"
                       aria-label={`${mark.label}: ${attendanceStudentName(row)}`}
                       aria-pressed={selected}
-                      size="small"
                       disabled={Boolean(unavailable)}
                       onClick={() =>
                         onChange(row.studentId, (previous) =>
@@ -250,27 +394,22 @@ export const buildAttendanceColumns = ({
                         )
                       }
                       sx={{
-                        width: { xs: 44, sm: 36 },
-                        height: { xs: 44, sm: 36 },
-                        border: 1,
-                        borderRadius: 1,
-                        borderColor: unavailable ? 'divider' : `${mark.color}.main`,
-                        bgcolor: selected ? `${mark.color}.main` : 'background.paper',
-                        color: selected ? `${mark.color}.contrastText` : `${mark.color}.main`,
+                        ...segmentButtonSx,
+                        bgcolor: selected ? `${mark.color}.main` : 'transparent',
+                        color: selected ? `${mark.color}.contrastText` : 'text.secondary',
                         '&:hover': {
-                          bgcolor: selected ? `${mark.color}.dark` : `${mark.color}.lighter`,
+                          bgcolor: selected ? `${mark.color}.dark` : 'action.hover',
                         },
                         '&.Mui-disabled': {
-                          color: 'text.disabled',
-                          bgcolor: 'action.disabledBackground',
-                          borderColor: 'divider',
+                          opacity: 0.48,
+                          color: selected ? `${mark.color}.contrastText` : 'text.disabled',
                         },
                       }}
                     >
                       <Iconify icon={mark.icon} width={20} />
-                    </IconButton>
+                    </ButtonBase>
                   </span>
-                </Tooltip>
+                </CustomTooltip>
               );
             })}
           </Box>

@@ -83,8 +83,15 @@ beforeEach(() => {
   );
 });
 
-// Decorative icons are outside this data-contract regression; keep the real controls and table.
-vi.mock('src/components/iconify', () => ({ Iconify: () => <span aria-hidden="true" /> }));
+vi.mock('src/components/iconify', async () => {
+  const { isValidElement } = await import('react');
+  return {
+    Iconify: ({ icon }: { icon: unknown }) => {
+      if (isValidElement(icon)) throw new TypeError('Iconify requires an icon name or data.');
+      return <span aria-hidden="true" />;
+    },
+  };
+});
 vi.mock('@mui/icons-material', () => {
   const Icon = () => <svg aria-hidden="true" />;
   return Object.fromEntries(

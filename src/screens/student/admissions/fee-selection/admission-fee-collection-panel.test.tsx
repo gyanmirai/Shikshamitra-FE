@@ -491,7 +491,7 @@ it('returns from a named policy to visible full charge and sends only null to pr
   );
 });
 
-it('does not show policy choices until an actual joining date is available', () => {
+it('requires a joining date before collecting fees and keeps deferral available', () => {
   const current = editableDate();
   mocks.joiningDate.mockReturnValue({
     currentData: {
@@ -514,8 +514,23 @@ it('does not show policy choices until an actual joining date is available', () 
     refetch: mocks.refetch,
   });
 
-  renderPanel();
+  renderPanel({
+    stretch: true,
+    footerAction: <button type="button">Collect later in Onboarding</button>,
+  });
 
+  const collect = screen.getByRole('button', { name: 'Collect Fees' });
+  expect(screen.getByText('Required before collecting fees.')).toBeVisible();
+  expect(collect).toBeDisabled();
+  const day = screen.getByRole('spinbutton', { name: 'Day' });
+  const month = screen.getByRole('spinbutton', { name: 'Month' });
+  fireEvent.blur(day, { relatedTarget: month });
+  expect(screen.queryByText('Actual joining date is required.')).not.toBeInTheDocument();
+  fireEvent.blur(month);
+  expect(screen.getByText('Actual joining date is required.')).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Collect later in Onboarding' })).toBeEnabled();
+  expect(mocks.saveDate).not.toHaveBeenCalled();
+  expect(mocks.prepare).not.toHaveBeenCalled();
   expect(screen.queryByRole('combobox', { name: 'Proration policy' })).not.toBeInTheDocument();
 });
 

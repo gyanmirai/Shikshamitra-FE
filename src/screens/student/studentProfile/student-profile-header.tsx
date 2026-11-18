@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { RootState } from 'src/redux/store';
 import type { Board, Medium } from 'src/types/school';
 import type { StudentRecordProfile } from 'src/redux/student/student-profile-types';
@@ -9,9 +10,11 @@ import { Box, Paper, Stack, Avatar, Divider, Typography } from '@mui/material';
 export function StudentProfileHeader({
   student,
   compact = false,
+  grNumberAction,
 }: {
   student: StudentRecordProfile;
   compact?: boolean;
+  grNumberAction?: ReactNode;
 }) {
   const currentYear = useSelector((state: RootState) => state.globalState.currentYear);
   const board = currentYear?.boards?.find((item: Board) =>
@@ -81,7 +84,11 @@ export function StudentProfileHeader({
           </Stack>
         </Stack>
         {[
-          { label: 'GR number', value: student.grNumber ?? student.grNo },
+          {
+            label: 'GR number',
+            value: student.grNumber?.trim() || student.grNo,
+            action: grNumberAction,
+          },
           {
             label: 'Class / Division',
             value: [student.standardName, student.divisionName].filter(Boolean).join(' · '),
@@ -93,9 +100,11 @@ export function StudentProfileHeader({
             <Typography variant="caption" color="text.secondary">
               {field.label}
             </Typography>
-            <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
-              {field.value == null || field.value === '' ? '—' : field.value}
-            </Typography>
+            {field.action || (
+              <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
+                {field.value == null || field.value === '' ? '—' : field.value}
+              </Typography>
+            )}
           </Box>
         ))}
       </Box>

@@ -47,7 +47,9 @@ import {
 
 import RecordPhotoPreview from './record-photo-preview';
 
-const sectionTabs: Record<RecordSection, number> = {
+type StructuredRecordSection = Exclude<RecordSection, 'gr-number'>;
+
+const sectionTabs: Record<StructuredRecordSection, number> = {
   general: 0,
   family: 1,
   communication: 2,
@@ -97,10 +99,11 @@ export default function RecordChangeForm(props: RecordChangeFormProps) {
         Edit the Registration form in Student Profile.
       </StudentFeedback>
     );
+  if (snapshot.section === 'gr-number') return null;
   return snapshot.section === 'custom-details' ? (
     <CustomRecordChangePage {...props} />
   ) : (
-    <StructuredRecordChangeForm {...props} />
+    <StructuredRecordChangeForm {...props} snapshot={{ ...snapshot, section: snapshot.section }} />
   );
 }
 
@@ -143,7 +146,7 @@ function StructuredRecordChangeForm({
   onDirtyChange,
 }: {
   studentId: string;
-  snapshot: RecordSnapshot;
+  snapshot: RecordSnapshot & { section: StructuredRecordSection };
   correctsChangeId?: string;
   onSubmitted: (id: string) => void;
   onReload?: () => void;

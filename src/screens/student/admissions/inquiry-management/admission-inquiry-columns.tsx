@@ -1,4 +1,5 @@
 import type { LabelColor } from 'src/components/label';
+import type { PopoverActions } from '@mui/material/Popover';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { AdaptiveThreeDotsAction } from 'src/components/adaptive-three-dots-actions';
 import type { AdmissionInquiry } from 'src/redux/student/admissions/admission-inquiries-api';
@@ -6,6 +7,7 @@ import type { AdmissionInquiry } from 'src/redux/student/admissions/admission-in
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Stack, Typography } from '@mui/material';
+import { useRef, useState, useEffect } from 'react';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 
 import { inquiryHandoffBlocker } from './use-inquiry-handoff';
@@ -96,7 +98,7 @@ export function getAdmissionInquiryActions(
   if (options.canMove)
     actions.push({
       id: 'move',
-      label: `Move ${reference} To Next Stage`,
+      label: 'Move to Next Stage',
       icon: 'mdi:arrow-right-circle-outline',
       disabled: options.isMoving || Boolean(inquiryHandoffBlocker(inquiry)),
       loading: options.isMoving && options.movingInquiryId === inquiry.id,
@@ -116,6 +118,61 @@ export function getAdmissionInquiryActions(
       onClick: () => options.onHistory?.(inquiry),
     });
   return actions;
+}
+
+function InquiryRowActions({ inquiry, options }: { inquiry: AdmissionInquiry; options: Options }) {
+  const anchor = useRef<HTMLButtonElement | null>(null);
+  const popoverAction = useRef<PopoverActions>(null);
+  const [paper, setPaper] = useState<HTMLDivElement | null>(null);
+  const [opensAbove, setOpensAbove] = useState(false);
+
+  useEffect(() => {
+    if (!paper) return undefined;
+    // Icons and fonts can settle after the opening transition. Keep the arrow
+    // attached to the trigger when that changes the menu's measured width.
+    const observer = new ResizeObserver(() => popoverAction.current?.updatePosition());
+    observer.observe(paper);
+    return () => observer.disconnect();
+  }, [paper]);
+
+  return (
+    <AdaptiveThreeDotsActions
+      directActionLimit={2}
+      collapseOnOverflow={false}
+      moreLabel={`Actions For ${inquiry.applicantName}`}
+      placement={opensAbove ? 'bottom-right' : 'top-right'}
+      popoverAction={popoverAction}
+      onClickThreeDots={(event) => {
+        anchor.current = event.currentTarget;
+        setOpensAbove(false);
+      }}
+      popoverSlotProps={{
+        paper: { ref: setPaper, sx: { mt: opensAbove ? -1 : 1 } },
+        transition: {
+          onEntering: (node: HTMLElement) => {
+            const trigger = anchor.current;
+            const viewport = trigger?.ownerDocument.defaultView;
+            if (!trigger || !viewport) return;
+            const bounds = trigger.getBoundingClientRect();
+            const below = viewport.innerHeight - bounds.bottom;
+            const gap = Math.abs(Number.parseFloat(viewport.getComputedStyle(node).marginTop)) || 0;
+            // Include MUI Popover's standard 16px viewport gutter. Measure the real menu,
+            // so disabled entries and theme sizing do not leave the last row covered.
+            setOpensAbove(below < node.offsetHeight + gap + 16 && bounds.top > below);
+          },
+        },
+      }}
+      sx={{
+        gap: 0,
+        justifyContent: 'flex-end',
+        '& .MuiIconButton-root': {
+          width: { xs: 44, sm: 30 },
+          height: { xs: 44, sm: 30 },
+        },
+      }}
+      actions={getAdmissionInquiryActions(inquiry, options)}
+    />
+  );
 }
 
 export function buildAdmissionInquiryColumns(options: Options): IColumn[] {
@@ -204,22 +261,7 @@ export function buildAdmissionInquiryColumns(options: Options): IColumn[] {
       excludeFromExport: true,
       render: (_, row) => {
         const inquiry = row as AdmissionInquiry;
-        return (
-          <AdaptiveThreeDotsActions
-            directActionLimit={2}
-            collapseOnOverflow={false}
-            moreLabel={`Actions For ${inquiry.applicantName}`}
-            sx={{
-              gap: 0,
-              justifyContent: 'flex-end',
-              '& .MuiIconButton-root': {
-                width: { xs: 44, sm: 30 },
-                height: { xs: 44, sm: 30 },
-              },
-            }}
-            actions={getAdmissionInquiryActions(inquiry, options)}
-          />
-        );
+        return <InquiryRowActions inquiry={inquiry} options={options} />;
       },
     },
   ];
