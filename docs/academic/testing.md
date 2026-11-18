@@ -106,6 +106,8 @@ Its local API does not establish deployed staging acceptance.
 
 ## Browser notification checks
 
+The rule client tests cover academic scope and paging parameters, owner-isolated cache keys, stale rule saves, and commands blocked after an account change. Run `npm test -- src/redux/academic-notifications/api.test.ts src/redux/service.auth-session.test.ts`.
+
 ```powershell
 npm test -- src/hooks/notifications src/redux/auth/load-session.test.tsx src/redux/auth/load-session-recovery.test.tsx
 npx eslint --no-config-lookup --global self --global URL --rule "no-undef:error" --rule "no-unused-vars:error" public/notification-sw.js --max-warnings 0

@@ -13,6 +13,12 @@ audience: humans-and-agents
 TL;DR: `src/redux/academic-setup/api.ts` persists guide position and reads configuration status; existing module clients continue to save the actual settings.
 Use the [backend API reference](../../../Shikshamitra-BE/docs/modules/academic/api.md) for endpoint semantics and authorization.
 
+## Notification rules client
+
+`src/redux/academic-notifications/api.ts` adds the catalogue, paged effective rules, and rule save operations to the shared authenticated API. The client is available for the Rules workspace. The current notification page still displays sample data.
+
+The catalogue cache is keyed by tenant and user. The rule cache also includes the requested academic hierarchy, event filter and page. Each request verifies the identity of the session that supplies the token. The request sends the hierarchy and paging fields, and the save sends the current rule concurrency stamp. Successful saves refresh rule queries for the same user and tenant. Rejected saves retain the existing results.
+
 ## Browser notifications
 
 `src/redux/communication/notification/web-push-api.ts` injects the public-key, register and disable operations into the shared authenticated API.
