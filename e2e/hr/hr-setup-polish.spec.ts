@@ -20,22 +20,66 @@ for (const theme of ['light', 'dark']) {
       await wizard.getByText('View completed setup (1)', { exact: true }).click();
       await expect(wizard.getByRole('button', { name: 'Review Salary Template' })).toBeVisible();
       await wizard.getByText('View completed setup (1)', { exact: true }).click();
-      await expect(
-        wizard
-          .getByRole('list')
-          .filter({ hasText: 'Finish setup for attendance' })
-          .getByRole('listitem')
-      ).toHaveText([
-        'Finish setup for attendance, leave and payroll.',
-        'Close anytime to explore HR.',
-        'Saved setup is kept.',
-      ]);
+      const message = wizard.getByText(/Finish setup for attendance, leave and payroll/);
+      await expect(message).toContainText('return to your saved progress');
       expect(await wizard.evaluate((node) => getComputedStyle(node).outlineWidth)).toBe('0px');
       const progress = wizard.getByRole('progressbar', { name: 'Saved HR setup completion' });
       await expect(progress).toHaveAttribute('aria-valuetext', '10 of 11 setup items complete');
+      await expect(wizard.getByText('1 item remaining', { exact: true })).toBeVisible();
+      const stepper = wizard.getByRole('list', { name: 'HR setup steps' });
+      if (width === 390) {
+        await expect(stepper).toHaveCount(0);
+        await expect(wizard.getByRole('status')).toHaveText('Step 4 of 5: Salary Template');
+      } else {
+        await expect(
+          stepper.getByRole('button', { name: 'Staff Prerequisites' })
+        ).toHaveAccessibleDescription('Completed');
+        await expect(
+          stepper.getByRole('button', { name: 'Salary Template' })
+        ).toHaveAccessibleDescription('In progress');
+        const stepGeometry = await stepper.getByRole('listitem').evaluateAll((steps) =>
+          steps.map((item) => {
+            const marker = item.querySelector('.MuiStepIcon-root')!.getBoundingClientRect();
+            const line = item.querySelector('.MuiStepConnector-line');
+            const lineBox = line?.getBoundingClientRect();
+            const label = item.querySelector('.MuiStepLabel-label')!;
+            return {
+              markerY: marker.y + marker.height / 2,
+              lineY: lineBox ? lineBox.y + lineBox.height / 2 : null,
+              lineStyle: line ? getComputedStyle(line).borderTopStyle : null,
+              columnWidth: item.getBoundingClientRect().width,
+              labelLines: Math.round(
+                label.getBoundingClientRect().height /
+                  parseFloat(getComputedStyle(label).lineHeight)
+              ),
+            };
+          })
+        );
+        expect(stepGeometry).toHaveLength(5);
+        expect(stepGeometry.map(({ lineStyle }) => lineStyle)).toEqual([
+          null,
+          'solid',
+          'solid',
+          'solid',
+          'dashed',
+        ]);
+        for (const { markerY, lineY, columnWidth } of stepGeometry) {
+          expect(Math.abs(markerY - stepGeometry[0].markerY)).toBeLessThan(1);
+          expect(Math.abs(columnWidth - stepGeometry[0].columnWidth)).toBeLessThan(1);
+          if (lineY !== null) expect(Math.abs(lineY - markerY)).toBeLessThan(1);
+        }
+        expect(Math.max(...stepGeometry.map(({ labelLines }) => labelLines))).toBe(
+          width === 768 ? 2 : 1
+        );
+      }
       for (const name of ['Close for now', 'Back', 'Review progress']) {
         await expect(wizard.getByRole('button', { name, exact: true })).toBeInViewport();
       }
+      const footerButtonRows = await wizard
+        .locator('.MuiDialogActions-root')
+        .getByRole('button')
+        .evaluateAll((buttons) => buttons.map((button) => button.getBoundingClientRect().y));
+      expect(new Set(footerButtonRows).size).toBe(1);
       expect(await wizard.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
       const initialBox = await wizard.boundingBox();
       await wizard.getByTestId('hr-setup-next').press('Shift+Tab');
@@ -93,7 +137,9 @@ test('all checklist steps retain saved statuses, optional deductions and accessi
   const wizard = page.getByRole('dialog', { name: 'Let’s Complete Your HR Setup', exact: true });
   const initialBox = await wizard.boundingBox();
   for (const label of ['Staff Prerequisites', 'Policies and Calendar', 'Earning Components']) {
-    await wizard.getByRole('button', { name: label, exact: true }).click();
+    const step = wizard.getByRole('button', { name: label, exact: true });
+    await step.press('Enter');
+    await expect(step).toHaveAttribute('aria-current', 'step');
     await expect(wizard.getByRole('heading', { name: label, level: 2, exact: true })).toBeVisible();
     const box = await wizard.boundingBox();
     expect(box!.height).toBeCloseTo(initialBox!.height, 0);

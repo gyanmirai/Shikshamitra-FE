@@ -100,7 +100,8 @@ Apply Leave reads the selected paid-type rule from the current staff/date policy
 Authorized HR operators receive the **Let’s Complete Your HR Setup** wizard on any HR route when the readiness summary reports unresolved configuration.
 The wizard opens at the first unresolved step and marks usable existing configuration complete without requiring acknowledgement.
 Checklist steps use shared section cards with readable saved-state labels, step headings and completion counts.
-Three short bullets explain the setup purpose, optional dismissal to explore HR, and retention of saved configuration.
+A muted summary header explains the setup purpose and confirms that saved progress is available when the user returns.
+On tablet and desktop, the horizontal stepper centers the connectors on the step markers and labels completed and in-progress steps.
 Checklists, embedded editors and completion share the same viewport-bounded height, with a fixed header, navigation and footer and one scrolling body.
 Phones use the full viewport and show the current step and its position as text.
 The overall progress bar counts only server-reported ready checks; navigating between steps does not increase completion, and read failures do not display completion progress.

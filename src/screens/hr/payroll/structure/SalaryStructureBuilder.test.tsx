@@ -531,7 +531,9 @@ describe('SalaryStructureBuilder initialization and activation', () => {
       )
     );
     await user.click(navigation.getByRole('button', { name: /^Salary preview/ }));
-    expect(screen.getByLabelText('Salary preview')).toHaveFocus();
+    expect(
+      screen.getByLabelText('Salary preview', { selector: '[data-salary-preview]' })
+    ).toHaveFocus();
     await user.click(screen.getByRole('button', { name: 'Refresh setup' }));
     await waitFor(() => expect(onSalaryChange).toHaveBeenLastCalledWith(null));
     expect(screen.getByLabelText('Monthly cost to school (CTC)')).toHaveValue('\u20b9 18,000');
