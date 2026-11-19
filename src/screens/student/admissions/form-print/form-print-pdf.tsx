@@ -2,8 +2,13 @@ import COLORS from 'src/theme/core/colors.json';
 import { pdf, Font, Page, Text, View, Image, Document } from '@react-pdf/renderer';
 import { splitPdfScriptRuns } from 'src/components/customizabaleTable/indic-pdf-export';
 
-import { AdmissionPaperTemplate } from './form-print-paper-templates';
 import { estimatePrintTextLines } from './form-print-text-layout';
+import { AdmissionPaperTemplate } from './form-print-paper-templates';
+import { AdmissionAdvancedPaperTemplate } from './form-print-advanced-template';
+import {
+  AdmissionPrintLayoutError,
+  getAdmissionPrintLayoutError,
+} from './form-print-advanced-layout';
 
 import type {
   AdmissionPrintField,
@@ -80,6 +85,17 @@ export async function createAdmissionFormPdfBlob(
   fontBasePath = '/fonts'
 ): Promise<Blob> {
   registerFonts(fontBasePath);
+  const layoutError = getAdmissionPrintLayoutError(model, branding);
+  if (layoutError) throw new AdmissionPrintLayoutError(layoutError);
+  if (model.settings.advanced)
+    return pdf(
+      <AdmissionAdvancedPaperTemplate
+        model={model}
+        branding={branding}
+        baseFamily={BASE_FAMILY}
+        devanagariFamily={DEVANAGARI_FAMILY}
+      />
+    ).toBlob();
   if (
     model.settings.template === 'boxed-grid' ||
     model.settings.template === 'structured-classic'

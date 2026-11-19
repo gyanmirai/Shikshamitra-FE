@@ -16,7 +16,7 @@ const house = (id: string, name: string) => ({
   name,
   color: '#123456',
   memberCount: 0,
-  leader: null,
+  houseLeaderCount: 0,
   concurrencyStamp: 'v1',
   canManage: true,
 });

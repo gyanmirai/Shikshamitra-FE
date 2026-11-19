@@ -35,5 +35,9 @@ export function useHouseCloseGuard(dirty: boolean, busy: boolean, onClose: () =>
       />
     ),
   });
-  return { close: () => guard.requestNavigation(onClose), confirmation: guard.confirmation };
+  return {
+    close: () => guard.requestNavigation(onClose),
+    confirmation: guard.confirmation,
+    requestNavigation: guard.requestNavigation,
+  };
 }

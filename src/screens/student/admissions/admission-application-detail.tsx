@@ -166,9 +166,9 @@ export default function AdmissionApplicationDetailScreen({
   });
   const academicOffering = canReadOfferingContext ? offeringContext.currentData : undefined;
   const academicContext = [
-    application?.standardName || academicOffering?.standardName,
     academicOffering?.boardName,
     academicOffering?.mediumName,
+    application?.standardName || academicOffering?.standardName,
   ].filter((value): value is string => Boolean(value?.trim()));
   // Withdrawn cases belong to Applications history even when no decision stage was entered.
   const decisionWorkspace = application?.hasReachedDecision === true || application?.status === 2;
@@ -678,7 +678,7 @@ export default function AdmissionApplicationDetailScreen({
             display: 'grid',
             gridTemplateColumns: {
               xs: 'minmax(0, 1fr)',
-              sm: 'minmax(0, 1fr) minmax(0, auto)',
+              md: 'minmax(0, 1fr) minmax(0, auto)',
             },
             alignItems: 'center',
             gap: 1,
@@ -689,9 +689,23 @@ export default function AdmissionApplicationDetailScreen({
             bgcolor: 'background.paper',
           }}
         >
-          <Box sx={{ minWidth: 0 }}>
+          <Box
+            sx={{
+              minWidth: 0,
+              ...(application && {
+                borderInlineStart: '3px solid',
+                borderColor: 'primary.main',
+                paddingInlineStart: (theme) => theme.spacing(1.25),
+              }),
+            }}
+          >
             <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
-              <Typography id={titleId} variant="h6">
+              <Typography
+                id={titleId}
+                component="h2"
+                variant="h4"
+                sx={{ lineHeight: 1.2, overflowWrap: 'anywhere' }}
+              >
                 {application?.applicantName ?? 'Application Details'}
               </Typography>
               {application &&
@@ -727,7 +741,9 @@ export default function AdmissionApplicationDetailScreen({
                       component="span"
                       sx={{
                         overflowWrap: 'anywhere',
-                        ...(index > 0 && { borderLeft: 1, borderColor: 'divider', pl: 1 }),
+                        ...(index === 0
+                          ? { fontWeight: 'fontWeightSemiBold' }
+                          : { borderLeft: 1, borderColor: 'divider', pl: 1 }),
                       }}
                     >
                       {value}
@@ -744,7 +760,7 @@ export default function AdmissionApplicationDetailScreen({
             justifyContent="flex-end"
             useFlexGap
             flexWrap="wrap"
-            sx={{ minWidth: 0, maxWidth: 1, justifySelf: { xs: 'stretch', sm: 'end' } }}
+            sx={{ minWidth: 0, maxWidth: 1, justifySelf: { xs: 'stretch', md: 'end' } }}
           >
             {!isLoading &&
               !isError &&

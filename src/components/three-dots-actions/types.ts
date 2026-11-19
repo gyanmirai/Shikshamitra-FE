@@ -10,6 +10,7 @@ export interface ThreeDotsActionContext {
 export interface ThreeDotsDirectAction {
   id: string;
   label: string;
+  ariaLabel?: string;
   icon: string;
   color?: string;
   disabled?: boolean;
@@ -27,6 +28,7 @@ export interface ThreeDotsActionsOptions {
   directActions?: readonly ThreeDotsDirectAction[];
   onClickThreeDots?: MouseEventHandler<HTMLButtonElement>;
   onClosePopover?: () => void;
+  disablePopoverClose?: boolean;
   handleViewClick?: MouseEventHandler<HTMLButtonElement>;
   handleEditClick?: MouseEventHandler<HTMLButtonElement>;
   onEditMouseDown?: MouseEventHandler<HTMLButtonElement>;

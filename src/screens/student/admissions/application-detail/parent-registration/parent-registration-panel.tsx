@@ -3,11 +3,13 @@
 import type {
   ParentRecipientRelationship,
   StaffParentRegistrationContext,
+  ParentRegistrationCopyLinkInput,
 } from 'src/redux/student/admissions/admission-parent-registration-types';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { useRouter } from 'src/routes/hooks';
+import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useRef, useState, useEffect } from 'react';
@@ -40,6 +42,7 @@ import {
   useSendParentRegistrationMutation,
   useApplyParentRegistrationMutation,
   useRevokeParentRegistrationMutation,
+  useCopyParentRegistrationLinkMutation,
   useTakeoverParentRegistrationMutation,
   useChangeParentRegistrationEmailMutation,
   useGetParentRegistrationEmailHistoryQuery,
@@ -50,8 +53,10 @@ import {
 import { readAdmissionFormValue } from '../../admission-visibility-rules';
 import { ParentRegistrationEmailHistoryDrawer } from './parent-registration-email-history-drawer';
 
-type Action = 'email' | 'send' | 'corrections' | 'apply' | 'revoke' | 'takeover' | 'retry-delivery';
+type Action =
+  'copy' | 'email' | 'send' | 'corrections' | 'apply' | 'revoke' | 'takeover' | 'retry-delivery';
 const labels: Record<Action, string> = {
+  copy: 'Copy Registration Link',
   email: 'Update Link',
   send: 'Send Registration Link',
   corrections: 'Request Parent Documents',
@@ -61,6 +66,7 @@ const labels: Record<Action, string> = {
   'retry-delivery': 'Retry Link Delivery',
 };
 const actionLabels: Record<Action, string> = {
+  copy: 'Copy link',
   email: 'Submit',
   send: 'Send link',
   corrections: 'Request corrections',
@@ -97,7 +103,7 @@ export function ParentRegistrationPanel({
   /** Reuse these actions in the applicant header without a second controller or query. */
   placement?: 'inline' | 'header';
 }) {
-  const [polling, setPolling] = useState(false);
+  const [pollingInterval, setPollingInterval] = useState(0);
   const [emailHistoryOpen, setEmailHistoryOpen] = useState(false);
   const query: ReturnType<typeof useGetParentRegistrationQuery> = useQueryAndMutation({
     type: 'query',
@@ -105,7 +111,7 @@ export function ParentRegistrationPanel({
     params: applicationId,
     options: {
       skip: !canView,
-      pollingInterval: polling ? 30000 : 0,
+      pollingInterval,
       skipPollingIfUnfocused: true,
     },
     popupConfig: {
@@ -133,13 +139,17 @@ export function ParentRegistrationPanel({
       onProgressChange?.();
   }, [applicationId, canView, context, onProgressChange]);
   useEffect(() => {
-    setPolling(
-      Boolean(context?.request && ['Invited', 'InProgress'].includes(context.request.status))
-    );
+    const request = context?.request;
+    if (request && ['Pending', 'Sending'].includes(request.deliveryStatus)) {
+      setPollingInterval(5000);
+    } else {
+      setPollingInterval(request && ['Invited', 'InProgress'].includes(request.status) ? 30000 : 0);
+    }
   }, [context?.request]);
   const [action, setAction] = useState<Action | null>(null);
   const [snapshot, setSnapshot] = useState<StaffParentRegistrationContext | null>(null);
   const [send] = useSendParentRegistrationMutation();
+  const [copyRegistrationLink] = useCopyParentRegistrationLinkMutation();
   const [changeEmail] = useChangeParentRegistrationEmailMutation();
   const [revoke] = useRevokeParentRegistrationMutation();
   const [takeover] = useTakeoverParentRegistrationMutation();
@@ -155,6 +165,16 @@ export function ParentRegistrationPanel({
     onBusyChange?.(busy);
     return () => onBusyChange?.(false);
   }, [busy, onBusyChange]);
+  async function copyLink(input: ParentRegistrationCopyLinkInput) {
+    const { copied } = await copyRegistrationLink({ applicationId, input }).unwrap();
+    if (copied) {
+      shikshaMitraToast.success({ message: 'Registration link copied.' });
+    } else {
+      shikshaMitraToast.error({
+        message: 'Unable to copy the registration link. Try Copy link again.',
+      });
+    }
+  }
   const formik = useFormik({
     initialValues: {
       recipient: '' as ParentRecipientRelationship | '',
@@ -174,7 +194,7 @@ export function ParentRegistrationPanel({
         'saved-recipient',
         'Select a saved contact with an email.',
         (value) =>
-          !['send', 'corrections'].includes(action || '') ||
+          !['copy', 'send', 'corrections'].includes(action || '') ||
           Boolean(
             snapshot?.recipients.some(
               (recipient) =>
@@ -198,6 +218,7 @@ export function ParentRegistrationPanel({
     }),
     onSubmit: async (values) => {
       if (!snapshot || !action || busyRef.current || conflict || !canManage) return;
+      if (action === 'copy' && (disabled || dirty || !context?.canCreateLink)) return;
       if (
         action === 'email' &&
         !hasParentEmailChange(
@@ -220,7 +241,7 @@ export function ParentRegistrationPanel({
         return;
       const payload = {
         concurrencyStamp: snapshot.concurrencyStamp,
-        ...(['send', 'corrections', 'email'].includes(action)
+        ...(['copy', 'send', 'corrections', 'email'].includes(action)
           ? { recipientRelationship: values.recipient as ParentRecipientRelationship }
           : {}),
         ...(action === 'email'
@@ -252,7 +273,8 @@ export function ParentRegistrationPanel({
       setError('');
       try {
         const command = { applicationId, input };
-        if (action === 'email')
+        if (action === 'copy') await copyLink(input as ParentRegistrationCopyLinkInput);
+        else if (action === 'email')
           await changeEmail(command as Parameters<typeof changeEmail>[0]).unwrap();
         else if (action === 'send') await send(command as Parameters<typeof send>[0]).unwrap();
         else if (action === 'corrections')
@@ -265,14 +287,16 @@ export function ParentRegistrationPanel({
         setAction(null);
         setSnapshot(null);
         formik.resetForm();
-        shikshaMitraToast.success({
-          message:
-            action === 'email'
-              ? 'Parent email saved. Send a registration link when ready.'
-              : action === 'apply'
-                ? 'Parent corrections applied. Review the application before continuing.'
-                : 'Parent registration updated. Check email history for the latest status.',
-        });
+        if (action !== 'copy') {
+          shikshaMitraToast.success({
+            message:
+              action === 'email'
+                ? 'Parent email saved. Send a registration link when ready.'
+                : action === 'apply'
+                  ? 'Parent corrections applied. Review the application before continuing.'
+                  : 'Parent registration updated. Check email history for the latest status.',
+          });
+        }
       } catch (failure) {
         const conflictError =
           (failure as { status?: number; data?: { error?: { code?: string } } }).status === 409 ||
@@ -334,8 +358,36 @@ export function ParentRegistrationPanel({
       },
     });
   };
+  const handleCopyLink = async () => {
+    if (!context || disabled || dirty || busyRef.current || !canManage) return;
+    if (context.canCreateLink) {
+      open('copy');
+      return;
+    }
+    if (!context.canCopyLink || !context.request) return;
+    busyRef.current = true;
+    setBusy(true);
+    try {
+      await copyLink({
+        requestId: context.request.id,
+        concurrencyStamp: context.concurrencyStamp,
+        idempotencyKey: crypto.randomUUID(),
+      });
+    } catch (failure) {
+      shikshaMitraToast.error({
+        message: parseApiProblemDetail(failure).detail || 'Unable to copy the registration link.',
+      });
+    } finally {
+      busyRef.current = false;
+      setBusy(false);
+    }
+  };
   if (!canView || query.isError || (!context && !query.isLoading)) return null;
   const request = context?.request;
+  const inHeader = placement === 'header';
+  const copyAvailable = Boolean(context?.canCopyLink || context?.canCreateLink);
+  const showCopyLink = inHeader && canManage && Boolean(context?.canSend || copyAvailable);
+  const emailSent = Boolean(inHeader && request?.deliveryStatus === 'Sent');
   const editableRecipients = context?.recipients.filter((contact) => contact.canChangeEmail) ?? [];
   const primaryDeliveryAction = context?.canRetryDelivery
     ? 'retry-delivery'
@@ -356,7 +408,9 @@ export function ParentRegistrationPanel({
         (contact) => contact.canChangeEmail || contact.emailChangeBlockedReason
       ))
   );
-  const hasActions = Boolean((canManage && primaryDeliveryAction) || request || hasMoreActions);
+  const hasActions = Boolean(
+    showCopyLink || (canManage && primaryDeliveryAction) || request || hasMoreActions
+  );
   const headerIconSx = {
     width: { xs: 44, sm: 36 },
     height: { xs: 44, sm: 36 },
@@ -381,12 +435,19 @@ export function ParentRegistrationPanel({
               aria-label="Parent registration actions"
               spacing={1}
               alignItems="flex-end"
+              useFlexGap
               sx={
                 placement === 'header'
                   ? {
+                      display: { xs: 'contents', sm: 'flex' },
                       minWidth: 0,
-                      maxWidth: { xs: '100%', sm: 360 },
-                      ...(hasActions && { borderRight: 1, borderColor: 'divider', pr: 1 }),
+                      maxWidth: 1,
+                      '& > .MuiTypography-root': { flexBasis: '100%', textAlign: 'end' },
+                      ...(hasActions && {
+                        borderRight: { xs: 0, md: 1 },
+                        borderColor: 'divider',
+                        pr: { xs: 0, md: 1 },
+                      }),
                     }
                   : { width: 1 }
               }
@@ -398,7 +459,29 @@ export function ParentRegistrationPanel({
                 justifyContent="flex-end"
                 useFlexGap
                 flexWrap="wrap"
+                sx={inHeader ? { display: { xs: 'contents', sm: 'flex' } } : undefined}
               >
+                {showCopyLink && (
+                  <CustomTooltip
+                    title={
+                      copyAvailable ? '' : 'The current registration link is unavailable to copy.'
+                    }
+                    arrow
+                  >
+                    <span>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        color="inherit"
+                        startIcon={<Iconify icon="mdi:link-variant" />}
+                        disabled={disabled || dirty || busy || !copyAvailable}
+                        onClick={handleCopyLink}
+                      >
+                        Copy link
+                      </Button>
+                    </span>
+                  </CustomTooltip>
+                )}
                 {canManage && primaryDeliveryAction && (
                   <Button
                     size="small"
@@ -412,6 +495,15 @@ export function ParentRegistrationPanel({
                   >
                     Send email
                   </Button>
+                )}
+                {emailSent && (
+                  <Label
+                    color="success"
+                    role="status"
+                    startIcon={<Iconify icon="mdi:check" width={14} />}
+                  >
+                    Email sent
+                  </Label>
                 )}
                 {request && (
                   <CustomTooltip title="Email history" arrow>
@@ -542,7 +634,7 @@ export function ParentRegistrationPanel({
                   Delivery could not be confirmed. Review email history before sending another link.
                 </Typography>
               )}
-              {dirty && (
+              {dirty && !inHeader && (
                 <Typography variant="caption" color="text.secondary" role="status">
                   Save your current form edits before sending email or changing parent access.
                 </Typography>
@@ -611,7 +703,7 @@ export function ParentRegistrationPanel({
         >
           <DialogScrollContent>
             <Stack spacing={2}>
-              {['send', 'corrections'].includes(action) && (
+              {['copy', 'send', 'corrections'].includes(action) && (
                 <FormSectionCard
                   title="Parent Contact"
                   icon={GlobalIcons.admissionDetails}
@@ -623,7 +715,7 @@ export function ParentRegistrationPanel({
                     >
                       <CustomSelect
                         name="recipient"
-                        label="Send to"
+                        label={action === 'copy' ? 'Share with' : 'Send to'}
                         required
                         fullWidth
                         size="small"
@@ -657,7 +749,9 @@ export function ParentRegistrationPanel({
                       }
                     />
                     <Typography variant="body2" color="text.secondary">
-                      {snapshot.request ? 'Sending a new link closes the previous link. ' : ''}
+                      {action !== 'copy' && snapshot.request
+                        ? 'Sending a new link closes the previous link. '
+                        : ''}
                       Parent completes the form. Staff review and submit the application.
                     </Typography>
                   </Stack>

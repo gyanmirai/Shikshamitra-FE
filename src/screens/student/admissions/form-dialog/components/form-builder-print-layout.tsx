@@ -21,6 +21,7 @@ export function FormBuilderPrintLayout({ formik }: Props) {
       form={form}
       settings={getAdmissionFormPrintSettings(formik.values.printSettings)}
       initialMode="blank"
+      sampleDetails
       readOnly={formik.isSubmitting}
       onSettingsChange={(settings) => formik.setFieldValue('printSettings', settings)}
     />

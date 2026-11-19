@@ -62,6 +62,13 @@ export function useCertificateGeneration(
     const timer = setTimeout(async () => {
       try {
         const input = JSON.parse(previewKey) as CertificatePreviewInput;
+        if (input.omitSchoolBranding) {
+          const value = await previewCertificate({ ...input, includeBranding: false }).unwrap();
+          if (!cancelled) {
+            setPreviewState({ key: previewKey, value: { ...value, branding: undefined } });
+          }
+          return;
+        }
         const context = JSON.stringify([
           input.studentId,
           input.certificateType,

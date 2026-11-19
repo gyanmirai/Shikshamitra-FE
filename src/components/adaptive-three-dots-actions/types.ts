@@ -3,17 +3,21 @@ import type { Theme, SxProps } from '@mui/material/styles';
 
 import type { ThreeDotsActionsOptions } from '../three-dots-actions/types';
 
-export interface AdaptiveThreeDotsAction {
+type AdaptiveActionSelection =
+  | { closeOnSuccess?: false; onClick?: () => void }
+  | { closeOnSuccess: true; onClick: () => Promise<boolean> };
+
+export type AdaptiveThreeDotsAction = AdaptiveActionSelection & {
   id: string;
   label: string;
+  ariaLabel?: string;
   icon: string;
   color?: string;
   disabled?: boolean;
   loading?: boolean;
   tooltip?: ReactNode;
   href?: string;
-  onClick?: () => void;
-}
+};
 
 export interface AdaptiveThreeDotsActionsProps {
   actions: readonly AdaptiveThreeDotsAction[];
@@ -24,6 +28,7 @@ export interface AdaptiveThreeDotsActionsProps {
   mobileDirectActionLimit?: 0 | 1 | 2 | 3;
   onClickThreeDots?: MouseEventHandler<HTMLButtonElement>;
   onClosePopover?: () => void;
+  disablePopoverClose?: boolean;
   placement?: ThreeDotsActionsOptions['placement'];
   popoverSlotProps?: ThreeDotsActionsOptions['popoverSlotProps'];
   popoverAction?: ThreeDotsActionsOptions['popoverAction'];

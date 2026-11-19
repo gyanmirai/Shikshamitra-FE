@@ -1,58 +1,92 @@
 import { useRef, useState, useEffect } from 'react';
 
+import { renderAdmissionPrintPdf } from './admission-print-render';
+
 import type { AdmissionPrintDocument, AdmissionPrintBranding } from './form-print-model';
 
 /** Only the latest request may become printable; superseded object URLs are always released. */
 export function useAdmissionPrintPreview(
   model: AdmissionPrintDocument,
   branding: AdmissionPrintBranding,
-  enabled: boolean
+  enabled: boolean,
+  debounceMs = 0,
+  previewContext?: string
 ) {
   const request = JSON.stringify({ model, branding });
   const [revision, setRevision] = useState(0);
-  const [result, setResult] = useState<{ request: string; url: string } | null>(null);
-  const [failed, setFailed] = useState<string | null>(null);
+  const [result, setResult] = useState<{
+    request: string;
+    context?: string;
+    revision: number;
+    url: string;
+  } | null>(null);
+  const [failed, setFailed] = useState<{ request: string; message?: string } | null>(null);
   const activeUrl = useRef<string | null>(null);
+  useEffect(
+    () => () => {
+      if (activeUrl.current) URL.revokeObjectURL(activeUrl.current);
+      activeUrl.current = null;
+    },
+    []
+  );
   useEffect(() => {
     if (!enabled) return undefined;
-    let active = true;
-    let url: string | undefined;
+    const controller = new AbortController();
+    const { signal } = controller;
     const generate = async () => {
-      const { createAdmissionFormPdfBlob } = await import('./form-print-pdf');
-      const data = JSON.parse(request) as {
-        model: AdmissionPrintDocument;
-        branding: AdmissionPrintBranding;
-      };
-      const blob = await createAdmissionFormPdfBlob(data.model, data.branding);
-      if (!active) return;
-      url = URL.createObjectURL(blob);
+      const blob = await renderAdmissionPrintPdf(request, signal);
+      if (signal.aborted) return;
+      const url = URL.createObjectURL(blob);
+      if (activeUrl.current) URL.revokeObjectURL(activeUrl.current);
       activeUrl.current = url;
-      setResult({ request, url });
+      setResult({ request, context: previewContext, revision, url });
       setFailed(null);
     };
-    generate().catch(() => {
-      if (active) setFailed(request);
-    });
+    const run = () =>
+      generate().catch((error: unknown) => {
+        if (!signal.aborted) {
+          setFailed({
+            request,
+            message:
+              error instanceof Error &&
+              ['AdmissionPrintLayoutError', 'AdmissionPrintTimeoutError'].includes(error.name)
+                ? error.message
+                : undefined,
+          });
+        }
+      });
+    const timer = debounceMs ? window.setTimeout(run, debounceMs) : undefined;
+    if (timer === undefined) run();
     return () => {
-      active = false;
-      if (url) {
-        URL.revokeObjectURL(url);
-        if (activeUrl.current === url) activeUrl.current = null;
-      }
+      controller.abort();
+      if (timer !== undefined) window.clearTimeout(timer);
     };
-  }, [request, enabled, revision]);
+  }, [request, enabled, revision, debounceMs, previewContext]);
+  const retain = previewContext !== undefined && result?.context === previewContext;
+  useEffect(() => {
+    if (!result || retain || (enabled && result.request === request && result.context === previewContext)) return;
+    if (result.url === activeUrl.current) {
+      URL.revokeObjectURL(result.url);
+      activeUrl.current = null;
+    }
+    setResult(null);
+  }, [enabled, previewContext, request, result, retain]);
+  const failedRequest = failed?.request === request;
   const ready =
     enabled &&
-    failed !== request &&
+    !failedRequest &&
     result?.request === request &&
+    result.context === previewContext &&
+    result.revision === revision &&
     result.url === activeUrl.current;
   return {
     url: ready ? result.url : undefined,
-    loading: enabled && failed !== request && !ready,
-    error: enabled && failed === request,
+    previewUrl: retain && result?.url === activeUrl.current ? result?.url : undefined,
+    loading: enabled && !failedRequest && !ready,
+    error: enabled && failedRequest,
+    errorMessage: enabled && failedRequest ? failed.message : undefined,
     retry: () => {
       setFailed(null);
-      setResult(null);
       setRevision((value) => value + 1);
     },
   };

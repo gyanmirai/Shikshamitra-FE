@@ -218,28 +218,8 @@ export default function AdmissionInquiryFormPage() {
                 icon={GlobalIcons.admissionInterest}
                 expanded={interestExpanded}
                 onExpandedChange={setInterestExpanded}
+                loadingLabel={controller.academicLoading ? 'Loading Admission Interest' : undefined}
               >
-                {controller.offeringsLoading && (
-                  <Box
-                    role="status"
-                    aria-label="Loading Admission Offerings"
-                    aria-busy
-                    sx={{
-                      ...skeletonReducedMotionSx,
-                      gridColumn: '1 / -1',
-                      display: 'grid',
-                      gridTemplateColumns: {
-                        xs: 'minmax(0, 1fr)',
-                        sm: 'repeat(2, minmax(0, 1fr))',
-                      },
-                      gap: 2,
-                    }}
-                  >
-                    {Array.from({ length: 2 }, (_, index) => (
-                      <Skeleton key={index} variant="rounded" height={48} />
-                    ))}
-                  </Box>
-                )}
                 <ShakingTextField
                   error={Boolean(formik.touched.admissionCycleId && formik.errors.admissionCycleId)}
                 >
@@ -357,7 +337,17 @@ export default function AdmissionInquiryFormPage() {
                   </TextField>
                 </ShakingTextField>
 
-                {hierarchySelected && (
+                {hierarchySelected && controller.offeringsLoading && (
+                  <Box
+                    role="status"
+                    aria-label="Loading Admission Offerings"
+                    aria-busy
+                    sx={{ ...skeletonReducedMotionSx, mb: 1.5 }}
+                  >
+                    <Skeleton variant="rounded" height={40} />
+                  </Box>
+                )}
+                {hierarchySelected && !controller.offeringsLoading && (
                   <ShakingTextField
                     error={Boolean(formik.touched.offeringId && formik.errors.offeringId)}
                   >
@@ -371,17 +361,14 @@ export default function AdmissionInquiryFormPage() {
                       value={formik.values.offeringId}
                       disabled={
                         controller.busy ||
-                        controller.offeringsLoading ||
                         controller.offeringsError ||
                         controller.offerings.length === 0
                       }
                       error={Boolean(formik.touched.offeringId && formik.errors.offeringId)}
                       helperText={
-                        controller.offeringsLoading
-                          ? 'Checking latest admission offerings…'
-                          : !controller.offeringsError && controller.offerings.length > 0
-                            ? formik.touched.offeringId && formik.errors.offeringId
-                            : undefined
+                        !controller.offeringsError && controller.offerings.length > 0
+                          ? formik.touched.offeringId && formik.errors.offeringId
+                          : undefined
                       }
                       onBlur={formik.handleBlur}
                       onChange={(event) => {
@@ -457,7 +444,7 @@ export default function AdmissionInquiryFormPage() {
                   )}
               </InquiryFormSection>
 
-              {controller.runtimeLoading && (
+              {controller.runtimeLoading && !controller.offeringsLoading && (
                 <InquiryFormSection
                   title="Inquiry Form"
                   description="Loading fields for the selected offering."
@@ -571,13 +558,6 @@ export default function AdmissionInquiryFormPage() {
                 guardianEmail={controller.currentGuardianEmail}
                 busy={controller.busy}
                 onUseExisting={controller.useExistingFamily}
-                onOpenExisting={(inquiryId) => {
-                  const next = new URLSearchParams(searchParams.toString());
-                  next.set('inquiryId', inquiryId);
-                  guard.requestNavigation(() =>
-                    router.push(`${studentPaths.enrollment.inquiries}?${next.toString()}`)
-                  );
-                }}
               />
               {controller.requestError && (
                 <StudentFeedback notificationKey="STU-0083" presentation="inline" severity="error">
@@ -645,6 +625,7 @@ function InquiryFormSection({
   description,
   expanded,
   onExpandedChange,
+  loadingLabel,
   children,
 }: {
   title: string;
@@ -652,6 +633,7 @@ function InquiryFormSection({
   description?: string;
   expanded?: boolean;
   onExpandedChange?: (expanded: boolean) => void;
+  loadingLabel?: string;
   children: ReactNode;
 }) {
   return (
@@ -659,9 +641,9 @@ function InquiryFormSection({
       title={title}
       icon={icon}
       descriptionTooltip={description || `Enter the ${title.toLocaleLowerCase()} for this inquiry.`}
-      collapsible={Boolean(onExpandedChange)}
-      expanded={expanded}
-      onExpandedChange={onExpandedChange}
+      collapsible={!loadingLabel && Boolean(onExpandedChange)}
+      expanded={loadingLabel ? true : expanded}
+      onExpandedChange={loadingLabel ? undefined : onExpandedChange}
     >
       {description && (
         <Typography variant="body2" color="text.secondary">
@@ -669,6 +651,9 @@ function InquiryFormSection({
         </Typography>
       )}
       <Box
+        role={loadingLabel ? 'status' : undefined}
+        aria-label={loadingLabel}
+        aria-busy={loadingLabel ? true : undefined}
         sx={{
           display: 'grid',
           gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))' },
@@ -676,7 +661,16 @@ function InquiryFormSection({
           alignItems: 'start',
         }}
       >
-        {children}
+        {loadingLabel
+          ? Array.from({ length: 4 }, (_, index) => (
+              <Skeleton
+                key={index}
+                sx={{ ...skeletonReducedMotionSx, mb: 1.5 }}
+                variant="rounded"
+                height={40}
+              />
+            ))
+          : children}
       </Box>
     </FormSectionCard>
   );

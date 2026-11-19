@@ -1,4 +1,8 @@
 import type { AdmissionFormSection } from 'src/redux/student/admissions/admission-applications-api';
+import type {
+  AdmissionFormPrintSettings,
+  AdmissionPrintAcademicDetails,
+} from 'src/redux/student/admissions/admission-form-print-settings';
 
 import { formatDateOnly } from 'src/utils/date-only';
 
@@ -11,14 +15,7 @@ import { getAdmissionFormStepGroups } from '../form-dialog/form-step-groups';
 import { mergeInquiryContextSections } from '../inquiry-context-presentation';
 import { readRepeatableValues, getRepeatableEntryCount } from '../form-repeatable-values';
 
-export type AdmissionPrintSettings = {
-  template?: 'simple' | 'boxed-grid' | 'structured-classic';
-  layout: 'compact' | 'spacious';
-  paperSize: 'A4';
-  showSchoolHeader: boolean;
-  showPhoto: boolean;
-  showSignature: boolean;
-};
+export type AdmissionPrintSettings = AdmissionFormPrintSettings;
 
 export const DEFAULT_ADMISSION_PRINT_SETTINGS: AdmissionPrintSettings = {
   template: 'simple',
@@ -52,6 +49,9 @@ export type AdmissionPrintBranding = {
   addressLines?: string[];
   logoUrl?: string;
   bannerUrl?: string;
+  schoolPhone?: string;
+  schoolEmail?: string;
+  schoolWebsite?: string;
 };
 
 export type AdmissionPrintField = {
@@ -64,6 +64,8 @@ export type AdmissionPrintField = {
   conditional?: boolean;
   options?: { value: string; label: string }[];
   imageUrl?: string;
+  helpText?: string;
+  selectedValues?: string[];
   /** Semantic input metadata; display labels may be renamed or translated. */
   bindingKey?: string;
   writingFormat?: 'line' | 'characters' | 'phone' | 'date' | 'aadhaar' | 'pan';
@@ -77,6 +79,7 @@ export type AdmissionPrintEntry = {
 
 export type AdmissionPrintSection = {
   key: string;
+  code: string;
   title: string;
   columns: number;
   repeatable: boolean;
@@ -93,6 +96,7 @@ export type AdmissionPrintStep = {
 export type AdmissionPrintDocument = {
   title: string;
   registrationNumber: string;
+  academicDetails: AdmissionPrintAcademicDetails;
   language: string;
   mode: 'blank' | 'filled';
   settings: AdmissionPrintSettings;
@@ -111,6 +115,19 @@ export type AdmissionPrintDocument = {
     no: string;
     conditional: string;
     unavailable: string;
+    notProvided: string;
+    board: string;
+    medium: string;
+    class: string;
+    academicYear: string;
+    instructions: string;
+    checklist: string;
+    declaration: string;
+    officeUse: string;
+    documentChecks: string;
+    remarks: string;
+    verificationDate: string;
+    stamp: string;
   };
 };
 
@@ -126,6 +143,7 @@ type BuildInput = {
   settings?: Partial<AdmissionPrintSettings>;
   choiceLabels?: Record<string, Record<string, string>>;
   registrationNumber?: string;
+  academicDetails?: AdmissionPrintAcademicDetails;
 };
 
 const COPY = {
@@ -142,6 +160,19 @@ const COPY = {
     no: 'No',
     conditional: 'If applicable',
     unavailable: 'Unavailable',
+    notProvided: 'Not provided',
+    board: 'Board',
+    medium: 'Medium',
+    class: 'Class',
+    academicYear: 'Academic year',
+    instructions: 'Instructions',
+    checklist: 'Document checklist',
+    declaration: 'Declaration',
+    officeUse: 'For office use only',
+    documentChecks: 'Documents checked',
+    remarks: 'Remarks',
+    verificationDate: 'Verification date',
+    stamp: 'School stamp',
   },
   gu: {
     registrationNumber: 'નોંધણી ક્રમાંક',
@@ -156,6 +187,19 @@ const COPY = {
     no: 'ના',
     conditional: 'લાગુ પડતું હોય તો',
     unavailable: 'ઉપલબ્ધ નથી',
+    notProvided: 'આપેલ નથી',
+    board: 'બોર્ડ',
+    medium: 'માધ્યમ',
+    class: 'ધોરણ',
+    academicYear: 'શૈક્ષણિક વર્ષ',
+    instructions: 'સૂચનાઓ',
+    checklist: 'દસ્તાવેજોની યાદી',
+    declaration: 'ઘોષણા',
+    officeUse: 'માત્ર કચેરીના ઉપયોગ માટે',
+    documentChecks: 'તપાસેલ દસ્તાવેજો',
+    remarks: 'નોંધ',
+    verificationDate: 'ચકાસણીની તારીખ',
+    stamp: 'શાળાનો સિક્કો',
   },
   hi: {
     registrationNumber: 'पंजीकरण क्रमांक',
@@ -170,6 +214,19 @@ const COPY = {
     no: 'नहीं',
     conditional: 'यदि लागू हो',
     unavailable: 'उपलब्ध नहीं',
+    notProvided: 'प्रदान नहीं किया गया',
+    board: 'बोर्ड',
+    medium: 'माध्यम',
+    class: 'कक्षा',
+    academicYear: 'शैक्षणिक वर्ष',
+    instructions: 'निर्देश',
+    checklist: 'दस्तावेज़ सूची',
+    declaration: 'घोषणा',
+    officeUse: 'केवल कार्यालय के उपयोग के लिए',
+    documentChecks: 'जाँचे गए दस्तावेज़',
+    remarks: 'टिप्पणियाँ',
+    verificationDate: 'सत्यापन की तारीख',
+    stamp: 'विद्यालय की मुहर',
   },
 };
 
@@ -307,6 +364,14 @@ function printField(
     value: printed,
     kind,
     required: field.required,
+    ...(field.helpText ? { helpText: field.helpText } : {}),
+    ...(mode === 'filled' && kind === 'choice'
+      ? {
+          selectedValues: (Array.isArray(answer) ? answer : [answer])
+            .map(readableValue)
+            .filter(Boolean),
+        }
+      : {}),
     ...(conditional ? { conditional: true } : {}),
     ...(options.length ? { options } : {}),
     ...(imageUrl ? { imageUrl } : {}),
@@ -324,12 +389,12 @@ export function buildAdmissionPrintDocument({
   settings,
   choiceLabels = {},
   registrationNumber,
+  academicDetails = {},
 }: BuildInput): AdmissionPrintDocument {
   const effectiveSettings: AdmissionPrintSettings = {
     ...DEFAULT_ADMISSION_PRINT_SETTINGS,
     ...definition.printSettings,
     ...settings,
-    paperSize: 'A4',
   };
   const labels = COPY[language as keyof typeof COPY] ?? COPY.en;
   const answers =
@@ -391,7 +456,11 @@ export function buildAdmissionPrintDocument({
           });
         const count = section.isRepeatable
           ? mode === 'blank'
-            ? Math.max(1, section.minEntries ?? 0)
+            ? Math.max(
+                1,
+                section.minEntries ?? 0,
+                effectiveSettings.advanced?.sections?.[section.code.toUpperCase()]?.blankRows ?? 0
+              )
             : getRepeatableEntryCount(
                 section.fields.map((field) => answers[field.code]),
                 section.minEntries
@@ -420,7 +489,7 @@ export function buildAdmissionPrintDocument({
               const value = section.isRepeatable
                 ? (readRepeatableValues(sourceAnswers[field.code])[index] ?? '')
                 : (sourceAnswers[field.code] ?? '');
-              return printField(
+              const printed = printField(
                 field,
                 value,
                 mode,
@@ -433,6 +502,16 @@ export function buildAdmissionPrintDocument({
                   group.visibilityRuleJson
                 )
               );
+              if (
+                mode === 'filled' &&
+                !printed.value &&
+                !['static', 'photo'].includes(printed.kind)
+              ) {
+                const fallback = effectiveSettings.advanced?.copies?.unanswered;
+                printed.value =
+                  fallback === 'dash' ? '-' : fallback === 'not-provided' ? labels.notProvided : '';
+              }
+              return printed;
             });
           if (entryFields.length)
             entries.push({
@@ -446,6 +525,7 @@ export function buildAdmissionPrintDocument({
         if (entries.length)
           parts.push({
             key: section.id,
+            code: section.code,
             title: section.name,
             columns: Math.max(1, Math.min(4, section.fieldsPerRow ?? definition.fieldsPerRow ?? 2)),
             repeatable: Boolean(section.isRepeatable),
@@ -458,6 +538,7 @@ export function buildAdmissionPrintDocument({
   return {
     title: definition.name,
     registrationNumber: mode === 'filled' ? (registrationNumber?.trim() ?? '') : '',
+    academicDetails: mode === 'filled' ? academicDetails : {},
     language,
     mode,
     settings: effectiveSettings,

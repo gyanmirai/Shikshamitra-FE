@@ -25,23 +25,30 @@ describe('house workspace state', () => {
       sorting: 'studentName desc',
     });
   });
-  it('clears a checked cross-class cohort whenever academic/filter scope changes', () => {
+  it('clears checked students whenever academic or filter scope changes', () => {
     const selected = { context: 'english', ids: ['enrollment-1', 'enrollment-2'] };
     expect(selectionForContext(selected, 'english')).toEqual(selected.ids);
     expect(selectionForContext(selected, 'hindi')).toEqual([]);
   });
   it('serializes unique enrollment IDs and a null destination for removal', () => {
-    expect(assignmentInput('medium', '', ['a', 'a', 'b'])).toEqual({
+    expect(assignmentInput('medium', 'division', '', ['a', 'a', 'b'])).toEqual({
       academicMediumId: 'medium',
+      divisionId: 'division',
       houseId: null,
       enrollmentIds: ['a', 'b'],
     });
   });
-  it('rejects empty and oversized commands without imposing house capacity', () => {
-    expect(() => assignmentInput('medium', 'house', [])).toThrow('Select at least one student.');
+  it('requires a division and bounds the number of selected students', () => {
+    expect(() => assignmentInput('medium', '', 'house', ['a'])).toThrow(
+      'Select a division to change house membership.'
+    );
+    expect(() => assignmentInput('medium', 'division', 'house', [])).toThrow(
+      'Select at least one student.'
+    );
     expect(() =>
       assignmentInput(
         'medium',
+        'division',
         'house',
         Array.from({ length: 501 }, (_, i) => String(i))
       )

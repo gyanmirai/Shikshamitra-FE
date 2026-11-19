@@ -21,6 +21,7 @@ import { useHouseCloseGuard } from './use-house-close-guard';
 
 type Props = {
   academicMediumId: string;
+  divisionId: string;
   enrollmentIds: string[];
   initialMode?: 'assign' | 'remove';
   onClose: () => void;
@@ -29,6 +30,7 @@ type Props = {
 };
 export default function HouseAssignmentDrawer({
   academicMediumId,
+  divisionId,
   enrollmentIds,
   initialMode = 'assign',
   onClose,
@@ -75,6 +77,7 @@ export default function HouseAssignmentDrawer({
     try {
       const input = assignmentInput(
         academicMediumId,
+        divisionId,
         mode === 'remove' ? '' : house!.id,
         enrollmentIds
       );
@@ -131,7 +134,7 @@ export default function HouseAssignmentDrawer({
               <FormSectionCard
                 title="Membership Change"
                 icon={GlobalIcons.assigned}
-                descriptionTooltip="Selected students can span classes in this medium. Review the server preview before confirming."
+                descriptionTooltip="All selected students must be in the selected division. Review the server preview before confirming."
               >
                 <Typography variant="body2">
                   Selected students: {enrollmentIds.length}. Up to 500 students can be changed at

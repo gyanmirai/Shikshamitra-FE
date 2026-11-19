@@ -18,6 +18,17 @@ const student = {
   isDivisionLeader: true,
   concurrencyStamp: 'v1',
 };
+const division = {
+  id: 'd1',
+  name: 'A',
+  standardId: 'c1',
+  standardName: '6',
+  studentCount: 20,
+  leader: student,
+  houseLeader: { ...student, studentName: 'Mira', enrollmentId: 'e2', houseName: 'Falcon' },
+  concurrencyStamp: 'v1',
+  canManage: true,
+};
 const picker = vi.hoisted(() => vi.fn());
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
@@ -32,39 +43,46 @@ vi.mock('./house-pickers', () => ({
     );
   },
 }));
-it('loads division students independently of houses and confirms leader removal', async () => {
+function mount(houseId?: string) {
   const onSave = vi.fn().mockResolvedValue(undefined);
   const onClose = vi.fn();
   render(
     <Provider store={configureStore({ reducer: { confirmPopup: () => ({ isChanges: false }) } })}>
       <ThemeProvider theme={createTheme(defaultSettings)}>
         <HouseLeaderDialog
-          kind="division"
           academicMediumId="m1"
-          record={{
-            id: 'd1',
-            name: 'A',
-            standardId: 'c1',
-            standardName: '6',
-            studentCount: 20,
-            leader: student,
-            concurrencyStamp: 'v1',
-            canManage: true,
-          }}
+          houseId={houseId}
+          record={division}
           onSave={onSave}
           onClose={onClose}
         />
       </ThemeProvider>
     </Provider>
   );
-  expect(picker.mock.calls[0][0].input).toEqual({ academicMediumId: 'm1', divisionId: 'd1' });
+  return { onSave, onClose };
+}
+
+function chooseDivisionRole() {
+  fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Role' }));
+  fireEvent.click(screen.getByRole('option', { name: 'Division leader' }));
+}
+
+it('loads division students independently of houses and confirms leader removal', async () => {
+  const { onSave, onClose } = mount();
+  chooseDivisionRole();
+  expect(picker).toHaveBeenLastCalledWith(
+    expect.objectContaining({
+      input: { academicMediumId: 'm1', divisionId: 'd1' },
+      value: student,
+    })
+  );
   fireEvent.click(screen.getByRole('button', { name: 'Vacant' }));
   fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
   expect(await screen.findByText('Remove Division Leader?')).toBeVisible();
   expect(onSave).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('button', { name: 'Confirm change' }));
   await waitFor(() =>
-    expect(onSave).toHaveBeenCalledWith({
+    expect(onSave).toHaveBeenCalledWith('division', {
       id: 'd1',
       academicMediumId: 'm1',
       enrollmentId: null,
@@ -72,4 +90,31 @@ it('loads division students independently of houses and confirms leader removal'
     })
   );
   expect(onClose).toHaveBeenCalledOnce();
+});
+
+it('loads House leader candidates in the division and uses its independent incumbent', async () => {
+  const { onSave } = mount('h1');
+  expect(picker).toHaveBeenLastCalledWith(
+    expect.objectContaining({
+      input: { academicMediumId: 'm1', divisionId: 'd1', assignedOnly: true, houseId: 'h1' },
+      value: division.houseLeader,
+    })
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Vacant' }));
+  chooseDivisionRole();
+  expect(await screen.findByText('Discard Unsaved Changes?')).toBeVisible();
+  fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
+  expect(screen.getByRole('combobox', { name: 'Role' })).toHaveTextContent('House leader');
+  fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+  expect(await screen.findByText(/Mira will no longer be the house leader/)).toBeVisible();
+  expect(onSave).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Confirm change' }));
+  await waitFor(() =>
+    expect(onSave).toHaveBeenCalledExactlyOnceWith('house', {
+      id: 'd1',
+      academicMediumId: 'm1',
+      enrollmentId: null,
+      concurrencyStamp: 'v1',
+    })
+  );
 });

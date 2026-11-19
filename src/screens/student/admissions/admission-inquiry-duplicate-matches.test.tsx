@@ -56,7 +56,6 @@ function setup(overrides: Partial<ComponentProps<typeof AdmissionInquiryDuplicat
     applicantName: 'Priya Patel',
     busy: false,
     onUseExisting: vi.fn(),
-    onOpenExisting: vi.fn(),
     ...overrides,
   };
   const content = (next = props) => (
@@ -73,7 +72,11 @@ it('confirms a single saved family using a child witness without showing parent 
       { ...match, applicantId: 'child-2', applicantName: 'Anya Patel' },
     ],
   });
-  expect(screen.getByText('Priya Patel')).toBeVisible();
+  expect(
+    screen.getByText('We found possible siblings. Confirm the children belong to the same family.')
+  ).toBeVisible();
+  expect(screen.queryByText('Priya Patel')).toBeNull();
+  expect(screen.queryByText('Link with')).toBeNull();
   const children = screen.getByRole('list', { name: 'Children in this family' });
   expect(within(children).getAllByRole('listitem')).toHaveLength(2);
   expect(within(children).getByText('Asha Patel')).toBeVisible();
@@ -112,20 +115,48 @@ it('requires explicit family selection for distinct saved family IDs despite ide
     expect(props.onUseExisting).toHaveBeenCalledExactlyOnceWith('family-2', 'child-2')
   );
 });
-it('preserves the exact-child duplicate guard and open-existing path', async () => {
+it('returns to the draft from a duplicate warning even when a family can be linked', async () => {
   const { props } = setup({
     matches: [
       { ...match, existingInquiryId: 'inquiry-1', existingInquiryAdmissionCycleId: 'cycle' },
     ],
     applicantName: 'Asha Patel',
     admissionCycleId: 'cycle',
+    presentation: 'dialog',
   });
-  expect(screen.getByRole('button', { name: 'Confirm siblings' })).toBeDisabled();
-  fireEvent.click(screen.getByRole('button', { name: 'Open Existing Inquiry' }));
-  expect(props.onOpenExisting).toHaveBeenCalledWith('inquiry-1');
-  fireEvent.click(screen.getByRole('button', { name: 'Different Child? Review Siblings' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Confirm siblings' }));
-  await waitFor(() => expect(props.onUseExisting).toHaveBeenCalledOnce());
+  const warning = screen.getByRole('dialog', { name: 'Possible Duplicate Inquiry' });
+  expect(within(warning).getByText(/check the name and mobile number/i)).toBeVisible();
+  expect(within(warning).queryByRole('button', { name: 'Open Existing Inquiry' })).toBeNull();
+  expect(within(warning).queryByRole('button', { name: 'Confirm siblings' })).toBeNull();
+  expect(within(warning).queryByRole('button', { name: 'This is a different child' })).toBeNull();
+  fireEvent.click(within(warning).getByRole('button', { name: 'Back to form' }));
+  await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  expect(props.onUseExisting).not.toHaveBeenCalled();
+  expect(store.getState().confirmPopup.isChanges).toBe(true);
+});
+
+it('returns to the form without saving from a DOB-only warning without a linkable family', async () => {
+  const { props } = setup({
+    matches: [
+      {
+        ...match,
+        existingInquiryId: 'inquiry-1',
+        existingInquiryAdmissionCycleId: 'cycle',
+        dateOfBirth: '2016-04-05',
+        canLinkFamily: false,
+      },
+    ],
+    applicantName: 'Asha Patel',
+    applicantDateOfBirth: '2016-04-05',
+    admissionCycleId: 'cycle',
+    presentation: 'dialog',
+  });
+  const warning = screen.getByRole('dialog', { name: 'Possible Duplicate Inquiry' });
+  expect(within(warning).queryByRole('button', { name: 'This is a different child' })).toBeNull();
+  fireEvent.click(within(warning).getByRole('button', { name: 'Back to form' }));
+  await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  expect(props.onUseExisting).not.toHaveBeenCalled();
+  expect(store.getState().confirmPopup.isChanges).toBe(true);
 });
 it('disambiguates equal child names in separate families using saved inquiry references', async () => {
   const { props } = setup({
@@ -173,8 +204,15 @@ it('allows family-only confirmation for guardian entry and legacy records withou
 });
 it('cancels locally without changing the parent draft and reopens on a new submission', async () => {
   const view = setup({ presentation: 'dialog', reviewKey: 1 });
+  const dialog = screen.getByRole('dialog', { name: 'Confirm Siblings' });
+  expect(
+    within(dialog).getByText(
+      'We found a possible sibling. Confirm both children belong to the same family.'
+    )
+  ).toBeVisible();
+  expect(within(dialog).getByText('Asha Patel')).toBeVisible();
   fireEvent.click(
-    within(screen.getByRole('dialog', { name: 'Confirm Siblings' })).getByRole('button', {
+    within(dialog).getByRole('button', {
       name: 'Cancel',
     })
   );

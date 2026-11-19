@@ -68,6 +68,9 @@ beforeEach(() => {
   profileNavigation.query = '';
   profileNavigation.push.mockClear();
   mswServer.use(
+    http.get('*/api/students/records/:studentId/photo', () =>
+      new HttpResponse(null, { status: 404 })
+    ),
     http.get(profileDetailsPath, ({ params }) =>
       HttpResponse.json({
         data: {

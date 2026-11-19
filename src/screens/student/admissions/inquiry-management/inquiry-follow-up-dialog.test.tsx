@@ -197,6 +197,40 @@ it('shows notes and exactly three statuses, then saves one atomic Interested fol
   expect(mocks.move).not.toHaveBeenCalled();
 });
 
+it('shows the shared empty state and applies editable templates without saving automatically', async () => {
+  const user = userEvent.setup();
+  mocks.management = { ...mocks.management, currentData: { ...management, notes: [] } };
+  render(<InquiryFollowUpDialog inquiry={inquiry} onClose={mocks.close} />);
+  expect(screen.getByText('No follow-up notes yet.')).toBeVisible();
+  expect(document.querySelector('svg image')).toBeInTheDocument();
+  const note = screen.getByRole('textbox', { name: 'Notes' });
+  await user.type(note, 'Called the parent.');
+  changeReminder();
+  await user.click(screen.getByRole('button', { name: 'Quick templates' }));
+  await user.click(screen.getByRole('menuitem', { name: 'Interested' }));
+  expect((note as HTMLTextAreaElement).value).toContain(
+    'Called the parent.\n\nThe parent expressed interest in admission.'
+  );
+  expect(screen.getByRole('combobox', { name: 'Status' })).toHaveValue('2');
+  expect(screen.getByLabelText('Next reminder date')).not.toBeDisabled();
+  await user.clear(note);
+  await user.click(screen.getByRole('button', { name: 'Quick templates' }));
+  await user.click(screen.getByRole('menuitem', { name: 'Not interested' }));
+  expect(screen.getByRole('combobox', { name: 'Status' })).toHaveValue('6');
+  expect(screen.getByLabelText('Next reminder date')).toBeDisabled();
+  expect(mocks.record).not.toHaveBeenCalled();
+  await user.click(screen.getByRole('button', { name: 'Submit' }));
+  await waitFor(() =>
+    expect(mocks.record).toHaveBeenCalledWith(
+      expect.objectContaining({
+        note: expect.stringContaining('not interested'),
+        status: 6,
+        reminderAt: null,
+      })
+    )
+  );
+});
+
 it('loads management before inquiry details and waits for the inquiry stamp refreshed after initialization', async () => {
   const user = userEvent.setup();
   const freshStamp = Date.now() + 60_000;

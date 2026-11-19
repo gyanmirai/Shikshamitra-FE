@@ -44,6 +44,13 @@ export function AdmissionInquiryFamilyReview({
   });
   return (
     <Stack spacing={2} sx={{ minWidth: 0 }}>
+      {families.length > 0 && (
+        <Typography variant="body2">
+          {selectedFamily?.children.length === 1
+            ? 'We found a possible sibling. Confirm both children belong to the same family.'
+            : 'We found possible siblings. Confirm the children belong to the same family.'}
+        </Typography>
+      )}
       {families.length > 1 && (
         <ShakingTextField error={Boolean(error)}>
           <CustomSelect
@@ -62,57 +69,52 @@ export function AdmissionInquiryFamilyReview({
         </ShakingTextField>
       )}
       {selectedFamily && (
-        <Stack spacing={1}>
-          <Typography variant="body2" color="text.secondary">
-            Link with
-          </Typography>
-          <Box
-            component="ul"
-            aria-label="Children in this family"
-            sx={{ m: 0, p: 0, listStyle: 'none' }}
-          >
-            {selectedFamily.children.map((child) => (
-              <Stack
-                component="li"
-                key={child.applicantId}
-                direction="row"
-                spacing={1.5}
-                alignItems="center"
+        <Box
+          component="ul"
+          aria-label="Children in this family"
+          sx={{ m: 0, p: 0, listStyle: 'none' }}
+        >
+          {selectedFamily.children.map((child) => (
+            <Stack
+              component="li"
+              key={child.applicantId}
+              direction="row"
+              spacing={1.5}
+              alignItems="center"
+              sx={{
+                py: 1,
+                minWidth: 0,
+                '&:not(:last-child)': { borderBottom: 1, borderColor: 'divider' },
+              }}
+            >
+              <Box
                 sx={{
-                  py: 1,
-                  minWidth: 0,
-                  '&:not(:last-child)': { borderBottom: 1, borderColor: 'divider' },
+                  display: 'flex',
+                  p: 1,
+                  borderRadius: 1,
+                  bgcolor: 'background.neutral',
+                  color: 'text.secondary',
                 }}
               >
-                <Box
-                  sx={{
-                    display: 'flex',
-                    p: 1,
-                    borderRadius: 1,
-                    bgcolor: 'background.neutral',
-                    color: 'text.secondary',
-                  }}
-                >
-                  <Iconify icon={GlobalIcons.studentProfile} width={20} aria-hidden="true" />
-                </Box>
-                <Stack spacing={0.25} sx={{ minWidth: 0 }}>
-                  <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
-                    {child.applicantName}
+                <Iconify icon={GlobalIcons.studentProfile} width={20} aria-hidden="true" />
+              </Box>
+              <Stack spacing={0.25} sx={{ minWidth: 0 }}>
+                <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
+                  {child.applicantName}
+                </Typography>
+                {child.existingInquiryNumber && (
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ overflowWrap: 'anywhere' }}
+                  >
+                    {child.existingInquiryNumber}
                   </Typography>
-                  {child.existingInquiryNumber && (
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ overflowWrap: 'anywhere' }}
-                    >
-                      {child.existingInquiryNumber}
-                    </Typography>
-                  )}
-                </Stack>
+                )}
               </Stack>
-            ))}
-          </Box>
-        </Stack>
+            </Stack>
+          ))}
+        </Box>
       )}
     </Stack>
   );

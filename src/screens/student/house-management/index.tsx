@@ -1,6 +1,7 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
+import type { Theme } from '@mui/material/styles';
 import type { IData, IColumn } from 'src/components/customizabaleTable/types';
 import type {
   House,
@@ -9,6 +10,7 @@ import type {
 } from 'src/redux/student/house-management/house-management-types';
 
 import { useSelector } from 'react-redux';
+import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
@@ -38,7 +40,6 @@ import {
   Alert,
   Stack,
   Button,
-  Avatar,
   Checkbox,
   Typography,
 } from '@mui/material';
@@ -61,12 +62,13 @@ import HouseLogoAvatar from './house-logo-avatar';
 import HouseLeaderDialog from './house-leader-dialog';
 import HouseAssignmentDrawer from './house-assignment-drawer';
 import { recordsQueryUrl } from '../records/records-url-state';
+import StudentPhotoAvatar from '../components/student-photo-avatar';
 import { studentAcademicFilterRowSx } from '../student-academic-filter-layout';
 import { houseWorkspaceState, selectionForContext } from './house-management-model';
 
 type Session =
   | { kind: 'house'; house?: House }
-  | { kind: 'leader'; type: 'house' | 'division'; record: House | HouseDivision }
+  | { kind: 'leader'; record: HouseDivision }
   | { kind: 'assignment'; mode: 'assign' | 'remove'; ids: string[] }
   | { kind: 'delete'; house: House };
 
@@ -77,14 +79,41 @@ function classDivisionLabel(standardName: string, divisionName?: string | null) 
 const classDivisionValue = (value: unknown, row: IData) =>
   classDivisionLabel(String(value ?? '—'), row.divisionName);
 
+const divisionPlacementValue = (value: unknown, row: IData) =>
+  classDivisionLabel(row.standardName, String(value ?? '—'));
+
+const leaderTints = { house: 'success', division: 'info', both: 'error' } as const;
+
+function studentLeadershipRowProps(student: HouseStudent) {
+  const role = student.isHouseLeader
+    ? student.isDivisionLeader
+      ? 'both'
+      : 'house'
+    : student.isDivisionLeader
+      ? 'division'
+      : undefined;
+  if (!role) return {};
+
+  const tint = leaderTints[role];
+  return {
+    'data-leadership': role,
+    sx: {
+      bgcolor: (theme: Theme) => varAlpha(theme.vars.palette[tint].mainChannel, 0.12),
+      '&.MuiTableRow-hover:hover': {
+        bgcolor: (theme: Theme) => varAlpha(theme.vars.palette[tint].mainChannel, 0.18),
+      },
+    },
+  };
+}
+
 function StudentLeaderIcon({
   title,
   icon,
   color,
 }: {
   title: string;
-  icon: 'mdi:shield-star-outline' | 'mdi:account-star';
-  color: 'info.main' | 'warning.main';
+  icon: 'mdi:crown' | 'mdi:account-tie-hat-outline';
+  color: 'success' | 'info';
 }) {
   return (
     <CustomTooltip title={title} placement="right" arrow>
@@ -93,18 +122,19 @@ function StudentLeaderIcon({
         role="img"
         tabIndex={0}
         aria-label={title}
-        sx={{
+        sx={(theme) => ({
           display: 'inline-flex',
           alignItems: 'center',
           flexShrink: 0,
-          color,
+          color: theme.vars.palette[color].dark,
           borderRadius: 0.5,
+          ...theme.applyStyles('dark', { color: theme.vars.palette[color].light }),
           '&:focus-visible': {
             outline: '2px solid',
             outlineColor: 'primary.main',
             outlineOffset: 2,
           },
-        }}
+        })}
       >
         <Iconify icon={icon} width={16} aria-hidden />
       </Box>
@@ -132,27 +162,29 @@ export default function HouseManagement() {
     studentPermissions.records.deleteHouseManagement
   );
   const canViewProfile = hasGrantedPermission(permissions, studentPermissions.records.studentList);
-  const mediumId = academic.currentMedium?.id ?? '';
-  const standards =
-    academic.currentMedium?.educationMediumStages.flatMap((stage) => stage.standards) ?? [];
-  const standardId = params.get('class') ?? '';
-  const divisions = standards
-    .filter((item) => !standardId || item.id === standardId)
-    .flatMap((item) =>
-      item.divisions.map((division) => ({
-        ...division,
-        label: standardId ? division.name : `${item.name} / ${division.name}`,
-      }))
-    );
-  const divisionId = params.get('division') ?? '';
+  const requestedBoard = params.get('board');
+  const requestedMedium = params.get('medium');
+  const board = requestedBoard
+    ? academic.boards.find((item) => item.id === requestedBoard)
+    : academic.currentBoard;
+  const mediums = board?.educationMediums ?? [];
+  // A board change leaves the medium empty until the user chooses one for that board.
+  const selectedMediumId =
+    requestedMedium ?? (requestedBoard ? undefined : academic.currentMedium?.id);
+  const medium = mediums.find((item) => item.id === selectedMediumId);
+  const mediumId = medium?.id ?? '';
+  const standards = medium?.educationMediumStages.flatMap((stage) => stage.standards) ?? [];
+  const standard = standards.find((item) => item.id === params.get('class'));
+  const standardId = standard?.id ?? '';
+  const divisions = standard?.divisions ?? [];
+  const divisionId = divisions.find((item) => item.id === params.get('division'))?.id ?? '';
   const houseId = params.get('house') ?? '';
+  const leaderHouseId = state.tab === 'divisions' ? (params.get('leaderHouse') ?? '') : '';
   const unassignedOnly = params.get('assignment') === 'unassigned';
-  const validScope = Boolean(
-    mediumId &&
-    (!standardId || standards.some((item) => item.id === standardId)) &&
-    (!divisionId || divisions.some((item) => item.id === divisionId))
-  );
+  const validScope = Boolean(medium);
+  const awaitingMedium = Boolean(board && requestedBoard && !requestedMedium);
   const ready = validScope && !academic.isLoading && !academic.isError;
+  const hasSelectedDivision = Boolean(divisionId);
   const input = {
     academicMediumId: mediumId,
     filter: state.search,
@@ -172,7 +204,12 @@ export default function HouseManagement() {
     { skip: !ready || state.tab !== 'students' }
   );
   const divisionQuery = useGetHouseDivisionsQuery(
-    { ...input, standardId: standardId || undefined },
+    {
+      ...input,
+      standardId: standardId || undefined,
+      divisionId: divisionId || undefined,
+      houseId: leaderHouseId || undefined,
+    },
     { skip: !ready || state.tab !== 'divisions' }
   );
   const query =
@@ -199,6 +236,7 @@ export default function HouseManagement() {
     standardId,
     divisionId,
     houseId,
+    leaderHouseId,
     unassignedOnly,
     state.search,
     state.sorting,
@@ -210,7 +248,9 @@ export default function HouseManagement() {
     ids: [],
   });
   const selected =
-    canManage && ready && !query.isError ? selectionForContext(selection, context) : [];
+    canManage && hasSelectedDivision && ready && !query.isError
+      ? selectionForContext(selection, context)
+      : [];
   const currentSession = session?.context === context ? session.value : null;
   useEffect(() => {
     setSession((previous) => (previous?.context === context ? previous : null));
@@ -263,7 +303,7 @@ export default function HouseManagement() {
     setSelection({ context, ids: [] });
   };
   const toggle = (ids: string[], checked: boolean) => {
-    if (!canManage || query.isFetching || !ready) return;
+    if (!canManage || !hasSelectedDivision || !ready || query.isFetching || query.isError) return;
     setSelection((previous) => {
       const next = new Set(selectionForContext(previous, context));
       ids.forEach((id) => {
@@ -293,10 +333,17 @@ export default function HouseManagement() {
         {student.studentName}
       </Typography>
     );
-  const leader = (record: House | HouseDivision) =>
-    record.leader ? (
-      name(record.leader)
-    ) : record.canManage ? (
+  const leader = (student: HouseStudent | null, canManageDivision: boolean, showHouse = false) =>
+    student ? (
+      <Stack alignItems="flex-start">
+        {name(student)}
+        {showHouse && student.houseName && (
+          <Typography variant="caption" color="text.secondary">
+            {student.houseName}
+          </Typography>
+        )}
+      </Stack>
+    ) : canManageDivision ? (
       <Label color="default" sx={{ typography: 'caption', height: 22 }}>
         Vacant
       </Label>
@@ -306,6 +353,7 @@ export default function HouseManagement() {
       </Typography>
     );
   const disabled = !ready || query.isFetching || query.isError;
+  const membershipSelectionDisabled = disabled || !hasSelectedDivision;
   const houseColumns: IColumn[] = [
     {
       id: 'name',
@@ -341,11 +389,17 @@ export default function HouseManagement() {
       ),
     },
     {
-      id: 'leader',
-      label: 'House leader',
-      minWidth: 160,
-      isFilter: false,
-      render: (_, row) => leader(row as House),
+      id: 'houseLeaderCount',
+      label: 'House leaders',
+      align: 'right',
+      minWidth: 130,
+      isFilter: true,
+      filterType: 'number',
+      render: (value) => (
+        <Typography variant="body2" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+          {value ?? 0}
+        </Typography>
+      ),
     },
     {
       id: 'description',
@@ -369,6 +423,7 @@ export default function HouseManagement() {
           <AdaptiveThreeDotsActions
             directActionLimit={2}
             collapseOnOverflow={false}
+            moreLabel={`More actions for ${row.name}`}
             actions={[
               {
                 id: 'members',
@@ -399,11 +454,21 @@ export default function HouseManagement() {
                     },
                     {
                       id: 'leader',
-                      label: `Manage leader for ${row.name}`,
-                      icon: GlobalIcons.admissionStudent,
-                      disabled: disabled || !row.canManage,
-                      tooltip: !row.canManage ? 'Full house scope is required.' : undefined,
-                      onClick: () => open({ kind: 'leader', type: 'house', record: row }),
+                      label: 'Manage leader',
+                      ariaLabel: `Manage leader for ${row.name}`,
+                      icon: 'mdi:account-switch-outline',
+                      disabled,
+                      onClick: () =>
+                        update({
+                          tab: 'divisions',
+                          class: undefined,
+                          division: undefined,
+                          leaderHouse: row.id,
+                          leaderHouseName: row.name,
+                          search: undefined,
+                          sort: undefined,
+                          page: undefined,
+                        }),
                     },
                   ]
                 : []),
@@ -411,7 +476,8 @@ export default function HouseManagement() {
                 ? [
                     {
                       id: 'delete',
-                      label: `Delete ${row.name}`,
+                      label: 'Delete',
+                      ariaLabel: `Delete ${row.name}`,
                       icon: GlobalIcons.delete,
                       color: 'error.main',
                       disabled: disabled || !row.canManage || row.memberCount > 0,
@@ -433,7 +499,7 @@ export default function HouseManagement() {
   ];
   const visibleStudents = students.currentData?.items ?? [];
   const studentColumns: IColumn[] = [
-    ...(canManage
+    ...(canManage && hasSelectedDivision
       ? [
           {
             id: 'selected',
@@ -449,7 +515,7 @@ export default function HouseManagement() {
                   visibleStudents.some((row) => selected.includes(row.enrollmentId)) &&
                   !visibleStudents.every((row) => selected.includes(row.enrollmentId))
                 }
-                disabled={disabled}
+                disabled={membershipSelectionDisabled}
                 onChange={(_, checked) =>
                   toggle(
                     visibleStudents.map((row) => row.enrollmentId),
@@ -466,7 +532,8 @@ export default function HouseManagement() {
                 inputProps={{ 'aria-label': `Select ${row.studentName}` }}
                 checked={selected.includes(row.enrollmentId)}
                 disabled={
-                  disabled || (!selected.includes(row.enrollmentId) && selected.length >= 500)
+                  membershipSelectionDisabled ||
+                  (!selected.includes(row.enrollmentId) && selected.length >= 500)
                 }
                 onChange={(_event, checked) => toggle([row.enrollmentId], checked)}
               />
@@ -486,7 +553,10 @@ export default function HouseManagement() {
         const row = data as HouseStudent;
         return (
           <Stack direction="row" spacing={1} alignItems="center">
-            <Avatar
+            <StudentPhotoAvatar
+              studentId={row.studentId}
+              alt={row.studentName}
+              lazy
               sx={{
                 width: 32,
                 height: 32,
@@ -503,7 +573,7 @@ export default function HouseManagement() {
                 .join('')
                 .slice(0, 2)
                 .toUpperCase() || '—'}
-            </Avatar>
+            </StudentPhotoAvatar>
             <Stack
               component="span"
               direction="row"
@@ -515,15 +585,15 @@ export default function HouseManagement() {
               {row.isHouseLeader && (
                 <StudentLeaderIcon
                   title={row.houseName ? `House leader · ${row.houseName}` : 'House leader'}
-                  icon="mdi:shield-star-outline"
-                  color="info.main"
+                  icon="mdi:crown"
+                  color="success"
                 />
               )}
               {row.isDivisionLeader && (
                 <StudentLeaderIcon
                   title={`Division leader · ${classDivisionLabel(row.standardName, row.divisionName)}`}
-                  icon="mdi:account-star"
-                  color="warning.main"
+                  icon="mdi:account-tie-hat-outline"
+                  color="info"
                 />
               )}
             </Stack>
@@ -581,34 +651,35 @@ export default function HouseManagement() {
     },
   ];
   const divisionColumns: IColumn[] = [
-    { id: 'standardName', label: 'Class', minWidth: 140, isFilter: true, filterType: 'string' },
     {
       id: 'name',
-      label: 'Division',
+      label: 'Class / Division',
       isSort: true,
-      minWidth: 140,
+      minWidth: 180,
       isFilter: true,
       filterType: 'string',
+      render: divisionPlacementValue,
+      filterValue: divisionPlacementValue,
+      exportValue: divisionPlacementValue,
     },
     {
-      id: 'studentCount',
-      label: 'Visible students',
-      align: 'right',
-      minWidth: 130,
-      isFilter: true,
-      filterType: 'number',
-      render: (value) => (
-        <Typography variant="body2" sx={{ fontVariantNumeric: 'tabular-nums' }}>
-          {value ?? 0}
-        </Typography>
-      ),
+      id: 'houseLeader',
+      label: 'House leader',
+      minWidth: 180,
+      isFilter: false,
+      render: (_, row) => leader(row.houseLeader, row.canManage, true),
+      exportValue: (_, row) => {
+        const student = row.houseLeader as HouseStudent | null;
+        return student ? [student.studentName, student.houseName].filter(Boolean).join(' · ') : null;
+      },
     },
     {
       id: 'leader',
       label: 'Division leader',
       minWidth: 180,
       isFilter: false,
-      render: (_, row) => leader(row as HouseDivision),
+      render: (_, row) => leader(row.leader, row.canManage),
+      exportValue: (_, row) => row.leader?.studentName ?? null,
     },
     ...(canManage
       ? [
@@ -619,18 +690,21 @@ export default function HouseManagement() {
             width: 100,
             sticky: true,
             stickyPosition: 'right',
+            excludeFromExport: true,
             render: (_: unknown, row: HouseDivision) => (
               <AdaptiveThreeDotsActions
                 directActionLimit={2}
                 collapseOnOverflow={false}
+                sx={{ justifyContent: 'flex-end' }}
                 actions={[
                   {
                     id: 'leader',
-                    label: `Manage leader for ${row.standardName} / ${row.name}`,
-                    icon: GlobalIcons.admissionStudent,
+                    label: 'Manage leaders',
+                    ariaLabel: `Manage leaders for ${row.standardName} / ${row.name}`,
+                    icon: 'mdi:account-switch-outline',
                     disabled: disabled || !row.canManage,
                     tooltip: !row.canManage ? 'Full division scope is required.' : undefined,
-                    onClick: () => open({ kind: 'leader', type: 'division', record: row }),
+                    onClick: () => open({ kind: 'leader', record: row }),
                   },
                 ]}
               />
@@ -639,11 +713,14 @@ export default function HouseManagement() {
         ]
       : []),
   ];
+  const mediumPrompt = mediums.length
+    ? 'Select a medium to view records.'
+    : 'No mediums are available for this board.';
   const tableError = academic.isError
     ? 'Academic scope could not be loaded. Refresh the page and try again.'
-    : !validScope && !academic.isLoading
-      ? 'Choose an available board, medium, class and division.'
-      : query.isError
+    : !validScope && !academic.isLoading && !awaitingMedium
+      ? 'Choose an available board and medium.'
+      : ready && query.isError
         ? parseApiProblemDetail(query.error).detail
         : undefined;
   return (
@@ -661,7 +738,7 @@ export default function HouseManagement() {
       <CustomBreadcrumbs
         editorOpen={Boolean(currentSession)} busy={deleting.isLoading}
         heading="House Management"
-        description="Manage medium-wise houses, cross-class membership and independent leaders. Counts include only students in your academic scope; leadership outside your access is not shown."
+        description="Manage medium-wise houses, cross-class membership and two independent leadership roles per division. Counts and leaders reflect your academic scope."
         descriptionDisplay="tooltip"
         links={[
           { name: 'Student', href: studentPaths.dashboard },
@@ -743,8 +820,8 @@ export default function HouseManagement() {
             })}
             id="house-management-tab-divisions"
             aria-controls="house-management-panel"
-            label="Division Leaders"
-            icon={<Iconify icon={GlobalIcons.admissionStudent} />}
+            label="Assign Leaders"
+            icon={<Iconify icon="mdi:account-switch-outline" />}
             iconPosition="start"
           />
         </CustomTabs>
@@ -768,7 +845,7 @@ export default function HouseManagement() {
           <Box sx={{ ...studentAcademicFilterRowSx, flex: 1 }}>
             <CustomSelect
               label="Board"
-              value={academic.currentBoard?.id ?? ''}
+              value={board?.id ?? ''}
               options={academic.boards}
               labelKey="name"
               valueKey="id"
@@ -781,6 +858,8 @@ export default function HouseManagement() {
                   division: undefined,
                   house: undefined,
                   houseName: undefined,
+                  leaderHouse: undefined,
+                  leaderHouseName: undefined,
                   page: undefined,
                 })
               }
@@ -788,10 +867,11 @@ export default function HouseManagement() {
             <CustomSelect
               label="Medium"
               value={mediumId}
-              options={academic.mediums}
+              options={mediums}
               labelKey="name"
               valueKey="id"
               isLoading={academic.isLoading}
+              disabled={!board}
               onChange={(value) =>
                 update({
                   medium: String(value),
@@ -799,6 +879,8 @@ export default function HouseManagement() {
                   division: undefined,
                   house: undefined,
                   houseName: undefined,
+                  leaderHouse: undefined,
+                  leaderHouseName: undefined,
                   page: undefined,
                 })
               }
@@ -810,7 +892,7 @@ export default function HouseManagement() {
                 options={[{ id: 'all', name: 'All classes' }, ...standards]}
                 labelKey="name"
                 valueKey="id"
-                disabled={!ready && !standardId}
+                disabled={!medium}
                 onChange={(value) =>
                   update({
                     class: value === 'all' ? undefined : String(value),
@@ -820,14 +902,14 @@ export default function HouseManagement() {
                 }
               />
             )}
-            {state.tab === 'students' && (
+            {state.tab !== 'houses' && (
               <CustomSelect
                 label="Division"
                 value={divisionId || 'all'}
-                options={[{ id: 'all', label: 'All divisions' }, ...divisions]}
-                labelKey="label"
+                options={[{ id: 'all', name: 'All divisions' }, ...divisions]}
+                labelKey="name"
                 valueKey="id"
-                disabled={!mediumId}
+                disabled={!standard}
                 onChange={(value) =>
                   update({ division: value === 'all' ? undefined : String(value), page: undefined })
                 }
@@ -865,6 +947,19 @@ export default function HouseManagement() {
             </Box>
           )}
         </Stack>
+        {leaderHouseId && (
+          <Box sx={{ pt: 1, mt: 1, borderTop: 1, borderColor: 'divider' }}>
+            <Chip
+              size="small"
+              variant="outlined"
+              color="primary"
+              label={`House: ${params.get('leaderHouseName') || 'Selected'}`}
+              onDelete={() =>
+                update({ leaderHouse: undefined, leaderHouseName: undefined, page: undefined })
+              }
+            />
+          </Box>
+        )}
         {state.tab === 'students' && (Boolean(houseId) || unassignedOnly) && (
           <Stack
             direction="row"
@@ -988,7 +1083,7 @@ export default function HouseManagement() {
                       name: params.get('houseName') || 'Selected house',
                       color: '',
                       memberCount: 0,
-                      leader: null,
+                      houseLeaderCount: 0,
                       canManage: false,
                       concurrencyStamp: '',
                     }
@@ -1050,13 +1145,15 @@ export default function HouseManagement() {
             alignItems="center"
           >
             <Typography variant="body2" sx={{ mr: 'auto', fontWeight: 'fontWeightMedium' }}>
-              {selected.length} selected
+              {hasSelectedDivision
+                ? `${selected.length} selected`
+                : 'Select a division to change house membership.'}
             </Typography>
             <Button
               size="small"
               variant="outlined"
               color="inherit"
-              disabled={!selected.length || disabled}
+              disabled={!selected.length || membershipSelectionDisabled}
               startIcon={<Iconify icon={GlobalIcons.assigned} />}
               onClick={() => open({ kind: 'assignment', mode: 'assign', ids: selected })}
             >
@@ -1066,7 +1163,7 @@ export default function HouseManagement() {
               size="small"
               variant="outlined"
               color="inherit"
-              disabled={!selected.length || disabled}
+              disabled={!selected.length || membershipSelectionDisabled}
               startIcon={<Iconify icon={GlobalIcons.delete} />}
               onClick={() => open({ kind: 'assignment', mode: 'remove', ids: selected })}
             >
@@ -1105,7 +1202,7 @@ export default function HouseManagement() {
               ? 'Houses'
               : state.tab === 'students'
                 ? 'House membership students'
-                : 'Division leaders'
+                : 'Assign Leaders'
           }
           showColumns
           showFullScreen
@@ -1116,6 +1213,11 @@ export default function HouseManagement() {
               : divisionColumns
           ).map((column) => ({ ...column, isSort: column.isSort === true }))}
           data={rows}
+          rowProps={
+            state.tab === 'students'
+              ? (row) => studentLeadershipRowProps(row as HouseStudent)
+              : undefined
+          }
           wrapperProps={{ sx: { height: 1, minHeight: 0 } }}
           tableContainerProps={{
             sx: { height: 1 },
@@ -1124,7 +1226,7 @@ export default function HouseManagement() {
                 ? 'Houses'
                 : state.tab === 'students'
                   ? 'House membership students'
-                  : 'Division leaders',
+                  : 'Assign Leaders',
           }}
           serverSidePagination
           serverSideSearch
@@ -1205,6 +1307,8 @@ export default function HouseManagement() {
               division: undefined,
               house: undefined,
               houseName: undefined,
+              leaderHouse: undefined,
+              leaderHouseName: undefined,
               assignment: undefined,
               page: undefined,
             })
@@ -1218,15 +1322,21 @@ export default function HouseManagement() {
             })
           }
           noDataText={
-            state.search || standardId || divisionId || houseId || unassignedOnly
-              ? 'No records match these filters.'
-              : state.tab === 'houses'
-                ? canManage && mediumCanManage
-                  ? 'No houses in this medium. Create a house to get started.'
-                  : 'No houses in this medium.'
-                : state.tab === 'students'
-                  ? 'No enrolled students in this medium.'
-                  : 'No divisions in this medium.'
+            awaitingMedium
+              ? mediumPrompt
+              : state.search ||
+                  standardId ||
+                  divisionId ||
+                  leaderHouseId ||
+                  (state.tab === 'students' && (houseId || unassignedOnly))
+                ? 'No records match these filters.'
+                : state.tab === 'houses'
+                  ? canManage && mediumCanManage
+                    ? 'No houses in this medium. Create a house to get started.'
+                    : 'No houses in this medium.'
+                  : state.tab === 'students'
+                    ? 'No enrolled students in this medium.'
+                    : 'No divisions in this medium.'
           }
         />
       </Box>
@@ -1251,22 +1361,21 @@ export default function HouseManagement() {
       {currentSession?.kind === 'leader' && canManage && (
         <HouseLeaderDialog
           key={`${context}:${currentSession.record.id}`}
-          kind={currentSession.type}
           academicMediumId={mediumId}
+          houseId={leaderHouseId || undefined}
           record={currentSession.record}
           onClose={() => setSession(null)}
-          onSave={async (values) => {
-            await (
-              currentSession.type === 'house' ? setHouseLeader(values) : setDivisionLeader(values)
-            ).unwrap();
+          onSave={async (role, values) => {
+            await (role === 'house' ? setHouseLeader(values) : setDivisionLeader(values)).unwrap();
             success('Leader updated.');
           }}
         />
       )}
-      {currentSession?.kind === 'assignment' && canManage && (
+      {currentSession?.kind === 'assignment' && canManage && hasSelectedDivision && (
         <HouseAssignmentDrawer
           key={context}
           academicMediumId={mediumId}
+          divisionId={divisionId}
           enrollmentIds={currentSession.ids}
           initialMode={currentSession.mode}
           onClose={() => setSession(null)}

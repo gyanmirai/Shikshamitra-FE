@@ -9,6 +9,7 @@ import {
 } from 'src/redux/tagTypes';
 
 import type { ReviewDecisionCapabilities } from './admission-review-types';
+import type { AdmissionPrintAcademicDetails } from './admission-form-print-settings';
 import type {
   AdmissionFormInheritance,
   AdmissionFormPrintSettings,
@@ -257,6 +258,7 @@ export type CorrectAdmissionApplicationFormInput = {
 };
 export type AdmissionApplicationForm = {
   applicationNumber?: string;
+  printAcademicDetails?: AdmissionPrintAcademicDetails;
   /** Stored answers only; excludes suggestions projected for the editor. */
   persistedValues?: { fieldCode: string; valueJson?: string | null }[];
   /** Stamp captured by the same server read as these answers. */

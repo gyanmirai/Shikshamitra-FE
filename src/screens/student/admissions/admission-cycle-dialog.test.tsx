@@ -13,6 +13,8 @@ import { defaultSettings } from 'src/components/settings/config-settings';
 
 import { AdmissionCycleDialog } from './admission-cycle-dialog';
 
+import type { AdmissionCycleDialogProps } from './admission-cycle-dialog';
+
 ['mdi:information-outline', 'basil:cross-solid', 'material-symbols-light:save'].forEach((name) => {
   addIcon(name, { body: '<path d="M0 0h16v16H0z"/>', width: 16, height: 16 });
 });
@@ -47,6 +49,20 @@ const editingCycle = {
 };
 
 describe('admission cycle dialog', () => {
+  it.each(['Applications open', 'Applications close'])(
+    'excludes previous calendar years from the %s picker',
+    async (label) => {
+      const user = userEvent.setup();
+      renderDateDialog();
+      await user.click(screen.getByRole('group', { name: label }).querySelector('button')!);
+      await user.click(
+        screen.getByRole('button', { name: 'calendar view is open, switch to year view' })
+      );
+      expect(screen.queryByRole('radio', { name: '2025' })).not.toBeInTheDocument();
+      expect(screen.getByRole('radio', { name: '2026' })).toBeEnabled();
+      expect(screen.getByRole('radio', { name: '2027' })).toBeEnabled();
+    }
+  );
   it('keeps guidance available without inline helper text', async () => {
     const user = userEvent.setup();
     const store = configureStore({ reducer: { confirmPopup } });
@@ -127,3 +143,25 @@ describe('admission cycle dialog', () => {
     ).not.toBeInTheDocument();
   });
 });
+
+function renderDateDialog(overrides: Partial<AdmissionCycleDialogProps> = {}) {
+  return render(
+    <Provider store={configureStore({ reducer: { confirmPopup } })}>
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <AdmissionCycleDialog
+            open
+            academicYearId={academicYear.id}
+            academicYears={[academicYear]}
+            academicYearsLoading={false}
+            academicYearsError={false}
+            saving={false}
+            onSave={vi.fn()}
+            onClose={vi.fn()}
+            {...overrides}
+          />
+        </LocalizationProvider>
+      </ThemeProvider>
+    </Provider>
+  );
+}

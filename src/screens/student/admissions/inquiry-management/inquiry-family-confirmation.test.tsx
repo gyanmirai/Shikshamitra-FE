@@ -157,11 +157,19 @@ it('loads candidates only after explicit open and requires an explicit choice be
 
 it('auto-selects one saved family and confirms without parent details or a relationship choice', async () => {
   requests.lookup.mockReturnValue({
-    unwrap: async () => [{ ...match, parents: [] }],
+    unwrap: async () => [{ ...match, applicantName: 'Riya Meera Shah', parents: [] }],
   });
   open();
   fireEvent.click(screen.getByRole('button', { name: 'Confirm Siblings' }));
-  await screen.findByRole('list', { name: 'Children in this family' });
+  const children = await screen.findByRole('list', { name: 'Children in this family' });
+  expect(children).toHaveTextContent('Riya Meera Shah');
+  expect(
+    screen.getByText(
+      'We found a possible sibling. Confirm both children belong to the same family.'
+    )
+  ).toBeVisible();
+  expect(screen.queryByText('Priya', { exact: true })).toBeNull();
+  expect(screen.queryByText('Link with')).toBeNull();
   expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Confirm siblings' })).toBeEnabled();
   expect(requests.confirm).not.toHaveBeenCalled();

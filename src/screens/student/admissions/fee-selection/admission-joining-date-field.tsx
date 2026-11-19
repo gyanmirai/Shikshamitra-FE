@@ -1,3 +1,5 @@
+import type { InputAdornmentProps } from '@mui/material/InputAdornment';
+
 import { parseDateOnly } from 'src/utils/date-only';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -10,6 +12,20 @@ import { Stack, Button, Skeleton, TextField, Typography, InputAdornment } from '
 import { ADMISSION_DATE_FORMAT } from '../admission-date-formats';
 
 import type { useAdmissionJoiningDate } from './use-admission-joining-date';
+
+function JoiningDatePickerAdornment({ children, ...props }: InputAdornmentProps) {
+  return (
+    <InputAdornment {...props}>
+      {props.position === 'end' && (
+        <InfoTooltipIcon
+          label="About Actual Joining Date"
+          title="Confirm When the Student Actually Joins. Registration and Onboarding Use This Same Date. Finance Uses It to Calculate Fees. The Payment Date Is Separate."
+        />
+      )}
+      {children}
+    </InputAdornment>
+  );
+}
 
 export function AdmissionJoiningDateField({
   controller,
@@ -89,6 +105,7 @@ export function AdmissionJoiningDateField({
             maxDate={parseDateOnly(state.academicYearEndDate) ?? undefined}
             onChange={controller.change}
             disabled={disabled || query.isFetching || controller.saving}
+            slots={{ inputAdornment: JoiningDatePickerAdornment }}
             slotProps={{
               textField: {
                 name: 'actualJoiningDate',
@@ -98,16 +115,6 @@ export function AdmissionJoiningDateField({
                 error: Boolean(error),
                 helperText:
                   error || (value === null ? 'Required before collecting fees.' : undefined),
-                InputProps: {
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <InfoTooltipIcon
-                        label="About Actual Joining Date"
-                        title="Confirm When the Student Actually Joins. Registration and Onboarding Use This Same Date. Finance Applies the Configured Policy Automatically; the Payment Date Is Separate."
-                      />
-                    </InputAdornment>
-                  ),
-                },
               },
             }}
           />

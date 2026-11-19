@@ -6,6 +6,7 @@ import type {
 } from 'src/redux/student/admissions/admission-forms-api';
 
 import * as Yup from 'yup';
+import { ADMISSION_PRINT_PAPER_SIZES } from 'src/redux/student/admissions/admission-form-print-settings';
 
 import { ensureNewInquiryDefaults, withInquiryDefaultTranslations } from './inquiry-default-fields';
 import {
@@ -87,10 +88,11 @@ export const admissionFormSchema = Yup.object({
   printSettings: Yup.object({
     template: Yup.string().oneOf(['simple', 'boxed-grid', 'structured-classic']).optional(),
     layout: Yup.string().oneOf(['compact', 'spacious']).required(),
-    paperSize: Yup.string().oneOf(['A4']).required(),
+    paperSize: Yup.string().oneOf(ADMISSION_PRINT_PAPER_SIZES).required(),
     showSchoolHeader: Yup.boolean().required(),
     showPhoto: Yup.boolean().required(),
     showSignature: Yup.boolean().required(),
+    advanced: Yup.mixed<NonNullable<AdmissionFormPrintSettings['advanced']>>().nullable().optional(),
   }).nullable().default(undefined).optional(),
   name: Yup.string().trim().max(128).required('Form name is required'),
   layoutType: Yup.number().oneOf([0, 1]).required('Choose a form layout'),
@@ -302,10 +304,11 @@ export function getAdmissionFormPrintSettings(
   return {
     template: settings?.template ?? 'simple',
     layout: settings?.layout ?? 'compact',
-    paperSize: 'A4',
+    paperSize: settings?.paperSize ?? 'A4',
     showSchoolHeader: settings?.showSchoolHeader ?? true,
     showPhoto: settings?.showPhoto ?? true,
     showSignature: settings?.showSignature ?? true,
+    ...(settings?.advanced ? { advanced: settings.advanced } : {}),
   };
 }
 

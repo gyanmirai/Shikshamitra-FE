@@ -395,7 +395,7 @@ it('never renders the empty result during scope restoration or before the first 
   expect(screen.getByText('QA Loading')).toBeInTheDocument();
 });
 
-it('keeps safe rows visible on refetch and handoff progress visible after the moved row disappears', () => {
+it('keeps table refresh independent of the handoff and omits a page-level handoff loader', () => {
   Object.assign(state, {
     board: 'board',
     medium: 'medium',
@@ -408,13 +408,12 @@ it('keeps safe rows visible on refetch and handoff progress visible after the mo
   expect(screen.getByText('QA Loading')).toBeInTheDocument();
   expect(state.table.isRefreshing).toBe(true);
   expect(state.table.refreshIndicator).toBe('skeleton');
-  state.data = { items: [], totalCount: 0 };
   state.moving = true;
-  state.fetching = false;
   view.rerender(<AdmissionInquiriesScreen />);
+  expect(screen.getByText('QA Loading')).toBeInTheDocument();
   expect(
-    screen.getByRole('status', { name: 'Moving Inquiry to the Next Stage' })
-  ).toBeInTheDocument();
+    screen.queryByRole('status', { name: 'Moving Inquiry to the Next Stage' })
+  ).not.toBeInTheDocument();
 });
 
 it('distinguishes successful empty, failed and unavailable-scope results from initial loading', () => {

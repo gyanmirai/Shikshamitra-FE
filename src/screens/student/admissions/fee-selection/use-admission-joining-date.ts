@@ -1,5 +1,6 @@
 import type { Dayjs } from 'dayjs';
 
+import dayjs from 'dayjs';
 import { useState } from 'react';
 import { toDateOnly, parseDateOnly } from 'src/utils/date-only';
 import {
@@ -14,7 +15,8 @@ export function useAdmissionJoiningDate(
   {
     enabled,
     requiresVariableAmounts = false,
-  }: { enabled: boolean; requiresVariableAmounts?: boolean }
+    defaultToToday = false,
+  }: { enabled: boolean; requiresVariableAmounts?: boolean; defaultToToday?: boolean }
 ) {
   const query = useGetAdmissionJoiningDateQuery(applicationId, {
     skip: !enabled || !applicationId,
@@ -30,7 +32,17 @@ export function useAdmissionJoiningDate(
   const [selection, setSelection] = useState<{ applicationId: string; versionId: string | null }>();
   const currentDraft =
     state?.canEdit && !state.isLocked && draft?.applicationId === applicationId ? draft : undefined;
-  const value = currentDraft ? currentDraft.value : parseDateOnly(state?.joiningDate);
+  const yearEnd = toDateOnly(state?.academicYearEndDate);
+  const today = dayjs().startOf('day');
+  const canDefaultToToday =
+    enabled &&
+    defaultToToday &&
+    state?.canEdit &&
+    !state.isLocked &&
+    (!yearEnd || toDateOnly(today) <= yearEnd);
+  const value = currentDraft
+    ? currentDraft.value
+    : (parseDateOnly(state?.joiningDate) ?? (canDefaultToToday ? today : null));
   const validDate = Boolean(value?.isValid());
   const date = validDate ? toDateOnly(value) : '';
   const selectedPolicyVersionId =
@@ -40,7 +52,6 @@ export function useAdmissionJoiningDate(
   const prorationPolicyEligible = Boolean(
     date && state?.academicYearStartDate && date >= toDateOnly(state.academicYearStartDate)
   );
-  const yearEnd = toDateOnly(state?.academicYearEndDate);
   const validation = !value
     ? 'Actual joining date is required.'
     : !validDate

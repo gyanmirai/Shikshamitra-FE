@@ -2,6 +2,7 @@ import { api } from 'src/redux/service';
 import { studentType, studentOnboardingType } from 'src/redux/tagTypes';
 
 import { unwrapRecordsResult } from './student-records-api';
+import { studentPhotoTag } from './student-record-photo-api';
 
 import type { RecordsPage } from './student-records-types';
 
@@ -153,6 +154,7 @@ export const studentRecordChangesApi = api.injectEndpoints({
                 type: studentType.student,
                 id: `RECORDS-SNAPSHOT-${body.studentId}-${body.section}`,
               },
+              ...(body.section === 'photo' ? [studentPhotoTag(body.studentId)] : []),
             ],
     }),
     decideStudentRecordChange: builder.mutation<
@@ -176,6 +178,9 @@ export const studentRecordChangesApi = api.injectEndpoints({
           ? []
           : [
               studentType.student,
+              ...(result?.section === 'photo' && result.status === 'Applied'
+                ? [studentPhotoTag(result.studentId)]
+                : []),
               ...(result?.section === 'gr-number' && result.status === 'Applied'
                 ? [
                     { type: studentOnboardingType.onboardingCaseList, id: 'LIST' },

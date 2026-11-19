@@ -42,6 +42,7 @@ export type CertificateFormValues = {
   reason: string;
   particulars: string;
   exitCases: Record<string, string>;
+  showSchoolBranding: boolean;
 };
 
 export function certificateRequest(
@@ -55,6 +56,7 @@ export function certificateRequest(
     expectedAcademicYearId,
     certificateType,
     issueDate: values.issueDate,
+    ...(!values.showSchoolBranding ? { omitSchoolBranding: true } : {}),
     certificateFields: {
       Reason: values.reason.trim(),
       ...(certificateType === 2

@@ -30,7 +30,6 @@ import {
   Box,
   Tab,
   Stack,
-  Avatar,
   Button,
   Drawer,
   Divider,
@@ -45,6 +44,7 @@ import {
 } from '@mui/material';
 
 import StudentOnboardingFees from './student-onboarding-fees';
+import StudentPhotoAvatar from '../../components/student-photo-avatar';
 import { StudentSetupLoadingFields } from './student-setup-loading';
 import { hasAssignedDivision, type StudentSetupView } from './student-setup-view';
 import StudentOnboardingPortalAccounts from './student-onboarding-portal-accounts';
@@ -331,11 +331,13 @@ export default function StudentSetupDrawer({
         }}
       >
         <Stack direction="row" spacing={1.25} alignItems="center" sx={{ minWidth: 0, flex: 1 }}>
-          <Avatar
+          <StudentPhotoAvatar
+            studentId={open ? activeStudent.studentId : undefined}
+            alt={activeStudent.studentName}
             sx={{ bgcolor: 'action.selected', color: 'text.secondary', width: 44, height: 44 }}
           >
             {activeStudent.studentName.charAt(0).toUpperCase()}
-          </Avatar>
+          </StudentPhotoAvatar>
           <Box sx={{ minWidth: 0 }}>
             <Typography
               id="student-setup-drawer-title"

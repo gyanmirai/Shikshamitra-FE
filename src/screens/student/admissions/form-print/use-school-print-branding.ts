@@ -29,20 +29,20 @@ function useImageData(blob?: Blob | null) {
 }
 
 /** Tenant-owned read-only branding; no School Identity management permission is required. */
-export function useSchoolPrintBranding(enabled: boolean) {
+export function useSchoolPrintBranding(enabled: boolean, includeImages = true) {
   const tenantId = useSelector((state: RootState) => state.auth.sessionContext?.tenantId);
   const skip = !enabled || !tenantId;
   const metadata = useGetSchoolBrandingQuery({ tenantId: tenantId ?? '' }, { skip });
+  const hasLogo = !skip && includeImages && Boolean(metadata.currentData?.logo);
+  const hasBanner = !skip && includeImages && Boolean(metadata.currentData?.banner);
   const logo = useGetSchoolBrandingImageQuery(
     { kind: 'logo', tenantId: tenantId ?? '' },
-    { skip: skip || !metadata.currentData?.logo }
+    { skip: !hasLogo }
   );
   const banner = useGetSchoolBrandingImageQuery(
     { kind: 'banner', tenantId: tenantId ?? '' },
-    { skip: skip || !metadata.currentData?.banner }
+    { skip: !hasBanner }
   );
-  const hasLogo = !skip && Boolean(metadata.currentData?.logo);
-  const hasBanner = !skip && Boolean(metadata.currentData?.banner);
   const logoImage = useImageData(hasLogo ? logo.currentData : null);
   const bannerImage = useImageData(hasBanner ? banner.currentData : null);
   const pendingImage =
@@ -52,6 +52,9 @@ export function useSchoolPrintBranding(enabled: boolean) {
     branding: {
       schoolName: skip ? undefined : metadata.currentData?.schoolName,
       addressLines: skip ? undefined : metadata.currentData?.addressLines,
+      schoolPhone: skip ? undefined : metadata.currentData?.schoolPhone,
+      schoolEmail: skip ? undefined : metadata.currentData?.schoolEmail,
+      schoolWebsite: skip ? undefined : metadata.currentData?.schoolWebsite,
       logoUrl: skip ? undefined : logoImage.url,
       bannerUrl: skip ? undefined : bannerImage.url,
     },
@@ -70,8 +73,8 @@ export function useSchoolPrintBranding(enabled: boolean) {
         bannerImage.failed),
     retry: () => {
       metadata.refetch();
-      if (metadata.currentData?.logo) logo.refetch();
-      if (metadata.currentData?.banner) banner.refetch();
+      if (hasLogo) logo.refetch();
+      if (hasBanner) banner.refetch();
     },
   };
 }

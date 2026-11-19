@@ -228,7 +228,7 @@ it('tracks the initiating row immediately and prevents duplicate handoffs', asyn
   });
   mocks.start.mockReturnValue({ unwrap: () => response });
   const { result } = renderHook(useInquiryHandoff);
-  let moving!: Promise<void>;
+  let moving!: Promise<boolean>;
   act(() => {
     moving = result.current.move(inquiry);
     result.current.move(inquiry);
@@ -238,7 +238,7 @@ it('tracks the initiating row immediately and prevents duplicate handoffs', asyn
   expect(mocks.start).toHaveBeenCalledOnce();
   await act(async () => {
     resolve({ id: 'application-1', hasReachedDecision: false });
-    await moving;
+    expect(await moving).toBe(true);
   });
   expect(mocks.push).toHaveBeenCalledOnce();
   expect(result.current.moving).toBe(false);
