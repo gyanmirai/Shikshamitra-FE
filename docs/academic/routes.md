@@ -56,4 +56,8 @@ Closing a Lecture Slots form removes its action/record context while retaining t
 
 Calendar Settings and the five LMS settings are outside this guide because their navigation entries are inactive.
 Existing Calendar operations, operational Academic pages, and their own route guards retain their current ownership.
+
+## Notification rules
+
+`/academic/notification` opens the Rules workspace under **Academics → Notification**. It requires `Academics.Notification.View`, and the Configure action requires `Academics.Notification.Add`. The category filter accepts older links using `tab=curriculumManagement`, `tab=timetable`, `tab=homeworkAssignment`, or `tab=examination`.
 Do not add inactive LMS placeholder forms to setup or label them as saved configuration.

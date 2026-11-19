@@ -246,13 +246,13 @@
         {
           "name": "Notification",
           "routes": ["/academic/notification"],
-          "apis": [],
+          "apis": ["/api/academic/notifications/catalogue", "/api/academic/notifications/rules", "/api/academic/notifications/rules/{eventKey}", "/api/academic/notifications/templates/options"],
           "roles": ["academic-admin"],
-          "permissions": ["ShikshaMitra.Academics.Notification"],
-          "forms": ["notification composer"],
-          "businessActions": ["send academic notifications"],
-          "risk": "medium",
-          "status": "confirmed-route-only"
+          "permissions": ["Academics.Notification.View", "Academics.Notification.Add"],
+          "forms": ["notification rule editor"],
+          "businessActions": ["view effective notification rules", "save a scoped notification rule"],
+          "risk": "high",
+          "status": "confirmed"
         },
         {
           "name": "Group Management",

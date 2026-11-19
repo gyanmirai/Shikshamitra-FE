@@ -95,4 +95,25 @@ describe('Academic notification client', () => {
     })).unwrap()).rejects.toMatchObject({ status: 'CUSTOM_ERROR' });
     expect(writes).toBe(0);
   });
+
+  it('loads every published option for the current event through metadata pages', async () => {
+    const offsets: number[] = [];
+    const templates = Array.from({ length: 101 }, (unused, index) => ({
+      templateId: `template-${index}`,
+      templateName: `Template ${index}`,
+    }));
+    mswServer.use(http.get('*/api/academic/notifications/templates/options', ({ request }) => {
+      const params = new URL(request.url).searchParams;
+      expect(params.get('eventKey')).toBe(eventKey);
+      expect(params.get('academicMediumId')).toBe('medium-a');
+      const offset = Number(params.get('skipCount'));
+      offsets.push(offset);
+      return HttpResponse.json({ items: templates.slice(offset, offset + 100), totalCount: templates.length });
+    }));
+    const result = await store.dispatch(api.endpoints.academicNotificationTemplateOptions.initiate({
+      ...identity, eventKey, academicMediumId: 'medium-a',
+    })).unwrap();
+    expect(result.items).toHaveLength(101);
+    expect(offsets).toEqual([0, 100]);
+  });
 });

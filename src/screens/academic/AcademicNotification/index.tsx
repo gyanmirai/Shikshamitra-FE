@@ -1,166 +1,107 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
-import { useBoolean } from 'src/hooks/use-boolean';
-import { Box, Tab, Paper, Alert } from '@mui/material';
-import { CustomTabs } from 'src/components/custom-tabs';
-import { FormSlider } from 'src/components/form-slider';
-import { Iconify } from 'src/components/iconify/iconify';
-import { useCustomSearchParams } from 'src/hooks/use-search-param';
+import type { AcademicNotificationRuleRow } from 'src/redux/academic-notifications/response-adapters';
+
+import { useState } from 'react';
+import { Box, Alert, Button } from '@mui/material';
+import { academicPaths } from 'src/constants/academic-menu';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { notificationRuleRows } from 'src/redux/academic-notifications/response-adapters';
+import {
+  useAcademicNotificationRulesQuery,
+  useAcademicNotificationCatalogueQuery,
+} from 'src/redux/academic-notifications/api';
 
-import TimetableNotificationManagement from './Components/TimetableNotificationManagement';
-import CurriculumNotificationManagement from './Components/CurriculumNotificationManagement';
-import ExaminationNotificationManagement from './Components/ExaminationNotificationManagement';
-import HomeworkAssignmentNotificationManagement from './Components/HomeworkAssignmentNotificationManagement';
+import { NotificationRulesTable } from './Components/notification-rules-table';
+import { NotificationRuleDrawer } from './Components/notification-rule-drawer';
+import { NotificationScopeFilter } from './Components/notification-scope-filter';
+import { useNotificationWorkspaceScope } from './use-notification-workspace-scope';
+import { useNotificationWorkspaceState } from './use-notification-workspace-state';
 
-const TABS = [
-  {
-    value: 'curriculumManagement',
-    label: 'Curriculum',
-    icon: <Iconify icon="ph:books-light" width={20} />,
-    component: (props: any) => <CurriculumNotificationManagement {...props} />,
-  },
-  {
-    value: 'timetable',
-    label: 'Timetable',
-    icon: <Iconify icon="solar:calendar-outline" width={20} />,
-    component: (props: any) => <TimetableNotificationManagement {...props} />,
-  },
-  {
-    value: 'homeworkAssignment',
-    label: 'Homework & Assignment',
-    icon: <Iconify icon="mdi:book-edit-outline" width={20} />,
-    component: (props: any) => <HomeworkAssignmentNotificationManagement {...props} />,
-  },
-  {
-    value: 'examination',
-    label: 'Examination',
-    icon: <Iconify icon="mdi:clipboard-text-outline" width={20} />,
-    component: (props: any) => <ExaminationNotificationManagement {...props} />,
-  },
-];
-
-const AcademicNotificationScreen = () => {
-  // const [searchParams, setSearchParams] = useSearchParam({ tab: 'curriculumManagement' });
-
-  const { getAllParams, setParam: setSearchParams } = useCustomSearchParams({
-    tab: 'curriculumManagement',
-  });
-  const searchParams = getAllParams();
-  const dialog = useBoolean(false);
-  const currentActiveComponent = useMemo(
-    () => TABS.find((tab) => tab.value === searchParams?.tab),
-    [searchParams?.tab]
+export default function AcademicNotificationScreen() {
+  const scope = useNotificationWorkspaceScope();
+  const filters = useNotificationWorkspaceState();
+  const selection = scope.options.find((option) => option.value === filters.scopeKey) ??
+    scope.options.find((option) => option.value === 'medium') ??
+    scope.options.find((option) => option.value !== 'school') ?? scope.options[0];
+  const contextKey = JSON.stringify([scope.identity, selection?.scope]);
+  const [editor, setEditor] = useState<{ contextKey: string; row: AcademicNotificationRuleRow }>();
+  const openRule = scope.canManage && editor?.contextKey === contextKey ? editor.row : undefined;
+  const catalogue = useAcademicNotificationCatalogueQuery(scope.identity, { skip: !scope.canView });
+  const rules = useAcademicNotificationRulesQuery({
+    ...scope.identity,
+    scope: selection?.scope ?? {},
+    skipCount: 0,
+    maxResultCount: 100,
+  }, { skip: !scope.canView || !selection, refetchOnMountOrArgChange: true });
+  const allRows = catalogue.currentData && rules.currentData
+    ? notificationRuleRows(catalogue.currentData, rules.currentData) : [];
+  const rows = allRows.filter((row) =>
+    (filters.category.value === 'all' || filters.category.families.includes(row.event.definition.category)) &&
+    (filters.status === 'all' || row.state === filters.status)
   );
-  const currentIndex = useMemo(
-    () => TABS.findIndex((tab) => tab.value === searchParams?.tab),
-    [searchParams.tab]
-  );
-  const [isViewMode, setIsViewMode] = useState(false);
+  const loading = scope.isLoading ||
+    Boolean(!catalogue.currentData && catalogue.isFetching) ||
+    Boolean(!rules.currentData && rules.isFetching);
+  const refreshing = !loading && Boolean(rules.isFetching || catalogue.isFetching);
+  const error = catalogue.error ?? rules.error;
 
-  const [isBackClick, setIsBackClick] = useState(false);
+  function configureRule(row: AcademicNotificationRuleRow) {
+    setEditor({ contextKey, row });
+  }
+
+  const rowAction = scope.canManage ? configureRule : undefined;
+
   return (
-    <Box
-      sx={{
-        height: '100%',
-        minHeight: 0,
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-      }}
-    >
-      {dialog?.value ? (
-        <CustomBreadcrumbs
-          sx={{ mb: 1, px: 1 }}
-          heading={isViewMode ? 'View Notification' : 'Edit Notification'}
-          description="Review notification templates for curriculum, timetable, homework, and examinations."
-          links={[
-            { name: 'Academics', href: '/academic/dashboard' },
-            {
-              name: 'Notification',
-              href: '/academic/notification',
-              onClick(e) {
-                dialog.onFalse();
-              },
-            },
-            isViewMode ? { name: 'View Notification' } : { name: 'Edit Notification' },
-          ]}
-          isBack
-          onBack={() => {
-            dialog.onFalse();
-          }}
-        />
-      ) : (
-        <CustomBreadcrumbs
-          heading="Notification"
-          description="Review notification templates for curriculum, timetable, homework, and examinations."
-          links={[
-            { name: 'Academics', href: '/academic/dashboard' },
-            { name: 'Notification', href: '/academic/notification' },
-          ]}
-          sx={{ px: 1 }}
-        />
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: 1, minHeight: 0 }}>
+      <CustomBreadcrumbs
+        heading="Academic Notifications"
+        description="Review which events notify students, guardians, and staff for the selected scope."
+        links={[{ name: 'Academics', href: academicPaths.dashboard }, { name: 'Notifications' }]}
+        sx={{ px: 1 }}
+      />
+      {!scope.canView && scope.permissionsInitialized && (
+        <Alert severity="warning" sx={{ mx: 1 }}>You do not have access to Academic notification rules.</Alert>
       )}
-      {!dialog.value && (
-        <Alert severity="info" sx={{ mx: 1, mb: 1 }}>
-          Notification templates are read-only. Saving templates and enabling automatic
-          notifications are not available yet.
-        </Alert>
+      {scope.canView && (
+        <>
+          <NotificationScopeFilter
+            category={filters.category.value} status={filters.status} scopeKey={selection?.value ?? ''}
+            scopes={scope.options} contextLabel={selection?.value === 'school' ? '' : scope.contextLabel}
+            disabled={Boolean(openRule)}
+            onChange={filters.setFilters}
+          />
+          {scope.error && (
+            <Alert severity="error" sx={{ mx: 1 }} action={<Button onClick={scope.retry}>Retry</Button>}>
+              Academic scope could not be loaded.
+            </Alert>
+          )}
+          {!scope.error && !selection && !scope.isLoading && (
+            <Alert severity="info" sx={{ mx: 1 }}>
+              Select an academic year, board, and medium you can access.
+            </Alert>
+          )}
+          {!scope.error && (selection || scope.isLoading) && (
+            <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+              <NotificationRulesTable
+                rows={rows} search={filters.search} loading={loading} refreshing={refreshing} error={error}
+                filtered={filters.category.value !== 'all' || filters.status !== 'all'}
+                onSearch={(search) => filters.setFilters({ search })}
+                onClear={() => filters.setFilters({ category: 'all', status: 'all', search: '' })}
+                onRetry={() => {
+                  if (catalogue.error) catalogue.refetch();
+                  if (rules.error) rules.refetch();
+                }}
+                onConfigure={rowAction}
+              />
+            </Box>
+          )}
+          {openRule && selection && (
+            <NotificationRuleDrawer row={openRule} identity={scope.identity}
+              scopeLabel={selection.label} onClose={() => setEditor(undefined)} />
+          )}
+        </>
       )}
-      <Paper
-        sx={{
-          '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
-        }}
-      >
-        {!dialog?.value && (
-          <CustomTabs
-            value={searchParams.tab}
-            onChange={(e, value) => {
-              const newIndex = TABS.findIndex((tab) => tab.value === value);
-              if (currentIndex > newIndex) {
-                setIsBackClick(true);
-              } else {
-                setIsBackClick(false);
-              }
-              setSearchParams('tab', value);
-            }}
-            sx={{ '& .MuiTabs-flexContainer': { gap: 1 } }}
-            role="tablist"
-          >
-            {TABS.map((tab) => (
-              <Tab key={tab.value} value={tab.value} label={tab.label} icon={tab.icon} />
-            ))}
-          </CustomTabs>
-        )}
-      </Paper>
-      <FormSlider
-        steps={TABS}
-        isBackClick={isBackClick}
-        step={currentIndex}
-        containerProps={{
-          sx: {
-            p: 0,
-            minHeight: 0,
-            height: 'auto',
-            flex: 1,
-            overflow: 'hidden',
-          },
-        }}
-      >
-        <Paper sx={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-          {currentActiveComponent?.component && (
-            <currentActiveComponent.component
-              dialog={dialog}
-              setIsViewMode={setIsViewMode}
-              // searchParams={searchParams}
-              // setSearchParams={setSearchParams}
-            />
-          )}{' '}
-        </Paper>
-      </FormSlider>
     </Box>
   );
-};
-
-export default AcademicNotificationScreen;
+}

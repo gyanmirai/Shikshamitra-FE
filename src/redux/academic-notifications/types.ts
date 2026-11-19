@@ -39,6 +39,16 @@ export interface AcademicNotificationCatalogue {
   channels: { channel: AcademicNotificationChannel; isConfigured: boolean }[];
 }
 
+export interface PublishedNotificationTemplateOption {
+  templateId: string;
+  revisionId: string;
+  templateName: string;
+  recipientKind: string;
+  channel: AcademicNotificationChannel;
+  languageCode: string;
+  academicMediumId: string | null;
+}
+
 interface AcademicNotificationRuleAudience {
   guardianMode?: AcademicNotificationGuardianMode;
   additionalGuardianRelationships?: string[];

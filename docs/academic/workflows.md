@@ -25,7 +25,7 @@ The section catalogue covers class assignments, Student Academic 360, calendar, 
 Each visible staff section links to its permitted existing workflows.
 Graphs use actual samples: mappings, scatter comparisons, timelines, progress bars, status columns, period occupancy, task stacks, review distributions, exam stages and report counts.
 Where the source cannot safely provide the selected scope, the section explains its limitation and retains permitted navigation.
-Notification templates remain read-only, and settings existence is not a readiness score.
+The Rules workspace shows saved configuration separately from event and channel readiness.
 
 The shared header stays visible during loading and failures.
 Each insight uses the shared outlined `FormSectionCard`, a neutral semantic icon, a `subtitle1`/600 heading and an adjacent accessible information tooltip.
@@ -95,6 +95,12 @@ Homework publish and due pickers use Asia/Kolkata (IST), including initial value
 On `/academic/assign-elective-subject`, newly admitted students remain editable beside previously locked students. Locked rows disable their subject controls and selection checkboxes. Individual edits, bulk assignment and clearing preserve locked rows, and saving excludes them from the update payload. Save new selections before using Review & Lock; refreshing after the final lock makes those students read-only too. The [backend product rules](../../../Shikshamitra-BE/docs/modules/academic/product.md#data-integrity) own lock enforcement.
 
 When the roster's server capability permits locked corrections, an edit action appears on locked rows. Save or discard other draft assignments before opening it. Select a new subject, a preference correction, or both, then choose Review changes. The review shows old/new values and backend-reported effects. Confirm changes submits that exact reviewed input and token. A failed or stale confirmation retains the draft and requires a new review; success refreshes the roster while keeping the row locked. Other roles retain the existing read-only locked rows. See [backend correction contracts](../../../Shikshamitra-BE/docs/modules/academic/api.md#locked-elective-corrections).
+
+## Configure Academic notification rules
+
+Open **Academics → Notification** and select a category and rule scope. The table shows the effective saved rule, including rules inherited from a broader scope. Older category links open the matching category.
+
+Staff with rule edit access can use **Configure** to submit a rule for the selected scope. The primary guardian is included for family events. The editor offers choices for additional guardians, the student account, and other recipients where the event supports them. Enabling requires published templates for the selected recipients and channels. Conflicts keep the current draft open.
 
 ## Enable notifications on a device
 

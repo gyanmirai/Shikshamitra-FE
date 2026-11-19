@@ -1,3 +1,5 @@
+import type { QueryReturnValue, FetchBaseQueryMeta, FetchBaseQueryError } from '@reduxjs/toolkit/query';
+
 import { api } from '../service';
 
 import type { PagedResultDto } from '../communication/communicationTypes';
@@ -8,10 +10,12 @@ import type {
   AcademicNotificationRulesQuery,
   AcademicNotificationRuleListItem,
   AcademicNotificationCacheIdentity,
+  PublishedNotificationTemplateOption,
 } from './types';
 
 const root = '/academic/notifications';
 const ruleTag = 'AcademicNotificationRule' as const;
+const templatePageSize = 100;
 
 function cacheOwner({ tenantCacheKey, userCacheKey }: AcademicNotificationCacheIdentity) {
   return `${tenantCacheKey}:${userCacheKey}`;
@@ -51,6 +55,31 @@ export const academicNotificationsApi = api.enhanceEndpoints({ addTagTypes: [rul
       }),
       invalidatesTags: (result, _, identity) => result ? [{ type: ruleTag, id: cacheOwner(identity) }] : [],
     }),
+    academicNotificationTemplateOptions: builder.query<
+      PagedResultDto<PublishedNotificationTemplateOption>,
+      AcademicNotificationCacheIdentity & { eventKey: string; academicMediumId?: string | null }
+    >({
+      queryFn: async ({ eventKey, academicMediumId, ...identity }, _, __, fetchWithBQ) => {
+        async function readPage(
+          collected: PublishedNotificationTemplateOption[]
+        ): Promise<QueryReturnValue<PagedResultDto<PublishedNotificationTemplateOption>, FetchBaseQueryError, FetchBaseQueryMeta>> {
+          const request = {
+            url: `${root}/templates/options`,
+            expectedSessionOwner: cacheOwner(identity),
+            params: { eventKey, academicMediumId: academicMediumId ?? undefined, skipCount: collected.length, maxResultCount: templatePageSize },
+          };
+          const result = await fetchWithBQ(request);
+          if (result.error) return { error: result.error };
+          const page = result.data as PagedResultDto<PublishedNotificationTemplateOption>;
+          const items = [...collected, ...page.items];
+          if (page.items.length < templatePageSize || items.length >= page.totalCount) {
+            return { data: { items, totalCount: page.totalCount } };
+          }
+          return readPage(items);
+        }
+        return readPage([]);
+      },
+    }),
   }),
 });
 
@@ -58,4 +87,5 @@ export const {
   useAcademicNotificationCatalogueQuery,
   useAcademicNotificationRulesQuery,
   useSaveAcademicNotificationRuleMutation,
+  useAcademicNotificationTemplateOptionsQuery,
 } = academicNotificationsApi;
