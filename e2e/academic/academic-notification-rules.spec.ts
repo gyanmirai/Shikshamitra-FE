@@ -70,3 +70,44 @@ test('creates and previews a template, then preserves its published version duri
   await expect(drawer.getByText('Version 1 · Published')).toBeVisible();
   await expect(drawer.getByText('Version 2 · Draft')).toBeVisible();
 });
+
+test('shows scoped delivery evidence and filters unknown acceptance on a phone', { tag }, async ({ page, request }) => {
+  await request.post(`${fixtureApi}/fixture/reset`, { data: { visited: true, notificationDeliveries: true } });
+  await prepare(page, request);
+  await login(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/academic/notification?view=history&operation=5d643be1-59a9-4d91-a7b1-7dbd9b673011');
+  const table = page.getByRole('table', { name: 'Academic notification delivery history table' });
+  await expect(page.getByText('Partially failed', { exact: true })).toBeVisible();
+  await expect(table.getByText('Delivered', { exact: true })).toBeVisible();
+  await expect(table.getByText('Acceptance unknown', { exact: true })).toBeVisible();
+  await page.getByRole('combobox', { name: 'Delivery status' }).click();
+  await page.getByRole('option', { name: 'Acceptance unknown', exact: true }).click();
+  await expect(table.getByText('Delivered', { exact: true })).toHaveCount(0);
+  await expect(table.getByText('Smtp acceptance unknown', { exact: true })).toBeVisible();
+  await expectHealthy(page);
+});
+
+test('reports a personal unread count and keeps read and acknowledge actions distinct', { tag }, async ({ page, request }) => {
+  await request.post(`${fixtureApi}/fixture/reset`, { data: { visited: true, notificationDeliveries: true } });
+  await prepare(page, request);
+  await login(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/dashboard');
+  const open = page.getByRole('button', { name: 'Open notifications' });
+  await expect(open).toHaveAccessibleDescription('1 unread notification');
+  await open.click();
+  const drawer = page.getByRole('dialog', { name: 'Notifications' });
+  await expect(drawer.getByRole('heading', { name: 'Homework notice' })).toBeVisible();
+  await expect(drawer.getByRole('link', { name: 'Open record' })).toHaveAttribute('href', '/academic/dashboard');
+  await drawer.getByRole('button', { name: 'Mark as read' }).click();
+  await expect(drawer.getByRole('button', { name: 'Mark as read' })).toHaveCount(0);
+  await expect(drawer.getByText('Acknowledged', { exact: true })).toHaveCount(0);
+  await drawer.getByRole('button', { name: 'Acknowledge' }).click();
+  await expect(drawer.getByText('Acknowledged', { exact: true })).toBeVisible();
+  await drawer.getByRole('tab', { name: 'Unread', exact: true }).click();
+  await expect(drawer.getByText('You have no unread notifications.')).toBeVisible();
+  await drawer.getByRole('button', { name: 'Close notifications' }).click();
+  await expect(open).toHaveAccessibleDescription('0 unread notifications');
+  await expectHealthy(page);
+});

@@ -5,6 +5,7 @@ import { handleManagers } from './managers.mjs';
 import { handleDashboard } from './dashboard.mjs';
 import { insightsPermissions } from './insights.mjs';
 import { createNotificationRulesFixture } from './notification-rules.mjs';
+import { createNotificationDeliveriesFixture } from './notification-deliveries.mjs';
 import { paged, year, board, medium, ids } from './data.mjs';
 
 const upstream = 'http://127.0.0.1:4469';
@@ -12,6 +13,7 @@ const pushPath = '/api/communication/notifications/me/push';
 const fixtureVapid = createECDH('prime256v1').generateKeys().toString('base64url');
 let fixture = createAcademicFixture();
 let notificationRules = null;
+let notificationDeliveries = createNotificationDeliveriesFixture();
 export const server = http.createServer(async (request, response) => {
   response.setHeader(
     'Access-Control-Allow-Origin',
@@ -45,6 +47,7 @@ export const server = http.createServer(async (request, response) => {
   if (url.pathname === '/fixture/reset') {
     fixture = createAcademicFixture(body);
     notificationRules = body.notificationRules === true ? createNotificationRulesFixture() : null;
+    notificationDeliveries = createNotificationDeliveriesFixture(body.notificationDeliveries === true);
     send(200, fixture.snapshot());
     return;
   }
@@ -78,6 +81,7 @@ export const server = http.createServer(async (request, response) => {
   }
   const token = request.headers.authorization?.split('.')[1];
   const claims = token ? JSON.parse(Buffer.from(token, 'base64url').toString()) : {};
+  if (notificationDeliveries(url, request.method, claims.sub, send)) return;
   if (claims.sub && notificationRules?.handle(url, request.method, body, send)) return;
   if (url.pathname.startsWith(pushPath + '/')) {
     if (!claims.sub) { send(401, {}); return; }

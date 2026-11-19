@@ -1,6 +1,34 @@
 module: Academic
 generatedAt: 2026-07-29
 scenarios:
+  - id: ACM-NOTIFICATION-DELIVERY-HISTORY-001
+    module: Academic
+    submodule: Notification
+    title: Staff inspect scoped per-channel delivery evidence and filter attempts by acceptance status
+    risk: high
+    priority: P1
+    type: [functional, regression, responsive, accessibility]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/academic/notification]
+    automated: true
+    automationFile: e2e/academic/academic-notification-rules.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-notifications', '@regression', '@responsive', '@accessibility']
+  - id: ACM-NOTIFICATION-INBOX-001
+    module: Academic
+    submodule: Notification
+    title: Signed-in users view their own unread count and independently read and acknowledge a notification
+    risk: high
+    priority: P1
+    type: [functional, regression, responsive, accessibility]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/dashboard]
+    automated: true
+    automationFile: e2e/academic/academic-notification-rules.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-notifications', '@regression', '@responsive', '@accessibility']
   - id: ACM-NOTIFICATION-TEMPLATE-WORKSPACE-001
     module: Academic
     submodule: Notification

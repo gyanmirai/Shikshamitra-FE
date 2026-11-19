@@ -110,6 +110,14 @@ Save the draft and load its preview with sample data. Publish it to make that ve
 
 **Send test** queues the saved version for the configured test destination using sample data. WhatsApp delivery requires provider approval for the exact version and language.
 
+## Review delivery history
+
+Open Delivery History with a link to a notification operation or Academic source. Filter the attempt table by delivery status. Provider acceptance, delivery and read receipts each have their own status, and the Columns menu exposes the available timestamps. When acceptance is unknown, review the provider outcome before retrying. Staff with access to cancel can stop pending work and see how much work is already in progress.
+
+## Read or acknowledge a notification
+
+Open the notification bell. **All** shows notifications for the signed-in account, and **Unread** shows messages without a read timestamp. **Mark as read** clears the unread indicator. **Acknowledge** records a separate acknowledgement. Open record follows the school's internal link when one is available.
+
 ## Enable notifications on a device
 
 Sign in to the school website on the device that should receive updates.

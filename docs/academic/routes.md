@@ -62,4 +62,8 @@ Existing Calendar operations, operational Academic pages, and their own route gu
 `/academic/notification` opens the Rules workspace under **Academics → Notification**. It requires `Academics.Notification.View`, and the Configure action requires `Academics.Notification.Add`. The category filter accepts older links using `tab=curriculumManagement`, `tab=timetable`, `tab=homeworkAssignment`, or `tab=examination`.
 
 `/academic/notification?view=templates` opens Templates on the same route. The event and template list scope are stored as `templateEvent` and `templateScope`. The View permission allows inspection and sample preview. Draft creation, editing, publishing, restoration, and test send require Add. Deleting a draft requires `Academics.Notification.Delete`. Actions also require write access to the template's medium or the whole school.
+
+Delivery History uses `/academic/notification?view=history`. An operation link supplies `operation`. A record link supplies `eventKey`, `sourceType`, and `sourceId`. History requires View and server-verified access to the Academic record. Cancelling pending work requires Add and access to the operation.
+
+The dashboard notification bell opens the signed-in user's inbox on school routes. It uses the same drawer for a browser-push launch.
 Do not add inactive LMS placeholder forms to setup or label them as saved configuration.

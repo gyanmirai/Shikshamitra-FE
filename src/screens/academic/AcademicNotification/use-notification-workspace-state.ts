@@ -33,7 +33,8 @@ export function useNotificationWorkspaceState() {
   const category = notificationCategories.find((entry) => entry.value === categoryValue) ?? notificationCategories[0];
   const status = notificationRuleStatuses.find((entry) => entry.value === params.get('status'))?.value ?? 'all';
   const search = params.get('search') ?? '';
-  const view = params.get('view') === 'templates' ? 'templates' : 'rules';
+  const requestedView = params.get('view');
+  const view = requestedView === 'templates' || requestedView === 'history' ? requestedView : 'rules';
 
   function setFilters(updates: Partial<Record<'category' | 'status' | 'scope' | 'search' | 'view' | 'templateEvent' | 'templateScope', string>>) {
     const next = new URLSearchParams(params.toString());

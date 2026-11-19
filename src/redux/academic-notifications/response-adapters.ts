@@ -19,7 +19,11 @@ export function notificationLabel(value: string) {
 }
 
 export function notificationEventLabel(event: AcademicNotificationEvent) {
-  const words = event.definition.eventKey.split('.').slice(1).map(notificationLabel).join(' ');
+  return notificationEventKeyLabel(event.definition.eventKey);
+}
+
+export function notificationEventKeyLabel(eventKey: string) {
+  const words = eventKey.split('.').slice(1).map(notificationLabel).join(' ');
   return words.charAt(0) + words.slice(1).toLowerCase();
 }
 
