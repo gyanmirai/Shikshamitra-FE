@@ -19,6 +19,13 @@ const tools: {
   { type: 'qr', label: 'Add QR code', icon: 'mdi:qrcode' },
   { type: 'barcode', label: 'Add barcode', icon: 'mdi:barcode' },
 ];
+
+const toolSize = {
+  width: { xs: 44, md: 36 },
+  height: { xs: 44, md: 36 },
+  '@media (any-pointer: coarse)': { width: 44, height: 44 },
+};
+
 export function StudioToolRail({
   tool,
   onToolChange,
@@ -38,6 +45,8 @@ export function StudioToolRail({
         display: 'flex',
         flexDirection: { xs: 'row', md: 'column' },
         overflow: 'auto',
+        maxWidth: 1,
+        minHeight: 0,
         flexShrink: 0,
         border: 1,
         borderColor: 'divider',
@@ -59,8 +68,7 @@ export function StudioToolRail({
               disabled={disabled}
               onClick={() => onToolChange(item.key)}
               sx={{
-                width: 44,
-                height: 44,
+                ...toolSize,
                 color: tool === item.key ? 'primary.main' : 'text.secondary',
                 bgcolor: tool === item.key ? 'action.selected' : undefined,
               }}
@@ -77,7 +85,7 @@ export function StudioToolRail({
               aria-label={item.label}
               disabled={disabled}
               onClick={() => onAdd(item.type, item.ellipse)}
-              sx={{ width: 44, height: 44 }}
+              sx={toolSize}
             >
               <Iconify icon={item.icon} />
             </IconButton>

@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
 
+export const IDENTITY_CARD_PREFIX_LIMIT = 150;
+
 export type IdentityCardElement = {
   id: string;
   type: 'text' | 'photo' | 'logo' | 'image' | 'qr' | 'barcode' | 'shape' | 'line';
@@ -10,6 +12,7 @@ export type IdentityCardElement = {
   fieldKey?: string;
   label?: string;
   value?: string;
+  prefix?: string;
   x: number;
   y: number;
   w: number;
@@ -68,11 +71,12 @@ export type IdentityCardPrintSettings = {
   sideMode: 'both' | 'front' | 'back';
 };
 
-export type IdentityCardFieldOption = { key: string; label: string };
+export type IdentityCardFieldOption = { key: string; label: string; group?: string };
 export type IdentityCardPreviewProps = {
   layout: IdentityCardLayout;
   side?: 'front' | 'back';
   values?: Record<string, string | null | undefined>;
+  fieldTokens?: Readonly<Record<string, string>>;
   logoUrl?: string;
   logoHidden?: boolean;
   photoUrl?: string;
@@ -90,6 +94,7 @@ export type IdentityCardDesignerProps = IdentityCardPreviewProps & {
   printSettings: IdentityCardPrintSettings;
   onPrintSettingsChange: (settings: IdentityCardPrintSettings) => void;
   fields: IdentityCardFieldOption[];
+  fieldPickerLabel?: string;
   disabled?: boolean;
   backSideEnabled: boolean;
   onBackSideEnabledChange: (enabled: boolean) => void;

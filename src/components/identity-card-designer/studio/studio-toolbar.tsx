@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Select from '@mui/material/Select';
@@ -16,6 +18,7 @@ export type StudioToolbarProps = {
   onZoomChange: (zoom: number) => void;
   onFit: () => void;
   disabled?: boolean;
+  viewControls?: ReactNode;
 };
 
 export function StudioToolbar({
@@ -24,6 +27,7 @@ export function StudioToolbar({
   onZoomChange,
   onFit,
   disabled,
+  viewControls,
 }: StudioToolbarProps) {
   const editable = c.selectedElements.filter((element) => !element.locked);
   const blocked = disabled || !editable.length;
@@ -35,19 +39,17 @@ export function StudioToolbar({
       direction="row"
       alignItems="center"
       sx={{
-        flexWrap: { xs: 'nowrap', md: 'wrap' },
-        overflowX: { xs: 'auto', md: 'visible' },
-        overflowY: { xs: 'hidden', md: 'visible' },
+        flexWrap: 'wrap',
         flexShrink: 0,
         minWidth: 0,
         gap: 0.25,
-        px: 1,
-        py: 0.5,
+        py: 0.25,
         borderBottom: 1,
         borderColor: 'divider',
         '& > *': { flexShrink: 0 },
       }}
     >
+      {viewControls}
       <StudioCommandButtons controller={c} disabled={disabled} />
       <ToolMenu
         label="Align selection"
@@ -92,14 +94,14 @@ export function StudioToolbar({
         direction="row"
         spacing={0.5}
         alignItems="center"
-        sx={{ ml: { xs: 0, md: 'auto' }, order: { xs: -1, md: 0 } }}
+        sx={{ ml: { md: 'auto' } }}
       >
         <Select
           size="small"
           value={zoom}
           inputProps={{ 'aria-label': 'Canvas zoom' }}
           onChange={(event) => onZoomChange(Number(event.target.value))}
-          sx={{ minWidth: 90 }}
+          sx={{ minWidth: 72, '& .MuiSelect-select': { py: 0.75 } }}
         >
           {zooms.map((value) => (
             <MenuItem key={value} value={value}>

@@ -1,7 +1,18 @@
+import { IDENTITY_CARD_PREFIX_LIMIT } from '../types';
+
 import type { IdentityCardElement } from '../types';
 
 export function validateEditorElement(element: IdentityCardElement): string[] {
   const errors: string[] = [];
+  if (
+    element.prefix != null &&
+    (element.type !== 'text' ||
+      typeof element.prefix !== 'string' ||
+      element.prefix.length > IDENTITY_CARD_PREFIX_LIMIT)
+  )
+    errors.push(
+      `Only text elements can use a prefix of up to ${IDENTITY_CARD_PREFIX_LIMIT} characters.`
+    );
   if (
     element.rotation !== undefined &&
     (!Number.isFinite(element.rotation) || Math.abs(element.rotation) > 180)

@@ -46,13 +46,13 @@ export function StudioLayerRow({ element, controller: c, disabled }: StudioLayer
           onDoubleClick={() => {
             if (!blocked) setDraft(label);
           }}
-          sx={{ minWidth: 0, px: 0.75, py: 0.75 }}
+          sx={{ minWidth: 0, px: 0.75, py: 0.5 }}
         >
           <Box sx={{ minWidth: 0 }}>
-            <Typography variant="body2" noWrap>
+            <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
               {label}
             </Typography>
-            <Typography variant="caption" color="text.secondary" noWrap>
+            <Typography variant="caption" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>
               {[
                 element.type,
                 element.groupId ? 'Grouped' : '',

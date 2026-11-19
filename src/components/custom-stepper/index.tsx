@@ -43,6 +43,7 @@ interface CustomStepperProps {
   onStepClick?: (index: number) => void;
   disabled?: boolean;
   iconOnly?: boolean;
+  density?: 'standard' | 'compact';
 }
 
 const CustomStepper: React.FC<CustomStepperProps> = ({
@@ -55,6 +56,7 @@ const CustomStepper: React.FC<CustomStepperProps> = ({
   onStepClick,
   disabled = false,
   iconOnly = false,
+  density = 'standard',
 }) => (
   <Box sx={{ width: '100%' }}>
     <Stepper
@@ -62,11 +64,15 @@ const CustomStepper: React.FC<CustomStepperProps> = ({
       aria-label={ariaLabel}
       activeStep={activeStep}
       orientation={orientation}
-      alternativeLabel={orientation === 'horizontal'}
+      alternativeLabel={orientation === 'horizontal' && density === 'standard'}
       nonLinear={Boolean(onStepClick)}
       sx={{
         m: 0,
         p: 0,
+        ...(density === 'compact' && {
+          '& .MuiStepConnector-root': { mx: 0.5 },
+          '& .MuiStepLabel-iconContainer': { pr: 0.5 },
+        }),
         ...(orientation === 'vertical' && {
           '& .MuiStepConnector-line': { minHeight: 20 },
           ...(iconOnly && { '& .MuiStepConnector-root': { ml: 2.75 } }),
@@ -106,7 +112,10 @@ const CustomStepper: React.FC<CustomStepperProps> = ({
             error={state === 'error'}
             optional={stepCaptions?.[index]}
             sx={{
-              '& .MuiStepLabel-label': { typography: 'subtitle2', overflowWrap: 'anywhere' },
+              '& .MuiStepLabel-label': {
+                typography: density === 'compact' ? 'caption' : 'subtitle2',
+                overflowWrap: 'anywhere',
+              },
               ...(iconOnly && {
                 '& .MuiStepLabel-labelContainer': { display: 'none' },
                 '& .MuiStepLabel-iconContainer': { pr: 0 },
@@ -157,7 +166,8 @@ const CustomStepper: React.FC<CustomStepperProps> = ({
             aria-current={index === activeStep ? 'step' : undefined}
             sx={{
               listStyle: 'none',
-              '& svg': { height: 28, width: 28 },
+              ...(density === 'compact' && { px: 0.5 }),
+              '& svg': density === 'compact' ? { height: 20, width: 20 } : { height: 28, width: 28 },
               ...(state === 'skipped' && { '& .MuiStepIcon-root': { color: 'warning.main' } }),
               ...(state === 'error' && { '& .MuiStepIcon-root': { color: 'error.main' } }),
             }}
