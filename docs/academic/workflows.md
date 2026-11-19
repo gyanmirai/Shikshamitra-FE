@@ -108,6 +108,10 @@ For Homework Submitted and Assignment Submitted, **Daily digest time** closes th
 
 For Substitution Acknowledgement Due, the assigned substitute receives the first reminder. In **Recipients**, select **Notify the configured reviewer** and set **Escalate after (minutes)** to follow up if the substitute has not responded. Select published templates for both recipients before enabling the rule.
 
+## Notify recipients about exam seating
+
+In the guided Seating Plan **Publish** step, choose guardians, student accounts, or assigned teachers under **Notifications**. Select **Allow email** to permit email for those audiences when the school's Seating Published rule includes it. The rule controls guardian and student account eligibility and channels. Publication locks the plans. Delivery can queue after both seating and the exam are published. See the [seating notification contract](../../../Shikshamitra-BE/docs/modules/academic/api.md#exam-seating-notifications).
+
 ## Create an Academic notification template
 
 Open **Academics → Notification → Templates**. Choose the event and scope, then create a template for one recipient, channel, and language. Use the variable pickers to insert fields from the event catalogue. Email supports rich text. In-app, browser push, and WhatsApp use plain text.

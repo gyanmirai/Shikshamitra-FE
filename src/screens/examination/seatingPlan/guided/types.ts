@@ -5,6 +5,7 @@ import type {
   SeatingPlanWorkspaceDto,
   GuidedAllocationPreviewDto,
   ExaminationSeatingReadinessDto,
+  PublishSeatingNotificationOptionsDto,
 } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/seat-allocation-v2.types';
 
 export type AllocationStrategy = 'roll-number' | 'alphabetical' | 'random' | 'alternate-division';
@@ -13,7 +14,7 @@ export type FillDirection = 'front-to-back' | 'back-to-front' | 'row-wise' | 'co
 
 export type AllocationMode = 'automatic' | 'manual';
 
-export interface GuidedSeatingValues {
+export interface GuidedSeatingValues extends PublishSeatingNotificationOptionsDto {
   selectedPlanId: string;
   planName: string;
   selectedExamSubjectIds: string[];
@@ -25,8 +26,6 @@ export interface GuidedSeatingValues {
   mixDivisions: boolean;
   specialRequirementPriority: boolean;
   acknowledgeWarnings: boolean;
-  notifyStudents: boolean;
-  notifyParents: boolean;
 }
 
 export interface GuidedWorkflowPermissions {

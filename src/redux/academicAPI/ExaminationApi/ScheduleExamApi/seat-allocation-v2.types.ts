@@ -161,3 +161,10 @@ export interface SeatingValidationIssueDto {
   seatNumber?: number | null;
   suggestedActionLabel?: string | null;
 }
+
+export interface PublishSeatingNotificationOptionsDto {
+  notifyStudents: boolean;
+  notifyParents: boolean;
+  notifyTeachers: boolean;
+  sendEmail: boolean;
+}
