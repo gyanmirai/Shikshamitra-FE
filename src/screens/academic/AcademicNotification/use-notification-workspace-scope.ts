@@ -14,6 +14,7 @@ export function useNotificationWorkspaceScope() {
   const canView = permissionsInitialized && Boolean(identity.userCacheKey && identity.tenantCacheKey) &&
     hasGrantedPermission(permissions, academicNotificationPermissions.view);
   const canManage = canView && hasGrantedPermission(permissions, academicNotificationPermissions.manage);
+  const canRemove = canView && hasGrantedPermission(permissions, academicNotificationPermissions.remove);
   const hierarchy = useGetUserScopeHierarchyQuery({
     userId: identity.userCacheKey, cacheTenantId: identity.tenantCacheKey,
     academicYearId: currentYear?.id,
@@ -24,7 +25,7 @@ export function useNotificationWorkspaceScope() {
     : [];
 
   return {
-    identity, canView, canManage, permissionsInitialized, options,
+    identity, canView, canManage, canRemove, permissionsInitialized, options,
     contextLabel: [currentYear?.name, currentBoard?.name, currentMedium?.name].filter(Boolean).join(' / '),
     isLoading: !hierarchy.currentData && hierarchy.isFetching,
     error: hierarchy.error,

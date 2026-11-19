@@ -19,6 +19,12 @@ Use the [backend API reference](../../../Shikshamitra-BE/docs/modules/academic/a
 
 The catalogue cache is keyed by tenant and user. The rule cache also includes the requested academic hierarchy, event filter and page. Each request verifies the identity of the session that supplies the token. The request sends the hierarchy and paging fields, and the save sends the current rule concurrency stamp. Successful saves refresh rule queries for the same user and tenant. Rejected saves retain the existing results.
 
+## Notification template client
+
+`src/redux/academic-notifications/template-api.ts` reads templates by event, medium, name search, and page. It loads history and sample previews on demand. Queries key the school and account, and mutations recheck the request owner before sending.
+
+Draft edits and publication send the saved revision stamp. Creating a subsequent draft or restoring default wording sends the template header stamp. Successful revisions refresh template lists, previews, history, and the published choices used by Rules for the same session.
+
 ## Browser notifications
 
 `src/redux/communication/notification/web-push-api.ts` injects the public-key, register and disable operations into the shared authenticated API.

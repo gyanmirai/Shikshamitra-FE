@@ -102,6 +102,14 @@ Open **Academics → Notification** and select a category and rule scope. The ta
 
 Staff with rule edit access can use **Configure** to submit a rule for the selected scope. The primary guardian is included for family events. The editor offers choices for additional guardians, the student account, and other recipients where the event supports them. Enabling requires published templates for the selected recipients and channels. Conflicts keep the current draft open.
 
+## Create an Academic notification template
+
+Open **Academics → Notification → Templates**. Choose the event and scope, then create a template for one recipient, channel, and language. Use the variable pickers to insert fields from the event catalogue. Email supports rich text. In-app, browser push, and WhatsApp use plain text.
+
+Save the draft and load its preview with sample data. Publish it to make that version available to Rules. Further edits create a new draft while the published version remains available. Version history can preview saved revisions. Restoring the default wording also creates a draft.
+
+**Send test** queues the saved version for the configured test destination using sample data. WhatsApp delivery requires provider approval for the exact version and language.
+
 ## Enable notifications on a device
 
 Sign in to the school website on the device that should receive updates.

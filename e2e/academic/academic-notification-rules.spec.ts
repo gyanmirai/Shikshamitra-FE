@@ -29,3 +29,44 @@ test('legacy category link opens the scoped Rules workspace and saves an overrid
   expect(saved.scope.mediumId).toBeTruthy();
   expect(saved.concurrencyStamp).toBeUndefined();
 });
+
+test('creates and previews a template, then preserves its published version during editing', { tag }, async ({ page, request }) => {
+  await request.post(`${fixtureApi}/fixture/reset`, { data: { visited: true, notificationRules: true } });
+  await prepare(page, request);
+  await login(page);
+  await page.goto('/academic/notification?view=templates');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expectHealthy(page);
+
+  await page.getByRole('button', { name: 'New template' }).click();
+  const drawer = page.getByRole('dialog', { name: 'New notification template' });
+  const message = drawer.getByRole('textbox', { name: 'Message' });
+  await drawer.getByRole('textbox', { name: 'Template name' }).fill('Homework family update');
+  await drawer.getByRole('textbox', { name: 'Subject' }).fill('Homework published');
+  await message.fill('Homework for {{unknown}}');
+  await drawer.getByRole('button', { name: 'Save draft' }).click();
+  await expect(drawer.getByText('Variable {{unknown}} is unavailable for this event.')).toBeVisible();
+  await expect(message).toBeFocused();
+  await message.fill('Homework for ');
+  await drawer.getByRole('combobox', { name: 'Insert message variable' }).click();
+  await page.getByRole('option', { name: /student name/ }).click();
+  await expect(message).toHaveValue('Homework for {{student_name}}');
+  await expect(message).toBeFocused();
+  await drawer.getByRole('button', { name: 'Save draft' }).click();
+  await expect(drawer.getByText('Draft · Version 1')).toBeVisible();
+  await drawer.getByRole('button', { name: 'Load sample preview' }).click();
+  await expect(drawer.getByText('Preview with sample data')).toBeVisible();
+  await expect(drawer.getByText('Homework for Sample Student')).toBeVisible();
+  await drawer.getByRole('button', { name: 'Publish draft' }).click();
+  await page.getByRole('dialog', { name: 'Publish draft' }).getByRole('button', { name: 'Publish draft' }).click();
+  await expect(drawer.getByText('Published · Version 1')).toBeVisible();
+  await message.fill('Updated homework for {{student_name}}');
+  await drawer.getByRole('button', { name: 'Close template editor' }).click();
+  await page.getByRole('button', { name: 'Keep editing' }).click();
+  await expect(message).toHaveValue('Updated homework for {{student_name}}');
+  await drawer.getByRole('button', { name: 'Save new draft' }).click();
+  await expect(drawer.getByText('Draft · Version 2')).toBeVisible();
+  await drawer.getByRole('button', { name: 'Version history' }).click();
+  await expect(drawer.getByText('Version 1 · Published')).toBeVisible();
+  await expect(drawer.getByText('Version 2 · Draft')).toBeVisible();
+});

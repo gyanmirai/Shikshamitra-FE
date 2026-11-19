@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { paged } from './data.mjs';
+import { createNotificationTemplatesFixture } from './notification-templates.mjs';
 
 const root = '/api/academic/notifications';
 const eventKey = 'Academic.Homework.Published';
@@ -12,6 +13,7 @@ const parentRule = {
 export function createNotificationRulesFixture() {
   let rule;
   const writes = [];
+  const templateRequests = createNotificationTemplatesFixture();
   return {
     writes,
     handle(url, method, body, send) {
@@ -22,7 +24,9 @@ export function createNotificationRulesFixture() {
               eventKey, category: 'Homework', sourceType: 'Academic.Homework',
               linkBuilderKey: 'Academic.Homework', schemaVersion: 1, triggerType: 0, deliveryProfile: 0,
               recipientSelectors: ['PrimaryGuardian', 'AdditionalGuardians', 'StudentAccount'],
-              supportedChannels: [3, 2], variables: [], materialChangeFields: [], allowsQuietHoursBypass: false,
+              supportedChannels: [3, 2, 0, 4],
+              variables: [{ key: 'student_name', type: 0, required: true, sensitivity: 1 }],
+              materialChangeFields: [], allowsQuietHoursBypass: false,
             },
             availability: { isAvailable: true, reasonCode: null },
           }],
@@ -54,7 +58,7 @@ export function createNotificationRulesFixture() {
           },
         };
         send(200, rule);
-      } else return false;
+      } else return templateRequests(url, method, body, send);
       return true;
     },
   };

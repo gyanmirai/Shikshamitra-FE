@@ -5,6 +5,7 @@ import { clearCachedAuthSession } from 'src/redux/session-cache';
 import { it, vi, expect, describe, afterEach, beforeEach } from 'vitest';
 
 import { academicNotificationsApi as api } from './api';
+import { academicNotificationTemplateApi } from './template-api';
 
 vi.hoisted(() => { process.env.NEXT_PUBLIC_API_URL = 'http://localhost:5000'; });
 
@@ -115,5 +116,42 @@ describe('Academic notification client', () => {
     })).unwrap();
     expect(result.items).toHaveLength(101);
     expect(offsets).toEqual([0, 100]);
+  });
+
+  it('invalidates published options after publication while a stale revision leaves them cached', async () => {
+    let current = { templateId: 'template-a', revisionId: 'revision-a' };
+    let reads = 0;
+    const stamps: unknown[] = [];
+    const command = { revisionId: 'revision-b', concurrencyStamp: 'stamp-b' };
+    mswServer.use(
+      http.get('*/api/academic/notifications/templates/options', () => {
+        reads += 1;
+        return HttpResponse.json({ totalCount: 1, items: [current] });
+      }),
+      http.post('*/api/academic/notifications/templates/:templateId/publish', async ({ request }) => {
+        const input = await request.json();
+        stamps.push(input);
+        if (stamps.length === 1) return HttpResponse.json({}, { status: 409 });
+        current = { ...current, revisionId: command.revisionId };
+        return HttpResponse.json({ ...current, isPublished: true });
+      })
+    );
+    const options = { ...identity, eventKey, academicMediumId: 'medium-a' };
+    const published = api.endpoints.academicNotificationTemplateOptions;
+    const initial = store.dispatch(published.initiate(options));
+    expect((await initial.unwrap()).items[0].revisionId).toBe('revision-a');
+    const publish = academicNotificationTemplateApi.endpoints.publishAcademicNotificationTemplate;
+    const request = { ...identity, templateId: current.templateId, command };
+    await expect(store.dispatch(publish.initiate(request)).unwrap()).rejects.toMatchObject({ status: 409 });
+    expect(published.select(options)(store.getState()).data?.items[0].revisionId).toBe('revision-a');
+    expect(reads).toBe(1);
+
+    await store.dispatch(publish.initiate(request)).unwrap();
+    await vi.waitFor(() => {
+      expect(published.select(options)(store.getState()).data?.items[0].revisionId).toBe('revision-b');
+    });
+    expect(reads).toBe(2);
+    expect(stamps).toEqual([command, command]);
+    initial.unsubscribe();
   });
 });

@@ -108,7 +108,7 @@ Its local API does not establish deployed staging acceptance.
 
 The rule client tests cover academic scope and paging parameters, owner-isolated cache keys, stale rule saves, and commands blocked after an account change. Run `npm test -- src/redux/academic-notifications/api.test.ts src/redux/service.auth-session.test.ts`.
 
-Run `npm test -- src/screens/academic/AcademicNotification` for the rule list and editor. Run `npx playwright test --config e2e/academic/academic-notification-rules.config.mjs` to verify a legacy category link and a scoped save at a phone viewport with the synthetic school.
+Run `npm test -- src/screens/academic/AcademicNotification` for the rule workspace and template field validation. Run `npx playwright test --config e2e/academic/academic-notification-rules.config.mjs` to verify the legacy category link, scoped rule save, and template draft, preview, publication, and version history at a phone viewport with the synthetic school.
 
 ```powershell
 npm test -- src/hooks/notifications src/redux/auth/load-session.test.tsx src/redux/auth/load-session-recovery.test.tsx

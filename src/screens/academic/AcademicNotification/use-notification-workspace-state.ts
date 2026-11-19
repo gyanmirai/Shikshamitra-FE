@@ -1,4 +1,5 @@
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { guardAcademicContextChange } from 'src/hooks/academic-context-change';
 
 export const notificationCategories = [
   { value: 'all', label: 'All categories', families: [] },
@@ -32,8 +33,9 @@ export function useNotificationWorkspaceState() {
   const category = notificationCategories.find((entry) => entry.value === categoryValue) ?? notificationCategories[0];
   const status = notificationRuleStatuses.find((entry) => entry.value === params.get('status'))?.value ?? 'all';
   const search = params.get('search') ?? '';
+  const view = params.get('view') === 'templates' ? 'templates' : 'rules';
 
-  function setFilters(updates: Partial<Record<'category' | 'status' | 'scope' | 'search', string>>) {
+  function setFilters(updates: Partial<Record<'category' | 'status' | 'scope' | 'search' | 'view' | 'templateEvent' | 'templateScope', string>>) {
     const next = new URLSearchParams(params.toString());
     if ('category' in updates) next.delete('tab');
     Object.entries(updates).forEach(([key, value]) => {
@@ -41,8 +43,12 @@ export function useNotificationWorkspaceState() {
       else next.delete(key);
     });
     const query = next.toString();
-    router.push(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    const proceed = () => router.push(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    if (!guardAcademicContextChange(proceed)) proceed();
   }
 
-  return { category, status, search, scopeKey: params.get('scope'), setFilters };
+  return {
+    category, status, search, scopeKey: params.get('scope'), setFilters, view,
+    templateEvent: params.get('templateEvent'), templateScope: params.get('templateScope'),
+  };
 }

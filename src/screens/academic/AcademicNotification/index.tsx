@@ -1,105 +1,42 @@
 'use client';
 
-import type { AcademicNotificationRuleRow } from 'src/redux/academic-notifications/response-adapters';
-
-import { useState } from 'react';
-import { Box, Alert, Button } from '@mui/material';
+import { useId } from 'react';
+import { Box, Tab, Alert } from '@mui/material';
+import { CustomTabs } from 'src/components/custom-tabs';
 import { academicPaths } from 'src/constants/academic-menu';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { notificationRuleRows } from 'src/redux/academic-notifications/response-adapters';
-import {
-  useAcademicNotificationRulesQuery,
-  useAcademicNotificationCatalogueQuery,
-} from 'src/redux/academic-notifications/api';
 
-import { NotificationRulesTable } from './Components/notification-rules-table';
-import { NotificationRuleDrawer } from './Components/notification-rule-drawer';
-import { NotificationScopeFilter } from './Components/notification-scope-filter';
+import { NotificationRulesWorkspace } from './notification-rules-workspace';
 import { useNotificationWorkspaceScope } from './use-notification-workspace-scope';
 import { useNotificationWorkspaceState } from './use-notification-workspace-state';
+import { NotificationTemplatesWorkspace } from './notification-templates-workspace';
 
 export default function AcademicNotificationScreen() {
+  const tabId = useId();
   const scope = useNotificationWorkspaceScope();
   const filters = useNotificationWorkspaceState();
-  const selection = scope.options.find((option) => option.value === filters.scopeKey) ??
-    scope.options.find((option) => option.value === 'medium') ??
-    scope.options.find((option) => option.value !== 'school') ?? scope.options[0];
-  const contextKey = JSON.stringify([scope.identity, selection?.scope]);
-  const [editor, setEditor] = useState<{ contextKey: string; row: AcademicNotificationRuleRow }>();
-  const openRule = scope.canManage && editor?.contextKey === contextKey ? editor.row : undefined;
-  const catalogue = useAcademicNotificationCatalogueQuery(scope.identity, { skip: !scope.canView });
-  const rules = useAcademicNotificationRulesQuery({
-    ...scope.identity,
-    scope: selection?.scope ?? {},
-    skipCount: 0,
-    maxResultCount: 100,
-  }, { skip: !scope.canView || !selection, refetchOnMountOrArgChange: true });
-  const allRows = catalogue.currentData && rules.currentData
-    ? notificationRuleRows(catalogue.currentData, rules.currentData) : [];
-  const rows = allRows.filter((row) =>
-    (filters.category.value === 'all' || filters.category.families.includes(row.event.definition.category)) &&
-    (filters.status === 'all' || row.state === filters.status)
-  );
-  const loading = scope.isLoading ||
-    Boolean(!catalogue.currentData && catalogue.isFetching) ||
-    Boolean(!rules.currentData && rules.isFetching);
-  const refreshing = !loading && Boolean(rules.isFetching || catalogue.isFetching);
-  const error = catalogue.error ?? rules.error;
-
-  function configureRule(row: AcademicNotificationRuleRow) {
-    setEditor({ contextKey, row });
-  }
-
-  const rowAction = scope.canManage ? configureRule : undefined;
-
+  const templates = filters.view === 'templates';
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: 1, minHeight: 0 }}>
-      <CustomBreadcrumbs
-        heading="Academic Notifications"
-        description="Review which events notify students, guardians, and staff for the selected scope."
-        links={[{ name: 'Academics', href: academicPaths.dashboard }, { name: 'Notifications' }]}
-        sx={{ px: 1 }}
-      />
+      <CustomBreadcrumbs heading="Academic Notifications"
+        description={templates ? 'Manage message templates by event, recipient, channel, and language.'
+          : 'Review which events notify students, guardians, and staff for the selected scope.'}
+        links={[{ name: 'Academics', href: academicPaths.dashboard }, { name: 'Notifications' }]} sx={{ px: 1 }} />
       {!scope.canView && scope.permissionsInitialized && (
         <Alert severity="warning" sx={{ mx: 1 }}>You do not have access to Academic notification rules.</Alert>
       )}
       {scope.canView && (
         <>
-          <NotificationScopeFilter
-            category={filters.category.value} status={filters.status} scopeKey={selection?.value ?? ''}
-            scopes={scope.options} contextLabel={selection?.value === 'school' ? '' : scope.contextLabel}
-            disabled={Boolean(openRule)}
-            onChange={filters.setFilters}
-          />
-          {scope.error && (
-            <Alert severity="error" sx={{ mx: 1 }} action={<Button onClick={scope.retry}>Retry</Button>}>
-              Academic scope could not be loaded.
-            </Alert>
-          )}
-          {!scope.error && !selection && !scope.isLoading && (
-            <Alert severity="info" sx={{ mx: 1 }}>
-              Select an academic year, board, and medium you can access.
-            </Alert>
-          )}
-          {!scope.error && (selection || scope.isLoading) && (
-            <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
-              <NotificationRulesTable
-                rows={rows} search={filters.search} loading={loading} refreshing={refreshing} error={error}
-                filtered={filters.category.value !== 'all' || filters.status !== 'all'}
-                onSearch={(search) => filters.setFilters({ search })}
-                onClear={() => filters.setFilters({ category: 'all', status: 'all', search: '' })}
-                onRetry={() => {
-                  if (catalogue.error) catalogue.refetch();
-                  if (rules.error) rules.refetch();
-                }}
-                onConfigure={rowAction}
-              />
-            </Box>
-          )}
-          {openRule && selection && (
-            <NotificationRuleDrawer row={openRule} identity={scope.identity}
-              scopeLabel={selection.label} onClose={() => setEditor(undefined)} />
-          )}
+          <CustomTabs value={filters.view} aria-label="Academic notification workspace" variant="scrollable"
+            onChange={(_, view: string) => filters.setFilters({ view: view === 'rules' ? '' : view })}>
+            <Tab label="Rules" value="rules" id={`${tabId}-rules`} aria-controls={`${tabId}-panel`} />
+            <Tab label="Templates" value="templates" id={`${tabId}-templates`} aria-controls={`${tabId}-panel`} />
+          </CustomTabs>
+          <Box role="tabpanel" id={`${tabId}-panel`} aria-labelledby={`${tabId}-${filters.view}`}
+            sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+            {templates ? <NotificationTemplatesWorkspace scope={scope} filters={filters} />
+              : <NotificationRulesWorkspace scope={scope} filters={filters} />}
+          </Box>
         </>
       )}
     </Box>

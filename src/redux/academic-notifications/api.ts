@@ -1,6 +1,7 @@
 import type { QueryReturnValue, FetchBaseQueryMeta, FetchBaseQueryError } from '@reduxjs/toolkit/query';
 
 import { api } from '../service';
+import { academicNotificationTemplateTag, academicNotificationsRoot as root, academicNotificationCacheOwner as cacheOwner } from './request-context';
 
 import type { PagedResultDto } from '../communication/communicationTypes';
 import type {
@@ -13,15 +14,10 @@ import type {
   PublishedNotificationTemplateOption,
 } from './types';
 
-const root = '/academic/notifications';
 const ruleTag = 'AcademicNotificationRule' as const;
 const templatePageSize = 100;
 
-function cacheOwner({ tenantCacheKey, userCacheKey }: AcademicNotificationCacheIdentity) {
-  return `${tenantCacheKey}:${userCacheKey}`;
-}
-
-export const academicNotificationsApi = api.enhanceEndpoints({ addTagTypes: [ruleTag] }).injectEndpoints({
+export const academicNotificationsApi = api.enhanceEndpoints({ addTagTypes: [ruleTag, academicNotificationTemplateTag] }).injectEndpoints({
   endpoints: (builder) => ({
     academicNotificationCatalogue: builder.query<AcademicNotificationCatalogue, AcademicNotificationCacheIdentity>({
       query: (identity) => ({ url: `${root}/catalogue`, expectedSessionOwner: cacheOwner(identity) }),
@@ -79,6 +75,7 @@ export const academicNotificationsApi = api.enhanceEndpoints({ addTagTypes: [rul
         }
         return readPage([]);
       },
+      providesTags: (_, __, identity) => [{ type: academicNotificationTemplateTag, id: cacheOwner(identity) }],
     }),
   }),
 });
