@@ -2,6 +2,54 @@
 import { test, expect } from '@playwright/test';
 
 for (const width of [1440, 390]) {
+  test(`only collected late fees remain refundable after a waiver at ${width}px`, async ({
+    page,
+  }, testInfo) => {
+    await page.setViewportSize({ width, height: 950 });
+    await page.goto('/?waivedLateFee=1');
+    await page.getByRole('button', { name: 'Load test student' }).click();
+    await page.getByRole('radio', { name: 'Full refund', exact: true }).check();
+    const lateFees = page.getByRole('checkbox', {
+      name: 'Select refundable installments for Paid late fees',
+      exact: true,
+    });
+    await expect(lateFees).toBeVisible();
+    await lateFees.check();
+    const lateTable = page.getByRole('table', { name: 'Paid late fees table' });
+    await expect(lateTable).toBeVisible();
+    await expect(lateTable.getByRole('textbox', { name: /^Refund amount for/ })).toHaveValue(
+      '₹ 1,500'
+    );
+    await expect(
+      page.getByRole('checkbox', { name: 'Select refundable installments for Paid charges' })
+    ).not.toBeChecked();
+    await expect(
+      page.getByRole('checkbox', { name: 'Select refundable installments for Tuition' })
+    ).not.toBeChecked();
+    await page.screenshot({ path: testInfo.outputPath('paid-after-waiver.png'), fullPage: true });
+    await page
+      .getByRole('textbox', { name: /Refund reason/ })
+      .fill('Refund the settled late-fee payment after the remaining late fees were waived');
+    await page.getByRole('button', { name: 'Submit', exact: true }).click();
+    const confirmation = page.getByRole('dialog', { name: 'Submit and Approve Refund?' });
+    await expect(confirmation).toContainText('₹ 1,500');
+    await expect(confirmation).not.toContainText('9,500');
+    await confirmation.getByRole('button', { name: 'Submit and pay cash', exact: true }).click();
+    await expect(page.getByText('Synthetic cash refund completed.')).toBeVisible();
+    const payload = JSON.parse(await page.getByLabel('Submitted refund payload').innerText());
+    expect(payload.lines).toEqual([
+      {
+        lateFeeDueFeeId: 'late-fee-due',
+        sourceAllocationId: 'late-fee-allocation',
+        sourceReceiptId: 'receipt-paid-sources',
+        amount: 1500,
+      },
+    ]);
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)
+    ).toBe(true);
+  });
+
   test(`paid sources keep payment accounts separate at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 950 });
     await page.goto('/?paidSources=1&mixedPayers=1');

@@ -447,6 +447,71 @@ describe('refund receipt selection', () => {
     ]);
   });
 
+  it.each([
+    { choice: 'full', partial: false },
+    { choice: 'partial', partial: true },
+  ])('limits a $choice late-fee refund to the collected portion after a waiver', async ({ partial }) => {
+    // Of an assessed 11,000, 9,500 was waived and only 1,500 was collected.
+    // Eligibility carries the immutable payment source, not the waived assessment.
+    mocks.eligibility.currentData = {
+      totalPaid: 1500,
+      totalRefundable: 1500,
+      receipts: [{ receiptId: 'late-receipt', financeFeeAccountId: 'account' }],
+      feeHeads: [
+        {
+          feeHeadId: null,
+          feeHeadName: 'Paid late fees',
+          months: [
+            {
+              month: FeeMonth.August,
+              year: 2026,
+              lateFeeDueFeeId: 'late-due',
+              chargeName: 'Late Fee - Tuition',
+              sourceAllocationId: 'late-payment',
+              sourceReceiptId: 'late-receipt',
+              receiptNumber: 'FIN-2026-000089',
+              total: 1500,
+              paid: 1500,
+              refunded: 0,
+              refundable: 1500,
+            },
+          ],
+        },
+      ],
+    };
+    render(<Request partial={partial} />);
+    expect(screen.getByRole('table', { name: 'Paid late fees table' })).toBeVisible();
+    const payment = screen.getByRole('checkbox', {
+      name: 'Select Late Fee - Tuition · FIN-2026-000089',
+    });
+    fireEvent.click(payment);
+    await waitFor(() => expect(payment).toBeChecked());
+    const amount = screen.getByRole('textbox', {
+      name: 'Refund amount for Late Fee - Tuition · FIN-2026-000089',
+    });
+    if (partial) {
+      fireEvent.change(amount, { target: { value: '1500' } });
+      await waitFor(() => expect(amount).toHaveValue('₹ 1,500'));
+      fireEvent.change(amount, { target: { value: '11000' } });
+      expect(amount).toHaveValue('₹ 1,500');
+    } else {
+      expect(amount).toBeDisabled();
+    }
+    await waitFor(() =>
+      expect(screen.getByLabelText('Selection total')).toHaveTextContent('1 installments · 1500')
+    );
+    const payload = JSON.parse(screen.getByLabelText('Request payload').textContent!);
+    expect(payload.originalReceiptId).toBe('late-receipt');
+    expect(payload.lines).toEqual([
+      {
+        lateFeeDueFeeId: 'late-due',
+        sourceAllocationId: 'late-payment',
+        sourceReceiptId: 'late-receipt',
+        amount: 1500,
+      },
+    ]);
+  });
+
   it('preserves every source for a capped whole-receipt refund so the server can allocate the cap', async () => {
     mocks.eligibility.currentData.allowPartialRefund = false;
     mocks.eligibility.currentData.totalRefundable = 1000;

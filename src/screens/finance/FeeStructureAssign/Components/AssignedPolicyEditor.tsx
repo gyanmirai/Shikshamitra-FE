@@ -18,6 +18,7 @@ import {
 } from 'src/redux/finance/studentFeeAssignment';
 
 import AssignmentPolicies from './AssignmentPolicies';
+import OptionalFeeServiceStops from './OptionalFeeServiceStops';
 
 export default function AssignedPolicyEditor({
   data,
@@ -26,6 +27,7 @@ export default function AssignedPolicyEditor({
   onBusyChange,
   onDirtyChange,
   children,
+  canStopOptionalService,
 }: {
   data: AssignmentDetails;
   onCancel: () => void;
@@ -33,6 +35,7 @@ export default function AssignedPolicyEditor({
   onBusyChange?: (busy: boolean) => void;
   onDirtyChange: (dirty: boolean) => void;
   children?: ReactNode;
+  canStopOptionalService?: boolean;
 }) {
   const [save, state] = useAssignmentUpdatePoliciesMutation();
   const [error, setError] = useState('');
@@ -110,6 +113,13 @@ export default function AssignedPolicyEditor({
         }}
       >
         {children}
+        {canStopOptionalService && (
+          <OptionalFeeServiceStops
+            assignment={data.assignment}
+            disabled={formik.dirty || state.isLoading}
+            onSaved={onSaved}
+          />
+        )}
         <AssignmentPolicies
           studentId={data.assignment.studentId}
           academicYearId={data.assignment.academicYearId}

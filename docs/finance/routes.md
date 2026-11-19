@@ -27,15 +27,19 @@ Active Fee Structure editor, typed client and browser checks: [workspace impleme
 
 ## Dashboard presentation
 
-The dashboard uses shared section and summary cards with info tooltips. Its activity date picker and
-presets filter the existing preview activity; queues and outstanding fees retain academic-year scope.
-The global academic selector is hidden only on this dashboard; other Finance pages keep it.
-Academic loading, default selection and saved-scope normalization remain active while it is hidden.
-Outstanding Fees by Class uses the embedded customizable table with class/search/column filters,
-sorting, columns, export, fullscreen, density and pagination. Board/medium context remains a preview
-control; fixture rows do not contain board/medium identifiers. Dashboard data is still supplied by
-`FinanceAdminDashboard/finance-admin-dashboard-preview-data.ts`, with that boundary explained in the
-statement tooltip and table exports.
+The exact Finance Dashboard grant protects the menu and route. The administrator presentation
+starts with the activity date controls and metric cards, followed by the cheque summary,
+Payment Methods, Daily Collections, Outstanding Fees by Class, and Needs Attention.
+Session roles select the dashboard presentation. The backend applies the school, academic year,
+user scope, and source permissions to every result.
+
+The date picker and its presets refresh the dashboard within the selected academic year.
+Collections use receipt dates, balances use the due dates of current unpaid fees and charges, and
+open requests use submission dates. The global academic selector remains available on other Finance pages.
+The class table aligns headers to the left and numeric cells to the right. Board and medium
+narrows the searchable Class selector. The scope controls, search, and column filters apply
+to the same authorized rows used by the embedded table and its export.
+See the [Finance Dashboard API](../../../Shikshamitra-BE/docs/modules/finance/api.md#finance-dashboard).
 
 ## Active menu routes
 
@@ -53,7 +57,7 @@ its menu and route require `Finance.Fees.Adjustment.View`.
 | Receipts             | `/finance/invoice-receipt`                  | `src/constants/finance-menu.ts` |
 | Concessions          | `/finance/concession`                       | `src/constants/finance-menu.ts` |
 | Adjustments          | `/finance/adjustments`                      | `src/constants/finance-menu.ts` |
-| Fee Structure Assign | `/finance/fee-structure-assign`             | `src/constants/finance-menu.ts` |
+| Structure Assignment | `/finance/fee-structure-assign`             | `src/constants/finance-menu.ts` |
 | Fee Category         | `/finance/settings/fee-category`            | `src/constants/finance-menu.ts` |
 | Fee Head             | `/finance/settings/fee-head`                | `src/constants/finance-menu.ts` |
 | Payment Terms        | `/finance/settings/payment-term`            | `src/constants/finance-menu.ts` |
@@ -74,6 +78,12 @@ its menu and route require `Finance.Fees.Adjustment.View`.
 
 The Waivers row reflects the current source only.
 The approved target removes that menu item and `/finance/waiver-management` route without adding a replacement; waiver application moves into Fee Collection as documented in [Fee Collection waiver end to end](../../../Shikshamitra-BE/docs/modules/finance/references/fee-collection-waiver-end-to-end.md).
+
+## Finance reports
+
+`/finance/reports` opens the requester's export history. **Report** opens the same report picker used by Curriculum Reports. Pick **Fees Reports** or **Accounts Reports**, then search for and select a report to show its filters. Accounts Reports contains payment verification and clearing ageing, cheque clearance, and bank deposit receipt detail. **Preview** loads matching rows and **Queue export** generates a PDF or Excel file using the previewed filters. History refreshes until the file is ready to download. The report options endpoint controls which reports and academic filters appear. See the [Finance report API contract](../../../Shikshamitra-BE/docs/modules/finance/api.md#reports-and-audit-api-families).
+
+In reports with academic filters, select a specific Board to enable Medium and a specific Class to enable Division. Selecting **All** clears and disables the dependent filter. Reports with a date filter use the shared date range picker. Leave the range blank to preview without a date filter, or enter two valid dates in `DD/MM/YYYY` format with the end date on or after the start date.
 
 ## Nested charge routes
 

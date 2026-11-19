@@ -62,6 +62,7 @@ export const adjustmentApi = financeModuleApi.injectEndpoints({
       invalidatesTags: [
         financeModuleType.studentFeeAssignment,
         financeModuleType.feeAdjustment,
+        financeModuleType.feeDetails,
         financeModuleType.feeCollection,
       ],
     }),

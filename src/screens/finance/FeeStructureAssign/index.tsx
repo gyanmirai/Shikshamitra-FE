@@ -12,6 +12,8 @@ import FeeStructureAssignTable from './Components/FeeStructureAssignTable';
 
 import type { IFeeStructureData } from './Components/type';
 
+const title = 'Structure Assignment';
+
 export default function FeeStructureAssign() {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
@@ -34,12 +36,12 @@ export default function FeeStructureAssign() {
     >
       <CustomBreadcrumbs
         description="Review each student's fee heads, service period and installment schedule before assigning."
-        heading="Fee Structure Assignment"
+        heading={title}
 
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
           { name: 'Fees', href: '/finance/fee-collection' },
-          { name: 'Fee Structure Assignment' },
+          { name: title },
         ]}
       />
       <FeeStructureAssignTable

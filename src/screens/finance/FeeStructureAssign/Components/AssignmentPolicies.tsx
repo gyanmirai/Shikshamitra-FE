@@ -9,8 +9,8 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { DetailField } from 'src/components/detail-view';
 import { FormSectionCard } from 'src/components/form-section-card';
+import { DetailField } from 'src/screens/finance/components/detail-view';
 import {
   useAssignmentPolicyOptionsQuery,
   selectableAssignmentPolicyFamilies,
@@ -58,9 +58,7 @@ export default function AssignmentPolicies({
     { studentId, academicYearId },
     { skip: !canOverride }
   );
-  const changed =
-    editing ||
-    selections.some(
+  const changed = selections.some(
       (s) => s.versionId !== (defaults.find((p) => p.family === s.family)?.versionId ?? null)
     );
   const policyControls = (
@@ -127,7 +125,7 @@ export default function AssignmentPolicies({
                       policy.versionId !==
                       (defaults.find((item) => item.family === policy.family)?.versionId ?? null)
                   );
-                  onChange(nextSelections, hasOverride || editing ? reason : '');
+                  onChange(nextSelections, hasOverride ? reason : '');
                 }}
               />
               {overridden && canOverride && (
@@ -217,7 +215,7 @@ export default function AssignmentPolicies({
             return (
               <DetailField
                 key={family}
-                label={`${family} policy`}
+                label={family === 'refund' ? 'Refund policy' : 'Collection policy'}
                 value={
                   policy
                     ? `${policy.name} · v${policy.version}`

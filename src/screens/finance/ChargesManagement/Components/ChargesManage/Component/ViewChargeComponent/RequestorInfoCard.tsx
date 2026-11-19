@@ -1,5 +1,5 @@
 import dayjs from 'dayjs';
-import { DetailGrid, DetailField, DetailSection } from 'src/components/detail-view';
+import { DetailGrid, DetailField, DetailSection } from 'src/screens/finance/components/detail-view';
 
 export default function RequestorInfoCard({ charge }: { charge?: any }) {
   return (

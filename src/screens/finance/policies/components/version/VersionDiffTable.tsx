@@ -6,7 +6,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { FormSectionCard } from 'src/components/form-section-card';
-import { DetailGrid, DetailField } from 'src/components/detail-view';
+import { DetailGrid, DetailField } from 'src/screens/finance/components/detail-view';
 import {
   Box,
   Stack,
@@ -291,11 +291,10 @@ function VersionDiffTable({
               {snapshotFields.map(([field, value]) => (
                 <DetailField
                   key={field}
-                  label={formatFinancePolicyVersionField(field)}
-                  labelTypographyProps={{
-                    color: 'text.secondary',
-                    sx: { fontWeight: 600, textTransform: 'none', letterSpacing: 'normal' },
-                  }}
+                  label={formatFinancePolicyVersionField(field).replace(
+                    /\b[A-Z][a-z]+/g,
+                    (word, index) => (index === 0 ? word : word.toLowerCase())
+                  )}
                   value={renderValueCell(field, value, snapshotContext)}
                 />
               ))}

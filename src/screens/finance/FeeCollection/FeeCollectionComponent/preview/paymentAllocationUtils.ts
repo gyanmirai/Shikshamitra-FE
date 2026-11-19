@@ -37,6 +37,56 @@ export interface AllocatedChargeRow {
 
 export type AllocatedRow = AllocatedFeeRow | AllocatedChargeRow;
 
+interface FundedAllocationSummary {
+  id: string;
+  name: string;
+  periods: string[];
+  originalAmount: number;
+  paidAmount: number;
+  remainingAmount: number;
+  context?: string;
+  oneTime?: boolean;
+}
+
+export function summarizeFundedAllocations(
+  rows: AllocatedRow[],
+  oneTimeFeeHeadIds?: ReadonlySet<string>
+): FundedAllocationSummary[] {
+  const summary = new Map<string, FundedAllocationSummary>();
+  for (const row of rows) {
+    if (row.paidAmount <= 0) continue;
+    if (row.type === 'charge') {
+      const id = `charge:${row.key}`;
+      summary.set(id, {
+        id,
+        name: row.chargeName,
+        periods: [],
+        originalAmount: row.originalAmount,
+        paidAmount: row.paidAmount,
+        remainingAmount: row.remainingAmount,
+        context: row.sourceType === 'LateFee' ? 'Late fee' : 'Additional charge',
+      });
+      continue;
+    }
+    const id = `fee:${row.feeHeadId}`;
+    const item: FundedAllocationSummary = summary.get(id) ?? {
+      id,
+      name: row.feeHeadName,
+      periods: [],
+      originalAmount: 0,
+      paidAmount: 0,
+      remainingAmount: 0,
+      ...(oneTimeFeeHeadIds?.has(row.feeHeadId) && { oneTime: true }),
+    };
+    if (!item.periods.includes(row.period)) item.periods.push(row.period);
+    item.originalAmount = (toPaise(item.originalAmount) + toPaise(row.originalAmount)) / 100;
+    item.paidAmount = (toPaise(item.paidAmount) + toPaise(row.paidAmount)) / 100;
+    item.remainingAmount = (toPaise(item.remainingAmount) + toPaise(row.remainingAmount)) / 100;
+    summary.set(id, item);
+  }
+  return [...summary.values()].sort((a, b) => Number(!!b.oneTime) - Number(!!a.oneTime));
+}
+
 // ─── Internal Wallet State ─────────────────────────────────────────────────────
 
 interface AllocationWallet {

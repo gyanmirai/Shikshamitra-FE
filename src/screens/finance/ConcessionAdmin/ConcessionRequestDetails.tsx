@@ -14,7 +14,7 @@ import { formatNumber } from 'src/utils/formate_number';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { financePermissions } from 'src/constants/finance-menu';
 import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
-import { DetailGrid, DetailField, DetailSection } from 'src/components/detail-view';
+import { DetailGrid, DetailField, DetailSection } from 'src/screens/finance/components/detail-view';
 import { Box, Stack, Alert, Drawer, Button, Skeleton, Typography, IconButton } from '@mui/material';
 import { ConcessionRequestStatusEnum as Status } from 'src/redux/finance/ConcessionManagement/types';
 import {

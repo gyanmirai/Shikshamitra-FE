@@ -5,6 +5,8 @@ import { useSession } from 'next-auth/react';
 import FinanceAccountantDashboardScreen from 'src/screens/finance/dashboard';
 import FinanceAdminDashboardScreen from 'src/screens/finance/FinanceAdminDashboard';
 import FinancePrincipalDashboard from 'src/screens/finance/FinancePrincipalDashboard';
+import { getSessionRoles } from 'src/screens/mainDashboard/dashboard-template-resolver';
+import { resolveFinanceDashboardView } from 'src/screens/finance/FinanceAdminDashboard/finance-dashboard-routing';
 import {
   Box,
   Card,
@@ -15,13 +17,6 @@ import {
   CardContent,
   CircularProgress,
 } from '@mui/material';
-
-const normalizeRole = (role: unknown) =>
-  String(role || '')
-    .trim()
-    .toLowerCase();
-
-const isOneOf = (role: string, allowedRoles: string[]) => allowedRoles.includes(role);
 
 const FinanceRoleNotConfigured = ({ role }: { role: string }) => (
   <Box
@@ -62,7 +57,11 @@ const FinanceRoleNotConfigured = ({ role }: { role: string }) => (
             No finance dashboard is configured for your role yet. Please contact the administrator
             to assign dashboard access.
           </Typography>
-          <Chip label={`Current Role: ${role || 'Unknown'}`} color="warning" variant="outlined" />
+          <Chip
+            label={`Current Role: ${role || 'Unknown'}`}
+            color="warning"
+            variant="outlined"
+          />
         </Stack>
       </CardContent>
     </Card>
@@ -70,8 +69,8 @@ const FinanceRoleNotConfigured = ({ role }: { role: string }) => (
 );
 
 const FinanceDashboard = () => {
-  const { data: session, status } = useSession() as any;
-  const role = normalizeRole(session?.profile?.role);
+  const { data: session, status } = useSession();
+  const view = resolveFinanceDashboardView(session);
 
   if (status === 'loading') {
     return (
@@ -88,19 +87,19 @@ const FinanceDashboard = () => {
     );
   }
 
-  if (isOneOf(role, ['admin', 'it administrator'])) {
+  if (view === 'admin') {
     return <FinanceAdminDashboardScreen />;
   }
 
-  if (isOneOf(role, ['principal', 'vice principal', 'director'])) {
+  if (view === 'principal') {
     return <FinancePrincipalDashboard />;
   }
 
-  if (isOneOf(role, ['finance officer', 'clerk', 'administrative manager', 'office assistant'])) {
+  if (view === 'accountant') {
     return <FinanceAccountantDashboardScreen />;
   }
 
-  return <FinanceRoleNotConfigured role={session?.profile?.role || ''} />;
+  return <FinanceRoleNotConfigured role={getSessionRoles(session).join(', ')} />;
 };
 
 export default FinanceDashboard;

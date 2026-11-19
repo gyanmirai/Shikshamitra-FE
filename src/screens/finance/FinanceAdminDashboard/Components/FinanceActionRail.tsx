@@ -1,120 +1,96 @@
 'use client';
 
+import type { FinanceDashboardWork } from 'src/redux/finance/financeDashboardApi';
+
 import Link from 'next/link';
-import { Iconify } from 'src/components/iconify';
+import { fNumber } from 'src/utils/format-number';
+import { Box, Stack, Typography } from '@mui/material';
 import { financePaths } from 'src/constants/finance-menu';
 import { FormSectionCard } from 'src/components/form-section-card';
-import { Box, Chip, Grid, Stack, Typography } from '@mui/material';
 
-import {
-  financeQueuePreview,
-  financeReportShortcuts,
-} from '../finance-admin-dashboard-preview-data';
+import { financeDashboardCardSx } from './finance-dashboard-card-styles';
+import { dashboardNumberSx, formatDashboardMoney } from '../finance-dashboard-format';
 
-import { financeDashboardCardSx, financeDashboardTileSx } from './finance-dashboard-card-styles';
+const workLabels = {
+  refundFailed: { title: 'Refund payouts failed', href: financePaths.feeRefund, urgent: true },
+  refundPayment: { title: 'Refunds awaiting payment', href: financePaths.feeRefund },
+  concessionReview: { title: 'Concessions awaiting review', href: financePaths.concession },
+  refundReview: { title: 'Refunds awaiting review', href: financePaths.feeRefund },
+};
 
-export function FinanceAttentionQueue() {
+export function FinanceAttentionQueue({ work }: { work: FinanceDashboardWork[] }) {
+  const items = work
+    .filter((entry) => entry.count > 0)
+    .sort((a, b) => Number(b.kind === 'refundFailed') - Number(a.kind === 'refundFailed'));
+
   return (
     <FormSectionCard
       title="Needs Attention"
-      descriptionTooltip="Finance items requiring review. Open an item to continue in its existing workflow."
-      action={<Chip size="small" label={`${financeQueuePreview.needsAttention.length} items`} />}
-      sx={financeDashboardCardSx}
+      descriptionTooltip="Open requests you can view that were submitted during the selected period."
+      sx={{ ...financeDashboardCardSx, height: 'auto' }}
     >
-      <Stack spacing={1}>
-        {financeQueuePreview.needsAttention.map((item) => (
-          <Box
-            key={item.id}
-            component={Link}
-            href={item.route}
-            sx={{
-              ...financeDashboardTileSx,
-              display: 'grid',
-              gridTemplateColumns: 'minmax(0, 1fr) auto',
-              gap: 1,
-              alignItems: 'center',
-              textDecoration: 'none',
-              color: 'inherit',
-              '&:hover': { bgcolor: 'action.hover', borderColor: 'text.disabled' },
-              '&:focus-visible': {
-                outline: '2px solid',
-                outlineColor: 'primary.main',
-                outlineOffset: -2,
-              },
-            }}
-          >
-            <Box sx={{ minWidth: 0 }}>
-              <Stack direction="row" spacing={1} alignItems="center">
+      {items.length === 0 ? (
+        <Typography variant="body2" color="text.secondary">
+          No open requests submitted during this period.
+        </Typography>
+      ) : (
+        <Stack
+          component="ul"
+          sx={{
+            listStyle: 'none',
+            m: 0,
+            p: 0,
+            '& > li + li': { borderTop: '1px solid', borderColor: 'divider' },
+          }}
+        >
+          {items.map((item) => {
+            const entry = workLabels[item.kind];
+            return (
+              <Box component="li" key={item.kind}>
                 <Box
-                  aria-hidden
+                  component={Link}
+                  href={entry.href}
                   sx={{
-                    width: 7,
-                    height: 7,
-                    flex: '0 0 auto',
-                    borderRadius: '50%',
-                    bgcolor: `${item.severity}.main`,
+                    display: 'grid',
+                    gridTemplateColumns: 'minmax(0, 1fr) auto',
+                    alignItems: 'center',
+                    gap: 1,
+                    px: 0.5,
+                    py: 1,
+                    borderRadius: 0.75,
+                    color: 'inherit',
+                    textDecoration: 'none',
+                    '&:hover': { bgcolor: 'action.hover' },
+                    '&:focus-visible': {
+                      outline: '2px solid',
+                      outlineColor: 'primary.main',
+                      outlineOffset: -2,
+                    },
                   }}
-                />
-                <Typography variant="subtitle2" noWrap>
-                  {item.title}
-                </Typography>
-              </Stack>
-              <Typography variant="caption" color="text.secondary" sx={{ pl: 2 }}>
-                {item.description}
-              </Typography>
-            </Box>
-            <Typography variant="caption" color="text.secondary" fontWeight={700}>
-              {item.id}
-            </Typography>
-          </Box>
-        ))}
-      </Stack>
-    </FormSectionCard>
-  );
-}
-
-export function FinanceReportRail() {
-  return (
-    <FormSectionCard
-      title="Quick Reports"
-      descriptionTooltip="Open Finance Reports to choose a reporting period and filters."
-      sx={financeDashboardCardSx}
-    >
-      <Grid container spacing={1.5}>
-        {financeReportShortcuts.map((report) => (
-          <Grid key={report} size={{ xs: 12, sm: 6, lg: 3 }}>
-            <Box
-              component={Link}
-              href={financePaths.reports}
-              sx={{
-                ...financeDashboardTileSx,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: 1,
-                color: 'inherit',
-                textDecoration: 'none',
-                '&:hover': { bgcolor: 'action.hover', borderColor: 'text.disabled' },
-                '&:focus-visible': {
-                  outline: '2px solid',
-                  outlineColor: 'primary.main',
-                  outlineOffset: -2,
-                },
-              }}
-            >
-              <Typography variant="body2" fontWeight={600}>
-                {report}
-              </Typography>
-              <Iconify
-                icon="mdi:chevron-right"
-                width={18}
-                aria-hidden
-                sx={{ color: 'text.secondary', flexShrink: 0 }}
-              />
-            </Box>
-          </Grid>
-        ))}
-      </Grid>
+                >
+                  <Typography
+                    variant="body2"
+                    fontWeight={600}
+                    color={'urgent' in entry ? 'error.main' : 'text.primary'}
+                  >
+                    {entry.title}
+                  </Typography>
+                  <Box sx={{ textAlign: 'end', ...dashboardNumberSx }}>
+                    <Typography variant="body2" fontWeight={600}>
+                      {fNumber(item.count)}
+                    </Typography>
+                    {item.amount !== null && (
+                      <Typography variant="caption" color="text.secondary">
+                        {formatDashboardMoney(item.amount)}
+                      </Typography>
+                    )}
+                  </Box>
+                </Box>
+              </Box>
+            );
+          })}
+        </Stack>
+      )}
     </FormSectionCard>
   );
 }

@@ -260,17 +260,11 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
                               <Box sx={{ flex: 1 }}>
                                 <Typography
                                   variant="caption"
-                                  sx={{
-                                    color: 'text.secondary',
-                                    fontWeight: 600,
-                                    fontSize: '0.65rem',
-                                    textTransform: 'uppercase',
-                                    letterSpacing: 1,
-                                    mb: 0.75,
-                                    display: 'block',
-                                  }}
+                                  color="text.secondary"
+                                  display="block"
+                                  mb={0.25}
                                 >
-                                  Starting Receipt
+                                  Starting receipt
                                 </Typography>
                                 <Box
                                   sx={{
@@ -360,17 +354,11 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
                                 <Box sx={{ flex: 1 }}>
                                   <Typography
                                     variant="caption"
-                                    sx={{
-                                      color: 'text.secondary',
-                                      fontWeight: 600,
-                                      fontSize: '0.65rem',
-                                      textTransform: 'uppercase',
-                                      letterSpacing: 1,
-                                      mb: 0.75,
-                                      display: 'block',
-                                    }}
+                                    color="text.secondary"
+                                    display="block"
+                                    mb={0.25}
                                   >
-                                    Ending Receipt
+                                    Ending receipt
                                   </Typography>
                                   <Box
                                     sx={{

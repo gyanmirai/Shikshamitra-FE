@@ -75,13 +75,11 @@ it.each(['collection', 'refund'] as const)(
       </Provider>
     );
     fireEvent.click(screen.getByRole('button', { name: `Change ${family} Policy` }));
-    const selected = await screen.findByRole('button', {
-      name: 'Currently applied: School policy version 1',
-    });
-    expect(selected).toBeDisabled();
-    expect(selected).toHaveTextContent('Selected');
-    expect(selected.closest('tr')).toHaveAttribute('aria-selected', 'true');
-    fireEvent.click(selected);
+    const selected = await screen.findByRole('row', { selected: true });
+    expect(within(selected).getByText('Version 1')).toBeVisible();
+    expect(within(selected).getByText('Selected')).toBeVisible();
+    expect(within(selected).queryByRole('button')).not.toBeInTheDocument();
+    fireEvent.click(within(selected).getByText('Selected'));
     expect(onChange).not.toHaveBeenCalled();
     const other = screen.getByRole('button', { name: 'Select School policy version 2' });
     expect(other).toBeEnabled();
@@ -90,9 +88,9 @@ it.each(['collection', 'refund'] as const)(
     expect(onChange).toHaveBeenCalledExactlyOnceWith(family, 'version-2');
     fireEvent.click(screen.getByRole('button', { name: `Change ${family} Policy` }));
     const dialog = await screen.findByRole('dialog');
-    expect(
-      within(dialog).getByRole('button', { name: 'Currently applied: School policy version 2' })
-    ).toBeDisabled();
+    const nextSelected = within(dialog).getByRole('row', { selected: true });
+    expect(within(nextSelected).getByText('Version 2')).toBeVisible();
+    expect(within(nextSelected).getByText('Selected')).toBeVisible();
     expect(
       within(dialog).getByRole('button', { name: 'Select School policy version 1' })
     ).toBeEnabled();

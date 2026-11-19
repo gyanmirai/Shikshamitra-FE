@@ -28,7 +28,7 @@ const FINANCE_GROUPS: Record<string, Record<FinancePermissionAction, string[]>> 
   'Finance.Fees.Adjustment': CRUD,
   'Finance.Fees.StructureAssign': {
     ...CRUD,
-    Add: ['Add', 'OverrideAmount', 'OverridePolicies'],
+    Add: ['Add', 'OverrideAmount', 'OverridePolicies', 'StopOptionalService'],
     Delete: [],
   },
   'Finance.Settings.FeeCategory': CRUD,

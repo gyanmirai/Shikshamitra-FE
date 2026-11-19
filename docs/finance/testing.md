@@ -316,7 +316,7 @@ Verify Charges, Collections, Adjustments, Income/Expenses, fee/account settings 
 Embedded fee details require Collection Add for Collect Fees and Auditing View for
 Audit Trail; the audit drawer and adjustment audit query must also fail closed.
 The posting-setup compatibility page uses an exact View guard even though posting is unavailable.
-Receipts/Audit are read-only; Collections, Fee Structure Assign and Reconciliation have no Delete control. Use the authorized local
+Receipts/Audit are read-only; Collections, Structure Assignment and Reconciliation have no Delete control. Use the authorized local
 test workspace and synthetic records for writes; do not perform real payments for a permission test.
 Wait for the academic-year context and the target screen to finish loading before
 checking actions; Income/Expenses initially render a context-only header. Test adjustment

@@ -91,13 +91,7 @@ function FeeReceiptDisplay({
 
       {/* Paid Fee Heads Table */}
       <Box>
-        <Typography
-          variant="overline"
-          color="text.secondary"
-          fontWeight={700}
-          mb={1}
-          display="block"
-        >
+        <Typography variant="subtitle1" mb={1}>
           Paid Fee Heads
         </Typography>
         <Table size="small">
@@ -133,13 +127,7 @@ function FeeReceiptDisplay({
       {/* Allocation Details Table */}
       {(receipt.allocationDetails ?? []).length > 0 && (
         <Box>
-          <Typography
-            variant="overline"
-            color="text.secondary"
-            fontWeight={700}
-            mb={1}
-            display="block"
-          >
+          <Typography variant="subtitle1" mb={1}>
             Allocation Details
           </Typography>
           <Table size="small">
@@ -183,13 +171,7 @@ function FeeReceiptDisplay({
       {/* Audit Summary */}
       {auditSummary && (
         <Box>
-          <Typography
-            variant="overline"
-            color="text.secondary"
-            fontWeight={700}
-            mb={1}
-            display="block"
-          >
+          <Typography variant="subtitle1" mb={1}>
             Transaction Summary
           </Typography>
           <Card sx={{ p: 1.5, bgcolor: alpha('#000', 0.02) }}>
@@ -215,13 +197,7 @@ function FeeReceiptDisplay({
       {/* PDF Viewer */}
       {blobUrl && (
         <Box>
-          <Typography
-            variant="overline"
-            color="text.secondary"
-            fontWeight={700}
-            mb={1}
-            display="block"
-          >
+          <Typography variant="subtitle1" mb={1}>
             PDF Preview
           </Typography>
           <Box

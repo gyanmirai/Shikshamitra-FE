@@ -44,9 +44,15 @@ const eligibility = {
 // Exercise the production refund form's three source types independently of API tests.
 if (
   typeof window !== 'undefined' &&
-  new URLSearchParams(window.location.search).has('paidSources')
+  (new URLSearchParams(window.location.search).has('paidSources') ||
+    new URLSearchParams(window.location.search).has('waivedLateFee'))
 ) {
   const mixedPayers = new URLSearchParams(window.location.search).has('mixedPayers');
+  // A waiver is non-cash evidence: of 11,000 assessed and 9,500 waived, only
+  // the settled 1,500 payment is returned as a refundable late-fee source.
+  const lateFeePaid = new URLSearchParams(window.location.search).has('waivedLateFee')
+    ? 1500
+    : 250;
   const paidSource = (source: Record<string, unknown>, amount: number) => ({
     month: 6,
     year: 2026,
@@ -60,8 +66,8 @@ if (
     ...source,
   });
   Object.assign(eligibility, {
-    totalPaid: 1750,
-    totalRefundable: 1750,
+    totalPaid: 1500 + lateFeePaid,
+    totalRefundable: 1500 + lateFeePaid,
     refundPolicyName: 'Paid source refund policy',
     receipts: mixedPayers
       ? [
@@ -110,7 +116,7 @@ if (
               sourceAllocationId: 'late-fee-allocation',
               ...(mixedPayers ? { sourceReceiptId: 'receipt-account-late' } : {}),
             },
-            250
+            lateFeePaid
           ),
         ],
       },

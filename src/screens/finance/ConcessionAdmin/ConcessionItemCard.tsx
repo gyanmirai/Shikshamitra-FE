@@ -15,7 +15,7 @@ import { hasGrantedPermission } from 'src/utils/permissions';
 import { financePermissions } from 'src/constants/finance-menu';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import { FormSectionHeader } from 'src/components/form-section-card';
-import { DetailGrid, DetailField } from 'src/components/detail-view';
+import { DetailGrid, DetailField } from 'src/screens/finance/components/detail-view';
 import { isFinanceAdministratorSession } from 'src/utils/finance-admin-auto-approval';
 import DocumentPreviewDialog from 'src/components/preview-document/DocumentPreviewDialog';
 import { Box, Card, Stack, Button, Tooltip, Typography, IconButton } from '@mui/material';

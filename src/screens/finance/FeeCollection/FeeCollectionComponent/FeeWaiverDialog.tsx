@@ -16,6 +16,7 @@ import { FormBusyRegion } from 'src/components/form-busy-region';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
+import { DetailField } from 'src/screens/finance/components/detail-view';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { useApplyFeeWaiverMutation } from 'src/redux/feeCollection/feeCollection';
 import { Alert, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
@@ -171,23 +172,16 @@ export default function FeeWaiverDialog({
                 <Stack spacing={2} sx={{ overflowWrap: 'anywhere' }}>
                   {sourceName && <Typography variant="subtitle2">{sourceName}</Typography>}
                   <Stack spacing={1}>
-                    <Stack direction="row" justifyContent="space-between" spacing={2}>
-                      <Typography variant="body2" color="text.secondary">
-                        Full remaining amount
-                      </Typography>
-                      <Typography
-                        variant="subtitle2"
-                        sx={{ fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}
-                      >
-                        {formatNumber(remainingAmount, 'INR')}
-                      </Typography>
-                    </Stack>
-                    <Stack direction="row" justifyContent="space-between" spacing={2}>
-                      <Typography variant="body2" color="text.secondary">
-                        Remaining after waiver
-                      </Typography>
-                      <Typography variant="body2">{formatNumber(0, 'INR')}</Typography>
-                    </Stack>
+                    <DetailField
+                      label="Full remaining amount"
+                      value={formatNumber(remainingAmount, 'INR')}
+                      layout="inline"
+                    />
+                    <DetailField
+                      label="Remaining after waiver"
+                      value={formatNumber(0, 'INR')}
+                      layout="inline"
+                    />
                   </Stack>
                   <Typography variant="body2" color="text.secondary">
                     This non-cash reduction takes effect immediately. No payment receipt is

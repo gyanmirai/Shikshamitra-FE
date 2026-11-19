@@ -71,8 +71,15 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
   const isLoading = isAdj ? adjustmentEligibility.isLoading : refundEligibility.isLoading;
   const isFetching = isAdj ? adjustmentEligibility.isFetching : refundEligibility.isFetching;
   const refetchEligibility = isAdj ? adjustmentEligibility.refetch : refundEligibility.refetch;
+  const hasAdjustmentSources = adjustmentEligibility.currentData?.feeHeads.some((head) =>
+    head.months.some((month) => month.adjustable > 0)
+  );
 
-  useRefreshFinancePrerequisites(() => refetchEligibility(), !skipEligibility);
+  // Returning to a loaded adjustment must not interrupt Submit with a prerequisite refresh.
+  useRefreshFinancePrerequisites(
+    () => refetchEligibility(),
+    !skipEligibility && (!isAdj || !hasAdjustmentSources || Boolean(eligibilityError))
+  );
 
   const [showValidation, setShowValidation] = useState(false);
 
@@ -138,12 +145,12 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
         const monthLabel = (m as any).chargeName
           ? `${(m as any).chargeName} · ${(m as any).receiptNumber}${repeated ? ` · allocation ${(m as any).sourceAllocationId.slice(0, 8)}` : ''}`
           : refundAllocationLabel(
-              monthName,
-              m.year,
-              (m as any).receiptNumber ?? '',
-              (m as any).sourceAllocationId ?? '',
-              repeated
-            );
+            monthName,
+            m.year,
+            (m as any).receiptNumber ?? '',
+            (m as any).sourceAllocationId ?? '',
+            repeated
+          );
         const refunded = isAdj ? ((m as any).adjusted ?? 0) : ((m as any).refunded ?? 0);
         const refundable = isAdj ? ((m as any).adjustable ?? 0) : ((m as any).refundable ?? 0);
         const concession = (m as any).concession ?? 0;
@@ -278,18 +285,18 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
         const updatedMonths = hasMonth
           ? existing.months.filter((m) => m.month !== month)
           : [
-              ...existing.months,
-              {
-                month,
-                dueFeeId,
-                chargeId: itemInfo?.chargeId,
-                lateFeeDueFeeId: itemInfo?.lateFeeDueFeeId,
-                sourceAllocationId: itemInfo?.sourceAllocationId,
-                sourceReceiptId: itemInfo?.sourceReceiptId,
-                receiptNumber: itemInfo?.receiptNumber,
-                amount: initialAmount,
-              },
-            ];
+            ...existing.months,
+            {
+              month,
+              dueFeeId,
+              chargeId: itemInfo?.chargeId,
+              lateFeeDueFeeId: itemInfo?.lateFeeDueFeeId,
+              sourceAllocationId: itemInfo?.sourceAllocationId,
+              sourceReceiptId: itemInfo?.sourceReceiptId,
+              receiptNumber: itemInfo?.receiptNumber,
+              amount: initialAmount,
+            },
+          ];
 
         if (updatedMonths.length === 0) {
           updated = refunds.filter((fh) => fh.feeHeadId !== feeHeadId);
@@ -401,15 +408,15 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
       const updated = formik.values.feeHeadRefunds.map((head) =>
         head.feeHeadId === feeHeadId
           ? {
-              ...head,
-              months: head.months.map((month) => ({
-                ...month,
-                amount: Math.min(
-                  amountToApply,
-                  Math.max(0, items.find((item) => item.month === month.month)?.refundable ?? 0)
-                ),
-              })),
-            }
+            ...head,
+            months: head.months.map((month) => ({
+              ...month,
+              amount: Math.min(
+                amountToApply,
+                Math.max(0, items.find((item) => item.month === month.month)?.refundable ?? 0)
+              ),
+            })),
+          }
           : head
       );
       formik.setFieldValue('feeHeadRefunds', updated);
@@ -492,11 +499,11 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
   if (isLoading || isFetching) return <RefundTableSkeleton compact={compact} />;
   const prerequisite = isAdj
     ? isFinancePrerequisiteMissing({
-        options: adjustmentEligibility.currentData?.feeHeads.flatMap((head) =>
-          head.months.filter((month) => month.adjustable > 0)
-        ),
-        ...adjustmentEligibility,
-      })
+      options: adjustmentEligibility.currentData?.feeHeads.flatMap((head) =>
+        head.months.filter((month) => month.adjustable > 0)
+      ),
+      ...adjustmentEligibility,
+    })
       ? 'adjustment-balance'
       : undefined
     : getRefundPrerequisite(refundEligibility);

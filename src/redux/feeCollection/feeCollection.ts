@@ -115,6 +115,7 @@ export interface FeeLedgerLine {
   feeHeadId: string;
   feeHeadName: string;
   installmentLabel?: string;
+  paymentTermName?: string | null;
   dueDate?: string;
   coverageStartDate?: string;
   coverageEndDate?: string;

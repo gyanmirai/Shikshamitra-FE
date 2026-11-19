@@ -77,6 +77,8 @@ export interface DateRangePickerProps extends DateRangeValidationProps {
   dateFormat?: string;
   /** Enable typing a complete range in the single input. */
   allowManualInput?: boolean;
+  /** Report validation errors in the typed draft. */
+  onInputErrorChange?: (error: string | null) => void;
   /** Initial calendar date when no range is selected. */
   referenceDate?: Dayjs;
 

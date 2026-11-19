@@ -103,6 +103,40 @@ test('all twelve month options, both fee heads, combined empty state, and Clear 
   await expect(ledger(page)).toContainText('Showing 20 fees in 3 groups');
 });
 
+test('shows billing dates and one-time heads, and reviews only funded fee heads in structure order', async ({
+  page,
+}) => {
+  await page.goto('/?allocationBasis=FeeHead&ledgerSchedule=1');
+  await page.getByRole('button', { name: 'Collect fee for Diya Sweta Badgujar (10092)' }).click();
+
+  const feeLedger = ledger(page);
+  await expect(feeLedger.getByRole('heading').first()).toHaveText('School Fees');
+  await expect(feeLedger.getByText('One time', { exact: true })).toBeVisible();
+  await expect(feeLedger.getByText('Yearly', { exact: true })).toBeVisible();
+  const schoolFees = feeLedger.getByRole('table', { name: 'School Fees table' });
+  await expect(schoolFees.getByRole('columnheader', { name: 'Billing Period' })).toBeVisible();
+  await expect(schoolFees.getByRole('columnheader', { name: 'Due Date' })).toBeVisible();
+  await expect(schoolFees.getByRole('columnheader', { name: 'Installment' })).toHaveCount(0);
+  await expect(schoolFees.getByText('10 Jun 2026')).toBeVisible();
+
+  await amount(page).fill('2500');
+  await expect(
+    feeLedger.getByRole('checkbox', { name: 'Select Class 3 Tuition Fee, June 2026' })
+  ).toBeChecked();
+  await expect(
+    feeLedger.getByRole('checkbox', { name: 'Select Class 3 Tuition Fee, July 2026' })
+  ).toBeChecked();
+  await expect(
+    feeLedger.getByRole('checkbox', { name: 'Select School Fees, June 2026' })
+  ).not.toBeChecked();
+  await collectAction(page).click();
+
+  const review = page.getByRole('dialog', { name: 'Review Payment' });
+  await expect(review.getByText('Class 3 Tuition Fee', { exact: true })).toHaveCount(1);
+  await expect(review.getByText('School Fees', { exact: true })).toHaveCount(0);
+  await expect(review.getByText('Jun 2026 · Jul 2026', { exact: true })).toBeVisible();
+});
+
 test('all six status filters use real fee and charge statuses', async ({ page }) => {
   await openCollection(page, 'Mixed statuses');
   await filters(page);

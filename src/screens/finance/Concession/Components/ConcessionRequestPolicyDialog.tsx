@@ -1,13 +1,13 @@
 import type { ConcessionPolicyOption } from 'src/redux/finance/ConcessionManagement/types';
 
-import { Box, Stack, Button, DialogActions } from '@mui/material';
+import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { Label } from 'src/components/label';
 import { formatNumber } from 'src/utils/formate_number';
-import { DetailField, DetailGrid } from 'src/components/detail-view';
+import { Box, Stack, Button, DialogActions } from '@mui/material';
 import { FormSectionCard } from 'src/components/form-section-card';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { DetailField, DetailGrid } from 'src/screens/finance/components/detail-view';
 
 import {
   CONCESSION_SCOPES,

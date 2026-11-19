@@ -3,7 +3,7 @@ import { financeModuleType, financePolicyType, studentAdmissionType } from 'src/
 
 export interface AssignmentServicePeriod {
   feeHeadId: string;
-  source: 'AcademicYear' | 'Registration' | 'TransportService' | 'ManualOverride';
+  source: 'AcademicYear' | 'BoardAcademicYear' | 'Registration' | 'TransportService' | 'ManualOverride';
   sourceReferenceId?: string;
   startDate?: string;
   endDate?: string;
@@ -44,6 +44,7 @@ export interface AssignmentLine {
   proratedAmount: number;
   paidAmount: number;
   outstandingAmount: number;
+  optionalServiceCancellationAmount?: number;
   explanation?: string;
 }
 
@@ -98,6 +99,21 @@ export interface AssignmentPolicySelection {
   family: AssignmentPolicyFamily;
   versionId: string | null;
 }
+export interface OptionalServiceStopRequest {
+  studentId: string;
+  academicYearId: string;
+  feeHeadId: string;
+  lastServiceDate: string;
+  reason: string;
+  requestId: string;
+}
+
+export interface OptionalServiceStopResult {
+  installmentCount: number;
+  cancelledAmount: number;
+  previewToken?: string;
+}
+
 export interface AssignmentDetails {
   studentFeeStructureId?: string;
   canEditStructure?: boolean;
@@ -118,7 +134,10 @@ export interface AssignmentRequest {
   standardFeeStructureId: string;
   selectedOptionalFeeHeadIds: string[];
   servicePeriods: AssignmentServicePeriod[];
-  feeHeadDetails: { feeHeadId: string; amount: number }[];
+  chargePeriodSource?: 'BoardAcademicYear';
+  chargeStartDate?: string;
+  chargeEndDate?: string;
+  feeHeadDetails: { feeHeadId: string; amount: number | null }[];
   variableFeeHeads?: { feeHeadId: string; amount: number | null; zeroAmountReason?: string }[];
   overrideReason?: string;
   previewToken?: string;
@@ -131,6 +150,8 @@ export interface AssignmentCandidate {
   revisionNumber: number;
   academicYearId: string;
   standardId: string;
+  boardStartDate?: string;
+  boardEndDate?: string;
   total: number;
   heads: AssignmentHead[];
 }
@@ -225,8 +246,10 @@ export function assignmentErrorCode(error: unknown): string {
 
 export function assignmentError(error: unknown): string {
   const code = assignmentErrorCode(error);
+  if (code.endsWith('NoFutureOptionalInstallments'))
+    return 'No future unpaid installments can be cancelled for this fee and date.';
   if (code.endsWith('StructureEditBlocked'))
-    return 'This fee assignment has a payment or another recorded financial change. Only policies can be edited.';
+    return 'A payment or another financial change prevents replacing this assignment.';
   if (code.endsWith('MixedOriginalStructures'))
     return 'Select unpaid students with the same original fee structure and revision.';
   if (code.endsWith('VariableAmountRequired'))
@@ -324,6 +347,24 @@ export const studentFeeAssignmentApi = api.injectEndpoints({
       }),
       invalidatesTags: (result, _error, arg) => (result ? assignmentChangedTags([arg]) : []),
     }),
+    assignmentOptionalServiceStopPreview: builder.mutation<OptionalServiceStopResult, OptionalServiceStopRequest>({
+      query: ({ studentId, ...body }) => ({
+        url: `/student-fee-structure/student/${studentId}/optional-service-stop/preview`,
+        method: 'POST',
+        body,
+      }),
+    }),
+    assignmentOptionalServiceStop: builder.mutation<
+      OptionalServiceStopResult,
+      OptionalServiceStopRequest & { previewToken: string }
+    >({
+      query: ({ studentId, ...body }) => ({
+        url: `/student-fee-structure/student/${studentId}/optional-service-stop`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: (result, _error, arg) => (result ? assignmentChangedTags([arg]) : []),
+    }),
     assignmentStudents: builder.query<
       { items: AssignmentStudent[]; totalCount: number },
       {
@@ -403,4 +444,6 @@ export const {
   useAssignmentCommitMutation,
   useAssignmentBulkCommitMutation,
   useAssignmentTransportSourcesQuery,
+  useAssignmentOptionalServiceStopPreviewMutation,
+  useAssignmentOptionalServiceStopMutation,
 } = studentFeeAssignmentApi;

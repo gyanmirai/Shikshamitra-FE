@@ -1555,10 +1555,11 @@ The established shared implementation is exported from `src/screens/hr/employee/
 ### 09. Drawer
 
 For read-only Finance sections, use `DetailSection`, `DetailGrid` and `DetailField`
-from `src/components/detail-view`. `DetailSection` reuses the shared
+from `src/screens/finance/components/detail-view.tsx`. `DetailSection` reuses the shared
 `FormSectionCard`/`FormSectionHeader` with a compact neutral icon and `subtitle1`
-heading. Fields use uppercase caption labels and `body2` values, matching Finance
-policy views. Use `fullWidth` for long notes and descriptions. The grid adapts to
+heading. Fields match Subject Information with sentence-case `caption` labels in
+`text.secondary` and regular `body2` values in `text.primary`. Use `fullWidth`
+for long notes and descriptions. The grid adapts to
 the section width. For compact summary rows, `DetailField layout="inline"` keeps
 the same label/value typography and aligns the value to the right. The grid uses
 one column below 440px, two from 440px and three from 680px.

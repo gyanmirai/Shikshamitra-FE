@@ -316,12 +316,7 @@ const InvoiceForm = ({ open, onClose }: InvoiceFormProps) => {
             }}
           >
             <Box>
-              <Typography
-                variant="overline"
-                fontWeight={700}
-                letterSpacing={2}
-                sx={{ opacity: 0.9, display: 'block', mb: 0.25 }}
-              >
+              <Typography variant="subtitle1" mb={0.25}>
                 Invoice Preview
               </Typography>
               <Typography variant="h5" fontWeight={800} lineHeight={1.2}>
@@ -734,15 +729,7 @@ const InvoiceForm = ({ open, onClose }: InvoiceFormProps) => {
                       mt: 0.5,
                     }}
                   >
-                    <Typography
-                      variant="caption"
-                      fontWeight={700}
-                      textTransform="uppercase"
-                      color="primary.main"
-                      letterSpacing={1}
-                    >
-                      Fee Structure Preview
-                    </Typography>
+                    <Typography variant="subtitle1">Fee Structure Preview</Typography>
 
                     <Box sx={{ mt: 1.5 }}>
                       {feeItems.map((item, idx) => (

@@ -12,11 +12,7 @@ interface SummaryRowProps {
 export function SummaryRow({ label, value }: SummaryRowProps) {
   return (
     <Stack direction="row" justifyContent="space-between" alignItems="center">
-      <Typography
-        variant="caption"
-        color="text.secondary"
-        sx={{ fontSize: '0.7rem', flexShrink: 0 }}
-      >
+      <Typography variant="caption" color="text.secondary">
         {label}
       </Typography>
       {value}

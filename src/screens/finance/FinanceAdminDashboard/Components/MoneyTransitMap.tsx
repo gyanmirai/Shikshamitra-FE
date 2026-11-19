@@ -1,219 +1,159 @@
 'use client';
 
-import { useMemo } from 'react';
+import type { FinanceDashboardActivity } from 'src/redux/finance/financeDashboardApi';
+
+import dayjs from 'dayjs';
 import { useTheme } from '@mui/material/styles';
-import { formatNumber } from 'src/utils/formate_number';
-import { DashboardCard } from 'src/components/dashboard-card/dashboard-card';
+import { Chart, useChart } from 'src/components/chart';
 import { FormSectionCard } from 'src/components/form-section-card';
-import { Chart, useChart, ChartLegends } from 'src/components/chart';
-import { Box, Grid, Stack, Typography } from '@mui/material';
+import { Box, Grid, Stack, Alert, Typography } from '@mui/material';
+import { PaymentMethodLabels } from 'src/enums/finance-payment-method';
+import { TopMetricTile } from 'src/screens/academic/AcademicDashboard/Components/TopMetricTile';
 
-import {
-  financeQueuePreview,
-  financePaymentMethods,
-  type DailyFinancePreview,
-} from '../finance-admin-dashboard-preview-data';
 import { financeDashboardCardSx } from './finance-dashboard-card-styles';
+import { dashboardNumberSx, formatDashboardMoney } from '../finance-dashboard-format';
 
-type ActivitySummary = {
-  received: number;
-  confirmedIncome: number;
-  expenses: number;
-  transactions: number;
-  methods: Record<string, number>;
-  days: DailyFinancePreview[];
-};
-
-type Props = {
-  activity: ActivitySummary;
-  rangeLabel: string;
-};
-
-export default function MoneyTransitMap({ activity, rangeLabel }: Props) {
-  const theme = useTheme();
-  const confirmedNet = activity.confirmedIncome - activity.expenses;
-  const awaitingConfirmation =
-    financeQueuePreview.cashAwaitingDeposit + financeQueuePreview.nonCashAwaitingVerification;
-  const stages = [
-    {
-      label: 'Fees Received',
-      icon: 'mdi:cash-multiple',
-      value: formatNumber(activity.received, 'INR'),
-      detail: 'Fee payments received within the selected activity dates.',
-    },
-    {
-      label: 'Pending Confirmation',
-      icon: 'mdi:clock-outline',
-      value: formatNumber(awaitingConfirmation, 'INR'),
-      detail: `Awaiting confirmation for the selected academic year. Cash ${formatNumber(
-        financeQueuePreview.cashAwaitingDeposit,
-        'INR'
-      )} · Other ${formatNumber(financeQueuePreview.nonCashAwaitingVerification, 'INR')}`,
-    },
-    {
-      label: 'Confirmed Income',
-      icon: 'mdi:check-circle-outline',
-      value: formatNumber(activity.confirmedIncome, 'INR'),
-      detail: 'Confirmed income within the selected activity dates.',
-    },
-    {
-      label: 'Expenses',
-      icon: 'mdi:receipt-text-outline',
-      value: formatNumber(activity.expenses, 'INR'),
-      detail: 'Recorded expenses within the selected activity dates.',
-    },
-    {
-      label: 'Net Movement',
-      icon: 'mdi:swap-horizontal',
-      value: formatNumber(confirmedNet, 'INR'),
-      detail:
-        'Confirmed income less recorded expenses for the selected activity dates. This is a register difference, not a bank balance.',
-    },
-  ];
-  const channelRows = financePaymentMethods.map((method) => ({
-    ...method,
-    amount: activity.methods[method.id] ?? 0,
-  }));
-  const methodSeries = [
-    { name: 'Fees received', data: channelRows.map((method) => method.amount) },
-  ];
-  const chart = useMemo(
-    () => ({
-      labels: activity.days.map((day) =>
-        new Date(`${day.date}T12:00:00`).toLocaleDateString('en-IN', {
-          day: 'numeric',
-          month: 'short',
-        })
-      ),
-      series: [
-        { name: 'Fees received', data: activity.days.map((day) => day.received) },
-        { name: 'Income confirmed', data: activity.days.map((day) => day.confirmedIncome) },
-      ],
-    }),
-    [activity.days]
+export function FinanceActivityMetrics({ activity }: { activity: FinanceDashboardActivity }) {
+  const { confirmedFees, confirmedIncome, confirmedExpenses, netMovement, collectionsUnavailable } =
+    activity;
+  const metrics = [
+    { label: 'Confirmed fee receipts', value: confirmedFees, icon: 'mdi:receipt-text-outline' },
+    { label: 'Confirmed income', value: confirmedIncome, icon: 'mdi:cash-plus' },
+    { label: 'Confirmed expenses', value: confirmedExpenses, icon: 'mdi:hand-coin-outline' },
+    { label: 'Net movement', value: netMovement, icon: 'mdi:chart-box-outline' },
+  ].filter(
+    (metric): metric is { label: string; value: number; icon: string } => metric.value !== null
   );
-  const chartOptions = useChart({
-    colors: [theme.palette.info.main, theme.palette.secondary.main],
-    chart: { toolbar: { show: false }, zoom: { enabled: false } },
-    dataLabels: { enabled: false },
-    stroke: { curve: 'smooth', width: 3 },
-    markers: { size: 4 },
-    xaxis: { categories: chart.labels },
-    yaxis: {
-      title: { text: 'Amount (₹)' },
-      labels: { formatter: (value: number) => formatNumber(value, 'INR') },
-    },
-    tooltip: { y: { formatter: (value: number) => formatNumber(value, 'INR') } },
-    legend: { show: false },
-  });
-  const methodsChartOptions = useChart({
-    colors: [theme.palette.info.main],
-    chart: { toolbar: { show: false } },
-    plotOptions: { bar: { horizontal: true, borderRadius: 4, barHeight: '48%' } },
-    dataLabels: { enabled: false },
-    xaxis: { categories: channelRows.map((method) => method.label) },
-    yaxis: {
-      title: { text: 'Amount (₹)' },
-      labels: { formatter: (value: number) => formatNumber(value, 'INR') },
-    },
-    tooltip: { y: { formatter: (value: number) => formatNumber(value, 'INR') } },
-    legend: { show: false },
-    grid: { padding: { right: 12 } },
-  });
 
   return (
-    <Box component="section" aria-label="Collections and cash flow">
-      <Stack spacing={2}>
+    <Stack component="section" aria-label="Period activity" spacing={2}>
+      {collectionsUnavailable && <Alert severity="info">{collectionsUnavailable}</Alert>}
+      {metrics.length === 0 && !collectionsUnavailable && (
+        <Typography color="text.secondary" variant="body2">
+          Period activity is unavailable for your access.
+        </Typography>
+      )}
+      {metrics.length > 0 && (
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: `repeat(${Math.min(metrics.length, 2)}, minmax(0, 1fr))`,
+              md: `repeat(${metrics.length}, minmax(0, 1fr))`,
+            },
+            gap: 1.5,
+            overflowWrap: 'anywhere',
+            ...dashboardNumberSx,
+          }}
+        >
+          {metrics.map(({ label, value, icon }) => (
+            <TopMetricTile
+              key={label}
+              label={label}
+              value={formatDashboardMoney(value)}
+              icon={icon}
+            />
+          ))}
+        </Box>
+      )}
+    </Stack>
+  );
+}
+
+export function FinanceCollectionCharts({ activity }: { activity: FinanceDashboardActivity }) {
+  const theme = useTheme();
+  const { confirmedFees, collectionsUnavailable } = activity;
+  const showCollections = confirmedFees !== null || !!collectionsUnavailable;
+  const methods = (activity.paymentMethods ?? []).slice().sort((a, b) => b.amount - a.amount);
+  const methodTotal = methods.reduce((total, method) => total + method.amount, 0);
+  const chartOptions = useChart({
+    colors: [theme.palette.success.main],
+    chart: { toolbar: { show: false }, zoom: { enabled: false } },
+    dataLabels: { enabled: false },
+    xaxis: {
+      categories: activity.days.map((day) => dayjs(day.date).format('DD MMM')),
+      tickAmount: activity.days.length > 6 ? 6 : undefined,
+    },
+    yaxis: { labels: { formatter: formatDashboardMoney } },
+    tooltip: { y: { formatter: formatDashboardMoney } },
+    legend: { show: false },
+  });
+
+  if (!showCollections) return null;
+
+  return (
+    <Grid
+      component="section"
+      aria-label="Fee collections"
+      container
+      spacing={2}
+      alignItems="stretch"
+    >
+      <Grid size={{ xs: 12, md: 5 }} sx={{ minWidth: 0 }}>
         <FormSectionCard
-          title="Payment Flow"
-          descriptionTooltip="Collections, pending confirmation, confirmed income and recorded expenses. Pending confirmation is separate from confirmed income and covers the selected academic year."
+          title="Payment Methods"
+          descriptionTooltip="Payments linked to confirmed fee receipts in the selected period. Amounts include charges paid in the same transaction."
           sx={financeDashboardCardSx}
         >
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: {
-                xs: '1fr',
-                sm: 'repeat(2, minmax(0, 1fr))',
-                xl: 'repeat(5, minmax(0, 1fr))',
-              },
-              gap: 2,
-            }}
-          >
-            {stages.map((stage) => (
-              <DashboardCard
-                key={stage.label}
-                title={stage.label}
-                value={stage.value}
-                icon={stage.icon}
-                titleInfo={stage.detail}
-                density="compact"
-              />
-            ))}
-          </Box>
-        </FormSectionCard>
-
-        <Grid container spacing={2}>
-          <Grid size={{ xs: 12, lg: 5 }}>
-            <FormSectionCard
-              title="Payment Methods"
-              descriptionTooltip="Fee payments received by method within the selected activity dates."
-              sx={financeDashboardCardSx}
-            >
-              <Box sx={{ minWidth: 0 }}>
-                {activity.received ? (
-                  <Chart
-                    type="bar"
-                    series={methodSeries}
-                    options={methodsChartOptions}
-                    height={310}
-                  />
-                ) : (
-                  <Box role="status" sx={{ minHeight: 310, display: 'grid', placeItems: 'center' }}>
-                    <Typography variant="body2" color="text.secondary">
-                      No fees received for these dates.
+          {methods.length > 0 ? (
+            <Stack component="ul" spacing={1.5} sx={{ listStyle: 'none', p: 0, m: 0 }}>
+              {methods.map(({ method, amount }) => (
+                <Box component="li" key={method}>
+                  <Stack direction="row" justifyContent="space-between" spacing={1}>
+                    <Typography variant="body2">{PaymentMethodLabels[method]}</Typography>
+                    <Typography
+                      variant="body2"
+                      fontWeight={600}
+                      sx={{ ...dashboardNumberSx, flexShrink: 0 }}
+                    >
+                      {formatDashboardMoney(amount)}
                     </Typography>
-                  </Box>
-                )}
-              </Box>
-            </FormSectionCard>
-          </Grid>
-          <Grid size={{ xs: 12, lg: 7 }}>
-            <FormSectionCard
-              title="Daily Collections"
-              descriptionTooltip={`Fee payments received and income confirmed for ${rangeLabel}.`}
-              sx={financeDashboardCardSx}
-            >
-              <Box sx={{ minWidth: 0 }}>
-                {activity.days.length ? (
-                  <>
-                    <Chart type="line" series={chart.series} options={chartOptions} height={310} />
-                    <ChartLegends
-                      labels={['Fees received', 'Income confirmed']}
-                      colors={[theme.palette.info.main, theme.palette.secondary.main]}
-                      sx={{ justifyContent: 'center', mt: 1 }}
-                    />
-                  </>
-                ) : (
+                  </Stack>
                   <Box
-                    role="status"
-                    sx={{
-                      minHeight: 310,
-                      display: 'grid',
-                      placeItems: 'center',
-                      textAlign: 'center',
-                    }}
+                    aria-hidden
+                    sx={{ bgcolor: 'action.hover', borderRadius: 1, height: 5, mt: 0.5 }}
                   >
-                    <Typography variant="body2" color="text.secondary">
-                      No collections for these dates.
-                    </Typography>
+                    <Box
+                      sx={{
+                        bgcolor: 'success.main',
+                        borderRadius: 'inherit',
+                        height: '100%',
+                        width: methodTotal > 0 ? `${(amount / methodTotal) * 100}%` : 0,
+                      }}
+                    />
                   </Box>
-                )}
-              </Box>
-            </FormSectionCard>
-          </Grid>
-        </Grid>
-      </Stack>
-    </Box>
+                </Box>
+              ))}
+            </Stack>
+          ) : (
+            <Typography variant="body2" color="text.secondary">
+              No payment methods recorded for these dates.
+            </Typography>
+          )}
+        </FormSectionCard>
+      </Grid>
+      <Grid size={{ xs: 12, md: 7 }} sx={{ minWidth: 0 }}>
+        <FormSectionCard
+          title="Daily Collections"
+          descriptionTooltip="Confirmed fee amounts grouped by receipt date."
+          sx={financeDashboardCardSx}
+        >
+          {activity.days.length > 0 ? (
+            <Chart
+              type="bar"
+              height={210}
+              options={chartOptions}
+              series={[{ name: 'Confirmed fees', data: activity.days.map((day) => day.amount) }]}
+            />
+          ) : (
+            <Typography variant="body2" color="text.secondary">
+              {collectionsUnavailable
+                ? 'Daily fee totals are unavailable for these dates.'
+                : 'No collections for these dates.'}
+            </Typography>
+          )}
+        </FormSectionCard>
+      </Grid>
+    </Grid>
   );
 }

@@ -21,6 +21,7 @@ type RangeFieldProps = {
   endDate: Dayjs | null;
   onOpen: (event: React.MouseEvent<HTMLElement>) => void;
   onChange?: (range: DateRange) => void;
+  onInputErrorChange?: (error: string | null) => void;
   validateDate?: (date: Dayjs | null) => string | null;
   allowManualInput?: boolean;
   singleInput?: boolean;
@@ -44,6 +45,7 @@ export function RangeField({
   endDate,
   onOpen,
   onChange,
+  onInputErrorChange,
   validateDate,
   allowManualInput = false,
   singleInput,
@@ -78,8 +80,9 @@ export function RangeField({
       lastInputRange.current = rangeKey;
       setInputText(formattedRange);
       setInputError(null);
+      onInputErrorChange?.(null);
     }
-  }, [rangeKey, formattedRange]);
+  }, [rangeKey, formattedRange, onInputErrorChange]);
 
   const parseInput = (text: string): { range: DateRange; error: string | null } => {
     if (!text.trim()) return { range: [null, null], error: null };
@@ -101,6 +104,7 @@ export function RangeField({
     const parsed = parseInput(text);
     lastInputRange.current = parsed.range.map((date) => date?.format(dateFormat) ?? '').join('|');
     setInputError(parsed.error);
+    onInputErrorChange?.(parsed.error);
     // Clear invalid drafts from the form so an earlier valid range cannot be saved silently.
     onChange?.(parsed.range);
   };
