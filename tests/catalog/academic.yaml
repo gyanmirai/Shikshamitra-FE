@@ -1,6 +1,20 @@
 module: Academic
 generatedAt: 2026-07-29
 scenarios:
+  - id: ACM-NOTIFICATION-REVIEWED-REMINDER-001
+    module: Academic
+    submodule: Notification
+    title: Staff preview and confirm a reminder for one unsubmitted homework row and open its queued operation
+    risk: high
+    priority: P1
+    type: [functional, regression, responsive, accessibility]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/academic/gradingAndFeedback, /academic/notification]
+    automated: true
+    automationFile: e2e/academic/academic-notification-rules.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-notifications', '@regression', '@responsive', '@accessibility']
   - id: ACM-NOTIFICATION-DELIVERY-HISTORY-001
     module: Academic
     submodule: Notification

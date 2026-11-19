@@ -1,6 +1,7 @@
-import { notificationLabel } from 'src/redux/academic-notifications/response-adapters';
-import { AcademicDispatchStatus } from 'src/redux/academic-notifications/delivery-types';
 import { CommunicationCampaignStatus } from 'src/redux/communication/communicationTypes';
+
+import { notificationLabel } from './response-adapters';
+import { AcademicDispatchStatus } from './delivery-types';
 
 export const dispatchStatusLabels: Record<AcademicDispatchStatus, string> = {
   [AcademicDispatchStatus.Pending]: 'Queued',
@@ -32,7 +33,7 @@ export function deliveryReason(reason: string | null) {
   return notificationLabel(code).replace(/^(\w)(.*)$/, (_, first, rest) => first + rest.toLowerCase());
 }
 
-export function historyOperationId(value: string | null) {
+export function notificationRecordId(value: string | null) {
   return value && /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(value)
     && value !== '00000000-0000-0000-0000-000000000000' ? value : undefined;
 }

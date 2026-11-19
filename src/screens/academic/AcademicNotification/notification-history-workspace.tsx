@@ -6,11 +6,11 @@ import { useSearchParams } from 'next/navigation';
 import CustomSelect from 'src/components/custom-select';
 import { Box, Alert, Button, Skeleton, Typography } from '@mui/material';
 import { notificationEventKeyLabel } from 'src/redux/academic-notifications/response-adapters';
+import { notificationRecordId, dispatchStatusLabels } from 'src/redux/academic-notifications/delivery-adapters';
 import { useAcademicNotificationHistoryQuery, useAcademicNotificationOperationQuery } from 'src/redux/academic-notifications/delivery-api';
 
 import { NotificationHistoryTable } from './Components/notification-history-table';
 import { NotificationDeliveryDetails } from './Components/notification-delivery-details';
-import { historyOperationId, dispatchStatusLabels } from './notification-delivery-labels';
 
 const options = [
   { value: 'all', label: 'All statuses' },
@@ -21,7 +21,7 @@ const refresh = { refetchOnFocus: true, pollingInterval: 15000, skipPollingIfUnf
 function historySource(params: URLSearchParams): AcademicNotificationSource | undefined {
   const eventKey = params.get('eventKey') ?? '';
   const sourceType = params.get('sourceType') ?? '';
-  const sourceId = historyOperationId(params.get('sourceId'));
+  const sourceId = notificationRecordId(params.get('sourceId'));
   if (!sourceId || !/^Academic\.[\w.]{1,100}$/.test(eventKey) || !/^Academic\.[\w.]{1,100}$/.test(sourceType)) return undefined;
   return { eventKey, sourceType, sourceId };
 }
@@ -31,7 +31,7 @@ export function NotificationHistoryWorkspace({ identity, canManage }: {
   canManage: boolean;
 }) {
   const params = useSearchParams();
-  const operationId = historyOperationId(params.get('operation'));
+  const operationId = notificationRecordId(params.get('operation'));
   const source = historySource(params);
   const operation = useAcademicNotificationOperationQuery({
     ...identity, operationId: operationId ?? '',

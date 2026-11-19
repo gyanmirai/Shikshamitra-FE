@@ -21,7 +21,7 @@ type HistoryRequest = AcademicNotificationCacheIdentity & AcademicNotificationSo
 
 const tag = 'AcademicNotificationDelivery' as const;
 
-function deliveryTag(identity: AcademicNotificationCacheIdentity) {
+export function deliveryTag(identity: AcademicNotificationCacheIdentity) {
   return { type: tag, id: academicNotificationCacheOwner(identity) };
 }
 

@@ -111,3 +111,34 @@ test('reports a personal unread count and keeps read and acknowledge actions dis
   await expect(open).toHaveAccessibleDescription('0 unread notifications');
   await expectHealthy(page);
 });
+
+test('confirms a reviewed homework reminder for the selected student and opens delivery history', { tag }, async ({ page, request }) => {
+  await request.post(`${fixtureApi}/fixture/reset`, { data: { visited: true, manualNotification: true } });
+  await prepare(page, request);
+  await login(page);
+  await page.goto('/academic/gradingAndFeedback');
+  await page.getByRole('combobox', { name: 'Subject', exact: true }).click();
+  await page.getByRole('option', { name: 'Mathematics', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Homework title' }).click();
+  await page.getByRole('option', { name: /Fraction practice/ }).click();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole('button', { name: 'Send reminder for Sample Learner' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Send Notification' });
+  await expect(dialog.getByText('Family notification for Sample Learner')).toBeVisible();
+  await expect(dialog.getByRole('button', { name: 'Confirm send' })).toHaveCount(0);
+  await dialog.getByRole('checkbox', { name: 'Email', exact: true }).click();
+  await expect(dialog.getByRole('checkbox', { name: 'WhatsApp (unavailable)' })).toBeDisabled();
+  await dialog.getByRole('button', { name: 'Preview recipients' }).click();
+  await expect(dialog.getByText('Email missing · 1 excluded')).toBeVisible();
+  await expect(dialog.getByText('Homework due soon')).toBeVisible();
+  await dialog.getByRole('button', { name: 'Confirm send' }).click();
+  await expect(dialog.getByRole('status').filter({ hasText: 'Queued' })).toBeVisible();
+  const writes = (await snapshot(request)).manualNotificationWrites;
+  expect(writes.previews).toHaveLength(1);
+  expect(writes.confirmations).toHaveLength(1);
+  expect(writes.previews[0].selectedRecipients).toEqual([{ kind: 'Student', studentId: 'a43c43cc-bbcf-43a5-9111-1260ba985601' }]);
+  await dialog.getByRole('link', { name: 'Delivery History' }).click();
+  await expect(page.getByRole('table', { name: 'Academic notification delivery history table' })).toBeVisible();
+  await expect(page.getByText('Queued', { exact: true })).toBeVisible();
+  await expectHealthy(page);
+});

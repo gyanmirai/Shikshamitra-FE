@@ -5,9 +5,8 @@ import { Label } from 'src/components/label';
 import { fDateTime } from 'src/utils/format-time';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { AcademicDispatchStatus } from 'src/redux/academic-notifications/delivery-types';
+import { deliveryReason, dispatchStatusLabels } from 'src/redux/academic-notifications/delivery-adapters';
 import { notificationLabel, notificationChannelLabels } from 'src/redux/academic-notifications/response-adapters';
-
-import { deliveryReason, dispatchStatusLabels } from '../notification-delivery-labels';
 
 const columns: IColumn[] = [
   { id: 'recorded', label: 'Recorded', minWidth: 180, rowHeader: true },

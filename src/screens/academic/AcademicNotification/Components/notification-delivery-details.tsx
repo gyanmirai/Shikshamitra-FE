@@ -9,9 +9,8 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CommunicationCampaignStatus } from 'src/redux/communication/communicationTypes';
 import { useCancelAcademicNotificationOperationMutation } from 'src/redux/academic-notifications/delivery-api';
 import { Stack, Alert, Button, Accordion, Typography, AccordionDetails, AccordionSummary } from '@mui/material';
+import { dispatchStatusLabels, operationStatusLabels } from 'src/redux/academic-notifications/delivery-adapters';
 import { notificationEventKeyLabel, notificationChannelLabels } from 'src/redux/academic-notifications/response-adapters';
-
-import { dispatchStatusLabels, operationStatusLabels } from '../notification-delivery-labels';
 
 const cancellable = [
   CommunicationCampaignStatus.PendingApproval, CommunicationCampaignStatus.Scheduled,

@@ -110,6 +110,12 @@ Save the draft and load its preview with sample data. Publish it to make that ve
 
 **Send test** queues the saved version for the configured test destination using sample data. WhatsApp delivery requires provider approval for the exact version and language.
 
+## Review and send a task reminder
+
+In **Evaluation & Feedback**, select a published homework or assignment, then use **Send reminder** on an unsubmitted student's row. The action is available when the school has the corresponding Academic event integration. The review applies the current recipient rule, which defaults family notices to the primary guardian.
+
+Choose available channels and select **Preview recipients**. Review eligible counts, exclusions, and sample messages before selecting **Confirm send** or **Request approval**. A changed review needs a fresh preview. If the confirmation response is interrupted, **Retry confirmation** checks the same send. Open **Delivery History** to follow the accepted operation.
+
 ## Review delivery history
 
 Open Delivery History with a link to a notification operation or Academic source. Filter the attempt table by delivery status. Provider acceptance, delivery and read receipts each have their own status, and the Columns menu exposes the available timestamps. When acceptance is unknown, review the provider outcome before retrying. Staff with access to cancel can stop pending work and see how much work is already in progress.

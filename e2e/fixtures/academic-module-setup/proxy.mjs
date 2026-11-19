@@ -6,6 +6,7 @@ import { handleDashboard } from './dashboard.mjs';
 import { insightsPermissions } from './insights.mjs';
 import { createNotificationRulesFixture } from './notification-rules.mjs';
 import { createNotificationDeliveriesFixture } from './notification-deliveries.mjs';
+import { createManualNotificationFixture, manualNotificationPermissions } from './notification-manual.mjs';
 import { paged, year, board, medium, ids } from './data.mjs';
 
 const upstream = 'http://127.0.0.1:4469';
@@ -14,6 +15,7 @@ const fixtureVapid = createECDH('prime256v1').generateKeys().toString('base64url
 let fixture = createAcademicFixture();
 let notificationRules = null;
 let notificationDeliveries = createNotificationDeliveriesFixture();
+let manualNotification = null;
 export const server = http.createServer(async (request, response) => {
   response.setHeader(
     'Access-Control-Allow-Origin',
@@ -48,11 +50,12 @@ export const server = http.createServer(async (request, response) => {
     fixture = createAcademicFixture(body);
     notificationRules = body.notificationRules === true ? createNotificationRulesFixture() : null;
     notificationDeliveries = createNotificationDeliveriesFixture(body.notificationDeliveries === true);
+    manualNotification = body.manualNotification === true ? createManualNotificationFixture() : null;
     send(200, fixture.snapshot());
     return;
   }
   if (url.pathname === '/fixture/snapshot') {
-    send(200, { ...fixture.snapshot(), notificationRuleWrites: notificationRules?.writes ?? [] });
+    send(200, { ...fixture.snapshot(), notificationRuleWrites: notificationRules?.writes ?? [], manualNotificationWrites: manualNotification?.writes });
     return;
   }
   if (url.pathname === '/fixture/mark-visited') {
@@ -70,7 +73,8 @@ export const server = http.createServer(async (request, response) => {
     send(200, {
       groups: [
         {
-          permissions: [...insightsPermissions(fixture.state.insights), ...(notificationRules ? ['Academics.Notification.Add'] : [])].map((name) => ({
+          permissions: [...insightsPermissions(fixture.state.insights), ...(notificationRules ? ['Academics.Notification.Add'] : []),
+            ...(manualNotification ? manualNotificationPermissions : [])].map((name) => ({
             name,
             isGranted: true,
           })),
@@ -81,6 +85,7 @@ export const server = http.createServer(async (request, response) => {
   }
   const token = request.headers.authorization?.split('.')[1];
   const claims = token ? JSON.parse(Buffer.from(token, 'base64url').toString()) : {};
+  if (manualNotification?.handle(url, request.method, body, claims.sub, send)) return;
   if (notificationDeliveries(url, request.method, claims.sub, send)) return;
   if (claims.sub && notificationRules?.handle(url, request.method, body, send)) return;
   if (url.pathname.startsWith(pushPath + '/')) {

@@ -29,6 +29,8 @@ Draft edits and publication send the saved revision stamp. Creating a subsequent
 
 `src/redux/academic-notifications/delivery-api.ts` reads the operation status and paged delivery attempts for an authorized source. A link with an operation ID reads its authorized source before requesting its attempt rows. Staff cancellation refreshes both reads for the same school and user.
 
+`src/redux/academic-notifications/manual-api.ts` submits the source, selected student reference and channel choices for review. Confirmation submits only the review token and its stable idempotency key. A successful confirmation returns the operation for Delivery History. The same session guard applies to both requests.
+
 `src/redux/communication/notification-self-api.ts` supplies the dashboard bell's unread count and the drawer's All and Unread pages. Separate requests record reading and acknowledgement. Queries use the current school and account, and changes invalidate only that account's inbox reads. Polling pauses while the page is unfocused.
 
 ## Browser notifications

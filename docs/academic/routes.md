@@ -65,5 +65,7 @@ Existing Calendar operations, operational Academic pages, and their own route gu
 
 Delivery History uses `/academic/notification?view=history`. An operation link supplies `operation`. A record link supplies `eventKey`, `sourceType`, and `sourceId`. History requires View and server-verified access to the Academic record. Cancelling pending work requires Add and access to the operation.
 
+Homework and Assignment rows in **Evaluation & Feedback** at `/academic/gradingAndFeedback` can show **Send reminder** for an unsubmitted student. The action needs `Academics.Notification.View`, `Academics.Notification.Send`, and a supported source integration. The source API still checks access to the task and the selected student.
+
 The dashboard notification bell opens the signed-in user's inbox on school routes. It uses the same drawer for a browser-push launch.
 Do not add inactive LMS placeholder forms to setup or label them as saved configuration.
