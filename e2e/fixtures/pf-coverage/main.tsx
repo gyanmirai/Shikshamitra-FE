@@ -9,6 +9,7 @@ import { createTheme } from 'src/theme/create-theme';
 import { Stack, Typography, CssBaseline } from '@mui/material';
 import { defaultSettings } from 'src/components/settings/config-settings';
 import { PfCoverageSettings } from 'src/screens/hr/payroll/setting/pf-coverage-settings';
+import { LocalizationProvider } from 'src/components/Localization-provider/localization-provider';
 
 const readOnly = new URLSearchParams(window.location.search).get('access') === 'readonly';
 const mode = new URLSearchParams(window.location.search).get('theme') === 'dark' ? 'dark' : 'light';
@@ -36,7 +37,9 @@ createRoot(document.getElementById('root')!).render(
         <Typography variant="caption">
           Synthetic UI fixture. No school records are changed.
         </Typography>
-        <PfCoverageSettings />
+        <LocalizationProvider>
+          <PfCoverageSettings />
+        </LocalizationProvider>
       </Stack>
     </ThemeProvider>
   </Provider>

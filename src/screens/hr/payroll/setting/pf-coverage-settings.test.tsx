@@ -1,11 +1,24 @@
+import type { ReactElement } from 'react';
+
 import { it, vi, expect, describe, afterEach, beforeEach } from 'vitest';
-import { act, render, screen, cleanup, waitFor, fireEvent } from '@testing-library/react';
+import { LocalizationProvider } from 'src/components/Localization-provider/localization-provider';
 import {
   HrSetupEditorContext,
   type SetupEditorState,
 } from 'src/screens/hr/setup/hr-setup-editor-context';
+import {
+  act,
+  screen,
+  cleanup,
+  waitFor,
+  fireEvent,
+  render as renderWithWrapper,
+} from '@testing-library/react';
 
 import { PfCoverageSettings } from './pf-coverage-settings';
+
+const render = (element: ReactElement) =>
+  renderWithWrapper(element, { wrapper: LocalizationProvider });
 
 const mocks = vi.hoisted(() => ({
   save: vi.fn(),
@@ -99,6 +112,11 @@ describe('School PF coverage', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(screen.queryByRole('button', { name: 'Submit' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Configure coverage' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /Choose date/ }));
+    fireEvent.click(await screen.findByRole('radio', { name: 'November' }));
+    const acceptMonth = screen.queryByRole('button', { name: 'OK' });
+    if (acceptMonth) fireEvent.click(acceptMonth);
+    await waitFor(() => expect(screen.queryByRole('radio', { name: 'November' })).toBeNull());
     fireEvent.mouseDown(screen.getByRole('combobox', { name: /School establishment coverage/ }));
     fireEvent.click(screen.getByRole('option', { name: /^Not covered under PF$/ }));
     fireEvent.change(screen.getByLabelText(/PF coverage evidence reference/), {
@@ -110,7 +128,11 @@ describe('School PF coverage', () => {
     });
     expect(onSaved).toHaveBeenCalledOnce();
     expect(mocks.save).toHaveBeenCalledWith(
-      expect.objectContaining({ isCovered: false, evidenceReference: 'Wizard review evidence' })
+      expect.objectContaining({
+        effectiveMonth: '2026-11-01T00:00:00.000Z',
+        isCovered: false,
+        evidenceReference: 'Wizard review evidence',
+      })
     );
   });
   it('closes and resets the form only after a successful save', async () => {

@@ -25,6 +25,7 @@ for (const theme of ['light', 'dark']) {
       expect(await wizard.evaluate((node) => getComputedStyle(node).outlineWidth)).toBe('0px');
       const progress = wizard.getByRole('progressbar', { name: 'Saved HR setup completion' });
       await expect(progress).toHaveAttribute('aria-valuetext', '10 of 11 setup items complete');
+      await expect(progress).toHaveCSS('height', '4px');
       await expect(wizard.getByText('1 item remaining', { exact: true })).toBeVisible();
       const stepper = wizard.getByRole('list', { name: 'HR setup steps' });
       if (width === 390) {
@@ -99,6 +100,13 @@ for (const theme of ['light', 'dark']) {
         wizard.getByRole('heading', { name: 'Configure PF Coverage', exact: true, level: 2 })
       ).toBeVisible();
       await expect(wizard.getByLabel(/PF coverage evidence reference/)).toBeVisible();
+      const monthField = wizard.getByRole('group', { name: 'PF coverage effective month' });
+      await monthField.getByRole('button', { name: /Choose date/ }).click();
+      const monthPicker = page.getByRole('dialog', { name: 'PF coverage effective month' });
+      await expect(monthPicker.getByRole('radio', { checked: true })).toHaveCount(1);
+      await page.keyboard.press('Escape');
+      await expect(monthPicker).toHaveCount(0);
+      await expect(monthField.getByRole('button', { name: /Choose date/ })).toBeFocused();
       const editorBox = await wizard.boundingBox();
       expect(editorBox!.height).toBeCloseTo(initialBox!.height, 0);
       expect(editorBox!.y).toBeCloseTo(initialBox!.y, 0);
@@ -128,6 +136,25 @@ for (const theme of ['light', 'dark']) {
     });
   }
 }
+
+test.describe('touch month picker', () => {
+  test.use({ hasTouch: true, isMobile: true, viewport: { width: 390, height: 844 } });
+
+  test('accepts a month inside the setup wizard', async ({ page }) => {
+    await page.clock.setFixedTime(new Date('2026-10-15T12:00:00Z'));
+    await page.goto('/?theme=dark');
+    const wizard = page.getByRole('dialog', { name: 'Let’s Complete Your HR Setup', exact: true });
+    await wizard.getByRole('button', { name: 'Configure PF Coverage' }).tap();
+    const field = wizard.getByRole('group', { name: 'PF coverage effective month' });
+    await field.getByRole('button', { name: /Choose date/ }).tap();
+    const picker = page.getByRole('dialog', { name: 'Select date', exact: true });
+    await picker.getByRole('radio', { name: 'November' }).tap();
+    await picker.getByRole('button', { name: 'OK', exact: true }).tap();
+    await expect(picker).toHaveCount(0);
+    await expect(field.getByRole('spinbutton', { name: 'Month' })).toHaveText('November');
+    await expect(wizard.getByRole('button', { name: 'Save and next' })).toBeVisible();
+  });
+});
 
 test('all checklist steps retain saved statuses, optional deductions and accessible headings', async ({
   page,

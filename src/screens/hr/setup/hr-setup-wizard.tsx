@@ -258,7 +258,6 @@ export default function HrSetupWizard({ readiness, error, refreshing, refresh, o
                   aria-label="Saved HR setup completion"
                   aria-valuetext={completionText}
                   color="success"
-                  sx={{ height: 8, borderRadius: 1 }}
                 />
               </Stack>
             )}

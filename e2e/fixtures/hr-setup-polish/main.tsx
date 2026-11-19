@@ -18,6 +18,7 @@ import globalReducer from 'src/redux/globalState/globalSlice';
 import HrSetupWizard from 'src/screens/hr/setup/hr-setup-wizard';
 import { defaultSettings } from 'src/components/settings/config-settings';
 import confirmPopupReducer from 'src/redux/confirmPopup/confirmPopupSlice';
+import { LocalizationProvider } from 'src/components/Localization-provider/localization-provider';
 
 const params = new URLSearchParams(window.location.search);
 const mode = params.get('theme') === 'dark' ? 'dark' : 'light';
@@ -163,7 +164,9 @@ createRoot(document.getElementById('root')!).render(
       modeStorageKey={`hr-polish-${mode}`}
     >
       <CssBaseline />
-      <Fixture />
+      <LocalizationProvider>
+        <Fixture />
+      </LocalizationProvider>
     </ThemeProvider>
   </Provider>
 );

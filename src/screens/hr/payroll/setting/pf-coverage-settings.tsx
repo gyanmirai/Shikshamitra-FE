@@ -1,7 +1,9 @@
 'use client';
 
+import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
 
+import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import { useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -10,6 +12,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import SubmitButton from 'src/components/submit-button';
 import { shikshaMitraToast } from 'src/components/toast';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -47,9 +50,15 @@ export function PfCoverageSettings({ onSaved }: { onSaved?: () => void } = {}) {
     query.data?.hasSchoolWideScope &&
     hasGrantedPermission(permissions, 'HR.PayrollManagement.Settings.PfRule.Add');
   const form = useFormik({
-    initialValues: { month: getLocalMonthKey(), coverage: '', evidence: '', error: '' },
+    initialValues: {
+      month: dayjs(`${getLocalMonthKey()}-01`) as Dayjs | null,
+      invalidMonth: false,
+      coverage: '',
+      evidence: '',
+      error: '',
+    },
     validate: (values) => ({
-      ...(!/^\d{4}-(0[1-9]|1[0-2])$/.test(values.month)
+      ...(!values.month?.isValid() || values.invalidMonth
         ? { month: 'Choose an effective month.' }
         : {}),
       ...(!values.coverage ? { coverage: 'Select school coverage.' } : {}),
@@ -58,12 +67,21 @@ export function PfCoverageSettings({ onSaved }: { onSaved?: () => void } = {}) {
         : {}),
     }),
     onSubmit: async (values) => {
-      if (!canEdit || !query.data || query.isFetching || query.isError || state.isLoading) return;
+      if (
+        !canEdit ||
+        !query.data ||
+        query.isFetching ||
+        query.isError ||
+        state.isLoading ||
+        !values.month
+      )
+        return;
+      const month = values.month.format('YYYY-MM');
       const current = query.data.history.find(
-        (item) => !item.isCancelled && item.effectiveMonth.slice(0, 7) <= values.month
+        (item) => !item.isCancelled && item.effectiveMonth.slice(0, 7) <= month
       );
       const body = {
-        effectiveMonth: `${values.month}-01T00:00:00.000Z`,
+        effectiveMonth: `${month}-01T00:00:00.000Z`,
         isCovered: values.coverage === 'covered',
         evidenceReference: values.evidence.trim(),
         expectedConfigurationId: current?.id ?? null,
@@ -230,21 +248,32 @@ export function PfCoverageSettings({ onSaved }: { onSaved?: () => void } = {}) {
                     }}
                   >
                     <ShakingTextField error={errorFor('month')}>
-                      <TextField
-                        required
+                      <DatePicker
                         autoFocus
                         label="PF coverage effective month"
-                        type="month"
                         name="month"
-                        size="small"
-                        fullWidth
+                        views={['year', 'month']}
+                        openTo="month"
+                        format="MMMM YYYY"
                         value={form.values.month}
-                        onChange={form.handleChange}
-                        onBlur={form.handleBlur}
+                        onChange={(month, { validationError }) =>
+                          form.setValues((values) => ({
+                            ...values,
+                            month,
+                            invalidMonth: validationError !== null,
+                          }))
+                        }
                         disabled={busy}
-                        error={errorFor('month')}
-                        helperText={errorFor('month') ? form.errors.month : undefined}
-                        slotProps={{ inputLabel: { shrink: true } }}
+                        slotProps={{
+                          textField: {
+                            required: true,
+                            size: 'small',
+                            fullWidth: true,
+                            onBlur: () => form.setFieldTouched('month'),
+                            error: errorFor('month'),
+                            helperText: errorFor('month') ? form.errors.month : undefined,
+                          },
+                        }}
                       />
                     </ShakingTextField>
                     <ShakingTextField error={errorFor('coverage')}>
