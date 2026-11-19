@@ -31,6 +31,17 @@ test('configured coverage stays compact until configuration is requested', async
   await expect(page.getByRole('button', { name: 'Configure coverage' })).toBeFocused();
 });
 
+test('schools outside PF coverage can submit with just the status and month', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Set up PF coverage' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Configure PF Coverage' });
+  await dialog.getByRole('combobox', { name: /School PF coverage/ }).click();
+  await page.getByRole('option', { name: 'Not covered under PF', exact: true }).click();
+  await dialog.getByRole('button', { name: 'Submit', exact: true }).click();
+  await expect(dialog.getByRole('alert')).toBeVisible({ timeout: 2500 });
+  await expect(dialog.getByRole('textbox')).toHaveCount(0);
+});
+
 test('failed saves preserve entries and dirty close supports keep-editing and discard', async ({
   page,
 }) => {
@@ -46,20 +57,20 @@ test('failed saves preserve entries and dirty close supports keep-editing and di
   await monthField.getByRole('button', { name: /Choose date/ }).click();
   await page.getByRole('radio', { name: 'November' }).click();
   await expect(monthField.getByRole('spinbutton', { name: 'Month' })).toHaveText('November');
-  await dialog.getByRole('combobox', { name: /School establishment coverage/ }).click();
+  await dialog.getByRole('combobox', { name: /School PF coverage/ }).click();
   await page.getByRole('option', { name: 'Covered under PF', exact: true }).click();
   await dialog
-    .getByRole('textbox', { name: /PF coverage evidence reference/ })
+    .getByRole('textbox', { name: /PF establishment number/ })
     .fill('Synthetic evidence');
   await dialog.getByRole('button', { name: 'Submit', exact: true }).click();
   await expect(dialog.getByRole('alert')).toBeVisible();
   await expect(monthField.getByRole('spinbutton', { name: 'Month' })).toHaveText('November');
-  await expect(dialog.getByRole('textbox', { name: /PF coverage evidence reference/ })).toHaveValue(
+  await expect(dialog.getByRole('textbox', { name: /PF establishment number/ })).toHaveValue(
     'Synthetic evidence'
   );
   await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
   await page.getByRole('button', { name: 'Keep editing' }).click();
-  await expect(dialog.getByRole('textbox', { name: /PF coverage evidence reference/ })).toHaveValue(
+  await expect(dialog.getByRole('textbox', { name: /PF establishment number/ })).toHaveValue(
     'Synthetic evidence'
   );
   await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
@@ -80,7 +91,7 @@ test('failed saves preserve entries and dirty close supports keep-editing and di
         .getByRole('group', { name: 'PF coverage effective month' })
         .boundingBox();
       const select = await dialog
-        .getByRole('combobox', { name: /School establishment coverage/ })
+        .getByRole('combobox', { name: /School PF coverage/ })
         .boundingBox();
       expect(select!.y - (month!.y + month!.height)).toBeGreaterThanOrEqual(16);
       expect(

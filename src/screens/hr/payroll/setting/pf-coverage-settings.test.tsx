@@ -90,11 +90,16 @@ describe('School PF coverage', () => {
     view.rerender(<PfCoverageSettings />);
     expect(screen.queryByRole('button', { name: 'Submit' })).toBeNull();
   });
-  it('requires coverage and evidence before writing', async () => {
+  it('requires a coverage choice and an establishment number for covered schools', async () => {
     render(<PfCoverageSettings />);
     fireEvent.click(screen.getByRole('button', { name: 'Configure coverage' }));
+    expect(screen.queryByLabelText(/PF establishment number/)).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
     await screen.findByText('Select school coverage.');
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: /School PF coverage/ }));
+    fireEvent.click(screen.getByRole('option', { name: /^Covered under PF$/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+    await screen.findByText('Enter the PF establishment number.');
     expect(mocks.save).not.toHaveBeenCalled();
   });
   it('embeds in setup with one footer owner and reports successful saves', async () => {
@@ -117,37 +122,41 @@ describe('School PF coverage', () => {
     const acceptMonth = screen.queryByRole('button', { name: 'OK' });
     if (acceptMonth) fireEvent.click(acceptMonth);
     await waitFor(() => expect(screen.queryByRole('radio', { name: 'November' })).toBeNull());
-    fireEvent.mouseDown(screen.getByRole('combobox', { name: /School establishment coverage/ }));
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: /School PF coverage/ }));
     fireEvent.click(screen.getByRole('option', { name: /^Not covered under PF$/ }));
-    fireEvent.change(screen.getByLabelText(/PF coverage evidence reference/), {
-      target: { value: 'Wizard review evidence' },
-    });
+    expect(screen.queryByLabelText(/PF establishment number/)).toBeNull();
     expect(editor.dirty).toBe(true);
     await act(async () => {
       await editor.save?.();
     });
     expect(onSaved).toHaveBeenCalledOnce();
     expect(mocks.save).toHaveBeenCalledWith(
-      expect.objectContaining({
+      {
         effectiveMonth: '2026-11-01T00:00:00.000Z',
         isCovered: false,
-        evidenceReference: 'Wizard review evidence',
-      })
+        expectedConfigurationId: 'coverage-1',
+        idempotencyKey: expect.any(String),
+      }
     );
   });
   it('closes and resets the form only after a successful save', async () => {
     render(<PfCoverageSettings />);
     fireEvent.click(screen.getByRole('button', { name: 'Configure coverage' }));
-    fireEvent.mouseDown(screen.getByRole('combobox', { name: /School establishment coverage/ }));
-    fireEvent.click(screen.getByRole('option', { name: /^Not covered under PF$/ }));
-    fireEvent.change(screen.getByLabelText(/PF coverage evidence reference/), {
-      target: { value: 'School review reference' },
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: /School PF coverage/ }));
+    fireEvent.click(screen.getByRole('option', { name: /^Covered under PF$/ }));
+    fireEvent.change(screen.getByLabelText(/PF establishment number/), {
+      target: { value: 'PF-123/ABC' },
     });
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: /School PF coverage/ }));
+    fireEvent.click(screen.getByRole('option', { name: /^Not covered under PF$/ }));
     fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     expect(mocks.save).toHaveBeenCalledWith(expect.objectContaining({ isCovered: false }));
+    expect(mocks.save.mock.calls[0][0]).not.toHaveProperty('evidenceReference');
     fireEvent.click(screen.getByRole('button', { name: 'Configure coverage' }));
-    expect(screen.getByLabelText(/PF coverage evidence reference/)).toHaveValue('');
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: /School PF coverage/ }));
+    fireEvent.click(screen.getByRole('option', { name: /^Covered under PF$/ }));
+    expect(screen.getByLabelText(/PF establishment number/)).toHaveValue('');
   });
   it('locks editing, cancel, close, and submit during saving', () => {
     const view = render(<PfCoverageSettings />);
@@ -157,7 +166,10 @@ describe('School PF coverage', () => {
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'close' })).toBeDisabled();
     expect(screen.getByRole('button', { name: /Submit/ })).toBeDisabled();
-    expect(screen.getByLabelText(/PF coverage evidence reference/)).toBeDisabled();
+    expect(screen.getByRole('combobox', { name: /School PF coverage/ })).toHaveAttribute(
+      'aria-disabled',
+      'true'
+    );
   });
   it('retains the evidence and idempotency key after a failed save', async () => {
     mocks.save.mockReturnValue({
@@ -165,9 +177,9 @@ describe('School PF coverage', () => {
     });
     render(<PfCoverageSettings />);
     fireEvent.click(screen.getByRole('button', { name: 'Configure coverage' }));
-    fireEvent.mouseDown(screen.getByRole('combobox', { name: /School establishment coverage/ }));
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: /School PF coverage/ }));
     fireEvent.click(screen.getByRole('option', { name: /^Covered under PF$/ }));
-    fireEvent.change(screen.getByLabelText(/PF coverage evidence reference/), {
+    fireEvent.change(screen.getByLabelText(/PF establishment number/), {
       target: { value: 'Synthetic registration' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
@@ -181,7 +193,7 @@ describe('School PF coverage', () => {
       isCovered: true,
       evidenceReference: 'Synthetic registration',
     });
-    expect(screen.getByLabelText(/PF coverage evidence reference/)).toHaveValue(
+    expect(screen.getByLabelText(/PF establishment number/)).toHaveValue(
       'Synthetic registration'
     );
   });
@@ -246,7 +258,9 @@ describe('PF coverage request states', () => {
   it('preserves a draft through refresh and locks submission until coverage is available', () => {
     const view = render(<PfCoverageSettings />);
     fireEvent.click(screen.getByRole('button', { name: 'Set up PF coverage' }));
-    fireEvent.change(screen.getByLabelText(/PF coverage evidence reference/), {
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: /School PF coverage/ }));
+    fireEvent.click(screen.getByRole('option', { name: /^Covered under PF$/ }));
+    fireEvent.change(screen.getByLabelText(/PF establishment number/), {
       target: { value: 'Draft evidence' },
     });
     mocks.fetching = true;
@@ -255,19 +269,21 @@ describe('PF coverage request states', () => {
     mocks.fetching = false;
     mocks.failed = true;
     view.rerender(<PfCoverageSettings />);
-    expect(screen.getByLabelText(/PF coverage evidence reference/)).toHaveValue('Draft evidence');
+    expect(screen.getByLabelText(/PF establishment number/)).toHaveValue('Draft evidence');
     expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
   });
   it('protects unsaved changes with keep-editing and discard actions', async () => {
     render(<PfCoverageSettings />);
     fireEvent.click(screen.getByRole('button', { name: 'Set up PF coverage' }));
-    fireEvent.change(screen.getByLabelText(/PF coverage evidence reference/), {
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: /School PF coverage/ }));
+    fireEvent.click(screen.getByRole('option', { name: /^Covered under PF$/ }));
+    fireEvent.change(screen.getByLabelText(/PF establishment number/), {
       target: { value: 'Draft evidence' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
     await waitFor(() => expect(screen.getByRole('button', { name: 'Cancel' })).toBeVisible());
-    expect(screen.getByLabelText(/PF coverage evidence reference/)).toHaveValue('Draft evidence');
+    expect(screen.getByLabelText(/PF establishment number/)).toHaveValue('Draft evidence');
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());

@@ -18,11 +18,13 @@ test.describe.serial('HR setup wizard with disposable SQLite and real backend AP
     await expect(wizard.getByRole('group', { name: 'PF coverage effective month' })).toBeVisible();
     await expect(page.getByRole('dialog')).toHaveCount(1);
     await page.screenshot({ path: '.artifacts/hr-setup/pf-coverage-wizard.png' });
-    await wizard.getByLabel(/PF coverage evidence reference/).fill('Unsaved coverage evidence');
+    await wizard.getByRole('combobox', { name: /School PF coverage/ }).click();
+    await page.getByRole('option', { name: 'Covered under PF', exact: true }).click();
+    await wizard.getByLabel(/PF establishment number/).fill('Unsaved coverage evidence');
     await wizard.getByRole('button', { name: 'Back', exact: true }).click();
     const confirmation = page.getByRole('dialog', { name: 'Discard Unsaved Changes?' });
     await confirmation.getByRole('button', { name: 'Keep Editing', exact: true }).click();
-    await expect(wizard.getByLabel(/PF coverage evidence reference/)).toHaveValue(
+    await expect(wizard.getByLabel(/PF establishment number/)).toHaveValue(
       'Unsaved coverage evidence'
     );
     await wizard.getByRole('button', { name: 'Back', exact: true }).click();
@@ -99,7 +101,7 @@ test.describe.serial('HR setup wizard with disposable SQLite and real backend AP
         await expect(
           wizard.getByRole('group', { name: 'PF coverage effective month' })
         ).toBeInViewport();
-        await expect(wizard.getByLabel(/PF coverage evidence reference/)).toBeInViewport();
+        await expect(wizard.getByRole('combobox', { name: /School PF coverage/ })).toBeInViewport();
         await expect(
           wizard.getByRole('button', { name: 'Save and next', exact: true })
         ).toBeInViewport();
@@ -268,11 +270,9 @@ test.describe.serial('HR setup wizard with disposable SQLite and real backend AP
       .getByTestId('hr-setup-check-pf-coverage')
       .getByRole('button', { name: /^Configure / })
       .click();
-    await wizard.getByRole('combobox', { name: /School establishment coverage/ }).click();
+    await wizard.getByRole('combobox', { name: /School PF coverage/ }).click();
     await page.getByRole('option', { name: 'Not covered under PF', exact: true }).click();
-    await wizard
-      .getByLabel(/PF coverage evidence reference/)
-      .fill('Synthetic school coverage review');
+    await expect(wizard.getByLabel(/PF establishment number/)).toHaveCount(0);
     await wizard.getByRole('button', { name: 'Save and next', exact: true }).click();
     await expect(
       wizard.getByText(

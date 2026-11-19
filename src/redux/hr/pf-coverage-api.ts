@@ -21,7 +21,7 @@ export const pfCoverageApi = api.injectEndpoints({
       {
         effectiveMonth: string;
         isCovered: boolean;
-        evidenceReference: string;
+        evidenceReference?: string;
         expectedConfigurationId?: string | null;
         idempotencyKey: string;
       }
