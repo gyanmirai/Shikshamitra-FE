@@ -17,12 +17,6 @@ export default function FeeProrationResult({
 }) {
   if (!result) return null;
 
-  const labelTypographyProps = compact
-    ? {
-        color: 'text.secondary',
-        sx: { fontWeight: 'fontWeightSemiBold', letterSpacing: '0.25px' },
-      }
-    : undefined;
   const payable = formatNumber(result.payableAmount, 'INR');
 
   return (
@@ -41,35 +35,23 @@ export default function FeeProrationResult({
         <DetailField
           label="Finance policy"
           value={`${result.policyName} · v${result.policyVersion}`}
-          labelTypographyProps={labelTypographyProps}
         />
-        <DetailField
-          label="Actual joining date"
-          value={fDate(result.joiningDate)}
-          labelTypographyProps={labelTypographyProps}
-        />
+        <DetailField label="Actual joining date" value={fDate(result.joiningDate)} />
         <DetailField
           label="Charge period"
           value={`${fDate(result.chargeStartDate)} – ${fDate(result.chargeEndDate)}`}
-          labelTypographyProps={labelTypographyProps}
         />
-        <DetailField
-          label="Scheduled fees"
-          value={formatNumber(result.scheduledAmount, 'INR')}
-          labelTypographyProps={labelTypographyProps}
-        />
+        <DetailField label="Scheduled fees" value={formatNumber(result.scheduledAmount, 'INR')} />
         {result.admissionReduction > 0 && (
           <DetailField
             label="Joining date reduction"
             value={formatNumber(result.admissionReduction, 'INR')}
-            labelTypographyProps={labelTypographyProps}
           />
         )}
         {result.withdrawalCredit > 0 && (
           <DetailField
             label="Withdrawal credit"
             value={formatNumber(result.withdrawalCredit, 'INR')}
-            labelTypographyProps={labelTypographyProps}
           />
         )}
         <DetailField
@@ -87,14 +69,12 @@ export default function FeeProrationResult({
               payable
             )
           }
-          labelTypographyProps={labelTypographyProps}
         />
         {result.excessPaidAmount > 0 && (
           <DetailField
             label="Excess paid"
             value={formatNumber(result.excessPaidAmount, 'INR')}
             secondary="Subject to Finance refund review. No cash refund is created here."
-            labelTypographyProps={labelTypographyProps}
           />
         )}
       </DetailGrid>

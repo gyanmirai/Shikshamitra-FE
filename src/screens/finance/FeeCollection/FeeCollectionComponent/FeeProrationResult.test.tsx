@@ -65,12 +65,17 @@ describe('Finance-owned read-only proration result', () => {
     expect(screen.getByText('Joining date reduction')).toBeVisible();
   });
 
-  it('uses lighter captions and emphasizes only the payable amount in compact Payment', () => {
-    show({ ...result, withdrawalCredit: 0, excessPaidAmount: 0 }, true);
+  it('keeps the same Finance captions and emphasizes only the payable amount in compact Payment', () => {
+    const admissionResult = { ...result, withdrawalCredit: 0, excessPaidAmount: 0 };
+    const regular = show(admissionResult);
+    const captionWeight = getComputedStyle(screen.getByText('Finance policy')).fontWeight;
+    regular.unmount();
+
+    show(admissionResult, true);
     const label = screen.getByText('Finance policy');
     const payable = screen.getByText('Payable fees').nextElementSibling;
 
-    expect(label).toHaveStyle({ fontWeight: '600' });
+    expect(getComputedStyle(label).fontWeight).toBe(captionWeight);
     expect(payable?.querySelector('strong')).toHaveTextContent(/5,000/);
     expect(
       screen.getByText('Scheduled fees').nextElementSibling?.querySelector('strong')
