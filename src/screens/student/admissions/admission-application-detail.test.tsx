@@ -1021,9 +1021,12 @@ describe('AdmissionApplicationDetailScreen', () => {
     });
     render(<AdmissionApplicationDetailScreen />);
     expect(offeringContext).toHaveBeenCalledWith('actual-offering', { skip: false });
-    expect(screen.getByLabelText('Application Academic Context')).toHaveTextContent('Class 1');
-    expect(screen.getByLabelText('Application Academic Context')).toHaveTextContent('CBSE');
-    expect(screen.getByLabelText('Application Academic Context')).toHaveTextContent('English');
+    expect(
+      Array.from(
+        screen.getByLabelText('Application Academic Context').children,
+        (item) => item.textContent
+      ).slice(1)
+    ).toEqual(['CBSE', 'English', 'Class 1']);
   });
 
   it('keeps application access without issuing an unauthorized Offering context read', () => {

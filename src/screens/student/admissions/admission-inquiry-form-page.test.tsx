@@ -400,7 +400,27 @@ describe('New inquiry form', () => {
     expect(shikshaMitraToast.error).toHaveBeenCalledTimes(2);
   });
 
-  it('keeps class selection usable while checking and does not announce stale unavailability', () => {
+  it('replaces the entire Admission Interest field grid during initial catalogue loading', () => {
+    vi.mocked(useAdmissionInquiryDialog).mockReturnValue(
+      controller({
+        academicLoading: true,
+        offeringsLoading: true,
+        runtimeLoading: false,
+        canCreateInquiry: false,
+        sections: [],
+      }) as unknown as ReturnType<typeof useAdmissionInquiryDialog>
+    );
+    render(<AdmissionInquiryFormPage />);
+    expect(screen.getByRole('status', { name: 'Loading Admission Interest' })).toBeVisible();
+    expect(screen.queryByRole('combobox', { name: 'Admission Period' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Class' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('status', { name: 'Loading Admission Offerings' })
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Create Inquiry' })).toBeDisabled();
+  });
+
+  it('keeps class selection usable while checking and loads only the Offering slot', () => {
     const fixture = controller({
       offeringsLoading: true,
       canCreateInquiry: false,
@@ -417,11 +437,11 @@ describe('New inquiry form', () => {
       'aria-disabled',
       'true'
     );
-    expect(screen.getByRole('combobox', { name: 'Offering' })).toHaveAttribute(
-      'aria-disabled',
-      'true'
-    );
-    expect(screen.getByText('Checking latest admission offerings…')).toBeVisible();
+    expect(screen.queryByRole('combobox', { name: 'Offering' })).not.toBeInTheDocument();
+    expect(screen.getByRole('status', { name: 'Loading Admission Offerings' })).toBeVisible();
+    expect(
+      screen.queryByRole('status', { name: 'Loading Admission Interest' })
+    ).not.toBeInTheDocument();
     expect(screen.queryByText('Admission is Closed.')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Create Inquiry' })).toBeDisabled();
   });

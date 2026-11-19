@@ -70,6 +70,30 @@ describe('admission form field codes', () => {
     ).toBe(true);
   });
 
+  it('retains the advanced print configuration when reopening a saved Registration', () => {
+    const settings = {
+      ...getAdmissionFormPrintSettings(),
+      paperSize: 'LETTER' as const,
+      advanced: {
+        paper: { orientation: 'landscape' as const },
+        branding: { logo: { x: 10, y: 5, width: 20, height: 65 } },
+        footer: { pageNumbers: false },
+        content: { translations: { gu: { instructions: 'ગુજરાતી' } } },
+        fields: { STUDENT_NAME: { width: 'full' as const } },
+      },
+    };
+    const saved = {
+      ...getBlankAdmissionFormInitialValues(1),
+      id: 'saved',
+      concurrencyStamp: undefined,
+      status: 0 as const,
+      version: 2,
+      sectionCount: 1,
+      printSettings: settings,
+    };
+    expect(getAdmissionFormInitialValues(saved).printSettings).toEqual(settings);
+  });
+
   it('starts Registration with required identity/contact fields and DOB/gender', () => {
     expect(getBlankAdmissionFormInitialValues(1).sections[0].fields).toHaveLength(7);
   });

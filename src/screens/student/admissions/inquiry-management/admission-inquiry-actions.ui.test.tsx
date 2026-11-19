@@ -4,14 +4,67 @@ import { it, vi, expect } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import { buildAdmissionInquiryColumns } from './admission-inquiry-columns';
+
+it('keeps the move menu open during the request and on failure, then closes on success', async () => {
+  let finish: (success: boolean) => void = () => {};
+  const onMove = vi.fn(
+    () =>
+      new Promise<boolean>((resolve) => {
+        finish = resolve;
+      })
+  );
+  const row = {
+    id: 'inquiry',
+    inquiryNumber: 'INQ-2026-000058',
+    applicantName: 'QA Student',
+    status: 2,
+    applicantId: 'applicant',
+    admissionOfferingId: 'offering',
+  } as AdmissionInquiry;
+  const theme = createTheme(defaultSettings);
+  function menu(isMoving: boolean) {
+    const column = buildAdmissionInquiryColumns({
+      canManage: true,
+      canMove: true,
+      isMoving,
+      movingInquiryId: row.id,
+      counsellorNames: {},
+      counsellorOptions: [],
+      offeringOptions: [],
+      onManage: vi.fn(),
+      onFollowUp: vi.fn(),
+      onHistory: vi.fn(),
+      onMove,
+    }).find((item) => item.id === 'actions')!;
+    return <ThemeProvider theme={theme}>{column.render?.(null, row)}</ThemeProvider>;
+  }
+  const view = render(menu(false));
+  fireEvent.click(screen.getByRole('button', { name: 'Actions For QA Student' }));
+  const move = () => screen.getByTestId('menu-action-move');
+  fireEvent.click(move());
+  view.rerender(menu(true));
+  expect(move()).toBeVisible();
+  expect(move()).toHaveAttribute('aria-busy', 'true');
+  fireEvent.keyDown(move(), { key: 'Escape' });
+  expect(move()).toBeVisible();
+  fireEvent.click(move());
+  expect(onMove).toHaveBeenCalledTimes(1);
+  await act(async () => finish(false));
+  view.rerender(menu(false));
+  expect(move()).toBeVisible();
+  expect(move()).not.toHaveAttribute('aria-disabled', 'true');
+  fireEvent.click(move());
+  await act(async () => finish(true));
+  await waitFor(() => expect(screen.queryByRole('menu')).not.toBeInTheDocument());
+});
 
 it.each(['below', 'above'] as const)(
   'opens the inquiry menu %s its trigger without covering row actions',
   async (side) => {
-    const onMove = vi.fn();
+    const onMove = vi.fn(async () => true);
     const row = {
       id: 'inquiry',
       inquiryNumber: 'INQ-2026-000058',

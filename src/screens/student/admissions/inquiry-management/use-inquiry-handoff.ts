@@ -50,7 +50,7 @@ export function useInquiryHandoff() {
       state.isLoading ||
       inquiryHandoffBlocker(inquiry)
     )
-      return;
+      return false;
     movingRef.current = true;
     setIssue(null);
     setMovingInquiryId(inquiry.id);
@@ -73,17 +73,19 @@ export function useInquiryHandoff() {
             : admissionPipelineApplicationUrl(application.id, new URLSearchParams())
         )
       );
+      return true;
     } catch (error) {
       const recoveryIssue = readInquiryHandoffIssue(error, inquiry);
       if (recoveryIssue) {
         setIssue(recoveryIssue);
-        return;
+        return false;
       }
       shikshaMitraToast.error({
         message:
           parseApiProblemDetail(error).detail ||
           'Unable to move this inquiry. Refresh and try again.',
       });
+      return false;
     } finally {
       movingRef.current = false;
       setStarting(false);

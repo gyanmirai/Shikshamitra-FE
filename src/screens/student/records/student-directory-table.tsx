@@ -104,7 +104,9 @@ export default function StudentDirectoryTable({
             {
               id: 'certificate',
               icon: 'mdi:certificate-outline',
-              label: `Generate Certificate for ${directoryStudentName(row)}`,
+              label: 'Generate Certificate',
+              ariaLabel: `Generate Certificate for ${directoryStudentName(row)}`,
+              tooltip: `Generate Certificate for ${directoryStudentName(row)}`,
               onClick: () => onDocumentAction('certificate', [row]),
             },
           ]

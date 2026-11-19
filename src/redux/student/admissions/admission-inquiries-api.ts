@@ -235,6 +235,7 @@ export type DuplicateMatch = {
   existingInquiryId?: string | null;
   existingInquiryNumber?: string | null;
   existingInquiryAdmissionCycleId?: string | null;
+  existingInquiryMatchesMobile?: boolean | null;
   applicantName: string;
   guardianPhone?: string | null;
   guardianEmail?: string | null;

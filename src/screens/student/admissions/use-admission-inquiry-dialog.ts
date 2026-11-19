@@ -21,6 +21,7 @@ import {
 } from 'src/redux/student/admissions/admission-inquiries-api';
 
 import { useAdmissionPhotoReads } from './use-admission-photo-reads';
+import { isPossibleDuplicateInquiry } from './admission-inquiry-match-review';
 import { useInquiryPrimaryContact } from './use-inquiry-primary-contact';
 import { useAdmissionUnsavedChanges } from './use-admission-unsaved-changes';
 import { getConfiguredInquiryParentRelationship } from './admission-inquiry-field-bindings';
@@ -82,18 +83,23 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
         setRequestError(null);
         const identity = buildAdmissionInquiryPayload(values, fields, offering);
         if (!identity.applicantFirstName?.trim() && reportIdentityErrors(identity, values)) return;
-        const key = JSON.stringify([
-          offering.id,
-          buildAdmissionInquiryDuplicateInput(values, fields, offering),
-        ]);
+        const duplicateInputForSubmit = buildAdmissionInquiryDuplicateInput(values, fields, offering);
+        const key = JSON.stringify([offering.id, duplicateInputForSubmit]);
         try {
-          const result = await checkDuplicates(
-            buildAdmissionInquiryDuplicateInput(values, fields, offering)
-          ).unwrap();
+          const result = await checkDuplicates(duplicateInputForSubmit).unwrap();
           if (identityKeyRef.current !== key) return;
-          setMatches(result);
+          const reviewMatches = result.filter(
+            (match) =>
+              isPossibleDuplicateInquiry(match, duplicateInputForSubmit) ||
+              canLinkAdmissionInquiryFamily(
+                match,
+                duplicateInputForSubmit.guardianPhone,
+                duplicateInputForSubmit.guardianEmail
+              )
+          );
+          setMatches(reviewMatches);
           setMatchesKey(key);
-          if (!result.length) await submit(undefined, undefined, true);
+          if (!reviewMatches.length) await submit(undefined, undefined, true);
         } catch (error) {
           const message = parseApiProblemDetail(error).detail || 'Duplicate check failed';
           shikshaMitraToast.error({ message });
@@ -112,7 +118,8 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
     standardId: formik.values.standardId,
   });
   const offeringChoices = classOfferings.checkedOfferings;
-  const offeringsLoading = catalogue.isFetching || classOfferings.checking;
+  const academicLoading = catalogue.isFetching && !catalogue.currentData && !catalogue.isError;
+  const offeringsLoading = academicLoading || classOfferings.checking;
   const offeringsError = catalogue.isError || classOfferings.error;
   const runtime = useGetAdmissionInquiryCaptureContextQuery(formik.values.offeringId, {
     skip:
@@ -335,7 +342,7 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
     noOfferingReason: classOfferings.reason,
     canCreateInquiry,
     unavailableReason: runtime.currentData?.availability.reasonMessage,
-    academicLoading: catalogue.isFetching,
+    academicLoading,
     academicError: catalogue.isError,
     retryAcademic: () => catalogue.refetch(),
     selectedOffering,

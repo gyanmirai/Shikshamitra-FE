@@ -37,6 +37,46 @@ const fields = (model: ReturnType<typeof buildAdmissionPrintDocument>) =>
   );
 
 describe('Registration print document', () => {
+  it('keeps advanced paper settings, blank repeat rows and filled academic/choice formatting in the common model', () => {
+    const input = {
+      definition: definition([
+        section(
+          'MAIN',
+          [
+            question('CHOICE', {
+              fieldType: 6,
+              optionsJson: '[{"value":"a","label":"Option A"}]',
+              helpText: 'Choose one option',
+            }),
+          ],
+          { isRepeatable: true, minEntries: 1 }
+        ),
+      ]),
+      values: { CHOICE: '["a",""]' },
+      academicDetails: { board: 'CBSE', class: 'Class 1' },
+      settings: {
+        paperSize: 'A5' as const,
+        advanced: {
+          paper: { orientation: 'landscape' as const },
+          sections: { MAIN: { blankRows: 3 } },
+          copies: { unanswered: 'not-provided' as const },
+        },
+      },
+    };
+    const blank = buildAdmissionPrintDocument({ ...input, mode: 'blank' });
+    expect(blank.settings.paperSize).toBe('A5');
+    expect(blank.steps[0].sections[0].entries).toHaveLength(3);
+    expect(blank.steps[0].sections[0].code).toBe('MAIN');
+    expect(blank.academicDetails).toEqual({});
+    const filled = buildAdmissionPrintDocument({ ...input, mode: 'filled' });
+    expect(filled.academicDetails).toEqual({ board: 'CBSE', class: 'Class 1' });
+    expect(fields(filled)[0]).toMatchObject({
+      selectedValues: ['a'],
+      helpText: 'Choose one option',
+      value: 'Option A',
+    });
+    expect(fields(filled)[1].value).toBe('Not provided');
+  });
   it('keeps legacy Simple, preserves selected paper style and clears registration numbers on blank copies', () => {
     const input = {
       definition: definition([section('main')]),

@@ -2,11 +2,12 @@ import type { RenderTask, PDFDocumentLoadingTask } from 'pdfjs-dist';
 
 import { useRef, useState, useEffect } from 'react';
 
-export function usePdfPage(url: string, pageNumber: number, retry: number) {
+export function usePdfPage(url: string, pageNumber: number, retry: number, preservePage = false) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [pageCount, setPageCount] = useState(1);
+  const [renderedPage, setRenderedPage] = useState<number>();
   const [text, setText] = useState('');
   useEffect(() => {
     let active = true;
@@ -28,21 +29,33 @@ export function usePdfPage(url: string, pageNumber: number, retry: number) {
       });
       const document = await task.promise;
       if (!active) return;
-      setPageCount(document.numPages);
-      const page = await document.getPage(pageNumber);
+      if (!preservePage) setPageCount(document.numPages);
+      const nextPage = Math.min(pageNumber, document.numPages);
+      const page = await document.getPage(nextPage);
       if (!active || !canvasRef.current) return;
       const original = page.getViewport({ scale: 1 });
       const longestSide = Math.max(original.width, original.height);
       if (!Number.isFinite(longestSide) || longestSide <= 0)
         throw new Error('Invalid PDF page dimensions.');
       const viewport = page.getViewport({ scale: Math.min(1.5, 3072 / longestSide) });
-      const canvas = canvasRef.current;
+      // Render off-screen while the previously drawn page stays in the viewer.
+      const canvas = preservePage ? window.document.createElement('canvas') : canvasRef.current;
       canvas.width = Math.ceil(viewport.width);
       canvas.height = Math.ceil(viewport.height);
       render = page.render({ canvas, viewport });
       await render.promise;
       const content = await page.getTextContent();
       if (active) {
+        if (preservePage) {
+          const visible = canvasRef.current;
+          const context = visible?.getContext('2d');
+          if (!visible || !context) throw new Error('Unable to update the preview canvas.');
+          visible.width = canvas.width;
+          visible.height = canvas.height;
+          context.drawImage(canvas, 0, 0);
+        }
+        setPageCount(document.numPages);
+        setRenderedPage(nextPage);
         setText(content.items.flatMap((item) => ('str' in item ? [item.str] : [])).join(' '));
         setLoading(false);
       }
@@ -59,6 +72,6 @@ export function usePdfPage(url: string, pageNumber: number, retry: number) {
       task?.destroy().catch(() => undefined);
       worker?.terminate();
     };
-  }, [url, pageNumber, retry]);
-  return { canvasRef, loading, error, pageCount, text };
+  }, [url, pageNumber, retry, preservePage]);
+  return { canvasRef, loading, error, pageCount, text, renderedPage, hasRendered: renderedPage !== undefined };
 }

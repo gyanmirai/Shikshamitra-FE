@@ -85,7 +85,7 @@ export const houseManagementApi = api.injectEndpoints({
       invalidatesTags: (_result, error) => (error ? [] : tags),
     }),
     setHouseLeader: builder.mutation<void, HouseLeaderCommand>({
-      query: ({ id, ...body }) => ({ url: `${root}/houses/${id}/leader`, method: 'PUT', body }),
+      query: ({ id, ...body }) => ({ url: `${root}/divisions/${id}/house-leader`, method: 'PUT', body }),
       invalidatesTags: (_result, error) => (error ? [] : tags),
     }),
     setDivisionLeader: builder.mutation<void, HouseLeaderCommand>({

@@ -34,6 +34,9 @@ vi.mock('src/components/preview-document/pdf-preview', () => ({
 vi.mock('./admission-print-settings', () => ({
   AdmissionPrintSettingsPanel: () => <div>Print settings</div>,
 }));
+vi.mock('./admission-print-advanced-settings', () => ({
+  AdmissionPrintAdvancedSettings: () => <div>Advanced print settings</div>,
+}));
 vi.mock('src/components/custom-select', () => ({
   default: ({
     label,
@@ -156,6 +159,19 @@ describe('Registration print workspace controls', () => {
     expect(onSettingsChange).not.toHaveBeenCalled();
   });
 
+  it('prints a filled builder example without querying applicant-specific choices', () => {
+    render(<AdmissionFormPrintWorkspace form={form} sampleDetails />);
+    expect(mocks.preview.mock.lastCall![0].registrationNumber).toBe('');
+    fireEvent.click(screen.getByRole('button', { name: 'With details' }));
+    const model = mocks.preview.mock.lastCall![0];
+    expect(model.registrationNumber).toBe('SAMPLE-001');
+    expect(model.steps[0].sections[0].entries[0].fields[0].value).toBe('Example answer');
+    expect(screen.getByText(/Sample answers are used/)).toBeVisible();
+    expect(mocks.options.mock.lastCall![2]).toBe(false);
+    fireEvent.click(screen.getByRole('button', { name: 'Download PDF' }));
+    expect(mocks.download).toHaveBeenLastCalledWith('blob:current', 'Registration-sample');
+  });
+
   it('generates the selected language and current step while preserving the full-form default', () => {
     render(<AdmissionFormPrintWorkspace form={form} currentStepId="step-1" />);
     expect(mocks.preview.mock.lastCall![0].steps).toHaveLength(2);
@@ -175,6 +191,33 @@ describe('Registration print workspace controls', () => {
       target: { value: 'all' },
     });
     expect(mocks.preview.mock.lastCall![0].steps).toHaveLength(2);
+  });
+
+  it('keeps the draft preview mounted during a settings refresh and blocks stale output', () => {
+    const props = { form, onSettingsChange: vi.fn() };
+    const { rerender } = render(<AdmissionFormPrintWorkspace {...props} />);
+    const preview = screen.getByTestId('pdf-preview');
+    mocks.preview.mockReturnValue({ previewUrl: 'blob:current', loading: true, error: false });
+    rerender(<AdmissionFormPrintWorkspace {...props} />);
+    expect(screen.getByTestId('pdf-preview')).toBe(preview);
+    expect(screen.queryByText('Preparing printable form…')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Print' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Download PDF' })).toBeDisabled();
+    mocks.preview.mockReturnValue({ previewUrl: 'blob:updated', url: 'blob:updated', loading: false, error: false });
+    rerender(<AdmissionFormPrintWorkspace {...props} />);
+    expect(screen.getByTestId('pdf-preview')).toBe(preview);
+    expect(preview).toHaveTextContent('blob:updated');
+    expect(screen.getByRole('button', { name: 'Print' })).toBeEnabled();
+  });
+
+  it('keeps the branding editor usable when moving between Basic and Advanced', () => {
+    mocks.branding.mockReturnValue({ branding: { logoUrl: 'logo.png' }, loading: false, error: false });
+    render(<AdmissionFormPrintWorkspace form={form} onSettingsChange={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Advanced' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit branding' }));
+    const logo = screen.getByRole('button', { name: 'Move logo' });
+    fireEvent.click(screen.getByRole('button', { name: 'Basic' }));
+    expect(screen.getByRole('button', { name: 'Move logo' })).toBe(logo);
   });
 
   it.each(['branding', 'options', 'generation'])(

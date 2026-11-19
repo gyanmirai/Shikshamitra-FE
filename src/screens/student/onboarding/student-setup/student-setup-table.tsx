@@ -13,7 +13,6 @@ import {
   Box,
   Link,
   Stack,
-  Avatar,
   Button,
   Tooltip,
   Checkbox,
@@ -23,6 +22,7 @@ import {
 } from '@mui/material';
 
 import StudentPendingTasks from './student-pending-tasks';
+import StudentPhotoAvatar from '../../components/student-photo-avatar';
 import StudentSetupDivisionEditor from './student-setup-division-editor';
 import { hasAssignedDivision, type StudentSetupView } from './student-setup-view';
 import { studentSetupSortFields, studentSetupStatusOptions } from './student-setup-worklist-config';
@@ -244,7 +244,10 @@ export default function StudentSetupTable({
         stickyOnMobile: !['readiness', 'division', 'gr-number', 'roll-number'].includes(view),
         render: (value, row) => (
           <Stack direction="row" spacing={1.25} alignItems="center" sx={{ minWidth: 0, py: 0.25 }}>
-            <Avatar
+            <StudentPhotoAvatar
+              studentId={row.studentId}
+              alt={String(value)}
+              lazy
               sx={{
                 width: 36,
                 height: 36,
@@ -261,7 +264,7 @@ export default function StudentSetupTable({
                 .map((part) => part[0])
                 .join('')
                 .toUpperCase()}
-            </Avatar>
+            </StudentPhotoAvatar>
             <Stack spacing={0.25} sx={{ minWidth: 0 }}>
               {['readiness', 'division', 'gr-number', 'roll-number'].includes(view) ? (
                 <Link

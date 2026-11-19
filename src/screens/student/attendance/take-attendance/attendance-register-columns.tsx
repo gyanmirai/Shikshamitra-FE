@@ -8,7 +8,9 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { AttendanceStatus } from 'src/enums/student-attendace-status';
-import { Box, Stack, Avatar, TextField, ButtonBase, Typography } from '@mui/material';
+import { Box, Stack, TextField, ButtonBase, Typography } from '@mui/material';
+
+import StudentPhotoAvatar from '../../components/student-photo-avatar';
 
 import {
   changeAttendanceMark,
@@ -170,7 +172,10 @@ export const buildAttendanceColumns = ({
       const row = item as AttendanceStudent;
       return (
         <Stack direction="row" spacing={1} alignItems="center">
-          <Avatar
+          <StudentPhotoAvatar
+            studentId={row.studentId}
+            alt={attendanceStudentName(row)}
+            lazy
             sx={{
               width: 32,
               height: 32,
@@ -185,7 +190,7 @@ export const buildAttendanceColumns = ({
               .map((name) => name?.charAt(0))
               .join('')
               .slice(0, 2) || '—'}
-          </Avatar>
+          </StudentPhotoAvatar>
           <Typography
             variant="body2"
             fontWeight="fontWeightSemiBold"

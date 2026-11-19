@@ -5,8 +5,9 @@ import { useFormik } from 'formik';
 import { useRef, useState } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { LoadingButton } from 'src/components/loading-button';
-import { Box, Stack, Button, Typography, DialogActions } from '@mui/material';
+import { Box, Stack, Button, DialogActions } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 
 import { canLinkAdmissionInquiryFamily } from './admission-inquiry-model';
@@ -26,7 +27,6 @@ type Props = {
   reviewKey?: number;
   busy: boolean;
   onUseExisting: (familyId: string, sourceApplicantId: string) => void | Promise<void>;
-  onOpenExisting: (inquiryId: string) => void;
 };
 
 export function AdmissionInquiryDuplicateMatches({ reviewKey, ...props }: Props) {
@@ -63,16 +63,15 @@ function InquiryMatchReview({
   presentation = 'inline',
   busy,
   onUseExisting,
-  onOpenExisting,
 }: Omit<Props, 'reviewKey'>) {
   const [open, setOpen] = useState(true);
-  const [reviewDifferentChild, setReviewDifferentChild] = useState(false);
   const inFlight = useRef(false);
-  const duplicate = matches.find((match) =>
+  const duplicate = matches.some((match) =>
     isPossibleDuplicateInquiry(match, {
       applicantName,
       applicantDateOfBirth,
       admissionCycleId,
+      guardianPhone,
     })
   );
   const families = buildInquiryFamilyReviews(
@@ -86,7 +85,7 @@ function InquiryMatchReview({
         .required('Select a family.'),
     }),
     onSubmit: async (values) => {
-      if (busy || inFlight.current || (duplicate && !reviewDifferentChild)) return;
+      if (busy || inFlight.current || duplicate) return;
       const family = families.find((item) => item.familyId === values.family);
       const source = family?.children[0];
       if (!family || !source) return;
@@ -100,56 +99,42 @@ function InquiryMatchReview({
   });
   const selectedFamily = families.find((family) => family.familyId === formik.values.family);
   const locked = busy || formik.isSubmitting;
-  const canConfirm = Boolean(
-    selectedFamily?.children.length && (!duplicate || reviewDifferentChild)
-  );
+  const canConfirm = Boolean(selectedFamily?.children.length);
   const close = () => {
     if (!locked && !inFlight.current) setOpen(false);
   };
+  if (!open) return null;
+  if (duplicate) {
+    return (
+      <ConfirmDialog
+        open
+        title="Possible Duplicate Inquiry"
+        icon="warning"
+        showCloseButton
+        onClose={close}
+        disableCancel={locked}
+        cancelText="Back to form"
+        content="An inquiry with this student name already exists. Check the name and mobile number."
+        action={null}
+        sx={{
+          '& .MuiDialogTitle-root': { borderBottom: 1, borderColor: 'divider' },
+          '& .MuiDialogContent-root': { pt: 2 },
+          '& .MuiDialogActions-root': {
+            borderTop: 1,
+            borderColor: 'divider',
+          },
+        }}
+      />
+    );
+  }
   const content = (
-    <Stack spacing={2} sx={{ minWidth: 0 }}>
-      {applicantName && (
-        <Typography variant="body2">
-          Inquiry: <strong>{applicantName}</strong>
-        </Typography>
-      )}
-      {duplicate && !reviewDifferentChild && (
-        <Stack spacing={1} alignItems="flex-start">
-          <Typography variant="body2" color="warning.main">
-            An inquiry with this student name already exists. Review it before adding another child.
-          </Typography>
-          {duplicate.existingInquiryId && (
-            <Button
-              type="button"
-              size="small"
-              variant="outlined"
-              disabled={locked}
-              onClick={() => onOpenExisting(duplicate.existingInquiryId!)}
-              startIcon={<Iconify icon={GlobalIcons.eye} width={18} />}
-            >
-              Open Existing Inquiry
-            </Button>
-          )}
-          <Button
-            type="button"
-            size="small"
-            disabled={locked}
-            onClick={() => setReviewDifferentChild(true)}
-          >
-            Different Child? Review Siblings
-          </Button>
-        </Stack>
-      )}
-      {(!duplicate || reviewDifferentChild) && (
-        <AdmissionInquiryFamilyReview
-          families={families}
-          selectedFamily={selectedFamily}
-          disabled={locked}
-          onSelect={(familyId) => formik.setFieldValue('family', familyId)}
-          error={formik.submitCount ? formik.errors.family : undefined}
-        />
-      )}
-    </Stack>
+    <AdmissionInquiryFamilyReview
+      families={families}
+      selectedFamily={selectedFamily}
+      disabled={locked}
+      onSelect={(familyId) => formik.setFieldValue('family', familyId)}
+      error={formik.submitCount ? formik.errors.family : undefined}
+    />
   );
   const actions = (
     <DialogActions disableSpacing sx={{ flexWrap: 'wrap', gap: 1 }}>
@@ -177,7 +162,6 @@ function InquiryMatchReview({
       </LoadingButton>
     </DialogActions>
   );
-  if (!open) return null;
   return (
     <>
       <Box

@@ -58,6 +58,29 @@ const details: StudentRecordDetails = {
   customDetailsEditable: false,
 };
 
+it('shows the stored student photo in the profile header', async () => {
+  mswServer.use(
+    http.get(profilePath, () => HttpResponse.json({ data: studentProfile })),
+    http.get('*/api/students/records/:studentId/photo', ({ params }) =>
+      params.studentId === profileStudentId
+        ? new HttpResponse(new Uint8Array([137, 80, 78, 71]), {
+            headers: { 'Content-Type': 'image/png' },
+          })
+        : new HttpResponse(null, { status: 404 })
+    )
+  );
+
+  renderStudentProfile();
+
+  const name = [studentProfile.firstName, studentProfile.middleName, studentProfile.lastName]
+    .filter(Boolean)
+    .join(' ');
+  expect(await screen.findByRole('img', { name })).toHaveAttribute(
+    'src',
+    expect.stringMatching(/^blob:/)
+  );
+});
+
 it('uses saved guardian data and formats saved location objects without confusing student and guardian email', () => {
   expect(profileOverviewContacts(details)).toEqual([
     { label: 'Main contact', value: 'Meera Patel' },

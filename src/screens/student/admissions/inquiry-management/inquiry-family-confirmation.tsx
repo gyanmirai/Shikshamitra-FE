@@ -26,7 +26,6 @@ export function InquiryFamilyConfirmation(props: InquiryFamilyConfirmationProps)
 }
 
 function InquiryFamilyConfirmationContent(props: InquiryFamilyConfirmationProps) {
-  const { inquiry } = props;
   const state = useInquiryFamilyConfirmation(props);
   const { formik } = state;
   const locked =
@@ -81,9 +80,6 @@ function InquiryFamilyConfirmationContent(props: InquiryFamilyConfirmationProps)
           <DialogScrollContent>
             <FormBusyRegion busy={state.saving} label="Confirming Sibling Family…">
               <Stack spacing={2}>
-                <Typography variant="body2">
-                  Inquiry: <strong>{inquiry.applicantName}</strong>
-                </Typography>
                 {state.loading ? (
                   <Stack spacing={2} role="status" aria-label="Loading Family Matches">
                     <Skeleton variant="rounded" height={56} />

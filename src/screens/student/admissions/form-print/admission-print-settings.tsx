@@ -1,5 +1,21 @@
+import type { AdmissionPrintAdvancedSettings } from 'src/redux/student/admissions/admission-form-print-settings';
+
+import { useId } from 'react';
+import CustomSelect from 'src/components/custom-select';
 import { FormSectionCard } from 'src/components/form-section-card';
-import { Box, Stack, Radio, Switch, RadioGroup, Typography, FormControlLabel } from '@mui/material';
+import {
+  Box,
+  Stack,
+  Radio,
+  Switch,
+  TextField,
+  RadioGroup,
+  Typography,
+  FormControlLabel,
+} from '@mui/material';
+import { resolveAdmissionPrintAdvancedSettings } from 'src/redux/student/admissions/admission-form-print-settings';
+
+import { PrintSettingSelect } from './admission-print-setting-controls';
 
 import type { AdmissionPrintSettings, AdmissionPrintBranding } from './form-print-model';
 
@@ -7,13 +23,35 @@ export function AdmissionPrintSettingsPanel({
   settings,
   onChange,
   branding,
+  defaultLanguage = 'en',
+  pageCount,
 }: {
   settings: AdmissionPrintSettings;
   onChange: (settings: AdmissionPrintSettings) => void;
   branding: AdmissionPrintBranding;
+  defaultLanguage?: string;
+  pageCount?: number;
 }) {
+  const bannerPagesId = useId();
+  const advanced = resolveAdmissionPrintAdvancedSettings(settings.advanced);
+  const { bannerPlacement, bannerPages, showBanner } = advanced.branding;
+  const pageNumbers = [
+    ...new Set([...Array.from({ length: pageCount ?? 1 }, (_, index) => index + 1), ...bannerPages]),
+  ].sort((left, right) => left - right);
+  const update = <K extends keyof AdmissionPrintAdvancedSettings>(
+    key: K,
+    value: NonNullable<AdmissionPrintAdvancedSettings[K]>
+  ) =>
+    onChange({
+      ...settings,
+      advanced: {
+        ...settings.advanced,
+        [key]: { ...settings.advanced?.[key], ...value },
+      },
+    });
+
   return (
-    <Stack spacing={2} sx={{ width: { xs: 1, md: 280 }, flexShrink: 0 }}>
+    <Stack spacing={2} sx={{ width: 1 }}>
       <FormSectionCard
         title="Print Template"
         descriptionTooltip="Choose the paper form style. This is saved with the form and used when printing from Registration or Pipeline."
@@ -86,32 +124,38 @@ export function AdmissionPrintSettingsPanel({
           <FormControlLabel value="compact" control={<Radio size="small" />} label="Compact" />
           <FormControlLabel value="spacious" control={<Radio size="small" />} label="Spacious" />
         </RadioGroup>
+        <CustomSelect
+          label="Print palette"
+          size="small"
+          value={advanced.style.palette}
+          options={[
+            { label: 'School blue', value: 'school-blue' },
+            { label: 'Neutral', value: 'neutral' },
+            { label: 'Black & white', value: 'monochrome' },
+          ]}
+          onChange={(value) =>
+            update('style', {
+              palette: value as typeof advanced.style.palette,
+              sectionFill: undefined,
+              borderColor: undefined,
+              textColor: undefined,
+            })
+          }
+        />
+        <FormControlLabel
+          label="Full-page border"
+          control={
+            <Switch
+              checked={advanced.border.enabled}
+              onChange={(_, enabled) => update('border', { enabled })}
+            />
+          }
+        />
       </FormSectionCard>
       <FormSectionCard
         title="School Branding"
         descriptionTooltip="The logo and banner come from Institute Setup. Printing does not change them."
       >
-        {branding.bannerUrl || branding.logoUrl ? (
-          <Box
-            component="img"
-            src={branding.bannerUrl || branding.logoUrl}
-            alt="School branding from Institute Setup"
-            sx={{
-              maxHeight: 90,
-              width: 1,
-              objectFit: 'contain',
-              bgcolor: 'common.white',
-              borderRadius: 1,
-            }}
-          />
-        ) : (
-          <Typography variant="body2" color="text.secondary">
-            No school logo or banner configured.
-          </Typography>
-        )}
-        <Typography variant="caption" color="text.secondary">
-          From Institute Setup
-        </Typography>
         <FormControlLabel
           label="School header"
           control={
@@ -121,30 +165,125 @@ export function AdmissionPrintSettingsPanel({
             />
           }
         />
+        {settings.showSchoolHeader && (
+          <>
+            {!branding.bannerUrl && !branding.logoUrl ? (
+              <Typography variant="body2" color="text.secondary">
+                No school logo or banner configured in Institute Setup.
+              </Typography>
+            ) : (
+              <>
+                {(
+                  [
+                    { asset: 'logo', label: 'Logo', flag: 'showLogo' },
+                    { asset: 'banner', label: 'Banner', flag: 'showBanner' },
+                  ] as const
+                ).map(({ asset, label, flag }) => (
+                  <FormControlLabel
+                    key={asset}
+                    label={label}
+                    control={
+                      <Switch
+                        size="small"
+                        checked={Boolean(branding[`${asset}Url`] && advanced.branding[flag])}
+                        disabled={!branding[`${asset}Url`]}
+                        onChange={(_, value) => update('branding', { [flag]: value })}
+                      />
+                    }
+                  />
+                ))}
+              </>
+            )}
+            <CustomSelect
+              label="Header on later pages"
+              size="small"
+              value={advanced.header.continuation}
+              options={[
+                { label: 'Compact', value: 'compact' },
+                { label: 'Full', value: 'full' },
+                { label: 'None', value: 'none' },
+              ]}
+              onChange={(value) =>
+                update('header', { continuation: value as typeof advanced.header.continuation })
+              }
+            />
+            <PrintSettingSelect
+              label="Banner pages"
+              value={bannerPlacement}
+              disabled={!showBanner}
+              options={[
+                ['first', 'First page'],
+                ['every', 'Every page'],
+                ['selected', 'Selected pages'],
+              ]}
+              onChange={(placement) =>
+                update('branding', {
+                  bannerPlacement: placement,
+                  ...(placement === 'selected' ? { bannerPages } : {}),
+                })
+              }
+              helperText="Applies to the banner from Institute Setup."
+            />
+            {bannerPlacement === 'selected' && (
+              <CustomSelect
+                name={bannerPagesId}
+                label="Pages with banner"
+                size="small"
+                fullWidth
+                multiple
+                disabled={!showBanner}
+                disabledValues={bannerPages.length === 1 ? bannerPages : undefined}
+                value={bannerPages}
+                options={pageNumbers.map((page) => ({ value: page, label: `Page ${page}` }))}
+                onChange={(pages) => {
+                  if (pages.length) {
+                    update('branding', { bannerPages: pages.map(Number).sort((left, right) => left - right) });
+                  }
+                }}
+                helperText="Choose at least one page of the printed copy."
+              />
+            )}
+          </>
+        )}
+      </FormSectionCard>
+      <FormSectionCard title="Writing Instructions">
+        <FormControlLabel
+          label="Print writing instructions"
+          control={
+            <Switch
+              checked={advanced.content.showInstructions}
+              onChange={(_, showInstructions) => update('content', { showInstructions })}
+            />
+          }
+        />
+        {advanced.content.showInstructions && (
+          <TextField
+            label="Instructions"
+            multiline
+            minRows={2}
+            maxRows={5}
+            size="small"
+            value={advanced.content.translations[defaultLanguage]?.instructions ?? ''}
+            slotProps={{ htmlInput: { maxLength: 2000 } }}
+            onChange={(event) =>
+              update('content', {
+                translations: {
+                  ...advanced.content.translations,
+                  [defaultLanguage]: {
+                    ...advanced.content.translations[defaultLanguage],
+                    instructions: event.target.value,
+                  },
+                },
+              })
+            }
+          />
+        )}
       </FormSectionCard>
       <FormSectionCard
         title="Print Settings"
-        descriptionTooltip="A4 portrait. Long forms continue onto additional pages automatically."
+        descriptionTooltip="Change paper size and orientation under Advanced. Long forms continue onto additional pages automatically."
       >
-        <Typography variant="body2">Paper size: A4</Typography>
-        <FormControlLabel
-          label="Photo space"
-          control={
-            <Switch
-              checked={settings.showPhoto}
-              onChange={(_, checked) => onChange({ ...settings, showPhoto: checked })}
-            />
-          }
-        />
-        <FormControlLabel
-          label="Signature area"
-          control={
-            <Switch
-              checked={settings.showSignature}
-              onChange={(_, checked) => onChange({ ...settings, showSignature: checked })}
-            />
-          }
-        />
+        <Typography variant="body2">Paper size: {settings.paperSize}</Typography>
       </FormSectionCard>
     </Stack>
   );

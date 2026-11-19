@@ -66,7 +66,6 @@ function Workspace() {
   const { mode, setMode } = useColorScheme();
   const [busy, setBusy] = useState(false);
   const [links, setLinks] = useState(0);
-  const [opened, setOpened] = useState('');
   const [reviewKey, setReviewKey] = useState(0);
   return (
     <Stack sx={{ height: '100dvh', minHeight: 0, bgcolor: 'background.default' }}>
@@ -141,7 +140,6 @@ function Workspace() {
             presentation={params.has('dialog') ? 'dialog' : 'inline'}
             reviewKey={reviewKey}
             busy={busy}
-            onOpenExisting={setOpened}
             onUseExisting={async () => {
               setLinks((value) => value + 1);
               setBusy(true);
@@ -174,9 +172,6 @@ function Workspace() {
         )}
         <Typography component="output" aria-label="Sibling confirmations">
           {links}
-        </Typography>
-        <Typography component="output" aria-label="Opened inquiry">
-          {opened}
         </Typography>
       </Stack>
       <Snackbar />

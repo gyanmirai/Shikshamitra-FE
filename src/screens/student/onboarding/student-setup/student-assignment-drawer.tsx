@@ -30,10 +30,11 @@ export default function StudentAssignmentDrawer({
   expanded?: boolean;
   context?: ReactNode;
   titleInfo?: string;
-  contentLayout?: 'scroll' | 'workspace';
+  contentLayout?: 'scroll' | 'workspace' | 'split';
 }) {
   const titleId = useId();
   const mounted = useRef(false);
+  const split = contentLayout === 'split';
   const [returnFocusTarget] = useState(() =>
     typeof document !== 'undefined' && document.activeElement instanceof HTMLElement
       ? document.activeElement
@@ -109,14 +110,27 @@ export default function StudentAssignmentDrawer({
       {contentLayout === 'workspace' ? (
         <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden', p: 2 }}>{children}</Box>
       ) : (
-        <>
-          <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
-            <Box sx={{ p: expanded ? { xs: 2, sm: 3 } : 2 }}>{children}</Box>
-          </Scrollbar>
-          <Box component="footer" sx={{ flexShrink: 0, borderTop: 1, borderColor: 'divider' }}>
-            {actions}
+        <Scrollbar
+          ariaLabel={split ? 'Drawer content' : undefined}
+          sx={{
+            flex: 1,
+            minHeight: 0,
+            ...(split && {
+              // Bound only the outer body so its desktop panes can scroll independently.
+              '& > .simplebar-wrapper > .simplebar-mask > .simplebar-offset > .simplebar-content-wrapper > .simplebar-content':
+                { height: { lg: 1 } },
+            }),
+          }}
+        >
+          <Box sx={{ p: expanded ? { xs: 2, sm: 3 } : 2, height: split ? { lg: 1 } : undefined }}>
+            {children}
           </Box>
-        </>
+        </Scrollbar>
+      )}
+      {contentLayout !== 'workspace' && (
+        <Box component="footer" sx={{ flexShrink: 0, borderTop: 1, borderColor: 'divider' }}>
+          {actions}
+        </Box>
       )}
     </Drawer>
   );

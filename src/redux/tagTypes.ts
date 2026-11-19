@@ -534,6 +534,7 @@ export const shiftManagementType = {
 // ===== Student API (reducerPath: StudentApi) =====
 export const studentType = {
   student: 'Student',
+  photo: 'StudentPhoto',
 } as const;
 
 // ===== Student Admission API (reducerPath: StudentAdmissionApi) =====

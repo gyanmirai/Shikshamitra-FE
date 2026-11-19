@@ -10,7 +10,6 @@ import { studentPaths } from 'src/constants/student-menu';
 import { useRouter, useSearchParams } from 'next/navigation';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { useUrlFilterValue } from 'src/hooks/use-url-filter-value';
-import { skeletonReducedMotionSx } from 'src/theme/styles/skeleton';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { CustomDateRangePicker } from 'src/components/custom-date-range-picker';
@@ -399,20 +398,6 @@ export default function AdmissionInquiriesScreen() {
           flexDirection: 'column',
         }}
       >
-        {handoff.moving && (
-          <Stack
-            role="status"
-            aria-label="Moving Inquiry to the Next Stage"
-            aria-busy
-            direction="row"
-            spacing={2}
-            sx={{ px: 2, py: 1, ...skeletonReducedMotionSx }}
-          >
-            <Skeleton width="40%" height={24} />
-            <Skeleton width="25%" height={24} />
-            <Skeleton width="20%" height={24} />
-          </Stack>
-        )}
         <CustomizableTable
           tableId="admission-inquiries"
           tableTitle="Admission Inquiries"
@@ -420,9 +405,7 @@ export default function AdmissionInquiriesScreen() {
           tableContainerProps={{ sx: { height: 1 } }}
           columns={columns}
           data={skipList || scopeLoading ? [] : (data?.items ?? [])}
-          isRefreshing={
-            Boolean(data) && isFetching && !scopeLoading && !skipList && !handoff.moving
-          }
+          isRefreshing={Boolean(data) && isFetching && !scopeLoading && !skipList}
           refreshIndicator="skeleton"
           errorContent={
             isError && !skipList && !scopeLoading && !data?.items.length ? (
@@ -432,7 +415,6 @@ export default function AdmissionInquiriesScreen() {
           isLoading={
             yearChanging ||
             scopeLoading ||
-            (handoff.moving && !data?.items.length) ||
             (!skipList && !isError && (isLoading || !data || (isFetching && !data.items.length)))
           }
           serverSidePagination

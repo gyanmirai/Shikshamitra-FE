@@ -94,9 +94,27 @@ const selectClass = async (
   });
 };
 
-it.each([null, 'qa@example.invalid'])(
-  'creates an inquiry without automatic communication for staff with Send permission (email: %s)',
-  async (email) => {
+it.each([
+  { lookup: 'empty', email: null, matches: [] },
+  {
+    lookup: 'name-only',
+    email: 'qa@example.invalid',
+    matches: [
+      {
+        applicantId: 'saved-child',
+        familyId: 'saved-family',
+        applicantName: 'QA child',
+        existingInquiryId: 'saved-inquiry',
+        existingInquiryAdmissionCycleId: 'cycle',
+        existingInquiryMatchesMobile: false,
+        guardianPhone: '9876543211',
+        canLinkFamily: false,
+      },
+    ],
+  },
+])(
+  'creates an inquiry without automatic communication for a $lookup duplicate lookup',
+  async ({ email, matches }) => {
     store = createStore([
       { name: 'Communication.Campaigns.Add', isGranted: true },
       { name: 'Communication.Campaigns.Send', isGranted: true },
@@ -143,7 +161,7 @@ it.each([null, 'qa@example.invalid'])(
           },
         })
       ),
-      http.post(`${root}/duplicate-check`, () => HttpResponse.json({ data: [] })),
+      http.post(`${root}/duplicate-check`, () => HttpResponse.json({ data: matches })),
       http.post(root, () => {
         created += 1;
         return HttpResponse.json({ data: { id: 'new-inquiry', applicantName: 'QA child', email } });
@@ -179,6 +197,7 @@ it.each([null, 'qa@example.invalid'])(
     });
     await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
     expect(created).toBe(1);
+    expect(result.current.matches).toEqual([]);
     expect(communicationRequests).toBe(0);
     expect(shikshaMitraToast.success).toHaveBeenCalledWith({ message: 'Inquiry created' });
     expect(shikshaMitraToast.warning).not.toHaveBeenCalled();

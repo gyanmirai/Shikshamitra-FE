@@ -34,6 +34,7 @@ const linkStatusLabels: Record<string, string> = {
 };
 
 const attemptStatusLabels: Record<string, string> = {
+  NotSent: 'Email not sent',
   Pending: 'Email queued',
   Sending: 'Sending email',
   PendingApproval: 'Awaiting approval',

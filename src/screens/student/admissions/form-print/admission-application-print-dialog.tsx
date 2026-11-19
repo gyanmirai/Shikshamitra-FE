@@ -53,6 +53,7 @@ export function AdmissionApplicationPrintDialog({
           currentStepId={currentStepId}
           academicYearId={form.academicYearId}
           registrationNumber={form.applicationNumber}
+          academicDetails={form.printAcademicDetails}
           readOnly
         />
       ) : (

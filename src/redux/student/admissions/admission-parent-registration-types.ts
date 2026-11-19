@@ -74,7 +74,14 @@ export type ParentRegistrationRequest = {
   lastSavedAt: string | null;
   handedInAt: string | null;
   deliveryStatus:
-    'Pending' | 'Sending' | 'Sent' | 'Failed' | 'PendingApproval' | 'Unknown' | 'Cancelled';
+    | 'NotSent'
+    | 'Pending'
+    | 'Sending'
+    | 'Sent'
+    | 'Failed'
+    | 'PendingApproval'
+    | 'Unknown'
+    | 'Cancelled';
   deliveryError: string | null;
   notes: string | null;
   fieldCodes: string[];
@@ -87,6 +94,8 @@ export type StaffParentRegistrationContext = {
   recipients: ParentRegistrationRecipient[];
   request: ParentRegistrationRequest | null;
   canSend: boolean;
+  canCopyLink?: boolean;
+  canCreateLink?: boolean;
   canRequestCorrections: boolean;
   canRequestDocumentCorrections?: boolean;
   canRevoke: boolean;
@@ -120,6 +129,11 @@ export type ParentRegistrationEmailHistory = {
   attempts: ParentRegistrationEmailAttempt[];
 };
 export type ParentRegistrationCommand = { concurrencyStamp: string; idempotencyKey: string };
+export type ParentRegistrationCopyLinkInput = ParentRegistrationCommand &
+  (
+    | { requestId: string; recipientRelationship?: never }
+    | { requestId?: never; recipientRelationship: ParentRecipientRelationship }
+  );
 export type ParentRegistrationSendInput = ParentRegistrationCommand & {
   recipientRelationship: ParentRecipientRelationship;
 };

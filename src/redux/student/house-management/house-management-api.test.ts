@@ -78,6 +78,7 @@ it('sends server roster filters and unwraps only the current medium response', a
 it('sends the exact reviewed token and null destination for membership removal', async () => {
   const command = {
     academicMediumId: 'm1',
+    divisionId: 'd1',
     enrollmentIds: ['e1', 'e2'],
     houseId: null,
     previewToken: 'reviewed-version',
@@ -91,6 +92,21 @@ it('sends the exact reviewed token and null destination for membership removal',
   await expect(
     store.dispatch(houseManagementApi.endpoints.commitHouseAssignment.initiate(command)).unwrap()
   ).resolves.toBeDefined();
+});
+
+it('updates the House leader slot on the division using the reviewed version', async () => {
+  const body = { academicMediumId: 'm1', enrollmentId: 'e1', concurrencyStamp: 'v1' };
+  const save = vi.fn();
+  mswServer.use(
+    http.put(`${root}/divisions/d1/house-leader`, async ({ request }) => {
+      save(await request.json());
+      return HttpResponse.json({ data: null });
+    })
+  );
+  await store
+    .dispatch(houseManagementApi.endpoints.setHouseLeader.initiate({ id: 'd1', ...body }))
+    .unwrap();
+  expect(save).toHaveBeenCalledExactlyOnceWith(body);
 });
 it('keeps rejected stale commits from refreshing saved lists', async () => {
   let reads = 0;
@@ -115,6 +131,7 @@ it('keeps rejected stale commits from refreshing saved lists', async () => {
       .dispatch(
         houseManagementApi.endpoints.commitHouseAssignment.initiate({
           academicMediumId: 'm1',
+          divisionId: 'd1',
           enrollmentIds: ['e1'],
           houseId: null,
           previewToken: 'stale',

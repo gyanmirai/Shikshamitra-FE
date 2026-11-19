@@ -54,7 +54,13 @@ vi.mock('src/components/adaptive-three-dots-actions', () => ({
   default: ({ actions }: any) => (
     <div>
       {actions.map((action: any) => (
-        <button type="button" key={action.id} disabled={action.disabled} onClick={action.onClick}>
+        <button
+          type="button"
+          key={action.id}
+          aria-label={action.ariaLabel}
+          disabled={action.disabled}
+          onClick={action.onClick}
+        >
           {action.label}
         </button>
       ))}
@@ -140,6 +146,14 @@ beforeEach(() => {
     template: { renderedHeaderContent: 'Saved school snapshot', renderedFooterContent: '' },
     certificateData: {},
   });
+});
+it('shows action names without certificate numbers while retaining accessible row context', () => {
+  render(<CertificateHistoryTable studentId="ravi" />);
+  expect(screen.getByRole('button', { name: 'Reprint BON-001' })).toHaveTextContent(/^Reprint$/);
+  expect(screen.getByRole('button', { name: 'Issue duplicate BON-001' })).toHaveTextContent(
+    /^Issue duplicate$/
+  );
+  expect(screen.getByRole('button', { name: 'Void BON-001' })).toHaveTextContent(/^Void$/);
 });
 it('offers a retry notification when certificate history fails to load', () => {
   mocks.historyFailed = true;

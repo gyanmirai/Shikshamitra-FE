@@ -23,7 +23,7 @@ export type House = {
   description?: string | null;
   logoUrl?: string | null;
   memberCount: number;
-  leader: HouseStudent | null;
+  houseLeaderCount: number;
   concurrencyStamp: string;
   canManage: boolean;
 };
@@ -34,6 +34,7 @@ export type HouseDivision = {
   standardName: string;
   studentCount: number;
   leader: HouseStudent | null;
+  houseLeader: HouseStudent | null;
   concurrencyStamp: string;
   canManage: boolean;
 };
@@ -46,6 +47,7 @@ export type HouseQuery = {
   standardId?: string;
   divisionId?: string;
   houseId?: string;
+  assignedOnly?: boolean;
   unassignedOnly?: boolean;
 };
 export type SaveHouse = {
@@ -57,6 +59,7 @@ export type SaveHouse = {
 };
 export type HouseAssignment = {
   academicMediumId: string;
+  divisionId: string;
   houseId: string | null;
   enrollmentIds: string[];
 };

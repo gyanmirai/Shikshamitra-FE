@@ -15,6 +15,7 @@ import { hasGrantedPermission } from 'src/utils/permissions';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { Box, Stack, Button, Skeleton, IconButton, Typography } from '@mui/material';
+import { FormSectionCard, FormSectionHeader } from 'src/components/form-section-card';
 import {
   useGetAdmissionFeeSelectionQuery,
   useConfirmAdmissionFeeSelectionOnboardingMutation,
@@ -317,6 +318,7 @@ export default function AdmissionFeeSelectionPanel({
                   flex: 1,
                   minWidth: 0,
                   alignItems: 'stretch',
+                  ...(!selection && !showEditor && { alignContent: 'start' }),
                 }
               : { display: 'flex', flexDirection: 'column', gap: 1.5 }
           }
@@ -333,9 +335,13 @@ export default function AdmissionFeeSelectionPanel({
             }
           >
             {workspaceLayout && (
-              <Typography variant="subtitle2" component="h3">
-                Fee Structure
-              </Typography>
+              <FormSectionHeader
+                icon="mdi:file-document-outline"
+                title="Fee Structure"
+                titleTypographyProps={{ component: 'h3' }}
+                descriptionTooltip="Choose a published fee structure and review the fee heads included for this application."
+                descriptionTooltipLabel="Fee Structure Card Information"
+              />
             )}
             {showEditor ? (
               <AdmissionFeeSelectionEditor
@@ -388,37 +394,21 @@ export default function AdmissionFeeSelectionPanel({
                     helpText={`Fee structure confirmed ${fDateTime(selection.savedAt, ADMISSION_DATE_TIME_FORMAT)}${state.ownerStageName ? ` in ${state.ownerStageName}` : ''}.${state.isLocked ? ' Payment has been recorded. This fee selection is locked; ask Finance to review any adjustment or refund.' : ''}`}
                   />
                 </Typography>
-                {compact && mode === 'admissions' ? (
-                  <Box
-                    sx={{
-                      display: 'grid',
-                      gridTemplateColumns: {
-                        xs: 'minmax(0, 1fr)',
-                        lg: 'minmax(0, 1fr)',
-                      },
-                      gap: 1.5,
-                    }}
-                  >
-                    <Stack
-                      spacing={1.5}
-                      sx={{
-                        p: 2,
-                        border: 1,
-                        borderColor: 'divider',
-                        borderRadius: 1.5,
-                        minWidth: 0,
-                      }}
+                {workspaceLayout ? (
+                  <Stack spacing={2} useFlexGap>
+                    <FormSectionCard
+                      title="Published Fee Heads"
+                      titleTypographyProps={{ component: 'h4' }}
+                      icon="mdi:format-list-bulleted"
+                      iconSize={16}
+                      iconContainerSize={28}
+                      descriptionTooltip="Shows the fee heads included in the confirmed structure revision."
+                      sx={{ minWidth: 0, boxShadow: 'none' }}
                     >
-                      <Typography variant="subtitle2">Published Fee Heads</Typography>
                       <AdmissionFeeHeads heads={selection.heads} currency={selection.currency} />
-                    </Stack>
-                    <AdmissionFeeSelectionSummary
-                      structureName={selection.structureName}
-                      revisionNumber={selection.revisionNumber}
-                      heads={selection.heads}
-                      currency={selection.currency}
-                    />
-                  </Box>
+                    </FormSectionCard>
+                    <AdmissionFeeSelectionSummary selection={selection} />
+                  </Stack>
                 ) : (
                   <AdmissionFeeHeads heads={selection.heads} currency={selection.currency} />
                 )}
@@ -440,7 +430,7 @@ export default function AdmissionFeeSelectionPanel({
                 description={
                   readOnly
                     ? 'No fee structure was selected in this step.'
-                    : 'Select a published structure to enable fee collection.'
+                    : 'Choose a published fee structure to get started.'
                 }
                 sx={{ flex: 1, height: 'auto', py: 3, minWidth: 0 }}
                 slotProps={{
@@ -482,6 +472,7 @@ export default function AdmissionFeeSelectionPanel({
               }
               onOpenChange={collectionOpenChanged}
               stretch={workspaceLayout}
+              defaultJoiningDateToToday
               footerAction={workspaceLayout ? deferralAction : undefined}
             />
           )}

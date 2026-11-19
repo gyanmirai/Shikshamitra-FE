@@ -86,6 +86,7 @@ export function LeaderStudentPicker({
     input.standardId,
     input.divisionId,
     input.houseId,
+    input.assignedOnly,
     input.unassignedOnly,
   ]);
   const fetchOptions = async (filter: string, page: number) => {
@@ -108,7 +109,16 @@ export function LeaderStudentPicker({
       onChange={(_, option) => onChange(option)}
       fetchOptions={fetchOptions}
       getOptionLabel={(option) =>
-        `${option.studentName} · ${option.standardName}${option.divisionName ? ` / ${option.divisionName}` : ''}${option.admissionNumber ? ` · GR ${option.admissionNumber}` : ''}`
+        [
+          option.studentName,
+          option.divisionName
+            ? `${option.standardName} / ${option.divisionName}`
+            : option.standardName,
+          input.assignedOnly ? option.houseName : null,
+          option.admissionNumber ? `GR ${option.admissionNumber}` : null,
+        ]
+          .filter(Boolean)
+          .join(' · ')
       }
       getOptionKey={(option) => option.enrollmentId}
       isOptionEqualToValue={(option, selected) => option.enrollmentId === selected.enrollmentId}

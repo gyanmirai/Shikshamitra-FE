@@ -96,6 +96,22 @@ describe('Registration school branding reads', () => {
     );
   });
 
+  it('loads school text for a footer without requesting hidden header images', () => {
+    mocks.metadata.mockReturnValue({
+      currentData: { schoolName: 'Sample School', logo: 'logo-key', banner: 'banner-key' },
+      isFetching: false,
+      isError: false,
+      refetch: mocks.refetchMetadata,
+    });
+    const { result } = renderHook(() => useSchoolPrintBranding(true, false));
+    expect(result.current.branding.schoolName).toBe('Sample School');
+    expect(mocks.image.mock.calls.every((call) => call[1].skip)).toBe(true);
+    act(() => result.current.retry());
+    expect(mocks.refetchMetadata).toHaveBeenCalledOnce();
+    expect(mocks.refetchLogo).not.toHaveBeenCalled();
+    expect(mocks.refetchBanner).not.toHaveBeenCalled();
+  });
+
   it.each([false, true])(
     'skips branding without enabled header or tenant (enabled %s)',
     (enabled) => {

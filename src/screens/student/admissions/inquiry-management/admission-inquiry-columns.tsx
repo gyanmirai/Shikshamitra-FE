@@ -33,7 +33,7 @@ type Options = {
   onManage: (inquiry: AdmissionInquiry) => void;
   onFollowUp?: (inquiry: AdmissionInquiry) => void;
   onHistory?: (inquiry: AdmissionInquiry) => void;
-  onMove: (inquiry: AdmissionInquiry) => void;
+  onMove: (inquiry: AdmissionInquiry) => Promise<boolean>;
 };
 
 const statusColors: Record<number, LabelColor> = {
@@ -102,6 +102,7 @@ export function getAdmissionInquiryActions(
       icon: 'mdi:arrow-right-circle-outline',
       disabled: options.isMoving || Boolean(inquiryHandoffBlocker(inquiry)),
       loading: options.isMoving && options.movingInquiryId === inquiry.id,
+      closeOnSuccess: true,
       tooltip: options.isMoving
         ? options.movingInquiryId === inquiry.id
           ? 'Moving Inquiry…'
@@ -139,6 +140,7 @@ function InquiryRowActions({ inquiry, options }: { inquiry: AdmissionInquiry; op
     <AdaptiveThreeDotsActions
       directActionLimit={2}
       collapseOnOverflow={false}
+      disablePopoverClose={options.isMoving && options.movingInquiryId === inquiry.id}
       moreLabel={`Actions For ${inquiry.applicantName}`}
       placement={opensAbove ? 'bottom-right' : 'top-right'}
       popoverAction={popoverAction}

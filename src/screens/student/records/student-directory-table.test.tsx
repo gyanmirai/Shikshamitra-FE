@@ -136,7 +136,10 @@ it('shows two direct actions and retains certificate, print and status actions i
     within(menu)
       .getAllByRole('menuitem')
       .map((action) => action.textContent)
-  ).toEqual(['Generate Certificate for Riya Shah', 'Print I-Card', 'Change Status']);
+  ).toEqual(['Generate Certificate', 'Print I-Card', 'Change Status']);
+  expect(within(menu).getByTestId('menu-action-certificate')).toHaveAccessibleName(
+    'Generate Certificate for Riya Shah'
+  );
   expect(within(menu).getByRole('menuitem', { name: 'Change Status' })).toHaveAttribute(
     'href',
     '/student/records/changes?student=student-1&section=status'

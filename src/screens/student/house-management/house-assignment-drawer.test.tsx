@@ -34,6 +34,7 @@ it.each(['Cancel', 'X', 'Escape'])(
       <ThemeProvider theme={createTheme(defaultSettings)}>
         <HouseAssignmentDrawer
           academicMediumId="m1"
+          divisionId="d1"
           enrollmentIds={['e1']}
           initialMode="remove"
           onClose={onClose}
@@ -65,6 +66,7 @@ it('keeps an edited membership draft after cancelling a pending read and discard
     <ThemeProvider theme={createTheme(defaultSettings)}>
       <HouseAssignmentDrawer
         academicMediumId="m1"
+        divisionId="d1"
         enrollmentIds={['e1']}
         onClose={onClose}
         onPreview={() =>
@@ -106,6 +108,7 @@ it('does not replace a newer preview token with a discarded read result', async 
     <ThemeProvider theme={createTheme(defaultSettings)}>
       <HouseAssignmentDrawer
         academicMediumId="m1"
+        divisionId="d1"
         enrollmentIds={['e1']}
         initialMode="remove"
         onClose={vi.fn()}
@@ -138,6 +141,7 @@ it('keeps dismissal and duplicate submission locked while confirming a membershi
     <ThemeProvider theme={createTheme(defaultSettings)}>
       <HouseAssignmentDrawer
         academicMediumId="m1"
+        divisionId="d1"
         enrollmentIds={['e1']}
         initialMode="remove"
         onClose={onClose}
@@ -181,6 +185,7 @@ it('requires a preview and names cleared house leadership before confirming remo
     <ThemeProvider theme={createTheme(defaultSettings)}>
       <HouseAssignmentDrawer
         academicMediumId="m1"
+        divisionId="d1"
         enrollmentIds={['e1']}
         initialMode="remove"
         onClose={onClose}
@@ -198,6 +203,7 @@ it('requires a preview and names cleared house leadership before confirming remo
   await waitFor(() =>
     expect(onCommit).toHaveBeenCalledWith({
       academicMediumId: 'm1',
+      divisionId: 'd1',
       houseId: null,
       enrollmentIds: ['e1'],
       previewToken: 'token',

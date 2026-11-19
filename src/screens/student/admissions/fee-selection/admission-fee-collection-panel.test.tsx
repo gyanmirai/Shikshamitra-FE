@@ -577,9 +577,11 @@ it('places joining-date information inside the date field', () => {
     .getByRole('group', { name: /actual joining date/i })
     .closest('.MuiFormControl-root');
   const infoButton = screen.getByRole('button', { name: 'About Actual Joining Date' });
+  const calendarButton = screen.getByRole('button', { name: /choose date/i });
 
   expect(dateField).not.toBeNull();
   expect(dateField).toContainElement(infoButton);
+  expect(calendarButton.closest('.MuiInputAdornment-positionEnd')).toContainElement(infoButton);
 });
 
 it('previews a chosen policy and prepares fees without a reason field', async () => {
@@ -844,9 +846,11 @@ it('keeps unknown balances distinct from zero and preserves collection prerequis
   });
   expect(screen.getAllByLabelText('Not Calculated')).toHaveLength(2);
   expect(screen.getByText('Confirmed payments').nextElementSibling).toHaveTextContent('₹0');
+  expect(screen.getByRole('heading', { name: 'Fee Collection' })).toBeVisible();
+  expect(screen.getByText('No payments recorded yet.')).toBeVisible();
   expect(
-    screen.getByText('Confirm a published fee structure before collecting fees.')
-  ).toBeVisible();
+    screen.queryByText('Confirm a published fee structure before collecting fees.')
+  ).not.toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Collect Fees' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Collect later in Onboarding' })).toBeEnabled();
   expect(mocks.prepare).not.toHaveBeenCalled();

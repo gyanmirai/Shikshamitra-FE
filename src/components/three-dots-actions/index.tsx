@@ -15,6 +15,7 @@ const ThreeDotsActions = ({
   directActions = [],
   onClickThreeDots,
   onClosePopover,
+  disablePopoverClose = false,
   popoverSlotProps,
   popoverAction,
   placement = 'left-top',
@@ -122,7 +123,7 @@ const ThreeDotsActions = ({
               {...(action.href && !action.disabled && !action.loading
                 ? { component: RouterLink, href: action.href }
                 : {})}
-              aria-label={action.label}
+              aria-label={action.ariaLabel ?? action.label}
               data-testid={`table-action-${action.id}`}
               onClick={(event) => {
                 event.stopPropagation();
@@ -180,11 +181,14 @@ const ThreeDotsActions = ({
             event.target.closest('[role="menu"]')
           ) {
             event.preventDefault();
-            popover.onClose();
-            onClosePopover?.();
+            if (!disablePopoverClose) {
+              popover.onClose();
+              onClosePopover?.();
+            }
           }
         }}
         onClose={() => {
+          if (disablePopoverClose) return;
           popover.onClose();
           onClosePopover?.();
         }}

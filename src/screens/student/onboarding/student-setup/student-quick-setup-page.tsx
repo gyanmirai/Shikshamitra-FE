@@ -10,7 +10,7 @@ import { useRef, useState, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
 import { StudentFeedback } from 'src/components/student-feedback';
-import { Box, Stack, Avatar, Button, Skeleton, Typography } from '@mui/material';
+import { Box, Stack, Button, Skeleton, Typography } from '@mui/material';
 import {
   useActivateStudentOnboardingMutation,
   useLazyGetStudentOnboardingCaseQuery,
@@ -21,6 +21,7 @@ import {
 } from 'src/redux/student/onboarding/student-onboarding-api';
 
 import StudentOnboardingFees from './student-onboarding-fees';
+import StudentPhotoAvatar from '../../components/student-photo-avatar';
 import { mapOnboardingCaseToItem } from './student-onboarding-model';
 import StudentQuickSetupSection from './student-quick-setup-section';
 import { runStudentQuickSetupSave } from './student-quick-setup-save';
@@ -465,7 +466,12 @@ export default function StudentQuickSetupPage({
           flexShrink: 0,
         }}
       >
-        <Avatar variant="rounded" sx={{ bgcolor: 'action.selected', color: 'text.secondary' }}>
+        <StudentPhotoAvatar
+          studentId={editor.permissionDenied ? undefined : activeStudent.studentId}
+          alt={activeStudent.studentName}
+          variant="rounded"
+          sx={{ bgcolor: 'action.selected', color: 'text.secondary' }}
+        >
           {editor.permissionDenied
             ? '—'
             : activeStudent.studentName
@@ -474,7 +480,7 @@ export default function StudentQuickSetupPage({
                 .slice(0, 2)
                 .map((name) => name.charAt(0))
                 .join('')}
-        </Avatar>
+        </StudentPhotoAvatar>
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography
             ref={titleRef}

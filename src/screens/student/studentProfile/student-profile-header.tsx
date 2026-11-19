@@ -5,7 +5,9 @@ import type { StudentRecordProfile } from 'src/redux/student/student-profile-typ
 
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
-import { Box, Paper, Stack, Avatar, Divider, Typography } from '@mui/material';
+import { Box, Paper, Stack, Divider, Typography } from '@mui/material';
+
+import StudentPhotoAvatar from '../components/student-photo-avatar';
 
 export function StudentProfileHeader({
   student,
@@ -57,7 +59,11 @@ export function StudentProfileHeader({
           alignItems="center"
           sx={{ minWidth: 0, gridColumn: { xs: '1 / -1', md: 'auto' } }}
         >
-          <Avatar
+          <StudentPhotoAvatar
+            studentId={student.studentId}
+            hasPhoto={
+              student.recordsAccess !== 'Summary' && !student.maskedFields?.includes('Identity')
+            }
             alt={name}
             sx={{
               width: compact ? 32 : 40,
@@ -68,7 +74,7 @@ export function StudentProfileHeader({
           >
             {student.firstName?.[0]}
             {student.lastName?.[0]}
-          </Avatar>
+          </StudentPhotoAvatar>
           <Stack
             direction="row"
             spacing={1}
