@@ -136,6 +136,7 @@ vi.mock('src/redux/student/house-management/house-management-api', () => {
     totalCount: 1,
   };
   let studentPage = studentData;
+  let divisionPage = { items: fixture.divisions, totalCount: fixture.divisions.length };
   const houseData = [
     { items: [], totalCount: 0, canManage: false },
     { items: [], totalCount: 0, canManage: true },
@@ -151,7 +152,10 @@ vi.mock('src/redux/student/house-management/house-management-api', () => {
     useUploadHouseLogoMutation: mutation,
     useGetHouseDivisionsQuery: (input: unknown) => {
       fixture.divisionInput(input);
-      return { ...result, currentData: { items: fixture.divisions, totalCount: fixture.divisions.length } };
+      // Match RTK Query's stable result identity between renders of an unchanged page.
+      if (divisionPage.items !== fixture.divisions)
+        divisionPage = { items: fixture.divisions, totalCount: fixture.divisions.length };
+      return { ...result, currentData: divisionPage };
     },
     useGetHouseStudentsQuery: (input: unknown) => {
       fixture.input(input);
