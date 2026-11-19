@@ -94,17 +94,17 @@ it('sends the exact reviewed token and null destination for membership removal',
   ).resolves.toBeDefined();
 });
 
-it('updates the House leader slot on the division using the reviewed version', async () => {
+it('updates the leader slot on the house using the reviewed version', async () => {
   const body = { academicMediumId: 'm1', enrollmentId: 'e1', concurrencyStamp: 'v1' };
   const save = vi.fn();
   mswServer.use(
-    http.put(`${root}/divisions/d1/house-leader`, async ({ request }) => {
+    http.put(`${root}/houses/h1/leader`, async ({ request }) => {
       save(await request.json());
       return HttpResponse.json({ data: null });
     })
   );
   await store
-    .dispatch(houseManagementApi.endpoints.setHouseLeader.initiate({ id: 'd1', ...body }))
+    .dispatch(houseManagementApi.endpoints.setHouseLeader.initiate({ id: 'h1', ...body }))
     .unwrap();
   expect(save).toHaveBeenCalledExactlyOnceWith(body);
 });

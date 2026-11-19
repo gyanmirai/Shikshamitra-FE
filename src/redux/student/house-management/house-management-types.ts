@@ -24,6 +24,7 @@ export type House = {
   logoUrl?: string | null;
   memberCount: number;
   houseLeaderCount: number;
+  leader?: HouseStudent | null;
   concurrencyStamp: string;
   canManage: boolean;
 };
@@ -34,7 +35,6 @@ export type HouseDivision = {
   standardName: string;
   studentCount: number;
   leader: HouseStudent | null;
-  houseLeader: HouseStudent | null;
   concurrencyStamp: string;
   canManage: boolean;
 };
