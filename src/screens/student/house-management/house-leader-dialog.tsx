@@ -1,4 +1,5 @@
 import type {
+  House,
   HouseStudent,
   HouseDivision,
   HouseLeaderCommand,
@@ -8,7 +9,6 @@ import { useState } from 'react';
 import { useFormik } from 'formik';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import CustomSelect from 'src/components/custom-select';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { LoadingButton } from 'src/components/loading-button';
 import { FormBusyRegion } from 'src/components/form-busy-region';
@@ -21,21 +21,17 @@ import { LeaderStudentPicker } from './house-pickers';
 import { useHouseCloseGuard } from './use-house-close-guard';
 
 type LeaderRole = 'house' | 'division';
-const roles = [
-  { value: 'house', label: 'House leader' },
-  { value: 'division', label: 'Division leader' },
-];
 
 type Props = {
   academicMediumId: string;
-  houseId?: string;
-  record: HouseDivision;
-  onSave: (role: LeaderRole, command: HouseLeaderCommand) => Promise<void>;
+  role: LeaderRole;
+  record: House | HouseDivision;
+  onSave: (command: HouseLeaderCommand) => Promise<void>;
   onClose: () => void;
 };
 export default function HouseLeaderDialog({
   academicMediumId,
-  houseId,
+  role,
   record,
   onSave,
   onClose,
@@ -43,16 +39,15 @@ export default function HouseLeaderDialog({
   const [error, setError] = useState('');
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [role, setRole] = useState<LeaderRole>('house');
   const isHouse = role === 'house';
   const title = isHouse ? 'House Leader' : 'Division Leader';
-  const currentLeader = (isHouse ? record.houseLeader : record.leader) ?? null;
+  const currentLeader = record.leader ?? null;
   const save = async (leader: HouseStudent | null) => {
     if (busy) return;
     setBusy(true);
     setError('');
     try {
-      await onSave(role, {
+      await onSave({
         id: record.id,
         academicMediumId,
         enrollmentId: leader?.enrollmentId ?? null,
@@ -74,13 +69,17 @@ export default function HouseLeaderDialog({
       else await save(values.leader);
     },
   });
-  const { close, confirmation, requestNavigation } = useHouseCloseGuard(form.dirty, busy, onClose);
+  const { close, confirmation } = useHouseCloseGuard(form.dirty, busy, onClose);
   return (
     <>
       <CustomDialog
         open
-        title="Manage Leaders"
-        titleInfo="Each division can have one house leader and one division leader. A student can hold both roles."
+        title={`Manage ${title}`}
+        titleInfo={
+          isHouse
+            ? 'Each house has one leader. Choose a current house member or leave the role vacant.'
+            : 'Each division has one division leader. A student may also lead their house.'
+        }
         handleClose={close}
         guardUnsavedChanges={false}
         disableClose={busy}
@@ -102,31 +101,14 @@ export default function HouseLeaderDialog({
                 icon={GlobalIcons.admissionStudent}
                 descriptionTooltip={
                   isHouse
-                    ? 'Choose an active student in this division with a house. Moving them to another house clears their house leadership.'
+                    ? 'Choose an active member of this house. Leaving the house clears this appointment.'
                     : 'Choose an active student in this division. House membership is optional.'
                 }
               >
                 <Typography variant="body2">
-                  {record.standardName} / {record.name}
+                  {'standardName' in record ? `${record.standardName} / ` : ''}
+                  {record.name}
                 </Typography>
-                <CustomSelect
-                  label="Role"
-                  options={roles}
-                  value={role}
-                  disabled={busy}
-                  onChange={(nextRole) => {
-                    if (nextRole === role || (nextRole !== 'house' && nextRole !== 'division')) return;
-                    requestNavigation(() => {
-                      setRole(nextRole);
-                      form.resetForm({
-                        values: {
-                          leader: (nextRole === 'house' ? record.houseLeader : record.leader) ?? null,
-                        },
-                      });
-                      setError('');
-                    });
-                  }}
-                />
                 {currentLeader && (
                   <Typography variant="body2" color="text.secondary">
                     Current leader: {currentLeader.studentName}
@@ -136,8 +118,7 @@ export default function HouseLeaderDialog({
                 <LeaderStudentPicker
                   input={{
                     academicMediumId,
-                    divisionId: record.id,
-                    ...(isHouse ? { assignedOnly: true, houseId } : {}),
+                    ...(isHouse ? { houseId: record.id } : { divisionId: record.id }),
                   }}
                   value={form.values.leader}
                   onChange={(student) => form.setFieldValue('leader', student)}

@@ -68,7 +68,8 @@ import { houseWorkspaceState, selectionForContext } from './house-management-mod
 
 type Session =
   | { kind: 'house'; house?: House }
-  | { kind: 'leader'; record: HouseDivision }
+  | { kind: 'leader'; role: 'house'; record: House }
+  | { kind: 'leader'; role: 'division'; record: HouseDivision }
   | { kind: 'assignment'; mode: 'assign' | 'remove'; ids: string[] }
   | { kind: 'delete'; house: House };
 
@@ -179,7 +180,6 @@ export default function HouseManagement() {
   const divisions = standard?.divisions ?? [];
   const divisionId = divisions.find((item) => item.id === params.get('division'))?.id ?? '';
   const houseId = params.get('house') ?? '';
-  const leaderHouseId = state.tab === 'divisions' ? (params.get('leaderHouse') ?? '') : '';
   const unassignedOnly = params.get('assignment') === 'unassigned';
   const validScope = Boolean(medium);
   const awaitingMedium = Boolean(board && requestedBoard && !requestedMedium);
@@ -208,7 +208,6 @@ export default function HouseManagement() {
       ...input,
       standardId: standardId || undefined,
       divisionId: divisionId || undefined,
-      houseId: leaderHouseId || undefined,
     },
     { skip: !ready || state.tab !== 'divisions' }
   );
@@ -236,7 +235,6 @@ export default function HouseManagement() {
     standardId,
     divisionId,
     houseId,
-    leaderHouseId,
     unassignedOnly,
     state.search,
     state.sorting,
@@ -333,17 +331,8 @@ export default function HouseManagement() {
         {student.studentName}
       </Typography>
     );
-  const leader = (student: HouseStudent | null, canManageDivision: boolean, showHouse = false) =>
-    student ? (
-      <Stack alignItems="flex-start">
-        {name(student)}
-        {showHouse && student.houseName && (
-          <Typography variant="caption" color="text.secondary">
-            {student.houseName}
-          </Typography>
-        )}
-      </Stack>
-    ) : canManageDivision ? (
+  const leader = (student: HouseStudent | null | undefined, canManageRole: boolean) =>
+    student ? name(student) : canManageRole ? (
       <Label color="default" sx={{ typography: 'caption', height: 22 }}>
         Vacant
       </Label>
@@ -389,17 +378,12 @@ export default function HouseManagement() {
       ),
     },
     {
-      id: 'houseLeaderCount',
-      label: 'House leaders',
-      align: 'right',
-      minWidth: 130,
-      isFilter: true,
-      filterType: 'number',
-      render: (value) => (
-        <Typography variant="body2" sx={{ fontVariantNumeric: 'tabular-nums' }}>
-          {value ?? 0}
-        </Typography>
-      ),
+      id: 'leader',
+      label: 'House leader',
+      minWidth: 160,
+      isFilter: false,
+      render: (_, row) => leader(row.leader, row.canManage),
+      exportValue: (_, row) => row.leader?.studentName ?? null,
     },
     {
       id: 'description',
@@ -457,18 +441,9 @@ export default function HouseManagement() {
                       label: 'Manage leader',
                       ariaLabel: `Manage leader for ${row.name}`,
                       icon: 'mdi:account-switch-outline',
-                      disabled,
-                      onClick: () =>
-                        update({
-                          tab: 'divisions',
-                          class: undefined,
-                          division: undefined,
-                          leaderHouse: row.id,
-                          leaderHouseName: row.name,
-                          search: undefined,
-                          sort: undefined,
-                          page: undefined,
-                        }),
+                      disabled: disabled || !row.canManage,
+                      tooltip: !row.canManage ? 'Full house scope is required.' : undefined,
+                      onClick: () => open({ kind: 'leader', role: 'house', record: row }),
                     },
                   ]
                 : []),
@@ -663,17 +638,6 @@ export default function HouseManagement() {
       exportValue: divisionPlacementValue,
     },
     {
-      id: 'houseLeader',
-      label: 'House leader',
-      minWidth: 180,
-      isFilter: false,
-      render: (_, row) => leader(row.houseLeader, row.canManage, true),
-      exportValue: (_, row) => {
-        const student = row.houseLeader as HouseStudent | null;
-        return student ? [student.studentName, student.houseName].filter(Boolean).join(' · ') : null;
-      },
-    },
-    {
       id: 'leader',
       label: 'Division leader',
       minWidth: 180,
@@ -699,12 +663,12 @@ export default function HouseManagement() {
                 actions={[
                   {
                     id: 'leader',
-                    label: 'Manage leaders',
-                    ariaLabel: `Manage leaders for ${row.standardName} / ${row.name}`,
+                    label: 'Manage division leader',
+                    ariaLabel: `Manage division leader for ${row.standardName} / ${row.name}`,
                     icon: 'mdi:account-switch-outline',
                     disabled: disabled || !row.canManage,
                     tooltip: !row.canManage ? 'Full division scope is required.' : undefined,
-                    onClick: () => open({ kind: 'leader', record: row }),
+                    onClick: () => open({ kind: 'leader', role: 'division', record: row }),
                   },
                 ]}
               />
@@ -738,7 +702,7 @@ export default function HouseManagement() {
       <CustomBreadcrumbs
         editorOpen={Boolean(currentSession)} busy={deleting.isLoading}
         heading="House Management"
-        description="Manage medium-wise houses, cross-class membership and two independent leadership roles per division. Counts and leaders reflect your academic scope."
+        description="Manage medium-wise houses, cross-class membership, and separate House and Division leaders. Counts and leaders reflect your academic scope."
         descriptionDisplay="tooltip"
         links={[
           { name: 'Student', href: studentPaths.dashboard },
@@ -947,19 +911,6 @@ export default function HouseManagement() {
             </Box>
           )}
         </Stack>
-        {leaderHouseId && (
-          <Box sx={{ pt: 1, mt: 1, borderTop: 1, borderColor: 'divider' }}>
-            <Chip
-              size="small"
-              variant="outlined"
-              color="primary"
-              label={`House: ${params.get('leaderHouseName') || 'Selected'}`}
-              onDelete={() =>
-                update({ leaderHouse: undefined, leaderHouseName: undefined, page: undefined })
-              }
-            />
-          </Box>
-        )}
         {state.tab === 'students' && (Boolean(houseId) || unassignedOnly) && (
           <Stack
             direction="row"
@@ -1327,7 +1278,6 @@ export default function HouseManagement() {
               : state.search ||
                   standardId ||
                   divisionId ||
-                  leaderHouseId ||
                   (state.tab === 'students' && (houseId || unassignedOnly))
                 ? 'No records match these filters.'
                 : state.tab === 'houses'
@@ -1362,11 +1312,13 @@ export default function HouseManagement() {
         <HouseLeaderDialog
           key={`${context}:${currentSession.record.id}`}
           academicMediumId={mediumId}
-          houseId={leaderHouseId || undefined}
+          role={currentSession.role}
           record={currentSession.record}
           onClose={() => setSession(null)}
-          onSave={async (role, values) => {
-            await (role === 'house' ? setHouseLeader(values) : setDivisionLeader(values)).unwrap();
+          onSave={async (values) => {
+            await (currentSession.role === 'house'
+              ? setHouseLeader(values)
+              : setDivisionLeader(values)).unwrap();
             success('Leader updated.');
           }}
         />

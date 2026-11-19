@@ -110,7 +110,7 @@ vi.mock('src/components/customizabaleTable', () => ({
     );
   },
 }));
-vi.mock('./house-pickers', () => ({ HousePicker: () => null }));
+vi.mock('./house-pickers', () => ({ HousePicker: () => null, LeaderStudentPicker: () => null }));
 vi.mock('src/redux/student/house-management/house-management-api', () => {
   const result = {
     currentData: { items: [], totalCount: 0 },
@@ -136,6 +136,7 @@ vi.mock('src/redux/student/house-management/house-management-api', () => {
     totalCount: 1,
   };
   let studentPage = studentData;
+  let divisionPage = { items: fixture.divisions, totalCount: fixture.divisions.length };
   const houseData = [
     { items: [], totalCount: 0, canManage: false },
     { items: [], totalCount: 0, canManage: true },
@@ -151,7 +152,10 @@ vi.mock('src/redux/student/house-management/house-management-api', () => {
     useUploadHouseLogoMutation: mutation,
     useGetHouseDivisionsQuery: (input: unknown) => {
       fixture.divisionInput(input);
-      return { ...result, currentData: { items: fixture.divisions, totalCount: fixture.divisions.length } };
+      // Match RTK Query's stable result identity between renders of an unchanged page.
+      if (divisionPage.items !== fixture.divisions)
+        divisionPage = { items: fixture.divisions, totalCount: fixture.divisions.length };
+      return { ...result, currentData: divisionPage };
     },
     useGetHouseStudentsQuery: (input: unknown) => {
       fixture.input(input);
@@ -328,46 +332,46 @@ it('shows separate role icons beside a dual leader with hover and keyboard toolt
   expect(await screen.findByRole('tooltip', { name: 'Division leader · 6 / A' })).toBeVisible();
 });
 
-it('shows both leadership positions with the incumbent house while filtering divisions', () => {
+it('shows the independent Division leader position when filtering divisions', () => {
   fixture.permissions.push('Students.Records.HouseManagement.Add');
-  fixture.query = 'tab=divisions&class=c1&division=d1&leaderHouse=h1&leaderHouseName=Falcon';
+  fixture.query = 'tab=divisions&class=c1&division=d1';
   fixture.divisions = [{
     id: 'd1', name: 'A', standardId: 'c1', standardName: '6', studentCount: 20,
     leader: null,
-    houseLeader: {
-      enrollmentId: 'e2', studentId: 's2', studentName: 'Mira', standardId: 'c1', standardName: '6',
-      houseName: 'Ocean', isHouseLeader: true, isDivisionLeader: false, concurrencyStamp: 'v1',
-    },
     concurrencyStamp: 'v1', canManage: true,
   }];
   mount();
   expect(screen.getByRole('tab', { name: 'Assign Leaders' })).toHaveAttribute('aria-selected', 'true');
   expect(fixture.divisionInput).toHaveBeenCalledWith(expect.objectContaining({
-    standardId: 'c1', divisionId: 'd1', houseId: 'h1',
+    standardId: 'c1', divisionId: 'd1',
   }));
-  expect(screen.getByText('Mira')).toBeVisible();
-  expect(screen.getByText('Ocean')).toBeVisible();
   expect(screen.getByText('Vacant')).toBeVisible();
-  expect(screen.getByRole('button', { name: 'Manage leaders for 6 / A' })).toBeEnabled();
+  const manage = screen.getByRole('button', { name: 'Manage division leader for 6 / A' });
+  fireEvent.click(manage);
+  expect(screen.getByRole('dialog', { name: 'Manage Division Leader' })).toBeVisible();
 });
 
-it('uses short house row action labels and opens Assign Leaders for that house', () => {
+it('shows the house incumbent and opens Manage House Leader from the house row', () => {
   fixture.permissions.push('Students.Records.HouseManagement.Add', 'Students.Records.HouseManagement.Delete');
   fixture.query = 'tab=houses';
   fixture.houses = { items: [{
-    id: 'h1', name: 'Falcon', color: '#123456', memberCount: 0, houseLeaderCount: 0,
+    id: 'h1', name: 'Falcon', color: '#123456', memberCount: 1, houseLeaderCount: 1,
+    leader: {
+      enrollmentId: 'e2', studentId: 's2', studentName: 'Mira',
+      standardId: 'c1', standardName: '6',
+      houseName: 'Falcon', isHouseLeader: true, isDivisionLeader: false, concurrencyStamp: 'v1',
+    },
     concurrencyStamp: 'v1', canManage: true,
   }], totalCount: 1, canManage: true };
   mount();
+  expect(screen.getByText('Mira')).toBeVisible();
   fireEvent.click(screen.getByRole('button', { name: 'More actions for Falcon' }));
   expect(screen.getByRole('menuitem', { name: 'Delete Falcon' })).toHaveTextContent(/^Delete$/);
   const manageLeader = screen.getByRole('menuitem', { name: 'Manage leader for Falcon' });
   expect(manageLeader).toHaveTextContent(/^Manage leader$/);
   fireEvent.click(manageLeader);
-  expect(fixture.push).toHaveBeenCalledWith(
-    '/student/records/houses?tab=divisions&leaderHouse=h1&leaderHouseName=Falcon',
-    { scroll: false }
-  );
+  expect(screen.getByRole('dialog', { name: 'Manage House Leader' })).toBeVisible();
+  expect(screen.getByText(/Current leader: Mira/)).toBeVisible();
 });
 
 it('keeps class filter changes in the URL and resets the page', () => {
