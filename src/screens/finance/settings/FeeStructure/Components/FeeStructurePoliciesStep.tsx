@@ -348,7 +348,7 @@ export default function FeeStructurePoliciesStep({
                         backgroundImage: `linear-gradient(${selectionTint}, ${selectionTint})`,
                       },
                     }
-                  : {},
+                  : undefined,
               })}
               isLoading={catalogs[choosing].loading && !options.length}
               isSearch
