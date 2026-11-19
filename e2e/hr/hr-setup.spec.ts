@@ -15,7 +15,7 @@ test.describe.serial('HR setup wizard with disposable SQLite and real backend AP
       .getByTestId('hr-setup-check-pf-coverage')
       .getByRole('button', { name: /^Configure / })
       .click();
-    await expect(wizard.getByLabel(/PF coverage effective month/)).toBeVisible();
+    await expect(wizard.getByRole('group', { name: 'PF coverage effective month' })).toBeVisible();
     await expect(page.getByRole('dialog')).toHaveCount(1);
     await page.screenshot({ path: '.artifacts/hr-setup/pf-coverage-wizard.png' });
     await wizard.getByLabel(/PF coverage evidence reference/).fill('Unsaved coverage evidence');
@@ -96,7 +96,9 @@ test.describe.serial('HR setup wizard with disposable SQLite and real backend AP
           .getByTestId('hr-setup-check-pf-coverage')
           .getByRole('button', { name: /^Configure / })
           .click();
-        await expect(wizard.getByLabel(/PF coverage effective month/)).toBeInViewport();
+        await expect(
+          wizard.getByRole('group', { name: 'PF coverage effective month' })
+        ).toBeInViewport();
         await expect(wizard.getByLabel(/PF coverage evidence reference/)).toBeInViewport();
         await expect(
           wizard.getByRole('button', { name: 'Save and next', exact: true })

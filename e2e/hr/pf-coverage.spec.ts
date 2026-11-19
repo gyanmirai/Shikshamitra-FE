@@ -34,11 +34,18 @@ test('configured coverage stays compact until configuration is requested', async
 test('failed saves preserve entries and dirty close supports keep-editing and discard', async ({
   page,
 }) => {
+  await page.clock.setFixedTime(new Date('2026-10-15T12:00:00Z'));
   await page.goto('/');
   await page.getByRole('button', { name: 'Set up PF coverage' }).click();
   const dialog = page.getByRole('dialog', { name: 'Configure PF Coverage' });
   await dialog.getByRole('button', { name: 'Submit', exact: true }).click();
   await expect(dialog.getByText('Select school coverage.')).toBeVisible();
+  const monthField = dialog.getByRole('group', { name: 'PF coverage effective month' });
+  await monthField.getByRole('spinbutton', { name: 'Month' }).press('Delete');
+  await expect(dialog.getByText('Choose an effective month.')).toBeVisible();
+  await monthField.getByRole('button', { name: /Choose date/ }).click();
+  await page.getByRole('radio', { name: 'November' }).click();
+  await expect(monthField.getByRole('spinbutton', { name: 'Month' })).toHaveText('November');
   await dialog.getByRole('combobox', { name: /School establishment coverage/ }).click();
   await page.getByRole('option', { name: 'Covered under PF', exact: true }).click();
   await dialog
@@ -46,6 +53,7 @@ test('failed saves preserve entries and dirty close supports keep-editing and di
     .fill('Synthetic evidence');
   await dialog.getByRole('button', { name: 'Submit', exact: true }).click();
   await expect(dialog.getByRole('alert')).toBeVisible();
+  await expect(monthField.getByRole('spinbutton', { name: 'Month' })).toHaveText('November');
   await expect(dialog.getByRole('textbox', { name: /PF coverage evidence reference/ })).toHaveValue(
     'Synthetic evidence'
   );
@@ -68,7 +76,9 @@ test('failed saves preserve entries and dirty close supports keep-editing and di
       const dialog = page.getByRole('dialog', { name: 'Configure PF Coverage' });
       await expect(dialog.getByRole('button', { name: 'Submit', exact: true })).toBeInViewport();
       await expect(dialog.getByRole('button', { name: 'Cancel', exact: true })).toBeInViewport();
-      const month = await dialog.getByLabel(/PF coverage effective month/).boundingBox();
+      const month = await dialog
+        .getByRole('group', { name: 'PF coverage effective month' })
+        .boundingBox();
       const select = await dialog
         .getByRole('combobox', { name: /School establishment coverage/ })
         .boundingBox();
