@@ -94,6 +94,7 @@ import { CreateSubstitutionModeTabs } from './components/CreateSubstitutionModeT
 import { QuickSubstitutionDrawer } from './quick-substitution/QuickSubstitutionDrawer';
 import { SubstitutionCreationOverlay } from './components/SubstitutionCreationOverlay';
 import { SubstitutionFormSection as SectionCard } from './components/SubstitutionFormSection';
+import { canSendSubstitutionReminder, substitutionReminderFeedback } from './substitutionReminder';
 import {
   createSubstitutionSegments,
   resolveAvailabilityTeacherSelection,
@@ -2250,15 +2251,18 @@ const SubstitutionManagementScreen = () => {
             id: 'reminder',
             label: 'Send reminder',
             icon: 'mdi:bell-ring-outline',
-            disabled: isClosed || !canManageSubstitutions,
+            disabled:
+              !canManageSubstitutions || isSendingReminder || !canSendSubstitutionReminder(row),
             onClick: async () => {
               try {
                 const updated = await sendSubstitutionReminder(row.id).unwrap();
                 updateSubstitution(row.id, () => mapApiSubstitution(updated));
-                shikshaMitraToast.info({ message: 'Reminder sent to substitute teacher.' });
-              } catch (error) {
-                const message = error instanceof Error ? error.message : 'Unable to send reminder.';
-                shikshaMitraToast.error({ message });
+                const { tone, message } = substitutionReminderFeedback(updated.notificationStatus);
+                shikshaMitraToast[tone]({ message });
+              } catch {
+                shikshaMitraToast.error({
+                  message: 'Unable to queue the reminder. Check that the duty is awaiting acknowledgement.',
+                });
               }
             },
           },
@@ -3309,19 +3313,21 @@ const SubstitutionManagementScreen = () => {
           <MenuItem
             disabled={
               !actionRow ||
-              ['Completed', 'Cancelled'].includes(actionRow.status) ||
-              !canManageSubstitutions
+              !canManageSubstitutions ||
+              isSendingReminder ||
+              !canSendSubstitutionReminder(actionRow)
             }
             onClick={async () => {
               if (actionRow) {
                 try {
                   const updated = await sendSubstitutionReminder(actionRow.id).unwrap();
                   updateSubstitution(actionRow.id, () => mapApiSubstitution(updated));
-                  shikshaMitraToast.info({ message: 'Reminder sent to substitute teacher.' });
-                } catch (error) {
-                  const message =
-                    error instanceof Error ? error.message : 'Unable to send reminder.';
-                  shikshaMitraToast.error({ message });
+                  const { tone, message } = substitutionReminderFeedback(updated.notificationStatus);
+                  shikshaMitraToast[tone]({ message });
+                } catch {
+                  shikshaMitraToast.error({
+                    message: 'Unable to queue the reminder. Check that the duty is awaiting acknowledgement.',
+                  });
                 }
               }
               closeActionMenu();

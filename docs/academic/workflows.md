@@ -22,6 +22,8 @@ Student and parent dashboards use verified personal context and a linked-student
 The absence of a child selection never defaults to a school-wide view.
 
 The section catalogue covers class assignments, Student Academic 360, calendar, syllabus, lesson plans and diary, timetable/rooms/substitutions, learning tasks, evaluation, examinations, reports, notifications, audits and the nine active settings.
+
+On the Substitution workspace, Send reminder is available while an open duty still requires acknowledgement. After the request, the workspace reports the returned delivery state, including queued work, provider acceptance, and an unconfirmed response.
 Each visible staff section links to its permitted existing workflows.
 Graphs use actual samples: mappings, scatter comparisons, timelines, progress bars, status columns, period occupancy, task stacks, review distributions, exam stages and report counts.
 Where the source cannot safely provide the selected scope, the section explains its limitation and retains permitted navigation.
