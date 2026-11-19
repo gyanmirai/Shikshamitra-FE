@@ -4,6 +4,7 @@ import type { RootState } from 'src/redux/store';
 import type { HrSetupCheck, HrSetupReadiness } from 'src/redux/hr/hr-setup-readiness-api';
 
 import { useRouter } from 'src/routes/hooks';
+import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
@@ -158,6 +159,12 @@ export default function HrSetupWizard({ readiness, error, refreshing, refresh, o
   const totalChecks = readiness?.checks.length ?? 0;
   const totalCompletedChecks =
     readiness?.checks.filter((check) => check.state === 'ready').length ?? 0;
+  const remainingChecks = totalChecks - totalCompletedChecks;
+  const completionText = `${totalCompletedChecks} of ${totalChecks} setup items complete`;
+  const stepStates = hrSetupSteps.map((_, index) => {
+    if (readiness && setupStepComplete(readiness, index)) return 'completed';
+    return index === activeStep ? 'active' : 'pending';
+  });
   const editorTitle = setupCheckLabels[auxiliary || task || ''] || 'Required Configuration';
   const renderCheck = (check: HrSetupCheck) => (
     <Box key={check.code} data-testid={`hr-setup-check-${check.code}`}>
@@ -222,6 +229,41 @@ export default function HrSetupWizard({ readiness, error, refreshing, refresh, o
         open
         title="Let’s Complete Your HR Setup"
         titleInfo="Saved setup is shared by this school. Staff still need individual salary setup before activation."
+        headerContent={
+          <Stack spacing={1.5}>
+            <Typography variant="body2" color="text.secondary">
+              Finish setup for attendance, leave and payroll. You can close this window and return
+              to your saved progress.
+            </Typography>
+            {!error && totalChecks > 0 && (
+              <Stack spacing={0.75}>
+                <Stack
+                  direction="row"
+                  useFlexGap
+                  spacing={1}
+                  justifyContent="space-between"
+                  alignItems="center"
+                  flexWrap="wrap"
+                >
+                  <Typography variant="body2">{completionText}</Typography>
+                  <Label color={readiness?.isReady ? 'success' : 'default'}>
+                    {readiness?.isReady
+                      ? 'Ready to finish'
+                      : `${remainingChecks} ${remainingChecks === 1 ? 'item' : 'items'} remaining`}
+                  </Label>
+                </Stack>
+                <LinearProgress
+                  variant="determinate"
+                  value={(totalCompletedChecks / totalChecks) * 100}
+                  aria-label="Saved HR setup completion"
+                  aria-valuetext={completionText}
+                  color="success"
+                  sx={{ height: 8, borderRadius: 1 }}
+                />
+              </Stack>
+            )}
+          </Stack>
+        }
         maxWidth="lg"
         fullScreen={mobile}
         hasForm={false}
@@ -237,51 +279,24 @@ export default function HrSetupWizard({ readiness, error, refreshing, refresh, o
           },
         }}
       >
-        <Box sx={{ p: 2, flexShrink: 0, borderBottom: 1, borderColor: 'divider' }}>
-          <Stack spacing={1.5} sx={{ mb: 2 }}>
-            <Box
-              component="ul"
-              sx={{ m: 0, pl: 2.5, typography: 'body2', color: 'text.secondary' }}
-            >
-              <li>Finish setup for attendance, leave and payroll.</li>
-              <li>Close anytime to explore HR.</li>
-              <li>Saved setup is kept.</li>
-            </Box>
-            {readiness && !error && totalChecks > 0 && (
-              <Stack spacing={0.75}>
-                <Stack direction="row" spacing={1} justifyContent="space-between">
-                  <Typography variant="caption" color="text.secondary">
-                    {totalCompletedChecks} of {totalChecks} setup items complete
-                  </Typography>
-                  <Typography variant="subtitle2">
-                    {totalChecks === totalCompletedChecks
-                      ? 'Ready to finish'
-                      : `${totalChecks - totalCompletedChecks} ${totalChecks - totalCompletedChecks === 1 ? 'item' : 'items'} remaining`}
-                  </Typography>
-                </Stack>
-                <LinearProgress
-                  variant="determinate"
-                  value={(totalCompletedChecks / totalChecks) * 100}
-                  aria-label="Saved HR setup completion"
-                  aria-valuetext={`${totalCompletedChecks} of ${totalChecks} setup items complete`}
-                  sx={{ height: 6, borderRadius: 1 }}
-                />
-              </Stack>
-            )}
-          </Stack>
-          {!mobile && (
+        <Box sx={{ px: 2, py: 1, flexShrink: 0, borderBottom: 1, borderColor: 'divider' }}>
+          {mobile ? (
+            <Typography variant="subtitle2" role="status">
+              Step {activeStep + 1} of {hrSetupSteps.length}: {step.label}
+            </Typography>
+          ) : (
             <CustomStepper
               steps={hrSetupSteps.map((item) => item.label)}
               activeStep={activeStep}
               ariaLabel="HR setup steps"
               disabled={busy}
-              stepStates={hrSetupSteps.map((_, index) =>
-                readiness && setupStepComplete(readiness, index)
-                  ? 'completed'
-                  : index === activeStep
-                    ? 'active'
-                    : 'pending'
-              )}
+              stepStates={stepStates}
+              stepCaptions={stepStates.map((state) => {
+                if (state === 'completed') return <Label color="success">Completed</Label>;
+                if (state === 'active' && readiness && !error)
+                  return <Label color="info">In progress</Label>;
+                return undefined;
+              })}
               onStepClick={(index) =>
                 navigate(() => {
                   setTask(null);
@@ -290,13 +305,6 @@ export default function HrSetupWizard({ readiness, error, refreshing, refresh, o
                 })
               }
             />
-          )}
-          {mobile && (
-            <Stack spacing={1}>
-              <Typography variant="subtitle2" role="status">
-                Step {activeStep + 1} of {hrSetupSteps.length}: {step.label}
-              </Typography>
-            </Stack>
           )}
         </Box>
         <DialogScrollContent>
@@ -457,6 +465,7 @@ export default function HrSetupWizard({ readiness, error, refreshing, refresh, o
             py: 1.5,
             flexWrap: 'wrap',
             gap: 1,
+            '& > :not(:first-of-type)': { ml: 0 },
             flexShrink: 0,
             borderTop: 1,
             borderColor: 'divider',

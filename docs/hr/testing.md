@@ -48,6 +48,7 @@ Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/@play
 Run `npx playwright test --config e2e/hr/hr-setup-polish.config.ts` for stable dialog dimensions across all five steps and embedded PF coverage, visible welcome guidance, saved-only completion progress, readable status variants, optional deductions, read-only/year/error/completion states and embedded PF coverage draft protection.
 It uses actual production components with synthetic readiness and a loopback-only PF read; writes return an explicit error and no backend is connected.
 Desktop, tablet and phone layouts run at 1440 by 900, 768 by 1024 and 390 by 844 in both themes.
+Desktop and tablet assertions measure connector alignment and equal step widths with single-line and wrapped labels.
 Finish with the in-app browser smoke test at `http://127.0.0.1:4197` using the same fixture.
 The real-backend `hr-setup.spec.ts` suite remains the save-contract coverage.
 
