@@ -25,7 +25,12 @@ export function assignmentInputError(
   return (
     assignmentEditReasonError(request) ||
     assignmentFeeSelectionError(candidate, request) ||
-    variableAssignmentError(candidate, request)
+    variableAssignmentError(candidate, request) ||
+    request.feeHeadDetails.map((head) => {
+      const problem = amountError(head.amount);
+      const name = candidate.heads.find((item) => item.feeHeadId === head.feeHeadId)?.feeHeadName;
+      return problem ? `${name ?? "Optional fee"}: ${problem}` : undefined;
+    }).find(Boolean)
   );
 }
 

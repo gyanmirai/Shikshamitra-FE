@@ -5,10 +5,10 @@ import type { DialogProps } from '@mui/material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { formatNumber } from 'src/utils/formate_number';
-import { Box, Stack, Button, Typography, DialogActions, CircularProgress } from '@mui/material';
-import { DetailGrid, DetailField, DetailSection } from 'src/components/detail-view';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import PdfPreview from 'src/components/preview-document/pdf-preview';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { Box, Stack, Button, Typography, DialogActions, CircularProgress } from '@mui/material';
+import { DetailGrid, DetailField, DetailSection } from 'src/screens/finance/components/detail-view';
 
 interface ReconciliationReceiptData {
   id: string;

@@ -11,8 +11,8 @@ import { formatNumber } from 'src/utils/formate_number';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Stack, Alert, Button, DialogActions } from '@mui/material';
-import { DetailGrid, DetailField, DetailSection } from 'src/components/detail-view';
 import { useGetChargeByIdQuery } from 'src/redux/finance/ChargeManagement/chargeApi';
+import { DetailGrid, DetailField, DetailSection } from 'src/screens/finance/components/detail-view';
 import {
   ChargesPaymentStatus,
   ChargesPaymentStatusColors,

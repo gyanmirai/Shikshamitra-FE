@@ -20,6 +20,7 @@ const student = {
 };
 
 function initialLedger(): FeeLedgerMonth[] {
+  const showSingleInstallment = new URLSearchParams(window.location.search).has('ledgerSchedule');
   return Array.from({ length: 12 }, (_, index) => {
     const month = (index + 5) % 12;
     const year = month >= 5 ? 2026 : 2027;
@@ -27,7 +28,8 @@ function initialLedger(): FeeLedgerMonth[] {
     const tuition = index === 11 ? 2008.8 : 1999.2;
     const items = [{
       dueFeeId: `tuition-${index}`, feeHeadId: 'tuition', feeHeadName: 'Class 3 Tuition Fee',
-      installmentLabel: label, dueDate: `${year}-${String(month + 1).padStart(2, '0')}-05`,
+      installmentLabel: label, paymentTermName: 'Monthly',
+      dueDate: `${year}-${String(month + 1).padStart(2, '0')}-05`,
       total: tuition, paid: 0, due: tuition, status: new Date(year, month, 5) < new Date(2026, 9, 1) ? 2 : 0, lateFeeAmount: 0,
     }];
     if ([2, 5, 8, 11].includes(index)) {
@@ -35,8 +37,16 @@ function initialLedger(): FeeLedgerMonth[] {
       const ranges = ['Jun to Aug', 'Sep to Nov', 'Dec to Feb', 'Mar to May'];
       items.push({
         dueFeeId: `transport-${quarter}`, feeHeadId: 'transport', feeHeadName: 'Class 3 Student Transport Fee',
-        installmentLabel: `Quarter ${quarter} — ${ranges[quarter - 1]}`, dueDate: `${year}-${String(month + 1).padStart(2, '0')}-05`,
+        installmentLabel: `Quarter ${quarter} — ${ranges[quarter - 1]}`, paymentTermName: 'Quarterly',
+        dueDate: `${year}-${String(month + 1).padStart(2, '0')}-05`,
         total: 2400, paid: 0, due: 2400, status: new Date(year, month, 5) < new Date(2026, 9, 1) ? 2 : 0, lateFeeAmount: 0,
+      });
+    }
+    if (showSingleInstallment && index === 0) {
+      items.push({
+        dueFeeId: 'school-fee', feeHeadId: 'school', feeHeadName: 'School Fees',
+        installmentLabel: 'Annual fees', paymentTermName: 'Yearly', dueDate: '2026-06-10',
+        total: 5000, paid: 0, due: 5000, status: 0, lateFeeAmount: 0,
       });
     }
     return { month, year, totalDue: items.reduce((sum, item) => sum + item.due, 0), items };
@@ -373,8 +383,9 @@ export const fixtureBaseQuery = async (args: string | FetchArgs) => {
         const basis = new URLSearchParams(window.location.search).get('allocationBasis');
         const configured = basis === 'Installment' || basis === 'FeeHead';
         const lines = ledger.flatMap(month => month.items);
+        const feeStructureOrder = ['tuition', 'transport', 'school'];
         const order = basis === 'FeeHead'
-          ? [...lines].sort((a, b) => a.feeHeadName.toLowerCase() < b.feeHeadName.toLowerCase() ? -1 : a.feeHeadName.toLowerCase() > b.feeHeadName.toLowerCase() ? 1 : 0)
+          ? [...lines].sort((a, b) => feeStructureOrder.indexOf(a.feeHeadId) - feeStructureOrder.indexOf(b.feeHeadId))
           : lines;
         const form: FeeCollectFormDto = {
           student, summary: { totalFee: balance.totalFees, paidFee: balance.paidFees, pendingFee: balance.pendingFees },

@@ -17,9 +17,9 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { fDate, fDateTime } from 'src/utils/format-time';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { FormSectionCard } from 'src/components/form-section-card';
-import { DetailGrid, DetailField, DetailSection } from 'src/components/detail-view';
 import { Box, Alert, Stack, Button, Drawer, Typography, LinearProgress } from '@mui/material';
 import FinancePolicySkeleton from 'src/screens/finance/policies/components/FinancePolicySkeleton';
+import { DetailGrid, DetailField, DetailSection } from 'src/screens/finance/components/detail-view';
 import FinancePolicyDrawerHeader from 'src/screens/finance/policies/components/FinancePolicyDrawerHeader';
 import {
   useGetPaymentTermByIdQuery,

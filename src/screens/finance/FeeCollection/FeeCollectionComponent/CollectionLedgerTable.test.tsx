@@ -111,6 +111,110 @@ const ledgerProps = (): FeeLedgerListProps => ({
   onChargesChange: vi.fn(),
 });
 
+describe('collection ledger schedule display', () => {
+  it.each(['by-fee-head', 'by-month'] as const)(
+    'strikes through all paid fee text when grouped %s',
+    (activeTab) => {
+      const props = ledgerProps();
+      props.chargesData = [];
+      const [{ items }] = props.data.monthWise;
+      items.push(
+        {
+          ...items[0],
+          dueFeeId: 'paid-due',
+          paid: 500,
+          due: 0,
+          lateFeeAmount: 0,
+          status: FeeCollectionStatusType.Paid,
+        },
+        {
+          ...items[0],
+          dueFeeId: 'partial-due',
+          paid: 200,
+          due: 300,
+          status: FeeCollectionStatusType.Partial,
+        }
+      );
+      render(
+        <LedgerTestProviders>
+          <CollectionLedgerTable {...props} layout="ledger" activeTab={activeTab} />
+        </LedgerTestProviders>
+      );
+
+      const paid = screen.getByText('Paid', { exact: true });
+      const [selectionCell, ...paidCells] = within(paid.closest('tr')!).getAllByRole('cell');
+      expect(selectionCell).not.toHaveStyle({ textDecoration: 'line-through' });
+      paidCells.forEach((cell) => expect(cell).toHaveStyle({ textDecoration: 'line-through' }));
+      expect(paid).toHaveStyle({ textDecoration: 'line-through' });
+
+      ['Pending', 'Partial Pending'].forEach((status) => {
+        const row = screen.getByText(status, { exact: true }).closest('tr')!;
+        within(row).getAllByRole('cell').forEach((cell) => {
+          expect(cell).not.toHaveStyle({ textDecoration: 'line-through' });
+        });
+      });
+    }
+  );
+
+  it('shows a one-time head before recurring heads without tagging filtered recurring rows', () => {
+    const props = ledgerProps();
+    props.chargesData = [];
+    const tuition = props.data.monthWise[0].items[0];
+    props.data.monthWise[0].items.push({
+      ...tuition,
+      dueFeeId: 'school-due',
+      feeHeadId: 'school',
+      feeHeadName: 'Yearly School Fees',
+      paymentTermName: 'Yearly',
+    });
+    render(
+      <LedgerTestProviders>
+        <CollectionLedgerTable
+          {...props}
+          activeTab="by-fee-head"
+          layout="ledger"
+          oneTimeFeeHeadIds={new Set(['school'])}
+        />
+      </LedgerTestProviders>
+    );
+
+    expect(screen.getAllByRole('heading').map((heading) => heading.textContent)).toEqual([
+      'Yearly School Fees',
+      'Tuition',
+    ]);
+    expect(screen.getAllByText('One time', { exact: true })).toHaveLength(1);
+  });
+
+  it.each(['by-fee-head', 'by-month'] as const)(
+    'shows the payment term outside its own column and the recorded due date when grouped %s',
+    (activeTab) => {
+      const props = ledgerProps();
+      props.chargesData = [];
+      Object.assign(props.data.monthWise[0].items[0], {
+        paymentTermName: 'Yearly',
+        installmentLabel: 'First installment',
+        coverageStartDate: '2026-06-01',
+        coverageEndDate: '2027-05-31',
+        dueDate: '2026-07-05T00:00:00+05:30',
+      });
+
+      render(
+        <LedgerTestProviders>
+          <CollectionLedgerTable {...props} layout="ledger" activeTab={activeTab} />
+        </LedgerTestProviders>
+      );
+
+      expect(screen.getByText('Yearly')).toBeVisible();
+      expect(screen.getByRole('columnheader', { name: 'Billing Period' })).toBeVisible();
+      expect(screen.getByRole('columnheader', { name: 'Due Date' })).toBeVisible();
+      expect(screen.queryByRole('columnheader', { name: 'Installment' })).not.toBeInTheDocument();
+      const row = within(screen.getByRole('row', { name: 'Open Tuition, June 2026' }));
+      expect(row.getByText('Jun 2026 – May 2027')).toBeVisible();
+      expect(row.getByText('5 Jul 2026')).toBeVisible();
+    }
+  );
+});
+
 describe('collection ledger checkbox state', () => {
   it.each(['ledger', 'period', 'wide'] as const)(
     'checks both parent controls when every fee is paid in the %s layout',

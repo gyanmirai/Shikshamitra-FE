@@ -210,18 +210,7 @@ const SmartRecommendationPanel = ({
     >
       <Box display="flex" alignItems="center" gap={1} mb={0.65} px={0.25}>
         <Iconify icon="solar:magic-stick-bold" width={14} sx={{ color: 'primary.main' }} />
-        <Typography
-          variant="caption"
-          sx={{
-            color: 'text.disabled',
-            fontWeight: 800,
-            textTransform: 'uppercase',
-            letterSpacing: '0.07em',
-            fontSize: '0.62rem',
-          }}
-        >
-          Smart Recommendations
-        </Typography>
+        <Typography variant="subtitle1">Smart Recommendations</Typography>
         <Chip
           label={recommendations.length}
           size="small"

@@ -1,5 +1,6 @@
 import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
+import { DetailField } from 'src/screens/finance/components/detail-view';
 import { Box, Grid, Card, Stack, Avatar, Typography } from '@mui/material';
 
 import type { IStudentFee } from '../../Components/type';
@@ -29,28 +30,15 @@ const MetaItem = ({ icon, label, value }: MetaItemProps) => (
       transition: '0.2s ease',
     }}
   >
-    <Typography
-      variant="caption"
-      sx={{
-        color: 'text.secondary',
-        fontWeight: 600,
-        textTransform: 'uppercase',
-        letterSpacing: 0.4,
-        fontSize: '0.68rem',
-        mb: 0.6,
-        display: 'block',
-      }}
-    >
-      {label}
-    </Typography>
-
-    <Stack direction="row" spacing={0.8} alignItems="center">
-      <Iconify icon={icon} width={15} sx={{ color: 'text.secondary' }} />
-
-      <Typography variant="body2" fontWeight={700} color="text.primary" noWrap>
-        {value}
-      </Typography>
-    </Stack>
+    <DetailField
+      label={label}
+      value={
+        <Stack direction="row" spacing={0.8} alignItems="center">
+          <Iconify icon={icon} width={15} sx={{ color: 'text.secondary', flexShrink: 0 }} />
+          <Box>{value}</Box>
+        </Stack>
+      }
+    />
   </Box>
 );
 
@@ -140,19 +128,19 @@ const StudentInfoPreviewCard = ({ student, academicYear, feeStructureName }: Pro
             <Grid size={{ xs: 6, sm: 4, md: 3 }}>
               <MetaItem
                 icon="solar:user-id-bold"
-                label="Admission No."
+                label="Admission number"
                 value={student.grNumber || student.rollNumber || '—'}
               />
             </Grid>
 
             <Grid size={{ xs: 6, sm: 4, md: 3 }}>
-              <MetaItem icon="solar:book-bold" label="Class & Division" value={classLabel} />
+              <MetaItem icon="solar:book-bold" label="Class / division" value={classLabel} />
             </Grid>
 
             <Grid size={{ xs: 6, sm: 4, md: 3 }}>
               <MetaItem
                 icon="solar:calendar-bold"
-                label="Academic Year"
+                label="Academic year"
                 value={academicYear || '—'}
               />
             </Grid>
@@ -161,7 +149,7 @@ const StudentInfoPreviewCard = ({ student, academicYear, feeStructureName }: Pro
               <Grid size={{ xs: 6, sm: 4, md: 3 }}>
                 <MetaItem
                   icon="solar:document-text-bold"
-                  label="Fee Structure"
+                  label="Fee structure"
                   value={feeStructureName}
                 />
               </Grid>

@@ -414,7 +414,7 @@ const financeModule = {
               icon: menuIconView('mdi:tune-variant'),
             },
             {
-              title: 'Fee Structure Assign',
+              title: 'Structure Assignment',
               path: financePaths.fees.structureAssign,
               _action: 'fee-structure-assign',
               shortcutKey: 'Alt+F+2+SA',

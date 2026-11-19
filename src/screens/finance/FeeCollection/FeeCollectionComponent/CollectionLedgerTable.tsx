@@ -3,15 +3,15 @@
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import { useState, useContext } from 'react';
-import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CancelButton from 'src/components/cancel-button';
-import { formatDateOnly } from 'src/utils/date-only';
 import { formatNumber } from 'src/utils/formate_number';
+import { Label, labelClasses } from 'src/components/label';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { parseDateOnly, formatDateOnly } from 'src/utils/date-only';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { DetailGrid, DetailField, DetailSection } from 'src/components/detail-view';
+import { DetailGrid, DetailField, DetailSection } from 'src/screens/finance/components/detail-view';
 import {
   Box,
   Stack,
@@ -24,6 +24,7 @@ import {
 } from '@mui/material';
 import {
   FeeMonth,
+  FeeCollectionStatusType,
   feeInstallmentStatusLabel,
   chargeCollectionStatusLabel,
   FeeCollectionStatusTypeColors,
@@ -44,6 +45,7 @@ type LedgerRow = MonthWiseFeeItem & {
   id: string;
   period: string;
   periodLabel: string;
+  billingPeriod?: string;
   charge?: IFeeCharge;
   outstanding: number;
 };
@@ -77,10 +79,18 @@ export default function CollectionLedgerTable({
   hasActiveFilters,
   layout,
   groupByInstallment,
+  oneTimeFeeHeadIds,
+  getAllocatedAmount,
+  selectedFeeCandidates = selectedItems,
+  selectedChargeCandidates = charges,
 }: FeeLedgerListProps & {
   layout: CollectionLayout;
   onPeriodFocus?: (period: string) => void;
   groupByInstallment?: boolean;
+  oneTimeFeeHeadIds?: ReadonlySet<string>;
+  getAllocatedAmount?: (item: SelectedItem | IFeeCharge) => number;
+  selectedFeeCandidates?: SelectedItem[];
+  selectedChargeCandidates?: string[];
 }) {
   const allowWaivers = useContext(FeeCollectionWaiverContext);
   const [detailId, setDetailId] = useState<string | null>(null);
@@ -88,18 +98,32 @@ export default function CollectionLedgerTable({
   const rows: LedgerRow[] = data.monthWise.flatMap((group) =>
     group.items.map((item) => {
       const period = toPeriod(group.month, group.year ?? year);
+      const periodLabel = `${FeeMonth[group.month]} ${group.year ?? year}`;
+      const start = parseDateOnly(item.coverageStartDate);
+      const end = parseDateOnly(item.coverageEndDate);
+      const billingPeriod =
+        start && end
+          ? start.isSame(end, 'month')
+            ? start.format('MMMM YYYY')
+            : `${start.format('MMM YYYY')} – ${end.format('MMM YYYY')}`
+          : periodLabel;
       return {
         ...item,
         id: `fee:${item.dueFeeId ?? `${item.feeHeadId}:${period}`}`,
         period,
-        periodLabel: `${FeeMonth[group.month]} ${group.year ?? year}`,
+        periodLabel,
+        billingPeriod,
         outstanding: roundUpToRupee(item.due) + (item.lateFeeAmount ?? 0),
       };
     })
   );
   if (activeTab === 'by-fee-head' && layout !== 'period')
     rows.sort(
-      (a, b) => a.feeHeadName.localeCompare(b.feeHeadName) || a.period.localeCompare(b.period)
+      (a, b) =>
+        Number(Boolean(oneTimeFeeHeadIds?.has(b.feeHeadId))) -
+          Number(Boolean(oneTimeFeeHeadIds?.has(a.feeHeadId))) ||
+        a.feeHeadName.localeCompare(b.feeHeadName) ||
+        a.period.localeCompare(b.period)
     );
   else rows.sort((a, b) => a.period.localeCompare(b.period));
   rows.push(
@@ -110,6 +134,7 @@ export default function CollectionLedgerTable({
       feeHeadName: charge.chargeName,
       period: '',
       periodLabel: charge.dueDate ?? '—',
+      dueDate: charge.dueDate,
       installmentLabel: charge.isSystemGenerated ? 'System generated' : 'Additional charge',
       total: charge.total ?? charge.amount,
       paid: charge.paid ?? 0,
@@ -144,18 +169,25 @@ export default function CollectionLedgerTable({
     if (!eligible.length) return;
     const remove = eligible.every(isSelected);
     const feeRows = eligible.filter((row) => !row.charge);
-    const keys = new Set(feeRows.map((row) => selectionItemKey(asSelection(row))));
+    const feeSelections = feeRows.map(asSelection);
+    const keys = new Set(feeSelections.map(selectionItemKey));
+    const candidateKeys = new Set(selectedFeeCandidates.map(selectionItemKey));
     if (feeRows.length)
       onSelectionChange(
         remove
-          ? selectedItems.filter((item) => !keys.has(selectionItemKey(item)))
-          : [...selectedItems, ...feeRows.filter((row) => !isSelected(row)).map(asSelection)]
+          ? selectedFeeCandidates.filter((item) => !keys.has(selectionItemKey(item)))
+          : [
+              ...selectedFeeCandidates,
+              ...feeSelections.filter((item) => !candidateKeys.has(selectionItemKey(item))),
+            ]
       );
     const chargeRows = eligible.filter((row) => row.charge);
     const ids = new Set(chargeRows.map((row) => row.charge!.chargeId));
     if (chargeRows.length)
       onChargesChange(
-        remove ? charges.filter((id) => !ids.has(id)) : [...new Set([...charges, ...ids])]
+        remove
+          ? selectedChargeCandidates.filter((id) => !ids.has(id))
+          : [...new Set([...selectedChargeCandidates, ...ids])]
       );
   };
   const groupCheckbox = (candidates: LedgerRow[], label: string) => {
@@ -239,23 +271,30 @@ export default function CollectionLedgerTable({
               Additional Charges
             </Typography>
           )}
+          {!row.charge && row.paymentTermName && (
+            <Typography variant="caption" color="text.secondary">
+              {row.paymentTermName}
+            </Typography>
+          )}
+          {oneTimeFeeHeadIds?.has(row.feeHeadId) && <Label sx={{ ml: 1 }}>One time</Label>}
         </Box>
       ),
     },
     {
       id: 'period',
-      label: 'Due Period',
+      label: 'Billing Period',
       minWidth: 150,
       isFilter: false,
-      render: (_value, row) => <Typography variant="body2">{row.periodLabel}</Typography>,
+      sortValue: (_value, row) => row.coverageStartDate ?? row.period,
+      render: (_value, row) => <Typography variant="body2">{row.billingPeriod}</Typography>,
     },
     {
-      id: 'installmentLabel',
-      label: 'Installment',
-      minWidth: 150,
+      id: 'dueDate',
+      label: 'Due Date',
+      minWidth: 125,
       isFilter: false,
-      render: (value, row) => (
-        <Typography variant="body2">{row.charge ? '—' : value || '—'}</Typography>
+      render: (_value, row) => (
+        <Typography variant="body2">{formatDateOnly(row.dueDate, 'D MMM YYYY')}</Typography>
       ),
     },
     {
@@ -294,15 +333,16 @@ export default function CollectionLedgerTable({
   const detail = rows.find((row) => row.id === detailId);
   const closeDetail = () => setDetailId(null);
   const waiverApplied = (row = detail) => {
-    if (row?.charge && charges.includes(row.charge.chargeId)) {
-      onChargesChange(charges.filter((id) => id !== row.charge!.chargeId));
-    } else if (row && !row.charge && isSelected(row)) {
+    if (row?.charge && selectedChargeCandidates.includes(row.charge.chargeId)) {
+      onChargesChange(selectedChargeCandidates.filter((id) => id !== row.charge!.chargeId));
+    } else if (row && !row.charge) {
       const key = selectionItemKey(asSelection(row));
-      onSelectionChange(
-        selectedItems.map((item) =>
-          selectionItemKey(item) === key ? { ...item, lateFeeAmount: 0 } : item
-        )
-      );
+      if (selectedFeeCandidates.some((item) => selectionItemKey(item) === key))
+        onSelectionChange(
+          selectedFeeCandidates.map((item) =>
+            selectionItemKey(item) === key ? { ...item, lateFeeAmount: 0 } : item
+          )
+        );
     }
     closeDetail();
   };
@@ -316,8 +356,17 @@ export default function CollectionLedgerTable({
     >
       <Stack spacing={1.5} sx={{ flex: 1, minHeight: 0, overflowY: 'auto', pb: 1 }}>
         {groups.map((group, index) => {
+          const groupedByFeeHead =
+            activeTab === 'by-fee-head' && layout !== 'period' && group.id !== 'additional-charges';
+          const paymentTermNames = groupedByFeeHead
+            ? [...new Set(group.items.map((row) => row.paymentTermName).filter(Boolean))]
+            : [];
           const selected = group.items.filter(isSelected);
-          const selectedTotal = selected.reduce((sum, row) => sum + row.outstanding, 0);
+          const selectedTotal = selected.reduce(
+            (sum, row) =>
+              sum + (getAllocatedAmount?.(row.charge ?? asSelection(row)) ?? row.outstanding),
+            0
+          );
           const outstanding = group.items
             .filter(collectible)
             .reduce((sum, row) => sum + row.outstanding, 0);
@@ -325,9 +374,8 @@ export default function CollectionLedgerTable({
           const groupColumns: IColumn[] = columns
             .filter(
               (column) =>
-                column.id !== 'feeHeadName' ||
-                group.id === 'additional-charges' ||
-                activeTab === 'by-month'
+                (column.id !== 'feeHeadName' || !groupedByFeeHead) &&
+                (column.id !== 'period' || group.id !== 'additional-charges')
             )
             .map((column) => ({
               ...column,
@@ -445,6 +493,14 @@ export default function CollectionLedgerTable({
                     >
                       {group.title}
                     </Typography>
+                    {paymentTermNames.length > 0 && (
+                      <Typography variant="caption" color="text.secondary">
+                        {paymentTermNames.join(' · ')}
+                      </Typography>
+                    )}
+                    {groupedByFeeHead && oneTimeFeeHeadIds?.has(group.id) && (
+                      <Label sx={{ alignSelf: { xs: 'flex-start', sm: 'center' } }}>One time</Label>
+                    )}
                     {selected.length ? (
                       <Label
                         color="success"
@@ -489,8 +545,17 @@ export default function CollectionLedgerTable({
                   isSearch={false}
                   isFilter={false}
                   isShowedDense={false}
-                  rowProps={(row) => ({ selected: isSelected(row as LedgerRow) })}
-
+                  rowProps={(row) => ({
+                    selected: isSelected(row as LedgerRow),
+                    sx:
+                      !row.charge && row.status === FeeCollectionStatusType.Paid
+                        ? {
+                            [`& > td:not(:first-child), & .${labelClasses.root}`]: {
+                              textDecoration: 'line-through',
+                            },
+                          }
+                        : undefined,
+                  })}
                   wrapperProps={{
                     sx: {
                       minWidth: 0,

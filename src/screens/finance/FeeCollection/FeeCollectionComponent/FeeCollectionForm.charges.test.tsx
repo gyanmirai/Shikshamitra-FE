@@ -686,6 +686,40 @@ describe('Fee Collection automatic ledger selection', () => {
     ]);
   }, 60_000);
 
+  it('updates funding for previously selected installments when the amount is edited', async () => {
+    mocks.data.allocationBasis = 'FeeHead';
+    mocks.data.allocationDueFeeOrder = ['due-0', 'tuition-july', 'transport-june'];
+    render(<FeeCollectComponentForm student={student} />);
+    const tuition = ledger().getByRole('checkbox', { name: 'Select Class 3 Tuition Fee' });
+    fireEvent.click(tuition);
+    const amount = screen.getByLabelText(/Amount to collect/);
+    for (const [value, ids] of [
+      ['500', ['due-0']],
+      ['2500', ['due-0', 'tuition-july']],
+    ] as const) {
+      fireEvent.change(amount, { target: { value } });
+      await waitFor(() =>
+        expect(
+          mocks.ledgerProps.mock.lastCall?.[0].selectedItems.map(
+            (item: { dueFeeId: string }) => item.dueFeeId
+          )
+        ).toEqual(ids)
+      );
+    }
+    expect(mocks.previewItems.map((item) => item.dueFeeId)).toEqual(['due-0', 'tuition-july']);
+    fireEvent.change(amount, { target: { value: '500' } });
+    fireEvent.click(
+      ledger().getByRole('checkbox', { name: 'Select Class 3 Tuition Fee, June 2026' })
+    );
+    await waitFor(() =>
+      expect(
+        mocks.ledgerProps.mock.lastCall?.[0].selectedItems.map(
+          (item: { dueFeeId: string }) => item.dueFeeId
+        )
+      ).toEqual(['tuition-july'])
+    );
+  }, 60_000);
+
   it.each([
     {
       basis: 'Installment',

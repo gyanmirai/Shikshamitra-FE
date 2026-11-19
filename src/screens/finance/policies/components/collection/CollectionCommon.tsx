@@ -231,11 +231,7 @@ export function SummaryRow({ label, value }: { label: string; value: React.React
         },
       }}
     >
-      <Typography
-        variant="caption"
-        color="text.secondary"
-        sx={{ fontSize: '0.72rem', flexShrink: 0, fontWeight: 500 }}
-      >
+      <Typography variant="caption" color="text.secondary">
         {label}
       </Typography>
       <Box sx={{ minWidth: 0, textAlign: 'right', overflowWrap: 'anywhere' }}>{value}</Box>

@@ -2,7 +2,7 @@ import type { FeeProrationResult as FinanceResult } from 'src/redux/finance/fee-
 
 import { fDate } from 'src/utils/format-time';
 import { formatNumber } from 'src/utils/formate_number';
-import { DetailGrid, DetailField, DetailSection } from 'src/components/detail-view';
+import { DetailGrid, DetailField, DetailSection } from 'src/screens/finance/components/detail-view';
 
 /** Shared read-only output for Admission, Onboarding and withdrawal preview. */
 export default function FeeProrationResult({

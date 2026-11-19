@@ -51,28 +51,26 @@ const BudgetDetailsCard: React.FC<{
           <Grid container spacing={2}>
             {/* Budget Title */}
             <Grid size={{ xs: 12, sm: 4 }}>
-              <Typography variant="body2" color="text.secondary">
-                Budget Title
+              <Typography variant="caption" color="text.secondary" display="block">
+                Budget title
               </Typography>
-              <Typography variant="subtitle1" fontWeight={600}>
-                {budget?.budgetTitle}
-              </Typography>
+              <Typography variant="body2">{budget?.budgetTitle}</Typography>
             </Grid>
 
             {/* Budget Category */}
             <Grid size={{ xs: 12, sm: 4 }}>
-              <Typography variant="body2" color="text.secondary">
-                Budget Category
+              <Typography variant="caption" color="text.secondary" display="block">
+                Budget category
               </Typography>
               <Chip size="small" label={budget?.budgetCategory} variant="outlined" />
             </Grid>
 
             {/* Time Period */}
             <Grid size={{ xs: 12, sm: 4 }}>
-              <Typography variant="body2" color="text.secondary">
-                Time Period
+              <Typography variant="caption" color="text.secondary" display="block">
+                Time period
               </Typography>
-              <Typography variant="subtitle1" fontWeight={600}>
+              <Typography variant="body2">
                 {budget?.startDate} to {budget?.endDate}
               </Typography>
             </Grid>
@@ -95,10 +93,10 @@ const BudgetDetailsCard: React.FC<{
                   mb: { xs: 2, sm: 0 }, // Add margin bottom on mobile
                 }}
               >
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="caption" color="text.secondary" display="block">
                   Allocated
                 </Typography>
-                <Typography variant="h6" color="success.main" fontWeight={600}>
+                <Typography variant="body2" color="success.main">
                   ₹{allocated.toLocaleString()}
                 </Typography>
               </Box>
@@ -113,10 +111,10 @@ const BudgetDetailsCard: React.FC<{
                   mb: { xs: 2, sm: 0 }, // Add margin bottom on mobile
                 }}
               >
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="caption" color="text.secondary" display="block">
                   Spent
                 </Typography>
-                <Typography variant="h6" color="#F57C00" fontWeight={600}>
+                <Typography variant="body2" color="#F57C00">
                   ₹{spent.toLocaleString()}
                 </Typography>
               </Box>
@@ -130,10 +128,10 @@ const BudgetDetailsCard: React.FC<{
                   border: '1px solid #FFC107',
                 }}
               >
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="caption" color="text.secondary" display="block">
                   Remaining
                 </Typography>
-                <Typography variant="h6" color="warning.main" fontWeight={600}>
+                <Typography variant="body2" color="warning.main">
                   ₹{remaining.toLocaleString()}
                 </Typography>
               </Box>
@@ -141,8 +139,8 @@ const BudgetDetailsCard: React.FC<{
           </Grid>
           <Box mt={3}>
             <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-              <Typography variant="body2" color="text.secondary">
-                Utilisation Progress
+              <Typography variant="caption" color="text.secondary" display="block">
+                Utilisation progress
               </Typography>
               <Typography variant="body2" fontWeight={600}>
                 {utilization.toFixed(1)}%

@@ -20,13 +20,13 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { useDispatch, useSelector } from 'react-redux';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomSelect from 'src/components/custom-select';
-import { DetailField } from 'src/components/detail-view';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { financePermissions } from 'src/constants/finance-menu';
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { DetailField } from 'src/screens/finance/components/detail-view';
 import { AssignmentFormSkeleton } from 'src/screens/finance/components/FinanceFormSkeletons';
 import FinancePrerequisiteState from 'src/screens/finance/components/FinancePrerequisiteState';
 import { isFinancePrerequisiteMissing } from 'src/screens/finance/components/financePrerequisites';
@@ -59,6 +59,7 @@ import {
 import AssignmentReview from './AssignmentReview';
 import AssignmentPolicies from './AssignmentPolicies';
 import AssignedPolicyEditor from './AssignedPolicyEditor';
+import OptionalFeeServiceStops from './OptionalFeeServiceStops';
 import AssignmentStudentInputs from './AssignmentStudentInputs';
 import PreparedAssignmentHandoff from './PreparedAssignmentHandoff';
 import { assignmentCurrencyTotals } from './assignmentReviewPresentation';
@@ -403,7 +404,7 @@ function AssignmentEditor({
   );
   const { permissions } = useSelector((state: RootState) => state.auth);
   const currentYear = useSelector((state: RootState) => state.globalState?.currentYear);
-  const yearBounds = assignmentYearBounds(currentYear, academicYearId);
+  const academicYearBounds = assignmentYearBounds(currentYear, academicYearId);
   const canAssign = hasGrantedPermission(
     permissions,
     `${financePermissions.fees.structureAssign}.Add`
@@ -416,6 +417,14 @@ function AssignmentEditor({
     permissions,
     `${financePermissions.fees.structureAssign}.OverridePolicies`
   );
+  const canOverrideAmount = hasGrantedPermission(
+    permissions,
+    `${financePermissions.fees.structureAssign}.OverrideAmount`
+  );
+  const canStopOptionalService = hasGrantedPermission(
+    permissions,
+    `${financePermissions.fees.structureAssign}.StopOptionalService`
+  ) && students[0]?.isActive !== false;
   const dispatch = useDispatch();
   const [editingPolicies, setEditingPolicies] = useState(
     editAssignedPolicies && canOverridePolicies && !editAssignedStructure
@@ -431,6 +440,15 @@ function AssignmentEditor({
     { studentId: students[0]?.studentId, academicYearId },
     { skip: !academicYearId || viewing || !canAssign }
   );
+  const serviceBounds = (candidate?: AssignmentCandidate) =>
+    assignmentYearBounds(
+      candidate && {
+        id: candidate.academicYearId,
+        startDate: candidate.boardStartDate,
+        endDate: candidate.boardEndDate,
+      },
+      academicYearId
+    ) ?? academicYearBounds;
   const missingStructure = isFinancePrerequisiteMissing({
     ...candidates,
     options: candidates.currentData,
@@ -591,7 +609,7 @@ function AssignmentEditor({
       items.find(
         (request) =>
           assignmentInputError(candidate, request) ||
-          assignmentServiceDateError(candidate, request, yearBounds)
+          assignmentServiceDateError(candidate, request, academicYearBounds)
       );
     if (invalidRequest && candidate) {
       setSelectedStudentId(invalidRequest.studentId);
@@ -602,7 +620,7 @@ function AssignmentEditor({
       setError(
         `${studentName}: ${
           assignmentInputError(candidate, invalidRequest) ||
-          assignmentServiceDateError(candidate, invalidRequest, yearBounds)
+          assignmentServiceDateError(candidate, invalidRequest, academicYearBounds)
         }`
       );
       setActiveStep(1);
@@ -797,6 +815,7 @@ function AssignmentEditor({
     return (
       <AssignedPolicyEditor
         data={assigned.data}
+        canStopOptionalService={canStopOptionalService}
         onCancel={onClose}
         onSaved={() => {
           setEditingPolicies(false);
@@ -845,7 +864,14 @@ function AssignmentEditor({
               {!assigned.isFetching &&
                 !assigned.isError &&
                 assigned.data?.assignment &&
-                !editingPolicies && <AssignmentReview data={assigned.data.assignment} committed />}
+                !editingPolicies && (
+                  <>
+                    {editAssignedPolicies && canStopOptionalService && (
+                      <OptionalFeeServiceStops assignment={assigned.data.assignment} />
+                    )}
+                    <AssignmentReview data={assigned.data.assignment} committed />
+                  </>
+                )}
               {!assigned.isFetching && !assigned.isError && !assigned.data?.assignment && (
                 <Alert severity="info">
                   No saved fee assignment is available for this student in the selected academic
@@ -1064,7 +1090,7 @@ function AssignmentEditor({
                 .find(
                   (r) =>
                     assignmentInputError(candidate, r) ||
-                    assignmentServiceDateError(candidate, r, yearBounds)
+                    assignmentServiceDateError(candidate, r, academicYearBounds)
                 );
               if (invalidRequest) {
                 setSelectedStudentId(invalidRequest.studentId);
@@ -1073,7 +1099,7 @@ function AssignmentEditor({
                   (item) => item.studentId === invalidRequest.studentId
                 );
                 setError(
-                  `${student?.studentName ?? 'Student'}: ${assignmentInputError(candidate, invalidRequest) || assignmentServiceDateError(candidate, invalidRequest, yearBounds)}`
+                  `${student?.studentName ?? 'Student'}: ${assignmentInputError(candidate, invalidRequest) || assignmentServiceDateError(candidate, invalidRequest, academicYearBounds)}`
                 );
                 return;
               }
@@ -1512,7 +1538,7 @@ function AssignmentEditor({
                                   candidate &&
                                   input &&
                                   (assignmentInputError(candidate, input) ||
-                                    assignmentServiceDateError(candidate, input, yearBounds));
+                                    assignmentServiceDateError(candidate, input, academicYearBounds));
                                 const needsAttention =
                                   !saved?.result &&
                                   !checked?.preview &&
@@ -1696,7 +1722,6 @@ function AssignmentEditor({
                                 <FormSectionCard
                                   title="Fees & Dates"
                                   icon="mdi:format-list-checks"
-                                  descriptionTooltip="Review the fees and service dates included in this assignment."
                                 >
                                   {assignmentFeeSelectionError(candidate, request) && (
                                     <Alert severity="info" sx={{ mb: 2 }}>
@@ -1716,9 +1741,11 @@ function AssignmentEditor({
                                     request={request}
                                     onChange={updateRequest}
                                     canOverrideDates={canOverrideDates}
+                                    canOverrideAmount={canOverrideAmount}
                                     allowTransportSource={!isBulk}
                                     disabled={busy}
-                                    yearBounds={yearBounds}
+                                    yearBounds={serviceBounds(candidate)}
+                                    validationBounds={academicYearBounds}
                                     showErrors={showInputErrors}
                                     flat
                                   />

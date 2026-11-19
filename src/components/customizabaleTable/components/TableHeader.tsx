@@ -128,6 +128,7 @@ export const TableHeader = React.memo(
                   <Box
                     sx={{
                       display: 'flex',
+                      flexDirection: column.headerAlign === 'right' ? 'row-reverse' : 'row',
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       width: '100%',
@@ -144,6 +145,7 @@ export const TableHeader = React.memo(
                         sx={{
                           flex: 1,
                           minWidth: 0,
+                          flexDirection: column.headerAlign === 'right' ? 'row-reverse' : 'row',
                           justifyContent: 'space-between',
                           gap: 0.5,
                           font: 'inherit',

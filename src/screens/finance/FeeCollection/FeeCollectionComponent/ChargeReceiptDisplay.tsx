@@ -91,13 +91,7 @@ function ChargeReceiptDisplay({
 
       {/* Paid Charges Table */}
       <Box>
-        <Typography
-          variant="overline"
-          color="text.secondary"
-          fontWeight={700}
-          mb={1}
-          display="block"
-        >
+        <Typography variant="subtitle1" mb={1}>
           Paid Charges
         </Typography>
         <Table size="small">
@@ -133,13 +127,7 @@ function ChargeReceiptDisplay({
       {/* Audit Summary */}
       {auditSummary && (
         <Box>
-          <Typography
-            variant="overline"
-            color="text.secondary"
-            fontWeight={700}
-            mb={1}
-            display="block"
-          >
+          <Typography variant="subtitle1" mb={1}>
             Transaction Summary
           </Typography>
           <Card sx={{ p: 1.5, bgcolor: alpha('#000', 0.02) }}>
@@ -165,13 +153,7 @@ function ChargeReceiptDisplay({
       {/* PDF Viewer */}
       {blobUrl && (
         <Box>
-          <Typography
-            variant="overline"
-            color="text.secondary"
-            fontWeight={700}
-            mb={1}
-            display="block"
-          >
+          <Typography variant="subtitle1" mb={1}>
             PDF Preview
           </Typography>
           <Box

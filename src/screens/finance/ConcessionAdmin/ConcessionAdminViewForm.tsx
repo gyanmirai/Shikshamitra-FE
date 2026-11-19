@@ -189,11 +189,7 @@ const StatCard: React.FC<IStatCardProps> = ({ label, value, color = 'default' })
         '&:hover': { boxShadow: 4 },
       }}
     >
-      <Typography
-        variant="caption"
-        color="text.secondary"
-        sx={{ textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}
-      >
+      <Typography variant="caption" color="text.secondary">
         {label}
       </Typography>
       <Typography variant="h4" sx={{ mt: 0.5, color: colorMap[color], fontWeight: 700 }}>

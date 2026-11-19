@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTheme } from '@mui/material/styles';
 import { EmptyContent } from 'src/components/empty-content';
 import { Box, Card, Stack, Typography, CircularProgress } from '@mui/material';
@@ -25,14 +25,21 @@ export default function CommonReport({
 }: CommonReportProps) {
   const theme = useTheme();
 
-  const [selectedCategory, setSelectedCategory] = useState(categories[0]?.id);
-  const [selectedReport, setSelectedReport] = useState<ReportSubCategory | null>(null);
+  const [categoryId, setCategoryId] = useState(categories[0]?.id ?? '');
+  const [reportId, setReportId] = useState<string | null>(null);
+  const selectedCategory = categories.find((category) => category.id === categoryId)?.id ??
+    categories[0]?.id ?? '';
+  const selectedReport = subCategories.find((report) =>
+    report.id === reportId && report.categoryId === selectedCategory) ?? null;
 
-  useEffect(() => {
-    if (!selectedCategory && categories[0]?.id) {
-      setSelectedCategory(categories[0].id);
-    }
-  }, [categories, selectedCategory]);
+  function selectCategory(id: string) {
+    setCategoryId(id);
+    setReportId(null);
+  }
+
+  function selectReport(report: ReportSubCategory | null) {
+    setReportId(report?.id ?? null);
+  }
 
   if (isLoading) {
     return (
@@ -79,11 +86,8 @@ export default function CommonReport({
               reports={subCategories}
               selectedCategory={selectedCategory}
               selectedReport={selectedReport}
-              onSelectCategory={(id) => {
-                setSelectedCategory(id);
-                setSelectedReport(null);
-              }}
-              onSelectReport={setSelectedReport}
+              onSelectCategory={selectCategory}
+              onSelectReport={selectReport}
             />
           </Box>
           <Box
@@ -99,10 +103,7 @@ export default function CommonReport({
             <LeftPanel
               categories={categories}
               selectedCategory={selectedCategory}
-              onSelectCategory={(id) => {
-                setSelectedCategory(id);
-                setSelectedReport(null);
-              }}
+              onSelectCategory={selectCategory}
             />
           </Box>
           <Box
@@ -118,7 +119,7 @@ export default function CommonReport({
             <MiddlePanel
               selectedCategory={selectedCategory}
               selectedReport={selectedReport}
-              onSelectReport={setSelectedReport}
+              onSelectReport={selectReport}
               subCategories={subCategories}
             />
           </Box>

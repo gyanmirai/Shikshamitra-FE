@@ -12,7 +12,7 @@ import { formatNumber } from 'src/utils/formate_number';
 import CustomAccordion from 'src/components/custom-accordian';
 import { Box, Stack, Divider, Typography } from '@mui/material';
 import { FormSectionCard } from 'src/components/form-section-card';
-import { DetailField } from 'src/components/detail-view';
+import { DetailField } from 'src/screens/finance/components/detail-view';
 
 import ConcessionImpactSummary from './ConcessionImpactSummary';
 import { concessionInstallmentLabel } from './concessionInstallmentLabel';

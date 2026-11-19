@@ -9,8 +9,8 @@ import { formatNumber } from 'src/utils/formate_number';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import PdfPreview from 'src/components/preview-document/pdf-preview';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { DetailGrid, DetailField, DetailSection } from 'src/components/detail-view';
 import { useDownloadReceiptPdfMutation } from 'src/redux/feeCollection/feeCollection';
+import { DetailGrid, DetailField, DetailSection } from 'src/screens/finance/components/detail-view';
 import {
   Box,
   Stack,

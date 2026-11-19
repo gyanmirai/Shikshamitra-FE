@@ -35,7 +35,7 @@ export default function CollectionAllocationSection({
           options={[
             ...(legacy ? [{ label: 'Existing selection order', value: 'Legacy' }] : []),
             { label: 'Installment first (earliest due)', value: 'Installment' },
-            { label: 'Fee head first (A–Z)', value: 'FeeHead' },
+            { label: 'Fee structure order', value: 'FeeHead' },
           ]}
           onChange={(value) => formik.setFieldValue('allocationBasis', value)}
           onBlur={() => formik.setFieldTouched('allocationBasis', true)}
@@ -45,7 +45,7 @@ export default function CollectionAllocationSection({
             (legacy
               ? 'This policy retains its existing behavior. Choose a basis to enable automatic allocation.'
               : formik.values.allocationBasis === 'FeeHead'
-                ? 'Clears each fee head in alphabetical order, paying its earliest dues first.'
+                ? 'Follows the fee head sequence in the fee structure and pays each head’s earliest dues first.'
                 : 'Clears the earliest installment first, then moves to the next installment.')
           }
         />

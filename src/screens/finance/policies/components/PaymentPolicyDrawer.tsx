@@ -177,30 +177,30 @@ const LiveSummaryPanel = ({ values }: { values: IPaymentPolicyFormValues }) => (
     variant="outlined"
     sx={{ p: 2, borderRadius: 2, position: 'sticky', top: 0, minWidth: 220 }}
   >
-    <Typography variant="subtitle2" mb={1.5} color="primary">
+    <Typography variant="subtitle1" mb={1.5}>
       Live Summary
     </Typography>
     <Stack spacing={1}>
       <SummaryRow
-        label="Partial Payment"
-        value={values.allowPartialPayment ? 'Allowed' : 'Not Allowed'}
+        label="Partial payment"
+        value={values.allowPartialPayment ? 'Allowed' : 'Not allowed'}
         color={values.allowPartialPayment ? 'success.main' : 'text.secondary'}
       />
-      <SummaryRow label="Allocation Rule" value={values.allocationMethod || '-'} />
-      <SummaryRow label="Receipt Type" value={values.receiptGeneration || '-'} />
+      <SummaryRow label="Allocation rule" value={values.allocationMethod || '-'} />
+      <SummaryRow label="Receipt type" value={values.receiptGeneration || '-'} />
       <SummaryRow
-        label="Auto Demand"
+        label="Auto demand"
         value={values.autoDemand ? 'Enabled' : 'Disabled'}
         color={values.autoDemand ? 'success.main' : 'text.secondary'}
       />
       <SummaryRow
-        label="Auto Reminder"
+        label="Auto reminder"
         value={values.autoReminder ? 'Enabled' : 'Disabled'}
         color={values.autoReminder ? 'success.main' : 'text.secondary'}
       />
       <Divider />
       <SummaryRow
-        label="Payment Modes"
+        label="Payment modes"
         value={
           [
             values.paymentModes.cash && 'Cash',
@@ -216,7 +216,7 @@ const LiveSummaryPanel = ({ values }: { values: IPaymentPolicyFormValues }) => (
       />
       <Divider />
       <SummaryRow
-        label="Policy Status"
+        label="Policy status"
         value={values.status}
         color={
           values.status === 'Published' || values.status === 'Active'
@@ -240,10 +240,15 @@ const SummaryRow = ({
   color?: string;
 }) => (
   <Box display="flex" justifyContent="space-between" alignItems="flex-start" gap={1}>
-    <Typography variant="caption" color="text.secondary" noWrap>
+    <Typography variant="caption" color="text.secondary">
       {label}
     </Typography>
-    <Typography variant="caption" fontWeight={600} color={color} textAlign="right">
+    <Typography
+      variant="body2"
+      color={color}
+      textAlign="right"
+      sx={{ overflowWrap: 'anywhere', minWidth: 0 }}
+    >
       {value}
     </Typography>
   </Box>

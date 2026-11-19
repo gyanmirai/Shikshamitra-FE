@@ -93,8 +93,8 @@ const NewFeeRefundRequestForm: React.FC<INewFeeRefundRequestFormProps> = ({
                       renderInput={(params) => (
                         <TextField
                           {...params}
-                          label="Student Name *"
-                          placeholder="Search Student Name"
+                          label="Student name *"
+                          placeholder="Search student name"
                           size="small"
                           fullWidth
                           error={formik.touched.studentName && Boolean(formik.errors.studentName)}

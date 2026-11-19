@@ -39,6 +39,11 @@ export function admissionAssignmentRequest(
     studentId,
     academicYearId,
     standardFeeStructureId: candidate.id,
+    ...(candidate.boardStartDate && candidate.boardEndDate && {
+      chargePeriodSource: 'BoardAcademicYear',
+      chargeStartDate: candidate.boardStartDate,
+      chargeEndDate: candidate.boardEndDate,
+    }),
     selectedOptionalFeeHeadIds,
     servicePeriods: admissionServicePeriods(candidate, context, selectedOptionalFeeHeadIds),
     feeHeadDetails: [],
@@ -118,6 +123,16 @@ export function mergeAssignmentInputs(
   (next.variableFeeHeads ?? [])
     .filter(included)
     .forEach((head) => variableAmounts.set(head.feeHeadId, head));
+  const fixedAmounts = !current.editAssignmentId || !previousSource || next.studentId === current.studentId
+    ? next.feeHeadDetails
+    : candidate.heads.flatMap(({ feeHeadId }) => {
+        const proposed = next.feeHeadDetails.find((item) => item.feeHeadId === feeHeadId);
+        const previous = previousSource.feeHeadDetails.find((item) => item.feeHeadId === feeHeadId);
+        const kept = previous?.amount === proposed?.amount
+          ? current.feeHeadDetails.find((item) => item.feeHeadId === feeHeadId)
+          : proposed;
+        return kept && includedHeads.has(feeHeadId) ? [kept] : [];
+      });
   return {
     ...next,
     studentId: current.studentId,
@@ -126,7 +141,7 @@ export function mergeAssignmentInputs(
     previewToken: undefined,
     selectedOptionalFeeHeadIds,
     variableFeeHeads: [...variableAmounts.values()],
-    feeHeadDetails: next.feeHeadDetails.filter(included),
+    feeHeadDetails: fixedAmounts.filter(included),
     servicePeriods: [
       ...servicePeriods,
       ...admissionServicePeriods(candidate, context, selectedOptionalFeeHeadIds).filter(

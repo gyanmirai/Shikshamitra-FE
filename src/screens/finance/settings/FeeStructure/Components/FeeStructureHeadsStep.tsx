@@ -243,11 +243,11 @@ export default function FeeStructureHeadsStep({
                       <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
                         {row.feeHeadName}
                       </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {[row.categoryName, row.isOptional ? 'Optional' : 'Required']
-                          .filter(Boolean)
-                          .join(' · ')}
-                      </Typography>
+                      {row.categoryName && (
+                        <Typography variant="caption" color="text.secondary">
+                          {row.categoryName}
+                        </Typography>
+                      )}
                       {mobile && (row.amountError || row.termError) && (
                         <Stack
                           role="group"
@@ -271,6 +271,22 @@ export default function FeeStructureHeadsStep({
                       )}
                     </Box>
                   ),
+                },
+                {
+                  id: 'isOptional',
+                  label: 'Required',
+                  minWidth: 120,
+                  isFilter: false,
+                  isSort: false,
+                  render: (value) => (value === true ? 'Optional' : 'Required'),
+                },
+                {
+                  id: 'isVariable',
+                  label: 'Amount type',
+                  minWidth: 112,
+                  isFilter: false,
+                  isSort: false,
+                  render: (value) => (value === true ? 'Variable' : 'Static'),
                 },
                 {
                   cellSx: { textAlign: 'right' as const },

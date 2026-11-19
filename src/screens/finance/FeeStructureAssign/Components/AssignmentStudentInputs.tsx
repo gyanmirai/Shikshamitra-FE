@@ -3,16 +3,16 @@ import type {
   AssignmentCandidate,
   AssignmentServicePeriod,
 } from 'src/redux/finance/studentFeeAssignment';
+import type { DateRange } from 'src/components/custom-date-range-picker';
 
 import dayjs from 'dayjs';
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { Label } from 'src/components/label';
-import { fDate } from 'src/utils/format-time';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { CustomDateRangePicker } from 'src/components/custom-date-range-picker';
 import { amountError } from 'src/screens/finance/settings/FeeStructure/feeStructureModel';
 import { useAssignmentTransportSourcesQuery } from 'src/redux/finance/studentFeeAssignment';
 import {
@@ -21,11 +21,9 @@ import {
   Alert,
   Button,
   Checkbox,
-  Collapse,
   TextField,
   IconButton,
   Typography,
-  FormControlLabel,
 } from '@mui/material';
 
 import AssignmentMoneyInput from './AssignmentMoneyInput';
@@ -33,13 +31,17 @@ import { servicePeriodErrors, serializeServiceDate } from './assignmentServiceDa
 
 import type { AssignmentYearBounds } from './assignmentServiceDates';
 
+const parseDate = (date?: string) => (date ? dayjs(date.slice(0, 10)) : null);
+
 export default function AssignmentStudentInputs({
   candidate,
   request,
   onChange,
   canOverrideDates,
+  canOverrideAmount = false,
   disabled,
   yearBounds,
+  validationBounds = yearBounds,
   showErrors = false,
   flat = false,
   allowTransportSource = true,
@@ -49,27 +51,28 @@ export default function AssignmentStudentInputs({
   request: AssignmentRequest;
   onChange: (value: AssignmentRequest) => void;
   canOverrideDates: boolean;
+  canOverrideAmount?: boolean;
   disabled: boolean;
   yearBounds?: AssignmentYearBounds;
+  validationBounds?: AssignmentYearBounds;
   showErrors?: boolean;
   flat?: boolean;
   // Verified transport records belong to one student and cannot be shared in bulk.
   allowTransportSource?: boolean;
   lockOptionalSelection?: boolean;
 }) {
-  const [touchedAmounts, setTouchedAmounts] = useState<string[]>([]);
-  const [expandedHeads, setExpandedHeads] = useState<string[]>(() =>
-    request.servicePeriods
-      .filter((period) => period.source !== 'AcademicYear')
-      .map((period) => period.feeHeadId)
-  );
-  const [touchedDates, setTouchedDates] = useState<string[]>([]);
-  const touchDate = (key: string) =>
-    setTouchedDates((previous) => [...new Set([...previous, key])]);
-  const usesTransport = request.servicePeriods.some((p) => p.source === 'TransportService');
+  const selectionId = useId();
+  const [touched, setTouched] = useState<string[]>([]);
+  const [expandedHeads, setExpandedHeads] = useState<string[]>([]);
+  const touch = (key: string) =>
+    setTouched((previous) => (previous.includes(key) ? previous : [...previous, key]));
   const transport = useAssignmentTransportSourcesQuery(
     { studentId: request.studentId, academicYearId: request.academicYearId },
-    { skip: !usesTransport || !allowTransportSource }
+    {
+      skip:
+        !allowTransportSource ||
+        !request.servicePeriods.some((p) => p.source === 'TransportService'),
+    }
   );
   const updatePeriod = (period: AssignmentServicePeriod) =>
     onChange({
@@ -79,407 +82,248 @@ export default function AssignmentStudentInputs({
         period,
       ],
     });
-  const selectedAmounts = candidate.heads
-    .filter(
-      (head) => !head.isOptional || request.selectedOptionalFeeHeadIds.includes(head.feeHeadId)
-    )
-    .map((head) =>
-      head.isVariable
-        ? request.variableFeeHeads?.find((input) => input.feeHeadId === head.feeHeadId)?.amount
-        : head.configuredAmount
-    );
-  const selectedTotal = selectedAmounts.every((amount) => amount != null && !amountError(amount))
-    ? selectedAmounts.reduce<number>((sum, amount) => sum + amount!, 0)
+  const isIncluded = (head: AssignmentCandidate['heads'][number]) =>
+    !head.isOptional || request.selectedOptionalFeeHeadIds.includes(head.feeHeadId);
+  const amountFor = (head: AssignmentCandidate['heads'][number]) => {
+    if (head.isVariable)
+      return request.variableFeeHeads?.find((input) => input.feeHeadId === head.feeHeadId)?.amount;
+    const override = request.feeHeadDetails.find((input) => input.feeHeadId === head.feeHeadId);
+    return override ? override.amount : head.configuredAmount;
+  };
+  const amounts = candidate.heads.filter(isIncluded).map(amountFor);
+  const total = amounts.every((amount) => amount != null && !amountError(amount))
+    ? amounts.reduce<number>((sum, amount) => sum + amount!, 0)
     : undefined;
+
   return (
-    <Stack spacing={2}>
+    <Stack spacing={1.5}>
       <Stack divider={<Box sx={{ borderBottom: 1, borderColor: 'divider' }} />}>
         {candidate.heads.map((head) => {
-          const included =
-            !head.isOptional || request.selectedOptionalFeeHeadIds.includes(head.feeHeadId);
-          const period = request.servicePeriods.find((p) => p.feeHeadId === head.feeHeadId) ?? {
-            feeHeadId: head.feeHeadId,
-            source: 'AcademicYear' as const,
-          };
+          const { feeHeadId, feeHeadName } = head;
+          const checkboxId = `${selectionId}-${feeHeadId}`;
+          const included = isIncluded(head);
+          const canEditAmount =
+            head.isVariable ||
+            (head.isOptional && canOverrideAmount && Boolean(request.editAssignmentId));
+          const amount = amountFor(head);
+          const amountIssue =
+            showErrors || touched.includes(feeHeadId) ? amountError(amount) : undefined;
+          const variable = request.variableFeeHeads?.find((input) => input.feeHeadId === feeHeadId);
+          const savedPeriod = request.servicePeriods.find((item) => item.feeHeadId === feeHeadId);
           const admissionPeriod =
             head.servicePeriod?.source === 'Registration'
               ? head.servicePeriod
-              : period.source === 'Registration'
-                ? period
+              : savedPeriod?.source === 'Registration'
+                ? savedPeriod
                 : undefined;
-          const variable = request.variableFeeHeads?.find((h) => h.feeHeadId === head.feeHeadId);
-          const dateErrors = servicePeriodErrors(period, yearBounds);
-          const dateError = (key: 'start' | 'end' | 'reason') =>
-            showErrors || touchedDates.includes(`${head.feeHeadId}-${key}`)
-              ? dateErrors[key]
-              : undefined;
+          const defaultPeriod: AssignmentServicePeriod = admissionPeriod ?? {
+            feeHeadId,
+            source: request.chargePeriodSource ?? 'AcademicYear',
+            ...(request.chargePeriodSource && {
+              startDate: request.chargeStartDate,
+              endDate: request.chargeEndDate,
+            }),
+          };
+          const period = savedPeriod ?? defaultPeriod;
+          const transportPeriod = period.source === 'TransportService';
+          const transportRecord = transportPeriod
+            ? transport.data?.find((record) => record.id === period.sourceReferenceId)
+            : undefined;
+          const defaultStart = parseDate(defaultPeriod.startDate) ?? yearBounds?.start;
+          const defaultEnd = parseDate(defaultPeriod.endDate) ?? yearBounds?.end;
+          const savedRange =
+            period.source !== 'AcademicYear' && period.source !== 'BoardAcademicYear';
+          const start =
+            parseDate(period.startDate ?? transportRecord?.startDate) ??
+            (savedRange ? null : (defaultStart ?? null));
+          const end =
+            parseDate(period.endDate ?? transportRecord?.endDate) ??
+            (savedRange ? null : (defaultEnd ?? null));
+          const dateErrors = servicePeriodErrors(period, validationBounds);
+          const rangeError =
+            dateErrors.start ||
+            dateErrors.end ||
+            (!yearBounds ? 'Selected academic year dates are unavailable.' : undefined);
+          const reasonError =
+            showErrors || touched.includes(`${feeHeadId}-reason`) ? dateErrors.reason : undefined;
+          const canUseTransport =
+            allowTransportSource && head.supportsTransportSource && !head.isVariable;
           const expanded =
-            flat ||
-            expandedHeads.includes(head.feeHeadId) ||
-            head.isVariable ||
-            (showErrors && Boolean(dateErrors.start || dateErrors.end || dateErrors.reason));
-          const manualDateFields = (
-            <Box sx={{ gridColumn: '1 / -1', minWidth: 0 }}>
-              {!yearBounds && (
-                <Alert severity="error">Selected academic year dates are unavailable.</Alert>
-              )}
+            flat || canEditAmount || Boolean(savedPeriod) || expandedHeads.includes(feeHeadId);
+
+          const changeDates = ([nextStart, nextEnd]: DateRange) => {
+            if (!canOverrideDates || disabled || !nextStart || !nextEnd) return;
+            if (nextStart.isSame(start, 'day') && nextEnd.isSame(end, 'day')) return;
+            const isDefault =
+              defaultStart &&
+              defaultEnd &&
+              nextStart.isSame(defaultStart, 'day') &&
+              nextEnd.isSame(defaultEnd, 'day');
+            updatePeriod(
+              isDefault
+                ? defaultPeriod
+                : {
+                    feeHeadId,
+                    source: 'ManualOverride',
+                    startDate: serializeServiceDate(nextStart),
+                    endDate: serializeServiceDate(nextEnd),
+                    ...(period.source === 'ManualOverride' && { reason: period.reason }),
+                  }
+            );
+          };
+
+          const selectOptional = (checked: boolean) => {
+            onChange({
+              ...request,
+              selectedOptionalFeeHeadIds: checked
+                ? [...request.selectedOptionalFeeHeadIds, feeHeadId]
+                : request.selectedOptionalFeeHeadIds.filter((id) => id !== feeHeadId),
+              servicePeriods: checked
+                ? [...request.servicePeriods, ...(admissionPeriod ? [admissionPeriod] : [])]
+                : request.servicePeriods.filter((item) => item.feeHeadId !== feeHeadId),
+              feeHeadDetails: checked
+                ? request.feeHeadDetails
+                : request.feeHeadDetails.filter((item) => item.feeHeadId !== feeHeadId),
+              variableFeeHeads: checked
+                ? request.variableFeeHeads
+                : request.variableFeeHeads?.filter((item) => item.feeHeadId !== feeHeadId),
+            });
+          };
+
+          return (
+            <Box
+              key={feeHeadId}
+              component="section"
+              aria-label={feeHeadName}
+              sx={{
+                py: 1.5,
+                display: 'grid',
+                gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'minmax(0, 1fr) minmax(0, 2fr)' },
+                gap: 1.5,
+                alignItems: 'start',
+              }}
+            >
               <Box
                 sx={{
                   display: 'grid',
-                  gridTemplateColumns: {
-                    xs: 'minmax(0, 1fr)',
-                    sm: 'minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.4fr)',
-                  },
-                  gap: 1,
-                  alignItems: 'start',
-                  '& > *': { minWidth: 0 },
+                  gridTemplateColumns: '36px minmax(0, 1fr)',
+                  columnGap: 0.5,
+                  minHeight: 36,
+                  alignItems: 'center',
                 }}
               >
-                <DatePicker
-                  format="DD/MM/YYYY"
-                  label="Start date"
-                  value={period.startDate ? dayjs(period.startDate.slice(0, 10)) : null}
-                  disabled={disabled || !yearBounds}
-                  minDate={yearBounds?.start}
-                  maxDate={yearBounds?.end}
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      size: 'small',
-                      required: true,
-                      name: `${head.feeHeadId}-start`,
-                      onBlur: () => touchDate(`${head.feeHeadId}-start`),
-                      error: Boolean(dateError('start')),
-                      helperText: dateError('start'),
-                    },
-                  }}
-                  onChange={(date) => {
-                    touchDate(`${head.feeHeadId}-start`);
-                    updatePeriod({
-                      ...period,
-                      startDate: serializeServiceDate(date),
-                    });
-                  }}
-                />
-                <DatePicker
-                  format="DD/MM/YYYY"
-                  label="End date"
-                  value={period.endDate ? dayjs(period.endDate.slice(0, 10)) : null}
-                  disabled={disabled || !yearBounds}
-                  minDate={
-                    period.startDate &&
-                    yearBounds &&
-                    dayjs(period.startDate).isValid() &&
-                    !dayjs(period.startDate).isBefore(yearBounds.start, 'day') &&
-                    !dayjs(period.startDate).isAfter(yearBounds.end, 'day')
-                      ? dayjs(period.startDate.slice(0, 10))
-                      : yearBounds?.start
-                  }
-                  maxDate={yearBounds?.end}
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      size: 'small',
-                      required: true,
-                      name: `${head.feeHeadId}-end`,
-                      onBlur: () => touchDate(`${head.feeHeadId}-end`),
-                      error: Boolean(dateError('end')),
-                      helperText: dateError('end'),
-                    },
-                  }}
-                  onChange={(date) => {
-                    touchDate(`${head.feeHeadId}-end`);
-                    updatePeriod({
-                      ...period,
-                      endDate: serializeServiceDate(date),
-                    });
-                  }}
-                />
-                <TextField
-                  label="Reason for changing dates"
-                  size="small"
-                  fullWidth
-                  required
-                  value={period.reason ?? ''}
-                  disabled={disabled}
-                  inputProps={{ maxLength: 500 }}
-                  onBlur={() => touchDate(`${head.feeHeadId}-reason`)}
-                  error={Boolean(dateError('reason'))}
-                  helperText={dateError('reason')}
-                  onChange={(e) => updatePeriod({ ...period, reason: e.target.value })}
-                />
+                {head.isOptional && (
+                  <Checkbox
+                    checked={included}
+                    disabled={disabled || lockOptionalSelection}
+                    onChange={(_, checked) => selectOptional(checked)}
+                    slotProps={{ input: { id: checkboxId } }}
+                    sx={{ gridColumn: 1, gridRow: 1, justifySelf: 'center' }}
+                  />
+                )}
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  alignItems="center"
+                  flexWrap="wrap"
+                  useFlexGap
+                  sx={{ gridColumn: 2, gridRow: 1, minWidth: 0 }}
+                >
+                  <Typography component="h3" variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
+                    {head.isOptional ? <label htmlFor={checkboxId}>{feeHeadName}</label> : feeHeadName}
+                  </Typography>
+                  <Label color={head.isOptional ? 'info' : 'default'}>
+                    {head.isOptional ? 'Optional' : 'Required'}
+                  </Label>
+                  {!flat && included && !expanded && (
+                    <CustomTooltip title={`Expand ${feeHeadName}`}>
+                      <IconButton
+                        size="small"
+                        disabled={disabled}
+                        aria-label={`Expand ${feeHeadName}`}
+                        onClick={() => setExpandedHeads((previous) => [...previous, feeHeadId])}
+                      >
+                        <Iconify icon="mdi:chevron-down" />
+                      </IconButton>
+                    </CustomTooltip>
+                  )}
+                </Stack>
               </Box>
-            </Box>
-          );
-          return (
-            <Box
-              key={head.feeHeadId}
-              component="section"
-              aria-label={head.feeHeadName}
-              sx={{
-                py: flat ? 1.5 : 2,
-                minWidth: 0,
-                '&:first-of-type': { pt: flat ? 0 : 2 },
-                ...(flat && {
-                  display: 'grid',
-                  gridTemplateColumns: {
-                    xs: 'minmax(0, 1fr)',
-                    sm: 'minmax(0, 1fr) minmax(0, 2fr)',
-                  },
-                  gap: 1.5,
-                  alignItems: 'start',
-                  '& > .MuiCollapse-root': { minWidth: 0 },
-                }),
-              }}
-            >
-              <Stack
-                direction="row"
-                spacing={2}
-                justifyContent="space-between"
-                alignItems="flex-start"
-              >
-                <Box sx={{ minWidth: 0, flex: 1 }}>
-                  {head.isOptional ? (
-                    <FormControlLabel
-                      sx={{
-                        m: 0,
-                        ml: -1,
-                        '& .MuiFormControlLabel-label': {
-                          typography: 'subtitle2',
-                          overflowWrap: 'anywhere',
-                        },
-                      }}
-                      control={
-                        <Checkbox
-                          checked={included}
-                          disabled={!head.isOptional || disabled || lockOptionalSelection}
-                          onChange={(_, checked) =>
-                            onChange({
-                              ...request,
-                              selectedOptionalFeeHeadIds: checked
-                                ? [...request.selectedOptionalFeeHeadIds, head.feeHeadId]
-                                : request.selectedOptionalFeeHeadIds.filter(
-                                    (id) => id !== head.feeHeadId
-                                  ),
-                              servicePeriods: checked
-                                ? [
-                                    ...request.servicePeriods,
-                                    ...(admissionPeriod ? [admissionPeriod] : []),
-                                  ]
-                                : request.servicePeriods.filter(
-                                    (p) => p.feeHeadId !== head.feeHeadId
-                                  ),
-                              variableFeeHeads: checked
-                                ? request.variableFeeHeads
-                                : request.variableFeeHeads?.filter(
-                                    (h) => h.feeHeadId !== head.feeHeadId
-                                  ),
-                              feeHeadDetails: checked
-                                ? request.feeHeadDetails
-                                : request.feeHeadDetails.filter(
-                                    (h) => h.feeHeadId !== head.feeHeadId
-                                  ),
-                            })
+              {included && (
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))' },
+                    gap: 1.5,
+                    alignItems: 'start',
+                  }}
+                >
+                  {expanded ? (
+                    <Stack spacing={1}>
+                      <CustomDateRangePicker
+                        label="Start – end date"
+                        name={`${request.studentId}-${feeHeadId}-service-dates`}
+                        dateFormat="DD/MM/YYYY"
+                        singleInput
+                        calendars={1}
+                        value={[start, end]}
+                        minDate={yearBounds?.start}
+                        maxDate={yearBounds?.end}
+                        disabled={disabled || (!yearBounds && !start && !end)}
+                        readOnly={!canOverrideDates || !yearBounds}
+                        error={Boolean(rangeError)}
+                        helperText={rangeError}
+                        onChange={changeDates}
+                      />
+                      {period.source === 'ManualOverride' && (
+                        <TextField
+                          label="Reason for changing dates"
+                          size="small"
+                          fullWidth
+                          required
+                          value={period.reason ?? ''}
+                          disabled={disabled}
+                          inputProps={{ maxLength: 500 }}
+                          onBlur={() => touch(`${feeHeadId}-reason`)}
+                          error={Boolean(reasonError)}
+                          helperText={reasonError}
+                          onChange={(event) =>
+                            updatePeriod({ ...period, reason: event.target.value })
                           }
                         />
-                      }
-                      label={`${head.feeHeadName} · ${head.isOptional ? 'Optional' : 'Mandatory'}`}
-                    />
-                  ) : (
-                    <Stack
-                      direction="row"
-                      spacing={1}
-                      alignItems="center"
-                      useFlexGap
-                      flexWrap="wrap"
-                    >
-                      <Typography
-                        component="h3"
-                        variant="subtitle2"
-                        sx={{ overflowWrap: 'anywhere' }}
-                      >
-                        {head.feeHeadName}
-                      </Typography>
-                      <Label>Required</Label>
-                    </Stack>
-                  )}
-                  {!flat && (
-                    <Typography variant="body2" color="text.secondary">
-                      {head.isVariable ? 'Student amount · ' : ''}
-                      {period.source === 'ManualOverride'
-                        ? 'Custom dates'
-                        : period.source === 'TransportService'
-                          ? 'Transport service'
-                          : 'Academic year'}
-                      {head.isOneTime ? ' · One-time' : ''}
-                    </Typography>
-                  )}
-                </Box>
-                {!head.isVariable && !flat && (
-                  <Typography
-                    variant="subtitle2"
-                    sx={{
-                      flexShrink: 0,
-                      fontVariantNumeric: 'tabular-nums',
-                      pt: head.isOptional ? 1 : 0,
-                    }}
-                  >
-                    {head.configuredAmount == null
-                      ? '—'
-                      : formatNumber(head.configuredAmount, 'INR')}
-                  </Typography>
-                )}
-                {included && !head.isVariable && !flat && (
-                  <CustomTooltip title={`${expanded ? 'Collapse' : 'Expand'} ${head.feeHeadName}`}>
-                    <IconButton
-                      size="small"
-                      sx={{ minWidth: 44, minHeight: 44 }}
-                      disabled={disabled}
-                      aria-label={`${expanded ? 'Collapse' : 'Expand'} ${head.feeHeadName}`}
-                      aria-expanded={Boolean(expanded)}
-                      aria-controls={`${request.studentId}-${head.feeHeadId}-fields`}
-                      onClick={() =>
-                        setExpandedHeads((previous) =>
-                          previous.includes(head.feeHeadId)
-                            ? previous.filter((id) => id !== head.feeHeadId)
-                            : [...previous, head.feeHeadId]
-                        )
-                      }
-                    >
-                      <Iconify icon={expanded ? 'mdi:chevron-up' : 'mdi:chevron-down'} />
-                    </IconButton>
-                  </CustomTooltip>
-                )}
-              </Stack>
-              {included && (
-                <Collapse in={Boolean(expanded)}>
-                  <Box
-                    id={`${request.studentId}-${head.feeHeadId}-fields`}
-                    sx={{
-                      mt: flat ? 0 : 2,
-                      display: 'grid',
-                      gridTemplateColumns: {
-                        xs: 'minmax(0, 1fr)',
-                        sm:
-                          flat || head.isVariable ? 'repeat(2, minmax(0, 1fr))' : 'minmax(0, 1fr)',
-                      },
-                      gap: 1,
-                      alignItems: 'start',
-                    }}
-                  >
-                    <Stack spacing={1}>
-                      {canOverrideDates ||
-                      (allowTransportSource && head.supportsTransportSource && !head.isVariable) ? (
-                        <CustomSelect
-                          optionDescriptionKey="description"
+                      )}
+                      {canUseTransport && (
+                        <Button
                           size="small"
-                          name={`${head.feeHeadId}-source`}
-                          label="Service period"
-                          value={period.source}
+                          sx={{ alignSelf: 'flex-start' }}
                           disabled={disabled}
-                          labelKey="label"
-                          valueKey="value"
-
-                          options={[
-                            ...(admissionPeriod
-                              ? [
-                                  {
-                                    value: 'Registration',
-                                    label: 'From admission',
-                                    description:
-                                      'Use the verified joining date and admission proration rule.',
-                                  },
-                                ]
-                              : [
-                                  {
-                                    value: 'AcademicYear',
-                                    label: 'Academic year',
-                                    description: yearBounds
-                                      ? `${fDate(yearBounds.start)} – ${fDate(yearBounds.end)}`
-                                      : 'Academic year dates are unavailable.',
-                                  },
-                                ]),
-                            ...((allowTransportSource || period.source === 'TransportService') &&
-                            head.supportsTransportSource &&
-                            !head.isVariable
-                              ? [
-                                  {
-                                    value: 'TransportService',
-                                    label: allowTransportSource
-                                      ? 'Transport service'
-                                      : 'Saved transport service',
-                                    description:
-                                      'Use the service dates from the selected verified transport record.',
-                                  },
-                                ]
-                              : []),
-                            ...(canOverrideDates
-                              ? [
-                                  {
-                                    value: 'ManualOverride',
-                                    label: 'Custom dates',
-                                    description:
-                                      'Set the charge coverage within the academic year. Start date, end date and a reason are required; preview shows any applicable service adjustment.',
-                                  },
-                                ]
-                              : []),
-                          ]}
-                          onChange={(value) =>
+                          onClick={() =>
                             updatePeriod(
-                              value === 'Registration' && admissionPeriod
-                                ? admissionPeriod
-                                : {
-                                    feeHeadId: head.feeHeadId,
-                                    source: value as AssignmentServicePeriod['source'],
-                                  }
+                              transportPeriod
+                                ? defaultPeriod
+                                : { feeHeadId, source: 'TransportService' }
                             )
                           }
-                        />
-                      ) : flat ? (
-                        <Box>
-                          <Typography variant="caption" color="text.secondary">
-                            Service period
-                          </Typography>
-                          <Typography variant="body2">
-                            {period.source === 'ManualOverride'
-                              ? 'Custom dates'
-                              : period.source === 'TransportService'
-                                ? 'Transport service'
-                                : period.source === 'Registration'
-                                  ? 'From admission'
-                                  : 'Academic year'}
-                          </Typography>
-                        </Box>
-                      ) : null}
-                      {period.source === 'Registration' && (
-                        <Typography variant="body2" color="text.secondary">
-                          {fDate(period.startDate)} – {fDate(period.endDate)}
-                        </Typography>
+                        >
+                          {transportPeriod ? 'Use default dates' : 'Use transport dates'}
+                        </Button>
                       )}
-                      {period.source === 'TransportService' && !allowTransportSource && (
-                        <Typography variant="body2" color="text.secondary">
-                          Each student keeps their saved transport dates.
-                          {period.startDate &&
-                            period.endDate &&
-                            ` ${fDate(period.startDate)} – ${fDate(period.endDate)}`}
-                        </Typography>
-                      )}
-                      {period.source === 'TransportService' && allowTransportSource && (
+                      {transportPeriod && canUseTransport && (
                         <>
                           <CustomSelect
                             size="small"
-                            name={`${head.feeHeadId}-transport`}
+                            name={`${feeHeadId}-transport`}
                             label="Transport record"
                             value={period.sourceReferenceId ?? ''}
                             isLoading={transport.isLoading}
                             disabled={disabled}
-                            options={(transport.data ?? []).map((t) => ({
-                              value: t.id,
-                              label: t.label,
+                            options={(transport.data ?? []).map((record) => ({
+                              value: record.id,
+                              label: record.label,
                             }))}
                             onChange={(value) =>
                               updatePeriod({
-                                feeHeadId: head.feeHeadId,
+                                feeHeadId,
                                 source: 'TransportService',
                                 sourceReferenceId: String(value),
                               })
@@ -489,11 +333,7 @@ export default function AssignmentStudentInputs({
                             <Alert
                               severity="error"
                               action={
-                                <Button
-                                  size="small"
-                                  startIcon={<Iconify icon="mdi:refresh" />}
-                                  onClick={() => transport.refetch()}
-                                >
+                                <Button size="small" onClick={() => transport.refetch()}>
                                   Retry
                                 </Button>
                               }
@@ -503,89 +343,86 @@ export default function AssignmentStudentInputs({
                           )}
                         </>
                       )}
-                      {!flat && period.source === 'ManualOverride' && manualDateFields}
                     </Stack>
-                    {!head.isVariable && flat && (
-                      <Box sx={{ textAlign: 'right' }}>
-                        <Typography variant="caption" color="text.secondary">
-                          Amount
-                        </Typography>
-                        <Typography variant="subtitle2" sx={{ fontVariantNumeric: 'tabular-nums' }}>
-                          {head.configuredAmount == null
-                            ? '—'
-                            : formatNumber(head.configuredAmount, 'INR')}
-                        </Typography>
-                      </Box>
-                    )}
-                    {head.isVariable && (
-                      <Stack spacing={1.5}>
-                        <AssignmentMoneyInput
-                          label={`${head.feeHeadName} student amount`}
-                          name={`${request.studentId}-${head.feeHeadId}-amount`}
-                          required
+                  ) : (
+                    <Box />
+                  )}
+                  {canEditAmount ? (
+                    <Stack spacing={1}>
+                      <AssignmentMoneyInput
+                        label={head.isVariable ? 'Monthly amount' : `${feeHeadName} amount`}
+                        name={`${request.studentId}-${feeHeadId}-amount`}
+                        required
+                        fullWidth
+                        value={amount ?? null}
+                        disabled={disabled}
+                        error={Boolean(amountIssue)}
+                        helperText={
+                          amountIssue || (head.isVariable ? 'Total for the selected dates' : undefined)
+                        }
+                        onBlur={() => touch(feeHeadId)}
+                        onAmountChange={(value) =>
+                          onChange(
+                            head.isVariable
+                              ? {
+                                  ...request,
+                                  variableFeeHeads: [
+                                    ...(request.variableFeeHeads ?? []).filter(
+                                      (item) => item.feeHeadId !== feeHeadId
+                                    ),
+                                    {
+                                      feeHeadId,
+                                      amount: value,
+                                      zeroAmountReason: variable?.zeroAmountReason,
+                                    },
+                                  ],
+                                }
+                              : {
+                                  ...request,
+                                  feeHeadDetails: [
+                                    ...request.feeHeadDetails.filter(
+                                      (item) => item.feeHeadId !== feeHeadId
+                                    ),
+                                    ...(value === head.configuredAmount
+                                      ? []
+                                      : [{ feeHeadId, amount: value }]),
+                                  ],
+                                }
+                          )
+                        }
+                      />
+                      {head.isVariable && variable?.amount === 0 && (
+                        <TextField
+                          label="Reason for zero amount"
                           fullWidth
-                          value={variable?.amount ?? null}
+                          size="small"
+                          required
+                          value={variable.zeroAmountReason ?? ''}
                           disabled={disabled}
-                          error={
-                            (showErrors || touchedAmounts.includes(head.feeHeadId)) &&
-                            !!amountError(variable?.amount)
-                          }
-                          helperText={
-                            ((showErrors || touchedAmounts.includes(head.feeHeadId)) &&
-                            amountError(variable?.amount)
-                              ? amountError(variable?.amount)
-                              : undefined) || undefined
-                          }
-                          onBlur={() =>
-                            setTouchedAmounts((previous) =>
-                              previous.includes(head.feeHeadId)
-                                ? previous
-                                : [...previous, head.feeHeadId]
-                            )
-                          }
-                          onAmountChange={(amount) =>
+                          inputProps={{ maxLength: 500 }}
+                          onChange={(event) =>
                             onChange({
                               ...request,
-                              variableFeeHeads: [
-                                ...(request.variableFeeHeads ?? []).filter(
-                                  (h) => h.feeHeadId !== head.feeHeadId
-                                ),
-                                {
-                                  feeHeadId: head.feeHeadId,
-                                  amount,
-                                  zeroAmountReason: variable?.zeroAmountReason,
-                                },
-                              ],
+                              variableFeeHeads: (request.variableFeeHeads ?? []).map((item) =>
+                                item.feeHeadId === feeHeadId
+                                  ? { ...item, zeroAmountReason: event.target.value }
+                                  : item
+                              ),
                             })
                           }
                         />
-                        {variable?.amount === 0 && (
-                          <TextField
-                            label="Reason for zero amount"
-                            fullWidth
-                            size="small"
-                            required
-                            value={variable.zeroAmountReason ?? ''}
-                            disabled={disabled}
-                            inputProps={{ maxLength: 500 }}
-                            onChange={(e) =>
-                              onChange({
-                                ...request,
-                                variableFeeHeads: (request.variableFeeHeads ?? []).map((h) =>
-                                  h.feeHeadId === head.feeHeadId
-                                    ? { ...h, zeroAmountReason: e.target.value }
-                                    : h
-                                ),
-                              })
-                            }
-                          />
-                        )}
-                      </Stack>
-                    )}
-                  </Box>
-                </Collapse>
+                      )}
+                    </Stack>
+                  ) : (
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ textAlign: { sm: 'right' }, fontVariantNumeric: 'tabular-nums' }}
+                    >
+                      {amount == null ? '—' : formatNumber(amount, 'INR')}
+                    </Typography>
+                  )}
+                </Box>
               )}
-              {included && flat && period.source === 'ManualOverride' && manualDateFields}
             </Box>
           );
         })}
@@ -593,12 +430,11 @@ export default function AssignmentStudentInputs({
       <Stack
         direction="row"
         justifyContent="space-between"
-        alignItems="center"
-        sx={{ px: 0, py: 1.5, borderTop: 1, borderColor: 'divider', '& > :last-child': { pr: 0 } }}
+        sx={{ py: 1.5, borderTop: 1, borderColor: 'divider' }}
       >
         <Typography variant="subtitle2">Selected fees</Typography>
         <Typography variant="subtitle2" sx={{ fontVariantNumeric: 'tabular-nums' }}>
-          {selectedTotal == null ? '—' : formatNumber(selectedTotal, 'INR')}
+          {total == null ? '—' : formatNumber(total, 'INR')}
         </Typography>
       </Stack>
     </Stack>

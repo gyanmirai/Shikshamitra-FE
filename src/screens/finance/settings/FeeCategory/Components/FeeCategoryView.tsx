@@ -51,11 +51,15 @@ const FeeCategoryView: React.FC<IFeeCategoryViewProps> = ({ id }) => {
         descriptionTooltip="The saved category name, description, and current status."
       >
         <Box>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+          <Typography variant="caption" color="text.secondary" display="block" mb={0.25}>
             Category name
           </Typography>
           <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" alignItems="center">
-            <Typography component="h3" variant="h6" sx={{ minWidth: 0 }}>
+            <Typography
+              component="h3"
+              variant="body2"
+              sx={{ minWidth: 0, overflowWrap: 'anywhere' }}
+            >
               {category.name || '—'}
             </Typography>
             <Label color={category.isActive ? 'success' : 'default'}>
@@ -64,7 +68,7 @@ const FeeCategoryView: React.FC<IFeeCategoryViewProps> = ({ id }) => {
           </Stack>
         </Box>
         <Box>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+          <Typography variant="caption" color="text.secondary" display="block" mb={0.25}>
             Description
           </Typography>
           <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
@@ -107,7 +111,7 @@ const FeeCategoryView: React.FC<IFeeCategoryViewProps> = ({ id }) => {
                   {head.name || 'Unnamed fee head'}
                 </Typography>
                 <Box sx={{ flex: 1 }}>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                  <Typography variant="caption" color="text.secondary" display="block" mb={0.25}>
                     Description
                   </Typography>
                   <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
@@ -116,12 +120,7 @@ const FeeCategoryView: React.FC<IFeeCategoryViewProps> = ({ id }) => {
                 </Box>
                 <Box component="dl" sx={{ m: 0, display: 'grid', gap: 1.5 }}>
                   <Box>
-                    <Typography
-                      component="dt"
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ mb: 0.5 }}
-                    >
+                    <Typography component="dt" variant="caption" color="text.secondary" mb={0.25}>
                       Income category
                     </Typography>
                     <Typography component="dd" variant="body2" sx={{ m: 0 }}>
@@ -129,12 +128,7 @@ const FeeCategoryView: React.FC<IFeeCategoryViewProps> = ({ id }) => {
                     </Typography>
                   </Box>
                   <Box>
-                    <Typography
-                      component="dt"
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ mb: 0.5 }}
-                    >
+                    <Typography component="dt" variant="caption" color="text.secondary" mb={0.25}>
                       Concession applicable
                     </Typography>
                     <Box component="dd" sx={{ m: 0 }}>

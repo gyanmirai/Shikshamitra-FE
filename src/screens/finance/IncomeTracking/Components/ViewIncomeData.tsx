@@ -6,6 +6,7 @@ import { Iconify } from 'src/components/iconify';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { DialogScrollContent } from 'src/components/customDialog';
 import { PaymentMethodLabels } from 'src/enums/finance-payment-method';
+import { DetailField } from 'src/screens/finance/components/detail-view';
 import {
   Box,
   Card,
@@ -32,6 +33,10 @@ const ViewIncomeData = ({
   onClose: () => void;
 }) => {
   const { incomeInformation, incomeList } = incomeDetailedData || {};
+  const receivedAmount =
+    incomeInformation?.totalAmountReceived?.toLocaleString() ||
+    incomeData?.amount?.toLocaleString() ||
+    0;
   return (
     <>
       <DialogScrollContent>
@@ -64,42 +69,15 @@ const ViewIncomeData = ({
               <Grid container spacing={3}>
                 {/* Income Category */}
                 <Grid size={{ xs: 12, md: 4 }}>
-                  <Stack spacing={0.5}>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      fontWeight="bold"
-                      sx={{ textTransform: 'uppercase' }}
-                    >
-                      Income Category
-                    </Typography>
-                    <Typography variant="subtitle1" fontWeight="bold">
-                      {incomeInformation?.incomeCategoryName || incomeData?.categoryName || '—'}
-                    </Typography>
-                  </Stack>
+                  <DetailField
+                    label="Income category"
+                    value={incomeInformation?.incomeCategoryName || incomeData?.categoryName || '—'}
+                  />
                 </Grid>
 
                 {/* Total Amount Received */}
                 <Grid size={{ xs: 12, md: 4 }}>
-                  <Stack spacing={0.5}>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      fontWeight="bold"
-                      sx={{ textTransform: 'uppercase' }}
-                    >
-                      Total Amount Received
-                    </Typography>
-                    <Typography
-                      variant="subtitle1"
-                      sx={{ color: 'success.main', fontWeight: 'bold' }}
-                    >
-                      ₹{' '}
-                      {incomeInformation?.totalAmountReceived?.toLocaleString() ||
-                        incomeData?.amount?.toLocaleString() ||
-                        0}
-                    </Typography>
-                  </Stack>
+                  <DetailField label="Total amount received" value={`₹ ${receivedAmount}`} />
                 </Grid>
               </Grid>
             </Stack>
