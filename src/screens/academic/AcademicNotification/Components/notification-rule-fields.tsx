@@ -6,10 +6,10 @@ import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { CommunicationChannelType } from 'src/redux/communication/communicationTypes';
-import { Alert, Button, Switch, Checkbox, Typography, FormControlLabel } from '@mui/material';
+import { Alert, Button, Switch, Checkbox, TextField, Typography, FormControlLabel } from '@mui/material';
 import { notificationLabel, notificationChannelLabels } from 'src/redux/academic-notifications/response-adapters';
 
-import { staffRuleSelectors } from '../notification-rule-form-model';
+import { staffRuleSelectors, substitutionAcknowledgementEvent } from '../notification-rule-form-model';
 
 import type { RuleFormValues } from '../notification-rule-form-model';
 
@@ -32,9 +32,12 @@ export function NotificationRuleFields({ row, form, templates, isLoading, isErro
   const { definition, availability } = row.event;
   const staff = staffRuleSelectors(row.event);
   const current = form.values;
+  const isSubstitutionReminder = row.id === substitutionAcknowledgementEvent;
+  const hasReviewerEscalation = current.staffAudienceSelectors.includes('ConfiguredReviewer');
   const showErrors = form.submitCount > 0;
   const templateError = showErrors && typeof form.errors.templateIds === 'string' ? form.errors.templateIds : undefined;
   const staffError = showErrors && typeof form.errors.staffAudienceSelectors === 'string' ? form.errors.staffAudienceSelectors : undefined;
+  const reviewerDelayError = (showErrors || form.touched.reviewerEscalationMinutes) ? form.errors.reviewerEscalationMinutes : undefined;
   const templateOptions = templates.map((template) => ({
     value: template.templateId,
     label: `${template.templateName} · ${notificationLabel(template.recipientKind)} · ${notificationChannelLabels[template.channel]} · ${template.languageCode}`,
@@ -62,7 +65,21 @@ export function NotificationRuleFields({ row, form, templates, isLoading, isErro
         {definition.recipientSelectors.includes('StudentAccount') && <FormControlLabel label="Include student account" control={
           <Checkbox checked={current.includeStudentAccount} onChange={(_, checked) => form.setFieldValue('includeStudentAccount', checked)} />
         } />}
-        {!!staff.length && <ShakingTextField error={Boolean(staffError)}>
+        {isSubstitutionReminder && <Typography variant="body2">The assigned substitute receives the reminder.</Typography>}
+        {isSubstitutionReminder && staff.includes('ConfiguredReviewer') && <>
+          <FormControlLabel label="Notify the configured reviewer" control={
+            <Checkbox checked={hasReviewerEscalation} onChange={(_, enabled) => form.setFieldValue(
+              'staffAudienceSelectors', enabled ? ['SubstituteTeacher', 'ConfiguredReviewer'] : ['SubstituteTeacher']
+            )} />
+          } />
+          {hasReviewerEscalation && <ShakingTextField error={Boolean(reviewerDelayError)}>
+            <TextField {...form.getFieldProps('reviewerEscalationMinutes')} type="number" label="Escalate after (minutes)"
+              required fullWidth size="small" error={Boolean(reviewerDelayError)} helperText={reviewerDelayError ||
+                'Starts when the substitute reminder is sent. Stops when the substitute responds or the duty ends.'}
+              slotProps={{ htmlInput: { min: 1, max: 10080, step: 1 } }} />
+          </ShakingTextField>}
+        </>}
+        {!isSubstitutionReminder && !!staff.length && <ShakingTextField error={Boolean(staffError)}>
           <CustomSelect multiple label="Other recipients" size="small" value={current.staffAudienceSelectors}
             options={staff.map((value) => ({ value, label: notificationLabel(value) }))}
             error={Boolean(staffError)} helperText={staffError} onChange={(values) => form.setFieldValue('staffAudienceSelectors', values)} />

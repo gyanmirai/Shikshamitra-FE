@@ -112,4 +112,37 @@ describe('Configure Academic notification rule', () => {
       staffAudienceSelectors: ['AssignedTeacher'], timing: { reminderLocalTime: '14:35' },
     });
   });
+
+  it('adds a delayed reviewer to the assigned substitute reminder', async () => {
+    const user = userEvent.setup();
+    const reminderId = 'Academic.Substitution.AcknowledgementDue';
+    mocks.mutate.mockReturnValue({ unwrap: () => Promise.resolve({}) });
+    renderDrawer({
+      ...row,
+      id: reminderId,
+      item: { ...row.item, eventKey: reminderId },
+      event: {
+        ...row.event,
+        definition: {
+          ...row.event.definition, eventKey: reminderId, triggerType: 1,
+          recipientSelectors: ['SubstituteTeacher', 'ConfiguredReviewer'],
+        },
+      },
+    });
+    expect(screen.getByText('The assigned substitute receives the reminder.')).toBeVisible();
+    expect(screen.queryByLabelText(/Escalate after/)).toBeNull();
+    await user.click(screen.getByRole('checkbox', { name: 'Notify the configured reviewer' }));
+    const delay = screen.getByLabelText(/Escalate after/);
+    expect(delay).toHaveValue(30);
+    fireEvent.change(delay, { target: { value: '0' } });
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+    expect(await screen.findByText('Enter a delay from 1 to 10080 minutes.')).toBeVisible();
+    expect(mocks.mutate).not.toHaveBeenCalled();
+    fireEvent.change(delay, { target: { value: '45' } });
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+    expect(mocks.mutate.mock.calls[0][0].command).toMatchObject({
+      staffAudienceSelectors: ['SubstituteTeacher', 'ConfiguredReviewer'],
+      timing: { reviewerEscalationMinutes: 45 },
+    });
+  });
 });

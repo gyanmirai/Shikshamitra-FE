@@ -61,6 +61,7 @@ interface AcademicNotificationRuleTiming {
   delayMinutes: number;
   reminderSchoolDaysBefore: number;
   reminderLocalTime: string;
+  reviewerEscalationMinutes?: number | null;
   quietHoursEnabled: boolean;
   quietStart: string;
   quietEnd: string;
@@ -103,7 +104,8 @@ export interface SaveAcademicNotificationRule extends AcademicNotificationRuleAu
   enabled: boolean;
   channels?: AcademicNotificationChannel[];
   templateIds?: string[];
-  timing?: Partial<Pick<AcademicNotificationRuleTiming, 'delayMinutes' | 'reminderSchoolDaysBefore' | 'reminderLocalTime'>>;
+  timing?: Partial<Pick<AcademicNotificationRuleTiming,
+    'delayMinutes' | 'reminderSchoolDaysBefore' | 'reminderLocalTime' | 'reviewerEscalationMinutes'>>;
   quietHours?: { enabled?: boolean; start?: string | null; end?: string | null; bypass?: boolean };
   fallbackLanguage?: string;
   concurrencyStamp?: string | null;

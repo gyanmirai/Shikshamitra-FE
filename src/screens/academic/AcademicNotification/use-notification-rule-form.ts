@@ -12,7 +12,7 @@ import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { isSubmissionDigest } from 'src/redux/academic-notifications/response-adapters';
 import { useSaveAcademicNotificationRuleMutation } from 'src/redux/academic-notifications/api';
 
-import { ruleCommand, ruleFormValues, ruleRecipientKinds, templateCoverageError } from './notification-rule-form-model';
+import { ruleCommand, ruleFormValues, ruleRecipientKinds, templateCoverageError, substitutionAcknowledgementEvent } from './notification-rule-form-model';
 
 import type { RuleFormValues } from './notification-rule-form-model';
 
@@ -37,13 +37,20 @@ export function useNotificationRuleForm({
   onSaved: () => void;
 }) {
   const [save, mutation] = useSaveAcademicNotificationRuleMutation();
+  const defaultStaff = row.id === substitutionAcknowledgementEvent ? ['SubstituteTeacher']
+    : isSubmissionDigest(row.id) ? ['AssignedTeacher'] : [];
   const form = useFormik<RuleFormValues>({
-    initialValues: ruleFormValues(row.item.effectiveRule, isSubmissionDigest(row.id) ? ['AssignedTeacher'] : []),
+    initialValues: ruleFormValues(row.item.effectiveRule, defaultStaff),
     validationSchema,
     validate: (values) => {
       const errors: FormikErrors<RuleFormValues> = {};
       const kinds = ruleRecipientKinds(values, row.event);
       if (!kinds.length) errors.staffAudienceSelectors = 'Select at least one recipient.';
+      if (row.id === substitutionAcknowledgementEvent && kinds.includes('ConfiguredReviewer')) {
+        if (!Number.isInteger(values.reviewerEscalationMinutes) || values.reviewerEscalationMinutes < 1 || values.reviewerEscalationMinutes > 10080) {
+          errors.reviewerEscalationMinutes = 'Enter a delay from 1 to 10080 minutes.';
+        }
+      }
       if (values.enabled && !row.event.availability.isAvailable) errors.enabled = 'This event integration is unavailable.';
       if (values.quietHoursEnabled && values.quietStart === values.quietEnd) errors.quietEnd = 'Choose a different end time.';
       if (optionsAvailable || values.enabled) {
