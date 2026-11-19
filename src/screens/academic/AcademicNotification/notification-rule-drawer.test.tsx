@@ -1,10 +1,10 @@
 import type { AcademicNotificationRuleRow } from 'src/redux/academic-notifications/response-adapters';
 
-import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { renderWithProviders } from 'src/test/test-utils';
+import { screen, fireEvent } from '@testing-library/react';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
 import { defaultSettings } from 'src/components/settings/config-settings';
 
@@ -84,5 +84,32 @@ describe('Configure Academic notification rule', () => {
     });
     expect(mocks.mutate.mock.calls[0][0].command.concurrencyStamp).toBeUndefined();
     expect(mocks.close).not.toHaveBeenCalled();
+  });
+
+  it('edits the daily submission digest cutoff without a school-days offset', async () => {
+    const user = userEvent.setup();
+    const digestId = 'Academic.Homework.Submitted';
+    mocks.mutate.mockReturnValue({ unwrap: () => Promise.resolve({}) });
+    renderDrawer({
+      ...row,
+      id: digestId,
+      item: { ...row.item, eventKey: digestId },
+      event: {
+        ...row.event,
+        definition: {
+          ...row.event.definition, eventKey: digestId, triggerType: 1, deliveryProfile: 3,
+          recipientSelectors: ['AssignedTeacher'],
+        },
+      },
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Expand Timing and Language' }));
+    const time = screen.getByLabelText(/Daily digest time/);
+    expect(screen.queryByLabelText(/School days before/)).toBeNull();
+    fireEvent.change(time, { target: { value: '14:35' } });
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+    expect(mocks.mutate.mock.calls[0][0].command).toMatchObject({
+      staffAudienceSelectors: ['AssignedTeacher'], timing: { reminderLocalTime: '14:35' },
+    });
   });
 });

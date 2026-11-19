@@ -8,6 +8,7 @@ import { Label } from 'src/components/label';
 import SubmitButton from 'src/components/submit-button';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
+import { isSubmissionDigest } from 'src/redux/academic-notifications/response-adapters';
 import { Box, Alert, Stack, Button, Drawer, IconButton, Typography } from '@mui/material';
 import { useAcademicNotificationTemplateOptionsQuery } from 'src/redux/academic-notifications/api';
 
@@ -42,6 +43,9 @@ export function NotificationRuleDrawer({ row, identity, scopeLabel, onClose }: P
     push: router.push,
   });
   const requestClose = () => requestNavigation(() => {});
+  const schedule = row.event.definition.triggerType === 1
+    ? isSubmissionDigest(row.id) ? 'digest' : 'reminder'
+    : undefined;
 
   return (
     <>
@@ -69,7 +73,7 @@ export function NotificationRuleDrawer({ row, identity, scopeLabel, onClose }: P
                 <NotificationRuleFields row={row} form={form} templates={templates}
                   isLoading={!templateQuery.currentData && templateQuery.isFetching} isError={templateQuery.isError}
                   retry={templateQuery.refetch} />
-                <NotificationRuleTiming form={form} isReminder={row.event.definition.triggerType === 1}
+                <NotificationRuleTiming form={form} schedule={schedule}
                   allowsQuietHoursBypass={row.event.definition.allowsQuietHoursBypass} />
               </Stack>
             </FormBusyRegion>

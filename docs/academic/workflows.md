@@ -102,6 +102,8 @@ Open **Academics → Notification** and select a category and rule scope. The ta
 
 Staff with rule edit access can use **Configure** to submit a rule for the selected scope. The primary guardian is included for family events. The editor offers choices for additional guardians, the student account, and other recipients where the event supports them. Enabling requires published templates for the selected recipients and channels. Conflicts keep the current draft open.
 
+For Homework Submitted and Assignment Submitted, **Daily digest time** closes the submission count in the school's time zone. Assigned teachers are selected by default for a new rule. Use published teacher templates to enable the digest.
+
 ## Create an Academic notification template
 
 Open **Academics → Notification → Templates**. Choose the event and scope, then create a template for one recipient, channel, and language. Use the variable pickers to insert fields from the event catalogue. Email supports rich text. In-app, browser push, and WhatsApp use plain text.

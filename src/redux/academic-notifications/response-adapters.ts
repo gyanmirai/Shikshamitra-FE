@@ -52,10 +52,16 @@ export function notificationRuleRows(
       item,
       state,
       status: isInherited ? `${status} · inherited` : status,
-      trigger: { 0: 'On change', 1: 'Scheduled reminder', 2: 'Manual' }[event.definition.triggerType],
+      trigger: event.definition.triggerType === 1 && isSubmissionDigest(event.definition.eventKey)
+        ? 'Daily digest'
+        : { 0: 'On change', 1: 'Scheduled reminder', 2: 'Manual' }[event.definition.triggerType],
       deliveryChannels,
     }];
   });
 }
 
 export type AcademicNotificationRuleRow = ReturnType<typeof notificationRuleRows>[number];
+
+export function isSubmissionDigest(eventKey: string) {
+  return eventKey === 'Academic.Homework.Submitted' || eventKey === 'Academic.Assignment.Submitted';
+}

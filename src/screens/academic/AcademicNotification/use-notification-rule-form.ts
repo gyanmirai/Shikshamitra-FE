@@ -9,6 +9,7 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { shikshaMitraToast } from 'src/components/toast';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { isSubmissionDigest } from 'src/redux/academic-notifications/response-adapters';
 import { useSaveAcademicNotificationRuleMutation } from 'src/redux/academic-notifications/api';
 
 import { ruleCommand, ruleFormValues, ruleRecipientKinds, templateCoverageError } from './notification-rule-form-model';
@@ -21,7 +22,7 @@ const validationSchema = Yup.object({
   ).required('Fallback language is required.'),
   delayMinutes: Yup.number().integer().min(0).max(10080).required('Enter a delay from 0 to 10080 minutes.'),
   reminderSchoolDaysBefore: Yup.number().integer().min(0).max(365).required('Enter a number from 0 to 365.'),
-  reminderLocalTime: Yup.string().required('Enter the reminder time.'),
+  reminderLocalTime: Yup.string().required('Enter a time.'),
   quietStart: Yup.string().when('quietHoursEnabled', { is: true, then: (field) => field.required('Enter the quiet-hours start time.') }),
   quietEnd: Yup.string().when('quietHoursEnabled', { is: true, then: (field) => field.required('Enter the quiet-hours end time.') }),
 });
@@ -37,7 +38,7 @@ export function useNotificationRuleForm({
 }) {
   const [save, mutation] = useSaveAcademicNotificationRuleMutation();
   const form = useFormik<RuleFormValues>({
-    initialValues: ruleFormValues(row.item.effectiveRule),
+    initialValues: ruleFormValues(row.item.effectiveRule, isSubmissionDigest(row.id) ? ['AssignedTeacher'] : []),
     validationSchema,
     validate: (values) => {
       const errors: FormikErrors<RuleFormValues> = {};

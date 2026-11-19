@@ -14,13 +14,13 @@ export function staffRuleSelectors(event: AcademicNotificationEvent) {
   return event.definition.recipientSelectors.filter((selector) => !familySelectors.includes(selector));
 }
 
-export function ruleFormValues(rule: AcademicNotificationRule | null) {
+export function ruleFormValues(rule: AcademicNotificationRule | null, defaultStaffAudienceSelectors: string[] = []) {
   const config = rule?.configuration;
   return {
     enabled: rule?.enabled ?? false,
     additionalGuardianRelationships: config?.additionalGuardianRelationships ?? [],
     includeStudentAccount: config?.includeStudentAccount ?? false,
-    staffAudienceSelectors: config?.staffAudienceSelectors ?? [],
+    staffAudienceSelectors: config?.staffAudienceSelectors ?? defaultStaffAudienceSelectors,
     channels: config?.channels ?? [CommunicationChannelType.InApp] as AcademicNotificationChannel[],
     templateIds: config?.templateIds ?? [],
     fallbackLanguage: config?.fallbackLanguage ?? 'en',
