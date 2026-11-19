@@ -11,39 +11,37 @@ export function StudioCommandBar({
   studio,
   photo,
   props,
+  layersId,
+  configurationId,
 }: {
   view: ReturnType<typeof useStudioView>;
   studio: StudioController;
   photo: ReturnType<typeof useStudioPhoto>;
   props: IdentityCardDesignerProps;
+  layersId: string;
+  configurationId: string;
 }) {
-  const { side, setSide, guides, setGuides, snap, setSnap, layers, setLayers, zoom, setZoom } =
-    view;
+  const { zoom, setZoom } = view;
   return (
-    <>
-      <StudioHeader
-        widthMm={props.layout.widthMm}
-        heightMm={props.layout.heightMm}
-        side={side}
-        onSideChange={setSide}
-        backSideEnabled={props.backSideEnabled}
-        guides={guides}
-        onGuidesChange={setGuides}
-        snap={snap}
-        onSnapChange={setSnap}
-        layers={layers}
-        onLayersChange={setLayers}
-        photo={photo}
-        photoRecords={props.photoRecords}
-        disabled={props.disabled}
-      />
-      <StudioToolbar
-        controller={studio}
-        zoom={zoom}
-        onZoomChange={setZoom}
-        onFit={view.fitCanvas}
-        disabled={props.disabled}
-      />
-    </>
+    <StudioToolbar
+      controller={studio}
+      zoom={zoom}
+      onZoomChange={setZoom}
+      onFit={view.fitCanvas}
+      disabled={props.disabled}
+      viewControls={
+        <StudioHeader
+          view={view}
+          widthMm={props.layout.widthMm}
+          heightMm={props.layout.heightMm}
+          backSideEnabled={props.backSideEnabled}
+          photo={photo}
+          photoRecords={props.photoRecords}
+          disabled={props.disabled}
+          layersId={layersId}
+          configurationId={configurationId}
+        />
+      }
+    />
   );
 }

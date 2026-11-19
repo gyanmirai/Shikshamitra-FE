@@ -18,7 +18,7 @@ export function ToolButton({ label, icon, disabled, onClick }: ToolButtonProps) 
           aria-label={label}
           disabled={disabled}
           onClick={onClick}
-          sx={{ width: 44, height: 44 }}
+          sx={{ width: 36, height: 36, '@media (any-pointer: coarse)': { width: 44, height: 44 } }}
         >
           <Iconify icon={icon} width={18} />
         </IconButton>

@@ -4,19 +4,23 @@ import { FormSectionCard } from 'src/components/form-section-card';
 import { Box, Stack, Button, TextField, Typography } from '@mui/material';
 
 import { ElementStyle } from './element-style';
-import { designerGrid, DesignerNumber, DesignerSelect, DesignerSwitch } from './controls';
+import { ElementDataSource } from './element-data-source';
+import { StudioAppearance } from './editor/studio-appearance';
+import { designerGrid, DesignerNumber, DesignerSwitch } from './controls';
 
 import type { IdentityCardElement, IdentityCardFieldOption } from './types';
 
 export function ElementInspector({
   element,
   fields,
+  fieldPickerLabel,
   onChange,
   onDelete,
   disabled,
 }: {
   element?: IdentityCardElement;
   fields: IdentityCardFieldOption[];
+  fieldPickerLabel?: string;
   onChange: (element: IdentityCardElement) => void;
   onDelete: () => void;
   disabled?: boolean;
@@ -28,95 +32,76 @@ export function ElementInspector({
       </Typography>
     );
   const readOnly = disabled || element.locked;
-  const options = [
-    { value: 'static', label: 'Static text' },
-    ...fields
-      .filter((field) => field.key !== 'static')
-      .map((field) => ({ value: field.key, label: field.label })),
-    ...[
-      { key: 'schoolName', label: 'School name' },
-      { key: 'schoolAddress', label: 'School address' },
-    ]
-      .filter((field) => !fields.some((item) => item.key === field.key))
-      .map((field) => ({ value: field.key, label: field.label })),
-  ];
+  const textElement = element.type === 'text';
   return (
-    <FormSectionCard
-      title="Selected Element"
-      icon={GlobalIcons.edit}
-      descriptionTooltip="Position and dimensions use design canvas units. Layer order controls which elements are drawn above others. Unlock an element to edit it."
-      titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
-    >
-      <TextField
-        label="Element label"
-        size="small"
-        fullWidth
-        value={element.label ?? ''}
-        disabled={readOnly}
-        onChange={(event) => onChange({ ...element, label: event.target.value })}
-      />
-      <Stack direction="row" flexWrap="wrap">
-        <DesignerSwitch
-          label="Visible"
-          checked={element.visible}
-          onChange={(visible) => onChange({ ...element, visible })}
-          disabled={readOnly}
-        />
-        <DesignerSwitch
-          label="Locked"
-          checked={Boolean(element.locked)}
-          onChange={(locked) => onChange({ ...element, locked })}
-          disabled={disabled}
-        />
-      </Stack>
-      {element.type === 'text' && (
-        <>
-          <DesignerSelect
-            label="Value source"
-            value={element.fieldKey || 'static'}
-            options={options}
-            onChange={(fieldKey) => onChange({ ...element, fieldKey })}
+    <>
+      {textElement && (
+        <FormSectionCard
+          title="Selected Element"
+          icon={GlobalIcons.edit}
+          descriptionTooltip="Enter text to print the same words on each card, or choose a field to insert its value for each cardholder."
+        >
+          <ElementDataSource
+            element={element}
+            fields={fields}
+            fieldPickerLabel={fieldPickerLabel}
+            onChange={onChange}
             disabled={readOnly}
           />
-          {(!element.fieldKey || element.fieldKey === 'static') && (
-            <TextField
-              label="Static text"
-              size="small"
-              fullWidth
-              multiline
-              minRows={2}
-              value={element.value ?? ''}
-              onChange={(event) => onChange({ ...element, value: event.target.value })}
+        </FormSectionCard>
+      )}
+      <FormSectionCard
+        key={element.id}
+        title="Position & Style"
+        icon={GlobalIcons.edit}
+        descriptionTooltip="Position and dimensions use canvas units. Layer order controls what is drawn on top. Unlock an element to edit it."
+        collapsible
+        defaultExpanded={!fieldPickerLabel || !textElement || Boolean(element.locked)}
+      >
+        <TextField
+          label="Element label"
+          size="small"
+          fullWidth
+          value={element.label ?? ''}
+          disabled={readOnly}
+          onChange={(event) => onChange({ ...element, label: event.target.value })}
+        />
+        <Stack direction="row" flexWrap="wrap">
+          <DesignerSwitch
+            label="Visible"
+            checked={element.visible}
+            onChange={(visible) => onChange({ ...element, visible })}
+            disabled={readOnly}
+          />
+          <DesignerSwitch
+            label="Locked"
+            checked={Boolean(element.locked)}
+            onChange={(locked) => onChange({ ...element, locked })}
+            disabled={disabled}
+          />
+        </Stack>
+        <Box sx={designerGrid}>
+          {(['x', 'y', 'w', 'h', 'z'] as const).map((key) => (
+            <DesignerNumber
+              key={key}
+              label={
+                {
+                  x: 'X position (canvas)',
+                  y: 'Y position (canvas)',
+                  w: 'Width (canvas)',
+                  h: 'Height (canvas)',
+                  z: 'Layer order',
+                }[key]
+              }
+              value={element[key]}
+              onChange={(value) => onChange({ ...element, [key]: value })}
               disabled={readOnly}
             />
-          )}
-          {['headerText', 'footerText'].includes(element.fieldKey ?? '') && (
-            <Typography variant="caption" color="text.secondary">
-              This value comes from the card branding settings.
-            </Typography>
-          )}
-        </>
-      )}
-      <Box sx={designerGrid}>
-        {(['x', 'y', 'w', 'h', 'z'] as const).map((key) => (
-          <DesignerNumber
-            key={key}
-            label={
-              {
-                x: 'X position (canvas)',
-                y: 'Y position (canvas)',
-                w: 'Width (canvas)',
-                h: 'Height (canvas)',
-                z: 'Layer order',
-              }[key]
-            }
-            value={element[key]}
-            onChange={(value) => onChange({ ...element, [key]: value })}
-            disabled={readOnly}
-          />
-        ))}
-      </Box>
-      <ElementStyle element={element} onChange={onChange} disabled={readOnly} />
+          ))}
+        </Box>
+        <ElementStyle element={element} onChange={onChange} disabled={readOnly} />
+        <StudioAppearance element={element} onChange={onChange} disabled={readOnly} />
+      </FormSectionCard>
       <Button
         type="button"
         size="small"
@@ -128,6 +113,6 @@ export function ElementInspector({
       >
         Remove element
       </Button>
-    </FormSectionCard>
+    </>
   );
 }

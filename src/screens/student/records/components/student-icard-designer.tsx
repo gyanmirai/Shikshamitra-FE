@@ -10,6 +10,7 @@ import { IdentityCardDesigner } from 'src/components/identity-card-designer';
 import { StudentICardBranding } from './student-icard-branding';
 import {
   STUDENT_ICARD_FIELDS,
+  STUDENT_ICARD_TOKENS,
   getStudentICardLayout,
   applyStudentICardDesign,
   getStudentICardPrintSettings,
@@ -67,6 +68,8 @@ export function StudentICardDesigner({
       layout={layout}
       values={values}
       fields={STUDENT_ICARD_FIELDS}
+      fieldPickerLabel="Select Student Field"
+      fieldTokens={STUDENT_ICARD_TOKENS}
       logoHidden={template.logo?.mode === 2}
       printSettings={settings}
       disabled={disabled}
