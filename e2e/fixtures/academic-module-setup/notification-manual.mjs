@@ -43,7 +43,9 @@ export function createManualNotificationFixture() {
         }] });
       } else if (method === 'GET' && path === `${root}/catalogue`) {
         send(200, {
-          events: [{ definition, availability: { isAvailable: true, reasonCode: null } }],
+          events: [{ definition,
+            availability: { isAvailable: false, reasonCode: 'Communication:Notification:SourceUnavailable' },
+            manualAvailability: { isAvailable: true, reasonCode: null } }],
           channels: definition.supportedChannels.map((channel) => ({ channel, isConfigured: channel === 3 || channel === 2 })),
         });
       } else if (method === 'POST' && path === `${root}/manual/preview`) {

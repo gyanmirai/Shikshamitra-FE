@@ -4,7 +4,7 @@ scenarios:
   - id: ACM-NOTIFICATION-REVIEWED-REMINDER-001
     module: Academic
     submodule: Notification
-    title: Staff preview and confirm a reminder for one unsubmitted homework row and open its queued operation
+    title: Staff can review a manual Homework reminder before scheduled reminders are available and open its queued operation
     risk: high
     priority: P1
     type: [functional, regression, responsive, accessibility]

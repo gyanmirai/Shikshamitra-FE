@@ -27,7 +27,8 @@ export function useAcademicNotificationActionContext(eventKey: string, sourceId?
   });
   const data = catalogue.currentData;
   const event = data?.events.find((entry) => entry.definition.eventKey === eventKey);
-  if (!allowed || !savedSourceId || catalogue.isError || !data || !event?.availability.isAvailable ||
+  const availability = event?.manualAvailability ?? event?.availability;
+  if (!allowed || !savedSourceId || catalogue.isError || !data || !event || !availability?.isAvailable ||
     !event.definition.supportedChannels.includes(CommunicationChannelType.InApp) ||
     !data.channels.some((option) => option.channel === CommunicationChannelType.InApp && option.isConfigured)) return undefined;
   return {
