@@ -130,14 +130,12 @@ describe('School PF coverage', () => {
       await editor.save?.();
     });
     expect(onSaved).toHaveBeenCalledOnce();
-    expect(mocks.save).toHaveBeenCalledWith(
-      {
-        effectiveMonth: '2026-11-01T00:00:00.000Z',
-        isCovered: false,
-        expectedConfigurationId: 'coverage-1',
-        idempotencyKey: expect.any(String),
-      }
-    );
+    expect(mocks.save).toHaveBeenCalledWith({
+      effectiveMonth: '2026-11-01T00:00:00.000Z',
+      isCovered: false,
+      expectedConfigurationId: 'coverage-1',
+      idempotencyKey: expect.any(String),
+    });
   });
   it('closes and resets the form only after a successful save', async () => {
     render(<PfCoverageSettings />);
@@ -158,6 +156,21 @@ describe('School PF coverage', () => {
     fireEvent.click(screen.getByRole('option', { name: /^Covered under PF$/ }));
     expect(screen.getByLabelText(/PF establishment number/)).toHaveValue('');
   });
+  it('saves school-wide external management without a number or evidence', async () => {
+    render(<PfCoverageSettings />);
+    fireEvent.click(screen.getByRole('button', { name: 'Configure coverage' }));
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: /School PF coverage/ }));
+    fireEvent.click(screen.getByRole('option', { name: 'Handled outside ShikshaMitra' }));
+    expect(screen.queryByLabelText(/PF establishment number/)).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+    await waitFor(() => expect(mocks.save).toHaveBeenCalledOnce());
+    expect(mocks.save.mock.calls[0][0]).toMatchObject({
+      isCovered: false,
+      isHandledExternally: true,
+    });
+    expect(mocks.save.mock.calls[0][0]).not.toHaveProperty('evidenceReference');
+  });
+
   it('locks editing, cancel, close, and submit during saving', () => {
     const view = render(<PfCoverageSettings />);
     fireEvent.click(screen.getByRole('button', { name: 'Configure coverage' }));
@@ -193,9 +206,7 @@ describe('School PF coverage', () => {
       isCovered: true,
       evidenceReference: 'Synthetic registration',
     });
-    expect(screen.getByLabelText(/PF establishment number/)).toHaveValue(
-      'Synthetic registration'
-    );
+    expect(screen.getByLabelText(/PF establishment number/)).toHaveValue('Synthetic registration');
   });
 });
 

@@ -271,7 +271,7 @@ test.describe.serial('HR setup wizard with disposable SQLite and real backend AP
       .getByRole('button', { name: /^Configure / })
       .click();
     await wizard.getByRole('combobox', { name: /School PF coverage/ }).click();
-    await page.getByRole('option', { name: 'Not covered under PF', exact: true }).click();
+    await page.getByRole('option', { name: 'Handled outside ShikshaMitra', exact: true }).click();
     await expect(wizard.getByLabel(/PF establishment number/)).toHaveCount(0);
     await wizard.getByRole('button', { name: 'Save and next', exact: true }).click();
     await expect(

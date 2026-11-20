@@ -2,6 +2,7 @@
 
 import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
+import type { PfCoverageVersion } from 'src/redux/hr/pf-coverage-api';
 
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
@@ -37,6 +38,11 @@ import {
 } from 'src/screens/hr/setup/hr-setup-editor-context';
 
 import { getLocalMonthKey } from '../structure/salary-structure-builder-utils';
+
+function coverageLabel(coverage: PfCoverageVersion) {
+  if (coverage.isHandledExternally) return 'Handled outside ShikshaMitra';
+  return coverage.isCovered ? 'Covered under PF' : 'Not covered under PF';
+}
 
 export function PfCoverageSettings({ onSaved }: { onSaved?: () => void } = {}) {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
@@ -83,6 +89,7 @@ export function PfCoverageSettings({ onSaved }: { onSaved?: () => void } = {}) {
       const body = {
         effectiveMonth: `${month}-01T00:00:00.000Z`,
         isCovered: values.coverage === 'covered',
+        ...(values.coverage === 'external' ? { isHandledExternally: true } : {}),
         ...(values.coverage === 'covered'
           ? { evidenceReference: values.establishmentNumber.trim() }
           : {}),
@@ -165,7 +172,7 @@ export function PfCoverageSettings({ onSaved }: { onSaved?: () => void } = {}) {
                 <Typography variant="subtitle2">School PF Coverage</Typography>
                 <Typography variant="body2">
                   {current
-                    ? `${current.isCovered ? 'Covered under PF' : 'Not covered under PF'}. Effective ${current.effectiveMonth.slice(0, 7)}.`
+                    ? `${coverageLabel(current)}. Effective ${current.effectiveMonth.slice(0, 7)}.`
                     : 'PF coverage is not configured for the current month. Complete coverage setup before saving new salary enrollment decisions.'}
                 </Typography>
                 {!current && !canEdit && (
@@ -235,7 +242,7 @@ export function PfCoverageSettings({ onSaved }: { onSaved?: () => void } = {}) {
                       role={current ? 'status' : 'alert'}
                     >
                       {current
-                        ? `${current.isCovered ? 'Covered under PF' : 'Not covered under PF'}. Effective ${current.effectiveMonth.slice(0, 7)}.`
+                        ? `${coverageLabel(current)}. Effective ${current.effectiveMonth.slice(0, 7)}.`
                         : 'Record school PF coverage to complete HR setup and save new salary enrollment decisions.'}
                     </Typography>
                   )}
@@ -291,11 +298,18 @@ export function PfCoverageSettings({ onSaved }: { onSaved?: () => void } = {}) {
                         onBlur={form.handleBlur}
                         disabled={busy}
                         error={errorFor('coverage')}
-                        helperText={errorFor('coverage') ? form.errors.coverage : undefined}
+                        helperText={
+                          errorFor('coverage')
+                            ? form.errors.coverage
+                            : form.values.coverage === 'external'
+                              ? 'ShikshaMitra skips PF contributions for all staff from this month.'
+                              : undefined
+                        }
                         slotProps={{ inputLabel: { shrink: true } }}
                       >
                         <MenuItem value="covered">Covered under PF</MenuItem>
                         <MenuItem value="not-covered">Not covered under PF</MenuItem>
+                        <MenuItem value="external">Handled outside ShikshaMitra</MenuItem>
                       </TextField>
                     </ShakingTextField>
                     {form.values.coverage === 'covered' && (
