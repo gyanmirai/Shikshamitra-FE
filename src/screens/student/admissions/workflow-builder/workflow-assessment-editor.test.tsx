@@ -85,7 +85,7 @@ describe('combined assessment setup', { timeout: 15000 }, () => {
   it('shows assessment settings directly without changing its policy or hiding stage controls', async () => {
     const { user, onSave } = await setup();
     expect(screen.queryByRole('button', { name: 'assessment settings' })).not.toBeInTheDocument();
-    expect(screen.getByRole('spinbutton', { name: 'Total Marks *' })).toBeVisible();
+    expect(screen.getByRole('textbox', { name: 'Total Marks *' })).toBeVisible();
     expect(screen.getByText('Required Stage')).toBeVisible();
     expect(screen.getByText('End Of Journey')).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
@@ -103,7 +103,7 @@ describe('combined assessment setup', { timeout: 15000 }, () => {
     );
     expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument();
     expect(screen.getByRole('switch', { name: 'Schedule an Entrance Exam' })).not.toBeChecked();
-    expect(screen.getByRole('spinbutton', { name: 'Maximum Attempts *' })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Maximum Attempts *' })).toBeInTheDocument();
     expect(screen.getByRole('switch', { name: 'Entry Stage' })).toBeChecked();
     await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
@@ -136,7 +136,7 @@ describe('combined assessment setup', { timeout: 15000 }, () => {
         assessment: { ...DEFAULT_ASSESSMENT_POLICY, reviewRequired: true, maxAttempts: 3 },
       })
     );
-    expect(screen.getByRole('spinbutton', { name: 'Maximum Attempts *' })).toHaveValue(3);
+    expect(screen.getByRole('textbox', { name: 'Maximum Attempts *' })).toHaveValue('3');
     await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(JSON.parse(onSave.mock.calls[0][0].configurationJson).assessment).toMatchObject({
@@ -146,19 +146,45 @@ describe('combined assessment setup', { timeout: 15000 }, () => {
   });
   it('rejects invalid marks without an alternate manual bypass and preserves the draft for correction', async () => {
     const { user, onSave } = await setup();
-    const input = screen.getByRole('spinbutton', { name: 'Passing Marks *' });
+    const input = screen.getByRole('textbox', { name: 'Passing Marks *' });
     await user.clear(input);
     await user.type(input, '101');
     await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
-    expect(
-      await screen.findByText('Passing marks must be between zero and the total marks.')
-    ).toBeInTheDocument();
+    expect(await screen.findByText('Use a value between 0 and total marks.')).toBeInTheDocument();
     expect(onSave).not.toHaveBeenCalled();
     await user.clear(input);
     await user.type(input, '50');
     await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(JSON.parse(onSave.mock.calls[0][0].configurationJson).assessment.passingMarks).toBe(50);
+  });
+  it('retains fractional count drafts for correction and saves scalar decimal marks without rounding', async () => {
+    const { user, onSave } = await setup(
+      JSON.stringify({ assessment: { ...DEFAULT_ASSESSMENT_POLICY, maxAttempts: 1.5 } })
+    );
+    const attempts = screen.getByRole('textbox', { name: 'Maximum Attempts *' });
+    expect(attempts).toHaveValue('1.5');
+    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
+    expect(await screen.findByText('Enter a whole number from 1 to 10.')).toBeVisible();
+    expect(attempts).toHaveValue('1.5');
+    expect(onSave).not.toHaveBeenCalled();
+    await user.clear(attempts);
+    expect(attempts).toHaveValue('');
+    await user.type(attempts, '1.0');
+    expect(attempts).toHaveValue('1.0');
+    const total = screen.getByRole('textbox', { name: 'Total Marks *' });
+    await user.clear(total);
+    await user.type(total, '0.5');
+    const passing = screen.getByRole('textbox', { name: 'Passing Marks *' });
+    await user.clear(passing);
+    await user.type(passing, '0.25');
+    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
+    await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
+    expect(JSON.parse(onSave.mock.calls[0][0].configurationJson).assessment).toMatchObject({
+      maxAttempts: 1,
+      totalMarks: 0.5,
+      passingMarks: 0.25,
+    });
   });
   it('blocks unsupported policy versions rather than silently replacing them', async () => {
     const { user, onSave } = await setup(

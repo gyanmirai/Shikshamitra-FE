@@ -41,11 +41,12 @@ export default function FeeStructureAssignTable({
     permissions,
     `${financePermissions.fees.structureAssign}.Add`
   );
+  const canStopOptionalService = hasGrantedPermission(permissions, `${financePermissions.fees.structureAssign}.StopOptionalService`);
   const canEdit = hasGrantedPermission(
     permissions,
     `${financePermissions.fees.structureAssign}.OverridePolicies`
   );
-  const context = useFinanceAcademicFilters();
+  const context = useFinanceAcademicFilters({ includeWorkContext: false });
   const [pagination, setPagination] = useState({ page: 1, scope: '' });
   const [pageSize, setPageSize] = useState(10);
   const [search, setSearch] = useState('');
@@ -520,7 +521,7 @@ export default function FeeStructureAssignTable({
                       disabled: query.isFetching,
                       onClick: () => onAssignStructure(row),
                     },
-                    ...((canEdit || (canAssign && row.canEditStructure && row.isActive)) && onEdit
+                    ...((canEdit || (row.isActive && (canStopOptionalService || (canAssign && row.canEditStructure)))) && onEdit
                       ? [
                           {
                             id: 'edit',

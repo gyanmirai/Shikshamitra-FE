@@ -10,6 +10,7 @@ import { useFormik } from 'formik';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { LoadingButton } from 'src/components/loading-button';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
@@ -19,16 +20,18 @@ import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { LeaderStudentPicker } from './house-pickers';
 import { useHouseCloseGuard } from './use-house-close-guard';
 
+type LeaderRole = 'house' | 'division';
+
 type Props = {
-  kind: 'house' | 'division';
   academicMediumId: string;
+  role: LeaderRole;
   record: House | HouseDivision;
   onSave: (command: HouseLeaderCommand) => Promise<void>;
   onClose: () => void;
 };
 export default function HouseLeaderDialog({
-  kind,
   academicMediumId,
+  role,
   record,
   onSave,
   onClose,
@@ -36,7 +39,9 @@ export default function HouseLeaderDialog({
   const [error, setError] = useState('');
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
-  const title = kind === 'house' ? 'House Leader' : 'Division Leader';
+  const isHouse = role === 'house';
+  const title = isHouse ? 'House Leader' : 'Division Leader';
+  const currentLeader = record.leader ?? null;
   const save = async (leader: HouseStudent | null) => {
     if (busy) return;
     setBusy(true);
@@ -57,10 +62,10 @@ export default function HouseLeaderDialog({
     }
   };
   const form = useFormik<{ leader: HouseStudent | null }>({
-    initialValues: { leader: record.leader },
+    initialValues: { leader: currentLeader },
     onSubmit: async (values) => {
       if (!form.dirty || busy) return;
-      if (record.leader) setConfirming(true);
+      if (currentLeader) setConfirming(true);
       else await save(values.leader);
     },
   });
@@ -69,11 +74,11 @@ export default function HouseLeaderDialog({
     <>
       <CustomDialog
         open
-        title={title}
+        title={`Manage ${title}`}
         titleInfo={
-          kind === 'house'
-            ? 'Choose one leader from the current house members, or leave the position vacant.'
-            : 'Choose one student enrolled in this division. House membership is not required.'
+          isHouse
+            ? 'Each house has one leader. Choose a current house member or leave the role vacant.'
+            : 'Each division has one division leader. A student may also lead their house.'
         }
         handleClose={close}
         guardUnsavedChanges={false}
@@ -95,21 +100,25 @@ export default function HouseLeaderDialog({
                 title="Leader Appointment"
                 icon={GlobalIcons.admissionStudent}
                 descriptionTooltip={
-                  kind === 'house'
-                    ? 'Moving or removing the house leader from this house clears their house leadership.'
-                    : 'Division leadership is independent of house membership and house leadership.'
+                  isHouse
+                    ? 'Choose an active member of this house. Leaving the house clears this appointment.'
+                    : 'Choose an active student in this division. House membership is optional.'
                 }
               >
                 <Typography variant="body2">
-                  {kind === 'division' && 'standardName' in record
-                    ? `${record.standardName} / `
-                    : ''}
+                  {'standardName' in record ? `${record.standardName} / ` : ''}
                   {record.name}
                 </Typography>
+                {currentLeader && (
+                  <Typography variant="body2" color="text.secondary">
+                    Current leader: {currentLeader.studentName}
+                    {isHouse && currentLeader.houseName ? ` · ${currentLeader.houseName}` : ''}
+                  </Typography>
+                )}
                 <LeaderStudentPicker
                   input={{
                     academicMediumId,
-                    ...(kind === 'house' ? { houseId: record.id } : { divisionId: record.id }),
+                    ...(isHouse ? { houseId: record.id } : { divisionId: record.id }),
                   }}
                   value={form.values.leader}
                   onChange={(student) => form.setFieldValue('leader', student)}
@@ -130,16 +139,17 @@ export default function HouseLeaderDialog({
           >
             Cancel
           </Button>
-          <Button
+          <LoadingButton
             size="small"
             type="submit"
             variant="contained"
             color="inherit"
-            disabled={busy || !form.dirty}
+            loading={busy}
+            disabled={!form.dirty}
             startIcon={<Iconify icon={GlobalIcons.submit} />}
           >
             Submit
-          </Button>
+          </LoadingButton>
         </DialogActions>
       </CustomDialog>
       <ConfirmDialog
@@ -149,18 +159,18 @@ export default function HouseLeaderDialog({
         icon="warning"
         disableCancel={busy}
         bodyBusy={busy}
-        content={`${record.leader?.studentName ?? ''} will no longer be the ${kind} leader. ${form.values.leader ? `${form.values.leader.studentName} will take this position.` : 'The position will be vacant.'}`}
+        content={`${currentLeader?.studentName ?? ''} will no longer be the ${role} leader. ${form.values.leader ? `${form.values.leader.studentName} will take this position.` : 'The position will be vacant.'}`}
         action={
-          <Button
+          <LoadingButton
             size="small"
             variant="contained"
             color="inherit"
-            disabled={busy}
+            loading={busy}
             onClick={() => save(form.values.leader)}
             startIcon={<Iconify icon={GlobalIcons.submit} />}
           >
             Confirm change
-          </Button>
+          </LoadingButton>
         }
       />
       {confirmation}

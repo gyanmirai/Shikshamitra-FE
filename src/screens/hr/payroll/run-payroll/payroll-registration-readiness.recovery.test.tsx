@@ -41,7 +41,7 @@ function mount(authorized: boolean) {
     </Provider>
   );
   fireEvent.click(
-    screen.getByRole('button', { name: 'Registration review before payroll refresh' })
+    screen.getByRole('button', { name: 'View registrations' })
   );
 }
 

@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from 'react';
+import { useMemo, useSyncExternalStore } from 'react';
 
 // Local-only synthetic fixture. These hooks never call the live API.
 type Kind = 'Income' | 'Expense' | 'Bank';
@@ -75,8 +75,7 @@ function useList(kind: Kind, params: Row = {}) {
       .includes(term)
   );
   const pageSize = params.pageSize || 10;
-  return {
-    data: {
+  const data = useMemo(() => ({
       items: matches
         .slice(((params.page || 1) - 1) * pageSize, (params.page || 1) * pageSize)
         .map((row) =>
@@ -85,7 +84,10 @@ function useList(kind: Kind, params: Row = {}) {
             : row
         ),
       totalCount: matches.length,
-    },
+    }), [rows, term, pageSize, params.page]);
+  return {
+    data,
+    currentData: data,
     isLoading: false,
     isFetching: false,
     refetch: () => publish({ ...state }),
@@ -145,24 +147,26 @@ function useMutation(kind: Kind, action: 'create' | 'update' | 'status' | 'delet
     { isLoading: false },
   ] as const;
 }
-function useHistory(kind: Kind, id: string) {
+type HistoryQuery = string | { id: string; skipCount?: number; maxResultCount?: number };
+function useHistory(kind: Kind, input: HistoryQuery) {
+  const id = typeof input === 'string' ? input : input.id;
+  const skip = typeof input === 'string' ? 0 : input.skipCount || 0;
+  const take = typeof input === 'string' ? 50 : input.maxResultCount || 50;
   const rows = useRows(kind);
   const row = rows.find((item) => item.id === id);
   return {
     currentData: {
       items: row
-        ? [
-            {
-              id: `${id}-1`,
-              versionNumber: 1,
-              changeAction: 'created',
+        ? Array.from({ length: 120 }, (_, index) => ({
+              id: `${id}-${120 - index}`,
+              versionNumber: 120 - index,
+              changeAction: index === 119 ? 'created' : 'updated',
               actorName: 'QA Fixture',
               changeTime: '2026-10-14T07:00:00Z',
               changedFields: [],
-            },
-          ]
+            })).slice(skip, skip + take)
         : [],
-      totalCount: row ? 1 : 0,
+      totalCount: row ? 120 : 0,
     },
     isFetching: false,
     isError: false,
@@ -184,11 +188,11 @@ export const usePostBankAccountMutation = () => useMutation('Bank', 'create');
 export const usePutBankAccountMutation = () => useMutation('Bank', 'update');
 export const useDeleteBankAccountMutation = () => useMutation('Bank', 'delete');
 export const usePatchBankAccountStatusMutation = () => useMutation('Bank', 'status');
-export const useGetIncomeCategoryVersionsQuery = (id: string) => useHistory('Income', id);
-export const useGetExpenseCategoryVersionsQuery = (id: string) => useHistory('Expense', id);
-export const useGetBankAccountVersionsQuery = (id: string) => useHistory('Bank', id);
+export const useGetIncomeCategoryVersionsQuery = (id: HistoryQuery) => useHistory('Income', id);
+export const useGetExpenseCategoryVersionsQuery = (id: HistoryQuery) => useHistory('Expense', id);
+export const useGetBankAccountVersionsQuery = (id: HistoryQuery) => useHistory('Bank', id);
 export const useLazyGetBankAccountByIdQuery = () =>
-  [(id: string) => ({ unwrap: async () => state.Bank.find((row) => row.id === id) })] as const;
+  [(id: string) => ({ unwrap: async () => ({ ...state.Bank.find((row) => row.id === id), academicYearId: 'qa-year' }) })] as const;
 const mockApi = { util: { updateQueryData: () => () => ({ undo: () => {} }) } };
 export const incomeCategoryApi = mockApi;
 export const expenseCategoryApi = mockApi;

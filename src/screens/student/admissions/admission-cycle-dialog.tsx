@@ -18,6 +18,7 @@ import { CycleDateFields } from './cycle-dialog/cycle-date-fields';
 import { useAdmissionCloseGuard } from './use-admission-close-guard';
 import { CycleDetailsFields } from './cycle-dialog/cycle-details-fields';
 import { useAdmissionCycleForm } from './cycle-dialog/use-admission-cycle-form';
+import { getAdmissionCycleMinimumDate } from './cycle-dialog/cycle-date-limits';
 
 export type AdmissionCycleDialogProps = {
   open: boolean;
@@ -42,7 +43,19 @@ export function AdmissionCycleDialog({
   saving,
   onSave,
 }: AdmissionCycleDialogProps) {
-  const formik = useAdmissionCycleForm({ academicYearId, editingCycle, onSave, onClose });
+  const formik = useAdmissionCycleForm({
+    academicYearId,
+    academicYears,
+    academicYearsLoading,
+    academicYearsError,
+    editingCycle,
+    onSave,
+    onClose,
+  });
+  const minimumDate =
+    !editingCycle && !academicYearsLoading && !academicYearsError
+      ? getAdmissionCycleMinimumDate(academicYears, formik.values.academicYearId)
+      : undefined;
   const closeWithoutSaving = () => {
     formik.resetForm();
     onClose();
@@ -86,7 +99,11 @@ export function AdmissionCycleDialog({
               academicYearsLoading={academicYearsLoading}
               saving={saving}
             />
-            <CycleDateFields formik={formik} />
+            <CycleDateFields
+              formik={formik}
+              minimumDate={minimumDate}
+              disabled={!editingCycle && !minimumDate}
+            />
           </Grid>
         </FormSectionCard>
       </DialogScrollContent>
@@ -106,6 +123,7 @@ export function AdmissionCycleDialog({
           type="submit"
           startIcon={<Iconify icon={GlobalIcons.submit} />}
           loading={saving}
+          disabled={!editingCycle && (academicYearsLoading || academicYearsError)}
         >
           Submit
         </LoadingButton>

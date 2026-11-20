@@ -2,6 +2,7 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Divider, Skeleton, Typography } from '@mui/material';
+import { DetailField } from 'src/screens/finance/components/detail-view';
 import { useGetStudentReceiptDataQuery } from 'src/redux/invoiceAndReceipt/studentReceiptApi';
 
 import type { IReceipt, IFeeReceipt } from '../type';
@@ -66,116 +67,46 @@ export default function StudentTableView({
               color: '#fff',
             }}
           >
-            <Typography
-              variant="overline"
-              fontWeight={700}
-              letterSpacing={2}
-              sx={{ opacity: 0.85, display: 'block', mb: 0.5 }}
-            >
+            <Typography variant="subtitle1" mb={0.5}>
               Receipt Summary
             </Typography>
             <Typography variant="h5" fontWeight={800} lineHeight={1.2} sx={{ mb: 1.5 }}>
               {selectedStudent?.student || 'N/A'}
             </Typography>
-            <Box sx={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-              <Box>
-                <Typography
-                  variant="caption"
-                  sx={{
-                    opacity: 0.7,
-                    display: 'block',
-                    fontSize: '0.65rem',
-                    textTransform: 'uppercase',
-                    letterSpacing: 0.5,
-                  }}
-                >
-                  Class
-                </Typography>
-                <Typography variant="subtitle2" fontWeight={600}>
-                  {selectedStudent?.class && selectedStudent?.division
+            <Box
+              sx={{
+                display: 'flex',
+                gap: 4,
+                flexWrap: 'wrap',
+                '& .MuiTypography-root': { color: 'inherit' },
+              }}
+            >
+              <DetailField
+                label="Class"
+                value={
+                  selectedStudent?.class && selectedStudent?.division
                     ? ` ${selectedStudent.class}`
-                    : '—'}
-                </Typography>
-              </Box>
-              <Box>
-                <Typography
-                  variant="caption"
-                  sx={{
-                    opacity: 0.7,
-                    display: 'block',
-                    fontSize: '0.65rem',
-                    textTransform: 'uppercase',
-                    letterSpacing: 0.5,
-                  }}
-                >
-                  Division
-                </Typography>
-                <Typography variant="subtitle2" fontWeight={600}>
-                  {selectedStudent?.division || '—'}
-                </Typography>
-              </Box>
-              <Box>
-                <Typography
-                  variant="caption"
-                  sx={{
-                    opacity: 0.7,
-                    display: 'block',
-                    fontSize: '0.65rem',
-                    textTransform: 'uppercase',
-                    letterSpacing: 0.5,
-                  }}
-                >
-                  Last Payment
-                </Typography>
-                <Typography variant="subtitle2" fontWeight={600}>
-                  {selectedStudent?.lastPaymentDate || '—'}
-                </Typography>
-              </Box>
-              <Box>
-                <Typography
-                  variant="caption"
-                  sx={{
-                    opacity: 0.7,
-                    display: 'block',
-                    fontSize: '0.65rem',
-                    textTransform: 'uppercase',
-                    letterSpacing: 0.5,
-                  }}
-                >
-                  Payment Term
-                </Typography>
-                <Typography variant="subtitle2" fontWeight={600}>
-                  {selectedStudent?.paymentTerm || '—'}
-                </Typography>
-              </Box>
+                    : '—'
+                }
+              />
+              <DetailField label="Division" value={selectedStudent?.division || '—'} />
+              <DetailField label="Last payment" value={selectedStudent?.lastPaymentDate || '—'} />
+              <DetailField label="Payment term" value={selectedStudent?.paymentTerm || '—'} />
             </Box>
           </Box>
 
           {/* Detail Rows */}
           <Box>
             {[
-              { label: 'Roll No.', value: selectedStudent?.rollNo },
-              { label: 'GR No.', value: selectedStudent?.grNo },
-              { label: 'Payment Term', value: selectedStudent?.paymentTerm },
-              { label: 'Last Payment Date', value: selectedStudent?.lastPaymentDate },
+              { label: 'Roll number', value: selectedStudent?.rollNo },
+              { label: 'GR number', value: selectedStudent?.grNo },
+              { label: 'Payment term', value: selectedStudent?.paymentTerm },
+              { label: 'Last payment date', value: selectedStudent?.lastPaymentDate },
               { label: 'Status', value: selectedStudent?.status },
             ].map((row, idx, arr) => (
               <Box key={row.label}>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    px: 2.5,
-                    py: 1.5,
-                  }}
-                >
-                  <Typography variant="body2" color="text.secondary">
-                    {row.label}
-                  </Typography>
-                  <Typography variant="body2" fontWeight={600}>
-                    {row.value || '—'}
-                  </Typography>
+                <Box sx={{ px: 2.5, py: 1.5 }}>
+                  <DetailField label={row.label} value={row.value} layout="inline" />
                 </Box>
                 {idx < arr.length - 1 && <Divider />}
               </Box>
@@ -246,13 +177,7 @@ export default function StudentTableView({
           <Box sx={{ mt: 3 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
               <Iconify icon="mdi:history" width={18} color="text.secondary" />
-              <Typography
-                variant="caption"
-                fontWeight={700}
-                sx={{ letterSpacing: 1, textTransform: 'uppercase', color: 'text.secondary' }}
-              >
-                Payment History ({receipts.length})
-              </Typography>
+              <Typography variant="subtitle1">Payment History ({receipts.length})</Typography>
             </Box>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
               {receipts.map((receipt, idx) => (

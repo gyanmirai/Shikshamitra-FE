@@ -2,17 +2,17 @@
 
 import type { RootState } from 'src/redux/store';
 import type { StudentDirectoryItem } from 'src/redux/student/records/student-records-types';
-import type { CertificateType } from 'src/redux/student/records/student-record-documents-api';
 
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Iconify } from 'src/components/iconify';
+import { useRouter } from 'next/navigation';
+import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import { Stack, Button, Typography, DialogActions } from '@mui/material';
+import { Button, Typography, DialogActions } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 
 import StudentICardBuilder from './student-icard-builder';
-import StudentCertificateForm from './student-certificate-form';
+import CertificateGenerationDrawer from './components/certificate-generation-drawer';
 import StudentAssignmentDrawer from '../onboarding/student-setup/student-assignment-drawer';
 
 import type { StudentICardAcademicScope } from './student-icard-builder';
@@ -24,13 +24,6 @@ export type DirectoryDocumentRequest = {
   academicScope?: StudentICardAcademicScope;
   lockAcademicScope?: boolean;
 };
-
-const certificateChoices: { type: CertificateType; label: string; icon: string }[] = [
-  { type: 1, label: 'Bonafide', icon: 'tdesign:certificate' },
-  { type: 4, label: 'First Trial', icon: 'ph:certificate-light' },
-  { type: 3, label: 'Leaving', icon: 'streamline-cyber:wedding-certificate' },
-  { type: 2, label: 'Character', icon: 'la:certificate' },
-];
 
 export default function StudentDirectoryDocuments({
   request,
@@ -58,7 +51,6 @@ function DirectoryDocuments({
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const currentYear = useSelector((state: RootState) => state.globalState.currentYear?.id);
   const [openedYear] = useState(currentYear);
-  const [certificate, setCertificate] = useState<(typeof certificateChoices)[number] | null>(null);
   const [busy, setBusy] = useState(false);
   const feature = request.kind === 'id-card' ? 'StudentICard' : 'Certificates';
   const canIssue =
@@ -108,7 +100,7 @@ function DirectoryDocuments({
   if (request.kind === 'id-card')
     return (
       <StudentAssignmentDrawer
-        title="Print Student I-Cards"
+        title="Print I-Cards"
         titleInfo="Select students, review their cards, then download a print PDF or issue numbered cards into student history."
         contentLayout="workspace"
         wide
@@ -129,57 +121,27 @@ function DirectoryDocuments({
         />
       </StudentAssignmentDrawer>
     );
-  if (certificate)
-    return (
-      <StudentCertificateForm
-        certificateType={certificate.type}
-        certificateLabel={certificate.label}
-        initialStudents={request.students}
-        academicYearId={request.academicYearId}
-        onClose={onClose}
-        onGenerated={() => {}}
-      />
-    );
+  return <DirectoryCertificateFlow request={request} onClose={onClose} />;
+}
+
+function DirectoryCertificateFlow({
+  request,
+  onClose,
+}: {
+  request: DirectoryDocumentRequest;
+  onClose: () => void;
+}) {
+  const router = useRouter();
   return (
-    <CustomDialog
-      open
-      handleClose={onClose}
-      title="Generate Certificates"
-      hasForm={false}
-      titleInfo="Choose a certificate type, then preview it for the selected students before generating."
-      hasUnsavedChanges={false}
-      maxWidth="xs"
-    >
-      <DialogScrollContent>
-        <Stack spacing={1}>
-          <Typography variant="body2" color="text.secondary">
-            {request.students.length} student{request.students.length === 1 ? '' : 's'} selected
-          </Typography>
-          {contextInvalid ? (
-            <Typography role="alert" variant="body2" color="warning.main">
-              The academic year changed. Close this workspace and select students again.
-            </Typography>
-          ) : (
-            certificateChoices.map((choice) => (
-              <Button
-                key={choice.type}
-                variant="outlined"
-                color="inherit"
-                fullWidth
-                startIcon={<Iconify icon={choice.icon} width={18} />}
-                onClick={() => setCertificate(choice)}
-              >
-                {choice.label}
-              </Button>
-            ))
-          )}
-        </Stack>
-      </DialogScrollContent>
-      <DialogActions>
-        <Button variant="outlined" onClick={onClose}>
-          Cancel
-        </Button>
-      </DialogActions>
-    </CustomDialog>
+    <CertificateGenerationDrawer
+      students={request.students}
+      academicYearId={request.academicYearId}
+      onClose={onClose}
+      onViewHistory={(studentId) => {
+        onClose();
+        const params = new URLSearchParams({ student: studentId, year: request.academicYearId });
+        router.push(`${studentPaths.records.certificates}?${params.toString()}`);
+      }}
+    />
   );
 }

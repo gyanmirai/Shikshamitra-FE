@@ -2,6 +2,7 @@ import type { IParams } from 'src/components/customizabaleTable/types';
 import type { AdmissionFormPurpose } from 'src/redux/student/admissions/admission-forms-api';
 
 import { studentPaths } from 'src/constants/student-menu';
+import { getStudentSetupReturnUrl } from 'src/screens/student/setup/embedding/student-setup-return';
 
 import { normalizeAdmissionFormFilters } from '../form-list/form-column-filters';
 
@@ -13,6 +14,8 @@ export function getAdmissionFormPreviewReturnUrl(
   value: string | null,
   _purpose?: AdmissionFormPurpose
 ) {
+  const guideReturn = getStudentSetupReturnUrl(value, 'admission-forms');
+  if (guideReturn) return guideReturn;
   return value === forms || value?.startsWith(`${forms}?`) ? value : forms;
 }
 

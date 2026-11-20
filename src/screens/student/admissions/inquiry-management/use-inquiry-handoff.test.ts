@@ -30,6 +30,8 @@ vi.mock('src/components/toast', () => ({
 
 const inquiry = {
   id: 'inquiry-1',
+  inquiryNumber: 'INQ-2026-000006',
+  applicantName: 'Ritika Sinha',
   status: 2,
   applicantId: 'applicant-1',
   admissionOfferingId: 'offering-1',
@@ -59,6 +61,126 @@ it.each([false, undefined])(
     );
   }
 );
+
+const archivedForm = {
+  code: 'InquiryFormNotPublished',
+  message: "Inquiry Form 'DM 8th INQ FORM' is archived. Restore it in Admission forms.",
+  formDefinitionId: 'form-1',
+  formName: 'DM 8th INQ FORM',
+};
+
+it.each([
+  { data: { ConfigurationErrors: [archivedForm] } },
+  { error: { data: { configurationErrors: [archivedForm] } } },
+  {
+    data: {
+      ConfigurationErrors: [
+        {
+          Code: archivedForm.code,
+          Message: archivedForm.message,
+          FormDefinitionId: archivedForm.formDefinitionId,
+          FormName: archivedForm.formName,
+        },
+      ],
+    },
+  },
+])('retains an archived inquiry form blocker for the recovery dialog: %j', async (data) => {
+  mocks.start.mockReturnValue({
+    unwrap: () => Promise.reject(Object.assign(new Error('Rejected'), { status: 400, data })),
+  });
+  const { result } = renderHook(useInquiryHandoff);
+  await act(async () => {
+    await result.current.move(inquiry);
+  });
+  expect(result.current.issue).toEqual({
+    inquiry,
+    formName: 'DM 8th INQ FORM',
+    formDefinitionId: 'form-1',
+  });
+  expect(result.current.moving).toBe(false);
+  expect(mocks.error).not.toHaveBeenCalled();
+  expect(mocks.push).not.toHaveBeenCalled();
+  expect(inquiry.status).toBe(2);
+});
+
+it('handles older archived-form responses without inventing a restore target', async () => {
+  mocks.start.mockReturnValue({
+    unwrap: () =>
+      Promise.reject(
+        Object.assign(new Error('Rejected'), {
+          status: 400,
+          data: {
+            errorCode: 'Admissions.OfferingFormNotPublished',
+            detail: archivedForm.message,
+          },
+        })
+      ),
+  });
+  const { result } = renderHook(useInquiryHandoff);
+  await act(async () => {
+    await result.current.move(inquiry);
+  });
+  expect(result.current.issue?.formName).toBe('DM 8th INQ FORM');
+  expect(result.current.issue?.formDefinitionId).toBeUndefined();
+  expect(mocks.error).not.toHaveBeenCalled();
+});
+
+it.each([
+  { ...archivedForm, message: "Inquiry Form 'DM 8th INQ FORM' is still a draft." },
+  {
+    ...archivedForm,
+    code: 'ApplicationFormNotPublished',
+    message: "Registration Form 'Registration' is archived.",
+  },
+])('preserves existing error feedback for other configuration failures: %j', async (error) => {
+  mocks.start.mockReturnValue({
+    unwrap: () =>
+      Promise.reject(
+        Object.assign(new Error('Rejected'), {
+          status: 400,
+          data: {
+            detail: error.message,
+            data: { ConfigurationErrors: [error] },
+          },
+        })
+      ),
+  });
+  const { result } = renderHook(useInquiryHandoff);
+  await act(async () => {
+    await result.current.move(inquiry);
+  });
+  expect(result.current.issue).toBeNull();
+  expect(mocks.error).toHaveBeenCalledOnce();
+});
+
+it('dismisses the recovery state and permits a normal user-initiated retry', async () => {
+  mocks.start.mockReturnValue({
+    unwrap: () =>
+      Promise.reject(
+        Object.assign(new Error('Rejected'), {
+          data: {
+            data: { ConfigurationErrors: [archivedForm] },
+          },
+        })
+      ),
+  });
+  const { result } = renderHook(useInquiryHandoff);
+  await act(async () => {
+    await result.current.move(inquiry);
+  });
+  act(() => result.current.dismissIssue());
+  expect(result.current.issue).toBeNull();
+  expect(mocks.start).toHaveBeenCalledOnce();
+  mocks.start.mockReturnValue({ unwrap: () => Promise.resolve({ id: 'application-1' }) });
+  await act(async () => {
+    await result.current.move(inquiry);
+  });
+  expect(result.current.issue).toBeNull();
+  expect(mocks.start).toHaveBeenCalledTimes(2);
+  expect(mocks.push).toHaveBeenCalledExactlyOnceWith(
+    '/student/admissions/pipeline?application=application-1'
+  );
+});
 
 it('keeps a server-confirmed decision case in the Applications workspace', async () => {
   mocks.start.mockReturnValue({
@@ -106,7 +228,7 @@ it('tracks the initiating row immediately and prevents duplicate handoffs', asyn
   });
   mocks.start.mockReturnValue({ unwrap: () => response });
   const { result } = renderHook(useInquiryHandoff);
-  let moving!: Promise<void>;
+  let moving!: Promise<boolean>;
   act(() => {
     moving = result.current.move(inquiry);
     result.current.move(inquiry);
@@ -116,7 +238,7 @@ it('tracks the initiating row immediately and prevents duplicate handoffs', asyn
   expect(mocks.start).toHaveBeenCalledOnce();
   await act(async () => {
     resolve({ id: 'application-1', hasReachedDecision: false });
-    await moving;
+    expect(await moving).toBe(true);
   });
   expect(mocks.push).toHaveBeenCalledOnce();
   expect(result.current.moving).toBe(false);
@@ -136,3 +258,34 @@ it('clears loading after failure and allows retry without losing the inquiry', a
   });
   expect(mocks.start).toHaveBeenCalledTimes(2);
 });
+
+it.each([
+  {
+    errorCode: 'Admissions.Offering.Inactive',
+    detail: 'One or more business rules were violated.',
+  },
+  {
+    error: {
+      code: 'Admissions.Offering.Inactive',
+      message: 'One or more business rules were violated.',
+    },
+  },
+])(
+  'explains an inactive offering rejection without navigating or losing the inquiry',
+  async (data) => {
+    const error = Object.assign(new Error('Offering start rejected'), { status: 400, data });
+    mocks.start.mockReturnValue({ unwrap: () => Promise.reject(error) });
+    const { result } = renderHook(useInquiryHandoff);
+    await act(async () => {
+      await result.current.move(inquiry);
+    });
+    expect(mocks.error).toHaveBeenCalledWith({
+      message:
+        'This admission offering is inactive. Ask an admission administrator to activate it before starting a new inquiry or registration.',
+    });
+    expect(result.current.moving).toBe(false);
+    expect(mocks.push).not.toHaveBeenCalled();
+    expect(inquiry.status).toBe(2);
+    expect(inquiry.admissionOfferingId).toBe('offering-1');
+  }
+);

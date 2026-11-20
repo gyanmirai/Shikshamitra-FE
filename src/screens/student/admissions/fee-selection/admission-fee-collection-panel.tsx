@@ -18,15 +18,15 @@ import { fCurrency } from 'src/utils/format-number';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { EmptyContent } from 'src/components/empty-content';
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { FormSectionHeader } from 'src/components/form-section-card';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
+import { Box, Stack, Button, Skeleton, Typography } from '@mui/material';
 import { DetailGrid, DetailField, DetailSection } from 'src/components/detail-view';
-import { Box, Stack, Button, Skeleton, IconButton, Typography } from '@mui/material';
 import { useDownloadReceiptPdfMutation } from 'src/redux/feeCollection/feeCollection';
 import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 import FeeProrationResult from 'src/screens/finance/FeeCollection/FeeCollectionComponent/FeeProrationResult';
@@ -50,8 +50,12 @@ type Props = {
   refreshing?: boolean;
   onOpenChange?: (open: boolean) => void;
   stretch?: boolean;
+  defaultJoiningDateToToday?: boolean;
   footerAction?: ReactNode;
 };
+
+// A valid no-policy choice needs a non-empty select value; Finance still receives null.
+const NO_PRORATION_POLICY_OPTION = '__no_proration_policy__';
 
 const collectionGuardError = (status: number, detail: string) =>
   Object.assign(new Error(detail), { status, data: { detail } });
@@ -98,6 +102,7 @@ export default function AdmissionFeeCollectionPanel({
   refreshing = false,
   onOpenChange,
   stretch = false,
+  defaultJoiningDateToToday = false,
   footerAction,
 }: Props) {
   const router = useRouter();
@@ -152,6 +157,7 @@ export default function AdmissionFeeCollectionPanel({
   const joiningDate = useAdmissionJoiningDate(applicationId, {
     enabled: access.canView,
     requiresVariableAmounts: Boolean(state?.variableFeeHeads?.length),
+    defaultToToday: defaultJoiningDateToToday,
   });
   const canPrepare = Boolean(state?.canCollect || joiningDate.state?.canPreview);
   const showingDatePreview = Boolean(joiningDate.state?.canPreview);
@@ -168,9 +174,10 @@ export default function AdmissionFeeCollectionPanel({
     const prepared = await prepare({
       applicationId,
       variableFeeHeads,
-      ...(joiningDate.state?.canSelectProrationPolicy && {
-        prorationPolicyVersionId: joiningDate.selectedPolicyVersionId,
-      }),
+      ...(joiningDate.state?.canSelectProrationPolicy &&
+        joiningDate.prorationPolicyEligible && {
+          prorationPolicyVersionId: joiningDate.selectedPolicyVersionId,
+        }),
     }).unwrap();
     variableAmounts.onFalse();
     if (prepared.isSettled) {
@@ -284,12 +291,23 @@ export default function AdmissionFeeCollectionPanel({
     minWidth: 0,
     ...(stretch && { flex: 1, minHeight: 0 }),
   };
+  const header = stretch ? (
+    <FormSectionHeader
+      icon="mdi:receipt-text-outline"
+      title="Fee Collection"
+      titleTypographyProps={{ component: 'h3' }}
+      descriptionTooltip="Partial collection is allowed. Charges and late fees appear separately in the collection form. Collect later requires a reason."
+      descriptionTooltipLabel="Fee Collection Information"
+    />
+  ) : (
+    <Typography variant="subtitle2" component="h3">
+      Fee Collection
+    </Typography>
+  );
   if (summary.isLoading || (!state && summary.isFetching))
     return (
       <Stack spacing={1.5} useFlexGap sx={panelSx}>
-        <Typography variant="subtitle2" component="h3">
-          Fee Collection
-        </Typography>
+        {header}
         <FeeCollectionSkeleton />
         {footerAction && <Box sx={{ mt: 'auto', alignSelf: 'flex-end' }}>{footerAction}</Box>}
       </Stack>
@@ -297,7 +315,7 @@ export default function AdmissionFeeCollectionPanel({
   if (!state)
     return (
       <Stack component="section" aria-label="Fee Collection" spacing={1.5} useFlexGap sx={panelSx}>
-        <Typography variant="subtitle2">Fee Collection</Typography>
+        {header}
         <StudentFeedback notificationKey="STU-0332" presentation="toast" severity="error">
           Fee collection details could not be loaded.
         </StudentFeedback>
@@ -356,23 +374,7 @@ export default function AdmissionFeeCollectionPanel({
         justifyContent="space-between"
         alignItems={{ sm: 'center' }}
       >
-        <Stack direction="row" spacing={0.5} alignItems="center">
-          <Typography variant="subtitle2" component="h3">
-            Fee Collection
-          </Typography>
-          {stretch && (
-            <CustomTooltip title="Partial Collection Is Allowed. Charges and Late Fees Are Shown Separately in the Collection Form. Collect Later Opens a Required-Reason Dialog.">
-              <IconButton
-                size="small"
-                color="info"
-                aria-label="Fee Collection Information"
-                sx={{ width: { xs: 44, sm: 30 }, height: { xs: 44, sm: 30 } }}
-              >
-                <Iconify icon="mdi:information-outline" width={16} />
-              </IconButton>
-            </CustomTooltip>
-          )}
-        </Stack>
+        {header}
         {!stretch && collectAction}
       </Stack>
       {refreshingCollection && <FeeCollectionSkeleton refreshing />}
@@ -405,16 +407,16 @@ export default function AdmissionFeeCollectionPanel({
             preparing.isLoading
           }
         />
-        {Boolean(joiningDate.date) &&
+        {joiningDate.prorationPolicyEligible &&
           joiningDate.state?.canSelectProrationPolicy &&
           access.canOverridePolicies && (
             <Stack spacing={1} sx={{ maxWidth: { xs: '100%', sm: 520 } }}>
               <CustomSelect<'value' | 'label', false>
                 label="Proration policy"
-                value={joiningDate.selectedPolicyVersionId ?? ''}
+                value={joiningDate.selectedPolicyVersionId ?? NO_PRORATION_POLICY_OPTION}
                 options={[
                   ...(!joiningDate.state.defaultProrationPolicyVersionId
-                    ? [{ value: '', label: 'No policy · Full charge' }]
+                    ? [{ value: NO_PRORATION_POLICY_OPTION, label: 'No policy · Full charge' }]
                     : []),
                   ...(joiningDate.state.prorationPolicies ?? []).map((policy) => ({
                     value: policy.policyVersionId,
@@ -432,7 +434,9 @@ export default function AdmissionFeeCollectionPanel({
                 isSearch={(joiningDate.state.prorationPolicies?.length ?? 0) > 6}
                 noOptionsMessage="No active proration policies are available for this academic year."
                 onChange={(value) => {
-                  joiningDate.changePolicy(String(value) || null);
+                  joiningDate.changePolicy(
+                    value === NO_PRORATION_POLICY_OPTION ? null : String(value) || null
+                  );
                 }}
                 helperText="Used to calculate fees from the actual joining date."
               />
@@ -442,7 +446,7 @@ export default function AdmissionFeeCollectionPanel({
           (joiningDate.preview.proration || joiningDate.preview.prorationPolicy) && (
             <Label sx={{ alignSelf: 'flex-end' }}>Preview</Label>
           )}
-        {prorationResult && <FeeProrationResult result={prorationResult} />}
+        {prorationResult && <FeeProrationResult result={prorationResult} compact={stretch} />}
         {feeCalculationReady && prorationResult && prorationPolicy?.source === 'FinanceDefault' && (
           <Typography variant="caption" color="text.secondary">
             Finance default for {state?.academicYear?.name ?? 'this academic year'}.
@@ -475,8 +479,16 @@ export default function AdmissionFeeCollectionPanel({
           </DetailSection>
         ) : !prorationResult && feeCalculationReady ? (
           <StudentFeedback notificationKey="STU-0340" presentation="inline" severity="info">
-            No active default proration policy is configured for this academic year. Fees use the
-            existing full-charge treatment.
+            {joiningDate.date &&
+            joiningDate.state?.academicYearStartDate &&
+            !joiningDate.prorationPolicyEligible ? (
+              'Full fees apply because the joining date is before the school start date.'
+            ) : (
+              <>
+                No active default proration policy is configured for this academic year. Fees use
+                the existing full-charge treatment.
+              </>
+            )}
           </StudentFeedback>
         ) : null}
         <Box
@@ -485,7 +497,8 @@ export default function AdmissionFeeCollectionPanel({
             m: 0,
             display: 'grid',
             gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, minmax(0, 1fr))' },
-            gap: 1.5,
+            gap: stretch ? 0 : 1.5,
+            ...(stretch && { border: 1, borderColor: 'divider', borderRadius: 1 }),
           }}
         >
           {[
@@ -502,8 +515,22 @@ export default function AdmissionFeeCollectionPanel({
                 ? (joiningDate.preview?.totalAmount ?? null)
                 : state.outstandingAmount,
             ],
-          ].map(([title, value]) => (
-            <Box key={title} sx={{ minWidth: 0 }}>
+          ].map(([title, value], index) => (
+            <Box
+              key={title}
+              sx={{
+                minWidth: 0,
+                ...(stretch && {
+                  px: 1.5,
+                  py: 1,
+                  ...(index > 0 && {
+                    borderTop: { xs: 1, sm: 0 },
+                    borderInlineStart: { sm: 1 },
+                    borderColor: 'divider',
+                  }),
+                }),
+              }}
+            >
               <Typography component="dt" variant="caption" color="text.secondary">
                 {title}
               </Typography>
@@ -537,6 +564,7 @@ export default function AdmissionFeeCollectionPanel({
           </StudentFeedback>
         )}
         {state.blocker &&
+          !(stretch && state.blocker === 'Confirm a published fee structure before collecting fees.') &&
           !joiningDate.state?.canPreview &&
           (stretch ? (
             <Stack direction="row" spacing={1} alignItems="flex-start" role="status">
@@ -658,7 +686,7 @@ export default function AdmissionFeeCollectionPanel({
                 <Stack component="span" spacing={1.5} alignItems="center">
                   <Iconify
                     icon="mdi:receipt-text-outline"
-                    width={32}
+                    width={24}
                     sx={{ color: 'text.disabled' }}
                   />
                   <Typography component="span" variant="body2" color="text.secondary">
@@ -666,8 +694,8 @@ export default function AdmissionFeeCollectionPanel({
                   </Typography>
                 </Stack>
               }
-              sx={{ flex: 1, height: 'auto', py: 2 }}
-              slotProps={{ img: { display: 'none' } }}
+              sx={{ flexGrow: 0, height: 'auto', py: 2 }}
+              slotProps={{ img: { display: 'none' }, title: { mt: 0 } }}
             />
           ) : (
             <Typography variant="caption" color="text.secondary">
@@ -699,9 +727,10 @@ export default function AdmissionFeeCollectionPanel({
               ? {
                   applicationId,
                   joiningDate: joiningDate.date,
-                  ...(joiningDate.state.canSelectProrationPolicy && {
-                    prorationPolicyVersionId: joiningDate.selectedPolicyVersionId,
-                  }),
+                  ...(joiningDate.state.canSelectProrationPolicy &&
+                    joiningDate.prorationPolicyEligible && {
+                      prorationPolicyVersionId: joiningDate.selectedPolicyVersionId,
+                    }),
                 }
               : undefined
           }

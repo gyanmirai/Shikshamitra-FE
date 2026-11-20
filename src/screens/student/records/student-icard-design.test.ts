@@ -1,10 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { it, expect, describe } from 'vitest';
 
 import {
   getStudentICardLayout,
   readStudentICardLayout,
   applyStudentICardDesign,
   createStudentICardTemplate,
+  setStudentICardOrientation,
   getStudentICardDesignErrors,
   getStudentICardPrintSettings,
 } from './student-icard-design';
@@ -35,6 +36,43 @@ describe('student configurable ID-card adapter', () => {
     expect(readStudentICardLayout(saved)).toEqual(layout);
     expect(getStudentICardPrintSettings(saved)).toEqual(settings);
     expect(saved).not.toBe(initial);
+  });
+
+  it('swaps saved print dimensions without discarding custom artwork or print settings', () => {
+    const template = createStudentICardTemplate();
+    const layout = getStudentICardLayout(template);
+    layout.widthMm = 90;
+    layout.heightMm = 55;
+    const settings = { ...getStudentICardPrintSettings(template), bleedMm: 3 };
+    const custom = applyStudentICardDesign({ ...template, name: 'Saved design' }, layout, settings);
+
+    const vertical = setStudentICardOrientation(custom, 'Vertical');
+    expect(vertical).toMatchObject({ name: 'Saved design', orientation: 'Vertical' });
+    expect(readStudentICardLayout(vertical)).toEqual({
+      ...layout,
+      orientation: 'Vertical',
+      widthMm: 55,
+      heightMm: 90,
+    });
+    expect(getStudentICardPrintSettings(vertical)).toEqual(settings);
+    expect(setStudentICardOrientation(vertical, 'Horizontal')).toEqual(custom);
+  });
+
+  it('gives a square design portrait dimensions when Vertical is selected', () => {
+    const template = createStudentICardTemplate();
+    const layout = { ...getStudentICardLayout(template), widthMm: 70, heightMm: 70 };
+    const square = applyStudentICardDesign(template, layout, getStudentICardPrintSettings(template));
+
+    const vertical = setStudentICardOrientation(square, 'Vertical');
+
+    expect(readStudentICardLayout(vertical)).toMatchObject({
+      orientation: 'Vertical',
+      widthMm: 53.98,
+      heightMm: 85.6,
+      front: layout.front,
+      back: layout.back,
+    });
+    expect(getStudentICardDesignErrors(vertical)).toEqual([]);
   });
 
   it('synchronises student data and photograph switches with visible configured elements', () => {

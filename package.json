@@ -7,7 +7,8 @@
   "homepage": "/dashboard",
   "scripts": {
     "dev": "npm install && next dev --turbopack",
-    "dev:local": "node --use-system-ca node_modules/next/dist/bin/next dev --webpack",
+    "dev:local": "node --use-system-ca node_modules/next/dist/bin/next dev --turbopack",
+    "dev:local:webpack": "node --use-system-ca node_modules/next/dist/bin/next dev --webpack",
     "start": "next start",
     "build": "next build --webpack",
     "build:window": "build-and-copy.bat",
@@ -90,6 +91,7 @@
     "@hello-pangea/dnd": "^18.0.1",
     "@highcharts/react": "^5.0.0",
     "@hookform/resolvers": "^5.2.1",
+    "@huggingface/transformers": "4.3.2",
     "@iconify/react": "^5.0.1",
     "@mui/icons-material": "^7.3.1",
     "@mui/lab": "^7.0.0-beta.16",

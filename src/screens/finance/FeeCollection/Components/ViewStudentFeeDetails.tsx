@@ -1,18 +1,19 @@
 import { Box, Card, Grid, Avatar, Typography } from '@mui/material';
+import { DetailField } from 'src/screens/finance/components/detail-view';
 
 import type { IStudentFee } from './type';
 
 const StudentInfoCard = ({ student }: { student: IStudentFee }) => {
   const fields = [
-    { label: 'Student Name', value: student.name },
-    { label: 'Roll No.', value: student.rollNumber },
+    { label: 'Student name', value: student.name },
+    { label: 'Roll number', value: student.rollNumber },
     { label: 'Board', value: student.board },
     { label: 'Medium', value: student.medium },
-    { label: 'Class/Division', value: `${student.className}-${student.division}` },
-    { label: 'Contact No.', value: student.contactNumber },
-    { label: 'Admission Date', value: student.admissionDate },
-    { label: 'GR No.', value: student.grNumber },
-    { label: 'Parent Name', value: student.parentName },
+    { label: 'Class / division', value: `${student.className}-${student.division}` },
+    { label: 'Contact no.', value: student.contactNumber },
+    { label: 'Admission date', value: student.admissionDate },
+    { label: 'GR number', value: student.grNumber },
+    { label: 'Parent name', value: student.parentName },
     { label: 'Email', value: student.email },
   ];
 
@@ -46,12 +47,7 @@ const StudentInfoCard = ({ student }: { student: IStudentFee }) => {
             <Grid container spacing={2}>
               {fields.map((field) => (
                 <Grid size={{ xs: 12, sm: 2 }} key={field.label}>
-                  <Typography variant="body2" color="text.secondary">
-                    {field.label}
-                  </Typography>
-                  <Typography variant="body1" fontWeight="medium">
-                    {field.value}
-                  </Typography>
+                  <DetailField label={field.label} value={field.value} />
                 </Grid>
               ))}
             </Grid>

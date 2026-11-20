@@ -32,6 +32,8 @@ const hooks = vi.hoisted(() => ({
   setupQuery: vi.fn(),
   optionsQuery: vi.fn(),
   tableProps: vi.fn(),
+  cycleChoices: vi.fn(),
+  formChoices: vi.fn(),
   options: {
     currentData: [] as AdmissionPublicInquiryLinkOption[] | undefined,
     isLoading: false,
@@ -84,18 +86,24 @@ vi.mock('src/redux/student/admissions/admission-intake-profiles-api', () => ({
   ],
 }));
 vi.mock('src/redux/student/admissions/admission-cycles-api', () => ({
-  useGetAdmissionCyclesQuery: () => ({
-    data: {
-      items: [
-        { id: 'cycle-1', name: 'Regular admission', status: 1 },
-        { id: 'cycle-2', name: 'Next admission', status: 1 },
-      ],
-    },
-    isLoading: false,
-  }),
+  useGetAdmissionCyclesQuery: (...args: unknown[]) => {
+    hooks.cycleChoices(...args);
+    return {
+      data: {
+        items: [
+          { id: 'cycle-1', name: 'Regular admission', status: 1 },
+          { id: 'cycle-2', name: 'Next admission', status: 1 },
+        ],
+      },
+      isLoading: false,
+    };
+  },
 }));
 vi.mock('src/redux/student/admissions/admission-forms-api', () => ({
-  useGetAdmissionFormsQuery: () => hooks.forms,
+  useGetAdmissionFormsQuery: (...args: unknown[]) => {
+    hooks.formChoices(...args);
+    return hooks.forms;
+  },
 }));
 vi.mock('src/components/iconify', () => ({
   Iconify: ({ icon }: { icon: string }) => <span data-icon={icon} />,
@@ -204,6 +212,16 @@ const fillLink = async (user: ReturnType<typeof userEvent.setup>) => {
 };
 
 describe('create public inquiry link', () => {
+  it('loads creation choices only when the creation drawer is open', () => {
+    const { rerender } = render(
+      <AdmissionPublicInquiryLinks canEdit createOpen={false} onCreateClose={hooks.close} />
+    );
+    expect(hooks.cycleChoices).toHaveBeenLastCalledWith(expect.anything(), { skip: true });
+    expect(hooks.formChoices).toHaveBeenLastCalledWith(expect.anything(), { skip: true });
+    rerender(<AdmissionPublicInquiryLinks canEdit createOpen onCreateClose={hooks.close} />);
+    expect(hooks.cycleChoices).toHaveBeenLastCalledWith(expect.anything(), { skip: false });
+    expect(hooks.formChoices).toHaveBeenLastCalledWith(expect.anything(), { skip: false });
+  });
   beforeEach(() => {
     vi.clearAllMocks();
     hooks.setups.data = [];
@@ -667,6 +685,23 @@ const renderList = (canEdit = true) =>
   );
 
 describe('public inquiry link details and actions', () => {
+  it.each([true, false])(
+    'loads indispensable period and form labels for existing links without opening an editor (canEdit=%s)',
+    (canEdit) => {
+      render(
+        <AdmissionPublicInquiryLinks
+          canEdit={canEdit}
+          createOpen={false}
+          onCreateClose={hooks.close}
+        />
+      );
+      expect(hooks.cycleChoices).toHaveBeenLastCalledWith(expect.anything(), { skip: false });
+      expect(hooks.formChoices).toHaveBeenLastCalledWith(expect.anything(), { skip: false });
+      expect(hooks.tableProps.mock.lastCall![0].data).toEqual([
+        expect.objectContaining({ periodName: 'Regular admission', formName: 'Inquiry form' }),
+      ]);
+    }
+  );
   beforeEach(() => {
     vi.clearAllMocks();
     hooks.links = [activeLink];

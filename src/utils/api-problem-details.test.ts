@@ -3,6 +3,19 @@ import { it, expect, describe } from 'vitest';
 import { parseApiProblemDetail } from './api-problem-details';
 
 describe('parseApiProblemDetail', () => {
+  it('explains an actual duplicate student without treating a shared parent mobile as a duplicate', () => {
+    expect(
+      parseApiProblemDetail({
+        status: 400,
+        data: {
+          errorCode: 'Admissions.InquiryDuplicateStudent',
+          detail: 'One or more business rules were violated.',
+        },
+      }).detail
+    ).toBe(
+      'An inquiry for this student already exists in this admission cycle. Review the student name and date of birth or open the existing inquiry. A shared parent mobile is allowed for a different child; use Confirm Siblings to link their family.'
+    );
+  });
   it('explains an admission form revision conflict instead of the generic business error', () => {
     expect(
       parseApiProblemDetail({
@@ -289,20 +302,30 @@ describe('parseApiProblemDetail', () => {
     expect(parsed.errorCode).toBe('ShikshaMitra.Submission.CannotEvaluateMissingSubmission');
   });
 
-  it('explains that a different user must review a form approval request', () => {
-    const parsed = parseApiProblemDetail({
-      data: {
+  it.each(['Admissions.FormMakerCheckerRequired', 'Admissions.FormAdminOverrideReasonRequired'])(
+    'preserves a legacy server reason for retired form approval error %s',
+    (errorCode) => {
+      const reason = 'This form action is no longer available. Refresh the form and try again.';
+      const parsed = parseApiProblemDetail({
         status: 400,
-        title: 'Business rule violated',
-        detail: 'One or more business rules were violated.',
-        errorCode: 'Admissions.FormMakerCheckerRequired',
-      },
-    });
+        data: {
+          error: {
+            code: errorCode,
+            message: 'One or more business rules were violated.',
+            details: reason,
+          },
+        },
+      });
 
-    expect(parsed.detail).toBe(
-      'A different authorized user must review this form. The user who requested approval cannot approve or reject the same form.'
-    );
-  });
+      expect(parsed).toEqual({ errorCode, detail: reason });
+      expect(
+        parseApiProblemDetail({
+          status: 400,
+          data: { errorCode, detail: reason },
+        })
+      ).toEqual({ errorCode, detail: reason });
+    }
+  );
 
   it('maps an admission workflow concurrency conflict to a safe retry message', () => {
     const parsed = parseApiProblemDetail({

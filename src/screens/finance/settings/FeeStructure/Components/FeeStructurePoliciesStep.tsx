@@ -4,18 +4,19 @@ import type {
 } from 'src/redux/finance/feeStructureWorkspace';
 
 import { useState } from 'react';
+import { varAlpha } from 'src/theme/styles';
+import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
+import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { FormSectionHeader } from 'src/components/form-section-card';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { alpha, useTheme } from '@mui/material/styles';
 import {
   Box,
   Card,
-  Chip,
   Alert,
   Stack,
   Button,
@@ -68,6 +69,7 @@ export default function FeeStructurePoliciesStep({
   onView,
 }: Props) {
   const theme = useTheme();
+  const selectionTint = varAlpha((theme.vars ?? theme).palette.success.mainChannel, 0.08);
   const [choosing, setChoosing] = useState<StructurePolicyFamily>();
   const selectedFamily = impacts.find((impact) => impact.key === choosing);
   const options = choosing
@@ -322,7 +324,6 @@ export default function FeeStructurePoliciesStep({
           titleInfo={selectedFamily.description}
           open
           title={`Choose ${selectedFamily.label}`}
-
           maxWidth="md"
           hasForm={false}
           guardUnsavedChanges={false}
@@ -341,12 +342,13 @@ export default function FeeStructurePoliciesStep({
                 'aria-selected': row.selected,
                 sx: row.selected
                   ? {
-                      outline: `2px solid ${theme.palette.success.main}`,
-                      outlineOffset: -2,
-                      bgcolor: alpha(theme.palette.success.main, 0.08),
-                      '& > td': { bgcolor: 'transparent', backgroundImage: 'none' },
+                      '&.Mui-selected, &.Mui-selected:hover': { bgcolor: 'transparent' },
+                      '& > td': {
+                        bgcolor: 'background.paper',
+                        backgroundImage: `linear-gradient(${selectionTint}, ${selectionTint})`,
+                      },
                     }
-                  : {},
+                  : undefined,
               })}
               isLoading={catalogs[choosing].loading && !options.length}
               isSearch
@@ -373,26 +375,23 @@ export default function FeeStructurePoliciesStep({
                 {
                   id: 'name',
                   label: 'Policy',
-                  minWidth: 220,
+                  headerSx: { minWidth: { sm: 220 } },
+                  cellSx: { overflowWrap: 'anywhere' },
                   isSort: false,
                   isFilter: false,
                   render: (_value, row) => (
                     <Stack spacing={0.5}>
-                      <Stack direction="row" alignItems="center" spacing={0.75} flexWrap="wrap" useFlexGap>
-                        <Typography variant="subtitle2">{row.name}</Typography>
-                        {row.selected && (
-                          <Chip
-                            size="small"
-                            color="success"
-                            label="Currently applied"
-                            icon={<Iconify icon="solar:check-circle-bold" width={14} />}
-                            sx={{ fontSize: 10, height: 20, fontWeight: 600, borderRadius: 1 }}
-                          />
-                        )}
-                      </Stack>
+                      <Typography variant="subtitle2">{row.name}</Typography>
                       <Typography variant="caption" color="text.secondary">
                         Version {row.versionNumber}
                         {row.isDefault ? ' · Default' : ''}
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ display: { xs: 'block', sm: 'none' } }}
+                      >
+                        {row.coverage}
                       </Typography>
                     </Stack>
                   ),
@@ -401,6 +400,8 @@ export default function FeeStructurePoliciesStep({
                   id: 'coverage',
                   label: 'Fee head coverage',
                   minWidth: 180,
+                  headerSx: { display: { xs: 'none', sm: 'table-cell' } },
+                  cellSx: { display: { xs: 'none', sm: 'table-cell' } },
                   isFilter: false,
                   isSort: false,
                 },
@@ -415,53 +416,47 @@ export default function FeeStructurePoliciesStep({
                   isFilter: false,
                   isSort: false,
                   excludeFromExport: true,
-                  render: (_value, row) => (
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      color={row.selected ? 'success' : 'inherit'}
-                      disabled={
-                        row.selected ||
-                        busy ||
-                        !writable ||
-                        !settings.permissions[choosing] ||
-                        !settings.permissions[`${choosing}Read`]
-                      }
-                      aria-label={`${row.selected ? 'Currently applied:' : 'Select'} ${row.name} version ${row.versionNumber}`}
-                      startIcon={
-                        row.selected ? (
-                          <Iconify icon="solar:check-circle-bold" width={16} />
-                        ) : undefined
-                      }
-                      onClick={() => {
-                        if (row.selected) return;
-                        onChange(choosing, row.versionId);
-                        shikshaMitraToast.success({
-                          message: `${selectedFamily.label} added to this draft.`,
-                        });
-                        setChoosing(undefined);
-                      }}
-                      sx={
-                        row.selected
-                          ? {
-                              fontWeight: 700,
-                              borderColor: 'success.main',
-                              color: 'success.main',
-                              '&.Mui-disabled': {
-                                color: 'success.main',
-                                borderColor: 'success.main',
-                                opacity: 0.9,
-                              },
-                            }
-                          : undefined
-                      }
-                    >
-                      {row.selected ? 'Selected' : 'Select'}
-                    </Button>
-                  ),
+                  render: (_value, row) =>
+                    row.selected ? (
+                      <Label
+                        color="success"
+                        startIcon={<Iconify icon="solar:check-circle-bold" aria-hidden />}
+                        sx={{ borderRadius: 999, px: 1 }}
+                      >
+                        Selected
+                      </Label>
+                    ) : (
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        color="inherit"
+                        disabled={
+                          busy ||
+                          !writable ||
+                          !settings.permissions[choosing] ||
+                          !settings.permissions[`${choosing}Read`]
+                        }
+                        aria-label={`Select ${row.name} version ${row.versionNumber}`}
+                        onClick={() => {
+                          onChange(choosing, row.versionId);
+                          shikshaMitraToast.success({
+                            message: `${selectedFamily.label} added to this draft.`,
+                          });
+                          setChoosing(undefined);
+                        }}
+                        sx={{ borderRadius: 999 }}
+                      >
+                        Select
+                      </Button>
+                    ),
                 },
               ]}
-              searchFieldProps={{ placeholder: 'Search' }}
+              searchFieldProps={{
+                placeholder: 'Search policies',
+                inputProps: {
+                  'aria-label': `Search ${selectedFamily.label.toLowerCase()} choices`,
+                },
+              }}
             />
             {catalogs[choosing].loading && !!options.length && (
               <Typography variant="caption" role="status">

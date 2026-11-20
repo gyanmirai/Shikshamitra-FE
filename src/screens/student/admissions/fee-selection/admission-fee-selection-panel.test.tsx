@@ -217,6 +217,9 @@ describe('AdmissionFeeSelectionPanel', () => {
     expect(screen.getByText('Class one fees · Revision 2')).toBeVisible();
     expect(screen.getByRole('button', { name: 'Change Fee Structure' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled();
+    expect(screen.getByRole('heading', { name: 'Fee Structure', level: 3 })).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Published Fee Heads', level: 4 })).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Selection Summary', level: 4 })).toBeVisible();
     expect(screen.getByLabelText('Selected fee heads')).toBeVisible();
     expect(screen.getByLabelText('Selection Summary')).toBeVisible();
     expect(onContinue).not.toHaveBeenCalled();
@@ -356,7 +359,7 @@ describe('AdmissionFeeSelectionPanel', () => {
     );
     expect(screen.queryByText(/Configured total/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Finance Calculates Dues/)).not.toBeInTheDocument();
-    fireEvent.mouseOver(screen.getByRole('button', { name: 'About Selection Summary' }));
+    fireEvent.mouseOver(screen.getByRole('button', { name: 'Selection Summary information' }));
     expect(await screen.findByRole('tooltip')).toHaveTextContent(/Finance Calculates Dues/);
   });
 

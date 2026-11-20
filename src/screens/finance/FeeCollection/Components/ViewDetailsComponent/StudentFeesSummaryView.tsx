@@ -1,6 +1,6 @@
 import type { StudentSummary } from 'src/redux/feeCollection/feeCollection';
 
-import { DetailGrid, DetailField, DetailSection } from 'src/components/detail-view';
+import { DetailGrid, DetailField, DetailSection } from 'src/screens/finance/components/detail-view';
 
 export const StudentFeesSummaryView = ({ student }: { student: StudentSummary }) => (
   <DetailSection

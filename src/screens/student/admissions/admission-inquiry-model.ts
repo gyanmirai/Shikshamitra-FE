@@ -41,7 +41,6 @@ export type AdmissionInquiryFormValues = {
   offeringId: string;
   source: AdmissionInquirySource;
   sourceDetail: string;
-  sendAcknowledgement: boolean;
   parentRelationship?: '' | AdmissionParentRelationship;
   /** Provenance from the saved inquiry, used only while editing legacy partial forms. */
   capturedParentRelationship?: AdmissionParentRelationship;
@@ -102,7 +101,6 @@ export const initialAdmissionInquiryValues: AdmissionInquiryFormValues = {
   offeringId: '',
   source: 0,
   sourceDetail: '',
-  sendAcknowledgement: true,
   parentRelationship: '',
   familyContacts: initialAdmissionFamilyContacts,
   fields: {},
@@ -117,7 +115,6 @@ export const admissionInquirySchema = Yup.object({
   offeringId: Yup.string().required('Offering is required'),
   source: Yup.number().integer().min(0).max(12).required('Source is required'),
   sourceDetail: Yup.string().max(128, 'Source details must be 128 characters or fewer'),
-  sendAcknowledgement: Yup.boolean().required(),
   parentRelationship: Yup.string()
     .oneOf(['', 'father', 'mother'], 'Select Father or Mother.')
     .optional(),
@@ -406,7 +403,8 @@ export function buildAdmissionInquiryPayload(
   existingFamilyId?: string | null,
   createSeparateFamily = false,
   duplicateOverrideReason?: string,
-  parentSelection?: AdmissionSiblingParentSelection
+  parentSelection?: AdmissionSiblingParentSelection,
+  familySourceApplicantId?: string
 ): CreateAdmissionInquiry {
   const contact = getAdmissionInquiryPrimaryContact(fields, values);
   const configuredRelationship = getConfiguredInquiryParentRelationship(
@@ -480,7 +478,8 @@ export function buildAdmissionInquiryPayload(
     mediumId: values.mediumId,
     standardId: values.standardId,
     existingFamilyId,
-    existingParentApplicantId: parentSelection?.sourceApplicantId,
+    existingParentApplicantId: familySourceApplicantId || parentSelection?.sourceApplicantId,
+    ...(familySourceApplicantId ? { familyLinkOnly: true } : {}),
     parentRelationship: relationship === 'guardian' ? undefined : relationship,
     guardianResponsibilityConfirmed:
       relationship === 'guardian' && values.guardianResponsibilityConfirmed === true,
@@ -583,9 +582,10 @@ export function validateAdmissionInquiry(
   );
   activeFields.forEach((field) => {
     if (field.required && !fieldValue(values, field.code) && fieldErrors[field.code])
-      fieldErrors[field.code] = canonicalInquiryBinding(field) === 'Inquiry.ParentRelationship'
-        ? `Select a ${field.label.toLowerCase()}.`
-        : `${field.label} is required.`;
+      fieldErrors[field.code] =
+        canonicalInquiryBinding(field) === 'Inquiry.ParentRelationship'
+          ? `Select a ${field.label.toLowerCase()}.`
+          : `${field.label} is required.`;
   });
   const { prefix } = getAdmissionInquiryPrimaryContact(fields, values);
   const guardianPhoneField = activeFields.find(

@@ -94,11 +94,19 @@ a genuinely different name clears that conflict without losing the installment s
 
 ## Refund request form presentation
 
+Paid charges and paid late fees follow the refund policy version explicitly assigned to the
+student. Editing the policy creates a new version; existing assignments require an explicit
+policy update before that version applies. Student-based eligibility includes settled sources
+from the linked account as well as historical student receipts. Receipts from different payment
+accounts must be refunded in separate requests; multiple receipts for one account remain
+selectable together.
+
 Refund detail drawers show only installments carrying a refund in the selected request, grouped under their fee heads.
 Shared accordions and embedded tables display Installment, Paid amount and Refund amount; paid values come from the selected installment response, and the summary uses the request refund amounts.
 Student-wide paid/refunded totals and due-collection statuses are excluded from this breakdown.
 Reject is offered only before approval, including when an older response still contains an approved Reject action hint.
 The refund worklist omits the Actions column on Completed, Rejected and Failed tabs; row opening still provides the refund detail view.
+The worklist sends the selected board, medium, class and division with the global academic year. Historical refund rows show the student's placement from that refund year after promotion.
 The [backend request-detail contract](../../../Shikshamitra-BE/docs/modules/finance/references/fee-refund-payout-workflow.md#edit-a-pending-request) owns the saved amount semantics.
 
 Pending refund rows expose Edit only when the server returns the `edit` action.
@@ -203,8 +211,8 @@ Applied withdrawal/correction invalidates Finance fee details, collection, adjus
 
 Finance policy views, Accounts income/expense transaction dialogs, concessions, charges,
 student fee details, receipt previews and receipts generated after collection use
-`src/components/detail-view`. `DetailSection` extends the common `FormSectionCard`;
-`DetailField` provides the policy reference's uppercase caption and body-value typography.
+`src/screens/finance/components/detail-view.tsx`. `DetailSection` extends the common `FormSectionCard`.
+`DetailField` follows Subject Information with muted sentence-case captions and regular body values.
 `DetailGrid` uses one, two or three columns based on the section's available width.
 Descriptions and notes span the row, and related tables use the full content width.
 The body owns scrolling while dialog headers and action footers remain reachable.
@@ -411,22 +419,24 @@ the server's refund reference/reason when available. Zero or absent pending valu
 field. Pending payout context does not change Paid, Concession or outstanding amounts.
 
 Collection Policy's **Automatic Payment Priority** section selects **Installment first (earliest due)**
-or **Fee head first (A–Z)**. The latter clears each head's earliest dues before the next head.
+or **Fee structure order**. The latter follows the saved fee head sequence and pays each head's
+earliest dues before moving to the next head.
 The collect form receives the assignment's pinned `allocationBasis`, policy identity/version,
 `allocationDueFeeOrder` and `allocationRevision`. With no fees or charges selected, entering an
-amount allocates across eligible outstanding fees from the complete ledger in the returned order.
-Additional charges require explicit selection. Selecting any fees or charges limits collection to
-that selection. Entering an amount updates Pay now and Remaining; amount-only summaries show
-the funded fees, and the left ledger checks and highlights those same rows, including a partially
-funded final row. Changing or clearing the amount updates these highlights without converting them
-into explicit selections or restricting the policy candidate set. Unchecking the last automatic
+amount allocates across eligible outstanding fees from the complete ledger in the returned order,
+then eligible Additional Charges from top to bottom. Only funded fees and charges are highlighted
+and shown in review; validation and the command include the full eligible candidate set.
+Entering the full collectible outstanding amount includes the charges without an excess-amount error.
+Selecting any fees or charges explicitly limits collection to those items. Entering or editing
+the amount updates the ledger checks and Pay now and Remaining for the funded rows, including a
+partially funded final row. Later amount edits can still fund additional items from the same
+candidate set. Unchecking the last automatic
 highlight clears the amount; manual selections still limit the collection. Group by remains editable, and grouping, sorting and display filters never change
 payment priority or the amount-only candidate set. No fee-head priority editor is introduced.
 Configured fee rows have numbered positions; table sorting and summary dragging cannot change
 the automatic allocation sequence. Charge ordering remains in its existing separate group.
-Amount-only Review Payment and Review Cash Payment show the funded installments highlighted
-in the ledger, including the partially funded final row; their period count uses those rows.
-Explicit selections retain their selected rows in review. Collection submits every candidate due ID,
+Review Payment and final confirmation show each funded fee head once, with its funded periods
+and combined allocation. Charges appear individually when funded. Collection submits every candidate due ID,
 including unfunded rows, and the revision through `automaticAllocation`. A changed-policy/balance rejection refreshes the form and requires
 another review; an uncertain network outcome retains the original retry key.
 Policies and historical snapshots without the setting retain **Existing selection order**.
@@ -434,9 +444,12 @@ Existing assignments continue using their pinned version until refreshed through
 Backend rules: [collection allocation contract](../../../Shikshamitra-BE/docs/modules/finance/api.md#automatic-collection-allocation).
 
 Collect Fees shows the student identity, academic year and total outstanding above expandable
-fee-head cards and a payment summary. Each card has independent group selection, a selected
-amount/count badge, and an embedded shared table showing Due Period with installment label,
-Amount, Status and an icon-only View action. The Filters button expands Month, Fee Head, Status,
+fee-head cards and a payment summary. The Fees for this student card shows the collection policy
+name and version resolved by the collect-form response, even when filters are collapsed.
+Each fee-head card has independent group selection, a selected
+amount/count badge, and an embedded shared table showing Billing Period, Due Date, Amount and
+Status. The payment term appears beside the fee head. Fee heads with one installment in the full
+ledger appear first in the fee-head view with a **One time** chip. The Filters button expands Month, Fee Head, Status,
 Group by and all four selection presets. Grouping by month uses the same cards and preserves
 selection, payment drafts and allocation order; additional charges retain a separate group.
 View opens the row's full breakdown, including proration, concessions, refunds, reconciliation
@@ -604,7 +617,9 @@ The adjustment workspace follows Refund Management's shared finance presentation
 | Permissions          | Add gates creation only. Approve and Reject are distinct grants; list and detail actions also require the matching server `availableActions` entry and an independent checker. A server `unavailableReason` is shown in the detail drawer when credit transfer is unavailable.                        |
 | Amounts and recovery | Decimal drafts remain strings until validated. Adjustment money displays opt into two decimals through the shared formatter. Saving locks conflicting controls; confirmed navigation discards the owned form. Retrying an unchanged allocation payload reuses its idempotency key.                    |
 
-The Approved worklist group includes partially applied and fully applied requests. Its row labels retain the actual state rather than collapsing both to one status.
+The Create form loads eligibility for the selected student and academic year. Returning to the form refreshes unmet prerequisites. Once eligible sources are loaded, returning focus keeps the draft ready to submit. Submit sends `POST /api/fee-adjustments`, which revalidates the selected sources and amounts.
+
+The Approved worklist group includes partially applied and fully applied requests. Its row labels show the actual application state. A successful administrator submission returns an applied status and refreshes the worklist and fee details. [Backend administrator approval contract](../../../Shikshamitra-BE/docs/modules/finance/references/admin-request-auto-approval-contract.md).
 
 Across charge, concession, adjustment and refund workspaces, list totals come from the existing server-scoped queries. Decision controls require the exact action grant and the record's server `availableActions`; a missing or empty action list grants nothing. Class-teacher charge requests enter Pending review even when their category does not ordinarily require approval. Until the charge audience preview contract exists, the confirmed All selection submits explicit IDs from the scoped lookup. Refund approval remains separate from recording a payout. Dedicated My requests and Awaiting my review server filters are not yet exposed by these module list APIs, so the existing scoped status worklists remain the navigation surface.
 

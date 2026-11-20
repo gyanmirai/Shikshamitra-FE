@@ -84,32 +84,16 @@ export default function CollectionSummaryPanel({
             >
               <Iconify icon="solar:document-bold" width={14} height={14} />
             </Box>
-            <Typography
-              variant="overline"
-              sx={{
-                fontSize: '0.68rem',
-                fontWeight: 800,
-                letterSpacing: '0.08em',
-                color: 'text.primary',
-              }}
-            >
-              Live Summary
-            </Typography>
+            <Typography variant="subtitle1">Live Summary</Typography>
           </Stack>
 
           <Stack spacing={0.5} mb={2.5}>
             <SummaryRow
-              label="Policy Name"
+              label="Policy name"
               value={
                 <Typography
-                  variant="caption"
-                  fontWeight={600}
-                  sx={{
-                    maxWidth: 160,
-                    textAlign: 'right',
-                    wordBreak: 'break-word',
-                    fontSize: '0.72rem',
-                  }}
+                  variant="body2"
+                  sx={{ maxWidth: 160, textAlign: 'right', overflowWrap: 'anywhere' }}
                 >
                   {formik.values.policyName || '—'}
                 </Typography>
@@ -127,15 +111,15 @@ export default function CollectionSummaryPanel({
               }
             />
             <SummaryRow
-              label="Grace Period"
+              label="Grace period"
               value={
-                <Typography variant="caption" fontWeight={600} fontSize="0.72rem">
+                <Typography variant="body2">
                   {formik.values.gracePeriodDays ?? 0} calendar days
                 </Typography>
               }
             />
             <SummaryRow
-              label="Late Fee Formula"
+              label="Late fee formula"
               value={
                 <Label
                   color={formik.values.enableLateFee ? 'warning' : 'default'}
@@ -146,7 +130,7 @@ export default function CollectionSummaryPanel({
               }
             />
             <SummaryRow
-              label="Consider As Income"
+              label="Consider as income"
               value={
                 <Label
                   color={formik.values.considerAsIncome ? 'success' : 'default'}
@@ -157,7 +141,7 @@ export default function CollectionSummaryPanel({
               }
             />
             <SummaryRow
-              label="Online Gateway"
+              label="Online gateway"
               value={
                 <Label
                   color={formik.values.allowOnlineCollection ? 'success' : 'default'}
@@ -187,17 +171,7 @@ export default function CollectionSummaryPanel({
             >
               <Iconify icon="solar:calculator-bold" width={14} height={14} />
             </Box>
-            <Typography
-              variant="overline"
-              sx={{
-                fontSize: '0.68rem',
-                fontWeight: 800,
-                letterSpacing: '0.08em',
-                color: 'text.primary',
-              }}
-            >
-              Impact Simulation
-            </Typography>
+            <Typography variant="subtitle1">Impact Simulation</Typography>
           </Stack>
 
           <Stack spacing={1.25} mb={2.5}>
@@ -205,7 +179,7 @@ export default function CollectionSummaryPanel({
               fullWidth
               size="small"
               kind="amount"
-              label="Outstanding Overdue Fee"
+              label="Outstanding overdue fee"
               value={calcAmount}
               onChange={(e) => setCalcAmount(Math.max(0, +e.target.value))}
               slotProps={{
@@ -219,7 +193,7 @@ export default function CollectionSummaryPanel({
               fullWidth
               size="small"
               kind="days"
-              label="Days Overdue Past Due Date"
+              label="Days overdue past due date"
               value={calcDaysLate}
               onChange={(e) => setCalcDaysLate(Math.max(0, +e.target.value))}
               slotProps={{
@@ -233,7 +207,7 @@ export default function CollectionSummaryPanel({
               fullWidth
               size="small"
               kind="amount"
-              label="Payment Amount Made"
+              label="Payment amount made"
               value={calcPayment}
               onChange={(e) => setCalcPayment(Math.max(0, +e.target.value))}
               slotProps={{
@@ -325,21 +299,11 @@ export default function CollectionSummaryPanel({
                 height={14}
               />
             </Box>
-            <Typography
-              variant="overline"
-              sx={{
-                fontSize: '0.68rem',
-                fontWeight: 800,
-                letterSpacing: '0.08em',
-                color: 'text.primary',
-              }}
-            >
-              Validation Checklist
-            </Typography>
+            <Typography variant="subtitle1">Validation Checklist</Typography>
           </Stack>
 
           <Stack spacing={0.5} mb={2}>
-            <ValidationCheck label="General Information complete" valid={checks.nameValid} />
+            <ValidationCheck label="General information complete" valid={checks.nameValid} />
             <ValidationCheck label="Grace period configured" valid={checks.graceValid} />
             <ValidationCheck label="Late fee formula configured" valid={checks.lateFeeValid} />
             <ValidationCheck

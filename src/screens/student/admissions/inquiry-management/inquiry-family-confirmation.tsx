@@ -10,41 +10,24 @@ import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { Box, Stack, Alert, Button, Skeleton, Typography, DialogActions } from '@mui/material';
 import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 
-import { buildInquiryFamilyReviews } from '../admission-inquiry-parent-review-model';
-import {
-  AdmissionInquiryParentReview,
-  AdmissionInquiryContactMatch,
-} from '../admission-inquiry-parent-review';
+import { AdmissionInquiryFamilyReview } from '../admission-inquiry-family-review';
+import { inquiryFamilyConfirmationVisible } from './inquiry-family-confirmation-model';
 import {
   useInquiryFamilyConfirmation,
   type InquiryFamilyConfirmationProps,
 } from './use-inquiry-family-confirmation';
-import {
-  inquiryFamilyParentKey,
-  inquiryFamilyCandidateKey,
-  inquiryFamilyConfirmationVisible,
-} from './inquiry-family-confirmation-model';
 
 export function InquiryFamilyConfirmation(props: InquiryFamilyConfirmationProps) {
   const { inquiry, readOnly } = props;
-  if (inquiry.siblingFamilyConfirmed) return <Label color="success">Sibling Confirmed</Label>;
+  if (inquiry.hasLinkedSiblings || inquiry.siblingFamilyConfirmed)
+    return <Label color="success">Siblings linked</Label>;
   if (!inquiryFamilyConfirmationVisible(inquiry, readOnly)) return null;
   return <InquiryFamilyConfirmationContent key={inquiry.id} {...props} />;
 }
 
 function InquiryFamilyConfirmationContent(props: InquiryFamilyConfirmationProps) {
-  const { inquiry } = props;
   const state = useInquiryFamilyConfirmation(props);
   const { formik } = state;
-  const families = buildInquiryFamilyReviews(state.candidates);
-  const selected = families
-    .flatMap((family) => family.parents)
-    .find(
-      (option) =>
-        inquiryFamilyCandidateKey(option.match) === formik.values.source &&
-        inquiryFamilyParentKey(option.parent) === formik.values.parent
-    );
-  const relationship = state.selectedParent?.relationship ?? formik.values.relationship;
   const locked =
     state.loading ||
     state.saving ||
@@ -78,9 +61,9 @@ function InquiryFamilyConfirmationContent(props: InquiryFamilyConfirmationProps)
       {state.open && (
         <CustomDialog
           open
-          title="Check Parent Details"
-          maxWidth="sm"
-          titleInfo="Check the saved parent and children. Add as Sibling links this inquiry to that family without changing the saved parent."
+          title="Confirm Siblings"
+          maxWidth="xs"
+          titleInfo="Link this inquiry with the children in the selected family."
           handleClose={state.requestClose}
           guardUnsavedChanges={false}
           disableClose={state.saving}
@@ -97,42 +80,21 @@ function InquiryFamilyConfirmationContent(props: InquiryFamilyConfirmationProps)
           <DialogScrollContent>
             <FormBusyRegion busy={state.saving} label="Confirming Sibling Family…">
               <Stack spacing={2}>
-                <Typography variant="body2">
-                  Inquiry: <strong>{inquiry.applicantName}</strong>
-                </Typography>
                 {state.loading ? (
                   <Stack spacing={2} role="status" aria-label="Loading Family Matches">
                     <Skeleton variant="rounded" height={56} />
                     <Skeleton variant="rounded" height={56} />
                   </Stack>
                 ) : state.candidates.length ? (
-                  <>
-                    <AdmissionInquiryContactMatch
-                      matches={state.candidates}
-                      phone={state.reviewInput?.guardianPhone ?? ''}
-                      email={state.reviewInput?.guardianEmail}
-                    />
-                    <AdmissionInquiryParentReview
-                      families={families}
-                      selected={selected}
-                      disabled={locked}
-                      enteredMobile={state.reviewInput?.guardianPhone}
-                      relationship={formik.values.relationship}
-                      relationshipError={
-                        formik.touched.relationship || formik.submitCount
-                          ? formik.errors.relationship
-                          : undefined
-                      }
-                      onRelationshipChange={(value) => formik.setFieldValue('relationship', value)}
-                      onSelect={(option) =>
-                        formik.setValues({
-                          source: inquiryFamilyCandidateKey(option.match),
-                          parent: inquiryFamilyParentKey(option.parent),
-                          relationship: '',
-                        })
-                      }
-                    />
-                  </>
+                  <AdmissionInquiryFamilyReview
+                    families={state.families}
+                    selectedFamily={state.selectedFamily}
+                    disabled={locked}
+                    error={
+                      formik.touched.family || formik.submitCount ? formik.errors.family : undefined
+                    }
+                    onSelect={(familyId) => formik.setFieldValue('family', familyId)}
+                  />
                 ) : (
                   !state.requestError && (
                     <Typography variant="body2" color="text.secondary">
@@ -143,7 +105,7 @@ function InquiryFamilyConfirmationContent(props: InquiryFamilyConfirmationProps)
                 )}
                 {state.staleTarget && (
                   <Alert severity="warning">
-                    This inquiry changed. Reload matches and select the parent again.
+                    This inquiry changed. Reload matches and select the family again.
                   </Alert>
                 )}
                 {state.entryReason && <Alert severity="warning">{state.entryReason}</Alert>}
@@ -172,11 +134,11 @@ function InquiryFamilyConfirmationContent(props: InquiryFamilyConfirmationProps)
               type="button"
               size="small"
               variant="outlined"
-              startIcon={<Iconify icon={GlobalIcons.edit} width={18} />}
+              startIcon={<Iconify icon={GlobalIcons.cancel} width={18} />}
               disabled={state.saving}
               onClick={state.requestClose}
             >
-              Edit Contact Details
+              Cancel
             </Button>
             <LoadingButton
               type="submit"
@@ -185,9 +147,9 @@ function InquiryFamilyConfirmationContent(props: InquiryFamilyConfirmationProps)
               color="inherit"
               startIcon={<Iconify icon={GlobalIcons.assigned} width={18} />}
               loading={state.saving}
-              disabled={locked || !selected || !['father', 'mother'].includes(relationship)}
+              disabled={locked || !state.selectedFamily?.children.length}
             >
-              Add as Sibling
+              Confirm siblings
             </LoadingButton>
           </DialogActions>
         </CustomDialog>

@@ -9,7 +9,11 @@ export default defineConfig({
   resolve: {
     alias: [
       { find: /^@mui\/icons-material$/, replacement: `${here}/icon-barrel.ts` },
-      { find: /.*hooks\/useFeeStructureLookups$/, replacement: `${here}/mock-lookups.ts` },
+      { find: /^src\/redux\/feeHeadManage\/feeHeadManageApi$/, replacement: `${here}/mock-api.ts` },
+      {
+        find: /^src\/redux\/finance\/(collectionPolicy|refundPolicy)$/,
+        replacement: `${here}/mock-api.ts`,
+      },
       {
         find: /.*hooks\/useClassWiseFeeStructureHooks$/,
         replacement: `${here}/mock-class-structures.ts`,

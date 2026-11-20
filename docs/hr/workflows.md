@@ -63,7 +63,22 @@ Use this map to find the first screen and client:
 
 ## Staff card designs
 
-New staff templates start with the Staff Professional front and back. Existing templates retain their saved design; legacy field-only templates use the existing adapter. Designer keeps the preview in a bounded region beside the independently scrolling configuration panel, or above it on narrow screens. School, Layout, Elements and Print tabs organize the controls. The compact element selector retains access to hidden and locked elements without a second scrolling layer list. Designer supports side selection, bound or static text, photos, logos, codes, shapes, layers, and element styling. School Identity inheritance, custom logo upload, and the option to hide the logo remain organization-aware.
+New staff templates start with the Staff Professional front and back.
+Existing templates retain their saved design; legacy field-only templates use the existing adapter.
+Designer keeps the preview in a bounded region beside the independently scrolling configuration panel, or above it on narrow screens.
+Phones use a compact step summary and a horizontally scrolling command bar with zoom and Fit first. Fit follows workspace resizing until a manual zoom is chosen.
+The studio command bar, tool rail and visible layer list support direct canvas selection, moving, resizing and rotation, with undo/redo, duplication, grouping, ordering, alignment and zoom.
+School, Layout, Elements and Print tabs retain the existing configuration controls.
+School Identity inheritance, custom logo upload, and the option to hide the logo remain organization-aware.
+
+Select staff in Employee, then return to Designer and choose the Preview person to edit that cardholder's photo.
+On phones, Photo opens a compact cardholder chooser and Edit photo action.
+The local dialog provides aspect crop presets, position/zoom, rotation/flips, tone adjustments, original comparison, reset, transparent/solid background and erase/restore mask brushes.
+Remove background explicitly loads a portrait model for on-device matting, with progress, cancellation and retry after failure.
+Inspect hair and edges before applying; portrait matting does not guarantee suitable results for non-person graphics.
+Applied copies appear in the selected person's Designer and Review/Export preview, and are sent only for selected PDF records.
+Profile photos and reusable templates retain their original data; personal photo drafts remain dirty after saving the template.
+Deselection removes the corresponding edit, and organization/academic context changes clear the scoped photo drafts.
 
 Finished width and height are configured in millimetres independently of the design canvas and preview size. Review and Export show both configured sides and the calculated A4 capacity. Paper size, margins, gaps, bleed, safe inset, output side, duplex flip, back rotation, and alignment offsets are configured in Designer. Geometry errors block saving and export with corrective guidance.
 
@@ -84,9 +99,16 @@ Apply Leave reads the selected paid-type rule from the current staff/date policy
 
 ## HR setup wizard
 
-Authorized HR operators receive the **Complete HR Setup** wizard on any HR route when the readiness summary reports unresolved configuration.
+Authorized HR operators receive the **Let’s Complete Your HR Setup** wizard on any HR route when the readiness summary reports unresolved configuration.
 The wizard opens at the first unresolved step and marks usable existing configuration complete without requiring acknowledgement.
-Checklist steps use shared section cards with readable saved-state labels, step headings and completion counts. Desktop checklists fit their content; embedded editors retain a bounded scrolling body and fixed actions. Phones show the current step and a position indicator, which does not imply saved completion. Optional deductions remain separate from required checks.
+Checklist steps use shared section cards with readable saved-state labels, step headings and completion counts.
+A muted summary header explains the setup purpose and confirms that saved progress is available when the user returns.
+On tablet and desktop, the horizontal stepper centers the connectors on the step markers and labels completed and in-progress steps.
+Checklists, embedded editors and completion share the same viewport-bounded height, with a fixed header, navigation and footer and one scrolling body.
+Phones use the full viewport and show the current step and its position as text.
+The overall progress bar counts only server-reported ready checks; navigating between steps does not increase completion, and read failures do not display completion progress.
+Unfinished items appear first and completed items can be expanded for review.
+Optional deductions remain separate from required checks.
 Users can configure shifts, policies and calendars, earning components, and salary templates through embedded versions of the existing editors.
 The Earning Components step also exposes optional deduction setup to operators with exact Deduction Components View and Add access, including before a template exists. Deductions are not an additional readiness requirement.
 Salary Template's Add Earning and Add Deduction actions open the shared modal picker above the wizard. Empty catalogues and components already added have visible guidance. Authorized operators can create another component within setup and return to the mounted salary draft; reopening the picker shows refreshed choices. Cancelling the picker preserves the draft and returns focus to its launcher.
@@ -103,7 +125,7 @@ Saving refreshes server readiness; missing current-month coverage prevents compl
 Role repair remains an explicitly authorized Role Management task in another tab.
 Each step saves independently through existing APIs, and the final action rechecks server readiness.
 Failed background catalogue reads keep earning and salary-template editors mounted with their entries and an explicit retry action. The earning selector loads the complete paginated catalogue; embedded template loading uses only the wizard's navigation footer.
-Closing preserves saved configuration, protects unsaved entries with the existing discard confirmation, leaves the current route intact, and shows no banner.
+Closing preserves saved configuration, protects unsaved entries with the existing discard confirmation, leaves the current route intact, and offers **Continue HR setup** on the HR dashboard when configuration still needs attention or readiness could not be checked.
 Dismissal lasts for the document lifetime across HR navigation and resets on refresh or a user, tenant, or academic-year change.
 Self-service-only users receive no popup and make no readiness request.
 Read failures display a dismissible retry state rather than missing-setup claims.
@@ -210,7 +232,12 @@ Review, adjustment, lock and preview completions belong to the month/year and mo
 Navigating away and back does not authorize an earlier completion to reload payroll, clear a new selection or replace a later adjustment draft.
 Ignoring an obsolete UI completion does not cancel an already submitted server operation; reopening reads current server state.
 
-Generate preview and Refresh preview sit in the register action row alongside readiness, review, audit, and lock controls.
+Generate preview and Refresh preview sit in the register action row alongside readiness, review, activity, and lock controls.
+Payroll month precedes the View registrations action, which opens the PF and ESIC registration list without resizing the register.
+Select all applies to unlocked rows on the current page, and Mark Reviewed acts on the pending rows among them.
+Review operations retain the visible rows while the server saves and the current result reloads.
+After a saved review with a failed reread, Reload rows retries the read.
+Payroll Activity shows recorded reviews, removed reviews, and locks for the selected month and academic year to authorized users with school-wide HR scope.
 Vertical dividers separate preview, readiness/audit, and review/lock action groups on desktop.
 On smaller screens, dividers are hidden and action groups wrap.
 Payroll month stays in the context row.
@@ -370,7 +397,8 @@ After salary is ready, users with Employee Edit permission activate the employee
 Only effective revisions drive payroll, while one-time earning and deduction components remain a separate editable list.
 Salary-history lookup failures expose an explicit retry that retains salary/statutory drafts and loaded history. Retry shares the salary operation lock, keeps saving blocked on failure, and invalidates the preview before successful recovery so the user must calculate again.
 System-managed statutory lines stay visible in the calculation but are never persisted as editable employee components.
-Run Payroll shows compensation revision provenance and protected-target drift without silently changing salary or blocking lock.
+Run Payroll shows compensation revision provenance and preserves saved salary.
+A protected compensation target difference blocks locking when the server reports the corresponding issue code.
 Employee payslips omit employer cost and compensation protection details.
 Professional-tax settings also control whether tax is deducted in an employee's employment cessation month.
 Salary Template settings uses one full-height table for Active, Needs setup, and Archived templates.
@@ -626,7 +654,11 @@ Opting in reveals the PF rule and voluntary consent reference; opting out exclud
 CTC setup confirms the requirement from the backend-calculated Gross, while changing salary preserves the draft and requires a fresh calculation.
 Existing membership remains visibly Required, and the backend owns coverage and contribution rules described in [the payroll API contract](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md).
 The salary calculation returns the enrollment decision and blocks saving when required evidence or enrollment is missing.
-The PF settings page records school establishment coverage with an effective month and evidence reference.
+The PF settings page records school establishment coverage and its effective month.
+Selecting Covered under PF asks for a PF establishment number.
+Selecting Not covered under PF allows saving with just the coverage choice and month.
+Selecting Handled outside ShikshaMitra also needs only the effective month and turns off in-app PF for all staff from that month.
+Salary setup displays the school decision in place of PF enrollment controls, and payroll registration review uses the same decision for the selected month.
 Its write requires the exact PF Add capability and backend-confirmed school-wide scope.
 The page shows a compact coverage summary and opens a focused configuration dialog on request.
 Loading and failed reads never claim that coverage is missing; failed reads offer Retry.

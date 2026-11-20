@@ -7,8 +7,9 @@ import { useState } from 'react';
 import { useFormik } from 'formik';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { fDateTime } from 'src/utils/format-time';
 import { useBoolean } from 'src/hooks/use-boolean';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { fIsSame, fDateTime } from 'src/utils/format-time';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -20,6 +21,40 @@ import { assessmentErrorMessage } from './assessment-utils';
 import { ADMISSION_DATE_TIME_FORMAT } from '../admission-date-formats';
 
 import type { SharedSessionView } from './assessment-session-setup-model';
+
+const formatSchedule = (startsAt: string, endsAt: string, compact = false) => {
+  const endFormat =
+    compact && fIsSame(startsAt, endsAt, 'day') ? 'hh:mm A' : ADMISSION_DATE_TIME_FORMAT;
+  return `${fDateTime(startsAt, ADMISSION_DATE_TIME_FORMAT)} – ${fDateTime(endsAt, endFormat)}`;
+};
+
+function SessionTableText({
+  text,
+  variant = 'body2',
+}: {
+  text: string;
+  variant?: 'body2' | 'subtitle2';
+}) {
+  return (
+    <CustomTooltip title={text} describeChild>
+      <Typography
+        component="div"
+        variant={variant}
+        noWrap
+        tabIndex={0}
+        sx={{
+          '&:focus-visible': {
+            outline: '2px solid',
+            outlineColor: 'primary.main',
+            outlineOffset: -2,
+          },
+        }}
+      >
+        {text}
+      </Typography>
+    </CustomTooltip>
+  );
+}
 
 export type AssessmentSessionsPanelProps = {
   sessions: SharedSessionView[];
@@ -82,42 +117,34 @@ export function AssessmentSessionsPanel({
     {
       id: 'name',
       label: 'Session',
+      minWidth: 220,
+      maxWidth: 320,
       filterType: 'string',
       isSort: false,
-      render: (value, row) => (
-        <Stack>
-          <Typography variant="subtitle2">{value}</Typography>
-          <Typography variant="caption" color="text.secondary">
-            {row.sessionType === 'individualInterview'
-              ? 'Individual Interview'
-              : row.sessionType === 'groupInterview'
-                ? 'Group Interview'
-                : 'School Exam'}{' '}
-          </Typography>
-        </Stack>
-      ),
+      render: (value) => <SessionTableText text={String(value)} variant="subtitle2" />,
     },
     {
       id: 'classes',
       label: 'Classes',
+      width: 128,
+      minWidth: 104,
+      maxWidth: 144,
       isSort: false,
       isFilter: false,
-      render: (_, row) => classes(row as SharedSessionView),
+      render: (_, row) => <SessionTableText text={classes(row as SharedSessionView)} />,
       exportValue: (_, row) => classes(row as SharedSessionView),
     },
     {
       id: 'startsAt',
       label: 'Schedule',
-      exportValue: (value, row) => `${fDateTime(value as string, ADMISSION_DATE_TIME_FORMAT)} – ${fDateTime(row.endsAt, ADMISSION_DATE_TIME_FORMAT)}`,
+      minWidth: 270,
+      exportValue: (value, row) => formatSchedule(value as string, row.endsAt),
       filterType: 'dateTime',
       isSort: false,
       render: (value, row) => (
-        <Stack>
-          <Typography variant="body2">{fDateTime(value, ADMISSION_DATE_TIME_FORMAT)}</Typography>
-          <Typography variant="caption" color="text.secondary">
-            To {fDateTime(row.endsAt, ADMISSION_DATE_TIME_FORMAT)}
-          </Typography>
-        </Stack>
+        <Typography variant="body2" sx={{ whiteSpace: 'nowrap' }}>
+          {formatSchedule(value, row.endsAt, true)}
+        </Typography>
       ),
     },
     {
@@ -138,6 +165,8 @@ export function AssessmentSessionsPanel({
     {
       id: 'isCancelled',
       label: 'Status',
+      sticky: true,
+      stickyPosition: 'right',
       exportValue: (_, row) => status(row as SharedSessionView),
       isSort: false,
       render: (value, row) => (
@@ -161,7 +190,7 @@ export function AssessmentSessionsPanel({
       label: 'Actions',
       sticky: true,
       stickyPosition: 'right',
-      minWidth: 120,
+      minWidth: 104,
       isSort: false,
       isFilter: false,
       excludeFromExport: true,
@@ -258,6 +287,7 @@ export function AssessmentSessionsPanel({
           columns={columns}
           isLoading={isLoading}
           isRefreshing={isFetching && !isLoading}
+          refreshIndicator="skeleton"
           isSearch
           showColumns
           showExport

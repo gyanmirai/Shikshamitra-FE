@@ -1,17 +1,18 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
+import type { RootState, AppDispatch } from 'src/redux/store';
 import type { AdmissionApplicationStatus } from 'src/redux/student/admissions/admission-applications-api';
 
-import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Box, Stack, Button } from '@mui/material';
+import { useDispatch, useSelector } from 'react-redux';
 import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { usePendingNavigation } from 'src/hooks/use-pending-navigation';
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { academicClassFilterInput } from 'src/utils/student-academic-filter-query';
@@ -24,6 +25,7 @@ import { serializeQueueColumnFilters } from './admission-queue-column-filters';
 import AdmissionDirectRegistrationDialog from './admission-direct-registration-dialog';
 import { ADMISSION_APPLICATION_PERMISSIONS } from './admission-application-permissions';
 import { getApplicationWorkspaceUrl } from './application-detail/application-return-url';
+import { preloadAdmissionApplication } from './application-detail/preload-admission-application';
 import { buildAdmissionApplicationsColumns } from './applications/admission-applications-columns';
 import { ApplicationWorkspaceRedirect } from './application-detail/application-workspace-redirect';
 import {
@@ -39,6 +41,8 @@ export default function AdmissionApplicationsScreen() {
   const academic = useAdmissionAcademicFilters();
   const pathname = usePathname();
   const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
+  const { pendingKey, isPending, navigate } = usePendingNavigation(router.push);
   const params = useSearchParams();
   const activeApplications = params.get('dashboard') === 'active-applications';
   const pendingDecisions = params.get('dashboard') === 'admission-decisions';
@@ -58,6 +62,7 @@ export default function AdmissionApplicationsScreen() {
   );
   const update = useCallback(
     (changes: Record<string, string | undefined>, resetPage = true) => {
+      if (isPending) return;
       const url = admissionApplicationsUrl(
         pathname,
         new URLSearchParams(queryString),
@@ -67,7 +72,7 @@ export default function AdmissionApplicationsScreen() {
       const currentUrl = queryString ? `${pathname}?${queryString}` : pathname;
       if (url !== currentUrl) router.replace(url, { scroll: false });
     },
-    [pathname, queryString, router]
+    [pathname, queryString, router, isPending]
   );
   const previousYear = useRef(academic.academicYearId);
   const [scopeLoading, setScopeLoading] = useState(true);
@@ -105,9 +110,12 @@ export default function AdmissionApplicationsScreen() {
   );
   const openApplication = useCallback(
     (id: string) => {
-      if (canView) router.push(applicationUrl(id), { scroll: false });
+      if (canView && !isPending) {
+        preloadAdmissionApplication(dispatch, id);
+        navigate(id, applicationUrl(id), { scroll: false });
+      }
     },
-    [applicationUrl, canView, router]
+    [applicationUrl, canView, dispatch, isPending, navigate]
   );
   const columns = useMemo(
     () => buildAdmissionApplicationsColumns({ applicationUrl, onOpen: openApplication }),
@@ -235,6 +243,8 @@ export default function AdmissionApplicationsScreen() {
               getRowAction={(row) => ({
                 label: `Open ${formatAdmissionReference(row.applicationNumber)} for ${row.applicantName || 'applicant'}`,
                 onClick: () => openApplication(row.id),
+                disabled: isPending,
+                pending: pendingKey === row.id,
               })}
               rowProps={() => ({
                 onClick: (event) => {
@@ -256,6 +266,7 @@ export default function AdmissionApplicationsScreen() {
                   (listQuery.isLoading || (listQuery.isFetching && !data)))
               }
               isRefreshing={!skip && listQuery.isFetching && Boolean(data)}
+              refreshIndicator="skeleton"
               onClearCriteria={() =>
                 update({ search: undefined, filters: undefined, status: undefined })
               }

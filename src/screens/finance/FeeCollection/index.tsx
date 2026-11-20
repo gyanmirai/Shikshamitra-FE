@@ -28,7 +28,7 @@ import type { IAdjustmentFullFormValues } from '../adjustments/types/adjustmentF
 const FeeCollection = () => {
   const access = useFinancePermissions(financePermissions.fees.collections);
   const adjustmentAccess = useFinancePermissions(financePermissions.fees.adjustment);
-  const academicFilters = useFinanceAcademicFilters();
+  const academicFilters = useFinanceAcademicFilters({ includeWorkContext: false });
   const studentDialog = useBoolean();
   const viewDialog = useBoolean();
   const adjustmentDialog = useBoolean();
@@ -142,7 +142,13 @@ const FeeCollection = () => {
           ]}
         />
       )}
-      {!studentDialog.value && !viewDialog.value && !adjustmentDialog.value && (
+      <Box sx={{
+        display: studentDialog.value || viewDialog.value || adjustmentDialog.value ? 'none' : 'flex',
+        flexDirection: 'column',
+        flex: 1,
+        minHeight: 0,
+        overflow: 'hidden',
+      }}>
         <FeeCollectionTable
           onAddFee={studentDialog}
           onDelete={() => {}}
@@ -162,7 +168,7 @@ const FeeCollection = () => {
           }}
           academicFilters={academicFilters}
         />
-      )}
+      </Box>
       <CustomDialog
         open={studentDialog.value && access.canAdd}
         guardUnsavedChanges={false}

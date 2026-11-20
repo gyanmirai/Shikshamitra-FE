@@ -52,6 +52,7 @@ export const admissionFeeSelectionApi = api.injectEndpoints({
       }),
       transformResponse: unwrapAdmissionFeeSelection<AdmissionFeeSelection>,
       invalidatesTags: (_, error, { applicationId }) => [
+        financeModuleType.studentFeeAssignment,
         ...applicationTags,
         // Collection eligibility and dues are derived from this saved selection.
         ...(!error ? [{ type: financeModuleType.feeCollection, id: applicationId }] : []),
@@ -68,6 +69,7 @@ export const admissionFeeSelectionApi = api.injectEndpoints({
       }),
       transformResponse: unwrapAdmissionFeeSelection<AdmissionFeeSelection>,
       invalidatesTags: [
+        financeModuleType.studentFeeAssignment,
         ...applicationTags,
         studentOnboardingType.onboardingCaseDetail,
         studentOnboardingType.onboardingCaseList,

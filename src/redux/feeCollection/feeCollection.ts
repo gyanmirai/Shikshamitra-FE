@@ -115,6 +115,7 @@ export interface FeeLedgerLine {
   feeHeadId: string;
   feeHeadName: string;
   installmentLabel?: string;
+  paymentTermName?: string | null;
   dueDate?: string;
   coverageStartDate?: string;
   coverageEndDate?: string;
@@ -534,6 +535,7 @@ export const feeCollectionApi = financeModuleApi.injectEndpoints({
         const admissionAccountId =
           collection?.financeFeeAccountId ?? collection?.data?.financeFeeAccountId;
         return [
+          ...(!error ? [financeModuleType.studentFeeAssignment] : []),
           receiptType.receipt,
           financeModuleType.feeCollection,
           financeModuleType.feeDetails,
@@ -562,6 +564,7 @@ export const feeCollectionApi = financeModuleApi.injectEndpoints({
         body,
       }),
       invalidatesTags: [
+        financeModuleType.studentFeeAssignment,
         financeModuleType.feeCollection,
         financeModuleType.feeDetails,
         financeModuleType.charges,

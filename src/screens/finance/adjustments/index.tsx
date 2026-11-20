@@ -88,12 +88,13 @@ export default function Adjustments() {
   const submit = async (values: IAdjustmentFullFormValues) => {
     if (!canCreateAdjustment) throw new Error('Adjustment initiation is unavailable.');
     const result = await createAdjustment(values);
-    shikshaMitraToast.success({
-      message:
-        result?.appliedAmount > 0
-          ? 'Adjustment approved and applied successfully.'
-          : 'Adjustment request submitted successfully.',
-    });
+    let message = 'Adjustment request submitted successfully.';
+    if (result.status === AdjustmentStatusEnum.Approved) {
+      message = 'Adjustment approved and applied successfully.';
+    } else if (result.status === AdjustmentStatusEnum.PartiallyApplied) {
+      message = 'Adjustment approved and partially applied.';
+    }
+    shikshaMitraToast.success({ message });
   };
   const submitRejection = async (_event: unknown, submitted = false, notes?: string) => {
     if (!submitted) {
@@ -133,15 +134,15 @@ export default function Adjustments() {
           { name: 'Finance', href: financePaths.dashboard },
           ...(mode !== 'list'
             ? [
-                {
-                  name: 'Adjustments',
-                  href: financePaths.fees.adjustments,
-                  onClick: (event: React.MouseEvent) => {
-                    event.preventDefault();
-                    handleClose();
-                  },
+              {
+                name: 'Adjustments',
+                href: financePaths.fees.adjustments,
+                onClick: (event: React.MouseEvent) => {
+                  event.preventDefault();
+                  handleClose();
                 },
-              ]
+              },
+            ]
             : []),
           { name: title },
         ]}
@@ -159,7 +160,7 @@ export default function Adjustments() {
                 setMode('create');
               }}
             >
-              New adjustment
+              Adjustment
             </Button>
           ) : undefined
         }

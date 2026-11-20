@@ -11,7 +11,7 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
 import { useGetYearQuery } from 'src/redux/year/yearApi';
-import { useGetBoardsQuery } from 'src/redux/board/boardApi';
+import { useGetAcademicHierarchyQuery } from 'src/redux/board/boardApi';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { financePermissions } from 'src/constants/finance-menu';
@@ -115,7 +115,10 @@ const PaymentTerm = () => {
   const cloneDialog = useBoolean();
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const { data: boardData, isLoading: boardsLoading } = useGetBoardsQuery('');
+  const { data: boardData, isLoading: boardsLoading } = useGetAcademicHierarchyQuery(
+    currentYear?.id ?? '',
+    { skip: !currentYear?.id }
+  );
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const paymentTermPermissions = financePermissions.fees.settings.paymentTermActions;
   const canView = hasGrantedPermission(permissions, paymentTermPermissions.view);
@@ -138,7 +141,7 @@ const PaymentTerm = () => {
   const cloneSourceYear = cloneSourceYears.find((year) => year.id === cloneSourceYearId);
   const boards = useMemo<IBoard[]>(() => {
     if (!boardData?.items || !targetAcademicYearId) return [];
-    return boardData.items.filter((board: IBoard) => board.academicYearId === targetAcademicYearId);
+    return boardData.items.filter((board) => board.academicYearId === targetAcademicYearId);
   }, [boardData?.items, targetAcademicYearId]);
 
   useEffect(() => {

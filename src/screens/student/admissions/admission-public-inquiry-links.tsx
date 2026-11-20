@@ -24,6 +24,7 @@ import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { useStudentSetupFormState } from 'src/screens/student/setup/embedding';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
@@ -125,13 +126,22 @@ export function AdmissionPublicInquiryLinks({
   const nameInputRef = useRef<HTMLInputElement>(null);
   const cycleInputRef = useRef<HTMLInputElement>(null);
   const formInputRef = useRef<HTMLInputElement>(null);
-  const cycles = useGetAdmissionCyclesQuery({ maxResultCount: 100, skipCount: 0 });
-  const forms = useGetAdmissionFormsQuery({ status: 1, purpose: 0, maxResultCount: 100 });
   const links = useGetAdmissionPublicInquiryLinksQuery();
   const [create, createState] = useCreateAdmissionPublicInquiryLinkMutation();
   const [setLinkForm, setLinkFormState] = useSetAdmissionPublicInquiryLinkFormMutation();
   const [revoke, revokeState] = useRevokeAdmissionPublicInquiryLinkMutation();
   const [formTarget, setFormTarget] = useState<AdmissionPublicInquiryLink | null>(null);
+  // Existing links carry IDs, so their visible labels need these lookups even in read-only lists.
+  const needsPeriodLabels = Boolean(links.currentData?.length);
+  const needsFormLabels = Boolean(links.currentData?.some((link) => link.inquiryFormDefinitionId));
+  const cycles = useGetAdmissionCyclesQuery(
+    { maxResultCount: 100, skipCount: 0 },
+    { skip: !createOpen && !needsPeriodLabels }
+  );
+  const forms = useGetAdmissionFormsQuery(
+    { status: 1, purpose: 0, maxResultCount: 100 },
+    { skip: !createOpen && !formTarget && !needsFormLabels }
+  );
   const [revokeTarget, setRevokeTarget] = useState<AdmissionPublicInquiryLink | null>(null);
   const [viewLink, setViewLink] = useState<LinkRow | null>(null);
   const [optionalOpen, setOptionalOpen] = useState(true);
@@ -259,6 +269,11 @@ export function AdmissionPublicInquiryLinks({
         setError(parseApiProblemDetail(problem).detail || 'Unable to attach the inquiry form.');
       }
     },
+  });
+
+  useStudentSetupFormState({
+    dirty: createOpen || Boolean(formTarget) || Boolean(revokeTarget),
+    busy: createState.isLoading || setLinkFormState.isLoading || revokeState.isLoading,
   });
 
   const openFormEditor = (link: AdmissionPublicInquiryLink) => {

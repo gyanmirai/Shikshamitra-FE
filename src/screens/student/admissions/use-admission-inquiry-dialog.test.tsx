@@ -12,6 +12,7 @@ import { it, vi, expect, afterEach, beforeEach } from 'vitest';
 import { clearCachedAuthSession } from 'src/redux/session-cache';
 import { act, cleanup, waitFor, renderHook } from '@testing-library/react';
 
+import { admissionInquirySchema } from './admission-inquiry-model';
 import { useAdmissionInquiryDialog } from './use-admission-inquiry-dialog';
 import { getInquiryOfferingUnavailableReason } from './use-admission-inquiry-class-offerings';
 
@@ -51,12 +52,12 @@ const catalogue = (offerings: AdmissionOfferingListItem[] = []) => ({
   })),
   offerings,
 });
-const createStore = () =>
+const createStore = (permissions: Array<{ name: string; isGranted: boolean }> = []) =>
   configureStore({
     reducer: {
       [api.reducerPath]: api.reducer,
       globalState: () => ({ currentYear: { id: 'year' } }),
-      auth: () => ({ permissions: [] }),
+      auth: () => ({ permissions }),
     },
     middleware: (defaults) => defaults().concat(api.middleware),
   });
@@ -92,6 +93,117 @@ const selectClass = async (
     );
   });
 };
+
+it.each([
+  { lookup: 'empty', email: null, matches: [] },
+  {
+    lookup: 'name-only',
+    email: 'qa@example.invalid',
+    matches: [
+      {
+        applicantId: 'saved-child',
+        familyId: 'saved-family',
+        applicantName: 'QA child',
+        existingInquiryId: 'saved-inquiry',
+        existingInquiryAdmissionCycleId: 'cycle',
+        existingInquiryMatchesMobile: false,
+        guardianPhone: '9876543211',
+        canLinkFamily: false,
+      },
+    ],
+  },
+])(
+  'creates an inquiry without automatic communication for a $lookup duplicate lookup',
+  async ({ email, matches }) => {
+    store = createStore([
+      { name: 'Communication.Campaigns.Add', isGranted: true },
+      { name: 'Communication.Campaigns.Send', isGranted: true },
+    ]);
+    const available = offering('class-a');
+    const onClose = vi.fn();
+    let created = 0;
+    let communicationRequests = 0;
+    mswServer.use(
+      http.get(`${root}/capture-catalogue`, () =>
+        HttpResponse.json({ data: catalogue([available]) })
+      ),
+      http.get(`${root}/capture-context/${available.id}`, () =>
+        HttpResponse.json({
+          data: {
+            offering: available,
+            availability: { canCreateInquiry: true },
+            form: {
+              sections: [
+                {
+                  fields: [
+                    {
+                      code: 'CHILD',
+                      label: 'Student name',
+                      bindingKey: 'Applicant.FirstName',
+                      fieldType: 0,
+                    },
+                    {
+                      code: 'ADULT',
+                      label: 'Parent name',
+                      bindingKey: 'Guardian.FirstName',
+                      fieldType: 0,
+                    },
+                    {
+                      code: 'PHONE',
+                      label: 'Parent mobile',
+                      bindingKey: 'Guardian.Mobile',
+                      fieldType: 4,
+                    },
+                  ],
+                },
+              ],
+            },
+          },
+        })
+      ),
+      http.post(`${root}/duplicate-check`, () => HttpResponse.json({ data: matches })),
+      http.post(root, () => {
+        created += 1;
+        return HttpResponse.json({ data: { id: 'new-inquiry', applicantName: 'QA child', email } });
+      }),
+      http.post(`${root}/new-inquiry/communications`, () => {
+        communicationRequests += 1;
+        return HttpResponse.json({
+          data: {
+            campaignId: 'unexpected-campaign',
+            deliveryStarted: false,
+            message: 'Communication draft created, but delivery could not start.',
+          },
+        });
+      })
+    );
+    const { result } = renderHook(() => useAdmissionInquiryDialog(onClose), { wrapper });
+    await waitFor(() => expect(result.current.periods).toHaveLength(1));
+    await selectClass(result, 'class-a');
+    await waitFor(() => expect(result.current.canCreateInquiry).toBe(true));
+    await act(async () => {
+      await result.current.formik.setFieldValue(
+        'fields',
+        {
+          CHILD: 'QA child',
+          ADULT: 'QA parent',
+          PHONE: '9876543210',
+        },
+        false
+      );
+    });
+    await act(async () => {
+      await result.current.formik.submitForm();
+    });
+    await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
+    expect(created).toBe(1);
+    expect(result.current.matches).toEqual([]);
+    expect(communicationRequests).toBe(0);
+    expect(shikshaMitraToast.success).toHaveBeenCalledWith({ message: 'Inquiry created' });
+    expect(shikshaMitraToast.warning).not.toHaveBeenCalled();
+    expect(result.current.formik.values).not.toHaveProperty('sendAcknowledgement');
+  }
+);
 
 it.each(['guardian', 'father', 'mother'] as const)(
   'blocks blank %s mobile before either API and creates after it is corrected',
@@ -198,7 +310,7 @@ it.each(['guardian', 'father', 'mother'] as const)(
       await result.current.formik.setFieldValue('fields.PHONE', '9876543210', false);
     });
     await act(async () => {
-      await result.current.formik.submitForm();
+      await Promise.all([result.current.formik.submitForm(), result.current.formik.submitForm()]);
     });
     await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
     expect(duplicateChecks).toBe(1);
@@ -367,7 +479,7 @@ it('explains missing legacy identity mappings on submit without sending an empty
 });
 
 it.each([false, true])(
-  'retains a partial father phone and creates only with a verified saved parent: %s',
+  'does not replace a missing parent name from a matching family: %s',
   async (useSavedParent) => {
     const available = offering('class-a');
     const duplicate = vi.fn();
@@ -417,7 +529,14 @@ it.each([false, true])(
         duplicate(await request.json());
         return HttpResponse.json({
           data: useSavedParent
-            ? [{ familyId: 'saved-family', guardianPhone: parent.mobile, parents: [parent] }]
+            ? [
+                {
+                  familyId: 'saved-family',
+                  applicantId: 'saved-applicant',
+                  guardianPhone: parent.mobile,
+                  parents: [parent],
+                },
+              ]
             : [],
         });
       }),
@@ -448,18 +567,9 @@ it.each([false, true])(
     if (useSavedParent) {
       expect(shikshaMitraToast.error).not.toHaveBeenCalled();
       await act(async () => {
-        await result.current.useExistingFamily('saved-family', parent);
+        await result.current.useExistingFamily('saved-family', parent.sourceApplicantId);
       });
-      expect(create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          existingFamilyId: 'saved-family',
-          existingParentApplicantId: 'saved-applicant',
-          parentRelationship: 'father',
-          guardianFirstName: 'Amit',
-          guardianPhone: parent.mobile,
-        })
-      );
-      return;
+      expect(create).not.toHaveBeenCalled();
     }
     expect(shikshaMitraToast.error).toHaveBeenCalledWith({
       message:
@@ -504,6 +614,46 @@ it.each([
     expect(getInquiryOfferingUnavailableReason([offering('class-a', status)])).toMatch(reason);
   }
 );
+
+it.each(['Inquiry', 'Registration'])(
+  'shows the archived %s form and recovery from the fresh catalogue without enabling capture',
+  async (purpose) => {
+    const unavailableReason = `${purpose} Form 'QA ${purpose}' is archived. Restore it in Admission forms, or select another published form.`;
+    const blocked = {
+      ...offering('class-a', 0),
+      configurationStatus: 0 as const,
+      unavailableReason,
+    };
+    mswServer.use(
+      http.get(`${root}/capture-catalogue`, () => HttpResponse.json({ data: catalogue([blocked]) }))
+    );
+    const { result } = renderHook(() => useAdmissionInquiryDialog(vi.fn()), { wrapper });
+    await waitFor(() => expect(result.current.periods).toHaveLength(1));
+    await selectClass(result, 'class-a');
+    await waitFor(() => expect(result.current.noOfferingReason).toBe(unavailableReason));
+    expect(result.current.canCreateInquiry).toBe(false);
+    expect(result.current.offerings).toEqual([]);
+    expect(result.current.formik.values.offeringId).toBe('');
+    expect(result.current.formik.values.standardId).toBe('class-a');
+  }
+);
+
+it('keeps an inactive offering reason ahead of archived configuration and labels multiple choices', () => {
+  const inactive = {
+    ...offering('class-a', 4),
+    configurationStatus: 0 as const,
+    unavailableReason: 'This admission offering is inactive.',
+  };
+  const archived = {
+    ...offering('class-a', 0),
+    name: 'Second offering',
+    unavailableReason: "Inquiry Form 'QA Inquiry' is archived. Restore it in Admission forms.",
+  };
+  expect(getInquiryOfferingUnavailableReason([inactive, archived])).toBe(
+    `class-a: ${inactive.unavailableReason} Second offering: ${archived.unavailableReason}`
+  );
+  expect(getInquiryOfferingUnavailableReason([offering('class-a'), archived])).toBeUndefined();
+});
 
 it('keeps manual offering selection when more than one fresh offering is open', async () => {
   const alternatives = [offering('class-a'), { ...offering('class-a'), id: 'second-offering' }];
@@ -705,7 +855,7 @@ it('selects a newly opened offering after a fresh class check and preserves the 
   expect(result.current.canCreateInquiry).toBe(false);
 });
 
-it('creates a sibling only after review using the saved parent source and never a separate-family override', async () => {
+it('links a reviewed sibling family while preserving a different entered parent name and Mother relationship', async () => {
   const available = offering('class-a');
   const parent = {
     sourceApplicantId: 'saved-child',
@@ -764,10 +914,10 @@ it('creates a sibling only after review using the saved parent source and never 
     await result.current.formik.setValues(
       (values) => ({
         ...values,
-        parentRelationship: 'father',
+        parentRelationship: 'mother',
         fields: {
           CHILD: 'New child',
-          ADULT: 'Amit Shah',
+          ADULT: 'Pradeep',
           MOBILE: parent.mobile,
           EMAIL: parent.email,
         },
@@ -781,18 +931,52 @@ it('creates a sibling only after review using the saved parent source and never 
   await waitFor(() => expect(result.current.matches).toHaveLength(1));
   expect(submitted).toHaveLength(0);
   await act(async () => {
-    await result.current.useExistingFamily('saved-family', parent);
+    await result.current.useExistingFamily('saved-family', parent.sourceApplicantId);
   });
   await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
   expect(submitted).toHaveLength(1);
   expect(submitted[0]).toMatchObject({
     existingFamilyId: 'saved-family',
     existingParentApplicantId: 'saved-child',
-    parentRelationship: 'father',
+    familyLinkOnly: true,
+    parentRelationship: 'mother',
+    guardianFirstName: 'Pradeep',
     applicantName: 'New child',
     guardianPhone: parent.mobile,
     guardianEmail: parent.email,
     createSeparateFamily: false,
     duplicateOverrideReason: null,
   });
+  expect(result.current.formik.values.fields.ADULT).toBe('Pradeep');
+  expect(submitted[0].formValues).toEqual(
+    expect.arrayContaining([{ fieldCode: 'ADULT', valueJson: '"Pradeep"' }])
+  );
+});
+
+it('reports busy for the entire held Formik validation before any mutation starts', async () => {
+  mswServer.use(
+    http.get(`${root}/capture-catalogue`, () => HttpResponse.json({ data: catalogue() }))
+  );
+  type ValidatedValues = Awaited<ReturnType<typeof admissionInquirySchema.validate>>;
+  let release!: (value: ValidatedValues) => void;
+  const validate = vi.spyOn(admissionInquirySchema, 'validate').mockImplementationOnce(
+    () =>
+      new Promise<ValidatedValues>((resolve) => {
+        release = resolve;
+      })
+  );
+  const { result } = renderHook(() => useAdmissionInquiryDialog(vi.fn()), { wrapper });
+  let submitted!: Promise<unknown>;
+  await act(async () => {
+    submitted = result.current.formik.submitForm();
+  });
+  expect(validate).toHaveBeenCalled();
+  expect(result.current.formik.isSubmitting).toBe(true);
+  expect(result.current.busy).toBe(true);
+  await act(async () => {
+    release(admissionInquirySchema.cast(result.current.formik.values));
+    await submitted;
+  });
+  expect(result.current.busy).toBe(false);
+  validate.mockRestore();
 });

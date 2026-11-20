@@ -9,6 +9,7 @@ const testState = vi.hoisted(() => ({
     boards: [{ id: 'board-1', educationMediums: [{ id: 'medium-1' }] }],
   },
 }));
+const classQueryCalls = vi.hoisted(() => [] as any[]);
 
 vi.mock('react-redux', () => ({
   useSelector: (selector: (state: unknown) => unknown) =>
@@ -16,15 +17,18 @@ vi.mock('react-redux', () => ({
 }));
 
 vi.mock('src/redux/customQueryAndMutation', () => ({
-  default: () => ({
-    currentData: [{ id: 'class-1', divisions: [{ id: 'division-1' }] }],
-    isFetching: false,
-  }),
+  default: (args: any) => {
+    classQueryCalls.push(args);
+    return {
+      currentData: [{ id: 'class-1', divisions: [{ id: 'division-1' }] }],
+      isFetching: false,
+    };
+  },
 }));
 
 vi.mock('src/redux/class/classApi', () => ({ useGetClassByMediumQuery: vi.fn() }));
 vi.mock('src/redux/finance/financeWorkContextApi', () => ({
-  useGetFinanceWorkContextQuery: () => ({
+  useGetFinanceWorkContextQuery: vi.fn((_params, _options) => ({
     currentData: {
       academicYearId: testState.currentYear.id,
       scopeLabel: 'Class 1 A',
@@ -41,15 +45,27 @@ vi.mock('src/redux/finance/financeWorkContextApi', () => ({
     },
     isLoading: false,
     isError: false,
-  }),
+  })),
 }));
 
 describe('finance academic filters', () => {
   beforeEach(() => {
+    classQueryCalls.length = 0;
     testState.currentYear = {
       id: 'year-1',
       boards: [{ id: 'board-1', educationMediums: [{ id: 'medium-1' }] }],
     };
+  });
+
+  it('gates class and table queries during an academic-year transition with reused board IDs', () => {
+    const { rerender } = renderHook(() => useFinanceAcademicFilters());
+    classQueryCalls.length = 0;
+    testState.currentYear = {
+      id: 'year-2',
+      boards: [{ id: 'board-1', educationMediums: [{ id: 'medium-1' }] }],
+    };
+    rerender();
+    expect(classQueryCalls.some((call) => call.options?.skip === true)).toBe(true);
   });
 
   it('keeps class and division when the same academic year refreshes', () => {
@@ -71,6 +87,16 @@ describe('finance academic filters', () => {
       standardId: 'class-1',
       divisionId: 'division-1',
     });
+  });
+
+  it('skips the finance work context when a screen only needs academic selectors', async () => {
+    const { useGetFinanceWorkContextQuery } =
+      await import('src/redux/finance/financeWorkContextApi');
+    renderHook(() => useFinanceAcademicFilters({ includeWorkContext: false }));
+    expect(vi.mocked(useGetFinanceWorkContextQuery)).toHaveBeenCalledWith(
+      { academicYearId: 'year-1' },
+      { skip: true }
+    );
   });
 
   it('clears class and division when the academic year changes', () => {

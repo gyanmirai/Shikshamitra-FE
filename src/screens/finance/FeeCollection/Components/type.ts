@@ -181,7 +181,10 @@ export interface MonthWiseFeeItem {
   feeHeadId: string;
   feeHeadName: string;
   installmentLabel?: string;
+  paymentTermName?: string | null;
   dueDate?: string;
+  coverageStartDate?: string;
+  coverageEndDate?: string;
   total: number;
   scheduledTotal?: number;
   prorationPolicyVersionId?: string | null;

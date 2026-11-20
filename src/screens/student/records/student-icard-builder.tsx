@@ -5,6 +5,7 @@ import type {
   IdCard,
   IdCardTemplate,
 } from 'src/redux/student/records/student-record-documents-api';
+import type { IdentityCardPhotoEdit, IdentityCardPhotoRecord } from 'src/components/identity-card-designer/types';
 import type {
   StudentDirectoryItem,
   StudentDirectoryOption,
@@ -15,13 +16,14 @@ import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomStepper from 'src/components/custom-stepper';
-import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useRef, useMemo, useState, useEffect, useLayoutEffect } from 'react';
 import { getIdentityCardSheetLayout } from 'src/components/identity-card-designer';
-import { FormSectionHeader } from 'src/components/form-section-card/section-header';
+import { FormSectionCard, FormSectionHeader } from 'src/components/form-section-card';
+import { CardPhotoAction } from 'src/components/identity-card-designer/photo-editor/card-photo-action';
+import { useCardPhotoEdits } from 'src/components/identity-card-designer/photo-editor/use-card-photo-edits';
 import {
   useGetStudentRecordsDirectoryQuery,
   useGetStudentRecordsDirectoryOptionsQuery,
@@ -35,10 +37,8 @@ import {
   Checkbox,
   TextField,
   Typography,
-  ToggleButton,
   LinearProgress,
   InputAdornment,
-  ToggleButtonGroup,
 } from '@mui/material';
 import {
   downloadRecordPdf,
@@ -46,14 +46,16 @@ import {
   useExportRecordIdsMutation,
   useGetRecordIdTemplateQuery,
   usePreviewRecordIdsMutation,
+  useLazyGetRecordIdPhotoQuery,
   useSaveRecordIdTemplateMutation,
   useCreateRecordIdTemplateMutation,
   useUpdateRecordIdTemplateMutation,
 } from 'src/redux/student/records/student-record-documents-api';
 
+import { StudentCardPreview } from './components/student-card-preview';
 import { StudentICardDesigner } from './components/student-icard-designer';
 import { StudentICardSheetPreview } from './components/student-icard-sheet-preview';
-import { StudentConfiguredCardPreview } from './components/student-configured-card-preview';
+import { StudentICardTemplateStep } from './components/student-icard-template-step';
 import {
   getStudentICardLayout,
   applyStudentICardDesign,
@@ -63,51 +65,6 @@ import {
 } from './student-icard-design';
 
 const steps = ['Template', 'Designer', 'Students', 'Review', 'Export'];
-const presets = [
-  {
-    key: 'classic-identity', label: 'Classic Identity',
-    description: 'Configurable front and back with exact print dimensions.', color: '#007867',
-  },
-  {
-    key: 'formal-student',
-    label: 'Formal Student',
-    description: 'Classic school identity card.',
-    color: '#1D4ED8',
-  },
-  {
-    key: 'modern-student',
-    label: 'Modern Student',
-    description: 'Clean badge with a strong accent.',
-    color: '#0F766E',
-  },
-  {
-    key: 'vertical-badge',
-    label: 'Vertical Badge',
-    description: 'Portrait layout for holders.',
-    color: '#7C3AED',
-  },
-  {
-    key: 'visitor-style',
-    label: 'Visitor Style',
-    description: 'High contrast card with compact details.',
-    color: '#B45309',
-  },
-  { key: 'minimal', label: 'Minimal', description: 'Quiet, low ink layout.', color: '#334155' },
-  {
-    key: 'photo-first',
-    label: 'Photo First',
-    description: 'Prominent student photo.',
-    color: '#BE123C',
-  },
-] as const;
-const fieldChoices = [
-  { id: 'StudentName', name: 'Student name' },
-  { id: 'GRNumber', name: 'GR number' },
-  { id: 'Class', name: 'Class' },
-  { id: 'Division', name: 'Division' },
-  { id: 'AcademicYear', name: 'Academic year' },
-  { id: 'DateOfBirth', name: 'Date of birth' },
-] as const;
 const defaultTemplate: IdCardTemplate = {
   name: '',
   presetKey: 'formal-student',
@@ -214,6 +171,7 @@ export default function StudentICardBuilder({
   const [previewCards, previewState] = usePreviewRecordIdsMutation();
   const [exportCards, exportState] = useExportRecordIdsMutation();
   const [issueCards, issueState] = useIssueRecordIdsMutation();
+  const [loadRecordPhoto] = useLazyGetRecordIdPhotoQuery();
   const [template, setTemplate] = useState<IdCardTemplate | null>(() =>
     initialTemplate === undefined ? null : initialTemplate === null
       ? createStudentICardTemplate() : normalizeTemplate(initialTemplate)
@@ -223,6 +181,7 @@ export default function StudentICardBuilder({
   ));
   const [step, setStep] = useState(firstStep);
   const [completed, setCompleted] = useState<number[]>([]);
+  const isDesigner = step === 1;
   const [storedScope, setScope] = useState<Scope>(() =>
     initialAcademicScope
       ? {
@@ -281,6 +240,14 @@ export default function StudentICardBuilder({
   const [selectionChanged, setSelectionChanged] = useState(false);
   const [templateNameTouched, setTemplateNameTouched] = useState(false);
   const issueKey = useRef('');
+  const { photoEdits, onPhotoEdit } = useCardPhotoEdits(
+    JSON.stringify({ academicYearId, storedScope, contextInvalid, selectionRestricted }),
+    Object.keys(selected),
+    setError
+  );
+  const applyPhotoEdit = (edit: IdentityCardPhotoEdit) => {
+    onPhotoEdit(edit); issueKey.current = '';
+  };
   const latestContext = useRef({ invalid: contextInvalid, generation: 0 });
   useLayoutEffect(() => {
     latestContext.current = {
@@ -309,8 +276,8 @@ export default function StudentICardBuilder({
   }, [busy, onBusyChange]);
   const currentTemplateJson = JSON.stringify(template);
   useEffect(() => {
-    onDirtyChange?.(!directoryMode && (currentTemplateJson !== savedTemplateJson || selectionChanged));
-  }, [currentTemplateJson, directoryMode, onDirtyChange, savedTemplateJson, selectionChanged]);
+    onDirtyChange?.(photoEdits.length > 0 || (!directoryMode && (currentTemplateJson !== savedTemplateJson || selectionChanged)));
+  }, [currentTemplateJson, directoryMode, onDirtyChange, savedTemplateJson, selectionChanged, photoEdits.length]);
 
   useEffect(() => {
     if (initialTemplate === undefined && templateQuery.currentData && !template) {
@@ -442,6 +409,19 @@ export default function StudentICardBuilder({
   const selectedRows = Object.values(selected).filter((student): student is StudentDirectoryItem =>
     Boolean(student)
   );
+  const photoRecords: IdentityCardPhotoRecord[] = contextInvalid || selectionRestricted ? [] : selectedRows
+    .filter((student) => student.hasPhoto && !student.maskedFields.includes('Identity'))
+    .map((student) => ({
+      id: student.studentId, name: studentName(student),
+      values: {
+        ...previews.find((card) => card.studentId === student.studentId)?.studentSnapshot,
+        StudentName: studentName(student), GRNumber: student.grNumber,
+        Class: student.standardName, Division: student.divisionName,
+        schoolName: template?.schoolName, schoolAddress: template?.schoolAddress,
+        headerText: template?.headerText, footerText: template?.footerText,
+      },
+      load: () => loadRecordPhoto(student.studentId).unwrap(),
+    }));
   const isSelected = (studentId: string) =>
     Object.prototype.hasOwnProperty.call(selected, studentId);
   const missingPhotoCount = selectedRows.filter((row) => !row.hasPhoto).length;
@@ -652,7 +632,7 @@ export default function StudentICardBuilder({
         setStep((current) => Math.min(current, 2));
       }
       setError('');
-      shikshaMitraToast.success({ message: 'Student I-Card template saved.' });
+      shikshaMitraToast.success({ message: 'I-Card template saved.' });
       return saved;
     } catch (failure: unknown) {
       const problem = parseApiProblemDetail(failure);
@@ -750,13 +730,14 @@ export default function StudentICardBuilder({
     try {
       const pdf = await exportCards({
         studentIds: selectedIds,
+        ...(photoEdits.length ? { photoEdits } : {}),
         cardsPerPage: template.cardsPerPage,
         templateId: saved.id ?? undefined,
       }).unwrap();
       if (!isCurrentContext(generation)) return;
       if (!pdf.size || (pdf.type && !pdf.type.includes('pdf'))) throw new Error('Invalid PDF');
       downloadRecordPdf(pdf, `Student-I-Cards-${new Date().toISOString().slice(0, 10)}.pdf`);
-      shikshaMitraToast.success({ message: 'Student I-Card PDF downloaded.' });
+      shikshaMitraToast.success({ message: 'I-Card PDF downloaded.' });
     } catch (failure: unknown) {
       const problem = parseApiProblemDetail(failure);
       if (isCurrentContext(generation))
@@ -780,12 +761,13 @@ export default function StudentICardBuilder({
       issueKey.current ||= crypto.randomUUID();
       await issueCards({
         studentIds: selectedIds,
+        ...(photoEdits.length ? { photoEdits } : {}),
         idempotencyKey: issueKey.current,
         templateId: saved.id ?? undefined,
       }).unwrap();
       if (!isCurrentContext(generation)) return;
       shikshaMitraToast.success({
-        message: 'Student I-Cards issued. Select a student to view history.',
+        message: 'I-Cards issued. Select a student to view history.',
       });
       onClose();
     } catch {
@@ -802,10 +784,10 @@ export default function StudentICardBuilder({
         severity="error"
         action={<Button onClick={() => templateQuery.refetch()}>Retry</Button>}
       >
-        Student I-Card template could not be loaded.
+        I-Card template could not be loaded.
       </StudentFeedback>
     );
-  if (!template) return <LinearProgress aria-label="Loading student I-Card template" />;
+  if (!template) return <LinearProgress aria-label="Loading I-Card template" />;
 
   const columns: IColumn[] = [
     {
@@ -848,23 +830,14 @@ export default function StudentICardBuilder({
     },
   ];
 
-  return (
-    <Paper
-      sx={{
-        height: 1,
-        minHeight: 0,
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-        p: 2,
-        gap: 2,
-      }}
-    >
+  const stepHeader = (
+    <>
       <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
         <CustomStepper
           steps={visibleSteps}
           activeStep={step - firstStep}
-          ariaLabel="Student I-Card creation steps"
+          ariaLabel="I-Card creation steps"
+          density={isDesigner ? 'compact' : 'standard'}
           stepStates={visibleSteps.map((_, index) =>
             completed.includes(index + firstStep)
               ? 'completed'
@@ -881,6 +854,22 @@ export default function StudentICardBuilder({
       >
         Step {step - firstStep + 1} of {visibleSteps.length}: {steps[step]}
       </Typography>
+    </>
+  );
+
+  return (
+    <Paper
+      sx={{
+        height: 1,
+        minHeight: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        p: isDesigner ? 1 : 2,
+        gap: isDesigner ? 0.75 : 2,
+      }}
+    >
+      {stepHeader}
       {contextInvalid && (
         <Typography role="alert" variant="body2" color="warning.main">
           The academic year changed. Close this workspace and select students again.
@@ -903,98 +892,26 @@ export default function StudentICardBuilder({
           flex: 1,
           minHeight: 0,
           minWidth: 0,
-          overflowY: step === 1 ? 'hidden' : 'auto',
+          overflowY: isDesigner ? 'hidden' : 'auto',
           border: 0,
           m: 0,
           p: 0,
-          pr: 0.5,
+          pr: isDesigner ? 0 : 0.5,
         }}
       >
         <Grid container spacing={2} sx={{ height: step === 1 ? 1 : undefined, minHeight: 0 }}>
           <Grid size={{ xs: 12, md: step >= 1 ? 12 : 7 }} sx={{ minWidth: 0, height: step === 1 ? 1 : undefined, minHeight: 0 }}>
             {step === 0 && (
-              <Stack spacing={2}>
-                <Grid container spacing={1.25}>
-                  {presets.map((preset) => (
-                    <Grid key={preset.key} size={{ xs: 12, sm: 6 }}>
-                      <Paper
-                        component="button"
-                        type="button"
-                        variant="outlined"
-                        onClick={() =>
-                          patchTemplate(preset.key === 'classic-identity'
-                            ? { ...createStudentICardTemplate(), name: template.name,
-                                schoolName: template.schoolName, schoolAddress: template.schoolAddress,
-                                headerText: template.headerText, footerText: template.footerText,
-                                logo: template.logo }
-                            : { presetKey: preset.key, primaryColor: preset.color,
-                                orientation: preset.key === 'vertical-badge' ? 'Vertical' : 'Horizontal',
-                                schemaVersion: 1, layoutJson: null, printSettingsJson: null, backSideEnabled: false })
-                        }
-                        sx={{
-                          p: 1.5,
-                          width: 1,
-                          textAlign: 'left',
-                          cursor: 'pointer',
-                          borderColor:
-                            template.presetKey === preset.key ? 'primary.main' : 'divider',
-                          bgcolor:
-                            template.presetKey === preset.key
-                              ? 'action.selected'
-                              : 'background.paper',
-                        }}
-                      >
-                        <Stack direction="row" spacing={1.25} alignItems="center">
-                          <Box
-                            sx={{
-                              width: 34,
-                              height: 24,
-                              borderRadius: 0.75,
-                              bgcolor: preset.color,
-                              flexShrink: 0,
-                            }}
-                          />
-                          <Box>
-                            <Typography variant="subtitle2">{preset.label}</Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              {preset.description}
-                            </Typography>
-                          </Box>
-                        </Stack>
-                      </Paper>
-                    </Grid>
-                  ))}
-                </Grid>
-                <ShakingTextField error={templateNameError}><TextField
-                  size="small"
-                  required
-                  label="Template name"
-                  value={templateName}
-                  inputProps={{ maxLength: 150 }}
-                  onChange={(event) => patchTemplate({ name: event.target.value })}
-                  onBlur={() => setTemplateNameTouched(true)}
-                  error={templateNameError}
-                  helperText={
-                    templateNameError
-                      ? 'Template name is required.'
-                      : 'Name this design so you can find and reuse it.'
-                  }
-                /></ShakingTextField>
-                <ToggleButtonGroup
-                  exclusive
-                  size="small"
-                  value={template.orientation}
-                  disabled={template.schemaVersion === 2}
-                  onChange={(_event, value) => value && patchTemplate({ orientation: value })}
-                  aria-label="Card orientation"
-                >
-                  <ToggleButton value="Horizontal">Horizontal</ToggleButton>
-                  <ToggleButton value="Vertical">Vertical</ToggleButton>
-                </ToggleButtonGroup>
-              </Stack>
+              <StudentICardTemplateStep
+                template={template}
+                nameError={templateNameError}
+                onNameBlur={() => setTemplateNameTouched(true)}
+                onChange={patchTemplate}
+              />
             )}
             {step === 1 && (
               <StudentICardDesigner template={template} card={sample} disabled={busy}
+                photoRecords={photoRecords} photoEdits={photoEdits} onPhotoEdit={applyPhotoEdit}
                 onBusyChange={setIdentityUploading} onChange={patchTemplate} />
             )}
             {step === 2 && (
@@ -1232,6 +1149,12 @@ export default function StudentICardBuilder({
                     </Button>
                   </Stack>
                 </Stack>
+                <CardPhotoAction
+                  key={JSON.stringify({ academicYearId, storedScope })}
+                  record={photoRecords.find((record) => record.id === reviewStudent?.studentId)}
+                  onPhotoEdit={applyPhotoEdit}
+                  disabled={busy || contextInvalid}
+                />
                 <Box sx={{ p: { xs: 1.5, sm: 2 }, bgcolor: 'background.neutral', borderRadius: 2 }}>
                   <Box
                     sx={{
@@ -1240,7 +1163,8 @@ export default function StudentICardBuilder({
                       mx: 'auto',
                     }}
                   >
-                    <StudentCardPreview template={template} card={reviewCard} />
+                    <StudentCardPreview template={template} card={reviewCard}
+                      photoUrl={photoEdits.find((edit) => edit.recordId === reviewStudent?.studentId)?.imageData} />
                   </Box>
                 </Box>
                 <Typography variant="caption" color="text.secondary" textAlign="center">
@@ -1253,7 +1177,7 @@ export default function StudentICardBuilder({
                 <Grid size={{ xs: 12, md: 6 }}>
                   <Stack spacing={2} sx={{ minWidth: 0 }}>
                     <FormSectionHeader
-                      title="Export Student I-Cards"
+                      title="Export I-Cards"
                       icon={GlobalIcons.printer}
                       titleTypographyProps={{ fontWeight: 600 }}
                       descriptionTooltip="Download a printable PDF or issue numbered cards to student history. These are separate actions."
@@ -1335,6 +1259,7 @@ export default function StudentICardBuilder({
                       {configuredSheet ? 'PDF Print Preview' : 'A4 Print Preview'}
                     </Typography>
                     {configuredSheet ? <StudentICardSheetPreview template={template}
+                      photoUrls={sheetStudents.map((student) => photoEdits.find((edit) => edit.recordId === student.studentId)?.imageData)}
                       cards={sheetStudents.map((student) => previews.find((item) => item.studentId === student.studentId))} /> : <Box
                       sx={{
                         width: 1,
@@ -1367,6 +1292,7 @@ export default function StudentICardBuilder({
                           return student ? (
                             <StudentCardPreview
                               key={student.studentId}
+                              photoUrl={photoEdits.find((edit) => edit.recordId === student.studentId)?.imageData}
                               template={template}
                               card={card}
                             />
@@ -1427,14 +1353,24 @@ export default function StudentICardBuilder({
             )}
           </Grid>
           {step === 0 && (
-            <Grid size={{ xs: 12, md: 5 }}>
-              <Paper variant="outlined" sx={{ p: 1.5, position: 'sticky', top: 0 }}>
-                <Typography variant="subtitle2">Live Preview</Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Student card composition
-                </Typography>
-                <StudentCardPreview template={template} card={sample} />
-              </Paper>
+            <Grid size={{ xs: 12, md: 5 }} sx={{ minWidth: 0 }}>
+              <FormSectionCard title="Live Preview" aria-label="Live Preview">
+                <Stack
+                  spacing={1.5}
+                  alignItems="center"
+                  justifyContent="center"
+                  sx={{ p: { xs: 1.5, sm: 2 }, minHeight: { md: 316 }, bgcolor: 'background.neutral', borderRadius: 1 }}
+                >
+                  <Box sx={{ width: 1, maxWidth: template.orientation === 'Vertical' ? 205 : 420 }}>
+                    <StudentCardPreview template={template} card={sample} previewLegacyBack />
+                  </Box>
+                  {templateName.trim() && (
+                    <Typography variant="body2" fontWeight={600} textAlign="center" sx={{ overflowWrap: 'anywhere' }}>
+                      {templateName}
+                    </Typography>
+                  )}
+                </Stack>
+              </FormSectionCard>
             </Grid>
           )}
         </Grid>
@@ -1443,9 +1379,10 @@ export default function StudentICardBuilder({
         direction="row"
         justifyContent="space-between"
         spacing={1}
-        sx={{ pt: 1, borderTop: 1, borderColor: 'divider' }}
+        sx={{ flexShrink: 0, pt: isDesigner ? 0.5 : 1, borderTop: 1, borderColor: 'divider' }}
       >
         <Button
+          size={isDesigner ? 'small' : undefined}
           variant="outlined"
           disabled={busy}
           onClick={() => (step === firstStep ? onClose() : setStep((value) => value - 1))}
@@ -1454,12 +1391,13 @@ export default function StudentICardBuilder({
         </Button>
         <Stack direction="row" spacing={1}>
           {!directoryMode && (
-            <Button variant="outlined" disabled={busy || contextInvalid} onClick={save}>
+            <Button size={isDesigner ? 'small' : undefined} variant="outlined" disabled={busy || contextInvalid} onClick={save}>
               Save
             </Button>
           )}
           {step < 4 ? (
             <Button
+              size={isDesigner ? 'small' : undefined}
               variant="contained"
               disabled={busy || contextInvalid || (step === 2 && selectionRestricted)}
               onClick={advance}
@@ -1474,145 +1412,5 @@ export default function StudentICardBuilder({
         </Stack>
       </Stack>
     </Paper>
-  );
-}
-
-export function StudentCardPreview({
-  template,
-  card,
-  side,
-  interactive = true,
-}: {
-  template: IdCardTemplate;
-  card?: Pick<IdCard, 'studentSnapshot' | 'hasPhoto' | 'cardNumber'>;
-  side?: 'front' | 'back';
-  interactive?: boolean;
-}) {
-  const vertical = template.orientation === 'Vertical';
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [availableWidth, setAvailableWidth] = useState(0);
-  const cardWidth = vertical ? 260 : 420;
-  const cardHeight = vertical ? 420 : 260;
-  useEffect(() => {
-    const element = containerRef.current;
-    if (!element) return undefined;
-    const measure = () => setAvailableWidth(element.getBoundingClientRect().width);
-    measure();
-    if (typeof ResizeObserver === 'undefined') {
-      window.addEventListener('resize', measure);
-      return () => window.removeEventListener('resize', measure);
-    }
-    const observer = new ResizeObserver(measure);
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, []);
-  if (template.schemaVersion === 2) return <StudentConfiguredCardPreview
-    template={template} card={card} side={side} interactive={interactive} />;
-  return (
-    <Box
-      ref={containerRef}
-      role="img"
-      aria-label={
-        card?.studentSnapshot.StudentName
-          ? `I-card preview for ${card.studentSnapshot.StudentName}`
-          : 'I-card composition preview'
-      }
-      sx={{
-        width: 1,
-        minWidth: 0,
-        position: 'relative',
-        aspectRatio: `${cardWidth} / ${cardHeight}`,
-      }}
-    >
-      <Box
-        sx={{
-          position: 'absolute',
-          inset: 0,
-          width: cardWidth,
-          height: cardHeight,
-          transform: `scale(${availableWidth ? availableWidth / cardWidth : 0})`,
-          transformOrigin: 'top left',
-          bgcolor: template.backgroundColor,
-          color: 'text.primary',
-          border: '1px solid',
-          borderColor: template.primaryColor,
-          borderRadius: 1.5,
-          p: 2,
-          boxSizing: 'border-box',
-          boxShadow: 2,
-        }}
-      >
-        <Typography
-          variant="subtitle1"
-          noWrap
-          sx={{ color: template.primaryColor, fontWeight: 700 }}
-        >
-          {template.schoolName || 'School Name'}
-        </Typography>
-        {template.schoolAddress && (
-          <Typography variant="caption" noWrap display="block">
-            {template.schoolAddress}
-          </Typography>
-        )}
-        {template.presetKey !== 'minimal' && (
-          <Box
-            sx={{ borderTop: '2px solid', borderColor: template.primaryColor, mt: 0.5, mb: 1 }}
-          />
-        )}
-        <Typography variant="caption" fontWeight={700}>
-          {template.headerText}
-        </Typography>
-        <Stack direction={vertical ? 'column' : 'row'} spacing={1.5} sx={{ mt: 1 }}>
-          {template.showPhoto && (
-            <Box
-              sx={{
-                width: template.presetKey === 'photo-first' ? 108 : vertical ? 72 : 80,
-                height: template.presetKey === 'photo-first' ? 112 : vertical ? 84 : 96,
-                border: '1px solid',
-                borderColor: template.primaryColor,
-                borderRadius: template.presetKey === 'modern-student' ? '50%' : 1,
-                display: 'grid',
-                placeItems: 'center',
-                flexShrink: 0,
-              }}
-            >
-              <Typography variant="caption">{card?.hasPhoto ? 'PHOTO' : 'NO PHOTO'}</Typography>
-            </Box>
-          )}
-          <Stack spacing={0.25} minWidth={0}>
-            {template.fields.map((field) => (
-              <Typography key={field} variant="caption" noWrap>
-                <strong>{fieldChoices.find((item) => item.id === field)?.name ?? field}:</strong>{' '}
-                {card?.studentSnapshot[field] || '—'}
-              </Typography>
-            ))}
-            {card?.cardNumber && card.cardNumber !== 'Preview' && (
-              <Typography variant="caption">Card: {card.cardNumber}</Typography>
-            )}
-          </Stack>
-          {template.showQrCode && (
-            <Box
-              sx={{
-                width: 44,
-                height: 44,
-                border: '1px solid',
-                borderColor: 'divider',
-                bgcolor: 'background.paper',
-                display: 'grid',
-                placeItems: 'center',
-                flexShrink: 0,
-              }}
-            >
-              <Typography variant="caption" color="text.primary">
-                QR
-              </Typography>
-            </Box>
-          )}
-        </Stack>
-        <Typography variant="caption" sx={{ display: 'block', mt: 1.5, fontSize: 10 }}>
-          {template.footerText}
-        </Typography>
-      </Box>
-    </Box>
   );
 }

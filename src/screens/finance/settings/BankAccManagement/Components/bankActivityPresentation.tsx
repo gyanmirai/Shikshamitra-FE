@@ -5,8 +5,8 @@ import type {
 } from 'src/redux/finance/BankAccountManage/bankAccountActivityApi';
 
 import { GlobalIcons } from 'src/utils/icons';
-import { DetailField } from 'src/components/detail-view';
 import { FormSectionCard } from 'src/components/form-section-card';
+import { DetailField } from 'src/screens/finance/components/detail-view';
 
 export const sourceLabels: Record<BankActivitySource, string> = {
   income: 'Income',
@@ -41,16 +41,7 @@ export function ActivitySection({
   );
 }
 export function ActivityField({ label, value }: { label: string; value?: ReactNode }) {
-  return (
-    <DetailField
-      label={label}
-      value={value}
-      labelTypographyProps={{
-        color: 'text.secondary',
-        sx: { fontWeight: 'fontWeightRegular', textTransform: 'none', letterSpacing: 'normal' },
-      }}
-    />
-  );
+  return <DetailField label={label} value={value} />;
 }
 export function activityReturnUrl(bankAccountId: string) {
   const url = new URL(window.location.href);

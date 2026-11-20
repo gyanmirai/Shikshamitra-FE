@@ -1,6 +1,157 @@
-import { expect, test } from '@playwright/test';
+/* eslint-disable no-await-in-loop, no-restricted-syntax -- Browser interactions must run in sequence. */
+import { test, expect } from '@playwright/test';
 
 for (const width of [1440, 390]) {
+  test(`only collected late fees remain refundable after a waiver at ${width}px`, async ({
+    page,
+  }, testInfo) => {
+    await page.setViewportSize({ width, height: 950 });
+    await page.goto('/?waivedLateFee=1');
+    await page.getByRole('button', { name: 'Load test student' }).click();
+    await page.getByRole('radio', { name: 'Full refund', exact: true }).check();
+    const lateFees = page.getByRole('checkbox', {
+      name: 'Select refundable installments for Paid late fees',
+      exact: true,
+    });
+    await expect(lateFees).toBeVisible();
+    await lateFees.check();
+    const lateTable = page.getByRole('table', { name: 'Paid late fees table' });
+    await expect(lateTable).toBeVisible();
+    await expect(lateTable.getByRole('textbox', { name: /^Refund amount for/ })).toHaveValue(
+      '₹ 1,500'
+    );
+    await expect(
+      page.getByRole('checkbox', { name: 'Select refundable installments for Paid charges' })
+    ).not.toBeChecked();
+    await expect(
+      page.getByRole('checkbox', { name: 'Select refundable installments for Tuition' })
+    ).not.toBeChecked();
+    await page.screenshot({ path: testInfo.outputPath('paid-after-waiver.png'), fullPage: true });
+    await page
+      .getByRole('textbox', { name: /Refund reason/ })
+      .fill('Refund the settled late-fee payment after the remaining late fees were waived');
+    await page.getByRole('button', { name: 'Submit', exact: true }).click();
+    const confirmation = page.getByRole('dialog', { name: 'Submit and Approve Refund?' });
+    await expect(confirmation).toContainText('₹ 1,500');
+    await expect(confirmation).not.toContainText('9,500');
+    await confirmation.getByRole('button', { name: 'Submit and pay cash', exact: true }).click();
+    await expect(page.getByText('Synthetic cash refund completed.')).toBeVisible();
+    const payload = JSON.parse(await page.getByLabel('Submitted refund payload').innerText());
+    expect(payload.lines).toEqual([
+      {
+        lateFeeDueFeeId: 'late-fee-due',
+        sourceAllocationId: 'late-fee-allocation',
+        sourceReceiptId: 'receipt-paid-sources',
+        amount: 1500,
+      },
+    ]);
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)
+    ).toBe(true);
+  });
+
+  test(`paid sources keep payment accounts separate at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 950 });
+    await page.goto('/?paidSources=1&mixedPayers=1');
+    await page.getByRole('button', { name: 'Load test student' }).click();
+    await page.getByRole('radio', { name: 'Full refund', exact: true }).check();
+    const tuition = page.getByRole('checkbox', {
+      name: 'Select refundable installments for Tuition',
+      exact: true,
+    });
+    const charges = page.getByRole('checkbox', {
+      name: 'Select refundable installments for Paid charges',
+      exact: true,
+    });
+    const lateFees = page.getByRole('checkbox', {
+      name: 'Select refundable installments for Paid late fees',
+      exact: true,
+    });
+    await tuition.check();
+    await expect(charges).toBeDisabled();
+    await expect(lateFees).toBeDisabled();
+    await tuition.uncheck();
+    await charges.check();
+    await expect(tuition).toBeDisabled();
+    await expect(lateFees).toBeEnabled();
+    await lateFees.check();
+    await page
+      .getByRole('textbox', { name: /Refund reason/ })
+      .fill('Refund the account-linked paid charges and late fees');
+    await page.getByRole('button', { name: 'Submit', exact: true }).click();
+    const confirmation = page.getByRole('dialog', { name: 'Submit and Approve Refund?' });
+    await expect(confirmation).toContainText('₹ 750');
+    await confirmation.getByRole('button', { name: 'Submit and pay cash', exact: true }).click();
+    await expect(page.getByText('Synthetic cash refund completed.')).toBeVisible();
+    const payload = JSON.parse(await page.getByLabel('Submitted refund payload').innerText());
+    expect(payload.lines).toHaveLength(2);
+    expect(payload.lines.map((line: any) => line.sourceReceiptId).sort()).toEqual([
+      'receipt-account-charge',
+      'receipt-account-late',
+    ]);
+  });
+
+  test(`paid charges and late fees can be selected and submitted at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 950 });
+    await page.goto('/?paidSources=1');
+    await page.getByRole('button', { name: 'Load test student' }).click();
+    for (const [name, amount] of [
+      ['Tuition', '1000'],
+      ['Paid charges', '500'],
+      ['Paid late fees', '250'],
+    ]) {
+      await page
+        .getByRole('checkbox', { name: `Select refundable installments for ${name}` })
+        .check();
+      const amountField = page.getByRole('textbox', {
+        name: `Amount for selected installments in ${name}`,
+      });
+      await amountField.fill(amount);
+      const group = amountField.locator('xpath=ancestor::section[1]');
+      await group.getByRole('button', { name: 'Apply', exact: true }).click();
+      await expect(group.getByRole('textbox', { name: /^Refund amount for/ })).toHaveValue(
+        `₹ ${Number(amount).toLocaleString('en-IN')}`
+      );
+    }
+    await page
+      .getByRole('textbox', { name: /Refund reason/ })
+      .fill('Refund paid fees, charges and late fees');
+    await page.getByRole('button', { name: 'Submit', exact: true }).click();
+    const confirmation = page.getByRole('dialog', { name: 'Submit and Approve Refund?' });
+    await expect(confirmation).toContainText('₹ 1,750');
+    await confirmation.getByRole('button', { name: 'Submit and pay cash', exact: true }).click();
+    await expect(page.getByText('Synthetic cash refund completed.')).toBeVisible();
+    const payload = JSON.parse(await page.getByLabel('Submitted refund payload').innerText());
+    expect(payload.lines).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          dueFeeId: 'tuition-due',
+          sourceAllocationId: 'tuition-allocation',
+          amount: 1000,
+        }),
+        expect.objectContaining({
+          chargeId: 'paid-charge',
+          sourceAllocationId: 'charge-allocation',
+          amount: 500,
+        }),
+        expect.objectContaining({
+          lateFeeDueFeeId: 'late-fee-due',
+          sourceAllocationId: 'late-fee-allocation',
+          amount: 250,
+        }),
+      ])
+    );
+    expect(payload.lines).toHaveLength(3);
+    expect(
+      payload.lines.every((line: any) => line.sourceReceiptId === 'receipt-paid-sources')
+    ).toBe(true);
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)
+    ).toBe(true);
+  });
+
   test(`refund amounts preserve repeated Apply and gate confirmation at ${width}px`, async ({
     page,
   }) => {

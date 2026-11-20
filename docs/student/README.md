@@ -3,12 +3,14 @@ module: student
 domain: overview
 content_type: Landing
 status: canonical
-updated_on: 2026-11-04
+updated_on: 2026-11-16
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Understand Student frontend integration
+
+The Student setup guide at `/student/setup` reuses the Academic setup shell and nine existing settings managers. Its six stages cover Welcome, Admission Setup, Student Numbering, Records & Houses, Student Workflows and Review. Separate Attendance and Documents/I-Card setup stages are excluded. See [routes](routes.md#student-setup-guide), [workflow](workflows.md#student-setup-guide), [client](clients.md#student-setup-guide-client) and [checks](testing.md#student-setup-guide-checks).
 
 TL;DR: use this page as the entrypoint for Student routes, screens, clients, workflows, and frontend validation.
 Admission forms use versioned core-field ownership and source-owned Inquiry reuse; see [the builder workflow](./workflows.md#dynamic-form-builder), [client metadata](./clients.md#admission-form-list), and [core-field checks](./testing.md#admission-core-fields-and-academic-selectors).
@@ -102,7 +104,7 @@ Backend Admissions rules, contracts, permissions, errors, and data integrity rem
 
 ## House Management
 
-Student Records → House Management opens the medium-wise Houses, Students and Division Leaders workspace. See [routes](./routes.md#house-management), [client integration](./clients.md#house-management-client), [workflow](./workflows.md#house-management) and [checks](./testing.md#house-management-checks). Backend product rules and permissions remain owned by the [Student backend](../../../Shikshamitra-BE/docs/modules/student/product.md#house-management).
+Student Records → House Management opens the medium-wise Houses, Students and Assign Leaders workspace. See [routes](./routes.md#house-management), [client integration](./clients.md#house-management-client), [workflow](./workflows.md#house-management) and [checks](./testing.md#house-management-checks). Backend product rules and permissions remain owned by the [Student backend](../../../Shikshamitra-BE/docs/modules/student/product.md#house-management).
 
 ## Student dashboard
 

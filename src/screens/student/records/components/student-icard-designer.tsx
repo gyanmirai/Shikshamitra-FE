@@ -2,6 +2,7 @@ import type {
   IdCard,
   IdCardTemplate,
 } from 'src/redux/student/records/student-record-documents-api';
+import type { IdentityCardPhotoEdit, IdentityCardPhotoRecord } from 'src/components/identity-card-designer/types';
 
 import { Stack, Alert } from '@mui/material';
 import { IdentityCardDesigner } from 'src/components/identity-card-designer';
@@ -9,6 +10,7 @@ import { IdentityCardDesigner } from 'src/components/identity-card-designer';
 import { StudentICardBranding } from './student-icard-branding';
 import {
   STUDENT_ICARD_FIELDS,
+  STUDENT_ICARD_TOKENS,
   getStudentICardLayout,
   applyStudentICardDesign,
   getStudentICardPrintSettings,
@@ -20,12 +22,18 @@ export function StudentICardDesigner({
   onChange,
   disabled,
   onBusyChange,
+  photoRecords,
+  photoEdits,
+  onPhotoEdit,
 }: {
   template: IdCardTemplate;
   card?: Pick<IdCard, 'studentSnapshot' | 'hasPhoto' | 'cardNumber'>;
   onChange: (patch: Partial<IdCardTemplate>) => void;
   disabled?: boolean;
   onBusyChange?: (busy: boolean) => void;
+  photoRecords?: IdentityCardPhotoRecord[];
+  photoEdits?: IdentityCardPhotoEdit[];
+  onPhotoEdit?: (edit: IdentityCardPhotoEdit) => void;
 }) {
   const layout = getStudentICardLayout(template);
   const settings = getStudentICardPrintSettings(template);
@@ -39,6 +47,9 @@ export function StudentICardDesigner({
   };
   return (
     <IdentityCardDesigner
+      photoRecords={photoRecords}
+      photoEdits={photoEdits}
+      onPhotoEdit={onPhotoEdit}
       brandingContent={
         <Stack spacing={2}>
           {template.schemaVersion === 2 && !template.layoutJson && (
@@ -57,6 +68,8 @@ export function StudentICardDesigner({
       layout={layout}
       values={values}
       fields={STUDENT_ICARD_FIELDS}
+      fieldPickerLabel="Select Student Field"
+      fieldTokens={STUDENT_ICARD_TOKENS}
       logoHidden={template.logo?.mode === 2}
       printSettings={settings}
       disabled={disabled}

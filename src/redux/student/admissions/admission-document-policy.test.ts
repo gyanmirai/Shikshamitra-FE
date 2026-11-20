@@ -1,7 +1,10 @@
 import { it, expect, describe } from 'vitest';
 
 import { getAdmissionConditionError } from './admission-condition-rule';
-import { getDocumentConfigurationError } from './admission-document-policy-validation';
+import {
+  documentRequirementSchema,
+  getDocumentConfigurationError,
+} from './admission-document-policy-validation';
 import {
   DEFAULT_DOCUMENT_POLICY,
   createDocumentRequirement,
@@ -76,11 +79,9 @@ describe('document verification configuration compatibility', () => {
       )
     ).toContain('PDF');
   });
-  it('requires a valid condition only for conditional requirements', () => {
+  it('validates conditions on historical conditional requirements', () => {
     const conditional = { ...requirement, requirement: 'conditional' };
-    expect(getDocumentConfigurationError(json({ requirements: [conditional] }))).toContain(
-      'condition'
-    );
+    expect(() => documentRequirementSchema.validateSync(conditional)).toThrow('condition');
     const conditionJson = JSON.stringify({
       operator: 'ALL',
       conditions: [
@@ -88,9 +89,36 @@ describe('document verification configuration compatibility', () => {
         { field: 'application.PREVIOUS_GRADE', operator: 'GreaterThan', value: 1 },
       ],
     });
-    expect(
-      getDocumentConfigurationError(json({ requirements: [{ ...conditional, conditionJson }] }))
-    ).toBeUndefined();
+    expect(() =>
+      documentRequirementSchema.validateSync({ ...conditional, conditionJson })
+    ).not.toThrow();
+  });
+  it('preserves saved conditional requirements until an explicit required or optional replacement', () => {
+    const conditional = {
+      ...requirement,
+      requirement: 'conditional' as const,
+      conditionJson: '{"field":"application.TRANSFER","operator":"Equals","value":"yes"}',
+    };
+    const original = json({ requirements: [conditional] });
+    const current = readAdmissionDocumentPolicy(original)!;
+    expect(current.requirements).toEqual([conditional]);
+    expect(readAdmissionDocumentPolicy(writeAdmissionDocumentPolicy(original, current))).toEqual(
+      current
+    );
+    expect(getDocumentConfigurationError(original)).toBe(
+      'Document 1: Choose required or optional for this document.'
+    );
+    (['required', 'optional'] as const).forEach((replacement) => {
+      const next = writeAdmissionDocumentPolicy(original, {
+        ...current,
+        requirements: [{ ...conditional, requirement: replacement, conditionJson: undefined }],
+      });
+      expect(getDocumentConfigurationError(next)).toBeUndefined();
+      expect(readAdmissionDocumentPolicy(next)?.requirements).toEqual([
+        { ...requirement, requirement: replacement },
+      ]);
+    });
+    expect(current.requirements).toEqual([conditional]);
   });
   it('rejects circular document conditions and nonnumeric comparisons', () => {
     expect(

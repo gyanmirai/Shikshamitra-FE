@@ -4,18 +4,23 @@ import type { IData, IColumn } from 'src/components/customizabaleTable/types';
 
 import dayjs from 'dayjs';
 import { useMemo } from 'react';
+import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { formatNumber } from 'src/utils/formate_number';
 import { LoadingButton } from 'src/components/loading-button';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { FormSectionCard } from 'src/components/form-section-card';
-import { DetailField, DetailSection } from 'src/components/detail-view';
 import { Box, Stack, Button, Typography, DialogActions } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { DetailField, DetailSection } from 'src/screens/finance/components/detail-view';
 
 import { collectionPaymentDetails } from '../collectionPaymentDetails';
-import { allocatePayment, selectedChargesInOrder } from './paymentAllocationUtils';
+import {
+  allocatePayment,
+  selectedChargesInOrder,
+  summarizeFundedAllocations,
+} from './paymentAllocationUtils';
 
 import type { IFeeCharge, IStudentFee, FeeCollectionFormValues } from '../../Components/type';
 
@@ -30,7 +35,7 @@ export interface FeeCollectionPreviewDialogProps {
   student: IStudentFee | null;
   chargesData: IFeeCharge[];
   feeHeadMap: Record<string, string>;
-  preserveAllocationOrder?: boolean;
+  oneTimeFeeHeadIds?: ReadonlySet<string>;
   academicYear?: string;
   feeStructureName?: string;
   bankAccounts?: { id: string; name: string }[];
@@ -45,6 +50,7 @@ const FeeCollectionPreviewDialog = ({
   student,
   chargesData,
   feeHeadMap,
+  oneTimeFeeHeadIds,
   academicYear,
   feeStructureName,
   bankAccounts,
@@ -64,18 +70,7 @@ const FeeCollectionPreviewDialog = ({
       ),
     [formValues.selectedItems, formValues.charges, chargesData, feeHeadMap, paidAmount]
   );
-  // Retain collection order, including unfunded selections and additional charges.
-  const rows = allocatedRows.map((row) => ({
-    ...row,
-    id: `${row.type}:${row.key}`,
-    name: row.type === 'fee' ? row.feeHeadName : row.chargeName,
-    context:
-      row.type === 'fee'
-        ? [row.installmentLabel, row.period].filter(Boolean).join(' · ')
-        : row.sourceType === 'LateFee'
-          ? 'Late fee'
-          : 'Additional charge',
-  }));
+  const rows = summarizeFundedAllocations(allocatedRows, oneTimeFeeHeadIds);
   const columns: IColumn[] = [
     {
       id: 'name',
@@ -84,9 +79,12 @@ const FeeCollectionPreviewDialog = ({
       minWidth: 180,
       render: (value: string, row: IData) => (
         <Box sx={{ minWidth: 0, overflowWrap: 'anywhere' }}>
-          <Typography variant="body2">{value}</Typography>
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <Typography variant="body2">{value}</Typography>
+            {row.oneTime && <Label>One time</Label>}
+          </Stack>
           <Typography variant="caption" color="text.secondary">
-            {row.context}
+            {row.context ?? row.periods.join(' · ')}
           </Typography>
         </Box>
       ),
@@ -100,10 +98,10 @@ const FeeCollectionPreviewDialog = ({
       cellSx: { fontVariantNumeric: 'tabular-nums' },
     })),
   ].map((column) => ({ ...column, isSort: false, isFilter: false }));
-  const periods = [...new Set(formValues.selectedItems.map((item) => item.period).filter(Boolean))];
+  const periods = [...new Set(rows.flatMap((row) => row.periods))];
   const periodLabel =
     periods.length === 1
-      ? dayjs(`${periods[0]}-01`).format('MMMM YYYY')
+      ? periods[0]
       : periods.length > 1
         ? `${periods.length} months`
         : 'Selected Charges';
@@ -168,7 +166,7 @@ const FeeCollectionPreviewDialog = ({
             icon={GlobalIcons.receiptIcon}
             iconSize={16}
             iconContainerSize={28}
-            descriptionTooltip="Amounts allocated to selected fee installments and charges in collection order. Balance after shows the amount still due after this allocation."
+            descriptionTooltip="Each funded fee head appears once. Original and Balance after cover the installments and charges receiving money in this payment."
             titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
             sx={{ pt: { xs: 1, sm: 1 }, boxShadow: 'none' }}
             action={

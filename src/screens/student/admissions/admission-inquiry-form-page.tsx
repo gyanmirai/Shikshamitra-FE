@@ -13,6 +13,7 @@ import { LoadingButton } from 'src/components/loading-button';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
+import { skeletonReducedMotionSx } from 'src/theme/styles/skeleton';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { FormSectionCard, FormFieldSpacing } from 'src/components/form-section-card';
 import {
@@ -24,7 +25,6 @@ import {
   MenuItem,
   TextField,
   Typography,
-  LinearProgress,
 } from '@mui/material';
 
 import AdmissionRuntimeField from './admission-runtime-field';
@@ -72,7 +72,6 @@ export default function AdmissionInquiryFormPage() {
   const formRef = useRef<HTMLFormElement>(null);
   const lastFocusedSubmit = useRef(0);
   const lastPreferredClassToast = useRef('');
-  const [dismissedCapacityOfferingId, setDismissedCapacityOfferingId] = useState('');
   const [interestExpanded, setInterestExpanded] = useState(true);
   const guard = useAdmissionCloseGuard(formik.dirty, controller.busy, true, router.push);
   const handleCancel = () => guard.requestNavigation(() => router.push(returnUrl));
@@ -165,7 +164,6 @@ export default function AdmissionInquiryFormPage() {
           bgcolor: 'background.paper',
         }}
       >
-        {controller.offeringsLoading && <LinearProgress aria-label="Loading Admission Offerings" />}
         <FormFieldSpacing
           role="region"
           aria-label="Inquiry Form Fields"
@@ -220,6 +218,7 @@ export default function AdmissionInquiryFormPage() {
                 icon={GlobalIcons.admissionInterest}
                 expanded={interestExpanded}
                 onExpandedChange={setInterestExpanded}
+                loadingLabel={controller.academicLoading ? 'Loading Admission Interest' : undefined}
               >
                 <ShakingTextField
                   error={Boolean(formik.touched.admissionCycleId && formik.errors.admissionCycleId)}
@@ -338,7 +337,17 @@ export default function AdmissionInquiryFormPage() {
                   </TextField>
                 </ShakingTextField>
 
-                {hierarchySelected && (
+                {hierarchySelected && controller.offeringsLoading && (
+                  <Box
+                    role="status"
+                    aria-label="Loading Admission Offerings"
+                    aria-busy
+                    sx={{ ...skeletonReducedMotionSx, mb: 1.5 }}
+                  >
+                    <Skeleton variant="rounded" height={40} />
+                  </Box>
+                )}
+                {hierarchySelected && !controller.offeringsLoading && (
                   <ShakingTextField
                     error={Boolean(formik.touched.offeringId && formik.errors.offeringId)}
                   >
@@ -352,23 +361,19 @@ export default function AdmissionInquiryFormPage() {
                       value={formik.values.offeringId}
                       disabled={
                         controller.busy ||
-                        controller.offeringsLoading ||
                         controller.offeringsError ||
                         controller.offerings.length === 0
                       }
                       error={Boolean(formik.touched.offeringId && formik.errors.offeringId)}
                       helperText={
-                        controller.offeringsLoading
-                          ? 'Checking latest admission offerings…'
-                          : !controller.offeringsError && controller.offerings.length > 0
-                            ? formik.touched.offeringId && formik.errors.offeringId
-                            : undefined
+                        !controller.offeringsError && controller.offerings.length > 0
+                          ? formik.touched.offeringId && formik.errors.offeringId
+                          : undefined
                       }
                       onBlur={formik.handleBlur}
                       onChange={(event) => {
                         formik.setFieldValue('offeringId', event.target.value);
                         formik.setFieldValue('fields', {});
-                        setDismissedCapacityOfferingId('');
                       }}
                     >
                       {controller.offerings.map((offering) => (
@@ -437,35 +442,9 @@ export default function AdmissionInquiryFormPage() {
                         'Admission Is Not Open for the Selected Class.'}
                     </StudentFeedback>
                   )}
-                {controller.classCapacity &&
-                  formik.values.offeringId &&
-                  dismissedCapacityOfferingId !== formik.values.offeringId && (
-                    <StudentFeedback
-                      notificationKey="STU-0081"
-                      presentation={controller.classCapacity.isFull ? 'persistent' : 'inline'}
-                      severity={controller.classCapacity.isFull ? 'warning' : 'info'}
-                      onClose={() => setDismissedCapacityOfferingId(formik.values.offeringId)}
-                      sx={{
-                        gridColumn: '1 / -1',
-                        display: 'grid',
-                        gridTemplateColumns: 'minmax(0, 1fr) auto',
-                        alignItems: 'center',
-                        columnGap: 1,
-                        '& > :not(style) ~ :not(style)': { mt: 0 },
-                      }}
-                    >
-                      {controller.classCapacity.capacity == null
-                        ? 'Admission Room Capacity Is Not Set. Division Seats Are Checked During Onboarding. You Can Continue This Inquiry.'
-                        : `${controller.classCapacity.remainingSeats} of ${controller.classCapacity.capacity} admission room seats available.`}
-                      {controller.classCapacity.isFull &&
-                        (controller.canCreateInquiry
-                          ? ` ${controller.unavailableReason || 'The configured admission capacity rules allow this inquiry. Division allocation is checked during onboarding.'}`
-                          : ' Capacity Is Full and This Offering Does Not Accept Further Inquiries.')}
-                    </StudentFeedback>
-                  )}
               </InquiryFormSection>
 
-              {controller.runtimeLoading && (
+              {controller.runtimeLoading && !controller.offeringsLoading && (
                 <InquiryFormSection
                   title="Inquiry Form"
                   description="Loading fields for the selected offering."
@@ -579,13 +558,6 @@ export default function AdmissionInquiryFormPage() {
                 guardianEmail={controller.currentGuardianEmail}
                 busy={controller.busy}
                 onUseExisting={controller.useExistingFamily}
-                onOpenExisting={(inquiryId) => {
-                  const next = new URLSearchParams(searchParams.toString());
-                  next.set('inquiryId', inquiryId);
-                  guard.requestNavigation(() =>
-                    router.push(`${studentPaths.enrollment.inquiries}?${next.toString()}`)
-                  );
-                }}
               />
               {controller.requestError && (
                 <StudentFeedback notificationKey="STU-0083" presentation="inline" severity="error">
@@ -653,6 +625,7 @@ function InquiryFormSection({
   description,
   expanded,
   onExpandedChange,
+  loadingLabel,
   children,
 }: {
   title: string;
@@ -660,6 +633,7 @@ function InquiryFormSection({
   description?: string;
   expanded?: boolean;
   onExpandedChange?: (expanded: boolean) => void;
+  loadingLabel?: string;
   children: ReactNode;
 }) {
   return (
@@ -667,9 +641,9 @@ function InquiryFormSection({
       title={title}
       icon={icon}
       descriptionTooltip={description || `Enter the ${title.toLocaleLowerCase()} for this inquiry.`}
-      collapsible={Boolean(onExpandedChange)}
-      expanded={expanded}
-      onExpandedChange={onExpandedChange}
+      collapsible={!loadingLabel && Boolean(onExpandedChange)}
+      expanded={loadingLabel ? true : expanded}
+      onExpandedChange={loadingLabel ? undefined : onExpandedChange}
     >
       {description && (
         <Typography variant="body2" color="text.secondary">
@@ -677,6 +651,9 @@ function InquiryFormSection({
         </Typography>
       )}
       <Box
+        role={loadingLabel ? 'status' : undefined}
+        aria-label={loadingLabel}
+        aria-busy={loadingLabel ? true : undefined}
         sx={{
           display: 'grid',
           gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))' },
@@ -684,7 +661,16 @@ function InquiryFormSection({
           alignItems: 'start',
         }}
       >
-        {children}
+        {loadingLabel
+          ? Array.from({ length: 4 }, (_, index) => (
+              <Skeleton
+                key={index}
+                sx={{ ...skeletonReducedMotionSx, mb: 1.5 }}
+                variant="rounded"
+                height={40}
+              />
+            ))
+          : children}
       </Box>
     </FormSectionCard>
   );

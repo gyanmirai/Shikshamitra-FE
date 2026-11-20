@@ -1,4 +1,5 @@
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
+import { useStudentSetupFormState } from 'src/screens/student/setup/embedding';
 import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 
 export function useAdmissionDraftGuard({
@@ -14,6 +15,7 @@ export function useAdmissionDraftGuard({
   reset: () => void;
   push?: (href: string) => void;
 }) {
+  useStudentSetupFormState({ dirty: active && dirty, busy: active && busy });
   return useUnsavedNavigation(active && dirty, {
     push,
     blockNavigation: active && busy,

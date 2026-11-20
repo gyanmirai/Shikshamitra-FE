@@ -1,18 +1,21 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
+import type { RootState, AppDispatch } from 'src/redux/store';
 import type { IParams } from 'src/components/customizabaleTable/types';
 
-import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
+import { useDispatch, useSelector } from 'react-redux';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { studentPaths } from 'src/constants/student-menu';
 import { useRouter, useSearchParams } from 'next/navigation';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { useUrlFilterValue } from 'src/hooks/use-url-filter-value';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
+import { CustomDateRangePicker } from 'src/components/custom-date-range-picker';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Box, Stack, Button, DialogActions, LinearProgress } from '@mui/material';
 import { academicClassFilterInput } from 'src/utils/student-academic-filter-query';
+import { Box, Stack, Button, Skeleton, IconButton, DialogActions } from '@mui/material';
 import {
   type AdmissionInquiry,
   useGetAdmissionInquiryQuery,
@@ -23,8 +26,12 @@ import { getAdmissionInquiryAccess } from './inquiry-access';
 import { AdmissionQueryError } from './admission-query-error';
 import { formatAdmissionReference } from './admission-reference';
 import { InquiryTimeline } from './inquiry-management/inquiry-timeline';
+import { inquiryDateRange } from './inquiry-management/inquiry-date-range';
 import { useInquiryHandoff } from './inquiry-management/use-inquiry-handoff';
 import { InquiryFollowUpDialog } from './inquiry-management/inquiry-follow-up-dialog';
+import { loadInquiryOverviewForm } from './inquiry-management/inquiry-overview-loader';
+import { preloadInquiryWorkspace } from './inquiry-management/preload-inquiry-workspace';
+import { InquiryHandoffIssueDialog } from './inquiry-management/inquiry-handoff-issue-dialog';
 import { buildAdmissionInquiryColumns } from './inquiry-management/admission-inquiry-columns';
 import { buildAdmissionInquiryRowOptions } from './inquiry-management/admission-inquiry-list-options';
 import { AdmissionInquiryManagementPage } from './inquiry-management/admission-inquiry-management-page';
@@ -41,28 +48,48 @@ import {
 } from './inquiry-management/admission-inquiry-table-filters';
 
 export default function AdmissionInquiriesScreen() {
+  const dispatch = useDispatch<AppDispatch>();
   const academic = useAdmissionAcademicFilters();
   const previousYear = useRef(academic.academicYearId);
-  const yearChanging = previousYear.current !== academic.academicYearId;
+  const yearChanged = previousYear.current !== academic.academicYearId;
+  const yearChanging = Boolean(previousYear.current) && yearChanged;
   useEffect(() => {
-    if (!yearChanging) return;
+    if (!yearChanged) return;
     previousYear.current = academic.academicYearId;
+    // Initial session restoration must preserve a deep link's academic filters.
+    if (!yearChanging) return;
     setPage(0);
     academic.update('board', '');
-  }, [academic, yearChanging]);
+  }, [academic, yearChanged, yearChanging]);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [dateFrom, setDateFrom] = useUrlFilterValue(searchParams.get('dateFrom') ?? '');
+  const [dateTo, setDateTo] = useUrlFilterValue(searchParams.get('dateTo') ?? '');
+  const dates = useMemo(() => inquiryDateRange(dateFrom, dateTo), [dateFrom, dateTo]);
+  const dateUrlKey = `${searchParams.get('dateFrom') ?? ''}|${searchParams.get('dateTo') ?? ''}`;
+  const previousDateUrl = useRef(dateUrlKey);
+  const restoringDateUrl = previousDateUrl.current !== dateUrlKey;
   const linkedInquiryId = searchParams.get('inquiryId') ?? '';
   const [search, setSearch] = useState(() => searchParams.get('search') ?? '');
   const [tableFilters, setTableFilters] = useState<IParams['filters']>(() =>
     createInitialAdmissionInquiryTableFilters(searchParams)
   );
   const [page, setPage] = useState(0);
+  useEffect(() => {
+    if (restoringDateUrl) setPage(0);
+    previousDateUrl.current = dateUrlKey;
+  }, [dateUrlKey, restoringDateUrl]);
   const [rowsPerPage, setRowsPerPage] = useState(25);
   const [selectedInquiry, setSelectedInquiry] = useState<AdmissionInquiry | null>(null);
   const [followUpInquiry, setFollowUpInquiry] = useState<AdmissionInquiry | null>(null);
   const [historyInquiry, setHistoryInquiry] = useState<AdmissionInquiry | null>(null);
-  const [dismissedInquiryId, setDismissedInquiryId] = useState('');
+  const [pendingInquiryOrigin, setPendingInquiryOrigin] = useState<string | null>(null);
+  useEffect(() => {
+    if (pendingInquiryOrigin !== null && linkedInquiryId !== pendingInquiryOrigin) {
+      setSelectedInquiry(null);
+      setPendingInquiryOrigin(null);
+    }
+  }, [linkedInquiryId, pendingInquiryOrigin]);
   const [scopeLoading, setScopeLoading] = useState(true);
   const [sorts, setSorts] = useState<
     Array<{ column: string; direction: 'asc' | 'desc'; originalId?: string }>
@@ -71,11 +98,15 @@ export default function AdmissionInquiriesScreen() {
 
   useEffect(() => {
     const next = new URLSearchParams(searchParams.toString());
+    // Let URL-backed controls restore Back/Forward values before synchronizing filters.
+    if (restoringDateUrl) return;
     const setOrDelete = (key: string, value?: string) => {
       if (!value) next.delete(key);
       else next.set(key, value);
     };
     setOrDelete('search', search);
+    setOrDelete('dateFrom', dates ? dateFrom : undefined);
+    setOrDelete('dateTo', dates ? dateTo : undefined);
     Object.entries(ADMISSION_INQUIRY_FILTER_QUERY_PARAMS).forEach(([column, parameter]) => {
       const filter = tableFilters.find((item) => item.column === column);
       setOrDelete(parameter, filter ? String(filter.value) : undefined);
@@ -88,12 +119,12 @@ export default function AdmissionInquiriesScreen() {
       router.replace(
         query ? `${studentPaths.enrollment.inquiries}?${query}` : studentPaths.enrollment.inquiries
       );
-  }, [router, search, searchParams, tableFilters]);
+  }, [router, search, searchParams, tableFilters, dates, dateFrom, dateTo, restoringDateUrl]);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const currentUserId = useSelector(
     (state: RootState) => state.auth.user?.sub as string | undefined
   );
-  const { canManage } = getAdmissionInquiryAccess(permissions);
+  const { canView, canManage } = getAdmissionInquiryAccess(permissions);
   const dashboardFollowUps = searchParams.get('dashboard') === 'inquiry-followups';
   const listFilters = buildAdmissionInquiryListFilters(tableFilters, search, currentUserId, {
     excludePostApplication: !dashboardFollowUps,
@@ -112,6 +143,8 @@ export default function AdmissionInquiriesScreen() {
   } = useGetAdmissionInquiriesQuery(
     {
       ...listFilters,
+      creationTimeFrom: dates?.creationTimeFrom,
+      creationTimeBefore: dates?.creationTimeBefore,
       dashboardFollowUpsDue: searchParams.get('dashboard') === 'inquiry-followups' || undefined,
       divisionId: academic.dashboardScope ? searchParams.get('division') || undefined : undefined,
       isTransferred: dashboardFollowUps ? undefined : false,
@@ -125,9 +158,14 @@ export default function AdmissionInquiriesScreen() {
     },
     {
       skip: skipList,
+      refetchOnMountOrArgChange: true,
     }
   );
-  const { data: linkedInquiry } = useGetAdmissionInquiryQuery(linkedInquiryId, {
+  const {
+    currentData: linkedInquiry,
+    isError: linkedInquiryError,
+    refetch: refetchLinkedInquiry,
+  } = useGetAdmissionInquiryQuery(linkedInquiryId, {
     skip: !linkedInquiryId,
   });
   const rowOptions = useMemo(
@@ -136,13 +174,18 @@ export default function AdmissionInquiriesScreen() {
   );
   const openInquiry = useCallback(
     (inquiry: AdmissionInquiry) => {
-      setDismissedInquiryId('');
+      if (canView) {
+        preloadInquiryWorkspace(dispatch, inquiry.id);
+        loadInquiryOverviewForm().catch(() => undefined);
+      }
+      setPendingInquiryOrigin(linkedInquiryId);
       setSelectedInquiry(inquiry);
-      const next = new URLSearchParams(searchParams.toString());
-      next.set('inquiryId', inquiry.id);
-      router.push(`${studentPaths.enrollment.inquiries}?${next.toString()}`);
+      const next = new URL(window.location.href);
+      next.searchParams.set('inquiryId', inquiry.id);
+      // Selecting an Inquiry changes client state on this route, not its server content.
+      window.history.pushState(null, '', next);
     },
-    [router, searchParams]
+    [linkedInquiryId, canView, dispatch]
   );
 
   const columns = useMemo(() => {
@@ -171,28 +214,44 @@ export default function AdmissionInquiriesScreen() {
     openInquiry,
   ]);
   const activeInquiry =
-    selectedInquiry ??
-    (linkedInquiryId && linkedInquiryId !== dismissedInquiryId ? linkedInquiry : null) ??
-    null;
+    (pendingInquiryOrigin === linkedInquiryId ? selectedInquiry : null) ??
+    (linkedInquiry?.id === linkedInquiryId ? linkedInquiry : null);
   if (activeInquiry) {
     return (
       <AdmissionInquiryManagementPage
+        key={activeInquiry.id}
         inquiry={activeInquiry}
         onClose={() => {
-          setDismissedInquiryId(activeInquiry.id);
+          setPendingInquiryOrigin(null);
           setSelectedInquiry(null);
-          const next = new URLSearchParams(searchParams.toString());
-          next.delete('inquiryId');
-          const query = next.toString();
-          router.push(
-            query
-              ? `${studentPaths.enrollment.inquiries}?${query}`
-              : studentPaths.enrollment.inquiries
-          );
+          const next = new URL(window.location.href);
+          next.searchParams.delete('inquiryId');
+          window.history.pushState(null, '', next);
         }}
       />
     );
   }
+  if (linkedInquiryId)
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <CustomBreadcrumbs
+          heading="Edit Inquiry"
+          description="Review and update the selected inquiry."
+          links={[
+            { name: 'Inquiries', href: studentPaths.enrollment.inquiries },
+            { name: 'Edit Inquiry' },
+          ]}
+        />
+        {linkedInquiryError ? (
+          <AdmissionQueryError onRetry={() => refetchLinkedInquiry()} />
+        ) : (
+          <Stack aria-label="Loading Inquiry" aria-busy="true" spacing={2}>
+            <Skeleton variant="rounded" height={84} />
+            <Skeleton variant="rounded" height={280} />
+          </Stack>
+        )}
+      </Box>
+    );
   return (
     <Box
       sx={{
@@ -248,11 +307,75 @@ export default function AdmissionInquiriesScreen() {
         }
       />
       <AdmissionAcademicFilters
+        filterAction={
+          <Stack
+            direction="row"
+            alignItems="center"
+            spacing={1}
+            sx={{ width: { xs: 1, lg: 380 }, minWidth: 0 }}
+          >
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <CustomDateRangePicker
+                label="Inquiry dates"
+                value={dates?.value ?? [null, null]}
+                dateFormat="DD/MM/YYYY"
+                singleInput
+                slotProps={{ field: { size: 'small', fullWidth: true } }}
+                onChange={([from, to]) => {
+                  if (!from && !to) {
+                    setDateFrom('');
+                    setDateTo('');
+                    setPage(0);
+                    return;
+                  }
+                  if (!from?.isValid() || !to?.isValid() || from.isAfter(to, 'day')) return;
+                  setDateFrom(from.format('YYYY-MM-DD'));
+                  setDateTo(to.format('YYYY-MM-DD'));
+                  setPage(0);
+                }}
+              />
+            </Box>
+            {dates && (
+              <CustomTooltip title="Clear inquiry dates">
+                <IconButton
+                  size="small"
+                  aria-label="Clear inquiry dates"
+                  sx={{ minWidth: { xs: 44, sm: 30 }, minHeight: { xs: 44, sm: 30 } }}
+                  onClick={() => {
+                    setDateFrom('');
+                    setDateTo('');
+                    setPage(0);
+                  }}
+                >
+                  <Iconify icon="mdi:close" />
+                </IconButton>
+              </CustomTooltip>
+            )}
+            <CustomTooltip
+              title={academic.standardId ? 'Clear Class Selection' : 'All Classes Are Shown'}
+              describeChild
+            >
+              <Box component="span" sx={{ display: 'inline-flex', flexShrink: 0 }}>
+                <Button
+                  type="button"
+                  aria-label="Clear Academic Filters"
+                  size="small"
+                  variant="outlined"
+                  color="inherit"
+                  startIcon={<Iconify icon="mdi:filter-off-outline" width={18} />}
+                  disabled={!academic.standardId}
+                  onClick={academic.clear}
+                >
+                  Clear
+                </Button>
+              </Box>
+            </CustomTooltip>
+          </Stack>
+        }
         onLoadingChange={setScopeLoading}
         boardId={academic.boardId}
         mediumId={academic.mediumId}
         standardId={academic.standardId}
-        onClear={academic.clear}
         onChange={(key, value) => {
           setPage(0);
           academic.update(key, value);
@@ -275,7 +398,6 @@ export default function AdmissionInquiriesScreen() {
           flexDirection: 'column',
         }}
       >
-        {handoff.moving && <LinearProgress aria-label="Moving Inquiry to the Next Stage" />}
         <CustomizableTable
           tableId="admission-inquiries"
           tableTitle="Admission Inquiries"
@@ -283,9 +405,8 @@ export default function AdmissionInquiriesScreen() {
           tableContainerProps={{ sx: { height: 1 } }}
           columns={columns}
           data={skipList || scopeLoading ? [] : (data?.items ?? [])}
-          isRefreshing={
-            Boolean(data) && isFetching && !scopeLoading && !skipList && !handoff.moving
-          }
+          isRefreshing={Boolean(data) && isFetching && !scopeLoading && !skipList}
+          refreshIndicator="skeleton"
           errorContent={
             isError && !skipList && !scopeLoading && !data?.items.length ? (
               <AdmissionQueryError onRetry={() => refetch()} />
@@ -294,8 +415,7 @@ export default function AdmissionInquiriesScreen() {
           isLoading={
             yearChanging ||
             scopeLoading ||
-            (handoff.moving && !data?.items.length) ||
-            (!skipList && !isError && (isLoading || !data))
+            (!skipList && !isError && (isLoading || !data || (isFetching && !data.items.length)))
           }
           serverSidePagination
           serverSideSearch
@@ -365,6 +485,11 @@ export default function AdmissionInquiriesScreen() {
         />
       </Box>
       <InquiryFollowUpDialog inquiry={followUpInquiry} onClose={() => setFollowUpInquiry(null)} />
+      <InquiryHandoffIssueDialog
+        issue={handoff.issue}
+        access={handoff.formAccess}
+        onClose={handoff.dismissIssue}
+      />
       {historyInquiry && (
         <CustomDialog
           open

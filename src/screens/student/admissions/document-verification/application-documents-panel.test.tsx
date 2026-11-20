@@ -18,6 +18,58 @@ vi.hoisted(() => {
 vi.mock('src/routes/hooks', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 describe('applicant document checklist interactions', { timeout: 15000 }, () => {
   it.each([false, true])(
+    'uses server readiness and exposes blockers in table layout (ready: %s)',
+    async (ready) => {
+      const onComplete = vi.fn();
+      const onReadinessChange = vi.fn();
+      const blocker =
+        'Configure an eligible next-stage route before completing document verification.';
+      mswServer.use(
+        http.get(documentStagePath, () =>
+          HttpResponse.json({
+            ...documentSummary,
+            canComplete: ready,
+            blockers: ready ? [] : [blocker],
+            requirements: [
+              {
+                ...documentSummary.requirements[0],
+                status: 'accepted',
+                evidence: [{ ...documentEvidence, status: 'accepted' }],
+              },
+            ],
+          })
+        )
+      );
+      renderDocumentUi(
+        <ApplicationDocumentsPanel
+          applicationId="application-1"
+          stage={documentStage}
+          layout="table"
+          canAdvance
+          onComplete={onComplete}
+          onReadinessChange={onReadinessChange}
+        />
+      );
+      await screen.findByText('Accepted');
+      const button = screen.getByRole('button', { name: 'Continue Admission' });
+      if (ready) {
+        expect(button).toBeEnabled();
+        await userEvent.click(button);
+        expect(onComplete).toHaveBeenCalledOnce();
+      } else {
+        expect(button).toBeDisabled();
+        await userEvent.hover(screen.getByRole('button', { name: 'Document verification help' }));
+        expect(await screen.findByText(blocker)).toBeVisible();
+        expect(onComplete).not.toHaveBeenCalled();
+      }
+      await waitFor(() =>
+        expect(onReadinessChange).toHaveBeenLastCalledWith(
+          expect.objectContaining({ canComplete: ready, concurrencyStamp: 'application-stamp' })
+        )
+      );
+    }
+  );
+  it.each([false, true])(
     'keeps parent document requests inside the editable Documents owner (historical: %s)',
     async (historical) => {
       mswServer.use(

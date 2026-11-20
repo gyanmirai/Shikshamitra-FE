@@ -11,6 +11,7 @@ export const recordFieldLabel = (field: string) =>
     academicYearId: 'Academic year',
     academicMediumId: 'Medium',
     rollNumber: 'Roll number',
+    'gr-number': 'GR number',
     siblingStudentIds: 'Linked siblings',
     photoDraftId: 'Student photo',
   })[field] ?? field.replace(/([A-Z])/g, ' $1').replace(/^./, (value) => value.toUpperCase());

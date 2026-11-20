@@ -1,6 +1,5 @@
 'use client';
 
-import { financeNameSchema } from 'src/utils/finance-name';
 import type { RootState } from 'src/redux/store';
 import type { ProrationPolicySavePayload } from 'src/redux/finance/prorationPolicy';
 
@@ -10,6 +9,7 @@ import { useSelector } from 'react-redux';
 import { useRef, useMemo, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
+import { financeNameSchema } from 'src/utils/finance-name';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useGetActiveFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
 import {
@@ -343,12 +343,12 @@ export function useProrationPolicyForm({
     () => buildProrationValidationSchema(activeEdit),
     [activeEdit]
   );
-  const { data: existingPoliciesData } = useGetProrationPoliciesQuery(
+  const { currentData: existingPoliciesData } = useGetProrationPoliciesQuery(
     {
       academicYearId: resolvedAcademicYearId,
       status: 'Active',
       page: 1,
-      pageSize: 100,
+      pageSize: 1,
     },
     { skip: !open || !resolvedAcademicYearId }
   );

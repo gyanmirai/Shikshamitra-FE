@@ -221,6 +221,30 @@ it('requires a payment frequency for every head and has no admission collection 
   expect(state.mutate).not.toHaveBeenCalled();
 });
 
+it('keeps Policies pending when creating a structure and first opening that step', () => {
+  render(ui());
+  const policies = screen.getByRole('button', { name: /^Step 2: Policies$/i });
+  expect(policies).not.toHaveAttribute('aria-invalid', 'true');
+  fireEvent.click(policies);
+  expect(policies).toHaveAttribute('aria-current', 'step');
+  expect(policies).not.toHaveAttribute('aria-invalid', 'true');
+  expect(screen.getByRole('button', { name: 'Review & Continue' })).toBeDisabled();
+  expect(state.mutate).not.toHaveBeenCalled();
+});
+
+it('keeps missing policy setup guidance visible without marking the new Policies step invalid', () => {
+  state.lookups.catalogs.collection = { ...catalog, ready: true };
+  render(ui());
+  fireEvent.click(screen.getByRole('button', { name: /^Step 2: Policies$/i }));
+  expect(screen.getByText('Set up a collection policy first')).toBeVisible();
+  expect(screen.getByRole('button', { name: /^Step 2: Policies$/i })).not.toHaveAttribute(
+    'aria-invalid',
+    'true'
+  );
+  expect(screen.getByRole('button', { name: 'Review & Continue' })).toBeDisabled();
+  expect(state.mutate).not.toHaveBeenCalled();
+});
+
 it('blocks Next and direct Review when collection is missing while allowing incomplete draft saves', () => {
   render(ui());
   fireEvent.click(screen.getByRole('button', { name: /^Step 2: Policies$/i }));
@@ -231,6 +255,10 @@ it('blocks Next and direct Review when collection is missing while allowing inco
   expect(screen.getByRole('button', { name: /^Step 2: Policies$/i })).toHaveAttribute(
     'aria-current',
     'step'
+  );
+  expect(screen.getByRole('button', { name: /^Step 2: Policies$/i })).toHaveAttribute(
+    'aria-invalid',
+    'true'
   );
   expect(state.mutate).not.toHaveBeenCalled();
 });
@@ -387,6 +415,10 @@ it('keeps the current step and entered name when Save & next fails', async () =>
     'step'
   );
   expect(screen.queryByRole('combobox', { name: 'Collection Policy' })).toBeNull();
+  expect(screen.getByRole('button', { name: /^Step 2: Policies$/i })).not.toHaveAttribute(
+    'aria-invalid',
+    'true'
+  );
 });
 
 it('advances after a successful save and restores the canonical name when navigating back', async () => {
@@ -808,16 +840,52 @@ it('edits a retained payment-term pin and permits cached terms after refresh fai
   expect(screen.getByText('Monthly')).toBeTruthy();
 });
 
+it('explains both fee options without changing their switch values', async () => {
+  render(ui());
+  await addHead();
+  const options = within(screen.getByRole('group', { name: 'Fee options' }));
+
+  const variableHelp = options.getByRole('button', { name: 'Variable amount information' });
+  fireEvent.mouseOver(variableHelp);
+  expect(
+    await screen.findByText('Enter the amount when assigning the fee structure to a student.')
+  ).toBeVisible();
+  fireEvent.click(variableHelp);
+  expect(options.getByRole('switch', { name: 'Variable amount' })).not.toBeChecked();
+  fireEvent.mouseOut(variableHelp);
+
+  const optionalHelp = options.getByRole('button', { name: 'Optional fee information' });
+  fireEvent.mouseOver(optionalHelp);
+  expect(
+    await screen.findByText('The fee is charged only if selected during student assignment.')
+  ).toBeVisible();
+  fireEvent.click(optionalHelp);
+  expect(options.getByRole('switch', { name: 'Optional fee' })).not.toBeChecked();
+});
+
 it('saves variable pricing with null amount while retaining frequency and optionality', async () => {
   render(ui());
   fireEvent.change(screen.getByRole('textbox', { name: /Structure name/i }), {
     target: { value: 'Variable fees' },
   });
   await addHead();
-  fireEvent.click(screen.getByRole('checkbox', { name: 'Optional fee head' }));
-  fireEvent.click(screen.getByRole('switch', { name: 'Set amount during student assignment' }));
+  const options = screen.getByRole('group', { name: 'Fee options' });
+  const optionalFee = within(options).getByRole('switch', { name: 'Optional fee' });
+  const variableAmount = within(options).getByRole('switch', { name: 'Variable amount' });
+  expect(optionalFee).not.toBeChecked();
+  expect(variableAmount).not.toBeChecked();
+  fireEvent.click(optionalFee);
+  expect(screen.getByRole('textbox', { name: /Annual amount/ })).toBeVisible();
+  fireEvent.click(variableAmount);
+  expect(screen.queryByRole('textbox', { name: /Annual amount/ })).not.toBeInTheDocument();
+  expect(optionalFee).toBeChecked();
   fireEvent.click(screen.getByRole('button', { name: 'Save' }));
   await screen.findByRole('button', { name: 'Edit Tuition' });
+  expect(screen.getByRole('columnheader', { name: 'Required' })).toBeVisible();
+  expect(screen.getByRole('columnheader', { name: 'Amount type' })).toBeVisible();
+  expect(screen.getByText('Optional', { exact: true })).toBeVisible();
+  expect(screen.getByText('Variable', { exact: true })).toBeVisible();
+  expect(screen.getByText('Set during assignment', { exact: true })).toBeVisible();
   state.mutate.mockReturnValue({
     unwrap: () => Promise.resolve({ id: 'saved', name: 'Variable fees', status: 1, feeHeads: [] }),
   });
@@ -838,8 +906,9 @@ it('requires a new fixed price after switching variable pricing off', async () =
   fireEvent.change(screen.getByRole('textbox', { name: /Annual amount/ }), {
     target: { value: '999' },
   });
-  fireEvent.click(screen.getByRole('switch', { name: 'Set amount during student assignment' }));
-  fireEvent.click(screen.getByRole('switch', { name: 'Set amount during student assignment' }));
+  const variableAmount = screen.getByRole('switch', { name: 'Variable amount' });
+  fireEvent.click(variableAmount);
+  fireEvent.click(variableAmount);
   expect(screen.getByRole('textbox', { name: /Annual amount/ })).toHaveValue('');
   fireEvent.click(screen.getByRole('button', { name: 'Save' }));
   expect(await screen.findByText('Enter the total fee for this Fee Head.')).toBeTruthy();
@@ -1054,6 +1123,8 @@ it('keeps published policy and payment-term names from the saved snapshot after 
   fireEvent.click(screen.getByRole('button', { name: 'Back' }));
   expect(screen.queryByRole('button', { name: 'View Fee Head' })).toBeNull();
   expect(screen.getByText('Original monthly')).toBeTruthy();
+  expect(screen.getByText('Required', { exact: true })).toBeVisible();
+  expect(screen.getByText('Static', { exact: true })).toBeVisible();
   expect(screen.queryByRole('combobox', { name: /Payment term/ })).toBeNull();
   expect(screen.queryByText('Renamed monthly')).toBeNull();
 });

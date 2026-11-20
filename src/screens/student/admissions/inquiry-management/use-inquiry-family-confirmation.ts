@@ -16,9 +16,7 @@ import {
 
 import { buildInquiryFamilyReviews } from '../admission-inquiry-parent-review-model';
 import {
-  inquiryFamilyParentKey,
   inquiryFamilyCandidates,
-  inquiryFamilyCandidateKey,
   inquiryFamilyConfirmationReason,
 } from './inquiry-family-confirmation-model';
 
@@ -72,35 +70,14 @@ export function useInquiryFamilyConfirmation(props: InquiryFamilyConfirmationPro
     snapshot && (snapshot.id !== target.id || snapshot.stamp !== target.concurrencyStamp)
   );
   const formik = useFormik({
-    initialValues: { source: '', parent: '', relationship: '' },
+    initialValues: { family: '' },
     validationSchema: Yup.object({
-      source: Yup.string()
-        .oneOf(candidates.map(inquiryFamilyCandidateKey), 'Select an available existing child.')
-        .required('Select an existing child.'),
-      parent: Yup.string()
-        .test('available-parent', 'Select an available saved parent.', (value, context) => {
-          const source = candidates.find(
-            (match) => inquiryFamilyCandidateKey(match) === context.parent.source
-          );
-          return (
-            !value ||
-            Boolean(source?.parents.some((parent) => inquiryFamilyParentKey(parent) === value))
-          );
-        })
-        .required('Select a saved parent.'),
-      relationship: Yup.string().when(['source', 'parent'], {
-        is: (sourceKey: string, parentKey: string) =>
-          candidates
-            .find((candidate) => inquiryFamilyCandidateKey(candidate) === sourceKey)
-            ?.parents.some(
-              (parent) =>
-                inquiryFamilyParentKey(parent) === parentKey && parent.relationship == null
-            ),
-        then: (schema) =>
-          schema
-            .oneOf(['father', 'mother'], 'Select Father or Mother.')
-            .required('Select Father or Mother.'),
-      }),
+      family: Yup.string()
+        .oneOf(
+          candidates.map((match) => match.familyId),
+          'Select an available family.'
+        )
+        .required('Select a family.'),
     }),
     onSubmit: async (values) => {
       const { current } = latest;
@@ -121,14 +98,8 @@ export function useInquiryFamilyConfirmation(props: InquiryFamilyConfirmationPro
         )
       )
         return;
-      const source = candidates.find(
-        (candidate) => inquiryFamilyCandidateKey(candidate) === values.source
-      );
-      const parent = source?.parents.find(
-        (candidate) => inquiryFamilyParentKey(candidate) === values.parent
-      );
-      const relationship = parent?.relationship ?? values.relationship;
-      if (!source || !parent || !['father', 'mother'].includes(relationship)) return;
+      const source = candidates.find((candidate) => candidate.familyId === values.family);
+      if (!source?.applicantId) return;
       const activeGeneration = generation.current;
       savingRef.current = true;
       setSaving(true);
@@ -138,8 +109,8 @@ export function useInquiryFamilyConfirmation(props: InquiryFamilyConfirmationPro
           id: current.inquiry.id,
           body: {
             existingFamilyId: source.familyId,
-            existingParentApplicantId: parent.sourceApplicantId,
-            parentRelationship: relationship as 'father' | 'mother',
+            existingParentApplicantId: source.applicantId,
+            familyLinkOnly: true,
             concurrencyStamp: snapshot.stamp,
           },
         }).unwrap();
@@ -229,15 +200,11 @@ export function useInquiryFamilyConfirmation(props: InquiryFamilyConfirmationPro
         const nextCandidates = inquiryFamilyCandidates(lookupTarget, matches);
         setCandidates(nextCandidates);
         setReviewInput(duplicateInput);
-        const options = buildInquiryFamilyReviews(nextCandidates).flatMap(
-          (family) => family.parents
-        );
-        const onlyParent = options.length === 1 ? options[0] : undefined;
+        const families = buildInquiryFamilyReviews(nextCandidates);
+        const onlyFamily = families.length === 1 ? families[0] : undefined;
         formik.resetForm({
           values: {
-            source: onlyParent ? inquiryFamilyCandidateKey(onlyParent.match) : '',
-            parent: onlyParent ? inquiryFamilyParentKey(onlyParent.parent) : '',
-            relationship: '',
+            family: onlyFamily?.familyId ?? '',
           },
         });
         setNeedsTargetRefresh(false);
@@ -283,12 +250,8 @@ export function useInquiryFamilyConfirmation(props: InquiryFamilyConfirmationPro
       latest.current.onBusyChange(false);
     };
   }, []);
-  const selectedSource = candidates.find(
-    (candidate) => inquiryFamilyCandidateKey(candidate) === formik.values.source
-  );
-  const selectedParent = selectedSource?.parents.find(
-    (parent) => inquiryFamilyParentKey(parent) === formik.values.parent
-  );
+  const families = buildInquiryFamilyReviews(candidates);
+  const selectedFamily = families.find((family) => family.familyId === formik.values.family);
   return {
     open,
     load,
@@ -308,7 +271,7 @@ export function useInquiryFamilyConfirmation(props: InquiryFamilyConfirmationPro
     needsTargetRefresh,
     requestError,
     formik,
-    selectedSource,
-    selectedParent,
+    families,
+    selectedFamily,
   };
 }

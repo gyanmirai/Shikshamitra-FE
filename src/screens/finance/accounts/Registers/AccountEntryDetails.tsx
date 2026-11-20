@@ -8,9 +8,9 @@ import { fDate, fDateTime } from 'src/utils/format-time';
 import CustomizableTable from 'src/components/customizabaleTable';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { Box, Stack, Alert, Button, Skeleton, DialogActions } from '@mui/material';
-import { DetailGrid, DetailField, DetailSection } from 'src/components/detail-view';
 import { PaymentMethod, PaymentMethodLabels } from 'src/enums/finance-payment-method';
 import { useGetAccountsActivityDetailQuery } from 'src/redux/finance/accountsActivityApi';
+import { DetailGrid, DetailField, DetailSection } from 'src/screens/finance/components/detail-view';
 
 function methodLabel(method?: string) {
   if (!method) return undefined;
@@ -104,7 +104,7 @@ export default function AccountEntryDetails({
             {data.studentId && (
               <DetailSection icon="mdi:account-school-outline" title="Student details">
                 <DetailGrid>
-                  <DetailField label="Student" value={data.studentName} />
+                  <DetailField label="Student name" value={data.studentName} />
                   <DetailField label="GR / admission number" value={data.grNumber} />
                   <DetailField
                     label="Class / division"

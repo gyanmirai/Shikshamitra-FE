@@ -6,7 +6,13 @@ import { vi, it, expect, beforeEach } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { screen, within, fireEvent, render as renderComponent } from '@testing-library/react';
+import {
+  screen,
+  within,
+  waitFor,
+  fireEvent,
+  render as renderComponent,
+} from '@testing-library/react';
 
 import StudentDirectoryTable from './student-directory-table';
 
@@ -104,7 +110,7 @@ function render() {
   );
 }
 
-it('shows three direct shortcuts and keeps concise print/status actions in the contextual menu', () => {
+it('shows two direct actions and retains certificate, print and status actions in overflow', async () => {
   render();
   const group = screen.getByRole('region', { name: 'Student actions' });
   expect(
@@ -114,43 +120,106 @@ it('shows three direct shortcuts and keeps concise print/status actions in the c
   ).toEqual([
     'Edit Details for Riya Shah',
     'Attendance History for Riya Shah',
-    'Generate Certificate for Riya Shah',
     'More actions for Riya Shah',
   ]);
-  fireEvent.click(screen.getByRole('button', { name: 'Generate Certificate for Riya Shah' }));
-  expect(props.onDocumentAction).toHaveBeenCalledWith('certificate', [
-    expect.objectContaining(student),
-  ]);
-  expect(props.onProfileOpen).not.toHaveBeenCalled();
+  expect(screen.getByRole('link', { name: 'Edit Details for Riya Shah' })).toHaveAttribute(
+    'href',
+    '/student/profile?student=student-1&edit=details'
+  );
+  expect(screen.getByRole('link', { name: 'Attendance History for Riya Shah' })).toHaveAttribute(
+    'href',
+    '/student/profile?student=student-1&view=attendance'
+  );
   fireEvent.click(screen.getByRole('button', { name: 'More actions for Riya Shah' }));
   const menu = screen.getByRole('menu', { name: 'More actions for Riya Shah' });
   expect(
     within(menu)
       .getAllByRole('menuitem')
       .map((action) => action.textContent)
-  ).toEqual(['Print I-card', 'Change Status']);
+  ).toEqual(['Generate Certificate', 'Print I-Card', 'Change Status']);
+  expect(within(menu).getByTestId('menu-action-certificate')).toHaveAccessibleName(
+    'Generate Certificate for Riya Shah'
+  );
   expect(within(menu).getByRole('menuitem', { name: 'Change Status' })).toHaveAttribute(
     'href',
     '/student/records/changes?student=student-1&section=status'
   );
-  fireEvent.click(within(menu).getByRole('menuitem', { name: 'Print I-card' }));
-  expect(props.onDocumentAction).toHaveBeenLastCalledWith('id-card', [
+  fireEvent.click(
+    within(menu).getByRole('menuitem', { name: 'Generate Certificate for Riya Shah' })
+  );
+  expect(props.onDocumentAction).toHaveBeenNthCalledWith(1, 'certificate', [
     expect.objectContaining(student),
   ]);
+  await waitFor(() => expect(screen.queryByRole('menu')).not.toBeInTheDocument());
+  fireEvent.click(screen.getByRole('button', { name: 'More actions for Riya Shah' }));
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Print I-Card' }));
+  expect(props.onDocumentAction).toHaveBeenNthCalledWith(2, 'id-card', [
+    expect.objectContaining(student),
+  ]);
+  expect(props.onDocumentAction).toHaveBeenCalledTimes(2);
+  expect(props.onProfileOpen).not.toHaveBeenCalled();
 });
 
 it.each([
-  [false, false, false],
-  [true, false, false],
-  [false, true, false],
-  [false, false, true],
-  [true, true, false],
-  [true, false, true],
-  [false, true, true],
-  [true, true, true],
+  {
+    edit: false,
+    attendance: false,
+    certificate: false,
+    direct: ['print-id', 'change-status'],
+    overflow: [],
+  },
+  {
+    edit: true,
+    attendance: false,
+    certificate: false,
+    direct: ['edit-details', 'print-id'],
+    overflow: ['change-status'],
+  },
+  {
+    edit: false,
+    attendance: true,
+    certificate: false,
+    direct: ['attendance-history', 'print-id'],
+    overflow: ['change-status'],
+  },
+  {
+    edit: false,
+    attendance: false,
+    certificate: true,
+    direct: ['certificate', 'print-id'],
+    overflow: ['change-status'],
+  },
+  {
+    edit: true,
+    attendance: true,
+    certificate: false,
+    direct: ['edit-details', 'attendance-history'],
+    overflow: ['print-id', 'change-status'],
+  },
+  {
+    edit: true,
+    attendance: false,
+    certificate: true,
+    direct: ['edit-details', 'certificate'],
+    overflow: ['print-id', 'change-status'],
+  },
+  {
+    edit: false,
+    attendance: true,
+    certificate: true,
+    direct: ['attendance-history', 'certificate'],
+    overflow: ['print-id', 'change-status'],
+  },
+  {
+    edit: true,
+    attendance: true,
+    certificate: true,
+    direct: ['edit-details', 'attendance-history'],
+    overflow: ['certificate', 'print-id', 'change-status'],
+  },
 ])(
-  'keeps overflow fixed with edit=%s, attendance=%s, certificate=%s',
-  (edit, attendance, certificate) => {
+  'preserves action order with edit=$edit, attendance=$attendance, certificate=$certificate',
+  ({ edit, attendance, certificate, direct, overflow }) => {
     const actions = props.rowActions!(student);
     props.rowActions = () =>
       actions.filter(
@@ -160,16 +229,46 @@ it.each([
       );
     props.canGenerateCertificates = certificate;
     render();
-    expect(screen.queryByTestId('table-action-edit-details') !== null).toBe(edit);
-    expect(screen.queryByTestId('table-action-attendance-history') !== null).toBe(attendance);
-    expect(screen.queryByTestId('table-action-certificate') !== null).toBe(certificate);
-    expect(screen.queryByTestId('table-action-print-id')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('table-action-change-status')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'More actions for Riya Shah' }));
-    expect(screen.getByTestId('menu-action-print-id')).toHaveTextContent('Print I-card');
-    expect(screen.getByTestId('menu-action-change-status')).toHaveTextContent('Change Status');
+    const group = screen.getByRole('region', { name: 'Student actions' });
+    expect(
+      Array.from(group.querySelectorAll('[data-testid^="table-action-"]')).map((action) =>
+        action.getAttribute('data-testid')
+      )
+    ).toEqual([
+      ...direct.map((id) => `table-action-${id}`),
+      ...(overflow.length ? ['table-action-more'] : []),
+    ]);
+    if (overflow.length) {
+      fireEvent.click(screen.getByRole('button', { name: 'More actions for Riya Shah' }));
+      expect(
+        screen.getAllByRole('menuitem').map((action) => action.getAttribute('data-testid'))
+      ).toEqual(overflow.map((id) => `menu-action-${id}`));
+    } else {
+      expect(screen.queryByTestId('table-action-more')).not.toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Change Status' })).toHaveAttribute(
+        'href',
+        '/student/records/changes?student=student-1&section=status'
+      );
+    }
+    ['edit-details', 'attendance-history', 'certificate', 'print-id', 'change-status'].forEach(
+      (id) => {
+        expect(screen.queryByTestId(`table-action-${id}`) !== null).toBe(direct.includes(id));
+        expect(screen.queryByTestId(`menu-action-${id}`) !== null).toBe(overflow.includes(id));
+      }
+    );
   }
 );
+
+it('keeps Print I-Card directly available with only I-Card access', () => {
+  props.rowActions = undefined;
+  props.canGenerateCertificates = false;
+  render();
+  fireEvent.click(screen.getByRole('button', { name: 'Print I-Card' }));
+  expect(props.onDocumentAction).toHaveBeenCalledExactlyOnceWith('id-card', [
+    expect.objectContaining(student),
+  ]);
+  expect(screen.queryByTestId('table-action-more')).not.toBeInTheDocument();
+});
 
 it('omits the menu when only certificate access exists', () => {
   props.rowActions = undefined;
@@ -206,9 +305,25 @@ it('keeps direct and overflow actions disabled during bulk selection', () => {
   expect(screen.getByTestId('table-action-edit-details')).toBeDisabled();
   expect(screen.getByTestId('table-action-edit-details')).not.toHaveAttribute('href');
   expect(screen.getByTestId('table-action-attendance-history')).toBeDisabled();
-  expect(screen.getByTestId('table-action-certificate')).toBeDisabled();
+  expect(screen.queryByTestId('table-action-certificate')).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'More actions for Riya Shah' }));
-  expect(screen.getByTestId('menu-action-print-id')).toHaveAttribute('aria-disabled', 'true');
-  expect(screen.getByTestId('menu-action-change-status')).toHaveAttribute('aria-disabled', 'true');
+  ['certificate', 'print-id', 'change-status'].forEach((id) => {
+    const action = screen.getByTestId(`menu-action-${id}`);
+    expect(action).toHaveAttribute('aria-disabled', 'true');
+    expect(action).not.toHaveAttribute('href');
+    fireEvent.click(action);
+  });
   expect(props.onDocumentAction).not.toHaveBeenCalled();
+});
+
+it('keeps a promoted Print I-Card action disabled during bulk selection', () => {
+  props.rowActions = undefined;
+  props.canGenerateCertificates = false;
+  props.selection.selected = [student];
+  render();
+  const action = screen.getByRole('button', { name: 'Print I-Card' });
+  expect(action).toBeDisabled();
+  fireEvent.click(action);
+  expect(props.onDocumentAction).not.toHaveBeenCalled();
+  expect(screen.queryByTestId('table-action-more')).not.toBeInTheDocument();
 });

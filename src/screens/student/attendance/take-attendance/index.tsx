@@ -12,23 +12,15 @@ import { formatStr } from 'src/utils/format-time';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useState, useEffect } from 'react';
 import { studentPaths } from 'src/constants/student-menu';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { useGetYearByIdQuery } from 'src/redux/year/yearApi';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { toDateOnly, formatDateOnly } from 'src/utils/date-only';
 import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Box, Paper, Stack, Button, Skeleton, TextField, Typography } from '@mui/material';
 import StudentDirectoryFilterFields from 'src/screens/student/records/student-directory-filter-fields';
-import {
-  Box,
-  Paper,
-  Stack,
-  Button,
-  Tooltip,
-  TextField,
-  Typography,
-  LinearProgress,
-} from '@mui/material';
 
 import { useDailyAttendance } from './use-daily-attendance';
 import AttendanceRegisterQueue from './attendance-register-queue';
@@ -39,12 +31,78 @@ const links = [
   { name: 'Daily Attendance' },
 ];
 
+function AttendanceLoadingSkeleton({ label }: { label: string }) {
+  return (
+    <Stack role="status" aria-label={label} aria-busy spacing={1} sx={{ p: 2 }}>
+      <Skeleton variant="rounded" height={40} />
+      {Array.from({ length: 5 }, (_, index) => (
+        <Skeleton key={index} variant="rounded" height={44} />
+      ))}
+    </Stack>
+  );
+}
+
 function DailyAttendanceWorkspace({
   academicYearOverride,
 }: {
   academicYearOverride?: AcademicYear;
 }) {
   const v = useDailyAttendance(academicYearOverride);
+  const registerActions = (
+    <Stack
+      direction="row"
+      spacing={1}
+      alignItems="center"
+      justifyContent="flex-end"
+      flexWrap="wrap"
+      useFlexGap
+    >
+      <Button
+        size="small"
+        variant="outlined"
+        disabled={!v.canSave}
+        loading={v.saving && !v.retryPayload?.submit}
+        onClick={() => v.save(false)}
+      >
+        Save draft
+      </Button>
+      <CustomTooltip title={v.submitReason}>
+        <span>
+          <Button
+            size="small"
+            variant="contained"
+            disabled={!v.canSubmit}
+            loading={v.saving && !!v.retryPayload?.submit}
+            onClick={() => v.setDecision('submit')}
+          >
+            Submit
+          </Button>
+        </span>
+      </CustomTooltip>
+      {v.canManageLock && (
+        <CustomTooltip
+          title={
+            v.snapshot?.isSubmitted
+              ? 'Lock the reviewed attendance register.'
+              : 'Submit attendance before locking.'
+          }
+        >
+          <span>
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<Iconify icon="mdi:lock-outline" width={16} />}
+              disabled={!v.canLock}
+              loading={v.locking}
+              onClick={() => v.setDecision('lock')}
+            >
+              Lock
+            </Button>
+          </span>
+        </CustomTooltip>
+      )}
+    </Stack>
+  );
   return (
     <Box
       sx={{
@@ -61,54 +119,6 @@ function DailyAttendanceWorkspace({
         description="Review students by academic scope and record their daily attendance."
         descriptionDisplay="tooltip"
         links={links}
-        action={
-          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-            <Button
-              size="small"
-              variant="outlined"
-              disabled={!v.canSave}
-              loading={v.saving && !v.retryPayload?.submit}
-              onClick={() => v.save(false)}
-            >
-              Save draft
-            </Button>
-            <Tooltip title={v.submitReason}>
-              <span>
-                <Button
-                  size="small"
-                  variant="contained"
-                  disabled={!v.canSubmit}
-                  loading={v.saving && !!v.retryPayload?.submit}
-                  onClick={() => v.setDecision('submit')}
-                >
-                  Submit attendance
-                </Button>
-              </span>
-            </Tooltip>
-            {v.canManageLock && (
-              <Tooltip
-                title={
-                  v.snapshot?.isSubmitted
-                    ? 'Lock the reviewed attendance register.'
-                    : 'Submit attendance before locking.'
-                }
-              >
-                <span>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    startIcon={<Iconify icon="mdi:lock-outline" width={16} />}
-                    disabled={!v.canLock}
-                    loading={v.locking}
-                    onClick={() => v.setDecision('lock')}
-                  >
-                    Lock attendance
-                  </Button>
-                </span>
-              </Tooltip>
-            )}
-          </Stack>
-        }
       />
       {v.contextChanged && (
         <StudentFeedback
@@ -201,19 +211,6 @@ function DailyAttendanceWorkspace({
           slotProps={{ htmlInput: { maxLength: 2000 } }}
         />
       )}
-      {v.classRegister && (
-        <Stack direction="row" justifyContent="flex-end" sx={{ px: 1 }}>
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={<Iconify icon="eva:checkmark-fill" width={16} />}
-            disabled={!v.editable || !v.pendingForBulk}
-            onClick={v.bulkPresent}
-          >
-            Mark pending as Present
-          </Button>
-        </Stack>
-      )}
       <Paper variant="outlined" sx={{ p: 1, borderRadius: 2, flexShrink: 0 }}>
         <Stack
           direction={{ xs: 'column', lg: 'row' }}
@@ -249,6 +246,7 @@ function DailyAttendanceWorkspace({
               class: v.selection.standard,
               division: v.selection.division,
             }}
+            allowAllScope={false}
             options={v.options}
             isLoading={v.contextQuery.isLoading || (v.contextQuery.isFetching && !v.context)}
             disabled={!v.context || v.busy}
@@ -263,13 +261,27 @@ function DailyAttendanceWorkspace({
           />
         </Stack>
       </Paper>
+      <Paper
+        component="section"
+        aria-label="Attendance controls"
+        variant="outlined"
+        sx={{ p: 1, borderRadius: 2, flexShrink: 0 }}
+      >
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          alignItems={{ xs: 'stretch', sm: 'center' }}
+          justifyContent="flex-end"
+          spacing={1}
+        >
+          <Box role="group" aria-label="Attendance actions" sx={{ ml: { sm: 'auto' } }}>
+            {registerActions}
+          </Box>
+        </Stack>
+      </Paper>
       {v.schoolToday && v.selection.date > v.schoolToday && (
         <StudentFeedback notificationKey="STU-0653" presentation="persistent" severity="warning">
           Attendance cannot be taken for a future date.
         </StudentFeedback>
-      )}
-      {(v.contextQuery.isFetching || (v.validSelection && v.activeQuery.isFetching)) && (
-        <LinearProgress aria-label="Refreshing attendance" />
       )}
       <Box
         sx={{
@@ -301,6 +313,11 @@ function DailyAttendanceWorkspace({
                 (v.activeQuery.isLoading ||
                   (v.activeQuery.isFetching && !v.activeQuery.currentData))))
           }
+          isRefreshing={
+            !!v.year &&
+            (v.contextQuery.isFetching || (v.validSelection && v.activeQuery.isFetching))
+          }
+          refreshIndicator="skeleton"
           errorContent={
             v.blockingError ? (
               <StudentFeedback
@@ -416,7 +433,7 @@ function DailyAttendanceWorkspace({
             disabled={v.busy || !(v.decision === 'lock' ? v.canLock : v.canSubmit)}
             onClick={() => (v.decision === 'lock' ? v.lockSubmitted() : v.save(true))}
           >
-            {v.decision === 'lock' ? 'Lock attendance' : 'Submit attendance'}
+            {v.decision === 'lock' ? 'Lock' : 'Submit'}
           </Button>
         }
       />
@@ -464,7 +481,7 @@ function AttendanceWorkspaceRoute() {
             The academic year for this register could not be loaded.
           </StudentFeedback>
         ) : (
-          <LinearProgress aria-label="Loading register academic year" />
+          <AttendanceLoadingSkeleton label="Loading register academic year" />
         )}
       </Box>
     );
@@ -487,7 +504,7 @@ export default function TakeAttendanceScreen() {
             descriptionDisplay="tooltip"
             links={links}
           />
-          <LinearProgress aria-label="Loading daily attendance" />
+          <AttendanceLoadingSkeleton label="Loading daily attendance" />
         </Box>
       }
     >

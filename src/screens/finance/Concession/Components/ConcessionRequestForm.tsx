@@ -584,6 +584,23 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
     onBusyChange?.(isSaving);
     return () => onBusyChange?.(false);
   }, [isSaving, onBusyChange]);
+  const [studentSearchInput, setStudentSearchInput] = useState('');
+  const [studentSearch, setStudentSearch] = useState('');
+  const studentSearchScope = JSON.stringify([
+    currentYear?.id,
+    values.boardId,
+    values.mediumId,
+    values.standardId,
+    values.divisionId,
+  ]);
+  useEffect(() => {
+    setStudentSearchInput('');
+    setStudentSearch('');
+  }, [studentSearchScope]);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setStudentSearch(studentSearchInput.trim()), 350);
+    return () => window.clearTimeout(timer);
+  }, [studentSearchInput]);
   const {
     currentData: studentsData,
     isLoading: studentLoading,
@@ -596,6 +613,8 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
       educationMediumId: values.mediumId,
       classIds: [values.standardId],
       divisionIds: [values.divisionId],
+      search: studentSearch,
+      maxResultCount: 100,
     },
     {
       skip:
@@ -603,7 +622,9 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
         !values.boardId ||
         !values.mediumId ||
         !values.standardId ||
-        !values.divisionId,
+        !values.divisionId ||
+        isEditMode ||
+        studentSearch.length < 2,
     }
   );
   const studentOptions = useMemo(
@@ -1390,62 +1411,65 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                         </Grid>
                         <Grid size={{ xs: 12 }}>
                           <ShakingTextField error={!!(touched.studentId && errors.studentId)}>
-                            <FinanceFieldSkeleton
-                              loading={(studentLoading || studentFetching) && !isSaving}
-                              label="Loading students"
-                            >
-                              <Autocomplete
-                                size="small"
-                                loading={studentLoading || studentFetching}
-                                noOptionsText={
-                                  studentsError ? 'Unable to load students' : 'No Student Found'
-                                }
-                                fullWidth
-                                disabled={isEditMode || !values.divisionId}
-                                options={studentOptions}
-                                value={
-                                  studentOptions.find((s) => s.studentId === values.studentId) ||
-                                  (isEditMode && values.studentId
-                                    ? { studentId: values.studentId, name: values.studentName }
-                                    : null)
-                                }
-                                isOptionEqualToValue={(option, value) =>
-                                  option.studentId === value.studentId
-                                }
-                                onChange={(_e, value: any) => {
-                                  setSelectedAssignmentId('');
-                                  setFieldValue('studentId', value?.studentId || '');
-                                  setFieldTouched('studentId', false);
-                                  setFieldValue('studentName', value?.name || '');
-                                  setFieldValue('selectedStudent', value || null);
-                                  setFieldValue('concessionPolicyId', '');
-                                  setFieldValue('concessionPolicyVersionId', '');
-                                  setFieldValue('dueFeeEntries', {});
-                                }}
-                                getOptionLabel={(option: any) => option.name || ''}
-                                renderOption={(props, option: any) => (
-                                  <li {...props} key={option.studentId}>
-                                    {option.name}
-                                  </li>
-                                )}
-                                renderInput={(params) => (
-                                  <TextField
-                                    {...params}
-                                    size="small"
-                                    label="Student"
-                                    name="studentId"
-                                    required
-                                    onBlur={formik.handleBlur}
-                                    fullWidth
-                                    error={!!errors.studentId && touched.studentId}
-                                    helperText={
-                                      ((touched.studentId && errors.studentId) as string) ||
-                                      undefined
-                                    }
-                                  />
-                                )}
-                              />
-                            </FinanceFieldSkeleton>
+                            <Autocomplete
+                              size="small"
+                              loading={studentLoading || studentFetching}
+                              noOptionsText={
+                                studentsError
+                                  ? 'Unable to load students'
+                                  : studentSearch.length < 2
+                                    ? 'Type at least 2 characters to search'
+                                    : 'No Student Found'
+                              }
+                              fullWidth
+                              disabled={isEditMode || !values.divisionId}
+                              options={studentOptions}
+                              filterOptions={(options) => options}
+                              onInputChange={(_event, input, reason) => {
+                                if (reason === 'input' || reason === 'clear')
+                                  setStudentSearchInput(input);
+                              }}
+                              value={
+                                studentOptions.find((s) => s.studentId === values.studentId) ||
+                                (values.studentId
+                                  ? { studentId: values.studentId, name: values.studentName }
+                                  : null)
+                              }
+                              isOptionEqualToValue={(option, value) =>
+                                option.studentId === value.studentId
+                              }
+                              onChange={(_e, value: any) => {
+                                setSelectedAssignmentId('');
+                                setFieldValue('studentId', value?.studentId || '');
+                                setFieldTouched('studentId', false);
+                                setFieldValue('studentName', value?.name || '');
+                                setFieldValue('selectedStudent', value || null);
+                                setFieldValue('concessionPolicyId', '');
+                                setFieldValue('concessionPolicyVersionId', '');
+                                setFieldValue('dueFeeEntries', {});
+                              }}
+                              getOptionLabel={(option: any) => option.name || ''}
+                              renderOption={(props, option: any) => (
+                                <li {...props} key={option.studentId}>
+                                  {option.name}
+                                </li>
+                              )}
+                              renderInput={(params) => (
+                                <TextField
+                                  {...params}
+                                  size="small"
+                                  label="Student"
+                                  name="studentId"
+                                  required
+                                  onBlur={formik.handleBlur}
+                                  fullWidth
+                                  error={!!errors.studentId && touched.studentId}
+                                  helperText={
+                                    ((touched.studentId && errors.studentId) as string) || undefined
+                                  }
+                                />
+                              )}
+                            />
                           </ShakingTextField>
                         </Grid>
                       </Grid>

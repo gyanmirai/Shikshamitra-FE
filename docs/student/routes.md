@@ -3,12 +3,20 @@ module: student
 domain: routes
 content_type: Reference
 status: canonical
-updated_on: 2026-11-04
+updated_on: 2026-11-16
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Find Student Admissions routes
+
+## Student setup guide
+
+`/student/setup` is an authenticated full-screen route outside the dashboard shell, using `src/app/student/setup/page.tsx` and `src/screens/student/setup/`. Student → Setup guide requires the Student module grant and at least one included setting's exact View grant. The included settings retain their existing route/action permissions; no additional grant is introduced.
+
+The Student layout's `StudentSetupEntry` uses backend school-wide visit state for first entry. Included settings remain directly accessible and record their exact visit. The guide can be reopened manually after that visit. `stage`, `setting` and `guideYear` preserve guide navigation; safe return locations are limited to permitted existing Student destinations. Workflow builder and form preview retain an allowlisted guide return context.
+
+The guide uses the existing Academic Year, Board and Medium selector so its configuration checks can follow each authorized medium. Other Student routes keep their year-only selector. Numbering checks additionally require a class selection.
 
 TL;DR: use this page to map the implemented Admissions and Onboarding routes to their screens and visible Student menu entries.
 
@@ -16,7 +24,7 @@ TL;DR: use this page to map the implemented Admissions and Onboarding routes to 
 
 Student Records → House Management is registered after Student List in `src/constants/student-menu.ts`. Its route is `/student/records/houses`, sourced from `studentPaths.records.houseManagement`. The page requires `Students.Records.HouseManagement.View`; controls use `manageHouseManagement` (`Add`, displayed as Add/Update) and `deleteHouseManagement` (`Delete`). Existing Student and Student Records visibility flags apply, with no feature-specific visibility flag or role-name exception. The former House Settings URL redirects here; the policy settings workspace remains separate.
 
-The route page and permission layout live under `src/app/(auth-route)/student/records/houses/`; the screen is `src/screens/student/house-management/index.tsx`. URL state uses `tab=houses|students|divisions`, `board`, `medium`, `class`, `division`, `house`, `assignment=unassigned`, `search`, `sort`, zero-based `page` and `pageSize`. `houseName` is a display label only. Academic year comes from the shared Student academic scope. Profile links require the separate Student List View grant.
+The route page and permission layout live under `src/app/(auth-route)/student/records/houses/`. The screen is `src/screens/student/house-management/index.tsx`. Assign Leaders retains `tab=divisions` for existing links. `board`, `medium`, `class`, `division`, `search`, `sort`, zero-based `page` and `pageSize` track the current view. The Students filters use `house` and `assignment=unassigned`. `houseName` is a display label only. House leader actions open from the house row, and Division leader actions open from the division row. Academic year comes from the shared Student academic scope. Profile links require the separate Student List View grant.
 
 ## Public app-login email verification
 
@@ -87,7 +95,7 @@ The Student Records menu has five submodules. Existing Records workflow URLs rem
 | ---------------- | ------------------------- | -------------------------------------------------------------------------------------------- | --------------------------------------- |
 | Student List     | `/student/profile`        | `src/screens/student/studentProfile/index.tsx`                                               | `Students.Records.StudentList.View`     |
 | House Management | `/student/records/houses` | `src/screens/student/house-management/index.tsx`                                             | `Students.Records.HouseManagement.View` |
-| Student I-Card   | `/student/student-i-card` | `src/screens/student/records/student-icard-templates.tsx`                                    | `Students.Records.StudentICard.View`    |
+| Student I-Card   | `/student/student-i-card` | `src/screens/student/records/student-icard-workspace.tsx`                                    | `Students.Records.StudentICard.View`    |
 | Certificates     | `/student/certificates`   | `src/screens/student/records/student-certificate-workspace.tsx`, through the document screen | `Students.Records.Certificates.View`    |
 | Reports          | `/student/reports`        | `src/screens/student/reports/index.tsx`                                                      | `Students.Records.Reports.View`         |
 
@@ -98,7 +106,9 @@ permissions and runtime policies are unchanged.
 
 I-Card and Certificates use the persisted document APIs rather than the sample rows in the earlier screens. Server permissions and school Records policy still control issuance and record changes.
 
-Certificate creation follows the Daily Attendance academic selection flow: default Board and Medium, then School level, Class and Division. Each change clears its dependent selections and selected students; the student list loads only after a complete academic selection.
+**View issued cards** stays within `/student/student-i-card?view=issued`. `student-icard-workspace.tsx` selects the template catalogue or the ID-only history view. Board, Medium, Class and Division reuse Student List's single-select filters; All Classes disables Division. Filters use students' current saved placement in the global academic year, while issued snapshots remain unchanged. Academic scope, search, sorting and paging are URL-backed; the former `student` parameter no longer limits this aggregate view. **View templates** returns to the catalogue. The retained `/student/records/documents` route and the dedicated `/student/certificates` flow remain unchanged.
+
+Certificates opens as a student search with no implicit selection. Explicit `student` and `year` query parameters restore a scoped selected student; `type` filters that student's all-type history. Student List row/bulk actions and the selected-student page action share `components/certificate-generation-drawer.tsx`, retaining the source students/year without another academic-selection form. A global-year change clears the usable context.
 The Student I-Card page lists saved designs with View, Edit, and Delete actions and shows each design's assigned student count against the active student total for the selected global year. Create and Edit open a five-step builder (Template, Designer, Students, Review, Export) using the shared HR-style stepper. The Students step uses multiple Board, Medium, Class and Division selections for the selected global year and retains up to 100 selected students across directory pages. Selecting multiple classes disables the Division filter and includes students from every division in those classes. Students assigned to another template in the same year can be selected; saving moves them to the current template. Export downloads a bulk A4 PDF; Issue writes numbered cards to history.
 
 ### Student List and profile navigation

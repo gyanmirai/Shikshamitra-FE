@@ -1,7 +1,8 @@
+import { useGetStructureSummariesQuery } from 'src/redux/finance/feeStructureWorkspace';
+
 import { useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
-  useGetStandardFeeStructureQuery,
   useLockClassWiseFeeStructureMutation,
   useCreateClassWiseFeeStructureMutation,
   useDeleteClassWiseFeeStructureMutation,
@@ -15,11 +16,17 @@ import {
 export const useFetchStandardFeeStructures = (classId: string, skip = false) => {
   const result = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetStandardFeeStructureQuery,
+    currentQueryAndMutation: useGetStructureSummariesQuery,
     params: { standardId: classId },
     options: { skip: skip || !classId },
   });
-  return result as typeof result & { isLoading: boolean; isFetching: boolean; isError: boolean; refetch: () => void; data: any };
+  return result as typeof result & {
+    isLoading: boolean;
+    isFetching: boolean;
+    isError: boolean;
+    refetch: () => void;
+    data: any;
+  };
 };
 
 // ---------------------------------------------------------------------------
@@ -39,8 +46,8 @@ export const useCreateClassWiseFeeStructure = () => {
       feeHeads: any[];
       collectionPolicyId?: string;
       concessionPolicyId?: string;
-		concessionFeeHeadScope?: 'EntireFeeStructure' | 'SelectedFeeHeads';
-		concessionApplicableFeeHeadIds?: string[];
+      concessionFeeHeadScope?: 'EntireFeeStructure' | 'SelectedFeeHeads';
+      concessionApplicableFeeHeadIds?: string[];
     }) => create(args).unwrap(),
     [create]
   );
@@ -59,7 +66,14 @@ export const useUpdateClassWiseFeeStructure = () => {
     (args: {
       structureId: string;
       classId: string;
-		body: { name: string; feeHeads: any[]; collectionPolicyId?: string; concessionPolicyId?: string; concessionFeeHeadScope?: 'EntireFeeStructure' | 'SelectedFeeHeads'; concessionApplicableFeeHeadIds?: string[] };
+      body: {
+        name: string;
+        feeHeads: any[];
+        collectionPolicyId?: string;
+        concessionPolicyId?: string;
+        concessionFeeHeadScope?: 'EntireFeeStructure' | 'SelectedFeeHeads';
+        concessionApplicableFeeHeadIds?: string[];
+      };
     }) => update(args).unwrap(),
     [update]
   );

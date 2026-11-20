@@ -9,6 +9,11 @@ import { render, screen } from '@testing-library/react';
 
 import { ApplicationManagedStages } from './application-managed-stages';
 
+vi.mock('./application-workspace-panels', async () => ({
+  ...(await import('../payment/application-payment-stage')),
+  ...(await import('../seat/application-seat-stage')),
+}));
+
 vi.mock('../payment/application-payment-stage', () => ({
   ApplicationPaymentStage: ({
     stage: selected,

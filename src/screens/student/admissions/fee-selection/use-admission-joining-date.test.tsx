@@ -58,6 +58,38 @@ it('prefills the saved joining date and skips all reads without collection view'
   expect(mocks.save).not.toHaveBeenCalled();
 });
 
+it.each([
+  { saved: null, editable: true, locked: false, end: '2027-05-31', expected: '2026-11-19' },
+  { saved: '2026-06-02', editable: true, locked: false, end: '2027-05-31', expected: '2026-06-02' },
+  { saved: null, editable: false, locked: false, end: '2027-05-31', expected: '' },
+  { saved: null, editable: false, locked: true, end: '2027-05-31', expected: '' },
+  { saved: null, editable: true, locked: false, end: '2026-11-18', expected: '' },
+])('uses today only as an eligible default ($expected)', ({ saved, editable, locked, end, expected }) => {
+  vi.useFakeTimers();
+  try {
+    vi.setSystemTime(new Date(2026, 10, 19, 12));
+    mocks.read.mockReturnValue({
+      currentData: {
+        ...state,
+        joiningDate: saved,
+        canEdit: editable,
+        isLocked: locked,
+        academicYearEndDate: end,
+      },
+    });
+    const view = renderDate({ defaultToToday: true });
+    expect(view.result.current.date).toBe(expected);
+    expect(mocks.save).not.toHaveBeenCalled();
+    if (expected === '2026-11-19') {
+      act(() => view.result.current.change(null));
+      expect(view.result.current.date).toBe('');
+      expect(view.result.current.blocked).toBe(true);
+    }
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
 it('does not preview an empty or invalid date and retains validation beside the field', () => {
   const view = renderDate();
   act(() => view.result.current.change(null));
@@ -87,6 +119,39 @@ it('debounces candidate dates and rejects an old date preview immediately', asyn
   );
   expect(mocks.save).not.toHaveBeenCalled();
 });
+
+it('does not send a proration policy before the Institute Setup academic-year start date', async () => {
+  mocks.read.mockReturnValue({
+    currentData: {
+      ...state,
+      canSelectProrationPolicy: true,
+      defaultProrationPolicyVersionId: 'default-v1',
+    },
+    isLoading: false,
+    isFetching: false,
+    isError: false,
+    refetch: mocks.refetch,
+  });
+  const view = renderDate();
+  act(() => view.result.current.change(dayjs('2026-05-31')));
+
+  expect(view.result.current.prorationPolicyEligible).toBe(false);
+  await waitFor(() =>
+    expect(mocks.preview).toHaveBeenLastCalledWith(
+      expect.not.objectContaining({ prorationPolicyVersionId: expect.anything() }),
+      expect.objectContaining({ skip: false })
+    )
+  );
+});
+
+it.each(['2026-06-01', '2026-06-02'])(
+  'allows proration policy use on or after academic-year start (%s)',
+  (date) => {
+    const view = renderDate();
+    act(() => view.result.current.change(dayjs(date)));
+    expect(view.result.current.prorationPolicyEligible).toBe(true);
+  }
+);
 
 it('confirms the date with its original concurrency stamp only on the collection command', async () => {
   mocks.preview.mockReturnValue({
@@ -122,6 +187,20 @@ it('uses the immutable prepared date without previewing or saving a replacement'
   expect(mocks.preview.mock.lastCall?.[1].skip).toBe(true);
   await act(() => view.result.current.confirm());
   expect(mocks.save).not.toHaveBeenCalled();
+});
+
+it('keeps the variable-fee date draft when save does not confirm the selected date', async () => {
+  const view = renderDate({ requiresVariableAmounts: true });
+  act(() => view.result.current.change(dayjs('2026-06-02')));
+  mocks.unwrap.mockResolvedValueOnce({ ...state, joiningDate: null });
+
+  await act(async () => {
+    await expect(view.result.current.confirm()).rejects.toThrow(/could not confirm/i);
+  });
+
+  expect(view.result.current.date).toBe('2026-06-02');
+  await act(() => view.result.current.confirm());
+  expect(mocks.save).toHaveBeenCalledTimes(2);
 });
 
 it('displays the saved date when concurrent preparation locks an unsaved date draft', async () => {

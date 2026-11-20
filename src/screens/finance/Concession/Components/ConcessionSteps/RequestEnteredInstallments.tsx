@@ -5,9 +5,9 @@ import type {
 
 import { Box, Typography } from '@mui/material';
 import { formatNumber } from 'src/utils/formate_number';
-import { DetailField } from 'src/components/detail-view';
-import RequestEnteredInstallmentTable from './RequestEnteredInstallmentTable';
+import { DetailField } from 'src/screens/finance/components/detail-view';
 
+import RequestEnteredInstallmentTable from './RequestEnteredInstallmentTable';
 import { validateConcessionInstallments } from '../concessionValueValidation';
 
 export default function RequestEnteredInstallments({

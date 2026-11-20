@@ -5,8 +5,8 @@ import type {
 } from 'src/redux/finance/ConcessionManagement/types';
 
 import { formatNumber } from 'src/utils/formate_number';
-import { DetailField } from 'src/components/detail-view';
 import { Stack, Checkbox, ButtonBase, Typography } from '@mui/material';
+import { DetailField } from 'src/screens/finance/components/detail-view';
 
 export type ConcessionSelectableFeeHead = Pick<
   ConcessionEligibleFeeHead,

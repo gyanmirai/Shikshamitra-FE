@@ -1,6 +1,6 @@
 import { Alert, Stack } from '@mui/material';
 import { formatNumber } from 'src/utils/formate_number';
-import { DetailGrid, DetailField, DetailSection } from 'src/components/detail-view';
+import { DetailGrid, DetailField, DetailSection } from 'src/screens/finance/components/detail-view';
 
 type FeeOverviewProps = {
   total: number;

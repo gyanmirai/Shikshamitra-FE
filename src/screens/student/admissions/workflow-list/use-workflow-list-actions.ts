@@ -10,6 +10,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
 import { studentPaths } from 'src/constants/student-menu';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { usePendingNavigation } from 'src/hooks/use-pending-navigation';
 import {
   useLazyGetAdmissionWorkflowQuery,
   useCloneAdmissionWorkflowMutation,
@@ -23,6 +24,7 @@ import {
 import { getAdmissionWorkflowAccess } from '../workflow-access';
 import { getAdmissionWorkflowTemplate } from '../workflow-template';
 import { useWorkflowListPublish } from './use-workflow-list-publish';
+import { workflowArchiveErrorMessage } from './workflow-archive-error';
 
 import type { WorkflowDetails } from '../admission-workflow-dialog';
 
@@ -31,8 +33,10 @@ export type PendingWorkflowConfirmation = {
   action: 'archive' | 'delete' | 'reopen';
 } | null;
 
-export function useWorkflowListActions() {
+export function useWorkflowListActions(returnTo?: string) {
   const router = useRouter();
+  const withReturn = (href: string) => returnTo ? href + (href.includes('?') ? '&' : '?') + new URLSearchParams({ returnTo }) : href;
+  const navigation = usePendingNavigation(router.push);
   const createDialog = useBoolean();
   const createCloseRef = useRef<(() => void) | null>(null);
   const cloneDialog = useBoolean();
@@ -57,14 +61,17 @@ export function useWorkflowListActions() {
   const [createWorkflow, createState] = useCreateAdmissionWorkflowMutation();
   const [cloneWorkflow, cloneState] = useCloneAdmissionWorkflowMutation();
   const [createVersion] = useCreateAdmissionWorkflowVersionMutation();
+  const versionLock = useRef(false);
+  const [creatingVersionId, setCreatingVersionId] = useState<string | null>(null);
   const [archiveWorkflow, archiveState] = useArchiveAdmissionWorkflowMutation();
   const [reopenWorkflow, reopenState] = useReopenAdmissionWorkflowMutation();
   const confirmingRef = useRef(false);
   const [deleteWorkflow, deleteState] = useDeleteAdmissionWorkflowMutation();
   const [getLatestWorkflow, latestWorkflowState] = useLazyGetAdmissionWorkflowQuery();
   const navigate = (workflow: AdmissionWorkflow, panel?: 'preview' | 'usage') =>
-    router.push(
-      `${studentPaths.enrollment.settings.workflows}/${workflow.id}${panel ? `?panel=${panel}` : ''}`
+    navigation.navigate(
+      workflow.id,
+      withReturn(`${studentPaths.enrollment.settings.workflows}/${workflow.id}${panel ? `?panel=${panel}` : ''}`)
     );
   const runAction = async (
     action: () => Promise<AdmissionWorkflow | void>,
@@ -100,7 +107,7 @@ export function useWorkflowListActions() {
       }).unwrap();
       shikshaMitraToast.success({ message: 'Workflow draft created' });
       setOpeningCreatedWorkflow(true);
-      router.push(`${studentPaths.enrollment.settings.workflows}/${result.id}?setup=1`);
+      router.push(withReturn(`${studentPaths.enrollment.settings.workflows}/${result.id}?setup=1`));
     } catch (error) {
       setOpeningCreatedWorkflow(false);
       shikshaMitraToast.error({
@@ -144,6 +151,7 @@ export function useWorkflowListActions() {
   const confirm = async () => {
     if (!pendingConfirmation || confirmingRef.current) return;
     confirmingRef.current = true;
+    setConfirmationNotice(null);
     const { workflow, action } = pendingConfirmation;
     try {
       const latest = await getLatestWorkflow(workflow.id, false).unwrap();
@@ -176,6 +184,10 @@ export function useWorkflowListActions() {
       closeConfirmation();
     } catch (error) {
       const problem = parseApiProblemDetail(error);
+      if (action === 'archive' && problem.errorCode === 'Admissions.WorkflowInUse') {
+        setConfirmationNotice(workflowArchiveErrorMessage(error));
+        return;
+      }
       if (problem.errorCode === 'Admissions.WorkflowConcurrencyConflict') {
         try {
           const latest = await getLatestWorkflow(workflow.id, false).unwrap();
@@ -214,11 +226,26 @@ export function useWorkflowListActions() {
     reopenState,
     deleteState,
     navigate,
+    pendingNavigationId: navigation.pendingKey,
     create,
     clone,
     openClone,
     confirm,
-    createVersion: (workflow: AdmissionWorkflow) =>
-      runAction(() => createVersion(workflow.id).unwrap(), 'New workflow version created', true),
+    creatingVersionId,
+    createVersion: async (workflow: AdmissionWorkflow) => {
+      if (versionLock.current || !allowed.canCreateVersion) return;
+      versionLock.current = true;
+      setCreatingVersionId(workflow.id);
+      try {
+        await runAction(
+          () => createVersion(workflow.id).unwrap(),
+          'New workflow version created',
+          true
+        );
+      } finally {
+        versionLock.current = false;
+        setCreatingVersionId(null);
+      }
+    },
   };
 }

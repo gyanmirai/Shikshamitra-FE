@@ -5,17 +5,9 @@ import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { EmptyContent } from 'src/components/empty-content';
 import { StudentFeedback } from 'src/components/student-feedback';
+import { skeletonReducedMotionSx } from 'src/theme/styles/skeleton';
+import { Box, Card, Stack, Button, Skeleton, IconButton, Typography } from '@mui/material';
 import { useGetApplicationAssessmentQuery } from 'src/redux/student/admissions/admission-assessments-api';
-import {
-  Box,
-  Card,
-  Stack,
-  Button,
-  Skeleton,
-  IconButton,
-  Typography,
-  LinearProgress,
-} from '@mui/material';
 
 import { AdmissionQueryError } from '../admission-query-error';
 import { AssessmentActionDialog } from './assessment-action-dialog';
@@ -86,7 +78,13 @@ export function ApplicationAssessmentPanel({
     concurrencyStamp: assessment?.concurrencyStamp,
   });
   return (
-    <Card sx={compact ? { p: 0, boxShadow: 'none', borderRadius: 0 } : { p: 2 }}>
+    <Card
+      aria-busy={query.isFetching}
+      sx={{
+        ...(compact ? { p: 0, boxShadow: 'none', borderRadius: 0 } : { p: 2 }),
+        ...skeletonReducedMotionSx,
+      }}
+    >
       <Stack spacing={1.5}>
         <Stack direction="row" alignItems="center" justifyContent="space-between">
           <Stack direction="row" spacing={0.5} alignItems="center">
@@ -115,7 +113,10 @@ export function ApplicationAssessmentPanel({
             administrator.
           </StudentFeedback>
         ) : query.isLoading ? (
-          <Skeleton variant="rounded" height={140} />
+          <Stack role="status" aria-label="Loading Assessment" spacing={1}>
+            <Skeleton variant="text" width="40%" />
+            <Skeleton variant="rounded" height={100} />
+          </Stack>
         ) : !assessment ? (
           <AdmissionQueryError onRetry={query.refetch} />
         ) : !assessment.assessmentEnabled || !assessment.policy ? (
@@ -125,7 +126,13 @@ export function ApplicationAssessmentPanel({
           </StudentFeedback>
         ) : (
           <>
-            {query.isFetching && <LinearProgress aria-label="Refreshing Assessment" />}
+            {query.isFetching && (
+              <Stack direction="row" spacing={1} role="status" aria-label="Refreshing Assessment">
+                <Skeleton variant="text" width="32%" />
+                <Skeleton variant="text" width="24%" />
+                <Skeleton variant="text" width="20%" />
+              </Stack>
+            )}
             {query.isError && <AdmissionQueryError onRetry={query.refetch} />}
             <Box
               component="dl"

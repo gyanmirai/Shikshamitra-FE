@@ -141,7 +141,7 @@ export const cashManagementApi = financeModuleApi.injectEndpoints({
       { academicYearId: string; operation: 'approve' | 'expense' | 'deposit' }
     >({
       query: (params) => ({ url: '/finance/cash-management/options', params }),
-      providesTags: [financeModuleType.cashManagement, financeModuleType.bankAccounts],
+      providesTags: [financeModuleType.cashManagement, financeModuleType.bankAccount],
     }),
     approveCash: builder.mutation<
       CashDetail,

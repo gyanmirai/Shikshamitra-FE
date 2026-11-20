@@ -316,7 +316,7 @@ Verify Charges, Collections, Adjustments, Income/Expenses, fee/account settings 
 Embedded fee details require Collection Add for Collect Fees and Auditing View for
 Audit Trail; the audit drawer and adjustment audit query must also fail closed.
 The posting-setup compatibility page uses an exact View guard even though posting is unavailable.
-Receipts/Audit are read-only; Collections, Fee Structure Assign and Reconciliation have no Delete control. Use the authorized local
+Receipts/Audit are read-only; Collections, Structure Assignment and Reconciliation have no Delete control. Use the authorized local
 test workspace and synthetic records for writes; do not perform real payments for a permission test.
 Wait for the academic-year context and the target screen to finish loading before
 checking actions; Income/Expenses initially render a context-only header. Test adjustment
@@ -811,6 +811,13 @@ Audit Trail search/reset regression: `src/screens/finance/AuditTrail/hooks/useFi
 `FinanceReconciliation.headers.integration.test.tsx` mounts the actual parent, method tables, shared filter menu, RTK clients and read-only transport. All six numeric tab IDs must send the amount criterion, find the final candidate before pagination, and restore the full count on Clear. Both unsupported legacy methods must offer zero column-filter buttons. The eight cases passed with a bounded 120 second case budget on the loaded Windows host; retain the earlier timeout-only run separately. `AdjustmentTable.query.test.tsx` covers server paging, search, criteria, context/page reset, atomic clear, text roll identifiers and disabled unsupported page-only sorting. Positive backend evidence remains separate from synthetic UI evidence.
 
 ## Refund editing regressions
+
+Paid-source refund coverage uses `refundEligibility.assignmentCache.test.ts` for successful and
+rejected assignment-policy updates, plus `RefundSelection.test.tsx` for charge/late-fee rows and
+source IDs. Run `e2e/finance/refund-request-validation.config.ts` for desktop/mobile selection,
+amounts, confirmation and submission payloads (`?paidSources=1`). The fixture uses synthetic
+responses; persisted eligibility, policy pins and settlement evidence are verified by the backend
+`FeeRefundApi.AssignedPolicyTests.cs` regression.
 
 `RefundRemarksForm.test.tsx`, `RefundFeeHeadViewTable.test.tsx` and `RefundWorklist.edit.test.tsx` cover approved Reject removal, request-only installment rows, exclusion of cumulative historical totals, and accordion behavior.
 The synthetic refund harness's `?view=approved` mode supplies a ₹3,750 request alongside old ₹50,000 history and a stale Reject hint for in-app browser checks.

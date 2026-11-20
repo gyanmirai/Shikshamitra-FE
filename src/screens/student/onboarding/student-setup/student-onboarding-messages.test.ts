@@ -14,6 +14,62 @@ const portalFailure = (reason: string) => ({
 
 describe('onboarding staff messages', () => {
   it.each([
+    {
+      errorCode: 'Students.Onboarding.IdentifierSeriesUnavailable',
+      data: { ReasonCode: 'SeriesLimitReached', MaximumNumber: 5 },
+    },
+    {
+      error: {
+        code: 'Students.Onboarding.IdentifierSeriesUnavailable',
+        data: { ReasonCode: 'SeriesLimitReached', MaximumNumber: 5 },
+      },
+    },
+    {
+      response: {
+        data: {
+          errorCode: 'Students.Onboarding.IdentifierSeriesUnavailable',
+          data: { ReasonCode: 'SeriesLimitReached', MaximumNumber: 5 },
+        },
+      },
+    },
+  ])('reads the limit reason from supported API error envelopes', (error) => {
+    expect(getOnboardingErrorMessage(error, fallback)).toContain(
+      'GR series limit of 5 has been reached.'
+    );
+  });
+  it('explains an exhausted GR series without asking staff to publish a missing rule', () => {
+    expect(
+      getOnboardingErrorMessage(
+        {
+          status: 400,
+          data: {
+            errorCode: 'Students.Onboarding.IdentifierSeriesUnavailable',
+            data: { ReasonCode: 'SeriesLimitReached', MaximumNumber: 5, NextSequence: 6 },
+          },
+        },
+        fallback
+      )
+    ).toBe(
+      'The GR series limit of 5 has been reached. Ask your administrator to increase or remove the limit in Onboarding Settings.'
+    );
+  });
+
+  it('does not assume every unavailable GR series is missing', () => {
+    expect(
+      getOnboardingErrorMessage(
+        {
+          status: 400,
+          data: {
+            errorCode: 'Students.Onboarding.IdentifierSeriesUnavailable',
+          },
+        },
+        fallback
+      )
+    ).toBe(
+      'This GR series is unavailable. Ask your administrator to check its limit and published coverage in Onboarding Settings.'
+    );
+  });
+  it.each([
     [
       'Student and adult app logins need different saved email addresses.',
       'Use different saved emails for the student and parent / guardian logins.',

@@ -1,11 +1,18 @@
 import type { ReactNode } from 'react';
 
+export const IDENTITY_CARD_PREFIX_LIMIT = 150;
+
 export type IdentityCardElement = {
   id: string;
-  type: 'text' | 'photo' | 'logo' | 'qr' | 'barcode' | 'shape' | 'line';
+  type: 'text' | 'photo' | 'logo' | 'image' | 'qr' | 'barcode' | 'shape' | 'line';
+  rotation?: number;
+  opacity?: number;
+  groupId?: string;
+  imageData?: string;
   fieldKey?: string;
   label?: string;
   value?: string;
+  prefix?: string;
   x: number;
   y: number;
   w: number;
@@ -25,6 +32,9 @@ export type IdentityCardElement = {
     fontSize?: number;
     fontWeight?: number | string;
     fontFamily?: string;
+    fontStyle?: 'normal' | 'italic';
+    textDecoration?: 'none' | 'underline' | 'line-through';
+    shape?: 'rectangle' | 'ellipse';
     textAlign?: 'left' | 'center' | 'right';
     showLabel?: boolean;
     separator?: string;
@@ -61,11 +71,12 @@ export type IdentityCardPrintSettings = {
   sideMode: 'both' | 'front' | 'back';
 };
 
-export type IdentityCardFieldOption = { key: string; label: string };
+export type IdentityCardFieldOption = { key: string; label: string; group?: string };
 export type IdentityCardPreviewProps = {
   layout: IdentityCardLayout;
   side?: 'front' | 'back';
   values?: Record<string, string | null | undefined>;
+  fieldTokens?: Readonly<Record<string, string>>;
   logoUrl?: string;
   logoHidden?: boolean;
   photoUrl?: string;
@@ -74,17 +85,31 @@ export type IdentityCardPreviewProps = {
 };
 
 export type IdentityCardDesignerProps = IdentityCardPreviewProps & {
+  photoRecords?: IdentityCardPhotoRecord[];
+  photoEdits?: IdentityCardPhotoEdit[];
+  onPhotoEdit?: (edit: IdentityCardPhotoEdit) => void;
+  onEditorBusyChange?: (busy: boolean) => void;
   brandingContent?: ReactNode;
   onLayoutChange: (layout: IdentityCardLayout) => void;
   printSettings: IdentityCardPrintSettings;
   onPrintSettingsChange: (settings: IdentityCardPrintSettings) => void;
   fields: IdentityCardFieldOption[];
+  fieldPickerLabel?: string;
   disabled?: boolean;
   backSideEnabled: boolean;
   onBackSideEnabledChange: (enabled: boolean) => void;
   qrCodeEnabled: boolean;
   onQrCodeEnabledChange: (enabled: boolean) => void;
   onBarcodeEnabledChange?: (enabled: boolean) => void;
+};
+
+export type IdentityCardPhotoEdit = { recordId: string; sourceHash: string; imageData: string };
+export type IdentityCardPhotoRecord = {
+  id: string;
+  name: string;
+  values: Record<string, string | null | undefined>;
+  imageData?: string;
+  load: () => Promise<IdentityCardPhotoEdit>;
 };
 
 export type IdentityCardConfigurationProps = IdentityCardDesignerProps & {

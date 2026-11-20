@@ -16,6 +16,7 @@ import { RouterLink } from 'src/routes/components';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { shikshaMitraToast } from 'src/components/toast';
 import { studentPaths } from 'src/constants/student-menu';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { useRef, useMemo, useState, useEffect } from 'react';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { StudentFeedback } from 'src/components/student-feedback';
@@ -38,6 +39,7 @@ import { AssessmentActionDialog } from './assessments/assessment-action-dialog';
 import { AssessmentSessionsPanel } from './assessments/assessment-sessions-panel';
 import { AssessmentApplicantTable } from './assessments/assessment-applicant-table';
 import { AssessmentContinueDialog } from './assessments/assessment-continue-dialog';
+import { studentBookingReason } from './assessments/assessment-student-booking-model';
 import { AssessmentApplicantDrawer } from './assessments/assessment-workbench-drawers';
 import { ADMISSION_APPLICATION_PERMISSIONS } from './admission-application-permissions';
 import { useAssessmentWorkspaceData } from './assessments/use-assessment-workspace-data';
@@ -251,6 +253,25 @@ export default function AdmissionAssessmentsScreen() {
             ? row.assessment.canRecordResult
             : row.assessment.canComplete)
     );
+  const bookableSelection = selection.filter((row) => !studentBookingReason(row));
+  const bookingDisabled =
+    !bookableSelection.length ||
+    !academic.boardId ||
+    !academic.mediumId ||
+    scopes.isFetching ||
+    scopes.isError;
+  const bookingReasons = [...new Set(selection.map((row) => studentBookingReason(row)))];
+  const bookingDisabledReason = !selection.length
+    ? 'Select students to book a session.'
+    : !bookableSelection.length
+      ? bookingReasons.length === 1
+        ? bookingReasons[0]
+        : 'No selected students are eligible for session booking.'
+      : !academic.boardId || !academic.mediumId
+        ? 'Select Board and Medium before booking a session.'
+        : scopes.isError
+          ? 'Refresh assessment settings before booking a session.'
+          : 'Wait for assessment settings to finish loading.';
   const filtered =
     state.columnFilters ||
     state.search ||
@@ -314,12 +335,14 @@ export default function AdmissionAssessmentsScreen() {
               flexWrap: 'wrap',
               flexShrink: 0,
               minWidth: 0,
+              borderRadius: 2,
             }}
           >
             <CustomTabs
+              density="compact"
               value={state.tab}
               aria-label="Assessment Workspace"
-              sx={{ minWidth: 0 }}
+              sx={{ minWidth: 0, bgcolor: 'transparent' }}
               slotProps={{ flexContainer: { gap: 1 } }}
             >
               <Tab
@@ -343,7 +366,7 @@ export default function AdmissionAssessmentsScreen() {
                 aria-controls="assessment-session-panel"
               />
             </CustomTabs>
-            <Stack direction="row" spacing={1} sx={{ ml: 'auto', p: 1 }}>
+            <Stack direction="row" spacing={1} sx={{ ml: 'auto', px: 1, py: 0.5 }}>
               {sessionPanel
                 ? permissions.manageSessions && (
                     <Button
@@ -366,22 +389,32 @@ export default function AdmissionAssessmentsScreen() {
                     </Button>
                   )
                 : permissions.book && (
-                    <Button
-                      size="small"
-                      variant="contained"
-                      color="inherit"
-                      startIcon={<Iconify icon="mdi:calendar-check-outline" />}
-                      disabled={
-                        !selection.length ||
-                        !academic.boardId ||
-                        !academic.mediumId ||
-                        scopes.isFetching ||
-                        scopes.isError
-                      }
-                      onClick={() => openStudentBooking(selection)}
+                    <CustomTooltip
+                      title={bookingDisabled ? bookingDisabledReason : ''}
+                      describeChild
                     >
-                      Book Session ({selection.length})
-                    </Button>
+                      <Box
+                        component="span"
+                        tabIndex={bookingDisabled ? 0 : undefined}
+                        aria-label={
+                          bookingDisabled ? 'Why Session Booking Is Unavailable' : undefined
+                        }
+                        sx={{ display: 'inline-flex' }}
+                      >
+                        <Button
+                          size="small"
+                          variant="contained"
+                          color="inherit"
+                          startIcon={<Iconify icon="mdi:calendar-check-outline" />}
+                          disabled={bookingDisabled}
+                          onClick={() => {
+                            if (!bookingDisabled) openStudentBooking(bookableSelection);
+                          }}
+                        >
+                          Book Session ({bookableSelection.length})
+                        </Button>
+                      </Box>
+                    </CustomTooltip>
                   )}
             </Stack>
           </Paper>
@@ -545,6 +578,7 @@ export default function AdmissionAssessmentsScreen() {
                     ) : undefined
                   }
                   isRefreshing={applicants.isFetching && !!applicants.currentData}
+                  refreshIndicator="skeleton"
                   filters={tableFilters}
                   onServerFilter={(next) =>
                     updateWorkbench({

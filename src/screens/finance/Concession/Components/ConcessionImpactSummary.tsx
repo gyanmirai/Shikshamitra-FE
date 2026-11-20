@@ -1,10 +1,10 @@
 import type { ConcessionRequestPreview } from 'src/redux/finance/ConcessionManagement/types';
 
 import { GlobalIcons } from 'src/utils/icons';
-import { formatNumber } from 'src/utils/formate_number';
 import { Box, Stack, Divider } from '@mui/material';
+import { formatNumber } from 'src/utils/formate_number';
 import { FormSectionCard } from 'src/components/form-section-card';
-import { DetailField } from 'src/components/detail-view';
+import { DetailField } from 'src/screens/finance/components/detail-view';
 
 export default function ConcessionImpactSummary({
   preview,

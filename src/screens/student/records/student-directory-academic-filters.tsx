@@ -3,6 +3,8 @@ import type { StudentDirectoryOptions } from 'src/redux/student/records/student-
 import { Box } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 
+import { studentAcademicFilterRowSx } from '../student-academic-filter-layout';
+
 import type { DirectoryAcademicScope } from './student-directory-scope';
 
 const ALL = 'all';
@@ -28,19 +30,7 @@ export default function StudentDirectoryAcademicFilters({
     (item) => scope.classes.length === 1 && item.parentId === scope.classes[0]
   );
   return (
-    <Box
-      sx={{
-        display: 'grid',
-        gridTemplateColumns: {
-          xs: 'minmax(0, 1fr)',
-          sm: 'repeat(2, minmax(0, 1fr))',
-          lg: 'repeat(4, minmax(0, 1fr))',
-        },
-        gap: 1,
-        flex: 1,
-        minWidth: 0,
-      }}
-    >
+    <Box sx={studentAcademicFilterRowSx}>
       <CustomSelect
         label="Board"
         value={scope.board}

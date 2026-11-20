@@ -5,8 +5,8 @@ import type {
 } from 'src/redux/finance/feeStructureWorkspace';
 
 import dayjs from 'dayjs';
-import { useState, useEffect } from 'react';
 import { LoadingButton } from '@mui/lab';
+import { useState, useEffect } from 'react';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
@@ -14,7 +14,7 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import CustomAccordion from 'src/components/custom-accordian';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { FormSectionCard } from 'src/components/form-section-card';
-import { DetailField, DetailSection } from 'src/components/detail-view';
+import { DetailField, DetailSection } from 'src/screens/finance/components/detail-view';
 import { Box, Stack, Button, IconButton, Typography, AccordionSummary } from '@mui/material';
 
 import { structureMoney } from '../feeStructurePresentation';

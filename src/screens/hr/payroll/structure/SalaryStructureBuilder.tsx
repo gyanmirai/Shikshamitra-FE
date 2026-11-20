@@ -30,6 +30,7 @@ import { useId, useRef, useMemo, useState, useEffect } from 'react';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { useUpdateEmployeeStatusMutation } from 'src/redux/hr/employeeApi';
+import { useGetSchoolPfManagementQuery } from 'src/redux/hr/pf-coverage-api';
 import { type HrFailure, normalizeHrFailure } from 'src/screens/hr/recovery/hr-failure';
 import { HrSetupLink, HrSetupRefresh } from 'src/screens/hr/recovery/hr-setup-controls';
 import {
@@ -165,6 +166,16 @@ export function SalaryStructureBuilder({
   const [selectedTemplateId, setSelectedTemplateId] = useState('');
   const [salaryBasis, setSalaryBasis] = useState<SalaryBasis>('EMPLOYER_COST');
   const [effectiveMonth, setEffectiveMonth] = useState(initialMonth || getLocalMonthKey());
+  const {
+    currentData: schoolPfManagement,
+    isError: pfManagementError,
+    isFetching: pfManagementFetching,
+    refetch: refetchPfManagement,
+  } = useGetSchoolPfManagementQuery(monthlyPayload(effectiveMonth), {
+    skip: !canManage || !/^\d{4}-(0[1-9]|1[0-2])$/.test(effectiveMonth),
+  });
+  const pfHandledExternally = schoolPfManagement?.isHandledExternally === true;
+  const pfManagementUnavailable = canManage && (!schoolPfManagement || pfManagementError);
   const [pendingMonth, setPendingMonth] = useState<string | null>(null);
   useEffect(
     () => onEffectiveMonthChange?.(effectiveMonth),
@@ -188,7 +199,7 @@ export function SalaryStructureBuilder({
   const [calculation, setCalculation] = useState<SalaryTemplateCalculation | null>(null);
   const onboardingGross = salaryBasis === 'GROSS' ? monthlyAmount : calculation?.grossSalary;
   const onboardingPfChoiceRequired =
-    isOnboarding && onboardingGross != null && onboardingGross > 25000;
+    isOnboarding && !pfHandledExternally && onboardingGross != null && onboardingGross > 25000;
   const statutoryDraft = useMemo<StatutoryProfileDraft | null>(
     () =>
       onboardingForm
@@ -282,7 +293,8 @@ export function SalaryStructureBuilder({
     : defaultTemplate;
   const selectedVersion = selectedTemplate?.editableVersion;
   const pfRules = (pfData?.items || []).filter((rule: any) => rule.isActive);
-  const pfNotApplicable = calculation?.pfEligibility?.status === 'NOT_APPLICABLE';
+  const pfNotApplicable =
+    pfHandledExternally || calculation?.pfEligibility?.status === 'NOT_APPLICABLE';
   const continuingPfMember =
     pfEnrollment.membership === 'EXISTING_MEMBER' ||
     calculation?.pfEligibility?.status === 'CONTINUING_MEMBER';
@@ -405,6 +417,7 @@ export function SalaryStructureBuilder({
     effectiveMonth,
     monthlyAmount,
     pfEnrollment,
+    pfHandledExternally,
     pfApplicable,
     pfChoice: statutoryDraft
       ? statutoryDraft.pfChoice == null
@@ -470,6 +483,7 @@ export function SalaryStructureBuilder({
         refetchTemplates().unwrap(),
         refetchPfRules().unwrap(),
         refetchEsiPolicies().unwrap(),
+        ...(canManage ? [refetchPfManagement().unwrap()] : []),
       ]);
     } finally {
       operationPending.current = false;
@@ -505,7 +519,9 @@ export function SalaryStructureBuilder({
     }
   };
   const pfConfigurationInvalid = Boolean(
-    pfApplicable && (pfRulesError || !pfRules.some((rule: any) => rule.id === pfRuleId))
+    pfManagementUnavailable ||
+    pfManagementFetching ||
+    (pfApplicable && (pfRulesError || !pfRules.some((rule: any) => rule.id === pfRuleId)))
   );
   const esiConfigurationInvalid = Boolean(
     esiMode === 'IN_PLATFORM' && (!effectiveEsiVersion || esiPoliciesError || esiPoliciesFetching)
@@ -514,11 +530,14 @@ export function SalaryStructureBuilder({
     if (onboarding?.invalidatePreviewKey) {
       setCalculation(null);
       setCalculatedSignature('');
+      if (canManage) refetchPfManagement();
     }
-  }, [onboarding?.invalidatePreviewKey]);
+  }, [onboarding?.invalidatePreviewKey, canManage, refetchPfManagement]);
   const calculationCurrent = Boolean(
     calculation &&
     calculatedSignature === signature &&
+    !pfManagementUnavailable &&
+    !pfManagementFetching &&
     (esiMode === 'EXTERNAL' ||
       (calculation.employeeStateInsurance.ruleId &&
         calculation.employeeStateInsurance.ruleId === effectiveEsiVersion?.id))
@@ -656,6 +675,7 @@ export function SalaryStructureBuilder({
           esiPolicyId: esiPolicyId || null,
           esiExternalReason: esiReason.trim() || null,
           expectedEsiPolicyVersionId: calculation.employeeStateInsurance.ruleId || null,
+          expectedPfHandledExternally: calculation.pfEligibility?.status === 'HANDLED_EXTERNALLY',
           statutoryProfileOverride: statutoryDraft?.profile,
           statutoryProfileConcurrencyStamp: statutoryDraft?.concurrencyStamp,
           statutoryProfileUpdatePf: statutoryDraft?.updatePf,
@@ -692,17 +712,21 @@ export function SalaryStructureBuilder({
       const parsed = parseApiProblemDetail(error);
       const failure = normalizeHrFailure(error);
       const previewStale = parsed.errorCode === 'HR:Payroll:CompensationPreviewStale';
-      if (previewStale) {
+      const pfManagementChanged = parsed.errorCode === 'HR:Payroll:PfManagementChanged';
+      if (previewStale || pfManagementChanged) {
         setCalculation(null);
         operationKeyRef.current = '';
-        await refetchEsiPolicies();
+        if (pfManagementChanged) await refetchPfManagement();
+        else await refetchEsiPolicies();
       } else if (error?.status === 409) setHasConflict(true);
       setOperationError(
-        previewStale
-          ? 'ESIC policy changed. Refresh preview and review the updated salary before saving.'
-          : error?.status === 409
-            ? 'Salary changed in another session. Reload the history and review before saving again.'
-            : failure.message
+        pfManagementChanged
+          ? failure.message
+          : previewStale
+            ? 'ESIC policy changed. Refresh preview and review the updated salary before saving.'
+            : error?.status === 409
+              ? 'Salary changed in another session. Reload the history and review before saving again.'
+              : failure.message
       );
       setOperationFailure(previewStale || error?.status === 409 ? null : failure);
       setOperationSection(
@@ -817,6 +841,7 @@ export function SalaryStructureBuilder({
           esiPolicyId: esiPolicyId || null,
           esiExternalReason: esiReason.trim() || null,
           expectedEsiPolicyVersionId: calculation.employeeStateInsurance.ruleId || null,
+          expectedPfHandledExternally: calculation.pfEligibility?.status === 'HANDLED_EXTERNALLY',
           statutoryProfile: 'IN-GJ' as const,
           overrides: customizing ? overrides : [],
           customizationReason: customizing ? customizationReason.trim() || null : null,
@@ -868,7 +893,9 @@ export function SalaryStructureBuilder({
     issue('salary-month', 'Choose a valid salary effective month.');
   if (statutoryDraft?.pfChoice === null)
     issue('pf-choice', 'Choose whether to opt in or opt out of PF.', '[data-salary-statutory]');
-  if (pfConfigurationInvalid)
+  if (pfManagementUnavailable || pfManagementFetching)
+    issue('pf-management', 'Wait for school PF settings to load.', '[data-salary-statutory]');
+  else if (pfConfigurationInvalid)
     issue(
       'pf-rule',
       pfRulesError
@@ -1552,6 +1579,14 @@ export function SalaryStructureBuilder({
             aria-label="Statutory deductions"
             sx={{ display: 'grid', gap: 1.5 }}
           >
+            {pfManagementError && (
+              <Alert
+                severity="error"
+                action={<Button onClick={() => refetchPfManagement()}>Retry</Button>}
+              >
+                School PF settings could not be loaded.
+              </Alert>
+            )}
             <EsiPolicyFields
               mode={esiMode}
               policyId={esiPolicyId}
@@ -1572,6 +1607,7 @@ export function SalaryStructureBuilder({
                   disabled={!canManage || busy}
                   grossSalary={salaryBasis === 'GROSS' ? monthlyAmount : calculation?.grossSalary}
                   pfSettings={pfSettings}
+                  pfHandledExternally={pfHandledExternally}
                   pfChoiceRequired={onboardingPfChoiceRequired}
                   pfChoice={statutoryDraft?.pfChoice}
                   onPfChoice={(apply) => {
@@ -1587,6 +1623,7 @@ export function SalaryStructureBuilder({
                   savedProfile={savedStatutoryProfile}
                   draftMode
                   pfSettings={pfSettings}
+                  pfHandledExternally={pfHandledExternally}
                   pfEnrollmentRecorded={Boolean(currentRevision)}
                   disabled={!canManage || busy}
                   grossSalary={salaryBasis === 'GROSS' ? monthlyAmount : calculation?.grossSalary}

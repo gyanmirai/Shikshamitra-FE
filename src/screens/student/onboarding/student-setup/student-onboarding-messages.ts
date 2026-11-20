@@ -176,7 +176,7 @@ const errorMessages: Record<string, string> = {
   'Students.Onboarding.PlacementInvalid':
     'The selected class or division is unavailable. Refresh and select it again.',
   'Students.Onboarding.IdentifierSeriesUnavailable':
-    'No GR numbering rule is available. Ask your administrator to publish one.',
+    'This GR series is unavailable. Ask your administrator to check its limit and published coverage in Onboarding Settings.',
   'Students.Onboarding.IdentifierAlreadyAllocated':
     'This GR number is already in use or reserved. Enter a different number.',
   'Students.Onboarding.SeatReservationExpired':
@@ -218,6 +218,24 @@ export function getOnboardingErrorMessage(error: unknown, fallback: string): str
   const status = error && typeof error === 'object' && 'status' in error ? error.status : undefined;
   if (status === 401 || status === 403) {
     return 'You cannot make this change. Ask your administrator for access.';
+  }
+  if (code === 'Students.Onboarding.IdentifierSeriesUnavailable') {
+    const record = (value: unknown): Record<string, unknown> =>
+      value && typeof value === 'object' ? (value as Record<string, unknown>) : {};
+    const source = record(error);
+    const isProblemBody =
+      'errorCode' in source || 'code' in source || typeof source.error === 'object';
+    const body = record(
+      record(source.response).data ?? (isProblemBody ? source : (source.data ?? source))
+    );
+    const data = record(record(body.error).data ?? body.data);
+    if (data.ReasonCode === 'SeriesLimitReached') {
+      const maximum =
+        typeof data.MaximumNumber === 'number' && Number.isFinite(data.MaximumNumber)
+          ? ` of ${data.MaximumNumber}`
+          : '';
+      return `The GR series limit${maximum} has been reached. Ask your administrator to increase or remove the limit in Onboarding Settings.`;
+    }
   }
   return (
     messages[problem.detail] ||

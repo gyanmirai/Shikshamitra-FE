@@ -10,17 +10,10 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { skeletonReducedMotionSx } from 'src/theme/styles/skeleton';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import {
-  Box,
-  Stack,
-  Button,
-  TextField,
-  Typography,
-  DialogActions,
-  LinearProgress,
-} from '@mui/material';
+import { Box, Stack, Button, Skeleton, TextField, Typography, DialogActions } from '@mui/material';
 import {
   admissionApplicationsApi,
   useLazyGetAdmissionApplicationQuery,
@@ -475,7 +468,20 @@ export function AssessmentBatchDialog({
                 {error}
               </StudentFeedback>
             )}
-            {busy && <LinearProgress aria-label="Saving Assessment Batch" />}
+            {busy && (
+              <Stack
+                direction="row"
+                spacing={1}
+                role="status"
+                aria-label="Saving Assessment Batch"
+                aria-busy
+                sx={skeletonReducedMotionSx}
+              >
+                <Skeleton variant="text" width="28%" />
+                <Skeleton variant="text" width="22%" />
+                <Skeleton variant="text" width="18%" />
+              </Stack>
+            )}
             {!!saved && (
               <StudentFeedback notificationKey="STU-0248" presentation="inline" severity="success">
                 {saved} saved. Successful rows will not be submitted again.

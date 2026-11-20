@@ -5,7 +5,7 @@ import { it, vi, expect, beforeEach } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { act, render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import StudentICardBuilder from './student-icard-builder';
 import StudentICardTemplates from './student-icard-templates';
@@ -56,7 +56,6 @@ vi.mock('src/components/custom-breadcrumbs', () => ({
     </>
   ),
 }));
-vi.mock('src/components/customDialog', () => ({ default: () => null }));
 vi.mock('src/components/confirm-dialog', () => ({
   ConfirmDialog: ({ open, action }: any) =>
     open ? <section role="dialog">{action}</section> : null,
@@ -129,6 +128,7 @@ vi.mock('src/redux/student/records/student-records-api', () => ({
     mocks.directory(input, options),
 }));
 vi.mock('src/redux/student/records/student-record-documents-api', () => ({
+  useLazyGetRecordIdPhotoQuery: () => [vi.fn()],
   useGetRecordIdTemplateQuery: () => ({ currentData: mocks.legacy }),
   useGetRecordIdTemplatesQuery: () => ({ currentData: mocks.templates }),
   useSaveRecordIdTemplateMutation: () => [mocks.legacySave, {}],
@@ -245,11 +245,24 @@ beforeEach(() => {
   mocks.preview.mockResolvedValue([]);
 });
 
-it('passes the selected global academic year into the standalone template builder', async () => {
+it('opens the standalone template builder full-screen in the selected academic year', async () => {
   render(wrap(<StudentICardTemplates />));
-  fireEvent.click(screen.getByRole('button', { name: 'Create Student I-Card' }));
-  expect(await screen.findByRole('textbox', { name: /Template name/ })).toBeVisible();
+  fireEvent.click(screen.getByRole('button', { name: 'Create I-Card' }));
+  const dialog = await screen.findByRole('dialog', { name: 'Create I-Card' });
+  expect(dialog).toHaveClass('MuiDialog-paperFullScreen');
+  const name = within(dialog).getByRole('textbox', { name: /Template name/ });
+  expect(name).toBeVisible();
   expect(mocks.options).toHaveBeenLastCalledWith({ academicYearId: 'year-1' });
+
+  fireEvent.change(name, { target: { value: 'Unsaved design' } });
+  fireEvent.click(within(dialog).getByRole('button', { name: 'close' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Keep editing' }));
+  expect(name).toHaveValue('Unsaved design');
+
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Discard changes' }));
+  await waitFor(() => expect(dialog).not.toBeInTheDocument());
+  expect(await screen.findByRole('button', { name: 'Create I-Card' })).toBeVisible();
 });
 
 it('uses single Board/Medium with All Classes and dependent plain Division choices', async () => {
@@ -769,7 +782,7 @@ it('ignores a late preview response after the opener academic context changes', 
   });
   expect(screen.queryByRole('heading', { name: 'Review Cards' })).not.toBeInTheDocument();
   expect(
-    screen.queryByRole('img', { name: 'I-card preview for Late old-context pupil' })
+    screen.queryByRole('img', { name: 'I-Card preview for Late old-context pupil' })
   ).not.toBeInTheDocument();
 });
 
@@ -782,7 +795,7 @@ it.each([true, false])(
       );
     render(wrap(<StudentICardTemplates />));
     const history = screen.queryByRole('link', { name: 'View issued cards' });
-    if (canView) expect(history).toHaveAttribute('href', '/student/records/documents?view=ids');
+    if (canView) expect(history).toHaveAttribute('href', '/student/student-i-card?view=issued');
     else expect(history).not.toBeInTheDocument();
   }
 );
@@ -810,7 +823,7 @@ it.each(['create', 'legacy'] as const)(
 it('allows metadata-only Create to open without a global academic year', async () => {
   mocks.state.globalState.currentYear.id = undefined;
   render(wrap(<StudentICardTemplates />));
-  const create = screen.getByRole('button', { name: 'Create Student I-Card' });
+  const create = screen.getByRole('button', { name: 'Create I-Card' });
   expect(create).toBeEnabled();
   fireEvent.click(create);
   expect(await screen.findByRole('textbox', { name: /Template name/ })).toBeVisible();

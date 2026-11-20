@@ -3,7 +3,7 @@ module: hr
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-11-08
+updated_on: 2026-11-16
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -13,6 +13,14 @@ audience: humans-and-agents
 `employee-icard-template-api.ts` retains the existing template, scoped school-logo, protected asset, and PDF endpoints. The staff builder writes schema version 2 through `employee-builder-state.ts`: `layoutJson` preserves front/back canvas elements and explicit `widthMm`/`heightMm`; `printSettingsJson` declares millimetre units and duplex/output settings. The legacy adapter converts prior margin/gap points once and keeps custom styles and palette bindings. The saved legacy field list is synchronized with visible configured staff bindings so backend field gates remain meaningful. Backend rendering and validation remain owned by [HR API documentation](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md).
 
 The PDF response handler keeps successful responses as blobs and parses failed responses as JSON so structured configuration details reach the builder. An unreadable error body receives safe export guidance.
+
+`employee-icard-template-api.ts` exposes an explicit lazy `/employees/i-card/templates/photos/{employeeId}` read with the raw photo DTO and `keepUnusedDataFor: 0`.
+The staff builder provides selected cardholders and allowed preview values to the shared studio; the photo editor requests the full source only for the chosen record.
+Record-keyed `photoEdits` stay in component memory and are included only in PDF requests, never reusable template writes.
+`use-card-photo-edits.ts` removes deselected staff drafts and resets them when organization or academic context changes.
+Saving a template retains the unsaved-photo dirty state.
+On-device removal shares the explicit lazy Transformers.js/MODNet worker with Student cards; public model/runtime downloads do not upload the photo.
+Backend ownership remains in the [HR API documentation](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md).
 
 `esi-policy-api.ts` loads `GET /payroll/statutory-schemes/esi/policies/{id}/archive-review` when the archive confirmation mounts, refetching cached reviews. The dialog uses `currentData`, rejects loading/failed/wrong-policy reviews, and submits the reviewed concurrency stamp with `confirmed: true`. Reviews share statutory and salary-template invalidation tags; failed mutations refresh dependencies before retry. See the [backend policy contract](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md#named-esic-policies).
 

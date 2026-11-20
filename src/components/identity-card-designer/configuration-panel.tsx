@@ -1,20 +1,19 @@
-import { useId } from 'react';
-import { GlobalIcons } from 'src/utils/icons';
-import { Iconify } from 'src/components/iconify';
+import { useId, useRef, useEffect } from 'react';
 import { Box, Tab, Stack, Alert } from '@mui/material';
 import { CustomTabs } from 'src/components/custom-tabs';
-import { FormSectionHeader } from 'src/components/form-section-card';
 
 import { ElementLayers } from './layers';
 import { PrintSettings } from './print-settings';
 import { LayoutSettings } from './layout-settings';
 import { ElementInspector } from './element-inspector';
 import { validateIdentityCardLayout } from './geometry';
+import { ImageLayerAction } from './editor/image-layer-action';
 
 import type { IdentityCardConfigurationProps } from './types';
 
 export function DesignerConfigurationPanel(props: IdentityCardConfigurationProps) {
   const id = useId();
+  const scrollArea = useRef<HTMLElement>(null);
   const {
     tab,
     onTabChange,
@@ -25,43 +24,44 @@ export function DesignerConfigurationPanel(props: IdentityCardConfigurationProps
     selected,
     layout,
     fields,
+    fieldPickerLabel,
     onSelect,
     onAdd,
     onElementChange,
     onDelete,
+    side = 'front',
+    onLayoutChange,
   } = props;
+  useEffect(() => {
+    if (tab === 'elements' && selectedId && scrollArea.current) scrollArea.current.scrollTop = 0;
+  }, [tab, selectedId]);
   const errors = validateIdentityCardLayout(layout, fields);
   const tabs = [
-    ...(brandingContent ? [{ value: 'school', label: 'School', icon: GlobalIcons.building }] : []),
-    { value: 'layout', label: 'Layout', icon: GlobalIcons.academicFieldSettings },
-    { value: 'elements', label: 'Elements', icon: GlobalIcons.edit },
-    { value: 'print', label: 'Print', icon: GlobalIcons.printer },
+    ...(brandingContent ? [{ value: 'school', label: 'School' }] : []),
+    { value: 'layout', label: 'Layout' },
+    { value: 'elements', label: 'Elements' },
+    { value: 'print', label: 'Print' },
   ];
   return (
     <Box
       sx={{
         display: 'flex',
         flexDirection: 'column',
+        width: 1,
         minHeight: 0,
         minWidth: 0,
         overflow: 'hidden',
-        gap: 1,
+        gap: 0.5,
       }}
     >
-      <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
-        <FormSectionHeader
-          title="Configuration"
-          icon={GlobalIcons.academicFieldSettings}
-          descriptionTooltip="School branding, layout, selected elements and print settings have separate tabs. Only this panel scrolls; edits appear on the fixed card preview."
-        />
-      </Box>
       <CustomTabs
         value={tab}
         onChange={(_, value) => onTabChange(value)}
         guardUnsavedChanges={false}
+        density="compact"
         variant="fullWidth"
         aria-label="Designer settings"
-        sx={{ flexShrink: 0 }}
+        sx={{ flexShrink: 0, '& .MuiTabs-scroller': { px: 0 } }}
       >
         {tabs.map((item) => (
           <Tab
@@ -69,18 +69,15 @@ export function DesignerConfigurationPanel(props: IdentityCardConfigurationProps
             value={item.value}
             label={item.label}
             disabled={disabled}
-            icon={
-              <Iconify icon={item.icon} width={18} sx={{ display: { xs: 'none', sm: 'block' } }} />
-            }
-            iconPosition="start"
             id={`${id}-${item.value}`}
             aria-controls={`${id}-panel-${item.value}`}
-            sx={{ minWidth: 0, px: 1 }}
+            sx={{ minWidth: 0, px: 0.75 }}
           />
         ))}
       </CustomTabs>
       <Box
         key={tab}
+        ref={scrollArea}
         component="section"
         role="region"
         aria-label="Card configuration"
@@ -114,6 +111,14 @@ export function DesignerConfigurationPanel(props: IdentityCardConfigurationProps
           {tab === 'layout' && <LayoutSettings {...props} />}
           {tab === 'elements' && (
             <>
+              <ElementInspector
+                element={selected}
+                fields={fields}
+                fieldPickerLabel={fieldPickerLabel}
+                onChange={onElementChange}
+                onDelete={onDelete}
+                disabled={disabled}
+              />
               <ElementLayers
                 elements={elements}
                 selectedId={selectedId}
@@ -121,11 +126,11 @@ export function DesignerConfigurationPanel(props: IdentityCardConfigurationProps
                 onAdd={onAdd}
                 disabled={disabled}
               />
-              <ElementInspector
+              <ImageLayerAction
                 element={selected}
-                fields={fields}
-                onChange={onElementChange}
-                onDelete={onDelete}
+                layout={layout}
+                side={side}
+                onLayoutChange={onLayoutChange}
                 disabled={disabled}
               />
             </>

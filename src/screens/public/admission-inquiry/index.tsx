@@ -516,7 +516,6 @@ function InquiryForm({
           offeringId: offering.id,
           source: context.source as AdmissionInquirySource,
           sourceDetail: '',
-          sendAcknowledgement: false,
           fields: values.fields,
         },
         mappedFields,

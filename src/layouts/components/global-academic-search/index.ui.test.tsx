@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
   dispatch: vi.fn(),
   options: [] as GlobalAcademicSearchOption[],
   selectedOption: null as GlobalAcademicSearchOption | null,
+  currentYear: { id: 'year-a', name: '2026-2027' } as { id?: string; name?: string },
   years: {
     items: [
       { id: 'year-a', name: '2026-2027' },
@@ -43,7 +44,7 @@ vi.mock('react-redux', () => ({
   useDispatch: () => mocks.dispatch,
   useSelector: (select: (state: unknown) => unknown) =>
     select({
-      globalState: { currentYear: mocks.years.items[0], currentBoard: {}, currentMedium: {} },
+      globalState: { currentYear: mocks.currentYear, currentBoard: {}, currentMedium: {} },
     }),
 }));
 vi.mock('src/hooks/use-confirm-dialog', () => ({ useConfirmDialog: () => [mocks.confirm, null] }));
@@ -74,36 +75,63 @@ describe('Global academic context confirmation', () => {
     mocks.scope.accessibleHierarchy = [];
     mocks.options = [];
     mocks.selectedOption = null;
+    mocks.currentYear = mocks.years.items[0];
   });
 
-  it('sets a complete context without claiming a year-only state is the current context', async () => {
-    mocks.pathname = '/academic/curriculumSubjects';
-    mocks.options = [
-      {
-        label: '2025-2026 / GSEB / Gujarati',
-        value: 'previous-gseb-gujarati',
-        academicYear: { id: 'year-2025', name: '2025-2026' },
-        board: { id: 'gseb', name: 'GSEB' },
-        medium: { id: 'gujarati', name: 'Gujarati' },
-      } as GlobalAcademicSearchOption,
-    ];
-    render(<GlobalAcademicSearch />);
-    const selector = screen.getByRole('combobox', { name: 'Academic Year, Board and Medium' });
-    expect(selector).toHaveValue('');
-    mocks.dispatch.mockClear();
-    fireEvent.mouseDown(selector);
-    fireEvent.click(await screen.findByRole('option', { name: mocks.options[0].label }));
-    await waitFor(() =>
-      expect(mocks.confirm).toHaveBeenCalledWith(
-        expect.objectContaining({
-          message:
-            'Are you sure you want to set academic year, board and medium to 2025-2026 / GSEB / Gujarati?',
-        })
-      )
-    );
-    expect(selector).toHaveValue('');
-    expect(mocks.dispatch).not.toHaveBeenCalled();
+  it('initializes an empty academic context while the Finance Dashboard selector is hidden', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-11-17T12:00:00Z'));
+    try {
+      mocks.pathname = '/finance/dashboard';
+      mocks.currentYear = {};
+      const view = render(<GlobalAcademicSearch hidden />);
+      expect(view.container).toBeEmptyDOMElement();
+      await waitFor(() =>
+        expect(mocks.dispatch).toHaveBeenCalledWith(
+          expect.objectContaining({
+            type: 'globalState/setCurrentYear',
+            payload: expect.objectContaining({ id: 'year-a' }),
+          })
+        )
+      );
+    } finally {
+      vi.useRealTimers();
+    }
   });
+
+  it.each(['/academic/curriculumSubjects', '/student/setup', '/student/setup/'])(
+    'sets a complete context on %s without claiming a year-only state is the current context',
+    async (pathname) => {
+      mocks.pathname = pathname;
+      mocks.options = [
+        {
+          label: '2025-2026 / GSEB / Gujarati',
+          value: 'previous-gseb-gujarati',
+          academicYear: { id: 'year-2025', name: '2025-2026' },
+          board: { id: 'gseb', name: 'GSEB' },
+          medium: { id: 'gujarati', name: 'Gujarati' },
+        } as GlobalAcademicSearchOption,
+      ];
+      render(<GlobalAcademicSearch />);
+      const selector = screen.getByRole('combobox', { name: 'Academic Year, Board and Medium' });
+      expect(selector).toHaveValue('');
+      mocks.dispatch.mockClear();
+      fireEvent.mouseDown(selector);
+      fireEvent.click(await screen.findByRole('option', { name: mocks.options[0].label }));
+      await waitFor(() =>
+        expect(mocks.confirm).toHaveBeenCalledWith(
+          expect.objectContaining({
+            title: 'Change Academic Year, Board and Medium',
+            confirmText: undefined,
+            message:
+              'Are you sure you want to set academic year, board and medium to 2025-2026 / GSEB / Gujarati?',
+          })
+        )
+      );
+      expect(selector).toHaveValue('');
+      expect(mocks.dispatch).not.toHaveBeenCalled();
+    }
+  );
 
   it('uses the visible complete context for the change message', async () => {
     mocks.pathname = '/academic/curriculumSubjects';

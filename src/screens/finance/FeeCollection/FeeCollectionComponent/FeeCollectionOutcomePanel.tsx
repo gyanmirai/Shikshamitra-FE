@@ -5,9 +5,9 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Box, Button, Typography } from '@mui/material';
 import { formatNumber } from 'src/utils/formate_number';
-import { FeeCollectionStatusType } from 'src/enums/fee-collection-type';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { DetailGrid, DetailField, DetailSection } from 'src/components/detail-view';
+import { FeeCollectionStatusType } from 'src/enums/fee-collection-type';
+import { DetailGrid, DetailField, DetailSection } from 'src/screens/finance/components/detail-view';
 
 type FeeCollectionOutcomePanelProps = {
   collectResponse: CollectFeeOutput;

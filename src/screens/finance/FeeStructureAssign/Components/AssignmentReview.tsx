@@ -7,9 +7,9 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { DetailField, DetailSection } from 'src/components/detail-view';
 import { Box, Stack, Collapse, IconButton, Typography } from '@mui/material';
 import { InfoTooltipIcon } from 'src/screens/hr/policies/components/HRPolicySharedUI';
+import { DetailField, DetailSection } from 'src/screens/finance/components/detail-view';
 import { selectableAssignmentPolicyFamilies } from 'src/redux/finance/studentFeeAssignment';
 
 import { groupAssignmentInstallments } from './assignmentReviewPresentation';
@@ -51,6 +51,7 @@ export default function AssignmentReview({
     </IconButton>
   );
   const installments = groupAssignmentInstallments(data.lines);
+  const cancelledAmount = data.lines.reduce((sum, line) => sum + (line.optionalServiceCancellationAmount ?? 0), 0);
   const legacy = data.calculationVersion === 'LegacyUnknown';
   const tableId = `assignment-${data.studentId}-${data.structureId}-${committed ? 'saved' : 'preview'}`;
   const money = (value: number) => formatNumber(value, data.currency);
@@ -70,7 +71,7 @@ export default function AssignmentReview({
         }}
       >
         <DetailField
-          label="Fee Structure"
+          label="Fee structure"
           value={`${data.structureName} · ${data.revisionNumber ? `r${data.revisionNumber}` : 'Historical'}`}
         />
         {data.registrationJoiningDate && (
@@ -78,6 +79,9 @@ export default function AssignmentReview({
         )}
         {data.assignmentSource === 'Admission' && (
           <DetailField label="Assignment source" value="Admission" />
+        )}
+        {committed && cancelledAmount > 0 && (
+          <DetailField label="Cancelled installments" value={money(cancelledAmount)} />
         )}
         {data.reductionTotal > 0 && (
           <DetailField label="Proration reduction" value={money(data.reductionTotal)} />
@@ -144,7 +148,7 @@ export default function AssignmentReview({
                   return (
                     <DetailField
                       key={family}
-                      label={`${family} policy`}
+                      label={family === 'refund' ? 'Refund policy' : 'Collection policy'}
                       value={policy ? `${policy.name} · v${policy.version}` : 'No policy assigned'}
                     />
                   );

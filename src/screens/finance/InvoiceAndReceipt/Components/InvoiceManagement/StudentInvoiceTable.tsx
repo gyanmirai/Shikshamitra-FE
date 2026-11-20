@@ -7,6 +7,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { Box, Divider, Skeleton, Typography } from '@mui/material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { InvoiceStatusColors } from 'src/enums/finance-invoice-status';
+import { DetailField } from 'src/screens/finance/components/detail-view';
 import { useGetStudentInvoiceDataQuery } from 'src/redux/invoiceAndReceipt/studentInvoiceApi';
 
 import type { InvoiceData } from './type';
@@ -153,32 +154,26 @@ export default function InvoiceTableView({
             </Box>
 
             {/* Row 1: Student, Class, Division, Created, Academic Year */}
-            <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap', mb: 2 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                gap: 3,
+                flexWrap: 'wrap',
+                mb: 2,
+                '& .MuiTypography-root': { color: 'inherit' },
+              }}
+            >
               {[
-                { label: 'Student', value: selectedStudent?.student },
+                { label: 'Student name', value: selectedStudent?.student },
                 { label: 'Class', value: selectedStudent?.class },
                 { label: 'Division', value: selectedStudent?.division },
                 { label: 'Created', value: selectedStudent?.createdAt },
-                { label: 'Academic Year', value: selectedStudent?.academicYear },
-                { label: 'Billing Cycle', value: selectedStudent?.billingCycle },
-                { label: 'Billing Period', value: billingPeriodDisplay },
+                { label: 'Academic year', value: selectedStudent?.academicYear },
+                { label: 'Billing cycle', value: selectedStudent?.billingCycle },
+                { label: 'Billing period', value: billingPeriodDisplay },
               ].map((f) => (
                 <Box key={f.label} sx={{ minWidth: 80 }}>
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      opacity: 0.65,
-                      display: 'block',
-                      fontSize: '0.65rem',
-                      textTransform: 'uppercase',
-                      letterSpacing: 0.5,
-                    }}
-                  >
-                    {f.label}
-                  </Typography>
-                  <Typography variant="subtitle2" fontWeight={600}>
-                    {f.value || '—'}
-                  </Typography>
+                  <DetailField label={f.label} value={f.value} />
                 </Box>
               ))}
             </Box>
@@ -197,13 +192,7 @@ export default function InvoiceTableView({
             }}
           >
             <Box sx={{ px: 2.5, py: 1.25, bgcolor: 'background.neutral' }}>
-              <Typography
-                variant="caption"
-                fontWeight={700}
-                sx={{ letterSpacing: 1, textTransform: 'uppercase', color: 'text.secondary' }}
-              >
-                Fee Breakdown
-              </Typography>
+              <Typography variant="subtitle1">Fee Breakdown</Typography>
             </Box>
             <Divider />
             {selectedStudent.feeItems.map((item, idx) => (
@@ -301,11 +290,7 @@ export default function InvoiceTableView({
         {/* Payment History */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
           <Iconify icon="mdi:history" width={18} color="text.secondary" />
-          <Typography
-            variant="caption"
-            fontWeight={700}
-            sx={{ letterSpacing: 1, textTransform: 'uppercase', color: 'text.secondary' }}
-          >
+          <Typography variant="subtitle1">
             Payment History ({(invoiceData || []).length})
           </Typography>
         </Box>

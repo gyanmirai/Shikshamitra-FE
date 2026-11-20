@@ -14,8 +14,8 @@ import { formatNumber } from 'src/utils/formate_number';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
-import { DetailGrid, DetailField, DetailSection } from 'src/components/detail-view';
 import { Box, Stack, Alert, Drawer, Button, Skeleton, Typography } from '@mui/material';
+import { DetailGrid, DetailField, DetailSection } from 'src/screens/finance/components/detail-view';
 import FinancePolicyDrawerHeader from 'src/screens/finance/policies/components/FinancePolicyDrawerHeader';
 import {
   useGetCashDetailQuery,

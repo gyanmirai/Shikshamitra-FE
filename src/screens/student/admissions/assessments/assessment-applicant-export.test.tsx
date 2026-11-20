@@ -67,6 +67,6 @@ it('exports exactly the displayed merged Status/Attendance, excludes Result/Acti
   expect(columns.slice(-2).map((column) => column.label)).toEqual(['Status', 'Action']);
   expect(columns.slice(-2)).toEqual([
     expect.objectContaining({ id: 'status', sticky: true, stickyPosition: 'right', width: 160 }),
-    expect.objectContaining({ id: 'actions', sticky: true, stickyPosition: 'right', width: 180 }),
+    expect.objectContaining({ id: 'actions', sticky: true, stickyPosition: 'right', width: 64 }),
   ]);
 });

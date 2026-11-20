@@ -77,3 +77,60 @@ describe('assignment dependency cache refresh', () => {
     }
   });
 });
+
+it('refetches only affected student/year contexts after assignment and retains unrelated cached contexts', async () => {
+  const calls: Record<string, number> = {};
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (request: Request) => {
+      if (request.url.endsWith('/contexts')) {
+        const body = await request.json();
+        const key = body.academicYearId + ':' + body.studentIds[0];
+        calls[key] = (calls[key] ?? 0) + 1;
+        return new Response(JSON.stringify([]), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      return new Response(
+        JSON.stringify({ assignmentId: 'saved', outcome: 'Assigned', assignment: {} }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    })
+  );
+  const { api } = await import('src/redux/service');
+  const { studentFeeAssignmentApi } = await import('./studentFeeAssignment');
+  const store = configureStore({
+    reducer: { [api.reducerPath]: api.reducer },
+    middleware: (getDefault) => getDefault().concat(api.middleware),
+  });
+  const subscriptions = [
+    { academicYearId: 'year', studentIds: ['changed'] },
+    { academicYearId: 'year', studentIds: ['unrelated'] },
+    { academicYearId: 'other-year', studentIds: ['changed'] },
+  ].map((arg) =>
+    store.dispatch(studentFeeAssignmentApi.endpoints.assignmentContexts.initiate(arg))
+  );
+  try {
+    await Promise.all(subscriptions.map((s) => s.unwrap()));
+    await store
+      .dispatch(
+        studentFeeAssignmentApi.endpoints.assignmentCommit.initiate({
+          studentId: 'changed',
+          academicYearId: 'year',
+          standardFeeStructureId: 'structure',
+          selectedOptionalFeeHeadIds: [],
+          servicePeriods: [],
+          feeHeadDetails: [],
+        })
+      )
+      .unwrap();
+    await waitFor(() => expect(calls['year:changed']).toBe(2));
+    expect(calls['year:unrelated']).toBe(1);
+    expect(calls['other-year:changed']).toBe(1);
+  } finally {
+    subscriptions.forEach((s) => s.unsubscribe());
+    store.dispatch(api.util.resetApiState());
+    vi.unstubAllGlobals();
+  }
+});

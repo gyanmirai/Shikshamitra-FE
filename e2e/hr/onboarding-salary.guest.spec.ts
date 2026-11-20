@@ -37,7 +37,7 @@ test('Bug6564 preserves onboarding salary after context failure and retries the 
   await page.getByRole('option', { name: 'Hinduism', exact: true }).click();
   await page.getByRole('combobox', { name: /^Role(?: \*)?$/ }).click();
   await page.getByRole('option', { name: 'Office staff', exact: true }).click();
-  await page.getByRole('combobox', { name: 'Shift *', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Work shift *', exact: true }).click();
   await page.getByRole('option', { name: 'Day shift', exact: true }).click();
   await page.getByRole('button', { name: 'Next', exact: true }).click();
   await page.getByRole('button', { name: 'Next', exact: true }).click();
@@ -77,7 +77,7 @@ test('salary precedes Finalize; back, cancel, failure and retry preserve the dra
   await page.getByRole('option', { name: 'Hinduism', exact: true }).click();
   await page.getByRole('combobox', { name: /^Role(?: \*)?$/ }).click();
   await page.getByRole('option', { name: 'Office staff', exact: true }).click();
-  await page.getByRole('combobox', { name: 'Shift *', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Work shift *', exact: true }).click();
   await page.getByRole('option', { name: 'Day shift', exact: true }).click();
   await page.getByRole('button', { name: 'Next', exact: true }).click();
   await page.getByRole('button', { name: 'Next', exact: true }).click();

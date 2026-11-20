@@ -5,16 +5,24 @@ import type { IdentityCardElement, IdentityCardPreviewProps } from './types';
 export function ElementContent({
   element,
   values = {},
+  fieldTokens,
   logoUrl,
   photoUrl,
 }: IdentityCardPreviewProps & { element: IdentityCardElement }) {
   const { style = {} } = element;
-  if (element.type === 'photo' || element.type === 'logo') {
-    const url = element.type === 'photo' ? photoUrl : logoUrl;
+  if (element.type === 'photo' || element.type === 'logo' || element.type === 'image') {
+    const url =
+      element.type === 'image' ? element.imageData : element.type === 'photo' ? photoUrl : logoUrl;
     return url ? (
       <img
         src={url}
-        alt={element.type === 'photo' ? 'Cardholder' : 'School logo'}
+        alt={
+          element.type === 'photo'
+            ? 'Cardholder'
+            : element.type === 'image'
+              ? element.label || 'Uploaded image'
+              : 'School logo'
+        }
         style={{
           width: '100%',
           height: '100%',
@@ -50,12 +58,24 @@ export function ElementContent({
       />
     );
   if (element.type !== 'text') return null;
-  const boundValue = element.fieldKey === 'static' ? element.value : values[element.fieldKey ?? ''];
-  const value = boundValue ?? element.value ?? `[${element.label || element.fieldKey || 'Text'}]`;
+  const { fieldKey } = element;
+  const dynamic = Boolean(fieldKey && fieldKey !== 'static');
+  const token = fieldKey ? fieldTokens?.[fieldKey] : undefined;
+  const value =
+    dynamic && fieldKey
+      ? token
+        ? `[${token}]`
+        : (values[fieldKey] ?? `[${element.label || fieldKey}]`)
+      : (element.value ?? '');
+  const labelPrefix =
+    style.showLabel && element.label ? `${element.label}${style.separator ?? ': '}` : '';
+  const prefix = dynamic ? (element.prefix ?? labelPrefix) : labelPrefix;
   return (
     <div
       style={{
         fontFamily: style.fontFamily || 'Arial',
+        fontStyle: style.fontStyle,
+        textDecoration: style.textDecoration,
         fontSize: style.fontSize ?? 12,
         fontWeight: Number(style.fontWeight) || (style.fontWeight === 'bold' ? 700 : 400),
         textAlign: style.textAlign ?? 'left',
@@ -65,7 +85,7 @@ export function ElementContent({
         overflowWrap: 'anywhere',
       }}
     >
-      {style.showLabel && element.label ? `${element.label}${style.separator ?? ': '}` : ''}
+      {prefix}
       {value}
     </div>
   );

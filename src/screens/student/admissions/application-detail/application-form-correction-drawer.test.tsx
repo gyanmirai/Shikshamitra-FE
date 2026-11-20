@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
 import { it, vi, expect, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import { ApplicationFormCorrectionDrawer } from './application-form-correction-drawer';
 
@@ -13,6 +13,7 @@ const state = vi.hoisted(() => ({
   permissions: [] as any[],
   applicationOptions: undefined as any,
   formOptions: undefined as any,
+  editorPending: null as Promise<void> | null,
 }));
 vi.mock('react-redux', () => ({
   useSelector: (select: any) => select({ auth: { permissions: state.permissions } }),
@@ -32,7 +33,9 @@ vi.mock('src/components/customDialog', () => ({
   DialogScrollContent: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
 vi.mock('./application-form-correction-frame', () => ({
-  ApplicationFormCorrectionFrame: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  ApplicationFormCorrectionFrame: ({ children }: { children: ReactNode }) => (
+    <div data-testid="correction-frame">{children}</div>
+  ),
 }));
 vi.mock('./application-form-correction-editor', () => ({
   ApplicationFormCorrectionEditor: ({ application, form, allowed, blockedReason }: any) => (
@@ -45,6 +48,7 @@ vi.mock('./application-form-correction-editor', () => ({
   ),
 }));
 beforeEach(() => {
+  state.editorPending = null;
   state.permissions = [
     'Students.Admissions.Applications.View',
     'Students.Admissions.Applications.Add',
@@ -110,4 +114,34 @@ it('does not fetch form data when existing view/edit permissions are missing', (
   expect(screen.getByText('You Do Not Have Permission to Correct This Application.')).toBeVisible();
   expect(state.applicationOptions.skip).toBe(true);
   expect(state.formOptions.skip).toBe(true);
+});
+vi.mock('./application-workspace-panels', async () => {
+  const { ApplicationFormCorrectionEditor } = await import('./application-form-correction-editor');
+  return {
+    ApplicationFormCorrectionEditor: (editorProps: any) => {
+      if (state.editorPending) {
+        // React Suspense signals an unresolved code import with its promise.
+        // eslint-disable-next-line @typescript-eslint/no-throw-literal
+        throw state.editorPending;
+      }
+      return <ApplicationFormCorrectionEditor {...editorProps} />;
+    },
+  };
+});
+
+it('keeps the correction frame and Close available while the editor chunk is loading', async () => {
+  let finish!: () => void;
+  state.editorPending = new Promise<void>((resolve) => {
+    finish = resolve;
+  });
+  const onClose = vi.fn();
+  render(<ApplicationFormCorrectionDrawer {...props} onClose={onClose} />);
+  expect(await screen.findByRole('status', { name: 'Loading Application Editor' })).toBeVisible();
+  expect(screen.getByTestId('correction-frame')).toBeVisible();
+  fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+  expect(onClose).toHaveBeenCalledOnce();
+  state.editorPending = null;
+  await act(async () => finish());
+  expect(await screen.findByText('original-stamp')).toBeVisible();
+  expect(screen.getByText('Original answer')).toBeVisible();
 });

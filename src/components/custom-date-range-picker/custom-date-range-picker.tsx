@@ -47,6 +47,7 @@ export function CustomDateRangePicker(props: DateRangePickerProps) {
     helperText,
     dateFormat,
     allowManualInput,
+    onInputErrorChange,
     referenceDate,
     name,
     required,
@@ -201,6 +202,7 @@ export function CustomDateRangePicker(props: DateRangePickerProps) {
         dateFormat={dateFormat}
         allowManualInput={allowManualInput}
         onChange={onInputChange}
+        onInputErrorChange={onInputErrorChange}
         validateDate={validation.validateDate}
       />
 

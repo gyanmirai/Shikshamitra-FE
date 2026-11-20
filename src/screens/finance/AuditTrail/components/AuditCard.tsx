@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { motion, AnimatePresence } from 'framer-motion';
+import { DetailField } from 'src/screens/finance/components/detail-view';
 import { Box, Card, Grid, Avatar, Divider, Tooltip, Typography, IconButton } from '@mui/material';
 import {
   toHrAuditLabel,
@@ -145,12 +146,12 @@ const AuditCard = ({ log, index = 0, variant = 'default', onFilterByStudent }: A
   };
 
   const detailItems = [
-    { label: 'IP Address', value: formatHrAuditValue(log.ipAddress) },
+    { label: 'IP address', value: formatHrAuditValue(log.ipAddress) },
     { label: 'Device', value: deviceInfo },
-    { label: 'GR No.', value: formatHrAuditValue(studentGrNo) },
-    { label: 'Roll No.', value: formatHrAuditValue(studentRollNo) },
+    { label: 'GR number', value: formatHrAuditValue(studentGrNo) },
+    { label: 'Roll number', value: formatHrAuditValue(studentRollNo) },
     {
-      label: 'Paid At',
+      label: 'Paid at',
       value: formatHrAuditDateTime(log.createdAt, log.createdAtDisplay),
     },
   ];
@@ -427,22 +428,7 @@ const AuditCard = ({ log, index = 0, variant = 'default', onFilterByStudent }: A
                   {detailItems.map((item, i) => (
                     <Grid key={item.label} size={{ xs: 12, sm: 6, md: 2 }}>
                       <Box sx={{ px: 1.5, py: 1.2 }}>
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            fontSize: 11,
-                            color: 'text.disabled',
-                            textTransform: 'uppercase',
-                            letterSpacing: 0.7,
-                            display: 'block',
-                            mb: 0.25,
-                          }}
-                        >
-                          {item.label}
-                        </Typography>
-                        <Typography variant="body2" sx={{ fontWeight: 600, fontSize: 13 }}>
-                          {item.value}
-                        </Typography>
+                        <DetailField label={item.label} value={item.value} />
                       </Box>
                       {i !== detailItems.length - 1 && <Divider />}
                     </Grid>

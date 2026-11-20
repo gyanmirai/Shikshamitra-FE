@@ -41,7 +41,7 @@ export function DocumentChecklistContent({
   ).length;
   return (
     <Stack spacing={2} sx={layout === 'table' ? { flex: 1, minWidth: 0, minHeight: 0 } : undefined}>
-      {required.length > 0 && (
+      {layout !== 'table' && required.length > 0 && (
         <Stack spacing={0.5}>
           <Typography variant="body2">
             {complete} Of {required.length} Required Documents Resolved
@@ -75,7 +75,7 @@ export function DocumentChecklistContent({
           Document requirements are complete. Continue to the next workflow step.
         </StudentFeedback>
       )}
-      {summary.policy?.requireIndependentReview && (
+      {layout !== 'table' && summary.policy?.requireIndependentReview && (
         <Typography variant="body2" color="text.secondary">
           A different authorized reviewer must check evidence collected by staff.
         </Typography>

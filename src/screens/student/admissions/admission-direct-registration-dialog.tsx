@@ -37,10 +37,7 @@ import {
   IconButton,
   Typography,
 } from '@mui/material';
-import {
-  useGetAdmissionClassCapacityQuery,
-  useLazyGetAdmissionOfferingsQuery,
-} from 'src/redux/student/admissions/admission-offerings-api';
+import { useLazyGetAdmissionOfferingsQuery } from 'src/redux/student/admissions/admission-offerings-api';
 import {
   useLazyFindAdmissionDirectFamiliesQuery,
   useStartAdmissionDirectRegistrationMutation,
@@ -306,10 +303,6 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
     else onClose();
   };
   useAdmissionUnsavedChanges(true, formik.dirty);
-  const { currentData: capacity } = useGetAdmissionClassCapacityQuery(formik.values.offeringId, {
-    skip: !formik.values.offeringId,
-    refetchOnMountOrArgChange: true,
-  });
   const fetchCycles = useCallback(
     async (search: string, page: number) => {
       const skipCount = (page - 1) * 25;
@@ -636,19 +629,6 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
                       }
                     />
                   </ShakingTextField>
-                  {capacity && (
-                    <StudentFeedback
-                      notificationKey="STU-0055"
-                      presentation={capacity.isFull ? 'persistent' : 'inline'}
-                      severity={capacity.isFull ? 'warning' : 'info'}
-                    >
-                      {capacity.capacity == null
-                        ? 'Admission Room Capacity Is Not Set. Division Seats Are Checked During Onboarding.'
-                        : `${capacity.remainingSeats} of ${capacity.capacity} admission room seats available.`}
-                      {capacity.isFull &&
-                        ' Admission Room Capacity Is Full; You Can Still Register.'}
-                    </StudentFeedback>
-                  )}
                 </FormSectionCard>
                 <FormSectionCard
                   icon={GlobalIcons.admissionStudent}

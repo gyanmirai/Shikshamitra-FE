@@ -17,8 +17,13 @@ const entered = {
 };
 
 describe('possible inquiry duplicate review', () => {
-  it('suggests reviewing the same named child in the current cycle', () => {
-    expect(isPossibleDuplicateInquiry(match, entered)).toBe(true);
+  it('warns on matching DOB in the same cycle even when the mobiles differ', () => {
+    expect(
+      isPossibleDuplicateInquiry(
+        { ...match, existingInquiryMatchesMobile: false, guardianPhone: '9876543211' },
+        { ...entered, guardianPhone: '9876543210' }
+      )
+    ).toBe(true);
   });
 
   it('normalizes case and whitespace without treating approximate names as identity', () => {
@@ -40,11 +45,36 @@ describe('possible inquiry duplicate review', () => {
     );
   });
 
-  it('allows a possible-name review without requiring an unconfigured DOB', () => {
+  it('requires positive evidence when either date of birth is missing', () => {
     expect(isPossibleDuplicateInquiry(match, { ...entered, applicantDateOfBirth: undefined })).toBe(
+      false
+    );
+    expect(isPossibleDuplicateInquiry({ ...match, dateOfBirth: null }, entered)).toBe(false);
+  });
+
+  it('warns on matching mobile even when the DOB differs', () => {
+    const identity = {
+      ...entered,
+      guardianPhone: '98765 43210',
+      applicantDateOfBirth: '2020-06-23',
+    };
+    expect(isPossibleDuplicateInquiry({ ...match, guardianPhone: '9876543210' }, identity)).toBe(
       true
     );
-    expect(isPossibleDuplicateInquiry({ ...match, dateOfBirth: null }, entered)).toBe(true);
+    expect(isPossibleDuplicateInquiry({ ...match, guardianPhone: '9876543211' }, identity)).toBe(
+      false
+    );
+  });
+
+  it('uses the mobile recorded on the matched inquiry when supplied by the server', () => {
+    const identity = { ...entered, guardianPhone: '9876543210', applicantDateOfBirth: undefined };
+    const familyMatch = { ...match, guardianPhone: '9876543210', matchByMobile: true };
+    expect(
+      isPossibleDuplicateInquiry({ ...familyMatch, existingInquiryMatchesMobile: false }, identity)
+    ).toBe(false);
+    expect(
+      isPossibleDuplicateInquiry({ ...match, existingInquiryMatchesMobile: true }, identity)
+    ).toBe(true);
   });
 
   it('uses conflicting configured dates to retain a sibling review rather than a duplicate label', () => {

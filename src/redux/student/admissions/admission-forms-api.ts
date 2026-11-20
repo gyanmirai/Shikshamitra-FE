@@ -1,10 +1,13 @@
+
 import { api } from 'src/redux/service';
-import { studentAdmissionsCrmType } from 'src/redux/tagTypes';
+import { financeModuleType, studentAdmissionsCrmType } from 'src/redux/tagTypes';
 import { academicReorderTags } from 'src/redux/academic-reorder-tags';
+import type { AdmissionFormPrintSettings } from './admission-form-print-settings';
 
 export type AdmissionFormStatus = 0 | 1 | 2;
 export type AdmissionFormLayoutType = 0 | 1;
 export type AdmissionFormPurpose = 0 | 1;
+export type { AdmissionFormPrintSettings } from './admission-form-print-settings';
 export type AdmissionFormFieldType = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
 export type AdmissionFormBindingType = 0 | 1;
 export type AdmissionFormInheritedOrigin = {
@@ -83,6 +86,7 @@ export type AdmissionFormSection = {
   translations?: Record<string, AdmissionFormTranslation>;
 };
 export type AdmissionForm = {
+  printSettings?: AdmissionFormPrintSettings | null;
   coreFieldPolicyVersion?: number | null;
   id: string;
   name: string;
@@ -104,6 +108,7 @@ export type AdmissionForm = {
   inheritance?: AdmissionFormInheritance | null;
 };
 export type CreateUpdateAdmissionForm = {
+  printSettings?: AdmissionFormPrintSettings | null;
   coreFieldPolicyVersion?: number | null;
   name: string;
   code: string;
@@ -222,6 +227,7 @@ export type AdmissionFormArchiveImpact = {
 };
 // Published form status affects intake and offering readiness, not just the form list.
 const formLifecycleTags = [
+  financeModuleType.studentFeeAssignment,
   studentAdmissionsCrmType.admissionForm,
   studentAdmissionsCrmType.admissionOffering,
 ];
@@ -232,9 +238,17 @@ const unwrap = <T>(r: Result<T> | T): T => {
 };
 export const admissionFormsApi = api.injectEndpoints({
   endpoints: (builder) => ({
-    getSavedAdmissionFormInheritancePreview: builder.query<AdmissionFormInheritancePreview, { id: string; inquiryFormDefinitionId: string }>({
-      query: ({ id, inquiryFormDefinitionId }) => ({ url: `/student/enrollment/admissions/forms/${id}/inheritance-preview`, params: { inquiryFormDefinitionId } }),
-      transformResponse: (response: Result<AdmissionFormInheritancePreview> | AdmissionFormInheritancePreview) => unwrap(response),
+    getSavedAdmissionFormInheritancePreview: builder.query<
+      AdmissionFormInheritancePreview,
+      { id: string; inquiryFormDefinitionId: string }
+    >({
+      query: ({ id, inquiryFormDefinitionId }) => ({
+        url: `/student/enrollment/admissions/forms/${id}/inheritance-preview`,
+        params: { inquiryFormDefinitionId },
+      }),
+      transformResponse: (
+        response: Result<AdmissionFormInheritancePreview> | AdmissionFormInheritancePreview
+      ) => unwrap(response),
       providesTags: [studentAdmissionsCrmType.admissionForm],
     }),
     getAdmissionFormInheritanceSources: builder.query<
@@ -297,7 +311,10 @@ export const admissionFormsApi = api.injectEndpoints({
     createAdmissionForm: builder.mutation<AdmissionForm, CreateUpdateAdmissionForm>({
       query: (body) => ({ url: '/student/enrollment/admissions/forms', method: 'POST', body }),
       transformResponse: (r: Result<AdmissionForm> | AdmissionForm) => unwrap(r),
-      invalidatesTags: [studentAdmissionsCrmType.admissionForm],
+      invalidatesTags: [
+        financeModuleType.studentFeeAssignment,
+        studentAdmissionsCrmType.admissionForm,
+      ],
     }),
     updateAdmissionForm: builder.mutation<
       AdmissionForm,
@@ -309,7 +326,10 @@ export const admissionFormsApi = api.injectEndpoints({
         body,
       }),
       transformResponse: (r: Result<AdmissionForm> | AdmissionForm) => unwrap(r),
-      invalidatesTags: [studentAdmissionsCrmType.admissionForm],
+      invalidatesTags: [
+        financeModuleType.studentFeeAssignment,
+        studentAdmissionsCrmType.admissionForm,
+      ],
     }),
     cloneAdmissionForm: builder.mutation<
       AdmissionForm,
@@ -321,7 +341,10 @@ export const admissionFormsApi = api.injectEndpoints({
         body,
       }),
       transformResponse: (r: Result<AdmissionForm> | AdmissionForm) => unwrap(r),
-      invalidatesTags: [studentAdmissionsCrmType.admissionForm],
+      invalidatesTags: [
+        financeModuleType.studentFeeAssignment,
+        studentAdmissionsCrmType.admissionForm,
+      ],
     }),
     validateAdmissionForm: builder.mutation<{ isValid: boolean; errors: string[] }, string>({
       query: (id) => ({
@@ -372,7 +395,10 @@ export const admissionFormsApi = api.injectEndpoints({
         method: 'POST',
       }),
       transformResponse: (r: Result<AdmissionForm> | AdmissionForm) => unwrap(r),
-      invalidatesTags: [studentAdmissionsCrmType.admissionForm],
+      invalidatesTags: [
+        financeModuleType.studentFeeAssignment,
+        studentAdmissionsCrmType.admissionForm,
+      ],
     }),
     archiveAdmissionForm: builder.mutation<AdmissionForm, { id: string; concurrencyStamp: string }>(
       {
@@ -408,7 +434,10 @@ export const admissionFormsApi = api.injectEndpoints({
         method: 'DELETE',
         params: { concurrencyStamp },
       }),
-      invalidatesTags: [studentAdmissionsCrmType.admissionForm],
+      invalidatesTags: [
+        financeModuleType.studentFeeAssignment,
+        studentAdmissionsCrmType.admissionForm,
+      ],
     }),
     getAdmissionFormUsage: builder.query<
       {

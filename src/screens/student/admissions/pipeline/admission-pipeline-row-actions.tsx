@@ -2,9 +2,11 @@ import type { MouseEvent } from 'react';
 import type { AdmissionPipelineItem } from 'src/redux/student/admissions/admission-pipeline-api';
 
 import Link from 'next/link';
-import { IconButton } from '@mui/material';
+import { GlobalIcons } from 'src/utils/icons';
+import { Box, IconButton } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 
 import { formatAdmissionReference } from '../admission-reference';
 import { pipelineActionLabel } from './admission-pipeline-row-content';
@@ -13,9 +15,10 @@ type Props = {
   row: AdmissionPipelineItem;
   href: string;
   onOpen?: (id: string) => void;
+  onPrint?: (id: string, mode: 'blank' | 'filled') => void;
 };
 
-export function AdmissionPipelineRowActions({ row, href, onOpen }: Props) {
+export function AdmissionPipelineRowActions({ row, href, onOpen, onPrint }: Props) {
   const label = pipelineActionLabel(row);
   const reference = formatAdmissionReference(row.applicationNumber);
   const icon =
@@ -49,16 +52,34 @@ export function AdmissionPipelineRowActions({ row, href, onOpen }: Props) {
     }
   };
   return (
-    <CustomTooltip title={label} arrow>
-      <IconButton
-        component={Link}
-        href={href}
-        aria-label={`${label} ${reference}`}
-        onClick={open}
-        sx={{ color: 'text.secondary' }}
-      >
-        <Iconify icon={icon} width={20} aria-hidden />
-      </IconButton>
-    </CustomTooltip>
+    <Box
+      sx={{ display: 'inline-flex', alignItems: 'center' }}
+      onClick={(event) => event.stopPropagation()}
+    >
+      <CustomTooltip title={label} arrow>
+        <IconButton
+          component={Link}
+          href={href}
+          aria-label={`${label} ${reference}`}
+          onClick={open}
+          sx={{ color: 'text.secondary' }}
+        >
+          <Iconify icon={icon} width={20} aria-hidden />
+        </IconButton>
+      </CustomTooltip>
+      {onPrint && (
+        <AdaptiveThreeDotsActions
+          directActionLimit={0}
+          mobileDirectActionLimit={0}
+          moreLabel={`Print options for ${reference}`}
+          actions={(['filled', 'blank'] as const).map((mode) => ({
+            id: `print-${mode}`,
+            label: mode === 'filled' ? 'Print filled form' : 'Print blank form',
+            icon: GlobalIcons.printer,
+            onClick: () => onPrint(row.id, mode),
+          }))}
+        />
+      )}
+    </Box>
   );
 }

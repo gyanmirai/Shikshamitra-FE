@@ -90,7 +90,7 @@ const OverallSummaryCard: React.FC<OverallSummaryCardProps> = ({
   // ── Stat card definitions ──────────────────────────────────────────────────
   const statCards = [
     {
-      label: 'Total Paid',
+      label: 'Total paid',
       value: totalPaid,
       icon: 'solar:wallet-bold',
       accent: theme.palette.text.secondary,
@@ -100,7 +100,7 @@ const OverallSummaryCard: React.FC<OverallSummaryCardProps> = ({
       highlight: false,
     },
     {
-      label: isAdj ? 'Already Adjusted' : 'Already Refunded',
+      label: isAdj ? 'Already adjusted' : 'Already refunded',
       value: totalRefunded,
       icon: 'solar:arrow-left-up-bold',
       accent: theme.palette.warning.dark,
@@ -110,7 +110,7 @@ const OverallSummaryCard: React.FC<OverallSummaryCardProps> = ({
       highlight: false,
     },
     {
-      label: isAdj ? 'Max Adjustable' : 'Max Refundable',
+      label: isAdj ? 'Max adjustable' : 'Max refundable',
       value: totalRefundable,
       icon: 'solar:shield-check-bold',
       accent: theme.palette.success.main,
@@ -120,7 +120,7 @@ const OverallSummaryCard: React.FC<OverallSummaryCardProps> = ({
       highlight: false,
     },
     {
-      label: isAdj ? 'Adjustment Requested' : 'Refund Requested',
+      label: isAdj ? 'Adjustment requested' : 'Refund requested',
       value: totalRefundInput,
       icon: 'solar:money-bag-bold',
       accent: theme.palette.info.main,
@@ -144,12 +144,7 @@ const OverallSummaryCard: React.FC<OverallSummaryCardProps> = ({
     <Box mb={1}>
       {/* ── Section label ── */}
       <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
-        <Typography
-          variant="caption"
-          fontWeight={700}
-          color="text.secondary"
-          sx={{ textTransform: 'uppercase', letterSpacing: '0.06em', fontSize: 10 }}
-        >
+        <Typography variant="subtitle1">
           {isAdj ? 'Adjustment Summary' : 'Refund Summary'}
         </Typography>
         {totalSelectedMonths > 0 && (
@@ -219,27 +214,15 @@ const OverallSummaryCard: React.FC<OverallSummaryCardProps> = ({
             </Box>
 
             {/* Label */}
-            <Typography
-              variant="caption"
-              fontWeight={600}
-              sx={{
-                color: alpha(card.accent, 0.75),
-                textTransform: 'uppercase',
-                letterSpacing: '0.04em',
-                fontSize: 10,
-                display: 'block',
-              }}
-            >
+            <Typography variant="caption" color="text.secondary" display="block">
               {card.label}
             </Typography>
 
             {/* Amount */}
             <Typography
-              fontWeight={800}
+              variant="body2"
               sx={{
-                fontSize: { xs: '1rem', md: '1.15rem' },
                 color: card.highlight ? card.accent : 'text.primary',
-                lineHeight: 1.25,
                 mt: 0.25,
                 fontVariantNumeric: 'tabular-nums',
               }}
@@ -248,7 +231,7 @@ const OverallSummaryCard: React.FC<OverallSummaryCardProps> = ({
             </Typography>
 
             {/* Sub-label */}
-            <Typography variant="caption" color="text.secondary" sx={{ fontSize: 10 }}>
+            <Typography variant="caption" color="text.secondary">
               {card.sub}
             </Typography>
           </Box>

@@ -25,10 +25,10 @@ const result = {
     'Full months charged from August through December using the saved Finance policy.',
   ],
 };
-const show = (value?: FinanceResult | null) =>
+const show = (value?: FinanceResult | null, compact = false) =>
   render(
     <ThemeProvider theme={createTheme(defaultSettings)}>
-      <FeeProrationResult result={value} />
+      <FeeProrationResult result={value} compact={compact} />
     </ThemeProvider>
   );
 
@@ -63,6 +63,23 @@ describe('Finance-owned read-only proration result', () => {
     expect(screen.queryByText('Withdrawal credit')).not.toBeInTheDocument();
     expect(screen.queryByText('Excess paid')).not.toBeInTheDocument();
     expect(screen.getByText('Joining date reduction')).toBeVisible();
+  });
+
+  it('keeps the same Finance captions and emphasizes only the payable amount in compact Payment', () => {
+    const admissionResult = { ...result, withdrawalCredit: 0, excessPaidAmount: 0 };
+    const regular = show(admissionResult);
+    const captionWeight = getComputedStyle(screen.getByText('Finance policy')).fontWeight;
+    regular.unmount();
+
+    show(admissionResult, true);
+    const label = screen.getByText('Finance policy');
+    const payable = screen.getByText('Payable fees').nextElementSibling;
+
+    expect(getComputedStyle(label).fontWeight).toBe(captionWeight);
+    expect(payable?.querySelector('strong')).toHaveTextContent(/5,000/);
+    expect(
+      screen.getByText('Scheduled fees').nextElementSibling?.querySelector('strong')
+    ).toBeNull();
   });
 
   it('shows an unavailable joining date without substituting the charge-period start', () => {

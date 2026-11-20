@@ -135,11 +135,11 @@ export default function RefundWorklist({
   const {
     currentData: data,
     isLoading,
-    isFetching,
     isError,
   } = useGetFeeRefundsQuery(
     {
       academicYearId: currentYear?.id,
+      boardId: filters.filterPayload?.boardId,
       academicMediumId: filters.filterPayload?.educationMediumId,
       standardId: filters.filterPayload?.standardId,
       divisionId: filters.filterPayload?.divisionId,
@@ -153,44 +153,7 @@ export default function RefundWorklist({
     },
     { skip: !filters.isReady || !currentYear?.id }
   );
-  const counts = STATUSES.map((entry) => ({
-    status: entry.value,
-    args: {
-      academicYearId: currentYear?.id,
-      academicMediumId: filters.filterPayload?.educationMediumId,
-      standardId: filters.filterPayload?.standardId,
-      divisionId: filters.filterPayload?.divisionId,
-      status: entry.value,
-      legacyHistory: false,
-      workflowVersion: 1,
-      search,
-      filters: serializedFilters,
-      skipCount: 0,
-      maxResultCount: 1,
-    },
-  }));
-  const pending = useGetFeeRefundsQuery(counts[0].args, {
-    skip: !filters.isReady || !currentYear?.id,
-  });
-  const approved = useGetFeeRefundsQuery(counts[1].args, {
-    skip: !filters.isReady || !currentYear?.id,
-  });
-  const processed = useGetFeeRefundsQuery(counts[2].args, {
-    skip: !filters.isReady || !currentYear?.id,
-  });
-  const rejected = useGetFeeRefundsQuery(counts[3].args, {
-    skip: !filters.isReady || !currentYear?.id,
-  });
-  const failed = useGetFeeRefundsQuery(counts[4].args, {
-    skip: !filters.isReady || !currentYear?.id,
-  });
-  const tabCounts = [
-    pending.data?.totalCount,
-    approved.data?.totalCount,
-    processed.data?.totalCount,
-    rejected.data?.totalCount,
-    failed.data?.totalCount,
-  ];
+  const tabCounts = STATUSES.map((entry) => data?.statusCounts?.[entry.value] ?? 0);
   const rows = useMemo(() => (data?.items ?? []).map(toRow), [data?.items]);
   const action = (
     row: IStudentFeeData,
@@ -420,7 +383,7 @@ export default function RefundWorklist({
                 FeeRefundStatusType.Failed,
               ].includes(status) || column.id !== 'actions'
           )}
-          isLoading={isLoading || isFetching}
+          isLoading={isLoading}
           noDataText={isError ? 'Could not load refunds. Retry the page.' : 'No refunds found.'}
           serverSide
           serverSidePagination

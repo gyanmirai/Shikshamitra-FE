@@ -1,19 +1,16 @@
-import type {
-  PolicyFamily,
-  StructureLine,
-  StructureSettings,
-} from 'src/redux/finance/feeStructureWorkspace';
+import type { StructureLine, StructureSettings } from 'src/redux/finance/feeStructureWorkspace';
 
 import { useRef, useMemo, useState, useEffect } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetRefundPoliciesQuery } from 'src/redux/finance/refundPolicy';
-import { useGetCollectionPoliciesQuery } from 'src/redux/finance/collectionPolicy';
+import { useGetCollectionPolicyByIdQuery } from 'src/redux/finance/collectionPolicy';
+import { useGetRefundPolicyByIdQuery } from 'src/redux/finance/refundPolicy';
 import { useGetActiveFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
-import { useGetStructureContextQuery } from 'src/redux/finance/feeStructureWorkspace';
-import { useGetPaymentTermsQuery, useGetPaymentTermByIdQuery } from 'src/redux/finance/paymentTerm';
+import {
+  useGetStructureContextQuery,
+  useGetStructureCatalogueQuery,
+  useGetStructureTermScheduleQuery,
+} from 'src/redux/finance/feeStructureWorkspace';
 import { useRefreshFinancePrerequisites } from 'src/screens/finance/hooks/useRefreshFinancePrerequisites';
-
-import { selectablePaymentTerms } from '../feeStructureModel';
 
 const queryOptions = { refetchOnMountOrArgChange: false, refetchOnFocus: false };
 
@@ -98,7 +95,8 @@ export default function useFeeStructureLookups(
   policiesEnabled: boolean,
   scheduleLine?: StructureLine,
   published = false,
-  active = true
+  active = true,
+  selectedPolicyIds?: { collection?: string | null; refund?: string | null }
 ) {
   const context = useQueryAndMutation({
     type: 'query',
@@ -109,53 +107,101 @@ export default function useFeeStructureLookups(
   const data = context.currentData;
   const academicYearId = data?.academicYearId ?? '';
   const permissions = data?.permissions ?? {};
-  const catalogScope = JSON.stringify({ ...scope, academicYearId });
   const activatedScope = useRef<string | undefined>(undefined);
-  // Load an editor's catalogs on first activation, then keep its shared cache
-  // subscription warm. Re-subscribing a completed multipage traversal would
-  // reset its options and invalidate an unchanged publication review.
-  if (active) activatedScope.current = catalogScope;
-  const catalogsEnabled = active || activatedScope.current === catalogScope;
-  const policyParams = { academicYearId, status: 'Active' };
-  const collection = useCatalog(
-    useGetCollectionPoliciesQuery,
-    policyParams,
-    catalogsEnabled && !!academicYearId && policiesEnabled && !!permissions.collectionRead
-  );
-  const refund = useCatalog(
-    useGetRefundPoliciesQuery,
-    policyParams,
-    catalogsEnabled && !!academicYearId && policiesEnabled && !!permissions.refundRead
-  );
-  const terms = useCatalog(
-    useGetPaymentTermsQuery,
-    { academicYearId, boardId: data?.boardId ?? '', status: 'Active' },
-    catalogsEnabled && !!academicYearId && !!permissions.termsRead
-  );
+  const scopeKey = JSON.stringify({ ...scope, academicYearId });
+  if (active) activatedScope.current = scopeKey;
+  const enabled = !!academicYearId && (active || activatedScope.current === scopeKey);
+  const catalogue = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetStructureCatalogueQuery,
+    params: { ...scope, academicYearId },
+    options: { ...queryOptions, skip: !enabled },
+    popupConfig: { error: false },
+  });
   const heads = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetActiveFeeHeadsQuery,
     params: academicYearId,
-    // Keep this shared year catalog subscribed across card switches. Dropping
-    // currentData during a skip would invalidate a ready publication preview.
     options: { ...queryOptions, skip: !academicYearId || !permissions.headsRead },
   });
   const termDetail = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetPaymentTermByIdQuery,
-    params: scheduleLine?.paymentTermId ?? '',
+    currentQueryAndMutation: useGetStructureTermScheduleQuery,
+    params: {
+      ...scope,
+      paymentTermId: scheduleLine?.paymentTermId ?? '',
+      versionId: scheduleLine?.paymentTermVersionId ?? '',
+    },
     options: {
       ...queryOptions,
-      skip: !active || !scheduleLine?.paymentTermId || !permissions.termsRead,
+      skip:
+        !active ||
+        !scheduleLine?.paymentTermId ||
+        !scheduleLine?.paymentTermVersionId ||
+        !permissions.termsRead,
     },
   });
+  const selectedPolicyId = (family: 'collection' | 'refund') =>
+    selectedPolicyIds?.[family] ??
+    catalogue.currentData?.policies.find(
+      (policy: any) => policy.family === family && policy.isDefault
+    )?.id ??
+    '';
+  const collectionDetail = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetCollectionPolicyByIdQuery,
+    params: selectedPolicyId('collection'),
+    options: {
+      ...queryOptions,
+      skip: !active || published || !permissions.collectionRead || !selectedPolicyId('collection'),
+    },
+    popupConfig: { error: false },
+  });
+  const refundDetail = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetRefundPolicyByIdQuery,
+    params: selectedPolicyId('refund'),
+    options: {
+      ...queryOptions,
+      skip: !active || published || !permissions.refundRead || !selectedPolicyId('refund'),
+    },
+    popupConfig: { error: false },
+  });
+  const catalogState = (required: boolean) => ({
+    items: [] as any[],
+    ready:
+      !required ||
+      (enabled && !!catalogue.currentData && !catalogue.isFetching && !catalogue.isError),
+    loading:
+      required && enabled && !catalogue.isError && (!catalogue.currentData || catalogue.isFetching),
+    error: required && enabled && !!catalogue.isError,
+    retry: () => {
+      if (!catalogue.isUninitialized) catalogue.refetch?.();
+    },
+  });
+  const terms = catalogState(!!permissions.termsRead);
+  const policyState = (family: 'collection' | 'refund', detail: any) => {
+    const state = catalogState(policiesEnabled && !!permissions[`${family}Read`]);
+    return {
+      ...state,
+      items: detail.currentData ? [detail.currentData] : [],
+      loading: !!detail.isFetching || state.loading,
+      error: !!detail.isError || state.error,
+      retry: () => {
+        state.retry();
+        if (!detail.isUninitialized) detail.refetch?.();
+      },
+    };
+  };
+  const collection = policyState('collection', collectionDetail);
+  const refund = policyState('refund', refundDetail);
   const refreshPrerequisites = () => {
     if (!active) return;
     context.refetch?.();
     if (academicYearId && permissions.headsRead && !heads.isUninitialized) heads.refetch?.();
-    if (academicYearId && permissions.termsRead) terms.retry();
-    if (academicYearId && policiesEnabled && permissions.collectionRead) collection.retry();
-    if (academicYearId && policiesEnabled && permissions.refundRead) refund.retry();
+    if (!catalogue.isUninitialized) catalogue.refetch?.();
+    if (!collectionDetail.isUninitialized) collectionDetail.refetch?.();
+    if (!refundDetail.isUninitialized) refundDetail.refetch?.();
   };
   useRefreshFinancePrerequisites(refreshPrerequisites, active);
   const settings: StructureSettings | undefined = useMemo(
@@ -167,47 +213,15 @@ export default function useFeeStructureLookups(
               ...head,
               categoryName: head.feeCategoryName,
             })),
-            policies: (
-              [
-                ['collection', collection.items],
-                ['refund', refund.items],
-              ] as [PolicyFamily, any[]][]
-            ).flatMap(([family, items]) =>
-              items
-                .filter((item) => item.isAttachable && item.currentVersionId)
-                .map((item) => ({
-                  family,
-                  id: item.id,
-                  name: item.policyName,
-                  versionId: item.currentVersionId,
-                  versionNumber: item.currentVersionNumber,
-                  isCurrent: true,
-                  isDefault: item.isDefault,
-                }))
-            ),
-            terms: selectablePaymentTerms(terms.items, data.academicYearId, data.boardId),
+            policies: catalogue.currentData?.policies ?? [],
+            terms: catalogue.currentData?.terms ?? [],
           }
         : undefined,
-    [data, heads.currentData, collection.items, refund.items, terms.items]
+    [data, heads.currentData, catalogue.currentData]
   );
   const detail = termDetail.currentData;
-  const version = detail?.versions.find(
-    (item: any) => item.id === scheduleLine?.paymentTermVersionId
-  );
-  const scheduleTerm: StructureSettings['terms'][number] | undefined = version
-    ? {
-        id: detail.id,
-        name: published ? scheduleLine?.paymentTermName || detail.name : detail.name,
-        versionId: version.id,
-        versionNumber: version.versionNumber,
-        isCurrent: version.status === 'Published',
-        demandGenerationRule: version.demandGenerationRule,
-        demandOffsetDays: version.demandOffsetDays ?? undefined,
-        installments: version.installments.map((item: any) => ({
-          ...item,
-          sourcePaymentTermInstallmentId: item.id,
-        })),
-      }
+  const scheduleTerm = detail
+    ? { ...detail, name: published ? scheduleLine?.paymentTermName || detail.name : detail.name }
     : undefined;
   return {
     settings,

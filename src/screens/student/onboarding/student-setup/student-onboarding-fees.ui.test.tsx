@@ -63,6 +63,26 @@ const mocks = vi.hoisted(() => ({
     },
   ],
 }));
+
+it.each(['loading', 'enrolled'] as const)('does not request fee candidates while %s', (state) => {
+  mocks.currentDataAvailable = state !== 'loading';
+  mocks.enrolled = state === 'enrolled';
+  render(<StudentOnboardingFees caseId="case-1" canManage />);
+  expect(mocks.candidatesQuery).toHaveBeenLastCalledWith('case-1', { skip: true });
+});
+
+it.each(['view-only', 'enrolled'] as const)(
+  'does not offer candidate refresh for an unassigned %s case',
+  (state) => {
+    mocks.currentCandidatesAvailable = false;
+    mocks.enrolled = state === 'enrolled';
+    render(<StudentOnboardingFees caseId="case-1" canManage={state !== 'view-only'} />);
+    expect(
+      screen.queryByRole('button', { name: 'Refresh fee structures' })
+    ).not.toBeInTheDocument();
+    expect(mocks.candidatesRefetch).not.toHaveBeenCalled();
+  }
+);
 vi.mock('src/components/custom-select', () => ({
   default: ({
     label,

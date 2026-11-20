@@ -1,3 +1,5 @@
+import { accountSettingHistoryRequest, type AccountSettingHistoryQuery } from './accountSettingHistoryQuery';
+
 import { financeModuleType } from 'src/redux/tagTypes';
 
 import { financeModuleApi } from './financeModuleApi';
@@ -72,7 +74,7 @@ export const expenseCategoryApi = financeModuleApi.injectEndpoints({
       invalidatesTags: [financeModuleType.expenseCategory],
     }),
     getExpenseCategoryVersions: builder.query({
-      query: (id: string) => ({ url: `/expense-categories/${id}/versions`, method: 'GET' }),
+      query: (input: AccountSettingHistoryQuery) => accountSettingHistoryRequest('expense-categories', input),
       providesTags: [financeModuleType.expenseCategory],
     }),
 

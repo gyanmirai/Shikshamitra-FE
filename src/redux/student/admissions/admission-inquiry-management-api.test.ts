@@ -5,7 +5,9 @@ import { it, vi, expect, afterEach, beforeEach } from 'vitest';
 import { clearCachedAuthSession } from 'src/redux/session-cache';
 
 import { createDocumentTestStore } from './document-test-fixture';
+import { admissionOfferingsApi } from './admission-offerings-api';
 import { admissionInquiriesApi } from './admission-inquiries-api';
+import { admissionApplicantsApi } from './admission-applicants-api';
 import { admissionInquiryManagementApi } from './admission-inquiry-management-api';
 
 vi.hoisted(() => {
@@ -100,4 +102,88 @@ it('posts one atomic follow-up with both stamps and refreshes inquiry and typed 
     expect(detailReads).toBe(2);
     expect(managementReads).toBe(2);
   });
+});
+
+it('does not reread capture configuration after a follow-up note', async () => {
+  let catalogueReads = 0;
+  let activityReads = 0;
+  mswServer.use(
+    http.get('*/api/student/enrollment/admissions/activities/applicant/applicant-1', () => {
+      activityReads += 1;
+      return HttpResponse.json({ data: [] });
+    }),
+    http.get('*/api/student/enrollment/admissions/inquiries/capture-catalogue', () => {
+      catalogueReads += 1;
+      return HttpResponse.json({ data: { offerings: [] } });
+    }),
+    http.post(
+      '*/api/student/enrollment/admissions/inquiries/inquiry-1/management/follow-up-notes',
+      () => HttpResponse.json({ data: {} })
+    )
+  );
+  await store
+    .dispatch(
+      admissionApplicantsApi.endpoints.getAdmissionJourneyActivities.initiate('applicant-1')
+    )
+    .unwrap();
+  await store
+    .dispatch(admissionInquiriesApi.endpoints.getAdmissionInquiryCaptureCatalogue.initiate({}))
+    .unwrap();
+  await store
+    .dispatch(
+      admissionInquiryManagementApi.endpoints.recordAdmissionInquiryFollowUpNote.initiate({
+        inquiryId: 'inquiry-1',
+        concurrencyStamp: 'a',
+        inquiryConcurrencyStamp: 'b',
+        note: 'Called',
+        status: 0,
+        reminderAt: null,
+      })
+    )
+    .unwrap();
+  await vi.waitFor(() =>
+    expect(
+      admissionInquiriesApi.endpoints.getAdmissionInquiryCaptureCatalogue.select({})(
+        store.getState()
+      ).status
+    ).toBe('fulfilled')
+  );
+  await new Promise((resolve) => setTimeout(resolve, 30));
+  expect(catalogueReads).toBe(1);
+  expect(activityReads).toBe(2);
+  mswServer.use(
+    http.put('*/api/student/enrollment/admissions/inquiries/inquiry-1', () =>
+      HttpResponse.json({ data: { id: 'inquiry-1' } })
+    )
+  );
+  await store
+    .dispatch(
+      admissionInquiriesApi.endpoints.updateAdmissionInquiry.initiate({
+        id: 'inquiry-1',
+        body: {
+          applicantName: 'Updated child',
+          phone: '9876543210',
+          preferredLanguageCode: 'en',
+          source: 0,
+          concurrencyStamp: 'stamp',
+        },
+      })
+    )
+    .unwrap();
+  await vi.waitFor(() => expect(activityReads).toBe(3));
+  expect(catalogueReads).toBe(1);
+  mswServer.use(
+    http.post('*/api/student/enrollment/admissions/offerings/offering-1/deactivate', () =>
+      HttpResponse.json({ data: { id: 'offering-1' } })
+    )
+  );
+  await store
+    .dispatch(
+      admissionOfferingsApi.endpoints.deactivateAdmissionOffering.initiate({
+        id: 'offering-1',
+        concurrencyStamp: 'stamp',
+      })
+    )
+    .unwrap();
+  await vi.waitFor(() => expect(catalogueReads).toBe(2));
 });

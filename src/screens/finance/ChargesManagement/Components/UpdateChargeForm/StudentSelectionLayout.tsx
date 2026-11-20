@@ -1,7 +1,7 @@
 'use client';
 
 import { Iconify } from 'src/components/iconify';
-import React, { useMemo, useState, useCallback, useEffect } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import {
   Box,
   List,
@@ -33,8 +33,11 @@ interface StudentSelectionLayoutProps {
   isLoading?: boolean;
   searchQuery?: string;
   onSearchChange?: (query: string) => void;
-  divisionFilter?: string;
   totalCount?: number;
+  candidateCount?: number;
+  matchingStudentIds?: string[];
+  page?: number;
+  onPageChange?: (page: number) => void;
   disabled?: boolean;
   emptyMessage?: string;
 }
@@ -51,15 +54,16 @@ export const StudentSelectionLayout: React.FC<StudentSelectionLayoutProps> = ({
   isLoading = false,
   searchQuery = '',
   onSearchChange,
-  divisionFilter,
   totalCount = students.length,
+  candidateCount = totalCount,
+  matchingStudentIds = students.map((student) => student.id),
+  page = 0,
+  onPageChange,
   disabled = false,
   emptyMessage,
 }) => {
   const localSearchQuery = searchQuery;
   const handleSearchChange = (query: string) => onSearchChange?.(query);
-  const [page, setPage] = useState(0);
-  useEffect(() => setPage(0), [searchQuery, divisionFilter, students]);
   // Handle individual student selection
   const handleStudentToggle = useCallback(
     (studentId: string) => {
@@ -73,45 +77,24 @@ export const StudentSelectionLayout: React.FC<StudentSelectionLayoutProps> = ({
     [selectedStudentIds, onSelectionChange]
   );
 
-  // Filter students based on search
-  const filteredStudents = useMemo(
-    () =>
-      students.filter((student) => {
-        const matchesSearch =
-          !localSearchQuery ||
-          student.label.toLowerCase().includes(localSearchQuery.toLowerCase()) ||
-          student.grNumber?.toString().includes(localSearchQuery) ||
-          student.rollNumber?.toString().includes(localSearchQuery);
-
-        const matchesDivision = !divisionFilter || student.divisionName === divisionFilter;
-
-        return matchesSearch && matchesDivision;
-      }),
-    [students, localSearchQuery, divisionFilter]
-  );
+  const filteredStudents = students;
 
   // Handle select all toggle
   const handleSelectAllToggle = useCallback(() => {
-    onSelectionChange(
-      toggleFilteredStudents(
-        selectedStudentIds,
-        filteredStudents.map((s) => s.id)
-      )
-    );
-  }, [filteredStudents, selectedStudentIds, onSelectionChange]);
+    onSelectionChange(toggleFilteredStudents(selectedStudentIds, matchingStudentIds));
+  }, [matchingStudentIds, selectedStudentIds, onSelectionChange]);
 
   const selectAllChecked = useMemo(
     () =>
-      filteredStudents.length > 0 &&
-      filteredStudents.every((s) => selectedStudentIds.includes(s.id)),
-    [filteredStudents, selectedStudentIds]
+      matchingStudentIds.length > 0 &&
+      matchingStudentIds.every((id) => selectedStudentIds.includes(id)),
+    [matchingStudentIds, selectedStudentIds]
   );
 
   const selectAllIndeterminate =
-    !selectAllChecked &&
-    filteredStudents.some((student) => selectedStudentIds.includes(student.id));
+    !selectAllChecked && matchingStudentIds.some((id) => selectedStudentIds.includes(id));
 
-  const currentPage = Math.min(page, Math.max(0, Math.ceil(filteredStudents.length / 25) - 1));
+  const currentPage = Math.min(page, Math.max(0, Math.ceil(totalCount / 25) - 1));
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', width: 1, minWidth: 0 }}>
@@ -140,8 +123,8 @@ export const StudentSelectionLayout: React.FC<StudentSelectionLayoutProps> = ({
             }}
           />
           <Typography variant="caption" color="text.secondary">
-            {selectedStudentIds.length} of {totalCount} students selected ·{' '}
-            {filteredStudents.length} matching results
+            {selectedStudentIds.length} of {candidateCount} students selected · {totalCount}{' '}
+            matching results
           </Typography>
         </Stack>
 
@@ -161,7 +144,7 @@ export const StudentSelectionLayout: React.FC<StudentSelectionLayoutProps> = ({
               checked={selectAllChecked}
               indeterminate={selectAllIndeterminate}
               onChange={handleSelectAllToggle}
-              disabled={disabled || isLoading || filteredStudents.length === 0}
+              disabled={disabled || isLoading || matchingStudentIds.length === 0}
             />
           }
         />
@@ -185,7 +168,7 @@ export const StudentSelectionLayout: React.FC<StudentSelectionLayoutProps> = ({
           ) : (
             <List disablePadding>
               {/* Individual Students */}
-              {filteredStudents.slice(currentPage * 25, (currentPage + 1) * 25).map((student) => (
+              {filteredStudents.map((student) => (
                 <ListItem key={student.id} disablePadding>
                   <FormControlLabel
                     labelPlacement="start"
@@ -227,14 +210,14 @@ export const StudentSelectionLayout: React.FC<StudentSelectionLayoutProps> = ({
             </List>
           )}
         </Box>
-        {filteredStudents.length > 25 && (
+        {totalCount > 25 && (
           <TablePagination
             component="div"
-            count={filteredStudents.length}
+            count={totalCount}
             page={currentPage}
             rowsPerPage={25}
             rowsPerPageOptions={[25]}
-            onPageChange={(_event, next) => setPage(next)}
+            onPageChange={(_event, next) => onPageChange?.(next)}
           />
         )}
       </Paper>

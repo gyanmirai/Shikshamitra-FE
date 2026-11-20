@@ -9,7 +9,9 @@ import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { StudentFeedback } from 'src/components/student-feedback';
-import { Card, Stack, Button, Skeleton, Typography, LinearProgress } from '@mui/material';
+import { skeletonReducedMotionSx } from 'src/theme/styles/skeleton';
+import { Card, Stack, Button, Skeleton, Typography } from '@mui/material';
+import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
 import { useGetApplicationDocumentsQuery } from 'src/redux/student/admissions/admission-document-verification-api';
 
 import { AdmissionQueryError } from '../admission-query-error';
@@ -85,7 +87,9 @@ export function ApplicationDocumentsPanel({
   });
   return (
     <Card
+      aria-busy={query.isFetching}
       sx={{
+        ...skeletonReducedMotionSx,
         p: historical ? 0 : 2,
         boxShadow: historical ? 'none' : undefined,
         ...(layout === 'table' && {
@@ -102,7 +106,39 @@ export function ApplicationDocumentsPanel({
         sx={layout === 'table' ? { flex: 1, minWidth: 0, minHeight: 0 } : undefined}
       >
         <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1}>
-          <Typography variant="h6">{stage.name}</Typography>
+          <Stack direction="row" alignItems="center" sx={{ minWidth: 0 }}>
+            <Typography variant="h6" sx={{ overflowWrap: 'anywhere' }}>
+              {stage.name}
+            </Typography>
+            <InfoTooltipIcon
+              label="Document verification help"
+              title={
+                <Stack spacing={1}>
+                  <Typography variant="body2">
+                    {layout === 'table'
+                      ? 'Upload documents from the table, then open a preview to approve or reject. Rejection requires a reason. History and Download are in More.'
+                      : 'Collect and review the required documents. Rejection requires a reason. Open document history to review previous versions and decisions.'}
+                  </Typography>
+                  {summary?.policy?.requireIndependentReview && (
+                    <Typography variant="body2">
+                      A different authorized reviewer must check collected evidence.
+                    </Typography>
+                  )}
+                  {summary?.blockers.map((blocker) => (
+                    <Typography key={blocker} variant="body2">
+                      {blocker}
+                    </Typography>
+                  ))}
+                  {summary?.canComplete && summary.blockers.length > 0 && (
+                    <Typography variant="body2">
+                      Your workflow allows continuation. Complete pending documents in Student
+                      Onboarding before activation.
+                    </Typography>
+                  )}
+                </Stack>
+              }
+            />
+          </Stack>
           {permissions.view && (
             <Button size="small" disabled={query.isFetching || advancing} onClick={query.refetch}>
               Refresh
@@ -114,7 +150,10 @@ export function ApplicationDocumentsPanel({
             Document access is required to view this checklist. Contact an admissions administrator.
           </StudentFeedback>
         ) : query.isLoading ? (
-          <Skeleton variant="rounded" height={180} />
+          <Stack role="status" aria-label="Loading Document Checklist" spacing={1}>
+            <Skeleton variant="text" width="40%" />
+            <Skeleton variant="rounded" height={140} />
+          </Stack>
         ) : query.isError || !summary ? (
           <AdmissionQueryError onRetry={query.refetch} />
         ) : !summary.documentVerificationEnabled || !summary.policy ? (
@@ -124,7 +163,18 @@ export function ApplicationDocumentsPanel({
           </StudentFeedback>
         ) : (
           <>
-            {query.isFetching && <LinearProgress aria-label="Refreshing Document Checklist" />}
+            {query.isFetching && (
+              <Stack
+                direction="row"
+                spacing={1}
+                role="status"
+                aria-label="Refreshing Document Checklist"
+              >
+                <Skeleton variant="text" width="32%" />
+                <Skeleton variant="text" width="24%" />
+                <Skeleton variant="text" width="20%" />
+              </Stack>
+            )}
             {!historical && canManageParentRegistration && (
               <ParentRegistrationPanel
                 applicationId={applicationId}

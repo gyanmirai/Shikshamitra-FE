@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect } from 'react';
-import { LoadingScreen } from 'src/components/loading-screen';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 
 import { getApplicationWorkspaceUrl } from './application-return-url';
+import { ApplicationWorkspaceSkeleton } from './application-workspace-skeleton';
 
 export function ApplicationWorkspaceRedirect({
   applicationId,
@@ -18,5 +18,5 @@ export function ApplicationWorkspaceRedirect({
   useEffect(() => {
     router.replace(destination, { scroll: false });
   }, [router, destination]);
-  return <LoadingScreen />;
+  return <ApplicationWorkspaceSkeleton />;
 }

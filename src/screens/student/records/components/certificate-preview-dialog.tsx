@@ -3,18 +3,11 @@ import type { CertificateResponse } from 'src/redux/student/records/student-reco
 import { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
-import { fDate, formatStr } from 'src/utils/format-time';
 import { StudentFeedback } from 'src/components/student-feedback';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import {
-  Box,
-  Stack,
-  Paper,
-  Button,
-  Typography,
-  DialogActions,
-  LinearProgress,
-} from '@mui/material';
+import { Box, Stack, Button, Typography, DialogActions, LinearProgress } from '@mui/material';
+
+import CertificateDocumentPreview from './certificate-document-preview';
 
 export default function CertificatePreviewDialog({
   open,
@@ -39,19 +32,6 @@ export default function CertificatePreviewDialog({
 }) {
   const [index, setIndex] = useState(0);
   const certificate = certificates[Math.min(index, Math.max(certificates.length - 1, 0))];
-  const document = certificate?.template.document;
-  const number = certificate?.certificateId ? certificate.certificateNo : 'Assigned on generation';
-  const header = certificate
-    ? certificate.certificateId
-      ? certificate.template.renderedHeaderContent
-      : certificate.template.renderedHeaderContent.replaceAll(certificate.certificateNo, number)
-    : '';
-  const showNumber = !header.includes(number);
-  const issueDateLabel = certificate ? fDate(certificate.issueDate, formatStr.split.date) : null;
-  const showDate =
-    certificate &&
-    !header.includes(certificate.certificateData.IssueDate || certificate.issueDate.slice(0, 10)) &&
-    (!issueDateLabel || !header.includes(issueDateLabel));
   return (
     <CustomDialog
       open={open}
@@ -98,117 +78,7 @@ export default function CertificatePreviewDialog({
               disabled={busy}
             />
           )}
-          {certificate && (
-            <Paper
-              variant="outlined"
-              aria-label={`Certificate preview for ${certificate.student.studentName}`}
-              sx={{ p: { xs: 2, sm: 5 }, bgcolor: 'background.paper', borderRadius: 1 }}
-            >
-              {document ? (
-                <Stack spacing={2}>
-                  <Typography variant="h5" align="center">
-                    {certificate.organization?.organizationName ||
-                      certificate.certificateData.OrganizationName}
-                  </Typography>
-                  {certificate.organization?.address && (
-                    <Typography variant="body2" align="center">
-                      {certificate.organization.address}
-                    </Typography>
-                  )}
-                  <Typography
-                    variant="h6"
-                    align="center"
-                    sx={{ borderTop: 1, borderColor: 'divider', pt: 2, textTransform: 'uppercase' }}
-                  >
-                    {document.title}
-                  </Typography>
-                  <Stack direction="row" justifyContent="space-between" gap={1} flexWrap="wrap">
-                    <Typography variant="caption">Certificate no: {number}</Typography>
-                    <Typography variant="caption">
-                      Issue date: {issueDateLabel || certificate.issueDate.slice(0, 10)}
-                    </Typography>
-                  </Stack>
-                  {certificate.template.headerContent !==
-                    `{{OrganizationName}}\n${document.title}\nCertificate No: {{CertificateNo}}\nIssue Date: {{IssueDate}}` && (
-                    <Typography sx={{ whiteSpace: 'pre-line' }}>{header}</Typography>
-                  )}
-                  <Typography sx={{ lineHeight: 1.6 }}>{document.body}</Typography>
-                  <Box component="dl" sx={{ m: 0 }}>
-                    {document.particulars.map((field) => (
-                      <Box
-                        key={field.label}
-                        sx={{
-                          display: 'grid',
-                          gridTemplateColumns: { xs: '1fr', sm: '155px 1fr' },
-                          gap: 1,
-                          py: 1,
-                          borderBottom: 1,
-                          borderColor: 'divider',
-                        }}
-                      >
-                        <Typography component="dt" variant="body2" fontWeight={600}>
-                          {field.label}
-                        </Typography>
-                        <Typography
-                          component="dd"
-                          variant="body2"
-                          sx={{ m: 0, whiteSpace: 'pre-line', overflowWrap: 'anywhere' }}
-                        >
-                          {field.value}
-                        </Typography>
-                      </Box>
-                    ))}
-                  </Box>
-                  {certificate.template.footerContent !==
-                    'Reason: {{Reason}}\nPrincipal Signature' && (
-                    <Typography sx={{ whiteSpace: 'pre-line' }}>
-                      {certificate.template.renderedFooterContent}
-                    </Typography>
-                  )}
-                  <Stack direction="row" justifyContent="space-between" gap={2} sx={{ pt: 5 }}>
-                    <Typography variant="body2">School seal</Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{ borderTop: 1, borderColor: 'divider', pt: 1 }}
-                    >
-                      Principal / authorised signatory
-                    </Typography>
-                  </Stack>
-                </Stack>
-              ) : (
-                <Stack spacing={3}>
-                  <Typography variant="h6" align="center" sx={{ whiteSpace: 'pre-line' }}>
-                    {header}
-                  </Typography>
-                  {(showNumber || showDate) && (
-                    <Stack direction="row" justifyContent="space-between" gap={1} flexWrap="wrap">
-                      {showNumber && (
-                        <Typography variant="body2">Certificate number: {number}</Typography>
-                      )}
-                      {showDate && (
-                        <Typography variant="body2">
-                          Issue date: {issueDateLabel || certificate.issueDate.slice(0, 10)}
-                        </Typography>
-                      )}
-                    </Stack>
-                  )}
-                  <Typography variant="body1" sx={{ lineHeight: 2 }}>
-                    Student: <strong>{certificate.student.studentName}</strong>
-                    <br />
-                    GR number: {certificate.student.grNo || certificate.certificateData.GRNo || '—'}
-                    <br />
-                    Class: {certificate.student.className || '—'} · Division:{' '}
-                    {certificate.student.divisionName || '—'}
-                    <br />
-                    Academic year: {certificate.certificateData.AcademicYear || '—'}
-                  </Typography>
-                  <Typography variant="body1" sx={{ whiteSpace: 'pre-line', pt: 3 }}>
-                    {certificate.template.renderedFooterContent}
-                  </Typography>
-                </Stack>
-              )}
-            </Paper>
-          )}
+          {certificate && <CertificateDocumentPreview certificate={certificate} />}
         </Stack>
       </DialogScrollContent>
       <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>

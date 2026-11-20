@@ -20,7 +20,7 @@ The searchable Fee head dropdown groups eligible heads under non-selectable Fee 
 Search matches either category or head names; duplicate head names include their category in the
 option and selected value. Already added heads remain excluded when adding another line.
 
-The client omits the retired field from candidates and create/PATCH payloads, including when reading an older server response. All assigned heads generate obligations and appear in Fee Collection under the normal backend rules. The summary shows the attached payment frequency and supports opening its schedule. Review counts fixed, optional and variable heads.
+The client omits the retired field from candidates and create/PATCH payloads, including when reading an older server response. All assigned heads generate obligations and appear in Fee Collection under the normal backend rules. The summary shows **Required** (Required or Optional), **Amount type** (Static or Variable), and the attached payment frequency with access to its schedule. Review counts fixed, optional and variable heads.
 
 Backend contracts, migration and historical-data handling are owned by the [backend workspace contract](../../../../Shikshamitra-BE/docs/modules/finance/references/fee-structure-workspace.md#fee-head-collection).
 
@@ -45,6 +45,12 @@ Backend rules, exact permissions, migration and API contracts are owned by [the 
 10. Published cards offer **Create revision**. Their saved publication review remains readable even after master settings change.
 
 ## Common components and interaction rules
+
+The Policies step indicator remains pending on a new draft and on first entering
+the step, including when collection-policy setup is missing. It shows an error only
+after an attempt to continue to review fails policy validation. Saving or discarding
+the draft resets that attempted-validation state. Required policy selections, setup
+guidance, and review/publication blocking retain their existing behavior.
 
 The structure navigator places Search structures above Copy Structure and Add Structure,
 in that order. Rows use neutral theme backgrounds and borders, display their position

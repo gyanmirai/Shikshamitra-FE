@@ -2,16 +2,21 @@
 
 import dayjs from 'dayjs';
 import { useMemo } from 'react';
+import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { formatNumber } from 'src/utils/formate_number';
 import { LoadingButton } from 'src/components/loading-button';
 import { FormSectionCard } from 'src/components/form-section-card';
-import { DetailGrid, DetailField } from 'src/components/detail-view';
 import { Box, Stack, Divider, Typography, DialogActions } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { DetailGrid, DetailField } from 'src/screens/finance/components/detail-view';
 
-import { allocatePayment, selectedChargesInOrder } from './paymentAllocationUtils';
+import {
+  allocatePayment,
+  selectedChargesInOrder,
+  summarizeFundedAllocations,
+} from './paymentAllocationUtils';
 
 import type { IFeeCharge, IStudentFee, FeeCollectionFormValues } from '../../Components/type';
 
@@ -28,6 +33,7 @@ export interface FinalPaymentReviewDialogProps {
   formValues: FeeCollectionFormValues;
   student: IStudentFee | null;
   feeHeadMap: Record<string, string>;
+  oneTimeFeeHeadIds?: ReadonlySet<string>;
   chargesData: IFeeCharge[];
   bankAccounts?: { id: string; name: string }[];
 }
@@ -83,6 +89,7 @@ const FinalPaymentReviewDialog = ({
   formValues,
   student,
   feeHeadMap,
+  oneTimeFeeHeadIds,
   chargesData,
   bankAccounts,
 }: FinalPaymentReviewDialogProps) => {
@@ -118,6 +125,7 @@ const FinalPaymentReviewDialog = ({
     [formValues.selectedItems, formValues.charges, chargesData, feeHeadMap, paidAmount]
   );
 
+  const fundedRows = summarizeFundedAllocations(allocatedRows, oneTimeFeeHeadIds);
   const paymentSummary = (
     <Stack spacing={2.5}>
       <Stack
@@ -126,9 +134,9 @@ const FinalPaymentReviewDialog = ({
         spacing={2}
         sx={{ m: 0, p: 0, listStyle: 'none' }}
       >
-        {allocatedRows.map((row) => (
+        {fundedRows.map((row) => (
           <Stack
-            key={`${row.type}:${row.key}`}
+            key={row.id}
             component="li"
             direction="row"
             justifyContent="space-between"
@@ -136,12 +144,13 @@ const FinalPaymentReviewDialog = ({
             spacing={2}
           >
             <Box sx={{ minWidth: 0, overflowWrap: 'anywhere' }}>
-              <Typography variant="body1">
-                {row.type === 'fee' ? row.feeHeadName : row.chargeName}
-              </Typography>
-              {row.type === 'fee' && allocatedRows.length > 1 && (
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <Typography variant="body1">{row.name}</Typography>
+                {row.oneTime && <Label>One time</Label>}
+              </Stack>
+              {row.periods.length > 0 && (
                 <Typography variant="caption" color="text.secondary">
-                  {row.installmentLabel || row.period}
+                  {row.periods.join(' · ')}
                 </Typography>
               )}
             </Box>

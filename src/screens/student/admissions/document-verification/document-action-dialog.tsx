@@ -6,6 +6,7 @@ import type {
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Button, DialogActions } from '@mui/material';
+import { FormBusyRegion } from 'src/components/form-busy-region';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { DialogScrollContent } from 'src/components/customDialog';
 import { FormSectionCard } from 'src/components/form-section-card';
@@ -64,7 +65,7 @@ export function DocumentActionDialog({
         },
       }}
       actions={(requestClose) => (
-        <DialogActions>
+        <DialogActions sx={{ px: 2, py: 1 }}>
           <Button
             size="small"
             variant="outlined"
@@ -102,20 +103,25 @@ export function DocumentActionDialog({
             {error}
           </StudentFeedback>
         )}
-        <FormSectionCard
-          title={action === 'upload' ? 'Document Details' : 'Document Decision'}
-          icon={GlobalIcons.documentIcon}
-          descriptionTooltip="Review the requirement and provide the evidence or decision notes for this action."
-          titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+        <FormBusyRegion
+          busy={formik.isSubmitting}
+          label={action === 'upload' ? 'Uploading document…' : 'Saving document decision…'}
         >
-          <DocumentActionFields
-            action={action}
-            requirement={snapshot.requirement}
-            formik={formik}
-            extensions={extensions}
-            maxFileSizeMb={maxFileSizeMb}
-          />
-        </FormSectionCard>
+          <FormSectionCard
+            title={action === 'upload' ? 'Document Details' : 'Document Decision'}
+            icon={GlobalIcons.documentIcon}
+            descriptionTooltip="Review the requirement and provide the evidence or decision notes for this action."
+            titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+          >
+            <DocumentActionFields
+              action={action}
+              requirement={snapshot.requirement}
+              formik={formik}
+              extensions={extensions}
+              maxFileSizeMb={maxFileSizeMb}
+            />
+          </FormSectionCard>
+        </FormBusyRegion>
       </DialogScrollContent>
     </ReviewDialog>
   );

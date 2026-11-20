@@ -10,7 +10,7 @@ import { render, screen, within, fireEvent } from '@testing-library/react';
 import AssignmentStudentInputs from './AssignmentStudentInputs';
 
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
-vi.mock('src/components/academic-date-picker', () => ({ AcademicDatePicker: () => null }));
+vi.mock('src/components/custom-date-range-picker', () => ({ CustomDateRangePicker: () => null }));
 vi.mock('src/redux/finance/studentFeeAssignment', () => ({
   useAssignmentTransportSourcesQuery: () => ({}),
 }));
@@ -53,11 +53,18 @@ const candidate = {
   ],
 } as AssignmentCandidate;
 
-function Harness({ changed }: { changed: (request: AssignmentRequest) => void }) {
+function Harness({
+  changed,
+  editing = false,
+}: {
+  changed: (request: AssignmentRequest) => void;
+  editing?: boolean;
+}) {
   const [request, setRequest] = useState<AssignmentRequest>({
     studentId: 'student',
     academicYearId: 'year',
     standardFeeStructureId: 'structure',
+    ...(editing && { editAssignmentId: 'assignment' }),
     selectedOptionalFeeHeadIds: [],
     servicePeriods: [],
     feeHeadDetails: [],
@@ -65,7 +72,16 @@ function Harness({ changed }: { changed: (request: AssignmentRequest) => void })
   });
   return (
     <AssignmentStudentInputs
-      candidate={candidate}
+      candidate={editing ? {
+        ...candidate,
+        heads: [...candidate.heads, {
+          ...candidate.heads[2],
+          feeHeadId: 'activity',
+          feeHeadName: 'Activity',
+          isOptional: true,
+        }],
+      } : candidate}
+      canOverrideAmount={editing}
       request={request}
       onChange={(value) => {
         changed(value);
@@ -80,11 +96,19 @@ function Harness({ changed }: { changed: (request: AssignmentRequest) => void })
 describe('variable student inputs', () => {
   it('shows mandatory variable entry with assignment access and requires optional selection first', () => {
     render(<Harness changed={vi.fn()} />);
-    expect(screen.getByLabelText(/Hostel student amount/)).toHaveValue('');
-    expect(screen.queryByLabelText(/Transport student amount/)).not.toBeInTheDocument();
+    const hostel = within(screen.getByRole('region', { name: 'Hostel' }));
+    const transport = within(screen.getByRole('region', { name: 'Transport' }));
+    expect(transport.getByText('Optional', { exact: true })).toBeVisible();
+    expect(hostel.getByRole('textbox', { name: 'Monthly amount' })).toHaveAccessibleDescription(
+      'Total for the selected dates'
+    );
+    expect(hostel.getByRole('textbox', { name: 'Monthly amount' })).toHaveValue('');
+    expect(transport.queryByRole('textbox', { name: 'Monthly amount' })).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/amount override/i)).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('checkbox', { name: /Transport.*Optional/ }));
-    expect(screen.getByLabelText(/Transport student amount/)).toHaveValue('');
+    const transportCheckbox = transport.getByRole('checkbox', { name: 'Transport' });
+    fireEvent.click(transport.getByText('Transport', { exact: true }));
+    expect(transportCheckbox).toBeChecked();
+    expect(transport.getByRole('textbox', { name: 'Monthly amount' })).toHaveValue('');
     const tuition = within(screen.getByRole('region', { name: 'Tuition' }));
     expect(tuition.getByText('₹ 5,000')).toBeInTheDocument();
     expect(tuition.getByText('Required')).toBeInTheDocument();
@@ -98,8 +122,9 @@ describe('variable student inputs', () => {
   it('keeps blank distinct from zero and clears a deselected optional amount', () => {
     const changed = vi.fn();
     render(<Harness changed={changed} />);
-    fireEvent.click(screen.getByRole('checkbox', { name: /Transport.*Optional/ }));
-    const field = screen.getByLabelText(/Transport student amount/);
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Transport' }));
+    const transport = within(screen.getByRole('region', { name: 'Transport' }));
+    const field = transport.getByRole('textbox', { name: 'Monthly amount' });
     fireEvent.change(field, { target: { value: '1200.01' } });
     expect(changed.mock.lastCall?.[0].variableFeeHeads[0].amount).toBe(1200.01);
     expect(field).toHaveValue('₹ 1,200.01');
@@ -107,15 +132,30 @@ describe('variable student inputs', () => {
     expect(changed.mock.lastCall?.[0].variableFeeHeads[0].amount).toBeNull();
     fireEvent.change(field, { target: { value: '0' } });
     expect(screen.getByLabelText(/reason for zero/i)).toBeRequired();
-    fireEvent.click(screen.getByRole('checkbox', { name: /Transport.*Optional/ }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Transport' }));
     expect(changed.mock.lastCall?.[0].variableFeeHeads).toEqual([]);
-    expect(screen.queryByLabelText(/Transport student amount/)).not.toBeInTheDocument();
+    expect(transport.queryByRole('textbox', { name: 'Monthly amount' })).not.toBeInTheDocument();
+  });
+
+  it('lets an authorized correction change and remove a fixed optional fee', () => {
+    const changed = vi.fn();
+    render(<Harness changed={changed} editing />);
+    const optional = screen.getByRole('checkbox', { name: 'Activity' });
+    fireEvent.click(optional);
+    const amount = screen.getByLabelText(/Activity amount/);
+    expect(amount).toHaveValue('₹ 5,000');
+    fireEvent.change(amount, { target: { value: '1800.50' } });
+    expect(changed.mock.lastCall?.[0].feeHeadDetails).toEqual([{ feeHeadId: 'activity', amount: 1800.5 }]);
+    fireEvent.click(optional);
+    expect(changed.mock.lastCall?.[0].selectedOptionalFeeHeadIds).toEqual([]);
+    expect(changed.mock.lastCall?.[0].feeHeadDetails).toEqual([]);
   });
 
   it('blocks a value above the server limit while typing', () => {
     const changed = vi.fn();
     render(<Harness changed={changed} />);
-    const field = screen.getByLabelText(/Hostel student amount/);
+    const hostel = within(screen.getByRole('region', { name: 'Hostel' }));
+    const field = hostel.getByRole('textbox', { name: 'Monthly amount' });
     fireEvent.change(field, { target: { value: '1300000000000000000' } });
     expect(field).toHaveValue('');
     expect(changed).not.toHaveBeenCalled();

@@ -37,6 +37,14 @@ type UpdateDraftCommand = ConcessionDraftCommand & {
   concurrencyStamp: string;
 };
 
+const concessionReads = (id?: string) => [
+  financeModuleType.studentFeeAssignment,
+  financeModuleType.concessionApplications,
+  financeModuleType.concessionContext,
+  financeModuleType.studentConcessions,
+  ...(id ? [{ type: financeModuleType.concessionRequest, id }] : []),
+];
+
 export const concessionManagementApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
     createConcessionRefundRequests: builder.mutation<
@@ -51,7 +59,11 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [financeModuleType.concessionRequest, financeModuleType.feeRefund],
+      invalidatesTags: (_result, _error, arg) => [
+        financeModuleType.studentFeeAssignment,
+        ...concessionReads(arg.concessionRequestId),
+        financeModuleType.feeRefund,
+      ],
     }),
     getConcessionRequestContext: builder.query<
       ConcessionRequestContext,
@@ -67,7 +79,7 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
     >({
       query: (params) => ({ url: '/concession-request/context', method: 'GET', params }),
       providesTags: (_result, _error, arg) => [
-        financeModuleType.concessionRequest,
+        financeModuleType.concessionContext,
         { type: financePolicyType.concessionPolicy, id: `year:${arg.academicYearId}` },
       ],
     }),
@@ -84,7 +96,13 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
       }),
       // Administrator creation can approve immediately and create linked refunds.
       invalidatesTags: (_result, error) =>
-        error ? [] : [financeModuleType.concessionRequest, financeModuleType.feeRefund],
+        error
+          ? []
+          : [
+              financeModuleType.studentFeeAssignment,
+              ...concessionReads(),
+              financeModuleType.feeRefund,
+            ],
     }),
 
     createConcessionDraft: builder.mutation<
@@ -97,7 +115,7 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
         params: { academicYearId },
         body,
       }),
-      invalidatesTags: [financeModuleType.concessionRequest],
+      invalidatesTags: () => concessionReads(),
     }),
 
     submitConcessionRequest: builder.mutation<
@@ -115,8 +133,14 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
         body,
       }),
       // Administrator submission follows the same automatic approval path.
-      invalidatesTags: (_result, error) =>
-        error ? [] : [financeModuleType.concessionRequest, financeModuleType.feeRefund],
+      invalidatesTags: (_result, error, arg) =>
+        error
+          ? []
+          : [
+              financeModuleType.studentFeeAssignment,
+              ...concessionReads(arg.concessionRequestId),
+              financeModuleType.feeRefund,
+            ],
     }),
 
     previewConcessionRequest: builder.mutation<ConcessionRequestPreview, PreviewCommand>({
@@ -138,7 +162,7 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
         params: { academicYearId },
         body,
       }),
-      invalidatesTags: [financeModuleType.concessionRequest],
+      invalidatesTags: (_result, _error, arg) => concessionReads(arg.concessionRequestId),
     }),
 
     getConcessionRequestById: builder.query<
@@ -149,7 +173,9 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
         url: `/concession-request/${concessionRequestId}`,
         method: 'GET',
       }),
-      providesTags: [financeModuleType.concessionRequest],
+      providesTags: (_result, _error, arg) => [
+        { type: financeModuleType.concessionRequest, id: arg.concessionRequestId },
+      ],
     }),
 
     uploadConcessionDocuments: builder.mutation<
@@ -166,7 +192,11 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
         method: 'PUT',
         body,
       }),
-      invalidatesTags: [financeModuleType.concessionRequest],
+      invalidatesTags: (_result, _error, arg) => [
+        financeModuleType.studentFeeAssignment,
+        financeModuleType.concessionApplications,
+        { type: financeModuleType.concessionRequest, id: arg.concessionRequestId },
+      ],
     }),
 
     uploadConcessionDocumentFile: builder.mutation<
@@ -193,7 +223,7 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
         method: 'GET',
         params,
       }),
-      providesTags: [financeModuleType.concessionRequest],
+      providesTags: [financeModuleType.studentConcessions],
     }),
 
     getConcessionApprovalContext: builder.query<ConcessionApprovalContext, string>({
@@ -201,7 +231,7 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
         url: `/concession-request/${concessionRequestId}/approval-context`,
         method: 'GET',
       }),
-      providesTags: [financeModuleType.concessionRequest],
+      providesTags: (_result, _error, id) => [{ type: financeModuleType.concessionRequest, id }],
     }),
 
     approveConcessionRequest: builder.mutation<
@@ -213,8 +243,9 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [
-        financeModuleType.concessionRequest,
+      invalidatesTags: (_result, _error, arg) => [
+        financeModuleType.studentFeeAssignment,
+        ...concessionReads(arg.studentConcessionTypeRequestId),
         financeModuleType.feeRefund,
         financeModuleType.accountPosting,
         financeModuleType.draftPosting,
@@ -241,7 +272,8 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [financeModuleType.concessionRequest],
+      invalidatesTags: (_result, _error, arg) =>
+        concessionReads(arg.studentConcessionTypeRequestId),
     }),
 
     getConcessionApplications: builder.query<
@@ -253,7 +285,7 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
         method: 'GET',
         params,
       }),
-      providesTags: [financeModuleType.concessionRequest],
+      providesTags: [financeModuleType.concessionApplications],
     }),
 
     deleteConcessionApplication: builder.mutation<
@@ -265,7 +297,7 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
         method: 'DELETE',
         body,
       }),
-      invalidatesTags: [financeModuleType.concessionRequest],
+      invalidatesTags: (_result, _error, arg) => concessionReads(arg.concessionRequestId),
     }),
 
     cancelConcessionRequest: builder.mutation<
@@ -282,7 +314,8 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [financeModuleType.concessionRequest],
+      invalidatesTags: (_result, _error, arg) =>
+        concessionReads(arg.studentConcessionTypeRequestId),
     }),
 
     reverseConcessionRequest: builder.mutation<
@@ -294,8 +327,9 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [
-        financeModuleType.concessionRequest,
+      invalidatesTags: (_result, _error, arg) => [
+        financeModuleType.studentFeeAssignment,
+        ...concessionReads(arg.concessionRequestId),
         financeModuleType.accountPosting,
         financeModuleType.draftPosting,
       ],

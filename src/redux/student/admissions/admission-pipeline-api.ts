@@ -62,7 +62,7 @@ const unwrap = <T>(response: T | { data: T }): T =>
 const url = '/student/enrollment/admissions/applications/pipeline';
 const tags = [
   studentAdmissionsCrmType.admissionApplication,
-  studentAdmissionsCrmType.admissionInquiry,
+  { type: studentAdmissionsCrmType.admissionInquiry, id: 'PIPELINE' } as const,
 ];
 
 export const admissionPipelineApi = api.injectEndpoints({
@@ -81,7 +81,10 @@ export const admissionPipelineApi = api.injectEndpoints({
     >({
       query: (params) => ({ url: `${url}/options`, params: studentAcademicFilterParams(params) }),
       transformResponse: unwrap<AdmissionPipelineOptions>,
-      providesTags: tags,
+      providesTags: [
+        { type: studentAdmissionsCrmType.admissionInquiry, id: 'PIPELINE-OPTIONS' },
+        { type: studentAdmissionsCrmType.admissionApplication, id: 'PIPELINE-OPTIONS' },
+      ],
     }),
   }),
 });

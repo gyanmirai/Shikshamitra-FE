@@ -186,7 +186,10 @@ export default function FeeStructureWorkspaceCard({
     scheduleTerm,
     termDetail,
     refreshPrerequisites,
-  } = useFeeStructureLookups(scope, !record || tab === 'policies', scheduleLine, locked, isActive);
+  } = useFeeStructureLookups(scope, !record || tab === 'policies', scheduleLine, locked, isActive, {
+    collection: candidate.collectionPolicyId,
+    refund: candidate.refundPolicyId,
+  });
   const publicationPrerequisites = structurePublicationPrerequisites({
     locked: !!locked || viewOnly,
     heads,
@@ -246,6 +249,7 @@ export default function FeeStructureWorkspaceCard({
     ]),
   ]);
   const [submitted, setSubmitted] = useState(false);
+  const [policiesSubmitted, setPoliciesSubmitted] = useState(false);
   const defaultsHandled = useRef(new Set<StructurePolicyFamily>());
   const patchRequest = useRef<{ fingerprint: string; id: string } | undefined>(undefined);
   const nameError = !candidate.name.trim()
@@ -400,6 +404,7 @@ export default function FeeStructureWorkspaceCard({
     setCandidate(next);
     setBaseline(JSON.stringify(next));
     setSubmitted(false);
+    setPoliciesSubmitted(false);
     setServerNameError('');
     formik.setTouched({});
     setAmountInputs({});
@@ -455,6 +460,7 @@ export default function FeeStructureWorkspaceCard({
   };
   const validatePolicies = () => {
     if (locked || policiesValid) return true;
+    setPoliciesSubmitted(true);
     focusErrorPending.current = true;
     setTab('policies');
     setError('Select a Collection Policy and a Refund Policy before continuing.');
@@ -512,6 +518,7 @@ export default function FeeStructureWorkspaceCard({
     if (action === 'discard') {
       setServerNameError('');
       setSubmitted(false);
+      setPoliciesSubmitted(false);
       formik.setTouched({});
       setAmountInputs({});
       const next = structureCandidate(record);
@@ -796,7 +803,7 @@ export default function FeeStructureWorkspaceCard({
               completedSteps={completedSteps}
               errors={[
                 Boolean((submitted || Object.keys(formik.errors).length > 0) && !headsValid),
-                Boolean(!locked && !policiesValid),
+                Boolean(policiesSubmitted && !locked && !policiesValid),
                 Boolean(preview?.errors.length),
               ]}
               onStepClick={navigate}

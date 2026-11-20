@@ -4,8 +4,10 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
+import { useStudentSetupFormState } from 'src/screens/student/setup/embedding';
 
 export function useHouseCloseGuard(dirty: boolean, busy: boolean, onClose: () => void) {
+  useStudentSetupFormState({ dirty, busy });
   const router = useRouter();
   const guard = useUnsavedNavigation(dirty, {
     guardContextChanges: true,
@@ -33,5 +35,9 @@ export function useHouseCloseGuard(dirty: boolean, busy: boolean, onClose: () =>
       />
     ),
   });
-  return { close: () => guard.requestNavigation(onClose), confirmation: guard.confirmation };
+  return {
+    close: () => guard.requestNavigation(onClose),
+    confirmation: guard.confirmation,
+    requestNavigation: guard.requestNavigation,
+  };
 }

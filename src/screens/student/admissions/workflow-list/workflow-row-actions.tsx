@@ -2,6 +2,7 @@ import type { AdaptiveThreeDotsAction } from 'src/components/adaptive-three-dots
 import type { AdmissionWorkflow } from 'src/redux/student/admissions/admission-workflows-api';
 
 import { useResponsive } from 'src/hooks/use-responsive';
+import { GlobalIcons } from 'src/utils/icons';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 
 import { isAdmissionWorkflowPublishable } from '../workflow-access';
@@ -28,6 +29,7 @@ type Props = WorkflowActionPermissions & {
   onDelete: () => void;
   onPublish?: () => void;
   publishing?: boolean;
+  creatingVersion?: boolean;
   busy?: boolean;
 };
 
@@ -42,6 +44,7 @@ export function WorkflowRowActions({
   canViewUsage,
   canPublish,
   publishing = false,
+  creatingVersion = false,
   busy = false,
   onEdit,
   onClone,
@@ -59,7 +62,7 @@ export function WorkflowRowActions({
   const deleteAction: AdaptiveThreeDotsAction = {
     id: 'delete',
     label: `Delete ${workflow.name}`,
-    icon: 'mdi:delete-outline',
+    icon: GlobalIcons.delete,
     color: workflow.status === 0 ? 'error.main' : 'text.disabled',
     disabled: workflow.status !== 0,
     onClick: onDelete,
@@ -83,7 +86,7 @@ export function WorkflowRowActions({
     actions.push({
       id: 'edit',
       label: `Edit ${workflow.name}`,
-      icon: 'mdi:pencil-outline',
+      icon: GlobalIcons.edit,
       disabled: ![0, 3].includes(workflow.status),
       tooltip: [0, 3].includes(workflow.status)
         ? undefined
@@ -104,6 +107,7 @@ export function WorkflowRowActions({
       id: 'new-version',
       label: 'Create New Version',
       icon: 'mdi:file-plus-outline',
+      loading: creatingVersion,
       onClick: onCreateVersion,
     });
   if (canViewUsage)

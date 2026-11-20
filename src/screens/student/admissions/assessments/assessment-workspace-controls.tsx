@@ -41,7 +41,7 @@ export function AssessmentWorkspaceControls({
         standardId={academic.standardId}
         onChange={academic.update}
         filterAction={
-          <Box sx={{ width: { xs: '100%', lg: 260 }, minWidth: 0 }}>
+          <Box sx={{ width: { xs: '100%', sm: 248 }, minWidth: 0 }}>
             <CustomSelect
               label="Session"
               isSearch
@@ -97,12 +97,12 @@ export function AssessmentWorkspaceControls({
           Room approval is pending. Bookings are held until approval.
         </StudentFeedback>
       )}
-      <Paper variant="outlined" sx={{ px: 1, py: 1, flexShrink: 0, minWidth: 0 }}>
+      <Paper variant="outlined" sx={{ px: 1, py: 0.5, flexShrink: 0, minWidth: 0 }}>
         <Stack
           direction="row"
           role="group"
           aria-label="Assessment Status Filter"
-          sx={{ gap: 2, overflowX: 'auto' }}
+          sx={{ gap: 1, overflowX: 'auto' }}
         >
           {assessmentWorkspaceQueues.map((tab) => (
             <Button
@@ -111,7 +111,8 @@ export function AssessmentWorkspaceControls({
               variant="text"
               aria-pressed={state.status === tab.value}
               sx={{
-                minHeight: 48,
+                minHeight: 36,
+                '@media (any-pointer: coarse)': { minHeight: 44 },
                 borderRadius: 0,
                 flexShrink: 0,
                 whiteSpace: 'nowrap',

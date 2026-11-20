@@ -14,7 +14,11 @@ import Bank from 'src/screens/finance/settings/BankAccManagement';
 import 'simplebar-react/dist/simplebar.min.css';
 
 const store = configureStore({
-  reducer: { confirmPopup, globalState: (state = { currentYear: { id: 'qa-year' } }) => state },
+  reducer: {
+    confirmPopup,
+    globalState: (state = { currentYear: { id: 'qa-year', name: '2026–2027', startDate: '2026-04-01', endDate: '2027-03-31' } }) => state,
+    auth: () => ({ permissions: ['IncomeTracking', 'ExpenseTracking', 'CashManagement'].map((name) => ({ name: `Finance.Accounts.${name}.View`, isGranted: true })) }),
+  },
 });
 function Fixture() {
   const [kind, setKind] = React.useState('Income');

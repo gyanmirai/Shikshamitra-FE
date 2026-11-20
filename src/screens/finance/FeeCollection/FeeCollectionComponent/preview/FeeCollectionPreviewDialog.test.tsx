@@ -6,6 +6,30 @@ import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings';
 
 import FeeCollectionPreviewDialog from './FeeCollectionPreviewDialog';
+import { allocatePayment, summarizeFundedAllocations } from './paymentAllocationUtils';
+
+it('sums funded installments by fee head and omits unfunded fees', () => {
+  const fees = [
+    { dueFeeId: 'reg-june', feeHeadId: 'reg', period: '2026-06', dueAmount: 7493 },
+    { dueFeeId: 'reg-july', feeHeadId: 'reg', period: '2026-07', dueAmount: 7497 },
+    { dueFeeId: 'reg-august', feeHeadId: 'reg', period: '2026-08', dueAmount: 7497 },
+    { dueFeeId: 'tuition', feeHeadId: 'tuition', period: '2026-06', dueAmount: 9996 },
+  ];
+  expect(
+    summarizeFundedAllocations(
+      allocatePayment(fees, [], { reg: 'Registration Fee' }, 10000).allocatedRows
+    )
+  ).toEqual([
+    {
+      id: 'fee:reg',
+      name: 'Registration Fee',
+      periods: ['Jun 2026', 'Jul 2026'],
+      originalAmount: 14990,
+      paidAmount: 10000,
+      remainingAmount: 4990,
+    },
+  ]);
+});
 
 vi.mock('src/components/customDialog', () => ({
   default: ({ open, children }: any) => (open ? <div role="dialog">{children}</div> : null),

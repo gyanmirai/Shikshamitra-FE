@@ -254,28 +254,29 @@ function enablePolicySelection() {
     { name: 'Finance.Fees.StructureAssign.OverridePolicies', isGranted: true },
   ];
   const current = editableDate();
+  const policyState = {
+    ...current,
+    canSelectProrationPolicy: true,
+    defaultProrationPolicyVersionId: 'policy-default-v1',
+    prorationPolicies: [
+      {
+        policyId: 'policy-default',
+        policyVersionId: 'policy-default-v1',
+        policyName: 'Monthly Default',
+        policyVersion: 1,
+        isDefault: true,
+      },
+      {
+        policyId: 'policy-daily',
+        policyVersionId: 'policy-daily-v3',
+        policyName: 'Daily Option',
+        policyVersion: 3,
+        isDefault: false,
+      },
+    ],
+  };
   mocks.joiningDate.mockReturnValue({
-    currentData: {
-      ...current,
-      canSelectProrationPolicy: true,
-      defaultProrationPolicyVersionId: 'policy-default-v1',
-      prorationPolicies: [
-        {
-          policyId: 'policy-default',
-          policyVersionId: 'policy-default-v1',
-          policyName: 'Monthly Default',
-          policyVersion: 1,
-          isDefault: true,
-        },
-        {
-          policyId: 'policy-daily',
-          policyVersionId: 'policy-daily-v3',
-          policyName: 'Daily Option',
-          policyVersion: 3,
-          isDefault: false,
-        },
-      ],
-    },
+    currentData: policyState,
     isFetching: false,
     isError: false,
     refetch: mocks.refetch,
@@ -297,6 +298,7 @@ function enablePolicySelection() {
     isFetching: false,
     isError: false,
   });
+  return policyState;
 }
 
 it('previews the date without writing, then confirms it before preparing fees', async () => {
@@ -431,7 +433,65 @@ it('shows the academic-year default preselected for staff authorized to override
   expect(screen.queryByRole('textbox', { name: /reason/i })).not.toBeInTheDocument();
 });
 
-it('does not show policy choices until an actual joining date is available', () => {
+it('displays full charge by default and after selecting the only no-policy option', async () => {
+  const current = enablePolicySelection();
+  mocks.joiningDate.mockReturnValue({
+    currentData: { ...current, defaultProrationPolicyVersionId: null, prorationPolicies: [] },
+    isFetching: false,
+    isError: false,
+    refetch: mocks.refetch,
+  });
+  renderPanel();
+  const policy = screen.getByRole('combobox', { name: 'Proration policy' });
+  expect(policy).toHaveTextContent('No policy · Full charge');
+  fireEvent.mouseDown(policy);
+  fireEvent.click(await screen.findByRole('option', { name: 'No policy · Full charge' }));
+  expect(policy).toHaveTextContent('No policy · Full charge');
+  await waitFor(() =>
+    expect(mocks.previewDate).toHaveBeenLastCalledWith(
+      expect.objectContaining({ prorationPolicyVersionId: null }),
+      expect.objectContaining({ skip: false })
+    )
+  );
+  expect(mocks.saveDate).not.toHaveBeenCalled();
+  expect(mocks.prepare).not.toHaveBeenCalled();
+  expect(mocks.collect).not.toHaveBeenCalled();
+});
+
+it('returns from a named policy to visible full charge and sends only null to preparation', async () => {
+  const current = enablePolicySelection();
+  mocks.joiningDate.mockReturnValue({
+    currentData: { ...current, defaultProrationPolicyVersionId: null },
+    isFetching: false,
+    isError: false,
+    refetch: mocks.refetch,
+  });
+  renderPanel();
+  const policy = screen.getByRole('combobox', { name: 'Proration policy' });
+  fireEvent.mouseDown(policy);
+  fireEvent.click(await screen.findByRole('option', { name: /Daily Option · v3/ }));
+  expect(policy).toHaveTextContent('Daily Option · v3');
+  fireEvent.mouseDown(policy);
+  fireEvent.click(await screen.findByRole('option', { name: 'No policy · Full charge' }));
+  expect(policy).toHaveTextContent('No policy · Full charge');
+  await waitFor(() =>
+    expect(mocks.previewDate).toHaveBeenLastCalledWith(
+      expect.objectContaining({ prorationPolicyVersionId: null }),
+      expect.objectContaining({ skip: false })
+    )
+  );
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Collect Fees' })).toBeEnabled());
+  fireEvent.click(screen.getByRole('button', { name: 'Collect Fees' }));
+  await waitFor(() =>
+    expect(mocks.prepare).toHaveBeenCalledWith({
+      applicationId: 'application-1',
+      variableFeeHeads: [],
+      prorationPolicyVersionId: null,
+    })
+  );
+});
+
+it('requires a joining date before collecting fees and keeps deferral available', () => {
   const current = editableDate();
   mocks.joiningDate.mockReturnValue({
     currentData: {
@@ -454,9 +514,59 @@ it('does not show policy choices until an actual joining date is available', () 
     refetch: mocks.refetch,
   });
 
+  renderPanel({
+    stretch: true,
+    footerAction: <button type="button">Collect later in Onboarding</button>,
+  });
+
+  const collect = screen.getByRole('button', { name: 'Collect Fees' });
+  expect(screen.getByText('Required before collecting fees.')).toBeVisible();
+  expect(collect).toBeDisabled();
+  const day = screen.getByRole('spinbutton', { name: 'Day' });
+  const month = screen.getByRole('spinbutton', { name: 'Month' });
+  fireEvent.blur(day, { relatedTarget: month });
+  expect(screen.queryByText('Actual joining date is required.')).not.toBeInTheDocument();
+  fireEvent.blur(month);
+  expect(screen.getByText('Actual joining date is required.')).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Collect later in Onboarding' })).toBeEnabled();
+  expect(mocks.saveDate).not.toHaveBeenCalled();
+  expect(mocks.prepare).not.toHaveBeenCalled();
+  expect(screen.queryByRole('combobox', { name: 'Proration policy' })).not.toBeInTheDocument();
+});
+
+it('explains full fees and hides policy choices before the school start date', async () => {
+  const current = enablePolicySelection();
+  mocks.joiningDate.mockReturnValue({
+    currentData: { ...current, joiningDate: '2026-05-31', academicYearStartDate: '2026-06-01' },
+    isFetching: false,
+    isError: false,
+    refetch: mocks.refetch,
+  });
+  mocks.previewDate.mockReturnValue({
+    currentData: {
+      joiningDate: '2026-05-31',
+      totalAmount: 10000,
+      scheduledAmount: 10000,
+      reductionAmount: 0,
+      proration: null,
+      prorationPolicy: null,
+      warnings: [],
+    },
+    isFetching: false,
+    isError: false,
+  });
+
   renderPanel();
 
   expect(screen.queryByRole('combobox', { name: 'Proration policy' })).not.toBeInTheDocument();
+  expect(
+    await screen.findByText(
+      'Full fees apply because the joining date is before the school start date.'
+    )
+  ).toBeVisible();
+  expect(
+    screen.queryByText(/No active default proration policy is configured/)
+  ).not.toBeInTheDocument();
 });
 
 it('places joining-date information inside the date field', () => {
@@ -467,9 +577,11 @@ it('places joining-date information inside the date field', () => {
     .getByRole('group', { name: /actual joining date/i })
     .closest('.MuiFormControl-root');
   const infoButton = screen.getByRole('button', { name: 'About Actual Joining Date' });
+  const calendarButton = screen.getByRole('button', { name: /choose date/i });
 
   expect(dateField).not.toBeNull();
   expect(dateField).toContainElement(infoButton);
+  expect(calendarButton.closest('.MuiInputAdornment-positionEnd')).toContainElement(infoButton);
 });
 
 it('previews a chosen policy and prepares fees without a reason field', async () => {
@@ -734,9 +846,11 @@ it('keeps unknown balances distinct from zero and preserves collection prerequis
   });
   expect(screen.getAllByLabelText('Not Calculated')).toHaveLength(2);
   expect(screen.getByText('Confirmed payments').nextElementSibling).toHaveTextContent('₹0');
+  expect(screen.getByRole('heading', { name: 'Fee Collection' })).toBeVisible();
+  expect(screen.getByText('No payments recorded yet.')).toBeVisible();
   expect(
-    screen.getByText('Confirm a published fee structure before collecting fees.')
-  ).toBeVisible();
+    screen.queryByText('Confirm a published fee structure before collecting fees.')
+  ).not.toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Collect Fees' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Collect later in Onboarding' })).toBeEnabled();
   expect(mocks.prepare).not.toHaveBeenCalled();

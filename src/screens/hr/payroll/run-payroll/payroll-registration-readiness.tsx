@@ -1,28 +1,25 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import ExpandMore from '@mui/icons-material/ExpandMore';
+import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { HrSetupLink } from 'src/screens/hr/recovery/hr-setup-controls';
 import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import { useGetPayrollRegistrationReadinessQuery } from 'src/redux/hr/statutory-profile-api';
-import {
-  Chip,
-  Alert,
-  Stack,
-  Button,
-  Accordion,
-  Typography,
-  AccordionDetails,
-  AccordionSummary,
-} from '@mui/material';
+import { Box, Stack, Button, Drawer, Divider, Typography, LinearProgress } from '@mui/material';
+
+import { DrawerHeader } from '../../policies/components/HRPolicySharedUI';
 
 export function PayrollRegistrationReadiness({ month }: { month: string | null }) {
-  const [open, setOpen] = useState(false);
+  const [openMonth, setOpenMonth] = useState<string | null>(null);
+  const open = Boolean(month && openMonth === month);
+  const close = () => setOpenMonth(null);
   const [page, setPage] = useState({ number: 1, size: 25, search: '' });
   useEffect(() => {
-    setPage((current) => ({ ...current, number: 1 }));
+    setPage({ number: 1, size: 25, search: '' });
+    setOpenMonth(null);
   }, [month]);
   const query = useHrTableQuery(
     {
@@ -43,48 +40,63 @@ export function PayrollRegistrationReadiness({ month }: { month: string | null }
     search: page.search,
   });
   const status = (apply: boolean, registered: boolean) => (
-    <Chip
-      size="small"
-      variant="outlined"
-      color={!apply || !registered ? 'warning' : 'default'}
-      label={!apply ? 'Turned off' : registered ? 'Number recorded' : 'Number missing'}
-    />
+    <Label variant="soft" color={apply && !registered ? 'warning' : 'default'}>
+      {!apply ? 'Turned off' : registered ? 'Number recorded' : 'Number missing'}
+    </Label>
   );
   return (
-    <Accordion
-      expanded={open}
-      onChange={(_, expanded) => setOpen(expanded)}
-      disableGutters
-      variant="outlined"
-      sx={{ borderRadius: 1 }}
-    >
-      <AccordionSummary expandIcon={<ExpandMore />}>
-        <Typography variant="subtitle2">Registration review before payroll refresh</Typography>
-      </AccordionSummary>
-      <AccordionDetails>
-        <Stack spacing={1.5}>
-          <Typography variant="body2" color="text.secondary">
-            Editable staff payroll only. Missing PF/ESIC numbers are follow-up warnings and do not
-            block payroll, locking, or payslip issuance. Eligible contributions still apply. Add the
-            numbers when available. PF and ESIC are evaluated independently; a turned-off scheme
-            applies no contributions.
+    <>
+      <Stack direction="row" flexWrap="wrap" useFlexGap gap={1} alignItems="center">
+        <Box sx={{ flex: '1 1 230px' }}>
+          <Typography variant="subtitle2">PF and ESIC Registration</Typography>
+          <Typography variant="caption" color="text.secondary">
+            Missing numbers can be added later. Contributions still apply when eligible.
           </Typography>
-          {query.isError && (
-            <Alert
-              severity="error"
-              action={
-                <Button size="small" onClick={() => query.refetch()}>
-                  Retry
-                </Button>
-              }
-            >
-              Registration review could not be loaded.
-            </Alert>
-          )}
+        </Box>
+        <Button
+          size="small"
+          variant="outlined"
+          disabled={!month}
+          startIcon={<Iconify icon="mdi:card-account-details-outline" />}
+          aria-haspopup="dialog"
+          onClick={() => setOpenMonth(month)}
+        >
+          View registrations
+        </Button>
+      </Stack>
+      <Drawer
+        anchor="right"
+        open={open}
+        onClose={close}
+        slotProps={{
+          paper: {
+            role: 'dialog',
+            'aria-modal': true,
+            'aria-label': 'PF and ESIC Registration',
+            sx: { width: { xs: '100%', sm: 'min(760px, 92vw)' } },
+          },
+        }}
+      >
+        <DrawerHeader
+          title="PF and ESIC Registration"
+          subtitle={month ?? undefined}
+          helpText="Registration numbers can be added after payroll. PF and ESIC are evaluated independently."
+          onClose={close}
+        />
+        <Divider />
+        <Stack spacing={1.5} sx={{ minHeight: 0, flex: 1, overflow: 'auto', p: 2 }}>
+          <Typography variant="body2" color="text.secondary">
+            Missing numbers can be added later. Contributions still apply when eligible. A scheme
+            that is turned off has no contributions.
+          </Typography>
+          <Box sx={{ height: 2 }}>
+            {query.isFetching && !query.isLoading && (
+              <LinearProgress aria-label="Refreshing registrations" />
+            )}
+          </Box>
           <CustomizableTable
             showColumns
             showExport
-            showFullScreen
             exportScope="all"
             tableId="payroll-registration-review"
             onExport={exportTable}
@@ -104,7 +116,12 @@ export function PayrollRegistrationReadiness({ month }: { month: string | null }
                   label: value,
                 })),
                 label: 'PF',
-                render: (_, row) => status(row.applyPf, row.pfNumberPresent),
+                render: (_, row) =>
+                  row.pfHandledExternally ? (
+                    <Label variant="soft">Handled outside ShikshaMitra</Label>
+                  ) : (
+                    status(row.applyPf, row.pfNumberPresent)
+                  ),
               },
               {
                 id: 'applyEsic',
@@ -130,7 +147,7 @@ export function PayrollRegistrationReadiness({ month }: { month: string | null }
             ]}
             serverSidePagination
             totalCount={query.currentData?.totalCount ?? 0}
-            isLoading={query.isFetching}
+            isLoading={query.isLoading}
             serverSideSearch
             searchTerm={page.search}
             page={page.number - 1}
@@ -145,7 +162,7 @@ export function PayrollRegistrationReadiness({ month }: { month: string | null }
             {...query.tableProps}
           />
         </Stack>
-      </AccordionDetails>
-    </Accordion>
+      </Drawer>
+    </>
   );
 }

@@ -48,6 +48,41 @@ it('loads the scoped email history only through its read-only endpoint', () => {
   expect(endpoints.getParentRegistrationEmailHistory.transformResponse({ data: [] })).toEqual([]);
 });
 
+it('copies the private URL without returning it in the mutation data', async () => {
+  const link = `https://school.example/admission-registration#token=${'a'.repeat(64)}`;
+  const writeText = vi.fn().mockResolvedValue(undefined);
+  vi.stubGlobal('navigator', { clipboard: { writeText } });
+  try {
+    const input = { requestId: 'grant', concurrencyStamp: 'snapshot', idempotencyKey: 'retry' };
+    const baseQuery = vi.fn().mockResolvedValue({ data: { data: link } });
+    const { signal } = new AbortController();
+    const endpoint = endpoints.copyParentRegistrationLink;
+
+    await expect(
+      endpoint.queryFn({ applicationId: 'app', input }, { signal }, {}, baseQuery)
+    ).resolves.toEqual({ data: { copied: true } });
+    expect(baseQuery).toHaveBeenCalledExactlyOnceWith({
+      url: '/student/enrollment/admissions/applications/app/parent-registration/copy-link',
+      method: 'POST',
+      body: input,
+      cache: 'no-store',
+    });
+    expect(writeText).toHaveBeenCalledExactlyOnceWith(link);
+    writeText.mockRejectedValueOnce(new Error('Clipboard denied'));
+    await expect(
+      endpoint.queryFn({ applicationId: 'app', input }, { signal }, {}, baseQuery)
+    ).resolves.toEqual({ data: { copied: false } });
+    writeText.mockClear();
+    const aborted = AbortSignal.abort();
+    await expect(
+      endpoint.queryFn({ applicationId: 'app', input }, { signal: aborted }, {}, baseQuery)
+    ).resolves.toEqual({ data: { copied: false } });
+    expect(writeText).not.toHaveBeenCalled();
+  } finally {
+    vi.unstubAllGlobals();
+  }
+});
+
 it('saves parent email with optimistic contact identity and invalidates staff application caches', () => {
   const input = {
     recipientRelationship: 'mother',

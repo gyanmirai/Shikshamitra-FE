@@ -5,6 +5,7 @@ export type PfCoverageVersion = {
   id: string;
   effectiveMonth: string;
   isCovered: boolean;
+  isHandledExternally?: boolean;
   evidenceReference: string;
   isCancelled: boolean;
 };
@@ -16,12 +17,17 @@ export const pfCoverageApi = api.injectEndpoints({
       query: () => endpoint,
       providesTags: [employeeType.pf],
     }),
+    getSchoolPfManagement: builder.query<{ isHandledExternally: boolean }, string>({
+      query: (effectiveMonth) => ({ url: `${endpoint}/management`, params: { effectiveMonth } }),
+      providesTags: [employeeType.pf],
+    }),
     savePfCoverage: builder.mutation<
       PfCoverageSettings,
       {
         effectiveMonth: string;
         isCovered: boolean;
-        evidenceReference: string;
+        isHandledExternally?: boolean;
+        evidenceReference?: string;
         expectedConfigurationId?: string | null;
         idempotencyKey: string;
       }
@@ -31,4 +37,5 @@ export const pfCoverageApi = api.injectEndpoints({
     }),
   }),
 });
-export const { useGetPfCoverageQuery, useSavePfCoverageMutation } = pfCoverageApi;
+export const { useGetPfCoverageQuery, useGetSchoolPfManagementQuery, useSavePfCoverageMutation } =
+  pfCoverageApi;

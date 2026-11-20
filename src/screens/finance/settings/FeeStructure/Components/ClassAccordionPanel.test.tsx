@@ -17,6 +17,9 @@ vi.mock('../hooks/useClassWiseFeeStructureHooks', () => ({
     refetch: vi.fn(),
   }),
 }));
+vi.mock('src/redux/finance/feeStructureWorkspace', () => ({
+  useGetStructureDetailQuery: () => ({}),
+}));
 vi.mock('src/hooks/use-responsive', () => ({ useResponsive: () => true }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => <svg aria-hidden="true" /> }));
 vi.mock('./CopyFeeStructureDialog', () => ({ default: () => null }));
@@ -55,7 +58,12 @@ vi.mock('./FeeStructureWorkspaceCard', () => ({
               ...initialData,
               _id: initialData._id ?? 'new-id',
               name,
-              record: { id: initialData._id ?? 'new-id', name, concurrencyStamp: `saved-${name}` },
+              record: {
+                id: initialData._id ?? 'new-id',
+                name,
+                feeHeads: [],
+                concurrencyStamp: `saved-${name}`,
+              },
             });
             setStep(1);
           }}
@@ -213,4 +221,23 @@ it('does not revert the latest save while the list still contains an older respo
   });
   fireEvent.click(screen.getByRole('button', { name: 'Save & Next' }));
   expect(screen.getByText('Received Second save')).toBeVisible();
+});
+
+it('mounts only activated editors for fifty saved structures and preserves visited drafts', () => {
+  state.records = Array.from({ length: 50 }, (_, index) => ({
+    id: 'record-' + index,
+    name: 'Fees ' + index,
+    status: 1,
+    feeHeads: [],
+    concurrencyStamp: 'v1',
+  }));
+  render(ui());
+  expect(screen.getAllByLabelText('Draft name')).toHaveLength(1);
+  fireEvent.change(screen.getByRole('textbox', { name: 'Draft name' }), {
+    target: { value: 'Draft preserved' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Fees 49' }));
+  expect(screen.getAllByLabelText('Draft name')).toHaveLength(2);
+  fireEvent.click(screen.getByRole('button', { name: 'Draft preserved' }));
+  expect(screen.getByRole('textbox', { name: 'Draft name' })).toHaveValue('Draft preserved');
 });

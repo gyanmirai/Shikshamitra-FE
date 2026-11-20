@@ -2,12 +2,12 @@ import type { ReactNode } from 'react';
 import type { IdentityCardDesignerProps } from 'src/components/identity-card-designer';
 
 import { it, vi, expect, describe, beforeEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import { EmployeeICardBuilder } from './employee-card-builder';
 import { initialBuilder, getEmployeeCardDesignPayload } from './employee-builder-state';
 
-const mocks = vi.hoisted(() => ({ update: vi.fn(), error: vi.fn(), dirty: false, busy: false }));
+const mocks = vi.hoisted(() => ({ update: vi.fn(), error: vi.fn(), dirty: false, busy: false, selectStaff: () => {}, photo: vi.fn() }));
 vi.mock('src/components/toast', () => ({
   shikshaMitraToast: { error: mocks.error, success: vi.fn() },
 }));
@@ -29,7 +29,9 @@ vi.mock('./hooks/use-employee-card-logo', () => ({
   useEmployeeCardLogo: () => ({ url: '', isError: false, retry: vi.fn() }),
 }));
 vi.mock('./hooks/use-employee-card-selection', () => ({
-  useEmployeeCardSelection: () => ({
+  useEmployeeCardSelection: (state: { selectedEmployeeIds: string[] }, setState: (update: (current: Record<string, unknown>) => Record<string, unknown>) => void) => {
+    mocks.selectStaff = () => setState((current) => ({ ...current, selectedEmployeeIds: ['staff-1'] }));
+    return {
     employeePage: 1,
     setEmployeePage: vi.fn(),
     employeePageSize: 25,
@@ -46,12 +48,14 @@ vi.mock('./hooks/use-employee-card-selection', () => ({
       missingLogo: 0,
     },
     designationOptions: [],
-    selectedPreviewEmployees: [],
+    selectedPreviewEmployees: state.selectedEmployeeIds.length ? [{ id: 'staff-1', fullName: 'Synthetic Staff', thumbnailPicture: 'data:image/png;base64,AAAA' }] : [],
     filteredEmployees: [],
     employeeColumns: [],
-  }),
+  };
+  },
 }));
 vi.mock('src/redux/hr/employee-icard-template-api', () => ({
+  useLazyGetEmployeeICardPhotoQuery: () => [(id: string) => ({ unwrap: () => mocks.photo(id) })],
   useCreateEmployeeICardTemplateMutation: () => [vi.fn()],
   useUpdateEmployeeICardTemplateMutation: () => [mocks.update],
   useUploadEmployeeICardAssetMutation: () => [vi.fn()],
@@ -89,8 +93,14 @@ vi.mock('src/components/identity-card-designer', async (importOriginal) => {
       onLayoutChange,
       printSettings,
       onPrintSettingsChange,
+      photoRecords,
+      onPhotoEdit,
     }: IdentityCardDesignerProps) => (
       <>
+        {photoRecords?.[0] && <button type="button" onClick={async () => {
+          const source = await photoRecords[0].load();
+          onPhotoEdit?.({ ...source, imageData: 'data:image/png;base64,BBBB' });
+        }}>Apply staff test photo</button>}
         <button
           type="button"
           onClick={() => {
@@ -194,6 +204,23 @@ describe('employee builder shared-designer integration', () => {
     await waitFor(() => expect(mocks.busy).toBe(false));
     expect(mocks.dirty).toBe(true);
     expect(screen.getByRole('button', { name: 'Edit back design' })).toBeInTheDocument();
+  });
+
+  it('keeps personal photo edits dirty after saving the reusable template', async () => {
+    mocks.update.mockReturnValue({ unwrap: () => Promise.resolve({}) });
+    mocks.photo.mockResolvedValue({ recordId: 'staff-1', sourceHash: 'source-hash', imageData: 'data:image/png;base64,AAAA' });
+    mount();
+    act(() => mocks.selectStaff());
+    fireEvent.click(screen.getByRole('button', { name: 'Next test step' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Apply staff test photo' }));
+    await waitFor(() => expect(mocks.photo).toHaveBeenCalledWith('staff-1'));
+    await waitFor(() => expect(mocks.dirty).toBe(true));
+    fireEvent.click(screen.getByRole('button', { name: 'Save test template' }));
+    await waitFor(() => expect(mocks.update).toHaveBeenCalledTimes(1));
+    const [{ body }] = mocks.update.mock.calls[0];
+    expect(body).not.toHaveProperty('photoEdits');
+    expect(body.layoutJson).not.toContain('data:image/');
+    expect(mocks.dirty).toBe(true);
   });
 
   it('retains the draft and blocks saving it into a changed global academic year', async () => {

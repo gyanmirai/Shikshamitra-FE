@@ -18,6 +18,7 @@ export interface FeeHeadGroupHeaderProps {
   totalRefundInput: number;
   mode?: 'refund' | 'adjustment';
   selectedReceiptId?: string;
+  selectedPayerKey?: string;
   onCheckboxToggle: () => void;
   onExpandToggle: () => void;
   applyInAllState?: { amount: number | string };
@@ -35,6 +36,7 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
   totalRefundInput,
   mode = 'refund',
   selectedReceiptId,
+  selectedPayerKey,
   onCheckboxToggle,
   onExpandToggle,
   applyInAllState = { amount: '' },
@@ -45,10 +47,15 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
   const isAdj = mode === 'adjustment';
   const refundableItems = feeHead.items.filter((i) => i.refundable > 0);
   const selectableItems = refundableItems.filter(
-    (item) => isAdj || !selectedReceiptId || item.sourceReceiptId === selectedReceiptId
+    (item) =>
+      isAdj ||
+      ((!selectedReceiptId || item.sourceReceiptId === selectedReceiptId) &&
+        (!selectedPayerKey || item.sourcePayerKey === selectedPayerKey))
   );
   const selectedCount = refundableItems.filter((i) => selectedMonths.includes(i.month)).length;
-  const isAllSelected = refundableItems.length > 0 && selectedCount === refundableItems.length;
+  const isAllSelected =
+    selectableItems.length > 0 &&
+    selectableItems.every((item) => selectedMonths.includes(item.month));
   const isPartialSelected = selectedCount > 0 && !isAllSelected;
   const hasSelectable = selectableItems.length > 0;
   const hasSelectedMonths = selectedMonths.length > 0;
@@ -72,7 +79,10 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
         <Tooltip
           title={
             !hasSelectable && refundableItems.length > 0
-              ? 'Clear the selected installments to choose this receipt.'
+              ? selectedPayerKey &&
+                refundableItems.some((item) => item.sourcePayerKey !== selectedPayerKey)
+                ? 'Clear selected installments to choose a different payment account.'
+                : 'Clear the selected installments to choose this receipt.'
               : !hasSelectable
                 ? isAdj
                   ? 'No adjustable months for this fee head'

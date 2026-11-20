@@ -139,6 +139,12 @@ function record(
     remainingAmount: amount - applied,
     requestedByUserId: 'maker',
     requestedByName: 'Creator',
+    availableActions:
+      status === AdjustmentStatusEnum.Pending
+        ? ['Approve', 'Reject']
+        : status === AdjustmentStatusEnum.PartiallyApplied
+          ? ['Approve']
+          : [],
     createdAt: '2026-11-03T09:00:00Z',
     sourceLines: [
       {

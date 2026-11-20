@@ -46,6 +46,8 @@ interface FeeLedgerFilterBarProps {
   entryCount?: number;
   studentId?: string;
   academicYearId?: string;
+  collectionPolicyName?: string | null;
+  collectionPolicyVersion?: number | null;
   feeHeads?: { feeHeadId: string; feeHeadName: string }[];
   academicYearMonths?: { month: number; year: number }[];
   isMonthsLoading?: boolean;
@@ -108,6 +110,8 @@ const FeeLedgerFilterBar = ({
   entryCount,
   studentId,
   academicYearId,
+  collectionPolicyName,
+  collectionPolicyVersion,
   feeHeads,
   academicYearMonths,
   isMonthsLoading = false,
@@ -122,6 +126,9 @@ const FeeLedgerFilterBar = ({
   const activeFilterCount = [filters.month, filters.feeHead, filters.status].filter(
     (value) => value !== 'All'
   ).length;
+  const policyName = collectionPolicyName?.trim();
+  const policyVersion =
+    policyName && collectionPolicyVersion != null ? ` (v${collectionPolicyVersion})` : '';
 
   const {
     data: studentFeeStructureData,
@@ -175,13 +182,23 @@ const FeeLedgerFilterBar = ({
       }}
     >
       <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
-        <Typography variant="subtitle1" component="h2">
-          Fees for this student
-        </Typography>
+        <Box sx={{ minWidth: 0 }}>
+          <Typography variant="subtitle1" component="h2">
+            Fees for this student
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>
+            {'Collection policy · '}
+            <Box component="span" sx={{ color: 'text.primary', fontWeight: 'fontWeightMedium' }}>
+              {policyName || 'None applied'}
+              {policyVersion}
+            </Box>
+          </Typography>
+        </Box>
         <Button
           size="small"
           variant="outlined"
           color="inherit"
+          sx={{ flexShrink: 0 }}
           startIcon={<Iconify icon="solar:filter-linear" width={18} />}
           endIcon={
             <Iconify

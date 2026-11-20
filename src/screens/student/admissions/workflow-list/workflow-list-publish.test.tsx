@@ -112,6 +112,34 @@ it('validates the latest saved journey and publishes once with the post-validati
   expect(result.current.publishingId).toBeNull();
 });
 
+it('guards duplicate new-version commands and identifies the pending row through completion', async () => {
+  let finish!: () => void;
+  const pending = new Promise<void>((resolve) => {
+    finish = resolve;
+  });
+  let versionCalls = 0;
+  mswServer.use(
+    http.post('*/api/student/enrollment/admissions/workflows/workflow-1/new-version', async () => {
+      versionCalls += 1;
+      await pending;
+      return HttpResponse.json({ data: { ...workflow, id: 'new-version' } });
+    })
+  );
+  const { result } = renderHook(() => useWorkflowListActions(), { wrapper });
+  let first!: Promise<void>;
+  act(() => {
+    first = result.current.createVersion({ ...workflow, status: 1 });
+    result.current.createVersion({ ...workflow, status: 1 });
+  });
+  expect(result.current.creatingVersionId).toBe('workflow-1');
+  await act(async () => {
+    finish();
+    await first;
+  });
+  expect(versionCalls).toBe(1);
+  expect(result.current.creatingVersionId).toBeNull();
+});
+
 it('reports validation issues and never publishes an invalid journey', async () => {
   invalid = true;
   const { result } = renderHook(() => useWorkflowListActions(), { wrapper });

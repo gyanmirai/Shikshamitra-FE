@@ -12,9 +12,10 @@ import { useRef, useMemo, useState, useEffect } from 'react';
 import { LoadingButton } from 'src/components/loading-button';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import { StudentFeedback } from 'src/components/student-feedback';
+import { skeletonReducedMotionSx } from 'src/theme/styles/skeleton';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { FormSectionCard, FormFieldSpacing } from 'src/components/form-section-card';
-import { Box, Stack, Button, MenuItem, TextField, Typography, LinearProgress } from '@mui/material';
+import { Box, Stack, Button, MenuItem, Skeleton, TextField, Typography } from '@mui/material';
 import {
   useUpdateAdmissionInquiryMutation,
   useGetAdmissionInquiryCaptureContextQuery,
@@ -66,6 +67,8 @@ export function InquiryOverviewForm({
   fullHeight?: boolean;
 }) {
   const { readingPhoto, onPhotoReading } = useAdmissionPhotoReads();
+  const operation = useRef(false);
+  const [operationBusy, setOperationBusy] = useState(false);
   const [current, setCurrent] = useState(inquiry);
   const [interestExpanded, setInterestExpanded] = useState(true);
   const [familyOpen, setFamilyOpen] = useState(false);
@@ -95,7 +98,6 @@ export function InquiryOverviewForm({
       source: current.source,
       sourceDetail: current.sourceDetail ?? '',
       preferredLanguageCode: current.preferredLanguageCode || 'en',
-      sendAcknowledgement: false,
       parentRelationship: current.parentRelationship ?? undefined,
       guardianResponsibilityConfirmed: current.guardianResponsibilityConfirmed ?? false,
       capturedParentRelationship: current.parentRelationship ?? undefined,
@@ -111,51 +113,72 @@ export function InquiryOverviewForm({
       return validateAdmissionInquiry(values, fields, null, selectedOffering);
     },
     onSubmit: async (values) => {
-      if (
-        readOnly ||
-        familyOpen ||
-        readingPhoto ||
-        !selectedOffering ||
-        !form ||
-        loading ||
-        (offeringChanged && !runtime.currentData?.availability.canCreateInquiry)
-      )
-        return;
-      if (primaryContact.requestConfirmation()) return;
-      setRequestError('');
-      ageFeedback.notify();
-      const payload = buildAdmissionInquiryPayload(values, fields, selectedOffering);
+      if (operation.current) return;
+      operation.current = true;
+      setOperationBusy(true);
       try {
-        const result = await update({
-          id: current.id,
-          body: {
-            admissionOfferingId: selectedOffering.id,
-            boardId: values.boardId,
-            mediumId: values.mediumId,
-            standardId: values.standardId,
-            applicantName: payload.applicantName || current.applicantName,
-            phone: payload.phone || current.normalizedPhone,
-            email: fields.some(
-              (field) =>
-                canonicalInquiryBinding(field) ===
-                getAdmissionInquiryPrimaryContact(fields, values).emailBinding
-            )
-              ? payload.email
-              : current.email,
-            source: payload.source,
-            sourceDetail: payload.sourceDetail,
-            preferredLanguageCode: payload.preferredLanguageCode,
-            formValues: payload.formValues,
-            guardianResponsibilityConfirmed: payload.guardianResponsibilityConfirmed,
-            concurrencyStamp: current.concurrencyStamp,
-          },
-        }).unwrap();
-        setCurrent(result);
-        shikshaMitraToast.success({ message: 'Inquiry details updated.' });
-      } catch (error) {
-        const message = parseApiProblemDetail(error).detail || 'Unable to update inquiry details.';
-        setRequestError(message);
-        shikshaMitraToast.error({ message });
+        if (
+          readOnly ||
+          familyOpen ||
+          readingPhoto ||
+          !selectedOffering ||
+          !form ||
+          loading ||
+          (offeringChanged && !runtime.currentData?.availability.canCreateInquiry)
+        )
+          return;
+        if (primaryContact.requestConfirmation()) return;
+        setRequestError('');
+        ageFeedback.notify();
+        const payload = buildAdmissionInquiryPayload(values, fields, selectedOffering);
+        try {
+          const result = await update({
+            id: current.id,
+            body: {
+              admissionOfferingId: selectedOffering.id,
+              boardId: values.boardId,
+              mediumId: values.mediumId,
+              standardId: values.standardId,
+              applicantName: payload.applicantName || current.applicantName,
+              phone: payload.phone || current.normalizedPhone,
+              email: fields.some(
+                (field) =>
+                  canonicalInquiryBinding(field) ===
+                  getAdmissionInquiryPrimaryContact(fields, values).emailBinding
+              )
+                ? payload.email
+                : current.email,
+              source: payload.source,
+              sourceDetail: payload.sourceDetail,
+              preferredLanguageCode: payload.preferredLanguageCode,
+              formValues: payload.formValues,
+              guardianResponsibilityConfirmed: payload.guardianResponsibilityConfirmed,
+              concurrencyStamp: current.concurrencyStamp,
+            },
+          }).unwrap();
+          setCurrent(result);
+          shikshaMitraToast.success({ message: 'Inquiry details updated.' });
+        } catch (error) {
+          const problem = parseApiProblemDetail(error);
+          const message = problem.detail || 'Unable to update inquiry details.';
+          if (problem.errorCode === 'Admissions.InquiryDuplicateStudent') {
+            const nameField = fields.find((field) =>
+              ['Applicant.Name', 'Applicant.FirstName'].includes(
+                canonicalInquiryBinding(field) ?? ''
+              )
+            );
+            if (nameField) {
+              formik.setFieldTouched(`fields.${nameField.code}`, true, false);
+              formik.setFieldError(`fields.${nameField.code}`, message);
+              return;
+            }
+          }
+          setRequestError(message);
+          shikshaMitraToast.error({ message });
+        }
+      } finally {
+        operation.current = false;
+        setOperationBusy(false);
       }
     },
   });
@@ -236,9 +259,15 @@ export function InquiryOverviewForm({
       item.availabilityStatus === 2 &&
       item.configurationStatus === 1
   );
-  const loading = runtime.isFetching;
+  const loading = !form && runtime.isFetching;
   const loadError = runtime.isError;
-  const locked = readOnly || familyOpen || updateState.isLoading || readingPhoto;
+  const locked =
+    readOnly ||
+    familyOpen ||
+    operationBusy ||
+    formik.isSubmitting ||
+    updateState.isLoading ||
+    readingPhoto;
   const errors = formik.errors.fields as Record<string, string> | undefined;
   const touched = formik.touched.fields as Record<string, boolean> | undefined;
   const hasInterestErrors = ['boardId', 'mediumId', 'standardId', 'offeringId'].some((key) =>
@@ -269,9 +298,18 @@ export function InquiryOverviewForm({
   useEffect(() => {
     onDraftChange?.({
       dirty: formik.dirty,
-      busy: familyOpen || updateState.isLoading || readingPhoto,
+      busy:
+        familyOpen || operationBusy || formik.isSubmitting || updateState.isLoading || readingPhoto,
     });
-  }, [formik.dirty, onDraftChange, familyOpen, updateState.isLoading, readingPhoto]);
+  }, [
+    formik.dirty,
+    formik.isSubmitting,
+    operationBusy,
+    onDraftChange,
+    familyOpen,
+    updateState.isLoading,
+    readingPhoto,
+  ]);
 
   useEffect(() => {
     if (!formik.dirty) {
@@ -387,7 +425,7 @@ export function InquiryOverviewForm({
         }
       >
         <FormBusyRegion
-          busy={updateState.isLoading || readingPhoto}
+          busy={operationBusy || formik.isSubmitting || updateState.isLoading || readingPhoto}
           label={readingPhoto ? 'Reading Photo…' : 'Saving Inquiry…'}
         >
           <Stack spacing={2}>
@@ -558,7 +596,26 @@ export function InquiryOverviewForm({
                 </Box>
               </FormSectionCard>
             )}
-            {(loading || choicesLoading) && <LinearProgress aria-label="Loading Inquiry Form" />}
+            {(loading || choicesLoading) && (
+              <Box
+                role="status"
+                aria-label="Loading Inquiry Form"
+                aria-busy
+                sx={{
+                  ...skeletonReducedMotionSx,
+                  display: 'grid',
+                  gridTemplateColumns: {
+                    xs: 'minmax(0, 1fr)',
+                    sm: 'repeat(2, minmax(0, 1fr))',
+                  },
+                  gap: 2,
+                }}
+              >
+                {Array.from({ length: loading ? 6 : 2 }, (_, index) => (
+                  <Skeleton key={index} variant="rounded" height={48} />
+                ))}
+              </Box>
+            )}
             {(loadError || choicesError) && (
               <StudentFeedback
                 notificationKey="STU-0421"
@@ -634,7 +691,6 @@ export function InquiryOverviewForm({
               </StudentFeedback>
             )}
             {!loading &&
-              !loadError &&
               form &&
               sections
                 .map((section) => localizeAdmissionSection(section, language))
@@ -733,7 +789,7 @@ export function InquiryOverviewForm({
             type="submit"
             size="small"
             variant="contained"
-            loading={updateState.isLoading}
+            loading={operationBusy || formik.isSubmitting || updateState.isLoading}
             disabled={
               readingPhoto ||
               familyOpen ||

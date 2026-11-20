@@ -4,7 +4,7 @@ import type {
   CreateUpdateAdmissionForm,
 } from 'src/redux/student/admissions/admission-forms-api';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -38,6 +38,17 @@ export function FormInheritancePanel() {
   const inheritance = useFormInheritance();
   const [resetSourceId, setResetSourceId] = useState<string | null>(null);
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
+  const [expanded, setExpanded] = useState(Boolean(inheritance?.enabled));
+  const needsRecovery = Boolean(
+    inheritance &&
+    (inheritance.failed ||
+      inheritance.sourceFailed ||
+      inheritance.connectionsFailed ||
+      (inheritance.preview && !inheritance.preview.isValid))
+  );
+  useEffect(() => {
+    if (inheritance?.enabled || needsRecovery) setExpanded(true);
+  }, [inheritance?.enabled, needsRecovery]);
   if (!inheritance || inheritance.formik.values.purpose !== 1) return null;
   const { formik, enabled, setEnabled } = inheritance;
   const selectedPolicy = formik.values.inheritance?.sources.find(
@@ -49,11 +60,6 @@ export function FormInheritancePanel() {
       selectedPolicy.layouts.length ||
       selectedPolicy.requiredFieldIdentities.length)
   );
-  const needsRecovery =
-    inheritance.failed ||
-    inheritance.sourceFailed ||
-    inheritance.connectionsFailed ||
-    Boolean(inheritance.preview && !inheritance.preview.isValid);
   const canCheck = Boolean(
     (inheritance.sourceId || inheritance.connectionsFailed) &&
     !inheritance.loading &&
@@ -64,8 +70,14 @@ export function FormInheritancePanel() {
       title="Reuse Inquiry Questions"
       icon="mdi:link-variant"
       descriptionTooltip="Questions Follow Each Applicant's Linked Inquiry Form. Offering and Workflow Setup Control the Connections."
-      sx={{ m: 1, flexShrink: 0, minWidth: 0 }}
-      contentSpacing={1.5}
+      collapsible
+      expanded={expanded}
+      onExpandedChange={setExpanded}
+      iconSize={16}
+      iconContainerSize={28}
+      titleTypographyProps={{ variant: 'subtitle2', sx: { flex: '1 1 0', minWidth: 0 } }}
+      sx={{ m: 1, p: 1.5, flexShrink: 0, minWidth: 0 }}
+      contentSpacing={1}
       action={
         enabled && (
           <CustomTooltip title="More Options">

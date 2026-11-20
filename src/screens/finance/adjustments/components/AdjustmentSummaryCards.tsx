@@ -1,9 +1,10 @@
 import { GlobalIcons } from 'src/utils/icons';
 import { formatNumber } from 'src/utils/formate_number';
-import { DetailGrid, DetailField } from 'src/components/detail-view';
 import { FormSectionCard } from 'src/components/form-section-card';
-import type { AdjustmentApplySummary } from '../types/adjustmentApply.types';
+import { DetailGrid, DetailField } from 'src/screens/finance/components/detail-view';
+
 import type { AdjustmentRequest } from '../types/adjustment.types';
+import type { AdjustmentApplySummary } from '../types/adjustmentApply.types';
 
 export default function AdjustmentSummaryCards({
   summary,

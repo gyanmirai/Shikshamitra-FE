@@ -141,9 +141,12 @@ export async function saveQuickAcademic({
   if (current.studentEnrollmentId || [4, 5, 6].includes(current.status))
     throw new Error('This student is no longer editable in Student Setup.');
 
+  let dependentWrite = false;
   const refresh = async () => {
+    if (!dependentWrite) return current;
     current = await services.getCase(baseline.id);
     checkCase(current, baseline);
+    dependentWrite = false;
     return current;
   };
   if (divisionChanged) {
@@ -156,6 +159,7 @@ export async function saveQuickAcademic({
         divisionId: values.divisionId,
         reason: values.divisionReason.trim() || undefined,
       });
+      dependentWrite = true;
     }
     // A successful placement command clears an unlocked Roll number. This is our own
     // dependent change, not another user's identifier edit. Do not reuse its old status.
@@ -198,7 +202,7 @@ export async function saveQuickAcademic({
         throw new Error(
           available.length
             ? 'Select the GR numbering rule.'
-            : 'No GR numbering rule is available. Ask an administrator to check the settings.'
+            : 'No published GR series covers this student. Ask your administrator to check the academic path in Onboarding Settings.'
         );
       current = await services.assignGr({
         id: current.id,
@@ -207,6 +211,7 @@ export async function saveQuickAcademic({
         ...(values.grMode === 'manual' ? { manualValue: requested } : {}),
         reason: values.grReason.trim() || undefined,
       });
+      dependentWrite = true;
       onSaved('gr', current);
     }
   }

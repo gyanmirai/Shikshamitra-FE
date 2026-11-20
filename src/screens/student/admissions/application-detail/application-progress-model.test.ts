@@ -65,7 +65,7 @@ describe('application progress model', () => {
     expect(canCompleteStageFromProgress(stage({ stageType: 7 }), 8, true)).toBe(false);
     expect(canCompleteStageFromProgress(stage({ stageType: 7 }), 5, true)).toBe(false);
     expect(canCompleteStageFromProgress(stage({ stageType: 7 }), 3, true)).toBe(true);
-    expect(canCompleteStageFromProgress(stage({ stageType: 5 }), 0, true)).toBe(false);
+    expect(canCompleteStageFromProgress(stage({ stageType: 5 }), 0, true)).toBe(true);
     expect(canCompleteStageFromProgress(stage({ stageType: 5 }), 1, true)).toBe(true);
     expect(getStageGuidance(stage({ stageType: 7 }), 1)).toContain('approve, waitlist, or reject');
     expect(getStageGuidance(stage({ stageType: 7 }), 5)).toContain('waitlisted');
@@ -84,7 +84,20 @@ describe('application progress model', () => {
     expect(canRequestNormalStageAdvance(stage({ stageType: 6, reviewEnabled: true }), 3)).toBe(
       false
     );
-    expect(canRequestNormalStageAdvance(stage({ stageType: 5 }), 0)).toBe(false);
+    expect(canRequestNormalStageAdvance(stage({ stageType: 5 }), 0)).toBe(true);
+  });
+
+  it('allows Draft document commands while managed readiness still owns completion', () => {
+    const documents = stage({ stageType: 5, documentVerificationEnabled: true });
+
+    expect(canRequestNormalStageAdvance(documents, 0)).toBe(true);
+    expect(canCompleteStageFromProgress(documents, 0, true)).toBe(false);
+    ([2, 3, 9, 10, 11] as const).forEach((status) => {
+      expect(canRequestNormalStageAdvance(documents, status)).toBe(false);
+    });
+    expect(canRequestNormalStageAdvance(stage({ stageType: 1 }), 0)).toBe(false);
+    expect(canRequestNormalStageAdvance(stage({ stageType: 9 }), 0)).toBe(false);
+    expect(canRequestNormalStageAdvance(stage({ stageType: 10 }), 0)).toBe(false);
   });
 
   it('offers a recovery handoff for a submitted legacy Form stage only', () => {

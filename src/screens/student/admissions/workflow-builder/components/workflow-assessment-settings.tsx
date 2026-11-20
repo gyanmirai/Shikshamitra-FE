@@ -14,6 +14,7 @@ import {
 
 import { WorkflowAssessmentOptions } from './workflow-assessment-options';
 import { WorkflowAssessmentProfiles } from './workflow-assessment-profiles';
+import { useAssessmentFieldValidation } from '../hooks/use-assessment-field-validation';
 
 type Props = {
   formik: FormikProps<AdmissionWorkflowStage>;
@@ -24,8 +25,51 @@ type Props = {
 export function WorkflowAssessmentSettings({ formik, available, readOnly }: Props) {
   const json = formik.values.configurationJson;
   const policy = readAdmissionAssessmentPolicy(json);
+  const profiles = policy?.classProfiles ?? [];
+  const interactionValidation = useAssessmentFieldValidation(formik.submitCount, [
+    'profiles',
+    'maxAttempts',
+    'totalMarks',
+    'passingMarks',
+    ...profiles.flatMap((profile) => [
+      ...['profile', 'boardId', 'mediumId', 'standardIds', 'subjects', 'passingMarks'].map(
+        (field) => `${profile.id}:${field}`
+      ),
+      ...profile.subjects.flatMap((subject) =>
+        ['name', 'totalMarks', 'passingMarks'].map(
+          (field) => `${profile.id}:${subject.code}:${field}`
+        )
+      ),
+    ]),
+  ]);
+  const validation = {
+    showError: interactionValidation.showError,
+    onBlur: (key: string) => {
+      formik.setFieldTouched('configurationJson', true, false);
+      interactionValidation.onBlur(key);
+    },
+  };
   const enabled = policy?.enabled === true;
   const invalid = getAssessmentConfigurationError(json);
+  const subjectProfiles =
+    enabled && policy.version === 2 && policy.scoringEnabled && policy.scoringMode === 'subjects';
+  const optionError =
+    policy &&
+    (!Number.isInteger(policy.maxAttempts) ||
+      policy.maxAttempts < 1 ||
+      policy.maxAttempts > 10 ||
+      (policy.scoringEnabled &&
+        !subjectProfiles &&
+        (policy.totalMarks <= 0 ||
+          policy.totalMarks > 10000 ||
+          policy.passingMarks < 0 ||
+          policy.passingMarks > policy.totalMarks)));
+  const configurationError = Boolean(
+    invalid &&
+    ((json?.length ?? 0) > 64000 ||
+      new Set(profiles.map((profile) => profile.id.toLowerCase())).size !== profiles.length ||
+      (!subjectProfiles && !optionError))
+  );
   const unreadable = Boolean(invalid && !policy);
   const disabled = readOnly || !available || unreadable;
   const update = (change: Partial<AdmissionAssessmentPolicy>) => {
@@ -56,19 +100,20 @@ export function WorkflowAssessmentSettings({ formik, available, readOnly }: Prop
             </StudentFeedback>
           )}
           {unreadable && (
-            <StudentFeedback notificationKey="STU-0538" presentation="persistent" severity="error">
+            <StudentFeedback notificationKey="STU-0538" presentation="inline" severity="error">
               {invalid}
             </StudentFeedback>
           )}
           {enabled && (
             <>
-              <WorkflowAssessmentOptions policy={policy} onChange={update} readOnly={disabled} />
-              {invalid && formik.submitCount > 0 && (
-                <StudentFeedback
-                  notificationKey="STU-0538"
-                  presentation="persistent"
-                  severity="error"
-                >
+              <WorkflowAssessmentOptions
+                policy={policy}
+                onChange={update}
+                readOnly={disabled}
+                validation={validation}
+              />
+              {configurationError && formik.submitCount > 0 && (
+                <StudentFeedback notificationKey="STU-0538" presentation="inline" severity="error">
                   {invalid}
                 </StudentFeedback>
               )}
@@ -83,7 +128,7 @@ export function WorkflowAssessmentSettings({ formik, available, readOnly }: Prop
           <WorkflowAssessmentProfiles
             policy={policy}
             disabled={disabled}
-            showErrors={formik.submitCount > 0}
+            validation={validation}
             onChange={update}
           />
         )}

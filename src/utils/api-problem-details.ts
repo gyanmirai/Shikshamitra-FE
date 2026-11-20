@@ -14,6 +14,8 @@ export interface ParsedApiProblemDetail {
 }
 
 const KNOWN_ERROR_MESSAGES: Record<string, string> = {
+  'Admissions.InquiryDuplicateStudent':
+    'An inquiry for this student already exists in this admission cycle. Review the student name and date of birth or open the existing inquiry. A shared parent mobile is allowed for a different child; use Confirm Siblings to link their family.',
   'HR:Payroll:SalaryTemplateNameExists':
     'A salary template already uses this name. Enter a different template name.',
   'HR:Payroll:SalaryTemplatePreviewRequired':
@@ -52,6 +54,8 @@ const KNOWN_ERROR_MESSAGES: Record<string, string> = {
     'This roll number is already assigned or reserved in the selected class/division for this academic year. Enter an unused number, or use Automatic if available.',
   'Admissions.CycleCodeAlreadyExists':
     'An admission cycle already uses this code. Choose a different cycle code and try again.',
+  'Admissions.Offering.Inactive':
+    'This admission offering is inactive. Ask an admission administrator to activate it before starting a new inquiry or registration.',
   'Admissions:ApplicationStageCannotAdvance':
     "This admission step is not available in the application's current status. Refresh the application, complete the required decision or submission first, then try again.",
   'Admissions.WorkflowConcurrencyConflict':

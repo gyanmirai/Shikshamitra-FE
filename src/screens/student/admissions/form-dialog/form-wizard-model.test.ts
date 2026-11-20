@@ -2,7 +2,7 @@ import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/adm
 
 import { it, expect, describe } from 'vitest';
 
-import { getAdmissionWizardSchema } from './form-wizard-model';
+import { getAdmissionWizardSteps, getAdmissionWizardSchema } from './form-wizard-model';
 
 function validForm(): CreateUpdateAdmissionForm {
   return {
@@ -39,6 +39,10 @@ function validForm(): CreateUpdateAdmissionForm {
 }
 
 describe('admission form wizard validation', () => {
+  it('keeps Inquiry at three stages and adds the Registration print layout stage', () => {
+    expect(getAdmissionWizardSteps(0)).toEqual(['Form details', 'Build form', 'Review & save']);
+    expect(getAdmissionWizardSteps(1)).toEqual(['Form details', 'Build form', 'Review', 'Print layout']);
+  });
   describe('Form details', () => {
     it.each([
       ['name', ''],

@@ -7,19 +7,20 @@ import type {
 } from 'src/redux/student/admissions/admission-applications-api';
 
 import { useSelector } from 'react-redux';
-import { useState, useEffect } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { useState, Suspense, useEffect } from 'react';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import { Stack, Button, Skeleton, Typography } from '@mui/material';
+import { Box, Stack, Button, Skeleton, Typography } from '@mui/material';
 import {
   useGetAdmissionApplicationQuery,
   useGetAdmissionApplicationFormQuery,
 } from 'src/redux/student/admissions/admission-applications-api';
 
 import { canCorrectApplicationForm } from './application-form-correction-model';
+import { ApplicationWorkspaceSkeleton } from './application-workspace-skeleton';
+import { ApplicationFormCorrectionEditor } from './application-workspace-panels';
 import { ApplicationFormCorrectionFrame } from './application-form-correction-frame';
-import { ApplicationFormCorrectionEditor } from './application-form-correction-editor';
 import { ADMISSION_APPLICATION_PERMISSIONS } from '../admission-application-permissions';
 
 export function ApplicationFormCorrectionDrawer({
@@ -96,23 +97,45 @@ function OpenFormCorrection({
     );
   if (snapshot)
     return (
-      <ApplicationFormCorrectionEditor
-        application={snapshot.application}
-        form={snapshot.form}
-        allowed={currentAllowed}
-        canRetry={permitted}
-        blockedReason={
-          !permitted
-            ? 'You do not have permission to correct this application.'
-            : form.currentData?.correctionBlockedReason
+      <Suspense
+        fallback={
+          <ApplicationFormCorrectionFrame onClose={onClose}>
+            <Stack spacing={2} sx={{ flex: 1, minHeight: 0 }}>
+              <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
+                <ApplicationWorkspaceSkeleton layout="form" label="Loading Application Editor" />
+              </Box>
+              <Button
+                size="small"
+                color="inherit"
+                variant="outlined"
+                onClick={onClose}
+                startIcon={<Iconify icon={GlobalIcons.cancel} />}
+                sx={{ alignSelf: 'flex-end', flexShrink: 0 }}
+              >
+                Close
+              </Button>
+            </Stack>
+          </ApplicationFormCorrectionFrame>
         }
-        onClose={onClose}
-        onSaved={() => {
-          onSaved();
-          onClose();
-        }}
-        onRefresh={() => onRefresh?.()}
-      />
+      >
+        <ApplicationFormCorrectionEditor
+          application={snapshot.application}
+          form={snapshot.form}
+          allowed={currentAllowed}
+          canRetry={permitted}
+          blockedReason={
+            !permitted
+              ? 'You do not have permission to correct this application.'
+              : form.currentData?.correctionBlockedReason
+          }
+          onClose={onClose}
+          onSaved={() => {
+            onSaved();
+            onClose();
+          }}
+          onRefresh={() => onRefresh?.()}
+        />
+      </Suspense>
     );
   const loading = permitted && (application.isFetching || form.isFetching);
   const failed = application.isError || form.isError;

@@ -1,138 +1,96 @@
 'use client';
 
+import type { FinanceDashboardWork } from 'src/redux/finance/financeDashboardApi';
+
 import Link from 'next/link';
-import { Iconify } from 'src/components/iconify';
+import { fNumber } from 'src/utils/format-number';
+import { Box, Stack, Typography } from '@mui/material';
 import { financePaths } from 'src/constants/finance-menu';
-import { Box, Card, Chip, Stack, Divider, CardHeader, Typography } from '@mui/material';
+import { FormSectionCard } from 'src/components/form-section-card';
 
-import {
-  financeQueuePreview,
-  financeReportShortcuts,
-} from '../finance-admin-dashboard-preview-data';
+import { financeDashboardCardSx } from './finance-dashboard-card-styles';
+import { dashboardNumberSx, formatDashboardMoney } from '../finance-dashboard-format';
 
-export function FinanceAttentionQueue() {
+const workLabels = {
+  refundFailed: { title: 'Refund payouts failed', href: financePaths.feeRefund, urgent: true },
+  refundPayment: { title: 'Refunds awaiting payment', href: financePaths.feeRefund },
+  concessionReview: { title: 'Concessions awaiting review', href: financePaths.concession },
+  refundReview: { title: 'Refunds awaiting review', href: financePaths.feeRefund },
+};
+
+export function FinanceAttentionQueue({ work }: { work: FinanceDashboardWork[] }) {
+  const items = work
+    .filter((entry) => entry.count > 0)
+    .sort((a, b) => Number(b.kind === 'refundFailed') - Number(a.kind === 'refundFailed'));
+
   return (
-    <Card
-      component="section"
-      aria-labelledby="finance-attention-title"
-      variant="outlined"
-      sx={{ height: '100%', boxShadow: 'none' }}
+    <FormSectionCard
+      title="Needs Attention"
+      descriptionTooltip="Open requests you can view that were submitted during the selected period."
+      sx={{ ...financeDashboardCardSx, height: 'auto' }}
     >
-      <CardHeader
-        title={
-          <Typography id="finance-attention-title" variant="h6">
-            Needs Attention
-          </Typography>
-        }
-        subheader="Finance items to review"
-        action={<Chip size="small" label={`${financeQueuePreview.needsAttention.length} items`} />}
-        sx={{ p: 2, '& .MuiCardHeader-action': { m: 0 } }}
-      />
-      <Divider />
-      <Stack divider={<Divider flexItem />}>
-        {financeQueuePreview.needsAttention.map((item) => (
-          <Box
-            key={item.id}
-            component={Link}
-            href={item.route}
-            sx={{
-              px: 2.5,
-              py: 1.5,
-              display: 'grid',
-              gridTemplateColumns: 'minmax(0, 1fr) auto',
-              gap: 1,
-              alignItems: 'center',
-              textDecoration: 'none',
-              color: 'inherit',
-              '&:hover': { bgcolor: 'action.hover' },
-              '&:focus-visible': {
-                outline: '2px solid',
-                outlineColor: 'primary.main',
-                outlineOffset: -2,
-              },
-            }}
-          >
-            <Box sx={{ minWidth: 0 }}>
-              <Stack direction="row" spacing={1} alignItems="center">
+      {items.length === 0 ? (
+        <Typography variant="body2" color="text.secondary">
+          No open requests submitted during this period.
+        </Typography>
+      ) : (
+        <Stack
+          component="ul"
+          sx={{
+            listStyle: 'none',
+            m: 0,
+            p: 0,
+            '& > li + li': { borderTop: '1px solid', borderColor: 'divider' },
+          }}
+        >
+          {items.map((item) => {
+            const entry = workLabels[item.kind];
+            return (
+              <Box component="li" key={item.kind}>
                 <Box
-                  aria-hidden
+                  component={Link}
+                  href={entry.href}
                   sx={{
-                    width: 7,
-                    height: 7,
-                    flex: '0 0 auto',
-                    borderRadius: '50%',
-                    bgcolor: `${item.severity}.main`,
+                    display: 'grid',
+                    gridTemplateColumns: 'minmax(0, 1fr) auto',
+                    alignItems: 'center',
+                    gap: 1,
+                    px: 0.5,
+                    py: 1,
+                    borderRadius: 0.75,
+                    color: 'inherit',
+                    textDecoration: 'none',
+                    '&:hover': { bgcolor: 'action.hover' },
+                    '&:focus-visible': {
+                      outline: '2px solid',
+                      outlineColor: 'primary.main',
+                      outlineOffset: -2,
+                    },
                   }}
-                />
-                <Typography variant="subtitle2" noWrap>
-                  {item.title}
-                </Typography>
-              </Stack>
-              <Typography variant="caption" color="text.secondary" sx={{ pl: 2 }}>
-                {item.description}
-              </Typography>
-            </Box>
-            <Typography variant="caption" color="text.secondary" fontWeight={700}>
-              {item.id}
-            </Typography>
-          </Box>
-        ))}
-      </Stack>
-    </Card>
-  );
-}
-
-export function FinanceReportRail() {
-  return (
-    <Card
-      component="section"
-      aria-labelledby="finance-report-title"
-      variant="outlined"
-      sx={{ boxShadow: 'none' }}
-    >
-      <CardHeader
-        title={
-          <Typography id="finance-report-title" variant="h6">
-            Quick Reports
-          </Typography>
-        }
-        subheader="Open Finance Reports to choose a period and filters"
-        sx={{ p: 2 }}
-      />
-      <Divider />
-      <Stack divider={<Divider flexItem />}>
-        {financeReportShortcuts.map((report) => (
-          <Box
-            key={report}
-            component={Link}
-            href={financePaths.reports}
-            sx={{
-              px: 2.5,
-              py: 1.5,
-              display: 'grid',
-              gridTemplateColumns: 'minmax(0, 1fr) auto',
-              alignItems: 'center',
-              gap: 1,
-              color: 'inherit',
-              textDecoration: 'none',
-              '&:hover': { bgcolor: 'action.hover' },
-              '&:focus-visible': {
-                outline: '2px solid',
-                outlineColor: 'primary.main',
-                outlineOffset: -2,
-              },
-            }}
-          >
-            <Typography variant="body2">{report}</Typography>
-            <Iconify
-              icon="mdi:chevron-right"
-              width={18}
-              aria-hidden
-              sx={{ color: 'text.secondary' }}
-            />
-          </Box>
-        ))}
-      </Stack>
-    </Card>
+                >
+                  <Typography
+                    variant="body2"
+                    fontWeight={600}
+                    color={'urgent' in entry ? 'error.main' : 'text.primary'}
+                  >
+                    {entry.title}
+                  </Typography>
+                  <Box sx={{ textAlign: 'end', ...dashboardNumberSx }}>
+                    <Typography variant="body2" fontWeight={600}>
+                      {fNumber(item.count)}
+                    </Typography>
+                    {item.amount !== null && (
+                      <Typography variant="caption" color="text.secondary">
+                        {formatDashboardMoney(item.amount)}
+                      </Typography>
+                    )}
+                  </Box>
+                </Box>
+              </Box>
+            );
+          })}
+        </Stack>
+      )}
+    </FormSectionCard>
   );
 }

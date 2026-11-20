@@ -14,15 +14,17 @@ import { useGetAdmissionAssessmentCatalogQuery } from 'src/redux/student/admissi
 
 import { WorkflowAssessmentClassProfile } from './workflow-assessment-class-profile';
 
+import type { AssessmentFieldValidation } from '../hooks/use-assessment-field-validation';
+
 export function WorkflowAssessmentProfiles({
   policy,
   disabled,
-  showErrors,
+  validation,
   onChange,
 }: {
   policy: AdmissionAssessmentPolicy;
   disabled: boolean;
-  showErrors: boolean;
+  validation: AssessmentFieldValidation;
   onChange: (changes: Partial<AdmissionAssessmentPolicy>) => void;
 }) {
   const query = useGetAdmissionAssessmentCatalogQuery(undefined, {
@@ -98,7 +100,10 @@ export function WorkflowAssessmentProfiles({
           </StudentFeedback>
         )}
         {!initialLoading && profiles.length === 0 && (
-          <Typography variant="body2" color={showErrors ? 'error.main' : 'text.secondary'}>
+          <Typography
+            variant="body2"
+            color={validation.showError('profiles') ? 'error.main' : 'text.secondary'}
+          >
             Add a class profile to configure subjects and pass rules.
           </Typography>
         )}
@@ -112,7 +117,7 @@ export function WorkflowAssessmentProfiles({
               catalogLoaded={Boolean(query.currentData)}
               catalogUnavailable={query.isFetching || query.isError}
               disabled={disabled}
-              showErrors={showErrors}
+              validation={validation}
               initiallyExpanded={profile.id === newProfileId || index === 0}
               onChange={(next) =>
                 onChange({

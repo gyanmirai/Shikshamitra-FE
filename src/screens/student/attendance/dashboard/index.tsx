@@ -27,7 +27,6 @@ import {
   Box,
   Grid,
   Paper,
-  Avatar,
   Button,
   Skeleton,
   Typography,
@@ -44,6 +43,7 @@ import {
   useGetStudentAttendanceDashboardSummaryQuery,
 } from 'src/redux/student';
 
+import StudentPhotoAvatar from '../../components/student-photo-avatar';
 import {
   buildAttendanceHistoryQuery,
   buildAttendanceSummaryQuery,
@@ -375,7 +375,16 @@ const DivisionOverview = ({ selectedDivision, selectedMonth }: any) => {
                 >
                   <UserHoverProfile
                     user={{ name: student.name }}
-                    avatarComp={<Avatar>{student.name?.[0] || 'S'}</Avatar>}
+                    avatarComp={
+                      <StudentPhotoAvatar
+                        studentId={student.studentId}
+                        hasPhoto={student.hasPhoto}
+                        alt={student.name}
+                        lazy
+                      >
+                        {student.name?.[0] || 'S'}
+                      </StudentPhotoAvatar>
+                    }
                   />
                   <Typography variant="h6">{student.name}</Typography>
                   <Label color="default">-</Label>

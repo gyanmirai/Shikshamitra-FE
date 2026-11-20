@@ -1,8 +1,16 @@
 import { createPortal } from 'react-dom';
 import { vi, it, expect, describe, beforeEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import AdmissionApplicationDetailScreen from './admission-application-detail';
+
+// Navigation/business fixtures use their existing panel doubles; browser checks
+// exercise the real asynchronous code-loading boundaries.
+vi.mock('./application-detail/application-workspace-panels', async () => ({
+  ...(await import('./application-detail/application-runtime-form')),
+  ...(await import('./application-detail/application-decision-card')),
+  loadApplicationRuntimeForm: vi.fn(async () => undefined),
+}));
 
 const push = vi.fn();
 const replace = vi.fn();
@@ -16,9 +24,14 @@ let permissions = [{ name: 'Students.Admissions.Applicants.View', isGranted: tru
 const offeringContext = vi.hoisted(() => vi.fn());
 const decisionCardProps = vi.hoisted(() => ({ current: null as any }));
 const responsive = vi.hoisted(() => ({ desktop: true }));
+const onboardingCaseQuery = vi.hoisted(() => vi.fn());
+vi.mock('src/redux/student/onboarding/student-onboarding-api', () => ({
+  useGetStudentOnboardingCaseQuery: onboardingCaseQuery,
+}));
 vi.mock('src/hooks/use-responsive', () => ({ useResponsive: () => responsive.desktop }));
 beforeEach(() => {
   responsive.desktop = true;
+  onboardingCaseQuery.mockReturnValue({ currentData: undefined });
 });
 vi.mock('src/redux/student/admissions/admission-offerings-api', () => ({
   useGetAdmissionOfferingQuery: offeringContext,
@@ -333,6 +346,7 @@ describe('approval finalization handoff', () => {
         id: 'decision',
         code: 'VERIFY_APPROVE_ADMISSION',
         name: 'Admission decision',
+        isTerminalStage: true,
         stageType: 7,
         status: 1,
       },
@@ -340,10 +354,10 @@ describe('approval finalization handoff', () => {
     decisionCardProps.current = null;
   });
 
-  it('reuses the guarded workflow advance and opens the exact returned Onboarding case', async () => {
+  it('leaves workflow completion to the atomic command and opens the exact returned Onboarding case', () => {
     render(<AdmissionApplicationDetailScreen />);
-    await decisionCardProps.current.onPrepareFinalization();
-    expect(detailState.advance).toHaveBeenCalledOnce();
+    expect(decisionCardProps.current.onPrepareFinalization).toBeUndefined();
+    expect(detailState.advance).not.toHaveBeenCalled();
     decisionCardProps.current.onFinalized({
       onboardingCaseId: 'case-finalized',
       studentId: 'student-finalized',
@@ -358,11 +372,68 @@ describe('approval finalization handoff', () => {
     expect(push).not.toHaveBeenCalled();
   });
 
+  it('retains the existing continuation path for a nonterminal approval', () => {
+    detailState.workflowQuery.data.stages[0].isTerminalStage = false;
+    render(<AdmissionApplicationDetailScreen />);
+    expect(decisionCardProps.current.simplified).toBe(false);
+    expect(decisionCardProps.current.onPrepareFinalization).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Continue Admission' })).toBeInTheDocument();
+  });
+
+  it('opens the single review for an approved completed workflow ending at another stage type', () => {
+    detailState.workflowQuery.data.status = 1;
+    detailState.workflowQuery.data.currentStageInstanceId = null;
+    detailState.workflowQuery.data.stages[0] = {
+      id: 'last-document',
+      name: 'Documents',
+      stageType: 5,
+      status: 2,
+    };
+    render(<AdmissionApplicationDetailScreen />);
+    expect(decisionCardProps.current.simplified).toBe(true);
+    expect(screen.queryByRole('button', { name: 'Continue Admission' })).not.toBeInTheDocument();
+  });
+
   it('does not offer automatic stage completion while there are unsaved answers', () => {
     detailState.hasUnsavedAnswers = true;
     render(<AdmissionApplicationDetailScreen />);
     expect(decisionCardProps.current.onPrepareFinalization).toBeUndefined();
     expect(detailState.advance).not.toHaveBeenCalled();
+  });
+
+  it('protects an unsaved inline decision through the existing workspace navigation guard', () => {
+    const onClose = vi.fn();
+    render(<AdmissionApplicationDetailScreen applicationId="application-1" onClose={onClose} />);
+    act(() => decisionCardProps.current.onDirtyChange(true));
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+    expect(
+      screen.getByRole('dialog', { name: 'Discard Unsaved Application Changes?' })
+    ).toBeVisible();
+    expect(onClose).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
+    expect(onClose).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
+    expect(onClose).toHaveBeenCalledOnce();
+    expect(detailState.advance).not.toHaveBeenCalled();
+  });
+
+  it('does not offer competing journey actions in the single admission decision workspace', () => {
+    render(<AdmissionApplicationDetailScreen />);
+    act(() => decisionCardProps.current.onDirtyChange(true));
+    expect(screen.queryByRole('button', { name: 'Continue Admission' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'End Journey' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'End Admission Journey' })).not.toBeInTheDocument();
+    expect(detailState.endJourney).not.toHaveBeenCalled();
+  });
+
+  it('does not expose manual skip beside the combined decision actions', () => {
+    detailState.canSkip = true;
+    detailState.workflowQuery.data.stages[0].allowManualSkip = true;
+    render(<AdmissionApplicationDetailScreen />);
+    act(() => decisionCardProps.current.onDirtyChange(true));
+    expect(screen.queryByRole('button', { name: 'Skip Current Step' })).not.toBeInTheDocument();
+    expect(detailState.setRuntimeAction).not.toHaveBeenCalled();
   });
 });
 
@@ -442,6 +513,51 @@ const addCompletedRegistrationStage = () => {
     status: 2,
   });
 };
+
+describe('finalized application footer onboarding status', () => {
+  it.each([0, 1, 4])(
+    'uses the current onboarding status %s in the actual workspace footer',
+    (status) => {
+      loadPaymentDetail();
+      pathname = '/student/admissions/applications/application-1';
+      returnParams = new URLSearchParams();
+      permissions = [
+        { name: 'Students.Onboarding.View', isGranted: true },
+        { name: 'Students.Records.StudentList.View', isGranted: true },
+      ];
+      Object.assign(detailState.applicationQuery.data, {
+        status: 11,
+        hasReachedDecision: true,
+        onboardingCaseId: 'case-1',
+      });
+      onboardingCaseQuery.mockReturnValue({
+        currentData: {
+          id: 'case-1',
+          applicationId: 'application-1',
+          studentId: 'student-1',
+          status,
+        },
+      });
+      render(<AdmissionApplicationDetailScreen />);
+      expect(decisionCardProps.current.hideFinalizedActions).toBe(true);
+      if (status === 4) {
+        expect(screen.queryByRole('link', { name: 'Continue Onboarding' })).not.toBeInTheDocument();
+        expect(screen.getByRole('link', { name: 'View in Student Records' })).toHaveAttribute(
+          'href',
+          '/student/profile?student=student-1'
+        );
+      } else {
+        expect(screen.getByRole('link', { name: 'Continue Onboarding' })).toHaveAttribute(
+          'href',
+          '/student/onboarding/setup?search=APP%2F2026%2F001'
+        );
+        expect(
+          screen.queryByRole('link', { name: 'View in Student Records' })
+        ).not.toBeInTheDocument();
+      }
+    }
+  );
+});
 
 describe('AdmissionApplicationDetailScreen', () => {
   it('mounts one parent registration controller in the current Form header before record actions', () => {
@@ -905,9 +1021,12 @@ describe('AdmissionApplicationDetailScreen', () => {
     });
     render(<AdmissionApplicationDetailScreen />);
     expect(offeringContext).toHaveBeenCalledWith('actual-offering', { skip: false });
-    expect(screen.getByLabelText('Application Academic Context')).toHaveTextContent('Class 1');
-    expect(screen.getByLabelText('Application Academic Context')).toHaveTextContent('CBSE');
-    expect(screen.getByLabelText('Application Academic Context')).toHaveTextContent('English');
+    expect(
+      Array.from(
+        screen.getByLabelText('Application Academic Context').children,
+        (item) => item.textContent
+      ).slice(1)
+    ).toEqual(['CBSE', 'English', 'Class 1']);
   });
 
   it('keeps application access without issuing an unauthorized Offering context read', () => {

@@ -14,7 +14,17 @@ import { LoadingButton } from 'src/components/loading-button';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
-import { Box, Link, Stack, Drawer, Button, Divider, IconButton, Typography } from '@mui/material';
+import {
+  Box,
+  Link,
+  Stack,
+  Drawer,
+  Button,
+  Divider,
+  Skeleton,
+  IconButton,
+  Typography,
+} from '@mui/material';
 
 import { AdmissionDialogTitle } from './admission-dialog-title';
 import { useAdmissionCloseGuard } from './use-admission-close-guard';
@@ -70,6 +80,55 @@ export function AdmissionOfferingDialog(props: Props) {
         onSave={onSave}
         onDeactivate={onDeactivate}
       />
+    );
+  }
+
+  if (mode === 'clone' && !offering) {
+    return (
+      <Drawer
+        anchor="right"
+        open={open}
+        onClose={onClose}
+        PaperProps={{ sx: { width: { xs: 1, sm: 760 }, maxWidth: 1 } }}
+      >
+        <Stack direction="row" alignItems="center" sx={{ p: 2 }}>
+          <Typography variant="h6" sx={{ flex: 1 }}>
+            Clone Admission Offering
+          </Typography>
+          <IconButton aria-label="Close Admission Offering" onClick={onClose}>
+            <Iconify icon="mdi:close" />
+          </IconButton>
+        </Stack>
+        <Divider />
+        <Stack
+          spacing={2}
+          sx={{ p: 2 }}
+          aria-busy={Boolean(loadingDetail)}
+          role={detailError ? undefined : 'status'}
+          aria-label={detailError ? undefined : 'Loading Offering Details'}
+        >
+          {detailError ? (
+            <StudentFeedback
+              notificationKey="admission-offering:clone-detail"
+              presentation="toast"
+              severity="error"
+              toastAction={
+                <Button size="small" color="inherit" onClick={onRetryDetail}>
+                  Retry
+                </Button>
+              }
+            >
+              {detailError}
+            </StudentFeedback>
+          ) : (
+            <>
+              <Skeleton variant="rounded" height={56} />
+              <Skeleton variant="rounded" height={160} />
+              <Skeleton variant="rounded" height={160} />
+            </>
+          )}
+        </Stack>
+      </Drawer>
     );
   }
 

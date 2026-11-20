@@ -2,6 +2,16 @@ import { employeeType } from 'src/redux/tagTypes';
 
 import { employeeApi } from '../hr/employeeApi';
 
+type PayrollReviewRequest = {
+  month: string;
+  academicYearId: string;
+  employeeIds: string[];
+  previewRunId: string;
+  operationId: string;
+};
+
+type PayrollReviewResponse = { message: string; employeesProcessed: number };
+
 export const runPayrollApi = employeeApi.injectEndpoints({
   endpoints: (builder) => ({
     generateAndLockPayroll: builder.mutation({
@@ -13,20 +23,20 @@ export const runPayrollApi = employeeApi.injectEndpoints({
       invalidatesTags: [employeeType.runPayroll, employeeType.salarySlip],
     }),
 
-    markPayrollReviewed: builder.mutation({
-      query: ({ month, academicYearId, employeeIds, previewRunId }) => ({
+    markPayrollReviewed: builder.mutation<PayrollReviewResponse, PayrollReviewRequest>({
+      query: ({ month, academicYearId, employeeIds, previewRunId, operationId }) => ({
         url: `/payroll/run/reviews`,
         method: 'POST',
-        body: { month, academicYearId, employeeIds, previewRunId },
+        body: { month, academicYearId, employeeIds, previewRunId, operationId },
       }),
       invalidatesTags: [employeeType.runPayroll],
     }),
 
-    unmarkPayrollReviewed: builder.mutation({
-      query: ({ month, academicYearId, employeeIds, previewRunId }) => ({
+    unmarkPayrollReviewed: builder.mutation<PayrollReviewResponse, PayrollReviewRequest>({
+      query: ({ month, academicYearId, employeeIds, previewRunId, operationId }) => ({
         url: `/payroll/run/reviews`,
         method: 'DELETE',
-        body: { month, academicYearId, employeeIds, previewRunId },
+        body: { month, academicYearId, employeeIds, previewRunId, operationId },
       }),
       invalidatesTags: [employeeType.runPayroll],
     }),

@@ -1,19 +1,21 @@
 import type { AdmissionAssessmentPolicy } from 'src/redux/student/admissions/admission-assessment-policy';
 
 import CustomSelect from 'src/components/custom-select';
-import { Grid, Stack, Switch, TextField, FormControlLabel } from '@mui/material';
+import { Grid, Stack, Switch, FormControlLabel } from '@mui/material';
 
 import { WorkflowSettingLabel } from './workflow-setting-label';
+import { WorkflowAssessmentMarksField } from './workflow-assessment-marks-field';
+
+import type { AssessmentFieldValidation } from '../hooks/use-assessment-field-validation';
 
 type Props = {
   policy: AdmissionAssessmentPolicy;
   readOnly: boolean;
+  validation: AssessmentFieldValidation;
   onChange: (change: Partial<AdmissionAssessmentPolicy>) => void;
 };
 
-export function WorkflowAssessmentOptions({ policy, readOnly, onChange }: Props) {
-  const invalidAttempts =
-    !Number.isInteger(policy.maxAttempts) || policy.maxAttempts < 1 || policy.maxAttempts > 10;
+export function WorkflowAssessmentOptions({ policy, readOnly, validation, onChange }: Props) {
   const options = [
     {
       field: 'schedulingEnabled',
@@ -82,75 +84,58 @@ export function WorkflowAssessmentOptions({ policy, readOnly, onChange }: Props)
           </Grid>
         )}
         <Grid size={{ xs: 12, sm: policy.scoringEnabled ? 6 : 12 }}>
-          <TextField
-            fullWidth
-            size="small"
-            type="number"
+          <WorkflowAssessmentMarksField
             label={
               <WorkflowSettingLabel
-                label="Maximum Attempts *"
+                label="Maximum Attempts"
                 help="Includes the first assessment. Choose 1 to disable retakes; maximum 10."
               />
             }
+            ariaLabel="Maximum Attempts *"
+            fieldKey="maxAttempts"
+            validation={validation}
             disabled={readOnly}
             value={policy.maxAttempts}
-            onChange={(event) => onChange({ maxAttempts: Number(event.target.value) })}
-            slotProps={{
-              htmlInput: { min: 1, max: 10, step: 1, 'aria-label': 'Maximum Attempts *' },
-            }}
-            error={invalidAttempts}
-            helperText={invalidAttempts ? 'Enter a whole number from 1 to 10.' : undefined}
+            max={10}
+            positive
+            integer
+            onChange={(value) => onChange({ maxAttempts: value ?? 0 })}
+            errorMessage="Enter a whole number from 1 to 10."
           />
         </Grid>
       </Grid>
       {policy.scoringEnabled && !(policy.version === 2 && policy.scoringMode === 'subjects') && (
         <Grid container spacing={1}>
           <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField
-              fullWidth
-              size="small"
-              type="number"
-              label="Total Marks *"
+            <WorkflowAssessmentMarksField
+              label="Total Marks"
+              ariaLabel="Total Marks *"
+              fieldKey="totalMarks"
+              validation={validation}
               disabled={readOnly}
               value={policy.totalMarks}
-              onChange={(event) => onChange({ totalMarks: Number(event.target.value) })}
-              slotProps={{ htmlInput: { min: 0.01, max: 10000, step: 'any' } }}
-              error={policy.totalMarks <= 0 || policy.totalMarks > 10000}
-              helperText={
-                policy.totalMarks <= 0 || policy.totalMarks > 10000
-                  ? 'Enter a value greater than 0, up to 10,000.'
-                  : undefined
-              }
+              max={10000}
+              positive
+              onChange={(value) => onChange({ totalMarks: value ?? 0 })}
+              errorMessage="Enter a value greater than 0, up to 10,000."
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField
-              fullWidth
-              size="small"
-              type="number"
+            <WorkflowAssessmentMarksField
+              ariaLabel="Passing Marks *"
+              fieldKey="passingMarks"
+              validation={validation}
               label={
                 <WorkflowSettingLabel
-                  label="Passing Marks *"
+                  label="Passing Marks"
                   help="An equal or higher score passes."
                 />
               }
               disabled={readOnly}
               value={policy.passingMarks}
-              onChange={(event) => onChange({ passingMarks: Number(event.target.value) })}
-              slotProps={{
-                htmlInput: {
-                  min: 0,
-                  max: policy.totalMarks,
-                  step: 'any',
-                  'aria-label': 'Passing Marks *',
-                },
-              }}
-              error={policy.passingMarks < 0 || policy.passingMarks > policy.totalMarks}
-              helperText={
-                policy.passingMarks < 0 || policy.passingMarks > policy.totalMarks
-                  ? 'Use a value between 0 and total marks.'
-                  : undefined
-              }
+              max={policy.totalMarks}
+              onChange={(value) => onChange({ passingMarks: value ?? 0 })}
+              errorMessage="Use a value between 0 and total marks."
             />
           </Grid>
         </Grid>

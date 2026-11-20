@@ -10,7 +10,7 @@ import { useAcademicSelection } from './use-academic-selection';
 import { useAcademicConfirmation } from './use-academic-confirmation';
 import { AcademicSelectionWrapper } from './academic-selection-wrapper';
 
-export default function GlobalAcademicSearch() {
+export default function GlobalAcademicSearch({ hidden = false }: { hidden?: boolean }) {
   const data = useAcademicOptions();
   const { selectedYearOption, selectedBoardMediumOption, applyAcademicOption } =
     useAcademicSelection(data);
@@ -31,6 +31,9 @@ export default function GlobalAcademicSearch() {
       window.removeEventListener('onboarding-open-academic-dropdown', handleOpenDropdown);
   }, []);
 
+  // Keep academic loading, defaults and saved-scope normalization active when only the control is hidden.
+  if (hidden) return null;
+
   return (
     <Box
       data-onboarding="academic-year"
@@ -50,7 +53,7 @@ export default function GlobalAcademicSearch() {
             arrow
             title={
               !selectedOption
-                ? data.isStudentModule
+                ? data.isStudentModule && data.isYearOnly
                   ? 'Select academic year'
                   : 'Select Academic Year, Board and Medium'
                 : undefined

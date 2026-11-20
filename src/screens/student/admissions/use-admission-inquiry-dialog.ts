@@ -2,13 +2,11 @@
 
 import type { RootState } from 'src/redux/store';
 import type { AdmissionFormField } from 'src/redux/student/admissions/admission-forms-api';
-import type { AdmissionSiblingParentSelection } from 'src/redux/student/admissions/admission-parent-family-types';
 
 import { useSelector } from 'react-redux';
 import { useRef, useState, useEffect } from 'react';
 import { useFormik, type FormikProps } from 'formik';
 import { shikshaMitraToast } from 'src/components/toast';
-import { hasGrantedPermission } from 'src/utils/permissions';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import {
   DEFAULT_INQUIRY_POLICY,
@@ -20,16 +18,14 @@ import {
   useGetAdmissionInquiryCaptureContextQuery,
   useCheckAdmissionInquiryDuplicatesMutation,
   useGetAdmissionInquiryCaptureCatalogueQuery,
-  useCreateAdmissionInquiryCommunicationMutation,
 } from 'src/redux/student/admissions/admission-inquiries-api';
 
 import { useAdmissionPhotoReads } from './use-admission-photo-reads';
+import { isPossibleDuplicateInquiry } from './admission-inquiry-match-review';
 import { useInquiryPrimaryContact } from './use-inquiry-primary-contact';
 import { useAdmissionUnsavedChanges } from './use-admission-unsaved-changes';
-import { getAdmissionSiblingParentReviewError } from './admission-family-contacts-model';
 import { getConfiguredInquiryParentRelationship } from './admission-inquiry-field-bindings';
 import { useAdmissionInquiryClassOfferings } from './use-admission-inquiry-class-offerings';
-import { getInquiryCommunicationTemplate } from './inquiry-management/inquiry-communication-templates';
 import {
   admissionInquirySchema,
   validateAdmissionInquiry,
@@ -52,6 +48,8 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
     fields: AdmissionFormField[];
     values: Record<string, string>;
   } | null>(null);
+  const operation = useRef(false);
+  const [operationBusy, setOperationBusy] = useState(false);
   const [matches, setMatches] = useState<DuplicateMatch[]>([]);
   const [matchesKey, setMatchesKey] = useState('');
   const identityKeyRef = useRef('');
@@ -62,12 +60,6 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
     { refetchOnMountOrArgChange: true }
   );
   const [create, createState] = useCreateAdmissionInquiryMutation();
-  const [createCommunication, communicationState] =
-    useCreateAdmissionInquiryCommunicationMutation();
-  const permissions = useSelector((state: RootState) => state.auth.permissions);
-  const canAutoAcknowledge =
-    hasGrantedPermission(permissions, 'Communication.Campaigns.Add') &&
-    hasGrantedPermission(permissions, 'Communication.Campaigns.Send');
   const [checkDuplicates, duplicateState] = useCheckAdmissionInquiryDuplicatesMutation();
   const formik: FormikProps<AdmissionInquiryFormValues> = useFormik<AdmissionInquiryFormValues>({
     initialValues: initialAdmissionInquiryValues,
@@ -80,27 +72,41 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
         offeringChoices.find((offering) => offering.id === values.offeringId)
       ),
     onSubmit: async (values) => {
-      const offering = offeringChoices.find((item) => item.id === values.offeringId);
-      if (!offering || !canCreateInquiry || readingPhoto || runtimeLoading || runtimeError) return;
-      if (primaryContact.requestConfirmation()) return;
-      setRequestError(null);
-      const identity = buildAdmissionInquiryPayload(values, fields, offering);
-      if (!identity.applicantFirstName?.trim() && reportIdentityErrors(identity, values)) return;
-      const key = JSON.stringify([
-        offering.id,
-        buildAdmissionInquiryDuplicateInput(values, fields, offering),
-      ]);
+      if (operation.current) return;
+      operation.current = true;
+      setOperationBusy(true);
       try {
-        const result = await checkDuplicates(
-          buildAdmissionInquiryDuplicateInput(values, fields, offering)
-        ).unwrap();
-        if (identityKeyRef.current !== key) return;
-        setMatches(result);
-        setMatchesKey(key);
-        if (!result.length) await submit();
-      } catch (error) {
-        const message = parseApiProblemDetail(error).detail || 'Duplicate check failed';
-        shikshaMitraToast.error({ message });
+        const offering = offeringChoices.find((item) => item.id === values.offeringId);
+        if (!offering || !canCreateInquiry || readingPhoto || runtimeLoading || runtimeError)
+          return;
+        if (primaryContact.requestConfirmation()) return;
+        setRequestError(null);
+        const identity = buildAdmissionInquiryPayload(values, fields, offering);
+        if (!identity.applicantFirstName?.trim() && reportIdentityErrors(identity, values)) return;
+        const duplicateInputForSubmit = buildAdmissionInquiryDuplicateInput(values, fields, offering);
+        const key = JSON.stringify([offering.id, duplicateInputForSubmit]);
+        try {
+          const result = await checkDuplicates(duplicateInputForSubmit).unwrap();
+          if (identityKeyRef.current !== key) return;
+          const reviewMatches = result.filter(
+            (match) =>
+              isPossibleDuplicateInquiry(match, duplicateInputForSubmit) ||
+              canLinkAdmissionInquiryFamily(
+                match,
+                duplicateInputForSubmit.guardianPhone,
+                duplicateInputForSubmit.guardianEmail
+              )
+          );
+          setMatches(reviewMatches);
+          setMatchesKey(key);
+          if (!reviewMatches.length) await submit(undefined, undefined, true);
+        } catch (error) {
+          const message = parseApiProblemDetail(error).detail || 'Duplicate check failed';
+          shikshaMitraToast.error({ message });
+        }
+      } finally {
+        operation.current = false;
+        setOperationBusy(false);
       }
     },
   });
@@ -112,7 +118,8 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
     standardId: formik.values.standardId,
   });
   const offeringChoices = classOfferings.checkedOfferings;
-  const offeringsLoading = catalogue.isFetching || classOfferings.checking;
+  const academicLoading = catalogue.isFetching && !catalogue.currentData && !catalogue.isError;
+  const offeringsLoading = academicLoading || classOfferings.checking;
   const offeringsError = catalogue.isError || classOfferings.error;
   const runtime = useGetAdmissionInquiryCaptureContextQuery(formik.values.offeringId, {
     skip:
@@ -147,10 +154,11 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
     fields,
     contextKey: `${formik.values.offeringId}:${form?.id ?? ''}`,
     busy:
+      operationBusy ||
+      formik.isSubmitting ||
       readingPhoto ||
       createState.isLoading ||
-      duplicateState.isLoading ||
-      communicationState.isLoading,
+      duplicateState.isLoading,
   });
   const sections = getAdmissionInquiryVisibleSections(allSections, formik.values);
   const policy = withStandardInquiryBehavior(runtime.currentData?.policy ?? DEFAULT_INQUIRY_POLICY);
@@ -236,56 +244,45 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
 
   async function submit(
     existingFamilyId?: string | null,
-    parentSelection?: AdmissionSiblingParentSelection
+    familySourceApplicantId?: string,
+    ownsOperation = false
   ) {
-    const offering = offeringChoices.find((item) => item.id === formik.values.offeringId);
-    if (!offering || !canCreateInquiry || readingPhoto || runtimeLoading || runtimeError) return;
-    if (primaryContact.requestConfirmation()) return;
-    const errors = await formik.validateForm();
-    if (Object.keys(errors).length) return;
-    setRequestError(null);
+    if (!ownsOperation && operation.current) return;
+    if (!ownsOperation) {
+      operation.current = true;
+      setOperationBusy(true);
+    }
     try {
-      const payload = buildAdmissionInquiryPayload(
-        formik.values,
-        fields,
-        offering,
-        existingFamilyId,
-        false,
-        undefined,
-        parentSelection
-      );
-      if (reportIdentityErrors(payload, formik.values)) return;
-      const inquiry = await create(payload).unwrap();
-      if (formik.values.sendAcknowledgement && canAutoAcknowledge) {
-        const template = getInquiryCommunicationTemplate('acknowledgement', inquiry);
-        try {
-          const communication = await createCommunication({
-            id: inquiry.id,
-            body: {
-              title: template.title,
-              subject: template.subject,
-              body: template.body,
-              channels: inquiry.email ? [1, 2] : [1],
-              importanceLevel: 0,
-              requiresAcknowledgement: false,
-              publishImmediately: true,
-            },
-          }).unwrap();
-          shikshaMitraToast.success({ message: communication.message });
-        } catch (communicationError) {
-          shikshaMitraToast.warning({
-            message:
-              parseApiProblemDetail(communicationError).detail ||
-              'Inquiry was created, but the acknowledgement could not be sent.',
-          });
-        }
-      } else {
+      const offering = offeringChoices.find((item) => item.id === formik.values.offeringId);
+      if (!offering || !canCreateInquiry || readingPhoto || runtimeLoading || runtimeError) return;
+      if (primaryContact.requestConfirmation()) return;
+      const errors = await formik.validateForm();
+      if (Object.keys(errors).length) return;
+      setRequestError(null);
+      try {
+        const payload = buildAdmissionInquiryPayload(
+          formik.values,
+          fields,
+          offering,
+          existingFamilyId,
+          false,
+          undefined,
+          undefined,
+          familySourceApplicantId
+        );
+        if (reportIdentityErrors(payload, formik.values)) return;
+        await create(payload).unwrap();
         shikshaMitraToast.success({ message: 'Inquiry created' });
+        onClose();
+      } catch (error) {
+        const message = parseApiProblemDetail(error).detail || 'Unable to create inquiry';
+        shikshaMitraToast.error({ message });
       }
-      onClose();
-    } catch (error) {
-      const message = parseApiProblemDetail(error).detail || 'Unable to create inquiry';
-      shikshaMitraToast.error({ message });
+    } finally {
+      if (!ownsOperation) {
+        operation.current = false;
+        setOperationBusy(false);
+      }
     }
   }
 
@@ -345,17 +342,10 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
     noOfferingReason: classOfferings.reason,
     canCreateInquiry,
     unavailableReason: runtime.currentData?.availability.reasonMessage,
-    academicLoading: catalogue.isFetching,
+    academicLoading,
     academicError: catalogue.isError,
     retryAcademic: () => catalogue.refetch(),
     selectedOffering,
-    classCapacity:
-      !offeringsLoading &&
-      !offeringsError &&
-      selectedOffering &&
-      offeringDetail?.id === formik.values.offeringId
-        ? offeringDetail.classCapacity
-        : null,
     offeringsLoading,
     offeringsError,
     retryOfferings: () => {
@@ -369,46 +359,26 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
     retryRuntime: () => runtime.refetch(),
     policy,
     allowedSources,
-    canAutoAcknowledge,
     onPhotoReading,
     busy:
+      operationBusy ||
+      formik.isSubmitting ||
       readingPhoto ||
       createState.isLoading ||
-      duplicateState.isLoading ||
-      communicationState.isLoading,
-    useExistingFamily: async (familyId: string, parent: AdmissionSiblingParentSelection) => {
+      duplicateState.isLoading,
+    useExistingFamily: async (familyId: string, sourceApplicantId: string) => {
       if (
         !currentMatches.some(
           (match) =>
             match.familyId === familyId &&
             canLinkAdmissionInquiryFamily(match, currentGuardianPhone, currentGuardianEmail) &&
-            match.parents?.some(
-              (candidate) =>
-                candidate.sourceApplicantId === parent.sourceApplicantId &&
-                (!candidate.relationship || candidate.relationship === parent.relationship)
-            )
+            match.applicantId === sourceApplicantId
         )
       ) {
-        setRequestError('Check the parent details again before linking this family.');
+        setRequestError('Check the family matches again before confirming siblings.');
         return;
       }
-      const parentReviewError = getAdmissionSiblingParentReviewError(
-        formik.values.familyContacts,
-        (() => {
-          const relationship = getConfiguredInquiryParentRelationship(
-            fields,
-            formik.values.fields,
-            formik.values.parentRelationship
-          );
-          return relationship === 'guardian' ? undefined : relationship;
-        })(),
-        parent.relationship
-      );
-      if (parentReviewError) {
-        setRequestError(parentReviewError);
-        return;
-      }
-      await submit(familyId, parent);
+      await submit(familyId, sourceApplicantId);
     },
   };
 }

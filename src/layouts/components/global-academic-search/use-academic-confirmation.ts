@@ -37,8 +37,11 @@ export function useAcademicConfirmation({
     const from = isYearOnly ? selectedOption?.academicYear.name : selectedOption?.label;
     const to = isYearOnly ? newOption.academicYear.name : newOption.label;
     const confirmed = await showConfirm({
-      title: isStudentModule ? 'Change academic year' : 'Change Academic Year, Board and Medium',
-      confirmText: isStudentModule ? 'Change year' : undefined,
+      title:
+        isStudentModule && isYearOnly
+          ? 'Change academic year'
+          : 'Change Academic Year, Board and Medium',
+      confirmText: isStudentModule && isYearOnly ? 'Change year' : undefined,
       message: from
         ? `Are you sure you want to change ${subject} from ${from} to ${to}?`
         : `Are you sure you want to set ${subject} to ${to}?`,

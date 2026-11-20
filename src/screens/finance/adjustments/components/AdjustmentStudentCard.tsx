@@ -1,6 +1,7 @@
 import { GlobalIcons } from 'src/utils/icons';
-import { DetailGrid, DetailField } from 'src/components/detail-view';
 import { FormSectionCard } from 'src/components/form-section-card';
+import { DetailGrid, DetailField } from 'src/screens/finance/components/detail-view';
+
 import type { AdjustmentRequest } from '../types/adjustment.types';
 
 export default function AdjustmentStudentCard({ adjustment }: { adjustment: AdjustmentRequest }) {

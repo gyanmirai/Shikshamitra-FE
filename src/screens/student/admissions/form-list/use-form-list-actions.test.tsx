@@ -12,7 +12,7 @@ import { AdmissionFormPublishDialog } from '../admission-form-publish-dialog';
 
 const query = vi.hoisted(() => ({ data: null as AdmissionForm | null, isError: false }));
 const publication = vi.hoisted(() => ({ validate: vi.fn(), publish: vi.fn() }));
-const saving = vi.hoisted(() => ({ create: vi.fn(), update: vi.fn() }));
+const saving = vi.hoisted(() => ({ create: vi.fn(), update: vi.fn(), version: vi.fn() }));
 const deletion = vi.hoisted(() => ({ remove: vi.fn() }));
 const freshForm = vi.hoisted(() => ({ load: vi.fn() }));
 const toast = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn() }));
@@ -41,11 +41,31 @@ vi.mock('src/redux/student/admissions/admission-forms-api', () => {
     usePublishAdmissionFormMutation: () => [publication.publish, { isLoading: false }],
     useArchiveAdmissionFormMutation: mutation,
     useValidateAdmissionFormMutation: () => [publication.validate, { isLoading: false }],
-    useCreateAdmissionFormVersionMutation: mutation,
+    useCreateAdmissionFormVersionMutation: () => [saving.version, { isLoading: false }],
   };
 });
 
 describe('useFormListActions editor mode', () => {
+  it('blocks duplicate version commands synchronously and reports the pending row', async () => {
+    let resolve!: () => void;
+    const promise = new Promise<void>((done) => {
+      resolve = done;
+    });
+    saving.version.mockReturnValue({ unwrap: () => promise });
+    const { result } = renderHook(() => useFormListActions());
+    let first!: Promise<unknown>;
+    act(() => {
+      first = result.current.createVersion('published');
+      result.current.createVersion('published');
+    });
+    expect(saving.version).toHaveBeenCalledTimes(1);
+    expect(result.current.creatingVersionId).toBe('published');
+    await act(async () => {
+      resolve();
+      await first;
+    });
+    expect(result.current.creatingVersionId).toBeNull();
+  });
   beforeEach(() => {
     vi.clearAllMocks();
     query.data = null;

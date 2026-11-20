@@ -2,6 +2,7 @@ import { api } from 'src/redux/service';
 import { studentType, studentOnboardingType } from 'src/redux/tagTypes';
 
 import { unwrapStudentRecordProfile } from './student-profile-types';
+import { studentPhotoTag } from './records/student-record-photo-api';
 
 import type { StudentRecordProfile } from './student-profile-types';
 import type { StudentAttendanceDashboardSummary } from './attendance-dashboard-types';
@@ -97,7 +98,10 @@ export const StudentApi = api.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [studentType.student],
+      invalidatesTags: (_result, error, { studentId }) => [
+        studentType.student,
+        ...(error ? [] : [studentPhotoTag(studentId)]),
+      ],
     }),
     getStudentDashboardSummary: builder.query({
       query: () => ({

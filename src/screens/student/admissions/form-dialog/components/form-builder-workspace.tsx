@@ -4,10 +4,13 @@ import Box from '@mui/material/Box';
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import Stack from '@mui/material/Stack';
-import { useRef, useEffect } from 'react';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import IconButton from '@mui/material/IconButton';
+import Typography from '@mui/material/Typography';
+import { useRef, useState, useEffect } from 'react';
 import useMediaQuery from '@mui/material/useMediaQuery';
+import CustomTooltip from 'src/components/custom-tooltip';
 
 type Props = {
   panel: 'fields' | 'form';
@@ -15,15 +18,35 @@ type Props = {
   fields: ReactNode;
   form: ReactNode;
   children: ReactNode;
+  fieldsNeedAttention?: boolean;
 };
 
-export function FormBuilderWorkspace({ panel, onPanelChange, fields, form, children }: Props) {
+export function FormBuilderWorkspace({
+  panel,
+  onPanelChange,
+  fields,
+  form,
+  children,
+  fieldsNeedAttention = false,
+}: Props) {
   const theme = useTheme();
   const desktop = useMediaQuery(theme.breakpoints.up('lg'));
   const workspaceRef = useRef<HTMLDivElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
+  const [fieldsCollapsed, setFieldsCollapsed] = useState(false);
   useEffect(() => {
-    if (desktop) return;
+    if (desktop && fieldsNeedAttention) setFieldsCollapsed(false);
+  }, [desktop, fieldsNeedAttention]);
+  useEffect(() => {
     const workspace = workspaceRef.current;
+    if (desktop) {
+      if (
+        fieldsCollapsed &&
+        workspace?.querySelector('#builder-fields-content')?.contains(document.activeElement)
+      )
+        toggleRef.current?.focus();
+      return;
+    }
     const focusedPanel = document.activeElement?.closest('[role="tabpanel"]');
     if (
       focusedPanel &&
@@ -32,7 +55,7 @@ export function FormBuilderWorkspace({ panel, onPanelChange, fields, form, child
     ) {
       workspace.querySelector<HTMLElement>(`#builder-panel-${panel}`)?.focus();
     }
-  }, [desktop, panel]);
+  }, [desktop, panel, fieldsCollapsed]);
   return (
     <Stack
       ref={workspaceRef}
@@ -68,8 +91,8 @@ export function FormBuilderWorkspace({ panel, onPanelChange, fields, form, child
           display: 'grid',
           gridTemplateColumns: {
             xs: 'minmax(0, 1fr)',
-            lg: 'minmax(320px, 350px) minmax(0, 1fr)',
-            xl: 'minmax(350px, 370px) minmax(0, 1fr)',
+            lg: `${fieldsCollapsed ? 56 : 280}px minmax(0, 1fr)`,
+            xl: `${fieldsCollapsed ? 56 : 300}px minmax(0, 1fr)`,
           },
           gap: 1,
           flex: 1,
@@ -97,7 +120,53 @@ export function FormBuilderWorkspace({ panel, onPanelChange, fields, form, child
             bgcolor: 'background.paper',
           }}
         >
-          {fields}
+          <Stack
+            direction="row"
+            alignItems="center"
+            justifyContent="space-between"
+            sx={{
+              display: desktop ? 'flex' : 'none',
+              p: 0.5,
+              borderBottom: fieldsCollapsed ? 0 : 1,
+              borderColor: 'divider',
+              flexShrink: 0,
+            }}
+          >
+            {!fieldsCollapsed && (
+              <Typography variant="subtitle2" sx={{ pl: 1 }}>
+                Field Library
+              </Typography>
+            )}
+            <CustomTooltip
+              title={fieldsCollapsed ? 'Expand Field Library' : 'Collapse Field Library'}
+              describeChild
+            >
+              <IconButton
+                ref={toggleRef}
+                size="small"
+                aria-label={fieldsCollapsed ? 'Expand Field Library' : 'Collapse Field Library'}
+                aria-expanded={!fieldsCollapsed}
+                aria-controls="builder-fields-content"
+                onClick={() => setFieldsCollapsed((collapsed) => !collapsed)}
+                sx={{ width: 44, height: 44, flexShrink: 0 }}
+              >
+                <Iconify icon={fieldsCollapsed ? 'mdi:chevron-right' : 'mdi:chevron-left'} />
+              </IconButton>
+            </CustomTooltip>
+          </Stack>
+          <Box
+            id="builder-fields-content"
+            hidden={desktop && fieldsCollapsed}
+            sx={{
+              display: desktop && fieldsCollapsed ? 'none' : 'flex',
+              flexDirection: 'column',
+              flex: 1,
+              minHeight: 0,
+              minWidth: 0,
+            }}
+          >
+            {fields}
+          </Box>
         </Box>
         <Box
           id="builder-panel-form"

@@ -1,7 +1,7 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
 import type { TooltipProps } from '@mui/material';
+import type { RootState, AppDispatch } from 'src/redux/store';
 import type { IParams } from 'src/components/customizabaleTable/types';
 import type { RollNumberScope } from 'src/redux/student/onboarding/student-roll-number-batches-api';
 import type {
@@ -9,8 +9,8 @@ import type {
   StudentGuardianAccessSelection,
 } from 'src/redux/student/onboarding/student-onboarding-types';
 
-import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
+import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
@@ -18,16 +18,16 @@ import { StudentFeedback } from 'src/components/student-feedback';
 import { useUrlFilterValue } from 'src/hooks/use-url-filter-value';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
+import { Box, Stack, Button, Skeleton, Typography } from '@mui/material';
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { readOnboardingDashboardQueue } from 'src/utils/student-dashboard-drilldown';
-import { Box, Stack, Button, Skeleton, Typography, LinearProgress } from '@mui/material';
 import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
+import { useGetRollNumberBatchContextQuery } from 'src/redux/student/onboarding/student-roll-number-batches-api';
 import {
   readAcademicFilterIds,
   academicClassFilterInput,
 } from 'src/utils/student-academic-filter-query';
-import { useGetRollNumberBatchContextQuery } from 'src/redux/student/onboarding/student-roll-number-batches-api';
 import {
   useGetStudentOnboardingCaseQuery,
   useGetStudentOnboardingCasesQuery,
@@ -38,6 +38,7 @@ import {
 
 import StudentSetupTable from './student-setup-table';
 import StudentSetupDrawer from './student-setup-drawer';
+import { preloadStudentSetup } from './preload-student-setup';
 import { StudentSetupFilters } from './student-setup-academic-filters';
 import { useOnboardingSettings } from '../onboarding-settings-context';
 import StudentSetupTaskNavigation from './student-setup-task-navigation';
@@ -46,13 +47,16 @@ import { getOnboardingErrorMessage } from './student-onboarding-messages';
 import { useStudentSetupAssignment } from './use-student-setup-assignment';
 import StudentSetupAssignmentToolbar from './student-setup-assignment-toolbar';
 import StudentIdentifierLockControls from './student-identifier-lock-controls';
-import { getStudentSetupRollAutoTargets } from './student-setup-assignment-model';
 import { type StudentSetupView, parseStudentSetupView } from './student-setup-view';
 import StudentOnboardingOperationDialog from './student-onboarding-operation-dialog';
 import StudentSetupAutoAssignmentDialog from './student-setup-auto-assignment-dialog';
 import { mapOnboardingCaseToItem, type StudentOnboardingItem } from './student-onboarding-model';
 import { studentSetupSortFields, studentSetupStatusOptions } from './student-setup-worklist-config';
 import StudentQuickSetupPage, { type StudentQuickSetupPageState } from './student-quick-setup-page';
+import {
+  getGrAutoUnavailableReason,
+  getStudentSetupRollAutoTargets,
+} from './student-setup-assignment-model';
 
 import type { StudentAssignmentType } from './student-onboarding-operation-dialog';
 
@@ -106,6 +110,7 @@ const assignmentViewMeta: Record<StudentSetupAssignmentView, { title: string }> 
 };
 
 export default function StudentSetupScreen() {
+  const dispatch = useDispatch<AppDispatch>();
   const [drawerTaskView, setDrawerTaskView] = useState<StudentSetupView | null>(null);
   const [reviewingCaseDetails, setReviewingCaseDetails] = useState(false);
   const [quickSetupState, setQuickSetupState] = useState<StudentQuickSetupPageState>({
@@ -153,9 +158,11 @@ export default function StudentSetupScreen() {
   const [selectedStandardId, setSelectedStandardId] = useUrlFilterValue(
     searchParams.get('class') ?? ALL_STANDARDS
   );
-  const [selectedDivisionId, setSelectedDivisionId] = useUrlFilterValue(
+  const [divisionFilterValue, setSelectedDivisionId] = useUrlFilterValue(
     searchParams.get('division') ?? ALL_STANDARDS
   );
+  const hasSingleClass = readAcademicFilterIds(selectedStandardId).length === 1;
+  const selectedDivisionId = hasSingleClass ? divisionFilterValue : ALL_STANDARDS;
   const placementDivisionId = searchParams.get('placementDivision') ?? '';
   const selectedStatusOption = studentSetupStatusOptions.find(
     ({ status }) => String(status) === searchParams.get('status')
@@ -392,24 +399,21 @@ export default function StudentSetupScreen() {
   const onboardingQuery = useGetStudentOnboardingCasesQuery(queryArgs, {
     skip: !academicYearId || (!dashboardQueue && (!selectedBoardId || !selectedMediumId)),
   });
+  const { refetch: refetchWorklist } = onboardingQuery;
   const credentialDeliveryPending =
     activeView === 'readiness' &&
     Boolean(
       onboardingQuery.currentData?.items.some(
-        (item) =>
-          Boolean(item.studentEnrollmentId) &&
-          item.credentialsPending &&
-          item.status !== 5
+        (item) => Boolean(item.studentEnrollmentId) && item.credentialsPending && item.status !== 5
       )
     );
-  const { refetch: refetchOnboarding } = onboardingQuery;
   useEffect(() => {
-    if (!credentialDeliveryPending) return undefined;
+    if (!credentialDeliveryPending || selectedStudentId) return undefined;
     const interval = window.setInterval(() => {
-      if (document.visibilityState === 'visible') refetchOnboarding();
+      if (document.visibilityState === 'visible') refetchWorklist();
     }, 15_000);
     return () => window.clearInterval(interval);
-  }, [credentialDeliveryPending, refetchOnboarding]);
+  }, [credentialDeliveryPending, refetchWorklist, selectedStudentId]);
   const pendingCountQuery = useGetStudentOnboardingCasesQuery(
     {
       ...queryArgs,
@@ -534,14 +538,11 @@ export default function StudentSetupScreen() {
     const standards = options.standards.filter((item) => item.parentId === selectedMediumId);
     const classIds = readAcademicFilterIds(selectedStandardId);
     const validClasses = classIds.filter((id) => standards.some((item) => item.id === id));
-    const validDivisions = readAcademicFilterIds(selectedDivisionId).filter((id) =>
-      options.divisions.some(
-        (item) =>
-          item.id === id &&
-          (validClasses.length
-            ? validClasses.includes(String(item.parentId))
-            : standards.some((standard) => standard.id === item.parentId))
-      )
+    const requestedDivisions = readAcademicFilterIds(divisionFilterValue);
+    const validDivisions = requestedDivisions.filter(
+      (id) =>
+        validClasses.length === 1 &&
+        options.divisions.some((item) => item.id === id && item.parentId === validClasses[0])
     );
     if (!board) {
       if (options.boards[0]) changeAcademicFilter('board', options.boards[0].id);
@@ -549,7 +550,7 @@ export default function StudentSetupScreen() {
       if (mediums[0]) changeAcademicFilter('medium', mediums[0].id);
     } else if (validClasses.join(',') !== classIds.join(','))
       changeAcademicFilter('class', validClasses.join(','));
-    else if (validDivisions.join(',') !== readAcademicFilterIds(selectedDivisionId).join(','))
+    else if (validDivisions.length !== requestedDivisions.length)
       changeAcademicFilter('division', validDivisions.join(','));
     else if (
       placementDivisionId &&
@@ -567,7 +568,7 @@ export default function StudentSetupScreen() {
     selectedBoardId,
     selectedMediumId,
     selectedStandardId,
-    selectedDivisionId,
+    divisionFilterValue,
     placementDivisionId,
     placementOptions,
     searchParams,
@@ -604,8 +605,9 @@ export default function StudentSetupScreen() {
   const sourceRows = displayedRows;
   const rollClassIds = readAcademicFilterIds(selectedStandardId);
   const rollDivisionIds = readAcademicFilterIds(selectedDivisionId);
+  const hasSingleDivision = rollDivisionIds.length === 1;
   const rollScope =
-    academicYearId && rollClassIds.length === 1 && rollDivisionIds.length === 1
+    academicYearId && rollClassIds.length === 1 && hasSingleDivision
       ? { academicYearId, standardId: rollClassIds[0], divisionId: rollDivisionIds[0] }
       : undefined;
   const rollContext = useGetRollNumberBatchContextQuery(rollScope!, {
@@ -630,8 +632,7 @@ export default function StudentSetupScreen() {
       assignment.cancel();
       action();
     });
-  const showDivisionSelection =
-    activeView === 'division' && readAcademicFilterIds(selectedStandardId).length === 1;
+  const showDivisionSelection = activeView === 'division' && hasSingleClass;
   const selectableStudents = displayedRows.filter(
     (row) =>
       row.source === 'onboarding-case' &&
@@ -658,7 +659,6 @@ export default function StudentSetupScreen() {
   const manualTargets = assignment.eligible('manual', assignmentTargets);
   const pendingCount = pendingCountQuery.currentData?.totalCount ?? 0;
   const assignmentScopeLoading = Boolean(
-    assignmentType &&
     academicYearId &&
     ((filterOptionsQuery.isFetching && !filterOptionsQuery.currentData) ||
       (!dashboardQueue &&
@@ -672,13 +672,13 @@ export default function StudentSetupScreen() {
     ? undefined
     : !canManageOnboarding
       ? 'Read-only access.'
-      : activeView === 'division' && !showDivisionSelection
-        ? 'Select one class for Auto.'
-        : activeView === 'roll-number'
-          ? !rollScope
+      : activeView === 'gr-number' && hasSingleDivision && !automaticTargets.length
+        ? getGrAutoUnavailableReason(assignmentTargets, settings.grNumber.assignmentMode)
+        : activeView === 'division' && !showDivisionSelection
+          ? 'Select one class for Auto.'
+          : activeView === 'roll-number' && !rollScope
             ? 'Select one class and division for Auto.'
-            : undefined
-          : undefined;
+            : undefined;
   const selectedRow = sourceRows.find((student) => student.id === selectedStudentId);
   if (selectedRow) selectedSnapshot.current = selectedRow;
   const focusedCaseQuery = useGetStudentOnboardingCaseQuery(focusedCaseId ?? '', {
@@ -729,6 +729,11 @@ export default function StudentSetupScreen() {
   }, [activeView, focusedCaseId]);
 
   const openStudentSetup = (id: string, section: StudentSetupView | null = null) => {
+    if (
+      hasGrantedPermission(permissions, 'Students.Onboarding.View') &&
+      sourceRows.some((student) => student.id === id && student.source === 'onboarding-case')
+    )
+      preloadStudentSetup(dispatch, id);
     if (!selectedStudentId && document.activeElement instanceof HTMLElement) {
       setupReturnFocus.current = document.activeElement;
     }
@@ -877,6 +882,9 @@ export default function StudentSetupScreen() {
     }
     if (!setupWasOpen.current) return undefined;
     setupWasOpen.current = false;
+    // Commands and background app access can finish while the retained list is hidden.
+    if (academicYearId && (dashboardQueue || (selectedBoardId && selectedMediumId)))
+      refetchWorklist();
     // The ?case transition can outlive the page unmount. Restore focus only after
     // the retained worklist is visible again, including returns from deep links.
     const frame = window.requestAnimationFrame(() => {
@@ -889,7 +897,14 @@ export default function StudentSetupScreen() {
       setupReturnFocus.current = null;
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [singleStudentMode]);
+  }, [
+    singleStudentMode,
+    academicYearId,
+    dashboardQueue,
+    selectedBoardId,
+    selectedMediumId,
+    refetchWorklist,
+  ]);
 
   return (
     <Stack
@@ -927,11 +942,8 @@ export default function StudentSetupScreen() {
         />
       </Box>
 
-      {singleStudentMode && focusedCaseId && !selectedRow && focusedCaseQuery.isFetching && (
-        <LinearProgress aria-label="Loading selected onboarding student" />
-      )}
       {singleStudentMode && !selectedStudent && !focusedCaseQuery.isError && (
-        <Stack spacing={1.5} role="status" aria-label="Loading student setup">
+        <Stack spacing={1.5} role="status" aria-label="Loading student setup" aria-busy>
           <Skeleton variant="rounded" height={64} />
           <Skeleton variant="rounded" height={220} />
           <Skeleton variant="rounded" height={240} />
@@ -1072,6 +1084,7 @@ export default function StudentSetupScreen() {
                   )}
                   selectedCount={showDivisionSelection ? selectedStudentIds.length : 0}
                   onClearSelection={() => setSelectedStudentIds([])}
+                  showAssignmentActions={hasSingleDivision}
                   automaticDisabledReason={automaticDisabledReason}
                   busy={interactionBusy}
                   automaticLoading={
@@ -1098,6 +1111,7 @@ export default function StudentSetupScreen() {
                   }
                   onAuto={async () => {
                     if (
+                      !hasSingleDivision ||
                       interactionBusy ||
                       !canManageOnboarding ||
                       onboardingQuery.isFetching ||
@@ -1142,7 +1156,9 @@ export default function StudentSetupScreen() {
                       setAutoAssignment({ type: assignmentType, students: automaticTargets });
                     }
                   }}
-                  onManual={() => assignment.startManual(assignmentTargets)}
+                  onManual={() => {
+                    if (hasSingleDivision) assignment.startManual(assignmentTargets);
+                  }}
                   onSave={() => assignment.form.submitForm()}
                   onCancel={() => navigate(() => {})}
                   needsReason={assignment.needsReason}
@@ -1182,11 +1198,7 @@ export default function StudentSetupScreen() {
                         )}
                         <StudentIdentifierLockControls
                           academicYearId={academicYearId}
-                          divisionId={
-                            readAcademicFilterIds(selectedDivisionId).length === 1
-                              ? readAcademicFilterIds(selectedDivisionId)[0]
-                              : undefined
-                          }
+                          divisionId={hasSingleDivision ? rollDivisionIds[0] : undefined}
                           identifierType={activeView === 'gr-number' ? 'gr' : 'roll'}
                           canLock={canManageOnboarding}
                           canUnlock={
@@ -1244,6 +1256,7 @@ export default function StudentSetupScreen() {
                     !assignment.manualEditing)
                 }
                 isError={onboardingQuery.isError}
+                isRefreshing={Boolean(onboardingQuery.isFetching && onboardingQuery.currentData)}
                 onRetry={() => onboardingQuery.refetch()}
                 view={activeView}
                 tableId={`student-onboarding-${activeView}-worklist`}

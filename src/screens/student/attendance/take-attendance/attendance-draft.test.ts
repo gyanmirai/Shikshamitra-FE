@@ -6,7 +6,6 @@ import { AttendanceStatus } from 'src/enums/student-attendace-status';
 import {
   getAttendanceCounts,
   hasAttendanceChanges,
-  markRemainingPresent,
   changeAttendanceMark,
   changeAttendanceStatus,
   normalizeAttendanceRows,
@@ -21,47 +20,17 @@ const row = (id: string, changes: Partial<AttendanceStudent> = {}): AttendanceSt
   ...changes,
 });
 describe('daily attendance draft', () => {
-  it('does not bulk-mark rows governed by approval or leave-credit review', () => {
-    const original = [
-      row('editable'),
-      row('approval', { requiresCorrectionApproval: true }),
-      row('credit', { needsCreditCorrection: true }),
-    ];
-    const result = markRemainingPresent(original);
-    expect(result[0].status).toBe(AttendanceStatus.Present);
-    expect(result[1]).toEqual(original[1]);
-    expect(result[2]).toEqual(original[2]);
-    expect(original[0].status).toBe(AttendanceStatus.Pending);
-  });
-  it('fills only eligible unmarked students without replacing absences, details or approved leave', () => {
-    const original = [
-      row('new'),
-      row('absent', { status: AttendanceStatus.Absent, remarks: 'Ill' }),
-      row('present', { status: AttendanceStatus.Present, late: true }),
-      row('leave', { approvedLeaveId: 'leave' }),
-      row('not-scheduled', { isExpected: false }),
-    ];
-    const result = markRemainingPresent(original);
-    expect(result.map((item) => item.status)).toEqual([
-      AttendanceStatus.Present,
-      AttendanceStatus.Absent,
-      AttendanceStatus.Present,
-      AttendanceStatus.Pending,
-      AttendanceStatus.Pending,
-    ]);
-    expect(result[1]).toEqual(original[1]);
-    expect(result[2].late).toBe(true);
-    expect(original[0].status).toBe(AttendanceStatus.Pending);
-  });
   it('counts the complete eligible roster and keeps unknown separate from absent', () => {
     expect(
       getAttendanceCounts([
         row('one', { status: AttendanceStatus.Present }),
         row('two', { status: AttendanceStatus.Absent }),
         row('three'),
+        row('half', { status: AttendanceStatus.Present, halfDay: true }),
+        row('recorded-closed', { isExpected: false, status: AttendanceStatus.Present }),
         row('closed', { isExpected: false }),
       ])
-    ).toEqual({ expected: 3, unmarked: 1 });
+    ).toEqual({ expected: 4, unmarked: 1, present: 1, halfDay: 1, absent: 1 });
   });
   it('clears present-only details when a mark becomes absent or unmarked', () => {
     const student = row('one', {

@@ -37,6 +37,7 @@ function OverflowActionMenuItem({
         : {})}
       disabled={action.disabled || action.loading}
       aria-busy={action.loading || undefined}
+      aria-label={action.ariaLabel ?? (action.loading ? action.label : undefined)}
       data-testid={`menu-action-${action.id}`}
       onClick={() => {
         if (!action.disabled && !action.loading) onSelect();
@@ -73,7 +74,10 @@ const AdaptiveThreeDotsActions = ({
   mobileDirectActionLimit,
   onClickThreeDots,
   onClosePopover,
+  disablePopoverClose,
   placement = 'left-top',
+  popoverSlotProps,
+  popoverAction,
   sx,
 }: AdaptiveThreeDotsActionsProps) => {
   const theme = useTheme();
@@ -104,10 +108,17 @@ const AdaptiveThreeDotsActions = ({
                     key={action.id}
                     action={action}
                     disabled={action.disabled || action.loading}
-                    onSelect={() => {
-                      popover.onClose();
-                      onClosePopover?.();
-                      action.onClick?.();
+                    onSelect={async () => {
+                      const close = () => {
+                        popover.onClose();
+                        onClosePopover?.();
+                      };
+                      if (action.closeOnSuccess) {
+                        if (await action.onClick()) close();
+                      } else {
+                        close();
+                        action.onClick?.();
+                      }
                     }}
                   />
                 ))}
@@ -120,7 +131,10 @@ const AdaptiveThreeDotsActions = ({
       moreLabel={moreLabel}
       onClickThreeDots={onClickThreeDots}
       onClosePopover={onClosePopover}
+      disablePopoverClose={disablePopoverClose}
       placement={placement}
+      popoverSlotProps={popoverSlotProps}
+      popoverAction={popoverAction}
       sx={sx}
     />
   );

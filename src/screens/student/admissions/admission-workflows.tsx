@@ -4,12 +4,14 @@ import type { IParams } from 'src/components/customizabaleTable/types';
 import type { AdmissionWorkflow } from 'src/redux/student/admissions/admission-workflows-api';
 
 import { Iconify } from 'src/components/iconify';
+import { useSearchParams } from 'next/navigation';
 import { studentPaths } from 'src/constants/student-menu';
 import { Box, Stack, Button, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { studentSetupReturnUrl } from 'src/screens/student/setup/embedding/student-setup-return';
 import { useGetAdmissionWorkflowsQuery } from 'src/redux/student/admissions/admission-workflows-api';
+import { useStudentSetupEmbedding , StudentSetupManagerHeader as CustomBreadcrumbs } from 'src/screens/student/setup/embedding';
 
 import { AdmissionQueryError } from './admission-query-error';
 import { useWorkflowFilters } from './workflow-list/use-workflow-filters';
@@ -25,7 +27,9 @@ import {
 
 export default function AdmissionWorkflowsScreen() {
   const filterState = useWorkflowFilters();
-  const actions = useWorkflowListActions();
+  const { embedded } = useStudentSetupEmbedding();
+  const params = useSearchParams();
+  const actions = useWorkflowListActions(embedded ? studentSetupReturnUrl('admission-stages', params.get('guideYear'), params.get('returnTo')) : undefined);
   const { filters } = filterState;
   const query = useGetAdmissionWorkflowsQuery({
     search: filters.search || undefined,
@@ -89,6 +93,7 @@ export default function AdmissionWorkflowsScreen() {
     onDelete: (workflow) => actions.requestConfirmation(workflow, 'delete'),
     onPublish: actions.publish,
     publishingId: actions.publishingId,
+    creatingVersionId: actions.creatingVersionId,
   });
   return (
     <Box
@@ -102,6 +107,7 @@ export default function AdmissionWorkflowsScreen() {
       }}
     >
       <CustomBreadcrumbs
+        editorOpen={actions.createDialog.value || actions.cloneDialog.value || Boolean(actions.pendingConfirmation)} busy={actions.createState.isLoading || actions.cloneState.isLoading || actions.archiveState.isLoading || actions.reopenState.isLoading || actions.deleteState.isLoading || Boolean(actions.creatingVersionId) || Boolean(actions.publishingId)}
         heading="Admission Stage"
         isBack={actions.createDialog.value}
         onBack={() => actions.createCloseRef.current?.()}
@@ -161,6 +167,12 @@ export default function AdmissionWorkflowsScreen() {
               ) : undefined
             }
             handleRowClick={(row) => actions.navigate(row as AdmissionWorkflow, 'preview')}
+            getRowAction={(row) => ({
+              label: `Preview ${(row as AdmissionWorkflow).name}`,
+              onClick: () => actions.navigate(row as AdmissionWorkflow, 'preview'),
+              pending: actions.pendingNavigationId === row.id,
+              pendingLabel: 'Opening workflow…',
+            })}
             rowProps={(row) => ({
               tabIndex: 0,
               sx: { cursor: 'pointer' },

@@ -22,7 +22,7 @@ vi.mock('src/redux/student/onboarding/student-onboarding-api', () => ({
   useEnableStudentAppAccessMutation: () => [state.enable, { isLoading: state.busy }],
 }));
 
-const panel = () => (
+const panel = (options: { unavailable?: boolean; validateAccess?: () => Promise<string> } = {}) => (
   <ThemeProvider theme={createTheme()}>
     <StudentAppAccessDialog
       caseId="case-1"
@@ -30,6 +30,7 @@ const panel = () => (
       concurrencyStamp="case-stamp"
       onClose={state.close}
       onSaved={state.saved}
+      {...options}
     />
   </ThemeProvider>
 );
@@ -74,6 +75,28 @@ it('retains the draft on failure and uses the shared discard confirmation', asyn
   fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
   expect(reason).toHaveValue('Student requested access');
   expect(state.close).not.toHaveBeenCalled();
+});
+
+it('retains its reason during reads, blocks submit, and uses the revalidated stamp', async () => {
+  state.enable.mockReturnValue({ unwrap: async () => ({}) });
+  const validateAccess = vi.fn(async () => 'latest-stamp');
+  const view = render(panel({ validateAccess }));
+  const reason = screen.getByRole('textbox', { name: /Correction reason/ });
+  fireEvent.change(reason, { target: { value: 'Student requested access' } });
+  view.rerender(panel({ unavailable: true, validateAccess }));
+  expect(reason).toHaveValue('Student requested access');
+  expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+  fireEvent.submit(reason.closest('form')!);
+  expect(validateAccess).not.toHaveBeenCalled();
+  view.rerender(panel({ validateAccess }));
+  fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+  await waitFor(() =>
+    expect(state.enable).toHaveBeenCalledWith({
+      id: 'case-1',
+      reason: 'Student requested access',
+      concurrencyStamp: 'latest-stamp',
+    })
+  );
 });
 
 it('locks close and submit while busy and ignores a stale completion after unmount', async () => {

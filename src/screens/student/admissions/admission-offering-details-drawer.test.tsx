@@ -1,24 +1,19 @@
 import type { AdmissionOffering } from 'src/redux/student/admissions/admission-offerings-api';
 
 import { vi, it, expect, describe } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, within, fireEvent } from '@testing-library/react';
 
 import { AdmissionOfferingDetailsDrawer } from './admission-offering-details-drawer';
 
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span aria-hidden="true" /> }));
-vi.mock('src/redux/student/admissions/admission-offerings-api', () => ({
-  useGetAdmissionClassCapacityQuery: () => ({
-    data: null,
-    isError: false,
-    isLoading: false,
-  }),
-  useGetAdmissionRoomChoicesQuery: () => ({
-    data: [],
-    isError: false,
-    isFetching: false,
-  }),
-  useUpdateAdmissionClassRoomsMutation: () => [vi.fn(), { isLoading: false }],
+const notices = vi.hoisted(() => ({
+  warning: vi.fn(),
+  info: vi.fn(),
+  success: vi.fn(),
+  error: vi.fn(),
+  dismiss: vi.fn(),
 }));
+vi.mock('src/components/toast', () => ({ shikshaMitraToast: notices }));
 
 const offering: AdmissionOffering = {
   id: 'offering-1',
@@ -58,30 +53,191 @@ const offering: AdmissionOffering = {
 };
 
 describe('Admission offering details drawer', () => {
-  it('groups offering details in a right drawer and keeps read-only access', () => {
-    const onClose = vi.fn();
-    render(
+  it('keeps saved configuration issues inline and removes recovery actions when ready', () => {
+    notices.warning.mockClear();
+    const invalid = {
+      ...offering,
+      configuration: {
+        isValid: false,
+        status: 1 as const,
+        errors: [
+          {
+            code: 'InquiryFormNotPublished',
+            message: 'Inquiry form is archived. Long server instructions.',
+            formDefinitionId: 'form-1',
+            formName: 'Inquiry 2026',
+          },
+        ],
+      },
+    };
+    const view = render(
       <AdmissionOfferingDetailsDrawer
         open
-        offering={offering}
-        canManage={false}
-        onClose={onClose}
+        offering={invalid}
+        onClose={vi.fn()}
+        canReviewForms
+        canRestoreForms
       />
     );
+    const readiness = within(screen.getByRole('region', { name: 'Configuration Readiness' }));
+    expect(notices.warning).not.toHaveBeenCalled();
+    expect(readiness.getByRole('status')).toHaveTextContent('1 issue to fix');
+    expect(
+      readiness.getByText('Inquiry form "Inquiry 2026" is archived. Restore it or choose another.')
+    ).toBeVisible();
+    expect(readiness.getByRole('link', { name: 'Review Inquiry 2026' })).toHaveAttribute(
+      'href',
+      expect.stringContaining('form-1')
+    );
+    expect(readiness.getByRole('link', { name: 'Restore archived form' })).toHaveAttribute(
+      'href',
+      expect.stringContaining('restoreForm=form-1')
+    );
+
+    view.rerender(
+      <AdmissionOfferingDetailsDrawer
+        open
+        offering={invalid}
+        loadingDetail
+        onClose={vi.fn()}
+        canReviewForms
+        canRestoreForms
+      />
+    );
+    expect(readiness.queryByRole('link')).not.toBeInTheDocument();
+    view.rerender(<AdmissionOfferingDetailsDrawer open offering={invalid} onClose={vi.fn()} />);
+    expect(readiness.queryByRole('link')).not.toBeInTheDocument();
+    view.rerender(
+      <AdmissionOfferingDetailsDrawer
+        open
+        offering={{ ...invalid, configuration: { isValid: true, status: 0, errors: [] } }}
+        onClose={vi.fn()}
+        canReviewForms
+        canRestoreForms
+      />
+    );
+    expect(readiness.getByText('Ready', { exact: true })).toBeVisible();
+    expect(readiness.queryByText(/archived/)).not.toBeInTheDocument();
+    expect(readiness.queryByRole('link')).not.toBeInTheDocument();
+  });
+  it('groups offering details in a right drawer and keeps read-only access', () => {
+    const onClose = vi.fn();
+    render(<AdmissionOfferingDetailsDrawer open offering={offering} onClose={onClose} />);
 
     expect(
       screen.getByRole('presentation').querySelector('.MuiDrawer-paperAnchorRight')
     ).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Class 1 Admission' })).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Admission offering details information' })).toBeVisible();
+    expect(
+      screen.getByRole('button', { name: 'Admission Offering Details information' })
+    ).toBeVisible();
+    ['Academic Scope', 'Admission Window', 'Process and Forms', 'Configuration Readiness'].forEach(
+      (title) => {
+        expect(screen.getByRole('button', { name: `${title} information` })).toBeVisible();
+      }
+    );
     expect(screen.getByRole('region', { name: 'Academic Scope' })).toBeVisible();
     expect(screen.getByRole('region', { name: 'Admission Window' })).toBeVisible();
     expect(screen.getByRole('region', { name: 'Process and Forms' })).toBeVisible();
-    expect(screen.getByRole('region', { name: 'Admission Capacity' })).toBeVisible();
+    expect(screen.queryByRole('region', { name: 'Admission Capacity' })).not.toBeInTheDocument();
     expect(screen.getByRole('region', { name: 'Configuration Readiness' })).toBeVisible();
     expect(screen.queryByRole('button', { name: 'Assign Class Rooms' })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /^Close$/ }));
     expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  it('does not offer room assignment in offering details', () => {
+    render(<AdmissionOfferingDetailsDrawer open offering={offering} onClose={vi.fn()} />);
+    expect(screen.queryByRole('button', { name: 'Assign Class Rooms' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/No rooms are assigned for admission capacity/)
+    ).not.toBeInTheDocument();
+  });
+
+  it('keeps saved scope, dates, zero counts and linked versions visible when ready', () => {
+    render(
+      <AdmissionOfferingDetailsDrawer
+        open
+        offering={{
+          ...offering,
+          isActive: true,
+          campusName: 'Main campus',
+          configuration: { isValid: true, status: 0, errors: [] },
+        }}
+        onClose={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText('Active', { exact: true })).toBeVisible();
+    const scope = within(screen.getByRole('region', { name: 'Academic Scope' }));
+    ['Class 1', 'General', 'CBSE', 'English', 'Primary', 'Inquiry First', 'Main campus'].forEach(
+      (value) => {
+        expect(scope.getByText(value, { exact: true })).toBeVisible();
+      }
+    );
+    const admissionWindow = within(screen.getByRole('region', { name: 'Admission Window' }));
+    expect(admissionWindow.getByText('28/09/2026')).toBeVisible();
+    expect(admissionWindow.getByText('30/09/2026')).toBeVisible();
+    expect(admissionWindow.getByText('0', { exact: true })).toBeVisible();
+    const forms = within(screen.getByRole('region', { name: 'Process and Forms' }));
+    ['Regular v1', 'Inquiry v1', 'Application v1'].forEach((value) => {
+      expect(forms.getByText(value)).toBeVisible();
+    });
+    expect(
+      within(screen.getByRole('region', { name: 'Configuration Readiness' })).getByText('Ready')
+    ).toBeVisible();
+    expect(screen.queryByRole('button', { name: /^Edit|Submit|Activate/ })).not.toBeInTheDocument();
+  });
+
+  it('preserves direct-entry form visibility and missing configuration fallbacks', () => {
+    render(
+      <AdmissionOfferingDetailsDrawer
+        open
+        offering={{ ...offering, entryMode: 1, workflowName: null, applicationFormName: null }}
+        onClose={vi.fn()}
+      />
+    );
+    const forms = within(screen.getByRole('region', { name: 'Process and Forms' }));
+    expect(forms.queryByText('Inquiry form')).not.toBeInTheDocument();
+    expect(forms.getByText('Application form')).toBeVisible();
+    expect(forms.getAllByText('Not configured')).toHaveLength(2);
+    expect(screen.getByText('Direct Registration')).toBeVisible();
+    expect(screen.queryByText('Campus')).not.toBeInTheDocument();
+    expect(screen.getByText('Inactive', { exact: true })).toBeVisible();
+  });
+
+  it('keeps incomplete configuration guidance in its owning section', () => {
+    render(
+      <AdmissionOfferingDetailsDrawer
+        open
+        offering={{
+          ...offering,
+          configuration: {
+            isValid: false,
+            status: 1,
+            errors: [{ code: 'workflow', message: 'Choose a published workflow.' }],
+          },
+        }}
+        onClose={vi.fn()}
+      />
+    );
+    const readiness = within(screen.getByRole('region', { name: 'Configuration Readiness' }));
+    expect(readiness.getByText('Configuration incomplete')).toBeVisible();
+    expect(readiness.getByText('Choose a published workflow.')).toBeVisible();
+    expect(readiness.queryByText('Ready', { exact: true })).not.toBeInTheDocument();
+  });
+
+  it('retains the loading state and both close controls before details arrive', () => {
+    const onClose = vi.fn();
+    render(<AdmissionOfferingDetailsDrawer open offering={null} loadingDetail onClose={onClose} />);
+    expect(screen.getByRole('status', { name: 'Loading Offering Details' })).toHaveAttribute(
+      'aria-busy',
+      'true'
+    );
+    expect(screen.queryByRole('region', { name: 'Academic Scope' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Close Admission Offering Details' }));
+    fireEvent.click(screen.getByRole('button', { name: /^Close$/ }));
+    expect(onClose).toHaveBeenCalledTimes(2);
   });
 });

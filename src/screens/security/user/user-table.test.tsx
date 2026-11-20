@@ -33,7 +33,7 @@ afterEach(() => {
   clearCachedAuthSession();
 });
 
-it('shows assigned roles and a truthful no-role state, loading every API page', async () => {
+it('shows assigned roles and a truthful no-role state on the requested page', async () => {
   [
     'fluent:filter-12-filled',
     'solar:magnifer-linear',
@@ -61,7 +61,7 @@ it('shows assigned roles and a truthful no-role state, loading every API page', 
     http.get('*/api/security/user-directory', ({ request }) => {
       const skip = Number(new URL(request.url).searchParams.get('skipCount'));
       skips.push(skip);
-      return HttpResponse.json({ items: users.slice(skip, skip + 1), totalCount: 2 });
+      return HttpResponse.json({ items: users, totalCount: 2 });
     })
   );
   render(
@@ -75,5 +75,5 @@ it('shows assigned roles and a truthful no-role state, loading every API page', 
   expect(await screen.findByText('Teacher', { exact: true })).toBeVisible();
   expect(screen.getByText('HR Manager', { exact: true })).toBeVisible();
   expect(await screen.findByText('No role assigned')).toBeVisible();
-  expect(skips).toEqual([0, 1]);
+  expect(skips).toEqual([0]);
 });

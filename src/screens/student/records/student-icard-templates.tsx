@@ -28,7 +28,8 @@ import {
   useDeleteRecordIdTemplateMutation,
 } from 'src/redux/student/records/student-record-documents-api';
 
-import StudentICardBuilder, { StudentCardPreview } from './student-icard-builder';
+import StudentICardBuilder from './student-icard-builder';
+import { StudentCardPreview } from './components/student-card-preview';
 
 export default function StudentICardTemplates() {
   const form = useBoolean();
@@ -40,7 +41,7 @@ export default function StudentICardTemplates() {
   const { requestNavigation, confirmation } = useUnsavedNavigation(form.value && dirty, {
     blockNavigation: form.value && busy,
     push: router.push,
-    title: 'Discard Student I-Card Changes?',
+    title: 'Discard I-Card Changes?',
     description: 'Your card design and student assignments have not been saved. Keep editing or discard these changes.',
   });
   const [templateToDelete, setTemplateToDelete] = useState<IdCardTemplate | null>(null);
@@ -97,6 +98,7 @@ export default function StudentICardTemplates() {
     setSelected(null);
     setDirty(false);
   };
+  const requestCloseForm = () => requestNavigation(closeForm);
   const closeDeleteDialog = () => {
     if (!deleting.isLoading) setTemplateToDelete(null);
   };
@@ -105,9 +107,9 @@ export default function StudentICardTemplates() {
     try {
       await deleteTemplate(templateToDelete.id).unwrap();
       setTemplateToDelete(null);
-      shikshaMitraToast.success({ message: 'Student I-Card template deleted.' });
+      shikshaMitraToast.success({ message: 'I-Card template deleted.' });
     } catch {
-      shikshaMitraToast.error({ message: 'Student I-Card template could not be deleted.' });
+      shikshaMitraToast.error({ message: 'I-Card template could not be deleted.' });
     }
   };
 
@@ -173,106 +175,101 @@ export default function StudentICardTemplates() {
 
   return (
     <Box sx={{ height: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
-      {form.value ? (
+      <CustomBreadcrumbs
+        heading="I-Card"
+        description="Manage templates and export student identity cards."
+        links={[
+          { name: 'Student', href: studentPaths.dashboard },
+          { name: 'Student Records', href: studentPaths.records.root },
+          { name: 'I-Card' },
+        ]}
+        action={
+          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            {canView && (
+              <Button
+                component={RouterLink}
+                href={studentPaths.records.studentICardIssued}
+                variant="outlined"
+                size="small"
+              >
+                View issued cards
+              </Button>
+            )}
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<Add />}
+              disabled={!canEdit}
+              onClick={openCreate}
+            >
+              Create I-Card
+            </Button>
+          </Box>
+        }
+      />
+      {!canView ? (
+        <Alert severity="warning">
+          You do not have permission to view I-Card templates.
+        </Alert>
+      ) : (
         <>
-          <CustomBreadcrumbs
-            heading={selected ? 'Update Student I-Card' : 'Create Student I-Card'}
-            description="Design and export student identity cards."
-            links={[
-              { name: 'Student', href: studentPaths.dashboard },
-              { name: 'Student Records', href: studentPaths.records.root },
-              { name: 'Student I-Card' },
-            ]}
-            isBack
-            onBack={() => requestNavigation(closeForm)}
-            backDisabled={busy}
+          {templates.isError && (
+            <Alert
+              severity="error"
+              action={
+                <Button size="small" onClick={() => templates.refetch()}>
+                  Retry
+                </Button>
+              }
+            >
+              I-Card templates could not be loaded.
+            </Alert>
+          )}
+          <CustomizableTable
+            tableId="student-icard-templates"
+            columns={columns}
+            data={tableRows}
+            isLoading={templates.isLoading}
+            isPagination
+            isSearch
+            noDataText="No I-Card templates found."
+            wrapperProps={{
+              sx: { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' },
+            }}
+            tableContainerProps={{ sx: { height: 1 } }}
           />
-          <Box sx={{ flex: 1, minHeight: 0 }}>
+        </>
+      )}
+      <CustomDialog
+        fullScreen
+        hasForm={false}
+        open={form.value}
+        title={selected ? 'Update I-Card' : 'Create I-Card'}
+        titleInfo="Design and export student identity cards."
+        handleClose={requestCloseForm}
+        disableClose={busy}
+        guardUnsavedChanges={false}
+        paperProps={{ sx: { borderRadius: 0, backgroundImage: 'none' } }}
+      >
+        <Box sx={{ flex: 1, minHeight: 0, p: 1, bgcolor: 'background.neutral' }}>
+          {form.value && (
             <StudentICardBuilder
               key={selected?.id ?? 'new'}
               initialTemplate={selected}
               academicYearId={openerYearId}
               contextInvalid={yearId !== openerYearId}
-              onClose={() => requestNavigation(closeForm)}
+              onClose={requestCloseForm}
               onBusyChange={setBusy}
               onDirtyChange={setDirty}
             />
-          </Box>
-        </>
-      ) : (
-        <>
-          <CustomBreadcrumbs
-            heading="Student I-Card"
-            description="Manage templates and export student identity cards."
-            links={[
-              { name: 'Student', href: studentPaths.dashboard },
-              { name: 'Student Records', href: studentPaths.records.root },
-              { name: 'Student I-Card' },
-            ]}
-            action={
-              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                {canView && (
-                  <Button
-                    component={RouterLink}
-                    href={`${studentPaths.records.documents}?view=ids`}
-                    variant="outlined"
-                    size="small"
-                  >
-                    View issued cards
-                  </Button>
-                )}
-                <Button
-                  variant="contained"
-                  size="small"
-                  startIcon={<Add />}
-                  disabled={!canEdit}
-                  onClick={openCreate}
-                >
-                  Create Student I-Card
-                </Button>
-              </Box>
-            }
-          />
-          {!canView ? (
-            <Alert severity="warning">
-              You do not have permission to view Student I-Card templates.
-            </Alert>
-          ) : (
-            <>
-              {templates.isError && (
-                <Alert
-                  severity="error"
-                  action={
-                    <Button size="small" onClick={() => templates.refetch()}>
-                      Retry
-                    </Button>
-                  }
-                >
-                  Student I-Card templates could not be loaded.
-                </Alert>
-              )}
-              <CustomizableTable
-                tableId="student-icard-templates"
-                columns={columns}
-                data={tableRows}
-                isLoading={templates.isLoading}
-                isPagination
-                isSearch
-                noDataText="No Student I-Card templates found."
-                wrapperProps={{
-                  sx: { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' },
-                }}
-                tableContainerProps={{ sx: { height: 1 } }}
-              />
-            </>
           )}
-        </>
-      )}
+        </Box>
+      </CustomDialog>
       {confirmation}
       <CustomDialog
         open={preview.value}
         handleClose={preview.onFalse}
-        title="Student I-Card Preview"
+        title="I-Card Preview"
         maxWidth="sm"
       >
         {selected && (
@@ -286,7 +283,7 @@ export default function StudentICardTemplates() {
         onClose={closeDeleteDialog}
         disableBackdropClick
         disableCancel={deleting.isLoading}
-        title="Delete Student I-Card Template"
+        title="Delete I-Card Template"
         icon="error"
         content={
           <Typography id="student-icard-delete-description" variant="body2">

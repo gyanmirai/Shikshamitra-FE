@@ -4,29 +4,30 @@ import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import { useSelector } from 'react-redux';
-import { Box, Alert, Stack, Drawer, Button, Skeleton, DialogActions } from '@mui/material';
-import { GlobalIcons } from 'src/utils/icons';
-import { fDate, fDateTime } from 'src/utils/format-time';
-import { formatNumber } from 'src/utils/formate_number';
 import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import { DetailGrid, DetailField } from 'src/components/detail-view';
-import { FormSectionCard } from 'src/components/form-section-card';
-import CustomizableTable from 'src/components/customizabaleTable';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { formatNumber } from 'src/utils/formate_number';
+import { fDate, fDateTime } from 'src/utils/format-time';
 import { financePermissions } from 'src/constants/finance-menu';
+import CustomizableTable from 'src/components/customizabaleTable';
+import { FormSectionCard } from 'src/components/form-section-card';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { DetailGrid, DetailField } from 'src/screens/finance/components/detail-view';
 import { useGetFeeAdjustmentQuery } from 'src/redux/finance/adjustments/adjustmentApi';
-import type { FeeAdjustmentDetailDto } from '../types/adjustmentApi.types';
-import type { IAdjustmentViewProps } from '../types/adjustment.types';
+import { Box, Alert, Stack, Drawer, Button, Skeleton, DialogActions } from '@mui/material';
 
+import { AdjustmentStatusEnum } from '../enums/adjustment.enum';
 import { useFinancePermissions } from '../../hooks/useFinancePermissions';
 import FinancePolicyDrawerHeader from '../../policies/components/FinancePolicyDrawerHeader';
-import { AdjustmentStatusEnum } from '../enums/adjustment.enum';
 import {
   ADJUSTMENT_STATUS_COLORS,
   formatAdjustmentStatusLabel,
 } from '../constants/adjustmentOptions';
+
+import type { IAdjustmentViewProps } from '../types/adjustment.types';
+import type { FeeAdjustmentDetailDto } from '../types/adjustmentApi.types';
 
 const moneyColumn = (id: string, label: string): IColumn => ({
   id,

@@ -1,9 +1,10 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { HrSetupReadiness } from 'src/redux/hr/hr-setup-readiness-api';
+import type { HrSetupCheck, HrSetupReadiness } from 'src/redux/hr/hr-setup-readiness-api';
 
 import { useRouter } from 'src/routes/hooks';
+import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
@@ -57,7 +58,7 @@ const stepDescriptions: Record<string, string> = {
 };
 const checkStatusLabels = {
   ready: 'Complete',
-  missing: 'Not configured',
+  missing: 'Needs setup',
   inactive: 'Inactive',
   invalid: 'Needs review',
   conflicting: 'Conflicting setup',
@@ -155,13 +156,113 @@ export default function HrSetupWizard({ readiness, error, refreshing, refresh, o
   const step = hrSetupSteps[activeStep];
   const checks = readiness?.checks.filter((check) => check.step === step.id) || [];
   const completedChecks = checks.filter((check) => check.state === 'ready').length;
+  const totalChecks = readiness?.checks.length ?? 0;
+  const totalCompletedChecks =
+    readiness?.checks.filter((check) => check.state === 'ready').length ?? 0;
+  const remainingChecks = totalChecks - totalCompletedChecks;
+  const completionText = `${totalCompletedChecks} of ${totalChecks} setup items complete`;
+  const stepStates = hrSetupSteps.map((_, index) => {
+    if (readiness && setupStepComplete(readiness, index)) return 'completed';
+    return index === activeStep ? 'active' : 'pending';
+  });
   const editorTitle = setupCheckLabels[auxiliary || task || ''] || 'Required Configuration';
+  const renderCheck = (check: HrSetupCheck) => (
+    <Box key={check.code} data-testid={`hr-setup-check-${check.code}`}>
+      <FormSectionCard
+        title={setupCheckLabels[check.code] || check.code}
+        titleTypographyProps={{ component: 'h3' }}
+        icon={
+          check.step === 'policies'
+            ? GlobalIcons.calendar
+            : check.step === 'staff'
+              ? GlobalIcons.family
+              : GlobalIcons.documentIcon
+        }
+        descriptionTooltip="Status reflects the saved school configuration. Opening a setup does not mark it complete."
+        action={
+          <Chip
+            size="small"
+            variant="soft"
+            color={check.state === 'ready' ? 'success' : 'warning'}
+            label={checkStatusLabels[check.state]}
+          />
+        }
+      >
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          spacing={2}
+          alignItems={{ xs: 'flex-start', sm: 'center' }}
+        >
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography variant="body2" color="text.secondary">
+              {check.code === 'pf-coverage' && check.state === 'missing'
+                ? 'Confirm whether PF applies to your school.'
+                : check.reason}
+            </Typography>
+            {check.state !== 'ready' && !check.canConfigure && check.code !== 'academic-year' && (
+              <Typography variant="body2">An administrator must complete this step.</Typography>
+            )}
+          </Box>
+          {check.canConfigure && check.code !== 'academic-year' && (
+            <Button
+              size="small"
+              variant="outlined"
+              sx={{ flexShrink: 0 }}
+              disabled={busy || refreshing}
+              startIcon={<Iconify icon={GlobalIcons.edit} />}
+              onClick={() => setTask(setupTaskForCheck(readiness!, check.code))}
+            >
+              {setupTaskForCheck(readiness!, check.code) !== check.code
+                ? 'Set up calendar first'
+                : check.state === 'ready'
+                  ? `Review ${setupCheckLabels[check.code] || 'configuration'}`
+                  : `Configure ${setupCheckLabels[check.code] || 'configuration'}`}
+            </Button>
+          )}
+        </Stack>
+      </FormSectionCard>
+    </Box>
+  );
   return (
     <>
       <CustomDialog
         open
-        title="Complete HR Setup"
+        title="Let’s Complete Your HR Setup"
         titleInfo="Saved setup is shared by this school. Staff still need individual salary setup before activation."
+        headerContent={
+          <Stack spacing={1.5}>
+            <Typography variant="body2" color="text.secondary">
+              Finish setup for attendance, leave and payroll. You can close this window and return
+              to your saved progress.
+            </Typography>
+            {!error && totalChecks > 0 && (
+              <Stack spacing={0.75}>
+                <Stack
+                  direction="row"
+                  useFlexGap
+                  spacing={1}
+                  justifyContent="space-between"
+                  alignItems="center"
+                  flexWrap="wrap"
+                >
+                  <Typography variant="body2">{completionText}</Typography>
+                  <Label color={readiness?.isReady ? 'success' : 'default'}>
+                    {readiness?.isReady
+                      ? 'Ready to finish'
+                      : `${remainingChecks} ${remainingChecks === 1 ? 'item' : 'items'} remaining`}
+                  </Label>
+                </Stack>
+                <LinearProgress
+                  variant="determinate"
+                  value={(totalCompletedChecks / totalChecks) * 100}
+                  aria-label="Saved HR setup completion"
+                  aria-valuetext={completionText}
+                  color="success"
+                />
+              </Stack>
+            )}
+          </Stack>
+        }
         maxWidth="lg"
         fullScreen={mobile}
         hasForm={false}
@@ -171,29 +272,30 @@ export default function HrSetupWizard({ readiness, error, refreshing, refresh, o
         data-testid="hr-setup-wizard"
         paperProps={{
           sx: {
-            height: mobile ? '100%' : task ? 'min(90dvh, 960px)' : 'auto',
-            maxHeight: mobile ? '100dvh' : '90dvh',
+            height: mobile ? '100dvh' : 'min(88dvh, 820px)',
+            maxHeight: mobile ? '100dvh' : 'calc(100dvh - 64px)',
+            ...(mobile && { borderRadius: 0 }),
           },
         }}
       >
-        <Box sx={{ p: 2, flexShrink: 0, borderBottom: 1, borderColor: 'divider' }}>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Complete these setup steps before adding staff or processing attendance and payroll. You
-            can close this window and continue working.
-          </Typography>
-          {!mobile && (
+        <Box sx={{ px: 2, py: 1, flexShrink: 0, borderBottom: 1, borderColor: 'divider' }}>
+          {mobile ? (
+            <Typography variant="subtitle2" role="status">
+              Step {activeStep + 1} of {hrSetupSteps.length}: {step.label}
+            </Typography>
+          ) : (
             <CustomStepper
               steps={hrSetupSteps.map((item) => item.label)}
               activeStep={activeStep}
               ariaLabel="HR setup steps"
               disabled={busy}
-              stepStates={hrSetupSteps.map((_, index) =>
-                readiness && setupStepComplete(readiness, index)
-                  ? 'completed'
-                  : index === activeStep
-                    ? 'active'
-                    : 'pending'
-              )}
+              stepStates={stepStates}
+              stepCaptions={stepStates.map((state) => {
+                if (state === 'completed') return <Label color="success">Completed</Label>;
+                if (state === 'active' && readiness && !error)
+                  return <Label color="info">In progress</Label>;
+                return undefined;
+              })}
               onStepClick={(index) =>
                 navigate(() => {
                   setTask(null);
@@ -202,19 +304,6 @@ export default function HrSetupWizard({ readiness, error, refreshing, refresh, o
                 })
               }
             />
-          )}
-          {mobile && (
-            <Stack spacing={1}>
-              <Typography variant="subtitle2" role="status">
-                Step {activeStep + 1} of {hrSetupSteps.length}: {step.label}
-              </Typography>
-              <LinearProgress
-                variant="determinate"
-                value={((activeStep + 1) / hrSetupSteps.length) * 100}
-                aria-label="Current HR setup step"
-                aria-valuetext={`Step ${activeStep + 1} of ${hrSetupSteps.length}`}
-              />
-            </Stack>
           )}
         </Box>
         <DialogScrollContent>
@@ -313,69 +402,23 @@ export default function HrSetupWizard({ readiness, error, refreshing, refresh, o
             ) : step.id === 'completion' ? (
               <Alert severity={readiness?.isReady ? 'success' : 'warning'}>
                 {readiness?.isReady
-                  ? 'HR setup is complete. Individual staff still need salary setup before activation.'
+                  ? 'Your school’s HR setup is ready. Set up salary for each staff member before activation.'
                   : 'Some setup still needs attention. Complete the unresolved steps, then check again.'}
               </Alert>
             ) : (
-              checks.map((check) => (
-                <Box key={check.code} data-testid={`hr-setup-check-${check.code}`}>
-                  <FormSectionCard
-                    title={setupCheckLabels[check.code] || check.code}
-                    titleTypographyProps={{ component: 'h3' }}
-                    icon={
-                      check.step === 'policies'
-                        ? GlobalIcons.calendar
-                        : check.step === 'staff'
-                          ? GlobalIcons.family
-                          : GlobalIcons.documentIcon
-                    }
-                    descriptionTooltip="Status reflects the saved school configuration. Opening a setup does not mark it complete."
-                    action={
-                      <Chip
-                        size="small"
-                        variant="soft"
-                        color={check.state === 'ready' ? 'success' : 'warning'}
-                        label={checkStatusLabels[check.state]}
-                      />
-                    }
-                  >
-                    <Stack
-                      direction={{ xs: 'column', sm: 'row' }}
-                      spacing={2}
-                      alignItems={{ xs: 'flex-start', sm: 'center' }}
-                    >
-                      <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Typography variant="body2" color="text.secondary">
-                          {check.reason}
-                        </Typography>
-                        {check.state !== 'ready' &&
-                          !check.canConfigure &&
-                          check.code !== 'academic-year' && (
-                            <Typography variant="body2">
-                              An administrator must complete this step.
-                            </Typography>
-                          )}
-                      </Box>
-                      {check.canConfigure && check.code !== 'academic-year' && (
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          sx={{ flexShrink: 0 }}
-                          disabled={busy || refreshing}
-                          startIcon={<Iconify icon={GlobalIcons.edit} />}
-                          onClick={() => setTask(setupTaskForCheck(readiness!, check.code))}
-                        >
-                          {setupTaskForCheck(readiness!, check.code) !== check.code
-                            ? 'Set up calendar first'
-                            : check.state === 'ready'
-                              ? 'Review setup'
-                              : 'Set up'}
-                        </Button>
-                      )}
+              <>
+                {checks.filter((check) => check.state !== 'ready').map(renderCheck)}
+                {completedChecks > 0 && (
+                  <Box component="details" key={step.id}>
+                    <Typography component="summary" variant="subtitle2" sx={{ cursor: 'pointer' }}>
+                      View completed setup ({completedChecks})
+                    </Typography>
+                    <Stack spacing={2} sx={{ mt: 1.5 }}>
+                      {checks.filter((check) => check.state === 'ready').map(renderCheck)}
                     </Stack>
-                  </FormSectionCard>
-                </Box>
-              ))
+                  </Box>
+                )}
+              </>
             )}
             {!task && step.id === 'earnings' && (
               <FormSectionCard
@@ -421,6 +464,7 @@ export default function HrSetupWizard({ readiness, error, refreshing, refresh, o
             py: 1.5,
             flexWrap: 'wrap',
             gap: 1,
+            '& > :not(:first-of-type)': { ml: 0 },
             flexShrink: 0,
             borderTop: 1,
             borderColor: 'divider',
@@ -484,7 +528,7 @@ export default function HrSetupWizard({ readiness, error, refreshing, refresh, o
                 else if (result) setActiveStep(firstIncompleteSetupStep(result));
               }}
             >
-              Finish setup
+              {readiness?.isReady ? 'Explore HR' : 'Return to remaining setup'}
             </Button>
           ) : (
             <Button
@@ -492,9 +536,12 @@ export default function HrSetupWizard({ readiness, error, refreshing, refresh, o
               variant="contained"
               disabled={busy || Boolean(task)}
               endIcon={<Iconify icon="mdi:arrow-right" />}
+              data-testid="hr-setup-next"
               onClick={() => setActiveStep((value) => value + 1)}
             >
-              Next
+              {activeStep === hrSetupSteps.length - 2
+                ? 'Review progress'
+                : `Continue to ${hrSetupSteps[activeStep + 1].label.toLowerCase()}`}
             </Button>
           )}
         </DialogActions>
