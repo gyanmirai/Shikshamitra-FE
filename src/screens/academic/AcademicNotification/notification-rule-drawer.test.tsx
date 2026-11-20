@@ -115,6 +115,35 @@ describe('Configure Academic notification rule', () => {
     }
   );
 
+  it('saves the explicit percentage for a progress milestone digest', async () => {
+    const user = userEvent.setup();
+    const eventKey = 'Academic.Progress.MilestoneReached';
+    mocks.mutate.mockReturnValue({ unwrap: () => Promise.resolve({}) });
+    renderDrawer({
+      ...row,
+      id: eventKey,
+      item: { ...row.item, eventKey },
+      event: {
+        ...row.event,
+        definition: {
+          ...row.event.definition, eventKey, triggerType: 1, deliveryProfile: 3,
+          recipientSelectors: ['AssignedTeacher', 'ClassTeacher'],
+        },
+      },
+    });
+    await user.click(screen.getByRole('button', { name: 'Expand Timing and Language' }));
+    const percent = screen.getByRole('spinbutton', { name: /Milestone percentage/ });
+    expect(screen.getByLabelText(/Daily digest time/)).toBeVisible();
+    expect(percent).toHaveValue(null);
+    fireEvent.change(percent, { target: { value: '0' } });
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+    expect(await screen.findByText('Enter a whole percentage from 1 to 100.')).toBeVisible();
+    expect(mocks.mutate).not.toHaveBeenCalled();
+    fireEvent.change(percent, { target: { value: '65' } });
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+    expect(mocks.mutate.mock.calls[0][0].command.timing).toMatchObject({ progressMilestonePercentage: 65 });
+  });
+
   it('adds a delayed reviewer to the assigned substitute reminder', async () => {
     const user = userEvent.setup();
     const reminderId = 'Academic.Substitution.AcknowledgementDue';

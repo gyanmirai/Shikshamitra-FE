@@ -108,7 +108,7 @@ Its local API does not establish deployed staging acceptance.
 
 The rule client tests cover academic scope and paging parameters, owner-isolated cache keys, stale rule saves, and commands blocked after an account change. Run `npm test -- src/redux/academic-notifications/api.test.ts src/redux/service.auth-session.test.ts`.
 
-Run `npm test -- notification-rule-drawer.test.tsx` to verify the **Daily digest time** field and saved cutoff for submission and chapter progress digests.
+Run `npm test -- notification-rule-drawer.test.tsx` to verify the **Daily digest time** field and saved cutoff for submission and chapter progress digests, along with validation and saving of the explicit milestone percentage.
 
 Run `npm test -- src/screens/academic/AcademicNotification src/components/notification-inbox` for the workspace and inbox, including safe links, separate read and acknowledgement, and account switching. Run `npx playwright test --config e2e/academic/academic-notification-rules.config.mjs` for scoped Rules, template publication, Delivery History and the personal inbox at a phone viewport with the synthetic school.
 

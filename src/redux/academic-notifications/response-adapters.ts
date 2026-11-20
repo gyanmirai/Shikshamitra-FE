@@ -62,8 +62,11 @@ export function notificationRuleRows(
 
 export type AcademicNotificationRuleRow = ReturnType<typeof notificationRuleRows>[number];
 
+export const progressMilestoneEvent = 'Academic.Progress.MilestoneReached';
+
 export function isDailyDigest(eventKey: string) {
   return eventKey === 'Academic.Homework.Submitted' ||
     eventKey === 'Academic.Assignment.Submitted' ||
-    eventKey === 'Academic.Progress.BehindSchedule';
+    eventKey === 'Academic.Progress.BehindSchedule' ||
+    eventKey === progressMilestoneEvent;
 }

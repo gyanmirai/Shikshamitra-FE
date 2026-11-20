@@ -8,9 +8,9 @@ import { Label } from 'src/components/label';
 import SubmitButton from 'src/components/submit-button';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
-import { isDailyDigest } from 'src/redux/academic-notifications/response-adapters';
 import { Box, Alert, Stack, Button, Drawer, IconButton, Typography } from '@mui/material';
 import { useAcademicNotificationTemplateOptionsQuery } from 'src/redux/academic-notifications/api';
+import { isDailyDigest, progressMilestoneEvent } from 'src/redux/academic-notifications/response-adapters';
 
 import { NotificationRuleFields } from './notification-rule-fields';
 import { NotificationRuleTiming } from './notification-rule-timing';
@@ -73,7 +73,7 @@ export function NotificationRuleDrawer({ row, identity, scopeLabel, onClose }: P
                 <NotificationRuleFields row={row} form={form} templates={templates}
                   isLoading={!templateQuery.currentData && templateQuery.isFetching} isError={templateQuery.isError}
                   retry={templateQuery.refetch} />
-                <NotificationRuleTiming form={form} schedule={schedule}
+                <NotificationRuleTiming form={form} schedule={schedule} configuresMilestone={row.id === progressMilestoneEvent}
                   allowsQuietHoursBypass={row.event.definition.allowsQuietHoursBypass} />
               </Stack>
             </FormBusyRegion>

@@ -9,8 +9,8 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { shikshaMitraToast } from 'src/components/toast';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
-import { isDailyDigest } from 'src/redux/academic-notifications/response-adapters';
 import { useSaveAcademicNotificationRuleMutation } from 'src/redux/academic-notifications/api';
+import { isDailyDigest, progressMilestoneEvent } from 'src/redux/academic-notifications/response-adapters';
 
 import { ruleCommand, ruleFormValues, ruleRecipientKinds, templateCoverageError, substitutionAcknowledgementEvent } from './notification-rule-form-model';
 
@@ -50,6 +50,11 @@ export function useNotificationRuleForm({
         if (!Number.isInteger(values.reviewerEscalationMinutes) || values.reviewerEscalationMinutes < 1 || values.reviewerEscalationMinutes > 10080) {
           errors.reviewerEscalationMinutes = 'Enter a delay from 1 to 10080 minutes.';
         }
+      }
+      const milestone = values.progressMilestonePercentage;
+      if (row.id === progressMilestoneEvent && (values.enabled || milestone !== '') &&
+        (milestone === '' || !Number.isInteger(milestone) || milestone < 1 || milestone > 100)) {
+        errors.progressMilestonePercentage = 'Enter a whole percentage from 1 to 100.';
       }
       if (values.enabled && !row.event.availability.isAvailable) errors.enabled = 'This event integration is unavailable.';
       if (values.quietHoursEnabled && values.quietStart === values.quietEnd) errors.quietEnd = 'Choose a different end time.';

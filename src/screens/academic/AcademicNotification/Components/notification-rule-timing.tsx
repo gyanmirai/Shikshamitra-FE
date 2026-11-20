@@ -9,11 +9,15 @@ import type { RuleFormValues } from '../notification-rule-form-model';
 interface Props {
   form: FormikProps<RuleFormValues>;
   schedule?: 'reminder' | 'digest';
+  configuresMilestone: boolean;
   allowsQuietHoursBypass: boolean;
 }
 
-export function NotificationRuleTiming({ form, schedule, allowsQuietHoursBypass }: Props) {
+export function NotificationRuleTiming({ form, schedule, configuresMilestone, allowsQuietHoursBypass }: Props) {
   const { values } = form;
+  const milestoneError = form.touched.progressMilestonePercentage || form.submitCount > 0
+    ? form.errors.progressMilestonePercentage
+    : undefined;
   const field = (name: 'fallbackLanguage' | 'delayMinutes' | 'reminderSchoolDaysBefore' | 'reminderLocalTime' | 'quietStart' | 'quietEnd',
     label: string, type = 'text', help?: string) => {
     const error = (form.touched[name] || form.submitCount > 0) ? form.errors[name] : undefined;
@@ -34,6 +38,12 @@ export function NotificationRuleTiming({ form, schedule, allowsQuietHoursBypass 
         {field('reminderLocalTime', 'Reminder time', 'time')}
       </Box>}
       {schedule === 'digest' && field('reminderLocalTime', 'Daily digest time', 'time', 'Uses the school’s time zone.')}
+      {configuresMilestone && <ShakingTextField error={Boolean(milestoneError)}>
+        <TextField {...form.getFieldProps('progressMilestonePercentage')} type="number" label="Milestone percentage"
+          required={values.enabled} fullWidth size="small" error={Boolean(milestoneError)}
+          helperText={milestoneError || 'Each chapter qualifies the first time saved progress reaches this percentage.'}
+          slotProps={{ htmlInput: { min: 1, max: 100, step: 1 } }} />
+      </ShakingTextField>}
       <FormControlLabel label="Use quiet hours" control={<Switch checked={values.quietHoursEnabled}
         onChange={(_, checked) => form.setFieldValue('quietHoursEnabled', checked)} />} />
       {values.quietHoursEnabled && <Box display="grid" gap={1} gridTemplateColumns={{ xs: '1fr', sm: '1fr 1fr' }}>

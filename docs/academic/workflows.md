@@ -108,6 +108,8 @@ For Homework Submitted and Assignment Submitted, **Daily digest time** closes th
 
 For **Progress behind schedule** in Curriculum, **Daily digest time** closes the window for published chapters with saved end dates. Choose the staff recipients and their published templates, then enable the rule. The digest opens Chapter Management. See the [chapter progress digest contract](../../../Shikshamitra-BE/docs/modules/academic/api.md#chapter-progress-digest).
 
+For **Progress milestone reached**, enter the **Milestone percentage** and **Daily digest time** before enabling the rule. Choose the assigned teacher or class teacher audience and its published templates. Each chapter qualifies the first time its saved division progress reaches that percentage.
+
 For Substitution Acknowledgement Due, the assigned substitute receives the first reminder. In **Recipients**, select **Notify the configured reviewer** and set **Escalate after (minutes)** to follow up if the substitute has not responded. Select published templates for both recipients before enabling the rule.
 
 ## Notify recipients about exam seating
