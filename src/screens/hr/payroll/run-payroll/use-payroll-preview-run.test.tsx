@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   params: new URLSearchParams('month=2026-08'),
   replace: vi.fn(),
   start: vi.fn(),
+  lookup: {} as any,
   status: {} as any,
   page: {} as any,
   statusHook: vi.fn(),
@@ -18,6 +19,8 @@ vi.mock('next/navigation', () => ({
   useSearchParams: () => mocks.params,
 }));
 vi.mock('src/redux/runPayroll/payroll-preview-run-api', () => ({
+  usePayrollPreviewLookupQuery: () => mocks.lookup,
+  usePayrollRegisterQuery: () => mocks.page,
   useStartPayrollPreviewMutation: () => [mocks.start, { isLoading: false }],
   usePayrollPreviewStatusQuery: (id: string, options: unknown) => {
     mocks.statusHook(id, options);
@@ -32,6 +35,7 @@ vi.mock('src/redux/runPayroll/payroll-preview-run-api', () => ({
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.params = new URLSearchParams('month=2026-08');
+  mocks.lookup = { currentData: { currentRun: null }, refetch: vi.fn() };
   mocks.status = { refetch: vi.fn() };
   mocks.page = { refetch: vi.fn() };
   mocks.start.mockReturnValue({ unwrap: () => Promise.resolve({ id: 'run-1' }) });
@@ -261,7 +265,7 @@ describe('background payroll preview', () => {
   );
 
   it('merges a refresh result with a search while router updates are still pending', async () => {
-    mocks.params = new URLSearchParams('month=2026-08&previewRunId=old');
+    completedPreview('old');
     const { result, rerender } = renderHook(() => usePayrollPreviewRun('2026-08', 'year-1'));
     await act(async () => result.current.loadPreview(true));
     act(() => result.current.updateQuery({ search: 'Admin', page: 0 }));
@@ -287,8 +291,11 @@ describe('background payroll preview', () => {
     act(() => result.current.updateQuery({ search: 'Admin' }));
     expect(mocks.replace.mock.calls.at(-1)![0]).toContain('previewRunId=old');
   });
-  it('starts automatically once and puts the run in URL state', async () => {
-    renderHook(() => usePayrollPreviewRun('2026-08', 'year-1'));
+  it('waits for explicit generation when the lookup confirms no saved payroll', async () => {
+    const { result } = renderHook(() => usePayrollPreviewRun('2026-08', 'year-1'));
+    expect(mocks.start).not.toHaveBeenCalled();
+    expect(result.current.canRequestPreview).toBe(true);
+    await act(async () => result.current.loadPreview());
     await waitFor(() =>
       expect(mocks.replace).toHaveBeenCalledWith(expect.stringContaining('previewRunId=run-1'), {
         scroll: false,
@@ -296,10 +303,46 @@ describe('background payroll preview', () => {
     );
     expect(mocks.start).toHaveBeenCalledTimes(1);
     expect(mocks.start).toHaveBeenCalledWith({
+      commandKey: expect.any(String),
       month: '2026-08',
       academicYearId: 'year-1',
       refresh: false,
     });
+  });
+
+  it('opens saved payroll from month lookup without generating or rewriting the URL', () => {
+    completedPreview();
+    mocks.params.delete('previewRunId');
+    mocks.lookup.currentData.currentRun = mocks.status.currentData;
+    const { result } = renderHook(() => usePayrollPreviewRun('2026-08', 'year-1'));
+    expect(result.current.isCurrent).toBe(true);
+    expect(result.current.runId).toBe('run-1');
+    expect(mocks.start).not.toHaveBeenCalled();
+    expect(mocks.replace).not.toHaveBeenCalled();
+  });
+
+  it('clears a saved link from a different academic year without starting payroll', () => {
+    completedPreview();
+    renderHook(() => usePayrollPreviewRun('2026-08', 'year-2'));
+    expect(mocks.replace).toHaveBeenCalledWith('/hr/payroll/run-payroll?month=2026-08', {
+      scroll: false,
+    });
+    expect(mocks.start).not.toHaveBeenCalled();
+  });
+
+  it('retries a failed lookup as a read and keeps generation disabled until lookup succeeds', async () => {
+    mocks.lookup.isError = true;
+    mocks.lookup.error = { status: 503 };
+    mocks.lookup.refetch.mockResolvedValue({ data: { currentRun: null } });
+    const { result } = renderHook(() => usePayrollPreviewRun('2026-08', 'year-1'));
+    expect(result.current.lookupFailed).toBe(true);
+    expect(result.current.canRequestPreview).toBe(false);
+    await act(async () => {
+      expect(await result.current.loadPreview()).toBeNull();
+      expect(await result.current.refreshStatus()).toBe(true);
+    });
+    expect(mocks.lookup.refetch).toHaveBeenCalledOnce();
+    expect(mocks.start).not.toHaveBeenCalled();
   });
 
   it('resumes an existing run and requests only its server page', () => {
@@ -367,11 +410,18 @@ describe('background payroll preview', () => {
           resolve = done;
         }),
     });
-    const { rerender } = renderHook(({ month }) => usePayrollPreviewRun(month, 'year-1'), {
+    const { result, rerender } = renderHook(({ month }) => usePayrollPreviewRun(month, 'year-1'), {
       initialProps: { month: '2026-08' },
     });
+    let pending!: ReturnType<typeof result.current.loadPreview>;
+    act(() => {
+      pending = result.current.loadPreview();
+    });
     rerender({ month: '2026-09' });
-    await act(async () => resolve({ id: 'old-month' }));
+    await act(async () => {
+      resolve({ id: 'old-month' });
+      await pending;
+    });
     expect(mocks.replace.mock.calls.some(([url]) => url.includes('old-month'))).toBe(false);
   });
 
@@ -526,17 +576,19 @@ describe('background payroll preview', () => {
     expect(result.current.isStale).toBe(false);
   });
 
-  it('retries a polling failure while the accepted run is still running', async () => {
+  it('reconnects with a read when polling the accepted run fails', async () => {
     completedPreview();
     mocks.status.currentData.status = 'RUNNING';
     mocks.status.isError = true;
     mocks.status.error = { data: { detail: 'Service unavailable' } };
+    mocks.status.refetch.mockResolvedValue({ data: mocks.status.currentData });
     const { result } = renderHook(() => usePayrollPreviewRun('2026-08', 'year-1'));
     expect(result.current.isPreparing).toBe(false);
     await act(async () => {
-      expect(await result.current.loadPreview(true)).toEqual({ id: 'run-1' });
+      expect(await result.current.loadPreview(true)).toBeNull();
+      await result.current.refreshStatus();
     });
-    expect(mocks.start).toHaveBeenCalledTimes(1);
+    expect(mocks.start).not.toHaveBeenCalled();
     expect(mocks.status.refetch).toHaveBeenCalled();
   });
 
@@ -582,16 +634,23 @@ describe('background payroll preview', () => {
           resolve = done;
         }),
     });
-    const { rerender } = renderHook(({ month }) => usePayrollPreviewRun(month, 'year-1'), {
+    const { result, rerender } = renderHook(({ month }) => usePayrollPreviewRun(month, 'year-1'), {
       initialProps: { month: '2026-08' },
+    });
+    let pending!: ReturnType<typeof result.current.loadPreview>;
+    act(() => {
+      pending = result.current.loadPreview();
     });
     rerender({ month: '2026-09' });
     rerender({ month: '2026-08' });
-    await act(async () => resolve({ id: 'late-original-month' }));
+    await act(async () => {
+      resolve({ id: 'late-original-month' });
+      await pending;
+    });
     expect(mocks.replace.mock.calls.some(([url]) => url.includes('late-original-month'))).toBe(
       false
     );
-    expect(mocks.start).toHaveBeenCalledTimes(3);
+    expect(mocks.start).toHaveBeenCalledOnce();
   });
 
   it('does not retain rows from a different academic year', () => {

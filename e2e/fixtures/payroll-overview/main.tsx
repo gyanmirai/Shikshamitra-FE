@@ -10,13 +10,20 @@ import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { defaultSettings } from 'src/components/settings/config-settings';
 import PayrollHome from 'src/screens/hr/payroll/payroll-home/payroll-home';
+import RunPayroll from 'src/screens/hr/payroll/run-payroll/runPayroll';
 import MonthlyPayslips from 'src/screens/hr/payroll/salarySlip-generate/salarySlipGenerate';
 
+const params = new URLSearchParams(window.location.search);
+const payroll = hrPermissions.payroll;
+const actor = params.get('actor');
+const roles = actor === 'hr' ? [payroll.runPayrollSubmit, payroll.runPayrollExportReview, `${payroll.runPayroll}.Add`]
+  : actor === 'principal' ? [payroll.runPayrollLock, payroll.runPayrollExportReview] : [];
+const workbench = window.location.pathname.endsWith('/run-payroll');
 const store = configureStore({
   reducer: {
     auth: () => ({
       permissionsInitialized: true,
-      permissions: [`${hrPermissions.payroll.generateSalarySlip}.View`].map((name) => ({
+      permissions: [`${payroll.generateSalarySlip}.View`, `${payroll.runPayroll}.View`, ...roles].map((name) => ({
         name,
         isGranted: true,
       })),
@@ -27,7 +34,7 @@ const store = configureStore({
   },
   middleware: (getDefault) => getDefault().concat(api.middleware),
 });
-const dark = new URLSearchParams(window.location.search).get('theme') === 'dark';
+const dark = params.get('theme') === 'dark';
 createRoot(document.getElementById('root')!).render(
   <Provider store={store}>
     <ThemeProvider
@@ -43,6 +50,8 @@ createRoot(document.getElementById('root')!).render(
           </Alert>
           {window.location.pathname.endsWith('/payslip-generation') ? (
             <MonthlyPayslips />
+          ) : workbench ? (
+            <RunPayroll />
           ) : (
             <PayrollHome />
           )}

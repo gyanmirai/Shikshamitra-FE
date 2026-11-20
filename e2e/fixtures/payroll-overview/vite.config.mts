@@ -54,6 +54,14 @@ export default defineConfig({
           let body = '';
           for await (const chunk of req) body += chunk;
           const input = body ? JSON.parse(body) : {};
+          if (path === '/api/payroll/run/approval-settings')
+            return res.end(JSON.stringify({ mode: 'Legacy', version: 0, approverId: null, allowSelfFinalization: false }));
+          if (path === '/api/payroll/run/previews/current') {
+            const { searchParams } = new URL(req.url!, 'http://127.0.0.1');
+            const month = searchParams.get('month');
+            const match = Array.from(months.entries()).reverse().find((entry) => entry[1] === month);
+            return res.end(JSON.stringify({ currentRun: match ? status(match[0]) : null }));
+          }
           if (path === '/api/payroll/run/previews') {
             started += 1;
             const id =
@@ -63,22 +71,26 @@ export default defineConfig({
             months.set(id, input.month);
             return res.end(JSON.stringify(status(id)));
           }
-          if (path?.endsWith('/employees'))
+          if (path?.endsWith('/employees') || path === '/api/payroll/run/register') {
+            const requestedMonth = new URL(req.url!, 'http://127.0.0.1').searchParams.get('month');
+            const id = requestedMonth
+              ? Array.from(months.entries()).reverse().find((entry) => entry[1] === requestedMonth)?.[0]
+              : path.split('/').at(-2);
             return res.end(
               JSON.stringify({
-                previewRunId: path.split('/').at(-2),
-                isCurrent: true,
+                previewRunId: id ?? null,
+                isCurrent: Boolean(id),
                 isGenerated: false,
                 totalCount: 0,
                 currentPage: 0,
                 pageSize: 25,
                 items: [],
                 readiness: {
-                  month: months.get(path.split('/').at(-2)!) ?? '2026-09',
+                  month: requestedMonth ?? months.get(id!) ?? '2026-09',
                   employeeCount: 1,
                   snapshotCount: 1,
                   lockedCount: 0,
-                  reviewedCount: path.includes('run-1') ? 1 : 0,
+                  reviewedCount: id === 'run-1' ? 1 : 0,
                   missingAttendanceCount: 0,
                   missingSalaryStructureCount: 0,
                   policyConfigurationIssueCount: 0,
@@ -86,6 +98,7 @@ export default defineConfig({
                 },
               })
             );
+          }
           if (path?.startsWith('/api/payroll/run/previews/'))
             return res.end(JSON.stringify(status(path.split('/').at(-1))));
           return res.end(JSON.stringify({ items: [], totalCount: 0 }));
