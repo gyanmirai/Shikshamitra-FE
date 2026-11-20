@@ -108,6 +108,8 @@ For Homework Submitted and Assignment Submitted, **Daily digest time** closes th
 
 For **Weekly academic summary**, choose a **Day of the week** and **Weekly summary time**. New rules start with Friday at 17:00 in the school's time zone. Publish the recipient and channel templates before enabling. Families get summaries for their linked children, and chosen staff receive division totals. The school can also choose additional authorized family relationships or the eligible student account. [Weekly summary contract](../../../Shikshamitra-BE/docs/modules/academic/api.md#weekly-academic-summary)
 
+Enable the operational impact rule in **Settings** to notify eligible scheduled teachers or the configured reviewer when a Weekly Lectures edit makes a published timetable need review. Publish an inbox or browser push template for each selected audience. Staff can open Timetable Management from the notice. [Weekly lecture requirements impact contract](../../../Shikshamitra-BE/docs/modules/academic/api.md#weekly-lecture-requirements-impact)
+
 For **Progress behind schedule** in Curriculum, **Daily digest time** closes the window for published chapters with saved end dates. Choose the staff recipients and their published templates, then enable the rule. The digest opens Chapter Management. See the [chapter progress digest contract](../../../Shikshamitra-BE/docs/modules/academic/api.md#chapter-progress-digest).
 
 For **Progress milestone reached**, enter the **Milestone percentage** and **Daily digest time** before enabling the rule. Choose the assigned teacher or class teacher audience and its published templates. Each chapter qualifies the first time its saved division progress reaches that percentage.
