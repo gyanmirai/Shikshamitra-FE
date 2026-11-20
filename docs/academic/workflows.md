@@ -116,6 +116,10 @@ For Substitution Acknowledgement Due, the assigned substitute receives the first
 
 In the guided Seating Plan **Publish** step, choose guardians, student accounts, or assigned teachers under **Notifications**. Select **Allow email** to permit email for those audiences when the school's Seating Published rule includes it. The rule controls guardian and student account eligibility and channels. Publication locks the plans. Delivery can queue after both seating and the exam are published. See the [seating notification contract](../../../Shikshamitra-BE/docs/modules/academic/api.md#exam-seating-notifications).
 
+## Choose who receives an emergency closure notice
+
+In **Emergency Closure**, choose the scope and then the audiences under **Notify**. New declarations select assigned teachers and guardians. Select **Student accounts** to include them when the school's rule allows it. The edit form restores the saved choices. The details view shows those selections, and Delivery History shows what was sent. See the [emergency closure notification contract](../../../Shikshamitra-BE/docs/modules/academic/api.md#emergency-closure-notifications).
+
 ## Create an Academic notification template
 
 Open **Academics → Notification → Templates**. Choose the event and scope, then create a template for one recipient, channel, and language. Use the variable pickers to insert fields from the event catalogue. Email supports rich text. In-app, browser push, and WhatsApp use plain text.

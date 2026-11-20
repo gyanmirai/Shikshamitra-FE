@@ -30,6 +30,12 @@ import { academicPaths, academicPermissions } from 'src/constants/academic-menu'
 import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { CalendarDayStatus, CALENDAR_DAY_STATUS_LABELS } from 'src/enums/academic-calendar';
 import {
+  useGetEmergencyClosuresQuery,
+  useCreateEmergencyClosureMutation,
+  useCancelEmergencyClosureMutation,
+  useUpdateEmergencyClosureMutation,
+} from 'src/redux/academicAPI/AcademicCalendarApi/academic-calendar-api';
+import {
   Box,
   Tab,
   Tabs,
@@ -40,23 +46,28 @@ import {
   Switch,
   Button,
   Divider,
+  Checkbox,
   TextField,
+  FormLabel,
+  FormGroup,
   Typography,
+  FormControl,
   DialogActions,
+  FormHelperText,
   FormControlLabel,
 } from '@mui/material';
-import {
-  useGetEmergencyClosuresQuery,
-  useCreateEmergencyClosureMutation,
-  useCancelEmergencyClosureMutation,
-  useUpdateEmergencyClosureMutation,
-} from 'src/redux/academicAPI/AcademicCalendarApi/academic-calendar-api';
 
 const statusColor: Record<number, 'success' | 'warning' | 'default'> = {
   [CalendarDayStatus.Active]: 'success',
   [CalendarDayStatus.Cancelled]: 'default',
   [CalendarDayStatus.Rescheduled]: 'warning',
 };
+
+const closureAudiences = [
+  ['notifyTeachers', 'Assigned teachers', 'mdi:account-tie-outline'],
+  ['notifyParents', 'Guardians', 'mdi:account-heart-outline'],
+  ['notifyStudents', 'Student accounts', 'mdi:school-outline'],
+] as const;
 
 const shakeKeyframes = keyframes`
   0%, 100% { transform: translateX(0); }
@@ -180,8 +191,7 @@ const EmergencyClosureScreen = () => {
       standardIds: [] as string[],
       notifyParents: true,
       notifyTeachers: true,
-      notifyStudents: true,
-      notifyStaff: false,
+      notifyStudents: false,
       autoScanImpacts: true,
     },
     validationSchema: emergencyClosureSchema,
@@ -221,7 +231,6 @@ const EmergencyClosureScreen = () => {
               notifyParents: values.notifyParents,
               notifyTeachers: values.notifyTeachers,
               notifyStudents: values.notifyStudents,
-              notifyStaff: values.notifyStaff,
               autoScanImpacts: payload.autoScanImpacts,
             },
           }).unwrap();
@@ -364,10 +373,9 @@ const EmergencyClosureScreen = () => {
       description: row.description ?? '',
       appliesToAll: Boolean(row.appliesToAll),
       standardIds: row.appliesToAll ? [] : [row.standardId].filter(Boolean),
-      notifyParents: row.notifyParents ?? true,
-      notifyTeachers: row.notifyTeachers ?? true,
-      notifyStudents: row.notifyStudents ?? true,
-      notifyStaff: row.notifyStaff ?? false,
+      notifyParents: row.notifyParents === true,
+      notifyTeachers: row.notifyTeachers === true,
+      notifyStudents: row.notifyStudents === true,
       autoScanImpacts: row.autoScanImpacts ?? true,
     });
     addDialog.onTrue();
@@ -928,50 +936,34 @@ const EmergencyClosureScreen = () => {
               </Grid>
             )}
 
-            {[
-              ['notifyTeachers', 'Teachers', 'mdi:account-tie-outline'],
-              ['notifyParents', 'Parents', 'mdi:account-heart-outline'],
-              ['notifyStudents', 'Students', 'mdi:school-outline'],
-              ['notifyStaff', 'Staff', 'mdi:account-wrench-outline'],
-            ].map(([key, label, icon]) => {
-              const isSelected = Boolean(formik.values[key as keyof typeof formik.values]);
-              return (
-                <Grid size={{ xs: 6, sm: 3 }} key={key}>
-                  <Paper
-                    variant="outlined"
-                    onClick={() => formik.setFieldValue(key, !isSelected)}
-                    sx={{
-                      p: 1.75,
-                      borderRadius: 2,
-                      cursor: 'pointer',
-                      textAlign: 'center',
-                      border: isSelected ? '2px solid' : '1px solid',
-                      borderColor: isSelected ? 'success.main' : 'divider',
-                      bgcolor: isSelected ? alpha(theme.palette.success.main, 0.05) : 'transparent',
-                      transition: 'all 0.2s ease',
-                      '&:hover': {
-                        borderColor: isSelected ? 'success.main' : 'primary.main',
-                      },
-                    }}
-                  >
-                    <Iconify
-                      icon={icon}
-                      width={24}
-                      color={isSelected ? 'success.main' : 'text.secondary'}
+            <Grid size={12}>
+              <FormControl
+                component="fieldset"
+                disabled={creating || updating}
+                aria-describedby="closure-notification-audience-help"
+              >
+                <FormLabel component="legend">Notify</FormLabel>
+                <FormGroup row>
+                  {closureAudiences.map(([key, label]) => (
+                    <FormControlLabel
+                      key={key}
+                      label={label}
+                      control={
+                        <Checkbox
+                          size="small"
+                          name={key}
+                          checked={formik.values[key]}
+                          onChange={formik.handleChange}
+                        />
+                      }
                     />
-                    <Typography
-                      variant="caption"
-                      display="block"
-                      fontWeight={700}
-                      mt={0.5}
-                      color={isSelected ? 'success.main' : 'text.secondary'}
-                    >
-                      {label}
-                    </Typography>
-                  </Paper>
-                </Grid>
-              );
-            })}
+                  ))}
+                </FormGroup>
+                <FormHelperText id="closure-notification-audience-help">
+                  Enabled notification rules determine eligible recipients and channels.
+                </FormHelperText>
+              </FormControl>
+            </Grid>
           </Grid>
         </DialogScrollContent>
 
@@ -1148,30 +1140,23 @@ const EmergencyClosureScreen = () => {
 
                   <Stack spacing={1}>
                     <Typography variant="caption" color="text.secondary">
-                      Notified Audiences
+                      Selected audiences
                     </Typography>
                     <Stack direction="row" gap={1} flexWrap="wrap">
-                      {[
-                        ['notifyTeachers', 'Teachers', 'mdi:account-tie-outline'],
-                        ['notifyParents', 'Parents', 'mdi:account-heart-outline'],
-                        ['notifyStudents', 'Students', 'mdi:school-outline'],
-                        ['notifyStaff', 'Staff', 'mdi:account-wrench-outline'],
-                      ].map(([key, label, icon]) => {
-                        const isNotified = Boolean(
-                          viewingClosure[key as keyof typeof viewingClosure]
-                        );
+                      {closureAudiences.map(([key, label, icon]) => {
+                        const isSelected = viewingClosure[key] === true;
                         return (
                           <Label
                             key={key}
-                            color={isNotified ? 'success' : 'default'}
+                            color={isSelected ? 'success' : 'default'}
                             variant="soft"
                             startIcon={<Iconify icon={icon} width={15} />}
                             sx={{
                               py: 0.75,
                               px: 1.25,
                               borderRadius: 1,
-                              fontWeight: isNotified ? 600 : 400,
-                              opacity: isNotified ? 1 : 0.6,
+                              fontWeight: isSelected ? 600 : 400,
+                              opacity: isSelected ? 1 : 0.6,
                             }}
                           >
                             {label}
