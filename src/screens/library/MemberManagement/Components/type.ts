@@ -1,6 +1,7 @@
 import type { Dayjs } from 'dayjs';
+import type { LibraryOverdueClassification } from 'src/redux/library/member-statistics-types';
 
-export interface IMember {
+export interface IMember extends LibraryOverdueClassification {
   id: string;
   role: string;
   name: string;
@@ -14,6 +15,12 @@ export interface IMember {
   overdueReturn: number;
   memberStatus: 'Active' | 'Inactive';
   contactNo?: string;
+  memberId?: string;
+  memberIdentifier?: string;
+  email?: string;
+  phone?: string;
+  classDivision?: string;
+  reservedBooks?: number;
 }
 
 export interface IMemberTableProps {

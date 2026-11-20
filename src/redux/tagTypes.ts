@@ -396,6 +396,9 @@ export const libraryChargeType = {
 
 // ===== Library Module API (reducerPath: libraryModuleApi) =====
 export const libraryModuleType = {
+  campusTransfers: 'LibraryCampusTransfers',
+  receiving: 'LibraryReceiving',
+  stockVerification: 'LibraryStockVerification',
   books: 'Books',
   copies: 'Copies',
   copyLabels: 'CopyLabels',
@@ -522,7 +525,10 @@ export const roleOptionsType = {
 } as const;
 
 // ===== Shift Management API (reducerPath: shiftManagementApi) =====
-export const workShiftType = { workShift: 'EmployeeWorkShift', shiftAssignment: 'EmployeeShiftAssignment' } as const;
+export const workShiftType = {
+  workShift: 'EmployeeWorkShift',
+  shiftAssignment: 'EmployeeShiftAssignment',
+} as const;
 export const shiftManagementType = {
   shift: 'Shift',
 } as const;

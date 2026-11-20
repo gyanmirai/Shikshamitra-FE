@@ -3,7 +3,7 @@ module: hr
 domain: workflows
 content_type: Reference
 status: canonical
-updated_on: 2026-11-08
+updated_on: 2026-11-19
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -18,6 +18,8 @@ TL;DR: use this page to connect HR screens, clients, and browser tests.
 Backend workflow rules are canonical in `https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/workflows.md`.
 
 ## Core workflows
+
+The employee status dialog shows advisory Library clearance when Left or Retired is selected. It uses the current employee's deactivation check and distinguishes a school-wide total from a limited or restricted view. HR saves the status through its existing workflow. Library records actual returns.
 
 Professional Tax retains entered two-decimal amounts, displays failed save feedback inline, and closes only after a successful create/update. Fields and dismissal remain locked while saving; standalone dismissal/reload protects dirty drafts. The same editor reports dirty, busy, and save state to the HR setup wizard and uses the wizard's existing footer. Payroll day-calculation labels render as complete selectable cards using theme colors. Synthetic coverage: `tests/browser/payroll-policy-drawer.config.ts` and `professional-tax.test.tsx`.
 

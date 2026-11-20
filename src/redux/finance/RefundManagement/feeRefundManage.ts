@@ -29,8 +29,13 @@ export interface FeeRefundLineDto {
 export interface FeeRefundRequestDto {
   id: string;
   concurrencyStamp?: string;
-  studentId: string;
+  studentId: string | null;
+  employeeId?: string | null;
+  financeFeeAccountId?: string | null;
+  financeExternalSourceLinkId?: string | null;
+  payerName?: string | null;
   academicYearId: string;
+  academicYearName?: string | null;
   boardId: string;
   educationMediumId: string;
   standardId: string;
@@ -223,6 +228,7 @@ export interface ResolveRefundPayoutInput {
 export interface GetFeeRefundsInput {
   academicYearId?: string;
   studentId?: string;
+  financeExternalSourceLinkId?: string;
   /** Filter to students enrolled in a specific academic medium. */
   academicMediumId?: string;
   standardId?: string;

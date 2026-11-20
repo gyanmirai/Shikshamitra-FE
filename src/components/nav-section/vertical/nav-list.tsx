@@ -29,7 +29,11 @@ export function NavList({
   const pathname = usePathname();
   const removeTrailingSlash = pathname.replace(/\/$/, '');
   const { permissions } = useSelector((state: RootState) => state.auth);
-  const isGranted = hasNavigationPermission(permissions, data.permissionName);
+  const isGranted = hasNavigationPermission(
+    permissions,
+    data.permissionName,
+    data.requiredAllPermissions
+  );
 
   const [currentModule] = removeTrailingSlash.split('/').filter((i) => i);
   // const active = useActiveLink(data.path, !!data.children);

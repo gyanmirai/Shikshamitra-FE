@@ -34,6 +34,7 @@ export interface IStudentFeeData {
   paymentDetails?: Record<string, any>; // 👈 dynamic fields from config
   _refundRequestId?: string;
   _studentId?: string;
+  _payerKind?: 'Student' | 'Staff' | 'Applicant';
   _availableActions?: string[];
   _approvedAmount?: number;
   _settlementId?: string;

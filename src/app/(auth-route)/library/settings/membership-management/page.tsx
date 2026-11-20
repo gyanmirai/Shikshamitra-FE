@@ -1,6 +1,6 @@
-import React from 'react';
-import LibraryMembershipManagementSettingScreen from 'src/screens/library/settings/membership-management-setting/library-membership-management-setting-screen';
+import { redirect } from 'next/navigation';
+import { libraryPaths } from 'src/constants/library-menus';
 
-const LibraryMembershipManagementSetting = () => <LibraryMembershipManagementSettingScreen />;
-
-export default LibraryMembershipManagementSetting;
+export default function LibraryMembershipSettingsRedirect() {
+  redirect(libraryPaths.members);
+}

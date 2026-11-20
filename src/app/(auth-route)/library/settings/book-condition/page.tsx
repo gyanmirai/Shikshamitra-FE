@@ -1,6 +1,6 @@
-import React from 'react';
-import BookConditionCreation from 'src/screens/library/settings/BookCondition';
+import { redirect } from 'next/navigation';
+import { libraryPaths } from 'src/constants/library-menus';
 
-const page = () => <BookConditionCreation />;
-
-export default page;
+export default function LibraryBookConditionRedirect() {
+  redirect(libraryPaths.allBooks);
+}

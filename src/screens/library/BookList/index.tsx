@@ -3,31 +3,25 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
-import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
+import { useRouter } from 'src/routes/hooks';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
-import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { Box, Card, Button, Typography } from '@mui/material';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import {
-  booksApi,
-  useDeleteBookMutation,
-  useDeleteBookReservationMutation,
-} from 'src/redux/library/bookList/bookList-api';
 
+import { useBookDeletion } from './useBookDeletion';
+import { BookDeleteDialog } from './BookDeleteDialog';
 import LibraryMainScreen from './Components/LIbraryMainScreen';
-import IssueBookModal from './Components/BookView/BookIssueForm';
 import BookViewDetail from './Components/BookView/BookViewDetail';
-import ReturnBookModal from './Components/BookView/BookReturnForm';
+import { CirculationDialogs } from '../circulation/CirculationDialogs';
+import { useReservationAccess } from '../reservations/useReservationAccess';
 import BookFormStepper from '../BookManagement/BookFormComponents/BookForm';
 import ReservationBookModal from './Components/BookView/BookReservationForm';
 import ChangeBookStatusForm from './Components/BookView/BookStatusChangeForm';
@@ -39,22 +33,21 @@ import type { IBook, IBookPayload, IBookCopyWithBook } from '../BookManagement/C
 const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
   // State to control book form visibility
   const [open, setOpen] = useState(false);
-  const [deleteBook, { isLoading: isDeleteLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useDeleteBookMutation,
-  });
-  const [deleteBookReservation, { isLoading: isDeleteReservationLoading }] =
-    useDeleteBookReservationMutation();
+  const [bookFormBusy, setBookFormBusy] = useState(false);
+  const router = useRouter();
+  const { canWrite: canReserve } = useReservationAccess();
+  const { permissions } = useSelector((state: RootState) => state.auth);
+  const canView = hasGrantedPermission(permissions, 'Library.AllBooks.View');
+  const canAdd = canView && hasGrantedPermission(permissions, 'Library.AllBooks.Add');
+  const canEdit = canView && hasGrantedPermission(permissions, 'Library.AllBooks.Update');
+  const canDelete = canView && hasGrantedPermission(permissions, 'Library.AllBooks.Delete');
+  const deletion = useBookDeletion(canDelete);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   // State to store currently selected book for editing
   const [selectedBook, setSelectedBook] = useState<IBook | null>(null);
-  const [selectedReservation, setSelectedReservation] = useState<any>(null);
   // Redux selector to track unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const [selectedCopy, setSelectedCopy] = useState<IBookCopyWithBook | null>(null);
-  // Boolean hook to control delete confirmation dialog
-  const deleteDialog = useBoolean();
-  const reservationDeleteDialog = useBoolean();
 
   const reserveDialog = useBoolean();
   const viewAllReservationDialog = useBoolean();
@@ -69,44 +62,58 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
   const returnDialog = useBoolean();
   const changeStatusDialog = useBoolean();
 
-  /**
-   * Handles closing the book form with confirmation if there are unsaved changes
-   */
-  const handleClose = (_e: any, isSubmit?: boolean) => {
-    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+  const clearCatalogTask = () => {
+    changeStatusDialog.onFalse();
+    viewAllReservationDialog.onFalse();
+    reserveDialog.onFalse();
+    setSelectedCopy(null);
+    setOpen(false);
+    setSelectedBook(null);
+    dispatch(setIsChanges(false));
+  };
+  const clearReturnTask = () => {
+    returnDialog.onFalse();
+    issueDialog.onFalse();
+    bookHistoryDialog.onFalse();
+    setSelectedCopy(null);
+    dispatch(setIsChanges(false));
+  };
+  const clearSession = () => {
+    deletion.close();
+    clearCatalogTask();
+    clearReturnTask();
+    viewDialog.onFalse();
+  };
+  const closeGuard = useUnsavedNavigation(
+    isChanges && (open || issueDialog.value || returnDialog.value || changeStatusDialog.value),
+    {
+      blockNavigation: bookFormBusy || deletion.busy,
+      guardContextChanges: true,
+      onNavigationApproved: () => dispatch(setIsChanges(false)),
+      onBeforeTraversal: clearSession,
+      push: (href) => {
+        clearSession();
+        router.push(href);
+      },
+    }
+  );
+  const handleClose = (_event: unknown, submitted = false) => {
+    if (submitted) clearCatalogTask();
+    else closeGuard.requestNavigation(clearCatalogTask);
+  };
+  const handleCloseReturn = (_event: unknown, submitted = false) => {
+    if (submitted) clearReturnTask();
+    else closeGuard.requestNavigation(clearReturnTask);
+  };
+  const handleCloseStatus = (submitted = false) => {
+    const close = () => {
       changeStatusDialog.onFalse();
-      viewAllReservationDialog.onFalse();
-      reserveDialog.onFalse();
-      setSelectedReservation(null);
       setSelectedCopy(null);
-      setOpen(false);
       dispatch(setIsChanges(false));
-      setSelectedBook(null);
-    } else if (!isChanges) {
-      viewAllReservationDialog.onFalse();
-      reserveDialog.onFalse();
-      setSelectedReservation(null);
-      setSelectedCopy(null);
-      setOpen(false);
-      setSelectedBook(null);
-    }
+    };
+    if (submitted) close();
+    else closeGuard.requestNavigation(close);
   };
-
-  const handleCloseReturn = (_e: any, isSubmit?: boolean) => {
-    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      returnDialog.onFalse();
-      issueDialog.onFalse();
-      bookHistoryDialog.onFalse();
-      setSelectedCopy(null);
-    } else if (!isChanges) {
-      returnDialog.onFalse();
-      issueDialog.onFalse();
-      bookHistoryDialog.onFalse();
-      setSelectedCopy(null);
-    }
-  };
-
-  const { confirmWithUndo } = useConfirmWithUndo();
 
   return (
     <Box
@@ -125,6 +132,7 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
                   : 'Add a new book by entering details like title, author, category, and availability.'
               }
               isBack
+              backDisabled={bookFormBusy}
               onBack={() => handleClose(null, false)}
               links={[
                 { name: 'Library', href: '/library/dashboard' },
@@ -132,13 +140,11 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
                   name: 'All Books',
                   href: '/library/book-list',
                   onClick: () => {
-                    setOpen(false);
-                    setSelectedBook(null);
+                    handleClose(null, false);
                   },
                 },
                 {
                   name: selectedBook ? 'Update Book' : 'Add Book',
-                  href: '/library/book-management',
                 },
               ]}
               sx={{ px: 1 }}
@@ -182,15 +188,17 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
                 },
               ]}
               action={
-                <Button
-                  startIcon={<Add />}
-                  variant="contained"
-                  size="small"
-                  onClick={() => setOpen(true)}
-                  sx={{ px: '32px' }}
-                >
-                  Book
-                </Button>
+                canAdd ? (
+                  <Button
+                    startIcon={<Add />}
+                    variant="contained"
+                    size="small"
+                    onClick={() => setOpen(true)}
+                    sx={{ px: '32px' }}
+                  >
+                    Book
+                  </Button>
+                ) : undefined
               }
             />
           )}
@@ -209,7 +217,12 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
             mt: 2,
           }}
         >
-          <BookFormStepper onClose={handleClose} editData={selectedBook as IBookPayload | null} />
+          <BookFormStepper
+            key={`${selectedBook?.id || 'new'}-${(currentYear as { id?: string })?.id || ''}`}
+            onClose={handleClose}
+            onBusyChange={setBookFormBusy}
+            editData={selectedBook as IBookPayload | null}
+          />
         </Card>
       ) : viewDialog.value ? (
         <Card
@@ -227,17 +240,14 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
             handleChangeStatus={(copy) => {
               changeStatusDialog.onTrue();
               setSelectedCopy(copy);
-              /* TODO: implement handleChangeStatus */
             }}
             handleIssueBook={(copy) => {
               issueDialog.onTrue();
               setSelectedCopy(copy);
-              /* TODO: implement handleIssueBook */
             }}
             handleReturnBook={(copy) => {
               returnDialog.onTrue();
               setSelectedCopy(copy);
-              /* TODO: implement handleReturnBook */
             }}
             handleBookHistory={(copy) => {
               bookHistoryDialog.onTrue();
@@ -270,22 +280,27 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
         //   }}
         // />
         <LibraryMainScreen
-          onDelete={(data) => {
-            setSelectedBook(data);
-            deleteDialog.onTrue();
-          }}
+          onDelete={canDelete ? deletion.open : undefined}
           onView={(data) => {
             viewDialog.onTrue();
             setSelectedBook(data);
           }}
-          onEdit={(data) => {
-            setSelectedBook(data);
-            setOpen(true);
-          }}
-          onReserveBook={(data) => {
-            setSelectedBook(data);
-            reserveDialog.onTrue();
-          }}
+          onEdit={
+            canEdit
+              ? (data) => {
+                  setSelectedBook(data);
+                  setOpen(true);
+                }
+              : undefined
+          }
+          onReserveBook={
+            canReserve
+              ? (data) => {
+                  setSelectedBook(data);
+                  reserveDialog.onTrue();
+                }
+              : undefined
+          }
           onViewAllReservationBook={(data) => {
             viewAllReservationDialog.onTrue();
             setSelectedBook(data);
@@ -293,115 +308,44 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
         />
       )}
 
-      <CustomDialog
-        open={issueDialog.value}
-        handleClose={() => {
-          issueDialog.onFalse();
-          setSelectedCopy(null);
-        }}
-        maxWidth="md"
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Iconify icon="octicon:issue-closed-16" />
-            <Typography variant="h5">Issue Book</Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title="Select a member and book to issue with issue date and due date."
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
+      <CirculationDialogs
+        dialog={
+          issueDialog.value
+            ? { kind: 'issue', accessionNo: selectedCopy?.accessionNo || '' }
+            : returnDialog.value
+              ? { kind: 'return', accessionNo: selectedCopy?.accessionNo || '' }
+              : null
         }
-      >
-        <IssueBookModal onClose={handleCloseReturn} editData={selectedCopy} />
-      </CustomDialog>
-      <CustomDialog
-        open={reserveDialog.value}
-        handleClose={() => {
-          reserveDialog.onFalse();
-          setSelectedBook(null);
-        }}
-        maxWidth="md"
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">Reserve Book {selectedBook?.title}</Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title="Select a member to reserve the book and set reservation details."
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
-      >
-        <ReservationBookModal onClose={handleClose} editData={selectedBook} />
-      </CustomDialog>
+        copy={selectedCopy}
+        busy={bookFormBusy}
+        onBusyChange={setBookFormBusy}
+        onClose={handleCloseReturn}
+      />
+      {reserveDialog.value && (
+        <ReservationBookModal
+          onClose={handleClose}
+          editData={selectedBook}
+          onBusyChange={setBookFormBusy}
+        />
+      )}
 
-      <CustomDialog
-        open={returnDialog.value}
-        handleClose={() => {
-          returnDialog.onFalse();
-          setSelectedCopy(null);
-        }}
-        maxWidth="md"
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Iconify icon="mdi:arrow-u-left-top" />
-            <Typography variant="h5">Return Book</Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title="Select the issued book record to mark it as returned with return date and remarks if any."
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
-      >
-        <ReturnBookModal onClose={handleCloseReturn} accessionNo={selectedCopy?.accessionNo} />
-      </CustomDialog>
-
-      <CustomDialog
-        open={viewAllReservationDialog.value}
-        handleClose={() => {
-          viewAllReservationDialog.onFalse();
-          setSelectedBook(null);
-        }}
-        maxWidth="md"
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">All Reservations for {selectedBook?.title}</Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title="View all reservations for the selected book."
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
-      >
+      {viewAllReservationDialog.value && (
         <ViewReservedMembersTable
           editData={selectedBook}
-          onDelete={(row) => {
-            reservationDeleteDialog.onTrue();
-            setSelectedReservation(row);
+          onClose={() => {
+            viewAllReservationDialog.onFalse();
+            setSelectedBook(null);
           }}
         />
-      </CustomDialog>
+      )}
 
       <CustomDialog
         open={changeStatusDialog.value}
-        handleClose={() => {
-          changeStatusDialog.onFalse();
-          setSelectedCopy(null);
-        }}
+        hasForm={false}
+        guardUnsavedChanges={false}
+        disableClose={bookFormBusy}
+        disableEscapeKeyDown={bookFormBusy}
+        handleClose={() => handleCloseStatus(false)}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Change Book Status</Typography>
@@ -418,159 +362,30 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
       >
         <ChangeBookStatusForm
           editData={selectedCopy}
-          onClose={(e, isSubmit) => {
-            changeStatusDialog.onFalse(); // close dialog
-            setSelectedCopy(null);
-          }}
+          onBusyChange={setBookFormBusy}
+          onClose={(_event, submitted) => handleCloseStatus(submitted)}
         />
       </CustomDialog>
-      {/* Delete Confirmation */}
-
-      <ConfirmDialog
-        open={deleteDialog.value}
-        onClose={() => {
-          setSelectedBook(null);
-          deleteDialog.onFalse();
-        }}
-        title="Delete"
-        content={
-          <>
-            Are you sure you want to delete book <strong>&quot;{selectedBook?.title}&quot;</strong>?
-          </>
-        }
-        action={
-          <LoadingButton
-            loading={isDeleteLoading}
-            variant="contained"
-            color="error"
-            size="small"
-            onClick={async () => {
-              const bookToDelete = selectedBook;
-              const bookId = bookToDelete?.id;
-              if (!bookId) return;
-              const queryArg = { academicYearId: (currentYear as any)?.id };
-              confirmWithUndo({
-                item: bookToDelete,
-                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
-                  dispatchFn(
-                    booksApi.util.updateQueryData('getAllBooks', queryArg, (draft: any) => {
-                      const index = draft.items?.findIndex((b: any) => b.id === bookId);
-                      setDeleteIndex(index);
-                      if (index !== -1) {
-                        draft.items.splice(index, 1);
-                      }
-                    })
-                  ),
-                onUndoRestore: (dispatchFn, index) =>
-                  dispatchFn(
-                    booksApi.util.updateQueryData('getAllBooks', queryArg, (draft: any) => {
-                      if (!draft.items) return;
-                      draft.items.splice(index, 0, bookToDelete);
-                    })
-                  ),
-                onCommit: () => deleteBook({ bookId }),
-              });
-              deleteDialog.onFalse();
-              setSelectedBook(null);
-            }}
-            // startIcon={<Iconify icon={GlobalIcons.delete} />}
-          >
-            Yes
-          </LoadingButton>
-        }
-      />
-
-      <ConfirmDialog
-        open={reservationDeleteDialog.value}
-        onClose={() => {
-          reservationDeleteDialog.onFalse();
-          setTimeout(() => {
-            setSelectedReservation(null);
-          }, 200);
-        }}
-        title="Delete"
-        content={
-          <>
-            Are you sure you want to cancel reservation for{' '}
-            <strong>
-              {selectedReservation?.name || selectedReservation?.memberId || 'this member'}
-            </strong>
-            {selectedBook?.title ? (
-              <>
-                {' '}
-                on <strong>{selectedBook.title}</strong>?
-              </>
-            ) : (
-              '?'
-            )}
-          </>
-        }
-        action={
-          <LoadingButton
-            loading={isDeleteReservationLoading}
-            variant="contained"
-            color="error"
-            size="small"
-            onClick={async () => {
-              const bookId = selectedBook?.id;
-              const reservationId = selectedReservation?.id;
-              if (!bookId || !reservationId) {
-                shikshaMitraToast.error({ message: 'Reservation details are missing.' });
-                return;
-              }
-
-              try {
-                await deleteBookReservation({ bookId, reservationId }).unwrap();
-                shikshaMitraToast.success({
-                  message: (
-                    <>
-                      Reservation for <strong>{selectedBook?.title}</strong> cancelled successfully
-                    </>
-                  ),
-                });
-                reservationDeleteDialog.onFalse();
-                setSelectedReservation(null);
-              } catch (error) {
-                const parsed = parseApiProblemDetail(error);
-                shikshaMitraToast.error({
-                  message: parsed.detail || 'Could not cancel reservation.',
-                });
-              }
-            }}
-          >
-            Yes
-          </LoadingButton>
-        }
-      />
+      {closeGuard.confirmation}
+      <BookDeleteDialog deletion={deletion} />
 
       <CustomDialog
         open={bookHistoryDialog.value}
+        hasForm={false}
+        guardUnsavedChanges={false}
         handleClose={() => {
           bookHistoryDialog.onFalse();
           setSelectedCopy(null);
         }}
         maxWidth="lg"
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">
-              {selectedCopy?.book?.title} ({selectedCopy?.accessionNo}) History
-            </Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title="View all reservations for the selected book."
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
+        title={`${selectedCopy?.book?.title || 'Book Copy'} (${selectedCopy?.accessionNo || 'Unavailable'}) History`}
+        titleInfo="Review this saved copy's borrowing records across authorized recorded years. School-date evidence and overdue classification remain distinct from original timestamps."
       >
         <ViewBookCopyHistoryTable
           editData={selectedCopy}
-          onDelete={(row) => {
-            bookHistoryDialog.onTrue();
-            setSelectedReservation(row);
+          onClose={() => {
+            bookHistoryDialog.onFalse();
+            setSelectedCopy(null);
           }}
         />
       </CustomDialog>

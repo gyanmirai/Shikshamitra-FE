@@ -8,9 +8,9 @@ import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { fDate } from 'src/utils/format-time';
 import { formatNumber } from 'src/utils/formate_number';
+import React, { useMemo, useState, useEffect } from 'react';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { financePermissions } from 'src/constants/finance-menu';
-import React, { useMemo, useState, useEffect } from 'react';
 import { Box, Tab, Card, Tabs, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { FeeRefundStatusType } from 'src/enums/feeRefund-status-type';
@@ -62,7 +62,7 @@ function toRow(item: FeeRefundRequestDto, index: number): IStudentFeeData {
   const payout = item.settlements?.[item.settlements.length - 1];
   return {
     id: index + 1,
-    name: item.studentName || item.studentId,
+    name: item.payerName || item.studentName || 'Payer unavailable',
     board: item.boardName ?? '',
     medium: item.educationMediumName ?? '',
     class: item.standardName ?? '',
@@ -77,7 +77,8 @@ function toRow(item: FeeRefundRequestDto, index: number): IStudentFeeData {
     status: item.status,
     requestDate: item.submittedAt || item.creationTime,
     _refundRequestId: item.id,
-    _studentId: item.studentId,
+    _studentId: item.studentId ?? undefined,
+    _payerKind: item.employeeId ? 'Staff' : item.studentId ? 'Student' : 'Applicant',
     _availableActions: item.availableActions,
     _approvedAmount: item.approvedAmount,
     _refundMethod: item.refundMethod ?? undefined,
@@ -121,7 +122,7 @@ export default function RefundWorklist({
   );
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
-  const refundActions = financePermissions.fees.refundActions;
+  const { refundActions } = financePermissions.fees;
   const can = (permission: string) => hasGrantedPermission(permissions, permission);
   useEffect(() => {
     setPage(0);

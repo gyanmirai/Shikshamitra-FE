@@ -109,7 +109,7 @@ export function LibraryAiReportDrawer({ open, onClose, onExportQueued }: Props) 
           {workflow.stage === 'planned' && workflow.review && (
             <LibraryAiReportPlanReview
               review={workflow.review}
-              onFormatChange={workflow.changeFormat}
+              onFormatChange={workflow.canExport ? workflow.changeFormat : undefined}
             />
           )}
           {workflow.errorMessage && <Alert severity="error">{workflow.errorMessage}</Alert>}
@@ -128,13 +128,15 @@ export function LibraryAiReportDrawer({ open, onClose, onExportQueued }: Props) 
         <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
           <Stack direction="row" spacing={1} justifyContent="flex-end">
             {workflow.stage === 'planned' ? (
-              <Button size="small" variant="outlined" onClick={handleEdit}>Edit request</Button>
+              <Button size="small" variant="outlined" onClick={handleEdit}>
+                Edit request
+              </Button>
             ) : (
               <Button size="small" variant="outlined" onClick={handleClose}>
                 {workflow.stage === 'ready' ? 'Close' : 'Cancel'}
               </Button>
             )}
-            {workflow.stage === 'planned' ? (
+            {workflow.stage === 'planned' && workflow.canExport ? (
               <LoadingButton
                 size="small"
                 variant="contained"

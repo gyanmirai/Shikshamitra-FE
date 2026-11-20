@@ -16,6 +16,8 @@ import {
   useCreateLibraryReportExportMutation,
 } from 'src/redux/library/reports-api';
 
+import { useLibraryReportExportAccess } from './useLibraryReportExportAccess';
+
 export type LibraryAiReview = {
   plan: LibraryReportRequest;
   preview: LibraryReportPreview;
@@ -36,6 +38,7 @@ export function useLibraryAiReport(onExportQueued: (jobId: string) => void) {
   const [createPlan] = useCreateLibraryAiReportPlanMutation();
   const [previewReport] = usePreviewLibraryReportMutation();
   const [createExport] = useCreateLibraryReportExportMutation();
+  const canExport = useLibraryReportExportAccess();
 
   const previewPlan = async (
     plan: LibraryReportRequest,
@@ -54,7 +57,10 @@ export function useLibraryAiReport(onExportQueued: (jobId: string) => void) {
     setStage('planning');
     setErrorMessage(null);
     try {
-      const response = await createPlan({ prompt: nextPrompt, clarificationAnswers: nextAnswers }).unwrap();
+      const response = await createPlan({
+        prompt: nextPrompt,
+        clarificationAnswers: nextAnswers,
+      }).unwrap();
       setPrompt(nextPrompt);
       setAnswers(nextAnswers);
       if (response.status === 'NeedsClarification' || !response.plan) {
@@ -72,7 +78,10 @@ export function useLibraryAiReport(onExportQueued: (jobId: string) => void) {
       });
     } catch (error: unknown) {
       setErrorMessage(
-        getAcademicReportErrorMessage(error, 'ShikshaMitra AI could not prepare this Library report.')
+        getAcademicReportErrorMessage(
+          error,
+          'ShikshaMitra AI could not prepare this Library report.'
+        )
       );
       setStage('failed');
     }
@@ -83,7 +92,7 @@ export function useLibraryAiReport(onExportQueued: (jobId: string) => void) {
   };
 
   const changeFormat = async (format: 'pdf' | 'excel') => {
-    if (!review) return;
+    if (!canExport || !review || stage !== 'planned') return;
     setErrorMessage(null);
     try {
       await previewPlan(
@@ -97,13 +106,15 @@ export function useLibraryAiReport(onExportQueued: (jobId: string) => void) {
         }
       );
     } catch (error: unknown) {
-      setErrorMessage(getAcademicReportErrorMessage(error, 'The updated Library plan is not valid.'));
+      setErrorMessage(
+        getAcademicReportErrorMessage(error, 'The updated Library plan is not valid.')
+      );
       setStage('failed');
     }
   };
 
   const generate = async () => {
-    if (!review) return;
+    if (!canExport || !review || stage !== 'planned') return;
     setStage('generating');
     setErrorMessage(null);
     try {
@@ -111,7 +122,9 @@ export function useLibraryAiReport(onExportQueued: (jobId: string) => void) {
       setStage('ready');
       onExportQueued(response.jobId);
     } catch (error: unknown) {
-      setErrorMessage(getAcademicReportErrorMessage(error, 'The Library export could not be queued.'));
+      setErrorMessage(
+        getAcademicReportErrorMessage(error, 'The Library export could not be queued.')
+      );
       setStage('failed');
     }
   };
@@ -130,6 +143,7 @@ export function useLibraryAiReport(onExportQueued: (jobId: string) => void) {
     questions,
     review,
     errorMessage,
+    canExport,
     planReport,
     submitClarifications,
     changeFormat,

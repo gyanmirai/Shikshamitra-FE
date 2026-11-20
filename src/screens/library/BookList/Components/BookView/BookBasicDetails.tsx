@@ -5,6 +5,11 @@ import { alpha } from '@mui/material/styles';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { ExpandMore } from '@mui/icons-material';
+import { cataloguePriceLabel } from 'src/redux/library/catalogue-price';
+import {
+  catalogueLanguageLabel,
+  catalogueMaterialLabel,
+} from 'src/redux/library/catalogue-metadata';
 import {
   Box,
   Grid,
@@ -40,7 +45,8 @@ const BookViewBasicDetail: React.FC<BookViewDetailProps> = ({ book }) => {
             ? new Date(book.createdOn).toLocaleDateString()
             : '—',
       },
-      { label: 'Language', icon: 'mdi:translate', value: book?.language || '—' },
+      { label: 'Language', icon: 'mdi:translate', value: catalogueLanguageLabel(book || {}) },
+      { label: 'Material', icon: 'mdi:bookshelf', value: catalogueMaterialLabel(book || {}) },
       { label: 'Edition', icon: 'mdi:book-edit-outline', value: book?.edition || '—' },
       {
         label: 'Category',
@@ -59,8 +65,8 @@ const BookViewBasicDetail: React.FC<BookViewDetailProps> = ({ book }) => {
       },
       {
         label: 'Price',
-        icon: 'mdi:currency-inr',
-        value: book?.price ? `₹${Math.ceil(book.price).toLocaleString('en-IN')}` : '—',
+        icon: 'mdi:tag-outline',
+        value: cataloguePriceLabel(book),
       },
       {
         label: 'Added On',
@@ -278,7 +284,11 @@ const BookViewBasicDetail: React.FC<BookViewDetailProps> = ({ book }) => {
                 {details.map((d, index) => (
                   <Grid
                     key={d.label}
-                    size={{ xs: 12, sm: 6, md: d.label === 'Description' ? 12 : 3 }}
+                    size={{
+                      xs: 12,
+                      sm: 6,
+                      md: d.label === 'Description' ? 12 : d.label === 'Price' ? 6 : 3,
+                    }}
                   >
                     <Stack
                       direction="row"
@@ -345,8 +355,9 @@ const BookViewBasicDetail: React.FC<BookViewDetailProps> = ({ book }) => {
                           sx={{
                             fontSize: '0.8rem',
                             lineHeight: d.label === 'Description' ? 1.6 : 1.4,
+                            overflowWrap: d.label === 'Price' ? 'anywhere' : undefined,
                           }}
-                          noWrap={d.label !== 'Description'}
+                          noWrap={d.label !== 'Description' && d.label !== 'Price'}
                         >
                           {d.value}
                         </Typography>

@@ -24,17 +24,19 @@ const SummaryView = ({
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
       <MenuList>
-        <MenuItem
-          onClick={(e) => {
-            e.stopPropagation();
-            const book = row as IBook;
-            onReserveBook?.(book);
-            pop.onClose();
-          }}
-        >
-          <Iconify icon="game-icons:archive-register" sx={{ height: 16, width: 16, mr: 1 }} />
-          Reserve Book
-        </MenuItem>
+        {onReserveBook && (
+          <MenuItem
+            onClick={(e) => {
+              e.stopPropagation();
+              const book = row as IBook;
+              onReserveBook?.(book);
+              pop.onClose();
+            }}
+          >
+            <Iconify icon="game-icons:archive-register" sx={{ height: 16, width: 16, mr: 1 }} />
+            Reserve Book
+          </MenuItem>
+        )}
 
         <MenuItem
           onClick={(e) => {
@@ -161,8 +163,8 @@ const SummaryView = ({
           {/* Edit Icon */}
           <ThreeDotsActions
             placement="right-center"
-            showDeleteIcon
-            showEditIcon
+            showDeleteIcon={Boolean(onDelete)}
+            showEditIcon={Boolean(onEdit)}
             showViewIcon
             actions={(prop) => actions({ ...prop, row: book })}
             handleViewClick={() => {

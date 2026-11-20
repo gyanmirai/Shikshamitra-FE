@@ -26,12 +26,15 @@ import AssignChargesForm from './Components/AssignChargesForm';
 import LibraryChargesTable from './Components/ChargedManagementTable';
 import CollectChargesForm from './Components/AssignChargeProcessForm';
 import CollectChargesView from './Components/AssignViewChargeDetails';
+import { useLibraryChargePermissions } from './Components/useLibraryChargePermissions';
 
 import type { ILibraryChargeData } from './Components/type';
 
 const LibraryChargesManagement = () => {
+  const access = useLibraryChargePermissions();
   // State for selected record
   const [selectedRecord, setSelectedRecord] = useState<ILibraryChargeData | null>(null);
+  const [financeBusy, setFinanceBusy] = useState(false);
 
   // Dialog states
   const addDialog = useBoolean();
@@ -94,7 +97,13 @@ const LibraryChargesManagement = () => {
         action={
           <Button
             data-testid="library-charge-assign-button"
-            onClick={() => addDialog.onTrue()}
+            disabled={!access.add}
+            onClick={() => {
+              if (access.add) {
+                setSelectedRecord(null);
+                addDialog.onTrue();
+              }
+            }}
             size="small"
             startIcon={<Add />}
             variant="contained"
@@ -108,7 +117,7 @@ const LibraryChargesManagement = () => {
 
       {/* Dialog for Add/Edit */}
       <CustomDialog
-        open={addDialog.value}
+        open={addDialog.value && (selectedRecord ? access.update : access.add)}
         handleClose={() => {
           addDialog.onFalse();
           setSelectedRecord(null);
@@ -138,7 +147,8 @@ const LibraryChargesManagement = () => {
       </CustomDialog>
 
       <CustomDialog
-        open={collectDialog.value}
+        open={collectDialog.value && access.view}
+        disableClose={financeBusy}
         handleClose={() => {
           collectDialog.onFalse();
           setSelectedRecord(null);
@@ -146,27 +156,28 @@ const LibraryChargesManagement = () => {
         maxWidth="sm"
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">{selectedRecord ? 'Collect Charge' : 'Add Charge'}</Typography>
+            <Typography variant="h5">Library Finance</Typography>
             <CustomTooltip
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
-              title={
-                selectedRecord
-                  ? 'Update charge details such as category, amount, or status.'
-                  : 'Fill details to add a new charge.'
-              }
+              title="Review the saved assessment and its Finance approval, policies, collection and receipt evidence."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>
           </Box>
         }
       >
-        <CollectChargesForm open={collectDialog} onClose={handleClose} charge={selectedRecord} />
+        <CollectChargesForm
+          open={collectDialog}
+          onClose={handleClose}
+          charge={selectedRecord}
+          onBusyChange={setFinanceBusy}
+        />
       </CustomDialog>
 
       <CustomDialog
-        open={viewDialog.value}
+        open={viewDialog.value && access.view}
         handleClose={() => {
           viewDialog.onFalse();
           setSelectedRecord(null);
@@ -194,18 +205,22 @@ const LibraryChargesManagement = () => {
         data={chargesData}
         addChargesDialog={addDialog}
         onEditCharge={(data) => {
+          if (!access.update) return;
           setSelectedRecord(data);
           addDialog.onTrue();
         }}
         onCollectCharges={(data) => {
+          if (!access.view) return;
           collectDialog.onTrue();
           setSelectedRecord(data);
         }}
         onViewCharges={(data) => {
+          if (!access.view) return;
           viewDialog.onTrue();
           setSelectedRecord(data);
         }}
         onDeleteCharge={(data) => {
+          if (!access.delete) return;
           setSelectedRecord(data);
           deleteDialog.onTrue();
         }}
@@ -213,7 +228,7 @@ const LibraryChargesManagement = () => {
 
       {/* Delete Confirmation */}
       <ConfirmDialog
-        open={deleteDialog.value}
+        open={deleteDialog.value && access.delete}
         onClose={() => {
           deleteDialog.onFalse();
           setTimeout(() => {
@@ -230,10 +245,12 @@ const LibraryChargesManagement = () => {
         action={
           <LoadingButton
             loading={isDeleteLoading}
+            disabled={!access.delete}
             variant="contained"
             color="error"
             size="small"
             onClick={async () => {
+              if (!access.delete) return;
               confirmWithUndo({
                 item: selectedRecord,
                 onOptimisticRemove: (dispatchFn, setDeleteIndex) =>

@@ -17,7 +17,7 @@ import type { LibraryAiReview } from '../hooks/useLibraryAiReport';
 
 type Props = {
   review: LibraryAiReview;
-  onFormatChange: (format: LibraryReportFormat) => void;
+  onFormatChange?: (format: LibraryReportFormat) => void;
 };
 
 function getFilterChips(review: LibraryAiReview) {
@@ -28,9 +28,11 @@ function getFilterChips(review: LibraryAiReview) {
   if (filters.sectionIds?.length) chips.push(`${filters.sectionIds.length} section(s)`);
   if (filters.copyStatuses?.length) chips.push(`${filters.copyStatuses.length} copy status(es)`);
   if (filters.issueStatuses?.length) chips.push(`${filters.issueStatuses.length} issue status(es)`);
-  if (filters.chargeStatuses?.length) chips.push(`${filters.chargeStatuses.length} charge status(es)`);
+  if (filters.chargeStatuses?.length)
+    chips.push(`${filters.chargeStatuses.length} recorded charge status filters`);
   if (filters.memberRole !== undefined) chips.push(filters.memberRole === 0 ? 'Students' : 'Staff');
-  if (filters.fromDate || filters.toDate) chips.push(`${filters.fromDate ?? 'Start'} to ${filters.toDate ?? 'Today'}`);
+  if (filters.fromDate || filters.toDate)
+    chips.push(`${filters.fromDate ?? 'Start'} to ${filters.toDate ?? 'Today'}`);
   if (filters.top) chips.push(`Top ${filters.top}`);
   if (filters.search) chips.push(`Search: ${filters.search}`);
   return chips;
@@ -51,16 +53,22 @@ export function LibraryAiReportPlanReview({ review, onFormatChange }: Props) {
             <Box>
               <Typography variant="subtitle2">Library report plan ready</Typography>
               <Typography variant="caption" color="text.secondary">
-                Review the interpretation and live authorized preview before approval.
+                Review the interpretation and live authorized preview.
               </Typography>
             </Box>
           </Stack>
           <Box sx={{ p: 1.5, borderRadius: 1.5, bgcolor: 'background.neutral' }}>
-            <Typography variant="caption" color="text.secondary">Selected report</Typography>
-            <Typography variant="body2" fontWeight={600}>{plan.reportType}</Typography>
+            <Typography variant="caption" color="text.secondary">
+              Selected report
+            </Typography>
+            <Typography variant="body2" fontWeight={600}>
+              {plan.reportType}
+            </Typography>
           </Box>
           <Box>
-            <Typography variant="caption" color="text.secondary">Understood request</Typography>
+            <Typography variant="caption" color="text.secondary">
+              Understood request
+            </Typography>
             <Typography variant="body2">{review.interpretedRequest}</Typography>
           </Box>
           <Typography variant="body2">{review.summary}</Typography>
@@ -88,15 +96,19 @@ export function LibraryAiReportPlanReview({ review, onFormatChange }: Props) {
               {Math.round(review.confidence * 100)}% planning confidence
             </Typography>
           </Box>
-          <ToggleButtonGroup
-            exclusive
-            size="small"
-            value={plan.format}
-            onChange={(_, value: LibraryReportFormat | null) => value && onFormatChange(value)}
-          >
-            <ToggleButton value="pdf">PDF</ToggleButton>
-            <ToggleButton value="excel">Excel</ToggleButton>
-          </ToggleButtonGroup>
+          {onFormatChange ? (
+            <ToggleButtonGroup
+              exclusive
+              size="small"
+              value={plan.format}
+              onChange={(_, value: LibraryReportFormat | null) => value && onFormatChange(value)}
+            >
+              <ToggleButton value="pdf">PDF</ToggleButton>
+              <ToggleButton value="excel">Excel</ToggleButton>
+            </ToggleButtonGroup>
+          ) : (
+            <Typography variant="body2">{plan.format === 'pdf' ? 'PDF' : 'Excel'}</Typography>
+          )}
         </Stack>
       </Paper>
 
@@ -104,12 +116,18 @@ export function LibraryAiReportPlanReview({ review, onFormatChange }: Props) {
         <Alert severity="info">
           <Typography variant="subtitle2">Defaults used</Typography>
           {review.assumptions.map((assumption) => (
-            <Typography key={assumption} variant="body2">• {assumption}</Typography>
+            <Typography key={assumption} variant="body2">
+              • {assumption}
+            </Typography>
           ))}
         </Alert>
       )}
 
-      {preview.queryWarnings.map((warning) => <Alert key={warning} severity="warning">{warning}</Alert>)}
+      {preview.queryWarnings.map((warning) => (
+        <Alert key={warning} severity="warning">
+          {warning}
+        </Alert>
+      ))}
 
       <Paper variant="outlined" sx={{ borderRadius: 2, overflow: 'hidden' }}>
         <Box sx={{ p: 1.5, borderBottom: 1, borderColor: 'divider' }}>

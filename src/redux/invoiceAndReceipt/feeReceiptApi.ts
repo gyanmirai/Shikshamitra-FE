@@ -73,15 +73,32 @@ export interface FeeReceiptListItem {
   feeCollectionTransactionId: string;
 }
 
-export interface FeeReceiptDetail extends FeeReceiptListItem {
+export interface FeeReceiptSettlementSnapshot {
+  originalAmount: number;
+  submittedAmount: number;
+  settledAmount: number;
+  pendingVerificationAmount: number;
+  financialOutstandingAmount: number;
+  collectibleAmount: number;
+  netWaivedAmount: number;
+}
+
+export interface FeeReceiptDetail extends Omit<FeeReceiptListItem, 'studentId'> {
+  studentId: string | null;
+  employeeId?: string | null;
+  financeFeeAccountId?: string | null;
+  payerName?: string | null;
+  payerCode?: string | null;
+  currency?: string | null;
+  settlementSnapshot?: FeeReceiptSettlementSnapshot | null;
   feePaidAmount?: number;
   chargePaidAmount?: number;
   linkedProvisionalReceiptId: string | null;
   linkedProvisionalReceiptNumber: string | null;
   linkedFinalReceiptId: string | null;
   academicYearId: string;
-  boardId: string;
-  educationMediumId: string;
+  boardId: string | null;
+  educationMediumId: string | null;
   academicYearName: string | null;
   boardName: string | null;
   mediumName: string | null;

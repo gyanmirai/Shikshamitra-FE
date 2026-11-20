@@ -1,13 +1,15 @@
 import type { IBook, IBookCopyWithBook } from 'src/screens/library/BookManagement/Components/type';
 
-import React from 'react';
+import { useState } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, Grid, Card, Skeleton, Typography } from '@mui/material';
+import { EmptyContent } from 'src/components/empty-content';
 import { useViewBookDetailsQuery } from 'src/redux/library/bookList/bookList-api';
+import { Box, Grid, Card, Alert, Button, Typography, LinearProgress } from '@mui/material';
 
 import BookCopyCard from './BookCopyCard';
 import BookViewBasicDetail from './BookBasicDetails';
+import { BookViewDetailSkeleton } from './BookViewDetailSkeleton';
+import { CopyLifecycleDialogs } from '../../../circulation/CopyLifecycleDialogs';
 
 interface BookViewDetailProps {
   book: IBook | null;
@@ -17,101 +19,85 @@ interface BookViewDetailProps {
   handleBookHistory: (copy: IBookCopyWithBook) => void;
 }
 
-const BookViewDetail: React.FC<BookViewDetailProps> = ({
+export default function BookViewDetail({
   book,
   handleChangeStatus,
   handleIssueBook,
   handleReturnBook,
   handleBookHistory,
-}) => {
-  const {
-    data: bookDetails,
-    isLoading: isBookDetailsLoading,
-    isFetching: isBookDetailsFetching,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useViewBookDetailsQuery,
-    params: {
-      bookId: book?.id,
-    },
-    options: { skip: !book?.id },
-  });
-
-  const currentBook = bookDetails || book;
-  const copies = currentBook?.copies?.length ? currentBook.copies : [];
-  const isLoading = isBookDetailsLoading || isBookDetailsFetching;
-
-  if (isLoading) {
-    return (
-      <Box display="flex" flexDirection="column" sx={{ flexGrow: 1, minHeight: 0 }}>
-        <Scrollbar sx={{ p: 2, flexGrow: 1 }}>
-          <Box sx={{ bgcolor: 'background.paper', width: '100%', mb: 1, p: 2 }}>
-            <Grid container spacing={2}>
-              <Grid size={{ xs: 12, md: 3 }}>
-                <Skeleton
-                  variant="rectangular"
-                  width="100%"
-                  height={180}
-                  sx={{ borderRadius: 2 }}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 9 }}>
-                <Skeleton variant="text" width="60%" height={36} sx={{ mb: 1 }} />
-                <Skeleton variant="text" width="40%" height={24} sx={{ mb: 1 }} />
-                <Skeleton variant="text" width="50%" height={24} sx={{ mb: 1 }} />
-                <Skeleton variant="text" width="35%" height={24} sx={{ mb: 1 }} />
-                <Skeleton variant="text" width="45%" height={24} />
-              </Grid>
-            </Grid>
-          </Box>
-          <Card sx={{ p: 2, bgcolor: 'background.paper' }}>
-            <Skeleton variant="text" width={120} height={32} sx={{ mb: 2 }} />
-            <Grid container spacing={3}>
-              {[1, 2, 3].map((i) => (
-                <Grid size={{ xs: 12, md: 4 }} key={i}>
-                  <Skeleton
-                    variant="rectangular"
-                    width="100%"
-                    height={160}
-                    sx={{ borderRadius: 2 }}
-                  />
-                </Grid>
-              ))}
-            </Grid>
-          </Card>
-        </Scrollbar>
-      </Box>
-    );
-  }
-
+}: BookViewDetailProps) {
+  const [selected, setSelected] = useState<IBookCopyWithBook | null>(null);
+  const query = useViewBookDetailsQuery({ bookId: book?.id }, { skip: !book?.id });
+  const currentBook = (book?.id ? query.currentData : undefined) as IBook | undefined;
+  const copies = currentBook?.copies || [];
   return (
     <Box display="flex" flexDirection="column" sx={{ flexGrow: 1, minHeight: 0 }}>
       <Scrollbar sx={{ p: 2, flexGrow: 1 }}>
-        <Grid container spacing={2} alignItems="flex-start">
-          <Box sx={{ bgcolor: 'background.paper', width: '100%', mb: 1 }}>
-            <BookViewBasicDetail book={currentBook} />
-          </Box>
-        </Grid>
-        <Card sx={{ p: 2, bgcolor: 'background.paper' }}>
-          <Typography variant="h6" color="primary" fontWeight={600} sx={{ mb: 2 }}>
-            Book Copies
-          </Typography>
-          <Grid container spacing={3}>
-            {copies.map((copy: any) => (
-              <Grid size={{ xs: 12, md: 4 }} key={copy.accessionNo}>
-                <BookCopyCard
-                  copy={copy as IBookCopyWithBook}
-                  onChangeStatus={() => handleChangeStatus({ ...copy, book: currentBook })}
-                  onIssueBook={() => handleIssueBook({ ...copy, book: currentBook })}
-                  onReturnBook={() => handleReturnBook({ ...copy, book: currentBook })}
-                  onBookHistory={() => handleBookHistory({ ...copy, book: currentBook })}
+        {!book?.id && <Alert severity="info">Select a saved book to view its details.</Alert>}
+        {query.isFetching && <LinearProgress aria-label="Refreshing book details" />}
+        {query.isError && (
+          <Alert
+            severity="error"
+            action={
+              <Button size="small" onClick={() => query.refetch()}>
+                Retry
+              </Button>
+            }
+          >
+            Could not load book details. Current saved data and any open copy draft are retained.
+          </Alert>
+        )}
+        {!currentBook && query.isFetching && <BookViewDetailSkeleton />}
+        {currentBook && (
+          <>
+            <Grid container spacing={2} alignItems="flex-start">
+              <Box sx={{ bgcolor: 'background.paper', width: '100%', mb: 1 }}>
+                <BookViewBasicDetail book={currentBook} />
+              </Box>
+            </Grid>
+            <Card sx={{ p: 2, bgcolor: 'background.paper' }}>
+              <Typography variant="h6" color="primary" fontWeight={600} sx={{ mb: 2 }}>
+                Book Copies
+              </Typography>
+              {!copies.length && (
+                <EmptyContent
+                  title="No physical copies recorded"
+                  description="Add saved copies through the book editor before issuing or printing labels."
                 />
+              )}
+              <Grid container spacing={3}>
+                {copies.map((copy) => {
+                  const savedCopy = { ...copy, bookId: currentBook.id, book: currentBook };
+                  return (
+                    <Grid size={{ xs: 12, md: 4 }} key={copy.copyId || copy.id || copy.accessionNo}>
+                      <BookCopyCard
+                        bookId={currentBook.id}
+                        copy={copy}
+                        onInventoryActions={() => setSelected(savedCopy)}
+                        onChangeStatus={() => handleChangeStatus(savedCopy)}
+                        onIssueBook={() => handleIssueBook(savedCopy)}
+                        onReturnBook={() => handleReturnBook(savedCopy)}
+                        onBookHistory={() => handleBookHistory(savedCopy)}
+                      />
+                    </Grid>
+                  );
+                })}
               </Grid>
-            ))}
-          </Grid>
-        </Card>
+            </Card>
+          </>
+        )}
       </Scrollbar>
+      {selected && (
+        <CopyLifecycleDialogs
+          key={`${selected.book.id}:${selected.copyId}`}
+          bookId={selected.book.id}
+          copyId={selected.copyId || ''}
+          accessionNumber={selected.accessionNo}
+          onClose={() => setSelected(null)}
+          onChangeStatus={() => handleChangeStatus(selected)}
+          onReturnBook={() => handleReturnBook(selected)}
+        />
+      )}
     </Box>
   );
-};
-export default BookViewDetail;
+}

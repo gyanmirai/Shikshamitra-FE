@@ -1,6 +1,5 @@
-import React from 'react';
-import LibraryCurriculumnTemplatesSettingScreen from 'src/screens/library/settings/curiculumn-templates/library-curriculumn-templates-setting-screen';
+import { notFound } from 'next/navigation';
 
-const LibraryCurriculumnTemplatesSetting = () => <LibraryCurriculumnTemplatesSettingScreen />;
-
-export default LibraryCurriculumnTemplatesSetting;
+export default function LibraryCurriculumTemplatesUnavailable() {
+  notFound();
+}

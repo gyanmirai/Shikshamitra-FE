@@ -29,7 +29,11 @@ export function NavList({
 }: NavListProps) {
   const theme = useTheme();
   const { permissions } = useSelector((state: RootState) => state.auth);
-  const isGranted = hasNavigationPermission(permissions, data.permissionName);
+  const isGranted = hasNavigationPermission(
+    permissions,
+    data.permissionName,
+    data.requiredAllPermissions
+  );
 
   const pathname = usePathname();
   const removeTrailingSlash = pathname.replace(/\/$/, '');

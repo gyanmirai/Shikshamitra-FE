@@ -1,6 +1,6 @@
-import React from 'react';
-import LibraryReportConfigurationSettingScreen from 'src/screens/library/settings/report-configuration/library-report-configuration-setting-screen';
+import { redirect } from 'next/navigation';
+import { libraryPaths } from 'src/constants/library-menus';
 
-const LibraryReportsConfigurationSetting = () => <LibraryReportConfigurationSettingScreen />;
-
-export default LibraryReportsConfigurationSetting;
+export default function LibraryReportSettingsRedirect() {
+  redirect(libraryPaths.reports);
+}

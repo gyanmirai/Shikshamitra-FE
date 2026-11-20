@@ -24,8 +24,8 @@ import {
   Typography,
   DialogActions,
 } from '@mui/material';
-import RefundRoutingField from './RefundRoutingField';
 
+import RefundRoutingField from './RefundRoutingField';
 import FinancePrerequisiteState from '../../components/FinancePrerequisiteState';
 import { useRefreshFinancePrerequisites } from '../../hooks/useRefreshFinancePrerequisites';
 import {
@@ -81,9 +81,10 @@ export default function RefundPaymentDialog({
     initialValues: {
       method: normalizeRefundMethod(refund._refundMethod ?? ''),
       externalReference: refund._payoutReference ?? '',
-      bankAccountId: normalizeRefundMethod(refund._refundMethod ?? '') === 'Cash'
-        ? ''
-        : refund._payingBankAccountId ?? refund._defaultPayingBankAccountId ?? '',
+      bankAccountId:
+        normalizeRefundMethod(refund._refundMethod ?? '') === 'Cash'
+          ? ''
+          : (refund._payingBankAccountId ?? refund._defaultPayingBankAccountId ?? ''),
       expenseCategoryId: refund._expenseCategoryId ?? refund._defaultExpenseCategoryId ?? '',
     },
     validationSchema: Yup.object({
@@ -228,7 +229,7 @@ export default function RefundPaymentDialog({
                   <Grid container spacing={2}>
                     <Grid size={{ xs: 12, sm: 7 }}>
                       <Typography variant="caption" color="text.secondary">
-                        Student
+                        {refund._payerKind || 'Student'}
                       </Typography>
                       <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
                         {refund.name}

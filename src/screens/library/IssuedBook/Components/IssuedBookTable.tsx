@@ -1,119 +1,63 @@
-import type { LabelColor } from 'src/components/label';
-import type { UseBooleanReturn } from 'src/hooks/use-boolean';
+import { Box, Alert, Button } from '@mui/material';
 
-import React, { useMemo } from 'react';
-import { Label } from 'src/components/label';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { LibraryBookStatus, LibraryBookStatusColors } from 'src/enums/library-book-status'; // Make sure this import path is correct
+import { LoanTable } from '../../circulation/LoanTable';
+import { LoanReadFilters } from '../../circulation/LoanReadFilters';
+import { useIssueReturnPage } from '../../circulation/useIssueReturnPage';
 
-import type { RootState } from 'src/redux/store';
-import type { IColumn } from 'src/components/customizabaleTable/types';
+import type { LibraryLoanRow } from '../../circulation/loan-types';
 
-import { useSelector } from 'react-redux';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetIssueReturnListQuery } from 'src/redux/library/issueAndReturnApi/issueAndReturnApi';
-
-import type { ILibraryBookData } from './type';
-
-// const TABS = [
-//   {
-//     label: 'Issued',
-//     value: LibraryBookStatus.Issued,
-//     color: 'info',
-//   },
-//   {
-//     label: 'Overdue',
-//     value: LibraryBookStatus.Overdue,
-//     color: 'error',
-//   },
-// ];
-
-const BookIssueReturnTable = ({
-  addDialog,
+export default function BookIssueReturnTable({
   onReturnBook,
+  onRenewBook,
+  onReviewDates,
 }: {
-  addDialog: UseBooleanReturn;
-  onReturnBook: (row: ILibraryBookData) => void;
-}) => {
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
-
-  //   Fetch issued/returned books
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { data: issuedBooks } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetIssueReturnListQuery,
-    params: { academicYearId: currentYear?.id },
-  });
-
-  const columns: IColumn[] = useMemo(
-    () => [
-      {
-        id: 'memberName',
-        label: 'Member Name',
-        align: 'left',
-        minWidth: '140px',
-        sticky: true,
-      },
-      { id: 'memberId', label: 'Member ID', align: 'left', minWidth: '120px' },
-      { id: 'role', label: 'Role', align: 'left', minWidth: '100px' },
-      { id: 'bookTitle', label: 'Book Title', align: 'left', minWidth: '120px' },
-      { id: 'accessionNo', label: 'Accession No.', align: 'left', minWidth: '150px' },
-      {
-        id: 'classDivision',
-        label: 'Class/Division',
-        align: 'left',
-        minWidth: '130px',
-        render: (_value, row) => (
-          <span>
-            {row.classNo}
-            {row.division ? `-${row.division}` : ''}
-          </span>
-        ),
-      },
-      { id: 'rollNo', label: 'Roll No.', align: 'left', minWidth: 90 },
-      { id: 'grNo', label: 'GR No.', align: 'left', minWidth: '120px' },
-      { id: 'contactNo', label: 'Contact No.', align: 'left', minWidth: '120px' },
-      { id: 'bookCategory', label: 'Book Category', align: 'left', minWidth: '140px' },
-      {
-        id: 'requestedDate',
-        label: 'Issue Date',
-        align: 'left',
-        filterType: 'date',
-        minWidth: '120px',
-      },
-      {
-        id: 'dueDate',
-        label: 'Due Date',
-        align: 'left',
-        filterType: 'date',
-        minWidth: '120px',
-      },
-      {
-        id: 'status',
-        label: 'Status',
-        filterType: 'enum',
-        sticky: true,
-        enumOptions: [
-          { label: 'Issued', value: LibraryBookStatus.Issued },
-          { label: 'Overdue', value: LibraryBookStatus.Overdue },
-        ],
-        align: 'left',
-        render(value, row) {
-          const color = LibraryBookStatusColors[value as LibraryBookStatus] as LabelColor;
-          return <Label color={color}>{LibraryBookStatus[value]}</Label>;
-        },
-      },
-    ],
-    []
-  );
-
+  onReturnBook?: (row: LibraryLoanRow) => void;
+  onRenewBook?: (row: LibraryLoanRow) => void;
+  onReviewDates?: (row: LibraryLoanRow) => void;
+}) {
+  const query = useIssueReturnPage();
+  if (!query.canView)
+    return <Alert severity="info">You do not have permission to view borrowing records.</Alert>;
   return (
-    <CustomizableTable
-      tableId="library-book-table"
-      noDataText="No Issue Book Data Found "
-      columns={columns}
-      data={issuedBooks || []}
-    />
+    <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+      <LoanReadFilters
+        academicYearId={query.academicYearId}
+        asOfDate={query.requestedAsOfDate}
+        onApply={query.onFilters}
+      />
+      <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+        {query.invalidAsOf ? (
+          <Alert
+            severity="warning"
+            action={
+              <Button size="small" onClick={() => query.onFilters(query.academicYearId, '')}>
+                Clear as-of date
+              </Button>
+            }
+          >
+            Choose a valid school as-of date or clear it. No classification request has been made
+            for the invalid date.
+          </Alert>
+        ) : (
+          <LoanTable
+            id="library-circulation-records"
+            title="Issue & Return"
+            rows={query.currentData?.items || []}
+            page={query.page}
+            pageSize={query.pageSize}
+            totalCount={query.currentData?.totalCount || 0}
+            loading={query.isFetching && !query.currentData}
+            refreshing={query.isFetching && Boolean(query.currentData)}
+            error={query.error}
+            onRetry={() => query.refetch()}
+            onPage={query.onPage}
+            onReturn={onReturnBook}
+            onRenew={onRenewBook}
+            onReviewDates={onReviewDates}
+            emptyMessage="No borrowing or return records are visible in your scope."
+          />
+        )}
+      </Box>
+    </Box>
   );
-};
-export default BookIssueReturnTable;
+}

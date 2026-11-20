@@ -1,9 +1,12 @@
 import type { LibraryDashboardOverview } from 'src/redux/library/library-adapters';
 
 import React from 'react';
-import { Grid } from '@mui/material';
-import { fNumber, fCurrency } from 'src/utils/format-number';
+import { Box, Grid } from '@mui/material';
+import { fNumber } from 'src/utils/format-number';
+import { RouterLink } from 'src/routes/components';
+import { libraryPaths } from 'src/constants/library-menus';
 
+import { overdueValue, movementValue } from '../dashboard-date-values';
 import CompactKPICard from '../../../student/dashboard/principal/kpi-card-item';
 
 const trendFromOverview = (overview?: LibraryDashboardOverview) => {
@@ -13,11 +16,10 @@ const trendFromOverview = (overview?: LibraryDashboardOverview) => {
   return data.length ? data : [0, 0, 0, 0, 0, 0, 0];
 };
 
-const buildKpiData = (overview?: LibraryDashboardOverview) => {
+const buildKpiData = (overview: LibraryDashboardOverview | undefined, canViewCharges: boolean) => {
   const trend = trendFromOverview(overview);
   const stock = overview?.stockTotals;
   const circulation = overview?.circulation;
-  const charges = overview?.charges;
   const reservations = overview?.reservations;
 
   return [
@@ -29,7 +31,7 @@ const buildKpiData = (overview?: LibraryDashboardOverview) => {
       icon: 'solar:book-bookmark-bold-duotone',
       status: 'primary' as const,
       path: '/library/book-list',
-      tooltip: 'Total book titles in the current academic year.',
+      tooltip: 'Permanent Library book titles across academic years.',
     },
     {
       id: 'LIB_TOTAL_COPIES',
@@ -44,7 +46,7 @@ const buildKpiData = (overview?: LibraryDashboardOverview) => {
     {
       id: 'LIB_CIRCULATION',
       title: 'Circulation Today',
-      value: fNumber((circulation?.issuesToday || 0) + (circulation?.returnsToday || 0)),
+      value: movementValue(overview, 'today'),
       chart: { data: trend },
       icon: 'solar:transfer-horizontal-bold-duotone',
       status: 'info' as const,
@@ -54,7 +56,7 @@ const buildKpiData = (overview?: LibraryDashboardOverview) => {
     {
       id: 'LIB_OVERDUE',
       title: 'Overdue Books',
-      value: fNumber(circulation?.overdueIssues || 0),
+      value: overdueValue(circulation?.overdueIssues || 0, circulation),
       chart: { data: trend },
       icon: 'solar:alarm-add-bold-duotone',
       status: 'error' as const,
@@ -62,14 +64,17 @@ const buildKpiData = (overview?: LibraryDashboardOverview) => {
       tooltip: 'Books currently past their due date.',
     },
     {
-      id: 'LIB_PENDING_CHARGES',
-      title: 'Pending Charges',
-      value: fCurrency(charges?.pendingAmount || 0),
-      chart: { data: trend },
+      id: 'LIB_FINANCE_REVIEW',
+      title: 'Needs Finance Review',
+      value: overview?.financePosition
+        ? fNumber(overview.financePosition.needsReviewCount)
+        : 'Unavailable',
+      chart: { data: [] },
       icon: 'solar:wallet-money-bold-duotone',
       status: 'warning' as const,
-      path: '/library/charges-management',
-      tooltip: 'Outstanding Library fines and charges.',
+      path: canViewCharges ? libraryPaths.charges : undefined,
+      tooltip:
+        'Authorized assessment records whose Finance evidence needs review. This is a record count, not an outstanding amount.',
     },
     {
       id: 'LIB_AVAILABLE_BOOKS',
@@ -84,24 +89,57 @@ const buildKpiData = (overview?: LibraryDashboardOverview) => {
   ];
 };
 
-const AdminKPICards = ({ overview }: { overview?: LibraryDashboardOverview }) => {
-  const kpiData = buildKpiData(overview);
+const AdminKPICards = ({
+  overview,
+  canViewCharges = false,
+}: {
+  overview?: LibraryDashboardOverview;
+  canViewCharges?: boolean;
+}) => {
+  const kpiData = buildKpiData(overview, canViewCharges);
 
   return (
     <Grid container spacing={1}>
-      {kpiData.map((kpi) => (
-        <Grid size={{ xs: 12, sm: 6, md: 4 }} key={kpi.id}>
+      {kpiData.map((kpi) => {
+        const financial = kpi.id === 'LIB_FINANCE_REVIEW';
+        const card = (
           <CompactKPICard
             title={kpi.title}
             value={kpi.value}
             icon={kpi.icon}
-            trendData={kpi.chart.data}
-            path={kpi.path}
+            trendData={kpi.chart.data.length ? kpi.chart.data : undefined}
+            path={financial ? undefined : kpi.path}
             tooltip={kpi.tooltip}
             status={kpi.status}
           />
-        </Grid>
-      ))}
+        );
+        return (
+          <Grid size={{ xs: 12, sm: 6, md: 4 }} key={kpi.id}>
+            {financial && kpi.path ? (
+              <Box
+                component={RouterLink}
+                href={kpi.path}
+                aria-label="Open Library charge register"
+                sx={{
+                  display: 'block',
+                  height: 1,
+                  textDecoration: 'none',
+                  borderRadius: 2,
+                  '&:focus-visible': {
+                    outline: '2px solid',
+                    outlineColor: 'primary.main',
+                    outlineOffset: 2,
+                  },
+                }}
+              >
+                {card}
+              </Box>
+            ) : (
+              card
+            )}
+          </Grid>
+        );
+      })}
     </Grid>
   );
 };
