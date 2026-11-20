@@ -48,6 +48,14 @@ export interface AcademicNotificationHistoryItem {
   deliveredAt: string | null;
   readAt: string | null;
   reasonCode: string | null;
+  canRequestRetry?: boolean;
+}
+
+export interface AcademicNotificationRetry {
+  dispatchId: string;
+  operationId: string;
+  status: AcademicDispatchStatus;
+  nextAttemptAt: string;
 }
 
 export interface AcademicNotificationCancellation extends AcademicNotificationOperation {

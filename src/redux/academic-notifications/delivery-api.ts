@@ -5,6 +5,7 @@ import type { AcademicNotificationCacheIdentity } from './types';
 import type { PagedResultDto } from '../communication/communicationTypes';
 import type {
   AcademicDispatchStatus,
+  AcademicNotificationRetry,
   AcademicNotificationSource,
   AcademicNotificationHistoryItem,
   AcademicNotificationCancellation,
@@ -12,6 +13,7 @@ import type {
 } from './delivery-types';
 
 type OperationRequest = AcademicNotificationCacheIdentity & { operationId: string };
+type RetryRequest = AcademicNotificationCacheIdentity & { dispatchId: string; attemptId: string };
 type HistoryRequest = AcademicNotificationCacheIdentity & AcademicNotificationSource & {
   operationId?: string;
   state?: AcademicDispatchStatus;
@@ -52,6 +54,14 @@ export const academicNotificationDeliveryApi = api.enhanceEndpoints({ addTagType
       }),
       invalidatesTags: (_, error, identity) => !error ? [deliveryTag(identity)] : [],
     }),
+    retryAcademicNotificationDispatch: builder.mutation<AcademicNotificationRetry, RetryRequest>({
+      query: ({ dispatchId, attemptId, ...identity }) => ({
+        url: `${academicNotificationsRoot}/dispatches/${encodeURIComponent(dispatchId)}/retry`,
+        method: 'POST', params: { expectedAttemptId: attemptId },
+        expectedSessionOwner: academicNotificationCacheOwner(identity),
+      }),
+      invalidatesTags: (_, __, identity) => [deliveryTag(identity)],
+    }),
   }),
 });
 
@@ -59,4 +69,5 @@ export const {
   useAcademicNotificationOperationQuery,
   useAcademicNotificationHistoryQuery,
   useCancelAcademicNotificationOperationMutation,
+  useRetryAcademicNotificationDispatchMutation,
 } = academicNotificationDeliveryApi;

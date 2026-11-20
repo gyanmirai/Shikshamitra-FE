@@ -154,7 +154,7 @@ Saving and submitting a diary leave notifications silent. The follow-up uses the
 
 ## Review delivery history
 
-Open Delivery History with a link to a notification operation or Academic source. Filter the attempt table by delivery status. Provider acceptance, delivery and read receipts each have their own status, and the Columns menu exposes the available timestamps. When acceptance is unknown, review the provider outcome before retrying. Staff with access to cancel can stop pending work and see how much work is already in progress.
+Open Delivery History with a link to a notification operation or Academic source. Filter the attempt table by delivery status. Provider acceptance, delivery and read receipts each have their own status, and the Columns menu exposes the available timestamps. When the current attempt shows **Retry delivery**, confirm **Queue retry** to retry that recipient and channel. History retains the rejected attempt and records the queued status separately. When acceptance is unknown, review the provider outcome before sending again. Staff with cancel access can stop pending work and see how much work is already in progress. [Delivery API](../../../Shikshamitra-BE/docs/modules/academic/api.md#staff-notification-configuration)
 
 ## Read or acknowledge a notification
 

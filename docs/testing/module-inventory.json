@@ -260,11 +260,11 @@
         {
           "name": "Notification",
           "routes": ["/academic/notification"],
-          "apis": ["/api/academic/notifications/catalogue", "/api/academic/notifications/rules", "/api/academic/notifications/rules/{eventKey}", "/api/academic/notifications/templates/options"],
+          "apis": ["/api/academic/notifications/catalogue", "/api/academic/notifications/rules", "/api/academic/notifications/rules/{eventKey}", "/api/academic/notifications/templates/options", "/api/academic/notifications/history", "/api/academic/notifications/dispatches/{id}/retry"],
           "roles": ["academic-admin"],
           "permissions": ["Academics.Notification.View", "Academics.Notification.Add"],
           "forms": ["notification rule editor"],
-          "businessActions": ["view effective notification rules", "save a scoped notification rule"],
+          "businessActions": ["view effective notification rules", "save a scoped notification rule", "request a retry for a definitively rejected channel attempt"],
           "risk": "high",
           "status": "confirmed"
         },

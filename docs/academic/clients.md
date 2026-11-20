@@ -31,6 +31,8 @@ Draft edits and publication send the saved revision stamp. Creating a subsequent
 `src/redux/academic-notifications/delivery-api.ts` reads the operation status and paged delivery attempts for an authorized source. A link with an operation ID reads its authorized source before requesting its attempt rows. Staff cancellation refreshes both reads for the same school and user.
 
 `src/redux/academic-notifications/manual-api.ts` submits the source, selected recipient references and channel choices for review. Confirmation submits only the review token and its stable idempotency key. A successful confirmation returns the operation for Delivery History. The same session guard applies to both requests.
+
+`src/redux/academic-notifications/delivery-api.ts` displays the history retry action from its server-provided eligibility flag. Confirmation sends the dispatch ID and the attempt ID from the selected row, then refreshes the operation and history for the same account.
 The Student Academic 360 drawer loads its audience only after a staff member chooses an action. The query includes the saved student, event and session owner. The shared composer uses published template options for the returned medium and includes the chosen relationships in the review request.
 
 The submitted Teacher Diary drawer loads available follow-up recipients using the diary ID and the current school and account. Its action sends the selected staff reference through the same preview and confirmation client. See the [diary follow-up contract](../../../Shikshamitra-BE/docs/modules/academic/api.md#teacher-diary-follow-up).

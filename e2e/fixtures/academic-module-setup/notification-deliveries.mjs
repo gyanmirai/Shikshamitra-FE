@@ -35,8 +35,15 @@ const history = [3, 7].map((status, index) => ({
   reasonCode: index === 0 ? null : 'SmtpAcceptanceUnknown',
 }));
 
-export function createNotificationDeliveriesFixture(enabled = false) {
+const rejected = {
+  ...history[1], dispatchId: '5d643be1-59a9-4d91-a7b1-7dbd9b673030',
+  attemptId: '5d643be1-59a9-4d91-a7b1-7dbd9b673031', status: 5, attemptNumber: 5,
+  reasonCode: 'SmtpTemporaryRejection', canRequestRetry: true,
+};
+
+export function createNotificationDeliveriesFixture(enabled = false, retry = undefined) {
   let item = { ...inboxItem };
+  let rows = retry ? [...history, rejected] : history;
   return (url, method, owner, send) => {
     const path = url.pathname;
     const ownsInbox = enabled && owner === creator;
@@ -59,13 +66,23 @@ export function createNotificationDeliveriesFixture(enabled = false) {
         ...source, operationId: notificationOperationId, status: 7, approvalRequired: false,
         createdAt: deliveredAt, publishedAt: null, scheduledAt: null, approvedAt: null,
         excludedBeforeDispatch: 0, intents: [],
-        deliveries: history.map(({ channel, status }) => ({ channel, status, count: 1 })),
+        deliveries: [...new Map(rows.map((row) => [row.dispatchId, row])).values()]
+          .map(({ channel, status }) => ({ channel, status, count: 1 })),
       });
     } else if (enabled && owner && path === `${academic}/history` && method === 'GET') {
       if (Object.entries(source).some(([key, value]) => url.searchParams.get(key) !== value)) send(403, {});
       else {
         const filter = url.searchParams.get('state');
-        send(200, paged(filter === null ? history : history.filter((row) => row.status === Number(filter))));
+        send(200, paged(filter === null ? rows : rows.filter((row) => row.status === Number(filter))));
+      }
+    } else if (enabled && retry && owner && path === `${academic}/dispatches/${rejected.dispatchId}/retry` && method === 'POST') {
+      if (url.searchParams.get('expectedAttemptId') !== rejected.attemptId) { send(400, {}); return true; }
+      rows = rows.map((row) => row === rejected ? { ...row, canRequestRetry: false } : row);
+      if (retry === 'conflict') {
+        send(409, { errorCode: 'Communication:Notification:RetryRequiresReview' });
+      } else {
+        rows = [...rows, { ...rejected, attemptId: null, attemptNumber: 6, status: 0, canRequestRetry: false }];
+        send(200, { operationId: notificationOperationId, dispatchId: rejected.dispatchId, status: 0, nextAttemptAt: deliveredAt });
       }
     } else return false;
     return true;

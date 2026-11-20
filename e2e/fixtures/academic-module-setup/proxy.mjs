@@ -51,7 +51,7 @@ export const server = http.createServer(async (request, response) => {
   if (url.pathname === '/fixture/reset') {
     fixture = createAcademicFixture(body);
     notificationRules = body.notificationRules === true ? createNotificationRulesFixture() : null;
-    notificationDeliveries = createNotificationDeliveriesFixture(body.notificationDeliveries === true);
+    notificationDeliveries = createNotificationDeliveriesFixture(body.notificationDeliveries === true, body.notificationRetry);
     manualNotification = body.manualNotification === true ? createManualNotificationFixture() : null;
     send(200, fixture.snapshot());
     return;

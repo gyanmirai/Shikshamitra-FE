@@ -121,6 +121,45 @@ test('shows scoped delivery evidence and filters unknown acceptance on a phone',
   await expectHealthy(page);
 });
 
+test('confirms a retry for the exact rejected email attempt and refreshes queued status', { tag }, async ({ page, request }) => {
+  await request.post(`${fixtureApi}/fixture/reset`, { data: { visited: true, notificationDeliveries: true, notificationRules: true, notificationRetry: 'queued' } });
+  await prepare(page, request);
+  await login(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/academic/notification?view=history&operation=5d643be1-59a9-4d91-a7b1-7dbd9b673011');
+  const table = page.getByRole('table', { name: 'Academic notification delivery history table' });
+  const retry = table.getByRole('button', { name: 'Retry Email' });
+  await expect(retry).toHaveCount(1);
+  await expect(table.getByRole('row').filter({ hasText: 'Acceptance unknown' }).getByRole('button', { name: /Retry/ })).toHaveCount(0);
+  await retry.click();
+  const confirmation = page.getByRole('dialog', { name: 'Retry Delivery' });
+  const [sent] = await Promise.all([
+    page.waitForRequest((candidate) => candidate.method() === 'POST' && candidate.url().includes('/retry?')),
+    confirmation.getByRole('button', { name: 'Queue retry' }).click(),
+  ]);
+  const route = new URL(sent.url());
+  expect(route.pathname).toContain('/dispatches/5d643be1-59a9-4d91-a7b1-7dbd9b673030/retry');
+  expect(route.searchParams.get('expectedAttemptId')).toBe('5d643be1-59a9-4d91-a7b1-7dbd9b673031');
+  await expect(page.getByText('Email retry queued.', { exact: false })).toBeVisible();
+  await expect(table.getByText('Queued', { exact: true })).toBeVisible();
+  await expect(table.getByText('Failed', { exact: true })).toBeVisible();
+  await expect(retry).toHaveCount(0);
+  await expectHealthy(page);
+});
+
+test('refreshes history and explains when a retry needs review', { tag }, async ({ page, request }) => {
+  await request.post(`${fixtureApi}/fixture/reset`, { data: { visited: true, notificationDeliveries: true, notificationRules: true, notificationRetry: 'conflict' } });
+  await prepare(page, request);
+  await login(page);
+  await page.goto('/academic/notification?view=history&operation=5d643be1-59a9-4d91-a7b1-7dbd9b673011');
+  const table = page.getByRole('table', { name: 'Academic notification delivery history table' });
+  await table.getByRole('button', { name: 'Retry Email' }).click();
+  await page.getByRole('dialog', { name: 'Retry Delivery' }).getByRole('button', { name: 'Queue retry' }).click();
+  await expect(page.getByText('This attempt now needs review.', { exact: false })).toBeVisible();
+  await expect(table.getByRole('button', { name: 'Retry Email' })).toHaveCount(0);
+  await expect(table.getByText('Queued', { exact: true })).toHaveCount(0);
+});
+
 test('reports a personal unread count and keeps read and acknowledge actions distinct', { tag }, async ({ page, request }) => {
   await request.post(`${fixtureApi}/fixture/reset`, { data: { visited: true, notificationDeliveries: true } });
   await prepare(page, request);
