@@ -8,20 +8,30 @@ import { ADMISSION_FORM_LANGUAGES, AVAILABLE_ADMISSION_FORM_LANGUAGES } from '..
 
 export function FormBuilderDetailFields({
   formik,
+  nameConflictMessage,
+  checkingName,
 }: {
   formik: FormikProps<CreateUpdateAdmissionForm>;
+  nameConflictMessage?: string | null;
+  checkingName?: boolean;
 }) {
   return (
     <Grid container spacing={1.5}>
       <Grid size={{ xs: 12, sm: 6 }}>
-        <ShakingTextField error={Boolean(formik.touched.name && formik.errors.name)}>
+        <ShakingTextField
+          error={Boolean(nameConflictMessage || (formik.touched.name && formik.errors.name))}
+        >
           <TextField
             fullWidth
             size="small"
             label="Form Name *"
             {...formik.getFieldProps('name')}
-            error={Boolean(formik.touched.name && formik.errors.name)}
-            helperText={formik.touched.name && formik.errors.name}
+            error={Boolean(nameConflictMessage || (formik.touched.name && formik.errors.name))}
+            helperText={
+              nameConflictMessage ||
+              (formik.touched.name && formik.errors.name) ||
+              (checkingName ? 'Checking name availability…' : undefined)
+            }
           />
         </ShakingTextField>
       </Grid>
@@ -42,7 +52,7 @@ export function FormBuilderDetailFields({
         <TextField
           fullWidth
           size="small"
-          label="Description (Optional)"
+          label="Description"
           multiline
           minRows={1}
           {...formik.getFieldProps('description')}

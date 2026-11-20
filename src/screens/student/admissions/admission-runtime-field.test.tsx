@@ -8,6 +8,11 @@ import { defaultSettings } from 'src/components/settings/config-settings';
 
 import AdmissionRuntimeField from './admission-runtime-field';
 
+const siblingQuery = vi.hoisted(() => vi.fn());
+vi.mock('src/redux/student/admissions/admission-forms-api', () => ({
+  useLazyGetAdmissionFormOptionsQuery: () => [siblingQuery],
+}));
+
 it('uses configured translated Other gender choices and emits the canonical answer', async () => {
   const onChange = vi.fn();
   render(
@@ -54,6 +59,28 @@ it('keeps a custom survey named Gender on its configured answer semantics', asyn
   await userEvent.click(screen.getByRole('combobox', { name: 'Survey' }));
   await userEvent.click(screen.getByRole('option', { name: 'Prefer not to say' }));
   expect(onChange).toHaveBeenCalledWith('PRIVATE');
+});
+
+it('does not load sibling records while rendering a builder preview', () => {
+  render(
+    <AdmissionRuntimeField
+      field={{
+        code: 'SIBLINGS',
+        label: 'Sibling students',
+        bindingKey: 'Family.SiblingStudentIds',
+        fieldType: 7,
+        required: false,
+        readOnly: false,
+      }}
+      value='["existing-student"]'
+      disabled={false}
+      preview
+      onChange={vi.fn()}
+    />
+  );
+  expect(screen.getByRole('textbox', { name: 'Sibling students' })).toBeDisabled();
+  expect(screen.getByText('Available during staff data entry.')).toBeVisible();
+  expect(siblingQuery).not.toHaveBeenCalled();
 });
 
 it('renders the saved student surname question as optional for single-name students', () => {

@@ -439,7 +439,7 @@ export default function CashCommandDialog({
                     multiline
                     minRows={2}
                     name="notes"
-                    label="Notes (optional)"
+                    label="Notes"
                     value={formik.values.notes}
                     disabled={fieldsBlocked}
                     onChange={formik.handleChange}

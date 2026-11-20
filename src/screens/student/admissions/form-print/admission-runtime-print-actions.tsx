@@ -58,7 +58,7 @@ export function hasUnsavedAdmissionPrintValues(
   values: Record<string, string>
 ) {
   const saved = Object.fromEntries(
-    form.values.map((item) => [item.fieldCode, readAdmissionFormValue(item.valueJson)])
+    (form.values ?? []).map((item) => [item.fieldCode, readAdmissionFormValue(item.valueJson)])
   );
   return Object.entries(values).some(([code, value]) => (saved[code] ?? '') !== value);
 }

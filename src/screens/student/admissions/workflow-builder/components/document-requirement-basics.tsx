@@ -29,7 +29,7 @@ export function DocumentRequirementBasics({
           fullWidth
           multiline
           minRows={2}
-          label="Instructions (Optional)"
+          label="Instructions"
           name="description"
           value={formik.values.description ?? ''}
           onChange={formik.handleChange}

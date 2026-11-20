@@ -63,7 +63,7 @@ describe('RubricPerformanceCards', () => {
       'aria-pressed',
       'true'
     );
-    expect(screen.getByRole('textbox', { name: 'Accuracy feedback (optional)' })).toHaveValue(
+    expect(screen.getByRole('textbox', { name: 'Accuracy feedback' })).toHaveValue(
       'Good work'
     );
 
@@ -92,7 +92,7 @@ describe('RubricPerformanceCards', () => {
       'true'
     );
     expect(screen.getByRole('button', { name: 'Accuracy: Good, 3 points' })).toBeDisabled();
-    expect(screen.getByRole('textbox', { name: 'Accuracy feedback (optional)' })).toBeDisabled();
+    expect(screen.getByRole('textbox', { name: 'Accuracy feedback' })).toBeDisabled();
 
     fireEvent.click(screen.getByRole('button', { name: 'Accuracy: Good, 3 points' }));
     expect(onMarksChange).not.toHaveBeenCalled();

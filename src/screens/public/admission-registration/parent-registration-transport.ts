@@ -9,7 +9,8 @@ export class ParentRegistrationError extends Error {
     message: string,
     public status: number,
     public conflict = false,
-    public fieldErrors: Record<string, string> = {}
+    public fieldErrors: Record<string, string> = {},
+    public unavailableLink = false
   ) {
     super(message);
     this.name = 'ParentRegistrationError';
@@ -50,7 +51,8 @@ export function createParentRegistrationTransport(token: string) {
               'Unable to complete this request. Try again.',
         response.status,
         conflict,
-        detail?.data?.FieldErrors ?? {}
+        detail?.data?.FieldErrors ?? {},
+        unavailable
       );
     }
     return binary ? response.blob() : response.json();

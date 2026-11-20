@@ -14,6 +14,7 @@ import {
   PrintSettingSelect,
   PrintSettingNumber,
   PrintSettingToggle,
+  PrintSettingsResetButton,
 } from './admission-print-setting-controls';
 
 import type { AdmissionPrintAdvancedTabProps } from './admission-print-advanced-types';
@@ -22,6 +23,7 @@ export function AdmissionPrintSectionsFieldsSettings({
   settings,
   advanced,
   form,
+  onChange,
   update,
 }: AdmissionPrintAdvancedTabProps) {
   const [selectedSection, setSelectedSection] = useState('');
@@ -41,12 +43,39 @@ export function AdmissionPrintSectionsFieldsSettings({
     update('sections', { [sectionCode]: { ...sectionSettings, ...patch } });
   const updateField = (patch: Partial<AdmissionPrintFieldSettings>) =>
     update('fields', { [fieldCode]: { ...fieldSettings, ...patch } });
+  const resetSectionOverride = () => {
+    const nextSections = { ...advanced.sections };
+    delete nextSections[sectionCode];
+    onChange({
+      ...settings,
+      advanced: { ...settings.advanced, sections: nextSections },
+    });
+  };
+  const resetFieldOverride = () => {
+    const nextFields = { ...advanced.fields };
+    delete nextFields[fieldCode];
+    onChange({
+      ...settings,
+      advanced: { ...settings.advanced, fields: nextFields },
+    });
+  };
   return (
     <PrintSettingsCards>
       <FormSectionCard
         title="Form Flow"
         sx={{ gridColumn: '1 / -1' }}
         icon={GlobalIcons.floors}
+        action={
+          <PrintSettingsResetButton
+            title="Form Flow"
+            onReset={() =>
+              update('flow', {
+                stepTitles: true,
+                sectionNumbers: true,
+              })
+            }
+          />
+        }
         descriptionTooltip="Control printed step headings and section numbering. Online form steps remain unchanged."
       >
         <PrintSettingToggle
@@ -63,6 +92,13 @@ export function AdmissionPrintSectionsFieldsSettings({
       <FormSectionCard
         title="Section Layout"
         icon={GlobalIcons.admissionDetails}
+        action={
+          <PrintSettingsResetButton
+            title="Section Layout"
+            disabled={!section}
+            onReset={resetSectionOverride}
+          />
+        }
         descriptionTooltip="Adjust one printed section at a time, including reused Inquiry sections. Question definitions remain unchanged."
       >
         {section ? (
@@ -142,6 +178,13 @@ export function AdmissionPrintSectionsFieldsSettings({
       <FormSectionCard
         title="Field Appearance"
         icon={GlobalIcons.academicFieldSettings}
+        action={
+          <PrintSettingsResetButton
+            title="Field Appearance"
+            disabled={!field}
+            onReset={resetFieldOverride}
+          />
+        }
         descriptionTooltip="These field settings affect paper copies only. Required questions keep their online validation."
       >
         {field ? (

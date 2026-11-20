@@ -1,9 +1,45 @@
 import type { ReactNode } from 'react';
 
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import { useId, useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
-import { Box, Switch, TextField, FormControlLabel } from '@mui/material';
+import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
+import {
+  Box,
+  Stack,
+  Switch,
+  Tooltip,
+  TextField,
+  IconButton,
+  Typography,
+  FormControlLabel,
+} from '@mui/material';
+
+export function PrintSettingsResetButton({
+  title,
+  onReset,
+  disabled = false,
+}: {
+  title: string;
+  onReset: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <Tooltip title={`Reset ${title} to defaults`}>
+      <IconButton
+        size="small"
+        aria-label={`Reset ${title} to defaults`}
+        onClick={onReset}
+        disabled={disabled}
+        sx={{ minWidth: 44, minHeight: 44 }}
+      >
+        <Iconify icon={GlobalIcons.resetIcon} />
+      </IconButton>
+    </Tooltip>
+  );
+}
 
 export function PrintSettingsCards({ children }: { children: ReactNode }) {
   return (
@@ -13,7 +49,7 @@ export function PrintSettingsCards({ children }: { children: ReactNode }) {
           display: 'grid',
           gridTemplateColumns: 'minmax(0, 1fr)',
           gap: 2,
-          alignItems: 'start',
+          alignItems: 'stretch',
           '@container (min-width: 620px)': { gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' },
           '& > section': { minWidth: 0, containerType: 'inline-size' },
         }}
@@ -48,6 +84,7 @@ export function PrintSettingSelect<T extends string | number>({
   disabledValues,
   disabledLabel,
   helperText,
+  helperTooltip,
 }: {
   label: string;
   value: T;
@@ -57,6 +94,7 @@ export function PrintSettingSelect<T extends string | number>({
   disabledValues?: T[];
   disabledLabel?: string;
   helperText?: string;
+  helperTooltip?: string;
 }) {
   const id = useId();
   return (
@@ -71,7 +109,13 @@ export function PrintSettingSelect<T extends string | number>({
       disabled={disabled}
       disabledValues={disabledValues}
       disabledLabel={disabledLabel}
-      helperText={helperText}
+      helperText={
+        helperTooltip ? (
+          <InfoTooltipIcon title={helperTooltip} label={`${label} help`} />
+        ) : (
+          helperText
+        )
+      }
     />
   );
 }
@@ -82,13 +126,35 @@ export function PrintSettingToggle({
   onChange,
   disabled,
   descriptionId,
+  helperTooltip,
 }: {
   label: string;
   checked: boolean;
   onChange: (checked: boolean) => void;
   disabled?: boolean;
   descriptionId?: string;
+  helperTooltip?: string;
 }) {
+  const id = useId();
+  if (helperTooltip) {
+    return (
+      <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
+        <Stack direction="row" spacing={0.25} alignItems="center" sx={{ minWidth: 0 }}>
+          <Typography id={id} variant="body2" color={disabled ? 'text.disabled' : 'text.primary'}>
+            {label}
+          </Typography>
+          <InfoTooltipIcon title={helperTooltip} label={`${label} help`} />
+        </Stack>
+        <Switch
+          size="small"
+          checked={checked}
+          disabled={disabled}
+          slotProps={{ input: { 'aria-labelledby': id, 'aria-describedby': descriptionId } }}
+          onChange={(_, value) => onChange(value)}
+        />
+      </Stack>
+    );
+  }
   return (
     <FormControlLabel
       label={label}
@@ -178,6 +244,7 @@ export function PrintSettingText({
   maxLength = 128,
   disabled,
   helperText,
+  helperTooltip,
 }: {
   label: string;
   value: string;
@@ -186,6 +253,7 @@ export function PrintSettingText({
   maxLength?: number;
   disabled?: boolean;
   helperText?: string;
+  helperTooltip?: string;
 }) {
   const id = useId();
   return (
@@ -201,7 +269,13 @@ export function PrintSettingText({
       multiline={multiline}
       minRows={multiline ? 3 : undefined}
       slotProps={{ htmlInput: { maxLength } }}
-      helperText={helperText}
+      helperText={
+        helperTooltip ? (
+          <InfoTooltipIcon title={helperTooltip} label={`${label} help`} />
+        ) : (
+          helperText
+        )
+      }
     />
   );
 }

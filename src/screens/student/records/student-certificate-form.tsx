@@ -614,8 +614,8 @@ export default function StudentCertificateForm({
                 name="particulars"
                 label={
                   certificateType === 2
-                    ? 'Conduct assessment (optional)'
-                    : 'First trial particulars (optional)'
+                    ? 'Conduct assessment'
+                    : 'First trial particulars'
                 }
                 value={values.particulars}
                 disabled={busy}

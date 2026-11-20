@@ -4,20 +4,23 @@ import type { ParentRegistrationDocument } from 'src/redux/student/admissions/ad
 
 import { useFormik } from 'formik';
 import { GlobalIcons } from 'src/utils/icons';
-import { useRef, useState, useEffect } from 'react';
+import { Iconify } from 'src/components/iconify';
 import CustomUpload from 'src/components/custom-upload';
+import { useId, useRef, useState, useEffect } from 'react';
 import { LoadingButton } from 'src/components/loading-button';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { Box, Stack, Button, FormLabel, Typography, FormControl } from '@mui/material';
 import { documentActionSchema } from 'src/screens/student/admissions/document-verification/document-action-model';
 
+import { registrationDocumentStatus } from './parent-registration-model';
 import { ParentRegistrationFileActions } from './parent-registration-files';
 
 import type { ParentRegistrationTransport } from './parent-registration-transport';
 
 export function ParentRegistrationDocuments({
   documents,
+  mobile,
   transport,
   disabled,
   uploading,
@@ -25,6 +28,7 @@ export function ParentRegistrationDocuments({
   onDirtyChange,
 }: {
   documents: ParentRegistrationDocument[];
+  mobile: boolean;
   transport: ParentRegistrationTransport;
   disabled: boolean;
   uploading: boolean;
@@ -37,6 +41,7 @@ export function ParentRegistrationDocuments({
         <ParentDocument
           key={`${document.stageInstanceId}/${document.code}`}
           document={document}
+          mobile={mobile}
           transport={transport}
           disabled={disabled}
           uploading={uploading}
@@ -50,6 +55,7 @@ export function ParentRegistrationDocuments({
 
 function ParentDocument({
   document,
+  mobile,
   transport,
   disabled,
   uploading,
@@ -57,13 +63,15 @@ function ParentDocument({
   onDirtyChange,
 }: {
   document: ParentRegistrationDocument;
+  mobile: boolean;
   transport: ParentRegistrationTransport;
   disabled: boolean;
   uploading: boolean;
   onUpload: (requirement: ParentRegistrationDocument, file: File, key: string) => Promise<boolean>;
   onDirtyChange: (key: string, dirty: boolean) => void;
 }) {
-  const [replacing, setReplacing] = useState(false);
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const id = useId();
   const retry = useRef<{ file: File; key: string } | null>(null);
   const formik = useFormik<{ file: File | null; notes: string }>({
     initialValues: { file: null, notes: '' },
@@ -78,7 +86,7 @@ function ParentDocument({
       if (await onUpload(document, file, retry.current.key)) {
         formik.resetForm();
         retry.current = null;
-        setReplacing(false);
+        setUploadOpen(false);
       }
     },
   });
@@ -89,6 +97,8 @@ function ParentDocument({
     return () => onDirtyChange(key, false);
   }, [document.stageInstanceId, document.code, formik.dirty, onDirtyChange]);
   const latest = document.evidence.at(-1);
+  const status = registrationDocumentStatus(document);
+  const showUpload = document.canUpload && !disabled && (uploadOpen || (!mobile && !latest));
   return (
     <FormSectionCard
       title={document.name}
@@ -98,7 +108,9 @@ function ParentDocument({
       <Stack spacing={1}>
         <Typography variant="body2" color="text.secondary">
           {document.isRequired ? 'Required' : 'Optional'} ·{' '}
-          {document.status === 'pendingReview' ? 'Awaiting school review' : document.status}
+          <Box component="span" sx={{ color: status.color }}>
+            {status.label}
+          </Box>
         </Typography>
         {latest && (
           <Box sx={{ minWidth: 0 }}>
@@ -108,22 +120,24 @@ function ParentDocument({
             <ParentRegistrationFileActions file={latest} transport={transport} />
           </Box>
         )}
-        {document.canUpload && !disabled && (!latest || replacing) && (
+        {document.canUpload && !disabled && (showUpload || !latest) && (
+          <Typography id={`${id}-help`} variant="caption" color="text.secondary">
+            {document.allowedExtensions
+              .map((extension) => extension.replace(/^\./, '').toUpperCase())
+              .join(', ')}{' '}
+            · Up to {document.maxFileSizeMb} MB
+          </Typography>
+        )}
+        {showUpload && (
           <>
-            <Typography
-              id={`document-help-${document.code}`}
-              variant="caption"
-              color="text.secondary"
-            >
-              {document.allowedExtensions.join(', ').toUpperCase()} · Maximum{' '}
-              {document.maxFileSizeMb} MB. Replacements create a new version for school review.
-            </Typography>
+            {latest && (
+              <Typography variant="caption" color="text.secondary">
+                Replacing the file creates a new version for school review.
+              </Typography>
+            )}
             <ShakingTextField error={Boolean(fileError)}>
               <FormControl fullWidth required={document.isRequired} error={Boolean(fileError)}>
-                <FormLabel
-                  id={`document-label-${document.code}`}
-                  sx={{ typography: 'body2', mb: 1 }}
-                >
+                <FormLabel id={`${id}-label`} sx={{ typography: 'body2', mb: 1 }}>
                   Document
                 </FormLabel>
                 <CustomUpload<false>
@@ -149,7 +163,7 @@ function ParentDocument({
                     formik.setFieldError('file', message);
                   }}
                   error={fileError}
-                  primaryText="Drop a file here or browse"
+                  primaryText={mobile ? 'Choose a file' : 'Drop a file here or browse'}
                   secondaryText="Select one document"
                   accept={document.allowedExtensions
                     .map((extension) => `.${extension.replace(/^\./, '')}`)
@@ -159,26 +173,26 @@ function ParentDocument({
                   loading={formik.isSubmitting}
                   parentsProps={{
                     role: 'group',
-                    'aria-labelledby': `document-label-${document.code}`,
+                    'aria-labelledby': `${id}-label`,
                   }}
                   dragProps={{
-                    'aria-describedby': `document-help-${document.code}`,
+                    'aria-describedby': `${id}-help`,
                     'aria-required': document.isRequired,
                   }}
                 />
               </FormControl>
             </ShakingTextField>
             <Stack direction="row" justifyContent="flex-end" spacing={1}>
-              {replacing && (
+              {uploadOpen && (
                 <Button
                   size="small"
                   disabled={uploading}
                   onClick={() => {
                     formik.resetForm();
-                    setReplacing(false);
+                    setUploadOpen(false);
                   }}
                 >
-                  Cancel replacement
+                  {latest ? 'Cancel replacement' : 'Cancel'}
                 </Button>
               )}
               <LoadingButton
@@ -188,19 +202,23 @@ function ParentDocument({
                 disabled={uploading}
                 onClick={() => formik.submitForm()}
               >
-                Upload document
+                {mobile ? 'Upload selected file' : 'Upload document'}
               </LoadingButton>
             </Stack>
           </>
         )}
-        {latest && document.canUpload && !disabled && !replacing && (
+        {document.canUpload && !disabled && !showUpload && (
           <Button
             size="small"
+            variant={latest ? 'text' : 'outlined'}
+            startIcon={
+              <Iconify icon={latest ? 'mdi:swap-horizontal' : GlobalIcons.upload} width={16} />
+            }
             disabled={uploading}
-            onClick={() => setReplacing(true)}
+            onClick={() => setUploadOpen(true)}
             sx={{ alignSelf: 'flex-start' }}
           >
-            Replace document
+            {latest ? 'Replace document' : 'Upload document'}
           </Button>
         )}
         {document.evidence.length > 1 && (

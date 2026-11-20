@@ -15,12 +15,12 @@ it('retains a correction draft when closing until the administrator explicitly d
       selectableSubjects: [{ subjectId: 'music', subjectName: 'Music' }, { subjectId: 'art', subjectName: 'Art' }] }}
     context={{ academicMediumId: 'medium', classId: 'class', divisionId: 'division', electiveGroupId: 'group' }}
     onClose={onClose} onSaved={vi.fn()} /></Provider>);
-  fireEvent.change(screen.getByLabelText('Reason (optional)'), { target: { value: 'Requested by parent' } });
+  fireEvent.change(screen.getByLabelText('Reason'), { target: { value: 'Requested by parent' } });
   fireEvent.click(screen.getByRole('button', { name: 'close' }));
   expect(onClose).not.toHaveBeenCalled();
   await screen.findByRole('dialog', { name: 'Discard Unsaved Changes?' });
   fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
-  await waitFor(() => expect(screen.getByLabelText('Reason (optional)')).toHaveValue('Requested by parent'));
+  await waitFor(() => expect(screen.getByLabelText('Reason')).toHaveValue('Requested by parent'));
   fireEvent.click(await screen.findByRole('button', { name: 'Cancel' }));
   fireEvent.click(await screen.findByRole('button', { name: 'Discard changes' }));
   expect(onClose).toHaveBeenCalledOnce();

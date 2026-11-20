@@ -887,7 +887,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                 onChange={(value) => {
                   setFieldValue('docs', value);
                 }}
-                primaryText="Upload Supporting Document (Optional)"
+                primaryText="Upload Supporting Document"
                 secondaryText="Accepted: PNG, JPG, PDF (max 5MB)"
               />
               {/* <UploadBox

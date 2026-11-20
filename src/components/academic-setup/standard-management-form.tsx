@@ -95,7 +95,7 @@ export function StandardManagementForm(props: StandardFormProps) {
                 `${option.shiftName} (${dayjs(option.startTime, 'HH:mm:ss').format('hh:mm A')}-${dayjs(option.endTime, 'HH:mm:ss').format('hh:mm A')})`
               }
               renderInput={(params) => (
-                <TextField {...params} label="Shift (optional)" size="small" />
+                <TextField {...params} label="Shift" size="small" />
               )}
               onChange={(_, value) => formik.setFieldValue('shiftId', value?.id ?? '')}
             />

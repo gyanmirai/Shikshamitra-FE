@@ -98,7 +98,7 @@ it('keeps an assigned counsellor compact until the user chooses to change it', a
   await user.click(screen.getByRole('button', { name: 'Change Counsellor' }));
 
   expect(screen.getByRole('combobox', { name: 'Change Journey Counsellor' })).toBeInTheDocument();
-  expect(screen.getByRole('textbox', { name: 'Reason for Change (Optional)' })).toBeInTheDocument();
+  expect(screen.getByRole('textbox', { name: 'Reason for Change' })).toBeInTheDocument();
 });
 
 it('uses compact ownership without repeating guidance and keeps the assignment form reachable', async () => {
@@ -140,7 +140,7 @@ it('locks compact counsellor form controls while the workspace is busy', () => {
     'aria-disabled',
     'true'
   );
-  expect(screen.getByRole('textbox', { name: 'Reason for Change (Optional)' })).toBeDisabled();
+  expect(screen.getByRole('textbox', { name: 'Reason for Change' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Assign Owner' })).toBeDisabled();
 });
 
@@ -197,7 +197,7 @@ it('reports a pending counsellor save and lets it finish while the workspace is 
   await user.click(screen.getByRole('button', { name: 'Assign Owner' }));
   await waitFor(() => expect(sent).toHaveBeenCalledOnce());
   await waitFor(() => expect(onBusyChange).toHaveBeenLastCalledWith(true));
-  expect(screen.getByRole('textbox', { name: 'Reason for Change (Optional)' })).toBeDisabled();
+  expect(screen.getByRole('textbox', { name: 'Reason for Change' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'close' })).toBeDisabled();
   finish();
@@ -317,13 +317,13 @@ it('keeps entered header assignment values after a failed save and protects dirt
   await user.click(screen.getByRole('combobox', { name: 'Assign Journey Counsellor' }));
   await user.click(screen.getByRole('option', { name: 'Counsellor One' }));
   await user.type(
-    screen.getByRole('textbox', { name: 'Reason for Change (Optional)' }),
+    screen.getByRole('textbox', { name: 'Reason for Change' }),
     'Admission follow-through'
   );
   await user.click(screen.getByRole('button', { name: 'Assign Owner' }));
   await waitFor(() => expect(screen.getByRole('button', { name: 'Assign Owner' })).toBeEnabled());
   expect(screen.getByRole('dialog', { name: 'Assign Journey Counsellor' })).toBeVisible();
-  expect(screen.getByRole('textbox', { name: 'Reason for Change (Optional)' })).toHaveValue(
+  expect(screen.getByRole('textbox', { name: 'Reason for Change' })).toHaveValue(
     'Admission follow-through'
   );
   const confirm = vi.fn().mockReturnValue(false);

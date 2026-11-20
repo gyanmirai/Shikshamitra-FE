@@ -67,6 +67,7 @@ export function AdmissionFormHistoryDialog({ form, canRestore, onClose, onRestor
 
   const versionsLoading = versions.isLoading || (versions.isFetching && !versions.currentData);
   const auditLoading = audit.isLoading || (audit.isFetching && !audit.currentData);
+  const auditEntries = audit.currentData ?? [];
   const comparableVersions = (versions.currentData ?? []).filter(
     (version) => version.id !== form?.id
   );
@@ -87,15 +88,12 @@ export function AdmissionFormHistoryDialog({ form, canRestore, onClose, onRestor
     >
       <DialogScrollContent sx={{ bgcolor: 'background.neutral' }}>
         <Stack spacing={2}>
-          <FormSectionCard
-            icon="mdi:compare"
-            title="Compare Versions"
-            description={
-              canRestore
+          <FormSectionCard icon="mdi:compare" title="Compare Versions">
+            <Typography variant="body2" color="text.secondary">
+              {canRestore
                 ? 'Review structural changes or restore an older version as a new editable draft.'
-                : 'Review structural changes between saved versions.'
-            }
-          >
+                : 'Review structural changes between saved versions.'}
+            </Typography>
             {versionsLoading ? (
               <Skeleton variant="rounded" height={40} aria-label="Loading Form Versions" />
             ) : versions.isError ? (
@@ -192,7 +190,7 @@ export function AdmissionFormHistoryDialog({ form, canRestore, onClose, onRestor
               !comparison.isError &&
               comparison.data &&
               (comparison.data.changes.length ? (
-                <List dense disablePadding>
+                <List dense disablePadding sx={{ maxHeight: 'none' }}>
                   {comparison.data.changes.map((change, index) => (
                     <ListItem key={`${index}:${change}`} disableGutters>
                       <ListItemText primary={change} />
@@ -225,14 +223,28 @@ export function AdmissionFormHistoryDialog({ form, canRestore, onClose, onRestor
               >
                 Unable to load form activity. Please try again.
               </StudentFeedback>
-            ) : audit.currentData?.length ? (
-              <List dense disablePadding>
-                {audit.currentData.map((entry) => (
-                  <ListItem key={entry.id} disableGutters divider sx={{ overflowWrap: 'anywhere' }}>
+            ) : auditEntries.length ? (
+              <List
+                dense
+                disablePadding
+                sx={{ maxHeight: 'none' }}
+                aria-label="Form Activity History"
+              >
+                {auditEntries.map((entry, index) => (
+                  <ListItem
+                    key={entry.id}
+                    disableGutters
+                    divider={index < auditEntries.length - 1}
+                    sx={{ overflowWrap: 'anywhere', py: 1.25 }}
+                  >
                     <ListItemText
                       primary={entry.action.replace(/([a-z])([A-Z])/g, '$1 $2')}
-                      primaryTypographyProps={{ variant: 'body2', fontWeight: 600 }}
-                      secondaryTypographyProps={{ variant: 'caption' }}
+                      primaryTypographyProps={{
+                        variant: 'body2',
+                        fontWeight: 600,
+                        color: 'text.primary',
+                      }}
+                      secondaryTypographyProps={{ variant: 'body2', color: 'text.secondary' }}
                       secondary={`${fDateTime(entry.occurredAt, ADMISSION_DATE_TIME_FORMAT)} · version ${entry.version}${entry.comment ? ` · ${entry.comment}` : ''}`}
                     />
                   </ListItem>
@@ -246,7 +258,7 @@ export function AdmissionFormHistoryDialog({ form, canRestore, onClose, onRestor
           </FormSectionCard>
         </Stack>
       </DialogScrollContent>
-      <DialogActions sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
+      <DialogActions>
         <Button
           variant="outlined"
           size="small"

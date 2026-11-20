@@ -110,7 +110,7 @@ it.each(['below', 'above'] as const)(
     });
     try {
       fireEvent.click(trigger);
-      const move = await screen.findByRole('menuitem', { name: 'Move to Next Stage' });
+      const move = await screen.findByRole('menuitem', { name: 'Start Application' });
       const menu = screen.getByRole('menu', { name: 'Actions For QA Student' });
       const paper = menu.closest('.MuiPopover-paper')!;
       await waitFor(() =>

@@ -52,8 +52,18 @@ it('uses sentence-case clone fields and submits the existing generated-code clon
     />
   );
   expect(screen.getByRole('textbox', { name: 'Cycle name' })).toBeVisible();
-  expect(screen.getByRole('textbox', { name: 'Description (optional)' })).toBeVisible();
+  expect(screen.getByRole('textbox', { name: 'Description' })).toBeVisible();
   expect(screen.getByRole('heading', { name: 'Cycle Configuration' })).toBeVisible();
+  const copyNotice = screen.getByRole('alert');
+  expect(copyNotice).toHaveTextContent(
+    'The copy is created as a draft. Offerings and applications are not copied.'
+  );
+  expect(copyNotice.querySelector('.MuiAlert-icon')).toBeInTheDocument();
+  expect(copyNotice).toContainElement(
+    screen.getByRole('button', { name: 'Dismiss copy information' })
+  );
+  await user.click(screen.getByRole('button', { name: 'Dismiss copy information' }));
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   await user.click(screen.getByRole('button', { name: 'Submit' }));
   await waitFor(() =>
     expect(onConfirm).toHaveBeenCalledWith(

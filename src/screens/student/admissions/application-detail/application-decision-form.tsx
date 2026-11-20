@@ -149,7 +149,7 @@ export function ApplicationDecisionForm({
                 multiline
                 minRows={3}
                 size="small"
-                label={requiresReason ? 'Reason' : 'Reason (Optional)'}
+                label={requiresReason ? 'Reason' : 'Reason'}
                 {...formik.getFieldProps('reason')}
                 error={showReasonError}
                 helperText={showReasonError ? formik.errors.reason : undefined}

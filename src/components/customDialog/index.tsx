@@ -185,6 +185,7 @@ export const DialogScrollContent = ({
   children,
   scrollBarProps = {},
   onSubmit,
+  sx,
   ...props
 }: {
   children: React.ReactNode;
@@ -207,7 +208,7 @@ export const DialogScrollContent = ({
         onKeyDown={handleKeyDown}
         sx={{
           p: 2, // Increased content padding for better readability
-          ...props.sx,
+          ...sx,
         }}
         {...props}
       >

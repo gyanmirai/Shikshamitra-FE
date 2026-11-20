@@ -4339,7 +4339,7 @@ const SubstitutionManagementScreen = () => {
               <AccordionDetails sx={{ px: 0, pt: 1.5, pb: 0 }}>
                 <Stack spacing={1.5}>
                   <CustomSelect
-                    label="Room Change (Optional)"
+                    label="Room Change"
                     options={[{ value: '', label: 'Keep current room' }, ...roomOptions]}
                     value={assignRoom}
                     onChange={(value) => setAssignRoom(value as string)}

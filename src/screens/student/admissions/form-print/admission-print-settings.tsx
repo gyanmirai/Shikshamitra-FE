@@ -3,19 +3,19 @@ import type { AdmissionPrintAdvancedSettings } from 'src/redux/student/admission
 import { useId } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { FormSectionCard } from 'src/components/form-section-card';
+import { resolveAdmissionPrintAdvancedSettings } from 'src/redux/student/admissions/admission-form-print-settings';
 import {
   Box,
   Stack,
   Radio,
   Switch,
-  TextField,
   RadioGroup,
   Typography,
   FormControlLabel,
 } from '@mui/material';
-import { resolveAdmissionPrintAdvancedSettings } from 'src/redux/student/admissions/admission-form-print-settings';
 
 import { PrintSettingSelect } from './admission-print-setting-controls';
+import { PrintInstructionsListEditor } from './print-instructions-list-editor';
 
 import type { AdmissionPrintSettings, AdmissionPrintBranding } from './form-print-model';
 
@@ -54,7 +54,7 @@ export function AdmissionPrintSettingsPanel({
     <Stack spacing={2} sx={{ width: 1 }}>
       <FormSectionCard
         title="Print Template"
-        descriptionTooltip="Choose the paper form style. This is saved with the form and used when printing from Registration or Pipeline."
+        descriptionTooltip="Choose the paper form style. This is saved with the form and used when printing from Registration or Pipeline. Boxed Grid: Bordered cells and character boxes for handwriting. Structured Classic: Framed sections with ruled writing space."
       >
         <RadioGroup
           aria-label="Print template"
@@ -66,27 +66,18 @@ export function AdmissionPrintSettingsPanel({
         >
           {(
             [
-              ['boxed-grid', 'Boxed Grid', 'Bordered cells and character boxes for handwriting.'],
-              [
-                'structured-classic',
-                'Structured Classic',
-                'Framed sections with ruled writing space.',
-              ],
+              ['boxed-grid', 'Boxed Grid'],
+              ['structured-classic', 'Structured Classic'],
             ] as const
-          ).map(([template, title, description]) => (
+          ).map(([template, title]) => (
             <FormControlLabel
               key={template}
               value={template}
               control={<Radio size="small" />}
               label={
-                <Stack spacing={0.5}>
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <TemplateThumbnail boxed={template === 'boxed-grid'} />
-                    <Typography variant="subtitle2">{title}</Typography>
-                  </Stack>
-                  <Typography variant="caption" color="text.secondary">
-                    {description}
-                  </Typography>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <TemplateThumbnail boxed={template === 'boxed-grid'} />
+                  <Typography variant="subtitle2">{title}</Typography>
                 </Stack>
               }
               sx={{
@@ -131,6 +122,7 @@ export function AdmissionPrintSettingsPanel({
           options={[
             { label: 'School blue', value: 'school-blue' },
             { label: 'Neutral', value: 'neutral' },
+            { label: 'Forest green', value: 'forest-green' },
             { label: 'Black & white', value: 'monochrome' },
           ]}
           onChange={(value) =>
@@ -154,7 +146,7 @@ export function AdmissionPrintSettingsPanel({
       </FormSectionCard>
       <FormSectionCard
         title="School Branding"
-        descriptionTooltip="The logo and banner come from Institute Setup. Printing does not change them."
+        descriptionTooltip={`The logo and banner come from Institute Setup. Printing does not change them. Applies to the banner from Institute Setup.${!branding.bannerUrl && !branding.logoUrl ? ' No school logo or banner configured in Institute Setup.' : ''}`}
       >
         <FormControlLabel
           label="School header"
@@ -167,11 +159,7 @@ export function AdmissionPrintSettingsPanel({
         />
         {settings.showSchoolHeader && (
           <>
-            {!branding.bannerUrl && !branding.logoUrl ? (
-              <Typography variant="body2" color="text.secondary">
-                No school logo or banner configured in Institute Setup.
-              </Typography>
-            ) : (
+            {(branding.bannerUrl || branding.logoUrl) && (
               <>
                 {(
                   [
@@ -222,7 +210,6 @@ export function AdmissionPrintSettingsPanel({
                   ...(placement === 'selected' ? { bannerPages } : {}),
                 })
               }
-              helperText="Applies to the banner from Institute Setup."
             />
             {bannerPlacement === 'selected' && (
               <CustomSelect
@@ -257,21 +244,15 @@ export function AdmissionPrintSettingsPanel({
           }
         />
         {advanced.content.showInstructions && (
-          <TextField
-            label="Instructions"
-            multiline
-            minRows={2}
-            maxRows={5}
-            size="small"
+          <PrintInstructionsListEditor
             value={advanced.content.translations[defaultLanguage]?.instructions ?? ''}
-            slotProps={{ htmlInput: { maxLength: 2000 } }}
-            onChange={(event) =>
+            onChange={(instructions) =>
               update('content', {
                 translations: {
                   ...advanced.content.translations,
                   [defaultLanguage]: {
                     ...advanced.content.translations[defaultLanguage],
-                    instructions: event.target.value,
+                    instructions,
                   },
                 },
               })

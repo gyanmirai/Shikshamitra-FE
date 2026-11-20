@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
-import { Box, Stack, Alert, Button, Skeleton, Typography } from '@mui/material';
+import { Box, Stack, Alert, Button, Skeleton, IconButton, Typography } from '@mui/material';
 
 import { usePdfPage } from './use-pdf-page';
 
@@ -51,15 +51,15 @@ export default function PdfCanvas({
       flexWrap="wrap"
       useFlexGap
     >
-      <Button
+      <IconButton
         size="small"
-        variant="outlined"
-        startIcon={<Iconify icon="solar:arrow-left-bold" width={18} />}
+        aria-label="Previous page"
+        sx={{ border: 1, borderColor: 'divider', borderRadius: 1, p: 0.75 }}
         disabled={pdf.loading || pdf.error || currentPage === 1}
         onClick={() => changePage(currentPage - 1)}
       >
-        Previous Page
-      </Button>
+        <Iconify icon="solar:arrow-left-bold" width={18} />
+      </IconButton>
       {usePageSelector ? (
         <CustomSelect
           label="Page"
@@ -78,15 +78,15 @@ export default function PdfCanvas({
           Page {currentPage} of {pdf.pageCount}
         </Typography>
       )}
-      <Button
+      <IconButton
         size="small"
-        variant="outlined"
-        startIcon={<Iconify icon="solar:arrow-right-bold" width={18} />}
+        aria-label="Next page"
+        sx={{ border: 1, borderColor: 'divider', borderRadius: 1, p: 0.75 }}
         disabled={pdf.loading || pdf.error || currentPage >= pdf.pageCount}
         onClick={() => changePage(currentPage + 1)}
       >
-        Next Page
-      </Button>
+        <Iconify icon="solar:arrow-right-bold" width={18} />
+      </IconButton>
       <Button
         size="small"
         variant="outlined"

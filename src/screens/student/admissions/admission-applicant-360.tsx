@@ -191,8 +191,8 @@ export default function AdmissionApplicant360Screen() {
                 </>
               ) : (
                 <StudentFeedback notificationKey="STU-0009" presentation="inline" severity="info">
-                  No admission application has started. Continue the inquiry and use Move to next
-                  stage when it is ready.
+                  No admission application has started. Continue the inquiry and use Start
+                  Application when it is ready.
                 </StudentFeedback>
               )}
               {inquiryId && (

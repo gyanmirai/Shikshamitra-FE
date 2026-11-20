@@ -60,7 +60,7 @@ export function AdmissionOfferingHierarchyFields({
       {showCampus && (
         <Grid size={{ xs: 12, sm: 6 }}>
           <AdmissionCampusSelect
-            label="Campus (Optional)"
+            label="Campus"
             valueId={formik.values.campusId ?? null}
             initialOption={initialCampus}
             fetchOptions={fetchCampuses}

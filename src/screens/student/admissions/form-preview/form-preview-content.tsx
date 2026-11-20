@@ -31,9 +31,16 @@ type Props = {
   formik: FormikProps<Record<string, string>>;
   resolvedOptions: Record<string, string>;
   embedded?: boolean;
+  preview?: boolean;
 };
 
-export function FormPreviewContent({ form, formik, resolvedOptions, embedded = false }: Props) {
+export function FormPreviewContent({
+  form,
+  formik,
+  resolvedOptions,
+  embedded = false,
+  preview = false,
+}: Props) {
   const fieldsPerRow = form.fieldsPerRow ?? 1;
   const { values } = formik;
   const [activeStep, setActiveStep] = useState(0);
@@ -141,6 +148,7 @@ export function FormPreviewContent({ form, formik, resolvedOptions, embedded = f
               onBlur={() => formik.setFieldTouched(field.code, true).catch(() => undefined)}
               onBusyChange={(busy) => onPhotoReading(`${field.code}[${entryIndex ?? 0}]`, busy)}
               formValues={rowValues}
+              preview={preview}
               onChange={(nextValue) =>
                 entryIndex === undefined
                   ? updateField(field.code, nextValue)

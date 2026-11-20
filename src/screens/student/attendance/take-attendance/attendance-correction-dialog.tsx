@@ -173,7 +173,7 @@ export default function AttendanceCorrectionDialog({
         <TextField
           fullWidth
           name="remarks"
-          label="Note (optional)"
+          label="Note"
           size="small"
           value={formik.values.remarks}
           onChange={formik.handleChange}

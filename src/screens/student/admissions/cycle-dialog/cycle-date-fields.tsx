@@ -5,6 +5,7 @@ import dayjs from 'dayjs';
 import { Grid } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers';
 import ShakingTextField from 'src/components/shaking-text-field';
+import DatePickerCalendarHeader from 'src/components/date-picker-calendar-header';
 
 import { ADMISSION_DATE_FORMAT } from '../admission-date-formats';
 
@@ -25,6 +26,9 @@ export function CycleDateFields({
           <DatePicker
             label="Applications open"
             format={ADMISSION_DATE_FORMAT}
+            views={['year', 'month', 'day']}
+            openTo="day"
+            slots={{ calendarHeader: DatePickerCalendarHeader }}
             minDate={minDate}
             disabled={disabled}
             value={formik.values.startDate ? dayjs(formik.values.startDate) : null}
@@ -54,6 +58,9 @@ export function CycleDateFields({
           <DatePicker
             label="Applications close"
             format={ADMISSION_DATE_FORMAT}
+            views={['year', 'month', 'day']}
+            openTo="day"
+            slots={{ calendarHeader: DatePickerCalendarHeader }}
             minDate={minDate}
             disabled={disabled}
             value={formik.values.endDate ? dayjs(formik.values.endDate) : null}

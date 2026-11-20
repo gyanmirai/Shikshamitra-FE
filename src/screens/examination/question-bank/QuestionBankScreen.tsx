@@ -1244,7 +1244,7 @@ function QuestionFormFields({
           <Grid size={{ xs: 12, sm: 6 }}>
             <ShakingTextField error={formik.touched.chapterId && !!formik.errors.chapterId}>
               <CustomSelect
-                label={requireChapter ? 'Chapter *' : 'Chapter (optional)'}
+                label={requireChapter ? 'Chapter *' : 'Chapter'}
                 options={[{ value: '', label: 'None' }, ...chapterOptions]}
                 value={formik.values.chapterId || ''}
                 disabled={!formik.values.subjectId}
@@ -1261,7 +1261,7 @@ function QuestionFormFields({
               <LanguageInputField
                 fullWidth
                 size="small"
-                label={requireTopic ? 'Topic *' : 'Topic (optional)'}
+                label={requireTopic ? 'Topic *' : 'Topic'}
                 name="topicName"
                 value={formik.values.topicName || ''}
                 onChange={formik.handleChange}

@@ -5,7 +5,7 @@ export function WorkflowInquiryContext() {
     <Stack spacing={0.5} sx={{ p: 1.5, border: 1, borderColor: 'divider', borderRadius: 1.5 }}>
       <Typography variant="subtitle2">Inquiry Submitted</Typography>
       <Typography variant="body2" color="text.secondary">
-        Mark the inquiry Interested, then choose Move to next stage to start this journey.
+        Mark the inquiry Interested, then choose Start Application to begin this journey.
       </Typography>
     </Stack>
   );

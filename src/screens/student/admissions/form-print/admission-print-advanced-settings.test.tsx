@@ -109,15 +109,87 @@ function choose(label: string, option: string) {
 }
 
 describe('Advanced registration print settings', () => {
-  it('offers a fixed top-right header placement and retains the saved alignment for other placements', () => {
+  it('edits writing instructions as list items while preserving the saved newline format', () => {
+    render(
+      <Harness
+        initial={{
+          ...DEFAULT_ADMISSION_PRINT_SETTINGS,
+          advanced: {
+            content: {
+              showInstructions: true,
+              translations: { en: { instructions: 'Use black ink.\nWrite clearly.' } },
+            },
+          },
+        }}
+      />
+    );
+    fireEvent.click(screen.getByRole('tab', { name: 'Content & copies' }));
+
+    expect(screen.getByLabelText('Instruction 1')).toHaveValue('Use black ink.');
+    expect(screen.getByLabelText('Instruction 2')).toHaveValue('Write clearly.');
+    fireEvent.click(screen.getByRole('button', { name: 'Add instruction' }));
+    fireEvent.change(screen.getByLabelText('Instruction 3'), {
+      target: { value: 'Sign every page.' },
+    });
+    expect(payload().advanced.content.translations.en.instructions).toBe(
+      'Use black ink.\nWrite clearly.\nSign every page.'
+    );
+  });
+
+  it('places content guidance beside the related setting labels', () => {
     render(<Harness />);
+    fireEvent.click(screen.getByRole('tab', { name: 'Content & copies' }));
+
+    expect(screen.getByRole('button', { name: 'Include instructions help' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Include declaration help' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Parent signature help' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Office signature help' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Instructions text help' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Declaration text help' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Parent signature label help' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Office signature label help' })).not.toBeInTheDocument();
+  });
+
+  it('shows independent parent and office signature uploads and persists their images', () => {
+    render(
+      <Harness
+        initial={{
+          ...DEFAULT_ADMISSION_PRINT_SETTINGS,
+          advanced: {
+            content: {
+              parentSignatureImage: 'data:image/png;base64,cGFyZW50',
+              officeSignatureImage: 'data:image/jpeg;base64,b2ZmaWNl',
+            },
+          },
+        }}
+      />
+    );
+    fireEvent.click(screen.getByRole('tab', { name: 'Content & copies' }));
+
+    expect(screen.getByRole('group', { name: /Parent signature image/ })).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: /Office signature image/ })).toBeInTheDocument();
+    expect(payload().advanced.content).toMatchObject({
+      parentSignatureImage: 'data:image/png;base64,cGFyZW50',
+      officeSignatureImage: 'data:image/jpeg;base64,b2ZmaWNl',
+    });
+  });
+
+  it('keeps photo placement hidden while preserving existing saved placement settings', () => {
+    render(
+      <Harness
+        initial={{
+          ...DEFAULT_ADMISSION_PRINT_SETTINGS,
+          advanced: { photo: { placement: 'header-top-right', alignment: 'center' } },
+        }}
+      />
+    );
     fireEvent.click(screen.getByRole('tab', { name: 'Header & footer' }));
-    choose('Photo alignment', 'Centre');
-    choose('Photo placement', 'Top-right of header');
-    expect(screen.getByRole('combobox', { name: 'Photo alignment' })).toHaveAttribute('aria-disabled', 'true');
-    expect(payload().advanced.photo).toMatchObject({ placement: 'header-top-right', alignment: 'center' });
-    choose('Photo placement', 'First page');
-    expect(screen.getByRole('combobox', { name: 'Photo alignment' })).toHaveTextContent('Centre');
+    expect(screen.queryByRole('combobox', { name: 'Photo placement' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Photo alignment' })).not.toBeInTheDocument();
+    expect(payload().advanced.photo).toMatchObject({
+      placement: 'header-top-right',
+      alignment: 'center',
+    });
   });
 
   it('keeps specific banner pages independent of the header choice', () => {
@@ -132,21 +204,38 @@ describe('Advanced registration print settings', () => {
     });
   });
 
-  it('saves photo visibility and alignment independently of photo placement', () => {
-    render(<Harness />);
-    fireEvent.click(screen.getByRole('tab', { name: 'Header & footer' }));
-    choose('Photo alignment', 'Centre');
-    fireEvent.click(screen.getByLabelText('Show photo space'));
-    expect(screen.getByRole('combobox', { name: 'Photo alignment' })).toHaveAttribute(
-      'aria-disabled',
-      'true'
+  it('edits Basic writing instructions as separate list items', () => {
+    render(<Harness basic />);
+    fireEvent.click(screen.getByLabelText('Print writing instructions'));
+    fireEvent.change(screen.getByLabelText('Instruction 1'), {
+      target: { value: 'Use black ink.' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Add instruction' }));
+    fireEvent.change(screen.getByLabelText('Instruction 2'), {
+      target: { value: 'Bring required documents.' },
+    });
+    expect(payload().advanced.content.translations.en.instructions).toBe(
+      'Use black ink.\nBring required documents.'
     );
+  });
+
+  it('saves photo visibility while retaining the saved placement values', () => {
+    render(
+      <Harness
+        initial={{
+          ...DEFAULT_ADMISSION_PRINT_SETTINGS,
+          advanced: { photo: { placement: 'last', alignment: 'center' } },
+        }}
+      />
+    );
+    fireEvent.click(screen.getByRole('tab', { name: 'Header & footer' }));
+    fireEvent.click(screen.getByLabelText('Show photo space'));
     expect(payload()).toMatchObject({
       showPhoto: false,
-      advanced: { photo: { alignment: 'center' } },
+      advanced: { photo: { placement: 'last', alignment: 'center' } },
     });
     fireEvent.click(screen.getByLabelText('Show photo space'));
-    expect(screen.getByRole('combobox', { name: 'Photo alignment' })).toHaveTextContent('Centre');
+    expect(payload().advanced.photo).toMatchObject({ placement: 'last', alignment: 'center' });
   });
 
   it('preserves existing overrides and serializes paper, border and typography edits independently', () => {
@@ -164,7 +253,7 @@ describe('Advanced registration print settings', () => {
     choose('Orientation', 'Landscape');
     fireEvent.click(screen.getByRole('switch', { name: 'Show page border' }));
     choose('Border style', 'Double line');
-    choose('Colour palette', 'School blue');
+    fireEvent.click(screen.getByRole('radio', { name: /School blue/ }));
     expect(payload()).toMatchObject({
       paperSize: 'A5',
       advanced: {
@@ -176,6 +265,305 @@ describe('Advanced registration print settings', () => {
         content: initial.advanced?.content,
       },
     });
+  });
+
+  it('offers four print colour presets and font families', () => {
+    render(<Harness />);
+    expect(screen.getByRole('radio', { name: /School blue/ })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /Neutral/ })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /Forest green/ })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /Black and white/ })).toBeInTheDocument();
+    expect(screen.queryByLabelText('Section fill')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('radio', { name: /Forest green/ }));
+    expect(payload().advanced.style).toMatchObject({
+      palette: 'forest-green',
+      sectionFill: '#E8F5EC',
+      borderColor: '#166534',
+      textColor: '#102A1A',
+    });
+
+    expect(screen.getByRole('radio', { name: 'Sans serif' })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Serif' })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Monospace' })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Roboto' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('radio', { name: 'Monospace' }));
+    expect(payload().advanced.style.fontFamily).toBe('monospace');
+  });
+
+  it('resets each paper and style card independently', () => {
+    render(
+      <Harness
+        initial={{
+          ...DEFAULT_ADMISSION_PRINT_SETTINGS,
+          paperSize: 'A5',
+          advanced: {
+            paper: {
+              orientation: 'landscape',
+              margins: { top: 20, right: 20, bottom: 20, left: 20 },
+            },
+            border: { enabled: true, style: 'double', thickness: 'thick', inset: 15 },
+            style: { palette: 'forest-green', fontFamily: 'roboto', baseSize: 12, titleSize: 20 },
+          },
+        }}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset Print Colours to defaults' }));
+    expect(payload()).toMatchObject({
+      paperSize: 'A5',
+      advanced: {
+        paper: { orientation: 'landscape', margins: { top: 20 } },
+        border: { enabled: true, style: 'double', thickness: 'thick', inset: 15 },
+        style: { palette: 'neutral', sectionFill: '#F3F4F6', fontFamily: 'roboto', baseSize: 12 },
+      },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset Typography to defaults' }));
+    expect(payload().advanced.style).toMatchObject({
+      palette: 'neutral',
+      fontFamily: 'sans',
+      baseSize: 10,
+      titleSize: 16,
+      labelWeight: 'semibold',
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset Paper Setup to defaults' }));
+    expect(payload()).toMatchObject({
+      paperSize: 'A4',
+      advanced: {
+        paper: { orientation: 'portrait', margins: { top: 12, right: 12, bottom: 12, left: 12 } },
+        border: { enabled: true, style: 'double' },
+      },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset Page Border to defaults' }));
+    expect(payload().advanced.border).toMatchObject({
+      enabled: false,
+      placement: 'every',
+      style: 'single',
+      thickness: 'thin',
+      inset: 8,
+      corners: 'square',
+      sectionBorders: true,
+      fieldBorders: true,
+      dividers: true,
+    });
+  });
+
+  it('resets header and footer cards independently and removes photo placement controls', () => {
+    render(
+      <Harness
+        initial={{
+          ...DEFAULT_ADMISSION_PRINT_SETTINGS,
+          showPhoto: false,
+          advanced: {
+            header: {
+              schoolName: false,
+              address: false,
+              phone: true,
+              continuation: 'full',
+              title: 'Keep me',
+              registrationNumber: false,
+            },
+            photo: {
+              placement: 'last',
+              alignment: 'left',
+              width: 50,
+              height: 60,
+              caption: 'Portrait',
+              useSaved: false,
+            },
+            footer: { placement: 'last', alignment: 'left', pageNumbers: false, schoolName: true },
+          },
+        }}
+      />
+    );
+    fireEvent.click(screen.getByRole('tab', { name: 'Header & footer' }));
+
+    expect(screen.queryByLabelText('Photo placement')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Photo alignment')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Add a photo question in Build form/)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset School Details to defaults' }));
+    expect(payload().advanced.header).toMatchObject({
+      schoolName: true,
+      address: true,
+      phone: false,
+      continuation: 'compact',
+      title: 'Keep me',
+      registrationNumber: false,
+    });
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Reset Title & Admission Details to defaults' })
+    );
+    expect(payload().advanced.header).toMatchObject({
+      schoolName: true,
+      title: '',
+      subtitle: '',
+      alignment: 'center',
+      registrationNumber: true,
+      date: true,
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset Photo Space to defaults' }));
+    expect(payload()).toMatchObject({
+      showPhoto: true,
+      advanced: {
+        photo: {
+          placement: 'first',
+          alignment: 'right',
+          width: 35,
+          height: 45,
+          caption: '',
+          useSaved: true,
+        },
+      },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset Footer to defaults' }));
+    expect(payload().advanced.footer).toMatchObject({
+      placement: 'every',
+      alignment: 'right',
+      pageNumbers: true,
+      registrationReference: false,
+      schoolName: false,
+      formTitle: false,
+    });
+  });
+
+  it('resets form flow and the selected section and field without clearing other overrides', () => {
+    render(
+      <Harness
+        initial={{
+          ...DEFAULT_ADMISSION_PRINT_SETTINGS,
+          advanced: {
+            flow: { stepTitles: false, sectionNumbers: false },
+            sections: { STUDENT: { columns: 4, fullWidth: true }, SIBLINGS: { columns: 3 } },
+            fields: {
+              FIRST_NAME: { width: 'full', showHelp: true },
+              SIBLING_NAME: { width: 'half' },
+            },
+          },
+        }}
+      />
+    );
+    fireEvent.click(screen.getByRole('tab', { name: 'Sections & fields' }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset Form Flow to defaults' }));
+    expect(payload().advanced.flow).toEqual({ stepTitles: true, sectionNumbers: true });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset Section Layout to defaults' }));
+    expect(payload().advanced.sections).toEqual({ SIBLINGS: { columns: 3 } });
+    expect(screen.getByRole('combobox', { name: 'Section columns' })).toHaveTextContent('2 columns');
+    expect(screen.getByRole('combobox', { name: 'Section spacing' })).toHaveTextContent('Compact');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset Field Appearance to defaults' }));
+    expect(payload().advanced.fields).toEqual({ SIBLING_NAME: { width: 'half' } });
+    expect(screen.getByRole('combobox', { name: 'Field width' })).toHaveTextContent(
+      'Use section columns'
+    );
+  });
+
+  it('resets content and copy cards and exposes field guidance through custom tooltips', () => {
+    render(
+      <Harness
+        initial={{
+          ...DEFAULT_ADMISSION_PRINT_SETTINGS,
+          advanced: {
+            content: {
+              showInstructions: true,
+              instructionsPlacement: 'section',
+              instructionSection: 'STUDENT',
+              showChecklist: true,
+              checklistPlacement: 'first',
+              showDeclaration: true,
+              signaturePlacement: 'separate-page',
+              parentSignature: false,
+              officeSignature: false,
+              signatureDate: true,
+              showOfficeUse: true,
+              officePlacement: 'separate-page',
+              documentChecks: false,
+              remarks: false,
+              verificationDate: false,
+              stamp: false,
+              translations: {
+                en: {
+                  instructions: 'School instructions',
+                  checklist: ['Birth certificate'],
+                  declaration: 'School declaration',
+                  parentLabel: 'Guardian',
+                  officeLabel: 'Staff',
+                },
+                gu: { instructions: 'Keep Gujarati' },
+              },
+            },
+            copies: { unanswered: 'dash', selectedChoices: 'mark' },
+          },
+        }}
+      />
+    );
+    fireEvent.click(screen.getByRole('tab', { name: 'Content & copies' }));
+
+    expect(screen.getByRole('button', { name: 'Include instructions help' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Include declaration help' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Parent signature help' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Office signature help' })).toBeInTheDocument();
+    expect(
+      screen.queryByText('Up to 2,000 characters for the selected language.')
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('Leave empty to use the standard translated label.')
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset Instructions to defaults' }));
+    expect(payload().advanced.content).toMatchObject({
+      showInstructions: false,
+      instructionsPlacement: 'first',
+      instructionSection: '',
+      translations: {
+        en: { checklist: ['Birth certificate'], declaration: 'School declaration' },
+        gu: { instructions: 'Keep Gujarati' },
+      },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset Document Checklist to defaults' }));
+    expect(payload().advanced.content).toMatchObject({
+      showChecklist: false,
+      checklistPlacement: 'last',
+    });
+    expect(payload().advanced.content.translations.en.checklist).toBeUndefined();
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Reset Declaration & Signatures to defaults' })
+    );
+    expect(payload().advanced.content).toMatchObject({
+      showDeclaration: false,
+      signaturePlacement: 'last',
+      parentSignature: true,
+      officeSignature: true,
+      signatureDate: false,
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset Office Use to defaults' }));
+    expect(payload().advanced.content).toMatchObject({
+      showOfficeUse: false,
+      officePlacement: 'last',
+      documentChecks: true,
+      remarks: true,
+      verificationDate: true,
+      stamp: true,
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset Filled Copies to defaults' }));
+    expect(payload().advanced.copies).toEqual({ unanswered: 'blank', selectedChoices: 'label' });
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Reset Print Content Language to defaults' })
+    );
+    expect(screen.getByRole('combobox', { name: 'Content language' })).toHaveTextContent('English');
   });
 
   it('keeps saved contact flags while disabling unavailable school contact options', () => {
@@ -239,7 +627,7 @@ describe('Advanced registration print settings', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'Content & copies' }));
     fireEvent.click(screen.getByRole('switch', { name: 'Include instructions' }));
     choose('Content language', 'Gujarati');
-    fireEvent.change(screen.getByLabelText('Instructions text'), {
+    fireEvent.change(screen.getByLabelText('Instruction 1'), {
       target: { value: 'Updated Gujarati instructions' },
     });
     fireEvent.click(screen.getByRole('switch', { name: 'Include document checklist' }));
@@ -253,7 +641,7 @@ describe('Advanced registration print settings', () => {
     });
     choose('Unanswered fields', 'Show dash');
     choose('Content language', 'English');
-    expect(screen.getByLabelText('Instructions text')).toHaveValue('English instructions');
+    expect(screen.getByLabelText('Instruction 1')).toHaveValue('English instructions');
     expect(payload().advanced).toMatchObject({
       content: {
         showInstructions: true,
@@ -333,7 +721,7 @@ describe('Advanced registration print settings', () => {
     expect(screen.getByLabelText('Document 1')).toBeDisabled();
   });
 
-  it('explains unavailable photo-question placement without clearing a previously saved choice', () => {
+  it('retains a saved photo-question placement without exposing the removed controls', () => {
     render(
       <Harness
         initial={{
@@ -343,16 +731,10 @@ describe('Advanced registration print settings', () => {
       />
     );
     fireEvent.click(screen.getByRole('tab', { name: 'Header & footer' }));
-    expect(screen.getByText(/Add a photo question in Build form to place/)).toBeVisible();
-    expect(screen.getByRole('combobox', { name: 'Photo placement' })).toHaveTextContent(
-      'With photo question'
-    );
-    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Photo placement' }));
-    expect(screen.getByRole('option', { name: /With photo question/ })).toHaveAttribute(
-      'aria-disabled',
-      'true'
-    );
-    fireEvent.click(screen.getByRole('option', { name: 'First page' }));
-    expect(payload().advanced.photo.placement).toBe('first');
+    expect(
+      screen.queryByText(/Add a photo question in Build form to place/)
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Photo placement' })).not.toBeInTheDocument();
+    expect(payload().advanced.photo.placement).toBe('field');
   });
 });

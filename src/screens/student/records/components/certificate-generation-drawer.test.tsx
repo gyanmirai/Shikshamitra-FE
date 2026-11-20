@@ -380,14 +380,14 @@ it('does not issue further batch students after the drawer unmounts', async () =
 it('keeps shared fields and clears type-specific fields when changing the certificate type', () => {
   renderDrawer();
   fireEvent.click(screen.getByRole('radio', { name: /Character/ }));
-  fireEvent.change(screen.getByRole('textbox', { name: 'Conduct assessment (optional)' }), {
+  fireEvent.change(screen.getByRole('textbox', { name: 'Conduct assessment' }), {
     target: { value: 'Verified conduct only' },
   });
   fireEvent.change(screen.getByRole('textbox', { name: 'Purpose / reason' }), {
     target: { value: 'School records' },
   });
   fireEvent.click(screen.getByRole('radio', { name: /First Trial/ }));
-  expect(screen.getByRole('textbox', { name: 'First trial particulars (optional)' })).toHaveValue(
+  expect(screen.getByRole('textbox', { name: 'First trial particulars' })).toHaveValue(
     ''
   );
   expect(screen.getByRole('textbox', { name: 'Purpose / reason' })).toHaveValue('School records');

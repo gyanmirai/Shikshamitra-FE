@@ -85,7 +85,7 @@ export function EligibilityCriterionBasics({
         multiline
         minRows={2}
         size="small"
-        label="Explanation When This Check Fails (Optional)"
+        label="Explanation When This Check Fails"
         name="failureMessage"
         value={formik.values.failureMessage ?? ''}
         onChange={formik.handleChange}

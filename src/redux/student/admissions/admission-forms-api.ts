@@ -1,4 +1,3 @@
-
 import { api } from 'src/redux/service';
 import { financeModuleType, studentAdmissionsCrmType } from 'src/redux/tagTypes';
 import { academicReorderTags } from 'src/redux/academic-reorder-tags';
@@ -7,6 +6,11 @@ import type { AdmissionFormPrintSettings } from './admission-form-print-settings
 export type AdmissionFormStatus = 0 | 1 | 2;
 export type AdmissionFormLayoutType = 0 | 1;
 export type AdmissionFormPurpose = 0 | 1;
+export type AdmissionFormNameAvailability = {
+  isAvailable: boolean;
+  existingStatus?: AdmissionFormStatus | null;
+  message?: string | null;
+};
 export type { AdmissionFormPrintSettings } from './admission-form-print-settings';
 export type AdmissionFormFieldType = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
 export type AdmissionFormBindingType = 0 | 1;
@@ -238,6 +242,18 @@ const unwrap = <T>(r: Result<T> | T): T => {
 };
 export const admissionFormsApi = api.injectEndpoints({
   endpoints: (builder) => ({
+    checkAdmissionFormName: builder.query<
+      AdmissionFormNameAvailability,
+      { name: string; excludingFormId?: string }
+    >({
+      query: (params) => ({
+        url: '/student/enrollment/admissions/forms/name-availability',
+        params,
+      }),
+      transformResponse: (
+        response: Result<AdmissionFormNameAvailability> | AdmissionFormNameAvailability
+      ) => unwrap(response),
+    }),
     getSavedAdmissionFormInheritancePreview: builder.query<
       AdmissionFormInheritancePreview,
       { id: string; inquiryFormDefinitionId: string }
@@ -518,6 +534,7 @@ export const admissionFormsApi = api.injectEndpoints({
   }),
 });
 export const {
+  useLazyCheckAdmissionFormNameQuery,
   useGetSavedAdmissionFormInheritancePreviewQuery,
   useGetAdmissionFormInheritanceSourcesQuery,
   usePreviewAdmissionFormInheritanceMutation,

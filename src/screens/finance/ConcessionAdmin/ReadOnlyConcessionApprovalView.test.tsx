@@ -47,7 +47,7 @@ describe('concession approval review', () => {
   it('requires server review before confirming and preserves approval metadata and note', async () => {
     const onBack = vi.fn();
     render(<ReadOnlyConcessionApprovalView selectedItem={item} mode="Approve" onBack={onBack} />);
-    fireEvent.change(screen.getByLabelText('Approval note (optional)'), {
+    fireEvent.change(screen.getByLabelText('Approval note'), {
       target: { value: '  Verified documents  ' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Review impact' }));

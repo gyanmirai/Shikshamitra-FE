@@ -2,7 +2,7 @@
 
 import type { ReactNode } from 'react';
 
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Box, IconButton } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
@@ -20,9 +20,13 @@ export function InfoTooltipIcon({
   disabled?: boolean;
 }) {
   const anchorRef = useRef<HTMLSpanElement>(null);
+  const [open, setOpen] = useState(false);
 
   return (
     <CustomTooltip
+      open={open}
+      onOpen={() => setOpen(true)}
+      onClose={() => setOpen(false)}
       title={title}
       describeChild
       arrow
@@ -49,6 +53,7 @@ export function InfoTooltipIcon({
         size="small"
         color="info"
         disabled={disabled}
+        onClick={() => setOpen(true)}
         sx={{ width: 44, height: 44, flexShrink: 0 }}
       >
         <Box

@@ -12,7 +12,7 @@ export function ReviewAssigneeSelect({
   disabled,
   available,
   onChange,
-  label = 'Default assigned reviewer (optional)',
+  label = 'Default assigned reviewer',
   emptyLabel = 'Assign when reviewing the applicant',
   savedName,
 }: {

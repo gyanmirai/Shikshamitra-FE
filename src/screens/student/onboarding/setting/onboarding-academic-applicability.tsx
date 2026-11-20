@@ -396,7 +396,7 @@ export function AcademicApplicabilityFields({
         <Box sx={{ gridColumn: '1 / -1' }}>
           <CustomSelect
             size="small"
-            label="Campuses (optional)"
+            label="Campuses"
             multiple
             value={value.campusMode === 'selected' ? (value.campusIds ?? []) : []}
             options={campuses.map((campus) => ({ value: campus.id, label: campus.name }))}

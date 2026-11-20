@@ -180,12 +180,12 @@ it('preserves the draft after an expense race but validates the refreshed remain
   fireEvent.change(screen.getByLabelText('Receiving school bank account'), {
     target: { value: 'bank' },
   });
-  fireEvent.change(screen.getByLabelText('Notes (optional)'), { target: { value: 'Keep draft' } });
+  fireEvent.change(screen.getByLabelText('Notes'), { target: { value: 'Keep draft' } });
   fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
   fireEvent.click(await screen.findByRole('button', { name: 'Refresh cash details' }));
   await waitFor(() => expect(screen.getByText(/Remaining to deposit:/)).toHaveTextContent('7,000'));
   expect(screen.getByLabelText('Counted amount')).toHaveValue('8000');
-  expect(screen.getByLabelText('Notes (optional)')).toHaveValue('Keep draft');
+  expect(screen.getByLabelText('Notes')).toHaveValue('Keep draft');
   fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
   expect(
     await screen.findByText('Count must match the remaining cash to deposit.')
@@ -236,14 +236,14 @@ it('recovers a definitive stale deposit in place and freezes an uncertain retry 
   );
   fireEvent.change(screen.getByLabelText('Deposit amount'), { target: { value: '20.25' } });
   fireEvent.change(screen.getByLabelText(/Deposit slip/), { target: { value: 'SLIP-001' } });
-  fireEvent.change(screen.getByLabelText('Notes (optional)'), {
+  fireEvent.change(screen.getByLabelText('Notes'), {
     target: { value: 'Keep evidence' },
   });
   fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
   fireEvent.click(await screen.findByRole('button', { name: 'Refresh cash details' }));
   await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled());
   expect(screen.getByLabelText('Deposit amount')).toHaveValue('20.25');
-  expect(screen.getByLabelText('Notes (optional)')).toHaveValue('Keep evidence');
+  expect(screen.getByLabelText('Notes')).toHaveValue('Keep evidence');
   fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
   await waitFor(() => expect(mock.send).toHaveBeenCalledTimes(2));
   await waitFor(() => expect(screen.getByLabelText('Deposit amount')).toBeDisabled());

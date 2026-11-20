@@ -6,9 +6,9 @@ import type { AdmissionWorkflow } from 'src/redux/student/admissions/admission-w
 import { Iconify } from 'src/components/iconify';
 import { useSearchParams } from 'next/navigation';
 import { studentPaths } from 'src/constants/student-menu';
-import { Box, Stack, Button, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
+import { Box, Stack, Alert, Button, Typography } from '@mui/material';
 import { studentSetupReturnUrl } from 'src/screens/student/setup/embedding/student-setup-return';
 import { useGetAdmissionWorkflowsQuery } from 'src/redux/student/admissions/admission-workflows-api';
 import { useStudentSetupEmbedding , StudentSetupManagerHeader as CustomBreadcrumbs } from 'src/screens/student/setup/embedding';
@@ -149,6 +149,24 @@ export default function AdmissionWorkflowsScreen() {
           ) : undefined
         }
       />
+      {actions.existingDraftNotice && (
+        <Alert
+          severity="info"
+          variant="outlined"
+          onClose={actions.dismissExistingDraftNotice}
+          action={
+            <Button
+              size="small"
+              aria-label={`Open draft for ${actions.existingDraftNotice.workflowName}`}
+              onClick={actions.openExistingDraft}
+            >
+              Open Draft
+            </Button>
+          }
+        >
+          A draft version already exists for this workflow. Open the existing draft to continue editing.
+        </Alert>
+      )}
       {!actions.createDialog.value && query.isError && Boolean(data?.items.length) && (
         <AdmissionQueryError onRetry={() => query.refetch()} />
       )}

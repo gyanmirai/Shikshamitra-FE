@@ -284,7 +284,7 @@ export default function ReadOnlyConcessionApprovalView({
               size="small"
               fullWidth
               disabled={isApproving}
-              label="Approval note (optional)"
+              label="Approval note"
               multiline
               minRows={1}
               maxRows={3}

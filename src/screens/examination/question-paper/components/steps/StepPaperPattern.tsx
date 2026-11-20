@@ -715,7 +715,7 @@ function SectionEditor({
           <LanguageInputField
             fullWidth
             size="small"
-            label="Section Instructions (optional)"
+            label="Section Instructions"
             placeholder="e.g. Answer all questions."
             value={draft.instructions}
             onChange={(e) => setDraft({ ...draft, instructions: e.target.value })}

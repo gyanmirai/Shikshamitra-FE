@@ -32,7 +32,7 @@ export function ReviewResponsibilitySettings({
       <CustomSelect
         fullWidth
         size="small"
-        label="Reviewer Role (Optional)"
+        label="Reviewer Role"
         value={policy.reviewerRole ?? ''}
         options={roleOptions(policy.reviewerRole)}
         disabled={disabled || query.isFetching}
@@ -61,7 +61,7 @@ export function ReviewResponsibilitySettings({
       <CustomSelect
         fullWidth
         size="small"
-        label="Final Approver Role (Optional)"
+        label="Final Approver Role"
         value={policy.approverRole ?? ''}
         options={roleOptions(policy.approverRole)}
         disabled={disabled || query.isFetching}

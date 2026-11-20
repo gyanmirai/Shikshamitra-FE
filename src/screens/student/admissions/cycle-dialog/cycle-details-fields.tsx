@@ -74,7 +74,7 @@ export function CycleDetailsFields({
           minRows={2}
           maxRows={4}
           size="small"
-          label="Description (optional)"
+          label="Description"
           placeholder="Internal purpose or audience, e.g. Nursery to Grade 9"
           slotProps={{ inputLabel: { shrink: true } }}
           {...formik.getFieldProps('description')}

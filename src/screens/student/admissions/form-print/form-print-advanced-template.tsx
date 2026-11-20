@@ -14,13 +14,13 @@ import {
   collectAdvancedPrintPhotos,
 } from './form-print-advanced-layout';
 
+import type { AdvancedPrintCell } from './form-print-advanced-layout';
 import type {
   AdmissionPrintField,
   AdmissionPrintSection,
   AdmissionPrintBranding,
   AdmissionPrintDocument,
 } from './form-print-model';
-import type { AdvancedPrintCell } from './form-print-advanced-layout';
 
 type Props = {
   model: AdmissionPrintDocument;
@@ -59,12 +59,20 @@ export function AdmissionAdvancedPaperTemplate({
     options.flow.stepTitles && sectionStepTitles.get(section.key) !== section.title
       ? sectionStepTitles.get(section.key)
       : undefined;
-  const familyFor = (value: string) =>
-    /[\u0900-\u097f]/.test(value)
-      ? devanagariFamily
-      : options.style.fontFamily === 'serif' && !/[\u0a80-\u0aff]/.test(value)
-        ? 'Times-Roman'
-        : baseFamily;
+  const familyFor = (value: string) => {
+    if (/[\u0900-\u097f]/.test(value)) return devanagariFamily;
+    if (/[\u0a80-\u0aff]/.test(value)) return baseFamily;
+    switch (options.style.fontFamily) {
+      case 'serif':
+        return 'Times-Roman';
+      case 'monospace':
+        return 'Courier';
+      case 'roboto':
+        return 'AdmissionPrintRoboto';
+      default:
+        return baseFamily;
+    }
+  };
   const runs = (value: string) =>
     splitPdfScriptRuns(value).map((run, index) => (
       <Text key={index} style={{ fontFamily: familyFor(run.text) }}>
@@ -91,7 +99,8 @@ export function AdmissionAdvancedPaperTemplate({
     footerHeight,
     bodyCapacity,
   } = advancedHeaderGeometry(model, branding, options, geometry);
-  const movedPhotos = model.settings.showPhoto && options.photo.placement !== 'field' && !headerPhoto;
+  const movedPhotos =
+    model.settings.showPhoto && options.photo.placement !== 'field' && !headerPhoto;
   const photoFields = movedPhotos ? collectAdvancedPrintPhotos(model) : [];
   const photos = photoFields.length ? photoFields : [undefined];
   const visibleFields = (fields: AdmissionPrintField[]) =>
@@ -103,7 +112,11 @@ export function AdmissionAdvancedPaperTemplate({
 
   const photoAlignment = { left: 'flex-start', center: 'center', right: 'flex-end' } as const;
   const photoPosition = photoAlignment[options.photo.alignment];
-  const renderPhoto = (field?: AdmissionPrintField, maximumWidth = contentWidth, inHeader = false) => {
+  const renderPhoto = (
+    field?: AdmissionPrintField,
+    maximumWidth = contentWidth,
+    inHeader = false
+  ) => {
     const width = Math.min(options.photo.width * PRINT_MM, maximumWidth);
     return (
       <View
@@ -138,7 +151,9 @@ export function AdmissionAdvancedPaperTemplate({
             </Text>
           )}
         </View>
-        <Text style={{ maxWidth: width, fontSize: fontSize - 2, marginTop: 3, textAlign: 'center' }}>
+        <Text
+          style={{ maxWidth: width, fontSize: fontSize - 2, marginTop: 3, textAlign: 'center' }}
+        >
           {runs(options.photo.caption || field?.label || model.labels.photo)}
         </Text>
       </View>
@@ -173,7 +188,7 @@ export function AdmissionAdvancedPaperTemplate({
     height > 0 ? (
       <View style={{ height, position: 'relative', marginBottom: 5 }}>
         {assets
-          .filter((asset) => asset.key === 'logo' ? includeLogo : showBannerOnPage(page))
+          .filter((asset) => (asset.key === 'logo' ? includeLogo : showBannerOnPage(page)))
           .map((asset) => (
             <Image
               key={asset.key}
@@ -646,8 +661,7 @@ export function AdmissionAdvancedPaperTemplate({
     );
     const rowCanWrap = (row: AdvancedPrintCell[]) =>
       row.some(
-        ({ field }) =>
-          field.value.length + field.label.length + (field.helpText?.length ?? 0) > 700
+        ({ field }) => field.value.length + field.label.length + (field.helpText?.length ?? 0) > 700
       );
     const renderRow = (row: AdvancedPrintCell[], key: string, marginBottom = 0) => (
       <View
@@ -818,9 +832,18 @@ export function AdmissionAdvancedPaperTemplate({
     options.content.showInstructions && copy.instructions?.trim() ? (
       <View key="instructions" style={{ marginVertical: 10 }}>
         {contentHeading(model.labels.instructions)}
-        <Text orphans={2} widows={2}>
-          {runs(copy.instructions)}
-        </Text>
+        {copy.instructions
+          .split(/\r?\n/)
+          .map((item) => item.trim())
+          .filter(Boolean)
+          .map((item, index) => (
+            <View key={index} style={{ flexDirection: 'row', marginBottom: 4 }}>
+              <Text style={{ width: 12 }}>{runs('•')}</Text>
+              <Text style={{ flex: 1 }} orphans={2} widows={2}>
+                {runs(item)}
+              </Text>
+            </View>
+          ))}
       </View>
     ) : null;
   const checklist = () =>
@@ -867,28 +890,49 @@ export function AdmissionAdvancedPaperTemplate({
             flexDirection: 'row',
             flexWrap: 'wrap',
             justifyContent: 'space-between',
-            paddingTop: 28,
+            paddingTop: 4,
           }}
         >
           {[
-            options.content.parentSignature ? copy.parentLabel || model.labels.parentSignature : '',
-            options.content.officeSignature ? copy.officeLabel || model.labels.officeSignature : '',
+            {
+              key: 'parent',
+              enabled: options.content.parentSignature,
+              label: copy.parentLabel || model.labels.parentSignature,
+              image: options.content.parentSignatureImage,
+            },
+            {
+              key: 'office',
+              enabled: options.content.officeSignature,
+              label: copy.officeLabel || model.labels.officeSignature,
+              image: options.content.officeSignatureImage,
+            },
           ]
-            .filter(Boolean)
-            .map((label) => (
+            .filter(({ enabled }) => enabled)
+            .map(({ key, label, image }) => (
               <View
-                key={label}
+                key={key}
                 style={{
                   width:
                     options.content.parentSignature && options.content.officeSignature
                       ? '43%'
                       : '100%',
-                  borderTopWidth: 0.5,
-                  borderTopColor: borderColor,
-                  paddingTop: 5,
                 }}
               >
-                <Text style={{ fontSize: fontSize - 1 }}>{runs(label)}</Text>
+                {image ? (
+                  <Image
+                    src={image}
+                    style={{ width: '100%', height: 28, objectFit: 'contain' }}
+                  />
+                ) : (
+                  <View
+                    style={{
+                      height: 28,
+                      borderBottomWidth: 0.5,
+                      borderBottomColor: borderColor,
+                    }}
+                  />
+                )}
+                <Text style={{ fontSize: fontSize - 1, paddingTop: 5 }}>{runs(label)}</Text>
               </View>
             ))}
         </View>
@@ -1026,7 +1070,9 @@ export function AdmissionAdvancedPaperTemplate({
           });
           regular = { key: `body-${parts.length}`, nodes: [] };
         } else {
-          const startNewPage = Boolean(config.startNewPage && (regular.nodes.length || parts.length));
+          const startNewPage = Boolean(
+            config.startNewPage && (regular.nodes.length || parts.length)
+          );
           if (table) {
             push(
               <View key={section.key} break={startNewPage}>
@@ -1106,18 +1152,20 @@ export function AdmissionAdvancedPaperTemplate({
                     left: margins.left,
                     right: margins.right,
                   }}
-                  render={({ pageNumber }) => flowingPhotoHeader && pageNumber === 1 ? null : (
-                    <View
-                      style={{
-                        marginTop:
-                          firstFlowHeader && pageNumber === 1
-                            ? fullHeaderHeight - compactHeaderHeight
-                            : 0,
-                      }}
-                    >
-                      {renderTableHeading(part.table!)}
-                    </View>
-                  )}
+                  render={({ pageNumber }) =>
+                    flowingPhotoHeader && pageNumber === 1 ? null : (
+                      <View
+                        style={{
+                          marginTop:
+                            firstFlowHeader && pageNumber === 1
+                              ? fullHeaderHeight - compactHeaderHeight
+                              : 0,
+                        }}
+                      >
+                        {renderTableHeading(part.table!)}
+                      </View>
+                    )
+                  }
                 />
                 {renderTableRows(part.table)}
               </>

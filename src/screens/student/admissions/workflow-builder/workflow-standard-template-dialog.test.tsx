@@ -86,7 +86,7 @@ describe('manual workflow template drawer', () => {
   it('shows the forms already attached to the workflow', async () => {
     renderDrawer(true);
 
-    expect(screen.getByRole('combobox', { name: 'Published Inquiry Form (Optional)' })).toHaveValue(
+    expect(screen.getByRole('combobox', { name: 'Published Inquiry Form' })).toHaveValue(
       'Parent inquiry · v2'
     );
     expect(screen.getByRole('combobox', { name: 'Published Registration Form *' })).toHaveValue(
@@ -100,7 +100,7 @@ describe('manual workflow template drawer', () => {
 
     expect(document.querySelector('.MuiDrawer-paperAnchorRight')).toBeInTheDocument();
     await user.click(screen.getByRole('radio', { name: /Standard admission/ }));
-    await selectForm(user, 'Published Inquiry Form (Optional)', 'Parent inquiry · v2');
+    await selectForm(user, 'Published Inquiry Form', 'Parent inquiry · v2');
     await selectForm(user, 'Published Registration Form *', 'Student registration · v3');
     await user.click(screen.getByRole('button', { name: 'Replace Journey' }));
 
@@ -118,7 +118,7 @@ describe('manual workflow template drawer', () => {
     expect(await screen.findByText('Select a published registration form')).toBeInTheDocument();
     expect(props.onApply).not.toHaveBeenCalled();
 
-    await selectForm(user, 'Published Inquiry Form (Optional)', 'Parent inquiry · v2');
+    await selectForm(user, 'Published Inquiry Form', 'Parent inquiry · v2');
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(screen.getByText('Discard Template Selections?')).toBeInTheDocument();
     expect(props.onClose).not.toHaveBeenCalled();

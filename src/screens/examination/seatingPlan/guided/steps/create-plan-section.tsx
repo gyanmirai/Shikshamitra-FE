@@ -42,7 +42,7 @@ export function CreatePlanSection({ workspace, workflow }: GuidedStepProps) {
         <ShakingTextField error={error}>
           <TextField
             size="small"
-            label="Plan name (optional)"
+            label="Plan name"
             value={workflow.formik.values.planName}
             onChange={(event) => workflow.formik.setFieldValue('planName', event.target.value)}
             error={error}

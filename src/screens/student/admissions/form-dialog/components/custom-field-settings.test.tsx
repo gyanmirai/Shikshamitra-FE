@@ -113,7 +113,7 @@ describe('Admission Form Builder custom field settings', () => {
       const fieldLabel = screen.getByRole('textbox', { name: 'Field Label' });
       fireEvent.change(fieldLabel, { target: { value: 'School question' } });
       expect(currentField().label).toBe('School question');
-      fireEvent.change(screen.getByRole('textbox', { name: 'Help Text (Optional)' }), {
+      fireEvent.change(screen.getByRole('textbox', { name: 'Help Text' }), {
         target: { value: 'Ask the school office if unsure.' },
       });
       expect(currentField().helpText).toBe('Ask the school office if unsure.');

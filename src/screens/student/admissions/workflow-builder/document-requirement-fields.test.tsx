@@ -62,9 +62,9 @@ describe('document requirement fields', { timeout: 15000 }, () => {
     );
     const dialog = screen.getByRole('dialog', { name: 'Configure Document Requirement' });
     expect(dialog.closest('.MuiPopover-root')).toBeInTheDocument();
-    await chooseDocumentOption(user, 'Student Document Category (Optional)', category.name);
+    await chooseDocumentOption(user, 'Student Document Category', category.name);
     expect(
-      within(dialog).getByRole('combobox', { name: 'Student Document Category (Optional)' })
+      within(dialog).getByRole('combobox', { name: 'Student Document Category' })
     ).toHaveTextContent(category.name);
     expect(
       within(dialog).getByRole('combobox', { name: 'Allowed File Formats' })
@@ -91,7 +91,7 @@ describe('document requirement fields', { timeout: 15000 }, () => {
         onSave={save}
       />
     );
-    const selector = screen.getByRole('combobox', { name: 'Student Document Category (Optional)' });
+    const selector = screen.getByRole('combobox', { name: 'Student Document Category' });
     expect(selector).toHaveTextContent('Keep as Admission Evidence');
     await user.click(selector);
     expect(
@@ -144,7 +144,7 @@ describe('document requirement fields', { timeout: 15000 }, () => {
         onSave={save}
       />
     );
-    const selector = screen.getByRole('combobox', { name: 'Student Document Category (Optional)' });
+    const selector = screen.getByRole('combobox', { name: 'Student Document Category' });
     expect(selector).toHaveTextContent(category.name);
     await user.click(selector);
     await user.keyboard('{Home}{Enter}');

@@ -3,7 +3,6 @@ import { Typography } from '@mui/material';
 import { GlobalIcons } from 'src/utils/icons';
 import { FormSectionCard } from 'src/components/form-section-card';
 
-import { parseFieldConfiguration } from '../form-dialog/form-field-presets';
 import {
   PrintSettingText,
   PrintSettingsGrid,
@@ -11,6 +10,7 @@ import {
   PrintSettingSelect,
   PrintSettingNumber,
   PrintSettingToggle,
+  PrintSettingsResetButton,
 } from './admission-print-setting-controls';
 
 import type { AdmissionPrintAdvancedTabProps } from './admission-print-advanced-types';
@@ -31,9 +31,6 @@ export function AdmissionPrintHeaderFooterSettings({
 }: AdmissionPrintAdvancedTabProps) {
   const { header, photo, footer } = advanced;
   const contactHelpId = useId();
-  const hasPhotoQuestion = form.sections.some((section) =>
-    section.fields.some((field) => parseFieldConfiguration(field.validationJson).format === 'photo')
-  );
   const contacts = [
     ['phone', 'School phone', branding.schoolPhone],
     ['email', 'School email', branding.schoolEmail],
@@ -44,6 +41,21 @@ export function AdmissionPrintHeaderFooterSettings({
       <FormSectionCard
         title="School Details"
         icon={GlobalIcons.building}
+        action={
+          <PrintSettingsResetButton
+            title="School Details"
+            onReset={() =>
+              update('header', {
+                continuation: 'compact',
+                schoolName: true,
+                address: true,
+                phone: false,
+                email: false,
+                website: false,
+              })
+            }
+          />
+        }
         descriptionTooltip="Use the school identity configured in Institute Setup. These options do not change Institute Setup."
       >
         {branding.schoolName && <Typography variant="subtitle2">{branding.schoolName}</Typography>}
@@ -88,6 +100,24 @@ export function AdmissionPrintHeaderFooterSettings({
       <FormSectionCard
         title="Title & Admission Details"
         icon={GlobalIcons.admissionDetails}
+        action={
+          <PrintSettingsResetButton
+            title="Title & Admission Details"
+            onReset={() =>
+              update('header', {
+                title: '',
+                subtitle: '',
+                alignment: 'center',
+                registrationNumber: true,
+                date: true,
+                board: false,
+                medium: false,
+                class: false,
+                academicYear: false,
+              })
+            }
+          />
+        }
         descriptionTooltip="Use a print-specific title or leave it empty to use the form name. Academic details use the selected admission context."
       >
         <PrintSettingText
@@ -128,6 +158,28 @@ export function AdmissionPrintHeaderFooterSettings({
       <FormSectionCard
         title="Photo Space"
         icon={GlobalIcons.image}
+        action={
+          <PrintSettingsResetButton
+            title="Photo Space"
+            onReset={() =>
+              onChange({
+                ...settings,
+                showPhoto: true,
+                advanced: {
+                  ...settings.advanced,
+                  photo: {
+                    placement: 'first',
+                    alignment: 'right',
+                    width: 35,
+                    height: 45,
+                    caption: '',
+                    useSaved: true,
+                  },
+                },
+              })
+            }
+          />
+        }
         descriptionTooltip="Set the printed photo space. The saved student photo is used only in filled copies when enabled."
       >
         <PrintSettingToggle
@@ -136,32 +188,6 @@ export function AdmissionPrintHeaderFooterSettings({
           onChange={(showPhoto) => onChange({ ...settings, showPhoto })}
         />
         <PrintSettingsGrid>
-          <PrintSettingSelect
-            label="Photo placement"
-            disabledValues={hasPhotoQuestion ? undefined : ['field']}
-            disabledLabel="Add a photo question in Build form"
-            helperText={
-              !hasPhotoQuestion
-                ? 'Add a photo question in Build form to place the photo with that question.'
-                : undefined
-            }
-            value={photo.placement}
-            disabled={!settings.showPhoto}
-            options={[
-              ['header-top-right', 'Top-right of header'],
-              ['first', 'First page'],
-              ['last', 'Last page'],
-              ['field', 'With photo question'],
-            ]}
-            onChange={(placement) => update('photo', { placement })}
-          />
-          <PrintSettingSelect
-            label="Photo alignment"
-            value={photo.alignment}
-            options={ALIGNMENTS}
-            disabled={!settings.showPhoto || photo.placement === 'header-top-right'}
-            onChange={(alignment) => update('photo', { alignment })}
-          />
           <PrintSettingText
             label="Photo caption"
             value={photo.caption}
@@ -197,6 +223,21 @@ export function AdmissionPrintHeaderFooterSettings({
       <FormSectionCard
         title="Footer"
         icon={GlobalIcons.documentIcon}
+        action={
+          <PrintSettingsResetButton
+            title="Footer"
+            onReset={() =>
+              update('footer', {
+                placement: 'every',
+                alignment: 'right',
+                pageNumbers: true,
+                registrationReference: false,
+                schoolName: false,
+                formTitle: false,
+              })
+            }
+          />
+        }
         descriptionTooltip="Choose footer placement and the references repeated on printed pages."
       >
         <PrintSettingsGrid>

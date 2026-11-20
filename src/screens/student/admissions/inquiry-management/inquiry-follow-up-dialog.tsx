@@ -22,6 +22,7 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { useGetAdmissionInquiryQuery } from 'src/redux/student/admissions/admission-inquiries-api';
 import {
@@ -284,9 +285,24 @@ function InquiryFollowUpContent({
                       sx={{ height: 'auto', py: 1 }}
                     />
                   )}
-                  {!queryError &&
-                    initialized.value &&
-                    notes.map((note) => <FollowUpNoteCard key={note.id} note={note} />)}
+                  {!queryError && initialized.value && notes.length > 0 && (
+                    <Scrollbar
+                      role="region"
+                      aria-label="Follow-Up History Notes"
+                      tabIndex={0}
+                      sx={{
+                        maxHeight: 'min(390px, 42dvh)',
+                        flexGrow: 0,
+                        pr: 1,
+                      }}
+                    >
+                      <Stack spacing={1.5}>
+                        {notes.map((note) => (
+                          <FollowUpNoteCard key={note.id} note={note} />
+                        ))}
+                      </Stack>
+                    </Scrollbar>
+                  )}
                 </Stack>
               </FormSectionCard>
               <Box sx={{ position: 'relative' }}>

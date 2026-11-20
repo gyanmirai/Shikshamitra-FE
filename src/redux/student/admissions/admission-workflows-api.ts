@@ -79,6 +79,10 @@ export type AdmissionWorkflowValidationResult = {
   errors: string[];
   warnings: string[];
 };
+export type AdmissionWorkflowValidationPreviewRequest = Pick<
+  CreateUpdateAdmissionWorkflow,
+  'defaultInquiryFormDefinitionId' | 'stages' | 'transitions'
+>;
 export type AdmissionWorkflowUsage = {
   workflowDefinitionId: string;
   offeringCount: number;
@@ -339,6 +343,19 @@ export const admissionWorkflowsApi = api.injectEndpoints({
         { type: studentAdmissionsCrmType.admissionWorkflow, id: 'LIST' },
       ],
     }),
+    validateAdmissionWorkflowPreview: builder.mutation<
+      AdmissionWorkflowValidationResult,
+      { id: string; body: AdmissionWorkflowValidationPreviewRequest }
+    >({
+      query: ({ id, body }) => ({
+        url: `/student/enrollment/admissions/workflows/${id}/validate-preview`,
+        method: 'POST',
+        body,
+      }),
+      transformResponse: (
+        r: Result<AdmissionWorkflowValidationResult> | AdmissionWorkflowValidationResult
+      ) => unwrap(r),
+    }),
     publishAdmissionWorkflowWithGovernance: builder.mutation<
       AdmissionWorkflow,
       { id: string; changeReason: string; effectiveAt?: string; concurrencyStamp?: string }
@@ -568,6 +585,7 @@ export const {
   useCloneAdmissionWorkflowMutation,
   useCreateAdmissionWorkflowVersionMutation,
   useValidateAdmissionWorkflowMutation,
+  useValidateAdmissionWorkflowPreviewMutation,
   usePublishAdmissionWorkflowMutation,
   usePublishAdmissionWorkflowWithGovernanceMutation,
   useSubmitAdmissionWorkflowForApprovalMutation,
