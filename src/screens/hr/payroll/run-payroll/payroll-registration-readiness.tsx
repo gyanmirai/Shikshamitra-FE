@@ -116,7 +116,12 @@ export function PayrollRegistrationReadiness({ month }: { month: string | null }
                   label: value,
                 })),
                 label: 'PF',
-                render: (_, row) => status(row.applyPf, row.pfNumberPresent),
+                render: (_, row) =>
+                  row.pfHandledExternally ? (
+                    <Label variant="soft">Handled outside ShikshaMitra</Label>
+                  ) : (
+                    status(row.applyPf, row.pfNumberPresent)
+                  ),
               },
               {
                 id: 'applyEsic',

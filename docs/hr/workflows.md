@@ -652,7 +652,11 @@ Opting in reveals the PF rule and voluntary consent reference; opting out exclud
 CTC setup confirms the requirement from the backend-calculated Gross, while changing salary preserves the draft and requires a fresh calculation.
 Existing membership remains visibly Required, and the backend owns coverage and contribution rules described in [the payroll API contract](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md).
 The salary calculation returns the enrollment decision and blocks saving when required evidence or enrollment is missing.
-The PF settings page records school establishment coverage with an effective month and evidence reference.
+The PF settings page records school establishment coverage and its effective month.
+Selecting Covered under PF asks for a PF establishment number.
+Selecting Not covered under PF allows saving with just the coverage choice and month.
+Selecting Handled outside ShikshaMitra also needs only the effective month and turns off in-app PF for all staff from that month.
+Salary setup displays the school decision in place of PF enrollment controls, and payroll registration review uses the same decision for the selected month.
 Its write requires the exact PF Add capability and backend-confirmed school-wide scope.
 The page shows a compact coverage summary and opens a focused configuration dialog on request.
 Loading and failed reads never claim that coverage is missing; failed reads offer Retry.

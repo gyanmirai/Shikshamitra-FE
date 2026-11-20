@@ -145,6 +145,10 @@ const known: Record<string, { message: string; setup?: HrSetup }> = {
     message:
       'ESIC setup changed after this salary preview. Refresh the preview and review it before saving.',
   },
+  'HR:Payroll:PfManagementChanged': {
+    message:
+      'School PF settings changed after this salary preview. Refresh the preview before saving.',
+  },
 };
 
 const record = (value: unknown): Record<string, any> =>

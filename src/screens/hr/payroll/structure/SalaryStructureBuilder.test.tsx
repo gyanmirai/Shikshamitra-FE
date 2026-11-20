@@ -49,6 +49,7 @@ const mocks = vi.hoisted(() => ({
   templateErrorStatus: 503,
   esiRuleVersionId: 'esi-rule-1',
   pfRuleAvailable: true,
+  pfHandledExternally: false,
   esiPolicyAvailable: true,
   revisionsFetching: false,
   revisionsError: false,
@@ -125,6 +126,12 @@ vi.mock('src/redux/PF/PFApi', () => ({
     },
     isError: false,
     refetch: () => mocks.refetchSetup(),
+  }),
+}));
+vi.mock('src/redux/hr/pf-coverage-api', () => ({
+  useGetSchoolPfManagementQuery: () => ({
+    currentData: { isHandledExternally: mocks.pfHandledExternally },
+    refetch: mocks.refetchSetup,
   }),
 }));
 vi.mock('src/redux/hr/employeeApi', () => ({
@@ -263,6 +270,7 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     mocks.templateErrorStatus = 503;
     mocks.esiRuleVersionId = 'esi-rule-1';
     mocks.pfRuleAvailable = true;
+    mocks.pfHandledExternally = false;
     mocks.esiPolicyAvailable = true;
     mocks.revisions = [];
     mocks.revisionsFetching = false;
@@ -627,6 +635,29 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     ).toBeDisabled();
   });
 
+  it('previews onboarding salary without employee PF choices or rules when the school handles PF externally', async () => {
+    mocks.pfHandledExternally = true;
+    mocks.pfRuleAvailable = false;
+    const onSalaryChange = vi.fn();
+    render(
+      <ThemeProvider theme={theme}>
+        <OnboardingBuilder onSalaryChange={onSalaryChange} />
+      </ThemeProvider>
+    );
+    expect(screen.getByText(/PF is handled outside ShikshaMitra/)).toBeVisible();
+    expect(screen.queryByText('Apply PF')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('PF rule')).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Monthly cost to school (CTC)'), {
+      target: { value: '30000' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Preview salary' }));
+    await waitFor(() =>
+      expect(onSalaryChange).toHaveBeenLastCalledWith(
+        expect.objectContaining({ pfApplicable: false, pfRuleId: null })
+      )
+    );
+  });
+
   it('explains missing employee context once, preserves onboarding choices and retries without saving staff', async () => {
     const onSalaryChange = vi.fn();
     render(
@@ -753,7 +784,7 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     ).toContain('18,000');
     expect(screen.getByLabelText('Effective month')).toHaveValue('2026-11');
     expect(screen.getByLabelText('PF number')).toHaveValue('SYNTHETIC-DRAFT');
-    expect(mocks.refetchSetup).toHaveBeenCalledTimes(6);
+    expect(mocks.refetchSetup).toHaveBeenCalledTimes(8);
     expect(mocks.calculate).not.toHaveBeenCalled();
     expect(mocks.saveSalary).not.toHaveBeenCalled();
     expect(mocks.refetchRevisions).not.toHaveBeenCalled();

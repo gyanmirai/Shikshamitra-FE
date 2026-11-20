@@ -33,6 +33,7 @@ export function StatutoryProfileEditor({
   month,
   grossSalary,
   pfSettings,
+  pfHandledExternally = false,
   draftMode = false,
   pfEnrollmentRecorded = false,
   disabled = false,
@@ -47,6 +48,7 @@ export function StatutoryProfileEditor({
   month?: string;
   grossSalary?: number;
   pfSettings?: ReactNode;
+  pfHandledExternally?: boolean;
   draftMode?: boolean;
   pfEnrollmentRecorded?: boolean;
   disabled?: boolean;
@@ -75,7 +77,11 @@ export function StatutoryProfileEditor({
   const data = query.currentData;
   const [pfChosen, setPfChosen] = useState(false);
   const choiceRequired =
-    draftMode && grossSalary != null && grossSalary > 25000 && !pfEnrollmentRecorded;
+    draftMode &&
+    !pfHandledExternally &&
+    grossSalary != null &&
+    grossSalary > 25000 &&
+    !pfEnrollmentRecorded;
   const form = useFormik<StaffStatutoryProfile>({
     initialValues: data?.profile ?? emptyStatutoryProfile,
     enableReinitialize: false,
@@ -101,7 +107,7 @@ export function StatutoryProfileEditor({
           effectiveMonth: baselineMonth.current,
           concurrencyStamp: baselineStamp.current,
           idempotencyKey: requestId.current,
-          updatePf: data.canManagePf,
+          updatePf: data.canManagePf && !pfHandledExternally,
           updateEsic: data.canManageEsic,
         }).unwrap();
         ignoredRead.current = query.requestId;
@@ -187,14 +193,16 @@ export function StatutoryProfileEditor({
           effectiveMonth: data.effectiveMonth,
           profile: values,
           concurrencyStamp: baselineStamp.current,
-          updatePf: data.canManagePf,
+          updatePf: data.canManagePf && !pfHandledExternally,
           updateEsic: data.canManageEsic,
           valid:
             !query.isError &&
             !query.isFetching &&
             statutoryProfileSchema.isValidSync({
               ...values,
-              ...(data.canViewPf ? {} : { applyPf: true, pfNumber: null, uanNumber: null }),
+              ...(data.canViewPf && !pfHandledExternally
+                ? {}
+                : { applyPf: true, pfNumber: null, uanNumber: null, pfDisabledReason: null }),
               ...(data.canViewEsic ? {} : { applyEsic: true, esicInsuranceNumber: null }),
             }) &&
             (!choiceRequired || pfChosen),
@@ -219,6 +227,7 @@ export function StatutoryProfileEditor({
         form={form}
         compact={draftMode}
         pfSettings={pfSettings}
+        pfHandledExternally={pfHandledExternally}
         grossSalary={grossSalary}
         canManagePf={data.canManagePf}
         canManageEsic={data.canManageEsic}

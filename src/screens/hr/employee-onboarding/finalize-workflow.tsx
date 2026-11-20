@@ -736,7 +736,11 @@ export function FinalizeWorkflow({
         selector: '[data-finalization-error]',
       });
       // Server policy version checks remain authoritative; a stale preview must be rebuilt.
-      if (parseApiProblemDetail(error).errorCode === 'HR:Payroll:CompensationPreviewStale') {
+      if (
+        ['HR:Payroll:CompensationPreviewStale', 'HR:Payroll:PfManagementChanged'].includes(
+          parseApiProblemDetail(error).errorCode ?? ''
+        )
+      ) {
         setSalary(null);
         setPreviewInvalidation((current) => current + 1);
       }

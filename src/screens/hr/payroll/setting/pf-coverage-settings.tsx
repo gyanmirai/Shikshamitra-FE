@@ -2,6 +2,7 @@
 
 import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
+import type { PfCoverageVersion } from 'src/redux/hr/pf-coverage-api';
 
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
@@ -38,6 +39,11 @@ import {
 
 import { getLocalMonthKey } from '../structure/salary-structure-builder-utils';
 
+function coverageLabel(coverage: PfCoverageVersion) {
+  if (coverage.isHandledExternally) return 'Handled outside ShikshaMitra';
+  return coverage.isCovered ? 'Covered under PF' : 'Not covered under PF';
+}
+
 export function PfCoverageSettings({ onSaved }: { onSaved?: () => void } = {}) {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canView = hasGrantedPermission(permissions, 'HR.PayrollManagement.Settings.PfRule.View');
@@ -54,7 +60,7 @@ export function PfCoverageSettings({ onSaved }: { onSaved?: () => void } = {}) {
       month: dayjs(`${getLocalMonthKey()}-01`) as Dayjs | null,
       invalidMonth: false,
       coverage: '',
-      evidence: '',
+      establishmentNumber: '',
       error: '',
     },
     validate: (values) => ({
@@ -62,8 +68,8 @@ export function PfCoverageSettings({ onSaved }: { onSaved?: () => void } = {}) {
         ? { month: 'Choose an effective month.' }
         : {}),
       ...(!values.coverage ? { coverage: 'Select school coverage.' } : {}),
-      ...(!values.evidence.trim() || values.evidence.length > 1000
-        ? { evidence: 'Add an evidence reference, up to 1000 characters.' }
+      ...(values.coverage === 'covered' && !values.establishmentNumber.trim()
+        ? { establishmentNumber: 'Enter the PF establishment number.' }
         : {}),
     }),
     onSubmit: async (values) => {
@@ -83,7 +89,10 @@ export function PfCoverageSettings({ onSaved }: { onSaved?: () => void } = {}) {
       const body = {
         effectiveMonth: `${month}-01T00:00:00.000Z`,
         isCovered: values.coverage === 'covered',
-        evidenceReference: values.evidence.trim(),
+        ...(values.coverage === 'external' ? { isHandledExternally: true } : {}),
+        ...(values.coverage === 'covered'
+          ? { evidenceReference: values.establishmentNumber.trim() }
+          : {}),
         expectedConfigurationId: current?.id ?? null,
       };
       const signature = JSON.stringify(body);
@@ -123,7 +132,7 @@ export function PfCoverageSettings({ onSaved }: { onSaved?: () => void } = {}) {
     form.resetForm();
     setEditing(false);
   };
-  const errorFor = (field: 'month' | 'coverage' | 'evidence') =>
+  const errorFor = (field: 'month' | 'coverage' | 'establishmentNumber') =>
     Boolean((form.touched[field] || form.submitCount > 0) && form.errors[field]);
   return (
     <Stack spacing={1.5} sx={{ mb: 2, flexShrink: 0 }}>
@@ -163,7 +172,7 @@ export function PfCoverageSettings({ onSaved }: { onSaved?: () => void } = {}) {
                 <Typography variant="subtitle2">School PF Coverage</Typography>
                 <Typography variant="body2">
                   {current
-                    ? `${current.isCovered ? 'Covered under PF' : 'Not covered under PF'}. Effective ${current.effectiveMonth.slice(0, 7)}.`
+                    ? `${coverageLabel(current)}. Effective ${current.effectiveMonth.slice(0, 7)}.`
                     : 'PF coverage is not configured for the current month. Complete coverage setup before saving new salary enrollment decisions.'}
                 </Typography>
                 {!current && !canEdit && (
@@ -181,7 +190,7 @@ export function PfCoverageSettings({ onSaved }: { onSaved?: () => void } = {}) {
         <SetupInlineCustomDialog
           open={embedded || editing}
           title={embedded ? null : 'Configure PF Coverage'}
-          titleInfo="Record whether PF covers the school, its effective month, and supporting evidence. Contribution rules are managed separately."
+          titleInfo="Record whether PF covers the school and the month that status takes effect."
           handleClose={close}
           disableClose={busy}
           hasUnsavedChanges={form.dirty}
@@ -218,7 +227,7 @@ export function PfCoverageSettings({ onSaved }: { onSaved?: () => void } = {}) {
               <FormSectionCard
                 title={embedded ? 'PF Coverage' : 'Coverage Details'}
                 icon={GlobalIcons.documentIcon}
-                descriptionTooltip="Choose the school coverage status and effective month. Add a reference to the supporting registration or review record."
+                descriptionTooltip="If the school is covered, enter its PF establishment number."
                 action={
                   <Label color={current ? 'success' : 'warning'}>
                     {current ? 'Configured' : 'Setup required'}
@@ -233,7 +242,7 @@ export function PfCoverageSettings({ onSaved }: { onSaved?: () => void } = {}) {
                       role={current ? 'status' : 'alert'}
                     >
                       {current
-                        ? `${current.isCovered ? 'Covered under PF' : 'Not covered under PF'}. Effective ${current.effectiveMonth.slice(0, 7)}.`
+                        ? `${coverageLabel(current)}. Effective ${current.effectiveMonth.slice(0, 7)}.`
                         : 'Record school PF coverage to complete HR setup and save new salary enrollment decisions.'}
                     </Typography>
                   )}
@@ -279,7 +288,7 @@ export function PfCoverageSettings({ onSaved }: { onSaved?: () => void } = {}) {
                     <ShakingTextField error={errorFor('coverage')}>
                       <TextField
                         required
-                        label="School establishment coverage"
+                        label="School PF coverage"
                         select
                         name="coverage"
                         size="small"
@@ -289,33 +298,48 @@ export function PfCoverageSettings({ onSaved }: { onSaved?: () => void } = {}) {
                         onBlur={form.handleBlur}
                         disabled={busy}
                         error={errorFor('coverage')}
-                        helperText={errorFor('coverage') ? form.errors.coverage : undefined}
+                        helperText={
+                          errorFor('coverage')
+                            ? form.errors.coverage
+                            : form.values.coverage === 'external'
+                              ? 'ShikshaMitra skips PF contributions for all staff from this month.'
+                              : undefined
+                        }
                         slotProps={{ inputLabel: { shrink: true } }}
                       >
                         <MenuItem value="covered">Covered under PF</MenuItem>
                         <MenuItem value="not-covered">Not covered under PF</MenuItem>
+                        <MenuItem value="external">Handled outside ShikshaMitra</MenuItem>
                       </TextField>
                     </ShakingTextField>
-                    <ShakingTextField error={errorFor('evidence')} sx={{ gridColumn: '1 / -1' }}>
-                      <TextField
-                        required
-                        label="PF coverage evidence reference"
-                        name="evidence"
-                        size="small"
-                        fullWidth
-                        value={form.values.evidence}
-                        onChange={form.handleChange}
-                        onBlur={form.handleBlur}
-                        disabled={busy}
-                        error={errorFor('evidence')}
-                        helperText={
-                          errorFor('evidence')
-                            ? form.errors.evidence
-                            : 'Registration number, document link, or review reference.'
-                        }
-                        slotProps={{ inputLabel: { shrink: true } }}
-                      />
-                    </ShakingTextField>
+                    {form.values.coverage === 'covered' && (
+                      <ShakingTextField
+                        error={errorFor('establishmentNumber')}
+                        sx={{ gridColumn: '1 / -1' }}
+                      >
+                        <TextField
+                          required
+                          label="PF establishment number"
+                          name="establishmentNumber"
+                          size="small"
+                          fullWidth
+                          value={form.values.establishmentNumber}
+                          onChange={form.handleChange}
+                          onBlur={form.handleBlur}
+                          disabled={busy}
+                          error={errorFor('establishmentNumber')}
+                          helperText={
+                            errorFor('establishmentNumber')
+                              ? form.errors.establishmentNumber
+                              : undefined
+                          }
+                          slotProps={{
+                            inputLabel: { shrink: true },
+                            htmlInput: { maxLength: 1000 },
+                          }}
+                        />
+                      </ShakingTextField>
+                    )}
                   </FormFieldSpacing>
                 </Stack>
               </FormSectionCard>

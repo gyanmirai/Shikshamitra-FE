@@ -56,6 +56,7 @@ export const statutoryProfileApi = api.injectEndpoints({
           employeeName: string;
           employeeCode: string;
           applyPf: boolean;
+          pfHandledExternally?: boolean;
           pfNumberPresent: boolean;
           applyEsic: boolean;
           esicNumberPresent: boolean;

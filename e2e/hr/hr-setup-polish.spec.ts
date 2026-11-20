@@ -99,7 +99,7 @@ for (const theme of ['light', 'dark']) {
       await expect(
         wizard.getByRole('heading', { name: 'Configure PF Coverage', exact: true, level: 2 })
       ).toBeVisible();
-      await expect(wizard.getByLabel(/PF coverage evidence reference/)).toBeVisible();
+      await expect(wizard.getByRole('combobox', { name: /School PF coverage/ })).toBeVisible();
       const monthField = wizard.getByRole('group', { name: 'PF coverage effective month' });
       await monthField.getByRole('button', { name: /Choose date/ }).click();
       const monthPicker = page.getByRole('dialog', { name: 'PF coverage effective month' });
@@ -114,11 +114,13 @@ for (const theme of ['light', 'dark']) {
       await expect(
         wizard.getByRole('button', { name: 'Save and next', exact: true })
       ).toBeInViewport();
-      await wizard.getByLabel(/PF coverage evidence reference/).fill('Synthetic unsaved evidence');
+      await wizard.getByRole('combobox', { name: /School PF coverage/ }).click();
+      await page.getByRole('option', { name: 'Covered under PF', exact: true }).click();
+      await wizard.getByLabel(/PF establishment number/).fill('Synthetic unsaved evidence');
       await wizard.getByRole('button', { name: 'Back', exact: true }).click();
       const discard = page.getByRole('dialog', { name: 'Discard Unsaved Changes?' });
       await discard.getByRole('button', { name: 'Keep Editing', exact: true }).click();
-      await expect(wizard.getByLabel(/PF coverage evidence reference/)).toHaveValue(
+      await expect(wizard.getByLabel(/PF establishment number/)).toHaveValue(
         'Synthetic unsaved evidence'
       );
       await page.screenshot({ path: `.artifacts/hr-setup-polish/editor-${theme}-${width}.png` });
