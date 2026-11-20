@@ -32,7 +32,7 @@ const PayrollHome = () => {
   const preview = usePayrollPreviewRun(monthKey, currentYear?.id || '');
   const data = preview.data?.readiness;
   const canLoad = Boolean(monthKey && currentYear?.id);
-  const isLoading = canLoad && !data && !preview.error;
+  const isLoading = canLoad && !data && !preview.error && (preview.isLookingUp || preview.isPreparing);
   const isFetching = preview.busy || preview.fetching || preview.refreshingStatus;
   const hasCurrentReadiness = Boolean(data && preview.isCurrent);
   const issues = [
@@ -136,7 +136,7 @@ const PayrollHome = () => {
           size="small"
           variant="outlined"
           loading={isFetching}
-          disabled={!canLoad || !preview.requestedRunId || preview.busy || preview.refreshingStatus}
+          disabled={!canLoad || preview.isLookingUp || preview.busy || preview.refreshingStatus}
           onClick={() => preview.refreshStatus()}
           startIcon={<Iconify icon="solar:refresh-bold" />}
         >
@@ -155,9 +155,14 @@ const PayrollHome = () => {
       )}
       {preview.error && (
         <Alert severity="error" sx={{ mb: 2 }}>
-          Could not load payroll readiness for this month. Refresh status to retry an existing
-          preview, or open the payroll workbench to calculate payroll.
+          Could not load payroll readiness for this month. Use Refresh status to check saved payroll,
+          or open Run Payroll for calculation and recovery actions.
         </Alert>
+      )}
+      {canLoad && !isLoading && !preview.error && !preview.requestedRunId && (
+        <HrNotice severity="info" sx={{ mb: 2 }}>
+          No payroll has been generated for this month. Open the payroll workbench to generate it.
+        </HrNotice>
       )}
       {!preview.isCurrent && data && (
         <HrNotice severity="info" sx={{ mb: 2 }}>

@@ -81,7 +81,7 @@ Use this table before searching `src/redux`:
 | `employee-salary-structure-api.ts` | Employee salary structure get and update                                                      | HR payroll salary structure     |
 | `compensation-revision-api.ts`     | Direct effective-dated compensation save, history, and activation readiness                    | HR payroll compensation         |
 | `runPayrollApi.ts`                 | Generation-bound reviews and lock, adjustments, salary slips, PDFs                            | HR payroll operations           |
-| `payroll-preview-run-api.ts`       | Start/resume background calculation, status polling, and server-paged generation results       | HR payroll operations           |
+| `payroll-preview-run-api.ts`       | Read-only month lookup, explicit calculation, status polling, and paged results                   | HR payroll operations           |
 | `statutory-scheme-api.ts`          | ESI rule, earning classifications, registration details, exceptions, and employee impact | HR payroll statutory settings   |
 | `esi-configuration-api.ts` | ESIC settings read and direct save with concurrency stamp and idempotency key | HR payroll statutory settings |
 | `attendanceApi.ts`                 | Attendance tracking, employee attendance, import preview, confirm, template, register, adjust | HR attendance and leaves        |
@@ -134,6 +134,9 @@ Download retains the original stored bytes.
 
 The durable payroll preview client is a pending coordinated release and requires the additive backend schema.
 `src/screens/hr/payroll/run-payroll/use-payroll-preview-run.ts` owns month/run URL state, bounded polling, debounced search, and late-response protection.
+The Run Payroll register reads the selected month through `/payroll/run/register` and passes the same criteria to the generic export.
+`src/redux/runPayroll/payroll-approval-api.ts` reads workflow settings and submissions, sends versioned commands and invalidates the payroll register after a successful mutation.
+Pending review sheets reuse the HR table export client with an exact selection or submission version.
 The monthly workbench and Payroll Overview consume the same background-run contract instead of invoking synchronous readiness calculations.
 Only the requested employee page is fetched, and the backend summary remains unfiltered.
 Payroll Structure and Payslips staff pickers use `getEmployeeOptions` at `/employees/options`, returning only ID, name, status, and `hasMore`.

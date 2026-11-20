@@ -32,6 +32,7 @@ import { HrNotice, HrLoadingNotice } from 'src/screens/hr/components/hr-notice';
 import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { DetailGrid, DetailField, DetailSection } from 'src/components/detail-view';
 import { PAYROLL_ISSUE_LABELS as ISSUE_LABELS } from 'src/constants/payroll-issues';
+import { usePayrollApprovalSettingsQuery } from 'src/redux/runPayroll/payroll-approval-api';
 import {
   toHrAuditLabel,
   formatHrAuditText,
@@ -68,11 +69,13 @@ import {
   useDeletePayrollAdjustmentMutation,
 } from 'src/redux/runPayroll/runPayrollApi';
 
+import { PayrollApprovalPanel } from './payroll-approval-panel';
 import { usePayrollPreviewRun } from './use-payroll-preview-run';
 import { SalaryDetailsTableCard } from './salary-details-table-card';
 import { DrawerHeader } from '../../policies/components/HRPolicySharedUI';
 import { getPayrollMutationErrorMessage } from './run-payroll-error-utils';
 import { PayrollRegistrationReadiness } from './payroll-registration-readiness';
+import { PayrollApprovalSettingsDialog } from './payroll-approval-settings-dialog';
 import {
   getPayrollAdjustmentSourceLabel,
   isSystemGeneratedPayrollAdjustment,
@@ -121,7 +124,8 @@ type PayrollRow = {
   previousMonthNetPay: number | null;
   netPayDelta: number | null;
   netPayDeltaPercent: number | null;
-  status: 'PENDING' | 'REVIEWED' | 'LOCKED';
+  status: 'PENDING' | 'REVIEWED' | 'SUBMITTED' | 'LOCKED';
+  issuedWithoutRegisterDetails: boolean;
   reviewedAt?: string | null;
   issueCodes: string[];
   issueSeverity: 'CLEAN' | 'INFO' | 'WARNING' | 'CRITICAL';
@@ -177,6 +181,7 @@ type PayrollPreviewError = {
 const statusColor = {
   PENDING: 'warning',
   REVIEWED: 'info',
+  SUBMITTED: 'primary',
   LOCKED: 'success',
 } as const;
 
@@ -216,6 +221,10 @@ const RunPayroll = () => {
   );
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const canLockPayroll = hasGrantedPermission(permissions, hrPermissions.payroll.runPayrollLock);
+  const canSubmitPayroll = hasGrantedPermission(permissions, hrPermissions.payroll.runPayrollSubmit);
+  const canExportReviewSheet = hasGrantedPermission(permissions, hrPermissions.payroll.runPayrollExportReview);
+  const canManagePayrollWorkflow = hasGrantedPermission(permissions, hrPermissions.payroll.runPayrollManageWorkflow);
+  const [approvalSettingsOpen, setApprovalSettingsOpen] = useState(false);
   const canAdjustPayroll = hasGrantedPermission(
     permissions,
     hrPermissions.payroll.runPayrollAdjustments
@@ -263,13 +272,22 @@ const RunPayroll = () => {
 
   const selectedMonthKey = month?.format('YYYY-MM') ?? '';
   const academicYearId = currentYear?.id || '';
+  const approval = usePayrollApprovalSettingsQuery(undefined, {
+    skip: !academicYearId,
+    refetchOnFocus: true,
+    refetchOnMountOrArgChange: true,
+  });
+  const approvalSettings = approval.isError ? undefined : approval.currentData;
+  const usesApproval = approvalSettings?.mode === 'Active' || approvalSettings?.mode === 'Paused';
   const isDesktop = useResponsive('up', 'md');
   const academicYearStart = currentYear?.startDate ? dayjs(currentYear.startDate) : null;
   const academicYearEnd = currentYear?.endDate ? dayjs(currentYear.endDate) : null;
-  const preview = usePayrollPreviewRun(selectedMonthKey, academicYearId);
+  const preview = usePayrollPreviewRun(selectedMonthKey, academicYearId, true);
   const exportTable = useHrTableExport('payroll-monthly-workbench-table', {
-    runId: preview.runId,
+    month: selectedMonthKey,
+    academicYearId,
     search: preview.searchInput,
+    ...preview.registerCriteria,
   });
   const previewItems = preview.data?.items || EMPTY_PREVIEW_ITEMS;
   const previewReadiness =
@@ -277,7 +295,7 @@ const RunPayroll = () => {
   const previewError = preview.error;
   const previewIsGenerated = preview.data?.isGenerated || false;
   const previewBusy = preview.isPreparing;
-  const isDataForSelectedMonth = Boolean(preview.data);
+  const isDataForSelectedMonth = Boolean(preview.data?.previewRunId || preview.data?.totalCount);
   const { loadPreview } = preview;
   const previewContextKey = `${academicYearId}:${selectedMonthKey}`;
   const readinessOpen = readinessDrawerContext === previewContextKey;
@@ -320,7 +338,7 @@ const RunPayroll = () => {
     explicitRequest.current = true;
     setReviewRefreshFailed(false);
     setPendingPreview({ key: requestedContext.key, id: null });
-    const accepted = await loadPreview(true);
+    const accepted = await loadPreview(Boolean(preview.requestedRunId));
     if (!previewMounted.current || previewContext.current !== requestedContext) return;
     if (!accepted) explicitRequest.current = false;
     setPendingPreview(
@@ -328,7 +346,7 @@ const RunPayroll = () => {
         ? { key: requestedContext.key, id: accepted.id }
         : { key: requestedContext.key, id: '' }
     );
-  }, [loadPreview, previewBusy]);
+  }, [loadPreview, previewBusy, preview.requestedRunId]);
   useEffect(() => {
     if (!pendingPreview || pendingPreview.key !== previewContextKey || pendingPreview.id === null)
       return;
@@ -441,7 +459,7 @@ const RunPayroll = () => {
       sourceRows.map((item: any) => {
         const totalWorkingDays = Number(item.totalWorkingDays || 0);
         const payableDays = Number(item.payableDays || 0);
-        const reviewStatus = item.isLocked ? 'LOCKED' : item.reviewStatus || 'PENDING';
+        const reviewStatus = item.isLocked ? 'LOCKED' : item.isSubmitted ? 'SUBMITTED' : item.reviewStatus || 'PENDING';
 
         const issueCodes = item.issueCodes || [];
         const issueSeverity = resolveIssueSeverity(issueCodes);
@@ -474,6 +492,7 @@ const RunPayroll = () => {
               ? null
               : Number(item.netPayDeltaPercent),
           status: reviewStatus,
+          issuedWithoutRegisterDetails: Boolean(item.isIssuedWithoutRegisterDetails),
           reviewedAt: item.reviewedAt,
           issueCodes,
           issueSeverity,
@@ -527,7 +546,7 @@ const RunPayroll = () => {
   );
 
   const pendingRows = useMemo(
-    () => tableData.filter((row) => row.status !== 'LOCKED'),
+    () => tableData.filter((row) => row.status !== 'LOCKED' && row.status !== 'SUBMITTED'),
     [tableData]
   );
   const selectedRows = useMemo(
@@ -910,7 +929,7 @@ const RunPayroll = () => {
           );
         },
         render(_value, row) {
-          const disabled = row.status === 'LOCKED';
+          const disabled = row.status === 'LOCKED' || row.status === 'SUBMITTED';
           return (
             <Checkbox
               inputProps={{ 'aria-label': `Select payroll for ${row.employeeName}` }}
@@ -966,6 +985,7 @@ const RunPayroll = () => {
         align: 'center',
         filterType: 'number',
         render(_value, row) {
+          if (row.issuedWithoutRegisterDetails) return 'Unavailable';
           const absentDays = Number(row.absentDays || 0);
 
           return (
@@ -990,7 +1010,7 @@ const RunPayroll = () => {
         minWidth: 140,
         align: 'center',
         filterType: 'number',
-        render: (v) => formatPayrollCurrency(v),
+        render: (v, row) => row.issuedWithoutRegisterDetails ? 'Unavailable' : formatPayrollCurrency(v),
       },
       {
         id: 'grossSalary',
@@ -998,7 +1018,7 @@ const RunPayroll = () => {
         minWidth: 130,
         align: 'center',
         filterType: 'number',
-        render: (v) => formatPayrollCurrency(v),
+        render: (v, row) => row.issuedWithoutRegisterDetails ? 'Unavailable' : formatPayrollCurrency(v),
       },
       {
         id: 'additionalEarnings',
@@ -1006,7 +1026,7 @@ const RunPayroll = () => {
         minWidth: 140,
         align: 'center',
         filterType: 'number',
-        render: (v) => formatPayrollCurrency(v),
+        render: (v, row) => row.issuedWithoutRegisterDetails ? 'Unavailable' : formatPayrollCurrency(v),
       },
       {
         id: 'totalEarnings',
@@ -1108,12 +1128,13 @@ const RunPayroll = () => {
         enumOptions: [
           { label: 'Pending', value: 'PENDING' },
           { label: 'Reviewed', value: 'REVIEWED' },
+          { label: 'Submitted', value: 'SUBMITTED' },
           { label: 'Locked', value: 'LOCKED' },
         ],
         render(value) {
           return (
             <Label variant="soft" color={statusColor[value as keyof typeof statusColor] as any}>
-              {String(value).toLowerCase()}
+              {value === 'SUBMITTED' ? 'Pending finalization' : String(value).toLowerCase()}
             </Label>
           );
         },
@@ -1128,6 +1149,7 @@ const RunPayroll = () => {
         sticky: true,
         stickyPosition: 'right',
         render(_value, row) {
+          if (row.issuedWithoutRegisterDetails) return 'Unavailable';
           return (
             <ThreeDotsActions
               showViewIcon
@@ -1198,7 +1220,11 @@ const RunPayroll = () => {
         previewReadiness.employeeCount > 0 &&
         previewReadiness.lockedCount === previewReadiness.employeeCount)
     )
-      return { label: 'Already locked', color: 'success' as const };
+      return { label: 'Finalized', color: 'success' as const };
+    if (previewReadiness && previewReadiness.lockedCount > 0)
+      return { label: 'Partially finalized', color: 'info' as const };
+    if (!preview.data?.previewRunId)
+      return { label: 'Preview not generated', color: 'default' as const };
     if (
       checksNeedingAttention.length ||
       additionalBlockingIssues.length ||
@@ -1248,13 +1274,21 @@ const RunPayroll = () => {
           : 'Unavailable',
     },
   ];
-  const previewButtonLabel = previewBusy
-    ? isDataForSelectedMonth
-      ? 'Refreshing…'
-      : 'Generating…'
-    : isDataForSelectedMonth
-      ? 'Refresh preview'
-      : 'Generate preview';
+  const previewButtonLabel = preview.isLookingUp
+    ? 'Loading saved payroll…'
+    : previewBusy
+      ? preview.isCalculating
+        ? 'Generating payroll…'
+        : 'Loading payroll rows…'
+      : preview.requestedRunId
+        ? 'Recalculate payroll'
+        : 'Generate payroll';
+  const retryGeneration = preview.canRequestPreview && !preview.readFailed;
+  const retryPreviewLabel = retryGeneration
+    ? 'Try generating again'
+    : preview.lookupFailed
+      ? 'Retry lookup'
+      : 'Reconnect';
 
   return (
     <Box
@@ -1274,7 +1308,7 @@ const RunPayroll = () => {
           { name: 'Payroll Management', href: `${hrPaths.payroll.root}?month=${selectedMonthKey}` },
           { name: 'Run Payroll' },
         ]}
-        description="Generate, review, and lock monthly payroll from one workbench."
+        description={usesApproval ? 'Generate payroll, review staff, then send ready rows for finalization.' : 'Generate, review, and lock monthly payroll from one workbench.'}
         sx={{ flexWrap: 'wrap', mb: 1 }}
       />
 
@@ -1310,10 +1344,18 @@ const RunPayroll = () => {
           }}
           sx={{ width: { xs: '100%', sm: 220, md: 260 }, minWidth: { sm: 220 } }}
         />
-        <PayrollRegistrationReadiness
+        {!usesApproval && <PayrollRegistrationReadiness
           key={academicYearId}
           month={academicYearId && month.isValid() ? selectedMonthKey : null}
-        />
+        />}
+        {canManagePayrollWorkflow && approvalSettings && (
+          <Button size="small" variant="outlined" onClick={() => setApprovalSettingsOpen(true)}>
+            Approval settings
+          </Button>
+        )}
+        {approvalSettingsOpen && approvalSettings && (
+          <PayrollApprovalSettingsDialog initial={approvalSettings} onClose={() => setApprovalSettingsOpen(false)} />
+        )}
       </Stack>
 
       <Box
@@ -1329,6 +1371,25 @@ const RunPayroll = () => {
           spacing={1}
           sx={{ flex: 1, minHeight: 0, overflow: { xs: 'visible', md: 'hidden' } }}
         >
+          {approval.isError && (
+            <Alert severity="error">Payroll approval settings could not be loaded. <Button onClick={() => approval.refetch()}>Retry</Button></Alert>
+          )}
+          {usesApproval && approvalSettings && selectedMonthKey && academicYearId && (
+            <PayrollApprovalPanel
+              key={previewContextKey}
+              period={{ month: selectedMonthKey, academicYearId }}
+              settings={approvalSettings}
+              canSubmit={canSubmitPayroll}
+              canSelfFinalize={canSubmitPayroll && canReviewPayroll && canLockPayroll}
+              canExport={canExportReviewSheet}
+              selection={preview.isCurrent && !payrollActionBusy && preview.runId && lockableIds.length ? {
+                previewRunId: preview.runId,
+                employeeIds: lockableIds,
+                netPay: selectedRows.filter((row) => lockableIds.includes(row.id)).reduce((total, row) => total + row.netSalary, 0),
+              } : null}
+              onSubmitted={() => setSelectedEmployeeIds([])}
+            />
+          )}
           {reviewRefreshFailed ? (
             <Alert
               severity="info"
@@ -1362,10 +1423,10 @@ const RunPayroll = () => {
                   size="small"
                   color="inherit"
                   loading={previewBusy}
-                  onClick={requestPreview}
+                  onClick={retryGeneration ? requestPreview : refreshStatus}
                   startIcon={<Iconify icon="mdi:refresh" />}
                 >
-                  Retry
+                  {retryPreviewLabel}
                 </LoadingButton>
               }
             >
@@ -1403,11 +1464,16 @@ const RunPayroll = () => {
               sx={{ px: 1, py: 0.75 }}
             >
               <Box>
-                <Typography id="payroll-register-title" variant="subtitle1" fontWeight={700}>
-                  Payroll Register
-                </Typography>
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <Typography id="payroll-register-title" variant="subtitle1" fontWeight={700}>
+                    Payroll Register
+                  </Typography>
+                  {usesApproval && previewReadiness && <Chip size="small" variant="outlined" label={monthStatus.label} color={monthStatus.color} />}
+                </Stack>
                 <Typography variant="caption" color="text.secondary">
-                  {month?.format('MMMM YYYY')} • {selectedEmployeeIds.length} selected on this page
+                  {month?.format('MMMM YYYY')}
+                  {usesApproval && previewReadiness ? ` • ${previewReadiness.lockedCount} of ${previewReadiness.employeeCount} staff finalized` : ''}
+                  {selectedEmployeeIds.length > 0 ? ` • ${selectedEmployeeIds.length} selected on this page` : ''}
                   {selectedPendingIds.length
                     ? ` • ${selectedPendingIds.length} ready to mark reviewed`
                     : ''}
@@ -1450,9 +1516,15 @@ const RunPayroll = () => {
                   ) : null}
                   <LoadingButton
                     variant="contained"
-                    loading={previewBusy}
+                    loading={previewBusy || preview.isLookingUp}
                     size="small"
-                    disabled={payrollActionBusy || !month.isValid() || !academicYearId}
+                    disabled={
+                      !preview.canRequestPreview ||
+                      Boolean(previewError) ||
+                      payrollActionBusy ||
+                      !month.isValid() ||
+                      !academicYearId
+                    }
                     startIcon={
                       <Iconify icon={isDataForSelectedMonth ? 'mdi:refresh' : 'mdi:calculator'} />
                     }
@@ -1478,7 +1550,7 @@ const RunPayroll = () => {
                     startIcon={<Iconify icon="mdi:clipboard-check-outline" />}
                     onClick={() => setReadinessDrawerContext(previewContextKey)}
                   >
-                    View readiness
+                    {usesApproval ? 'Payroll checks' : 'View readiness'}
                   </Button>
                   {canViewPayrollAudit ? (
                     <LoadingButton
@@ -1494,13 +1566,13 @@ const RunPayroll = () => {
                     </LoadingButton>
                   ) : null}
                 </Stack>
-                <Stack
+                {(!usesApproval || canReviewPayroll) && <Stack
                   direction="row"
                   spacing={1}
                   flexWrap="wrap"
                   useFlexGap
                   role="group"
-                  aria-label="Review and lock selected payroll rows"
+                  aria-label={usesApproval ? 'Review selected payroll rows' : 'Review and lock selected payroll rows'}
                 >
                   <LoadingButton
                     size="small"
@@ -1533,7 +1605,7 @@ const RunPayroll = () => {
                   >
                     Unmark
                   </LoadingButton>
-                  <LoadingButton
+                  {approvalSettings?.mode === 'Legacy' && <LoadingButton
                     size="small"
                     variant="contained"
                     color="success"
@@ -1550,8 +1622,8 @@ const RunPayroll = () => {
                     }}
                   >
                     Lock Reviewed
-                  </LoadingButton>
-                </Stack>
+                  </LoadingButton>}
+                </Stack>}
               </Stack>
             </Stack>
 
@@ -1561,9 +1633,13 @@ const RunPayroll = () => {
               color="text.secondary"
               sx={{ px: 1, mb: 0.75, overflowWrap: 'anywhere' }}
             >
-              {lockExplanation}
+              {usesApproval
+                ? canReviewPayroll
+                  ? 'Review salary amounts and issues, then select reviewed staff who are ready for approval.'
+                  : 'Open Approval batches to check the staff, earnings and deductions before finalizing.'
+                : lockExplanation}
             </Typography>
-            {!canReviewPayroll && (
+            {!usesApproval && !canReviewPayroll && (
               <Typography variant="body2" color="text.secondary" sx={{ px: 1, mb: 0.75 }}>
                 You do not have permission to review payroll. Contact an HR administrator to review
                 your access.
@@ -1573,6 +1649,57 @@ const RunPayroll = () => {
               <HrNotice severity={lockFeedback.failed ? 'warning' : 'error'}>
                 {lockFeedback.message}
               </HrNotice>
+            )}
+            {isDataForSelectedMonth && preview.registerCriteria && (
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ px: 1, pb: 1 }}>
+                <TextField select size="small" label="Payroll status" sx={{ minWidth: 165 }}
+                  value={preview.registerCriteria.reviewState ?? ''}
+                  onChange={(event) => {
+                    setSelectedEmployeeIds([]);
+                    preview.updateQuery({ registerState: event.target.value || null, page: 0 });
+                  }}>
+                  <MenuItem value="">All statuses</MenuItem>
+                  <MenuItem value="PENDING">Needs review</MenuItem>
+                  <MenuItem value="REVIEWED">Reviewed</MenuItem>
+                  <MenuItem value="SUBMITTED">Pending finalization</MenuItem>
+                  <MenuItem value="LOCKED">Finalized</MenuItem>
+                </TextField>
+                <TextField select size="small" label="Issues" sx={{ minWidth: 150 }}
+                  value={preview.registerCriteria.issueCode ? `code:${preview.registerCriteria.issueCode}` : preview.registerCriteria.issueClass ?? ''}
+                  onChange={(event) => {
+                    setSelectedEmployeeIds([]);
+                    const { value } = event.target;
+                    preview.updateQuery({
+                      registerIssue: value.startsWith('code:') ? null : value || null,
+                      registerIssueCode: value.startsWith('code:') ? value.slice(5) : null,
+                      page: 0,
+                    });
+                  }}>
+                  <MenuItem value="">All issue levels</MenuItem>
+                  <MenuItem value="CLEAN">Clear</MenuItem>
+                  <MenuItem value="HAS_ISSUES">Warnings</MenuItem>
+                  <MenuItem value="CRITICAL">Blocking issues</MenuItem>
+                  {Object.entries(ISSUE_LABELS).map(([code, issue]) => (
+                    <MenuItem key={code} value={`code:${code}`}>{issue.label}</MenuItem>
+                  ))}
+                </TextField>
+                <TextField select size="small" label="Sort payroll" sx={{ minWidth: 180 }}
+                  value={`${preview.registerCriteria.sort ?? 'employeeName'}:${preview.registerCriteria.descending ? 'desc' : 'asc'}`}
+                  onChange={(event) => {
+                    const [field, direction] = event.target.value.split(':');
+                    setSelectedEmployeeIds([]);
+                    preview.updateQuery({ registerSort: field, registerDirection: direction, page: 0 });
+                  }}>
+                  <MenuItem value="employeeName:asc">Staff name A to Z</MenuItem>
+                  <MenuItem value="employeeName:desc">Staff name Z to A</MenuItem>
+                  <MenuItem value="payableDays:asc">Payable days, low to high</MenuItem>
+                  <MenuItem value="payableDays:desc">Payable days, high to low</MenuItem>
+                  <MenuItem value="netPay:asc">Net pay, low to high</MenuItem>
+                  <MenuItem value="netPay:desc">Net pay, high to low</MenuItem>
+                  <MenuItem value="netPayDelta:asc">Variance, low to high</MenuItem>
+                  <MenuItem value="netPayDelta:desc">Variance, high to low</MenuItem>
+                </TextField>
+              </Stack>
             )}
             <Box sx={{ height: 2, flexShrink: 0 }}>
               {preview.data &&
@@ -1594,9 +1721,11 @@ const RunPayroll = () => {
               showFullScreen
               exportScope="all"
               noDataText={
-                !isDataForSelectedMonth && selectedMonthKey ? (
+                previewError ? (
+                  'Payroll results are unavailable.'
+                ) : !isDataForSelectedMonth && selectedMonthKey && academicYearId ? (
                   <>
-                    No preview is available. Use <strong>Generate preview</strong> above.
+                    No payroll has been generated for this month. Use <strong>Generate payroll</strong> above.
                   </>
                 ) : (
                   <>
@@ -1609,7 +1738,7 @@ const RunPayroll = () => {
               tableId="payroll-monthly-workbench-table"
               tableTitle="Monthly payroll workbench"
               onExport={exportTable}
-              isLoading={(previewBusy || preview.fetching) && !preview.data}
+              isLoading={(preview.isLookingUp || previewBusy || preview.fetching) && !preview.data}
               serverSidePagination
               serverSideSearch
               totalCount={preview.data?.totalCount || 0}
@@ -1707,6 +1836,10 @@ const RunPayroll = () => {
                       </Typography>
                     ) : null}
                   </Box>
+                  {usesApproval && <PayrollRegistrationReadiness
+                    key={previewContextKey}
+                    month={academicYearId && month.isValid() ? selectedMonthKey : null}
+                  />}
                   <Box component="section" aria-label="Readiness checks">
                     <Typography variant="subtitle2">Checks</Typography>
                     <Stack divider={<Divider />}>

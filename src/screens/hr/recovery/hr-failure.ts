@@ -137,6 +137,33 @@ const known: Record<string, { message: string; setup?: HrSetup }> = {
     message:
       'Payroll inputs changed after this preview. Refresh the preview and review it before continuing.',
   },
+  PAYROLL_SUBMISSION_REVIEW_REQUIRED: {
+    message: 'Some selected staff need a fresh review. Reload payroll and check their amounts and issues before sending.',
+  },
+  PAYROLL_EMPLOYEE_ALREADY_SUBMITTED: {
+    message: 'A selected staff member is already in an approval batch. Open Approval batches to see its status.',
+  },
+  PAYROLL_REVIEW_SHEET_EXPIRED: {
+    message: 'This review sheet expired when the payroll evidence or batch changed. Export a fresh review sheet from the current selection.',
+  },
+  PAYROLL_SUBMISSION_VERSION_CONFLICT: {
+    message: 'This batch changed after it was opened. Reopen the batch to review its current status.',
+  },
+  PAYROLL_SETTINGS_VERSION_CONFLICT: {
+    message: 'Approval settings changed. Reload the page before trying again.',
+  },
+  PAYROLL_APPROVER_UNAVAILABLE: {
+    message: 'The designated approver needs payroll lock permission and access to every selected staff member. Check the approver and staff selection.',
+  },
+  PAYROLL_APPROVER_PERMISSION_REQUIRED: {
+    message: 'Choose an active principal or admin with Run Payroll view and lock permissions.',
+  },
+  PAYROLL_WORKFLOW_NOT_ACTIVE: {
+    message: 'The school’s payroll approval workflow is paused or awaiting activation.',
+  },
+  PAYROLL_BATCH_ISSUANCE_FAILED: {
+    message: 'A payslip could not be issued. The entire batch is still pending. Retry finalization or return it to HR.',
+  },
   ESI_PREVIEW_STALE: {
     message:
       'ESIC setup changed after this preview. Refresh the preview and review it before continuing.',

@@ -175,11 +175,26 @@ async function mockPayroll(
         ],
         totalCount: 1,
       };
-    } else if (path.includes('/payroll/run/previews')) {
+    } else if (path.endsWith('/payroll/run/approval-settings')) {
+      body = { mode: 'Legacy', version: 0, approverId: null, allowSelfFinalization: false };
+    } else if (path.includes('/payroll/run/previews') || path.endsWith('/payroll/run/register')) {
       if (options.failReadiness) {
         status = 500;
         body = { error: { message: 'Readiness could not be loaded.' } };
-      } else if (path.endsWith('/employees'))
+      } else if (path.endsWith('/current')) {
+        const lookupMonth = new URL(route.request().url()).searchParams.get('month');
+        body = {
+          currentRun: lookupMonth === readiness.month ? {
+            id: 'ui-preview',
+            month: readiness.month,
+            academicYearId: year.id,
+            status: 'SUCCEEDED',
+            employeeCount: 3,
+            completedEmployees: 3,
+            isCurrent: true,
+          } : null,
+        };
+      } else if (path.endsWith('/employees') || path.endsWith('/register'))
         body = {
           previewRunId: 'ui-preview',
           isCurrent: true,
