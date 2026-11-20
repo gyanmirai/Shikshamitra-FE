@@ -2,6 +2,7 @@
 
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
+import dayjs from 'dayjs';
 import { useState, useContext } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
@@ -66,6 +67,18 @@ const lateFeeAppliedDays = (charge: IFeeCharge) =>
     ? `${charge.lateFeeAppliedDays} ${charge.lateFeeAppliedDays === 1 ? 'overdue day' : 'overdue days'} considered; grace and exception days are excluded.`
     : 'Grace and policy exception days are excluded from the displayed range.';
 
+const getDaysOverdue = (row?: LedgerRow) => {
+  if (!row || row.charge || row.status !== FeeCollectionStatusType.Overdue) return null;
+  if (row.daysOverdue != null && Number.isInteger(row.daysOverdue) && row.daysOverdue > 0)
+    return row.daysOverdue;
+
+  // Older collect-form responses provide the due date without an overdue count.
+  const dueDate = parseDateOnly(row.dueDate);
+  if (!dueDate) return null;
+  const days = dayjs().startOf('day').diff(dueDate.startOf('day'), 'day');
+  return days > 0 ? days : null;
+};
+
 /** One embedded student ledger. Filtering is owned by the collect form; sorting never changes allocation order. */
 export default function CollectionLedgerTable({
   data,
@@ -75,6 +88,8 @@ export default function CollectionLedgerTable({
   chargesData = [],
   onSelectionChange,
   onChargesChange,
+  onLedgerSelectionChange,
+  deselectPartiallyFundedGroups = false,
   year = new Date().getFullYear(),
   hasActiveFilters,
   layout,
@@ -91,6 +106,8 @@ export default function CollectionLedgerTable({
   getAllocatedAmount?: (item: SelectedItem | IFeeCharge) => number;
   selectedFeeCandidates?: SelectedItem[];
   selectedChargeCandidates?: string[];
+  onLedgerSelectionChange?: (items: SelectedItem[], chargeIds: string[], removing: boolean) => void;
+  deselectPartiallyFundedGroups?: boolean;
 }) {
   const allowWaivers = useContext(FeeCollectionWaiverContext);
   const [detailId, setDetailId] = useState<string | null>(null);
@@ -164,31 +181,33 @@ export default function CollectionLedgerTable({
     lateFeeAmount: row.lateFeeAmount,
     installmentLabel: row.installmentLabel,
   });
-  const toggleRows = (candidates: LedgerRow[]) => {
+  const toggleRows = (candidates: LedgerRow[], isGroup = false) => {
     const eligible = candidates.filter(collectible);
     if (!eligible.length) return;
-    const remove = eligible.every(isSelected);
+    const remove =
+      eligible.every(isSelected) ||
+      (isGroup && deselectPartiallyFundedGroups && eligible.some(isSelected));
     const feeRows = eligible.filter((row) => !row.charge);
     const feeSelections = feeRows.map(asSelection);
     const keys = new Set(feeSelections.map(selectionItemKey));
-    const candidateKeys = new Set(selectedFeeCandidates.map(selectionItemKey));
-    if (feeRows.length)
-      onSelectionChange(
-        remove
-          ? selectedFeeCandidates.filter((item) => !keys.has(selectionItemKey(item)))
-          : [
-              ...selectedFeeCandidates,
-              ...feeSelections.filter((item) => !candidateKeys.has(selectionItemKey(item))),
-            ]
-      );
+    const candidateKeys = new Set(selectedItems.map(selectionItemKey));
+    const nextFees = remove
+      ? selectedItems.filter((item) => !keys.has(selectionItemKey(item)))
+      : [
+          ...selectedItems,
+          ...feeSelections.filter((item) => !candidateKeys.has(selectionItemKey(item))),
+        ];
     const chargeRows = eligible.filter((row) => row.charge);
     const ids = new Set(chargeRows.map((row) => row.charge!.chargeId));
-    if (chargeRows.length)
-      onChargesChange(
-        remove
-          ? selectedChargeCandidates.filter((id) => !ids.has(id))
-          : [...new Set([...selectedChargeCandidates, ...ids])]
-      );
+    const nextCharges = remove
+      ? charges.filter((id) => !ids.has(id))
+      : [...new Set([...charges, ...ids])];
+    if (onLedgerSelectionChange) {
+      onLedgerSelectionChange(nextFees, nextCharges, remove);
+    } else {
+      if (feeRows.length) onSelectionChange(nextFees);
+      if (chargeRows.length) onChargesChange(nextCharges);
+    }
   };
   const groupCheckbox = (candidates: LedgerRow[], label: string) => {
     const eligible = candidates.filter(collectible);
@@ -201,7 +220,7 @@ export default function CollectionLedgerTable({
         indeterminate={count > 0 && count < eligible.length}
         disabled={!eligible.length}
         inputProps={{ 'aria-label': label }}
-        onChange={() => toggleRows(candidates)}
+        onChange={() => toggleRows(candidates, true)}
       />
     );
   };
@@ -266,7 +285,7 @@ export default function CollectionLedgerTable({
           <Typography variant="body2" fontWeight={600}>
             {row.feeHeadName}
           </Typography>
-          {row.charge && (
+          {row.charge && row.charge.sourceType !== 'LateFee' && !row.charge.isSystemGenerated && (
             <Typography variant="caption" color="text.secondary">
               Additional Charges
             </Typography>
@@ -282,7 +301,7 @@ export default function CollectionLedgerTable({
     },
     {
       id: 'period',
-      label: 'Billing Period',
+      label: 'Fee Period',
       minWidth: 150,
       isFilter: false,
       sortValue: (_value, row) => row.coverageStartDate ?? row.period,
@@ -297,19 +316,18 @@ export default function CollectionLedgerTable({
         <Typography variant="body2">{formatDateOnly(row.dueDate, 'D MMM YYYY')}</Typography>
       ),
     },
-    {
-      id: 'outstanding',
-      label: 'Amount',
-      align: 'left',
-      cellSx: { textAlign: 'right' },
-      minWidth: 135,
+    ...(['total', 'paid', 'due'] as const).map((id, index): IColumn => ({
+      id,
+      label: ['Total', 'Paid', 'Pending'][index],
+      align: 'right',
+      minWidth: 100,
       isFilter: false,
       render: (value) => (
         <Typography variant="body2" fontWeight={600} sx={{ fontVariantNumeric: 'tabular-nums' }}>
           {formatNumber(value, 'INR')}
         </Typography>
       ),
-    },
+    })),
     {
       id: 'status',
       label: 'Status',
@@ -331,16 +349,21 @@ export default function CollectionLedgerTable({
     },
   ];
   const detail = rows.find((row) => row.id === detailId);
+  const daysOverdue = getDaysOverdue(detail);
   const closeDetail = () => setDetailId(null);
-  const waiverApplied = (row = detail) => {
-    if (row?.charge && selectedChargeCandidates.includes(row.charge.chargeId)) {
+  const waiverApplied = (remainingAmount = 0, row = detail) => {
+    if (
+      row?.charge &&
+      remainingAmount === 0 &&
+      selectedChargeCandidates.includes(row.charge.chargeId)
+    ) {
       onChargesChange(selectedChargeCandidates.filter((id) => id !== row.charge!.chargeId));
     } else if (row && !row.charge) {
       const key = selectionItemKey(asSelection(row));
       if (selectedFeeCandidates.some((item) => selectionItemKey(item) === key))
         onSelectionChange(
           selectedFeeCandidates.map((item) =>
-            selectionItemKey(item) === key ? { ...item, lateFeeAmount: 0 } : item
+            selectionItemKey(item) === key ? { ...item, lateFeeAmount: remainingAmount } : item
           )
         );
     }
@@ -379,6 +402,8 @@ export default function CollectionLedgerTable({
             )
             .map((column) => ({
               ...column,
+              ...(group.id === 'additional-charges' &&
+                column.id === 'paid' && { label: 'Collected' }),
               ...(column.id === 'selection' && {
                 label: groupCheckbox(group.items, `Select all ${group.title}`),
               }),
@@ -386,20 +411,7 @@ export default function CollectionLedgerTable({
               headerSx: { py: 1 },
             }));
           if (group.id === 'additional-charges') {
-            const amountColumn = groupColumns.findIndex((column) => column.id === 'outstanding');
             const chargeAmountColumns: IColumn[] = [
-              {
-                cellSx: { textAlign: 'right' as const },
-                id: 'total',
-                label: 'Original',
-                render: (_value, row) => formatNumber(row.total, 'INR'),
-              },
-              {
-                cellSx: { textAlign: 'right' as const },
-                id: 'paid',
-                label: 'Collected',
-                render: (_value, row) => formatNumber(row.paid, 'INR'),
-              },
               {
                 cellSx: { textAlign: 'right' as const },
                 id: 'waived',
@@ -408,7 +420,7 @@ export default function CollectionLedgerTable({
               },
             ];
             groupColumns.splice(
-              amountColumn,
+              groupColumns.findIndex((column) => column.id === 'due'),
               0,
               ...chargeAmountColumns.map((column) => ({
                 ...column,
@@ -440,7 +452,7 @@ export default function CollectionLedgerTable({
                       sourceName={row.feeHeadName}
                       remainingAmount={row.due}
                       canWaive={row.charge.canWaive}
-                      onApplied={() => waiverApplied(row)}
+                      onApplied={(result) => waiverApplied(result?.remainingAmount, row)}
                     />
                   ) : null;
                 },
@@ -506,6 +518,10 @@ export default function CollectionLedgerTable({
                         color="success"
                         sx={{
                           height: 'auto',
+                          typography: 'body2',
+                          fontWeight: 700,
+                          whiteSpace: 'normal',
+                          flexShrink: 0,
                           py: 0.5,
                           alignSelf: { xs: 'flex-start', sm: 'center' },
                         }}
@@ -644,7 +660,16 @@ export default function CollectionLedgerTable({
                     <>
                       <DetailField label="Due period" value={detail.periodLabel} />
                       <DetailField label="Installment" value={detail.installmentLabel} />
+                      {detail.dueDate && (
+                        <DetailField
+                          label="Due date"
+                          value={formatDateOnly(detail.dueDate, 'D MMMM YYYY')}
+                        />
+                      )}
                     </>
+                  )}
+                  {daysOverdue != null && (
+                    <DetailField label="Days overdue" value={String(daysOverdue)} />
                   )}
                 </DetailGrid>
               </DetailSection>
@@ -757,7 +782,7 @@ export default function CollectionLedgerTable({
                         sourceName={detail.feeHeadName}
                         canWaive={detail.charge.canWaive}
                         remainingAmount={detail.due}
-                        onApplied={() => waiverApplied()}
+                        onApplied={(result) => waiverApplied(result?.remainingAmount)}
                       />
                     )
                   : detail.dueFeeId &&
@@ -768,7 +793,7 @@ export default function CollectionLedgerTable({
                         sourceId={detail.dueFeeId}
                         sourceName={`${detail.feeHeadName}, ${detail.periodLabel}`}
                         remainingAmount={detail.lateFeeAmount!}
-                        onApplied={() => waiverApplied()}
+                        onApplied={(result) => waiverApplied(result?.remainingAmount)}
                       />
                     ))}
             </Stack>

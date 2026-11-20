@@ -135,6 +135,15 @@ describe('Fee assignment student table', () => {
     const view = render(<FeeStructureAssignTable onAssignStructure={vi.fn()} />);
 
     expect(view.getByRole('checkbox', { name: 'Select Student' })).toBeDisabled();
+    expect(view.getByRole('checkbox', { name: 'Select Student' })).toHaveAttribute(
+      'aria-description',
+      'Select a class before selecting students.'
+    );
+    expect(
+      view.getAllByRole('group', {
+        name: 'Selection unavailable: Select a class before selecting students.',
+      })[0]
+    ).toHaveAttribute('tabindex', '0');
     expect(
       view.getByRole('checkbox', { name: 'Select eligible students on this page' })
     ).toBeDisabled();
@@ -312,8 +321,11 @@ describe('Fee assignment student table', () => {
     const action = state.table.columns
       .find((column: any) => column.id === 'action')
       .render(undefined, { studentId: 'eligible', studentName: 'Eligible', isActive: true });
-    expect(action.props.variant).toBe('outlined');
-    expect(action.props.startIcon).toBeTruthy();
+    const assignControl = render(action);
+    expect(
+      assignControl.getByRole('button', { name: 'Assign fee structure to Eligible' })
+    ).toBeEnabled();
+    expect(assignControl.queryByText('Assign Fee Structure')).not.toBeInTheDocument();
   });
 
   it('scopes dependency-review links to the requested fee head and exposes a clear action', () => {

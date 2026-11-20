@@ -1,5 +1,3 @@
-import { sanitizeFinanceName } from 'src/utils/finance-name';
-import { financeNameSchema } from 'src/utils/finance-name';
 import type { StructureRecord } from 'src/redux/finance/feeStructureWorkspace';
 
 import * as Yup from 'yup';
@@ -7,6 +5,8 @@ import { useFormik } from 'formik';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useRef, useState, useEffect } from 'react';
+import { capitalizeFirstLetter } from 'src/utils/input-format';
+import { financeNameSchema, sanitizeFinanceName } from 'src/utils/finance-name';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -262,7 +262,7 @@ export default function CopyFeeStructureDialog({
                       onChange={(event) =>
                         formik.setFieldValue(
                           event.target.name,
-                          sanitizeFinanceName(event.target.value)
+                          capitalizeFirstLetter(sanitizeFinanceName(event.target.value))
                         )
                       }
                       onBlur={formik.handleBlur}

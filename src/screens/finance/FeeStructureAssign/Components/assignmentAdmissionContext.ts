@@ -60,15 +60,13 @@ export function mergeAssignmentInputs(
   previousSource?: AssignmentRequest
 ): AssignmentRequest {
   const confirmed = context?.status !== 'Assigned' && context?.structureId === candidate.id;
-  const selectedOptionalFeeHeadIds = confirmed
-    ? context.selectedOptionalFeeHeadIds
-    : next.selectedOptionalFeeHeadIds;
+  const {selectedOptionalFeeHeadIds} = next;
   const includedHeads = new Set(
     candidate.heads
       .filter((head) => !head.isOptional || selectedOptionalFeeHeadIds.includes(head.feeHeadId))
       .map((head) => head.feeHeadId)
   );
-  const included = (head: { feeHeadId: string }) => !confirmed || includedHeads.has(head.feeHeadId);
+  const included = (head: { feeHeadId: string }) => includedHeads.has(head.feeHeadId);
   const verifiedHeads = new Set(
     next.servicePeriods
       .filter(

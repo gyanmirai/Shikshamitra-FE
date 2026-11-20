@@ -1,6 +1,7 @@
 import type { RootState } from 'src/redux/store';
 
 import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
 import { tabsClasses } from '@mui/material/Tabs';
 import { useDispatch, useSelector } from 'react-redux';
 import { CustomTabs } from 'src/components/custom-tabs';
@@ -19,6 +20,7 @@ export default function FeeStructureEditForm({
   editData,
   viewOnly = false,
   onBusyChange,
+  onPublished,
 }: IFeeStructureEditFormProps) {
   const dispatch = useDispatch();
   const { permissions } = useSelector((state: RootState) => state.auth);
@@ -77,60 +79,62 @@ export default function FeeStructureEditForm({
           flexShrink: 0,
         }}
       >
-        <CustomTabs
-          value={selectedClassId || false}
-          onChange={(_, value) => handleClassClick(String(value))}
-          guardUnsavedChanges={false}
-          variant="standard"
-          scrollButtons={false}
-          aria-label="Classes"
-          sx={{
-            flex: 1,
-            minWidth: 0,
-            [`& .${tabsClasses.indicator}`]: {
-              display: 'none',
-            },
-          }}
-          slotProps={{
-            tab: {
-              px: 2,
-              py: 1,
-              minWidth: 64,
-              minHeight: 44,
-              borderRadius: 3,
-              border: 1,
-              borderColor: 'divider',
-              typography: 'body2',
-              color: 'text.primary',
-              fontWeight: 500,
-              '&:hover': { bgcolor: 'action.hover' },
-              '&.Mui-focusVisible': {
-                outline: '2px solid',
-                outlineColor: 'text.secondary',
-                outlineOffset: -2,
+        <Scrollbar autoHide={false} sx={{ pb: 0.5 }}>
+          <CustomTabs
+            value={selectedClassId || false}
+            onChange={(_, value) => handleClassClick(String(value))}
+            guardUnsavedChanges={false}
+            variant="standard"
+            scrollButtons={false}
+            aria-label="Classes"
+            sx={{
+              width: 'max-content',
+              minWidth: 0,
+              [`& .${tabsClasses.indicator}`]: {
+                display: 'none',
               },
-            },
-            selected: {
-              bgcolor: 'action.selected',
-              borderColor: 'divider',
-              color: 'text.primary',
-              fontWeight: 500,
-              '&:hover': { bgcolor: 'action.selected', color: 'text.primary' },
-            },
-            flexContainer: { flexWrap: 'wrap', gap: 1 },
-          }}
-        >
-          {classes.map((item) => (
-            <Tab
-              key={item.id}
-              value={item.id}
-              label={item.name}
-              disabled={busy}
-              id={`fee-structure-class-${item.id}`}
-              aria-controls="fee-structure-class-panel"
-            />
-          ))}
-        </CustomTabs>
+            }}
+            slotProps={{
+              tab: {
+                px: 2,
+                py: 1,
+                minWidth: 64,
+                minHeight: 44,
+                borderRadius: 1,
+                border: 1,
+                borderColor: 'divider',
+                typography: 'body2',
+                color: 'text.primary',
+                fontWeight: 500,
+                '&:hover': { bgcolor: 'action.hover' },
+                '&.Mui-focusVisible': {
+                  outline: '2px solid',
+                  outlineColor: 'text.secondary',
+                  outlineOffset: -2,
+                },
+              },
+              selected: {
+                bgcolor: 'action.selected',
+                borderColor: 'success.main',
+                color: 'text.primary',
+                fontWeight: 500,
+                '&:hover': { bgcolor: 'action.selected', color: 'text.primary' },
+              },
+              flexContainer: { flexWrap: 'nowrap', gap: 1 },
+            }}
+          >
+            {classes.map((item) => (
+              <Tab
+                key={item.id}
+                value={item.id}
+                label={item.name}
+                disabled={busy}
+                id={`fee-structure-class-${item.id}`}
+                aria-controls="fee-structure-class-panel"
+              />
+            ))}
+          </CustomTabs>
+        </Scrollbar>
       </Box>
       <Box
         id="fee-structure-class-panel"
@@ -167,6 +171,7 @@ export default function FeeStructureEditForm({
                 dispatch(setIsChanges(dirty));
               }}
               onBusyChange={handleBusyChange}
+              onPublished={onPublished}
             />
           )
         )}

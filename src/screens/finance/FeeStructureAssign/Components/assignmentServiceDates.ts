@@ -53,7 +53,6 @@ export function servicePeriodErrors(
         : start && end.isBefore(start, 'day')
           ? 'End date must be on or after start date.'
           : undefined,
-    reason: !period.reason?.trim() ? 'Enter a reason for changing dates.' : undefined,
   };
 }
 
@@ -68,7 +67,7 @@ export function assignmentServiceDateError(
       const period = request.servicePeriods.find((item) => item.feeHeadId === head.feeHeadId);
       if (!period) return undefined;
       const errors = servicePeriodErrors(period, bounds);
-      const message = errors.start || errors.end || errors.reason;
+      const message = errors.start || errors.end;
       return message ? `${head.feeHeadName}: ${message}` : undefined;
     })
     .find(Boolean);

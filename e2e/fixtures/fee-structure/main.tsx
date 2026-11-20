@@ -47,7 +47,9 @@ function Fixture() {
   );
   const [pinned, setPinned] = React.useState(false);
   const [incomplete, setIncomplete] = React.useState(false);
-  const [workspace, setWorkspace] = React.useState(false);
+  const [workspace, setWorkspace] = React.useState(() =>
+    new URLSearchParams(window.location.search).has('revision-name')
+  );
   return (
     <Provider store={store}>
       <ThemeProvider theme={createTheme(defaultSettings)}>
@@ -160,7 +162,7 @@ function Fixture() {
                       classes: [
                         { id: 'class', name: 'Class 5' },
                         { id: 'other', name: 'Class 6' },
-                        ...Array.from({ length: 6 }, (_, i) => ({
+                        ...Array.from({ length: 18 }, (_, i) => ({
                           id: `class-${i + 7}`,
                           name: `Class ${i + 7}`,
                         })),

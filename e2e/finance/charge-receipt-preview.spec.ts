@@ -18,8 +18,11 @@ async function collectCharge(page: Page, retry = false) {
   await page
     .getByRole('button', { name: 'Collect fee for Diya Sweta Badgujar (10092)', exact: true })
     .click();
-  await page.getByRole('button', { name: /^Filters(?: \(\d+\))?$/ }).click();
-  await page.getByRole('checkbox', { name: 'All Charges', exact: true }).check();
+  const filters = page.getByRole('button', { name: /^Filters(?: \(\d+\))?$/ });
+  await expect(filters).toBeVisible();
+  const allCharges = page.getByRole('checkbox', { name: 'All Charges', exact: true });
+  if (!(await allCharges.isVisible())) await filters.click();
+  await allCharges.check();
   await expect(page.getByRole('textbox', { name: 'Amount to collect', exact: false })).toHaveValue(
     '₹ 1,000'
   );
@@ -27,10 +30,6 @@ async function collectCharge(page: Page, retry = false) {
   await page
     .getByRole('dialog', { name: 'Review Payment', exact: true })
     .getByRole('button', { name: /^Collect / })
-    .click();
-  await page
-    .getByRole('dialog', { name: 'Review Cash Payment', exact: true })
-    .getByRole('button', { name: 'Collect & issue receipt', exact: true })
     .click();
   return page.getByRole('dialog', { name: 'Payment Receipts', exact: true });
 }
@@ -45,13 +44,13 @@ async function evidence(page: Page) {
   }>;
 }
 
-test('charge-only collection previews and downloads the canonical PDF and refreshes balances', async ({
+test('charge-only collection downloads the canonical PDF and refreshes balances', async ({
   page,
 }) => {
   const receipts = await collectCharge(page);
-  await expect(
-    receipts.getByRole('img', { name: 'Charge Receipt, page 1', exact: true })
-  ).toBeVisible({ timeout: 30000 });
+  await expect(receipts.getByRole('button', { name: 'Download', exact: true })).toBeVisible();
+  await expect(receipts.getByRole('img', { name: 'Charge Receipt, page 1', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('dialog', { name: 'Review Cash Payment', exact: true })).toHaveCount(0);
   await expect(receipts).toContainText('CHG-REC-2026-000004');
   await expect(receipts.getByText(receiptFailure, { exact: true })).toHaveCount(0);
   await expect(page.getByText('Something went wrong', { exact: true })).toHaveCount(0);
@@ -102,9 +101,7 @@ test('receipt failure explains payment success and retries only the PDF', async 
   );
   await expect(page.getByText(/exceeds the payable amount/)).toHaveCount(0);
   await receipts.getByRole('button', { name: 'Retry receipt', exact: true }).click();
-  await expect(
-    receipts.getByRole('img', { name: 'Charge Receipt, page 1', exact: true })
-  ).toBeVisible({ timeout: 30000 });
+  await expect(receipts.getByRole('button', { name: 'Download', exact: true })).toBeVisible();
   await expect(receipts.getByText(receiptFailure, { exact: true })).toHaveCount(0);
   const requests = await evidence(page);
   expect(requests.filter((request) => request.method === 'POST')).toHaveLength(1);

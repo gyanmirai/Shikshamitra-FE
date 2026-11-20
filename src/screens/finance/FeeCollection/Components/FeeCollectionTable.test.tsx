@@ -174,9 +174,9 @@ describe('Collections status', () => {
         onDelete={vi.fn()}
       />
     );
-    const totalRow = screen.getByText('Total (displayed rows)').closest('tr')!;
+    const totalRow = screen.getByText('Total', { exact: true }).closest('tr')!;
     expect(within(totalRow).getAllByRole('cell').map((cell) => cell.textContent)).toEqual([
-      'Total (displayed rows)', '', '', '₹ 107,800', '₹ 0', '₹ 1,500',
+      'Total', '', '', '₹ 107,800', '₹ 0', '₹ 1,500',
       '₹ 60,024', '₹ 47,776', '₹ 0', '—', '₹ 0', '', '',
     ]);
   });

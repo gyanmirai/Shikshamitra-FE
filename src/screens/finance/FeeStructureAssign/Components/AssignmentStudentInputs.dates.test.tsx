@@ -9,7 +9,7 @@ import { it, vi, expect, describe } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 
 import AssignmentStudentInputs from './AssignmentStudentInputs';
-import { assignmentYearBounds } from './assignmentServiceDates';
+import { assignmentYearBounds, assignmentServiceDateError } from './assignmentServiceDates';
 
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 vi.mock('src/redux/finance/studentFeeAssignment', () => ({
@@ -45,7 +45,13 @@ vi.mock('src/components/custom-date-range-picker', () => ({
         value={value.map((date: any) => date?.format('YYYY-MM-DD') ?? '').join(' to ')}
         data-min={minDate?.format('YYYY-MM-DD')}
         data-max={maxDate?.format('YYYY-MM-DD')}
-        onChange={(event) => onChange(event.target.value.split(' to ').map((date) => dayjs(date)))}
+        onChange={(event) =>
+          onChange(
+            event.target.value === 'invalid' || !event.target.value
+              ? [null, null]
+              : event.target.value.split(' to ').map((date) => dayjs(date))
+          )
+        }
       />
       {helperText && <span>{helperText}</span>}
     </>
@@ -138,7 +144,7 @@ describe('shared assignment date picker', () => {
     expect(screen.queryByRole('button', { name: 'Use transport dates' })).not.toBeInTheDocument();
   });
 
-  it('starts on the academic-year range and requires a reason only for a custom range', () => {
+  it('starts on the academic-year range and accepts a custom range without a reason', () => {
     const changed = vi.fn();
     render(<Harness changed={changed} />);
     const dates = screen.getByLabelText('Start – end date');
@@ -156,7 +162,7 @@ describe('shared assignment date picker', () => {
         endDate: '2026-10-31T00:00:00Z',
       },
     ]);
-    expect(screen.getByLabelText(/Reason for changing dates/)).toBeRequired();
+    expect(screen.queryByLabelText(/Reason for changing dates/)).not.toBeInTheDocument();
 
     fireEvent.change(dates, { target: { value: '2026-06-15 to 2027-05-14' } });
     expect(changed.mock.lastCall?.[0].servicePeriods).toEqual([
@@ -169,6 +175,29 @@ describe('shared assignment date picker', () => {
     render(<Harness changed={vi.fn()} available={false} />);
     expect(screen.getByLabelText('Start – end date')).toBeDisabled();
     expect(screen.getByText('Selected academic year dates are unavailable.')).toBeVisible();
+  });
+
+  it.each(['invalid', ''])('blocks preview for an invalid or cleared date draft (%s)', (draft) => {
+    const changed = vi.fn();
+    render(<Harness changed={changed} />);
+    const dates = screen.getByLabelText('Start – end date');
+    fireEvent.change(dates, { target: { value: '2026-08-01 to 2026-10-31' } });
+    fireEvent.change(dates, { target: { value: draft } });
+    expect(
+      assignmentServiceDateError(
+        candidate,
+        changed.mock.lastCall?.[0],
+        assignmentYearBounds(year, 'year')
+      )
+    ).toBe('Tuition: Enter a valid start date.');
+    fireEvent.change(dates, { target: { value: '2026-08-01 to 2026-10-31' } });
+    expect(
+      assignmentServiceDateError(
+        candidate,
+        changed.mock.lastCall?.[0],
+        assignmentYearBounds(year, 'year')
+      )
+    ).toBeUndefined();
   });
 });
 

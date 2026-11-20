@@ -435,7 +435,7 @@ highlight clears the amount; manual selections still limit the collection. Group
 payment priority or the amount-only candidate set. No fee-head priority editor is introduced.
 Configured fee rows have numbered positions; table sorting and summary dragging cannot change
 the automatic allocation sequence. Charge ordering remains in its existing separate group.
-Review Payment and final confirmation show each funded fee head once, with its funded periods
+Review Payment shows each funded fee head once, with its funded periods
 and combined allocation. Charges appear individually when funded. Collection submits every candidate due ID,
 including unfunded rows, and the revision through `automaticAllocation`. A changed-policy/balance rejection refreshes the form and requires
 another review; an uncertain network outcome retains the original retry key.
@@ -447,7 +447,7 @@ Collect Fees shows the student identity, academic year and total outstanding abo
 fee-head cards and a payment summary. The Fees for this student card shows the collection policy
 name and version resolved by the collect-form response, even when filters are collapsed.
 Each fee-head card has independent group selection, a selected
-amount/count badge, and an embedded shared table showing Billing Period, Due Date, Amount and
+amount/count badge, and an embedded shared table showing Fee Period, Due Date, Total, Paid, Pending and
 Status. The payment term appears beside the fee head. Fee heads with one installment in the full
 ledger appear first in the fee-head view with a **One time** chip. The Filters button expands Month, Fee Head, Status,
 Group by and all four selection presets. Grouping by month uses the same cards and preserves
@@ -479,8 +479,8 @@ The student identity card uses compact padding and a smaller avatar. Selected-it
 compact, with a separate field group below. Summary guidance lives in the header info tooltip;
 fields show validation errors without routine instructional helper text.
 Collect and Cancel remain in the bottom footer; mobile stacks the payment summary after the fee groups. Hidden selections
-are counted visibly when filters exclude them. Both existing review dialogs and receipt flows
-remain in place.
+are counted visibly when filters exclude them. Review Payment provides the confirmation action and
+the collection result provides the receipt downloads.
 
 Selection Filters operate on the student's complete ledger independently of the Month,
 Fee Head, Status, and grouping controls, which only change the visible rows.
@@ -594,11 +594,11 @@ Fee Collection applies full-balance waivers directly through the existing waiver
 1. Collection Policy and Charge Management contain no waiver fields.
 2. Additional Charges uses the shared collection table to display original, collected, waived, and outstanding amounts. Eligible rows expose a waiver toggle; the existing detail action remains available. Explicitly ineligible and settled rows have no action.
 3. The exact `Finance.Fees.FeeCollections.ApplyWaiver` permission controls the action. The collector opens the shared `CustomDialog`, reviews the named charge and full remaining amount, and enters a mandatory reason (up to 500 characters). `FormSectionCard`, Formik/Yup, `ShakingTextField`, and `SubmitButton` provide the standard form interaction.
-4. The frontend does not accept or send a waiver amount.
-5. `Apply waiver` makes the server waive the full live remaining balance. Existing RTK Query tags refresh collection, fee details, charges, and audit queries. A waived charge is removed from payment selection; waiving an installment's late fee preserves selected principal.
+4. Waiver amount defaults to the pending balance. An authorized cashier can reduce it and see the remaining balance before applying.
+5. `Apply waiver` sends the entered amount for validation against the live remaining balance. Existing RTK Query tags refresh collection, fee details, charges, and audit queries. A fully waived charge is removed from payment selection; a partially waived charge stays collectible at its refreshed balance; waiving an installment's late fee preserves selected principal.
 6. There is no global setting, pending request, approver action, or `/finance/waiver-management` route.
 
-The dialog locks fields and dismissal during submission. Dirty cancellation uses the shared `ConfirmDialog` through `useUnsavedNavigation`, preserving the parent collection draft. Errors retain the reason and request identity; an unconfirmed network/server result freezes the submitted reason and offers `Retry waiver` with the same payload and idempotency key. Closing an unconfirmed result explains that it may already have applied and that closing does not undo it; reopening the same source retains its retry identity and reason. Waivers remain non-cash reductions with no payment receipt.
+The dialog locks fields and dismissal during submission. Dirty cancellation uses the shared `ConfirmDialog` through `useUnsavedNavigation`, preserving the parent collection draft. Errors retain the reason and request identity; an unconfirmed network/server result freezes the submitted amount and reason and offers `Retry waiver` with the same payload and idempotency key. Closing an unconfirmed result explains that it may already have applied and that closing does not undo it; reopening the same source retains its retry identity, amount, and reason. Waivers remain non-cash reductions with no payment receipt.
 
 See the [Fee Collection waiver contract](../../../Shikshamitra-BE/docs/modules/finance/references/fee-collection-waiver-end-to-end.md).
 
@@ -900,8 +900,11 @@ unique within the academic year; changing Board alone does not resolve a code co
 
 ## Receipt and provisional receipt workflow
 
-After collection succeeds, the payment draft, selected rows and allocation errors are cleared,
-and collection details are refreshed independently of PDF retrieval. Each generated receipt
+The cashier confirms directly in Review Payment for every payment method. For non-cash methods,
+Review Payment shows the reference details and records the payment for Finance verification.
+After collection succeeds, the payment draft and selected rows are cleared, and collection details
+refresh independently of PDF retrieval.
+The collection result provides download buttons for the generated receipts. Each receipt
 shows loading progress until its PDF arrives. If retrieval fails, the receipt shows
 “Payment was collected, but the receipt could not be generated. Please retry or contact support.”
 with **Retry receipt**. Retry downloads the existing receipt; it never repeats collection.

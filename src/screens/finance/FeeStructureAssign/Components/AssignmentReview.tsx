@@ -51,7 +51,15 @@ export default function AssignmentReview({
     </IconButton>
   );
   const installments = groupAssignmentInstallments(data.lines);
-  const cancelledAmount = data.lines.reduce((sum, line) => sum + (line.optionalServiceCancellationAmount ?? 0), 0);
+  const stoppedFeeHeadIds = new Set(
+    data.lines
+      .filter((line) => (line.optionalServiceCancellationAmount ?? 0) > 0)
+      .map((line) => line.feeHeadId)
+  );
+  const cancelledAmount = data.lines.reduce(
+    (sum, line) => sum + (line.optionalServiceCancellationAmount ?? 0),
+    0
+  );
   const legacy = data.calculationVersion === 'LegacyUnknown';
   const tableId = `assignment-${data.studentId}-${data.structureId}-${committed ? 'saved' : 'preview'}`;
   const money = (value: number) => formatNumber(value, data.currency);
@@ -196,6 +204,9 @@ export default function AssignmentReview({
                           <Typography variant="caption" color="text.secondary">
                             {head.isOptional ? 'Optional' : 'Required'}
                             {!head.included && <Label>Not selected</Label>}
+                            {stoppedFeeHeadIds.has(head.feeHeadId) && (
+                              <Label>Service stopped</Label>
+                            )}
                           </Typography>
                           {head.included && head.zeroAmountReason && (
                             <Typography variant="caption" color="text.secondary">

@@ -48,7 +48,7 @@ const open = () => fireEvent.click(screen.getByRole('switch'));
 const reason = () => screen.getByRole('textbox', { name: /Reason/ });
 const submit = () => fireEvent.click(screen.getByRole('button', { name: 'Apply waiver' }));
 
-describe('Fee Collection full-balance waiver', () => {
+describe('Fee Collection waiver', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.apply.mockImplementation(() => ({
@@ -68,10 +68,11 @@ describe('Fee Collection full-balance waiver', () => {
     expect(mocks.apply).not.toHaveBeenCalled();
   });
 
-  it('submits the trimmed reason and source once without a monetary payload', async () => {
+  it('defaults to the pending balance and sends that amount with the trimmed reason', async () => {
     const onApplied = vi.fn();
     mount({ onApplied });
     open();
+    expect(screen.getByRole('textbox', { name: /Waiver amount/ })).toHaveValue('₹ 700');
     fireEvent.change(reason(), { target: { value: '  Approved by management  ' } });
     submit();
     await waitFor(() => expect(onApplied).toHaveBeenCalledOnce());
@@ -79,10 +80,34 @@ describe('Fee Collection full-balance waiver', () => {
     expect(mocks.apply.mock.calls[0][0]).toEqual({
       sourceType: 'Charge',
       sourceId: 'charge-one',
+      amount: 700,
       reason: 'Approved by management',
       idempotencyKey: expect.any(String),
     });
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('validates the pending balance and submits a partial waiver', async () => {
+    mount();
+    open();
+    const amount = screen.getByRole('textbox', { name: /Waiver amount/ });
+    fireEvent.change(reason(), { target: { value: 'Management decision' } });
+    fireEvent.change(amount, { target: { value: '701' } });
+    submit();
+    expect(
+      await screen.findByText('Waiver amount cannot exceed the pending balance.')
+    ).toBeVisible();
+    expect(mocks.apply).not.toHaveBeenCalled();
+    fireEvent.change(amount, { target: { value: '250.25' } });
+    expect(screen.getByText('₹ 449.75')).toBeVisible();
+    submit();
+    await waitFor(() =>
+      expect(mocks.apply).toHaveBeenCalledWith(
+        expect.objectContaining({
+          amount: 250.25,
+        })
+      )
+    );
   });
 
   it('protects the reason on cancellation and discards only when asked', async () => {

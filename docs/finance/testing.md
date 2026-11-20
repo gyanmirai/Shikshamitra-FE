@@ -208,10 +208,10 @@ and keep counts/totals and Back/Assign fees visible at desktop and phone widths.
 fixtures use synthetic responses and do not establish backend persistence or policy enforcement.
 
 Bank transfer evidence: run `BankTransferTable.test.tsx`,
-`FeeCollectionPreviewDialog.test.tsx` and `FinalPaymentReviewDialog.test.tsx` in their owning
+`FeeCollectionPreviewDialog.test.tsx` in their owning
 Finance screen folders, plus `collectionPaymentDetails.test.ts` and `reconciliation.test.ts`.
 In the local browser, collect a QA fee using Bank Transfer with a reference, transfer date,
-holder and receiving bank; compare Payment Details, Payment Verification, provisional PDF,
+holder and receiving bank; compare the references in Review Payment, the downloaded provisional PDF,
 the reconciliation row and the official PDF after approval.
 Confirm the receiving bank stays masked and missing historical transfer dates stay unavailable.
 Backend persistence and receipt coverage lives in `BankTransferEvidenceApi_Tests`.

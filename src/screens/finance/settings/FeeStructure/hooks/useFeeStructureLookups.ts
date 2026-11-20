@@ -3,7 +3,10 @@ import type { StructureLine, StructureSettings } from 'src/redux/finance/feeStru
 import { useRef, useMemo, useState, useEffect } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetCollectionPolicyByIdQuery } from 'src/redux/finance/collectionPolicy';
-import { useGetRefundPolicyByIdQuery } from 'src/redux/finance/refundPolicy';
+import {
+  useGetRefundPolicyByIdQuery,
+  useGetRefundPolicyVersionsQuery,
+} from 'src/redux/finance/refundPolicy';
 import { useGetActiveFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
 import {
   useGetStructureContextQuery,
@@ -11,6 +14,7 @@ import {
   useGetStructureTermScheduleQuery,
 } from 'src/redux/finance/feeStructureWorkspace';
 import { useRefreshFinancePrerequisites } from 'src/screens/finance/hooks/useRefreshFinancePrerequisites';
+import { parsePolicyVersionSnapshot } from 'src/screens/finance/policies/utils/policy-version-page';
 
 const queryOptions = { refetchOnMountOrArgChange: false, refetchOnFocus: false };
 
@@ -96,7 +100,11 @@ export default function useFeeStructureLookups(
   scheduleLine?: StructureLine,
   published = false,
   active = true,
-  selectedPolicyIds?: { collection?: string | null; refund?: string | null }
+  selectedPolicyIds?: {
+    collection?: string | null;
+    refund?: string | null;
+    refundVersion?: string | null;
+  }
 ) {
   const context = useQueryAndMutation({
     type: 'query',
@@ -167,6 +175,44 @@ export default function useFeeStructureLookups(
     },
     popupConfig: { error: false },
   });
+  const refundVersionId = selectedPolicyIds?.refundVersion;
+  const needsSavedRefundScope =
+    !!refundVersionId &&
+    !!selectedPolicyIds?.refund &&
+    !!refundDetail.currentData &&
+    refundDetail.currentData.currentVersionId !== refundVersionId;
+  const savedRefund = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetRefundPolicyVersionsQuery,
+    params: { id: selectedPolicyIds?.refund ?? '', versionId: refundVersionId, maxResultCount: 1 },
+    options: {
+      ...queryOptions,
+      skip: !active || published || !permissions.refundRead || !needsSavedRefundScope,
+    },
+    popupConfig: { error: false },
+  });
+  const savedRefundCoverage = useMemo(() => {
+    const version = savedRefund.currentData?.items.find(
+      (item: { id: string }) => item.id === refundVersionId
+    );
+    if (!version) return undefined;
+    const snapshot = parsePolicyVersionSnapshot(version.snapshotJson);
+    const scopeValue = snapshot.FeeHeadScope ?? snapshot.feeHeadScope;
+    const feeHeadScope =
+      scopeValue === 'AllFeeHeads' || scopeValue === 0
+        ? 'AllFeeHeads'
+        : scopeValue === 'SelectedFeeHeads' || scopeValue === 1
+          ? 'SelectedFeeHeads'
+          : undefined;
+    const ids = snapshot.ApplicableFeeHeadIds ?? snapshot.applicableFeeHeadIds;
+    if (!feeHeadScope || !Array.isArray(ids)) return undefined;
+    return {
+      id: version.policyId,
+      currentVersionId: version.id,
+      feeHeadScope,
+      applicableFeeHeadIds: ids,
+    };
+  }, [savedRefund.currentData, refundVersionId]);
   const catalogState = (required: boolean) => ({
     items: [] as any[],
     ready:
@@ -194,7 +240,17 @@ export default function useFeeStructureLookups(
     };
   };
   const collection = policyState('collection', collectionDetail);
-  const refund = policyState('refund', refundDetail);
+  const refundState = policyState('refund', refundDetail);
+  const refund = {
+    ...refundState,
+    items: savedRefundCoverage ? [...refundState.items, savedRefundCoverage] : refundState.items,
+    loading: refundState.loading || !!savedRefund.isFetching,
+    error: refundState.error || !!savedRefund.isError,
+    retry: () => {
+      refundState.retry();
+      if (!savedRefund.isUninitialized) savedRefund.refetch?.();
+    },
+  };
   const refreshPrerequisites = () => {
     if (!active) return;
     context.refetch?.();

@@ -9,6 +9,7 @@ import type {
 } from 'src/redux/finance/feeStructureWorkspace';
 
 import { GlobalIcons } from 'src/utils/icons';
+import { capitalizeFirstLetter } from 'src/utils/input-format';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useResponsive } from 'src/hooks/use-responsive';
@@ -37,9 +38,11 @@ interface Props {
   writable: boolean;
   busy: boolean;
   locked: boolean;
-  revision: boolean;
+  fillHeight: boolean;
   submitted: boolean;
   nameError: string;
+  showNameError: boolean;
+  feeHeadsError: string;
   amountInputs: Record<string, string>;
   touched: Record<string, boolean>;
   headsLoading: boolean;
@@ -67,9 +70,11 @@ export default function FeeStructureHeadsStep({
   writable,
   busy,
   locked,
-  revision,
+  fillHeight,
   submitted,
   nameError,
+  showNameError,
+  feeHeadsError,
   amountInputs,
   touched,
   headsLoading,
@@ -116,13 +121,17 @@ export default function FeeStructureHeadsStep({
     candidate.feeHeads
       .filter((line) => !line.isVariable)
       .reduce((sum, line) => sum + Math.round((line.amount ?? 0) * 100), 0) / 100;
-  const nameInvalid = Boolean((touched.name || submitted) && nameError);
+  const nameInvalid = Boolean((touched.name || submitted || showNameError) && nameError);
+  const addHeadDisabled =
+    busy || headsLoading || headsError || !settings.permissions.headsRead || prerequisites.length > 0;
+  const feeHeadsErrorId = `${validationId}-fee-heads-error`;
   return (
-    <Stack ref={formRef} spacing={2}>
+    <Stack ref={formRef} spacing={2} sx={fillHeight ? { flex: 1, minHeight: 0 } : undefined}>
       <FormSectionCard
         title="General Information"
         icon={GlobalIcons.notebook}
         titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+        sx={{ flexShrink: 0 }}
         descriptionTooltip="Name this class's fee structure. The name identifies it when assigning fees to students."
       >
         <Box sx={{ width: 1, maxWidth: 560 }}>
@@ -133,10 +142,13 @@ export default function FeeStructureHeadsStep({
               required
               size="small"
               fullWidth
-              disabled={!writable || revision}
+              disabled={!writable}
               value={candidate.name}
               onChange={(event) =>
-                onChange({ ...candidate, name: sanitizeFinanceName(event.target.value) })
+                onChange({
+                  ...candidate,
+                  name: capitalizeFirstLetter(sanitizeFinanceName(event.target.value)),
+                })
               }
               onBlur={() => onTouch('name')}
               inputProps={{ maxLength: 256 }}
@@ -151,20 +163,24 @@ export default function FeeStructureHeadsStep({
         icon={GlobalIcons.receiptIcon}
         title="Fee Heads"
         titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
-        contentSx={{ minWidth: 0 }}
+        sx={
+          fillHeight
+            ? { display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }
+            : undefined
+        }
+        contentSx={{
+          minWidth: 0,
+          ...(fillHeight && { flex: 1, minHeight: 0, '& > :not(:last-child)': { flexShrink: 0 } }),
+        }}
         action={
           writable && (
             <Button
               size="small"
               variant="contained"
               startIcon={<Iconify icon={GlobalIcons.addIcon} />}
-              disabled={
-                busy ||
-                headsLoading ||
-                headsError ||
-                !settings.permissions.headsRead ||
-                prerequisites.length > 0
-              }
+              disabled={addHeadDisabled}
+              data-invalid={!!feeHeadsError && !addHeadDisabled}
+              aria-describedby={feeHeadsError ? feeHeadsErrorId : undefined}
               onClick={onAdd}
             >
               Fee Head
@@ -172,6 +188,17 @@ export default function FeeStructureHeadsStep({
           )
         }
       >
+        {feeHeadsError && (
+          <FormHelperText
+            id={feeHeadsErrorId}
+            error
+            tabIndex={addHeadDisabled ? -1 : undefined}
+            data-invalid={addHeadDisabled}
+            sx={{ m: 0 }}
+          >
+            {feeHeadsError}
+          </FormHelperText>
+        )}
         {(!settings.permissions.headsRead || headsError) && (
           <Alert
             severity="error"
@@ -228,7 +255,7 @@ export default function FeeStructureHeadsStep({
               showToolbar={false}
               noDataText={
                 writable
-                  ? 'No fee heads added. Add a fee head to build this structure.'
+                  ? 'No fee heads added.'
                   : 'No fee heads are configured for this structure.'
               }
               columns={[
@@ -395,14 +422,7 @@ export default function FeeStructureHeadsStep({
                             directActionLimit={2}
                             collapseOnOverflow={false}
                             moreLabel={`More actions for ${row.feeHeadName}`}
-                            sx={{
-                              justifyContent: 'center',
-                              '& .MuiIconButton-root': {
-                                border: 1,
-                                borderColor: 'divider',
-                                borderRadius: 1,
-                              },
-                            }}
+                            sx={{ justifyContent: 'center' }}
                             actions={[
                               ...(writable
                                 ? [
@@ -444,7 +464,7 @@ export default function FeeStructureHeadsStep({
               direction={{ xs: 'column', sm: 'row' }}
               justifyContent="space-between"
               spacing={1}
-              sx={{ borderTop: 1, borderColor: 'divider', pt: 2 }}
+              sx={{ borderTop: 1, borderColor: 'divider', pt: 2, flexShrink: 0 }}
             >
               <Typography variant="subtitle2">Total annual amount</Typography>
               <Typography variant="h6">{structureMoney(total)}</Typography>

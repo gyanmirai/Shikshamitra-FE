@@ -1,8 +1,8 @@
 import dayjs from 'dayjs';
 import { it, vi, expect } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
-import { render, screen } from '@testing-library/react';
 import { createTheme } from 'src/theme/create-theme';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { defaultSettings } from 'src/components/settings';
 
 import FeeCollectionPreviewDialog from './FeeCollectionPreviewDialog';
@@ -38,14 +38,15 @@ vi.mock('src/components/customDialog', () => ({
 vi.mock('src/components/scrollbar', () => ({ Scrollbar: ({ children }: any) => children }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 
-it('shows entered bank transfer evidence and the bank label in Payment Details', () => {
+it('shows bank transfer evidence and records a provisional receipt from the same review', () => {
+  const onConfirm = vi.fn();
   render(
     <ThemeProvider theme={createTheme(defaultSettings)}>
       <FeeCollectionPreviewDialog
         {...({
           open: true,
           onClose: vi.fn(),
-          onConfirm: vi.fn(),
+          onConfirm,
           student: null,
           chargesData: [],
           feeHeadMap: {},
@@ -69,9 +70,13 @@ it('shows entered bank transfer evidence and the bank label in Payment Details',
       />
     </ThemeProvider>
   );
+  expect(screen.getByText('Reference Details')).toBeVisible();
+  expect(screen.getByText('Bank Transfer (NEFT/RTGS/IMPS)')).toBeVisible();
   expect(screen.getByText('N2026BANKQA001')).toBeVisible();
   expect(screen.getByText('20/10/2026')).toBeVisible();
   expect(screen.getByText('Bank Transfer QA Holder')).toBeVisible();
   expect(screen.getByText('SBI • 9384')).toBeVisible();
   expect(screen.queryByText('school-bank-id')).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Record & issue provisional receipt' }));
+  expect(onConfirm).toHaveBeenCalledOnce();
 });

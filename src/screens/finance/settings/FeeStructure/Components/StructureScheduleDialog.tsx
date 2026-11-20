@@ -323,9 +323,9 @@ export default function StructureScheduleDialog({
                             )}
                             helperText={
                               (error &&
-                                (!row.allocationPercentage ||
-                                  row.allocationPercentage > 100 ||
-                                  row.allocationPercentage < 0)
+                              (!row.allocationPercentage ||
+                                row.allocationPercentage > 100 ||
+                                row.allocationPercentage < 0)
                                 ? 'Enter a percentage greater than 0 and up to 100'
                                 : undefined) || undefined
                             }
@@ -413,7 +413,6 @@ export default function StructureScheduleDialog({
                 type="button"
                 aria-label="Edit installments"
                 onClick={onEdit}
-                sx={{ border: 1, borderColor: 'divider', borderRadius: 1 }}
               >
                 <Iconify icon={GlobalIcons.edit} width={18} />
               </IconButton>

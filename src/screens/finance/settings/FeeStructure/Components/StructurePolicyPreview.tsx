@@ -1,0 +1,124 @@
+import type { StructureSettings } from 'src/redux/finance/feeStructureWorkspace';
+
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import {
+  useGetRefundPolicyByIdQuery,
+  useGetRefundPolicyVersionsQuery,
+} from 'src/redux/finance/refundPolicy';
+import {
+  useGetCollectionPolicyByIdQuery,
+  useGetCollectionPolicyVersionsQuery,
+} from 'src/redux/finance/collectionPolicy';
+import FinancePolicyDetailsDrawer from 'src/screens/finance/policies/components/FinancePolicyDetailsDrawer';
+import VersionDiffTable from 'src/screens/finance/policies/components/version/VersionDiffTable';
+import {
+  buildPolicyVersionPage,
+  parsePolicyVersionSnapshot,
+} from 'src/screens/finance/policies/utils/policy-version-page';
+
+interface Props {
+  option: StructureSettings['policies'][number];
+  settings: StructureSettings;
+  onClose: () => void;
+  onRefreshOptions: () => void;
+}
+
+export default function StructurePolicyPreview({
+  option,
+  settings,
+  onClose,
+  onRefreshOptions,
+}: Props) {
+  const collection = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetCollectionPolicyByIdQuery,
+    params: option.id,
+    options: { skip: option.family !== 'collection' || !settings.permissions.collectionRead },
+    popupConfig: { error: false },
+  });
+  const refund = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetRefundPolicyByIdQuery,
+    params: option.id,
+    options: { skip: option.family !== 'refund' || !settings.permissions.refundRead },
+    popupConfig: { error: false },
+  });
+  const query = option.family === 'collection' ? collection : refund;
+  const detail = query.currentData;
+  const verified = detail?.currentVersionId === option.versionId && detail?.id === option.id;
+  const versionChanged = !!detail && !verified;
+  const args = { id: option.id, versionId: option.versionId, maxResultCount: 1 };
+  const collectionVersion = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetCollectionPolicyVersionsQuery,
+    params: args,
+    options: {
+      skip:
+        !versionChanged || option.family !== 'collection' || !settings.permissions.collectionRead,
+    },
+    popupConfig: { error: false },
+  });
+  const refundVersion = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetRefundPolicyVersionsQuery,
+    params: args,
+    options: {
+      skip: !versionChanged || option.family !== 'refund' || !settings.permissions.refundRead,
+    },
+    popupConfig: { error: false },
+  });
+  const versionQuery = option.family === 'collection' ? collectionVersion : refundVersion;
+  const exactRecord = versionQuery.currentData?.items.find(
+    (item: { id: string }) => item.id === option.versionId
+  );
+  const savedVersion = exactRecord && buildPolicyVersionPage([exactRecord], 1)[0];
+  const snapshot = parsePolicyVersionSnapshot(savedVersion?.snapshotJson);
+  const hasSnapshot = !!savedVersion && Object.keys(snapshot).length > 0;
+  const loading =
+    query.isLoading || query.isFetching || versionQuery.isLoading || versionQuery.isFetching;
+  return (
+    <FinancePolicyDetailsDrawer
+      open
+      aboveDialog
+      onClose={() => {
+        if (versionChanged) onRefreshOptions();
+        onClose();
+      }}
+      policy={{
+        id: option.id,
+        policyName: option.name,
+        policyCode: verified ? (detail.policyCode ?? '') : '',
+        policyType: option.family,
+        academicYearId: settings.academicYearId,
+        academicYearName: settings.academicYearName,
+        status: 'Active',
+        version: option.versionNumber,
+        isDefault: !!option.isDefault,
+        effectiveFrom: verified ? (detail.effectiveFrom ?? null) : null,
+        effectiveTo: verified ? (detail.effectiveTo ?? null) : null,
+        updatedAt: verified ? (detail.updatedAt ?? '') : '',
+        updatedBy: verified ? (detail.updatedBy ?? '') : '',
+        creationTime: verified ? detail.creationTime : undefined,
+        lastModificationTime: verified ? detail.lastModificationTime : undefined,
+      }}
+      policyDetails={verified ? detail : undefined}
+      isLoading={loading}
+      isError={query.isError || (!verified && !hasSnapshot)}
+      savedVersionDetails={
+        hasSnapshot ? (
+          <VersionDiffTable
+            selectedVersion={{ ...savedVersion, snapshotAfter: snapshot }}
+            showSummary={false}
+            showSavedDetails
+          />
+        ) : undefined
+      }
+      errorMessage={
+        versionChanged
+          ? 'The saved details for this policy version could not be loaded.'
+          : undefined
+      }
+      onRetry={versionChanged ? versionQuery.refetch : query.refetch}
+    />
+  );
+}

@@ -51,18 +51,7 @@ const mocks = vi.hoisted(() => ({
   filterProps: vi.fn(),
   selectionOverrides: undefined as any[] | undefined,
   refetch: vi.fn(),
-  receiptProps: vi.fn(),
 }));
-
-vi.mock('./UnifiedReceiptDisplay', async (importOriginal) => {
-  const original = await importOriginal<typeof import('./UnifiedReceiptDisplay')>();
-  return {
-    default: (props: React.ComponentProps<typeof original.default>) => {
-      mocks.receiptProps(props);
-      return <original.default {...props} />;
-    },
-  };
-});
 
 vi.mock('react-redux', () => ({
   useSelector: (selector: any) =>
@@ -144,7 +133,13 @@ vi.mock('src/components/scrollbar', () => ({
   )),
 }));
 vi.mock('src/components/customDialog', () => ({
-  default: ({ open, children }: any) => (open ? children : null),
+  default: ({ open, title, children }: any) =>
+    open ? (
+      <section role="dialog" aria-label={title}>
+        {children}
+      </section>
+    ) : null,
+  DialogScrollContent: ({ children }: any) => children,
 }));
 vi.mock('src/components/back-popup-check/BackPopUpCheck', () => ({
   BackPopUpChecked: ({ children }: any) => children,
@@ -210,14 +205,6 @@ vi.mock('./preview/FeeCollectionPreviewDialog', () => ({
     open ? (
       <button type="button" onClick={onConfirm}>
         Review {academicYear}
-      </button>
-    ) : null,
-}));
-vi.mock('./preview/FinalPaymentReviewDialog', () => ({
-  default: ({ open, onConfirmCollect }: any) =>
-    open ? (
-      <button type="button" onClick={onConfirmCollect}>
-        Confirm collection
       </button>
     ) : null,
 }));
@@ -351,7 +338,6 @@ describe('embedded Finance collection context', () => {
     await waitFor(() => expect(screen.getByLabelText('Amount to collect *')).toHaveValue('₹ 250'));
     fireEvent.click(screen.getByRole('button', { name: 'Collect Payment' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Review 2026-2027' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm collection' }));
     await waitFor(() =>
       expect(context.collect).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -402,7 +388,6 @@ describe('embedded Finance collection context', () => {
       expect(screen.queryByRole('button', { name: /Remove Form fee/ })).not.toBeInTheDocument();
       fireEvent.click(screen.getByRole('button', { name: 'Collect Payment' }));
       fireEvent.click(await screen.findByRole('button', { name: 'Review 2026-2027' }));
-      fireEvent.click(screen.getByRole('button', { name: 'Confirm collection' }));
       await waitFor(() =>
         expect(context.collect).toHaveBeenCalledWith(
           expect.objectContaining({
@@ -454,7 +439,6 @@ describe('embedded Finance collection context', () => {
     fireEvent.change(screen.getByLabelText('Amount to collect *'), { target: { value: '250' } });
     fireEvent.click(screen.getByRole('button', { name: 'Collect Payment' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Review 2026-2027' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm collection' }));
     await waitFor(() =>
       expect(context.collect).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -536,9 +520,7 @@ describe('embedded Finance collection context', () => {
   it('supplies an empty head list when the student collection ledger is empty', () => {
     mocks.formData.ledger = [];
     render(<FeeCollectComponentForm student={student} academicYear={academicYear} />);
-    expect(mocks.filterProps).toHaveBeenLastCalledWith(
-      expect.objectContaining({ feeHeads: [] })
-    );
+    expect(mocks.filterProps).toHaveBeenLastCalledWith(expect.objectContaining({ feeHeads: [] }));
   });
 
   it('retains global-year defaults and uses the explicit year in every Finance query', () => {
@@ -648,8 +630,10 @@ describe('embedded Finance collection context', () => {
         onDirtyChange={onDirtyChange}
       />
     );
-    await beginCollection();
-    const confirm = screen.getByRole('button', { name: 'Confirm collection' });
+    fireEvent.click(screen.getByRole('button', { name: 'Select form fee' }));
+    await screen.findByRole('row', { name: 'Form fee, Jun 2026' });
+    fireEvent.click(screen.getByRole('button', { name: 'Collect Payment' }));
+    const confirm = await screen.findByRole('button', { name: 'Review 2026-2027' });
     fireEvent.click(confirm);
     fireEvent.click(confirm);
     expect(collect).toHaveBeenCalledOnce();
@@ -687,7 +671,6 @@ describe('embedded Finance collection context', () => {
       />
     );
     await beginCollection();
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm collection' }));
     await screen.findByText('Connection lost. Retry safely.');
     expect(screen.getByLabelText('Amount to collect *')).toHaveValue('₹ 500');
     expect(screen.getByLabelText('Amount to collect *')).toBeDisabled();
@@ -720,7 +703,6 @@ describe('embedded Finance collection context', () => {
     fireEvent.change(screen.getByLabelText('Amount to collect *'), { target: { value: '250' } });
     fireEvent.click(screen.getByRole('button', { name: 'Collect Payment' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Review 2026-2027' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Confirm collection' }));
     await waitFor(() => expect(collect).toHaveBeenCalledOnce());
     expect(collect.mock.calls[0][0]).toMatchObject({
       dueFeePayments: [{ dueFeeId: 'canonical-due', feeHeadId: 'form-fee', amount: 250 }],
@@ -743,7 +725,6 @@ describe('embedded Finance collection context', () => {
     expect(screen.getByRole('button', { name: 'Collect Payment' })).toBeEnabled();
     fireEvent.click(screen.getByRole('button', { name: 'Collect Payment' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Review 2026-2027' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm collection' }));
     await waitFor(() => expect(collect).toHaveBeenCalledOnce());
     expect(collect.mock.calls[0][0].payments[0].amount).toBe(500);
     expect(collect.mock.calls[0][0].dueFeePayments[0].amount).toBe(500);
@@ -782,7 +763,6 @@ describe('embedded Finance collection context', () => {
     fireEvent.change(screen.getByLabelText('Amount to collect *'), { target: { value: '600' } });
     fireEvent.click(screen.getByRole('button', { name: 'Collect Payment' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Review 2026-2027' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Confirm collection' }));
     await screen.findByText('Payment response lost.');
     expect(
       screen.getByText(/Payment may already have been recorded. Editing and closing are blocked/)
@@ -833,14 +813,12 @@ describe('embedded Finance collection context', () => {
         />
       );
       await beginCollection();
-      fireEvent.click(screen.getByRole('button', { name: 'Confirm collection' }));
       await screen.findByText('Payment could not be completed.');
       fireEvent.change(screen.getByLabelText('Amount to collect *'), { target: { value: '250' } });
       expect(screen.queryByRole('button', { name: 'Retry payment' })).not.toBeInTheDocument();
       expect(screen.queryByText(/Editing and closing are blocked/)).not.toBeInTheDocument();
       fireEvent.click(screen.getByRole('button', { name: 'Collect Payment' }));
       fireEvent.click(await screen.findByRole('button', { name: 'Review 2026-2027' }));
-      fireEvent.click(await screen.findByRole('button', { name: 'Confirm collection' }));
       await waitFor(() => expect(collect).toHaveBeenCalledTimes(2));
       expect(collect.mock.calls[1][0].idempotencyKey).not.toBe(
         collect.mock.calls[0][0].idempotencyKey
@@ -865,7 +843,6 @@ describe('embedded Finance collection context', () => {
         />
       );
       await beginCollection();
-      fireEvent.click(screen.getByRole('button', { name: 'Confirm collection' }));
       await screen.findByText('Payment response unavailable.');
       expect(busy).toHaveBeenLastCalledWith(true);
       expect(screen.getByLabelText('Amount to collect *')).toBeDisabled();
@@ -890,7 +867,6 @@ describe('embedded Finance collection context', () => {
       />
     );
     await beginCollection();
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm collection' }));
     await waitFor(() => expect(downloadReceiptPdf).toHaveBeenCalledWith('receipt-one', 'fee'));
     expect(mocks.defaultDownload).not.toHaveBeenCalled();
   });
@@ -960,13 +936,15 @@ describe('embedded Finance collection context', () => {
       });
       render(<FeeCollectComponentForm student={student} academicYear={academicYear} />);
       await beginCollection();
-      fireEvent.click(screen.getByRole('button', { name: 'Confirm collection' }));
-      await waitFor(() => {
-        const props = mocks.receiptProps.mock.lastCall?.[0];
-        expect(props?.feeReceipt?.totalAmount).toBe(fee);
-        expect(props?.chargeReceipt?.totalAmount).toBe(charge);
-        expect(props?.feeReceipt?.combined).toBe(combined);
-      });
+      const receipts = await screen.findByRole('dialog', { name: 'Payment Receipts' });
+      if (fee !== undefined && charge !== undefined) {
+        await within(receipts).findByRole('button', { name: 'Download fee' });
+        await within(receipts).findByRole('button', { name: 'Download charge' });
+      } else {
+        await within(receipts).findByRole('button', { name: 'Download' });
+      }
+      expect(within(receipts).queryByRole('document')).not.toBeInTheDocument();
+      expect(mocks.defaultDownload).toHaveBeenCalledTimes(combined || fee === undefined ? 1 : 2);
     }
   );
 
@@ -986,7 +964,6 @@ describe('embedded Finance collection context', () => {
     });
     render(<FeeCollectComponentForm student={student} academicYear={academicYear} />);
     await beginCollection();
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm collection' }));
     await waitFor(() =>
       expect(mocks.defaultDownload).toHaveBeenCalledWith({
         receiptId: 'charge-receipt',
@@ -1021,7 +998,6 @@ describe('embedded Finance collection context', () => {
     });
     render(<FeeCollectComponentForm student={student} academicYear={academicYear} />);
     await beginCollection();
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm collection' }));
     await screen.findByRole('status', { name: 'Loading charge receipt' });
     expect(screen.queryByText(/receipt preview is unavailable/)).not.toBeInTheDocument();
     expect(screen.getByLabelText('Amount to collect *')).toHaveValue('');
@@ -1036,7 +1012,7 @@ describe('embedded Finance collection context', () => {
     expect(shikshaMitraToast.error).not.toHaveBeenCalled();
     expect(screen.queryByRole('button', { name: 'Retry payment' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Retry receipt' }));
-    await screen.findByRole('document', { name: 'Charge Receipt' });
+    await screen.findByRole('button', { name: 'Download' });
     expect(screen.getByRole('button', { name: 'Download' })).toBeEnabled();
     expect(mocks.defaultCollect).toHaveBeenCalledTimes(1);
     expect(mocks.defaultDownload).toHaveBeenCalledTimes(2);
@@ -1057,6 +1033,7 @@ describe('embedded Finance collection context', () => {
     const pendingCharge = new Promise<Blob>((resolve) => {
       resolveCharge = resolve;
     });
+    const createUrl = vi.spyOn(URL, 'createObjectURL');
     const revoke = vi.spyOn(URL, 'revokeObjectURL');
     const context = adapter({
       canViewReceipts: true,
@@ -1079,17 +1056,14 @@ describe('embedded Finance collection context', () => {
     );
     try {
       await beginCollection();
-      fireEvent.click(screen.getByRole('button', { name: 'Confirm collection' }));
-      const feeUrl = (await screen.findByRole('document', { name: 'Fee Receipt' })).getAttribute(
-        'data-url'
-      );
+      await screen.findByRole('button', { name: 'Download fee' });
+      const feeUrl = createUrl.mock.results[0].value;
       expect(screen.getByRole('status', { name: 'Loading charge receipt' })).toBeInTheDocument();
       await act(async () => {
         resolveCharge(new Blob(['%PDF-charge'], { type: 'application/pdf' }));
       });
-      const chargeUrl = (
-        await screen.findByRole('document', { name: 'Charge Receipt' })
-      ).getAttribute('data-url');
+      await screen.findByRole('button', { name: 'Download charge' });
+      const chargeUrl = createUrl.mock.results[1].value;
       expect(feeUrl).toBeTruthy();
       expect(chargeUrl).toBeTruthy();
       expect(revoke).not.toHaveBeenCalledWith(feeUrl);
@@ -1099,6 +1073,7 @@ describe('embedded Finance collection context', () => {
       expect(revoke).toHaveBeenCalledWith(chargeUrl);
     } finally {
       revoke.mockRestore();
+      createUrl.mockRestore();
     }
   });
 
@@ -1112,8 +1087,7 @@ describe('embedded Finance collection context', () => {
     });
     render(<FeeCollectComponentForm academicYear={academicYear} collectionAdapter={context} />);
     await beginCollection();
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm collection' }));
-    await screen.findByRole('document', { name: 'Fee Receipt' });
+    await screen.findByRole('button', { name: 'Download' });
     await screen.findByText(/Fee details could not be refreshed/);
     expect(screen.getByRole('button', { name: 'Collect Payment' })).toBeDisabled();
     expect(screen.queryByRole('button', { name: 'Retry payment' })).not.toBeInTheDocument();
@@ -1135,7 +1109,6 @@ describe('embedded Finance collection context', () => {
         <FeeCollectComponentForm academicYear={academicYear} collectionAdapter={context} />
       );
       await beginCollection();
-      fireEvent.click(screen.getByRole('button', { name: 'Confirm collection' }));
       await waitFor(() => expect(context.refetch).toHaveBeenCalledOnce());
       if (state === 'failed') {
         await act(async () => {

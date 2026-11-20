@@ -4,12 +4,12 @@ import type {
 } from 'src/redux/finance/studentFeeAssignment';
 
 import dayjs from 'dayjs';
-import { describe, expect, it } from 'vitest';
+import { it, expect, describe } from 'vitest';
 
 import {
   assignmentYearBounds,
-  assignmentServiceDateError,
   serializeServiceDate,
+  assignmentServiceDateError,
 } from './assignmentServiceDates';
 
 const year = { id: 'year', startDate: '2026-06-15', endDate: '2027-05-14' };
@@ -55,7 +55,12 @@ describe('assignment service date boundaries', () => {
       'within the selected academic year'
     );
   });
-  it('rejects reversed, invalid and incomplete dates and missing reasons', () => {
+  it('accepts authorized dates without a reason', () => {
+    expect(
+      assignmentServiceDateError(candidate, request(year.startDate, year.endDate, ''), bounds)
+    ).toBeUndefined();
+  });
+  it('rejects reversed, invalid and incomplete dates', () => {
     expect(
       assignmentServiceDateError(candidate, request('2026-08-01', '2026-07-01'), bounds)
     ).toContain('on or after');
@@ -63,9 +68,6 @@ describe('assignment service date boundaries', () => {
       'valid start'
     );
     expect(assignmentServiceDateError(candidate, request(''), bounds)).toContain('valid start');
-    expect(
-      assignmentServiceDateError(candidate, request(year.startDate, year.endDate, ' '), bounds)
-    ).toContain('reason');
     expect(assignmentServiceDateError(candidate, request())).toContain('unavailable');
   });
   it('ignores deselected optional heads and configured-year service dates', () => {

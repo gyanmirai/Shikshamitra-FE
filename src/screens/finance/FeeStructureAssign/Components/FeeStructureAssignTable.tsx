@@ -1,4 +1,5 @@
 import type { RootState } from 'src/redux/store';
+import type { CheckboxProps } from '@mui/material/Checkbox';
 import type { IData, IParams } from 'src/components/customizabaleTable/types';
 
 import { useSelector } from 'react-redux';
@@ -7,6 +8,7 @@ import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { financePaths, financePermissions } from 'src/constants/finance-menu';
@@ -21,9 +23,26 @@ import {
   useFinanceAcademicFilters,
 } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
 
-import { assignmentSelectionGroup } from './assignmentSelection';
+import { assignmentSelectionGroup, assignmentSelectionBlocker } from './assignmentSelection';
 
 import type { IFeeStructureData, IFeeStructureTableProps } from './type';
+
+function SelectionCheckbox({ reason, ...props }: CheckboxProps & { reason?: string }) {
+  if (!reason) return <Checkbox {...props} />;
+  return (
+    <CustomTooltip title={reason} describeChild arrow>
+      <span
+        // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- Disabled inputs cannot receive focus; this anchor exposes their tooltip to keyboard users.
+        tabIndex={0}
+        role="group"
+        aria-label={`Selection unavailable: ${reason}`}
+        style={{ display: 'inline-flex' }}
+      >
+        <Checkbox {...props} inputProps={{ ...props.inputProps, 'aria-description': reason }} />
+      </span>
+    </CustomTooltip>
+  );
+}
 
 export default function FeeStructureAssignTable({
   onAssignStructure,
@@ -41,7 +60,10 @@ export default function FeeStructureAssignTable({
     permissions,
     `${financePermissions.fees.structureAssign}.Add`
   );
-  const canStopOptionalService = hasGrantedPermission(permissions, `${financePermissions.fees.structureAssign}.StopOptionalService`);
+  const canStopOptionalService = hasGrantedPermission(
+    permissions,
+    `${financePermissions.fees.structureAssign}.StopOptionalService`
+  );
   const canEdit = hasGrantedPermission(
     permissions,
     `${financePermissions.fees.structureAssign}.OverridePolicies`
@@ -211,7 +233,7 @@ export default function FeeStructureAssignTable({
       <CustomizableTable
         tableId="fee-structure-assignment"
         tableTitle="Student fee structure assignments"
-        isLoading={query.isFetching}
+        isLoading={query.isFetching && !query.currentData}
         data={rows}
         rowProps={(row) => ({
           'data-assignment-status': row.isFeeStructureAssigned ? 'assigned' : 'unassigned',
@@ -267,7 +289,16 @@ export default function FeeStructureAssignTable({
                   isFilter: false,
                   excludeFromExport: true,
                   renderColumn: () => (
-                    <Checkbox
+                    <SelectionCheckbox
+                      reason={
+                        query.isFetching
+                          ? 'Student information is refreshing.'
+                          : !standardId
+                            ? 'Select a class before selecting students.'
+                            : !eligible.length
+                              ? 'No eligible students are available on this page.'
+                              : undefined
+                      }
                       inputProps={{
                         'aria-label': 'Select eligible students on this page',
                         'aria-checked':
@@ -293,7 +324,14 @@ export default function FeeStructureAssignTable({
                   render: (_value: unknown, rawRow: IData) => {
                     const row = rawRow as IFeeStructureData & { isActive?: boolean };
                     return (
-                      <Checkbox
+                      <SelectionCheckbox
+                        reason={
+                          query.isFetching
+                            ? 'Student information is refreshing.'
+                            : !standardId
+                              ? 'Select a class before selecting students.'
+                              : assignmentSelectionBlocker(row, selectionGroup)
+                        }
                         inputProps={{
                           'aria-label': `Select ${row.studentName}`,
                           ...(row.isFeeStructureAssigned && {
@@ -496,18 +534,19 @@ export default function FeeStructureAssignTable({
                 );
               if (!row.isFeeStructureAssigned && canAssign)
                 return (
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    color="inherit"
-                    startIcon={<Iconify icon={GlobalIcons.addIcon} />}
-                    aria-label={`Assign fee structure to ${row.studentName}`}
-                    disabled={query.isFetching || !row.isActive}
-                    onClick={() => onAssignStructure(row)}
-                    sx={{ whiteSpace: 'nowrap' }}
-                  >
-                    Assign Fee Structure
-                  </Button>
+                  <AdaptiveThreeDotsActions
+                    directActionLimit={2}
+                    actions={[
+                      {
+                        id: 'assign',
+                        icon: GlobalIcons.addIcon,
+                        label: `Assign fee structure to ${row.studentName}`,
+                        disabled: query.isFetching || !row.isActive,
+                        onClick: () => onAssignStructure(row),
+                      },
+                    ]}
+                    sx={{ justifyContent: 'flex-start' }}
+                  />
                 );
               return row.isFeeStructureAssigned && canView ? (
                 <AdaptiveThreeDotsActions
@@ -521,7 +560,10 @@ export default function FeeStructureAssignTable({
                       disabled: query.isFetching,
                       onClick: () => onAssignStructure(row),
                     },
-                    ...((canEdit || (row.isActive && (canStopOptionalService || (canAssign && row.canEditStructure)))) && onEdit
+                    ...((canEdit ||
+                      (row.isActive &&
+                        (canStopOptionalService || (canAssign && row.canEditStructure)))) &&
+                    onEdit
                       ? [
                           {
                             id: 'edit',

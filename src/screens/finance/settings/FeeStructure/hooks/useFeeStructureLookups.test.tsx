@@ -1,14 +1,15 @@
 import { it, vi, expect } from 'vitest';
-import { waitFor, fireEvent, renderHook } from '@testing-library/react';
-import { useGetRefundPoliciesQuery } from 'src/redux/finance/refundPolicy';
-import { useGetCollectionPoliciesQuery } from 'src/redux/finance/collectionPolicy';
+import { waitFor, renderHook } from '@testing-library/react';
+import {
+  useGetRefundPolicyByIdQuery,
+  useGetRefundPolicyVersionsQuery,
+} from 'src/redux/finance/refundPolicy';
 import { useGetActiveFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
 import {
   useGetStructureContextQuery,
   useGetStructureCatalogueQuery,
   useGetStructureTermScheduleQuery,
 } from 'src/redux/finance/feeStructureWorkspace';
-import { useGetPaymentTermsQuery, useGetPaymentTermByIdQuery } from 'src/redux/finance/paymentTerm';
 
 import { defaultPolicy } from '../feeStructureModel';
 import useFeeStructureLookups, { useCatalog } from './useFeeStructureLookups';
@@ -20,6 +21,7 @@ vi.mock('src/redux/customQueryAndMutation', () => ({
 vi.mock('src/redux/finance/refundPolicy', () => ({
   useGetRefundPoliciesQuery: vi.fn(),
   useGetRefundPolicyByIdQuery: vi.fn(() => ({})),
+  useGetRefundPolicyVersionsQuery: vi.fn(() => ({})),
 }));
 vi.mock('src/redux/finance/concessionPolicy', () => ({ useGetConcessionPoliciesQuery: vi.fn() }));
 vi.mock('src/redux/finance/collectionPolicy', () => ({
@@ -108,9 +110,9 @@ function mockLookups() {
   const policies = ['collection', 'refund'].flatMap((family) =>
     Array.from({ length: 101 }, (_, index) => ({
       family,
-      id: family + index,
-      name: family + index,
-      versionId: family + '-version',
+      id: `${family}${index}`,
+      name: `${family}${index}`,
+      versionId: `${family}-version`,
       versionNumber: 1,
       isCurrent: true,
       isDefault: index === 100,
@@ -176,4 +178,38 @@ it('skips unactivated catalogue and schedule requests while retaining context ac
     expect.objectContaining({ skip: true })
   );
   expect(result.current.settings?.permissions.termsRead).toBe(true);
+});
+
+it('loads the retained refund scope from the attached version after the policy changes', () => {
+  mockLookups();
+  vi.mocked(useGetRefundPolicyByIdQuery).mockReturnValue({
+    currentData: { id: 'refund', currentVersionId: 'v2', feeHeadScope: 'AllFeeHeads' },
+  } as any);
+  vi.mocked(useGetRefundPolicyVersionsQuery).mockReturnValue({
+    currentData: {
+      items: [
+        {
+          id: 'v1',
+          policyId: 'refund',
+          snapshotJson: JSON.stringify({ FeeHeadScope: 1, ApplicableFeeHeadIds: ['tuition'] }),
+        },
+      ],
+    },
+  } as any);
+  const { result } = renderHook(() =>
+    useFeeStructureLookups(scope, true, undefined, false, true, {
+      refund: 'refund',
+      refundVersion: 'v1',
+    })
+  );
+  expect(useGetRefundPolicyVersionsQuery).toHaveBeenLastCalledWith(
+    { id: 'refund', versionId: 'v1', maxResultCount: 1 },
+    expect.objectContaining({ skip: false })
+  );
+  expect(result.current.catalogs.refund.items).toContainEqual({
+    id: 'refund',
+    currentVersionId: 'v1',
+    feeHeadScope: 'SelectedFeeHeads',
+    applicableFeeHeadIds: ['tuition'],
+  });
 });

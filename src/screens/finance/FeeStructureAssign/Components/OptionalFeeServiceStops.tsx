@@ -6,14 +6,24 @@ import type {
 } from 'src/redux/finance/studentFeeAssignment';
 
 import dayjs from 'dayjs';
-import { useRef, useState } from 'react';
 import { fDate } from 'src/utils/format-time';
+import { Label } from 'src/components/label';
+import { useRef, useState, useEffect } from 'react';
 import { formatNumber } from 'src/utils/formate_number';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { FormSectionCard } from 'src/components/form-section-card';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Alert, Button, DialogActions, Stack, TextField, Typography } from '@mui/material';
+import {
+  Alert,
+  Stack,
+  Button,
+  Checkbox,
+  TextField,
+  Typography,
+  DialogActions,
+} from '@mui/material';
 import {
   assignmentError,
   useAssignmentOptionalServiceStopMutation,
@@ -24,10 +34,14 @@ export default function OptionalFeeServiceStops({
   assignment,
   disabled,
   onSaved,
+  onBusyChange,
+  disabledReason,
 }: {
   assignment: AssignmentPreview;
   disabled?: boolean;
   onSaved?: () => void;
+  onBusyChange?: (busy: boolean) => void;
+  disabledReason?: string;
 }) {
   const [head, setHead] = useState<AssignmentHead>();
   const [lastServiceDate, setLastServiceDate] = useState<Dayjs | null>(null);
@@ -39,14 +53,12 @@ export default function OptionalFeeServiceStops({
   const [stop, stopState] = useAssignmentOptionalServiceStopMutation();
   const pending = useRef(false);
   const busy = previewState.isLoading || stopState.isLoading;
-  const heads = assignment.heads.filter(
-    (item) =>
-      item.included &&
-      item.isOptional &&
-      !item.isOneTime &&
-      item.servicePeriod?.startDate &&
-      item.servicePeriod?.endDate
-  );
+  useEffect(() => {
+    onBusyChange?.(busy);
+    return () => onBusyChange?.(false);
+  }, [busy, onBusyChange]);
+  const heads = assignment.heads.filter((item) => item.isOptional);
+  const hasUnselected = heads.some((item) => !item.included);
   const minDate = head?.servicePeriod?.startDate
     ? dayjs(head.servicePeriod.startDate.slice(0, 10))
     : undefined;
@@ -91,14 +103,31 @@ export default function OptionalFeeServiceStops({
   };
 
   return (
-    <FormSectionCard title="Optional Fees" icon="mdi:format-list-checks">
+    <FormSectionCard
+      title="Optional Fee Heads"
+      icon="mdi:format-list-checks"
+      descriptionTooltip="Review every optional fee from the assigned structure. Stop an active recurring service to cancel eligible future installments."
+    >
       <Stack spacing={1}>
+        {hasUnselected && (
+          <Typography variant="body2" color="text.secondary">
+            Adding optional fees through this assignment requires an editable fee structure.
+          </Typography>
+        )}
         {heads.map((item) => {
           const lines = assignment.lines.filter((line) => line.feeHeadId === item.feeHeadId);
           const cancelledAmount = lines.reduce(
             (sum, line) => sum + (line.optionalServiceCancellationAmount ?? 0),
             0
           );
+          const stopped = cancelledAmount > 0;
+          const blocker = disabled
+            ? disabledReason || 'This action is unavailable while another change is pending.'
+            : !item.servicePeriod?.startDate || !item.servicePeriod?.endDate
+              ? 'Saved service dates are unavailable for this fee.'
+              : !lines.some((line) => line.outstandingAmount > 0 && !line.paidAmount)
+                ? 'There are no unpaid installments available to cancel for this service.'
+                : undefined;
           return (
             <Stack
               key={item.feeHeadId}
@@ -107,33 +136,52 @@ export default function OptionalFeeServiceStops({
               justifyContent="space-between"
               spacing={1}
             >
-              <div>
-                <Typography variant="subtitle2">{item.feeHeadName}</Typography>
-                {cancelledAmount > 0 && (
-                  <Typography variant="body2" color="text.secondary">
-                    {formatNumber(cancelledAmount, assignment.currency)} cancelled
+              <Stack direction="row" alignItems="center" spacing={0.5} sx={{ minWidth: 0 }}>
+                <Checkbox
+                  checked={item.included && !stopped}
+                  disabled
+                  inputProps={{ 'aria-label': item.feeHeadName }}
+                />
+                <div>
+                  <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
+                    {item.feeHeadName}
                   </Typography>
-                )}
-              </div>
-              <Button
-                variant="outlined"
-                color="inherit"
-                size="small"
-                aria-label={`Stop service for ${item.feeHeadName}`}
-                disabled={
-                  disabled || !lines.some((line) => line.outstandingAmount > 0 && !line.paidAmount)
-                }
-                onClick={() => {
-                  setHead(item);
-                  setLastServiceDate(null);
-                  setReason('');
-                  setQuote(undefined);
-                  setError('');
-                  setRequestId(globalThis.crypto.randomUUID());
-                }}
-              >
-                Stop service
-              </Button>
+                  {stopped && (
+                    <Typography variant="body2" color="text.secondary">
+                      {formatNumber(cancelledAmount, assignment.currency)} cancelled
+                    </Typography>
+                  )}
+                </div>
+              </Stack>
+              {stopped && <Label sx={{ flexShrink: 0 }}>Service stopped</Label>}
+              {!item.included && <Label sx={{ flexShrink: 0 }}>Not selected</Label>}
+              {item.included && !stopped && !item.isOneTime && (
+                <CustomTooltip
+                  title={blocker || `Stop service for ${item.feeHeadName}`}
+                  describeChild
+                >
+                  {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- Keep the disabled action's explanation reachable by keyboard. */}
+                  <span tabIndex={blocker ? 0 : undefined} style={{ display: 'inline-flex' }}>
+                    <Button
+                      variant="outlined"
+                      color="inherit"
+                      size="small"
+                      aria-label={`Stop service for ${item.feeHeadName}`}
+                      disabled={Boolean(blocker)}
+                      onClick={() => {
+                        setHead(item);
+                        setLastServiceDate(null);
+                        setReason('');
+                        setQuote(undefined);
+                        setError('');
+                        setRequestId(globalThis.crypto.randomUUID());
+                      }}
+                    >
+                      Stop service
+                    </Button>
+                  </span>
+                </CustomTooltip>
+              )}
             </Stack>
           );
         })}

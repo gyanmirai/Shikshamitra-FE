@@ -1,5 +1,9 @@
 // Browser fixture only. These responses never enter the Next.js application.
-import type { StructureRecord, StructureCopyPolicy } from 'src/redux/finance/feeStructureWorkspace';
+import type {
+  StructureRecord,
+  StructureSettings,
+  StructureCopyPolicy,
+} from 'src/redux/finance/feeStructureWorkspace';
 
 import { useState } from 'react';
 
@@ -9,6 +13,8 @@ export const useGetStructureTermScheduleQuery = 'term-schedule';
 export const useGetActiveFeeHeadsQuery = 'heads';
 export const useGetCollectionPolicyByIdQuery = 'collection-detail';
 export const useGetRefundPolicyByIdQuery = 'refund-detail';
+export const useGetCollectionPolicyVersionsQuery = 'collection-version';
+export const useGetRefundPolicyVersionsQuery = 'refund-version';
 export const usePreviewStructureMutation = 'preview';
 export const copyMode = new URLSearchParams(window.location.search).get('copyPolicy') ?? 'current';
 let copyCurrentVersion = ['stale', 'race'].includes(copyMode) ? 2 : 1;
@@ -131,7 +137,7 @@ const installments = [
     allocationPercentage: 50,
   },
 ];
-const settings = {
+const settings: StructureSettings = {
   academicYearId: 'year',
   academicYearName: '2026–27',
   className: 'Class 5',
@@ -177,8 +183,8 @@ const settings = {
       installments,
     },
   ],
-  policies: ['collection', 'concession', 'refund'].flatMap((family) =>
-    [true, false].map((isDefault) => ({
+  policies: (['collection', 'concession', 'refund'] as const).flatMap((family) =>
+    [true, false].map((isDefault): StructureSettings['policies'][number] => ({
       id: isDefault ? family : `${family}-alternate`,
       versionId: isDefault ? `${family}-v1` : `${family}-alternate-v2`,
       family,
@@ -186,6 +192,14 @@ const settings = {
       versionNumber: isDefault ? 1 : 2,
       isCurrent: true,
       isDefault,
+      ...(family === 'refund' &&
+        (isDefault
+          ? { feeHeadScope: 'AllFeeHeads', applicableFeeHeadIds: [] }
+          : {
+              feeHeadScope: 'SelectedFeeHeads',
+              applicableFeeHeadIds: ['transport'],
+              feeHeadNames: { transport: 'Transport Fee' },
+            })),
     }))
   ),
   permissions: Object.fromEntries(
@@ -253,6 +267,18 @@ export const fixtureClassRecords: Record<string, any[]> = {
   other: [{ ...readyFixture, id: 'class-six-fees', name: 'Class 6 Annual Fees' }],
 };
 const navigationCount = Number(new URLSearchParams(window.location.search).get('structures') ?? 0);
+if (new URLSearchParams(window.location.search).has('revision-name')) {
+  fixtureClassRecords.class = [
+    { ...readyFixture, status: 0 },
+    {
+      ...readyFixture,
+      id: 'revision',
+      previousRevisionId: readyFixture.id,
+      revisionNumber: 2,
+      concurrencyStamp: 'revision-stamp',
+    },
+  ];
+}
 if (navigationCount > 2 && navigationCount <= 100)
   fixtureClassRecords.class = Array.from({ length: navigationCount }, (_, index) => ({
     ...readyFixture,
@@ -356,7 +382,19 @@ export default function useFixtureApi({
           ? settings.terms.find((term) => term.versionId === params?.versionId)
           : action === 'collection-detail' || action === 'refund-detail'
             ? policyCatalogItems.find((item) => item.id === params)
-            : settings;
+            : action === 'collection-version' || action === 'refund-version'
+              ? {
+                  items: policyCatalogItems
+                    .filter(
+                      (item) => item.id === params.id && item.currentVersionId === params.versionId
+                    )
+                    .map((item) => ({
+                      id: item.currentVersionId,
+                      policyId: item.id,
+                      snapshotJson: JSON.stringify(item),
+                    })),
+                }
+              : settings;
   if (type === 'query')
     return {
       data: queryData,
@@ -373,6 +411,13 @@ export default function useFixtureApi({
         try {
           if (action === 'preview') return preview(args.standardFeeStructures);
           if (action === 'save' || action === useSaveStructureDraftMutation) {
+            const revision = fixtureClassRecords.class.find(
+              (item) => item.id === args.structureId && item.previousRevisionId
+            );
+            if (revision) {
+              Object.assign(revision, structuredClone(args.standardFeeStructures));
+              return { ...revision };
+            }
             saved = {
               ...structuredClone(args.standardFeeStructures),
               id: 'saved',
@@ -409,13 +454,24 @@ const fixtureCatalogue = {
 const policyCatalogItems = settings.policies.map((policy) => ({
   id: policy.id,
   currentVersionId: policy.versionId,
+  policyCode: policy.id,
   description: 'Policy coverage in the isolated component verification fixture.',
+  ...(policy.family === 'refund'
+    ? {
+        amountMode: 'Percentage',
+        percentageValue: 75,
+        deductionType: 'Percentage',
+        deductionValue: 5,
+        allowPartialRefund: true,
+      }
+    : { lateFeeType: 'Flat', flatAmount: 120, gracePeriodDays: 5 }),
   enableLateFee: true,
   enableWaiver: true,
   lateFeeApplyOnFeeHeads: ['tuition'],
   waiverApplyOnFeeHeads: ['tuition'],
-  feeHeadScope: 'SelectedFeeHeads',
-  applicableFeeHeadIds: ['tuition'],
+  feeHeadScope: policy.feeHeadScope,
+  applicableFeeHeadIds: policy.applicableFeeHeadIds,
+  feeHeadNames: policy.feeHeadNames,
   feeHeadRules: [{ feeHeadId: 'tuition', ruleType: 'Daily', roundingMode: 'Currency' }],
 }));
 const catalog = {

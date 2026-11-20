@@ -7,11 +7,11 @@ import { render, screen, within, cleanup, fireEvent } from '@testing-library/rea
 
 import ClassAccordionPanel from './ClassAccordionPanel';
 
-const state = vi.hoisted(() => ({ records: [] as any[] }));
+const state = vi.hoisted(() => ({ records: [] as any[], loading: false }));
 vi.mock('../hooks/useClassWiseFeeStructureHooks', () => ({
   useFetchStandardFeeStructures: () => ({
     data: state.records,
-    isLoading: false,
+    isLoading: state.loading,
     isFetching: false,
     isError: false,
     refetch: vi.fn(),
@@ -77,7 +77,10 @@ vi.mock('./FeeStructureWorkspaceCard', () => ({
   },
 }));
 
-afterEach(cleanup);
+afterEach(() => {
+  state.loading = false;
+  cleanup();
+});
 const ui = (canAdd = true) => (
   <ThemeProvider theme={createTheme(defaultSettings)}>
     <ClassAccordionPanel classId="class" feeStructureMetaDataId="metadata" canAdd={canAdd} />
@@ -90,6 +93,26 @@ function setup(canAdd = true) {
   ];
   return render(ui(canAdd));
 }
+
+it('shows the sidebar skeleton while the first class request is pending', () => {
+  state.records = [];
+  state.loading = true;
+  render(ui());
+  expect(
+    within(screen.getByRole('complementary')).getByLabelText('Loading fee structures')
+  ).toBeVisible();
+  expect(screen.queryByText('No fee structures')).toBeNull();
+});
+
+it('shows status for an unopened structure and numbers the filtered list', () => {
+  setup();
+  expect(screen.getByText('Published')).toBeVisible();
+  expect(screen.getByText('Draft')).toBeVisible();
+  fireEvent.change(screen.getByRole('textbox', { name: 'Search structures' }), {
+    target: { value: 'Activity' },
+  });
+  expect(within(screen.getByRole('list', { name: 'Fee structures' })).getByText('1')).toBeVisible();
+});
 
 it('keeps edits and updates the structure list name when switching between structures', () => {
   setup();
@@ -225,8 +248,8 @@ it('does not revert the latest save while the list still contains an older respo
 
 it('mounts only activated editors for fifty saved structures and preserves visited drafts', () => {
   state.records = Array.from({ length: 50 }, (_, index) => ({
-    id: 'record-' + index,
-    name: 'Fees ' + index,
+    id: `record-${index}`,
+    name: `Fees ${index}`,
     status: 1,
     feeHeads: [],
     concurrencyStamp: 'v1',

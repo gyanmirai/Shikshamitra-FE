@@ -110,6 +110,7 @@ export interface FeeSummary {
 }
 
 export interface FeeLedgerLine {
+  daysOverdue?: number | null;
   installmentId?: string | null;
   dueFeeId: string;
   feeHeadId: string;
@@ -393,6 +394,7 @@ export interface CollectFeeOutput {
 export type FeeWaiverSourceType = 'LateFee' | 'Charge';
 
 export interface ApplyFeeWaiverInput {
+  amount?: number;
   sourceType: FeeWaiverSourceType;
   sourceId: string;
   reason: string;
@@ -559,7 +561,7 @@ export const feeCollectionApi = financeModuleApi.injectEndpoints({
 
     applyFeeWaiver: builder.mutation<FeeWaiverResult, ApplyFeeWaiverInput>({
       query: (body) => ({
-        url: `${FEE_COLLECTION_V2_BASE_URL}/waivers`,
+        url: `${FEE_COLLECTION_V2_BASE_URL}/waivers${body.amount === undefined ? '' : '/with-amount'}`,
         method: 'POST',
         body,
       }),

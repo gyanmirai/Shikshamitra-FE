@@ -59,7 +59,6 @@ import {
 import AssignmentReview from './AssignmentReview';
 import AssignmentPolicies from './AssignmentPolicies';
 import AssignedPolicyEditor from './AssignedPolicyEditor';
-import OptionalFeeServiceStops from './OptionalFeeServiceStops';
 import AssignmentStudentInputs from './AssignmentStudentInputs';
 import PreparedAssignmentHandoff from './PreparedAssignmentHandoff';
 import { assignmentCurrencyTotals } from './assignmentReviewPresentation';
@@ -151,6 +150,7 @@ type AssignmentWorkflowProps = {
   editAssignedPolicies?: boolean;
   onClose: () => void;
   onCompleted?: () => void;
+  onViewSavedAssignment?: () => void;
   onBusyChange?: (busy: boolean) => void;
   onContextResolved?: (status: AssignmentContext['status']) => void;
   onStructureEditResolved?: (editing: boolean) => void;
@@ -390,6 +390,7 @@ function AssignmentEditor({
   onStructureEditResolved,
   onClose,
   onCompleted,
+  onViewSavedAssignment,
   onBusyChange,
   contexts,
   onAssignedConflict,
@@ -399,8 +400,8 @@ function AssignmentEditor({
   onAssignedConflict: () => void;
 }) {
   useEffect(
-    () => onStructureEditResolved?.(editAssignedStructure),
-    [editAssignedStructure, onStructureEditResolved]
+    () => onStructureEditResolved?.(editAssignedStructure || editAssignedPolicies),
+    [editAssignedStructure, editAssignedPolicies, onStructureEditResolved]
   );
   const { permissions } = useSelector((state: RootState) => state.auth);
   const currentYear = useSelector((state: RootState) => state.globalState?.currentYear);
@@ -421,18 +422,18 @@ function AssignmentEditor({
     permissions,
     `${financePermissions.fees.structureAssign}.OverrideAmount`
   );
-  const canStopOptionalService = hasGrantedPermission(
-    permissions,
-    `${financePermissions.fees.structureAssign}.StopOptionalService`
-  ) && students[0]?.isActive !== false;
+  const canStopOptionalService =
+    hasGrantedPermission(
+      permissions,
+      `${financePermissions.fees.structureAssign}.StopOptionalService`
+    ) && students[0]?.isActive !== false;
   const dispatch = useDispatch();
-  const [editingPolicies, setEditingPolicies] = useState(
-    editAssignedPolicies && canOverridePolicies && !editAssignedStructure
-  );
-  useEffect(() => {
-    if (editAssignedPolicies && !editAssignedStructure && canOverridePolicies)
-      setEditingPolicies(true);
-  }, [editAssignedPolicies, editAssignedStructure, canOverridePolicies]);
+  const [serviceSaved, setServiceSaved] = useState(false);
+  const editingPolicies =
+    editAssignedPolicies &&
+    (canOverridePolicies || canStopOptionalService) &&
+    !editAssignedStructure &&
+    !serviceSaved;
   const setPolicyDirty = useCallback((dirty: boolean) => dispatch(setIsChanges(dirty)), [dispatch]);
   const viewing =
     !editAssignedStructure && students.length === 1 && !!students[0].isFeeStructureAssigned;
@@ -807,8 +808,7 @@ function AssignmentEditor({
   if (
     viewing &&
     editingPolicies &&
-    canOverridePolicies &&
-    !assigned.isFetching &&
+    (canOverridePolicies || canStopOptionalService) &&
     !assigned.isError &&
     assigned.data?.assignment
   ) {
@@ -816,10 +816,14 @@ function AssignmentEditor({
       <AssignedPolicyEditor
         data={assigned.data}
         canStopOptionalService={canStopOptionalService}
+        canOverridePolicies={canOverridePolicies}
         onCancel={onClose}
         onSaved={() => {
-          setEditingPolicies(false);
-          assigned.refetch();
+          (onCompleted ?? onClose)();
+        }}
+        onOptionalServiceSaved={() => {
+          setServiceSaved(true);
+          onViewSavedAssignment?.();
         }}
         onBusyChange={onBusyChange}
         onDirtyChange={setPolicyDirty}
@@ -866,9 +870,6 @@ function AssignmentEditor({
                 assigned.data?.assignment &&
                 !editingPolicies && (
                   <>
-                    {editAssignedPolicies && canStopOptionalService && (
-                      <OptionalFeeServiceStops assignment={assigned.data.assignment} />
-                    )}
                     <AssignmentReview data={assigned.data.assignment} committed />
                   </>
                 )}
@@ -1258,7 +1259,7 @@ function AssignmentEditor({
                     onBlur={formik.handleBlur}
                     options={(candidates.data ?? []).map((c) => ({
                       value: c.id,
-                      label: `${c.name} · r${c.revisionNumber}`,
+                      label: c.name,
                     }))}
                     noOptionsMessage="No published structure for this student and year"
                     onChange={(value) => {
@@ -1538,7 +1539,11 @@ function AssignmentEditor({
                                   candidate &&
                                   input &&
                                   (assignmentInputError(candidate, input) ||
-                                    assignmentServiceDateError(candidate, input, academicYearBounds));
+                                    assignmentServiceDateError(
+                                      candidate,
+                                      input,
+                                      academicYearBounds
+                                    ));
                                 const needsAttention =
                                   !saved?.result &&
                                   !checked?.preview &&
@@ -1719,10 +1724,7 @@ function AssignmentEditor({
                                 />
                               )}
                               {activeStep === 1 && candidate && request && (
-                                <FormSectionCard
-                                  title="Fees & Dates"
-                                  icon="mdi:format-list-checks"
-                                >
+                                <FormSectionCard title="Fees & Dates" icon="mdi:format-list-checks">
                                   {assignmentFeeSelectionError(candidate, request) && (
                                     <Alert severity="info" sx={{ mb: 2 }}>
                                       {admissionContext?.source === 'Admission' &&
@@ -1734,10 +1736,6 @@ function AssignmentEditor({
                                   <AssignmentStudentInputs
                                     key={student.studentId}
                                     candidate={studentCandidate ?? candidate}
-                                    lockOptionalSelection={
-                                      !editAssignedStructure &&
-                                      Boolean(admissionContext?.structureId)
-                                    }
                                     request={request}
                                     onChange={updateRequest}
                                     canOverrideDates={canOverrideDates}
