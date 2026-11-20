@@ -6,6 +6,7 @@ import { handleDashboard } from './dashboard.mjs';
 import { insightsPermissions } from './insights.mjs';
 import { createNotificationRulesFixture } from './notification-rules.mjs';
 import { createNotificationDeliveriesFixture } from './notification-deliveries.mjs';
+import { createNotificationTemplateTestFixture } from './notification-template-test.mjs';
 import { createManualNotificationFixture, manualNotificationPermissions } from './notification-manual.mjs';
 import { paged, year, board, medium, ids } from './data.mjs';
 
@@ -18,6 +19,7 @@ let fixture = createAcademicFixture();
 let notificationRules = null;
 let notificationDeliveries = createNotificationDeliveriesFixture();
 let manualNotification = null;
+let notificationTemplateTest = null;
 export const server = http.createServer(async (request, response) => {
   response.setHeader(
     'Access-Control-Allow-Origin',
@@ -50,12 +52,17 @@ export const server = http.createServer(async (request, response) => {
   }
   if (url.pathname === '/fixture/reset') {
     fixture = createAcademicFixture(body);
-    notificationRules = body.notificationRules === true ? createNotificationRulesFixture() : null;
+    notificationTemplateTest = body.notificationTemplateTest === true ? createNotificationTemplateTestFixture() : null;
+    notificationRules = body.notificationRules === true ? createNotificationRulesFixture(notificationTemplateTest?.queue) : null;
     notificationDeliveries = createNotificationDeliveriesFixture(
       body.notificationDeliveries === true, body.notificationRetry, body.notificationApproval,
     );
     manualNotification = body.manualNotification === true ? createManualNotificationFixture() : null;
     send(200, fixture.snapshot());
+    return;
+  }
+  if (url.pathname === '/fixture/complete-template-test' && request.method === 'POST') {
+    send(notificationTemplateTest?.deliver() ? 200 : 409, {});
     return;
   }
   if (url.pathname === '/fixture/snapshot') {
@@ -111,6 +118,7 @@ export const server = http.createServer(async (request, response) => {
     return;
   }
   if (manualNotification?.handle(url, request.method, body, claims.sub, send)) return;
+  if (notificationTemplateTest?.handle(url, request.method, claims.sub, send)) return;
   if (notificationDeliveries(url, request.method, claims.sub, send)) return;
   if (claims.sub && notificationRules?.handle(url, request.method, body, send)) return;
   if (url.pathname.startsWith(pushPath + '/')) {

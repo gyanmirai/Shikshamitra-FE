@@ -154,6 +154,8 @@ Saving and submitting a diary leave notifications silent. The follow-up uses the
 
 ## Review delivery history
 
+In **Templates**, open a saved template, load the sample preview, and select **Send test**. Confirm the test destination and open **Delivery History** from the queued confirmation to follow that test. Once an in-app test is delivered, its sample appears in the test account's notification bell.
+
 Assigned approvers open **Academics → Notifications → Delivery History** and select a request in **Pending Approvals**. Review the recipient counts, exclusions and sample messages, then confirm **Approve send** to queue it or **Reject send** to close the request. A changed request requires the sender to review and submit it again. The sender can follow the approval status from the Delivery History link on their send confirmation.
 
 Open Delivery History with a link to a notification operation or Academic source. Filter the attempt table by delivery status. Provider acceptance, delivery and read receipts each have their own status, and the Columns menu exposes the available timestamps. When the current attempt shows **Retry delivery**, confirm **Queue retry** to retry that recipient and channel. History retains the rejected attempt and records the queued status separately. When acceptance is unknown, review the provider outcome before sending again. Staff with cancel access can stop pending work and see how much work is already in progress. [Delivery API](../../../Shikshamitra-BE/docs/modules/academic/api.md#staff-notification-configuration)

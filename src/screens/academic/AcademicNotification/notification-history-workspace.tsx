@@ -53,20 +53,21 @@ export function NotificationHistoryWorkspace({ identity, canManage }: {
       </Alert>
     );
     if (!operation.currentData) return <Skeleton variant="rounded" height={80} sx={{ m: 1 }} aria-label="Loading delivery status" />;
-    const reviewing = canManage && operation.currentData.canReviewApproval === true;
+    const canManageOperation = canManage && !operation.currentData.isSynthetic;
+    const reviewing = canManageOperation && operation.currentData.canReviewApproval === true;
     return (
       <>
-        {canManage && (
+        {canManageOperation && (
           <Button size="small" component={RouterLink} href={`${academicPaths.notification}?view=history`}
             sx={{ alignSelf: 'flex-start', mx: 1 }}>Pending approvals</Button>
         )}
         <Box sx={reviewing ? { flex: 1, minHeight: 0, overflowY: 'auto' } : { flexShrink: 0 }}>
           <NotificationDeliveryDetails key={`summary-${operationId}`}
-            operation={operation.currentData} identity={identity} canManage={canManage} />
+            operation={operation.currentData} identity={identity} canManage={canManageOperation} />
         </Box>
         {!reviewing && (
           <NotificationHistoryList key={`attempts-${operationId}`}
-            identity={identity} source={operation.currentData} operationId={operationId} canManage={canManage} />
+            identity={identity} source={operation.currentData} operationId={operationId} canManage={canManageOperation} />
         )}
       </>
     );

@@ -26,6 +26,8 @@ The catalogue cache is keyed by tenant and user. The task reminder reads `manual
 
 Draft edits and publication send the saved revision stamp. Creating a subsequent draft or restoring default wording sends the template header stamp. Successful revisions refresh template lists, previews, history, and the published choices used by Rules for the same session.
 
+Test send submits just the saved revision ID and stamp. Its queued response provides the operation ID for the sender's Delivery History link.
+
 ## Notification delivery and inbox clients
 
 `src/redux/academic-notifications/delivery-api.ts` reads the operation status and paged delivery attempts for an authorized source. A link with an operation ID reads its authorized source before requesting its attempt rows. Staff cancellation refreshes both reads for the same school and user.

@@ -40,6 +40,7 @@ export function NotificationDeliveryDetails({ operation, identity, canManage }: 
     <Stack gap={1} sx={{ p: 1 }}>
       <Stack direction="row" alignItems="center" gap={1} flexWrap="wrap">
         <Typography variant="subtitle2">{notificationEventKeyLabel(operation.eventKey)}</Typography>
+        {operation.isSynthetic && <Label color="info">Template test</Label>}
         <Label>{operation.approvalRejected ? 'Rejected' : (operationStatusLabels[operation.status] ?? 'Status unavailable')}</Label>
         <Typography variant="caption" color="text.secondary">{fDateTime(operation.createdAt)}</Typography>
         {canCancel && (

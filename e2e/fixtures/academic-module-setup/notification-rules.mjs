@@ -10,10 +10,10 @@ const parentRule = {
   concurrencyStamp: 'school-stamp', configuration: null,
 };
 
-export function createNotificationRulesFixture() {
+export function createNotificationRulesFixture(queueTemplateTest) {
   let rule;
   const writes = [];
-  const templateRequests = createNotificationTemplatesFixture();
+  const templateRequests = createNotificationTemplatesFixture(queueTemplateTest);
   return {
     writes,
     handle(url, method, body, send) {

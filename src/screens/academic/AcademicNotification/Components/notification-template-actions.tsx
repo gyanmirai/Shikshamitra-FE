@@ -2,8 +2,10 @@ import type { AcademicNotificationCacheIdentity } from 'src/redux/academic-notif
 import type { AcademicNotificationTemplate } from 'src/redux/academic-notifications/template-types';
 
 import { useState } from 'react';
-import { Stack, Button } from '@mui/material';
+import { RouterLink } from 'src/routes/components';
+import { Alert, Stack, Button } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
+import { academicPaths } from 'src/constants/academic-menu';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import {
   usePublishAcademicNotificationTemplateMutation,
@@ -39,7 +41,7 @@ export function NotificationTemplateActions({
   const [publish] = usePublishAcademicNotificationTemplateMutation();
   const [restore] = useRestoreAcademicNotificationTemplateDefaultMutation();
   const [remove] = useDeleteAcademicNotificationTemplateDraftMutation();
-  const [testSend] = useTestSendAcademicNotificationTemplateMutation();
+  const [testSend, { data: latestTest }] = useTestSendAcademicNotificationTemplateMutation();
   const { templateId, revisionId, concurrencyStamp, headerConcurrencyStamp } = template;
   const currentDraft = template.isCurrent && !template.isPublished && !template.isRetired;
   const descriptions: Record<TemplateAction, string> = {
@@ -70,7 +72,6 @@ export function NotificationTemplateActions({
           break;
         case 'test':
           await testSend(request).unwrap();
-          shikshaMitraToast.success({ message: 'Template test queued.' });
           break;
         default:
           break;
@@ -101,6 +102,14 @@ export function NotificationTemplateActions({
           <Button size="small" color="error" disabled={disabled || busy} onClick={() => setSelected('delete')}>Delete draft</Button>
         )}
       </Stack>
+      {latestTest?.isSynthetic && (
+        <Alert severity="info" role="status" action={<Button size="small" color="inherit" component={RouterLink}
+          href={`${academicPaths.notification}?view=history&operation=${encodeURIComponent(latestTest.operationId)}`}>
+          Delivery History
+        </Button>}>
+          Template test queued.
+        </Alert>
+      )}
       {selected && (
         <ConfirmDialog open title={actionLabels[selected]} content={descriptions[selected]}
           onClose={() => { if (!busy) setSelected(null); }}

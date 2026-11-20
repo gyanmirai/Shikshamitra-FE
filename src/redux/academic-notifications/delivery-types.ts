@@ -26,6 +26,7 @@ export interface AcademicNotificationOperation {
 
 export interface AcademicNotificationOperationStatus extends AcademicNotificationSource, AcademicNotificationOperation {
   approvalRequired: boolean;
+  isSynthetic?: boolean;
   canReviewApproval?: boolean;
   approvalRejected?: boolean;
   createdAt: string;

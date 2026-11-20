@@ -2,6 +2,6 @@ import base from './academic-module-setup.config.mjs';
 
 export default {
   ...base,
-  testMatch: 'academic-notification-rules.spec.ts',
+  testMatch: ['academic-notification-rules.spec.ts', 'academic-notifications.spec.ts'],
   outputDir: '../../.artifacts/academic-notification-rules/browser',
 };

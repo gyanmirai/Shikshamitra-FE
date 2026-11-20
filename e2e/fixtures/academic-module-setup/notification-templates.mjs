@@ -3,7 +3,7 @@ import { paged } from './data.mjs';
 
 const root = '/api/academic/notifications/templates';
 
-export function createNotificationTemplatesFixture() {
+export function createNotificationTemplatesFixture(queueTemplateTest) {
   const templates = new Map();
   return (url, method, input, send) => {
     if (url.pathname === root && method === 'GET') {
@@ -54,6 +54,15 @@ export function createNotificationTemplatesFixture() {
           contentHash: revision.contentHash, linkUrl: null, errorCode: null,
         },
       });
+      return true;
+    }
+    if (action === 'test-send' && method === 'POST' && queueTemplateTest) {
+      const current = history[0];
+      if (input.revisionId !== current.revisionId || input.concurrencyStamp !== current.concurrencyStamp) {
+        send(409, { title: 'Template changed' });
+      } else {
+        send(202, queueTemplateTest(current));
+      }
       return true;
     }
     if (action !== 'publish' && action !== 'draft') return false;
