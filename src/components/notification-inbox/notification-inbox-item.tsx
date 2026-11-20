@@ -9,6 +9,8 @@ import { useChangePersonalNotificationItemMutation } from 'src/redux/communicati
 
 import { notificationLink } from './notification-link';
 
+const academicReportDownload = /^\/api\/academic-reports\/[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\/download$/i;
+
 export function NotificationInboxRow({ item, owner, onOpen }: {
   item: NotificationInboxItem;
   owner: string;
@@ -20,6 +22,7 @@ export function NotificationInboxRow({ item, owner, onOpen }: {
   const [updated, setUpdated] = useState<NotificationInboxItem>();
   const row = updated ?? item;
   const link = notificationLink(row.relativeLink);
+  const isReportDownload = link !== null && academicReportDownload.test(link);
 
   async function changeItem(action: 'read' | 'acknowledge') {
     if (sending.current) return;
@@ -47,7 +50,11 @@ export function NotificationInboxRow({ item, owner, onOpen }: {
         <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{item.body}</Typography>
         {error && <Alert severity="error">{error}</Alert>}
         <Stack direction="row" flexWrap="wrap" gap={0.75}>
-          {link && <Button size="small" LinkComponent={Link} href={link} onClick={onOpen}>Open record</Button>}
+          {link && (isReportDownload ? (
+            <Button size="small" component="a" href={link} download>Download report</Button>
+          ) : (
+            <Button size="small" LinkComponent={Link} href={link} onClick={onOpen}>Open record</Button>
+          ))}
           {!row.readAt && (
             <Button size="small" disabled={mutation.isLoading} onClick={() => changeItem('read')}>Mark as read</Button>
           )}

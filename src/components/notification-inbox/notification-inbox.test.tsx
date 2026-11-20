@@ -100,4 +100,20 @@ describe('signed-in notification inbox', () => {
     })).unwrap()).rejects.toMatchObject({ status: 'CUSTOM_ERROR' });
     expect(writes).toEqual([]);
   });
+
+  it('offers a native download for an authenticated academic report link', async () => {
+    const relativeLink = '/api/academic-reports/93ed784c-f9c2-4703-8745-752a15a3ac34/download';
+    mswServer.use(
+      http.get('*/api/communication/notifications/me/inbox', () => HttpResponse.json({
+        totalCount: 1,
+        items: [{ ...notice, title: 'Report export ready', relativeLink }],
+      }))
+    );
+
+    render(inbox(createStore(), originalOwner));
+    const download = await screen.findByRole('link', { name: 'Download report' });
+    expect(download).toHaveAttribute('href', relativeLink);
+    expect(download).toHaveAttribute('download');
+    expect(screen.queryByRole('link', { name: 'Open record' })).not.toBeInTheDocument();
+  });
 });
