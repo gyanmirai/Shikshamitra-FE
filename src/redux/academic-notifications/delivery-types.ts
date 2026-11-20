@@ -1,4 +1,5 @@
 import type { AcademicNotificationChannel } from './types';
+import type { AcademicNotificationReview } from './manual-types';
 import type { CommunicationCampaignStatus } from '../communication/communicationTypes';
 
 export enum AcademicDispatchStatus {
@@ -25,6 +26,8 @@ export interface AcademicNotificationOperation {
 
 export interface AcademicNotificationOperationStatus extends AcademicNotificationSource, AcademicNotificationOperation {
   approvalRequired: boolean;
+  canReviewApproval?: boolean;
+  approvalRejected?: boolean;
   createdAt: string;
   publishedAt: string | null;
   scheduledAt: string | null;
@@ -32,6 +35,15 @@ export interface AcademicNotificationOperationStatus extends AcademicNotificatio
   deliveries: { channel: AcademicNotificationChannel; status: AcademicDispatchStatus; count: number }[];
   intents: { status: number; reasonCode: string | null; count: number }[];
   excludedBeforeDispatch: number;
+}
+
+export type AcademicNotificationApprovalReview = Pick<
+  AcademicNotificationReview, 'eligibleRecipientCount' | 'channels' | 'samples' | 'blockingIssues'
+> & { canApprove: boolean };
+
+export interface AcademicNotificationPendingApprovals {
+  items: { operationId: string; eventKey: string; createdAt: string; eligibleRecipientCount: number }[];
+  nextAfterId: string | null;
 }
 
 export interface AcademicNotificationHistoryItem {

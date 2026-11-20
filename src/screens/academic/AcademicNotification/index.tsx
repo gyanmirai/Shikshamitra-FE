@@ -20,7 +20,7 @@ export default function AcademicNotificationScreen() {
   const description = {
     rules: 'Review which events notify students, guardians, and staff for the selected scope.',
     templates: 'Manage message templates by event, recipient, channel, and language.',
-    history: 'Review delivery attempts and exclusions for an Academic record.',
+    history: 'Review assigned approvals and delivery attempts for Academic notifications.',
   }[view];
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: 1, minHeight: 0 }}>

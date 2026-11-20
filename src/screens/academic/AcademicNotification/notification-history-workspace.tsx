@@ -5,7 +5,9 @@ import { useRef, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { fDateTime } from 'src/utils/format-time';
 import { useSearchParams } from 'next/navigation';
+import { RouterLink } from 'src/routes/components';
 import CustomSelect from 'src/components/custom-select';
+import { academicPaths } from 'src/constants/academic-menu';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { Box, Alert, Button, Skeleton, Typography } from '@mui/material';
 import { AcademicDispatchStatus } from 'src/redux/academic-notifications/delivery-types';
@@ -17,6 +19,7 @@ import {
 
 import { NotificationHistoryTable } from './Components/notification-history-table';
 import { NotificationDeliveryDetails } from './Components/notification-delivery-details';
+import { NotificationPendingApprovals } from './Components/notification-pending-approvals';
 
 const options = [
   { value: 'all', label: 'All statuses' },
@@ -50,12 +53,21 @@ export function NotificationHistoryWorkspace({ identity, canManage }: {
       </Alert>
     );
     if (!operation.currentData) return <Skeleton variant="rounded" height={80} sx={{ m: 1 }} aria-label="Loading delivery status" />;
+    const reviewing = canManage && operation.currentData.canReviewApproval === true;
     return (
       <>
-        <NotificationDeliveryDetails key={`summary-${operationId}`}
-          operation={operation.currentData} identity={identity} canManage={canManage} />
-        <NotificationHistoryList key={`attempts-${operationId}`}
-          identity={identity} source={operation.currentData} operationId={operationId} canManage={canManage} />
+        {canManage && (
+          <Button size="small" component={RouterLink} href={`${academicPaths.notification}?view=history`}
+            sx={{ alignSelf: 'flex-start', mx: 1 }}>Pending approvals</Button>
+        )}
+        <Box sx={reviewing ? { flex: 1, minHeight: 0, overflowY: 'auto' } : { flexShrink: 0 }}>
+          <NotificationDeliveryDetails key={`summary-${operationId}`}
+            operation={operation.currentData} identity={identity} canManage={canManage} />
+        </Box>
+        {!reviewing && (
+          <NotificationHistoryList key={`attempts-${operationId}`}
+            identity={identity} source={operation.currentData} operationId={operationId} canManage={canManage} />
+        )}
       </>
     );
   }
@@ -65,7 +77,8 @@ export function NotificationHistoryWorkspace({ identity, canManage }: {
       <NotificationHistoryList key={`${source.eventKey}/${source.sourceType}/${source.sourceId}`}
         identity={identity} source={source} canManage={canManage} />
     </>
-  ) : <Alert severity="info" sx={{ m: 1 }}>Open delivery history from an Academic record or a notification send confirmation.</Alert>;
+  ) : canManage ? <NotificationPendingApprovals identity={identity} />
+    : <Alert severity="info" sx={{ m: 1 }}>Open delivery history from an Academic record or a notification send confirmation.</Alert>;
 }
 
 function NotificationHistoryList({ identity, source, operationId, canManage }: {

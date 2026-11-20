@@ -41,9 +41,12 @@ const rejected = {
   reasonCode: 'SmtpTemporaryRejection', canRequestRetry: true,
 };
 
-export function createNotificationDeliveriesFixture(enabled = false, retry = undefined) {
+export function createNotificationDeliveriesFixture(enabled = false, retry = undefined, approval = undefined) {
   let item = { ...inboxItem };
   let rows = retry ? [...history, rejected] : history;
+  let operationStatus = approval ? 1 : 7;
+  let approvalChanged = false;
+  const operationPath = `${academic}/operations/${notificationOperationId}`;
   return (url, method, owner, send) => {
     const path = url.pathname;
     const ownsInbox = enabled && owner === creator;
@@ -61,19 +64,44 @@ export function createNotificationDeliveriesFixture(enabled = false, retry = und
         item = { ...item, readAt: deliveredAt, acknowledgedAt: deliveredAt };
         send(200, item);
       } else send(404, {});
-    } else if (enabled && owner && path === `${academic}/operations/${notificationOperationId}` && method === 'GET') {
+    } else if (enabled && owner && path === `${academic}/operations/pending-approvals` && method === 'GET') {
+      send(200, { items: approval && operationStatus === 1 ? [{
+        eventKey: source.eventKey, operationId: notificationOperationId, createdAt: deliveredAt, eligibleRecipientCount: 101,
+      }] : [], nextAfterId: null });
+    } else if (enabled && approval && owner && path === `${operationPath}/approval-review` && method === 'GET') {
       send(200, {
-        ...source, operationId: notificationOperationId, status: 7, approvalRequired: false,
+        canApprove: !approvalChanged, eligibleRecipientCount: 101, blockingIssues: [],
+        channels: approvalChanged ? [] : [{ channel: 2, eligibleRecipientCount: 101, readyDeliveryCount: 101, exclusions: [] }],
+        samples: approvalChanged ? [] : [{
+          revisionId: 'sample-revision', templateId: 'sample-template', isSynthetic: true,
+          recipientKind: 'Guardian', languageCode: 'en', channel: 2,
+          rendered: { isSuccess: true, subject: 'Homework for the sample class', body: 'Sample homework notice' },
+        }],
+      });
+    } else if (enabled && approval && owner && method === 'POST' &&
+      [`${operationPath}/approve`, `${operationPath}/reject`].includes(path)) {
+      if (approval === 'changed' && path.endsWith('/approve')) {
+        approvalChanged = true;
+        send(409, { error: { code: 'Communication:Notification:ReviewChanged' } });
+      } else {
+        operationStatus = path.endsWith('/approve') ? 4 : 9;
+        send(200, { operationId: notificationOperationId, status: operationStatus });
+      }
+    } else if (enabled && owner && path === operationPath && method === 'GET') {
+      send(200, {
+        ...source, operationId: notificationOperationId, status: operationStatus, approvalRequired: Boolean(approval),
+        canReviewApproval: Boolean(approval) && operationStatus === 1,
+        approvalRejected: Boolean(approval) && operationStatus === 9,
         createdAt: deliveredAt, publishedAt: null, scheduledAt: null, approvedAt: null,
         excludedBeforeDispatch: 0, intents: [],
-        deliveries: [...new Map(rows.map((row) => [row.dispatchId, row])).values()]
+        deliveries: (approval ? [] : [...new Map(rows.map((row) => [row.dispatchId, row])).values()])
           .map(({ channel, status }) => ({ channel, status, count: 1 })),
       });
     } else if (enabled && owner && path === `${academic}/history` && method === 'GET') {
       if (Object.entries(source).some(([key, value]) => url.searchParams.get(key) !== value)) send(403, {});
       else {
         const filter = url.searchParams.get('state');
-        send(200, paged(filter === null ? rows : rows.filter((row) => row.status === Number(filter))));
+        send(200, paged(approval ? [] : filter === null ? rows : rows.filter((row) => row.status === Number(filter))));
       }
     } else if (enabled && retry && owner && path === `${academic}/dispatches/${rejected.dispatchId}/retry` && method === 'POST') {
       if (url.searchParams.get('expectedAttemptId') !== rejected.attemptId) { send(400, {}); return true; }

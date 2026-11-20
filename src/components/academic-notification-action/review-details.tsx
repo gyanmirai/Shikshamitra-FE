@@ -8,7 +8,10 @@ import { deliveryReason } from 'src/redux/academic-notifications/delivery-adapte
 import { CommunicationChannelType } from 'src/redux/communication/communicationTypes';
 import { notificationLabel, notificationChannelLabels } from 'src/redux/academic-notifications/response-adapters';
 
-export function AcademicNotificationReviewDetails({ review, stale }: { review: AcademicNotificationReview; stale: boolean }) {
+type ReviewDetails = Pick<AcademicNotificationReview, 'eligibleRecipientCount' | 'channels' | 'samples' | 'blockingIssues'>
+  & Partial<Pick<AcademicNotificationReview, 'requiresApproval' | 'reviewToken'>>;
+
+export function AcademicNotificationReviewDetails({ review, stale = false }: { review: ReviewDetails; stale?: boolean }) {
   const samples = review.samples.filter((sample) => sample.isSynthetic && sample.rendered.isSuccess);
   return (
     <>
@@ -26,7 +29,7 @@ export function AcademicNotificationReviewDetails({ review, stale }: { review: A
           </Stack>
         ))}
         {review.blockingIssues.map((issue) => <Alert key={issue} severity="warning">{deliveryReason(issue)}</Alert>)}
-        {!review.reviewToken && <Alert severity="warning">There are no deliveries available to confirm.</Alert>}
+        {review.reviewToken === null && <Alert severity="warning">There are no deliveries available to confirm.</Alert>}
       </FormSectionCard>
       {!!samples.length && (
         <FormSectionCard title="Message Samples" icon={GlobalIcons.documentIcon}

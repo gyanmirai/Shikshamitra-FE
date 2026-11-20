@@ -12,6 +12,8 @@ import { Stack, Alert, Button, Accordion, Typography, AccordionDetails, Accordio
 import { dispatchStatusLabels, operationStatusLabels } from 'src/redux/academic-notifications/delivery-adapters';
 import { notificationEventKeyLabel, notificationChannelLabels } from 'src/redux/academic-notifications/response-adapters';
 
+import { NotificationApprovalReview } from './notification-approval-review';
+
 const cancellable = [
   CommunicationCampaignStatus.PendingApproval, CommunicationCampaignStatus.Scheduled,
   CommunicationCampaignStatus.Queued, CommunicationCampaignStatus.Sending,
@@ -25,7 +27,8 @@ export function NotificationDeliveryDetails({ operation, identity, canManage }: 
   const [confirm, setConfirm] = useState(false);
   const [cancel, result] = useCancelAcademicNotificationOperationMutation();
   const { operationId } = operation;
-  const canCancel = canManage && cancellable.includes(operation.status);
+  const canReview = canManage && operation.canReviewApproval === true;
+  const canCancel = canManage && !canReview && cancellable.includes(operation.status);
 
   async function cancelPending() {
     if (result.isLoading) return;
@@ -37,7 +40,7 @@ export function NotificationDeliveryDetails({ operation, identity, canManage }: 
     <Stack gap={1} sx={{ p: 1 }}>
       <Stack direction="row" alignItems="center" gap={1} flexWrap="wrap">
         <Typography variant="subtitle2">{notificationEventKeyLabel(operation.eventKey)}</Typography>
-        <Label>{operationStatusLabels[operation.status] ?? 'Status unavailable'}</Label>
+        <Label>{operation.approvalRejected ? 'Rejected' : (operationStatusLabels[operation.status] ?? 'Status unavailable')}</Label>
         <Typography variant="caption" color="text.secondary">{fDateTime(operation.createdAt)}</Typography>
         {canCancel && (
           <Button size="small" color="error" disabled={result.isLoading} onClick={() => setConfirm(true)}>
@@ -52,19 +55,22 @@ export function NotificationDeliveryDetails({ operation, identity, canManage }: 
           {result.data.remainingInFlight > 0 && ` Work still in progress ${result.data.remainingInFlight}.`}
         </Alert>
       )}
-      <Accordion disableGutters elevation={0} variant="outlined">
-        <AccordionSummary expandIcon={<ExpandMore />}>Delivery totals</AccordionSummary>
-        <AccordionDetails sx={{ maxHeight: 180, overflowY: 'auto' }}>
-          <Stack gap={0.5}>
-            {operation.deliveries.map((entry) => (
-              <Typography key={`${entry.channel}/${entry.status}`} variant="body2">
-                {notificationChannelLabels[entry.channel]} · {dispatchStatusLabels[entry.status]} · {entry.count}
-              </Typography>
-            ))}
-            <Typography variant="body2">Excluded before sending · {operation.excludedBeforeDispatch}</Typography>
-          </Stack>
-        </AccordionDetails>
-      </Accordion>
+      <NotificationApprovalReview identity={identity} operationId={operationId} active={canReview} />
+      {!canReview && (
+        <Accordion disableGutters elevation={0} variant="outlined">
+          <AccordionSummary expandIcon={<ExpandMore />}>Delivery totals</AccordionSummary>
+          <AccordionDetails sx={{ maxHeight: 180, overflowY: 'auto' }}>
+            <Stack gap={0.5}>
+              {operation.deliveries.map((entry) => (
+                <Typography key={`${entry.channel}/${entry.status}`} variant="body2">
+                  {notificationChannelLabels[entry.channel]} · {dispatchStatusLabels[entry.status]} · {entry.count}
+                </Typography>
+              ))}
+              <Typography variant="body2">Excluded before sending · {operation.excludedBeforeDispatch}</Typography>
+            </Stack>
+          </AccordionDetails>
+        </Accordion>
+      )}
       {confirm && (
         <ConfirmDialog open title="Cancel pending deliveries"
           content="Cancel work that has not started for this notification. In-progress deliveries may still finish."

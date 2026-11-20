@@ -160,6 +160,51 @@ test('refreshes history and explains when a retry needs review', { tag }, async 
   await expect(table.getByText('Queued', { exact: true })).toHaveCount(0);
 });
 
+(['approve', 'changed'] as const).forEach((scenario) => {
+  test(`reviews an assigned notification send and handles ${scenario === 'approve' ? 'approval' : 'a changed request'}`, { tag }, async ({ page, request }) => {
+    await request.post(`${fixtureApi}/fixture/reset`, { data: {
+      visited: true, notificationDeliveries: true, notificationRules: true, notificationApproval: scenario,
+    } });
+    await prepare(page, request);
+    await login(page);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/academic/notification?view=history');
+    await page.getByRole('link', { name: 'Homework published' }).click();
+    await expect(page.getByText('101 eligible recipients', { exact: true })).toBeVisible();
+    await expect(page.getByText('Sample homework notice', { exact: true })).toBeVisible();
+    const approveButton = page.getByRole('button', { name: 'Approve send', exact: true });
+    if (scenario === 'approve') {
+      const checkReview = async (width: number, height: number) => {
+        await page.setViewportSize({ width, height });
+        await approveButton.scrollIntoViewIfNeeded();
+        await expect(approveButton).toBeInViewport();
+        await expectHealthy(page);
+      };
+      await checkReview(390, 844);
+      await checkReview(768, 1024);
+      await checkReview(1440, 900);
+      await checkReview(390, 844);
+    }
+    await approveButton.click();
+    const approve = page.getByRole('dialog', { name: 'Approve Notification Send' });
+    await approve.getByRole('button', { name: 'Approve send', exact: true }).click();
+    if (scenario === 'changed') {
+      await expect(page.getByText('This request has changed.', { exact: false })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Approve send', exact: true })).toHaveCount(0);
+      await page.getByRole('button', { name: 'Reject send', exact: true }).click();
+      await page.getByRole('dialog', { name: 'Reject Notification Send' }).getByRole('button', { name: 'Reject send' }).click();
+      await expect(page.getByText('Notification request rejected.', { exact: true })).toBeVisible();
+      await expect(page.getByText('Rejected', { exact: true })).toBeVisible();
+    } else {
+      await expect(page.getByText('Notification approved and queued.', { exact: true })).toBeVisible();
+    }
+    await expect(page.getByRole('button', { name: 'Approve send', exact: true })).toHaveCount(0);
+    await page.getByRole('link', { name: 'Pending approvals', exact: true }).click();
+    await expect(page.getByText('No pending approvals are assigned to you.', { exact: true })).toBeVisible();
+    await expectHealthy(page);
+  });
+});
+
 test('reports a personal unread count and keeps read and acknowledge actions distinct', { tag }, async ({ page, request }) => {
   await request.post(`${fixtureApi}/fixture/reset`, { data: { visited: true, notificationDeliveries: true } });
   await prepare(page, request);
