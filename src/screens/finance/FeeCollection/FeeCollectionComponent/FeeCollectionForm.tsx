@@ -7,6 +7,7 @@ import type {
   FeeLedgerMonth,
   CollectFeeInput,
   CollectFeeOutput,
+  FeeCollectFormDto,
 } from 'src/redux/feeCollection/feeCollection';
 
 import dayjs from 'dayjs';
@@ -293,7 +294,9 @@ const FeeCollectComponentForm = ({
     },
   });
 
-  const formData = collectionAdapter ? collectionAdapter.data : studentCollectFormData;
+  const formData: FeeCollectFormDto | undefined = collectionAdapter
+    ? collectionAdapter.data
+    : studentCollectFormData;
   const allocationBasis = formData?.allocationBasis ?? 'Legacy';
   const usesAutomaticAllocation =
     allocationBasis === 'FeeHead' || allocationBasis === 'Installment';
@@ -964,7 +967,11 @@ const FeeCollectComponentForm = ({
   const changeSelection = (
     items: SelectedItem[],
     chargeIds: string[],
-    amount = selectionAmount(items, chargeIds, chargesData)
+    amount: FeeCollectionFormValues['payment']['amount'] = selectionAmount(
+      items,
+      chargeIds,
+      chargesData
+    )
   ) => {
     if (adaptedOutcomeUnresolved) return;
     submissionRef.current = null;
