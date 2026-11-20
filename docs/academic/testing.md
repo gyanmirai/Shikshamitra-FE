@@ -120,6 +120,8 @@ Run `npm test -- notification-rule-drawer.test.tsx` to verify the **Daily digest
 
 Run `npm test -- src/screens/academic/AcademicNotification src/components/notification-inbox` for the workspace and inbox, including safe links, separate read and acknowledgement, and account switching. Run `npx playwright test --config e2e/academic/academic-notification-rules.config.mjs` for scoped Rules, template publication, Delivery History and the personal inbox at a phone viewport with the synthetic school. The retry cases verify the selected attempt ID, queued status, retained failure evidence and conflict recovery. Approval cases open an assigned request from the queue, review samples, confirm approval or rejection, and verify that a changed request loses its Approve action.
 
+The unavailable-event case checks the source explanation in the Rules table and configuration drawer. It verifies the disabled Enabled switch and readable drawer content at phone, tablet and desktop widths.
+
 Run `npm test -- src/components/academic-notification-action` for reviewed sends, repeated confirmation clicks, changed reviews, and interrupted confirmation retries. The focused Playwright config also verifies that a reminder from the Homework evaluation table supplies exactly the selected student and opens the queued operation. This scenario uses a synthetic source and sends only to the fixture API.
 
 `e2e/academic/academic-notifications.spec.ts` checks the saved template preview, the test-send confirmation, the linked operation's queued and delivered states, and the sample in the personal inbox at the three standard viewport sizes. It uses the same focused Playwright config and the synthetic delivery fixture.

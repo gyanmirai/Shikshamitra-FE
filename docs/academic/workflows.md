@@ -102,6 +102,8 @@ When the roster's server capability permits locked corrections, an edit action a
 
 Open **Academics → Notification** and select a category and rule scope. The table shows the effective saved rule, including rules inherited from a broader scope. Older category links open the matching category.
 
+For an unavailable event, **Delivery readiness** and **Configure Rule** show which Academic workflow the event needs or which existing notice covers it. The rule stays unavailable until its source workflow supports sending.
+
 Staff with rule edit access can use **Configure** to submit a rule for the selected scope. The primary guardian is included for family events. The editor offers choices for additional guardians, the student account, and other recipients where the event supports them. Enabling requires published templates for the selected recipients and channels. Conflicts keep the current draft open.
 
 For Homework Submitted and Assignment Submitted, **Daily digest time** closes the submission count in the school's time zone. Assigned teachers are selected by default for a new rule. Use published teacher templates to enable the digest.

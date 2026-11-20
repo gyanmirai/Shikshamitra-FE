@@ -27,7 +27,19 @@ const columns: IColumn[] = [
   ) },
   { id: 'readiness', label: 'Delivery readiness', minWidth: 245, render: (_, record) => {
     const row = record as AcademicNotificationRuleRow;
-    if (!row.event.availability.isAvailable) return 'Event integration unavailable';
+    const { availability, availabilityDetail } = row.event;
+    if (!availability.isAvailable) {
+      return (
+        <Stack gap={0.5}>
+          <Typography variant="body2">Event integration unavailable</Typography>
+          {availabilityDetail && (
+            <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'normal' }}>
+              {availabilityDetail}
+            </Typography>
+          )}
+        </Stack>
+      );
+    }
     const missing = row.deliveryChannels.filter((channel) => !channel.configured);
     const configuration = row.item.effectiveRule?.configuration;
     return (

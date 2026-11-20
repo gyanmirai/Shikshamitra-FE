@@ -32,6 +32,7 @@ export interface AcademicNotificationEvent {
     allowsQuietHoursBypass: boolean;
   };
   availability: { isAvailable: boolean; reasonCode: string | null };
+  availabilityDetail?: string | null;
   manualAvailability?: AcademicNotificationEvent['availability'];
 }
 

@@ -15,7 +15,7 @@ Use the [backend API reference](../../../Shikshamitra-BE/docs/modules/academic/a
 
 ## Notification rules client
 
-`src/redux/academic-notifications/api.ts` supplies the Rules workspace with the event catalogue, paged effective rules, published template choices, and scoped rule saves. Template choices use a metadata endpoint that also finds published versions when a newer draft exists.
+`src/redux/academic-notifications/api.ts` supplies the Rules workspace with the event catalogue, paged effective rules, published template choices, and scoped rule saves. The Rules table and drawer read the optional `availabilityDetail` from the catalogue. Template choices use a metadata endpoint that also finds published versions when a newer draft exists.
 
 Weekly summary rules pass a weekday as `timing.weeklySummaryDay` alongside the school-local `timing.reminderLocalTime`.
 The catalogue cache is keyed by tenant and user. The task reminder reads `manualAvailability` when present. The Rules workspace uses `availability` to show which events can run automatically. The rule cache also includes the requested academic hierarchy, event filter and page. Each request verifies the identity of the session that supplies the token. The request sends the hierarchy and paging fields, and the save sends the current rule concurrency stamp. Successful saves refresh rule queries for the same user and tenant. Rejected saves retain the existing results.

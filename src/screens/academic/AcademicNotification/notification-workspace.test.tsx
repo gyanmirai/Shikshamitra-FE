@@ -34,6 +34,7 @@ vi.mock('./use-notification-workspace-scope', () => ({
 const subject = {
   definition: { eventKey: 'Academic.Subject.Published', category: 'Subject', triggerType: 0, supportedChannels: [3] },
   availability: { isAvailable: false, reasonCode: 'Communication:Notification:SourceUnavailable' },
+  availabilityDetail: 'This notice requires a published subject workflow.',
 };
 const homework = {
   definition: { eventKey: 'Academic.Homework.Published', category: 'Homework', triggerType: 0, supportedChannels: [3] },
@@ -80,6 +81,7 @@ describe('Academic notification rules workspace', () => {
     expect(screen.queryByText('Homework published')).not.toBeInTheDocument();
     expect(screen.getByText('Disabled · inherited')).toBeVisible();
     expect(screen.getByText('Event integration unavailable')).toBeVisible();
+    expect(screen.getByText(subject.availabilityDetail)).toBeVisible();
     expect(within(table).queryByRole('switch')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Configure Subject published' })).not.toBeInTheDocument();
   });

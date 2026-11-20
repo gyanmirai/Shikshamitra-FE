@@ -52,6 +52,20 @@ function renderDrawer(value = row) {
 describe('Configure Academic notification rule', () => {
   beforeEach(() => vi.clearAllMocks());
 
+  it('explains why an unavailable event cannot be enabled', () => {
+    const detail = 'A withdrawal notice needs the list of families who could see the published homework.';
+    renderDrawer({
+      ...row,
+      event: {
+        ...row.event,
+        availability: { isAvailable: false, reasonCode: 'Communication:Notification:SourceUnavailable' },
+        availabilityDetail: detail,
+      },
+    });
+    expect(screen.getByRole('alert')).toHaveTextContent(detail);
+    expect(screen.getByRole('switch', { name: 'Enabled' })).toBeDisabled();
+  });
+
   it('includes the primary guardian by default and requires a published template before enabling', async () => {
     const user = userEvent.setup();
     renderDrawer();

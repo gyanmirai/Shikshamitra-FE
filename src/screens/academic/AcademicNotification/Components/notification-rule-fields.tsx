@@ -29,7 +29,7 @@ const guardians = [
 ];
 
 export function NotificationRuleFields({ row, form, templates, isLoading, isError, retry }: Props) {
-  const { definition, availability } = row.event;
+  const { definition, availability, availabilityDetail } = row.event;
   const staff = staffRuleSelectors(row.event);
   const current = form.values;
   const isSubstitutionReminder = row.id === substitutionAcknowledgementEvent;
@@ -53,7 +53,9 @@ export function NotificationRuleFields({ row, form, templates, isLoading, isErro
           <Switch checked={current.enabled} onChange={(_, enabled) => form.setFieldValue('enabled', enabled)}
             disabled={!availability.isAvailable && !current.enabled} />
         } />
-        {!availability.isAvailable && <Alert severity="info">This event integration is unavailable.</Alert>}
+        {!availability.isAvailable && (
+          <Alert severity="info">{availabilityDetail ?? 'This event integration is unavailable.'}</Alert>
+        )}
         {showErrors && form.errors.enabled && <Alert severity="warning">{form.errors.enabled}</Alert>}
       </FormSectionCard>
       <FormSectionCard title="Recipients">

@@ -264,7 +264,7 @@
           "roles": ["academic-admin"],
           "permissions": ["Academics.Notification.View", "Academics.Notification.Add"],
           "forms": ["notification rule editor"],
-          "businessActions": ["view effective notification rules", "save a scoped notification rule", "request a retry for a definitively rejected channel attempt", "review and decide an assigned notification approval", "follow a template test from its confirmation to delivery history and the personal inbox"],
+          "businessActions": ["view effective notification rules", "review an unavailable event's source requirement", "save a scoped notification rule", "request a retry for a definitively rejected channel attempt", "review and decide an assigned notification approval", "follow a template test from its confirmation to delivery history and the personal inbox"],
           "risk": "high",
           "status": "confirmed"
         },

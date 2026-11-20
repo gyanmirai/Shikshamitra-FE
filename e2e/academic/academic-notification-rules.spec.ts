@@ -4,6 +4,33 @@ import { login, prepare, snapshot, fixtureApi, expectHealthy } from './academic-
 
 const tag = ['@module-academic', '@submodule-notifications', '@regression', '@responsive', '@accessibility'];
 
+test('explains what an unavailable event needs in Rules and Configure Rule', { tag }, async ({ page, request }) => {
+  await request.post(`${fixtureApi}/fixture/reset`, { data: { visited: true, notificationRules: true } });
+  await prepare(page, request);
+  await login(page);
+  await page.goto('/academic/notification?category=examinations');
+  const table = page.getByRole('table', { name: 'Academic notification rules table' });
+  const reason = 'This notice requires a saved exam reschedule and a list of the people affected.';
+  await expect(table.getByText('Event integration unavailable')).toBeVisible();
+  await expect(table.getByText(reason)).toBeVisible();
+  await table.getByRole('button', { name: 'Configure Exam rescheduled' }).click();
+  const drawer = page.getByRole('dialog', { name: 'Configure Rule' });
+  await expect(drawer.getByRole('alert')).toHaveText(reason);
+  await expect(drawer.getByRole('switch', { name: 'Enabled' })).toBeDisabled();
+
+  async function checkViewport(width: number, height: number) {
+    await page.setViewportSize({ width, height });
+    await expect(drawer.getByText(reason)).toBeInViewport();
+    await expect(drawer.getByRole('button', { name: 'Cancel' })).toBeInViewport();
+    await expectHealthy(page);
+  }
+  await checkViewport(390, 844);
+  await checkViewport(768, 1024);
+  await checkViewport(1440, 900);
+  await drawer.getByRole('button', { name: 'Cancel' }).click();
+  expect((await snapshot(request)).notificationRuleWrites).toEqual([]);
+});
+
 test('legacy category link opens the scoped Rules workspace and saves an override', { tag }, async ({ page, request }) => {
   await request.post(`${fixtureApi}/fixture/reset`, { data: { visited: true, notificationRules: true } });
   await prepare(page, request);

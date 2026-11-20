@@ -4,6 +4,17 @@ import { createNotificationTemplatesFixture } from './notification-templates.mjs
 
 const root = '/api/academic/notifications';
 const eventKey = 'Academic.Homework.Published';
+const examEventKey = 'Academic.Exam.Rescheduled';
+const unavailableExam = {
+  definition: {
+    eventKey: examEventKey, category: 'Exam', sourceType: 'Academic.Exam',
+    linkBuilderKey: 'Academic.Exam', schemaVersion: 1, triggerType: 0, deliveryProfile: 1,
+    recipientSelectors: ['PrimaryGuardian', 'AdditionalGuardians', 'StudentAccount'],
+    supportedChannels: [3, 2, 0, 4], variables: [], materialChangeFields: [], allowsQuietHoursBypass: false,
+  },
+  availability: { isAvailable: false, reasonCode: 'Communication:Notification:SourceUnavailable' },
+  availabilityDetail: 'This notice requires a saved exam reschedule and a list of the people affected.',
+};
 const templateId = '11111111-0000-4111-8111-111111111111';
 const parentRule = {
   id: 'school-rule', eventKey, scope: {}, enabled: false, revision: 1,
@@ -29,13 +40,16 @@ export function createNotificationRulesFixture(queueTemplateTest) {
               materialChangeFields: [], allowsQuietHoursBypass: false,
             },
             availability: { isAvailable: true, reasonCode: null },
-          }],
+          }, unavailableExam],
           channels: [{ channel: 3, isConfigured: true }, { channel: 2, isConfigured: false }],
         });
       } else if (url.pathname === `${root}/rules` && method === 'GET') {
         const keys = ['academicYearId', 'boardId', 'mediumId', 'classId', 'divisionId'];
         const requestedScope = Object.fromEntries(keys.flatMap((key) => url.searchParams.has(key) ? [[key, url.searchParams.get(key)]] : []));
-        send(200, paged([{ eventKey, requestedScope, effectiveRule: rule ?? parentRule, isInherited: !rule }]));
+        send(200, paged([
+          { eventKey, requestedScope, effectiveRule: rule ?? parentRule, isInherited: !rule },
+          { eventKey: examEventKey, requestedScope, effectiveRule: null, isInherited: false },
+        ]));
       } else if (url.pathname === `${root}/templates/options` && method === 'GET') {
         send(200, paged([{
           templateId, revisionId: 'published-revision', templateName: 'Homework notice',
