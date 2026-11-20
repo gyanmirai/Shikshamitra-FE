@@ -3,12 +3,20 @@ import { academicNotificationsRoot, academicNotificationCacheOwner } from './req
 
 import type { AcademicNotificationCacheIdentity } from './types';
 import type { AcademicNotificationOperation } from './delivery-types';
-import type { AcademicNotificationReview, PreviewAcademicNotification } from './manual-types';
+import type { AcademicNotificationReview, PreviewAcademicNotification, AcademicNotificationRecipient } from './manual-types';
 
 const root = `${academicNotificationsRoot}/manual`;
 
 export const academicNotificationManualApi = academicNotificationDeliveryApi.injectEndpoints({
   endpoints: (builder) => ({
+    diaryFollowUpRecipients: builder.query<
+      AcademicNotificationRecipient[], AcademicNotificationCacheIdentity & { diaryId: string }
+    >({
+      query: ({ diaryId, ...identity }) => ({
+        url: `${root}/diary-follow-up-recipients/${encodeURIComponent(diaryId)}`, method: 'GET',
+        expectedSessionOwner: academicNotificationCacheOwner(identity),
+      }),
+    }),
     previewAcademicNotification: builder.mutation<
       AcademicNotificationReview, AcademicNotificationCacheIdentity & { input: PreviewAcademicNotification }
     >({
@@ -30,4 +38,4 @@ export const academicNotificationManualApi = academicNotificationDeliveryApi.inj
   }),
 });
 
-export const { usePreviewAcademicNotificationMutation, useSendAcademicNotificationMutation } = academicNotificationManualApi;
+export const { useDiaryFollowUpRecipientsQuery, usePreviewAcademicNotificationMutation, useSendAcademicNotificationMutation } = academicNotificationManualApi;

@@ -112,6 +112,8 @@ Run `npm test -- src/screens/academic/AcademicNotification src/components/notifi
 
 Run `npm test -- src/components/academic-notification-action` for reviewed sends, repeated confirmation clicks, changed reviews, and interrupted confirmation retries. The focused Playwright config also verifies that a reminder from the Homework evaluation table supplies exactly the selected student and opens the queued operation. This scenario uses a synthetic source and sends only to the fixture API.
 
+Run `npm test -- LessonDiaryDetailsDrawer.presentation.test.tsx` to verify that a submitted diary opens the shared preview with the exact selected teacher or reviewer and a draft hides both actions.
+
 ```powershell
 npm test -- src/hooks/notifications src/redux/auth/load-session.test.tsx src/redux/auth/load-session-recovery.test.tsx
 npx eslint --no-config-lookup --global self --global URL --rule "no-undef:error" --rule "no-unused-vars:error" public/notification-sw.js --max-warnings 0

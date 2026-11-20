@@ -6,10 +6,12 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { Box, Stack, Button, Typography, IconButton } from '@mui/material';
+import { notificationRecordId } from 'src/redux/academic-notifications/delivery-adapters';
 
 import { StatusBadge } from './LessonDiaryDetailFields';
 import { LessonPlanDetailSection } from './LessonPlanDetailSection';
 import { TeacherDiaryDetailSections } from './TeacherDiaryDetailSections';
+import { TeacherDiaryNotificationActions } from './TeacherDiaryNotificationActions';
 
 import type { LessonPlanRow, TeacherDiaryRow } from '../lessonPlanData';
 
@@ -24,6 +26,7 @@ const LessonDiaryDetailsDrawer = ({ open, plan, diary, onClose }: Props) => {
   if (!plan) return null;
 
   const planStatus = plan.planStatus || plan.status || '';
+  const diaryId = open && diary?.diaryStatus === 'Submitted' ? notificationRecordId(diary.id) : undefined;
 
   return (
     <Drawer
@@ -121,12 +124,16 @@ const LessonDiaryDetailsDrawer = ({ open, plan, diary, onClose }: Props) => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'flex-end',
+          flexWrap: 'wrap',
           gap: 1,
           borderTop: '1px solid',
           borderColor: 'divider',
           bgcolor: 'background.paper',
         }}
       >
+        {diaryId && (
+          <TeacherDiaryNotificationActions key={diaryId} diaryId={diaryId} teacherName={plan.teacherName} />
+        )}
         <Button
           variant="outlined"
           startIcon={<Iconify icon="mdi:close" />}

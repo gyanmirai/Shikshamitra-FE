@@ -126,6 +126,12 @@ In **Evaluation & Feedback**, select a published homework or assignment, then us
 
 Choose available channels and select **Preview recipients**. Review eligible counts, exclusions, and sample messages before selecting **Confirm send** or **Request approval**. A changed review needs a fresh preview. If the confirmation response is interrupted, **Retry confirmation** checks the same send. Open **Delivery History** to follow the accepted operation.
 
+## Send a teacher diary follow-up
+
+Open **Academics → Lesson Plan / Teacher Diary**, select **Teacher Diary**, then open a submitted entry. Choose **Notify teacher** or **Notify reviewer**, when the reviewer option is available. Choose your channels, select **Preview recipients**, and review the recipient and message before selecting **Confirm send**. Open **Delivery History** from the confirmation result.
+
+Saving and submitting a diary leave notifications silent. The follow-up uses the published template for the selected staff role. Diary notes stay in the diary.
+
 ## Review delivery history
 
 Open Delivery History with a link to a notification operation or Academic source. Filter the attempt table by delivery status. Provider acceptance, delivery and read receipts each have their own status, and the Columns menu exposes the available timestamps. When acceptance is unknown, review the provider outcome before retrying. Staff with access to cancel can stop pending work and see how much work is already in progress.
