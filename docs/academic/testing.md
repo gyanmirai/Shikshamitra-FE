@@ -3,7 +3,7 @@ module: academic
 domain: validation
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-11-19
+updated_on: 2026-11-20
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -113,6 +113,8 @@ Run `npm test -- notification-rule-drawer.test.tsx` to verify the **Daily digest
 Run `npm test -- src/screens/academic/AcademicNotification src/components/notification-inbox` for the workspace and inbox, including safe links, separate read and acknowledgement, and account switching. Run `npx playwright test --config e2e/academic/academic-notification-rules.config.mjs` for scoped Rules, template publication, Delivery History and the personal inbox at a phone viewport with the synthetic school.
 
 Run `npm test -- src/components/academic-notification-action` for reviewed sends, repeated confirmation clicks, changed reviews, and interrupted confirmation retries. The focused Playwright config also verifies that a reminder from the Homework evaluation table supplies exactly the selected student and opens the queued operation. This scenario uses a synthetic source and sends only to the fixture API.
+
+Run `npm test -- src/components/academic-notification-action src/screens/academic/student-academic-360` to check Student Academic 360 recipient defaults, explicit relationship selection, published template selection and review invalidation when the audience changes. Browser acceptance should open each action from a saved student drawer and verify the child identity, meeting request wording, channel exclusions and return to the student after closing the composer.
 
 Run `npm test -- LessonDiaryDetailsDrawer.presentation.test.tsx` to verify that a submitted diary opens the shared preview with the exact selected teacher or reviewer and a draft hides both actions.
 

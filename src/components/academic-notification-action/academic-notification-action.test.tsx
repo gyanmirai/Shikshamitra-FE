@@ -83,6 +83,49 @@ describe('Reviewed Academic notification', () => {
     );
   });
 
+  it('defaults to the primary guardian and sends only explicitly selected family relationships', async () => {
+    const user = userEvent.setup();
+    const studentContext = {
+      ...context, source: { ...context.source, eventKey: 'Academic.Student360.GuardianMessage', sourceType: 'Academic.Student360' },
+    };
+    const child = { kind: 'Student', studentId: 'one-student' };
+    renderWithProviders(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <AcademicNotificationAction context={studentContext} recordLabel="Send academic message" audienceLabel="Selected student"
+          selectedRecipients={[]} choices={{
+            audience: [
+              { key: 'mother', label: 'Primary guardian (mother)', defaultSelected: true, recipient: child, relationship: 'mother' },
+              { key: 'father', label: 'Father', recipient: child, relationship: 'father' },
+              { key: 'self', label: 'Student account', recipient: child, relationship: 'self' },
+            ],
+            templates: [{ value: 'published-template', label: 'Family academic update' }],
+          }} onClose={vi.fn()} />
+      </ThemeProvider>
+    );
+
+    expect(screen.getByRole('checkbox', { name: 'Primary guardian (mother)' })).toBeChecked();
+    expect(screen.getByRole('checkbox', { name: 'Student account' })).not.toBeChecked();
+    await user.click(screen.getByRole('button', { name: 'Preview recipients' }));
+    expect(mocked.preview).toHaveBeenLastCalledWith({
+      ...context.identity, input: { ...studentContext.source, channels: [3], selectedRecipients: [child], selectedFamilyRelationships: ['mother'] },
+    });
+    await screen.findByRole('button', { name: 'Confirm send' });
+
+    await user.click(screen.getByRole('checkbox', { name: 'Primary guardian (mother)' }));
+    await user.click(screen.getByRole('checkbox', { name: 'Father' }));
+    await user.click(screen.getByRole('checkbox', { name: 'Student account' }));
+    expect(screen.queryByRole('button', { name: 'Confirm send' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('combobox', { name: 'Preferred template' }));
+    await user.click(screen.getByRole('option', { name: 'Family academic update' }));
+    await user.click(screen.getByRole('button', { name: 'Preview recipients' }));
+    expect(mocked.preview).toHaveBeenLastCalledWith({
+      ...context.identity, input: {
+        ...studentContext.source, channels: [3], selectedRecipients: [child],
+        selectedFamilyRelationships: ['father', 'self'], templateId: 'published-template',
+      },
+    });
+  });
+
   it('retains the previous review when the server requires a refresh and invalidates it when channels change', async () => {
     mocked.send.mockImplementationOnce(() => ({
       unwrap: async () => {

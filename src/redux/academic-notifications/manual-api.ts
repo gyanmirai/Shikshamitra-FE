@@ -3,7 +3,7 @@ import { academicNotificationsRoot, academicNotificationCacheOwner } from './req
 
 import type { AcademicNotificationCacheIdentity } from './types';
 import type { AcademicNotificationOperation } from './delivery-types';
-import type { AcademicNotificationReview, PreviewAcademicNotification, AcademicNotificationRecipient } from './manual-types';
+import type { AcademicNotificationReview, PreviewAcademicNotification, AcademicNotificationRecipient, Student360NotificationAudience } from './manual-types';
 
 const root = `${academicNotificationsRoot}/manual`;
 
@@ -14,6 +14,14 @@ export const academicNotificationManualApi = academicNotificationDeliveryApi.inj
     >({
       query: ({ diaryId, ...identity }) => ({
         url: `${root}/diary-follow-up-recipients/${encodeURIComponent(diaryId)}`, method: 'GET',
+        expectedSessionOwner: academicNotificationCacheOwner(identity),
+      }),
+    }),
+    student360NotificationAudience: builder.query<
+      Student360NotificationAudience, AcademicNotificationCacheIdentity & { eventKey: string; studentId: string }
+    >({
+      query: ({ studentId, eventKey, ...identity }) => ({
+        url: `${root}/student-360-audience/${encodeURIComponent(studentId)}`, method: 'GET', params: { eventKey },
         expectedSessionOwner: academicNotificationCacheOwner(identity),
       }),
     }),
@@ -38,4 +46,7 @@ export const academicNotificationManualApi = academicNotificationDeliveryApi.inj
   }),
 });
 
-export const { useDiaryFollowUpRecipientsQuery, usePreviewAcademicNotificationMutation, useSendAcademicNotificationMutation } = academicNotificationManualApi;
+export const {
+  useDiaryFollowUpRecipientsQuery, usePreviewAcademicNotificationMutation,
+  useSendAcademicNotificationMutation, useStudent360NotificationAudienceQuery,
+} = academicNotificationManualApi;

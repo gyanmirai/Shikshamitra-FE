@@ -1,7 +1,6 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { AcademicNotificationRecipient } from 'src/redux/academic-notifications/manual-types';
 
 import { useSelector } from 'react-redux';
 import { hasGrantedPermission } from 'src/utils/permissions';
@@ -13,7 +12,7 @@ import { academicNotificationCacheOwner } from 'src/redux/academic-notifications
 
 import { AcademicNotificationPreviewDialog } from './preview-dialog';
 
-import type { AcademicNotificationActionContext } from './preview-dialog';
+import type { AcademicNotificationActionProps, AcademicNotificationActionContext } from './preview-dialog';
 
 export function useAcademicNotificationActionContext(eventKey: string, sourceId?: string | null): AcademicNotificationActionContext | undefined {
   const { user, sessionContext, permissions, permissionsInitialized } = useSelector((state: RootState) => state.auth);
@@ -40,15 +39,9 @@ export function useAcademicNotificationActionContext(eventKey: string, sourceId?
   };
 }
 
-export function AcademicNotificationAction({ context, recordLabel, audienceLabel, selectedRecipients, onClose }: {
-  context: AcademicNotificationActionContext;
-  recordLabel: string;
-  audienceLabel: string;
-  selectedRecipients: AcademicNotificationRecipient[];
-  onClose: () => void;
-}) {
-  if (!selectedRecipients.length) return null;
+export function AcademicNotificationAction(props: AcademicNotificationActionProps) {
+  const { context, selectedRecipients, choices } = props;
+  if (!choices && !selectedRecipients.length) return null;
   const key = JSON.stringify([academicNotificationCacheOwner(context.identity), context.source, context.options, selectedRecipients]);
-  return <AcademicNotificationPreviewDialog key={key}
-    {...{ context, recordLabel, audienceLabel, selectedRecipients, onClose }} />;
+  return <AcademicNotificationPreviewDialog key={key} {...props} />;
 }

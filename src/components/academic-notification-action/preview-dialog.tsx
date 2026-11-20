@@ -8,6 +8,7 @@ import { useFormik } from 'formik';
 import { useRouter } from 'next/navigation';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import CustomSelect from 'src/components/custom-select';
 import { academicPaths } from 'src/constants/academic-menu';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { useFormikErrorFocus } from 'src/hooks/use-formik-error-focus';
@@ -29,25 +30,62 @@ export interface AcademicNotificationActionContext {
   options: ChannelOption[];
 }
 
-export function AcademicNotificationPreviewDialog({ context, recordLabel, audienceLabel, selectedRecipients, onClose }: {
+export interface AcademicNotificationActionProps {
   context: AcademicNotificationActionContext;
   recordLabel: string;
   audienceLabel: string;
   selectedRecipients: AcademicNotificationRecipient[];
   onClose: () => void;
-}) {
+  choices?: {
+    audience: {
+      key: string;
+      label: string;
+      defaultSelected?: boolean;
+      recipient: AcademicNotificationRecipient;
+      relationship?: string;
+    }[];
+    templates: { value: string; label: string }[];
+  };
+}
+
+type ComposeValues = { channels: AcademicNotificationChannel[]; audience: string[]; templateId: string };
+
+export function AcademicNotificationPreviewDialog({
+  context, recordLabel, audienceLabel, selectedRecipients, onClose, choices,
+}: AcademicNotificationActionProps) {
   const router = useRouter();
   const { source, identity, options } = context;
   const sender = useReviewedNotificationSend(identity);
   const { review, operation, phase, problem, stale, uncertain } = sender;
   const busy = phase !== 'idle';
-  const form = useFormik<{ channels: AcademicNotificationChannel[] }>({
-    initialValues: { channels: [CommunicationChannelType.InApp] },
+  const form = useFormik<ComposeValues>({
+    initialValues: {
+      channels: [CommunicationChannelType.InApp],
+      audience: choices?.audience.filter((item) => item.defaultSelected).map((item) => item.key) ?? [],
+      templateId: '',
+    },
     validationSchema: Yup.object({
       channels: Yup.array().required().of(Yup.number().oneOf(options.filter((o) => o.configured).map((o) => o.channel)))
         .test('required-in-app', 'In-app delivery is required.', (channels) => Boolean(channels?.includes(CommunicationChannelType.InApp))),
+      ...(choices && {
+        audience: Yup.array().of(Yup.string().oneOf(choices.audience.map((item) => item.key)))
+          .min(1, 'Choose at least one recipient.').required(),
+        templateId: Yup.string().oneOf(['', ...choices.templates.map(({ value }) => value)]),
+      }),
     }),
-    onSubmit: ({ channels }) => sender.loadPreview({ ...source, selectedRecipients, channels }),
+    onSubmit: ({ channels, audience, templateId }) => {
+      if (!choices) return sender.loadPreview({ ...source, selectedRecipients, channels });
+      const picked = choices.audience.filter((item) => audience.includes(item.key));
+      const family = picked.flatMap((item) => item.relationship ? [item.relationship] : []);
+      const recipients = picked.filter((item) => !item.relationship).map((item) => item.recipient);
+      const child = picked.find((item) => item.relationship)?.recipient;
+      if (child) recipients.push(child);
+      return sender.loadPreview({
+        ...source, selectedRecipients: recipients, channels,
+        ...(family.length > 0 && { selectedFamilyRelationships: family }),
+        ...(templateId && { templateId }),
+      });
+    },
   });
   useFormikErrorFocus(form);
   const { confirmation, requestNavigation } = useUnsavedNavigation(!operation && (form.dirty || uncertain), {
@@ -55,6 +93,7 @@ export function AcademicNotificationPreviewDialog({ context, recordLabel, audien
     description: uncertain ? 'The last confirmation may have been accepted. Keep this review open to retry the same send.' : undefined,
   });
   const canConfirm = Boolean(review?.reviewToken && !stale && !busy);
+  const canChoose = !busy && !uncertain;
   const history = operation && `${academicPaths.notification}?view=history&${new URLSearchParams({ operation: operation.operationId })}`;
 
   function changeChannel(channel: AcademicNotificationChannel, checked: boolean) {
@@ -82,6 +121,25 @@ export function AcademicNotificationPreviewDialog({ context, recordLabel, audien
               <Alert severity="info" role="status">{operationStatusLabels[operation.status] ?? 'Send request accepted'}</Alert>
             ) : (
               <>
+                {choices && (
+                  <FormSectionCard title="Recipients" icon={GlobalIcons.sendNotification}>
+                    <Stack gap={0.25} role="group" aria-label="Recipients">
+                      {choices.audience.length === 0 && (
+                        <Alert severity="warning">This student has no eligible recipients for this notification.</Alert>
+                      )}
+                      {choices.audience.map((item) => (
+                        <FormControlLabel key={item.key} label={item.label} control={
+                          <Checkbox size="small" name="audience" value={item.key} disabled={!canChoose}
+                            checked={form.values.audience.includes(item.key)} onChange={(_, checked) => {
+                              const current = form.values.audience;
+                              form.setFieldValue('audience', checked ? [...current, item.key] : current.filter((key) => key !== item.key));
+                              sender.resetReview();
+                            }} />
+                        } />
+                      ))}
+                    </Stack>
+                  </FormSectionCard>
+                )}
                 <FormSectionCard title="Delivery Channels" icon={GlobalIcons.sendNotification}
                   descriptionTooltip="The preview checks channel access, recipient preferences, and matching published templates.">
                   <Stack gap={0.25} role="group" aria-label="Delivery channels">
@@ -95,6 +153,19 @@ export function AcademicNotificationPreviewDialog({ context, recordLabel, audien
                   </Stack>
                   {typeof form.errors.channels === 'string' && <Alert severity="error">{form.errors.channels}</Alert>}
                 </FormSectionCard>
+                {choices && (
+                  <FormSectionCard title="Template" icon={GlobalIcons.sendNotification}
+                    descriptionTooltip="The preferred template is used where it matches the recipient, channel, and language. Other variants use the applicable published template.">
+                    <CustomSelect name="templateId" label="Preferred template" size="small" fullWidth
+                      disabled={!canChoose || choices.templates.length === 0}
+                      helperText={choices.templates.length === 0 ? 'No published templates are available for this event.' : undefined}
+                      options={[{ value: '', label: 'Use matching published templates' }, ...choices.templates]}
+                      value={form.values.templateId} onChange={(value) => {
+                        if (typeof value === 'string') form.setFieldValue('templateId', value);
+                        sender.resetReview();
+                      }} />
+                  </FormSectionCard>
+                )}
                 {review && <AcademicNotificationReviewDetails review={review} stale={stale} />}
               </>
             )}
@@ -109,7 +180,7 @@ export function AcademicNotificationPreviewDialog({ context, recordLabel, audien
           ) : (
             <>
               {!uncertain && (
-                <Button size="small" variant="outlined" type="submit" disabled={busy} loading={phase === 'previewing'}
+                <Button size="small" variant="outlined" type="submit" disabled={busy || Boolean(choices && (!form.values.audience.length || !choices.templates.length))} loading={phase === 'previewing'}
                   startIcon={<Iconify icon={GlobalIcons.eye} />}>{review ? 'Refresh preview' : 'Preview recipients'}</Button>
               )}
               {review?.reviewToken && (

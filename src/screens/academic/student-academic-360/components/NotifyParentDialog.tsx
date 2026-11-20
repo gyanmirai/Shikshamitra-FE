@@ -1,130 +1,108 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Iconify } from 'src/components/iconify';
+import type { AcademicNotificationActionContext } from 'src/components/academic-notification-action/preview-dialog';
+
 import { GlobalIcons } from 'src/utils/icons';
-import { shikshaMitraToast } from 'src/components/toast';
+import { Iconify } from 'src/components/iconify';
+import { skipToken } from '@reduxjs/toolkit/query';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Box, Button, Stack, TextField, Typography, DialogActions } from '@mui/material';
-import { Label } from 'src/components/label';
+import { Alert, Stack, Button, DialogActions, LinearProgress } from '@mui/material';
+import { useAcademicNotificationTemplateOptionsQuery } from 'src/redux/academic-notifications/api';
+import { useStudent360NotificationAudienceQuery } from 'src/redux/academic-notifications/manual-api';
+import { AcademicNotificationAction, useAcademicNotificationActionContext } from 'src/components/academic-notification-action';
 
-import { getStudentName } from '../types';
-import type { Academic360StudentRow, Academic360Alert } from '../types';
+const guardianMessage = 'Academic.Student360.GuardianMessage';
+const meetingRequested = 'Academic.Student360.MeetingRequested';
 
-type NotifyParentDialogProps = {
-  open: boolean;
-  student: Academic360StudentRow | null;
-  alerts?: Academic360Alert[];
-  onClose: () => void;
+export type Student360NotificationEvent = typeof guardianMessage | typeof meetingRequested;
+
+const eventLabels = {
+  [guardianMessage]: 'Send academic message',
+  [meetingRequested]: 'Request a meeting',
 };
 
-const buildDefaultMessage = (student: Academic360StudentRow, alerts: Academic360Alert[]) => {
-  const name = getStudentName(student) || 'your ward';
-  const cls = student.standardName ?? student.standard ?? '';
-  const div = student.divisionName ?? student.division ?? '';
-  const classPart = cls ? ` of ${cls}${div ? ` ${div}` : ''}` : '';
+const familyLabels = { father: 'Father', mother: 'Mother', guardian: 'Other guardian', self: 'Student account' };
 
-  const alertSummary =
-    alerts.length > 0
-      ? `\n\nAcademic concern(s) noted:\n${alerts.map((a, i) => `${i + 1}. ${a.title}: ${a.message}`).join('\n')}`
-      : '';
-
-  return `Dear Parent,\n\nThis is an important update regarding ${name}${classPart}.${alertSummary}\n\nPlease reach out to us at your earliest convenience to discuss the student's academic progress.\n\nRegards,\nShikshaMitra Team`;
+type Student360NotificationActionsProps = {
+  studentId: string;
+  studentName: string;
+  event: Student360NotificationEvent | undefined;
+  onEventChange: (event: Student360NotificationEvent | undefined) => void;
 };
 
-export function NotifyParentDialog({ open, student, alerts = [], onClose }: NotifyParentDialogProps) {
-  const [message, setMessage] = useState('');
-  const [isSending, setIsSending] = useState(false);
+export function Student360NotificationActions({ studentId, studentName, event, onEventChange }: Student360NotificationActionsProps) {
+  const messageContext = useAcademicNotificationActionContext(guardianMessage, studentId);
+  const meetingContext = useAcademicNotificationActionContext(meetingRequested, studentId);
+  const context = event === guardianMessage ? messageContext : event === meetingRequested ? meetingContext : undefined;
 
-  // Reset message when dialog opens with a new student
-  React.useEffect(() => {
-    if (open && student) {
-      setMessage(buildDefaultMessage(student, alerts));
-    }
-  }, [open, student, alerts]);
-
-  const handleSend = async () => {
-    if (!message.trim()) {
-      shikshaMitraToast.warning({ message: 'Please enter a message before sending.' });
-      return;
-    }
-    setIsSending(true);
-    try {
-      // Placeholder — integrate with parent-communication API in follow-up
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      shikshaMitraToast.success({ message: 'Notification sent to parent successfully.' });
-      onClose();
-    } catch {
-      shikshaMitraToast.error({ message: 'Failed to send notification. Please try again.' });
-    } finally {
-      setIsSending(false);
-    }
-  };
-
-  const studentName = student ? getStudentName(student) : '';
+  if (!messageContext && !meetingContext) return null;
 
   return (
-    <CustomDialog
-      open={open}
-      handleClose={onClose}
-      maxWidth="sm"
-      title={
-        <Box display="flex" flexDirection="row" gap={1} alignItems="center" component="span">
-          <Box component="span" sx={{ fontWeight: 700, fontSize: '1.05rem' }}>
-            Notify Parent
-          </Box>
-          {studentName && (
-            <Label color="info" variant="soft">{studentName}</Label>
-          )}
-        </Box>
-      }
-    >
-      <DialogScrollContent>
-        <Stack spacing={2}>
-          {alerts.length > 0 && (
-            <Box sx={{ p: 1.5, borderRadius: 1.5, bgcolor: 'warning.lighter', border: 1, borderColor: 'warning.light' }}>
-              <Stack direction="row" spacing={1} alignItems="center">
-                <Iconify icon="mdi:alert-circle-outline" width={16} sx={{ color: 'warning.main', flexShrink: 0 }} />
-                <Typography variant="caption" color="warning.dark">
-                  {alerts.length} academic alert{alerts.length > 1 ? 's' : ''} detected — pre-filled below.
-                </Typography>
-              </Stack>
-            </Box>
-          )}
+    <Stack direction="row" flexWrap="wrap" gap={1} sx={{ px: 1.5, py: 1 }}>
+      {messageContext && <Button size="small" variant="outlined" color="inherit"
+        startIcon={<Iconify icon={GlobalIcons.sendNotification} />} onClick={() => onEventChange(guardianMessage)}>
+        {eventLabels[guardianMessage]}
+      </Button>}
+      {meetingContext && <Button size="small" variant="outlined" color="inherit"
+        startIcon={<Iconify icon={GlobalIcons.sendNotification} />} onClick={() => onEventChange(meetingRequested)}>
+        {eventLabels[meetingRequested]}
+      </Button>}
+      {event && context && <NotifyParentDialog key={`${event}/${studentId}`} context={context}
+        studentName={studentName} event={event} onClose={() => onEventChange(undefined)} />}
+    </Stack>
+  );
+}
 
-          <TextField
-            label="Message"
-            multiline
-            minRows={6}
-            maxRows={14}
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            fullWidth
-            size="small"
-            helperText="This message will be sent to the student's registered parent / guardian."
-          />
-        </Stack>
+function NotifyParentDialog({ context, studentName, event, onClose }: {
+  context: AcademicNotificationActionContext;
+  studentName: string;
+  event: Student360NotificationEvent;
+  onClose: () => void;
+}) {
+  const { identity, source } = context;
+  const audience = useStudent360NotificationAudienceQuery({
+    ...identity, studentId: source.sourceId, eventKey: event,
+  }, { refetchOnMountOrArgChange: true });
+  const templates = useAcademicNotificationTemplateOptionsQuery(audience.currentData && !audience.isFetching ? {
+    ...identity, eventKey: event, academicMediumId: audience.currentData.academicMediumId,
+  } : skipToken);
+  const roster = audience.currentData;
+  const templateOptions = templates.currentData;
+  const error = audience.isError || templates.isError;
 
-        <DialogActions sx={{ p: 0, pt: 2, boxShadow: 'none' }}>
-          <Button
-            variant="outlined"
-            size="small"
-            startIcon={<Iconify icon={GlobalIcons.cancel} />}
-            onClick={onClose}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="contained"
-            size="small"
-            disabled={isSending}
-            startIcon={<Iconify icon={isSending ? 'mdi:loading' : 'mdi:send'} />}
-            onClick={handleSend}
-          >
-            {isSending ? 'Sending…' : 'Send Notification'}
-          </Button>
+  if (error || !roster || !templateOptions || audience.isFetching) {
+    return (
+      <CustomDialog open title="Prepare Notification" maxWidth="sm" handleClose={onClose} guardUnsavedChanges={false}>
+        <DialogScrollContent>
+          {error ? <Alert severity="error">Unable to load the recipients or published templates.</Alert> :
+            <LinearProgress aria-label="Loading recipients and templates" />}
+        </DialogScrollContent>
+        <DialogActions>
+          <Button size="small" variant="outlined" color="inherit" onClick={onClose}>Close</Button>
+          {error && <Button size="small" variant="contained" onClick={() => {
+            if (audience.isError) audience.refetch();
+            else templates.refetch();
+          }}>Retry</Button>}
         </DialogActions>
-      </DialogScrollContent>
-    </CustomDialog>
+      </CustomDialog>
+    );
+  }
+
+  const child = { kind: 'Student', studentId: source.sourceId };
+  const family = roster.family.map(({ relationship, isPrimary }) => ({
+    key: relationship, relationship, defaultSelected: isPrimary, recipient: child,
+    label: isPrimary ? `Primary guardian (${familyLabels[relationship].toLowerCase()})` : familyLabels[relationship],
+  }));
+  const staff = roster.staff.map((recipient) => ({
+    key: recipient.userId ?? recipient.kind, label: 'Class teacher', recipient,
+  }));
+  const templateNames = new Map(templateOptions.items.map(({ templateId, templateName }) => [templateId, templateName]));
+  return (
+    <AcademicNotificationAction context={context} recordLabel={eventLabels[event]} audienceLabel={studentName} selectedRecipients={[]}
+      choices={{
+        audience: [...family, ...staff],
+        templates: Array.from(templateNames, ([value, label]) => ({ value, label })),
+      }}
+      onClose={onClose} />
   );
 }

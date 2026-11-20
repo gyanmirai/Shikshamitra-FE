@@ -3,7 +3,7 @@ module: academic
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-11-19
+updated_on: 2026-11-20
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -133,6 +133,14 @@ Save the draft and load its preview with sample data. Publish it to make that ve
 In **Evaluation & Feedback**, select a published homework or assignment, then use **Send reminder** on an unsubmitted student's row. The action is available when the school has the corresponding Academic event integration. The review applies the current recipient rule, which defaults family notices to the primary guardian.
 
 Choose available channels and select **Preview recipients**. Review eligible counts, exclusions, and sample messages before selecting **Confirm send** or **Request approval**. A changed review needs a fresh preview. If the confirmation response is interrupted, **Retry confirmation** checks the same send. Open **Delivery History** to follow the accepted operation.
+
+## Send a Student Academic 360 notification
+
+Open a student's detail drawer from **Academics → Student Academic 360**. Select **Send academic message** or **Request a meeting**. The primary guardian is selected when eligible. Choose among the student's eligible guardians and student account. A meeting request can also include the assigned class teacher when available.
+
+Choose delivery channels and optionally choose a **Preferred template**. Review the recipient counts, channel exclusions and sample wording before confirming. The meeting request asks recipients to arrange a time with the school. Use **Delivery History** to check the queued operation.
+
+[Student Academic 360 notification contract](../../../Shikshamitra-BE/docs/modules/academic/api.md#staff-notification-configuration)
 
 ## Send a teacher diary follow-up
 

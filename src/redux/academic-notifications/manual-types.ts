@@ -10,10 +10,17 @@ export interface AcademicNotificationRecipient {
   employeeId?: string;
 }
 
+export interface Student360NotificationAudience {
+  academicMediumId: string | null;
+  family: { relationship: 'father' | 'mother' | 'guardian' | 'self'; isPrimary: boolean }[];
+  staff: AcademicNotificationRecipient[];
+}
+
 export interface PreviewAcademicNotification extends AcademicNotificationSource {
   selectedRecipients: AcademicNotificationRecipient[];
   channels: AcademicNotificationChannel[];
   templateId?: string;
+  selectedFamilyRelationships?: string[];
 }
 
 export interface AcademicNotificationReview {
