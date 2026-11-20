@@ -23,6 +23,7 @@ const validationSchema = Yup.object({
   delayMinutes: Yup.number().integer().min(0).max(10080).required('Enter a delay from 0 to 10080 minutes.'),
   reminderSchoolDaysBefore: Yup.number().integer().min(0).max(365).required('Enter a number from 0 to 365.'),
   reminderLocalTime: Yup.string().required('Enter a time.'),
+  weeklySummaryDay: Yup.number().integer().min(0).max(6).required('Choose a day of the week.'),
   quietStart: Yup.string().when('quietHoursEnabled', { is: true, then: (field) => field.required('Enter the quiet-hours start time.') }),
   quietEnd: Yup.string().when('quietHoursEnabled', { is: true, then: (field) => field.required('Enter the quiet-hours end time.') }),
 });

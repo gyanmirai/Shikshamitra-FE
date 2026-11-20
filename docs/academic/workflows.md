@@ -106,6 +106,8 @@ Staff with rule edit access can use **Configure** to submit a rule for the selec
 
 For Homework Submitted and Assignment Submitted, **Daily digest time** closes the submission count in the school's time zone. Assigned teachers are selected by default for a new rule. Use published teacher templates to enable the digest.
 
+For **Weekly academic summary**, choose a **Day of the week** and **Weekly summary time**. New rules start with Friday at 17:00 in the school's time zone. Publish the recipient and channel templates before enabling. Families get summaries for their linked children, and chosen staff receive division totals. The school can also choose additional authorized family relationships or the eligible student account. [Weekly summary contract](../../../Shikshamitra-BE/docs/modules/academic/api.md#weekly-academic-summary)
+
 For **Progress behind schedule** in Curriculum, **Daily digest time** closes the window for published chapters with saved end dates. Choose the staff recipients and their published templates, then enable the rule. The digest opens Chapter Management. See the [chapter progress digest contract](../../../Shikshamitra-BE/docs/modules/academic/api.md#chapter-progress-digest).
 
 For **Progress milestone reached**, enter the **Milestone percentage** and **Daily digest time** before enabling the rule. Choose the assigned teacher or class teacher audience and its published templates. Each chapter qualifies the first time its saved division progress reaches that percentage.

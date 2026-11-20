@@ -115,6 +115,35 @@ describe('Configure Academic notification rule', () => {
     }
   );
 
+  it('saves the weekly summary day and school-local time', async () => {
+    const user = userEvent.setup();
+    const eventKey = 'Academic.Summary.Weekly';
+    mocks.mutate.mockReturnValue({ unwrap: () => Promise.resolve({}) });
+    renderDrawer({
+      ...row,
+      id: eventKey,
+      item: { ...row.item, eventKey },
+      event: {
+        ...row.event,
+        definition: {
+          ...row.event.definition, eventKey, triggerType: 1, deliveryProfile: 3,
+          recipientSelectors: ['PrimaryGuardian', 'ClassTeacher'],
+        },
+      },
+    });
+    await user.click(screen.getByRole('button', { name: 'Expand Timing and Language' }));
+    const day = screen.getByRole('combobox', { name: /Day of the week/ });
+    expect(day).toHaveTextContent('Friday');
+    expect(screen.queryByLabelText(/School days before/)).not.toBeInTheDocument();
+    await user.click(day);
+    await user.click(screen.getByRole('option', { name: 'Wednesday' }));
+    fireEvent.change(screen.getByLabelText(/Weekly summary time/), { target: { value: '16:10' } });
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+    expect(mocks.mutate.mock.calls[0][0].command.timing).toMatchObject({
+      weeklySummaryDay: 3, reminderLocalTime: '16:10',
+    });
+  });
+
   it('saves the explicit percentage for a progress milestone digest', async () => {
     const user = userEvent.setup();
     const eventKey = 'Academic.Progress.MilestoneReached';

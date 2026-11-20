@@ -23,6 +23,7 @@ export function notificationEventLabel(event: AcademicNotificationEvent) {
 }
 
 export function notificationEventKeyLabel(eventKey: string) {
+  if (eventKey === weeklySummaryEvent) return 'Weekly academic summary';
   const words = eventKey.split('.').slice(1).map(notificationLabel).join(' ');
   return words.charAt(0) + words.slice(1).toLowerCase();
 }
@@ -52,15 +53,24 @@ export function notificationRuleRows(
       item,
       state,
       status: isInherited ? `${status} · inherited` : status,
-      trigger: event.definition.triggerType === 1 && isDailyDigest(event.definition.eventKey)
-        ? 'Daily digest'
-        : { 0: 'On change', 1: 'Scheduled reminder', 2: 'Manual' }[event.definition.triggerType],
+      trigger: notificationTriggerLabel(event),
       deliveryChannels,
     }];
   });
 }
 
 export type AcademicNotificationRuleRow = ReturnType<typeof notificationRuleRows>[number];
+
+export const weeklySummaryEvent = 'Academic.Summary.Weekly';
+
+function notificationTriggerLabel(event: AcademicNotificationEvent) {
+  const { eventKey, triggerType } = event.definition;
+  if (triggerType === 1) {
+    if (eventKey === weeklySummaryEvent) return 'Weekly summary';
+    if (isDailyDigest(eventKey)) return 'Daily digest';
+  }
+  return { 0: 'On change', 1: 'Scheduled reminder', 2: 'Manual' }[triggerType];
+}
 
 export const progressMilestoneEvent = 'Academic.Progress.MilestoneReached';
 

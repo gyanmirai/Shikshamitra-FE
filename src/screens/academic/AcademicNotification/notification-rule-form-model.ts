@@ -7,7 +7,7 @@ import type {
 } from 'src/redux/academic-notifications/types';
 
 import { CommunicationChannelType } from 'src/redux/communication/communicationTypes';
-import { progressMilestoneEvent } from 'src/redux/academic-notifications/response-adapters';
+import { weeklySummaryEvent, progressMilestoneEvent } from 'src/redux/academic-notifications/response-adapters';
 
 const familySelectors = ['PrimaryGuardian', 'AdditionalGuardians', 'StudentAccount'];
 export const substitutionAcknowledgementEvent = 'Academic.Substitution.AcknowledgementDue';
@@ -29,6 +29,7 @@ export function ruleFormValues(rule: AcademicNotificationRule | null, defaultSta
     delayMinutes: config?.timing.delayMinutes ?? 0,
     reminderSchoolDaysBefore: config?.timing.reminderSchoolDaysBefore ?? 1,
     reminderLocalTime: config?.timing.reminderLocalTime ?? '17:00:00',
+    weeklySummaryDay: config?.timing.weeklySummaryDay ?? 5,
     reviewerEscalationMinutes: config?.timing.reviewerEscalationMinutes ?? 30,
     progressMilestonePercentage: config?.timing.progressMilestonePercentage ?? ('' as const),
     quietHoursEnabled: config?.timing.quietHoursEnabled ?? true,
@@ -55,6 +56,7 @@ export function ruleCommand(values: RuleFormValues, row: { eventKey: string; sco
       delayMinutes: values.delayMinutes,
       reminderSchoolDaysBefore: values.reminderSchoolDaysBefore,
       reminderLocalTime: values.reminderLocalTime,
+      ...(row.eventKey === weeklySummaryEvent ? { weeklySummaryDay: values.weeklySummaryDay } : {}),
       ...(row.eventKey === substitutionAcknowledgementEvent && values.staffAudienceSelectors.includes('ConfiguredReviewer')
         ? { reviewerEscalationMinutes: values.reviewerEscalationMinutes }
         : {}),

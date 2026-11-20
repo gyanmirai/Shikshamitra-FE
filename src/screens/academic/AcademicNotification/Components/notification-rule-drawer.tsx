@@ -10,7 +10,7 @@ import { FormBusyRegion } from 'src/components/form-busy-region';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { Box, Alert, Stack, Button, Drawer, IconButton, Typography } from '@mui/material';
 import { useAcademicNotificationTemplateOptionsQuery } from 'src/redux/academic-notifications/api';
-import { isDailyDigest, progressMilestoneEvent } from 'src/redux/academic-notifications/response-adapters';
+import { isDailyDigest, weeklySummaryEvent, progressMilestoneEvent } from 'src/redux/academic-notifications/response-adapters';
 
 import { NotificationRuleFields } from './notification-rule-fields';
 import { NotificationRuleTiming } from './notification-rule-timing';
@@ -44,7 +44,7 @@ export function NotificationRuleDrawer({ row, identity, scopeLabel, onClose }: P
   });
   const requestClose = () => requestNavigation(() => {});
   const schedule = row.event.definition.triggerType === 1
-    ? isDailyDigest(row.id) ? 'digest' : 'reminder'
+    ? row.id === weeklySummaryEvent ? 'weekly' : isDailyDigest(row.id) ? 'digest' : 'reminder'
     : undefined;
 
   return (
