@@ -37,6 +37,10 @@ The submitted Teacher Diary drawer loads available follow-up recipients using th
 
 `src/redux/communication/notification-self-api.ts` supplies the dashboard bell's unread count and the drawer's All and Unread pages. Separate requests record reading and acknowledgement. Queries use the current school and account, and changes invalidate only that account's inbox reads. Polling pauses while the page is unfocused.
 
+## Personal notification preferences
+
+`src/redux/communication/notification-self-api.ts` loads category options, linked students and saved preferences when the bell's preferences dialog opens. Each query and save uses the current school and user owner. A save includes the selected category, student context and saved concurrency stamp. The dialog retains drafts on conflict and refreshes the accessible student options if a save is denied.
+
 ## Browser notifications
 
 `src/redux/communication/notification/web-push-api.ts` injects the public-key, register and disable operations into the shared authenticated API.

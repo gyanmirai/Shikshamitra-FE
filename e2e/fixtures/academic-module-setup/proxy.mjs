@@ -11,6 +11,8 @@ import { paged, year, board, medium, ids } from './data.mjs';
 
 const upstream = 'http://127.0.0.1:4469';
 const pushPath = '/api/communication/notifications/me/push';
+const preferencePath = '/api/communication/notifications/me/preferences';
+const preferenceChild = { studentId: 'b0000000-0000-4000-8000-000000000001', displayName: 'Sample Learner' };
 const fixtureVapid = createECDH('prime256v1').generateKeys().toString('base64url');
 let fixture = createAcademicFixture();
 let notificationRules = null;
@@ -85,6 +87,27 @@ export const server = http.createServer(async (request, response) => {
   }
   const token = request.headers.authorization?.split('.')[1];
   const claims = token ? JSON.parse(Buffer.from(token, 'base64url').toString()) : {};
+  if (url.pathname === preferencePath || url.pathname === preferencePath + '/options') {
+    if (!claims.sub) { send(401, {}); return; }
+    const rows = fixture.state.preferenceWrites.filter(({ user }) => user === claims.sub);
+    if (url.pathname.endsWith('/options')) {
+      send(200, { categories: [{ category: 'Academic.Homework', channels: [0, 2, 3, 4] }], students: [preferenceChild] });
+    } else if (request.method === 'GET') {
+      send(200, rows.map(({ preferences }) => preferences));
+    } else if (request.method === 'PUT') {
+      const writes = fixture.state.preferenceWrites;
+      const index = writes.findIndex(({ user, preferences }) => user === claims.sub &&
+        preferences.category === body.category && preferences.studentId === body.studentId);
+      const preferences = { ...body, concurrencyStamp: randomUUID() };
+      const row = { user: claims.sub, preferences };
+      if (index < 0) writes.push(row);
+      else writes[index] = row;
+      send(200, preferences);
+    } else {
+      send(405, {});
+    }
+    return;
+  }
   if (manualNotification?.handle(url, request.method, body, claims.sub, send)) return;
   if (notificationDeliveries(url, request.method, claims.sub, send)) return;
   if (claims.sub && notificationRules?.handle(url, request.method, body, send)) return;

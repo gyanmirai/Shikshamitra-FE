@@ -24,6 +24,11 @@ export interface NotificationPreference {
   concurrencyStamp?: string;
 }
 
+export interface NotificationPreferenceOptions {
+  categories: { category: string; channels: AcademicNotificationChannel[] }[];
+  students: { studentId: string; displayName: string }[];
+}
+
 type InboxQuery = { owner: string; unreadOnly: boolean; skipCount: number; maxResultCount: number };
 type InboxCommand = { owner: string; id: string; action: 'read' | 'acknowledge' };
 
@@ -55,6 +60,10 @@ export const notificationSelfApi = api.enhanceEndpoints({ addTagTypes: [inboxTag
       providesTags: (_, __, owner) => [{ type: preferencesTag, id: owner }],
       keepUnusedDataFor: 0,
     }),
+    personalNotificationPreferenceOptions: builder.query<NotificationPreferenceOptions, string>({
+      query: (owner) => ({ url: `${root}/preferences/options`, cache: 'no-store', expectedSessionOwner: owner }),
+      keepUnusedDataFor: 0,
+    }),
     savePersonalNotificationPreference: builder.mutation<NotificationPreference, { owner: string; input: NotificationPreference }>({
       query: ({ owner, input }) => ({
         url: `${root}/preferences`, method: 'PUT', body: input, expectedSessionOwner: owner,
@@ -69,5 +78,6 @@ export const {
   usePersonalNotificationUnreadCountQuery,
   useChangePersonalNotificationItemMutation,
   usePersonalNotificationPreferencesQuery,
+  usePersonalNotificationPreferenceOptionsQuery,
   useSavePersonalNotificationPreferenceMutation,
 } = notificationSelfApi;

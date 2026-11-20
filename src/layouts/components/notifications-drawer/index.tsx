@@ -13,8 +13,9 @@ import { CustomTabs } from 'src/components/custom-tabs';
 import { webPushOwner } from 'src/hooks/notifications/web-push-device';
 import EnableNotifications from 'src/components/notification-inbox/enable-notifications';
 import { NotificationInbox } from 'src/components/notification-inbox/notification-inbox';
-import { Box, Tab, Badge, Stack, Drawer, SvgIcon, IconButton, Typography } from '@mui/material';
+import { NotificationPreferences } from 'src/components/notification-inbox/notification-preferences';
 import { usePersonalNotificationUnreadCountQuery } from 'src/redux/communication/notification-self-api';
+import { Box, Tab, Badge, Stack, Drawer, SvgIcon, Tooltip, IconButton, Typography } from '@mui/material';
 
 type InboxTab = 'all' | 'unread';
 
@@ -31,6 +32,7 @@ function OwnedNotificationsDrawer({ owner }: { owner: string }) {
   const descriptionId = useId();
   const drawerId = useId();
   const drawer = useBoolean();
+  const preferences = useBoolean();
   const openDrawer = drawer.onTrue;
   const [tab, setTab] = useState<InboxTab>('all');
   const unread = usePersonalNotificationUnreadCountQuery(owner, {
@@ -82,6 +84,11 @@ function OwnedNotificationsDrawer({ owner }: { owner: string }) {
         slotProps={{ paper: { role: 'dialog', 'aria-modal': true, 'aria-labelledby': drawerId, sx: { width: 1, maxWidth: 420 } } }}>
         <Stack direction="row" alignItems="center" gap={1} sx={{ py: 1.5, pl: 2, pr: 1.5 }}>
           <Typography id={drawerId} variant="h6" sx={{ flexGrow: 1 }}>Notifications</Typography>
+          <Tooltip title="Notification preferences">
+            <IconButton aria-label="Notification preferences" onClick={preferences.onTrue}>
+              <Iconify icon="solar:settings-bold-duotone" />
+            </IconButton>
+          </Tooltip>
           <IconButton aria-label="Close notifications" onClick={drawer.onFalse}><Iconify icon="mingcute:close-line" /></IconButton>
         </Stack>
         {drawer.value && <EnableNotifications />}
@@ -96,6 +103,7 @@ function OwnedNotificationsDrawer({ owner }: { owner: string }) {
           {drawer.value && <NotificationInbox key={tab} owner={owner} unreadOnly={tab === 'unread'} onOpen={drawer.onFalse} />}
         </Box>
       </Drawer>
+      {preferences.value && <NotificationPreferences owner={owner} onClose={preferences.onFalse} />}
     </>
   );
 }

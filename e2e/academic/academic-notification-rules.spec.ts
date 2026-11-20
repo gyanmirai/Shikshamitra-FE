@@ -30,6 +30,39 @@ test('legacy category link opens the scoped Rules workspace and saves an overrid
   expect(saved.concurrencyStamp).toBeUndefined();
 });
 
+test('saves and reloads linked student notification preferences at phone width', { tag }, async ({ page, request }) => {
+  await request.post(`${fixtureApi}/fixture/reset`, { data: { visited: true } });
+  await prepare(page, request);
+  await login(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/dashboard');
+  await page.getByRole('button', { name: 'Open notifications' }).click();
+  await page.getByRole('button', { name: 'Notification preferences' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Notification Preferences' });
+  await dialog.getByLabel('Apply to').selectOption({ label: 'Sample Learner' });
+  await dialog.getByRole('checkbox', { name: 'WhatsApp' }).uncheck();
+  await dialog.getByRole('switch', { name: /Quiet hours/ }).check();
+  await dialog.getByRole('button', { name: 'Submit' }).click();
+  await expect(dialog).toBeHidden();
+  const [saved] = (await snapshot(request)).preferenceWrites;
+  expect(saved.preferences).toMatchObject({
+    category: 'Academic.Homework', studentId: 'b0000000-0000-4000-8000-000000000001',
+    enabledChannels: [2, 3, 4], quietHoursEnabled: true, quietHoursStart: '20:00', quietHoursEnd: '07:00',
+  });
+  await page.getByRole('button', { name: 'Notification preferences' }).click();
+  await dialog.getByLabel('Apply to').selectOption({ label: 'Sample Learner' });
+  await expect(dialog.getByRole('checkbox', { name: 'WhatsApp' })).not.toBeChecked();
+  await expect(dialog.getByLabel('Quiet hours start')).toHaveValue('20:00');
+  async function checkViewport(width: number, height: number) {
+    await page.setViewportSize({ width, height });
+    await expect(dialog.getByRole('button', { name: 'Cancel' })).toBeInViewport();
+    await expectHealthy(page);
+  }
+  await checkViewport(390, 844);
+  await checkViewport(768, 1024);
+  await checkViewport(1440, 900);
+});
+
 test('creates and previews a template, then preserves its published version during editing', { tag }, async ({ page, request }) => {
   await request.post(`${fixtureApi}/fixture/reset`, { data: { visited: true, notificationRules: true } });
   await prepare(page, request);

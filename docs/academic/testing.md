@@ -108,6 +108,10 @@ Its local API does not establish deployed staging acceptance.
 
 Run `npm test -- src/screens/academic/components/reports/AcademicReportRecoveryScreen.test.tsx src/app/api/academic-reports` for explicit generation, duplicate click protection, owner-keyed requests, and the authenticated attachment and recovery responses. In the browser, open an expired notice, confirm the queued status, and download the replacement after it is ready.
 
+## Personal notification preference checks
+
+Run the focused `notification-preferences.test.tsx` Vitest file for linked-student writes, draft retention and conflict recovery. The Rules browser fixture saves and reloads the channel and quiet-hour choices from the notification bell and checks the dialog at phone, tablet and desktop widths.
+
 ## Browser notification checks
 
 The rule client tests cover academic scope and paging parameters, owner-isolated cache keys, stale rule saves, and commands blocked after an account change. Run `npm test -- src/redux/academic-notifications/api.test.ts src/redux/service.auth-session.test.ts`.

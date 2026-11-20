@@ -162,6 +162,10 @@ Open the notification bell. **All** shows notifications for the signed-in accoun
 
 Academic report ready notices offer **Download report** in the inbox. This opens the same authenticated download used by the report workspace. Export ownership and expiry are checked for every download. If the file expired or is unavailable, the link opens the report status page. Select **Generate again** when available to rerun the saved export with your current access. Download from the status page or the same inbox link when the replacement is ready. [Academic report notification contract](../../../Shikshamitra-BE/docs/modules/academic/api.md#report-export-notifications)
 
+## Set personal notification preferences
+
+Open the notification bell and choose **Notification preferences**. Pick a category and apply it to all your notifications or one linked student. Choose the delivery channels, preferred language, and optional quiet hours in school time. Account-wide channel restrictions also apply to linked students. After a conflicting save, keep editing or reload the saved settings before retrying. [Personal notification contract](../../../Shikshamitra-BE/docs/modules/academic/api.md#personal-notification-preferences)
+
 ## Enable notifications on a device
 
 Sign in to the school website on the device that should receive updates.

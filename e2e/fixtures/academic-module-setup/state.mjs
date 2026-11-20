@@ -10,6 +10,7 @@ export function createAcademicFixture(options = {}) {
     insights: options.insights ?? {},
     pushEnabled: options.pushEnabled === true,
     pushActions: [],
+    preferenceWrites: [],
     failNext: options.failNext ?? null,
     saveDelay: options.saveDelay ?? 0,
     progress: {

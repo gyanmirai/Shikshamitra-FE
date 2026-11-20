@@ -13,6 +13,20 @@
       "module": "Academic",
       "submodules": [
         {
+          "name": "Personal Notification Preferences",
+          "routes": ["/dashboard"],
+          "apis": [
+            "/api/communication/notifications/me/preferences",
+            "/api/communication/notifications/me/preferences/options"
+          ],
+          "roles": ["signed-in school account"],
+          "permissions": [],
+          "forms": ["notification preferences dialog"],
+          "businessActions": ["save account or linked student notification preferences"],
+          "risk": "high",
+          "status": "confirmed"
+        },
+        {
           "name": "Browser Notifications",
           "routes": ["/academic/dashboard", "/dashboard"],
           "apis": [
