@@ -8,7 +8,7 @@ import { Label } from 'src/components/label';
 import SubmitButton from 'src/components/submit-button';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
-import { isSubmissionDigest } from 'src/redux/academic-notifications/response-adapters';
+import { isDailyDigest } from 'src/redux/academic-notifications/response-adapters';
 import { Box, Alert, Stack, Button, Drawer, IconButton, Typography } from '@mui/material';
 import { useAcademicNotificationTemplateOptionsQuery } from 'src/redux/academic-notifications/api';
 
@@ -44,7 +44,7 @@ export function NotificationRuleDrawer({ row, identity, scopeLabel, onClose }: P
   });
   const requestClose = () => requestNavigation(() => {});
   const schedule = row.event.definition.triggerType === 1
-    ? isSubmissionDigest(row.id) ? 'digest' : 'reminder'
+    ? isDailyDigest(row.id) ? 'digest' : 'reminder'
     : undefined;
 
   return (

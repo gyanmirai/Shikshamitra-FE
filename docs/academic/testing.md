@@ -108,6 +108,8 @@ Its local API does not establish deployed staging acceptance.
 
 The rule client tests cover academic scope and paging parameters, owner-isolated cache keys, stale rule saves, and commands blocked after an account change. Run `npm test -- src/redux/academic-notifications/api.test.ts src/redux/service.auth-session.test.ts`.
 
+Run `npm test -- notification-rule-drawer.test.tsx` to verify the **Daily digest time** field and saved cutoff for submission and chapter progress digests.
+
 Run `npm test -- src/screens/academic/AcademicNotification src/components/notification-inbox` for the workspace and inbox, including safe links, separate read and acknowledgement, and account switching. Run `npx playwright test --config e2e/academic/academic-notification-rules.config.mjs` for scoped Rules, template publication, Delivery History and the personal inbox at a phone viewport with the synthetic school.
 
 Run `npm test -- src/components/academic-notification-action` for reviewed sends, repeated confirmation clicks, changed reviews, and interrupted confirmation retries. The focused Playwright config also verifies that a reminder from the Homework evaluation table supplies exactly the selected student and opens the queued operation. This scenario uses a synthetic source and sends only to the fixture API.

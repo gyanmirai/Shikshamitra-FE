@@ -106,6 +106,8 @@ Staff with rule edit access can use **Configure** to submit a rule for the selec
 
 For Homework Submitted and Assignment Submitted, **Daily digest time** closes the submission count in the school's time zone. Assigned teachers are selected by default for a new rule. Use published teacher templates to enable the digest.
 
+For **Progress behind schedule** in Curriculum, **Daily digest time** closes the window for published chapters with saved end dates. Choose the staff recipients and their published templates, then enable the rule. The digest opens Chapter Management. See the [chapter progress digest contract](../../../Shikshamitra-BE/docs/modules/academic/api.md#chapter-progress-digest).
+
 For Substitution Acknowledgement Due, the assigned substitute receives the first reminder. In **Recipients**, select **Notify the configured reviewer** and set **Escalate after (minutes)** to follow up if the substitute has not responded. Select published templates for both recipients before enabling the rule.
 
 ## Notify recipients about exam seating

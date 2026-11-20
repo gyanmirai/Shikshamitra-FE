@@ -9,7 +9,7 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { shikshaMitraToast } from 'src/components/toast';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
-import { isSubmissionDigest } from 'src/redux/academic-notifications/response-adapters';
+import { isDailyDigest } from 'src/redux/academic-notifications/response-adapters';
 import { useSaveAcademicNotificationRuleMutation } from 'src/redux/academic-notifications/api';
 
 import { ruleCommand, ruleFormValues, ruleRecipientKinds, templateCoverageError, substitutionAcknowledgementEvent } from './notification-rule-form-model';
@@ -38,7 +38,7 @@ export function useNotificationRuleForm({
 }) {
   const [save, mutation] = useSaveAcademicNotificationRuleMutation();
   const defaultStaff = row.id === substitutionAcknowledgementEvent ? ['SubstituteTeacher']
-    : isSubmissionDigest(row.id) ? ['AssignedTeacher'] : [];
+    : isDailyDigest(row.id) ? ['AssignedTeacher'] : [];
   const form = useFormik<RuleFormValues>({
     initialValues: ruleFormValues(row.item.effectiveRule, defaultStaff),
     validationSchema,
