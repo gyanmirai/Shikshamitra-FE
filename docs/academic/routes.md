@@ -3,7 +3,7 @@ module: academic
 domain: navigation
 content_type: Reference
 status: canonical
-updated_on: 2026-10-29
+updated_on: 2026-11-20
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -56,6 +56,8 @@ Closing a Lecture Slots form removes its action/record context while retaining t
 
 Calendar Settings and the five LMS settings are outside this guide because their navigation entries are inactive.
 Existing Calendar operations, operational Academic pages, and their own route guards retain their current ownership.
+
+`/academic/report-exports/[jobId]` is a contextual report recovery route. It opens from a download link when the authenticated report service reports an expired, unavailable or pending file. The report API checks the signed-in requester before returning status or recovery controls.
 
 ## Academic notifications
 

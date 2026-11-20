@@ -153,6 +153,8 @@ Existing server refresh choices remain explicit; a warm cache does not replace r
 
 `src/redux/academicAPI/AcademicReportApi.ts` consumes completed exports as native Blobs, retaining content type and filename headers.
 `src/screens/academic/components/reports/useAcademicReportDownload.ts` owns job creation, serialized status polling and download coordination for the active preview drawers as well as report-list downloads. It aborts pending work and stops timers on unmount/account changes, ignores stale completions and backs off transient failures. A creation response arriving after close cannot install a new polling loop. Creating, generating and downloading states remain visible in the owning drawer.
+
+The report recovery screen uses owner-keyed status and regenerate endpoints in `AcademicReportApi.ts`. It polls only while the replacement is queued or running and uses the same authenticated download path when the file is ready.
 Completed jobs download directly without creating another export.
 Curriculum previews, including the active timetable and homework consumers of that shared drawer, retain the protected native download route. Generated Examination previews retain their Blob download behavior.
 

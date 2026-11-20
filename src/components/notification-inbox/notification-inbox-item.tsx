@@ -51,7 +51,7 @@ export function NotificationInboxRow({ item, owner, onOpen }: {
         {error && <Alert severity="error">{error}</Alert>}
         <Stack direction="row" flexWrap="wrap" gap={0.75}>
           {link && (isReportDownload ? (
-            <Button size="small" component="a" href={link} download>Download report</Button>
+            <Button size="small" component="a" href={link}>Download report</Button>
           ) : (
             <Button size="small" LinkComponent={Link} href={link} onClick={onOpen}>Open record</Button>
           ))}

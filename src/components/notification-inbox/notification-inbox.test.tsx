@@ -113,7 +113,7 @@ describe('signed-in notification inbox', () => {
     render(inbox(createStore(), originalOwner));
     const download = await screen.findByRole('link', { name: 'Download report' });
     expect(download).toHaveAttribute('href', relativeLink);
-    expect(download).toHaveAttribute('download');
+    expect(download).not.toHaveAttribute('download');
     expect(screen.queryByRole('link', { name: 'Open record' })).not.toBeInTheDocument();
   });
 });

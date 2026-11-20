@@ -156,7 +156,7 @@ Open Delivery History with a link to a notification operation or Academic source
 
 Open the notification bell. **All** shows notifications for the signed-in account, and **Unread** shows messages without a read timestamp. **Mark as read** clears the unread indicator. **Acknowledge** records a separate acknowledgement. Open record follows the school's internal link when one is available.
 
-Academic report ready notices offer **Download report** in the inbox. This opens the same authenticated download used by the report workspace. Export ownership and expiry are checked for every download. [Academic report notification contract](../../../Shikshamitra-BE/docs/modules/academic/api.md#report-export-notifications)
+Academic report ready notices offer **Download report** in the inbox. This opens the same authenticated download used by the report workspace. Export ownership and expiry are checked for every download. If the file expired or is unavailable, the link opens the report status page. Select **Generate again** when available to rerun the saved export with your current access. Download from the status page or the same inbox link when the replacement is ready. [Academic report notification contract](../../../Shikshamitra-BE/docs/modules/academic/api.md#report-export-notifications)
 
 ## Enable notifications on a device
 

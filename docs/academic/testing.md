@@ -104,6 +104,10 @@ It uses the production division form, RTK Query clients and timetable board to c
 `B101` to `B2222`, drag-and-drop, reopening the builder and preservation of saved lecture overrides.
 Its local API does not establish deployed staging acceptance.
 
+## Report recovery checks
+
+Run `npm test -- src/screens/academic/components/reports/AcademicReportRecoveryScreen.test.tsx src/app/api/academic-reports` for explicit generation, duplicate click protection, owner-keyed requests, and the authenticated attachment and recovery responses. In the browser, open an expired notice, confirm the queued status, and download the replacement after it is ready.
+
 ## Browser notification checks
 
 The rule client tests cover academic scope and paging parameters, owner-isolated cache keys, stale rule saves, and commands blocked after an account change. Run `npm test -- src/redux/academic-notifications/api.test.ts src/redux/service.auth-session.test.ts`.
