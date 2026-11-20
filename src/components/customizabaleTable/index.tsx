@@ -676,7 +676,12 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                 aria-label={`${tableTitle} table`}
                 size={dense ? 'small' : 'medium'}
                 sx={{
-                  height: !errorContent && (data.length > 0 || isLoading) ? 'auto' : '100%',
+                  height:
+                    summaryRow && !isLoading && !errorContent && paginatedData.length
+                      ? '100%'
+                      : !errorContent && (data.length > 0 || isLoading)
+                        ? 'auto'
+                        : '100%',
                   '&:focus-visible': {
                     outline: '2px solid',
                     outlineColor: 'primary.main',
@@ -728,6 +733,19 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                     }
                   }}
                 />
+                {summaryRow && !isLoading && !errorContent && paginatedData.length > 0 && (
+                  <Box component="tbody" aria-hidden="true" sx={{ height: '100%' }}>
+                    <TableRow>
+                      <TableCell
+                        colSpan={
+                          memoizedColumns.filter((column) => columnVisibility[column.id]).length +
+                          Number(memoizedColumns.some((column) => column.children))
+                        }
+                        sx={{ p: 0, border: 0 }}
+                      />
+                    </TableRow>
+                  </Box>
+                )}
                 {summaryRow && !isLoading && !errorContent && (
                   <TableFooter>
                     <TableRow>

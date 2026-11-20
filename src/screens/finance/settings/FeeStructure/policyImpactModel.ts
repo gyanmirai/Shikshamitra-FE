@@ -29,6 +29,21 @@ export interface PolicyImpactRow {
   treatment: string;
 }
 
+export function refundPolicyMatchesHeads(
+  policy:
+    | {
+        feeHeadScope?: string | null;
+        applicableFeeHeadIds?: string[] | null;
+      }
+    | undefined,
+  feeHeads: StructureCandidate['feeHeads']
+): boolean | undefined {
+  if (policy?.feeHeadScope === 'AllFeeHeads') return true;
+  if (policy?.feeHeadScope !== 'SelectedFeeHeads' || !policy.applicableFeeHeadIds) return undefined;
+  const ids = new Set(policy.applicableFeeHeadIds);
+  return feeHeads.some((head) => ids.has(head.feeHeadId));
+}
+
 export function policyImpactRows(
   family: PolicyFamily,
   candidate: StructureCandidate,

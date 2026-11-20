@@ -176,6 +176,7 @@ export type FeeEntryStatus = 'Pending' | 'Partial' | 'Paid' | 'Overdue';
 export type PaymentModeType = 'Cash' | 'Cheque' | 'UPI' | 'Card' | 'Demand Draft (DD)';
 
 export interface MonthWiseFeeItem {
+  daysOverdue?: number | null;
   installmentId?: string | null;
   dueFeeId?: string;
   feeHeadId: string;

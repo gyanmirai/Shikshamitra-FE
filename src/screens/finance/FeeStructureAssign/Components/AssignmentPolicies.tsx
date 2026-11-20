@@ -3,31 +3,16 @@ import type {
   AssignmentPolicySelection,
 } from 'src/redux/finance/studentFeeAssignment';
 
-import { GlobalIcons } from 'src/utils/icons';
-import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomSelect from 'src/components/custom-select';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { DetailField } from 'src/screens/finance/components/detail-view';
+import { Box, Stack, Alert, Button, Skeleton, TextField } from '@mui/material';
 import {
   useAssignmentPolicyOptionsQuery,
   selectableAssignmentPolicyFamilies,
 } from 'src/redux/finance/studentFeeAssignment';
-import {
-  Box,
-  Stack,
-  Alert,
-  Button,
-  Skeleton,
-  TextField,
-  Accordion,
-  IconButton,
-  Typography,
-  AccordionSummary,
-  AccordionDetails,
-} from '@mui/material';
 
 export default function AssignmentPolicies({
   studentId,
@@ -52,15 +37,14 @@ export default function AssignmentPolicies({
   editing?: boolean;
   flat?: boolean;
 }) {
-  const editMode = useBoolean();
   const restoreConfirmation = useBoolean();
   const options = useAssignmentPolicyOptionsQuery(
     { studentId, academicYearId },
     { skip: !canOverride }
   );
   const changed = selections.some(
-      (s) => s.versionId !== (defaults.find((p) => p.family === s.family)?.versionId ?? null)
-    );
+    (s) => s.versionId !== (defaults.find((p) => p.family === s.family)?.versionId ?? null)
+  );
   const policyControls = (
     <Stack spacing={2}>
       {options.isLoading && <Skeleton height={48} />}
@@ -109,9 +93,17 @@ export default function AssignmentPolicies({
                 value={value}
                 disabled={disabled || !canOverride || options.isLoading || options.isError}
                 options={available.map((p) => ({
-                    value: p.versionId,
-                    label: `${p.name} · v${p.version}${p.versionId === inherited?.versionId ? ' · default' : ''}`,
-                  }))}
+                  value: p.versionId,
+                  label: `${p.name}${p.versionId === inherited?.versionId ? ' · default' : ''}`,
+                  version: `v${p.version}`,
+                }))}
+                optionEndLabelKey="version"
+                renderValue={(selectedValue) => {
+                  const policy = available.find((p) => p.versionId === selectedValue);
+                  return policy
+                    ? `${policy.name} · v${policy.version}${policy.versionId === inherited?.versionId ? ' · default' : ''}`
+                    : '';
+                }}
                 onChange={(next) => {
                   const nextVersionId = String(next) || null;
                   const nextSelections = [
@@ -196,7 +188,7 @@ export default function AssignmentPolicies({
           </Button>
         }
       />
-      {!editing && (!canOverride || !flat || !editMode.value) && (
+      {!canOverride && (
         <Box
           sx={{
             display: 'grid',
@@ -228,24 +220,7 @@ export default function AssignmentPolicies({
           })}
         </Box>
       )}
-      {canOverride &&
-        (flat || editing ? (
-          (editing || editMode.value) && policyControls
-        ) : (
-          <Accordion
-            disableGutters
-            elevation={0}
-            defaultExpanded={editing || changed}
-            sx={{ '&::before': { display: 'none' }, border: 1, borderColor: 'divider' }}
-          >
-            <AccordionSummary disabled={disabled} expandIcon={<Iconify icon="mdi:chevron-down" />}>
-              <Typography variant="subtitle2">
-                {editing ? 'Student policies' : 'Change policies'}
-              </Typography>
-            </AccordionSummary>
-            <AccordionDetails>{policyControls}</AccordionDetails>
-          </Accordion>
-        ))}
+      {canOverride && policyControls}
     </Stack>
   );
   if (editing)
@@ -259,35 +234,11 @@ export default function AssignmentPolicies({
       </FormSectionCard>
     );
   if (!flat) return policyContent;
-  const actionLabel = editMode.value ? 'Finish editing policies' : 'Edit policies';
   return (
     <FormSectionCard
       title="Policies"
       icon="mdi:shield-check-outline"
       descriptionTooltip="Review the structure's policies or override them for this assignment."
-      action={
-        <CustomTooltip
-          title={
-            !canOverride
-              ? 'Policy editing requires fee assignment policy override access.'
-              : actionLabel
-          }
-          arrow
-          placement="right"
-        >
-          <span>
-            <IconButton
-              size="small"
-              aria-label={actionLabel}
-              aria-expanded={editMode.value}
-              disabled={disabled || !canOverride}
-              onClick={editMode.onToggle}
-            >
-              <Iconify icon={editMode.value ? GlobalIcons.submit : GlobalIcons.edit} width={18} />
-            </IconButton>
-          </span>
-        </CustomTooltip>
-      }
     >
       {policyContent}
     </FormSectionCard>

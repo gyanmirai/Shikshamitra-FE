@@ -13,3 +13,23 @@ export function assignmentSelectionGroup(
     ? undefined
     : 'unassigned';
 }
+
+export function assignmentSelectionBlocker(
+  student: Omit<IFeeStructureData, 'id'>,
+  selectionGroup?: string
+): string | undefined {
+  if (!student.isActive) return 'This student’s enrollment is inactive.';
+  if (student.assignmentState === 'Prepared')
+    return 'This student has prepared admission fees. Review prepared fees individually.';
+  if (student.assignmentState === 'NeedsAttention')
+    return 'This student’s assignment needs attention. Review the issue individually.';
+  const group = assignmentSelectionGroup(student);
+  if (!group)
+    return (
+      student.structureEditBlocker ||
+      'This student already has a fee structure assigned and cannot be selected for bulk editing.'
+    );
+  if (selectionGroup && group !== selectionGroup)
+    return 'Select students with the same assignment status, fee structure and revision for this batch.';
+  return undefined;
+}

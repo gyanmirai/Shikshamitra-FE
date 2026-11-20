@@ -51,6 +51,9 @@ export const structureCandidate = (source?: Partial<StructureRecord>): Structure
   concessionApplicableFeeHeadIds: [...(source?.concessionApplicableFeeHeadIds ?? [])],
 });
 
+export const duplicateStructureNameError =
+  'A Fee Structure with this name already exists in this class. Choose a different name.';
+
 export const structureError = (error: unknown): string => {
   const response = error as {
     data?: {
@@ -66,7 +69,7 @@ export const structureError = (error: unknown): string => {
   if ((problem?.code ?? response?.data?.errorCode)?.includes('ConcurrencyConflict'))
     return 'This structure changed in another session. Refresh and review the latest version before saving.';
   if ((problem?.code ?? response?.data?.errorCode)?.includes('DuplicateName'))
-    return 'A Fee Structure with this name already exists in this class. Choose a different name.';
+    return duplicateStructureNameError;
   return (
     problem?.data?.Errors?.join('\n') ||
     response?.data?.data?.Errors?.join('\n') ||

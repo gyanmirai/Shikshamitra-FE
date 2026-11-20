@@ -64,6 +64,7 @@ const policyOptions: AssignmentPolicy[] = [
 const stamps = new Map<string, number>();
 const unpaidEdit = new URLSearchParams(window.location.search).has('unpaidEdit');
 const paidEdit = new URLSearchParams(window.location.search).has('paidEdit');
+const optionalService = new URLSearchParams(window.location.search).has('optionalService');
 const bulkSidebar = new URLSearchParams(window.location.search).has('bulkSidebar');
 const installmentStress = new URLSearchParams(window.location.search).has('installmentStress');
 
@@ -103,6 +104,13 @@ export const candidate: AssignmentCandidate = {
     },
   ],
 };
+if (optionalService) {
+  candidate.heads.push({
+    ...candidate.heads[1],
+    feeHeadId: 'activity',
+    feeHeadName: 'After-school activity',
+  });
+}
 if (bulkSidebar) {
   candidate.heads.push(
     ...Array.from({ length: 6 }, (_, index) => ({
@@ -343,7 +351,8 @@ if (unpaidEdit) {
       studentId,
       academicYearId: 'year',
       standardFeeStructureId: candidate.id,
-      selectedOptionalFeeHeadIds: [],
+      selectedOptionalFeeHeadIds:
+        optionalService && studentId === 'student-one' ? ['transport'] : [],
       servicePeriods: [],
       feeHeadDetails: [],
       variableFeeHeads: candidate.heads
@@ -394,6 +403,38 @@ export const api = createApi({
       };
     }
     if (args.url.endsWith('/policy-options')) return { data: policyOptions };
+    if (optionalService && /\/optional-service-stop(?:\/preview)?$/.test(args.url)) {
+      const assignment = saved.get('student-one')?.assignment;
+      const line = assignment?.lines
+        .filter((item) => item.feeHeadId === args.body?.feeHeadId)
+        .at(-1);
+      if (!assignment || !line || line.optionalServiceCancellationAmount)
+        return {
+          error: {
+            status: 409,
+            data: { code: 'Finance:Assignment:OptionalServiceAlreadyStopped' },
+          },
+        };
+      const cancelledAmount = line.outstandingAmount;
+      if (args.url.endsWith('/preview'))
+        return { data: { installmentCount: 1, cancelledAmount, previewToken: 'stop-preview' } };
+      saved.set('student-one', {
+        ...saved.get('student-one')!,
+        assignment: {
+          ...assignment,
+          lines: assignment.lines.map((item) =>
+            item === line
+              ? {
+                  ...item,
+                  outstandingAmount: 0,
+                  optionalServiceCancellationAmount: cancelledAmount,
+                }
+              : item
+          ),
+        },
+      });
+      return { data: { installmentCount: 1, cancelledAmount } };
+    }
     if (args.url.endsWith('/policies')) {
       const id = args.url.split('/').at(-2)!;
       const assigned = saved.get(id);

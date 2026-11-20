@@ -1,5 +1,7 @@
 'use client';
 
+import type { ReactNode } from 'react';
+
 import dayjs from 'dayjs';
 import { Label } from 'src/components/label';
 import { alpha } from '@mui/material/styles';
@@ -48,6 +50,9 @@ type FinancePolicyDetailsDrawerProps = {
   isLoading?: boolean;
   isError?: boolean;
   onRetry?: () => void;
+  aboveDialog?: boolean;
+  errorMessage?: string;
+  savedVersionDetails?: ReactNode;
 };
 
 const BooleanChip = ({ label, value }: { label: string; value?: boolean }) => (
@@ -74,6 +79,9 @@ export default function FinancePolicyDetailsDrawer({
   isLoading = false,
   isError = false,
   onRetry,
+  aboveDialog = false,
+  errorMessage = 'Unable to load this policy. Retry to view its saved configuration.',
+  savedVersionDetails,
 }: FinancePolicyDetailsDrawerProps) {
   if (!policy) return null;
 
@@ -84,6 +92,7 @@ export default function FinancePolicyDetailsDrawer({
       anchor="right"
       open={open}
       onClose={onClose}
+      sx={aboveDialog ? { zIndex: (theme) => theme.zIndex.modal + 1 } : undefined}
       slotProps={{
         backdrop: {
           sx: {
@@ -155,8 +164,10 @@ export default function FinancePolicyDetailsDrawer({
                   )
                 }
               >
-                Unable to load this policy. Retry to view its saved configuration.
+                {errorMessage}
               </Alert>
+            ) : savedVersionDetails != null ? (
+              savedVersionDetails
             ) : (
               <>
                 {/* ── 1. General Information ── */}
@@ -482,7 +493,8 @@ export default function FinancePolicyDetailsDrawer({
                                           <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
                                             {slab.calculationType}
                                           </TableCell>
-                                          <TableCell align="right"
+                                          <TableCell
+                                            align="right"
                                             sx={{ fontSize: '12px', fontWeight: 600, py: 0.75 }}
                                           >
                                             {slab.calculationType === 'Flat'

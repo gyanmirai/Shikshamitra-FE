@@ -26,6 +26,7 @@ export default function FeeStructureWorkspaceDialog({
 }: Props) {
   const [busy, setBusy] = useState(false);
   const [confirmClose, setConfirmClose] = useState(false);
+  const [publishedName, setPublishedName] = useState<string | null>(null);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   useEffect(() => {
     if (!isChanges) return undefined;
@@ -77,8 +78,6 @@ export default function FeeStructureWorkspaceDialog({
               {editData.academicYearName &&
                 !editData.name.includes(editData.academicYearName) &&
                 ` · ${editData.academicYearName}`}
-              {editData.boardName && ` · Board: ${editData.boardName}`}
-              {editData.mediumName && ` · Medium: ${editData.mediumName}`}
             </Box>
           </Box>
         }
@@ -93,10 +92,33 @@ export default function FeeStructureWorkspaceDialog({
         <FeeStructureEditForm
           editData={editData}
           viewOnly={viewOnly}
-          onClose={requestClose}
           onBusyChange={setBusy}
+          onPublished={setPublishedName}
         />
       </CustomDialog>
+      <ConfirmDialog
+        open={publishedName !== null}
+        icon="success"
+        title="Fee Structure Published"
+        content={`“${publishedName}” is now published. You can keep working here or return to the Fee Structure list.`}
+        onClose={() => setPublishedName(null)}
+        cancelText="Continue"
+        action={
+          <Button
+            startIcon={<Iconify icon="mdi:exit-to-app" />}
+            size="small"
+            color="inherit"
+            variant="contained"
+            disabled={busy}
+            onClick={() => {
+              setPublishedName(null);
+              requestClose();
+            }}
+          >
+            Exit
+          </Button>
+        }
+      />
       <ConfirmDialog
         open={confirmClose}
         onClose={() => setConfirmClose(false)}

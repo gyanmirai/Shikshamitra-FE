@@ -28,6 +28,7 @@ function setup(overrides: Partial<React.ComponentProps<typeof PolicyImpactDialog
         </button>
         {open && (
           <PolicyImpactDialog
+            family="concession"
             title="Concession Policy"
             policyLabel="Sibling concession · v4"
             rows={[{ id: 'internal-id', name: 'Tuition', treatment: 'Eligible on approval' }]}
@@ -68,6 +69,43 @@ it('opens by keyboard, shows readable coverage, closes with Escape and preserves
   expect(document.activeElement).toBe(screen.getByRole('button', { name: 'View impact' }));
   expect(store.getState().confirmPopup.isChanges).toBe(true);
   expect(confirm).not.toHaveBeenCalled();
+});
+
+it('explains refund coverage and shows the applied version’s amount rule and deduction', async () => {
+  const user = userEvent.setup();
+  setup({
+    family: 'refund',
+    title: 'Refund Policy',
+    policyLabel: 'School refund · v3',
+    rows: [
+      { id: 'tuition', name: 'Tuition', treatment: 'Policy eligible' },
+      { id: 'transport', name: 'Transport', treatment: 'Excluded' },
+    ],
+    policy: { AmountMode: 3, PercentageValue: 75, DeductionType: 2, DeductionValue: 5 },
+  });
+  await user.click(screen.getByRole('button', { name: 'View impact' }));
+  expect(screen.getByText('This policy covers 1 of 2 fee heads for refunds.')).toBeVisible();
+  expect(screen.getByText('75% of the eligible amount')).toBeVisible();
+  expect(screen.getByText('5% deduction')).toBeVisible();
+  expect(screen.getByText('The policy excludes this fee head from refunds.')).toBeVisible();
+});
+
+it('reflects a saved collection override that disables late fees for a covered head', async () => {
+  const user = userEvent.setup();
+  setup({
+    family: 'collection',
+    title: 'Collection Policy',
+    policyLabel: 'Collection · v2',
+    saved: true,
+    rows: [{ id: 'tuition', name: 'Tuition', treatment: 'Late fee applies' }],
+    policy: {
+      applyLateFeeToAllFeeHeads: false,
+      feeHeadOverrides: [{ feeHeadId: 'tuition', overrideMode: 'NoLateFee' }],
+    },
+  });
+  await user.click(screen.getByRole('button', { name: 'View impact' }));
+  expect(screen.getByText('No fee heads accrue late fees under this policy.')).toBeVisible();
+  expect(screen.getByText('This fee head has an override that disables late fees.')).toBeVisible();
 });
 
 it.each([

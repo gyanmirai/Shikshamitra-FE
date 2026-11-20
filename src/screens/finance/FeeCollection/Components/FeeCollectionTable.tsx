@@ -178,7 +178,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
 
   const summaryRow = useMemo(
     () => ({
-      label: 'Total (displayed rows)',
+      label: <span title="Sum of the records on this page">Total</span>,
       values: Object.fromEntries(
         FEE_COLLECTION_AMOUNT_COLUMNS.map((column) => {
           const rows = tableData ?? [];

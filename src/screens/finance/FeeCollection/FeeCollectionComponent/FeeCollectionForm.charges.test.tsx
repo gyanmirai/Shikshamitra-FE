@@ -54,7 +54,6 @@ const mocks = vi.hoisted(() => ({
   collectMutation: vi.fn(),
   downloadMutation: vi.fn(),
   previewItems: [] as any[],
-  finalReviewItems: [] as any[],
   ledgerProps: vi.fn(),
 }));
 
@@ -274,16 +273,6 @@ vi.mock('./preview/FeeCollectionPreviewDialog', () => ({
     return open ? (
       <button type="button" onClick={onConfirm}>
         Review payment
-      </button>
-    ) : null;
-  },
-}));
-vi.mock('./preview/FinalPaymentReviewDialog', () => ({
-  default: ({ open, onConfirmCollect, formValues }: any) => {
-    mocks.finalReviewItems = formValues.selectedItems;
-    return open ? (
-      <button type="button" onClick={onConfirmCollect}>
-        Confirm collection
       </button>
     ) : null;
   },
@@ -551,7 +540,7 @@ describe('Collect Fees presentation and shared ledger', () => {
     expect(screen.getByLabelText(/Amount to collect/)).toHaveValue('₹ 500');
     expect(selectedAllocationCount()).toBe(1);
     expect(screen.queryByText('1 item selected')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Sort by Amount' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Sort by Pending' }));
     expect(
       screen.getByRole('checkbox', { name: 'Select Class 3 Tuition Fee, June 2026' })
     ).toBeChecked();
@@ -662,7 +651,6 @@ describe('Fee Collection automatic ledger selection', () => {
     await selectReceivingBank();
     fireEvent.click(screen.getByRole('button', { name: 'Collect Payment' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Review payment' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Confirm collection' }));
     await waitFor(() => expect(mocks.collect).toHaveBeenCalled());
     const command = mocks.collect.mock.lastCall?.[0];
     expect(command.automaticAllocation.chargeIds).toEqual(['charge-0', 'charge-1']);
@@ -672,7 +660,7 @@ describe('Fee Collection automatic ledger selection', () => {
     ]);
   }, 60_000);
 
-  it('reviews only the funded installments in both dialogs without narrowing the collection candidates', async () => {
+  it('reviews only the funded installments without narrowing the collection candidates', async () => {
     mocks.data.allocationBasis = 'Installment';
     mocks.data.allocationDueFeeOrder = ['due-0', 'transport-june', 'tuition-july'];
     render(<FeeCollectComponentForm student={student} />);
@@ -680,10 +668,6 @@ describe('Fee Collection automatic ledger selection', () => {
       fireEvent.change(screen.getByLabelText(/Amount to collect/), { target: { value: '2500' } });
     });
     expect(mocks.previewItems.map((item) => item.dueFeeId)).toEqual(['due-0', 'transport-june']);
-    expect(mocks.finalReviewItems.map((item) => item.dueFeeId)).toEqual([
-      'due-0',
-      'transport-june',
-    ]);
   }, 60_000);
 
   it('updates funding for previously selected installments when the amount is edited', async () => {
@@ -716,8 +700,32 @@ describe('Fee Collection automatic ledger selection', () => {
         mocks.ledgerProps.mock.lastCall?.[0].selectedItems.map(
           (item: { dueFeeId: string }) => item.dueFeeId
         )
-      ).toEqual(['tuition-july'])
+      ).toEqual([])
     );
+  }, 60_000);
+
+  it('keeps other funded groups unchanged when a partially funded group is unchecked', async () => {
+    mocks.data.allocationBasis = 'FeeHead';
+    mocks.data.allocationDueFeeOrder = ['transport-june', 'due-0', 'tuition-july'];
+    render(<FeeCollectComponentForm student={student} />);
+    fireEvent.click(ledger().getByRole('checkbox', { name: 'Select Transport', exact: true }));
+    fireEvent.click(
+      ledger().getByRole('checkbox', { name: 'Select Class 3 Tuition Fee', exact: true })
+    );
+    const amount = screen.getByLabelText(/Amount to collect/);
+    fireEvent.change(amount, { target: { value: '2500' } });
+    await waitFor(() => expect(amount).toHaveValue('₹ 2,500'));
+    fireEvent.click(
+      ledger().getByRole('checkbox', { name: 'Select Class 3 Tuition Fee', exact: true })
+    );
+    await waitFor(() => expect(amount).toHaveValue('₹ 2,000'));
+    expect(ledger().getByRole('checkbox', { name: 'Select Transport, June 2026' })).toBeChecked();
+    expect(
+      ledger().getByRole('checkbox', { name: 'Select Class 3 Tuition Fee, June 2026' })
+    ).not.toBeChecked();
+    expect(
+      ledger().getByRole('checkbox', { name: 'Select Class 3 Tuition Fee, July 2026' })
+    ).not.toBeChecked();
   }, 60_000);
 
   it.each([
@@ -857,7 +865,7 @@ describe('Fee Collection selection presets', () => {
       expect(rowCheckbox('June 2026')).toBeDisabled();
       expect(rowCheckbox('Sports Charge')).toBeDisabled();
       fireEvent.click(screen.getByRole('checkbox', { name: String(label) }));
-      expect(screen.getByRole('button', { name: 'Clear All' })).toBeDisabled();
+      await waitFor(() => expect(screen.getByRole('button', { name: 'Clear All' })).toBeDisabled());
     },
     30_000
   );
@@ -884,7 +892,9 @@ describe('Fee Collection selection presets', () => {
   it('shows a mixed preset after manual removal and restores its full scope with one click', async () => {
     render(<FeeCollectComponentForm student={student} />);
     fireEvent.click(screen.getByRole('checkbox', { name: 'All Pending' }));
-    fireEvent.click(rowCheckbox('November 2026'));
+    const novemberTuition = () =>
+      ledger().getByRole('checkbox', { name: 'Select Class 3 Tuition Fee, November 2026' });
+    fireEvent.click(novemberTuition());
     expect(screen.getByRole('checkbox', { name: 'All Pending' })).toHaveAttribute(
       'aria-checked',
       'mixed'
@@ -892,7 +902,7 @@ describe('Fee Collection selection presets', () => {
     await expectSelection(7, 15000);
     fireEvent.click(screen.getByRole('checkbox', { name: 'All Pending' }));
     await expectSelection(8, 17000);
-    expect(rowCheckbox('November 2026')).toBeChecked();
+    expect(novemberTuition()).toBeChecked();
     fireEvent.click(screen.getByRole('checkbox', { name: 'All Pending' }));
     expect(screen.getByRole('button', { name: 'Clear All' })).toBeDisabled();
   }, 30_000);
@@ -924,10 +934,13 @@ describe('Fee Collection selection presets', () => {
     render(<FeeCollectComponentForm student={student} />);
     fireEvent.click(screen.getByRole('checkbox', { name: 'All Pending' }));
     await expectSelection(9, 17500);
-    fireEvent.click(rowCheckbox('Second installment'));
+    const novemberTuition = () =>
+      ledger().getAllByRole('checkbox', { name: 'Select Class 3 Tuition Fee, November 2026' });
+    expect(novemberTuition()).toHaveLength(2);
+    fireEvent.click(novemberTuition()[1]);
     await expectSelection(8, 17000);
-    expect(rowCheckbox('November 2026')).toBeChecked();
-    expect(rowCheckbox('Second installment')).not.toBeChecked();
+    expect(novemberTuition()[0]).toBeChecked();
+    expect(novemberTuition()[1]).not.toBeChecked();
   }, 30_000);
 
   it('reconciles selected fees and charges to refreshed unpaid balances', async () => {
@@ -1029,7 +1042,6 @@ describe('Fee Collection independent additional charges', () => {
     await selectReceivingBank();
     fireEvent.click(screen.getByRole('button', { name: 'Collect Payment' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Review payment' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Confirm collection' }));
     await waitFor(() => expect(mocks.collect).toHaveBeenCalledOnce());
     expect(mocks.collect.mock.calls[0][0].lateFeePayments).toEqual([
       ...lateFees.map((charge) => ({ dueFeeId: charge.sourceId, amount: 100 })),
@@ -1105,12 +1117,10 @@ describe('Fee Collection independent additional charges', () => {
 
   it('collects only selected principal and keeps unpaid late fees selectable on reopening', async () => {
     const view = render(<FeeCollectComponentForm student={student} />);
-    const principalRow = ledger().getByText('Jun 2026').closest('tr')!;
-    fireEvent.click(within(principalRow).getByRole('checkbox'));
+    fireEvent.click(ledger().getByRole('checkbox', { name: 'Select Class 3 Tuition Fee, June 2026' }));
     await selectReceivingBank();
     fireEvent.click(screen.getByRole('button', { name: 'Collect Payment' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Review payment' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Confirm collection' }));
 
     await waitFor(() => expect(mocks.collect).toHaveBeenCalledOnce());
     expect(mocks.collect.mock.calls[0][0]).toMatchObject({
@@ -1135,7 +1145,6 @@ describe('Fee Collection independent additional charges', () => {
     await selectReceivingBank();
     fireEvent.click(screen.getByRole('button', { name: 'Collect Payment' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Review payment' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Confirm collection' }));
     await waitFor(() => expect(mocks.collect).toHaveBeenCalledTimes(2));
     expect(mocks.collect.mock.calls[1][0]).toMatchObject({
       dueFeePayments: [],

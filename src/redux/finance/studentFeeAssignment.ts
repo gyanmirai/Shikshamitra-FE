@@ -3,7 +3,8 @@ import { financeModuleType, financePolicyType, studentAdmissionType } from 'src/
 
 export interface AssignmentServicePeriod {
   feeHeadId: string;
-  source: 'AcademicYear' | 'BoardAcademicYear' | 'Registration' | 'TransportService' | 'ManualOverride';
+  source:
+    'AcademicYear' | 'BoardAcademicYear' | 'Registration' | 'TransportService' | 'ManualOverride';
   sourceReferenceId?: string;
   startDate?: string;
   endDate?: string;
@@ -246,6 +247,8 @@ export function assignmentErrorCode(error: unknown): string {
 
 export function assignmentError(error: unknown): string {
   const code = assignmentErrorCode(error);
+  if (code.endsWith('OptionalServiceAlreadyStopped'))
+    return 'This optional service has already been stopped. Reopen the assignment to see its saved status.';
   if (code.endsWith('NoFutureOptionalInstallments'))
     return 'No future unpaid installments can be cancelled for this fee and date.';
   if (code.endsWith('StructureEditBlocked'))
@@ -347,7 +350,10 @@ export const studentFeeAssignmentApi = api.injectEndpoints({
       }),
       invalidatesTags: (result, _error, arg) => (result ? assignmentChangedTags([arg]) : []),
     }),
-    assignmentOptionalServiceStopPreview: builder.mutation<OptionalServiceStopResult, OptionalServiceStopRequest>({
+    assignmentOptionalServiceStopPreview: builder.mutation<
+      OptionalServiceStopResult,
+      OptionalServiceStopRequest
+    >({
       query: ({ studentId, ...body }) => ({
         url: `/student-fee-structure/student/${studentId}/optional-service-stop/preview`,
         method: 'POST',

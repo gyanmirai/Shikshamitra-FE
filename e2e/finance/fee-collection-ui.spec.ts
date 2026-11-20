@@ -114,8 +114,8 @@ test('shows billing dates and one-time heads, and reviews only funded fee heads 
   await expect(feeLedger.getByText('One time', { exact: true })).toBeVisible();
   await expect(feeLedger.getByText('Yearly', { exact: true })).toBeVisible();
   const schoolFees = feeLedger.getByRole('table', { name: 'School Fees table' });
-  await expect(schoolFees.getByRole('columnheader', { name: 'Billing Period' })).toBeVisible();
-  await expect(schoolFees.getByRole('columnheader', { name: 'Due Date' })).toBeVisible();
+  await expect(schoolFees.getByRole('columnheader', { name: /Fee Period/ })).toBeVisible();
+  await expect(schoolFees.getByRole('columnheader', { name: /Due Date/ })).toBeVisible();
   await expect(schoolFees.getByRole('columnheader', { name: 'Installment' })).toHaveCount(0);
   await expect(schoolFees.getByText('10 Jun 2026')).toBeVisible();
 
@@ -422,9 +422,9 @@ async function fillMethod(page: Page, method: string) {
   if (method === 'Cash') return;
   await choose(page, /^Payment Method/, method);
   await collectAction(page).click();
-  await expect(page.getByRole('dialog', { name: 'Payment Details', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('dialog', { name: 'Review Payment', exact: true })).toHaveCount(0);
   await expect(summary(page).locator('.MuiFormHelperText-root.Mui-error')).not.toHaveCount(0);
-  await choose(page, /Receiving School Bank Account/, 'SBI');
+  await choose(page, /Receiving School Bank Account/, 'SBI • 1234');
   const text = async (label: RegExp, value: string) =>
     page.getByRole('textbox', { name: label }).fill(value);
   if (method === 'Cheque') {
@@ -462,52 +462,40 @@ for (const [method, methodId] of [
   ['Debit Card', 5],
   ['UPI', 6],
 ] as const) {
-  test(`${method}: required details, both review stages, and canonical payment request`, async ({
+  test(`${method}: one review, receipt download, and canonical payment request`, async ({
     page,
   }) => {
     await openCollection(page);
     await selectTransport(page);
     await amount(page).fill('500');
-    if (method === 'Cash')
-      await page.getByRole('textbox', { name: 'Cash Received', exact: true }).fill('1000');
     await fillMethod(page, method);
     await collectAction(page).click();
-    const preview = page.getByRole('dialog', { name: 'Payment Details', exact: true });
+    const preview = page.getByRole('dialog', { name: 'Review Payment', exact: true });
     await expect(preview).toBeVisible();
     await expect(preview).toContainText('Class 3 · Div A');
     await expect(preview).toContainText('2026-2027');
-    await preview.getByRole('button', { name: 'Confirm & Collect Fee', exact: true }).click();
-    const final = page.getByRole('dialog', {
-      name: method === 'Cash' ? 'Confirm Cash Payment' : 'Payment Verification',
-      exact: true,
-    });
-    await expect(final).toBeVisible();
-    await final
+    if (methodId !== 0) {
+      await expect(preview.getByText('Reference Details', { exact: true })).toBeVisible();
+      await expect(preview.getByText(method, { exact: true })).toBeVisible();
+      await expect(preview.getByText('Receiving School Bank Account', { exact: true })).toBeVisible();
+    }
+    await preview
       .getByRole('button', {
-        name:
-          method === 'Cash'
-            ? 'Final Submit & Generate Receipt'
-            : methodId <= 2
-              ? 'Move to Reconciliation'
-              : 'Accept & Confirm',
-        exact: true,
+        name: method === 'Cash' ? /^Collect\s*₹\s*500$/ : 'Record & issue provisional receipt',
       })
       .click();
-    if (methodId === 0 || methodId >= 3) {
-      await expect(
-        page.getByRole('dialog', { name: 'Payment Receipts', exact: true })
-      ).toBeVisible();
-      await expect(
-        page.getByRole('dialog', { name: 'Payment Receipts', exact: true })
-      ).toContainText('500');
-    } else {
-      await expect(page.getByRole('heading', { name: 'Payment summary', exact: true })).toHaveCount(
-        0
-      );
-      await expect(page.getByRole('dialog', { name: 'Payment Receipts', exact: true })).toHaveCount(
-        0
-      );
-    }
+    const receipts = page.getByRole('dialog', { name: 'Payment Receipts', exact: true });
+    await expect(receipts).toBeVisible();
+    await expect(receipts).toContainText(methodId === 0 ? 'REC-2026-' : 'KFE-2026-');
+    await expect(page.getByRole('dialog', { name: 'Payment Verification' })).toHaveCount(0);
+    await expect(receipts.locator('iframe, embed, object')).toHaveCount(0);
+    const [download] = await Promise.all([
+      page.waitForEvent('download'),
+      receipts.getByRole('button', { name: 'Download', exact: true }).click(),
+    ]);
+    expect(download.suggestedFilename()).toMatch(/\.pdf$/);
+    await receipts.getByRole('button', { name: 'Done', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'Payment summary', exact: true })).toHaveCount(0);
     const sent = (await requests(page)).filter(
       (item) => item.url === '/fee-collections' && item.method === 'POST'
     );
@@ -521,32 +509,10 @@ for (const [method, methodId] of [
       payments: [{ paymentMethod: methodId, amount: 500 }],
     });
     expect(sent[0].body.idempotencyKey).toBeTruthy();
-    if (methodId >= 3) expect(sent[0].body.paymentConfirmed).toBe(true);
-    if (methodId !== 0) expect(sent[0].body.payments[0].bankAccountId).toBe('sbi-account');
+    if (methodId >= 3) expect(sent[0].body.paymentConfirmed).toBe(false);
+    if (methodId !== 0) expect(sent[0].body.payments[0].bankAccountId).toBe('sbi-identified-account');
   });
 }
-
-test('UPI can be sent for later reconciliation without confirming payment', async ({ page }) => {
-  await openCollection(page);
-  await selectTransport(page);
-  await fillMethod(page, 'UPI');
-  await collectAction(page).click();
-  await page
-    .getByRole('dialog', { name: 'Payment Details', exact: true })
-    .getByRole('button', { name: 'Confirm & Collect Fee', exact: true })
-    .click();
-  await page
-    .getByRole('dialog', { name: 'Payment Verification', exact: true })
-    .getByRole('button', { name: 'Move to Reconciliation', exact: true })
-    .click();
-  await expect(page.getByRole('heading', { name: 'Payment summary', exact: true })).toHaveCount(0);
-  await expect(page.getByRole('dialog', { name: 'Payment Receipts', exact: true })).toHaveCount(0);
-  const sent = (await requests(page)).filter(
-    (item) => item.url === '/fee-collections' && item.method === 'POST'
-  );
-  expect(sent).toHaveLength(1);
-  expect(sent[0].body.paymentConfirmed).toBe(false);
-});
 
 async function bounds(locator: Locator) {
   const box = await locator.boundingBox();

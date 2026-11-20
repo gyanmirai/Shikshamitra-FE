@@ -3,6 +3,7 @@
 import type { RootState } from 'src/redux/store';
 import type {
   ApplyFeeWaiverInput,
+  FeeWaiverResult,
   FeeWaiverSourceType,
 } from 'src/redux/feeCollection/feeCollection';
 
@@ -20,7 +21,7 @@ export interface FeeWaiverToggleProps {
   sourceName?: string;
   remainingAmount: number;
   canWaive?: boolean;
-  onApplied?: () => void;
+  onApplied?: (result: FeeWaiverResult) => void;
 }
 
 export default function FeeWaiverToggle({
@@ -50,7 +51,7 @@ export default function FeeWaiverToggle({
 
   return (
     <>
-      <Tooltip title={`Waive the full remaining ${label}`} arrow>
+      <Tooltip title={`Waive part or all of the remaining ${label}`} arrow>
         <FormControlLabel
           onClick={(event) => event.stopPropagation()}
           control={
@@ -83,10 +84,10 @@ export default function FeeWaiverToggle({
           }
           onUnconfirmed={setPendingInput}
           onClose={() => setOpen(false)}
-          onApplied={() => {
+          onApplied={(result) => {
             setPendingInput(null);
             setOpen(false);
-            onApplied?.();
+            onApplied?.(result);
           }}
         />
       )}

@@ -29,7 +29,7 @@ export interface SelectedCollectionRow {
   term: string;
   amount: number;
   onRemove?: () => void;
-  remainingAmount?: number;
+  remainingAmount: number;
 }
 
 interface Props {
@@ -39,13 +39,13 @@ interface Props {
   onMoveFee: (from: number, to: number) => void;
   onMoveCharge: (from: number, to: number) => void;
   fixedFeeOrder?: boolean;
-  showAllocation?: boolean;
   emptyText?: string;
 }
 
 const rowLayout = {
   display: 'grid',
-  gridTemplateColumns: '24px minmax(0, 1fr) 96px 70px 28px',
+  gridTemplateColumns: '24px minmax(76px, 2fr) minmax(48px, 1fr) repeat(2, 88px) 28px',
+  minWidth: 380,
   gap: 0.5,
   alignItems: 'center',
   px: 0.5,
@@ -107,25 +107,28 @@ function SortableRow({
       <Typography role="cell" variant="body2" sx={{ overflowWrap: 'anywhere' }}>
         {row.label}
       </Typography>
-      <Typography role="cell" variant="caption" color="text.secondary" noWrap title={row.term}>
+      <Typography
+        role="cell"
+        variant="caption"
+        color="text.secondary"
+        sx={{ overflowWrap: 'anywhere' }}
+      >
         {row.term}
       </Typography>
       <Typography
         role="cell"
         variant="body2"
-        sx={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}
+        sx={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}
       >
         {formatNumber(row.amount, 'INR')}
-        {row.remainingAmount !== undefined && row.remainingAmount > 0 && (
-          <Typography
-            component="span"
-            variant="caption"
-            color="text.secondary"
-            sx={{ display: 'block' }}
-          >
-            {formatNumber(row.remainingAmount, 'INR')}
-          </Typography>
-        )}
+      </Typography>
+      <Typography
+        role="cell"
+        variant="body2"
+        color="text.secondary"
+        sx={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}
+      >
+        {formatNumber(row.remainingAmount, 'INR')}
       </Typography>
       <Box role="cell">
         {row.onRemove && (
@@ -155,7 +158,6 @@ export default function SelectedCollectionItems({
   onMoveFee,
   onMoveCharge,
   fixedFeeOrder = false,
-  showAllocation = false,
   emptyText = 'Select fees or charges from the ledger to start collecting.',
 }: Props) {
   const [feesExpanded, setFeesExpanded] = useState(true);
@@ -202,7 +204,8 @@ export default function SelectedCollectionItems({
           fixedFeeOrder ? 'Order' : 'Reorder',
           'Fee item',
           'Term',
-          showAllocation ? 'Pay now' : 'Amount',
+          'Pay now',
+          'Pending',
           'Remove',
         ].map((label, index) => (
           <Typography
@@ -211,9 +214,9 @@ export default function SelectedCollectionItems({
             aria-label={label}
             variant="caption"
             color="text.secondary"
-            sx={{ fontWeight: 600, textAlign: index === 3 ? 'right' : 'left' }}
+            sx={{ fontWeight: 600, textAlign: index === 3 || index === 4 ? 'right' : 'left' }}
           >
-            {index === 0 || index === 4 ? '' : label}
+            {index === 0 || index === 5 ? '' : label}
           </Typography>
         ))}
       </Box>
@@ -236,7 +239,7 @@ export default function SelectedCollectionItems({
             expanded={feesExpanded}
             onChange={() => setFeesExpanded((current) => !current)}
             content={
-              <Box>
+              <Box sx={{ overflowX: 'auto' }}>
                 {tableHeader}
                 {group(fees, 'Selected fees', onMoveFee)}
               </Box>
@@ -264,7 +267,7 @@ export default function SelectedCollectionItems({
             expanded={chargesExpanded}
             onChange={() => setChargesExpanded((current) => !current)}
             content={
-              <Box>
+              <Box sx={{ overflowX: 'auto' }}>
                 {fees.length > 0 && (
                   <Typography
                     variant="caption"

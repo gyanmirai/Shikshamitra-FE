@@ -13,7 +13,7 @@ import FeeStructureWorkspaceDialog from './FeeStructureWorkspaceDialog';
 
 vi.mock('src/components/iconify', () => ({ Iconify: () => <svg aria-hidden="true" /> }));
 vi.mock('./ClassAccordionPanel', () => ({
-  default: function ClassPanel({ classId, onDirtyChange, onBusyChange }: any) {
+  default: function ClassPanel({ classId, onDirtyChange, onBusyChange, onPublished }: any) {
     return (
       <div>
         <div>Selected class: {classId}</div>
@@ -25,6 +25,9 @@ vi.mock('./ClassAccordionPanel', () => ({
         </button>
         <button type="button" onClick={() => onBusyChange(false)}>
           Finish save
+        </button>
+        <button type="button" onClick={() => onPublished?.('Annual fees')}>
+          Report publication
         </button>
       </div>
     );
@@ -70,7 +73,8 @@ afterEach(cleanup);
 
 it('opens the shared full-screen dialog with horizontal class tabs', () => {
   setup();
-  expect(screen.getByText('Main fees · 2026–27 · Board: CBSE · Medium: English')).toBeTruthy();
+  expect(screen.getByText('Main fees · 2026–27')).toBeTruthy();
+  expect(screen.queryByText(/Board: CBSE|Medium: English/)).toBeNull();
   expect(screen.getByRole('dialog', { name: /Manage Fee Structure/ })).toHaveClass(
     'MuiDialog-paperFullScreen'
   );
@@ -113,4 +117,38 @@ it('blocks class switching and closing during a save then restores them', () => 
   fireEvent.click(screen.getByRole('button', { name: 'Finish save' }));
   fireEvent.click(screen.getByRole('button', { name: 'close' }));
   expect(onClose).toHaveBeenCalledTimes(1);
+});
+
+it('lets the user continue in the current class or exit after publication', async () => {
+  const { onClose } = setup();
+  fireEvent.click(screen.getByRole('tab', { name: 'Class 6' }));
+  const reportPublication = () =>
+    fireEvent.click(screen.getByRole('button', { name: 'Report publication' }));
+  const published = () => within(screen.getByRole('dialog', { name: 'Fee Structure Published' }));
+
+  reportPublication();
+  expect(published().getByText(/Annual fees/)).toBeVisible();
+  fireEvent.click(published().getByRole('button', { name: 'Continue' }));
+  await waitFor(() =>
+    expect(screen.queryByRole('dialog', { name: 'Fee Structure Published' })).toBeNull()
+  );
+  expect(screen.getByText('Selected class: class-6')).toBeVisible();
+  expect(onClose).not.toHaveBeenCalled();
+
+  reportPublication();
+  fireEvent.click(published().getByRole('button', { name: 'Exit' }));
+  expect(onClose).toHaveBeenCalledOnce();
+});
+
+it('honors the unsaved changes guard when exiting after publication', () => {
+  const { onClose } = setup();
+  fireEvent.click(screen.getByRole('button', { name: 'Change draft' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Report publication' }));
+  const published = screen.getByRole('dialog', { name: 'Fee Structure Published' });
+
+  fireEvent.click(within(published).getByRole('button', { name: 'Exit' }));
+  const confirm = screen.getByRole('dialog', { name: 'Discard unsaved changes?' });
+  expect(onClose).not.toHaveBeenCalled();
+  fireEvent.click(within(confirm).getByRole('button', { name: 'Discard & Leave' }));
+  expect(onClose).toHaveBeenCalledOnce();
 });

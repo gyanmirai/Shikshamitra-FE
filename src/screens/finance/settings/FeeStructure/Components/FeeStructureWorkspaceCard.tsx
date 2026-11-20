@@ -21,7 +21,8 @@ import { useRef, useMemo, useState, useEffect } from 'react';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { getStorage, setStorage } from 'src/hooks/use-local-storage';
-import { Box, Stack, Alert, Button, Typography } from '@mui/material';
+import { Box, Stack, Alert, Button, Typography, useMediaQuery } from '@mui/material';
+import { useResponsive } from 'src/hooks/use-responsive';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { FeeStructureLockStatusType } from 'src/enums/finance-fee-structure-status';
@@ -38,8 +39,8 @@ import {
   useSaveStructureDraftMutation,
 } from 'src/redux/finance/feeStructureWorkspace';
 
-import PolicyImpactDialog from './PolicyImpactDialog';
-import { policyImpactRows } from '../policyImpactModel';
+import { AttachedPolicyImpactDialog } from './PolicyImpactDialog';
+import { policyImpactRows, refundPolicyMatchesHeads } from '../policyImpactModel';
 import FeeStructureHeadsStep from './FeeStructureHeadsStep';
 import FeeStructureReviewStep from './FeeStructureReviewStep';
 import StructureScheduleDialog from './StructureScheduleDialog';
@@ -55,6 +56,7 @@ import {
   structureCandidate,
   structurePolicyError,
   buildStructureChanges,
+  duplicateStructureNameError,
 } from '../feeStructureModel';
 
 import type { IClassWiseFeeStructureCard } from '../type';
@@ -62,10 +64,12 @@ import type { StructurePolicyFamily } from '../feeStructureModel';
 
 interface Props {
   initialData: IClassWiseFeeStructureCard;
+  persistedStructures?: { id: string; name: string }[];
   index: number;
   viewOnly?: boolean;
   isActive?: boolean;
   onSaved?: (saved: IClassWiseFeeStructureCard) => void;
+  onPublished?: (name: string) => void;
   onDeleted?: () => void;
   onDirtyChange?: (dirty: boolean) => void;
   onBusyChange?: (busy: boolean) => void;
@@ -86,23 +90,25 @@ const families: {
     label: 'Collection Policy',
     description:
       'Late fees and waivers apply to matching heads. Collection controls stay at structure level.',
-    empty: 'Select a policy before publishing. Drafts may be incomplete.',
+    empty: 'Not attached',
   },
   {
     key: 'refund',
     label: 'Refund Policy',
     description:
       'Defines eligibility for matching heads. Attaching a policy does not approve a refund.',
-    empty: 'Select a policy before review. Drafts may be incomplete.',
+    empty: 'Not attached',
   },
 ];
 
 export default function FeeStructureWorkspaceCard({
   initialData,
+  persistedStructures = [],
   index,
   viewOnly = false,
   isActive = true,
   onSaved,
+  onPublished,
   onDeleted,
   onDirtyChange,
   onBusyChange,
@@ -135,6 +141,12 @@ export default function FeeStructureWorkspaceCard({
     if (restoredProgress.current) return;
     restoredProgress.current = true;
     if (!initialData.record) return;
+    if (
+      !viewOnly &&
+      initialData.record.status !== FeeStructureLockStatusType.Locked &&
+      !initialData.record.feeHeads?.some((line) => !line.isOptional)
+    )
+      return;
     const savedStep = getStorage(progressKey);
     if (workflowKeys.includes(savedStep))
       setTab(
@@ -144,8 +156,10 @@ export default function FeeStructureWorkspaceCard({
           ? 'policies'
           : savedStep
       );
-  }, [initialData.record, progressKey]);
+  }, [initialData.record, progressKey, viewOnly]);
   const activeStep = workflowKeys.indexOf(tab);
+  const wideWorkspace = useResponsive('up', 'lg');
+  const tallWorkspace = useMediaQuery('(min-height: 700px)');
   const [preview, setPreview] = useState<StructurePreview>();
   const [impactFamily, setImpactFamily] = useState<StructurePolicyFamily>();
   const [error, setError] = useState('');
@@ -159,6 +173,8 @@ export default function FeeStructureWorkspaceCard({
   const generation = useRef(0);
   const [requestId] = useState(uuidv4);
   const locked = record?.status === FeeStructureLockStatusType.Locked;
+  const draftRevision = !locked && !!record?.previousRevisionId;
+  const hasFeeHeads = candidate.feeHeads.length > 0;
   const candidateJson = useMemo(() => JSON.stringify(candidate), [candidate]);
   const dirty =
     candidateJson !== baseline ||
@@ -189,6 +205,7 @@ export default function FeeStructureWorkspaceCard({
   } = useFeeStructureLookups(scope, !record || tab === 'policies', scheduleLine, locked, isActive, {
     collection: candidate.collectionPolicyId,
     refund: candidate.refundPolicyId,
+    refundVersion: candidate.refundPolicyVersionId,
   });
   const publicationPrerequisites = structurePublicationPrerequisites({
     locked: !!locked || viewOnly,
@@ -199,6 +216,13 @@ export default function FeeStructureWorkspaceCard({
     candidate,
   });
   const publicationRequirements = publicationPrerequisites.map((key) => ({ key }));
+  const fillHeadsHeight =
+    tab === 'heads' &&
+    wideWorkspace &&
+    tallWorkspace &&
+    !heads.isError &&
+    !terms.error &&
+    !publicationPrerequisites.some((key) => key !== 'collection-policy');
   const { isLoading, isError, refetch } = context;
   const collectionItems = catalogs.collection.items;
   const refundItems = catalogs.refund.items;
@@ -220,8 +244,22 @@ export default function FeeStructureWorkspaceCard({
             policy.currentVersionId === candidate[`${family.key}PolicyVersionId`]
         );
         const evidence = locked ? record?.publicationReview : preview;
+        const refundScope =
+          family.key === 'refund' && selected?.feeHeadScope ? selected : undefined;
+        const impactPolicy = refundScope
+          ? {
+              id: refundScope.id,
+              currentVersionId: refundScope.versionId,
+              feeHeadScope: refundScope.feeHeadScope ?? undefined,
+              applicableFeeHeadIds: refundScope.applicableFeeHeadIds ?? undefined,
+            }
+          : raw;
         return {
           ...family,
+          incompatible:
+            !locked &&
+            family.key === 'refund' &&
+            refundPolicyMatchesHeads(refundScope ?? raw, candidate.feeHeads) === false,
           policyLabel:
             (locked
               ? record?.publicationReview?.policyLabels?.[family.key] ||
@@ -231,7 +269,7 @@ export default function FeeStructureWorkspaceCard({
               ? `${selected.name} · v${selected.versionNumber}${selected.isDefault ? ' · Default' : ''}`
               : record?.policyLabels?.[family.key] || 'Selected policy version'),
           rows: settings
-            ? policyImpactRows(family.key, candidate, settings, raw, evidence, locked)
+            ? policyImpactRows(family.key, candidate, settings, impactPolicy, evidence, locked)
             : undefined,
         };
       }),
@@ -249,16 +287,37 @@ export default function FeeStructureWorkspaceCard({
     ]),
   ]);
   const [submitted, setSubmitted] = useState(false);
+  const [advanceAttempted, setAdvanceAttempted] = useState(false);
+  const showHeadsErrors = submitted || Object.keys(formik.errors).length > 0;
   const [policiesSubmitted, setPoliciesSubmitted] = useState(false);
   const defaultsHandled = useRef(new Set<StructurePolicyFamily>());
   const patchRequest = useRef<{ fingerprint: string; id: string } | undefined>(undefined);
+  const canEdit = !viewOnly && !locked && !!settings?.permissions[record ? 'edit' : 'add'];
+  const missingFeeHeads = canEdit && !hasFeeHeads;
+  const missingRequiredFeeHead =
+    canEdit && hasFeeHeads && !candidate.feeHeads.some((line) => !line.isOptional);
+  const feeHeadsError =
+    showHeadsErrors && missingFeeHeads
+      ? 'Add at least one fee head.'
+      : advanceAttempted && missingRequiredFeeHead
+        ? 'Add a required fee head or turn off Optional fee for an existing one.'
+        : '';
+  const normalizedName = candidate.name.trim().toUpperCase();
+  const hasDuplicateRevisionName =
+    canEdit &&
+    draftRevision &&
+    persistedStructures.some(
+      ({ id, name }) => id !== record?.id && name.trim().toUpperCase() === normalizedName
+    );
   const nameError = !candidate.name.trim()
     ? 'Enter a name for this Fee Structure.'
     : candidate.name.trim().length > 256
       ? 'Use at most 256 characters.'
       : !financeNameSchema('Fee Structure Name').isValidSync(candidate.name)
         ? 'Fee Structure Name can only contain letters, numbers, and spaces'
-        : serverNameError;
+        : hasDuplicateRevisionName
+          ? duplicateStructureNameError
+          : serverNameError;
   const touch = (field: string) => {
     const term = field.startsWith('term:');
     const position = candidate.feeHeads.findIndex(
@@ -324,6 +383,14 @@ export default function FeeStructureWorkspaceCard({
   });
   const busy = saving || publishing || revising || deleting;
   const navigationBusy = busy || previewing;
+  const headsValid =
+    !missingFeeHeads &&
+    !nameError &&
+    !candidate.feeHeads.some(
+      (line) =>
+        (!line.isVariable && amountError(amountInputs[line.feeHeadId] ?? line.amount)) ||
+        paymentTermError(line)
+    );
   const busyCallback = useRef(onBusyChange);
   busyCallback.current = onBusyChange;
   useEffect(() => {
@@ -340,21 +407,24 @@ export default function FeeStructureWorkspaceCard({
     contentRef.current
       ?.querySelector<HTMLElement>('[aria-invalid="true"], [data-invalid="true"]')
       ?.focus();
-  }, [tab, submitted, error]);
-  const policiesValid = families.every(({ key }) => !structurePolicyError(candidate, key));
+  }, [tab, submitted, error, feeHeadsError]);
+  const refundMismatch = impacts.some((impact) => impact.incompatible);
+  const policiesValid =
+    !refundMismatch && families.every(({ key }) => !structurePolicyError(candidate, key));
   const publishBlockReason = publicationPrerequisites.length
     ? 'Complete the required fee setup before publishing.'
-    : !locked && !policiesValid
-      ? 'Select a Collection Policy and a Refund Policy before publishing.'
-      : dirty
-        ? 'Save draft before publishing.'
-        : preview?.errors.length
-          ? `Resolve ${preview.errors.length} issue${preview.errors.length === 1 ? '' : 's'} before publishing.`
-          : !preview?.isReady
-            ? 'Run the readiness check before publishing.'
-            : '';
-  const writable =
-    !viewOnly && !locked && !navigationBusy && !!settings?.permissions[record ? 'edit' : 'add'];
+    : missingFeeHeads || missingRequiredFeeHead || (draftRevision && nameError)
+      ? 'Complete Fee heads & terms before publishing.'
+      : !locked && !policiesValid
+        ? 'Select a Collection Policy and a Refund Policy before publishing.'
+        : dirty
+          ? 'Save draft before publishing.'
+          : preview?.errors.length
+            ? `Resolve ${preview.errors.length} issue${preview.errors.length === 1 ? '' : 's'} before publishing.`
+            : !preview?.isReady
+              ? 'Run the readiness check before publishing.'
+              : '';
+  const writable = canEdit && !navigationBusy;
   const dirtyCallback = useRef(onDirtyChange);
   dirtyCallback.current = onDirtyChange;
   useEffect(() => {
@@ -397,6 +467,17 @@ export default function FeeStructureWorkspaceCard({
         line.feeHeadId === id ? { ...line, ...values } : line
       ),
     });
+  const showSaveError = (cause: unknown) => {
+    const message = structureError(cause);
+    if (message === duplicateStructureNameError) {
+      setConfirmation(null);
+      setServerNameError(message);
+      focusErrorPending.current = true;
+      touch('name');
+      setTab('heads');
+    }
+    setError(message);
+  };
   const accept = (saved: StructureRecord) => {
     generation.current += 1;
     const next = structureCandidate(saved);
@@ -426,7 +507,7 @@ export default function FeeStructureWorkspaceCard({
       setPreview(record.publicationReview);
       return;
     }
-    if (publicationPrerequisites.length || !validateFields() || !validatePolicies()) return;
+    if (publicationPrerequisites.length || !validateFields(true) || !validatePolicies()) return;
     setError('');
     generation.current += 1;
     const requestGeneration = generation.current;
@@ -441,16 +522,11 @@ export default function FeeStructureWorkspaceCard({
       if (requestGeneration === generation.current) setError(structureError(cause));
     }
   };
-  const validateFields = () => {
+  const validateFields = (advancing = false) => {
     setSubmitted(true);
-    if (
-      nameError ||
-      candidate.feeHeads.some(
-        (line) =>
-          (!line.isVariable && amountError(amountInputs[line.feeHeadId] ?? line.amount)) ||
-          paymentTermError(line)
-      )
-    ) {
+    const requiresHead = advancing && missingRequiredFeeHead;
+    if (requiresHead) setAdvanceAttempted(true);
+    if (!headsValid || requiresHead) {
       focusErrorPending.current = true;
       setTab('heads');
       setError('Check the highlighted fields before saving or reviewing.');
@@ -463,50 +539,57 @@ export default function FeeStructureWorkspaceCard({
     setPoliciesSubmitted(true);
     focusErrorPending.current = true;
     setTab('policies');
-    setError('Select a Collection Policy and a Refund Policy before continuing.');
+    setError(
+      refundMismatch
+        ? 'Choose a refund policy that applies to at least one fee head in this structure.'
+        : 'Select a Collection Policy and a Refund Policy before continuing.'
+    );
     return false;
   };
-  const save = async (): Promise<boolean> => {
-    if (navigationBusy || !validateFields()) return false;
+  const save = async (advancing = false): Promise<boolean> => {
+    if (navigationBusy || !validateFields(advancing)) return false;
     setError('');
     try {
       const changes = record ? buildStructureChanges(JSON.parse(baseline), candidate) : undefined;
-      if (record && !Object.keys(changes ?? {}).length) {
+      const unchanged = !!record && !Object.keys(changes ?? {}).length;
+      if (unchanged && !draftRevision) {
         return true;
       }
       const fingerprint = JSON.stringify({ changes, stamp: candidate.concurrencyStamp });
       if (patchRequest.current?.fingerprint !== fingerprint)
         patchRequest.current = { fingerprint, id: uuidv4() };
-      accept(
-        await saveDraft({
-          ...scope,
-          requestId: record ? patchRequest.current.id : requestId,
-          changes,
-          structureId: record?.id,
-          standardFeeStructures: candidate,
-        }).unwrap()
-      );
-      shikshaMitraToast.success({ message: 'Draft saved. Review readiness before publishing.' });
+      const saved = await saveDraft({
+        ...scope,
+        requestId: record ? patchRequest.current.id : requestId,
+        changes,
+        structureId: record?.id,
+        standardFeeStructures: candidate,
+      }).unwrap();
+      if (!unchanged) {
+        accept(saved);
+        shikshaMitraToast.success({ message: 'Draft saved. Review readiness before publishing.' });
+      }
       return true;
     } catch (cause) {
-      const message = structureError(cause);
-      if (message.startsWith('A Fee Structure with this name')) {
-        setServerNameError(message);
-        touch('name');
-        setTab('heads');
-      }
-      setError(message);
+      showSaveError(cause);
       return false;
     }
   };
   const navigate = (step: number) => {
     if (navigationBusy || step === activeStep) return;
+    if (
+      step > activeStep &&
+      (missingFeeHeads || missingRequiredFeeHead || (draftRevision && nameError))
+    ) {
+      validateFields(true);
+      return;
+    }
     if (step === 2 && !validatePolicies()) return;
     setTab(workflowKeys[step]);
   };
   const saveAndNext = async () => {
     if (tab === 'policies' && !validatePolicies()) return;
-    if (!(await save())) return;
+    if (!(await save(true))) return;
     // Saving replaces the candidate with canonical server data. Review must
     // run from the next render, rather than against the old candidate here.
     setTab(workflowKeys[Math.min(activeStep + 1, 2)]);
@@ -518,6 +601,7 @@ export default function FeeStructureWorkspaceCard({
     if (action === 'discard') {
       setServerNameError('');
       setSubmitted(false);
+      setAdvanceAttempted(false);
       setPoliciesSubmitted(false);
       formik.setTouched({});
       setAmountInputs({});
@@ -545,10 +629,13 @@ export default function FeeStructureWorkspaceCard({
           if (publishBlockReason) setError(publishBlockReason);
           return;
         }
-        accept(await publish(args).unwrap());
-        shikshaMitraToast.success({
-          message: 'Fee Structure published. Its configuration is now protected.',
-        });
+        const published = await publish(args).unwrap();
+        accept(published);
+        if (onPublished) onPublished(published.name);
+        else
+          shikshaMitraToast.success({
+            message: 'Fee Structure published. Its configuration is now protected.',
+          });
       }
       if (action === 'revision') {
         await revise(args).unwrap();
@@ -558,7 +645,7 @@ export default function FeeStructureWorkspaceCard({
       }
       setConfirmation(null);
     } catch (cause) {
-      setError(structureError(cause));
+      showSaveError(cause);
     }
   };
   const reviewRef = useRef(review);
@@ -575,17 +662,11 @@ export default function FeeStructureWorkspaceCard({
     () => JSON.stringify(savedCandidate.feeHeads),
     [savedCandidate.feeHeads]
   );
-  const headsValid =
-    !nameError &&
-    !candidate.feeHeads.some(
-      (line) =>
-        (!line.isVariable && amountError(amountInputs[line.feeHeadId] ?? line.amount)) ||
-        paymentTermError(line)
-    );
   const headsSaved =
     !!record &&
     headsValid &&
-    candidate.feeHeads.length > 0 &&
+    hasFeeHeads &&
+    !missingRequiredFeeHead &&
     candidate.name === savedCandidate.name &&
     candidateHeadsJson === savedHeadsJson;
   const policiesSaved =
@@ -619,7 +700,9 @@ export default function FeeStructureWorkspaceCard({
             : []
         }
       />
-      <Label color={locked ? 'default' : 'warning'}>{locked ? 'Published' : 'Draft'}</Label>
+      {!actionsInList && (
+        <Label color={locked ? 'success' : 'warning'}>{locked ? 'Published' : 'Draft'}</Label>
+      )}
     </Stack>
   );
 
@@ -747,6 +830,7 @@ export default function FeeStructureWorkspaceCard({
               minHeight: 0,
               minWidth: 0,
               pt: 1,
+              '& .simplebar-content:has(> [data-fill-fee-heads])': { height: '100%' },
               '& .MuiStepper-vertical': {
                 width: 240,
                 minWidth: 240,
@@ -802,7 +886,7 @@ export default function FeeStructureWorkspaceCard({
               validationSchema={validationSchema}
               completedSteps={completedSteps}
               errors={[
-                Boolean((submitted || Object.keys(formik.errors).length > 0) && !headsValid),
+                (showHeadsErrors && !headsValid) || !!feeHeadsError,
                 Boolean(policiesSubmitted && !locked && !policiesValid),
                 Boolean(preview?.errors.length),
               ]}
@@ -848,8 +932,19 @@ export default function FeeStructureWorkspaceCard({
                   ref={contentRef}
                   role="region"
                   tabIndex={-1}
+                  data-fill-fee-heads={fillHeadsHeight ? '' : undefined}
                   aria-label={workflowSteps[activeStep]}
-                  sx={{ minWidth: 0, p: { xs: 1.5, sm: 2 }, outline: 'none' }}
+                  sx={{
+                    minWidth: 0,
+                    p: { xs: 1.5, sm: 2 },
+                    outline: 'none',
+                    ...(fillHeadsHeight && {
+                      display: 'flex',
+                      flexDirection: 'column',
+                      flex: 1,
+                      minHeight: 0,
+                    }),
+                  }}
                 >
                   {tab === 'heads' && (
                     <FeeStructureHeadsStep
@@ -866,9 +961,11 @@ export default function FeeStructureWorkspaceCard({
                       writable={writable}
                       busy={navigationBusy}
                       locked={!!locked}
-                      revision={!!record?.previousRevisionId}
-                      submitted={submitted || Object.keys(formik.errors).length > 0}
+                      fillHeight={fillHeadsHeight}
+                      submitted={showHeadsErrors}
                       nameError={nameError}
+                      showNameError={hasDuplicateRevisionName}
+                      feeHeadsError={feeHeadsError}
                       amountInputs={amountInputs}
                       touched={touched}
                       headsLoading={heads.isFetching}
@@ -980,9 +1077,12 @@ export default function FeeStructureWorkspaceCard({
         </Box>
       )}
       {selectedImpact && settings && (
-        <PolicyImpactDialog
+        <AttachedPolicyImpactDialog
+          family={selectedImpact.key}
           title={selectedImpact.label}
           policyLabel={selectedImpact.policyLabel}
+          candidate={candidate}
+          settings={settings}
           rows={selectedImpact.rows}
           loading={catalogs[selectedImpact.key].loading || heads.isFetching}
           error={catalogs[selectedImpact.key].error || heads.isError}

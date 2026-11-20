@@ -124,8 +124,8 @@ export interface IFeeStructureFormProps {
 
 export interface IFeeStructureEditFormProps {
   onBusyChange?: (busy: boolean) => void;
+  onPublished: (name: string) => void;
   editData: IFeeStructure;
-  onClose: (e: any, isSubmit?: boolean) => void;
   viewOnly?: boolean;
 }
 

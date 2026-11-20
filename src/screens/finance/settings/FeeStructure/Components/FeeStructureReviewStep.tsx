@@ -10,11 +10,12 @@ import { useState, useEffect } from 'react';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { EmptyContent } from 'src/components/empty-content';
 import CustomTooltip from 'src/components/custom-tooltip';
 import CustomAccordion from 'src/components/custom-accordian';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { FormSectionCard } from 'src/components/form-section-card';
-import { DetailField, DetailSection } from 'src/screens/finance/components/detail-view';
+import { DetailGrid, DetailField, DetailSection } from 'src/screens/finance/components/detail-view';
 import { Box, Stack, Button, IconButton, Typography, AccordionSummary } from '@mui/material';
 
 import { structureMoney } from '../feeStructurePresentation';
@@ -63,23 +64,16 @@ export default function FeeStructureReviewStep({
     <Stack spacing={1.5}>
       <DetailSection
         collapsible
-        helpText="Fixed fee total includes optional heads. All assigned heads are available in Fee Collection. Variable amounts are set during student assignment; this is not a student's amount due."
+        helpText="Shows fee head totals and attached policies. The fixed fee total includes optional heads. All assigned heads are available in Fee Collection. Student assignment determines variable amounts and what a student owes."
         icon={GlobalIcons.notebook}
         title="Structure Summary"
-
         action={
-          <Label color={locked ? 'info' : preview?.isReady ? 'success' : 'warning'}>
+          <Label color={locked || preview?.isReady ? 'success' : 'warning'}>
             {locked ? 'Published' : preview?.isReady ? 'Ready to publish' : 'Draft'}
           </Label>
         }
       >
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(4, minmax(0, 1fr))' },
-            gap: 2,
-          }}
-        >
+        <DetailGrid desktopColumns={4} desktopMinWidth={800}>
           {[
             {
               label: 'Fixed fee total',
@@ -101,51 +95,21 @@ export default function FeeStructureReviewStep({
           ].map((item) => (
             <DetailField key={item.label} label={item.label} value={item.value} />
           ))}
-        </Box>
+        </DetailGrid>
+        <DetailGrid desktopColumns={2} desktopMinWidth={680}>
+          {impacts.map(({ key, label, policyLabel, empty }) => (
+            <DetailField
+              key={key}
+              label={label}
+              value={
+                candidate[`${key}PolicyVersionId`]
+                  ? policyLabel.replace(/ · v\d+(?: · Default)?$/, '')
+                  : empty
+              }
+            />
+          ))}
+        </DetailGrid>
       </DetailSection>
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'repeat(2, minmax(0, 1fr))' },
-          gap: 1.5,
-          alignItems: 'start',
-        }}
-      >
-        {impacts.map((impact) => (
-          <DetailSection
-            collapsible
-            defaultExpanded={false}
-            key={impact.key}
-            icon={GlobalIcons.receiptIcon}
-            title={impact.label}
-            helpText={impact.description}
-            action={
-              <CustomTooltip title={`${writable ? 'Edit' : 'View'} ${impact.label}`}>
-                <span>
-                  <IconButton
-                    size="small"
-                    sx={{ border: 1, borderColor: 'divider', borderRadius: 1 }}
-                    disabled={busy}
-                    aria-label={`${writable ? 'Edit' : 'View'} ${impact.label}`}
-                    onClick={() => onNavigate(1)}
-                  >
-                    <Iconify icon={writable ? GlobalIcons.edit : GlobalIcons.eye} />
-                  </IconButton>
-                </span>
-              </CustomTooltip>
-            }
-          >
-            <Stack direction="row" spacing={1} alignItems="baseline" sx={{ minWidth: 0 }}>
-              <Typography variant="body2" color="text.secondary" sx={{ flexShrink: 0 }}>
-                Attached policy:
-              </Typography>
-              <Typography variant="body2" sx={{ minWidth: 0, overflowWrap: 'anywhere' }}>
-                {candidate[`${impact.key}PolicyVersionId`] ? impact.policyLabel : impact.empty}
-              </Typography>
-            </Stack>
-          </DetailSection>
-        ))}
-      </Box>
 
       <FormSectionCard
         collapsible
@@ -214,7 +178,12 @@ export default function FeeStructureReviewStep({
               </Stack>
             )}
             {!preview.errors.length && preview.isReady && (
-              <Typography variant="body2">No issues block publication.</Typography>
+              <EmptyContent
+                filled
+                title="No issues block publication."
+                sx={{ py: 2 }}
+                slotProps={{ img: { width: 100, height: 100 } }}
+              />
             )}
             {!!preview.warnings.length && (
               <Box
@@ -270,9 +239,8 @@ export default function FeeStructureReviewStep({
                     aria-label={writable ? 'Edit policies' : 'View policies'}
                     disabled={busy}
                     onClick={() => onNavigate(1)}
-                    sx={{ border: 1, borderColor: 'divider', borderRadius: 1 }}
                   >
-                    <Iconify icon={writable ? GlobalIcons.edit : GlobalIcons.eye} />
+                    <Iconify icon={writable ? GlobalIcons.edit : GlobalIcons.eye} width={16} />
                   </IconButton>
                 </span>
               </CustomTooltip>
@@ -349,9 +317,8 @@ export default function FeeStructureReviewStep({
                     aria-label={writable ? 'Edit fee heads' : 'View fee heads'}
                     disabled={busy}
                     onClick={() => onNavigate(0)}
-                    sx={{ border: 1, borderColor: 'divider', borderRadius: 1 }}
                   >
-                    <Iconify icon={writable ? GlobalIcons.edit : GlobalIcons.eye} />
+                    <Iconify icon={writable ? GlobalIcons.edit : GlobalIcons.eye} width={16} />
                   </IconButton>
                 </span>
               </CustomTooltip>

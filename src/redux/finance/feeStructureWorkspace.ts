@@ -76,6 +76,9 @@ export interface StructureSettings extends StructureContext {
     versionNumber: number;
     isCurrent: boolean;
     isDefault?: boolean;
+    feeHeadScope?: 'AllFeeHeads' | 'SelectedFeeHeads' | null;
+    applicableFeeHeadIds?: string[] | null;
+    feeHeadNames?: Record<string, string> | null;
   }[];
   terms: {
     id: string;

@@ -1,9 +1,9 @@
+import type { DateRange } from 'src/components/custom-date-range-picker';
 import type {
   AssignmentRequest,
   AssignmentCandidate,
   AssignmentServicePeriod,
 } from 'src/redux/finance/studentFeeAssignment';
-import type { DateRange } from 'src/components/custom-date-range-picker';
 
 import dayjs from 'dayjs';
 import { useId, useState } from 'react';
@@ -12,7 +12,9 @@ import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { FormSectionHeader } from 'src/components/form-section-card';
 import { CustomDateRangePicker } from 'src/components/custom-date-range-picker';
+import { getPayableMonthCount } from 'src/utils/fee-structure-assignment-calculations';
 import { amountError } from 'src/screens/finance/settings/FeeStructure/feeStructureModel';
 import { useAssignmentTransportSourcesQuery } from 'src/redux/finance/studentFeeAssignment';
 import {
@@ -20,6 +22,7 @@ import {
   Stack,
   Alert,
   Button,
+  Divider,
   Checkbox,
   TextField,
   IconButton,
@@ -97,336 +100,383 @@ export default function AssignmentStudentInputs({
 
   return (
     <Stack spacing={1.5}>
-      <Stack divider={<Box sx={{ borderBottom: 1, borderColor: 'divider' }} />}>
-        {candidate.heads.map((head) => {
-          const { feeHeadId, feeHeadName } = head;
-          const checkboxId = `${selectionId}-${feeHeadId}`;
-          const included = isIncluded(head);
-          const canEditAmount =
-            head.isVariable ||
-            (head.isOptional && canOverrideAmount && Boolean(request.editAssignmentId));
-          const amount = amountFor(head);
-          const amountIssue =
-            showErrors || touched.includes(feeHeadId) ? amountError(amount) : undefined;
-          const variable = request.variableFeeHeads?.find((input) => input.feeHeadId === feeHeadId);
-          const savedPeriod = request.servicePeriods.find((item) => item.feeHeadId === feeHeadId);
-          const admissionPeriod =
-            head.servicePeriod?.source === 'Registration'
-              ? head.servicePeriod
-              : savedPeriod?.source === 'Registration'
-                ? savedPeriod
-                : undefined;
-          const defaultPeriod: AssignmentServicePeriod = admissionPeriod ?? {
-            feeHeadId,
-            source: request.chargePeriodSource ?? 'AcademicYear',
-            ...(request.chargePeriodSource && {
-              startDate: request.chargeStartDate,
-              endDate: request.chargeEndDate,
-            }),
-          };
-          const period = savedPeriod ?? defaultPeriod;
-          const transportPeriod = period.source === 'TransportService';
-          const transportRecord = transportPeriod
-            ? transport.data?.find((record) => record.id === period.sourceReferenceId)
-            : undefined;
-          const defaultStart = parseDate(defaultPeriod.startDate) ?? yearBounds?.start;
-          const defaultEnd = parseDate(defaultPeriod.endDate) ?? yearBounds?.end;
-          const savedRange =
-            period.source !== 'AcademicYear' && period.source !== 'BoardAcademicYear';
-          const start =
-            parseDate(period.startDate ?? transportRecord?.startDate) ??
-            (savedRange ? null : (defaultStart ?? null));
-          const end =
-            parseDate(period.endDate ?? transportRecord?.endDate) ??
-            (savedRange ? null : (defaultEnd ?? null));
-          const dateErrors = servicePeriodErrors(period, validationBounds);
-          const rangeError =
-            dateErrors.start ||
-            dateErrors.end ||
-            (!yearBounds ? 'Selected academic year dates are unavailable.' : undefined);
-          const reasonError =
-            showErrors || touched.includes(`${feeHeadId}-reason`) ? dateErrors.reason : undefined;
-          const canUseTransport =
-            allowTransportSource && head.supportsTransportSource && !head.isVariable;
-          const expanded =
-            flat || canEditAmount || Boolean(savedPeriod) || expandedHeads.includes(feeHeadId);
+      {[
+        {
+          optional: false,
+          title: 'Required Fee Heads',
+          help: 'These fees are required by the selected structure and remain included.',
+        },
+        {
+          optional: true,
+          title: 'Optional Fee Heads',
+          help: 'Select the optional fees to include. Clear a checkbox to remove that fee before saving.',
+        },
+      ].map(({ optional, title, help }) => {
+        const heads = candidate.heads.filter((head) => head.isOptional === optional);
+        if (!heads.length) return null;
+        return (
+          <Stack key={title} role="group" aria-label={title} spacing={1}>
+            {optional && candidate.heads.some((head) => !head.isOptional) && <Divider />}
+            <FormSectionHeader title={title} descriptionTooltip={help} />
+            <Stack divider={<Box sx={{ borderBottom: 1, borderColor: 'divider' }} />}>
+              {heads.map((head) => {
+                const { feeHeadId, feeHeadName } = head;
+                const checkboxId = `${selectionId}-${feeHeadId}`;
+                const included = isIncluded(head);
+                const canEditAmount =
+                  head.isVariable ||
+                  (head.isOptional && canOverrideAmount && Boolean(request.editAssignmentId));
+                const amount = amountFor(head);
+                const amountIssue =
+                  showErrors || touched.includes(feeHeadId) ? amountError(amount) : undefined;
+                const variable = request.variableFeeHeads?.find(
+                  (input) => input.feeHeadId === feeHeadId
+                );
+                const savedPeriod = request.servicePeriods.find(
+                  (item) => item.feeHeadId === feeHeadId
+                );
+                const admissionPeriod =
+                  head.servicePeriod?.source === 'Registration'
+                    ? head.servicePeriod
+                    : savedPeriod?.source === 'Registration'
+                      ? savedPeriod
+                      : undefined;
+                const defaultPeriod: AssignmentServicePeriod = admissionPeriod ?? {
+                  feeHeadId,
+                  source: request.chargePeriodSource ?? 'AcademicYear',
+                  ...(request.chargePeriodSource && {
+                    startDate: request.chargeStartDate,
+                    endDate: request.chargeEndDate,
+                  }),
+                };
+                const period = savedPeriod ?? defaultPeriod;
+                const transportPeriod = period.source === 'TransportService';
+                const transportRecord = transportPeriod
+                  ? transport.data?.find((record) => record.id === period.sourceReferenceId)
+                  : undefined;
+                const defaultStart = parseDate(defaultPeriod.startDate) ?? yearBounds?.start;
+                const defaultEnd = parseDate(defaultPeriod.endDate) ?? yearBounds?.end;
+                const savedRange =
+                  period.source !== 'AcademicYear' && period.source !== 'BoardAcademicYear';
+                const start =
+                  parseDate(period.startDate ?? transportRecord?.startDate) ??
+                  (savedRange ? null : (defaultStart ?? null));
+                const end =
+                  parseDate(period.endDate ?? transportRecord?.endDate) ??
+                  (savedRange ? null : (defaultEnd ?? null));
+                const dateErrors = servicePeriodErrors(period, validationBounds);
+                const rangeError =
+                  dateErrors.start ||
+                  dateErrors.end ||
+                  (!yearBounds ? 'Selected academic year dates are unavailable.' : undefined);
+                const monthCount =
+                  start?.isValid() && end?.isValid() && !end.isBefore(start, 'day')
+                    ? getPayableMonthCount(
+                        start.month() + 1,
+                        end.month() + 1,
+                        start.year(),
+                        end.year()
+                      )
+                    : null;
+                const monthHelper =
+                  monthCount === null
+                    ? undefined
+                    : `${monthCount} ${monthCount === 1 ? 'month' : 'months'} covered`;
+                const canUseTransport =
+                  allowTransportSource && head.supportsTransportSource && !head.isVariable;
+                const expanded =
+                  flat ||
+                  canEditAmount ||
+                  Boolean(savedPeriod) ||
+                  expandedHeads.includes(feeHeadId);
 
-          const changeDates = ([nextStart, nextEnd]: DateRange) => {
-            if (!canOverrideDates || disabled || !nextStart || !nextEnd) return;
-            if (nextStart.isSame(start, 'day') && nextEnd.isSame(end, 'day')) return;
-            const isDefault =
-              defaultStart &&
-              defaultEnd &&
-              nextStart.isSame(defaultStart, 'day') &&
-              nextEnd.isSame(defaultEnd, 'day');
-            updatePeriod(
-              isDefault
-                ? defaultPeriod
-                : {
-                    feeHeadId,
-                    source: 'ManualOverride',
-                    startDate: serializeServiceDate(nextStart),
-                    endDate: serializeServiceDate(nextEnd),
-                    ...(period.source === 'ManualOverride' && { reason: period.reason }),
+                const changeDates = ([nextStart, nextEnd]: DateRange) => {
+                  if (!canOverrideDates || disabled) return;
+                  if (!nextStart || !nextEnd) {
+                    updatePeriod({ feeHeadId, source: 'ManualOverride' });
+                    return;
                   }
-            );
-          };
+                  if (nextStart.isSame(start, 'day') && nextEnd.isSame(end, 'day')) return;
+                  const isDefault =
+                    defaultStart &&
+                    defaultEnd &&
+                    nextStart.isSame(defaultStart, 'day') &&
+                    nextEnd.isSame(defaultEnd, 'day');
+                  updatePeriod(
+                    isDefault
+                      ? defaultPeriod
+                      : {
+                          feeHeadId,
+                          source: 'ManualOverride',
+                          startDate: serializeServiceDate(nextStart),
+                          endDate: serializeServiceDate(nextEnd),
+                        }
+                  );
+                };
 
-          const selectOptional = (checked: boolean) => {
-            onChange({
-              ...request,
-              selectedOptionalFeeHeadIds: checked
-                ? [...request.selectedOptionalFeeHeadIds, feeHeadId]
-                : request.selectedOptionalFeeHeadIds.filter((id) => id !== feeHeadId),
-              servicePeriods: checked
-                ? [...request.servicePeriods, ...(admissionPeriod ? [admissionPeriod] : [])]
-                : request.servicePeriods.filter((item) => item.feeHeadId !== feeHeadId),
-              feeHeadDetails: checked
-                ? request.feeHeadDetails
-                : request.feeHeadDetails.filter((item) => item.feeHeadId !== feeHeadId),
-              variableFeeHeads: checked
-                ? request.variableFeeHeads
-                : request.variableFeeHeads?.filter((item) => item.feeHeadId !== feeHeadId),
-            });
-          };
+                const selectOptional = (checked: boolean) => {
+                  onChange({
+                    ...request,
+                    selectedOptionalFeeHeadIds: checked
+                      ? [...request.selectedOptionalFeeHeadIds, feeHeadId]
+                      : request.selectedOptionalFeeHeadIds.filter((id) => id !== feeHeadId),
+                    servicePeriods: checked
+                      ? [...request.servicePeriods, ...(admissionPeriod ? [admissionPeriod] : [])]
+                      : request.servicePeriods.filter((item) => item.feeHeadId !== feeHeadId),
+                    feeHeadDetails: checked
+                      ? request.feeHeadDetails
+                      : request.feeHeadDetails.filter((item) => item.feeHeadId !== feeHeadId),
+                    variableFeeHeads: checked
+                      ? request.variableFeeHeads
+                      : request.variableFeeHeads?.filter((item) => item.feeHeadId !== feeHeadId),
+                  });
+                };
 
-          return (
-            <Box
-              key={feeHeadId}
-              component="section"
-              aria-label={feeHeadName}
-              sx={{
-                py: 1.5,
-                display: 'grid',
-                gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'minmax(0, 1fr) minmax(0, 2fr)' },
-                gap: 1.5,
-                alignItems: 'start',
-              }}
-            >
-              <Box
-                sx={{
-                  display: 'grid',
-                  gridTemplateColumns: '36px minmax(0, 1fr)',
-                  columnGap: 0.5,
-                  minHeight: 36,
-                  alignItems: 'center',
-                }}
-              >
-                {head.isOptional && (
-                  <Checkbox
-                    checked={included}
-                    disabled={disabled || lockOptionalSelection}
-                    onChange={(_, checked) => selectOptional(checked)}
-                    slotProps={{ input: { id: checkboxId } }}
-                    sx={{ gridColumn: 1, gridRow: 1, justifySelf: 'center' }}
-                  />
-                )}
-                <Stack
-                  direction="row"
-                  spacing={1}
-                  alignItems="center"
-                  flexWrap="wrap"
-                  useFlexGap
-                  sx={{ gridColumn: 2, gridRow: 1, minWidth: 0 }}
-                >
-                  <Typography component="h3" variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
-                    {head.isOptional ? <label htmlFor={checkboxId}>{feeHeadName}</label> : feeHeadName}
-                  </Typography>
-                  <Label color={head.isOptional ? 'info' : 'default'}>
-                    {head.isOptional ? 'Optional' : 'Required'}
-                  </Label>
-                  {!flat && included && !expanded && (
-                    <CustomTooltip title={`Expand ${feeHeadName}`}>
-                      <IconButton
-                        size="small"
-                        disabled={disabled}
-                        aria-label={`Expand ${feeHeadName}`}
-                        onClick={() => setExpandedHeads((previous) => [...previous, feeHeadId])}
-                      >
-                        <Iconify icon="mdi:chevron-down" />
-                      </IconButton>
-                    </CustomTooltip>
-                  )}
-                </Stack>
-              </Box>
-              {included && (
-                <Box
-                  sx={{
-                    display: 'grid',
-                    gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))' },
-                    gap: 1.5,
-                    alignItems: 'start',
-                  }}
-                >
-                  {expanded ? (
-                    <Stack spacing={1}>
-                      <CustomDateRangePicker
-                        label="Start – end date"
-                        name={`${request.studentId}-${feeHeadId}-service-dates`}
-                        dateFormat="DD/MM/YYYY"
-                        singleInput
-                        calendars={1}
-                        value={[start, end]}
-                        minDate={yearBounds?.start}
-                        maxDate={yearBounds?.end}
-                        disabled={disabled || (!yearBounds && !start && !end)}
-                        readOnly={!canOverrideDates || !yearBounds}
-                        error={Boolean(rangeError)}
-                        helperText={rangeError}
-                        onChange={changeDates}
-                      />
-                      {period.source === 'ManualOverride' && (
-                        <TextField
-                          label="Reason for changing dates"
-                          size="small"
-                          fullWidth
-                          required
-                          value={period.reason ?? ''}
-                          disabled={disabled}
-                          inputProps={{ maxLength: 500 }}
-                          onBlur={() => touch(`${feeHeadId}-reason`)}
-                          error={Boolean(reasonError)}
-                          helperText={reasonError}
-                          onChange={(event) =>
-                            updatePeriod({ ...period, reason: event.target.value })
-                          }
+                return (
+                  <Box
+                    key={feeHeadId}
+                    component="section"
+                    aria-label={feeHeadName}
+                    sx={{
+                      py: 1.5,
+                      display: 'grid',
+                      gridTemplateColumns: {
+                        xs: 'minmax(0, 1fr)',
+                        sm: 'minmax(0, 1fr) minmax(0, 2fr)',
+                      },
+                      gap: 1.5,
+                      alignItems: 'start',
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        display: 'grid',
+                        gridTemplateColumns: head.isOptional
+                          ? '36px minmax(0, 1fr)'
+                          : 'minmax(0, 1fr)',
+                        columnGap: 0.5,
+                        minHeight: 36,
+                        alignItems: 'center',
+                      }}
+                    >
+                      {head.isOptional && (
+                        <Checkbox
+                          checked={included}
+                          disabled={disabled || lockOptionalSelection}
+                          onChange={(_, checked) => selectOptional(checked)}
+                          slotProps={{ input: { id: checkboxId } }}
+                          sx={{ gridColumn: 1, gridRow: 1, justifySelf: 'center' }}
                         />
                       )}
-                      {canUseTransport && (
-                        <Button
-                          size="small"
-                          sx={{ alignSelf: 'flex-start' }}
-                          disabled={disabled}
-                          onClick={() =>
-                            updatePeriod(
-                              transportPeriod
-                                ? defaultPeriod
-                                : { feeHeadId, source: 'TransportService' }
-                            )
-                          }
+                      <Stack
+                        direction="row"
+                        spacing={1}
+                        alignItems="center"
+                        flexWrap="wrap"
+                        useFlexGap
+                        sx={{ gridColumn: head.isOptional ? 2 : 1, gridRow: 1, minWidth: 0 }}
+                      >
+                        <Typography
+                          component="h3"
+                          variant="subtitle2"
+                          sx={{ overflowWrap: 'anywhere' }}
                         >
-                          {transportPeriod ? 'Use default dates' : 'Use transport dates'}
-                        </Button>
-                      )}
-                      {transportPeriod && canUseTransport && (
-                        <>
-                          <CustomSelect
-                            size="small"
-                            name={`${feeHeadId}-transport`}
-                            label="Transport record"
-                            value={period.sourceReferenceId ?? ''}
-                            isLoading={transport.isLoading}
-                            disabled={disabled}
-                            options={(transport.data ?? []).map((record) => ({
-                              value: record.id,
-                              label: record.label,
-                            }))}
-                            onChange={(value) =>
-                              updatePeriod({
-                                feeHeadId,
-                                source: 'TransportService',
-                                sourceReferenceId: String(value),
-                              })
-                            }
-                          />
-                          {transport.isError && (
-                            <Alert
-                              severity="error"
-                              action={
-                                <Button size="small" onClick={() => transport.refetch()}>
-                                  Retry
-                                </Button>
+                          {head.isOptional ? (
+                            <label htmlFor={checkboxId}>{feeHeadName}</label>
+                          ) : (
+                            feeHeadName
+                          )}
+                        </Typography>
+                        <Label color={head.isOptional ? 'info' : 'default'}>
+                          {head.isOptional ? 'Optional' : 'Required'}
+                        </Label>
+                        {!flat && included && !expanded && (
+                          <CustomTooltip title={`Expand ${feeHeadName}`}>
+                            <IconButton
+                              size="small"
+                              disabled={disabled}
+                              aria-label={`Expand ${feeHeadName}`}
+                              onClick={() =>
+                                setExpandedHeads((previous) => [...previous, feeHeadId])
                               }
                             >
-                              Transport records could not be loaded.
-                            </Alert>
-                          )}
-                        </>
-                      )}
-                    </Stack>
-                  ) : (
-                    <Box />
-                  )}
-                  {canEditAmount ? (
-                    <Stack spacing={1}>
-                      <AssignmentMoneyInput
-                        label={head.isVariable ? 'Monthly amount' : `${feeHeadName} amount`}
-                        name={`${request.studentId}-${feeHeadId}-amount`}
-                        required
-                        fullWidth
-                        value={amount ?? null}
-                        disabled={disabled}
-                        error={Boolean(amountIssue)}
-                        helperText={
-                          amountIssue || (head.isVariable ? 'Total for the selected dates' : undefined)
-                        }
-                        onBlur={() => touch(feeHeadId)}
-                        onAmountChange={(value) =>
-                          onChange(
-                            head.isVariable
-                              ? {
-                                  ...request,
-                                  variableFeeHeads: [
-                                    ...(request.variableFeeHeads ?? []).filter(
-                                      (item) => item.feeHeadId !== feeHeadId
-                                    ),
-                                    {
+                              <Iconify icon="mdi:chevron-down" />
+                            </IconButton>
+                          </CustomTooltip>
+                        )}
+                      </Stack>
+                    </Box>
+                    {included && (
+                      <Box
+                        sx={{
+                          display: 'grid',
+                          gridTemplateColumns: {
+                            xs: 'minmax(0, 1fr)',
+                            sm: 'repeat(2, minmax(0, 1fr))',
+                          },
+                          gap: 1.5,
+                          alignItems: 'start',
+                        }}
+                      >
+                        {expanded ? (
+                          <Stack spacing={1}>
+                            <CustomDateRangePicker
+                              label="Start – end date"
+                              name={`${request.studentId}-${feeHeadId}-service-dates`}
+                              dateFormat="DD/MM/YYYY"
+                              singleInput
+                              calendars={2}
+                              showShortcuts={false}
+                              allowManualInput
+                              value={[start, end]}
+                              minDate={yearBounds?.start}
+                              maxDate={yearBounds?.end}
+                              disabled={disabled || (!yearBounds && !start && !end)}
+                              readOnly={!canOverrideDates || !yearBounds}
+                              error={Boolean(rangeError)}
+                              helperText={rangeError ?? monthHelper}
+                              onChange={changeDates}
+                            />
+                            {canUseTransport && (
+                              <Button
+                                size="small"
+                                sx={{ alignSelf: 'flex-start' }}
+                                disabled={disabled}
+                                onClick={() =>
+                                  updatePeriod(
+                                    transportPeriod
+                                      ? defaultPeriod
+                                      : { feeHeadId, source: 'TransportService' }
+                                  )
+                                }
+                              >
+                                {transportPeriod ? 'Use default dates' : 'Use transport dates'}
+                              </Button>
+                            )}
+                            {transportPeriod && canUseTransport && (
+                              <>
+                                <CustomSelect
+                                  size="small"
+                                  name={`${feeHeadId}-transport`}
+                                  label="Transport record"
+                                  value={period.sourceReferenceId ?? ''}
+                                  isLoading={transport.isLoading}
+                                  disabled={disabled}
+                                  options={(transport.data ?? []).map((record) => ({
+                                    value: record.id,
+                                    label: record.label,
+                                  }))}
+                                  onChange={(value) =>
+                                    updatePeriod({
                                       feeHeadId,
-                                      amount: value,
-                                      zeroAmountReason: variable?.zeroAmountReason,
-                                    },
-                                  ],
-                                }
-                              : {
-                                  ...request,
-                                  feeHeadDetails: [
-                                    ...request.feeHeadDetails.filter(
-                                      (item) => item.feeHeadId !== feeHeadId
+                                      source: 'TransportService',
+                                      sourceReferenceId: String(value),
+                                    })
+                                  }
+                                />
+                                {transport.isError && (
+                                  <Alert
+                                    severity="error"
+                                    action={
+                                      <Button size="small" onClick={() => transport.refetch()}>
+                                        Retry
+                                      </Button>
+                                    }
+                                  >
+                                    Transport records could not be loaded.
+                                  </Alert>
+                                )}
+                              </>
+                            )}
+                          </Stack>
+                        ) : (
+                          <Box />
+                        )}
+                        {canEditAmount ? (
+                          <Stack spacing={1}>
+                            <AssignmentMoneyInput
+                              label={head.isVariable ? 'Monthly amount' : `${feeHeadName} amount`}
+                              name={`${request.studentId}-${feeHeadId}-amount`}
+                              required
+                              fullWidth
+                              value={amount ?? null}
+                              disabled={disabled}
+                              error={Boolean(amountIssue)}
+                              helperText={
+                                amountIssue ||
+                                (head.isVariable ? 'Total for the selected dates' : undefined)
+                              }
+                              onBlur={() => touch(feeHeadId)}
+                              onAmountChange={(value) =>
+                                onChange(
+                                  head.isVariable
+                                    ? {
+                                        ...request,
+                                        variableFeeHeads: [
+                                          ...(request.variableFeeHeads ?? []).filter(
+                                            (item) => item.feeHeadId !== feeHeadId
+                                          ),
+                                          {
+                                            feeHeadId,
+                                            amount: value,
+                                            zeroAmountReason: variable?.zeroAmountReason,
+                                          },
+                                        ],
+                                      }
+                                    : {
+                                        ...request,
+                                        feeHeadDetails: [
+                                          ...request.feeHeadDetails.filter(
+                                            (item) => item.feeHeadId !== feeHeadId
+                                          ),
+                                          ...(value === head.configuredAmount
+                                            ? []
+                                            : [{ feeHeadId, amount: value }]),
+                                        ],
+                                      }
+                                )
+                              }
+                            />
+                            {head.isVariable && variable?.amount === 0 && (
+                              <TextField
+                                label="Reason for zero amount"
+                                fullWidth
+                                size="small"
+                                required
+                                value={variable.zeroAmountReason ?? ''}
+                                disabled={disabled}
+                                inputProps={{ maxLength: 500 }}
+                                onChange={(event) =>
+                                  onChange({
+                                    ...request,
+                                    variableFeeHeads: (request.variableFeeHeads ?? []).map(
+                                      (item) =>
+                                        item.feeHeadId === feeHeadId
+                                          ? { ...item, zeroAmountReason: event.target.value }
+                                          : item
                                     ),
-                                    ...(value === head.configuredAmount
-                                      ? []
-                                      : [{ feeHeadId, amount: value }]),
-                                  ],
+                                  })
                                 }
-                          )
-                        }
-                      />
-                      {head.isVariable && variable?.amount === 0 && (
-                        <TextField
-                          label="Reason for zero amount"
-                          fullWidth
-                          size="small"
-                          required
-                          value={variable.zeroAmountReason ?? ''}
-                          disabled={disabled}
-                          inputProps={{ maxLength: 500 }}
-                          onChange={(event) =>
-                            onChange({
-                              ...request,
-                              variableFeeHeads: (request.variableFeeHeads ?? []).map((item) =>
-                                item.feeHeadId === feeHeadId
-                                  ? { ...item, zeroAmountReason: event.target.value }
-                                  : item
-                              ),
-                            })
-                          }
-                        />
-                      )}
-                    </Stack>
-                  ) : (
-                    <Typography
-                      variant="subtitle2"
-                      sx={{ textAlign: { sm: 'right' }, fontVariantNumeric: 'tabular-nums' }}
-                    >
-                      {amount == null ? '—' : formatNumber(amount, 'INR')}
-                    </Typography>
-                  )}
-                </Box>
-              )}
-            </Box>
-          );
-        })}
-      </Stack>
+                              />
+                            )}
+                          </Stack>
+                        ) : (
+                          <Typography
+                            variant="subtitle2"
+                            sx={{ textAlign: { sm: 'right' }, fontVariantNumeric: 'tabular-nums' }}
+                          >
+                            {amount == null ? '—' : formatNumber(amount, 'INR')}
+                          </Typography>
+                        )}
+                      </Box>
+                    )}
+                  </Box>
+                );
+              })}
+            </Stack>
+          </Stack>
+        );
+      })}
       <Stack
         direction="row"
         justifyContent="space-between"

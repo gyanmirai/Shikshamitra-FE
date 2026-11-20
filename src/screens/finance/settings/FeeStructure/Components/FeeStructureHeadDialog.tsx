@@ -205,7 +205,8 @@ export default function FeeStructureHeadDialog({
   }, [settings.heads, lines, line]);
   const terms = settings.terms.map((term) => ({
     value: term.versionId,
-    label: `${term.name} · v${term.versionNumber}${term.isDefault ? ' · Default' : ''}`,
+    label: `${term.name}${term.isDefault ? ' · Default' : ''}`,
+    version: `v${term.versionNumber}`,
   }));
   if (
     line?.paymentTermId &&
@@ -214,7 +215,8 @@ export default function FeeStructureHeadDialog({
   )
     terms.push({
       value: line.paymentTermVersionId,
-      label: `${line.paymentTermName || 'Attached term'} · v${line.paymentTermVersionNumber ?? '?'} · retained`,
+      label: `${line.paymentTermName || 'Attached term'} · retained`,
+      version: `v${line.paymentTermVersionNumber ?? '?'}`,
     });
   const errorFor = (field: keyof typeof formik.values) =>
     revealErrors || formik.touched[field] || formik.submitCount > 0
@@ -381,6 +383,11 @@ export default function FeeStructureHeadDialog({
                   options={terms}
                   labelKey="label"
                   valueKey="value"
+                  optionEndLabelKey="version"
+                  renderValue={(value) => {
+                    const term = terms.find((option) => option.value === value);
+                    return term ? `${term.label} · ${term.version}` : '';
+                  }}
                   disabled={
                     busy || (termsLoading && !terms.length) || !settings.permissions.termsRead
                   }

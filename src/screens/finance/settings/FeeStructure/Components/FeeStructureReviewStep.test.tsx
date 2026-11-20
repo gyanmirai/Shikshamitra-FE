@@ -2,7 +2,7 @@ import { it, vi, expect, afterEach } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { render, screen, cleanup, fireEvent } from '@testing-library/react';
+import { render, screen, within, cleanup, fireEvent } from '@testing-library/react';
 
 import FeeStructureReviewStep from './FeeStructureReviewStep';
 
@@ -22,6 +22,56 @@ vi.mock('src/components/customizabaleTable', () => ({
 }));
 
 afterEach(cleanup);
+
+it('lists attached policy names in the summary and puts publish readiness directly after it', () => {
+  render(
+    <ThemeProvider theme={createTheme(defaultSettings)}>
+      <FeeStructureReviewStep
+        candidate={
+          {
+            name: 'Annual fees',
+            feeHeads: [],
+            collectionPolicyVersionId: 'collection-v2',
+            refundPolicyVersionId: 'refund-v4',
+          } as any
+        }
+        impacts={[
+          {
+            key: 'collection',
+            label: 'Collection Policy',
+            description: '',
+            empty: 'Not attached',
+            policyLabel: 'Standard Collection · v2 · Default',
+          },
+          {
+            key: 'refund',
+            label: 'Refund Policy',
+            description: '',
+            empty: 'Not attached',
+            policyLabel: 'Annual Refund · v4',
+          },
+        ]}
+        writable
+        locked={false}
+        busy={false}
+        previewing={false}
+        tableId="review"
+        onReview={vi.fn()}
+        onNavigate={vi.fn()}
+      />
+    </ThemeProvider>
+  );
+
+  const summary = screen.getByRole('heading', { name: 'Structure Summary' }).closest('section')!;
+  expect(within(summary).getByText('Collection Policy')).toBeVisible();
+  expect(within(summary).getByText('Standard Collection')).toBeVisible();
+  expect(within(summary).getByText('Refund Policy')).toBeVisible();
+  expect(within(summary).getByText('Annual Refund')).toBeVisible();
+  expect(summary.nextElementSibling).toContainElement(
+    screen.getByRole('heading', { name: 'Publish Readiness' })
+  );
+  expect(screen.queryByRole('heading', { name: /^(Collection|Refund) Policy$/ })).toBeNull();
+});
 
 it('reveals all installment details by expanding the schedule without another details toggle', () => {
   const onNavigate = vi.fn();

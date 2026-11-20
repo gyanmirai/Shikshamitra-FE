@@ -8,7 +8,7 @@ import { it, expect } from 'vitest';
 
 import { mergeAssignmentInputs } from './assignmentAdmissionContext';
 
-it('keeps confirmed optional selections and head amounts owned by each admission in a bulk edit', () => {
+it('applies optional choices while preserving each student’s verified admission identity and dates', () => {
   const candidate = {
     id: 'structure',
     heads: [
@@ -54,10 +54,17 @@ it('keeps confirmed optional selections and head amounts owned by each admission
   } as AssignmentContext;
   const merged = mergeAssignmentInputs(common, current, candidate, context);
   expect(merged.studentId).toBe('second');
-  expect(merged.selectedOptionalFeeHeadIds).toEqual(['meal']);
-  expect(merged.variableFeeHeads).toEqual([{ feeHeadId: 'meal', amount: 450 }]);
-  expect(merged.feeHeadDetails).toEqual([]);
+  expect(merged.selectedOptionalFeeHeadIds).toEqual(['bus']);
+  expect(merged.variableFeeHeads).toEqual([]);
+  expect(merged.feeHeadDetails).toEqual([{ feeHeadId: 'bus', amount: 100 }]);
   expect(merged.servicePeriods).toEqual([
+    {
+      feeHeadId: 'bus',
+      source: 'ManualOverride',
+      startDate: '2026-08-01',
+      endDate: '2027-03-31',
+      reason: 'Approved',
+    },
     {
       feeHeadId: 'tuition',
       source: 'Registration',
