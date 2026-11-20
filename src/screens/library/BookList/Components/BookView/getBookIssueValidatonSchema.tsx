@@ -1,47 +1,42 @@
+import type { Dayjs } from 'dayjs';
+
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 
-// ------------------ Schema ------------------
-export const getIssueBookSchema = (currentYear: any) =>
-  Yup.object().shape({
-    accessionNumber: Yup.string().required('Accession No. is required'),
-    issueDate: Yup.mixed()
-      .required('Issue date is required')
-      .test(
-        'is-valid-dayjs',
-        'Issue date must be a valid date',
-        (value) => value && dayjs(value as any).isValid()
-      )
-      .test(
-        'min-date',
-        (value) =>
-          `Issue date must be on or after ${dayjs(currentYear.startDate).format('DD/MM/YYYY')}`,
-        (value) => value && dayjs(value as any).isSameOrAfter(dayjs(currentYear.startDate), 'day')
-      )
-      .test(
-        'max-date',
-        (value) =>
-          `Issue date must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
-        (value) => value && dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day')
-      ),
-    dueDate: Yup.mixed()
-      .required('Due date is required')
-      .test(
-        'is-valid-dayjs',
-        'Due date must be a valid date',
-        (value) => value && dayjs(value as any).isValid()
-      )
-      .test(
-        'min-date',
-        (value) =>
-          `Due date must be on or after ${dayjs(currentYear.startDate).format('DD/MM/YYYY')}`,
-        (value) => value && dayjs(value as any).isSameOrAfter(dayjs(currentYear.startDate), 'day')
-      )
-      .test(
-        'max-date',
-        (value) =>
-          `Due date must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
-        (value) => value && dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day')
-      ),
-    memberId: Yup.string().required('Member Id is required'),
+const date = (label: string) =>
+  Yup.mixed<Dayjs>()
+    .nullable()
+    .required(`${label} is required`)
+    .test('valid', `${label} must be a valid date`, (value) =>
+      Boolean(value && dayjs(value).isValid())
+    );
+export const getIssueBookSchema = (
+  _currentYear?: unknown,
+  manualDue?: boolean,
+  requireYear = false
+) => {
+  const due = Yup.mixed<Dayjs>()
+    .nullable()
+    .test('valid', 'Due date must be a valid date', (value) => !value || value.isValid())
+    .test('order', 'Due date must be on or after the issue date', function ordered(value) {
+      return (
+        !value ||
+        !this.parent.issueDate ||
+        value.startOf('day').valueOf() >= dayjs(this.parent.issueDate).startOf('day').valueOf()
+      );
+    });
+  return Yup.object({
+    accessionNumber: Yup.string().trim().required('Accession number is required'),
+    memberId: Yup.string().required('Choose a Library member'),
+    academicYearId: requireYear
+      ? Yup.string().trim().required('Choose the staff loan academic year')
+      : Yup.string(),
+    issueDate: date('Issue date'),
+    dueDate:
+      manualDue === false
+        ? Yup.mixed<Dayjs>().nullable()
+        : manualDue
+          ? due.required('Due date is required')
+          : due,
   });
+};

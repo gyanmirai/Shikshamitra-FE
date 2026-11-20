@@ -99,6 +99,26 @@ export default function PrincipalUtilization({
           icon="solar:medical-kit-linear"
           color="secondary"
         />
+        <MetricItem
+          label="Classroom Custody"
+          value={
+            overview?.stockTotals.inCustodyCopies == null
+              ? 'Unavailable'
+              : fNumber(overview.stockTotals.inCustodyCopies)
+          }
+          icon="mdi:bookshelf"
+          color="info"
+        />
+        <MetricItem
+          label="In Transit"
+          value={
+            overview?.stockTotals.inTransitCopies == null
+              ? 'Unavailable'
+              : fNumber(overview.stockTotals.inTransitCopies)
+          }
+          icon="mdi:truck-delivery-outline"
+          color="info"
+        />
       </Stack>
     </Card>
   );

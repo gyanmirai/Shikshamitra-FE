@@ -6,6 +6,7 @@ import PrincipalCharts from './principal-charts';
 import PrincipalKPICards from './principal-kpi-cards';
 import PrincipalFinancials from './principal-financials';
 import PrincipalUtilization from './principal-utilization';
+import { DashboardAlerts } from '../alerts/DashboardAlerts';
 
 const PrincipalDashboard = ({ overview }: { overview?: LibraryDashboardOverview }) => (
   <Box>
@@ -21,6 +22,9 @@ const PrincipalDashboard = ({ overview }: { overview?: LibraryDashboardOverview 
       {/* 3. DEEP DIVE PANELS: READING INSIGHTS & FINANCIALS */}{' '}
       <Grid size={{ xs: 12 }}>
         <PrincipalFinancials overview={overview} />
+      </Grid>
+      <Grid size={{ xs: 12 }}>
+        <DashboardAlerts overview={overview} financialOnly />
       </Grid>
       {/* 4. TRENDS & VISUALIZATION */}
       <Grid size={{ xs: 12 }}>

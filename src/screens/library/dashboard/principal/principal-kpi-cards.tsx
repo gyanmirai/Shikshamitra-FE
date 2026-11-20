@@ -3,6 +3,7 @@ import type { LibraryDashboardOverview } from 'src/redux/library/library-adapter
 import { Grid } from '@mui/material';
 import { fNumber } from 'src/utils/format-number';
 
+import { movementValue, completeOverdue } from '../dashboard-date-values';
 import CompactKPICard from '../../../student/dashboard/principal/kpi-card-item';
 
 const trendFromOverview = (overview?: LibraryDashboardOverview) => {
@@ -26,7 +27,7 @@ const PrincipalKPICards = ({ overview }: { overview?: LibraryDashboardOverview }
       icon: 'solar:book-bookmark-bold-duotone',
       status: 'primary' as const,
       chart: { data: trend },
-      tooltip: 'Total Library book titles in the selected academic year.',
+      tooltip: 'Permanent Library book titles across academic years.',
     },
     {
       id: 'LIB_PRINCIPAL_TOTAL_COPIES',
@@ -40,7 +41,7 @@ const PrincipalKPICards = ({ overview }: { overview?: LibraryDashboardOverview }
     {
       id: 'LIB_PRINCIPAL_CIRCULATION',
       title: 'Weekly Circulation',
-      value: fNumber((circulation?.issuesThisWeek || 0) + (circulation?.returnsThisWeek || 0)),
+      value: movementValue(overview, 'week'),
       icon: 'solar:transfer-horizontal-bold-duotone',
       status: 'success' as const,
       chart: { data: trend },
@@ -49,20 +50,25 @@ const PrincipalKPICards = ({ overview }: { overview?: LibraryDashboardOverview }
     {
       id: 'LIB_PRINCIPAL_OVERDUE',
       title: 'Overdue Rate',
-      value: `${Math.round(utilization?.overdueRate || 0)}%`,
+      value: completeOverdue(circulation)
+        ? `${Math.round(utilization?.overdueRate || 0)}%`
+        : 'Not classified',
       icon: 'solar:alarm-add-bold-duotone',
       status: 'warning' as const,
       chart: { data: trend },
       tooltip: 'Share of active issues that are overdue.',
     },
     {
-      id: 'LIB_PRINCIPAL_FINE_COLLECTION',
-      title: 'Fine Collection Rate',
-      value: `${Math.round(utilization?.chargeCollectionRate || 0)}%`,
+      id: 'LIB_PRINCIPAL_FINANCE_VERIFIED',
+      title: 'Verified Finance Sources',
+      value: overview?.financePosition
+        ? fNumber(overview.financePosition.verifiedCount)
+        : 'Unavailable',
       icon: 'solar:wallet-money-bold-duotone',
       status: 'success' as const,
-      chart: { data: trend },
-      tooltip: 'Library charge collection rate.',
+      chart: { data: [] },
+      tooltip:
+        'Authorized assessment records with verified Finance evidence. Verification does not mean full settlement.',
     },
     {
       id: 'LIB_PRINCIPAL_ACTIVE_ISSUES',
@@ -83,7 +89,7 @@ const PrincipalKPICards = ({ overview }: { overview?: LibraryDashboardOverview }
             title={kpi.title}
             value={kpi.value}
             icon={kpi.icon}
-            trendData={kpi.chart.data}
+            trendData={kpi.chart.data.length ? kpi.chart.data : undefined}
             status={kpi.status}
             tooltip={kpi.tooltip}
           />

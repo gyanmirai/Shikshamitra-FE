@@ -7,9 +7,26 @@ import {
   mapLibraryNotificationSettingsDto,
 } from './library-adapters';
 
+import type {
+  LibraryPaginatedList,
+  LibraryNotificationHistory,
+  LibraryNotificationSettings,
+} from './library-adapters';
+import type {
+  NotificationSendResult,
+  NotificationSendRequest,
+  NotificationHistoryQuery,
+  NotificationSettingsUpdate,
+} from './notification-types';
+
+const deliveryTags = [
+  libraryModuleType.libraryNotificationHistory,
+  libraryModuleType.libraryNotifications,
+];
+
 export const libraryNotificationsApi = libraryModuleApi.injectEndpoints({
   endpoints: (builder) => ({
-    getLibraryNotificationSettings: builder.query({
+    getLibraryNotificationSettings: builder.query<LibraryNotificationSettings, void>({
       query: () => ({
         url: '/library/notifications/settings',
         method: 'GET',
@@ -18,17 +35,23 @@ export const libraryNotificationsApi = libraryModuleApi.injectEndpoints({
       providesTags: [libraryModuleType.libraryNotifications],
     }),
 
-    updateLibraryNotificationSettings: builder.mutation({
+    updateLibraryNotificationSettings: builder.mutation<
+      LibraryNotificationSettings,
+      NotificationSettingsUpdate
+    >({
       query: (body) => ({
         url: '/library/notifications/settings',
         method: 'PUT',
         body,
       }),
       transformResponse: mapLibraryNotificationSettingsDto,
-      invalidatesTags: [libraryModuleType.libraryNotifications],
+      invalidatesTags: (_result, error) => (error ? [] : deliveryTags),
     }),
 
-    getLibraryNotificationHistory: builder.query({
+    getLibraryNotificationHistory: builder.query<
+      LibraryPaginatedList<LibraryNotificationHistory>,
+      NotificationHistoryQuery
+    >({
       query: (params) => ({
         url: '/library/notifications/history',
         method: 'GET',
@@ -39,28 +62,37 @@ export const libraryNotificationsApi = libraryModuleApi.injectEndpoints({
       providesTags: [libraryModuleType.libraryNotificationHistory],
     }),
 
-    sendLibraryNotification: builder.mutation({
+    sendLibraryNotification: builder.mutation<NotificationSendResult, NotificationSendRequest>({
       query: (body) => ({
         url: '/library/notifications/send',
         method: 'POST',
         body,
       }),
-      invalidatesTags: [
-        libraryModuleType.libraryNotificationHistory,
-        libraryModuleType.libraryNotifications,
-      ],
+      invalidatesTags: (_result, error) => (error ? [] : deliveryTags),
     }),
 
-    runLibraryNotificationReminders: builder.mutation({
+    runLibraryNotificationReminders: builder.mutation<
+      NotificationSendResult,
+      { runDate?: string } | void
+    >({
       query: (body = {}) => ({
         url: '/library/notifications/run-reminders',
         method: 'POST',
         body,
       }),
-      invalidatesTags: [
-        libraryModuleType.libraryNotificationHistory,
-        libraryModuleType.libraryNotifications,
-      ],
+      invalidatesTags: (_result, error) => (error ? [] : deliveryTags),
+    }),
+    retryLibraryNotification: builder.mutation<
+      LibraryNotificationHistory,
+      { id: string; acknowledgePossibleDuplicate: boolean }
+    >({
+      query: ({ id, ...body }) => ({
+        url: `/library/notifications/history/${encodeURIComponent(id)}/retry`,
+        method: 'POST',
+        body,
+      }),
+      transformResponse: mapLibraryNotificationHistoryDto,
+      invalidatesTags: (_result, error) => (error ? [] : deliveryTags),
     }),
   }),
   overrideExisting: false,
@@ -72,4 +104,5 @@ export const {
   useGetLibraryNotificationHistoryQuery,
   useSendLibraryNotificationMutation,
   useRunLibraryNotificationRemindersMutation,
+  useRetryLibraryNotificationMutation,
 } = libraryNotificationsApi;

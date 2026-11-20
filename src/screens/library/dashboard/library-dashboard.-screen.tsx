@@ -2,9 +2,12 @@
 
 import type { RootState } from 'src/redux/store';
 
-import React from 'react';
 import { useSelector } from 'react-redux';
-import { Box, Alert, Stack, Typography, CircularProgress } from '@mui/material';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
+import { libraryPaths } from 'src/constants/library-menus';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Box, Alert, Stack, Button, Typography, LinearProgress } from '@mui/material';
 import { useGetLibraryDashboardOverviewQuery } from 'src/redux/library/dashboard-api';
 
 import AdminDashboard from './admin';
@@ -13,59 +16,69 @@ import PrincipalDashboard from './principal';
 const LibraryDashboard = () => {
   const { employee } = useSelector((state: RootState) => state.auth);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const role = employee?.role?.name;
-  const academicYearId = (currentYear as any)?.id;
-
+  const academicYearId = (currentYear as { id?: string })?.id;
   const {
-    data: overview,
+    currentData: overview,
     isLoading,
     isFetching,
     isError,
+    refetch,
   } = useGetLibraryDashboardOverviewQuery(
     { academicYearId },
     { skip: !academicYearId, refetchOnMountOrArgChange: true }
   );
 
-  if (!academicYearId) {
-    return (
-      <Alert severity="info" data-testid="library-dashboard-page">
-        Select an academic year to load the Library dashboard.
-      </Alert>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <Box
-        data-testid="library-dashboard-page"
-        sx={{ py: 8, display: 'grid', placeItems: 'center' }}
-      >
-        <Stack spacing={2} alignItems="center">
-          <CircularProgress size={28} />
-          <Typography variant="body2" color="text.secondary">
-            Loading library dashboard...
-          </Typography>
-        </Stack>
-      </Box>
-    );
-  }
-
-  if (isError) {
-    return (
-      <Alert severity="error" data-testid="library-dashboard-page">
-        Could not load the Library dashboard overview.
-      </Alert>
-    );
-  }
-
   return (
     <Box data-testid="library-dashboard-page">
-      {(role === 'Librarian' || role === 'Admin') && <AdminDashboard overview={overview} />}
-      {role === 'Principal' && <PrincipalDashboard overview={overview} />}
-      {/* Fallback to Principal dashboard if role not recognized */}
-      {!['Librarian', 'Admin', 'Principal'].includes(role) && (
-        <AdminDashboard overview={overview} />
-      )}
+      <CustomBreadcrumbs
+        heading="Library Dashboard"
+        description="Review library stock, borrowing, reservations, and charges for the selected academic year."
+        links={[{ name: 'Library', href: libraryPaths.dashboard }, { name: 'Dashboard' }]}
+        action={
+          <Button
+            size="small"
+            color="inherit"
+            variant="outlined"
+            disabled={!academicYearId || isFetching}
+            onClick={() => refetch()}
+            startIcon={<Iconify icon={GlobalIcons.refresh} />}
+          >
+            Refresh
+          </Button>
+        }
+      />
+      <Stack spacing={2}>
+        {!academicYearId && (
+          <Alert severity="info">Select an academic year to load the Library dashboard.</Alert>
+        )}
+        {(isLoading || isFetching) && <LinearProgress aria-label="Loading library dashboard" />}
+        {isError && (
+          <Alert
+            severity="error"
+            action={
+              <Button size="small" onClick={() => refetch()}>
+                Retry
+              </Button>
+            }
+          >
+            Could not load the Library dashboard overview.
+          </Alert>
+        )}
+        {overview && (
+          <>
+            {isFetching && (
+              <Typography variant="caption" color="text.secondary">
+                Refreshing library overview…
+              </Typography>
+            )}
+            {employee?.role?.name === 'Principal' ? (
+              <PrincipalDashboard overview={overview} />
+            ) : (
+              <AdminDashboard overview={overview} />
+            )}
+          </>
+        )}
+      </Stack>
     </Box>
   );
 };

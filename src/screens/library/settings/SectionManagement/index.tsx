@@ -4,13 +4,12 @@ import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
-import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
+import { Box, Button } from '@mui/material';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
-import { Box, Button, Typography } from '@mui/material';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -35,9 +34,6 @@ const SectionManagementScreen = () => {
   const [open, setOpen] = useState(false);
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-
-  // Global state for tracking unsaved changes
-  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
   // State to store currently selected section for edit/delete/view operations
   const [selectedSection, setSelectedSection] = useState<ISection | null>(null);
@@ -70,22 +66,9 @@ const SectionManagementScreen = () => {
   /**
    * Handles closing of add/edit section dialog
    */
-  const handleClose = (_e: any, isSubmit?: boolean) => {
-    const resetState = () => {
-      setTimeout(() => {
-        setSelectedSection(null);
-      }, 200);
-    };
-
-    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      addSectionDialog.onFalse();
-      resetState();
-    } else if (!isChanges) {
-      addSectionDialog.onFalse();
-      setTimeout(() => {
-        setSelectedSection(null);
-      }, 200);
-    }
+  const handleClose = () => {
+    addSectionDialog.onFalse();
+    setSelectedSection(null);
   };
 
   /**
@@ -105,7 +88,7 @@ const SectionManagementScreen = () => {
     >
       <CustomBreadcrumbs
         heading="Section Management"
-        description="This screen displays all created transport routes with options to create new ones. It helps in organizing and managing student transportation efficiently across different locations."
+        description="Review and configure permanent Library sections and their shelf names."
         links={[
           { name: 'Library', href: '/library' },
           { name: 'Setting', href: '/library/settings/book-category' },
@@ -114,11 +97,14 @@ const SectionManagementScreen = () => {
         action={
           <Button
             data-testid="library-settings-section-add-button"
-            onClick={() => addSectionDialog.onTrue()}
+            onClick={() => {
+              setSelectedSection(null);
+              addSectionDialog.onTrue();
+            }}
             size="small"
-            startIcon={<Add />}
+            aria-label="Add section"
+            startIcon={<Iconify icon={GlobalIcons.addIcon} />}
             variant="contained"
-            sx={{ px: '32px' }}
           >
             Section
           </Button>
@@ -149,61 +135,34 @@ const SectionManagementScreen = () => {
       />
 
       {/* Add/Edit Section Dialog */}
-      <CustomDialog
-        open={addSectionDialog.value}
-        maxWidth="md"
-        handleClose={() => {
-          addSectionDialog.onFalse();
-          setTimeout(() => {
-            setSelectedSection(null);
-          }, 200);
-        }}
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">
-              {selectedSection ? 'Update Section' : 'Add Section'}
-            </Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title={
-                selectedSection
-                  ? 'Update existing section by entering its name and number of columns.'
-                  : 'Create a new section by entering its name and number of columns.'
-              }
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
-      >
-        <SectionForm open={addSectionDialog} onClose={handleClose} editData={selectedSection} />
-      </CustomDialog>
+      {addSectionDialog.value && (
+        <SectionForm
+          key={selectedSection?.id ?? 'new'}
+          open
+          onClose={handleClose}
+          editData={selectedSection}
+        />
+      )}
 
       {/* View Shelves Dialog */}
       <CustomDialog
         open={viewShelfDialog.value}
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">View Shelves</Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title="This modal displays all shelves under a particular section, allowing users to view detailed shelf information and manage book placement."
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
+        hasForm={false}
+        title="View Shelves"
+        titleInfo="Review the saved section and shelf identities. Physical occupancy and row counts are unavailable."
         handleClose={() => {
           setSelectedSection(null);
           viewShelfDialog.onFalse();
         }}
         maxWidth="md"
       >
-        <ViewShelfData sectionData={selectedSection} />
+        <ViewShelfData
+          sectionData={selectedSection}
+          onClose={() => {
+            setSelectedSection(null);
+            viewShelfDialog.onFalse();
+          }}
+        />
       </CustomDialog>
 
       {/* Delete Section Dialog */}

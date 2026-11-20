@@ -1,5 +1,17 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import { test, expect, type Page } from '@playwright/test';
+import { randomUUID } from 'node:crypto';
+
+import type {
+  LibraryCopyLookup,
+  LibraryIssuePlan,
+  LibraryLoanCommandResult,
+  LibraryReturnLookup,
+} from '../../src/redux/library/circulation-types';
+import type {
+  LibraryReservation,
+  ReservationPreview,
+} from '../../src/redux/library/reservation-types';
 
 import {
   todayIso,
@@ -15,21 +27,25 @@ import {
   getAcademicYearId,
   ensureLibraryFixture,
   deleteLibraryResource,
+  requireLocalLibraryUrl,
 } from './library-api';
 
-type RouteSmoke = {
-  path: string;
-  testId: string;
-};
+type RouteSmoke = { path: string } & ({ testId: string } | { heading: string });
 
 const activeRoutes: RouteSmoke[] = [
   { path: '/library/dashboard', testId: 'library-dashboard-page' },
   { path: '/library/book-list', testId: 'library-books-page' },
+  { path: '/library/receiving', heading: 'Stock Receiving' },
+  { path: '/library/receiving/imports', heading: 'Stock Imports' },
+  { path: '/library/custody', heading: 'Classroom Custody' },
+  { path: '/library/campus-transfers', heading: 'Campus Transfers' },
+  { path: '/library/stock-verification', heading: 'Stock Verification' },
   { path: '/library/issued-books', testId: 'library-issue-return-page' },
   { path: '/library/member-management', testId: 'library-members-page' },
   { path: '/library/charges-management', testId: 'library-charges-page' },
   { path: '/library/reports', testId: 'library-reports-page' },
   { path: '/library/notification', testId: 'library-notification-page' },
+  { path: '/library/notification/settings', heading: 'Notification Settings' },
   { path: '/library/settings/book-category', testId: 'library-settings-book-categories-page' },
   { path: '/library/settings/charge-type', testId: 'library-settings-charge-categories-page' },
   { path: '/library/settings/library-timing', testId: 'library-settings-library-hours-page' },
@@ -37,13 +53,19 @@ const activeRoutes: RouteSmoke[] = [
     path: '/library/settings/borrowing-and-return-rules',
     testId: 'library-settings-borrowing-rules-page',
   },
+  { path: '/library/settings/calendar', heading: 'Library Calendar' },
+  { path: '/library/settings/catalogue-configuration', heading: 'Catalogue Configuration' },
   { path: '/library/settings/sectionManagement', testId: 'library-settings-sections-page' },
 ];
 
 async function expectActiveRoute(page: Page, route: RouteSmoke) {
   await page.goto(route.path, { waitUntil: 'domcontentloaded', timeout: 90_000 });
   await expect(page, `${route.path} should stay authenticated`).not.toHaveURL(/\/login|\/auth/i);
-  await expect(page.getByTestId(route.testId)).toBeVisible({ timeout: 60_000 });
+  const content =
+    'testId' in route
+      ? page.getByTestId(route.testId)
+      : page.getByRole('heading', { name: route.heading, exact: true });
+  await expect(content).toBeVisible({ timeout: 60_000 });
 }
 
 const expectActiveRoutes = (page: Page, routes: RouteSmoke[]) =>
@@ -56,7 +78,14 @@ test.describe('Library release gate E2E', () => {
   test.skip(!libraryE2EEnabled, 'Set E2E_LIBRARY=1 against a seeded local backend.');
   test.describe.configure({ mode: 'serial' });
 
-  test('renders every active Library route without Library API failures', async ({ page }) => {
+  test.beforeEach(({ baseURL }) => {
+    if (!baseURL) throw new Error('The disposable Library suite requires a frontend base URL.');
+    requireLocalLibraryUrl(baseURL, 'frontend URL');
+  });
+
+  test('renders active Library staff entry routes without Library API failures', async ({
+    page,
+  }) => {
     test.setTimeout(180_000);
     const browserErrors: string[] = [];
     const libraryApiFailures: string[] = [];
@@ -84,45 +113,112 @@ test.describe('Library release gate E2E', () => {
 
     await expectActiveRoute(page, { path: '/library/book-list', testId: 'library-books-page' });
 
-    const reservation = await postLibraryJson(
+    const copy = await getLibraryJson<LibraryCopyLookup>(
       page,
-      `/library/books/${fixture.bookId}/reservations`,
-      {
-        memberId: fixture.member.id,
-        requestedDate: todayIso(),
-        reserveDueDate: addDaysIso(3),
-      }
+      `/library/circulation/lookups/copy?scan=${encodeURIComponent(fixture.accessionOne)}`
+    );
+    expect(copy.bookId).toBe(fixture.bookId);
+    const schoolDate = copy.schoolContext.schoolToday || process.env.E2E_LIBRARY_SCHOOL_DATE;
+    if (!schoolDate) throw new Error('Confirm the school timezone or set E2E_LIBRARY_SCHOOL_DATE.');
+    const reservationInput = {
+      bookId: fixture.bookId,
+      academicYearId: fixture.academicYearId,
+      memberId: fixture.member.id,
+      requestedDate: schoolDate,
+      requestExpiryDate: addDaysIso(3, schoolDate),
+    };
+    const reservationPreview = await postLibraryJson<ReservationPreview>(
+      page,
+      '/library/reservations/preview',
+      reservationInput
+    );
+    expect(reservationPreview.canCreate, reservationPreview.blockedReasons.join(' ')).toBe(true);
+    const reservation = await postLibraryJson<LibraryReservation>(
+      page,
+      '/library/reservations',
+      reservationInput
     );
     expect(reservation.id).toBeTruthy();
-
-    await deleteLibraryResource(
+    const cancelled = await postLibraryJson<LibraryReservation>(
       page,
-      `/library/books/${fixture.bookId}/reservations/${reservation.id}`
+      `/library/reservations/${reservation.id}/cancel`,
+      {
+        academicYearId: fixture.academicYearId,
+        revision: reservation.revision,
+        reason: 'Release gate reservation cancellation.',
+      }
     );
-    const reservationsAfterCancel = listItems(
-      await getLibraryJson(page, `/library/books/${fixture.bookId}/reservations?page=1&pageSize=20`)
+    expect(cancelled).toMatchObject({ id: reservation.id, state: 3 });
+
+    const issueInput = {
+      copyId: copy.copyId,
+      memberId: fixture.member.id,
+      academicYearId: fixture.academicYearId,
+      issueDate: schoolDate,
+    };
+    const previewPath = '/library/circulation/issues/preview';
+    const initialPlan = await postLibraryJson<LibraryIssuePlan>(page, previewPath, issueInput);
+    const reviewedInput = initialPlan.dueDate
+      ? issueInput
+      : {
+          ...issueInput,
+          requestedDueDate: addDaysIso(7, schoolDate),
+        };
+    const issuePlan = initialPlan.dueDate
+      ? initialPlan
+      : await postLibraryJson<LibraryIssuePlan>(page, previewPath, reviewedInput);
+    expect(issuePlan.canIssue, issuePlan.blockedReasons.join(' ')).toBe(true);
+    const loansPath = '/library/circulation/loans';
+    const checkout = {
+      ...reviewedInput,
+      revision: issuePlan.revision,
+      idempotencyKey: randomUUID(),
+    };
+    const issue = await postLibraryJson<LibraryLoanCommandResult>(page, loansPath, checkout);
+    expect(issue.loan).toMatchObject({ copyId: copy.copyId, schoolDueDate: issuePlan.dueDate });
+    const replayedIssue = await postLibraryJson<LibraryLoanCommandResult>(
+      page,
+      loansPath,
+      checkout
     );
-    expect(reservationsAfterCancel.some((item: any) => item.id === reservation.id)).toBe(false);
+    expect(replayedIssue).toMatchObject({ wasReplay: true, loan: { id: issue.loan.id } });
 
-    const issue = await postLibraryJson(page, '/library/issues', {
-      accessionNo: fixture.accessionOne,
-      memberId: fixture.member.id,
-      issueDate: todayIso(),
-      dueDate: addDaysIso(7),
-    });
-    expect(issue.id).toBeTruthy();
-
-    const returnResult = await postLibraryJson(page, '/library/returns', {
-      accessionNo: fixture.accessionOne,
-      memberId: fixture.member.id,
-      returnDate: addDaysIso(8),
-      chargeCategoryId: fixture.chargeCategory.id,
-      amount: 15,
-      fineDueDate: addDaysIso(15),
+    const receiving = await getLibraryJson<LibraryReturnLookup>(
+      page,
+      `/library/circulation/lookups/return?scan=${encodeURIComponent(fixture.accessionOne)}`
+    );
+    expect(receiving.loan.id).toBe(issue.loan.id);
+    const returnPath = `${loansPath}/${receiving.loan.id}/return`;
+    const receipt = {
+      copyId: receiving.copy.copyId,
+      revision: receiving.loan.revision,
+      idempotencyKey: randomUUID(),
+      schoolReturnDate: schoolDate,
       copyStatus: 4,
       remarks: 'E2E damaged return charge',
+      assessments: [
+        {
+          chargeCategoryId: fixture.chargeCategory.id,
+          academicYearId: fixture.academicYearId,
+          amount: Number(fixture.chargeCategory.amount),
+          schoolChargeDate: schoolDate,
+          schoolDueDate: addDaysIso(7, schoolDate),
+          reason: 'Damaged cover observed at the desk.',
+        },
+      ],
+    };
+    const returnResult = await postLibraryJson<LibraryLoanCommandResult>(page, returnPath, receipt);
+    expect(returnResult.loan).toMatchObject({ id: issue.loan.id, schoolReturnDate: schoolDate });
+    expect(returnResult.assessmentIds).toHaveLength(1);
+    const replayedReceipt = await postLibraryJson<LibraryLoanCommandResult>(
+      page,
+      returnPath,
+      receipt
+    );
+    expect(replayedReceipt).toMatchObject({
+      wasReplay: true,
+      assessmentIds: returnResult.assessmentIds,
     });
-    expect(returnResult.id).toBeTruthy();
 
     const copies = listItems(
       await getLibraryJson(page, `/library/books/${fixture.bookId}/copies?page=1&pageSize=20`)

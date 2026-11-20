@@ -1,6 +1,7 @@
 import { libraryModuleType } from 'src/redux/tagTypes';
 
 import { libraryModuleApi } from '../libraryModuleApi';
+import { libraryCirculationMutationTags } from '../library-cache-tags';
 import {
   mapReturnSearchDto,
   mapIssueReturnItemDto,
@@ -16,14 +17,20 @@ export const issueAndReturnApi = libraryModuleApi.injectEndpoints({
         params,
       }),
       transformResponse: (response) => toLibraryPaginatedList(response, mapIssueReturnItemDto),
-      providesTags: [libraryModuleType.books],
+      providesTags: [
+        libraryModuleType.books,
+        libraryModuleType.bookIssue,
+        libraryModuleType.bookReturn,
+      ],
     }),
 
     getBookDetailsByAccession: builder.query({
       query: ({ accessionNo }) => ({
-        url: `/library/books/accession/${accessionNo}`,
+        url: '/library/books/accession',
         method: 'GET',
+        params: { accessionNo },
       }),
+      providesTags: [libraryModuleType.books, libraryModuleType.copies],
     }),
 
     issueBook: builder.mutation({
@@ -32,7 +39,7 @@ export const issueAndReturnApi = libraryModuleApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [libraryModuleType.books],
+      invalidatesTags: (_result, error) => (error ? [] : libraryCirculationMutationTags),
     }),
 
     getReturnDetails: builder.query({
@@ -42,6 +49,12 @@ export const issueAndReturnApi = libraryModuleApi.injectEndpoints({
         params: { accessionNo },
       }),
       transformResponse: mapReturnSearchDto,
+      providesTags: [
+        libraryModuleType.bookReturn,
+        libraryModuleType.copies,
+        libraryModuleType.books,
+        libraryModuleType.members,
+      ],
     }),
 
     returnBook: builder.mutation({
@@ -50,15 +63,20 @@ export const issueAndReturnApi = libraryModuleApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [libraryModuleType.books],
+      invalidatesTags: (_result, error) => (error ? [] : libraryCirculationMutationTags),
     }),
 
     getMemberDetailsByAccession: builder.query({
       query: ({ accessionNo, ...params }) => ({
-        url: `/library/issuedBook/accession/${accessionNo}/member`,
+        url: '/library/issuedBook/member',
         method: 'GET',
-        params,
+        params: { ...params, accessionNo },
       }),
+      providesTags: [
+        libraryModuleType.bookIssue,
+        libraryModuleType.bookReturn,
+        libraryModuleType.members,
+      ],
     }),
   }),
 });

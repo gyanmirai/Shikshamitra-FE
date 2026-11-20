@@ -4,6 +4,7 @@ import Divider from '@mui/material/Divider';
 import MenuList from '@mui/material/MenuList';
 import MenuItem from '@mui/material/MenuItem';
 import { stylesMode } from 'src/theme/styles';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
@@ -18,10 +19,13 @@ type Props = {
   titleId: string;
   institutionName?: string;
   canUseSelfLeaveCenter: boolean;
+  canUseLibraryInbox?: boolean;
   onClose: () => void;
   onPassword: () => void;
   onProfile: () => void;
   onLeaveCenter: () => void;
+  onLibraryInbox?: () => void;
+  onMyLibrary?: () => void;
 };
 
 export function AccountMenuContent({
@@ -29,10 +33,13 @@ export function AccountMenuContent({
   titleId,
   institutionName,
   canUseSelfLeaveCenter,
+  canUseLibraryInbox,
   onClose,
   onPassword,
   onProfile,
   onLeaveCenter,
+  onLibraryInbox,
+  onMyLibrary,
 }: Props) {
   return (
     <>
@@ -60,6 +67,18 @@ export function AccountMenuContent({
         aria-label="Account actions"
         sx={{ p: 1, '& .MuiMenuItem-root': { gap: 1.5, minHeight: 48, borderRadius: 1 } }}
       >
+        {onMyLibrary && (
+          <MenuItem onClick={onMyLibrary}>
+            <Iconify icon="mdi:bookshelf" width={20} />
+            My Library
+          </MenuItem>
+        )}
+        {canUseLibraryInbox && onLibraryInbox && (
+          <MenuItem onClick={onLibraryInbox}>
+            <Iconify icon={GlobalIcons.bell} width={20} />
+            Library Inbox
+          </MenuItem>
+        )}
         {canUseSelfLeaveCenter &&
           [
             { label: 'Leave Center', icon: 'mdi:calendar-account', onClick: onLeaveCenter },

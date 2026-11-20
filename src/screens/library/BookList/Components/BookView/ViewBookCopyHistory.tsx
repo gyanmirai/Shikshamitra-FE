@@ -1,115 +1,79 @@
-import type { IColumn } from 'src/components/customizabaleTable/types';
-import type { IBook, IBookCopyWithBook } from 'src/screens/library/BookManagement/Components/type';
+import type { IBookCopyWithBook } from 'src/screens/library/BookManagement/Components/type';
 
-import dayjs from 'dayjs';
-import React, { useMemo } from 'react';
-import { Box, Grid, Typography } from '@mui/material';
-import CustomizableTable from 'src/components/customizabaleTable';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetBookCopyMembersQuery } from 'src/redux/library/bookList/bookList-api';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
+import { Box, Alert, Button, DialogActions } from '@mui/material';
+import { DialogScrollContent } from 'src/components/customDialog';
 
-interface ViewBookCopyHistoryTableProps {
-  editData: IBookCopyWithBook | null; // book data containing reservationMemberIds
-  onDelete: (book: IBook) => void;
-}
+import { LoanTable } from '../../../circulation/LoanTable';
+import { useCopyHistory } from '../../../circulation/useCopyHistory';
+import { LoanReadFilters } from '../../../circulation/LoanReadFilters';
 
-const ViewBookCopyHistoryTable: React.FC<ViewBookCopyHistoryTableProps> = ({
+export default function ViewBookCopyHistoryTable({
   editData,
-  onDelete,
-}) => {
-  // Fetch all members
-  const { data: memberData, isLoading: memberLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetBookCopyMembersQuery,
-    params: { bookId: editData?.bookId, accessionNo: editData?.accessionNo },
-  });
-
-  const displayData = memberData?.length ? memberData : [];
-
-  const columns: IColumn[] = useMemo(
-    () => [
-      { id: 'memberId', label: 'Member ID', align: 'left', sticky: true, minWidth: 120 },
-      { id: 'name', label: 'Member Name', align: 'left', minWidth: 140 },
-      { id: 'grNo', label: 'GR No.', align: 'left', minWidth: 100 },
-      { id: 'role', label: 'Role', align: 'left', minWidth: 100 },
-      {
-        id: 'issuedDate',
-        label: 'Issued Date',
-        align: 'left',
-        minWidth: 120,
-        filterType: 'date',
-        render: (value) => (
-          <Typography variant="caption" fontSize="13px">
-            {dayjs(value).format('DD-MM-YYYY')}
-          </Typography>
-        ),
-      },
-      {
-        id: 'returnDate',
-        label: 'Return Date',
-        align: 'left',
-        minWidth: 120,
-        filterType: 'date',
-        render: (value) => (
-          <Typography variant="caption" fontSize="13px">
-            {value ? dayjs(value).format('DD-MM-YYYY') : '—'}
-          </Typography>
-        ),
-      },
-      {
-        id: 'daysBorrowed',
-        label: 'Days Borrowed',
-        align: 'left',
-        minWidth: 130,
-        render: (_value, row: any) => {
-          const issued = dayjs(row.issuedDate);
-          const returned = row.returnDate ? dayjs(row.returnDate) : dayjs();
-          const days = returned.diff(issued, 'day');
-          return (
-            <Typography variant="caption" fontSize="13px" fontWeight={600}>
-              {days} {days === 1 ? 'day' : 'days'}
-            </Typography>
-          );
-        },
-      },
-      { id: 'class', label: 'Class', align: 'left', minWidth: 80 },
-      { id: 'division', label: 'Division', align: 'left', minWidth: 90 },
-      { id: 'rollNo', label: 'Roll No.', align: 'left', minWidth: 90 },
-    ],
-    []
-  );
-
+  onClose,
+}: {
+  editData: IBookCopyWithBook | null;
+  onClose: () => void;
+}) {
+  const bookId = editData?.bookId || editData?.book.id || '';
+  const copyId = editData?.copyId || editData?.id || '';
+  const query = useCopyHistory(bookId, copyId);
   return (
-    <Box p={2} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Grid container spacing={3}>
-        <Grid size={12}>
-          {displayData?.length ? (
-            <CustomizableTable
-              tableId="reserved-members-table"
-              noDataText="No Reserved Members Found"
-              isLoading={memberLoading}
-              columns={columns}
-              data={displayData || []}
+    <>
+      <DialogScrollContent>
+        {!query.canView ? (
+          <Alert severity="info">You do not have permission to view borrowing history.</Alert>
+        ) : !bookId || !copyId ? (
+          <Alert severity="info">Select a saved book copy to view its borrowing history.</Alert>
+        ) : (
+          <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+            <LoanReadFilters
+              academicYearId={query.academicYearId}
+              asOfDate={query.requestedAsOfDate}
+              onApply={query.onFilters}
             />
-          ) : (
-            <Grid size={{ xs: 12 }}>
-              <div
-                style={{
-                  padding: '12px',
-                  borderRadius: '4px',
-                  backgroundColor: '#e3f2fd',
-                  color: '#2196f3',
-                  textAlign: 'center',
-                }}
+            {query.invalidAsOf ? (
+              <Alert
+                severity="warning"
+                action={
+                  <Button size="small" onClick={() => query.onFilters(query.academicYearId, '')}>
+                    Clear as-of date
+                  </Button>
+                }
               >
-                No reservations yet
-              </div>
-            </Grid>
-          )}
-        </Grid>
-      </Grid>
-    </Box>
+                Choose a valid school as-of date or clear it.
+              </Alert>
+            ) : (
+              <LoanTable
+                id="library-copy-borrowing-history"
+                title="Copy Borrowing History"
+                rows={query.currentData?.items || []}
+                page={query.page}
+                pageSize={query.pageSize}
+                totalCount={query.currentData?.totalCount || 0}
+                loading={query.isFetching && !query.currentData}
+                refreshing={query.isFetching && Boolean(query.currentData)}
+                error={query.error}
+                onRetry={() => query.refetch()}
+                onPage={query.onPage}
+                emptyMessage="This copy has no borrowing history in your scope."
+              />
+            )}
+          </Box>
+        )}
+      </DialogScrollContent>
+      <DialogActions>
+        <Button
+          size="small"
+          variant="outlined"
+          color="inherit"
+          onClick={onClose}
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+        >
+          Close
+        </Button>
+      </DialogActions>
+    </>
   );
-};
-
-export default ViewBookCopyHistoryTable;
+}

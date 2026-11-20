@@ -5,11 +5,15 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { FormSlider } from 'src/components/form-slider';
+import { formatNumber } from 'src/utils/formate_number';
 import React, { useMemo, useState, useCallback } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, Tab, Tabs, MenuItem, MenuList } from '@mui/material';
 import { LibraryChargeStatusType } from 'src/enums/library_charges_type';
+
+import { useLibraryChargePermissions } from './useLibraryChargePermissions';
+import { useLibraryFinanceAccess } from './finance/useLibraryFinanceAccess';
 
 import type { ILibraryChargeData } from './type';
 
@@ -42,22 +46,35 @@ const LibraryChargesTable = ({
   onViewCharges: (row: ILibraryChargeData) => void;
 }) => {
   const [tabValue, setTabValue] = useState(LibraryChargeStatusType.Paid);
+  const access = useLibraryChargePermissions();
+  const finance = useLibraryFinanceAccess();
+  const canFinance =
+    finance.view ||
+    finance.post ||
+    finance.bind ||
+    finance.approve ||
+    finance.collectionView ||
+    finance.waiverApply ||
+    finance.waiverApprove ||
+    finance.waiverReject ||
+    finance.waiverReverse ||
+    finance.refundView;
 
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
       <MenuList>
         <MenuItem
           onClick={() => {
-            onCollectCharges(row);
+            if (canFinance) onCollectCharges(row);
             pop.onClose();
           }}
         >
           <Iconify icon="mdi:cash-multiple" sx={{ height: '16px', width: '16px' }} />
-          Collect Charges
+          Finance
         </MenuItem>
       </MenuList>
     ),
-    [onCollectCharges]
+    [onCollectCharges, canFinance]
   );
 
   const columns: IColumn[] = useMemo(
@@ -81,10 +98,7 @@ const LibraryChargesTable = ({
         align: 'left',
         filterType: 'number',
         render(value) {
-          return new Intl.NumberFormat('en-IN', {
-            style: 'currency',
-            currency: 'INR',
-            minimumFractionDigits: 0, maximumFractionDigits: 0}).format(Math.ceil(value));
+          return formatNumber(String(value), 'INR', { fractionDigits: 2 });
         },
       },
       { id: 'rollNo', label: 'Roll No.', align: 'left', minWidth: 90 },
@@ -106,26 +120,38 @@ const LibraryChargesTable = ({
             <ThreeDotsActions
               actions={(prop) => actions({ ...prop, row })}
               placement="right-top"
-              showThreeDots={row.status === LibraryChargeStatusType.Pending}
+              showThreeDots={row.status === LibraryChargeStatusType.Pending && canFinance}
               showEditIcon
+              disableEditIcon={!access.update}
               handleEditClick={() => {
-                onEditCharge(row as ILibraryChargeData);
+                if (access.update) onEditCharge(row as ILibraryChargeData);
               }}
               showDeleteIcon
+              disableDeleteIcon={!access.delete}
+              deleteDisabledReason="Library charge View and Delete permissions are required."
               handleDeleteClick={() => {
-                onDeleteCharge(row as ILibraryChargeData);
+                if (access.delete) onDeleteCharge(row as ILibraryChargeData);
               }}
               showViewIcon
+              disableViewIcon={!access.view}
               handleViewClick={() => {
-                onViewCharges(row as ILibraryChargeData);
+                if (access.view) onViewCharges(row as ILibraryChargeData);
               }}
             />
           );
         },
       },
     ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
+    [
+      access.update,
+      access.delete,
+      access.view,
+      canFinance,
+      actions,
+      onEditCharge,
+      onDeleteCharge,
+      onViewCharges,
+    ]
   );
 
   const currentIndex = TABS.findIndex((tab) => tab.value === tabValue);

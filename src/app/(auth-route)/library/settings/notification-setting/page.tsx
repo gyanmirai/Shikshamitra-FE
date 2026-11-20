@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
+import { libraryPaths } from 'src/constants/library-menus';
 
 export default function LibraryNotificationSettingRedirect() {
-  redirect('/library/notification');
+  redirect(libraryPaths.notificationSettings);
 }

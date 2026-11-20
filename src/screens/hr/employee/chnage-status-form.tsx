@@ -34,6 +34,7 @@ import {
 
 import { HrSetupLink } from '../recovery/hr-setup-controls';
 import { normalizeHrFailure } from '../recovery/hr-failure';
+import { StaffLibraryClearanceNotice } from './StaffLibraryClearanceNotice';
 import {
   getEmployeeStatusOptions,
   isNonActiveEmployeeStatus,
@@ -169,6 +170,7 @@ const ChangeStatusForm = ({
   const isNonActiveSelected = isNonActiveEmployeeStatus(selectedStatus);
   const {
     data: deactivationCheck,
+    currentData: currentDeactivationCheck,
     isLoading: deactivationCheckLoading,
     isFetching: deactivationCheckFetching,
     isError: deactivationCheckError,
@@ -311,6 +313,12 @@ const ChangeStatusForm = ({
               {MANAGER_DEACTIVATION_CHECK_ERROR}
             </Alert>
           )}
+          {!isCheckingManagerReports &&
+            !hasDeactivationCheckError &&
+            (formik.values.status.value === EmployeeStatusType.Left ||
+              formik.values.status.value === EmployeeStatusType.Retired) && (
+              <StaffLibraryClearanceNotice check={currentDeactivationCheck} />
+            )}
           {activating && (
             <Alert severity={activation.isError ? 'error' : 'warning'} variant="outlined">
               <Stack spacing={1}>

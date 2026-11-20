@@ -6,7 +6,13 @@ import type {
 } from 'src/utils/userScopeBulkAssignPayload';
 
 import { api } from 'src/redux/service';
-import { tagTypes, roleType, allTagTypes, employeeType } from 'src/redux/tagTypes';
+import {
+  tagTypes,
+  roleType,
+  allTagTypes,
+  employeeType,
+  libraryModuleType,
+} from 'src/redux/tagTypes';
 
 export type { BulkUserScopeAssignmentScope, BulkUserScopeAssignmentPayload };
 
@@ -37,6 +43,14 @@ export interface EmployeeOptionsInput {
   search: string;
   status?: 'Active';
 }
+
+export type EmployeeStatusDeactivationCheck = {
+  canDeactivate: boolean;
+  activeDirectReportCount: number;
+  libraryClearanceStatus?: 'Pending' | 'Clear' | 'Limited' | 'Restricted' | null;
+  libraryOutstandingLoanCount?: number | null;
+  libraryOutstandingCustodyCount?: number | null;
+};
 
 export type EmployeeDashboardStatus =
   | 'Present'
@@ -336,12 +350,16 @@ export const employeeApi = api.injectEndpoints({
       }),
       invalidatesTags: [employeeType.employee],
     }),
-    getEmployeeStatusDeactivationCheck: builder.query({
+    getEmployeeStatusDeactivationCheck: builder.query<EmployeeStatusDeactivationCheck, string>({
       query: (id) => ({
         url: `/employees/${id}/status-deactivation-check`,
         method: 'GET',
       }),
-      providesTags: [employeeType.employee],
+      providesTags: [
+        employeeType.employee,
+        libraryModuleType.bookIssue,
+        libraryModuleType.bookReturn,
+      ],
     }),
 
     // Document Management

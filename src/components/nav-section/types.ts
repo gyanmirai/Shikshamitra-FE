@@ -58,6 +58,7 @@ export type NavItemBaseProps = {
   permissionChildren?: NavItemBaseProps[];
   visibility?: boolean;
   permissionName?: PermissionName;
+  requiredAllPermissions?: readonly string[];
   visibilityPermissionName?: string;
 };
 

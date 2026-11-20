@@ -1,716 +1,118 @@
-import type { RootState } from 'src/redux/store';
-import type { FormikProps, FormikErrors } from 'formik';
+import type { FormikProps } from 'formik';
 
-import { Grid } from '@mui/system';
-// eslint-disable-next-line import/no-extraneous-dependencies
-import Barcode from 'react-barcode';
-import { useSelector } from 'react-redux';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
-import { Iconify } from 'src/components/iconify';
-import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
-import CustomTooltip from 'src/components/custom-tooltip';
-import ShakingTextField from 'src/components/shaking-text-field';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { LibraryBookStatus } from 'src/enums/library-book-status';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetSectionManagementQuery } from 'src/redux/library/settingApi';
-import { useGetBookCopyLabelsQuery } from 'src/redux/library/copy-labels-api';
-import {
-  Box,
-  Alert,
-  Button,
-  TextField,
-  IconButton,
-  Typography,
-  GlobalStyles,
-  CircularProgress,
-} from '@mui/material';
+import { Alert, Stack, Button } from '@mui/material';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { FormSectionCard } from 'src/components/form-section-card';
 
-import type { IBookCopy, IBookPayload } from '../Components/type';
+import { CopySettings } from './CopySettings';
+import { BookCopiesTable } from './BookCopiesTable';
+import { canRemoveCatalogueCopy } from './copy-removal';
+import { useBookEditorOptions } from './useBookEditorOptions';
+import { SavedCopyLabelsDialog } from './SavedCopyLabelsDialog';
 
-interface ShelfDropdownProps {
-  row: any;
-  copies: IBookCopy[];
-  setCopies: React.Dispatch<React.SetStateAction<IBookCopy[]>>;
-  formik: FormikProps<IBookPayload>;
-  sectionData?: any;
-}
+import type { BookFormValues } from '../Components/type';
+import type { LibrarySectionOption } from './CopyLocationField';
 
-const ShelfDropdown = ({ row, copies, setCopies, formik, sectionData }: ShelfDropdownProps) => {
-  const sectionId = formik.values.copies[row.copyNo - 1]?.section;
-
-  const selectedSection = sectionData?.items?.find((item: any) => item.id === sectionId);
-
-  const shelfOptions =
-    selectedSection?.shelfDetails?.map((shelf: any) => ({
-      value: shelf.id,
-      label: shelf.shelfName,
-    })) || [];
-
-  return (
-    <Box mb={1}>
-      <ShakingTextField
-        error={
-          !!(
-            formik?.touched?.copies?.[row.copyNo - 1]?.shelf &&
-            Array.isArray(formik?.errors?.copies) &&
-            typeof formik?.errors?.copies?.[row.copyNo - 1] === 'object' &&
-            (formik.errors.copies[row.copyNo - 1] as FormikErrors<IBookCopy>)?.shelf
-          )
-        }
-      >
-        <CustomSelect
-          label="Shelf *"
-          options={shelfOptions}
-          name="shelf"
-          value={formik.values.copies[row.copyNo - 1]?.shelf || ''}
-          onChange={(val) => {
-            const updated = [...copies];
-            updated[row.copyNo - 1].shelf = val as string;
-            setCopies(updated);
-            formik.setFieldValue('copies', updated);
-            formik.setFieldTouched(`copies.${row.copyNo - 1}.shelf`, false, false);
-          }}
-          helperText={
-            (formik?.touched?.copies?.[row.copyNo - 1]?.shelf &&
-              Array.isArray(formik?.errors?.copies) &&
-              typeof formik?.errors?.copies?.[row.copyNo - 1] === 'object' &&
-              (formik.errors.copies[row.copyNo - 1] as FormikErrors<IBookCopy>)?.shelf) ||
-            ''
-          }
-          error={
-            !!(
-              formik?.touched?.copies?.[row.copyNo - 1]?.shelf &&
-              Array.isArray(formik?.errors?.copies) &&
-              typeof formik?.errors?.copies?.[row.copyNo - 1] === 'object' &&
-              (formik.errors.copies[row.copyNo - 1] as FormikErrors<IBookCopy>)?.shelf
-            )
-          }
-          formControlProps={{ sx: { minWidth: 200 } }}
-          disabled={!sectionId}
-        />
-      </ShakingTextField>
-    </Box>
-  );
-};
-
-interface BookCopiesStepProps {
-  formik: FormikProps<IBookPayload>;
-  isEdit?: boolean;
-  bookId?: string;
-}
-
-const BookCopiesStep = ({ formik, isEdit, bookId }: BookCopiesStepProps) => {
-  const [copies, setCopies] = useState<IBookCopy[]>(formik.values.copies || []);
-  const [openAccessionDialog, setOpenAccessionDialog] = useState(false);
-
-  useEffect(() => {
-    // If we have copies and the count matches, don't regenerate unless auto-gen is toggled
-    // and we want to actually change them. But usually we want to preserve existing ones.
-    const currentCopies = formik.values.copies || [];
-
-    const newCopies = Array.from({ length: formik.values.numberOfCopies }, (_, i) => {
-      const existingCopy = currentCopies[i];
-      return {
-        ...existingCopy,
-        copyNo: i + 1,
-        accessionNo:
-          existingCopy?.accessionNo ||
-          (formik.values.isAccesionNumberAutoGenerated
-            ? `ACC-${String(i + 1).padStart(4, '0')}`
-            : ''),
-        status: existingCopy?.status || LibraryBookStatus.Available,
-        section: existingCopy?.section || '',
-        shelf: existingCopy?.shelf || '',
-      };
-    });
-
-    setCopies(newCopies as IBookCopy[]);
-    formik.setFieldValue('copies', newCopies);
-
-    newCopies.forEach((_, idx) => {
-      formik.setFieldTouched(`copies.${idx}.copyNo`, false, false);
-      formik.setFieldTouched(`copies.${idx}.accessionNo`, false, false);
-      formik.setFieldTouched(`copies.${idx}.status`, false, false);
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formik.values.isAccesionNumberAutoGenerated, formik.values.numberOfCopies]);
-
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const { data: sectionData, isLoading: sectionLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetSectionManagementQuery,
-    params: {
-      academicYearId: currentYear?.id,
-    },
-    options: {
-      skip: !currentYear?.id,
-    },
-  });
-
-  const sectionOptions =
-    sectionData?.items?.map((item: any) => ({
-      value: item.id,
-      label: item.sectionName,
-    })) || [];
-  const shouldFetchLabels = Boolean(bookId && openAccessionDialog);
-  const {
-    data: labelBatch,
-    isFetching: labelsLoading,
-    isError: labelsError,
-  } = useGetBookCopyLabelsQuery(
-    { bookId },
-    { skip: !shouldFetchLabels, refetchOnMountOrArgChange: true }
-  );
-
-  const resolveSectionName = (sectionId?: string) =>
-    sectionData?.items?.find((item: any) => item.id === sectionId)?.sectionName || '';
-
-  const resolveShelfName = (sectionId?: string, shelfId?: string) => {
-    const section = sectionData?.items?.find((item: any) => item.id === sectionId);
-    return section?.shelfDetails?.find((item: any) => item.id === shelfId)?.shelfName || '';
+const BookCopiesStep = ({
+  formik,
+  disabled,
+  printDisabled = false,
+}: {
+  formik: FormikProps<BookFormValues>;
+  disabled: boolean;
+  printDisabled?: boolean;
+}) => {
+  const [labelsOpen, setLabelsOpen] = useState(false);
+  const [removeIndex, setRemoveIndex] = useState<number | null>(null);
+  const query = useBookEditorOptions();
+  const sections: LibrarySectionOption[] = query.currentData?.sections || [];
+  const remove = () => {
+    if (removeIndex === null || !canRemoveCatalogueCopy(formik.values.copies[removeIndex])) return;
+    const copies = formik.values.copies.filter((_, index) => index !== removeIndex);
+    formik.setValues({ ...formik.values, copies, numberOfCopies: String(copies.length) });
+    setRemoveIndex(null);
   };
-
-  const localLabelRows = copies
-    .filter((copy) => copy.accessionNo)
-    .map((copy) => ({
-      copyNumber: copy.copyNo,
-      accessionNumber: copy.accessionNo,
-      barcodeValue: copy.accessionNo,
-      sectionName: resolveSectionName(copy.section),
-      shelfName: resolveShelfName(copy.section, copy.shelf),
-    }));
-  const labelRows = labelBatch?.labels?.length ? labelBatch.labels : localLabelRows;
-  const hasMissingAccessionNumbers = copies.some((copy) => !copy.accessionNo);
-  const hasLabels = labelRows.length > 0;
-  const handlePrintLabels = () => {
-    window.print();
-  };
-
   return (
-    <Box>
-      <hr style={{ border: 'none', borderTop: '1px solid #e0e0e0', margin: '16px 0' }} />
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'right',
-          gap: 2,
-          alignItems: 'center',
-          position: 'sticky',
-          top: 0,
-          zIndex: 10,
-          backgroundColor: 'background.paper',
-          p: 1,
-        }}
+    <Stack spacing={2}>
+      <CopySettings
+        formik={formik}
+        disabled={disabled}
+        printDisabled={printDisabled}
+        onLabels={() => setLabelsOpen(true)}
+      />
+      <FormSectionCard
+        title="Copy Locations"
+        icon={GlobalIcons.building}
+        descriptionTooltip="Assign locations for new copies. Saved copies remain when receiving or circulation evidence prevents removal. Use Inventory actions for supported lifecycle changes."
       >
-        {' '}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Button
-            variant="contained"
-            color="inherit"
-            size="small"
-            onClick={() =>
-              formik.setFieldValue(
-                'isAccesionNumberAutoGenerated',
-                !formik.values.isAccesionNumberAutoGenerated
-              )
-            }
-            startIcon={<Iconify icon="mdi:autorenew" />}
-          >
-            Auto Accession
-          </Button>
-        </Box>
-        <Box sx={{ display: 'flex' }}>
-          <Button
-            variant="contained"
-            size="small"
-            onClick={() => setOpenAccessionDialog(true)}
-            startIcon={<Iconify icon={GlobalIcons.download} />}
-          >
-            Accession label
-          </Button>
-        </Box>
-      </Box>
-      {copies.length > 0 && (
-        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-          <CustomizableTable
-            tableContainerProps={{
-              component: 'div', // override Scrollbar to avoid nested wrappers breaking sticky
-              sx: {
-                maxHeight: 420,
-                overflowY: 'auto',
-                // Reinforce sticky header styling (fallback if internal styles fail)
-                '& thead th': {
-                  position: 'sticky',
-                  top: 0,
-                  zIndex: 3,
-                  backgroundColor: 'background.paper',
-                },
-              },
-            }}
-            tableId="copies-table"
-            isSearch={false}
-            isFilter={false}
-            columns={[
-              {
-                id: 'copyNo',
-                label: 'Copy No.',
-                align: 'left',
-                minWidth: 100,
-                render: (_, row) => <span>{row.copyNo}</span>,
-              },
-              {
-                id: 'accessionNo',
-                label: '',
-                renderColumn(value) {
-                  return (
-                    <Box display="flex" alignItems="center" gap={1}>
-                      Accession No.
-                      <CustomTooltip
-                        arrow
-                        placement="right"
-                        sx={{ textAlign: 'justify' }}
-                        title="Enter the unique Accession Number for this copy. Only letters, numbers, and hyphens are allowed. Maximum 12 characters."
-                      >
-                        <Iconify
-                          icon="lucide:info"
-                          sx={{ cursor: 'pointer', width: 15, height: 15 }}
-                          color="info.main"
-                        />
-                      </CustomTooltip>
-                    </Box>
-                  );
-                },
-                minWidth: 170,
-                align: 'left',
-                render: (value, row) => (
-                  <Box mb={1}>
-                    <ShakingTextField
-                      error={
-                        !!(
-                          formik?.touched?.copies?.[row.copyNo - 1]?.accessionNo &&
-                          Array.isArray(formik?.errors?.copies) &&
-                          typeof formik?.errors?.copies?.[row.copyNo - 1] === 'object' &&
-                          (formik.errors.copies[row.copyNo - 1] as FormikErrors<IBookCopy>)
-                            ?.accessionNo
-                        )
-                      }
-                    >
-                      <TextField
-                        size="small"
-                        fullWidth
-                        label="Accession No *"
-                        disabled={isEdit}
-                        value={formik.values.copies[row.copyNo - 1]?.accessionNo || ''}
-                        onChange={(e) => {
-                          const val = e.target.value
-                            .replace(/[^a-zA-Z0-9-]/g, '')
-                            .split(' ')
-                            .map((word) => word || '')
-                            .join(' ');
-
-                          if (val.length <= 11) {
-                            formik.setFieldValue(`copies.${row.copyNo - 1}.accessionNo`, val);
-                            const updated = [...copies];
-                            updated[row.copyNo - 1].accessionNo = val;
-                            setCopies(updated);
-                            formik.setFieldTouched(
-                              `copies.${row.copyNo - 1}.accessionNo`,
-                              false,
-                              false
-                            );
-                          }
-                        }}
-                        error={
-                          !!(
-                            formik?.touched?.copies?.[row.copyNo - 1]?.accessionNo &&
-                            Array.isArray(formik?.errors?.copies) &&
-                            typeof formik?.errors?.copies?.[row.copyNo - 1] === 'object' &&
-                            (formik.errors.copies[row.copyNo - 1] as FormikErrors<IBookCopy>)
-                              ?.accessionNo
-                          )
-                        }
-                        helperText={
-                          (formik?.touched?.copies?.[row.copyNo - 1]?.accessionNo &&
-                            Array.isArray(formik?.errors?.copies) &&
-                            typeof formik?.errors?.copies?.[row.copyNo - 1] === 'object' &&
-                            (formik.errors.copies[row.copyNo - 1] as FormikErrors<IBookCopy>)
-                              ?.accessionNo) ||
-                          ''
-                        }
-                      />
-                    </ShakingTextField>
-                  </Box>
-                ),
-              },
-              {
-                id: 'section',
-                label: 'Section',
-                align: 'left',
-                minWidth: 170,
-                render: (_, row) => (
-                  <Box mb={1}>
-                    <ShakingTextField
-                      error={
-                        !!(
-                          formik?.touched?.copies?.[row.copyNo - 1]?.section &&
-                          Array.isArray(formik?.errors?.copies) &&
-                          typeof formik?.errors?.copies?.[row.copyNo - 1] === 'object' &&
-                          (formik.errors.copies[row.copyNo - 1] as FormikErrors<IBookCopy>)?.section
-                        )
-                      }
-                    >
-                      <CustomSelect
-                        label="Section *"
-                        options={sectionOptions}
-                        name="section"
-                        value={formik.values.copies[row.copyNo - 1]?.section || ''}
-                        onChange={(val) => {
-                          const updated = [...copies];
-                          updated[row.copyNo - 1].section = val as string;
-                          updated[row.copyNo - 1].shelf = '';
-                          setCopies(updated);
-                          formik.setFieldValue('copies', updated);
-                          formik.setFieldTouched(`copies.${row.copyNo - 1}.section`, false, false);
-                        }}
-                        disabled={sectionLoading}
-                        helperText={
-                          (formik?.touched?.copies?.[row.copyNo - 1]?.section &&
-                            Array.isArray(formik?.errors?.copies) &&
-                            typeof formik?.errors?.copies?.[row.copyNo - 1] === 'object' &&
-                            (formik.errors.copies[row.copyNo - 1] as FormikErrors<IBookCopy>)
-                              ?.section) ||
-                          ''
-                        }
-                        error={
-                          !!(
-                            formik?.touched?.copies?.[row.copyNo - 1]?.section &&
-                            Array.isArray(formik?.errors?.copies) &&
-                            typeof formik?.errors?.copies?.[row.copyNo - 1] === 'object' &&
-                            (formik.errors.copies[row.copyNo - 1] as FormikErrors<IBookCopy>)
-                              ?.section
-                          )
-                        }
-                        formControlProps={{ sx: { minWidth: 200 } }}
-                      />
-                    </ShakingTextField>
-                  </Box>
-                ),
-              },
-              {
-                id: 'shelf',
-                label: 'Shelf',
-                align: 'left',
-                minWidth: 170,
-                render: (_, row) => (
-                  <ShelfDropdown
-                    row={row}
-                    copies={copies}
-                    setCopies={setCopies}
-                    formik={formik}
-                    sectionData={sectionData}
-                  />
-                ),
-              },
-              {
-                id: 'barcode',
-                label: 'Barcode',
-                align: 'left',
-                isFilter: false,
-                isSort: false,
-                minWidth: 100,
-                render: (_, row) =>
-                  row.accessionNo ? (
-                    <Barcode
-                      value={row.accessionNo}
-                      format="CODE128" // other options: EAN13, UPC, etc.
-                      width={1}
-                      height={20}
-                      displayValue
-                      background="#ffffff"
-                      lineColor="#000000"
-                    />
-                  ) : (
-                    <Typography variant="caption" color="text.secondary">
-                      Accession number pending
-                    </Typography>
-                  ),
-              },
-              {
-                id: '',
-                label: 'Print',
-                isFilter: false,
-                isSort: false,
-                render: (_, row) => (
-                  <IconButton
-                    onClick={() => setOpenAccessionDialog(true)}
-                    disabled={!row.accessionNo}
-                  >
-                    <Iconify icon={GlobalIcons.printer} />
-                  </IconButton>
-                ),
-              },
-            ]}
-            data={formik.values.copies || []}
-          />
-        </Box>
-      )}
-
-      <CustomDialog
-        open={openAccessionDialog}
-        handleClose={() => setOpenAccessionDialog(false)}
-        maxWidth="md"
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Iconify icon="mdi:barcode-scan" width={24} height={24} />
-            <Typography variant="h5">Generate Accession Labels</Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title="Download or print accession labels for all book copies listed below. Each label contains a unique barcode for easy tracking."
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
-      >
-        <Box
-          sx={{
-            background:
-              'linear-gradient(to bottom, rgba(102, 126, 234, 0.02), rgba(255, 255, 255, 0))',
-            borderRadius: 2,
-            p: 3,
-          }}
-        >
-          {/* Warning Alert for Pending Accession Numbers */}
-          <GlobalStyles
-            styles={{
-              '@media print': {
-                'body *': { visibility: 'hidden' },
-                '.library-copy-label-print-area, .library-copy-label-print-area *': {
-                  visibility: 'visible',
-                },
-                '.library-copy-label-print-area': {
-                  position: 'absolute',
-                  left: 0,
-                  top: 0,
-                  width: '100%',
-                  background: '#ffffff',
-                  padding: '16px',
-                },
-                '.library-copy-label-actions': {
-                  display: 'none !important',
-                },
-              },
-            }}
-          />
-          {labelsError && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              Could not load backend copy labels. Local copy rows are shown instead.
-            </Alert>
-          )}
-          {labelsLoading && (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-              <CircularProgress size={24} />
-            </Box>
-          )}
-          {hasMissingAccessionNumbers && (
-            <Box
-              sx={{
-                p: 2.5,
-                mb: 3,
-                background: 'linear-gradient(135deg, #fff5f5 0%, #ffe8e8 100%)',
-                borderRadius: 2,
-                border: '1px solid #ffcdd2',
-                borderLeft: '4px solid #f44336',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 2,
-                boxShadow: '0 2px 8px rgba(244, 67, 54, 0.1)',
-                transition: 'all 0.3s ease',
-                '&:hover': {
-                  boxShadow: '0 4px 12px rgba(244, 67, 54, 0.15)',
-                  transform: 'translateY(-2px)',
-                },
-              }}
-            >
-              <Box
-                sx={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: '50%',
-                  background: 'rgba(244, 67, 54, 0.1)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
-                }}
-              >
-                <Iconify icon="mdi:alert-circle" width={24} height={24} sx={{ color: '#f44336' }} />
-              </Box>
-              <Box>
-                <Typography variant="subtitle2" sx={{ color: '#d32f2f', fontWeight: 600, mb: 0.5 }}>
-                  Incomplete Accession Numbers
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#c62828', fontSize: '0.875rem' }}>
-                  Some copies are missing accession numbers. Complete all entries to generate
-                  labels.
-                </Typography>
-              </Box>
-            </Box>
-          )}
-
-          {/* Barcode Cards Grid */}
-          <Box
-            className="library-copy-label-print-area"
-            sx={{
-              maxHeight: 450,
-              overflowY: 'auto',
-              pr: 1,
-              '&::-webkit-scrollbar': {
-                width: '8px',
-              },
-              '&::-webkit-scrollbar-track': {
-                background: '#f1f1f1',
-                borderRadius: '10px',
-              },
-              '&::-webkit-scrollbar-thumb': {
-                background: '#888',
-                borderRadius: '10px',
-                '&:hover': {
-                  background: '#555',
-                },
-              },
-            }}
-          >
-            <Grid container spacing={3} justifyContent="flex-start" alignItems="stretch">
-              {labelRows.map((copy, idx) =>
-                copy.accessionNumber ? (
-                  <Grid
-                    size={{ xs: 12, sm: 6, md: 4 }}
-                    key={`${copy.accessionNumber}-${idx}`}
-                    display="flex"
-                  >
-                    <Box
-                      sx={{
-                        background: '#fff',
-                        borderRadius: 2,
-                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-                        p: 1.5,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        width: '100%',
-                        border: '1px solid #e0e0e0',
-                        position: 'relative',
-                        overflow: 'hidden',
-                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                      }}
-                    >
-                      {/* Barcode */}
-                      <Box
-                        sx={{
-                          p: 1,
-                          borderRadius: 1,
-                        }}
-                      >
-                        <Barcode
-                          value={copy.barcodeValue || copy.accessionNumber}
-                          format="CODE128"
-                          width={1}
-                          height={35}
-                          displayValue
-                          lineColor="#000000"
-                          fontSize={11}
-                        />
-                      </Box>
-                      <Typography variant="caption" sx={{ fontWeight: 700, textAlign: 'center' }}>
-                        Copy {copy.copyNumber}
-                      </Typography>
-                      {(copy.sectionName || copy.shelfName) && (
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          sx={{ textAlign: 'center' }}
-                        >
-                          {[copy.sectionName, copy.shelfName].filter(Boolean).join(' / ')}
-                        </Typography>
-                      )}
-                    </Box>
-                  </Grid>
-                ) : null
-              )}
-            </Grid>
-
-            {/* Empty State */}
-            {!labelsLoading && !hasLabels && (
-              <Box
-                sx={{
-                  textAlign: 'center',
-                  py: 6,
-                  px: 3,
-                }}
-              >
-                <Box
-                  sx={{
-                    // width: 80,
-                    // height: 80,
-                    borderRadius: '50%',
-                    background:
-                      'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    margin: '0 auto 16px',
-                  }}
-                >
-                  <Iconify
-                    icon="mdi:barcode-off"
-                    width={40}
-                    height={40}
-                    sx={{ color: '#667eea' }}
-                  />
-                </Box>
-                <Typography variant="h6" sx={{ color: 'text.secondary', mb: 1 }}>
-                  No Labels Available
-                </Typography>
-                <Typography variant="body2" sx={{ color: 'text.disabled' }}>
-                  Add accession numbers to generate labels
-                </Typography>
-              </Box>
-            )}
-          </Box>
-
-          {/* Action Buttons */}
-          {hasLabels && (
-            <Box
-              className="library-copy-label-actions"
-              sx={{
-                mt: 3,
-                pt: 3,
-                borderTop: '1px solid #e0e0e0',
-                display: 'flex',
-                gap: 2,
-                justifyContent: 'flex-end',
-              }}
-            >
-              <Button
-                variant="contained"
-                startIcon={<Iconify icon="mdi:printer" />}
-                onClick={handlePrintLabels}
-                disabled={labelsLoading}
-              >
-                Print All
+        {!query.canRead && (
+          <Alert severity="info">
+            Catalogue view and add or update permission are required to load copy locations.
+          </Alert>
+        )}
+        {!query.academicYearId && (
+          <Alert severity="info">Select an academic year to load copy locations.</Alert>
+        )}
+        {query.currentData && !sections.length && (
+          <Alert severity="info">
+            No Library sections and shelves are configured. Ask an authorized user to configure a
+            location before adding stock.
+          </Alert>
+        )}
+        {query.isError && (
+          <Alert
+            severity="error"
+            action={
+              <Button size="small" onClick={() => query.refetch()}>
+                Retry
               </Button>
-            </Box>
-          )}
-        </Box>
-      </CustomDialog>
-    </Box>
+            }
+          >
+            Could not load sections and shelves. Existing location values are retained.
+          </Alert>
+        )}
+        {typeof formik.errors.copies === 'string' && (
+          <Alert severity="error">{formik.errors.copies}</Alert>
+        )}
+        <BookCopiesTable
+          formik={formik}
+          sections={sections}
+          disabled={disabled || query.isFetching || !query.currentData || !query.canRead}
+          onRemove={setRemoveIndex}
+        />
+      </FormSectionCard>
+      <ConfirmDialog
+        open={removeIndex !== null}
+        title="Remove Copy?"
+        onClose={() => setRemoveIndex(null)}
+        content="This removes the row from your draft. Saving rechecks its removal eligibility. Receiving, circulation and condition records must be retained; use the copy's supported Inventory actions instead."
+        action={
+          <Button
+            type="button"
+            size="small"
+            color="error"
+            variant="contained"
+            disabled={
+              disabled ||
+              removeIndex === null ||
+              !canRemoveCatalogueCopy(formik.values.copies[removeIndex])
+            }
+            onClick={remove}
+          >
+            Remove copy
+          </Button>
+        }
+      />
+      {labelsOpen && (
+        <SavedCopyLabelsDialog
+          open
+          bookId={formik.values.id}
+          onClose={() => setLabelsOpen(false)}
+        />
+      )}
+    </Stack>
   );
 };
-
 export default BookCopiesStep;

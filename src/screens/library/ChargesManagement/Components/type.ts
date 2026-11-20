@@ -6,6 +6,15 @@ export interface ILibraryChargeData {
   id: any;
   memberId: string;
   memberName: string;
+  academicYearId?: string | null;
+  schoolChargeDate?: string | null;
+  schoolDueDate?: string | null;
+  chargeDateProvenance?: number;
+  dueDateProvenance?: number;
+  rawChargeDate?: string | null;
+  rawDueDate?: string | null;
+  sourceVersion?: string;
+  financeSourceLinkId?: string | null;
   rollNo?: string;
   grNo?: string;
   contactNo?: string;
@@ -55,6 +64,7 @@ export interface ICollectChargesProps {
   open: UseBooleanReturn;
   onClose: (e: any, isSubmit: boolean) => void;
   charge: ILibraryChargeData | null;
+  onBusyChange?: (busy: boolean) => void;
 }
 
 export interface ICollectChargesFormValues {

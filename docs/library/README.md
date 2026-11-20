@@ -3,7 +3,7 @@ module: library
 domain: overview
 content_type: Landing
 status: canonical
-updated_on: 2026-07-06
+updated_on: 2026-11-18
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -11,7 +11,7 @@ audience: humans-and-agents
 # Understand Library frontend integration
 
 TL;DR: use this page as the entrypoint for Library routes, screens, clients, workflows, and frontend validation.
-Backend Library docs own product and API truth at [Library backend docs](../../../Shikshamitra-BE/docs/modules/library/README.md).
+Backend Library docs own product and API truth at [Library backend docs](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/library/README.md).
 
 ## Read order
 
@@ -40,6 +40,10 @@ Use these paths before searching broadly:
 | App Router pages | `src/app/(auth-route)/library/**` |
 | Screens and components | `src/screens/library/**` |
 | Library API clients | `src/redux/library/**` |
+| School catalogue configuration | `src/screens/library/settings/catalogue-configuration/**` and `src/redux/library/catalogue-configuration-api.ts` |
+| Catalogue editor and effective rules | `src/screens/library/BookManagement/BookFormComponents/BookEditor.tsx` and `src/redux/library/book-editor-api.ts` |
+| Exact catalogue price drafts and display | `src/redux/library/catalogue-price.ts` and `src/screens/library/BookManagement/BookFormComponents/BookPriceField.tsx` |
+| Book detail snapshots and accepted command revisions | `src/screens/library/BookManagement/BookFormComponents/useBookDetailSnapshot.ts` and `src/screens/library/BookManagement/BookFormComponents/useBookSaveCommit.ts` |
 | Library tests | `src/redux/library/*.test.ts`, `src/screens/library/*.test.ts`, `e2e/library/**` |
 | Backend docs | `../../../Shikshamitra-BE/docs/modules/library/README.md` |
 | Backend contracts | `../../../Shikshamitra-BE/src/ShikshaMitra.Application.Contracts/Library/**` |
@@ -52,6 +56,7 @@ Use this table before code search:
 |---|---|
 | Which Library route or menu item is active? | [routes.md](./routes.md) |
 | Which API client owns a call? | [clients.md](./clients.md) |
+| How are school catalogue rules loaded and kept with an open draft? | [workflows.md](./workflows.md#configure-and-edit-the-catalogue) |
 | Which workflow should I test? | [workflows.md](./workflows.md) |
 | Which command should I run? | [testing.md](./testing.md) |
 | Which backend API behavior is canonical? | `../../../Shikshamitra-BE/docs/modules/library/api.md` |

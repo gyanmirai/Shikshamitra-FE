@@ -7,6 +7,8 @@ import { useSelector } from 'react-redux';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'src/routes/hooks';
 import { useId, useRef, useState } from 'react';
+import { hasGrantedPermission } from 'src/utils/permissions';
+import { libraryPersonalPaths } from 'src/constants/library-personal';
 
 import { AccountButton } from './account-button';
 import { AccountDialogs } from './account-dialogs';
@@ -26,7 +28,9 @@ export function AccountDrawer({ data: _data, institutionName, sx, ...other }: Ac
   const menuId = useId();
   const trigger = useRef<HTMLButtonElement>(null);
   const router = useRouter();
-  const { employee, sessionContext } = useSelector((state: RootState) => state.auth);
+  const { employee, sessionContext, permissions, permissionsInitialized } = useSelector(
+    (state: RootState) => state.auth
+  );
   const { data } = useSession();
   const session = data as { profile?: AccountProfile } | null;
   const profile = session?.profile;
@@ -70,6 +74,21 @@ export function AccountDrawer({ data: _data, institutionName, sx, ...other }: Ac
           titleId={`${menuId}-title`}
           institutionName={institutionName}
           canUseSelfLeaveCenter={canUseSelfLeaveCenter}
+          canUseLibraryInbox={sessionContext?.accountMode === 'tenant'}
+          onMyLibrary={
+            sessionContext?.accountMode === 'tenant' &&
+            permissionsInitialized &&
+            hasGrantedPermission(permissions, 'Library.Portal.View')
+              ? () => {
+                  closeMenu();
+                  router.push(libraryPersonalPaths.library);
+                }
+              : undefined
+          }
+          onLibraryInbox={() => {
+            closeMenu();
+            router.push(libraryPersonalPaths.inbox);
+          }}
           onClose={closeMenu}
           onPassword={() => openDialog('password')}
           onProfile={() => openDialog('profile')}
