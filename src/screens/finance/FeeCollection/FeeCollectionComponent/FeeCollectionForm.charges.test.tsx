@@ -708,16 +708,12 @@ describe('Fee Collection automatic ledger selection', () => {
     mocks.data.allocationBasis = 'FeeHead';
     mocks.data.allocationDueFeeOrder = ['transport-june', 'due-0', 'tuition-july'];
     render(<FeeCollectComponentForm student={student} />);
-    fireEvent.click(ledger().getByRole('checkbox', { name: 'Select Transport', exact: true }));
-    fireEvent.click(
-      ledger().getByRole('checkbox', { name: 'Select Class 3 Tuition Fee', exact: true })
-    );
+    fireEvent.click(ledger().getByRole('checkbox', { name: 'Select Transport' }));
+    fireEvent.click(ledger().getByRole('checkbox', { name: 'Select Class 3 Tuition Fee' }));
     const amount = screen.getByLabelText(/Amount to collect/);
     fireEvent.change(amount, { target: { value: '2500' } });
     await waitFor(() => expect(amount).toHaveValue('₹ 2,500'));
-    fireEvent.click(
-      ledger().getByRole('checkbox', { name: 'Select Class 3 Tuition Fee', exact: true })
-    );
+    fireEvent.click(ledger().getByRole('checkbox', { name: 'Select Class 3 Tuition Fee' }));
     await waitFor(() => expect(amount).toHaveValue('₹ 2,000'));
     expect(ledger().getByRole('checkbox', { name: 'Select Transport, June 2026' })).toBeChecked();
     expect(
