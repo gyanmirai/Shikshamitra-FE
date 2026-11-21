@@ -47,6 +47,24 @@ it('keeps unresolved permissions in a loading state', () => {
   expect(screen.getByLabelText('Loading payroll settings')).toBeVisible();
   expect(screen.queryByRole('link')).not.toBeInTheDocument();
 });
+it('offers Approval Workflow to a payroll workflow manager with Run Payroll view access', () => {
+  auth.permissions = [
+    { name: hrPermissions.payroll.runPayrollManageWorkflow, isGranted: true },
+    { name: `${hrPermissions.payroll.runPayroll}.View`, isGranted: true },
+  ];
+  render(<PayrollSettings />);
+  expect(screen.getByRole('link', { name: 'Open approval workflow' })).toHaveAttribute(
+    'href',
+    '/hr/payroll/setting/approval-workflow'
+  );
+});
+
+it('requires Run Payroll view access as well as the workflow management grant', () => {
+  auth.permissions = [{ name: hrPermissions.payroll.runPayrollManageWorkflow, isGranted: true }];
+  render(<PayrollSettings />);
+  expect(screen.queryByRole('link', { name: 'Open approval workflow' })).not.toBeInTheDocument();
+});
+
 it('explains the empty access state without offering unavailable destinations', () => {
   render(<PayrollSettings />);
   expect(screen.getByText(/No payroll settings are available/)).toBeVisible();

@@ -33,6 +33,8 @@ const mocks = vi.hoisted(() => ({
   confirmLock: null as null | (() => Promise<void>),
   reviewHandler: null as null | (() => Promise<void>),
   adjustment: vi.fn(),
+  approvalUnavailable: false,
+  retryApproval: vi.fn(),
 }));
 vi.mock('./payroll-registration-readiness', () => ({ PayrollRegistrationReadiness: () => null }));
 vi.mock('@mui/lab', async (importOriginal) => {
@@ -67,7 +69,11 @@ vi.mock('src/components/toast', () => ({
 }));
 vi.mock('./use-payroll-preview-run', () => ({ usePayrollPreviewRun: () => mocks.preview }));
 vi.mock('src/redux/runPayroll/payroll-approval-api', () => ({
-  usePayrollApprovalSettingsQuery: () => ({ currentData: { mode: 'Legacy', version: 0 } }),
+  usePayrollApprovalSettingsQuery: () => ({
+    currentData: { mode: 'Legacy', version: 0 },
+    isError: mocks.approvalUnavailable,
+    refetch: mocks.retryApproval,
+  }),
 }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span /> }));
 vi.mock('src/routes/components', () => ({
@@ -151,6 +157,7 @@ const view = () => (
 );
 
 beforeEach(() => {
+  mocks.approvalUnavailable = false;
   vi.clearAllMocks();
   mocks.query = 'month=2026-08';
   mocks.state.auth = {
@@ -1134,6 +1141,24 @@ describe('Run Payroll preview feedback', () => {
     ).toBeVisible();
     expect(screen.getByRole('button', { name: 'Add adjustment' })).toBeDisabled();
     expect(mocks.adjustment).not.toHaveBeenCalled();
+  });
+
+  it('keeps the register readable and closes lock confirmation when approval settings are unavailable', async () => {
+    const ui = render(view());
+    await userEvent.click(screen.getByRole('checkbox'));
+    await userEvent.click(screen.getByRole('button', { name: 'Lock Reviewed' }));
+    const confirm = mocks.confirmLock;
+    mocks.approvalUnavailable = true;
+    ui.rerender(view());
+    expect(screen.getByRole('region', { name: 'Payroll Register' })).toBeVisible();
+    expect(screen.queryByRole('dialog', { name: 'Lock reviewed payroll rows' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Lock Reviewed' })).not.toBeInTheDocument();
+    await act(async () => {
+      await confirm?.();
+    });
+    expect(mocks.lock).not.toHaveBeenCalled();
+    await userEvent.click(screen.getByRole('button', { name: /^Retry$/ }));
+    expect(mocks.retryApproval).toHaveBeenCalled();
   });
 
   it('blocks a lock handler when the preview becomes stale with confirmation open', async () => {

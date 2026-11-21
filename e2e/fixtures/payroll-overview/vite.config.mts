@@ -56,6 +56,8 @@ export default defineConfig({
           const input = body ? JSON.parse(body) : {};
           if (path === '/api/payroll/run/approval-settings')
             return res.end(JSON.stringify({ mode: 'Legacy', version: 0, approverId: null, allowSelfFinalization: false }));
+          if (path === '/api/payroll/run/approval-settings/approvers')
+            return res.end(JSON.stringify([{ id: 'principal', name: 'Test Principal' }]));
           if (path === '/api/payroll/run/previews/current') {
             const { searchParams } = new URL(req.url!, 'http://127.0.0.1');
             const month = searchParams.get('month');

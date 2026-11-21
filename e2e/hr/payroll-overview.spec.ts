@@ -135,6 +135,85 @@ test('the register keeps payroll checks and server criteria in their standard co
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
+test('approval settings are separate and recovery returns to the selected month', async ({ page }) => {
+  let settings = {
+    mode: 'Paused',
+    version: 3,
+    approverId: 'principal',
+    allowSelfFinalization: false,
+  };
+  await page.route('**/api/payroll/run/approval-settings', (route) => {
+    if (route.request().method() === 'PUT') {
+      expect(route.request().postDataJSON()).toMatchObject({
+        approverId: 'admin',
+        expectedVersion: 4,
+        reason: 'Use the backup approver',
+      });
+      settings = { ...settings, approverId: 'admin', version: 5 };
+    }
+    return route.fulfill({ json: settings });
+  });
+  await page.route('**/api/payroll/run/approval-settings/approvers?*', (route) =>
+    route.fulfill({ json: [
+      { id: 'principal', name: 'Test Principal' },
+      { id: 'admin', name: 'Backup Admin' },
+    ] })
+  );
+  await page.route('**/api/payroll/run/approval-settings/resume', (route) => {
+    expect(route.request().postDataJSON()).toMatchObject({
+      expectedVersion: 3,
+      reason: 'Resume synthetic payroll',
+    });
+    settings = { ...settings, mode: 'Active', version: 4 };
+    return route.fulfill({ json: settings });
+  });
+  await page.route('**/api/payroll/run/submissions?*', (route) => route.fulfill({ json: [] }));
+  await page.route('**/api/payroll/run/submissions', (route) => route.fulfill({
+    status: 400,
+    json: { errorCode: 'PAYROLL_APPROVER_UNAVAILABLE' },
+  }));
+  await page.goto('/hr/payroll/run-payroll?month=2026-09&actor=hr');
+  await expect(page.getByText(/Payroll approval is paused/)).toBeVisible();
+  await expect(page.getByText(/Contact your payroll administrator/)).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Open approval settings' })).toHaveCount(0);
+  await page.goto('/hr/payroll/setting/approval-workflow?returnMonth=2026-09');
+  await expect(page.getByText(/You do not have access to manage/)).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Save settings' })).toHaveCount(0);
+
+  await page.goto('/hr/payroll/setting?actor=manager');
+  await page.getByRole('link', { name: 'Open approval workflow' }).click();
+  await expect(page.getByRole('heading', { name: 'Approval Workflow', exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Back to Run Payroll' })).toHaveCount(0);
+  await page.goto('/hr/payroll/run-payroll?month=2026-09');
+  const recovery = page.getByRole('link', { name: 'Open approval settings' });
+  await expect(recovery).toHaveAttribute('href', '/hr/payroll/setting/approval-workflow?returnMonth=2026-09');
+  await recovery.click();
+  await expect(page.getByRole('button', { name: 'Resume workflow' })).toBeDisabled();
+  await page.getByRole('textbox', { name: /Reason for change/ }).fill('Resume synthetic payroll');
+  await page.getByRole('button', { name: 'Resume workflow' }).click();
+  await expect(page.getByText('Approval workflow updated.')).toBeVisible();
+  const approver = page.getByRole('combobox', { name: /Designated principal or admin/ });
+  await approver.fill('Backup');
+  await page.getByRole('option', { name: 'Backup Admin', exact: true }).click();
+  await expect(page.getByText(/Pending batches stay assigned/)).toBeVisible();
+  await page.getByRole('textbox', { name: /Reason for change/ }).fill('Use the backup approver');
+  await page.getByRole('button', { name: 'Save settings' }).click();
+  await expect(page.getByText('Approval workflow updated.')).toBeVisible();
+  await page.getByRole('link', { name: 'Back to Run Payroll' }).click();
+  await expect(page).toHaveURL(/\/hr\/payroll\/run-payroll\?month=2026-09/);
+  await expect(page.getByRole('button', { name: 'Approval batches' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Open approval settings' })).toHaveCount(0);
+  await page.getByRole('checkbox', { name: 'Select payroll for Asha Rao' }).check();
+  await page.getByRole('button', { name: 'Send for approval', exact: true }).click();
+  await page.getByRole('button', { name: 'Confirm and send' }).click();
+  const sendDialog = page.getByRole('dialog', { name: 'Send payroll for approval' });
+  await expect(sendDialog.getByText(/needs payroll lock permission/)).toBeVisible();
+  await expect(sendDialog.getByRole('link', { name: 'Open approval settings' })).toHaveAttribute(
+    'href',
+    '/hr/payroll/setting/approval-workflow?returnMonth=2026-09'
+  );
+});
+
 test('HR sends only ready rows and the principal confirms the exact batch', async ({ page }) => {
   const clean = { employeeId: 'staff-1', employeeName: 'Ready Staff', employeeIdentifier: 'S1', payableDays: 22,
     totalEarnings: 10500, totalDeduction: 500, netPay: 10000, grossSalary: 10500, reviewStatus: 'REVIEWED', issueCodes: [] };

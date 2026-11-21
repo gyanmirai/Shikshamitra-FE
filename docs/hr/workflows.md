@@ -245,7 +245,7 @@ Review and lock actions appear with the selected staff rows.
 On smaller screens, period and selection actions wrap above the register.
 Payroll month stays in the context row.
 Academic year comes from the global header selector without a duplicate page label.
-Payroll activity and approval settings are secondary period actions where permitted.
+Payroll activity is a secondary period action where permitted.
 For the approval workflow, the register header also shows month status and the finalized staff count.
 The read-only drawer starts closed, opens from the right on desktop, and fills the screen on mobile.
 Its checks cover attendance, salary setup, payroll policies, and additional server-reported blockers.
@@ -272,7 +272,9 @@ Approval batches shows incoming and outgoing batches, exact staff, earnings, ded
 An authorized approver confirms the whole batch from its details.
 While blocked employees remain pending, the register header shows Partially finalized and the finalized staff count.
 If evidence changed, the full pending batch returns to HR for fresh review.
-A school-wide workflow manager can update the approver or activate, pause and resume approval from Approval settings.
+A school-wide workflow manager can update the approver or activate, pause and resume approval in Payroll Settings → Approval Workflow.
+Run Payroll links to that page only when a configuration issue affects monthly work.
+The link retains the selected payroll month for the return to the register.
 Where the school enables it, eligible users can explicitly create a batch for themselves and confirm it separately.
 Review sheet Excel and Review sheet PDF use the exact ready selection or pending batch and include the Pending finalization label.
 
@@ -877,7 +879,7 @@ Inactive definitions retain history but disappear from new-assignment options.
 
 ## Payroll settings tasks
 
-Payroll Settings opens `/hr/payroll/setting` with permission-filtered tasks for Salary Templates, Statutory Settings, Component Library, and Payslip & Statement Settings.
+Payroll Settings opens `/hr/payroll/setting` with permission-filtered tasks for Salary Templates, Statutory Settings, Component Library, Approval Workflow, and Payslip & Statement Settings.
 The component library links to the existing earning and deduction screens; statutory settings links to the existing PF, ESIC, and Professional Tax destinations.
 Template editing stays on one continuous page, with the default Monthly salary or Monthly cost to school (CTC) choice in Basic Information.
 The sample preview identifies its basis and does not assign an amount to staff.
