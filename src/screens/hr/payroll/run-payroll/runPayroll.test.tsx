@@ -744,7 +744,7 @@ describe('Run Payroll preview feedback', () => {
       },
     };
     ui.rerender(view());
-    expect(screen.getByText('Critical • 4')).toBeVisible();
+    expect(screen.getByText('Attendance missing')).toBeVisible();
     expect(screen.getByRole('button', { name: 'Lock Reviewed' })).toBeDisabled();
     expect(mocks.lock).not.toHaveBeenCalled();
   });

@@ -96,7 +96,7 @@ export const PAYROLL_ISSUE_LABELS: Record<
     severity: 'CRITICAL',
     color: 'error',
   },
-  NO_ATTENDANCE: { label: 'No attendance', severity: 'CRITICAL', color: 'error' },
+  NO_ATTENDANCE: { label: 'Attendance missing', severity: 'CRITICAL', color: 'error' },
   LOW_ATTENDANCE: { label: 'Low attendance', severity: 'WARNING', color: 'warning' },
   NEGATIVE_NET_PAY: { label: 'Negative net pay', severity: 'CRITICAL', color: 'error' },
   NO_PREVIOUS_MONTH_COMPARISON: { label: 'No previous month', severity: 'INFO', color: 'info' },

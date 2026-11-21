@@ -214,6 +214,38 @@ test('approval settings are separate and recovery returns to the selected month'
   );
 });
 
+test('missing attendance blocks payroll review and is skipped by select all', async ({ page }) => {
+  await page.route('**/api/payroll/run/register?*', async (route) => {
+    const response = await route.fetch();
+    const result = await response.json();
+    result.items = result.items.map((row: { employeeName: string; issueCodes: string[] }) => ({
+      ...row,
+      reviewStatus: 'PENDING',
+      issueCodes: row.employeeName === 'Vikram Shah' ? ['NO_ATTENDANCE'] : row.issueCodes,
+    }));
+    await route.fulfill({ response, json: result });
+  });
+  await page.route('**/api/payroll/run/reviews', (route) =>
+    route.fulfill({ json: { employeesProcessed: 1, message: 'Marked 1 payroll row as reviewed.' } })
+  );
+  await page.goto('/hr/payroll/run-payroll?month=2026-09&actor=hr');
+  const blocked = page.getByRole('checkbox', { name: 'Select payroll for Vikram Shah' });
+  const eligible = page.getByRole('checkbox', { name: 'Select payroll for Asha Rao' });
+  await expect(blocked).toBeDisabled();
+  const attendance = page.getByText('Attendance missing', { exact: true });
+  await expect(attendance).toBeVisible();
+  await attendance.hover();
+  await expect(page.getByRole('tooltip')).toContainText(/Record attendance.*recalculate/i);
+  await page.getByRole('checkbox', { name: /Select all .*payroll rows on this page/ }).check();
+  await expect(blocked).not.toBeChecked();
+  await expect(eligible).toBeChecked();
+  const review = page.waitForRequest((request) =>
+    request.method() === 'POST' && new URL(request.url()).pathname === '/api/payroll/run/reviews'
+  );
+  await page.getByRole('button', { name: 'Mark Reviewed', exact: true }).click();
+  expect((await review).postDataJSON().employeeIds).toEqual(['fixture-staff-1']);
+});
+
 test('HR sends only ready rows and the principal confirms the exact batch', async ({ page }) => {
   const clean = { employeeId: 'staff-1', employeeName: 'Ready Staff', employeeIdentifier: 'S1', payableDays: 22,
     totalEarnings: 10500, totalDeduction: 500, netPay: 10000, grossSalary: 10500, reviewStatus: 'REVIEWED', issueCodes: [] };
