@@ -559,7 +559,7 @@ describe('Run Payroll preview feedback', () => {
   it('explains selection and independent review and lock permissions', async () => {
     mocks.preview.data.items[0].reviewStatus = 'PENDING';
     const ui = render(view());
-    expect(screen.getByText(/Select staff rows to lock/)).toBeVisible();
+    expect(screen.getByText(/Check staff salaries and issues, then select/)).toBeVisible();
     await userEvent.click(screen.getByRole('checkbox'));
     expect(screen.getByText(/Mark the selected pending rows reviewed/)).toBeVisible();
     mocks.state.auth.permissions = mocks.state.auth.permissions.filter(
@@ -742,10 +742,10 @@ describe('Run Payroll preview feedback', () => {
     expect(mocks.lock).not.toHaveBeenCalled();
   });
 
-  it('keeps refresh and readiness together in the register action row', async () => {
+  it('keeps period actions visible and reveals row actions after selection', async () => {
     render(view());
     expect(
-      within(screen.getByRole('region', { name: 'Payroll Register' })).getByRole('button', {
+      screen.getByRole('button', {
         name: 'Recalculate payroll',
       })
     ).toBeVisible();
@@ -760,21 +760,18 @@ describe('Run Payroll preview feedback', () => {
     const inspectionActions = within(
       screen.getByRole('group', { name: 'Payroll readiness and activity' })
     );
-    expect(inspectionActions.getByRole('button', { name: 'View readiness' })).toBeVisible();
+    expect(inspectionActions.getByRole('button', { name: 'Payroll checks' })).toBeVisible();
     expect(inspectionActions.getByRole('button', { name: 'Payroll activity' })).toBeVisible();
-    const reviewActions = within(
-      screen.getByRole('group', { name: 'Review and lock selected payroll rows' })
-    );
-    expect(reviewActions.getByRole('button', { name: 'Mark Reviewed' })).toBeDisabled();
-    expect(reviewActions.getByRole('button', { name: 'Unmark' })).toBeDisabled();
-    expect(reviewActions.getByRole('button', { name: 'Lock Reviewed' })).toBeDisabled();
+    expect(
+      screen.queryByRole('group', { name: 'Review and lock selected payroll rows' })
+    ).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Open attendance' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('dialog', { name: 'Payroll Readiness' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'Payroll Checks' })).not.toBeInTheDocument();
     expect(screen.queryByText('Academic year')).not.toBeInTheDocument();
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
     await userEvent.click(
-      within(screen.getByRole('region', { name: 'Payroll Register' })).getByRole('button', {
-        name: 'View readiness',
+      screen.getByRole('button', {
+        name: 'Payroll checks',
       })
     );
     expect(
@@ -789,14 +786,14 @@ describe('Run Payroll preview feedback', () => {
   it('starts closed, supports keyboard opening and Escape, and restores focus', async () => {
     render(view());
     fireEvent.scroll(window);
-    const toggle = screen.getByRole('button', { name: 'View readiness' });
+    const toggle = screen.getByRole('button', { name: 'Payroll checks' });
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
     act(() => toggle.focus());
     await userEvent.keyboard('{Enter}');
-    expect(screen.getByRole('dialog', { name: 'Payroll Readiness' })).toBeVisible();
+    expect(screen.getByRole('dialog', { name: 'Payroll Checks' })).toBeVisible();
     await userEvent.keyboard('{Escape}');
     await waitFor(() =>
-      expect(screen.queryByRole('dialog', { name: 'Payroll Readiness' })).not.toBeInTheDocument()
+      expect(screen.queryByRole('dialog', { name: 'Payroll Checks' })).not.toBeInTheDocument()
     );
     expect(toggle).toHaveFocus();
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
@@ -807,14 +804,14 @@ describe('Run Payroll preview feedback', () => {
     mocks.preview.page = 2;
     render(view());
     await userEvent.click(screen.getByRole('checkbox', { name: 'Select payroll for Test Staff' }));
-    await userEvent.click(screen.getByRole('button', { name: 'View readiness' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Payroll checks' }));
     await userEvent.click(
-      within(screen.getByRole('dialog', { name: 'Payroll Readiness' })).getByRole('button', {
+      within(screen.getByRole('dialog', { name: 'Payroll Checks' })).getByRole('button', {
         name: 'Close details',
       })
     );
     await waitFor(() =>
-      expect(screen.queryByRole('dialog', { name: 'Payroll Readiness' })).not.toBeInTheDocument()
+      expect(screen.queryByRole('dialog', { name: 'Payroll Checks' })).not.toBeInTheDocument()
     );
     expect(screen.getByRole('checkbox', { name: 'Select payroll for Test Staff' })).toBeChecked();
     expect(mocks.preview.searchInput).toBe('Test');
@@ -827,7 +824,7 @@ describe('Run Payroll preview feedback', () => {
     'closes readiness on a %s change and ignores previous-context aggregates',
     async (change) => {
       const ui = render(view());
-      await userEvent.click(screen.getByRole('button', { name: 'View readiness' }));
+      await userEvent.click(screen.getByRole('button', { name: 'Payroll checks' }));
       if (change === 'month') mocks.query = 'month=2026-09';
       else {
         mocks.state.globalState.currentYear = { id: 'year-2', name: '2027-28' };
@@ -836,13 +833,13 @@ describe('Run Payroll preview feedback', () => {
       }
       ui.rerender(view());
       await waitFor(() =>
-        expect(screen.queryByRole('dialog', { name: 'Payroll Readiness' })).not.toBeInTheDocument()
+        expect(screen.queryByRole('dialog', { name: 'Payroll Checks' })).not.toBeInTheDocument()
       );
-      expect(screen.getByRole('button', { name: 'View readiness' })).toHaveAttribute(
+      expect(screen.getByRole('button', { name: 'Payroll checks' })).toHaveAttribute(
         'aria-expanded',
         'false'
       );
-      await userEvent.click(screen.getByRole('button', { name: 'View readiness' }));
+      await userEvent.click(screen.getByRole('button', { name: 'Payroll checks' }));
       expect(screen.getByRole('status')).not.toHaveTextContent('Ready to review');
       const summary = screen.getByRole('region', { name: 'Preview summary' });
       expect(within(summary).getAllByText('Unavailable')).toHaveLength(5);
@@ -857,7 +854,7 @@ describe('Run Payroll preview feedback', () => {
     mocks.preview.fetching = true;
     mocks.preview.isCurrent = false;
     render(view());
-    await userEvent.click(screen.getByRole('button', { name: 'View readiness' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Payroll checks' }));
     expect(screen.getByRole('status')).toHaveTextContent('Ready to review');
     const summary = screen.getByRole('region', { name: 'Preview summary' });
     expect(within(summary).getByText('₹0')).toBeVisible();
@@ -889,7 +886,7 @@ describe('Run Payroll preview feedback', () => {
     Object.assign(mocks.preview.data.readiness, readiness);
     render(view());
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: 'View readiness' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Payroll checks' }));
     expect(screen.getByRole('status')).toHaveTextContent(status);
   });
 
@@ -901,7 +898,7 @@ describe('Run Payroll preview feedback', () => {
       'PF_WAGE_BASIS_REQUIRED',
     ];
     render(view());
-    await userEvent.click(screen.getByRole('button', { name: 'View readiness' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Payroll checks' }));
     expect(screen.getByRole('status')).toHaveTextContent('Needs attention');
     const additional = screen.getByRole('region', { name: 'Additional readiness checks' });
     expect(within(additional).getAllByText('Effective salary setup required')).toHaveLength(1);
@@ -918,7 +915,7 @@ describe('Run Payroll preview feedback', () => {
     delete mocks.preview.data.readiness.missingSalaryStructureCount;
     delete mocks.preview.data.readiness.netPayTotal;
     render(view());
-    await userEvent.click(screen.getByRole('button', { name: 'View readiness' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Payroll checks' }));
     expect(screen.getByRole('status')).toHaveTextContent('Readiness unavailable');
     expect(
       within(screen.getByRole('region', { name: 'Readiness checks' })).getByText('Unavailable')
@@ -938,7 +935,7 @@ describe('Run Payroll preview feedback', () => {
     });
     mocks.preview.data.items = [];
     render(view());
-    await userEvent.click(screen.getByRole('button', { name: 'View readiness' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Payroll checks' }));
     expect(screen.getByRole('status')).toHaveTextContent('No staff');
     expect(
       within(screen.getByRole('region', { name: 'Preview summary' })).getByText('₹0')
@@ -949,7 +946,7 @@ describe('Run Payroll preview feedback', () => {
     mocks.preview.isPreparing = true;
     mocks.preview.isCurrent = false;
     render(view());
-    await userEvent.click(screen.getByRole('button', { name: 'View readiness' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Payroll checks' }));
     expect(screen.getByRole('status')).toHaveTextContent('Preparing preview');
     expect(
       within(screen.getByRole('region', { name: 'Preview summary' })).getByText('₹10,000')
@@ -958,14 +955,14 @@ describe('Run Payroll preview feedback', () => {
       screen.getByText('Showing the last completed preview while preparing results.')
     ).toBeVisible();
     await userEvent.click(
-      within(screen.getByRole('dialog', { name: 'Payroll Readiness' })).getByRole('button', {
+      within(screen.getByRole('dialog', { name: 'Payroll Checks' })).getByRole('button', {
         name: 'Close details',
       })
     );
     await waitFor(() =>
-      expect(screen.queryByRole('dialog', { name: 'Payroll Readiness' })).not.toBeInTheDocument()
+      expect(screen.queryByRole('dialog', { name: 'Payroll Checks' })).not.toBeInTheDocument()
     );
-    expect(screen.getByRole('button', { name: 'Loading payroll rows…' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Recalculate payroll' })).toBeDisabled();
   });
 
   it('shows localized refresh progress without background or outdated alerts', () => {
@@ -985,7 +982,7 @@ describe('Run Payroll preview feedback', () => {
     mocks.preview.isCurrent = false;
     render(view());
     expect(
-      within(screen.getByRole('region', { name: 'Payroll Register' })).getByRole('button', {
+      screen.getByRole('button', {
         name: 'Generating payroll…',
       })
     ).toBeDisabled();
@@ -1010,7 +1007,7 @@ describe('Run Payroll preview feedback', () => {
     mocks.preview.isCurrent = false;
     render(view());
     expect(
-      within(screen.getByRole('region', { name: 'Payroll Register' })).getByRole('status')
+      within(screen.getByRole('group', { name: 'Payroll preview' })).getByRole('status')
     ).toHaveTextContent('Preview needs refresh');
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });

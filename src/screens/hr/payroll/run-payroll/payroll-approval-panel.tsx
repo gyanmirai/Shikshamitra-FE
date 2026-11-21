@@ -118,22 +118,22 @@ export function PayrollApprovalPanel({
   const actionsAllowed = current && !detail.isFetching;
 
   return (
-    <Stack spacing={1} sx={{ px: 1, py: 0.5 }}>
-      <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" alignItems="center">
-        <Button size="small" variant="outlined" onClick={() => {
+    <Stack spacing={1}>
+      <Stack direction="row" spacing={0.75} useFlexGap flexWrap="wrap" alignItems="center">
+        <Button size="small" variant={!canSubmit && pending.length ? 'contained' : 'text'} onClick={() => {
           setFeedback(undefined);
           setSelectedId((id) => id || pending[0]?.id || '');
           setOpen(true);
         }}>
           Approval batches{pending.length ? ` (${pending.length} pending)` : ''}
         </Button>
-        {settings.mode === 'Active' && canSubmit && (
-          <Button variant="contained" size="small" disabled={!selection} onClick={() => beginSend(false)}>
+        {settings.mode === 'Active' && canSubmit && selection && (
+          <Button variant="contained" size="small" onClick={() => beginSend(false)}>
             Send for approval
           </Button>
         )}
-        {settings.mode === 'Active' && canSelfFinalize && settings.allowSelfFinalization && (
-          <Button variant="outlined" size="small" disabled={!selection} onClick={() => beginSend(true)}>
+        {settings.mode === 'Active' && canSelfFinalize && settings.allowSelfFinalization && selection && (
+          <Button variant="outlined" size="small" onClick={() => beginSend(true)}>
             Prepare to finalize myself
           </Button>
         )}

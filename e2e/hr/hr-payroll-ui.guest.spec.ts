@@ -575,12 +575,16 @@ test.describe('Payroll interface consistency', () => {
         await mockPayroll(page, { missingPfBasis: true });
         await page.goto('/hr/payroll/run-payroll?month=2026-10&previewRunId=ui-preview');
         const registrations = page.getByRole('button', { name: 'View registrations' });
+        await expect(registrations).toHaveCount(0);
+        await page.getByRole('button', { name: 'Payroll checks' }).click();
         await registrations.click();
         await expect(
           page.getByRole('dialog', { name: 'PF and ESIC Registration' }).getByText('Number missing')
         ).toBeVisible();
         await page.keyboard.press('Escape');
         await expect(registrations).toBeFocused();
+        await page.keyboard.press('Escape');
+        await expect(page.getByRole('dialog', { name: 'Payroll Checks' })).toHaveCount(0);
         await page
           .getByRole('row', { name: /PF Test Staff/ })
           .getByRole('button', { name: 'View', exact: true })
@@ -634,7 +638,7 @@ test.describe('Payroll interface consistency', () => {
     expect(dimensions.contentWidth).toBeLessThanOrEqual(dimensions.width + 1);
     expect(dimensions.contentHeight).toBeLessThanOrEqual(dimensions.height + 1);
     await page.getByRole('button', { name: 'close', exact: true }).click();
-    await page.getByRole('button', { name: 'View readiness', exact: true }).click();
+    await page.getByRole('button', { name: 'Payroll checks', exact: true }).click();
     await expect(
       page
         .getByRole('dialog')

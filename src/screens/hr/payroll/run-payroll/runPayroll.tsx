@@ -77,6 +77,13 @@ import { getPayrollMutationErrorMessage } from './run-payroll-error-utils';
 import { PayrollRegistrationReadiness } from './payroll-registration-readiness';
 import { PayrollApprovalSettingsDialog } from './payroll-approval-settings-dialog';
 import {
+  payrollIssueOptions,
+  payrollStatusOptions,
+  getPayrollRegisterQuery,
+  getPayrollRegisterFilters,
+  payrollRegisterSortFields,
+} from './register-table-criteria';
+import {
   getPayrollAdjustmentSourceLabel,
   isSystemGeneratedPayrollAdjustment,
 } from './run-payroll-adjustment-utils';
@@ -295,7 +302,9 @@ const RunPayroll = () => {
   const previewError = preview.error;
   const previewIsGenerated = preview.data?.isGenerated || false;
   const previewBusy = preview.isPreparing;
-  const isDataForSelectedMonth = Boolean(preview.data?.previewRunId || preview.data?.totalCount);
+  const isDataForSelectedMonth = Boolean(
+    preview.data?.previewRunId || preview.data?.totalCount || previewReadiness?.lockedCount
+  );
   const { loadPreview } = preview;
   const previewContextKey = `${academicYearId}:${selectedMonthKey}`;
   const readinessOpen = readinessDrawerContext === previewContextKey;
@@ -577,7 +586,7 @@ const RunPayroll = () => {
     updateAdjustmentLoading ||
     deleteAdjustmentLoading;
   const lockExplanation = (() => {
-    if (!canLockPayroll)
+    if (!canLockPayroll && !canReviewPayroll)
       return 'You do not have permission to lock payroll. Contact an HR administrator to review your access.';
     if (payrollActionBusy)
       return 'A payroll action is in progress. Wait for it to finish before locking.';
@@ -597,11 +606,13 @@ const RunPayroll = () => {
         ? 'These payroll rows are already locked.'
         : 'No staff rows are available on this page. Check the month and filters.';
     if (!selectedRows.length)
-      return 'Select staff rows to lock. Only reviewed rows without critical issues can be locked.';
+      return 'Check staff salaries and issues, then select the rows to review or finalize.';
     if (!selectedReviewedIds.length)
       return canReviewPayroll
         ? 'Mark the selected pending rows reviewed after checking their amounts and issues.'
         : 'The selected rows need review. Ask an authorized payroll reviewer to review them first.';
+    if (!canLockPayroll)
+      return 'A user with payroll lock access can finalize reviewed rows.';
     if (!lockableIds.length) {
       const labels = [
         ...new Set(
@@ -947,7 +958,7 @@ const RunPayroll = () => {
       {
         id: 'employeeName',
         label: 'Staff',
-        minWidth: 220,
+        minWidth: 200,
         align: 'left',
         sticky: true,
         render(value, row) {
@@ -981,7 +992,7 @@ const RunPayroll = () => {
       {
         id: 'payableDays',
         label: 'Payable days',
-        minWidth: 160,
+        minWidth: 120,
         align: 'center',
         filterType: 'number',
         render(_value, row) {
@@ -1008,71 +1019,78 @@ const RunPayroll = () => {
         id: 'fullGrossSalary',
         label: 'Full-month gross',
         minWidth: 140,
-        align: 'center',
+        defaultHidden: true,
+        align: 'right',
         filterType: 'number',
-        render: (v, row) => row.issuedWithoutRegisterDetails ? 'Unavailable' : formatPayrollCurrency(v),
+        render: (v, row) =>
+          row.issuedWithoutRegisterDetails ? 'Unavailable' : formatPayrollCurrency(v),
       },
       {
         id: 'grossSalary',
-        label: 'Gross Salary',
+        label: 'Gross salary',
         minWidth: 130,
-        align: 'center',
+        defaultHidden: true,
+        align: 'right',
         filterType: 'number',
-        render: (v, row) => row.issuedWithoutRegisterDetails ? 'Unavailable' : formatPayrollCurrency(v),
+        render: (v, row) =>
+          row.issuedWithoutRegisterDetails ? 'Unavailable' : formatPayrollCurrency(v),
       },
       {
         id: 'additionalEarnings',
         label: 'Additional earnings',
         minWidth: 140,
-        align: 'center',
+        defaultHidden: true,
+        align: 'right',
         filterType: 'number',
-        render: (v, row) => row.issuedWithoutRegisterDetails ? 'Unavailable' : formatPayrollCurrency(v),
+        render: (v, row) =>
+          row.issuedWithoutRegisterDetails ? 'Unavailable' : formatPayrollCurrency(v),
       },
       {
         id: 'totalEarnings',
         label: 'Total earnings',
-        minWidth: 140,
-        align: 'center',
+        minWidth: 125,
+        align: 'right',
         filterType: 'number',
         render: (v) => formatPayrollCurrency(v),
       },
       {
         id: 'totalDeduction',
         label: 'Deductions',
-        minWidth: 140,
-        align: 'center',
+        minWidth: 110,
+        align: 'right',
         filterType: 'number',
         render: (v) => formatPayrollCurrency(v),
       },
       {
         id: 'netSalary',
         label: 'Net pay',
-        minWidth: 130,
-        align: 'center',
+        minWidth: 115,
+        align: 'right',
         filterType: 'number',
-        render: (v) => formatPayrollCurrency(v),
+        render: (v) => (
+          <Typography variant="body2" fontWeight={600}>
+            {formatPayrollCurrency(v)}
+          </Typography>
+        ),
       },
       {
         id: 'previousMonthNetPay',
         label: 'Last month',
         minWidth: 130,
-        align: 'left',
+        defaultHidden: true,
+        align: 'right',
         filterType: 'number',
         render: (v) => (typeof v === 'number' ? formatPayrollCurrency(v) : '-'),
       },
       {
         id: 'netPayDelta',
         label: 'Variance',
-        minWidth: 150,
-        align: 'left',
+        minWidth: 120,
+        align: 'right',
         render(_value, row) {
           const isHighVariance = row.issueCodes?.includes('LARGE_SALARY_VARIANCE');
           return (
-            <Typography
-              variant="body2"
-              textAlign="center"
-              color={isHighVariance ? 'warning.main' : 'text.primary'}
-            >
+            <Typography variant="body2" color={isHighVariance ? 'warning.main' : 'text.primary'}>
               {formatDelta(row.netPayDelta, row.netPayDeltaPercent)}
             </Typography>
           );
@@ -1081,18 +1099,14 @@ const RunPayroll = () => {
       {
         id: 'issueFilter',
         label: 'Issues',
-        minWidth: 170,
+        minWidth: 130,
         align: 'left',
         filterType: 'enum',
-        enumOptions: [
-          { label: 'Has Issues', value: 'HAS_ISSUES' },
-          { label: 'Critical', value: 'CRITICAL' },
-          { label: 'Clean', value: 'CLEAN' },
-        ],
+        enumOptions: payrollIssueOptions,
         render(_value, row) {
           const issues = row.issueCodes || [];
           if (!issues.length) {
-            return <Chip size="small" label="Clean" color="success" variant="outlined" />;
+            return <Chip size="small" label="Clear" color="success" variant="outlined" />;
           }
 
           const state = row.issueSeverity;
@@ -1100,7 +1114,7 @@ const RunPayroll = () => {
             state === 'CRITICAL' ? 'error' : state === 'WARNING' ? 'warning' : 'info';
           const title = issues
             .slice(0, 5)
-            .map((code: string | number) => ISSUE_LABELS[code]?.label || code)
+            .map((code: string | number) => ISSUE_LABELS[code]?.label || 'Additional payroll issue')
             .join(', ');
 
           return (
@@ -1119,22 +1133,17 @@ const RunPayroll = () => {
       },
       {
         id: 'status',
-        label: 'Review',
-        minWidth: 130,
+        label: 'Status',
+        minWidth: 145,
         align: 'left',
         filterType: 'enum',
         sticky: true,
         stickyPosition: 'right' as const,
-        enumOptions: [
-          { label: 'Pending', value: 'PENDING' },
-          { label: 'Reviewed', value: 'REVIEWED' },
-          { label: 'Submitted', value: 'SUBMITTED' },
-          { label: 'Locked', value: 'LOCKED' },
-        ],
+        enumOptions: payrollStatusOptions,
         render(value) {
           return (
             <Label variant="soft" color={statusColor[value as keyof typeof statusColor] as any}>
-              {value === 'SUBMITTED' ? 'Pending finalization' : String(value).toLowerCase()}
+              {payrollStatusOptions.find((option) => option.value === value)?.label ?? value}
             </Label>
           );
         },
@@ -1163,11 +1172,20 @@ const RunPayroll = () => {
     [pendingRows, selectedEmployeeIds]
   );
 
-  // The server owns row ordering. Sorting only the loaded page would be misleading.
+  // Enable the criteria that the register endpoint can apply before pagination.
   const pagedColumns = useMemo(
     () =>
-      columns.map((column) => ({ ...column, isSort: false, sticky: isDesktop && column.sticky })),
+      columns.map((column) => ({
+        ...column,
+        isSort: Object.hasOwn(payrollRegisterSortFields, column.id),
+        isFilter: column.id === 'status' || column.id === 'issueFilter',
+        sticky: isDesktop && column.sticky,
+      })),
     [columns, isDesktop]
+  );
+  const registerSort = preview.registerCriteria?.sort;
+  const sortedColumn = Object.keys(payrollRegisterSortFields).find(
+    (column) => payrollRegisterSortFields[column] === registerSort
   );
   const blockingIssues = Array.isArray(previewReadiness?.blockingIssues)
     ? [...new Set(previewReadiness.blockingIssues)]
@@ -1274,21 +1292,39 @@ const RunPayroll = () => {
           : 'Unavailable',
     },
   ];
-  const previewButtonLabel = preview.isLookingUp
-    ? 'Loading saved payroll…'
-    : previewBusy
-      ? preview.isCalculating
-        ? 'Generating payroll…'
-        : 'Loading payroll rows…'
-      : preview.requestedRunId
-        ? 'Recalculate payroll'
-        : 'Generate payroll';
+  const previewButtonLabel = preview.isCalculating
+    ? 'Generating payroll…'
+    : preview.requestedRunId
+      ? 'Recalculate payroll'
+      : 'Generate payroll';
   const retryGeneration = preview.canRequestPreview && !preview.readFailed;
   const retryPreviewLabel = retryGeneration
     ? 'Try generating again'
     : preview.lookupFailed
       ? 'Retry lookup'
       : 'Reconnect';
+  const registerGuidance = (() => {
+    if (preview.isLookingUp) return 'Loading saved payroll for this month…';
+    if (preview.isCalculating) return 'Calculating payroll for this month…';
+    if (previewError || !isDataForSelectedMonth) return null;
+    if (!usesApproval) return lockExplanation;
+    if (!canReviewPayroll && !canSubmitPayroll)
+      return canLockPayroll
+        ? 'Open Approval batches to review staff and salary amounts before finalizing.'
+        : 'Open Approval batches to view submitted payroll.';
+    if (preview.isStale) return 'Payroll inputs changed. Recalculate payroll before reviewing.';
+    if (!selectedRows.length) return 'Check salary amounts and issues, then select staff to review.';
+    if (!preview.isCurrent || payrollActionBusy) return 'Wait for the current payroll rows.';
+    if (lockableIds.length && canSubmitPayroll && approvalSettings?.mode === 'Active') {
+      const remaining = selectedRows.length - lockableIds.length;
+      return `${lockableIds.length} of ${selectedRows.length} selected staff ready for approval.${
+        remaining ? ' The other staff will stay pending.' : ''
+      }`;
+    }
+    if (selectedPendingIds.length) return 'Mark the selected staff reviewed after checking their amounts.';
+    if (!lockableIds.length) return 'Resolve the blocking issues before sending these staff for approval.';
+    return 'The selected staff are reviewed and ready for approval.';
+  })();
 
   return (
     <Box
@@ -1308,7 +1344,11 @@ const RunPayroll = () => {
           { name: 'Payroll Management', href: `${hrPaths.payroll.root}?month=${selectedMonthKey}` },
           { name: 'Run Payroll' },
         ]}
-        description={usesApproval ? 'Generate payroll, review staff, then send ready rows for finalization.' : 'Generate, review, and lock monthly payroll from one workbench.'}
+        description={
+          usesApproval
+            ? 'Generate payroll, review staff, then send ready rows for finalization.'
+            : 'Generate, review, and lock monthly payroll from one workbench.'
+        }
         sx={{ flexWrap: 'wrap', mb: 1 }}
       />
 
@@ -1317,11 +1357,10 @@ const RunPayroll = () => {
         flexWrap="wrap"
         useFlexGap
         alignItems={{ xs: 'stretch', sm: 'center' }}
-        spacing={2}
+        spacing={1}
         sx={{
-          position: { xs: 'static', md: 'sticky' },
-          top: 0,
-          zIndex: 10,
+          borderBottom: 1,
+          borderColor: 'divider',
           mb: 1,
           px: 1,
           py: 1,
@@ -1329,7 +1368,9 @@ const RunPayroll = () => {
       >
         <DatePicker
           label="Payroll month"
-          views={['month', 'year']}
+          views={['year', 'month']}
+          openTo="month"
+          closeOnSelect
           format="MMMM YYYY"
           value={month}
           onChange={(newValue) => setMonth(newValue)}
@@ -1344,17 +1385,87 @@ const RunPayroll = () => {
           }}
           sx={{ width: { xs: '100%', sm: 220, md: 260 }, minWidth: { sm: 220 } }}
         />
-        {!usesApproval && <PayrollRegistrationReadiness
-          key={academicYearId}
-          month={academicYearId && month.isValid() ? selectedMonthKey : null}
-        />}
+        <Stack
+          direction="row"
+          spacing={1}
+          alignItems="center"
+          flexWrap="wrap"
+          useFlexGap
+          role="group"
+          aria-label="Payroll preview"
+        >
+          {preview.isStale ? (
+            <Typography variant="caption" color="warning.main" role="status">
+              Preview needs refresh
+            </Typography>
+          ) : null}
+          <LoadingButton
+            variant={preview.isCurrent ? 'outlined' : 'contained'}
+            loading={preview.isCalculating}
+            size="small"
+            disabled={
+              preview.isLookingUp ||
+              previewBusy ||
+              !preview.canRequestPreview ||
+              Boolean(previewError) ||
+              payrollActionBusy ||
+              !month.isValid() ||
+              !academicYearId
+            }
+            startIcon={<Iconify icon={isDataForSelectedMonth ? 'mdi:refresh' : 'mdi:calculator'} />}
+            onClick={requestPreview}
+          >
+            {previewButtonLabel}
+          </LoadingButton>
+        </Stack>
+        <Stack
+          direction="row"
+          spacing={1}
+          flexWrap="wrap"
+          useFlexGap
+          role="group"
+          aria-label="Payroll readiness and activity"
+        >
+          <Button
+            size="small"
+            variant="outlined"
+            aria-haspopup="dialog"
+            aria-expanded={readinessOpen}
+            aria-controls="payroll-readiness-drawer"
+            startIcon={<Iconify icon="mdi:clipboard-check-outline" />}
+            onClick={() => setReadinessDrawerContext(previewContextKey)}
+          >
+            Payroll checks
+          </Button>
+          {canViewPayrollAudit ? (
+            <LoadingButton
+              size="small"
+              variant="text"
+              startIcon={<Iconify icon="solar:history-linear" />}
+              onClick={() => {
+                setAuditPage(0);
+                setAuditOpen(true);
+              }}
+            >
+              Payroll activity
+            </LoadingButton>
+          ) : null}
+        </Stack>
         {canManagePayrollWorkflow && approvalSettings && (
-          <Button size="small" variant="outlined" onClick={() => setApprovalSettingsOpen(true)}>
+          <Button
+            size="small"
+            variant="text"
+            startIcon={<Iconify icon="mdi:cog-outline" />}
+            onClick={() => setApprovalSettingsOpen(true)}
+          >
             Approval settings
           </Button>
         )}
         {approvalSettingsOpen && approvalSettings && (
-          <PayrollApprovalSettingsDialog initial={approvalSettings} onClose={() => setApprovalSettingsOpen(false)} />
+          <PayrollApprovalSettingsDialog
+            initial={approvalSettings}
+            onClose={() => setApprovalSettingsOpen(false)}
+          />
         )}
       </Stack>
 
@@ -1372,23 +1483,10 @@ const RunPayroll = () => {
           sx={{ flex: 1, minHeight: 0, overflow: { xs: 'visible', md: 'hidden' } }}
         >
           {approval.isError && (
-            <Alert severity="error">Payroll approval settings could not be loaded. <Button onClick={() => approval.refetch()}>Retry</Button></Alert>
-          )}
-          {usesApproval && approvalSettings && selectedMonthKey && academicYearId && (
-            <PayrollApprovalPanel
-              key={previewContextKey}
-              period={{ month: selectedMonthKey, academicYearId }}
-              settings={approvalSettings}
-              canSubmit={canSubmitPayroll}
-              canSelfFinalize={canSubmitPayroll && canReviewPayroll && canLockPayroll}
-              canExport={canExportReviewSheet}
-              selection={preview.isCurrent && !payrollActionBusy && preview.runId && lockableIds.length ? {
-                previewRunId: preview.runId,
-                employeeIds: lockableIds,
-                netPay: selectedRows.filter((row) => lockableIds.includes(row.id)).reduce((total, row) => total + row.netSalary, 0),
-              } : null}
-              onSubmitted={() => setSelectedEmployeeIds([])}
-            />
+            <Alert severity="error">
+              Payroll approval settings could not be loaded.{' '}
+              <Button onClick={() => approval.refetch()}>Retry</Button>
+            </Alert>
           )}
           {reviewRefreshFailed ? (
             <Alert
@@ -1468,178 +1566,141 @@ const RunPayroll = () => {
                   <Typography id="payroll-register-title" variant="subtitle1" fontWeight={700}>
                     Payroll Register
                   </Typography>
-                  {usesApproval && previewReadiness && <Chip size="small" variant="outlined" label={monthStatus.label} color={monthStatus.color} />}
+                  {usesApproval && previewReadiness && (
+                    <Chip
+                      size="small"
+                      variant="outlined"
+                      label={monthStatus.label}
+                      color={monthStatus.color}
+                    />
+                  )}
                 </Stack>
-                <Typography variant="caption" color="text.secondary">
-                  {month?.format('MMMM YYYY')}
-                  {usesApproval && previewReadiness ? ` • ${previewReadiness.lockedCount} of ${previewReadiness.employeeCount} staff finalized` : ''}
-                  {selectedEmployeeIds.length > 0 ? ` • ${selectedEmployeeIds.length} selected on this page` : ''}
-                  {selectedPendingIds.length
-                    ? ` • ${selectedPendingIds.length} ready to mark reviewed`
-                    : ''}
-                </Typography>
+                {(previewReadiness || selectedEmployeeIds.length > 0) && (
+                  <Typography variant="caption" color="text.secondary">
+                    {[
+                      previewReadiness &&
+                        (usesApproval
+                          ? `${previewReadiness.lockedCount} of ${previewReadiness.employeeCount} staff finalized`
+                          : `${previewReadiness.employeeCount} staff`),
+                      selectedEmployeeIds.length > 0 &&
+                        `${selectedEmployeeIds.length} selected on this page`,
+                    ].filter(Boolean).join(' • ')}
+                  </Typography>
+                )}
               </Box>
+            </Stack>
+            {(usesApproval || selectedRows.length > 0) && (
               <Stack
                 direction="row"
-                spacing={1.25}
-                alignItems="center"
-                flexWrap={{ xs: 'wrap', lg: 'nowrap' }}
+                alignItems="flex-start"
+                flexWrap="wrap"
                 useFlexGap
-                divider={
-                  <Divider
-                    orientation="vertical"
-                    flexItem
-                    aria-hidden="true"
-                    sx={{
-                      display: { xs: 'none', lg: 'block' },
-                      height: 20,
-                      alignSelf: 'center',
-                      borderColor: 'text.disabled',
-                    }}
-                  />
-                }
-                sx={{ maxWidth: '100%' }}
+                gap={0.75}
+                sx={{ px: 1, pb: 0.5 }}
               >
-                <Stack
-                  direction="row"
-                  spacing={1}
-                  alignItems="center"
-                  flexWrap="wrap"
-                  useFlexGap
-                  role="group"
-                  aria-label="Payroll preview"
-                >
-                  {preview.isStale ? (
-                    <Typography variant="caption" color="warning.main" role="status">
-                      Preview needs refresh
-                    </Typography>
-                  ) : null}
-                  <LoadingButton
-                    variant="contained"
-                    loading={previewBusy || preview.isLookingUp}
-                    size="small"
-                    disabled={
-                      !preview.canRequestPreview ||
-                      Boolean(previewError) ||
-                      payrollActionBusy ||
-                      !month.isValid() ||
-                      !academicYearId
+                {selectedRows.length > 0 && (!usesApproval || canReviewPayroll) && (
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    flexWrap="wrap"
+                    useFlexGap
+                    role="group"
+                    aria-label={
+                      usesApproval
+                        ? 'Review selected payroll rows'
+                        : 'Review and lock selected payroll rows'
                     }
-                    startIcon={
-                      <Iconify icon={isDataForSelectedMonth ? 'mdi:refresh' : 'mdi:calculator'} />
-                    }
-                    onClick={requestPreview}
                   >
-                    {previewButtonLabel}
-                  </LoadingButton>
-                </Stack>
-                <Stack
-                  direction="row"
-                  spacing={1}
-                  flexWrap="wrap"
-                  useFlexGap
-                  role="group"
-                  aria-label="Payroll readiness and activity"
-                >
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    aria-haspopup="dialog"
-                    aria-expanded={readinessOpen}
-                    aria-controls="payroll-readiness-drawer"
-                    startIcon={<Iconify icon="mdi:clipboard-check-outline" />}
-                    onClick={() => setReadinessDrawerContext(previewContextKey)}
-                  >
-                    {usesApproval ? 'Payroll checks' : 'View readiness'}
-                  </Button>
-                  {canViewPayrollAudit ? (
                     <LoadingButton
                       size="small"
                       variant="outlined"
-                      startIcon={<Iconify icon="solar:history-linear" />}
-                      onClick={() => {
-                        setAuditPage(0);
-                        setAuditOpen(true);
-                      }}
+                      loading={markLoading}
+                      disabled={
+                        payrollActionBusy ||
+                        !canReviewPayroll ||
+                        !preview.isCurrent ||
+                        !selectedPendingIds.length
+                      }
+                      startIcon={<Iconify icon="solar:check-circle-bold" />}
+                      title="Acknowledges the displayed payroll warnings for these rows."
+                      onClick={() => runReviewMutation('mark', selectedPendingIds)}
                     >
-                      Payroll activity
+                      Mark Reviewed
                     </LoadingButton>
-                  ) : null}
-                </Stack>
-                {(!usesApproval || canReviewPayroll) && <Stack
-                  direction="row"
-                  spacing={1}
-                  flexWrap="wrap"
-                  useFlexGap
-                  role="group"
-                  aria-label={usesApproval ? 'Review selected payroll rows' : 'Review and lock selected payroll rows'}
-                >
-                  <LoadingButton
-                    size="small"
-                    variant="outlined"
-                    loading={markLoading}
-                    disabled={
-                      payrollActionBusy ||
-                      !canReviewPayroll ||
-                      !preview.isCurrent ||
-                      !selectedPendingIds.length
+                    <LoadingButton
+                      size="small"
+                      variant="outlined"
+                      startIcon={<Iconify icon="mdi:undo" />}
+                      loading={unmarkLoading}
+                      disabled={
+                        payrollActionBusy ||
+                        !canReviewPayroll ||
+                        !preview.isCurrent ||
+                        !selectedReviewedIds.length
+                      }
+                      onClick={() => runReviewMutation('unmark', selectedReviewedIds)}
+                    >
+                      Unmark
+                    </LoadingButton>
+                    {approvalSettings?.mode === 'Legacy' && (
+                      <LoadingButton
+                        size="small"
+                        variant="contained"
+                        color="success"
+                        disabled={
+                          payrollActionBusy ||
+                          !preview.isCurrent ||
+                          !canLockPayroll ||
+                          !lockableIds.length
+                        }
+                        aria-describedby="payroll-lock-explanation"
+                        startIcon={<Iconify icon="solar:lock-bold" />}
+                        onClick={() => {
+                          if (preview.isCurrent) setLockConfirmOpen(true);
+                        }}
+                      >
+                        Lock Reviewed
+                      </LoadingButton>
+                    )}
+                  </Stack>
+                )}
+                {usesApproval && approvalSettings && selectedMonthKey && academicYearId && (
+                  <PayrollApprovalPanel
+                    key={previewContextKey}
+                    period={{ month: selectedMonthKey, academicYearId }}
+                    settings={approvalSettings}
+                    canSubmit={canSubmitPayroll}
+                    canSelfFinalize={canSubmitPayroll && canReviewPayroll && canLockPayroll}
+                    canExport={canExportReviewSheet}
+                    selection={
+                      preview.isCurrent && !payrollActionBusy && preview.runId && lockableIds.length
+                        ? {
+                            previewRunId: preview.runId,
+                            employeeIds: lockableIds,
+                            netPay: selectedRows
+                              .filter((row) => lockableIds.includes(row.id))
+                              .reduce((total, row) => total + row.netSalary, 0),
+                          }
+                        : null
                     }
-                    startIcon={<Iconify icon="solar:check-circle-bold" />}
-                    title="Acknowledges the displayed payroll warnings for these rows."
-                    onClick={() => runReviewMutation('mark', selectedPendingIds)}
-                  >
-                    Mark Reviewed
-                  </LoadingButton>
-                  <LoadingButton
-                    size="small"
-                    variant="outlined"
-                    startIcon={<Iconify icon="mdi:undo" />}
-                    loading={unmarkLoading}
-                    disabled={
-                      payrollActionBusy ||
-                      !canReviewPayroll ||
-                      !preview.isCurrent ||
-                      !selectedReviewedIds.length
-                    }
-                    onClick={() => runReviewMutation('unmark', selectedReviewedIds)}
-                  >
-                    Unmark
-                  </LoadingButton>
-                  {approvalSettings?.mode === 'Legacy' && <LoadingButton
-                    size="small"
-                    variant="contained"
-                    color="success"
-                    disabled={
-                      payrollActionBusy ||
-                      !preview.isCurrent ||
-                      !canLockPayroll ||
-                      !lockableIds.length
-                    }
-                    aria-describedby="payroll-lock-explanation"
-                    startIcon={<Iconify icon="solar:lock-bold" />}
-                    onClick={() => {
-                      if (preview.isCurrent) setLockConfirmOpen(true);
-                    }}
-                  >
-                    Lock Reviewed
-                  </LoadingButton>}
-                </Stack>}
+                    onSubmitted={() => setSelectedEmployeeIds([])}
+                  />
+                )}
               </Stack>
-            </Stack>
+            )}
 
-            <Typography
-              id="payroll-lock-explanation"
-              variant="body2"
-              color="text.secondary"
-              sx={{ px: 1, mb: 0.75, overflowWrap: 'anywhere' }}
-            >
-              {usesApproval
-                ? canReviewPayroll
-                  ? 'Review salary amounts and issues, then select reviewed staff who are ready for approval.'
-                  : 'Open Approval batches to check the staff, earnings and deductions before finalizing.'
-                : lockExplanation}
-            </Typography>
-            {!usesApproval && !canReviewPayroll && (
+            {registerGuidance && (
+              <Typography
+                id="payroll-lock-explanation"
+                variant="body2"
+                color="text.secondary"
+                aria-live="polite"
+                sx={{ px: 1, mb: 0.75, overflowWrap: 'anywhere' }}
+              >
+                {registerGuidance}
+              </Typography>
+            )}
+            {!usesApproval && canLockPayroll && !canReviewPayroll && (
               <Typography variant="body2" color="text.secondary" sx={{ px: 1, mb: 0.75 }}>
                 You do not have permission to review payroll. Contact an HR administrator to review
                 your access.
@@ -1649,57 +1710,6 @@ const RunPayroll = () => {
               <HrNotice severity={lockFeedback.failed ? 'warning' : 'error'}>
                 {lockFeedback.message}
               </HrNotice>
-            )}
-            {isDataForSelectedMonth && preview.registerCriteria && (
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ px: 1, pb: 1 }}>
-                <TextField select size="small" label="Payroll status" sx={{ minWidth: 165 }}
-                  value={preview.registerCriteria.reviewState ?? ''}
-                  onChange={(event) => {
-                    setSelectedEmployeeIds([]);
-                    preview.updateQuery({ registerState: event.target.value || null, page: 0 });
-                  }}>
-                  <MenuItem value="">All statuses</MenuItem>
-                  <MenuItem value="PENDING">Needs review</MenuItem>
-                  <MenuItem value="REVIEWED">Reviewed</MenuItem>
-                  <MenuItem value="SUBMITTED">Pending finalization</MenuItem>
-                  <MenuItem value="LOCKED">Finalized</MenuItem>
-                </TextField>
-                <TextField select size="small" label="Issues" sx={{ minWidth: 150 }}
-                  value={preview.registerCriteria.issueCode ? `code:${preview.registerCriteria.issueCode}` : preview.registerCriteria.issueClass ?? ''}
-                  onChange={(event) => {
-                    setSelectedEmployeeIds([]);
-                    const { value } = event.target;
-                    preview.updateQuery({
-                      registerIssue: value.startsWith('code:') ? null : value || null,
-                      registerIssueCode: value.startsWith('code:') ? value.slice(5) : null,
-                      page: 0,
-                    });
-                  }}>
-                  <MenuItem value="">All issue levels</MenuItem>
-                  <MenuItem value="CLEAN">Clear</MenuItem>
-                  <MenuItem value="HAS_ISSUES">Warnings</MenuItem>
-                  <MenuItem value="CRITICAL">Blocking issues</MenuItem>
-                  {Object.entries(ISSUE_LABELS).map(([code, issue]) => (
-                    <MenuItem key={code} value={`code:${code}`}>{issue.label}</MenuItem>
-                  ))}
-                </TextField>
-                <TextField select size="small" label="Sort payroll" sx={{ minWidth: 180 }}
-                  value={`${preview.registerCriteria.sort ?? 'employeeName'}:${preview.registerCriteria.descending ? 'desc' : 'asc'}`}
-                  onChange={(event) => {
-                    const [field, direction] = event.target.value.split(':');
-                    setSelectedEmployeeIds([]);
-                    preview.updateQuery({ registerSort: field, registerDirection: direction, page: 0 });
-                  }}>
-                  <MenuItem value="employeeName:asc">Staff name A to Z</MenuItem>
-                  <MenuItem value="employeeName:desc">Staff name Z to A</MenuItem>
-                  <MenuItem value="payableDays:asc">Payable days, low to high</MenuItem>
-                  <MenuItem value="payableDays:desc">Payable days, high to low</MenuItem>
-                  <MenuItem value="netPay:asc">Net pay, low to high</MenuItem>
-                  <MenuItem value="netPay:desc">Net pay, high to low</MenuItem>
-                  <MenuItem value="netPayDelta:asc">Variance, low to high</MenuItem>
-                  <MenuItem value="netPayDelta:desc">Variance, high to low</MenuItem>
-                </TextField>
-              </Stack>
             )}
             <Box sx={{ height: 2, flexShrink: 0 }}>
               {preview.data &&
@@ -1725,7 +1735,8 @@ const RunPayroll = () => {
                   'Payroll results are unavailable.'
                 ) : !isDataForSelectedMonth && selectedMonthKey && academicYearId ? (
                   <>
-                    No payroll has been generated for this month. Use <strong>Generate payroll</strong> above.
+                    No payroll has been generated for this month. Use{' '}
+                    <strong>Generate payroll</strong> above.
                   </>
                 ) : (
                   <>
@@ -1752,7 +1763,6 @@ const RunPayroll = () => {
                 setSelectedEmployeeIds([]);
                 preview.updateQuery({ page: page - 1, pageSize });
               }}
-              isFilter={false}
               columns={pagedColumns}
               data={tableData}
               wrapperProps={{
@@ -1791,6 +1801,33 @@ const RunPayroll = () => {
                 },
               }}
               {...preview.tableProps}
+              isFilter
+              serverSideFilter
+              serverSideSort
+              serverSideSortMode="single"
+              filters={getPayrollRegisterFilters(preview.registerCriteria)}
+              sorts={
+                sortedColumn
+                  ? [
+                      {
+                        column: sortedColumn,
+                        direction: preview.registerCriteria.descending ? 'desc' : 'asc',
+                      },
+                    ]
+                  : []
+              }
+              onServerFilter={(filters) => {
+                setSelectedEmployeeIds([]);
+                preview.updateQuery(getPayrollRegisterQuery(filters));
+              }}
+              onServerSort={(_, [sort]) => {
+                setSelectedEmployeeIds([]);
+                preview.updateQuery({
+                  registerSort: sort ? payrollRegisterSortFields[sort.column] : null,
+                  registerDirection: sort?.direction ?? null,
+                  page: 0,
+                });
+              }}
             />
           </Box>
 
@@ -1801,13 +1838,13 @@ const RunPayroll = () => {
             PaperProps={{
               id: 'payroll-readiness-drawer',
               role: 'dialog',
-              'aria-label': 'Payroll Readiness',
+              'aria-label': 'Payroll Checks',
               sx: { width: { xs: '100%', sm: 420 }, maxWidth: '100vw', overflow: 'hidden' },
             }}
           >
             <Stack sx={{ height: '100%', minHeight: 0 }}>
               <DrawerHeader
-                title="Payroll Readiness"
+                title="Payroll Checks"
                 subtitle={`${month.format('MMMM YYYY')} • ${currentYear?.name || 'Select year'}`}
                 onClose={() => setReadinessDrawerContext(null)}
               />
@@ -1836,10 +1873,6 @@ const RunPayroll = () => {
                       </Typography>
                     ) : null}
                   </Box>
-                  {usesApproval && <PayrollRegistrationReadiness
-                    key={previewContextKey}
-                    month={academicYearId && month.isValid() ? selectedMonthKey : null}
-                  />}
                   <Box component="section" aria-label="Readiness checks">
                     <Typography variant="subtitle2">Checks</Typography>
                     <Stack divider={<Divider />}>
@@ -1907,6 +1940,10 @@ const RunPayroll = () => {
                       </Stack>
                     </Box>
                   ) : null}
+                  <PayrollRegistrationReadiness
+                    key={previewContextKey}
+                    month={academicYearId && month.isValid() ? selectedMonthKey : null}
+                  />
                   <Box component="section" aria-label="Preview summary">
                     <Typography variant="subtitle2" sx={{ mb: 1 }}>
                       Preview summary
