@@ -50,6 +50,7 @@ export const hrPaths = {
       esiPolicies: '/hr/payroll/setting/statutory-schemes?view=policies',
       salaryTemplates: '/hr/payroll/setting/salary-templates',
       payrollDocuments: '/hr/payroll/setting/payslip-statement-settings',
+      approvalWorkflow: '/hr/payroll/setting/approval-workflow',
       salaryTemplateCreate: '/hr/payroll/setting/salary-templates/new',
       salaryTemplateEditor: (templateId: string) =>
         `/hr/payroll/setting/salary-templates/${templateId}`,
@@ -394,12 +395,24 @@ const hrModule = () => ({
               _action: 'payroll-setting',
               shortcutKey: 'Alt+H+P+4',
               shortcutKeyName: 'Alt+H+P+4',
-              permissionName: hrPermissions.payroll.settings.root,
+              permissionName: [
+                hrPermissions.payroll.settings.root,
+                hrPermissions.payroll.runPayrollManageWorkflow,
+              ],
+              visibilityPermissionName: hrPermissions.payroll.settings.root,
               icon: menuIconView('mdi:cog-outline'),
               // Document settings reuse Payslips grants without duplicating the permission editor group.
               permissionChildren: payrollSettingsMenuItems,
               children: [
                 ...payrollSettingsMenuItems,
+                {
+                  title: 'Approval Workflow',
+                  path: hrPaths.payroll.settings.approvalWorkflow,
+                  _action: 'payroll-setting-approval-workflow',
+                  permissionName: hrPermissions.payroll.runPayrollManageWorkflow,
+                  requiredAllPermissions: [`${hrPermissions.payroll.runPayroll}.View`],
+                  icon: menuIconView('mdi:clipboard-check-outline'),
+                },
                 {
                   title: 'Payslip & statement settings',
                   path: hrPaths.payroll.settings.payrollDocuments,

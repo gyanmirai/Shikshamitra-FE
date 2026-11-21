@@ -75,7 +75,6 @@ import { SalaryDetailsTableCard } from './salary-details-table-card';
 import { DrawerHeader } from '../../policies/components/HRPolicySharedUI';
 import { getPayrollMutationErrorMessage } from './run-payroll-error-utils';
 import { PayrollRegistrationReadiness } from './payroll-registration-readiness';
-import { PayrollApprovalSettingsDialog } from './payroll-approval-settings-dialog';
 import {
   payrollIssueOptions,
   payrollStatusOptions,
@@ -231,7 +230,6 @@ const RunPayroll = () => {
   const canSubmitPayroll = hasGrantedPermission(permissions, hrPermissions.payroll.runPayrollSubmit);
   const canExportReviewSheet = hasGrantedPermission(permissions, hrPermissions.payroll.runPayrollExportReview);
   const canManagePayrollWorkflow = hasGrantedPermission(permissions, hrPermissions.payroll.runPayrollManageWorkflow);
-  const [approvalSettingsOpen, setApprovalSettingsOpen] = useState(false);
   const canAdjustPayroll = hasGrantedPermission(
     permissions,
     hrPermissions.payroll.runPayrollAdjustments
@@ -286,6 +284,10 @@ const RunPayroll = () => {
   });
   const approvalSettings = approval.isError ? undefined : approval.currentData;
   const usesApproval = approvalSettings?.mode === 'Active' || approvalSettings?.mode === 'Paused';
+  const legacyLockAvailable = approvalSettings?.mode === 'Legacy';
+  useEffect(() => {
+    if (!legacyLockAvailable) setLockConfirmOpen(false);
+  }, [legacyLockAvailable]);
   const isDesktop = useResponsive('up', 'md');
   const academicYearStart = currentYear?.startDate ? dayjs(currentYear.startDate) : null;
   const academicYearEnd = currentYear?.endDate ? dayjs(currentYear.endDate) : null;
@@ -318,8 +320,8 @@ const RunPayroll = () => {
   const { refreshStatus } = preview;
   const reviewPreviewRunId = useRef(preview.requestedRunId);
   reviewPreviewRunId.current = preview.requestedRunId;
-  const actionAccess = useRef({ canReviewPayroll, canLockPayroll, canAdjustPayroll });
-  actionAccess.current = { canReviewPayroll, canLockPayroll, canAdjustPayroll };
+  const actionAccess = useRef({ canReviewPayroll, canLockPayroll, canAdjustPayroll, legacyLockAvailable });
+  actionAccess.current = { canReviewPayroll, canLockPayroll, canAdjustPayroll, legacyLockAvailable };
   const previewMounted = useRef(true);
   const explicitRequest = useRef(false);
   const notifiedRuns = useRef(new Set<string>());
@@ -1451,22 +1453,6 @@ const RunPayroll = () => {
             </LoadingButton>
           ) : null}
         </Stack>
-        {canManagePayrollWorkflow && approvalSettings && (
-          <Button
-            size="small"
-            variant="text"
-            startIcon={<Iconify icon="mdi:cog-outline" />}
-            onClick={() => setApprovalSettingsOpen(true)}
-          >
-            Approval settings
-          </Button>
-        )}
-        {approvalSettingsOpen && approvalSettings && (
-          <PayrollApprovalSettingsDialog
-            initial={approvalSettings}
-            onClose={() => setApprovalSettingsOpen(false)}
-          />
-        )}
       </Stack>
 
       <Box
@@ -1642,7 +1628,7 @@ const RunPayroll = () => {
                     >
                       Unmark
                     </LoadingButton>
-                    {approvalSettings?.mode === 'Legacy' && (
+                    {legacyLockAvailable && (
                       <LoadingButton
                         size="small"
                         variant="contained"
@@ -1672,6 +1658,11 @@ const RunPayroll = () => {
                     canSubmit={canSubmitPayroll}
                     canSelfFinalize={canSubmitPayroll && canReviewPayroll && canLockPayroll}
                     canExport={canExportReviewSheet}
+                    approvalSettingsHref={
+                      canManagePayrollWorkflow
+                        ? `${hrPaths.payroll.settings.approvalWorkflow}?returnMonth=${selectedMonthKey}`
+                        : undefined
+                    }
                     selection={
                       preview.isCurrent && !payrollActionBusy && preview.runId && lockableIds.length
                         ? {
@@ -2763,13 +2754,18 @@ const RunPayroll = () => {
                 color="error"
                 loading={lockLoading}
                 disabled={
-                  payrollActionBusy || !lockableIds.length || !canLockPayroll || !preview.isCurrent
+                  payrollActionBusy ||
+                  !legacyLockAvailable ||
+                  !lockableIds.length ||
+                  !canLockPayroll ||
+                  !preview.isCurrent
                 }
                 onClick={async () => {
                   if (
                     !previewMounted.current ||
                     previewContext.current !== renderedPreviewContext ||
                     !actionAccess.current.canLockPayroll ||
+                    !actionAccess.current.legacyLockAvailable ||
                     !selectedMonthKey ||
                     payrollActionBusy ||
                     mutationPending.current ||

@@ -6,7 +6,9 @@ import type {
 } from 'src/redux/runPayroll/payroll-approval-api';
 
 import { useState } from 'react';
+import { RouterLink } from 'src/routes/components';
 import { formatPayrollCurrency } from 'src/utils/payroll-currency';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { normalizeHrFailure } from 'src/screens/hr/recovery/hr-failure';
 import {
   useSubmitPayrollMutation,
@@ -36,14 +38,30 @@ type Selection = {
   netPay: number;
 };
 
+type Feedback = {
+  kind: 'error' | 'success' | 'warning';
+  text: string;
+  workflowIssue?: boolean;
+};
+
+function approvalError(error: unknown): Feedback {
+  const code = parseApiProblemDetail(error).errorCode;
+  return {
+    kind: 'error',
+    text: normalizeHrFailure(error).message,
+    workflowIssue: code === 'PAYROLL_APPROVER_UNAVAILABLE' || code === 'PAYROLL_WORKFLOW_NOT_ACTIVE',
+  };
+}
+
 export function PayrollApprovalPanel({
-  period, settings, canSubmit, canSelfFinalize, canExport, selection, onSubmitted,
+  period, settings, canSubmit, canSelfFinalize, canExport, selection, onSubmitted, approvalSettingsHref,
 }: {
   period: PayrollMonth;
   settings: PayrollApprovalSettings;
   canSubmit: boolean;
   canSelfFinalize: boolean;
   canExport: boolean;
+  approvalSettingsHref?: string;
   selection: Selection | null;
   onSubmitted: () => void;
 }) {
@@ -57,7 +75,7 @@ export function PayrollApprovalPanel({
   const [send, setSend] = useState<{ key: string; selfFinalize: boolean; selection: Selection } | null>(null);
   const [previousSubmissionId, setPreviousSubmissionId] = useState('');
   const [reason, setReason] = useState('');
-  const [feedback, setFeedback] = useState<{ kind: 'error' | 'success' | 'warning'; text: string }>();
+  const [feedback, setFeedback] = useState<Feedback>();
   const batches = usePayrollSubmissionsQuery(period, { refetchOnFocus: true, refetchOnMountOrArgChange: true });
   const detail = usePayrollSubmissionQuery(selectedId, {
     skip: !selectedId || !open, refetchOnFocus: true, refetchOnMountOrArgChange: true,
@@ -91,7 +109,7 @@ export function PayrollApprovalPanel({
       setOpen(true);
       setFeedback({ kind: 'success', text: send.selfFinalize ? 'Batch is ready for your final confirmation.' : 'Batch sent for approval.' });
     } catch (caught) {
-      setFeedback({ kind: 'error', text: normalizeHrFailure(caught).message });
+      setFeedback(approvalError(caught));
     }
   };
   const resolveBatch = async () => {
@@ -108,7 +126,7 @@ export function PayrollApprovalPanel({
         ? { kind: 'warning', text: 'Payroll figures changed. The entire batch was returned to HR for fresh review.' }
         : { kind: 'success', text: result.state === 'Finalized' ? `${result.staffCount} staff finalized.` : `Batch ${result.state.toLowerCase()}.` });
     } catch (caught) {
-      setFeedback({ kind: 'error', text: normalizeHrFailure(caught).message });
+      setFeedback(approvalError(caught));
     }
   };
   const reasonsRequired = confirmation?.action === 'withdraw' || confirmation?.action === 'return';
@@ -116,6 +134,19 @@ export function PayrollApprovalPanel({
     send.selection.previewRunId !== selection.previewRunId ||
     send.selection.employeeIds.join(',') !== selection.employeeIds.join(',')));
   const actionsAllowed = current && !detail.isFetching;
+  const paused = settings.mode === 'Paused';
+  const needsApprover = settings.mode === 'Active' && !settings.approverId;
+  const workflowLink = approvalSettingsHref ? (
+    <Button component={RouterLink} size="small" color="inherit" href={approvalSettingsHref}>
+      Open approval settings
+    </Button>
+  ) : undefined;
+  const contactAdmin = approvalSettingsHref ? '' : ' Contact your payroll administrator.';
+  const feedbackAlert = feedback && (
+    <Alert severity={feedback.kind} action={feedback.workflowIssue ? workflowLink : undefined}>
+      {feedback.text}{feedback.workflowIssue ? contactAdmin : ''}
+    </Alert>
+  );
 
   return (
     <Stack spacing={1}>
@@ -127,7 +158,7 @@ export function PayrollApprovalPanel({
         }}>
           Approval batches{pending.length ? ` (${pending.length} pending)` : ''}
         </Button>
-        {settings.mode === 'Active' && canSubmit && selection && (
+        {settings.mode === 'Active' && !needsApprover && canSubmit && selection && (
           <Button variant="contained" size="small" onClick={() => beginSend(false)}>
             Send for approval
           </Button>
@@ -141,7 +172,14 @@ export function PayrollApprovalPanel({
           <PayrollReviewSheetButtons selection={{ ...period, previewRunId: selection.previewRunId, employeeIds: selection.employeeIds }} />
         )}
       </Stack>
-      {settings.mode === 'Paused' && <Alert severity="info">Payroll approval is paused. Pending batches can be returned or withdrawn.</Alert>}
+      {(paused || needsApprover) && (
+        <Alert severity="warning" action={workflowLink}>
+          {paused
+            ? 'Payroll approval is paused. New submissions and finalization are unavailable. Pending batches can still be returned or withdrawn.'
+            : 'Payroll has no designated approver. Assign an approver before sending reviewed staff.'}
+          {contactAdmin}
+        </Alert>
+      )}
       {batches.isError && <Alert severity="error">Approval batches could not be loaded. <Button onClick={() => batches.refetch()}>Retry</Button></Alert>}
 
       <Dialog open={open} onClose={() => { setOpen(false); setFeedback(undefined); }} fullWidth maxWidth="md" aria-labelledby="payroll-batch-title">
@@ -149,7 +187,7 @@ export function PayrollApprovalPanel({
         <DialogContent>
           <Stack spacing={2} sx={{ pt: 1 }}>
             {(batches.isFetching || detail.isFetching) && <LinearProgress aria-label="Loading payroll batches" />}
-            {!confirmation && feedback && <Alert severity={feedback.kind}>{feedback.text}</Alert>}
+            {!confirmation && feedbackAlert}
             {batches.isError && <Alert severity="error">Approval batches could not be loaded.</Alert>}
             {batches.currentData?.length ? (
               <TextField select label="Batch" value={selectedId} onChange={(event) => setSelectedId(event.target.value)}>
@@ -229,7 +267,7 @@ export function PayrollApprovalPanel({
                   ))}
                 </TextField>
               )}
-              {feedback && <Alert severity={feedback.kind}>{feedback.text}</Alert>}
+              {feedbackAlert}
             </Stack>
           </DialogContent>
           <DialogActions>
@@ -253,7 +291,7 @@ export function PayrollApprovalPanel({
                 <Typography>Finalization issues payslips for everyone in this batch together.</Typography>
               )}
               {reasonsRequired && <TextField label="Reason" value={reason} onChange={(event) => setReason(event.target.value)} slotProps={{ htmlInput: { maxLength: 500 } }} fullWidth multiline />}
-              {feedback && <Alert severity={feedback.kind}>{feedback.text}</Alert>}
+              {feedbackAlert}
             </Stack>
           </DialogContent>
           <DialogActions>
