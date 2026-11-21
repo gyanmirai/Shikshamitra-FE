@@ -44,6 +44,7 @@ function renderDrawer(value = row) {
   renderWithProviders(
     <ThemeProvider theme={createTheme(defaultSettings)}>
       <NotificationRuleDrawer row={value} scopeLabel="Academic year"
+        channelConfiguration={[{ channel: 3, isConfigured: true }]}
         templatesHref="/academic/notification?view=templates&templateEvent=Academic.Homework.Published&templateScope=school"
         identity={{ tenantCacheKey: 'school', userCacheKey: 'staff' }} onClose={mocks.close} />
     </ThemeProvider>

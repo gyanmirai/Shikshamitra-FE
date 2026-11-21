@@ -25,7 +25,9 @@ export function NotificationRulesWorkspace({ scope, filters }: {
   const contextKey = JSON.stringify([scope.identity, selection?.scope]);
   const [editor, setEditor] = useState<{ contextKey: string; row: AcademicNotificationRuleRow }>();
   const openRule = scope.canManage && editor?.contextKey === contextKey ? editor.row : undefined;
-  const catalogue = useAcademicNotificationCatalogueQuery(scope.identity, { skip: !scope.canView });
+  const catalogue = useAcademicNotificationCatalogueQuery(scope.identity, {
+    skip: !scope.canView, refetchOnMountOrArgChange: true,
+  });
   const rules = useAcademicNotificationRulesQuery({
     ...scope.identity,
     scope: selection?.scope ?? {},
@@ -87,6 +89,7 @@ export function NotificationRulesWorkspace({ scope, filters }: {
           )}
           {openRule && selection && (
             <NotificationRuleDrawer row={openRule} identity={scope.identity}
+              channelConfiguration={catalogue.currentData?.channels ?? []}
               templatesHref={filters.filtersHref({ view: 'templates', templateEvent: openRule.id,
                 templateScope: openRule.item.requestedScope.mediumId ? 'medium' : 'school' })}
               scopeLabel={selection.label} onClose={() => setEditor(undefined)} />

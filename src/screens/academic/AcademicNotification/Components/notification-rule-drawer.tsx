@@ -1,5 +1,5 @@
-import type { AcademicNotificationCacheIdentity } from 'src/redux/academic-notifications/types';
 import type { AcademicNotificationRuleRow } from 'src/redux/academic-notifications/response-adapters';
+import type { AcademicNotificationCatalogue, AcademicNotificationCacheIdentity } from 'src/redux/academic-notifications/types';
 
 import { useId } from 'react';
 import { useRouter } from 'next/navigation';
@@ -21,10 +21,11 @@ interface Props {
   identity: AcademicNotificationCacheIdentity;
   scopeLabel: string;
   templatesHref: string;
+  channelConfiguration: AcademicNotificationCatalogue['channels'];
   onClose: () => void;
 }
 
-export function NotificationRuleDrawer({ row, identity, scopeLabel, templatesHref, onClose }: Props) {
+export function NotificationRuleDrawer({ row, identity, scopeLabel, templatesHref, channelConfiguration, onClose }: Props) {
   const titleId = useId();
   const router = useRouter();
   const templateQuery = useAcademicNotificationTemplateOptionsQuery({
@@ -73,6 +74,7 @@ export function NotificationRuleDrawer({ row, identity, scopeLabel, templatesHre
               <Stack gap={2}>
                 {typeof form.status === 'string' && <Alert severity="error">{form.status}</Alert>}
                 <NotificationRuleFields row={row} form={form} templates={templates}
+                  channelConfiguration={channelConfiguration}
                   optionsAvailable={optionsAvailable} isLoading={!optionsAvailable && templateQuery.isFetching}
                   isError={templateQuery.isError} retry={templateQuery.refetch}
                   onOpenTemplates={() => requestNavigation(() => router.push(templatesHref, { scroll: false }))} />

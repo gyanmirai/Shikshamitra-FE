@@ -41,7 +41,9 @@ export function createNotificationRulesFixture(queueTemplateTest) {
             },
             availability: { isAvailable: true, reasonCode: null },
           }, unavailableExam],
-          channels: [{ channel: 3, isConfigured: true }, { channel: 2, isConfigured: false }],
+          channels: [
+            { channel: 3, isConfigured: true }, { channel: 2, isConfigured: false }, { channel: 4, isConfigured: true },
+          ],
         });
       } else if (url.pathname === `${root}/rules` && method === 'GET') {
         const keys = ['academicYearId', 'boardId', 'mediumId', 'classId', 'divisionId'];

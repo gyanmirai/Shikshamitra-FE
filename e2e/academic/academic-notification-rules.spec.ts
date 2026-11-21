@@ -4,6 +4,41 @@ import { login, prepare, snapshot, fixtureApi, expectHealthy } from './academic-
 
 const tag = ['@module-academic', '@submodule-notifications', '@regression', '@responsive', '@accessibility'];
 
+test('shows channel setup while staff prepare a notification rule', { tag }, async ({ page, request }) => {
+  await request.post(`${fixtureApi}/fixture/reset`, { data: { visited: true, notificationRules: true } });
+  await prepare(page, request);
+  await login(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/academic/notification?category=learning');
+  await page.getByRole('button', { name: 'Configure Homework published' }).click();
+  const drawer = page.getByRole('dialog', { name: 'Configure Rule' });
+  const channels = drawer.getByRole('combobox', { name: 'Additional channels' });
+  const setupRequired = drawer.getByText('School setup required for Email.', { exact: true });
+  const setupUnknown = drawer.getByText('Setup status is unavailable for WhatsApp.', { exact: true });
+
+  await channels.click();
+  await expect(page.getByRole('option', { name: 'Email Setup required' })).toBeVisible();
+  await expect(page.getByRole('option', { name: 'WhatsApp Setup status unavailable' })).toBeVisible();
+  await expect(page.getByRole('option', { name: 'Browser push Configured' })).toBeVisible();
+  await page.getByRole('option', { name: 'Email Setup required' }).click();
+  await page.getByRole('option', { name: 'WhatsApp Setup status unavailable' }).click();
+  await page.keyboard.press('Escape');
+  await expect(setupRequired).toBeVisible();
+  await expect(setupUnknown).toBeVisible();
+  await expectHealthy(page);
+
+  await channels.press('ArrowDown');
+  await page.getByRole('option', { name: 'WhatsApp Setup status unavailable' }).click();
+  await page.keyboard.press('Escape');
+  await expect(setupUnknown).toBeHidden();
+  await expect(setupRequired).toBeVisible();
+  await drawer.getByRole('button', { name: 'Submit' }).click();
+  await expect(drawer).toBeHidden();
+  await expect(page.getByRole('table', { name: 'Academic notification rules table' }).getByText('Set up Email')).toBeVisible();
+  const [saved] = (await snapshot(request)).notificationRuleWrites;
+  expect(saved).toMatchObject({ enabled: false, guardianMode: 0, channels: [3, 2] });
+});
+
 test('shows missing template coverage and opens Templates for the same event and scope', { tag }, async ({ page, request }) => {
   await request.post(`${fixtureApi}/fixture/reset`, { data: { visited: true, notificationRules: true } });
   await prepare(page, request);
@@ -20,7 +55,7 @@ test('shows missing template coverage and opens Templates for the same event and
   await expect(missing).toHaveCount(0);
   await drawer.getByRole('checkbox', { name: 'Include student account' }).check();
   await drawer.getByRole('combobox', { name: 'Additional channels' }).click();
-  await page.getByRole('option', { name: 'Email', exact: true }).click();
+  await page.getByRole('option', { name: /^Email/ }).click();
   await page.keyboard.press('Escape');
 
   await expect(missing.getByRole('listitem')).toHaveText(['Guardian · Email', 'Student Account · In-app, Email']);

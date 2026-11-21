@@ -40,7 +40,8 @@ const columns: IColumn[] = [
         </Stack>
       );
     }
-    const missing = row.deliveryChannels.filter((channel) => !channel.configured);
+    const missing = row.deliveryChannels.filter((channel) => channel.configured === false);
+    const unknown = row.deliveryChannels.filter((channel) => channel.configured === undefined);
     const configuration = row.item.effectiveRule?.configuration;
     return (
       <Stack gap={0.5}>
@@ -50,6 +51,11 @@ const columns: IColumn[] = [
         {missing.length > 0 && (
           <Typography variant="caption" color="text.secondary">
             Set up {missing.map((channel) => channel.label).join(', ')}
+          </Typography>
+        )}
+        {unknown.length > 0 && (
+          <Typography variant="caption" color="text.secondary">
+            Setup status unavailable for {unknown.map((channel) => channel.label).join(', ')}
           </Typography>
         )}
         {configuration && configuration.templateIds.length === 0 && <span>Published template required</span>}

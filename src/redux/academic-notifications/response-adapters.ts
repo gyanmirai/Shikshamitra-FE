@@ -44,7 +44,7 @@ export function notificationRuleRows(
     const deliveryChannels = (configuration?.channels ?? []).map((channel) => ({
       id: channel,
       label: notificationChannelLabels[channel],
-      configured: channels.get(channel) === true,
+      configured: channels.get(channel),
     }));
     return [{
       id: item.eventKey,

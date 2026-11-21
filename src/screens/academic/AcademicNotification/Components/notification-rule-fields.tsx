@@ -1,6 +1,10 @@
 import type { FormikProps } from 'formik';
 import type { AcademicNotificationRuleRow } from 'src/redux/academic-notifications/response-adapters';
-import type { AcademicNotificationChannel, PublishedNotificationTemplateOption } from 'src/redux/academic-notifications/types';
+import type {
+  AcademicNotificationChannel,
+  AcademicNotificationCatalogue,
+  PublishedNotificationTemplateOption,
+} from 'src/redux/academic-notifications/types';
 
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -22,6 +26,7 @@ interface Props {
   row: AcademicNotificationRuleRow;
   form: FormikProps<RuleFormValues>;
   templates: PublishedNotificationTemplateOption[];
+  channelConfiguration: AcademicNotificationCatalogue['channels'];
   optionsAvailable: boolean;
   isLoading: boolean;
   isError: boolean;
@@ -36,7 +41,7 @@ const guardians = [
 ];
 
 export function NotificationRuleFields({
-  row, form, templates, optionsAvailable, isLoading, isError, retry, onOpenTemplates,
+  row, form, templates, channelConfiguration, optionsAvailable, isLoading, isError, retry, onOpenTemplates,
 }: Props) {
   const { definition, availability, availabilityDetail } = row.event;
   const staff = staffRuleSelectors(row.event);
@@ -57,6 +62,20 @@ export function NotificationRuleFields({
   const missingCoverage = availability.isAvailable && current.enabled && optionsAvailable && !isError && fallback
     ? missingTemplateCoverage(current, ruleRecipientKinds(current, row.event), templates)
     : [];
+  const channelOptions = definition.supportedChannels
+    .filter((channel) => channel !== CommunicationChannelType.InApp)
+    .map((channel) => {
+      const configured = channelConfiguration.find((entry) => entry.channel === channel)?.isConfigured;
+      return {
+        value: channel,
+        label: notificationChannelLabels[channel],
+        setup: configured === undefined ? 'Setup status unavailable' : configured ? 'Configured' : 'Setup required',
+        configured,
+      };
+    });
+  const selectedChannels = channelOptions.filter(({ value }) => current.channels.includes(value));
+  const needsSetup = selectedChannels.filter(({ configured }) => configured === false).map(({ label }) => label);
+  const unknownSetup = selectedChannels.filter(({ configured }) => configured === undefined).map(({ label }) => label);
 
   return (
     <>
@@ -105,10 +124,15 @@ export function NotificationRuleFields({
       )}>
         <Typography variant="body2">In-app is included with every rule.</Typography>
         <CustomSelect multiple label="Additional channels" size="small"
-          options={definition.supportedChannels.filter((channel) => channel !== CommunicationChannelType.InApp)
-            .map((channel) => ({ value: channel, label: notificationChannelLabels[channel] }))}
+          options={channelOptions} optionEndLabelKey="setup"
           value={current.channels.filter((channel) => channel !== CommunicationChannelType.InApp)}
           onChange={(channels) => form.setFieldValue('channels', [CommunicationChannelType.InApp, ...channels as AcademicNotificationChannel[]])} />
+        {(needsSetup.length > 0 || unknownSetup.length > 0) && (
+          <Alert severity="warning" role="status">
+            {needsSetup.length > 0 && <div>School setup required for {needsSetup.join(', ')}.</div>}
+            {unknownSetup.length > 0 && <div>Setup status is unavailable for {unknownSetup.join(', ')}.</div>}
+          </Alert>
+        )}
         {current.channels.includes(CommunicationChannelType.WhatsApp) && (
           <Typography variant="body2" color="text.secondary">
             WhatsApp delivery requires provider approval for the selected template version and language.
