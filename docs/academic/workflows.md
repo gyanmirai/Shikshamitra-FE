@@ -3,7 +3,7 @@ module: academic
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-11-20
+updated_on: 2026-11-21
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -139,6 +139,8 @@ Open **Academics → Notification → Templates** and choose the event. Staff wi
 Choose the scope and select **New template** to write a template for one recipient, channel, and language. Use the variable pickers to insert fields from the event catalogue. Email supports rich text. In-app, browser push, and WhatsApp use plain text.
 
 Save the draft and load its preview with sample data. Publish it to make that version available to Rules. Further edits create a new draft while the published version remains available. Version history can preview saved revisions. Restoring the default wording also creates a draft.
+
+Browser push displays a generic alert on the device. Its preview shows the saved template with sample data. Edit the **In-app** template to change what recipients read in the website inbox.
 
 **Send test** queues the saved version for the configured test destination using sample data. WhatsApp delivery requires provider approval for the exact version and language.
 

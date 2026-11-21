@@ -86,6 +86,11 @@ export function NotificationTemplateFields({ event, form, locked, disabled, read
           helperText={(touched.languageCode && errors.languageCode) || 'For example, en or hi.'}
           sx={{ flex: 1 }} />
       </Stack>
+      {values.channel === CommunicationChannelType.WebPush && (
+        <Typography variant="body2" color="text.secondary">
+          Browser push shows a generic school alert on the device. Use the in-app template for the message recipients read in the website inbox.
+        </Typography>
+      )}
       <TextField label="Subject" size="small" inputRef={subjectRef}
         {...form.getFieldProps('subject')} disabled={contentDisabled} error={Boolean(subjectError)} helperText={subjectError} />
       {!readOnly && <NotificationVariablePicker variables={event.definition.variables}

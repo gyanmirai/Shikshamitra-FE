@@ -34,7 +34,9 @@ export function NotificationTemplatePreview({ identity, templateId, revisionId, 
 
   return (
     <Stack gap={1.5}>
-      <Typography variant="caption" color="text.secondary">Preview with sample data</Typography>
+      <Typography variant="caption" color="text.secondary">
+        {channel === CommunicationChannelType.WebPush ? 'Saved browser push template with sample data' : 'Preview with sample data'}
+      </Typography>
       <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>{result.rendered.subject}</Typography>
       {channel === CommunicationChannelType.Email ? (
         <Box sx={{ overflowWrap: 'anywhere' }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(result.rendered.body) }} />
