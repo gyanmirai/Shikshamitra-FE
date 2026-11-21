@@ -1,6 +1,20 @@
 module: Academic
 generatedAt: 2026-07-29
 scenarios:
+  - id: ACM-NOTIFICATION-PRIMARY-GUARDIAN-001
+    module: Academic
+    submodule: Notification
+    title: A homework reminder with no primary guardian explains the next step without granting Student Records access
+    risk: high
+    priority: P1
+    type: [functional, regression, responsive, accessibility]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/academic/gradingAndFeedback]
+    automated: true
+    automationFile: e2e/academic/academic-notification-rules.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-notifications', '@regression', '@responsive', '@accessibility']
   - id: ACM-NOTIFICATION-CHANNEL-SETUP-001
     module: Academic
     submodule: Notification

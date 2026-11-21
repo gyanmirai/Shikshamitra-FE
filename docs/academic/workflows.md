@@ -148,9 +148,13 @@ In **Evaluation & Feedback**, select a published homework or assignment, then us
 
 Choose available channels and select **Preview recipients**. Review eligible counts, exclusions, and sample messages before selecting **Confirm send** or **Request approval**. A changed review needs a fresh preview. If the confirmation response is interrupted, **Retry confirmation** checks the same send. Open **Delivery History** to follow the accepted operation.
 
+If the review reports that the primary guardian is unconfigured, choose the main contact through **Parents & Contact** in Student Records. **Open student record** is available for a single identified student when you have the existing Records and contact-change permissions. The record still checks your access before it exposes contacts or allows changes. [Parents and contact selection](../student/workflows.md#parents-and-contact-selection)
+
 ## Send a Student Academic 360 notification
 
 Open a student's detail drawer from **Academics → Student Academic 360**. Select **Send academic message** or **Request a meeting**. The primary guardian is selected when eligible. Choose among the student's eligible guardians and student account. A meeting request can also include the assigned class teacher when available.
+
+When the student has no main contact configured, the dialog shows the Student Records guidance before preview. Other eligible recipients can still be selected explicitly.
 
 Choose delivery channels and optionally choose a **Preferred template**. Review the recipient counts, channel exclusions and sample wording before confirming. The meeting request asks recipients to arrange a time with the school. Use **Delivery History** to check the queued operation.
 

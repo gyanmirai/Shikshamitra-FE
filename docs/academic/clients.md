@@ -42,6 +42,7 @@ Test send submits just the saved revision ID and stamp. Its queued response prov
 
 The same client loads assigned approvals by cursor and reads the review for the selected operation when its status exposes `canReviewApproval`. Approval and rejection refresh the queue, review and delivery history for the current account. [Approval API](../../../Shikshamitra-BE/docs/modules/academic/api.md#staff-notification-configuration)
 The Student Academic 360 drawer loads its audience only after a staff member chooses an action. The query includes the saved student, event and session owner. The shared composer uses published template options for the returned medium and includes the chosen relationships in the review request.
+The audience response's `primaryGuardianNotConfigured` flag drives the main-contact guidance before preview. It remains distinct from an existing primary guardian who is ineligible on a delivery channel.
 
 The submitted Teacher Diary drawer loads available follow-up recipients using the diary ID and the current school and account. Its action sends the selected staff reference through the same preview and confirmation client. See the [diary follow-up contract](../../../Shikshamitra-BE/docs/modules/academic/api.md#teacher-diary-follow-up).
 

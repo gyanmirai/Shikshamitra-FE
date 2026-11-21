@@ -12,6 +12,7 @@ export interface AcademicNotificationRecipient {
 
 export interface Student360NotificationAudience {
   academicMediumId: string | null;
+  primaryGuardianNotConfigured?: boolean;
   family: { relationship: 'father' | 'mother' | 'guardian' | 'self'; isPrimary: boolean }[];
   staff: AcademicNotificationRecipient[];
 }

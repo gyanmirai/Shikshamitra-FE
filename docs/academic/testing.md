@@ -134,6 +134,8 @@ Run `npm test -- src/components/academic-notification-action` for reviewed sends
 
 Run `npm test -- src/components/academic-notification-action src/screens/academic/student-academic-360` to check Student Academic 360 recipient defaults, explicit relationship selection, published template selection and review invalidation when the audience changes. Browser acceptance should open each action from a saved student drawer and verify the child identity, meeting request wording, channel exclusions and return to the student after closing the composer.
 
+The main-contact checks cover the single-student Records link, the unsaved-review guard and guidance without Records permissions. The homework browser fixture verifies that a missing primary guardian produces no confirmation or Records link for the scoped send-only account.
+
 Run `npm test -- LessonDiaryDetailsDrawer.presentation.test.tsx` to verify that a submitted diary opens the shared preview with the exact selected teacher or reviewer and a draft hides both actions.
 
 ```powershell

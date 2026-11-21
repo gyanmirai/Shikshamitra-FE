@@ -460,6 +460,40 @@ test('reports a personal unread count and keeps read and acknowledge actions dis
   await expectHealthy(page);
 });
 
+test('explains a missing primary guardian without granting access to Student Records', { tag }, async ({ page, request }) => {
+  await request.post(`${fixtureApi}/fixture/reset`, { data: { visited: true, manualNotification: true } });
+  await prepare(page, request);
+  await login(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.route('**/api/academic/notifications/manual/preview', async (route) => {
+    const response = await route.fetch();
+    await route.fulfill({ response, json: {
+      reviewToken: null, expiresAt: null, eligibleRecipientCount: 0, requiresApproval: false,
+      channels: [{
+        channel: 3, eligibleRecipientCount: 0, readyDeliveryCount: 0,
+        exclusions: [{ code: 'Communication:Notification:PrimaryGuardianNotConfigured', count: 1 }],
+      }],
+      samples: [], blockingIssues: [],
+    } });
+  });
+  await page.goto('/academic/gradingAndFeedback');
+  await page.getByRole('combobox', { name: 'Subject', exact: true }).click();
+  await page.getByRole('option', { name: 'Mathematics', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Homework title' }).click();
+  await page.getByRole('option', { name: /Fraction practice/ }).click();
+  await page.getByRole('button', { name: 'Send reminder for Sample Learner' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Send Notification' });
+  await dialog.getByRole('button', { name: 'Preview recipients' }).click();
+  await expect(dialog.getByText(/Choose a main contact in Parents & Contact/)).toBeVisible();
+  await expect(dialog.getByText('Primary guardian not configured · 1 excluded')).toBeVisible();
+  await expect(dialog.getByRole('button', { name: 'Open student record' })).toHaveCount(0);
+  await expect(dialog.getByRole('button', { name: 'Confirm send' })).toHaveCount(0);
+  const writes = (await snapshot(request)).manualNotificationWrites;
+  expect(writes.previews).toHaveLength(1);
+  expect(writes.confirmations).toEqual([]);
+  await expectHealthy(page);
+});
+
 test('confirms a reviewed homework reminder for the selected student and opens delivery history', { tag }, async ({ page, request }) => {
   await request.post(`${fixtureApi}/fixture/reset`, { data: { visited: true, manualNotification: true } });
   await prepare(page, request);

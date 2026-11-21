@@ -4,6 +4,7 @@ import type { RootState } from 'src/redux/store';
 
 import { useSelector } from 'react-redux';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { studentPermissions } from 'src/constants/student-menu';
 import { academicNotificationPermissions } from 'src/constants/academic-menu';
 import { CommunicationChannelType } from 'src/redux/communication/communicationTypes';
 import { notificationRecordId } from 'src/redux/academic-notifications/delivery-adapters';
@@ -36,6 +37,10 @@ export function useAcademicNotificationActionContext(eventKey: string, sourceId?
     options: event.definition.supportedChannels.map((channel) => ({
       channel, configured: data.channels.some((option) => option.channel === channel && option.isConfigured),
     })),
+    canManageStudentContacts: [
+      studentPermissions.root, studentPermissions.records.studentList,
+      'Students.Records.Changes.View', 'Students.Records.Changes.Add',
+    ].every((permission) => hasGrantedPermission(permissions, permission)),
   };
 }
 

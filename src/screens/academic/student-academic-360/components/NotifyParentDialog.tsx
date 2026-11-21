@@ -100,6 +100,7 @@ function NotifyParentDialog({ context, studentName, event, onClose }: {
   return (
     <AcademicNotificationAction context={context} recordLabel={eventLabels[event]} audienceLabel={studentName} selectedRecipients={[]}
       choices={{
+        primaryGuardianNotConfigured: roster.primaryGuardianNotConfigured,
         audience: [...family, ...staff],
         templates: Array.from(templateNames, ([value, label]) => ({ value, label })),
       }}

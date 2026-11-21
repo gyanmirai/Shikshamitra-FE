@@ -9,25 +9,28 @@ import { useRouter } from 'next/navigation';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import { studentPaths } from 'src/constants/student-menu';
 import { academicPaths } from 'src/constants/academic-menu';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { useFormikErrorFocus } from 'src/hooks/use-formik-error-focus';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { CommunicationChannelType } from 'src/redux/communication/communicationTypes';
-import { operationStatusLabels } from 'src/redux/academic-notifications/delivery-adapters';
 import { notificationChannelLabels } from 'src/redux/academic-notifications/response-adapters';
 import { Alert, Stack, Button, Checkbox, Typography, DialogActions, FormControlLabel } from '@mui/material';
+import { notificationRecordId, operationStatusLabels } from 'src/redux/academic-notifications/delivery-adapters';
 
 import { AcademicNotificationReviewDetails } from './review-details';
 import { useReviewedNotificationSend } from './use-reviewed-notification-send';
 
 type ChannelOption = { channel: AcademicNotificationChannel; configured: boolean };
+const primaryGuardianNotConfigured = 'Communication:Notification:PrimaryGuardianNotConfigured';
 
 export interface AcademicNotificationActionContext {
   identity: AcademicNotificationCacheIdentity;
   source: AcademicNotificationSource;
   options: ChannelOption[];
+  canManageStudentContacts: boolean;
 }
 
 export interface AcademicNotificationActionProps {
@@ -37,6 +40,7 @@ export interface AcademicNotificationActionProps {
   selectedRecipients: AcademicNotificationRecipient[];
   onClose: () => void;
   choices?: {
+    primaryGuardianNotConfigured?: boolean;
     audience: {
       key: string;
       label: string;
@@ -95,6 +99,17 @@ export function AcademicNotificationPreviewDialog({
   const canConfirm = Boolean(review?.reviewToken && !stale && !busy);
   const canChoose = !busy && !uncertain;
   const history = operation && `${academicPaths.notification}?view=history&${new URLSearchParams({ operation: operation.operationId })}`;
+  const missingPrimaryGuardian = choices?.primaryGuardianNotConfigured || (
+    review && !stale && (
+      review.blockingIssues.includes(primaryGuardianNotConfigured) ||
+      review.channels.some(({ exclusions }) => exclusions.some(({ code }) => code === primaryGuardianNotConfigured))
+    )
+  );
+  const selectedStudent = selectedRecipients.length === 1 && selectedRecipients[0].kind === 'Student'
+    ? selectedRecipients[0].studentId : undefined;
+  const studentId = notificationRecordId((source.sourceType === 'Academic.Student360' ? source.sourceId : selectedStudent) ?? null);
+  const contactsHref = context.canManageStudentContacts && studentId
+    ? `${studentPaths.records.studentList}?${new URLSearchParams({ student: studentId })}` : undefined;
 
   function changeChannel(channel: AcademicNotificationChannel, checked: boolean) {
     const { channels } = form.values;
@@ -121,6 +136,23 @@ export function AcademicNotificationPreviewDialog({
               <Alert severity="info" role="status">{operationStatusLabels[operation.status] ?? 'Send request accepted'}</Alert>
             ) : (
               <>
+                {missingPrimaryGuardian && (
+                  <Alert severity="warning">
+                    <Stack alignItems="flex-start" gap={0.5}>
+                      <Typography variant="body2">
+                        Choose a main contact in Parents &amp; Contact to set the primary guardian for notifications.
+                      </Typography>
+                      {contactsHref ? (
+                        <Button type="button" size="small" disabled={!canChoose}
+                          onClick={() => requestNavigation(() => router.push(contactsHref))}>
+                          Open student record
+                        </Button>
+                      ) : !context.canManageStudentContacts && (
+                        <Typography variant="body2">Ask someone who can manage student contacts to update the record.</Typography>
+                      )}
+                    </Stack>
+                  </Alert>
+                )}
                 {choices && (
                   <FormSectionCard title="Recipients" icon={GlobalIcons.sendNotification}>
                     <Stack gap={0.25} role="group" aria-label="Recipients">
