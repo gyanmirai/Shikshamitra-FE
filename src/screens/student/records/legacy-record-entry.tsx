@@ -158,7 +158,7 @@ export default function LegacyRecordEntry({
                   disabled={busy}
                 />
                 <TextField
-                  label="Evidence reference (optional)"
+                  label="Evidence reference"
                   name="evidenceReference"
                   value={form.values.evidenceReference}
                   onChange={form.handleChange}
@@ -193,7 +193,7 @@ export default function LegacyRecordEntry({
                 <Typography variant="body2">Evidence: {decision.row.evidenceReference}</Typography>
               )}
               <TextField
-                label="Review remarks (optional)"
+                label="Review remarks"
                 value={remarks}
                 onChange={(event) => setRemarks(event.target.value)}
                 multiline

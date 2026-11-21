@@ -48,7 +48,6 @@ function renderCanvas(onlyBank = false) {
                 selectedFieldId={null}
                 onSelect={() => undefined}
                 newStepId={null}
-                onAddStep={() => undefined}
                 onNewStepReady={() => undefined}
               />
               <output data-testid="section-codes">
@@ -159,7 +158,6 @@ function renderCombinedCanvas(
               selectedFieldId={null}
               onSelect={(id) => select(id)}
               newStepId={null}
-              onAddStep={() => undefined}
               onNewStepReady={() => undefined}
             />
             <output data-testid="base-draft">{JSON.stringify(formik.values)}</output>

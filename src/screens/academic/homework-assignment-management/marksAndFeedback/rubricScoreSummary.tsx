@@ -88,7 +88,7 @@ export default function RubricScoreSummary({
           <TextField
             fullWidth
             size="small"
-            label="Overall rubric feedback (optional)"
+            label="Overall rubric feedback"
             value={remarks}
             onChange={(event) => onRemarksChange(event.target.value)}
             placeholder="Summarize the student's overall performance"

@@ -98,15 +98,15 @@ export function getAdmissionInquiryActions(
   if (options.canMove)
     actions.push({
       id: 'move',
-      label: 'Move to Next Stage',
+      label: 'Start Application',
       icon: 'mdi:arrow-right-circle-outline',
       disabled: options.isMoving || Boolean(inquiryHandoffBlocker(inquiry)),
       loading: options.isMoving && options.movingInquiryId === inquiry.id,
       closeOnSuccess: true,
       tooltip: options.isMoving
         ? options.movingInquiryId === inquiry.id
-          ? 'Moving Inquiry…'
-          : 'Wait for the Current Inquiry to Finish Moving.'
+          ? 'Starting Application…'
+          : 'Wait for the current application to finish starting.'
         : inquiryHandoffBlocker(inquiry),
       onClick: () => options.onMove(inquiry),
     });

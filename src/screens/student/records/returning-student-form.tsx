@@ -648,9 +648,9 @@ export default function ReturningStudentForm() {
                       label={
                         [
                           'Guardian first name',
-                          'Guardian last name (optional)',
+                          'Guardian last name',
                           'Guardian mobile',
-                          'Guardian email (optional)',
+                          'Guardian email',
                         ][index]
                       }
                       name={field}

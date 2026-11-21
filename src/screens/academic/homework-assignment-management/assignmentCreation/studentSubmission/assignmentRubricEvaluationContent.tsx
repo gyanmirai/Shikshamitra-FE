@@ -250,7 +250,7 @@ export default function AssignmentRubricEvaluationContent({
                     fullWidth
                     multiline
                     rows={4}
-                    label="Feedback (optional)"
+                    label="Feedback"
                     placeholder="Provide qualitative feedback on the student's assignment..."
                     value={feedback}
                     onChange={(event) => onFeedbackChange(event.target.value)}

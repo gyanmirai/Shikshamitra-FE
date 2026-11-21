@@ -327,7 +327,7 @@ function StructuredRecordChangeForm({
           />
           <TextField
             type="datetime-local"
-            label="Effective date and time (optional)"
+            label="Effective date and time"
             name="effectiveAt"
             value={form.values.effectiveAt}
             onChange={form.handleChange}

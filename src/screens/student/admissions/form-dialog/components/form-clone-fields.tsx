@@ -26,7 +26,7 @@ export function FormCloneFields({ formik }: { formik: FormikProps<AdmissionFormC
           multiline
           minRows={3}
           size="small"
-          label="Description (optional)"
+          label="Description"
           {...formik.getFieldProps('description')}
           error={Boolean(formik.touched.description && formik.errors.description)}
           helperText={

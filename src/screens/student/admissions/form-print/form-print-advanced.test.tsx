@@ -693,6 +693,35 @@ describe('Advanced Registration paper settings', () => {
     },
     30000
   );
+
+  it('prints each writing instruction as a separate bullet and uses uploaded signature images', async () => {
+    const signature =
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=';
+    const model = buildAdmissionPrintDocument({
+      definition: { name: 'Registration', sections: [section('STUDENT')] },
+      values: {},
+      mode: 'blank',
+      settings: {
+        advanced: {
+          content: {
+            showInstructions: true,
+            translations: { en: { instructions: 'Use black ink.\nWrite clearly.' } },
+            parentSignatureImage: signature,
+            officeSignatureImage: signature,
+          },
+        },
+      },
+    });
+    const result = await artifact('instruction-list-signature-images', model);
+    expect(result.text).toContain('Use black ink.');
+    expect(result.text).toContain('Write clearly.');
+    expect(result.text.match(/•/g)).toHaveLength(2);
+    const pdf = await pdfjs();
+    const imageCount = result.pages[0].operators.fnArray.filter((operation) =>
+      [pdf.OPS.paintImageXObject, pdf.OPS.paintInlineImageXObject].includes(operation)
+    );
+    expect(imageCount.length).toBeGreaterThanOrEqual(2);
+  }, 30000);
   it.each(
     (['A4', 'A5', 'LETTER', 'LEGAL'] as const).flatMap((paperSize, index) =>
       (['portrait', 'landscape'] as const).map((orientation) => ({

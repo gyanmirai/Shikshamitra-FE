@@ -29,6 +29,8 @@ describe('Admission form list columns', () => {
 
       const statusColumn = columns.find((column) => column.id === 'status');
       expect(statusColumn?.render).toBeDefined();
+      expect(columns.find((column) => column.id === 'version')?.align).toBe('left');
+      expect(columns.find((column) => column.id === 'sectionCount')?.align).toBe('left');
 
       render(<>{statusColumn?.render?.(0, { purpose })}</>);
       expect(screen.getByText('Draft')).toBeVisible();

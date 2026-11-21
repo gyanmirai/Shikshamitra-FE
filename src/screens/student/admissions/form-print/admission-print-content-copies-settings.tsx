@@ -2,18 +2,26 @@ import { useState } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { FormSectionCard } from 'src/components/form-section-card';
+import { BannerUpload } from 'src/components/custom-upload/banner-upload';
 import { Stack, Button, Tooltip, IconButton, Typography } from '@mui/material';
 
 import { getAdmissionLanguageLabel } from '../form-dialog/form-languages';
+import { PrintInstructionsListEditor } from './print-instructions-list-editor';
 import {
   PrintSettingText,
   PrintSettingsGrid,
   PrintSettingsCards,
   PrintSettingSelect,
   PrintSettingToggle,
+  PrintSettingsResetButton,
 } from './admission-print-setting-controls';
 
 import type { AdmissionPrintAdvancedTabProps } from './admission-print-advanced-types';
+
+const SIGNATURE_IMAGE_ACCEPT = {
+  'image/png': ['.png'],
+  'image/jpeg': ['.jpg', '.jpeg'],
+};
 
 export function AdmissionPrintContentCopiesSettings({
   settings,
@@ -34,12 +42,34 @@ export function AdmissionPrintContentCopiesSettings({
     update('content', {
       translations: { ...content.translations, [language]: { ...translation, ...patch } },
     });
+  const resetContentCard = (
+    contentPatch: Partial<typeof content>,
+    translationPatch?: Partial<typeof translation>
+  ) =>
+    update('content', {
+      ...contentPatch,
+      ...(translationPatch && language
+        ? {
+            translations: {
+              ...content.translations,
+              [language]: { ...translation, ...translationPatch },
+            },
+          }
+        : {}),
+    });
   return (
     <PrintSettingsCards>
       <FormSectionCard
         title="Print Content Language"
         sx={{ gridColumn: '1 / -1' }}
         icon={GlobalIcons.academicTextCase}
+        action={
+          <PrintSettingsResetButton
+            title="Print Content Language"
+            disabled={!languages.length}
+            onReset={() => setSelectedLanguage(form.defaultLanguage ?? languages[0] ?? 'en')}
+          />
+        }
         descriptionTooltip="Enter print-only content for the languages enabled on this form. Switching language preserves the other translations."
       >
         {languages.length ? (
@@ -58,12 +88,25 @@ export function AdmissionPrintContentCopiesSettings({
       <FormSectionCard
         title="Instructions"
         icon={GlobalIcons.info}
+        action={
+          <PrintSettingsResetButton
+            title="Instructions"
+            disabled={!language}
+            onReset={() =>
+              resetContentCard(
+                { showInstructions: false, instructionsPlacement: 'first', instructionSection: '' },
+                { instructions: undefined }
+              )
+            }
+          />
+        }
         descriptionTooltip="School-authored instructions appear only in printed copies and do not add applicant questions."
       >
         <PrintSettingToggle
           label="Include instructions"
           checked={content.showInstructions}
           onChange={(showInstructions) => update('content', { showInstructions })}
+          helperTooltip="Each non-empty line prints as a bullet. Use up to 2,000 characters for the selected language."
         />
         <PrintSettingSelect
           label="Instructions placement"
@@ -89,28 +132,37 @@ export function AdmissionPrintContentCopiesSettings({
               ),
             ]}
             onChange={(instructionSection) => update('content', { instructionSection })}
-            helperText={!form.sections.length ? 'Add a section in Build form first.' : undefined}
+            helperTooltip={!form.sections.length ? 'Add a section in Build form first.' : undefined}
           />
         )}
-        <PrintSettingText
-          label="Instructions text"
-          value={translation.instructions ?? ''}
-          multiline
-          maxLength={2000}
+        <PrintInstructionsListEditor
+          value={translation.instructions}
           disabled={!content.showInstructions || !language}
           onChange={(instructions) => updateTranslation({ instructions })}
-          helperText="Up to 2,000 characters for the selected language."
         />
       </FormSectionCard>
       <FormSectionCard
         title="Document Checklist"
         icon={GlobalIcons.prerequisites}
+        action={
+          <PrintSettingsResetButton
+            title="Document Checklist"
+            disabled={!language}
+            onReset={() =>
+              resetContentCard(
+                { showChecklist: false, checklistPlacement: 'last' },
+                { checklist: undefined }
+              )
+            }
+          />
+        }
         descriptionTooltip="Add school-specified document names for printed checklist boxes. This does not change upload requirements."
       >
         <PrintSettingToggle
           label="Include document checklist"
           checked={content.showChecklist}
           onChange={(showChecklist) => update('content', { showChecklist })}
+          helperTooltip="Add up to 20 documents, each up to 128 characters."
         />
         <PrintSettingSelect
           label="Checklist placement"
@@ -167,19 +219,37 @@ export function AdmissionPrintContentCopiesSettings({
         >
           Add document
         </Button>
-        <Typography variant="caption" color="text.secondary">
-          Up to 20 documents, each up to 128 characters.
-        </Typography>
       </FormSectionCard>
       <FormSectionCard
         title="Declaration & Signatures"
         icon={GlobalIcons.edit}
+        action={
+          <PrintSettingsResetButton
+            title="Declaration & Signatures"
+            disabled={!language}
+            onReset={() =>
+              resetContentCard(
+                {
+                  showDeclaration: false,
+                  signaturePlacement: 'last',
+                  parentSignature: true,
+                  officeSignature: true,
+                  parentSignatureImage: undefined,
+                  officeSignatureImage: undefined,
+                  signatureDate: false,
+                },
+                { declaration: undefined, parentLabel: undefined, officeLabel: undefined }
+              )
+            }
+          />
+        }
         descriptionTooltip="Use the school's own declaration and signature labels. No legal wording is supplied automatically."
       >
         <PrintSettingToggle
           label="Include declaration"
           checked={content.showDeclaration}
           onChange={(showDeclaration) => update('content', { showDeclaration })}
+          helperTooltip="The school-authored declaration prints on the form. Use up to 2,000 characters for the selected language."
         />
         <PrintSettingText
           label="Declaration text"
@@ -188,7 +258,6 @@ export function AdmissionPrintContentCopiesSettings({
           maxLength={2000}
           disabled={!content.showDeclaration || !language}
           onChange={(declaration) => updateTranslation({ declaration })}
-          helperText="Up to 2,000 characters for the selected language."
         />
         <PrintSettingSelect
           label="Signature placement"
@@ -205,26 +274,54 @@ export function AdmissionPrintContentCopiesSettings({
           checked={content.parentSignature}
           disabled={!settings.showSignature}
           onChange={(parentSignature) => update('content', { parentSignature })}
+          helperTooltip="Upload an optional parent signature image, or leave it blank to print an empty signature line. Leave the label blank to use the standard translation."
         />
+        {content.parentSignature && settings.showSignature && (
+          <BannerUpload
+            label="Parent signature image"
+            description="PNG or JPG image. Maximum 5 MB."
+            accept={SIGNATURE_IMAGE_ACCEPT}
+            maxSize={5 * 1024 * 1024}
+            value={content.parentSignatureImage ? [content.parentSignatureImage] : []}
+            onChange={(files) =>
+              update('content', {
+                parentSignatureImage: typeof files[0] === 'string' ? files[0] : undefined,
+              })
+            }
+          />
+        )}
         <PrintSettingText
           label="Parent signature label"
           value={translation.parentLabel ?? ''}
           disabled={!settings.showSignature || !content.parentSignature || !language}
           onChange={(parentLabel) => updateTranslation({ parentLabel })}
-          helperText="Leave empty to use the standard translated label."
         />
         <PrintSettingToggle
           label="Office signature"
           checked={content.officeSignature}
           disabled={!settings.showSignature}
           onChange={(officeSignature) => update('content', { officeSignature })}
+          helperTooltip="Upload an optional office signature image, or leave it blank to print an empty signature line. Leave the label blank to use the standard translation."
         />
+        {content.officeSignature && settings.showSignature && (
+          <BannerUpload
+            label="Office signature image"
+            description="PNG or JPG image. Maximum 5 MB."
+            accept={SIGNATURE_IMAGE_ACCEPT}
+            maxSize={5 * 1024 * 1024}
+            value={content.officeSignatureImage ? [content.officeSignatureImage] : []}
+            onChange={(files) =>
+              update('content', {
+                officeSignatureImage: typeof files[0] === 'string' ? files[0] : undefined,
+              })
+            }
+          />
+        )}
         <PrintSettingText
           label="Office signature label"
           value={translation.officeLabel ?? ''}
           disabled={!settings.showSignature || !content.officeSignature || !language}
           onChange={(officeLabel) => updateTranslation({ officeLabel })}
-          helperText="Leave empty to use the standard translated label."
         />
         <PrintSettingToggle
           label="Signature date"
@@ -236,6 +333,21 @@ export function AdmissionPrintContentCopiesSettings({
       <FormSectionCard
         title="Office Use"
         icon={GlobalIcons.building}
+        action={
+          <PrintSettingsResetButton
+            title="Office Use"
+            onReset={() =>
+              update('content', {
+                showOfficeUse: false,
+                officePlacement: 'last',
+                documentChecks: true,
+                remarks: true,
+                verificationDate: true,
+                stamp: true,
+              })
+            }
+          />
+        }
         descriptionTooltip="Add printed spaces for school staff to complete document verification and office notes."
       >
         <PrintSettingToggle
@@ -274,6 +386,12 @@ export function AdmissionPrintContentCopiesSettings({
         title="Filled Copies"
         sx={{ gridColumn: '1 / -1' }}
         icon={GlobalIcons.copy}
+        action={
+          <PrintSettingsResetButton
+            title="Filled Copies"
+            onReset={() => update('copies', { unanswered: 'blank', selectedChoices: 'label' })}
+          />
+        }
         descriptionTooltip="Choose how saved answers are presented. Blank copies never include applicant answers."
       >
         <PrintSettingsGrid>

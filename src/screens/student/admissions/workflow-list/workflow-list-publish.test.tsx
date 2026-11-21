@@ -8,15 +8,16 @@ import auth from 'src/redux/auth/authSlice';
 import { mswServer } from 'src/test/mswServer';
 import { configureStore } from '@reduxjs/toolkit';
 import { shikshaMitraToast } from 'src/components/toast';
-import { act, renderHook } from '@testing-library/react';
 import { it, vi, expect, afterEach, beforeEach } from 'vitest';
+import { act, waitFor, renderHook } from '@testing-library/react';
 
 import { useWorkflowListActions } from './use-workflow-list-actions';
 
 vi.hoisted(() => {
   process.env.NEXT_PUBLIC_API_URL = 'http://localhost:5000';
 });
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
+const routerPush = vi.hoisted(() => vi.fn());
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: routerPush }) }));
 vi.mock('src/components/toast', () => ({
   shikshaMitraToast: { success: vi.fn(), warning: vi.fn(), error: vi.fn() },
 }));
@@ -64,6 +65,7 @@ beforeEach(() => {
   invalid = false;
   failPublish = false;
   mswServer.use(
+    http.get('*/api/auth/session', () => HttpResponse.json(null)),
     http.get('*/api/student/enrollment/admissions/workflows/workflow-1', () => {
       requests.push('read');
       return HttpResponse.json({ data: current });
@@ -138,6 +140,44 @@ it('guards duplicate new-version commands and identifies the pending row through
   });
   expect(versionCalls).toBe(1);
   expect(result.current.creatingVersionId).toBeNull();
+});
+
+it('shows the existing draft guidance and opens the identified draft after a repeated version request', async () => {
+  mswServer.use(
+    http.post('*/api/student/enrollment/admissions/workflows/workflow-1/new-version', () =>
+      HttpResponse.json(
+        {
+          error: {
+            code: 'Admissions.WorkflowDraftRequired',
+            message:
+              'A draft version already exists for this workflow. Open the existing draft to continue editing.',
+            data: { DraftId: 'workflow-draft-2' },
+          },
+        },
+        { status: 400 }
+      )
+    )
+  );
+
+  const { result } = renderHook(() => useWorkflowListActions(), { wrapper });
+  await act(async () => {
+    await result.current.createVersion({ ...workflow, status: 1 });
+  });
+
+  expect(result.current.existingDraftNotice).toEqual({
+    workflowName: 'Regular admission',
+    draftId: 'workflow-draft-2',
+  });
+  expect(shikshaMitraToast.error).not.toHaveBeenCalled();
+
+  await act(async () => {
+    result.current.openExistingDraft();
+  });
+  await waitFor(() =>
+    expect(routerPush.mock.calls[0]?.[0]).toBe(
+      '/student/admissions/settings/workflows/workflow-draft-2'
+    )
+  );
 });
 
 it('reports validation issues and never publishes an invalid journey', async () => {

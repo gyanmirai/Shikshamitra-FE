@@ -46,7 +46,7 @@ export default function LockedElectiveCorrectionDialog({ student, context, onClo
                 <MenuItem value="">Keep current preference</MenuItem>
                 {student.selectableSubjects.map((option) => <MenuItem key={option.subjectId} value={option.subjectId}>{option.subjectName}</MenuItem>)}
               </TextField>
-              <TextField fullWidth multiline minRows={2} size="small" label="Reason (optional)" name="reason"
+              <TextField fullWidth multiline minRows={2} size="small" label="Reason" name="reason"
                 value={form.values.reason} onChange={form.handleChange} onBlur={form.handleBlur} disabled={isBusy}
                 error={!!form.touched.reason && !!form.errors.reason} helperText={form.touched.reason && form.errors.reason}
                 inputProps={{ maxLength: 1000 }} />

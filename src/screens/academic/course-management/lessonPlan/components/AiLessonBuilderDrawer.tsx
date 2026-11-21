@@ -389,7 +389,7 @@ const AiLessonBuilderDrawer = ({ open, onClose, contextPlan, onInsertContent }: 
 
               <TextField
                 size="small"
-                label="Additional context (optional)"
+                label="Additional context"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 fullWidth

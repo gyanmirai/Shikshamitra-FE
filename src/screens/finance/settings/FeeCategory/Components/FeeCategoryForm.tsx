@@ -468,7 +468,7 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({
                         multiline
                         minRows={2}
                         maxRows={4}
-                        label="Description (optional)"
+                        label="Description"
                         name="description"
                         size="small"
                         value={formik.values.description}
@@ -840,7 +840,7 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({
                                       multiline
                                       minRows={2}
                                       maxRows={4}
-                                      label="Description (optional)"
+                                      label="Description"
                                       name={`feeHeads.${idx}.description`}
                                       value={fh.description}
                                       onChange={formik.handleChange}

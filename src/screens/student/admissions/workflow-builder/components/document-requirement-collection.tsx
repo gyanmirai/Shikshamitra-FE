@@ -80,7 +80,7 @@ export function DocumentRequirementCollection({
       <CustomSelect
         size="small"
         fullWidth
-        label="Student Document Category (Optional)"
+        label="Student Document Category"
         isLoading={documentTypesLoading && !documentTypes.length}
         disabledValues={['__no_categories__']}
         disabledLabel="Configure categories in Student Records settings"

@@ -29,13 +29,11 @@ import {
 import AdmissionRuntimeField from '../admission-runtime-field';
 import { useAdmissionPhotoReads } from '../use-admission-photo-reads';
 import { isAdmissionSiblingField } from '../admission-sibling-runtime-field';
-import { getAdmissionFormStepGroups } from '../form-dialog/form-step-groups';
 import { mergeInquiryContextSections } from '../inquiry-context-presentation';
 import { AdmissionSectionFields } from '../components/admission-section-fields';
 import { dependentAdmissionFieldValues } from '../admission-field-dependencies';
 import { waitForAdmissionValidationPaint } from '../admission-validation-feedback';
 import { AdmissionFormStepNavigation } from '../components/admission-form-step-navigation';
-import { AdmissionRuntimePrintActions } from '../form-print/admission-runtime-print-actions';
 import { isAdmissionRuleVisible, readAdmissionFormValue } from '../admission-visibility-rules';
 import { academicOptionsJson, isInstituteAcademicSource } from '../admission-academic-options';
 import { useAdmissionAddressSync, isAdmissionCopiedAddressField } from '../admission-address-sync';
@@ -45,9 +43,17 @@ import {
   resolveRuntimeOptionsJson,
 } from './application-runtime-options';
 import {
+  getAdmissionFormStepGroups,
+  getVisibleAdmissionFormSteps,
+} from '../form-dialog/form-step-groups';
+import {
   getCorrectionSections,
   getEffectiveCorrectionValues,
 } from './application-form-correction-visibility';
+import {
+  AdmissionRuntimePrintActions,
+  hasUnsavedAdmissionPrintValues,
+} from '../form-print/admission-runtime-print-actions';
 import {
   readRepeatableValues,
   writeRepeatableValue,
@@ -86,10 +92,16 @@ type Props = {
   academicMediumId?: string;
   publicMode?: boolean;
   allowPrint?: boolean;
+  onRefresh?: () => void;
   editableFieldCodes?: string[];
   canEditOverride?: boolean;
   submitLabel?: string;
   saveLabel?: string;
+  guidedNavigation?: {
+    stepId: string | null;
+    onStepChange: (stepId: string) => void;
+    reviewSectionId?: string | null;
+  };
   loadOptions?: (query: AdmissionFormOptionsQuery) => Promise<AdmissionFormOption[]>;
 };
 
@@ -136,10 +148,12 @@ export function ApplicationRuntimeFormCore({
   academicMediumId,
   publicMode = false,
   allowPrint = false,
+  onRefresh,
   editableFieldCodes,
   canEditOverride,
   submitLabel,
   saveLabel,
+  guidedNavigation,
   loadOptions,
 }: Props) {
   const fieldsPerRow = form.definition.fieldsPerRow ?? 1;
@@ -205,17 +219,38 @@ export function ApplicationRuntimeFormCore({
       ),
     [presentationSections, displayValues, correctionMode, correctionSectionIds]
   );
-  const isStepper = form.definition.layoutType === 1;
-  const visibleSteps = getAdmissionFormStepGroups(presentationSections)
-    .filter(
-      (step) => correctionMode || isAdmissionRuleVisible(step.visibilityRuleJson, displayValues)
-    )
-    .map((step) => ({
-      ...step,
-      sections: step.sections.filter(({ section }) => visibleSections.includes(section)),
-    }))
-    .filter((step) => step.sections.length > 0);
-  const safeActiveStep = Math.min(activeStep, Math.max(0, visibleSteps.length - 1));
+  const isStepper = Boolean(guidedNavigation) || form.definition.layoutType === 1;
+  const visibleSteps = guidedNavigation
+    ? getVisibleAdmissionFormSteps(
+        presentationSections,
+        displayValues,
+        form.definition.layoutType === 1
+      )
+    : getAdmissionFormStepGroups(presentationSections)
+        .filter(
+          (step) => correctionMode || isAdmissionRuleVisible(step.visibilityRuleJson, displayValues)
+        )
+        .map((step) => ({
+          ...step,
+          sections: step.sections.filter(({ section }) => visibleSections.includes(section)),
+        }))
+        .filter((step) => step.sections.length > 0);
+  const safeActiveStep = guidedNavigation
+    ? Math.max(
+        0,
+        visibleSteps.findIndex((step) => step.id === guidedNavigation.stepId)
+      )
+    : Math.min(activeStep, Math.max(0, visibleSteps.length - 1));
+  const onGuidedStepChange = guidedNavigation?.onStepChange;
+  const reviewSectionId = guidedNavigation?.reviewSectionId;
+  const selectStep = (index: number) => {
+    if (onGuidedStepChange) {
+      const step = visibleSteps[index];
+      if (step) onGuidedStepChange(step.id);
+    } else {
+      setActiveStep(index);
+    }
+  };
   const invalidCodes = new Set(
     Object.entries(fieldErrors)
       .filter(([, error]) => Boolean(error))
@@ -228,6 +263,22 @@ export function ApplicationRuntimeFormCore({
         section.fields.some((field) => invalidCodes.has(field.code))
     )
   );
+  const firstInvalidStepId = visibleSteps[firstInvalidStep]?.id;
+  const reviewSectionNeedsScroll =
+    Boolean(reviewSectionId) &&
+    visibleSteps[safeActiveStep]?.sections[0]?.section.id !== reviewSectionId;
+  useEffect(() => {
+    if (!reviewSectionId || !reviewSectionNeedsScroll) return undefined;
+    const frame = requestAnimationFrame(() => {
+      const sections = formRoot.current?.querySelectorAll<HTMLElement>(
+        '[data-registration-section]'
+      );
+      Array.from(sections ?? [])
+        .find((section) => section.dataset.registrationSection === reviewSectionId)
+        ?.scrollIntoView?.({ block: 'start' });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [reviewSectionId, reviewSectionNeedsScroll]);
   const completedSteps = visibleSteps.flatMap((step, index) =>
     (form.status === 1 || savedStepIds.includes(step.id)) &&
     !step.sections.some(
@@ -253,7 +304,8 @@ export function ApplicationRuntimeFormCore({
     }
     if (!pendingErrorFocus.current) return undefined;
     if (isStepper && firstInvalidStep >= 0 && safeActiveStep !== firstInvalidStep) {
-      setActiveStep(firstInvalidStep);
+      if (onGuidedStepChange && firstInvalidStepId) onGuidedStepChange(firstInvalidStepId);
+      else setActiveStep(firstInvalidStep);
       return undefined;
     }
     pendingErrorFocus.current = false;
@@ -272,7 +324,14 @@ export function ApplicationRuntimeFormCore({
     };
     const frame = requestAnimationFrame(focusError);
     return () => cancelAnimationFrame(frame);
-  }, [isStepper, firstInvalidStep, safeActiveStep, fieldErrors]);
+  }, [
+    isStepper,
+    firstInvalidStep,
+    firstInvalidStepId,
+    onGuidedStepChange,
+    safeActiveStep,
+    fieldErrors,
+  ]);
   const { readingPhoto, onPhotoReading } = useAdmissionPhotoReads();
   useEffect(() => {
     onPhotoReadingChange?.(readingPhoto);
@@ -281,7 +340,10 @@ export function ApplicationRuntimeFormCore({
   const interactionLocked =
     saving || submitting || reopening || readingPhoto || savingStep || validatingStep;
   const isLastStep =
-    !isStepper || visibleSteps.length === 0 || safeActiveStep === visibleSteps.length - 1;
+    Boolean(reviewSectionId) ||
+    !isStepper ||
+    visibleSteps.length === 0 ||
+    safeActiveStep === visibleSteps.length - 1;
   const canEditForm =
     !readOnly &&
     (canEditOverride ??
@@ -432,7 +494,7 @@ export function ApplicationRuntimeFormCore({
         .flatMap((step) => step.sections.map(({ section }) => section));
       if (!(await validateNavigation(sections))) return;
     }
-    setActiveStep(index);
+    selectStep(index);
   };
   const saveAndContinue = async () => {
     if (interactionLocked || stepSavePending.current || validationPending.current) return;
@@ -444,7 +506,7 @@ export function ApplicationRuntimeFormCore({
       if (saved) {
         const stepId = visibleSteps[safeActiveStep]?.id;
         if (stepId) setSavedStepIds((previous) => [...new Set([...previous, stepId])]);
-        setActiveStep(Math.min(safeActiveStep + 1, visibleSteps.length - 1));
+        selectStep(Math.min(safeActiveStep + 1, visibleSteps.length - 1));
       }
     } finally {
       stepSavePending.current = false;
@@ -551,8 +613,11 @@ export function ApplicationRuntimeFormCore({
 
   const sectionHeader = (title: string, action?: ReactNode) => ({
     title,
-    icon: GlobalIcons.admissionDetails,
-    descriptionTooltip: `Details Captured In ${title} On the Published Registration Form.`,
+    icon: guidedNavigation ? undefined : GlobalIcons.admissionDetails,
+    titleTypographyProps: guidedNavigation ? ({ variant: 'h5' } as const) : undefined,
+    descriptionTooltip: guidedNavigation
+      ? undefined
+      : `Details Captured In ${title} On the Published Registration Form.`,
     action,
   });
   const { familyPrefill } = form;
@@ -604,6 +669,20 @@ export function ApplicationRuntimeFormCore({
             )
           )
         : [];
+      if (guidedNavigation) {
+        return (
+          <Stack key={section.id} data-registration-section={section.id} spacing={2}>
+            <FormSectionHeader
+              {...sectionHeader(section.name, actions)}
+              titleTypographyProps={{
+                variant: 'h5',
+                component: section.id === currentSections[0]?.id ? 'h1' : 'h2',
+              }}
+            />
+            {renderSectionFields(section)}
+          </Stack>
+        );
+      }
       return (
         <Box key={section.id} sx={{ width: 1 }}>
           {groups.length ? (
@@ -638,7 +717,11 @@ export function ApplicationRuntimeFormCore({
     const entryLabel = section.entryLabel || section.name.replace(/s$/i, '') || 'Entry';
     const maxEntries = section.maxEntries ?? 1;
     return (
-      <Stack key={section.id} spacing={2}>
+      <Stack
+        key={section.id}
+        data-registration-section={guidedNavigation ? section.id : undefined}
+        spacing={2}
+      >
         <FormSectionHeader
           {...sectionHeader(section.name, parentSectionAction(section.fields, actions))}
         />
@@ -656,6 +739,7 @@ export function ApplicationRuntimeFormCore({
             <FormSectionCard
               key={`${section.id}-${entryIndex}`}
               {...sectionHeader(`${entryLabel} ${entryIndex + 1}`)}
+              titleTypographyProps={undefined}
             >
               {renderSectionFields(section, entryIndex)}
               {count > Math.max(section.minEntries ?? 0, 1) &&
@@ -714,6 +798,7 @@ export function ApplicationRuntimeFormCore({
       busy={validatingStep}
       label="Checking form…"
       fillContent={compact}
+      flattenFieldset={Boolean(guidedNavigation)}
       showOverlay={!onValidationBusyChange}
     >
       <Box
@@ -738,7 +823,18 @@ export function ApplicationRuntimeFormCore({
           }
         >
           {allowPrint && !publicMode && (
-            <Stack direction="row" justifyContent="flex-end" sx={{ mb: 1 }}>
+            <Stack direction="row" justifyContent="flex-end" spacing={1} sx={{ mb: 1 }}>
+              {onRefresh && (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  disabled={interactionLocked || hasUnsavedAdmissionPrintValues(form, values)}
+                  startIcon={<Iconify icon={GlobalIcons.refresh} />}
+                  onClick={onRefresh}
+                >
+                  Refresh
+                </Button>
+              )}
               <AdmissionRuntimePrintActions
                 applicationId={application.id}
                 form={form}
@@ -755,7 +851,7 @@ export function ApplicationRuntimeFormCore({
               {form.definition.name} · v{form.formVersion}
             </Typography>
           )}
-          {compact && isStepper && visibleSteps.length > 0 && (
+          {compact && !guidedNavigation && isStepper && visibleSteps.length > 0 && (
             <Box
               component="nav"
               aria-label="Form Steps"
@@ -770,6 +866,7 @@ export function ApplicationRuntimeFormCore({
                 '& .MuiStep-root': { px: 0, minWidth: 0, flex: 1 },
                 '& .MuiStepButton-root': { p: 0.5, minHeight: 44 },
                 '& .MuiStepConnector-root': { top: 18 },
+                '& .MuiStepConnector-line': { borderTopStyle: 'solid !important' },
                 '& .MuiStepLabel-label': {
                   typography: 'caption',
                   mt: { xs: '0 !important', sm: '4px !important' },
@@ -927,10 +1024,10 @@ export function ApplicationRuntimeFormCore({
                 variant="outlined"
                 startIcon={<Iconify icon="mdi:arrow-left" width={16} />}
                 disabled={interactionLocked || safeActiveStep === 0}
-                onClick={() => setActiveStep(Math.max(safeActiveStep - 1, 0))}
+                onClick={() => selectStep(Math.max(safeActiveStep - 1, 0))}
                 sx={{ mr: 'auto' }}
               >
-                Previous
+                {guidedNavigation ? 'Back' : 'Previous'}
               </Button>
             )}
             <Stack

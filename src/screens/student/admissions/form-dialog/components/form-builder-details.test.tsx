@@ -109,7 +109,7 @@ describe('FormBuilderDetails purpose-specific starters', () => {
       await user.click(screen.getByRole('button', { name: starter }));
       await user.clear(screen.getByRole('textbox', { name: 'Form Name *' }));
       await user.paste('My saved draft');
-      await user.click(screen.getByRole('textbox', { name: 'Description (Optional)' }));
+      await user.click(screen.getByRole('textbox', { name: 'Description' }));
       await user.paste('School notes');
       const previousValues = structuredClone(getValues());
 

@@ -518,8 +518,8 @@ export default function CertificateGenerationDrawer({
                               name="particulars"
                               label={
                                 choice.type === 2
-                                  ? 'Conduct assessment (optional)'
-                                  : 'First trial particulars (optional)'
+                                  ? 'Conduct assessment'
+                                  : 'First trial particulars'
                               }
                               multiline
                               minRows={2}

@@ -154,7 +154,7 @@ export function WorkflowGovernanceActionDialog({
               error={Boolean(formik.touched.effectiveAt && formik.errors.effectiveAt)}
             >
               <DateTimePicker
-                label="Effective Time (Optional)"
+                label="Effective Time"
                 format={ADMISSION_DATE_TIME_FORMAT}
                 value={formik.values.effectiveAt}
                 minDateTime={dayjs()}
@@ -186,7 +186,7 @@ export function WorkflowGovernanceActionDialog({
                 mode === 'reject'
                   ? 'Changes Required'
                   : mode === 'approve'
-                    ? 'Approval Note (Optional)'
+                    ? 'Approval Note'
                     : 'Change Reason'
               }
               value={formik.values.reason}

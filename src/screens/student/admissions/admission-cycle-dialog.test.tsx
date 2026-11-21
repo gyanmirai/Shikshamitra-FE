@@ -55,9 +55,9 @@ describe('admission cycle dialog', () => {
       const user = userEvent.setup();
       renderDateDialog();
       await user.click(screen.getByRole('group', { name: label }).querySelector('button')!);
-      await user.click(
-        screen.getByRole('button', { name: 'calendar view is open, switch to year view' })
-      );
+      await user.click(screen.getByRole('button', { name: 'Choose month' }));
+      expect(screen.getByRole('radio', { name: 'December' })).toBeEnabled();
+      await user.click(screen.getByRole('button', { name: 'Choose year' }));
       expect(screen.queryByRole('radio', { name: '2025' })).not.toBeInTheDocument();
       expect(screen.getByRole('radio', { name: '2026' })).toBeEnabled();
       expect(screen.getByRole('radio', { name: '2027' })).toBeEnabled();
@@ -89,7 +89,7 @@ describe('admission cycle dialog', () => {
     expect(
       screen.queryByText('Uppercase letters, numbers, hyphen and underscore')
     ).not.toBeInTheDocument();
-    expect(screen.getByRole('textbox', { name: 'Description (optional)' })).toHaveAttribute(
+    expect(screen.getByRole('textbox', { name: 'Description' })).toHaveAttribute(
       'placeholder',
       'Internal purpose or audience, e.g. Nursery to Grade 9'
     );

@@ -54,11 +54,11 @@ export type AdmissionPrintAdvancedSettings = {
     dividers?: boolean;
   };
   style?: {
-    palette?: 'school-blue' | 'neutral' | 'monochrome';
+    palette?: 'school-blue' | 'neutral' | 'forest-green' | 'monochrome';
     sectionFill?: string;
     borderColor?: string;
     textColor?: string;
-    fontFamily?: 'sans' | 'serif';
+    fontFamily?: 'sans' | 'serif' | 'monospace' | 'roboto';
     baseSize?: number;
     titleSize?: number;
     labelWeight?: 'regular' | 'semibold';
@@ -118,6 +118,8 @@ export type AdmissionPrintAdvancedSettings = {
     signaturePlacement?: 'last' | 'separate-page';
     parentSignature?: boolean;
     officeSignature?: boolean;
+    parentSignatureImage?: string;
+    officeSignatureImage?: string;
     signatureDate?: boolean;
     showOfficeUse?: boolean;
     officePlacement?: 'last' | 'separate-page';
@@ -163,6 +165,7 @@ export const ADMISSION_PRINT_BRANDING_ASPECT = 7.5;
 export const ADMISSION_PRINT_PALETTES = {
   'school-blue': { sectionFill: '#E7F2FF', borderColor: '#003399', textColor: '#0A1F44' },
   neutral: { sectionFill: '#F3F4F6', borderColor: '#667085', textColor: '#101828' },
+  'forest-green': { sectionFill: '#E8F5EC', borderColor: '#166534', textColor: '#102A1A' },
   monochrome: { sectionFill: '#FFFFFF', borderColor: '#000000', textColor: '#000000' },
 } as const;
 

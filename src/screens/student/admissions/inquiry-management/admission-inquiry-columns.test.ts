@@ -90,7 +90,7 @@ describe('admission inquiry columns', () => {
     expect(moving.find((action) => action.id === 'move')).toMatchObject({
       loading: true,
       disabled: true,
-      tooltip: 'Moving Inquiry…',
+      tooltip: 'Starting Application…',
     });
     expect(moving.every((action) => action.disabled)).toBe(true);
     expect(
@@ -188,7 +188,7 @@ it('uses concise overflow action labels while retaining the selected inquiry han
   const row = inquiry({ status: 2, applicantId: 'applicant', admissionOfferingId: 'offering' });
   const actions = getAdmissionInquiryActions(row, { ...columnOptions, onMove, onHistory: vi.fn() });
   expect(actions.slice(2).map((action) => action.label)).toEqual([
-    'Move to Next Stage',
+    'Start Application',
     'Handling History',
   ]);
   actions.find((action) => action.id === 'move')?.onClick?.();

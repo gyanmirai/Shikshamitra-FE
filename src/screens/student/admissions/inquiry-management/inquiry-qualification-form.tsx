@@ -113,7 +113,7 @@ export function InquiryQualificationForm({
       {formik.values.status === 2 && originalStatus !== 2 && (
         <StudentFeedback notificationKey="STU-0429" presentation="inline" severity="info">
           Confirm the family wants to continue. A qualification email is queued on the first
-          Interested transition when a valid contact email is available. Move to next stage
+          Interested transition when a valid contact email is available. Start the application
           separately when ready.
         </StudentFeedback>
       )}

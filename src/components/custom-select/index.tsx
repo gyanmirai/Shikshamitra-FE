@@ -40,7 +40,7 @@ export type CustomSelectProps<T extends string, J extends boolean> = Omit<
   value: J extends true ? string[] | number[] : string | number;
   onChange: (value: J extends true ? string[] | number[] : string | number) => void;
   error?: boolean;
-  helperText?: string;
+  helperText?: React.ReactNode;
   helperTextProps?: FormHelperTextProps;
   isLoading?: boolean;
   disabled?: boolean;

@@ -401,7 +401,7 @@ it('uses cash category authority for cash and keeps the optional noncash referen
       operation: 'expense-entry',
     })
   );
-  expect(screen.getByLabelText('Payment reference (optional)')).not.toBeRequired();
+  expect(screen.getByLabelText('Payment reference')).not.toBeRequired();
   fireEvent.change(screen.getByLabelText('Payment method'), { target: { value: '0' } });
   await waitFor(() =>
     expect(mocks.routing).toHaveBeenLastCalledWith({
@@ -417,7 +417,7 @@ it('keeps the income category authority and optional reference for cash income',
     academicYearId: 'year',
     operation: 'income-entry',
   });
-  expect(screen.getByLabelText('Payment reference (optional)')).not.toBeRequired();
+  expect(screen.getByLabelText('Payment reference')).not.toBeRequired();
 });
 
 it('locks saving, preserves failed input, and reuses the request key on retry', async () => {
@@ -486,7 +486,7 @@ it('omits a previously entered noncash reference after switching to Cash', async
   setup('expense');
   await fill('expense');
   fireEvent.change(screen.getByLabelText('Payment method'), { target: { value: '3' } });
-  fireEvent.change(screen.getByLabelText('Payment reference (optional)'), {
+  fireEvent.change(screen.getByLabelText('Payment reference'), {
     target: { value: 'R'.repeat(101) },
   });
   fireEvent.change(screen.getByLabelText('Payment method'), { target: { value: '0' } });
@@ -520,7 +520,7 @@ it('refreshes a definitive stale cash balance without losing entered expense evi
   });
   const { onClose } = setup('expense');
   await fill('expense');
-  fireEvent.change(screen.getByLabelText('Notes (optional)'), {
+  fireEvent.change(screen.getByLabelText('Notes'), {
     target: { value: 'Keep these notes' },
   });
   fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
@@ -530,7 +530,7 @@ it('refreshes a definitive stale cash balance without losing entered expense evi
   fireEvent.click(refresh);
   await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled());
   expect(screen.getByLabelText('Amount')).toHaveValue('12.34');
-  expect(screen.getByLabelText('Notes (optional)')).toHaveValue('Keep these notes');
+  expect(screen.getByLabelText('Notes')).toHaveValue('Keep these notes');
   fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
   await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
   expect(mocks.create.mock.calls[1][0].body).not.toHaveProperty('cashConcurrencyStamp');

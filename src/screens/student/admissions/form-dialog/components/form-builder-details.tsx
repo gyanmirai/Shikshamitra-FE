@@ -20,9 +20,14 @@ import {
   withoutInquiryDefaults,
 } from '../inquiry-default-fields';
 
-type Props = { formik: FormikProps<CreateUpdateAdmissionForm>; editing: boolean };
+type Props = {
+  formik: FormikProps<CreateUpdateAdmissionForm>;
+  editing: boolean;
+  nameConflictMessage?: string | null;
+  checkingName?: boolean;
+};
 
-export function FormBuilderDetails({ formik, editing }: Props) {
+export function FormBuilderDetails({ formik, editing, nameConflictMessage, checkingName }: Props) {
   const purpose = formik.values.purpose ?? 0;
   const [selectedStarter, setSelectedStarter] = useState<AdmissionFormStarter | null>(() =>
     formik.values.sections.every((section) => section.fields.length === 0) ||
@@ -119,7 +124,11 @@ export function FormBuilderDetails({ formik, editing }: Props) {
           >
             Form Details
           </Typography>
-          <FormBuilderDetailFields formik={formik} />
+          <FormBuilderDetailFields
+            formik={formik}
+            nameConflictMessage={nameConflictMessage}
+            checkingName={checkingName}
+          />
         </Grid>
       </SectionCard>
       <ConfirmDialog

@@ -152,7 +152,7 @@ it('submits the year-wide amount with optional document and notes in one command
   bank();
   const file = new File(['proof'], 'deposit.pdf', { type: 'application/pdf' });
   fireEvent.change(screen.getByLabelText('Upload document'), { target: { files: [file] } });
-  fireEvent.change(screen.getByLabelText('Notes (optional)'), {
+  fireEvent.change(screen.getByLabelText('Notes'), {
     target: { value: '  Bank deposit  ' },
   });
   fireEvent.click(screen.getByRole('button', { name: 'Deposit cash' }));

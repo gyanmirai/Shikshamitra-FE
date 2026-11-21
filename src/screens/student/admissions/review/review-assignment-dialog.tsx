@@ -72,7 +72,7 @@ export function ReviewAssignmentDialog({
             onChange={(value) => formik.setFieldValue('assignedReviewerId', value)}
           />
           <DateTimePicker
-            label="Review Deadline (Optional)"
+            label="Review Deadline"
             format={ADMISSION_DATE_TIME_FORMAT}
             value={formik.values.dueAt ? dayjs(formik.values.dueAt) : null}
             disabled={busy}

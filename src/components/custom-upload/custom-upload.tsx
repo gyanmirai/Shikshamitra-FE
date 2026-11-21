@@ -1,3 +1,5 @@
+import type { Accept } from 'react-dropzone';
+
 import { Close } from '@mui/icons-material';
 import { useDropzone } from 'react-dropzone';
 import CloseIcon from '@mui/icons-material/Close';
@@ -37,7 +39,10 @@ export interface CustomUploadProps {
   onPreview?: (file: FileWithPreview | string) => void;
   error?: boolean;
   helperText?: string;
+  description?: string;
   label?: string;
+  accept?: Accept;
+  maxSize?: number;
   outputFormat?: OutputFormat;
   secondaryText?: string;
 }

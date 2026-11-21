@@ -70,7 +70,7 @@ describe('AssignmentRubricEvaluationContent', () => {
     expect(screen.getByText('In-Person')).toBeInTheDocument();
     expect(screen.getByText(/compact: true/)).toBeInTheDocument();
     expect(screen.getByText('Teacher Feedback & Remarks')).toBeInTheDocument();
-    expect(screen.getByRole('textbox', { name: 'Feedback (optional)' })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Feedback' })).toBeInTheDocument();
     expect(screen.getByText(student.studentName)).toBeInTheDocument();
     expect(screen.getByText(/Roll No: 1.*GR No: 10028/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Previous' })).toBeDisabled();
@@ -95,7 +95,7 @@ describe('AssignmentRubricEvaluationContent', () => {
   it('updates the teacher feedback field without submitting', () => {
     const onFeedbackChange = vi.fn();
     render(<AssignmentRubricEvaluationContent {...props} onFeedbackChange={onFeedbackChange} />);
-    fireEvent.change(screen.getByRole('textbox', { name: 'Feedback (optional)' }), {
+    fireEvent.change(screen.getByRole('textbox', { name: 'Feedback' }), {
       target: { value: 'Please revise the first answer.' },
     });
     expect(onFeedbackChange).toHaveBeenCalledWith('Please revise the first answer.');

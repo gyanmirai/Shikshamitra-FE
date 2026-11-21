@@ -1152,7 +1152,7 @@ const LeaveRequestForm = ({
 
                 <Grid size={{ xs: 12 }}>
                   <Typography id={supportingDocumentLabelId} variant="subtitle2" sx={{ mb: 1 }}>
-                    Supporting document (optional)
+                    Supporting document
                   </Typography>
                   <FileUploader
                     value={values.docs ?? undefined}

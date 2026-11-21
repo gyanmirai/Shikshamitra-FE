@@ -54,7 +54,7 @@ describe('FormBuilderDetailFields', () => {
     );
 
     const nameLabel = screen.getByText('Form Name *', { selector: 'label' });
-    const descriptionLabel = screen.getByText('Description (Optional)', { selector: 'label' });
+    const descriptionLabel = screen.getByText('Description', { selector: 'label' });
 
     expect(nameLabel).not.toHaveClass('MuiInputLabel-shrink');
     expect(descriptionLabel).not.toHaveClass('MuiInputLabel-shrink');
@@ -64,7 +64,7 @@ describe('FormBuilderDetailFields', () => {
     await user.click(screen.getByRole('textbox', { name: 'Form Name *' }));
     expect(nameLabel).toHaveClass('MuiInputLabel-shrink');
 
-    await user.click(screen.getByRole('textbox', { name: 'Description (Optional)' }));
+    await user.click(screen.getByRole('textbox', { name: 'Description' }));
     expect(nameLabel).not.toHaveClass('MuiInputLabel-shrink');
     expect(descriptionLabel).toHaveClass('MuiInputLabel-shrink');
   });

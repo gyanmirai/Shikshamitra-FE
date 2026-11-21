@@ -291,7 +291,7 @@ it('enables form entry when the dashboard medium is selected and on ordinary rou
     'true'
   );
   const upload = screen.getByRole('button', { name: 'Choose supporting document' });
-  expect(screen.getByRole('group', { name: 'Supporting document (optional)' })).toContainElement(
+  expect(screen.getByRole('group', { name: 'Supporting document' })).toContainElement(
     upload
   );
   expect(upload).toHaveAttribute('aria-disabled', 'false');

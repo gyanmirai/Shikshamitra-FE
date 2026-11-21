@@ -167,18 +167,11 @@ describe('Registration effective canvas integration', () => {
     expect(view.sections[0].fieldsPerRow).toBe(2);
     expect(JSON.parse(screen.getByTestId('base-form').textContent!).layoutType).toBe(0);
   });
-  it('offers Add step on a single-page draft and retains its content after converting', async () => {
-    const { base } = renderInheritedBuilder();
-    expect(screen.queryByRole('navigation', { name: 'Form Steps' })).not.toBeInTheDocument();
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Add Step' }));
-    });
-    const saved = JSON.parse(screen.getByTestId('base-form').textContent!);
-    expect(saved.layoutType).toBe(1);
-    expect(saved.sections).toHaveLength(base.sections.length + 1);
-    expect(saved.sections[0].id).toBe(base.sections[0].id);
+  it('keeps single-page drafts out of step creation, including inherited stepper previews', () => {
+    renderInheritedBuilder({ sourceLayout: 1 });
     expect(screen.getByRole('navigation', { name: 'Form Steps' })).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Add Step' })).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Add Step' })).not.toBeInTheDocument();
+    expect(JSON.parse(screen.getByTestId('base-form').textContent!).layoutType).toBe(0);
   });
   it('allows a valid source preview before approval and applies current grid changes without copying source questions', async () => {
     const { base, sourceField } = renderInheritedBuilder();

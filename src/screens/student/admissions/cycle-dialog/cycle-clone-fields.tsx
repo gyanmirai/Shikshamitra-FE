@@ -1,9 +1,9 @@
 import type { AcademicYear } from 'src/types/school';
 
-import { Grid, TextField } from '@mui/material';
+import { Alert, Grid, IconButton, TextField } from '@mui/material';
+import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { StudentFeedback } from 'src/components/student-feedback';
 
 import type { CycleConfigurationState } from './use-cycle-configuration';
 
@@ -28,15 +28,31 @@ export function CycleCloneFields({
     <>
       {dismissedNotice !== 'clone' && (
         <Grid size={{ xs: 12 }}>
-          <StudentFeedback
-            notificationKey="STU-0041"
-            presentation="inline"
+          <Alert
             severity="info"
-            onClose={() => setDismissedNotice('clone')}
-            closeText="Dismiss copy information"
+            variant="outlined"
+            icon={<Iconify icon="mdi:information-outline" width={18} />}
+            action={
+              <IconButton
+                aria-label="Dismiss copy information"
+                size="small"
+                onClick={() => setDismissedNotice('clone')}
+              >
+                <Iconify icon="mdi:close" width={18} />
+              </IconButton>
+            }
+            sx={{
+              width: '100%',
+              alignItems: 'center',
+              py: 0.5,
+              px: 1.5,
+              '& .MuiAlert-icon': { alignItems: 'center', py: 0, mr: 1 },
+              '& .MuiAlert-message': { py: 0, minWidth: 0 },
+              '& .MuiAlert-action': { alignItems: 'center', py: 0, pl: 1, mr: 0 },
+            }}
           >
             The copy is created as a draft. Offerings and applications are not copied.
-          </StudentFeedback>
+          </Alert>
         </Grid>
       )}
       <Grid size={{ xs: 12 }}>
@@ -69,7 +85,7 @@ export function CycleCloneFields({
           multiline
           minRows={2}
           size="small"
-          label="Description (optional)"
+          label="Description"
           value={description}
           onChange={(event) => setDescription(event.target.value.slice(0, 1000))}
         />

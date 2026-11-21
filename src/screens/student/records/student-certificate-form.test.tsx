@@ -438,8 +438,8 @@ it('defaults the full academic hierarchy and clears student selection when it ch
 });
 
 it.each([
-  [2, 'Character', 'Conduct assessment (optional)', 'Conduct'],
-  [4, 'First Trial', 'First trial particulars (optional)', 'FirstTrialDetails'],
+  [2, 'Character', 'Conduct assessment', 'Conduct'],
+  [4, 'First Trial', 'First trial particulars', 'FirstTrialDetails'],
 ] as const)(
   'passes verified particulars through preview and generation for type %s',
   async (type, label, fieldLabel, key) => {

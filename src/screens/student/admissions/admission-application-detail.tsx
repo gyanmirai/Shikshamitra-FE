@@ -365,6 +365,11 @@ export default function AdmissionApplicationDetailScreen({
           onValidateStep={detail.validateStep}
           onValidationBusyChange={onValidationBusyChange}
           onSave={detail.save}
+          onRefresh={() => {
+            applicationQuery.refetch();
+            workflowQuery.refetch();
+            if (!formQuery.isUninitialized) formQuery.refetch();
+          }}
           onSubmit={detail.submitApplication}
           showSaveDraft={detail.formStageQuery.currentData?.policy?.allowSaveAndResume ?? true}
           canSubmitForm={

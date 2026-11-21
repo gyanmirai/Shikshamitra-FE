@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import type {
   AdmissionWorkflowStage,
   AdmissionWorkflowTransition,
+  AdmissionWorkflowValidationIssue,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
 import { Card } from '@mui/material';
@@ -20,6 +21,7 @@ type Props = {
   readOnly: boolean;
   loadingStageTypes: boolean;
   issueCountByStage: Record<string, number>;
+  issuesByStage?: Record<string, AdmissionWorkflowValidationIssue[]>;
   onAddStage: () => void;
   onEditStage: (stage: AdmissionWorkflowStage) => void;
   onDuplicateStage: (stage: AdmissionWorkflowStage) => void;
@@ -41,6 +43,7 @@ export function WorkflowBuilderCanvas({
   readOnly,
   loadingStageTypes,
   issueCountByStage,
+  issuesByStage = {},
   onAddStage,
   onEditStage,
   onDuplicateStage,
@@ -72,6 +75,7 @@ export function WorkflowBuilderCanvas({
         readOnly={readOnly}
         loadingStageTypes={loadingStageTypes}
         issueCountByStage={issueCountByStage}
+        issuesByStage={issuesByStage}
         onAdd={onAddStage}
         onEdit={onEditStage}
         onDuplicate={onDuplicateStage}

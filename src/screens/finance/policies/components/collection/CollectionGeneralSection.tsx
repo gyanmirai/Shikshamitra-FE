@@ -137,7 +137,7 @@ export default function CollectionGeneralSection({
               <TextField
                 fullWidth
                 size="small"
-                label="Change reason (optional)"
+                label="Change reason"
                 name="changeReason"
                 placeholder="Explain why this active collection policy is being changed..."
                 value={formik.values.changeReason || ''}

@@ -398,7 +398,7 @@ export function FormBuilderSections({
                   alignItems="center"
                   justifyContent="flex-end"
                 >
-                  {effectiveForm.layoutType === 0 && (
+                  {formik.values.layoutType === 1 && (
                     <Button
                       aria-label="Add Step"
                       size="small"
@@ -478,7 +478,6 @@ export function FormBuilderSections({
                     selectedFieldId={selection.selectedFieldId}
                     onSelect={selectCanvasField}
                     newStepId={newStepId}
-                    onAddStep={addStep}
                     onNewStepReady={setNewStepId}
                     footer={desktop ? footer : undefined}
                   />

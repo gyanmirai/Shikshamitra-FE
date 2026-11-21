@@ -21,7 +21,7 @@ import type { InquiryHandoffIssue } from './inquiry-handoff-issue';
 export function inquiryHandoffBlocker(inquiry: AdmissionInquiry): string | undefined {
   if (inquiry.isTransferred || inquiry.applicationId)
     return 'This inquiry has already moved to Pipeline.';
-  if (inquiry.status !== 2) return 'Mark the inquiry Interested before moving to the next stage.';
+  if (inquiry.status !== 2) return 'Mark the inquiry Interested before starting an application.';
   if (!inquiry.admissionOfferingId)
     return 'Resolve this older inquiry’s admission offering before proceeding.';
   if (!inquiry.applicantId)
@@ -83,7 +83,7 @@ export function useInquiryHandoff() {
       shikshaMitraToast.error({
         message:
           parseApiProblemDetail(error).detail ||
-          'Unable to move this inquiry. Refresh and try again.',
+          'Unable to start the application. Refresh and try again.',
       });
       return false;
     } finally {

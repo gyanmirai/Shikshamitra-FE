@@ -1043,7 +1043,7 @@ const ConcessionFeeHeadApprovalLegacyView: React.FC<IFeeHeadApprovalViewProps> =
               isApprove &&
               totalSelectedConcession >=
                 Number(resolvedApprovalContext?.totalRequestedConcessionAmount ?? 0)
-                ? 'Approval message (optional)'
+                ? 'Approval message'
                 : 'Reason *'
             }
             value={formik.values.description}

@@ -41,3 +41,12 @@ it('makes the same information available after a touch hold', async () => {
   );
   fireEvent.touchEnd(trigger);
 });
+
+it('opens help on a direct tap or click', async () => {
+  render(<InfoTooltipIcon title="Check the saved details." label="Review information" />);
+  const trigger = screen.getByRole('button', { name: 'Review information' });
+
+  fireEvent.click(trigger);
+
+  expect(await screen.findByRole('tooltip')).toHaveTextContent('Check the saved details.');
+});

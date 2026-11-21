@@ -679,7 +679,7 @@ export default function ManualEntryForm({
                       )}
                       {!cashExpense && (
                         <Grid size={12}>
-                          {text('paymentReference', 'Payment reference (optional)')}
+                          {text('paymentReference', 'Payment reference')}
                         </Grid>
                       )}
                     </Grid>
@@ -690,7 +690,7 @@ export default function ManualEntryForm({
                     title="Additional Notes"
                   >
                     <Grid container spacing={2}>
-                      <Grid size={12}>{text('notes', 'Notes (optional)')}</Grid>
+                      <Grid size={12}>{text('notes', 'Notes')}</Grid>
                     </Grid>
                   </FormSectionCard>
                 </Stack>

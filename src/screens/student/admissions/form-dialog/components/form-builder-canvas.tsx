@@ -2,9 +2,8 @@ import type { ReactNode } from 'react';
 import type { FormikProps } from 'formik';
 import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
 
-import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import { Box, Card, Stack, Button, Typography } from '@mui/material';
+import { Box, Card, Stack, Typography } from '@mui/material';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 
 import { FormBuilderStep } from '../form-builder-step';
@@ -24,7 +23,6 @@ type Props = {
   showAllSteps?: boolean;
   onSelect: (sectionId: string, fieldId: string | null) => void;
   newStepId: string | null;
-  onAddStep: (afterStepId?: string) => void;
   onNewStepReady: (stepId: string | null) => void;
   footer?: ReactNode;
   beforeSections?: ReactNode;
@@ -39,7 +37,6 @@ export function FormBuilderCanvas({
   showAllSteps = false,
   onSelect,
   newStepId,
-  onAddStep,
   onNewStepReady,
   footer,
   beforeSections,
@@ -178,19 +175,6 @@ export function FormBuilderCanvas({
                 />
               </Box>
             </Scrollbar>
-            <Box sx={{ p: 1.5, flexShrink: 0, borderTop: 1, borderColor: 'divider' }}>
-              <Button
-                aria-label="Add Step"
-                fullWidth
-                size="small"
-                variant="outlined"
-                startIcon={<Iconify icon="mdi:plus" />}
-                disabled={formik.isSubmitting}
-                onClick={() => onAddStep(activeStep?.id)}
-              >
-                Step
-              </Button>
-            </Box>
           </Card>
         </Box>
       )}

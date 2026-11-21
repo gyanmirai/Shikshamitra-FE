@@ -264,6 +264,8 @@ function renderForm(overrides: Partial<Props> = {}) {
         application={{ status: 0 } as Props['application']}
         form={
           {
+            formInstanceId: 'form-instance',
+            formDefinitionId: 'form-definition',
             formVersion: 1,
             academicYearId: 'year',
             status: 0,
@@ -682,6 +684,22 @@ describe('application form step navigation', () => {
     expect(screen.getByRole('button', { name: 'Save & Next' })).toHaveClass('MuiButton-sizeSmall');
   }, 15000);
 
+  it('refreshes saved application data above the stepper and locks refresh while form answers are unsaved', async () => {
+    const onRefresh = vi.fn();
+    const user = userEvent.setup();
+    renderForm({ compact: true, onRefresh });
+    const refresh = screen.getByRole('button', { name: 'Refresh' });
+    expect(refresh).toBeEnabled();
+    await user.click(refresh);
+    expect(onRefresh).toHaveBeenCalledOnce();
+    await user.type(screen.getByRole('textbox', { name: 'Basic details answer' }), 'Draft');
+    expect(refresh).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Print' })).toBeVisible();
+    expect(
+      screen.getByRole('navigation', { name: 'Form Steps' }).querySelector('.MuiStepConnector-line')
+    ).toHaveStyle({ borderTopStyle: 'solid' });
+  }, 15000);
+
   it('validates and saves the configured section group before continuing in the compact footer', async () => {
     const user = userEvent.setup();
     const calls: string[] = [];
@@ -698,7 +716,7 @@ describe('application form step navigation', () => {
     });
     await user.click(screen.getByRole('button', { name: 'Save & Next' }));
     expect(calls).toEqual(['basic', 'contact', 'save']);
-    expect(screen.getByText('Health details')).toBeVisible();
+    expect(await screen.findByText('Health details')).toBeVisible();
     expect(screen.queryByRole('button', { name: 'Save & Next' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Submit Application' })).toBeEnabled();
   });

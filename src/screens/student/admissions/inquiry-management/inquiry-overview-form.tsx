@@ -215,6 +215,7 @@ export function InquiryOverviewForm({
     formik,
     fields,
     contextKey: `${current.id}:${formik.values.offeringId}:${form?.id ?? ''}`,
+    isEditingSavedInquiry: true,
     busy: readOnly || familyOpen || updateState.isLoading || readingPhoto,
   });
   const ageFeedback = useAdmissionInquiryAge({

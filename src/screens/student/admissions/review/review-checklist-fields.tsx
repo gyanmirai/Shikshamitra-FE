@@ -39,7 +39,7 @@ export function ReviewChecklistFields({
                   }
                 />
               }
-              label={`${item.name}${item.required ? ' *' : ' (optional)'}`}
+              label={`${item.name}${item.required ? ' *' : ''}`}
             />
             <TextField
               fullWidth

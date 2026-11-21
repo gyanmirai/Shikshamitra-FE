@@ -9,6 +9,7 @@ import {
   useLazyGetAdmissionWorkflowQuery,
   useUpdateAdmissionWorkflowMutation,
   usePublishAdmissionWorkflowMutation,
+  useValidateAdmissionWorkflowPreviewMutation,
   useValidateAdmissionWorkflowMutation,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
@@ -27,10 +28,13 @@ export function useWorkflowBuilderCommands(
 ) {
   const [updateWorkflow, updateState] = useUpdateAdmissionWorkflowMutation();
   const [validateWorkflow, validateState] = useValidateAdmissionWorkflowMutation();
+  const [validatePreview, validatePreviewState] = useValidateAdmissionWorkflowPreviewMutation();
   const [publishWorkflow, publishState] = usePublishAdmissionWorkflowMutation();
   const [loadWorkflow] = useLazyGetAdmissionWorkflowQuery();
   const publishingRef = useRef(false);
   const [publishing, setPublishing] = useState(false);
+  const previewRequestRef = useRef<{ abort: () => void } | null>(null);
+  const previewVersionRef = useRef(0);
   const savedDetails = useRef<(WorkflowDetails & { workflowId: string }) | null>(null);
   const getCurrentDetails = (): WorkflowDetails | null => {
     if (!workflow) return null;
@@ -118,8 +122,40 @@ export function useWorkflowBuilderCommands(
       return null;
     }
   };
+  const cancelDraftPreview = () => {
+    previewVersionRef.current += 1;
+    previewRequestRef.current?.abort();
+    previewRequestRef.current = null;
+  };
+  const validateDraftPreview = async () => {
+    cancelDraftPreview();
+    const requestVersion = previewVersionRef.current;
+    const request = validatePreview({
+      id: workflowId,
+      body: {
+        defaultInquiryFormDefinitionId: draft.defaultInquiryFormDefinitionId,
+        stages: normalizeAdmissionWorkflowStages(draft.stages),
+        transitions: draft.transitions,
+      },
+    });
+    previewRequestRef.current = request;
+    try {
+      const result = await request.unwrap();
+      if (requestVersion !== previewVersionRef.current) return null;
+      draft.setValidation(result);
+      return result;
+    } catch (error) {
+      if (requestVersion === previewVersionRef.current) {
+        showError(error, 'Unable to check the current workflow draft.');
+      }
+      return null;
+    } finally {
+      if (requestVersion === previewVersionRef.current) previewRequestRef.current = null;
+    }
+  };
   const publish = async () => {
     if (publishingRef.current || !workflow) return null;
+    cancelDraftPreview();
     publishingRef.current = true;
     setPublishing(true);
     try {
@@ -159,6 +195,9 @@ export function useWorkflowBuilderCommands(
     saveDetails,
     getCurrentDetails,
     validateSavedWorkflow,
+    validateDraftPreview,
+    cancelDraftPreview,
+    validatePreviewState,
     publish,
     updateState,
     validateState,

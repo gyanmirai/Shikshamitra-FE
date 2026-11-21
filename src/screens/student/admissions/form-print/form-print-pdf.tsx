@@ -34,6 +34,13 @@ function registerFonts(fontBasePath: string) {
       { src: `${fontBasePath}/NotoSansDevanagari-Bold.ttf`, fontWeight: 700 },
     ],
   });
+  Font.register({
+    family: 'AdmissionPrintRoboto',
+    fonts: [
+      { src: `${fontBasePath}/Roboto-Regular.ttf` },
+      { src: `${fontBasePath}/Roboto-Bold.ttf`, fontWeight: 700 },
+    ],
+  });
 }
 
 /** Keep the established Unicode/Indic shaping runs in preview and downloaded artifacts. */

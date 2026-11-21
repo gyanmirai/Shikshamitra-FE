@@ -114,7 +114,7 @@ export function ApplicationDecisionDialog({
                   multiline
                   minRows={3}
                   size="small"
-                  label={requiresReason ? 'Reason' : 'Reason (optional)'}
+                  label={requiresReason ? 'Reason' : 'Reason'}
                   {...formik.getFieldProps('reason')}
                   error={reasonError}
                   helperText={formik.touched.reason && formik.errors.reason}

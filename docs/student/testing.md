@@ -12,13 +12,13 @@ audience: humans-and-agents
 
 ## Inquiry Row Action Menu
 
-Run `inquiry-management/admission-inquiry-columns.test.ts`, `admission-inquiry-actions.ui.test.tsx`, `use-inquiry-handoff.test.ts` and the shared AdaptiveThreeDotsActions/ThreeDotsActions suites. Verify concise Move to Next Stage and Handling History menu labels, unchanged selected-record callbacks, permissions, disabled reasons and progress. The Inquiry menu opens below its trigger with a theme-spacing gap and a right-aligned arrow; insufficient space below opens it above. Check top and bottom rows at 390/768/1440px in both themes, deferred icon sizing, keyboard focus/activation/Escape and no document overflow. Use synthetic callbacks for browser geometry checks; do not advance real inquiries for presentation verification.
+Run `inquiry-management/admission-inquiry-columns.test.ts`, `admission-inquiry-actions.ui.test.tsx`, `use-inquiry-handoff.test.ts` and the shared AdaptiveThreeDotsActions/ThreeDotsActions suites. Verify concise Start Application and Handling History menu labels, unchanged selected-record callbacks, permissions, disabled reasons and progress. The Inquiry menu opens below its trigger with a theme-spacing gap and a right-aligned arrow; insufficient space below opens it above. Check top and bottom rows at 390/768/1440px in both themes, deferred icon sizing, keyboard focus/activation/Escape and no document overflow. Use synthetic callbacks for browser geometry checks; do not advance real inquiries for presentation verification.
 
 On 18 November 2026, 52 focused tests, full TypeScript, scoped lint/format and Student docs validation pass. Isolated in-app-browser checks at 390/768/1440px verify contained menus, visible arrows, above/below placement, keyboard activation/Escape and unchanged selected-record callbacks; both themes were inspected. Browser geometry confirms no intersection with the originating row's action buttons and no horizontal document overflow. No real inquiry is advanced; deployed acceptance remains separate.
 
 ## Inquiry loading and Follow-Up
 
-Delay the academic choices and verify that New Inquiry shows a skeleton across the Admission Interest card. Change Class and verify that only Offering shows a skeleton, with the selected academic fields still visible. Simulate a slow or failed move to Pipeline and verify that the row menu stays open, the spinner stays on Move to Next Stage while pending, and retry is available after failure. Verify that a successful move closes the menu. In Follow-Up, check the shared empty illustration and apply both Quick templates. Confirm that existing notes are preserved, the status matches the selected template, and saving still requires Submit.
+Delay the academic choices and verify that New Inquiry shows a skeleton across the Admission Interest card. Change Class and verify that only Offering shows a skeleton, with the selected academic fields still visible. Simulate a slow or failed start to Pipeline and verify that the row menu stays open, the spinner stays on Start Application while pending, and retry is available after failure. Verify that a successful start closes the menu. In Follow-Up, check the shared empty illustration and apply both Quick templates. Confirm that existing notes are preserved, the status matches the selected template, and saving still requires Submit.
 
 ## Compact approval and finalization
 
@@ -1583,7 +1583,7 @@ The final seven column tests exercise the actual shared export formatter, includ
 Both affected files passed typed ESLint, Prettier and affected-source TypeScript with zero diagnostics; repository-wide TypeScript was not rerun in this acceptance pass.
 Fresh UI exports produced an eight-column workbook with one active row and a matching landscape PDF; both files excluded Actions and the finalized synthetic application, had no literal boolean text, and passed content checks and PDF render inspection.
 
-The fresh synthetic `INQ-2026-000006` qualification persisted as Interested after reload, and explicit Move to next stage created `APP-2026-000004` while retaining its counsellor and original reminder.
+The fresh synthetic `INQ-2026-000006` qualification persisted as Interested after reload, and the explicit inquiry handoff created `APP-2026-000004` while retaining its counsellor and original reminder.
 Reminder completion persisted before the application journey continued.
 The published five-stage workflow was exercised using an authorized assessment waiver with an explicit synthetic QA reason, saved application-form sections, automatic Form completion, configured manual Documents/Review completion and an auditable admission decision.
 Blank offer expiry and missing core identity blocked progression; a future expiry and identity repair through Applicant 360 resolved those prerequisites.

@@ -47,7 +47,7 @@ export function EligibilityExceptionSettings({
             <CustomSelect
               fullWidth
               size="small"
-              label="Exception Approval Role (Optional)"
+              label="Exception Approval Role"
               value={policy.exceptionApprovalRole ?? ''}
               disabled={disabled || query.isFetching || query.isError}
               options={[

@@ -97,7 +97,7 @@ describe('Fee category editor', () => {
 
     fireEvent.change(feeHeadName, { target: { value: 'Bus Service 2#' } });
     expect(feeHeadName).toHaveValue('Bus Service 2');
-    const descriptions = screen.getAllByRole('textbox', { name: 'Description (optional)' });
+    const descriptions = screen.getAllByRole('textbox', { name: 'Description' });
     fireEvent.change(descriptions[0], { target: { value: 'Fees (2026): 50% concession.' } });
     expect(descriptions[0]).toHaveValue('Fees (2026): 50% concession.');
   });
@@ -245,7 +245,7 @@ describe('Fee category editor', () => {
     expect(screen.getByRole('textbox', { name: 'Fee head name *' })).toHaveValue('Bus Service');
 
     expect(screen.getByRole('button', { name: 'Remove Bus Service' })).toBeDisabled();
-    expect(screen.getAllByRole('textbox', { name: 'Description (optional)' })).toHaveLength(2);
+    expect(screen.getAllByRole('textbox', { name: 'Description' })).toHaveLength(2);
     expect(screen.queryByRole('button', { name: 'Add description' })).toBeNull();
     expect(screen.getByLabelText('Fee head 1')).toHaveTextContent('1');
   });
