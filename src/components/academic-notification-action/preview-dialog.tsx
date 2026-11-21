@@ -15,10 +15,10 @@ import { FormSectionCard } from 'src/components/form-section-card';
 import { useFormikErrorFocus } from 'src/hooks/use-formik-error-focus';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { notificationChannelLabels } from 'src/redux/academic-notifications/response-adapters';
 import { Alert, Stack, Button, Checkbox, Typography, DialogActions, FormControlLabel } from '@mui/material';
 import { notificationRecordId, operationStatusLabels } from 'src/redux/academic-notifications/delivery-adapters';
 import { CommunicationChannelType, CommunicationCampaignStatus } from 'src/redux/communication/communicationTypes';
+import { notificationChannelLabels, notificationQueuePauseMessage } from 'src/redux/academic-notifications/response-adapters';
 
 import { AcademicNotificationReviewDetails } from './review-details';
 import { useReviewedNotificationSend } from './use-reviewed-notification-send';
@@ -98,12 +98,13 @@ export function AcademicNotificationPreviewDialog({
   });
   const canConfirm = Boolean(review?.reviewToken && !stale && !busy);
   const canChoose = !busy && !uncertain;
-  const showQueuePause = operation
-    ? operation.isQueueWorkerEnabled === false && (
-      operation.status === CommunicationCampaignStatus.Queued ||
-      operation.status === CommunicationCampaignStatus.PendingApproval
-    )
-    : !stale && Boolean(review?.reviewToken) && review?.isQueueWorkerEnabled === false;
+  const showQueueStatus = operation
+    ? [CommunicationCampaignStatus.PendingApproval, CommunicationCampaignStatus.Scheduled, CommunicationCampaignStatus.Queued,
+      CommunicationCampaignStatus.Sending].includes(operation.status)
+    : !stale && Boolean(review?.reviewToken);
+  const queuePause = showQueueStatus
+    ? notificationQueuePauseMessage(operation ?? review, form.values.channels)
+    : undefined;
   const history = operation && `${academicPaths.notification}?view=history&${new URLSearchParams({ operation: operation.operationId })}`;
   const missingPrimaryGuardian = choices?.primaryGuardianNotConfigured || (
     review && !stale && (
@@ -209,9 +210,9 @@ export function AcademicNotificationPreviewDialog({
             )}
           </Stack>
         </DialogScrollContent>
-        {showQueuePause && (
+        {queuePause && (
           <Alert severity="warning" variant="outlined" role="status" sx={{ mx: 2, mt: 1, flexShrink: 0 }}>
-            <Typography variant="body2">Notification processing is paused on this server.</Typography>
+            <Typography variant="body2">{queuePause}</Typography>
             <Typography variant="body2">Messages can stay queued until processing resumes.</Typography>
           </Alert>
         )}

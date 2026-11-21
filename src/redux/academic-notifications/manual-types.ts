@@ -1,6 +1,6 @@
-import type { AcademicNotificationChannel } from './types';
 import type { AcademicNotificationSource } from './delivery-types';
 import type { AcademicNotificationTemplatePreview } from './template-types';
+import type { AcademicNotificationChannel, AcademicNotificationQueueStatus } from './types';
 
 export interface AcademicNotificationRecipient {
   kind: string;
@@ -24,12 +24,11 @@ export interface PreviewAcademicNotification extends AcademicNotificationSource 
   selectedFamilyRelationships?: string[];
 }
 
-export interface AcademicNotificationReview {
+export interface AcademicNotificationReview extends AcademicNotificationQueueStatus {
   reviewToken: string | null;
   expiresAt: string | null;
   eligibleRecipientCount: number;
   requiresApproval: boolean;
-  isQueueWorkerEnabled?: boolean;
   channels: {
     channel: AcademicNotificationChannel;
     eligibleRecipientCount: number;

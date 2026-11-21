@@ -36,10 +36,15 @@ export interface AcademicNotificationEvent {
   manualAvailability?: AcademicNotificationEvent['availability'];
 }
 
-export interface AcademicNotificationCatalogue {
+export interface AcademicNotificationQueueStatus {
+  isQueueWorkerEnabled?: boolean;
+  isSchoolQueuePaused?: boolean;
+  pausedChannels?: AcademicNotificationChannel[];
+}
+
+export interface AcademicNotificationCatalogue extends AcademicNotificationQueueStatus {
   events: AcademicNotificationEvent[];
   channels: { channel: AcademicNotificationChannel; isConfigured: boolean }[];
-  isQueueWorkerEnabled?: boolean;
 }
 
 export interface AcademicNotificationCatalogueQueryState {

@@ -13,6 +13,7 @@ const state = vi.hoisted(() => ({
   retry: vi.fn(),
   reads: { isFetching: false, error: undefined as unknown, currentData: null as unknown },
   permissions: { canView: true, canManage: false },
+  queue: {} as { isQueueWorkerEnabled?: boolean; isSchoolQueuePaused?: boolean; pausedChannels?: number[] },
 }));
 
 vi.mock('next/navigation', () => ({
@@ -49,7 +50,7 @@ const rules = {
 };
 vi.mock('src/redux/academic-notifications/api', () => ({
   useAcademicNotificationCatalogueQuery: () => ({
-    currentData: { events: [subject, homework], channels: [{ channel: 3, isConfigured: true }] },
+    currentData: { events: [subject, homework], channels: [{ channel: 3, isConfigured: true }], ...state.queue },
     refetch: state.retry,
   }),
   useAcademicNotificationRulesQuery: () => ({ ...state.reads, refetch: state.retry }),
@@ -70,6 +71,7 @@ describe('Academic notification rules workspace', () => {
     state.retry.mockClear();
     state.reads = { currentData: rules, error: undefined, isFetching: false };
     state.permissions = { canView: true, canManage: false };
+    state.queue = {};
   });
 
   it('uses the catalogue for legacy curriculum links and shows persisted disabled inheritance', () => {
@@ -117,6 +119,13 @@ describe('Academic notification rules workspace', () => {
     render();
     expect(screen.getByRole('button', { name: 'Retry' })).toBeVisible();
     expect(screen.queryByText('No notification rules are available for this scope.')).not.toBeInTheDocument();
+  });
+
+  it('identifies the paused channels while rules remain accessible', () => {
+    state.queue = { isQueueWorkerEnabled: true, pausedChannels: [2] };
+    render();
+    expect(screen.getByRole('status')).toHaveTextContent('Delivery is paused for Email.');
+    expect(screen.getByRole('table', { name: 'Academic notification rules table' })).toBeVisible();
   });
 
   it('does not expose cached rules after view permission is removed', () => {

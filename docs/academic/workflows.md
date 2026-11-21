@@ -104,6 +104,8 @@ Open **Academics → Notification** and select a category and rule scope. The ta
 
 If this server's queue processing is paused, the workspace shows a notice across Rules, Templates, and Delivery History. You can prepare rules and templates and review confirmed sends in Delivery History while processing is paused.
 
+The same notice identifies a pause for the current school or individual delivery channels. A source-based send preview and its confirmation show the pause for the selected channels. Paused channels can keep queued work while other channels continue processing.
+
 For an unavailable event, **Delivery readiness** and **Configure Rule** show which Academic workflow the event needs or which existing notice covers it. The rule stays unavailable until its source workflow supports sending.
 
 Staff with rule edit access can use **Configure** to submit a rule for the selected scope. The primary guardian is included for family events. The editor offers choices for additional guardians, the student account, and other recipients where the event supports them. Enabling requires published templates for the selected recipients and channels. Conflicts keep the current draft open.

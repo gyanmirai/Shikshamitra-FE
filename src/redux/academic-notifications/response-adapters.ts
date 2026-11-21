@@ -3,7 +3,9 @@ import { CommunicationChannelType } from '../communication/communicationTypes';
 import type { PagedResultDto } from '../communication/communicationTypes';
 import type {
   AcademicNotificationEvent,
+  AcademicNotificationChannel,
   AcademicNotificationCatalogue,
+  AcademicNotificationQueueStatus,
   AcademicNotificationRuleListItem,
 } from './types';
 
@@ -13,6 +15,17 @@ export const notificationChannelLabels = {
   [CommunicationChannelType.WebPush]: 'Browser push',
   [CommunicationChannelType.WhatsApp]: 'WhatsApp',
 };
+
+export function notificationQueuePauseMessage(
+  status?: AcademicNotificationQueueStatus | null,
+  selectedChannels?: AcademicNotificationChannel[]
+) {
+  if (status?.isQueueWorkerEnabled === false) return 'Notification processing is paused on this server.';
+  if (status?.isSchoolQueuePaused) return 'Notification processing is paused for this school.';
+  const paused = status?.pausedChannels?.filter((channel) => selectedChannels?.includes(channel) ?? true);
+  if (!paused?.length) return undefined;
+  return `Delivery is paused for ${paused.map((channel) => notificationChannelLabels[channel]).join(', ')}.`;
+}
 
 export function notificationLabel(value: string) {
   return value.replace(/([a-z\d])([A-Z])/g, '$1 $2');

@@ -1,6 +1,6 @@
-import type { AcademicNotificationChannel } from './types';
 import type { AcademicNotificationReview } from './manual-types';
 import type { CommunicationCampaignStatus } from '../communication/communicationTypes';
+import type { AcademicNotificationChannel, AcademicNotificationQueueStatus } from './types';
 
 export enum AcademicDispatchStatus {
   Pending,
@@ -19,10 +19,9 @@ export interface AcademicNotificationSource {
   sourceId: string;
 }
 
-export interface AcademicNotificationOperation {
+export interface AcademicNotificationOperation extends AcademicNotificationQueueStatus {
   operationId: string;
   status: CommunicationCampaignStatus;
-  isQueueWorkerEnabled?: boolean;
 }
 
 export interface AcademicNotificationOperationStatus extends AcademicNotificationSource, AcademicNotificationOperation {

@@ -171,6 +171,27 @@ describe('Reviewed Academic notification', () => {
     expect(paused).not.toBeInTheDocument();
   });
 
+  it('shows the selected paused channel and uses the current school pause after confirmation', async () => {
+    const user = userEvent.setup();
+    mocked.preview.mockImplementationOnce(() => ({ unwrap: async () => ({
+      reviewToken: 'server-review', expiresAt: new Date(Date.now() + 600000).toISOString(),
+      eligibleRecipientCount: 1, requiresApproval: false, channels: [count], samples: [],
+      blockingIssues: [], isQueueWorkerEnabled: true,
+      pausedChannels: [CommunicationChannelType.Email, CommunicationChannelType.WhatsApp],
+    }) }));
+    mocked.send.mockImplementationOnce(() => ({ unwrap: async () => ({
+      ...accepted, isQueueWorkerEnabled: true, isSchoolQueuePaused: true,
+    }) }));
+    renderAction();
+
+    await user.click(screen.getByRole('checkbox', { name: 'Email' }));
+    await user.click(screen.getByRole('button', { name: 'Preview recipients' }));
+    expect(await screen.findByText('Delivery is paused for Email.')).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Confirm send' }));
+    expect(await screen.findByText('Notification processing is paused for this school.')).toBeVisible();
+    expect(screen.queryByText('Delivery is paused for Email.')).not.toBeInTheDocument();
+  });
+
   it('defaults to the primary guardian and sends only explicitly selected family relationships', async () => {
     const user = userEvent.setup();
     const studentContext = {

@@ -6,6 +6,7 @@ import { CustomTabs } from 'src/components/custom-tabs';
 import { academicPaths } from 'src/constants/academic-menu';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useAcademicNotificationCatalogueQuery } from 'src/redux/academic-notifications/api';
+import { notificationQueuePauseMessage } from 'src/redux/academic-notifications/response-adapters';
 
 import { NotificationRulesWorkspace } from './notification-rules-workspace';
 import { NotificationHistoryWorkspace } from './notification-history-workspace';
@@ -28,6 +29,7 @@ export default function AcademicNotificationScreen() {
     templates: 'Manage message templates by event, recipient, channel, and language.',
     history: 'Review assigned approvals and delivery attempts for Academic notifications.',
   }[view];
+  const queuePause = catalogue.isError ? undefined : notificationQueuePauseMessage(catalogue.currentData);
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: 1, minHeight: 0 }}>
       <CustomBreadcrumbs heading="Academic Notifications"
@@ -38,9 +40,9 @@ export default function AcademicNotificationScreen() {
       )}
       {scope.canView && (
         <>
-          {!catalogue.isError && catalogue.currentData?.isQueueWorkerEnabled === false && (
+          {queuePause && (
             <Alert severity="warning" variant="outlined" role="status" sx={{ mx: 1, mb: 1 }}>
-              Notification processing is paused on this server. You can prepare rules and templates, and confirmed sends can still queue.
+              {queuePause} You can prepare rules and templates, and confirmed sends can still queue.
             </Alert>
           )}
           <CustomTabs value={filters.view} aria-label="Academic notification workspace" variant="scrollable"
