@@ -86,6 +86,55 @@ test('status refresh can recover from a read error without recalculating', async
   await expect(page).toHaveURL(/previewRunId=run-1/);
 });
 
+test('the register keeps payroll checks and server criteria in their standard controls', async ({
+  page,
+}) => {
+  await page.goto('/hr/payroll/run-payroll?month=2026-09&previewRunId=run-1');
+  const register = page.getByRole('region', { name: 'Payroll Register' });
+  await expect(register.getByRole('columnheader', { name: /Net pay/ })).toBeVisible();
+  await expect(register.getByRole('columnheader', { name: 'Full-month gross' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'View registrations' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Payroll checks', exact: true }).click();
+  const checks = page.getByRole('dialog', { name: 'Payroll Checks' });
+  await expect(checks.getByRole('button', { name: 'View registrations' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(checks).toHaveCount(0);
+
+  await register.getByRole('button', { name: 'Filter Status' }).click();
+  await page.getByRole('combobox', { name: /^Status/ }).click();
+  await page.getByRole('option', { name: 'Reviewed', exact: true }).click();
+  await page.getByRole('button', { name: 'Apply', exact: true }).click();
+  await expect(page).toHaveURL(/registerState=REVIEWED/);
+  await expect(page.getByRole('dialog', { name: 'Filter Status' })).toHaveCount(0);
+  await expect(register).toHaveAttribute('aria-busy', 'false');
+  await register.getByRole('button', { name: 'Filter Issues' }).click();
+  const issueFilter = page.getByRole('dialog', { name: 'Filter Issues' });
+  await expect(issueFilter).toBeVisible();
+  await issueFilter.getByRole('combobox', { name: /^Issues/ }).click();
+  await page.getByRole('option', { name: 'Blocking issues', exact: true }).click();
+  await page.getByRole('button', { name: 'Apply', exact: true }).click();
+  await expect(page).toHaveURL(/registerIssue=CRITICAL/);
+  await expect(issueFilter).toHaveCount(0);
+  await expect(register).toHaveAttribute('aria-busy', 'false');
+
+  const sorted = page.waitForRequest((request) => {
+    const url = new URL(request.url());
+    return url.pathname === '/api/payroll/run/register' && url.searchParams.get('sort') === 'netPay';
+  });
+  await register.getByRole('button', { name: 'Sort by Net pay' }).click();
+  const criteria = new URL((await sorted).url()).searchParams;
+  expect(criteria.get('reviewState')).toBe('REVIEWED');
+  expect(criteria.get('issueClass')).toBe('CRITICAL');
+  expect(criteria.get('page')).toBe('0');
+  await register.getByRole('button', { name: 'Clear (2)', exact: true }).click();
+  await expect(page).not.toHaveURL(/registerState=|registerIssue=/);
+  await expect(page).toHaveURL(/registerSort=netPay/);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.getByRole('button', { name: 'Payroll checks', exact: true })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
+
 test('HR sends only ready rows and the principal confirms the exact batch', async ({ page }) => {
   const clean = { employeeId: 'staff-1', employeeName: 'Ready Staff', employeeIdentifier: 'S1', payableDays: 22,
     totalEarnings: 10500, totalDeduction: 500, netPay: 10000, grossSalary: 10500, reviewStatus: 'REVIEWED', issueCodes: [] };

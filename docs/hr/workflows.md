@@ -235,17 +235,17 @@ Ignoring an obsolete UI completion does not cancel an already submitted server o
 Opening a payroll month checks for a saved run and resumes existing progress.
 Generate payroll starts the first calculation, and Recalculate payroll requests a replacement after a run exists.
 Retry lookup and Reconnect repeat reads after a loading or polling error.
-Payroll month precedes the View registrations action, which opens the PF and ESIC registration list without resizing the register.
+The month selector and generation action are in the period controls above the register.
+Payroll checks opens a drawer with readiness checks and the PF and ESIC registration list.
 Select all applies to unlocked rows on the current page, and Mark Reviewed acts on the pending rows among them.
 Review operations retain the visible rows while the server saves and the current result reloads.
 After a saved review with a failed reread, Reload rows retries the read.
 Payroll Activity shows recorded reviews, removed reviews, and locks for the selected month and academic year to authorized users with school-wide HR scope.
-Vertical dividers separate preview, readiness/audit, and review/lock action groups on desktop.
-On smaller screens, dividers are hidden and action groups wrap.
+Review and lock actions appear with the selected staff rows.
+On smaller screens, period and selection actions wrap above the register.
 Payroll month stays in the context row.
 Academic year comes from the global header selector without a duplicate page label.
-View readiness uses an outlined button beside the register review, audit, and lock actions.
-Readiness and attention details appear in the drawer.
+Payroll activity and approval settings are secondary period actions where permitted.
 For the approval workflow, the register header also shows month status and the finalized staff count.
 The read-only drawer starts closed, opens from the right on desktop, and fills the screen on mobile.
 Its checks cover attendance, salary setup, payroll policies, and additional server-reported blockers.
@@ -264,7 +264,9 @@ Failures retain a Retry action, and navigation or changing month/year clears pen
 ### Run Payroll approval
 
 The register opens saved working rows and issued payroll for the selected month.
-Search, status, issue and sort criteria apply before pagination and carry through to the register export.
+Status and issue filters live in their table columns.
+The Staff, Payable days, Net pay and Variance columns support register sorting.
+Search, filters and sorting apply before pagination and carry through to the register export.
 HR selects reviewed staff who are ready and uses Send for approval to hand the selection to the school's designated principal or admin.
 Approval batches shows incoming and outgoing batches, exact staff, earnings, deductions and net pay.
 An authorized approver confirms the whole batch from its details.
