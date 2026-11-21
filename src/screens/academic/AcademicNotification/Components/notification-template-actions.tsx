@@ -24,13 +24,14 @@ const actionLabels: Record<TemplateAction, string> = {
 };
 
 export function NotificationTemplateActions({
-  identity, template, canManage, canDelete, disabled, busy, onBusy, onSaved, onDeleted, onError,
+  identity, template, canManage, canDelete, disabled, testDisabled, busy, onBusy, onSaved, onDeleted, onError,
 }: {
   identity: AcademicNotificationCacheIdentity;
   template: AcademicNotificationTemplate;
   canManage: boolean;
   canDelete: boolean;
   disabled: boolean;
+  testDisabled: boolean;
   busy: boolean;
   onBusy: (value: boolean) => void;
   onSaved: (template: AcademicNotificationTemplate) => void;
@@ -52,7 +53,7 @@ export function NotificationTemplateActions({
   };
 
   async function run() {
-    if (!selected || busy || disabled) return;
+    if (!selected || busy || disabled || (selected === 'test' && testDisabled)) return;
     onBusy(true);
     const request = { ...identity, templateId, command: { revisionId, concurrencyStamp } };
     try {
@@ -96,7 +97,7 @@ export function NotificationTemplateActions({
           <Button size="small" disabled={disabled || busy} onClick={() => setSelected('restore')}>Restore default as draft</Button>
         )}
         {canManage && !template.isRetired && (
-          <Button size="small" disabled={disabled || busy} onClick={() => setSelected('test')}>Send test</Button>
+          <Button size="small" disabled={disabled || busy || testDisabled} onClick={() => setSelected('test')}>Send test</Button>
         )}
         {canDelete && currentDraft && (
           <Button size="small" color="error" disabled={disabled || busy} onClick={() => setSelected('delete')}>Delete draft</Button>
@@ -115,7 +116,7 @@ export function NotificationTemplateActions({
           onClose={() => { if (!busy) setSelected(null); }}
           disableCancel={busy} disableEscapeKeyDown={busy} disableBackdropClick={busy}
           action={<Button variant="contained" color={selected === 'delete' ? 'error' : 'primary'}
-            loading={busy} onClick={() => run()}>{actionLabels[selected]}</Button>} />
+            loading={busy} disabled={selected === 'test' && testDisabled} onClick={() => run()}>{actionLabels[selected]}</Button>} />
       )}
     </>
   );

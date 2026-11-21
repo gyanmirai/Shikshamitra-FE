@@ -24,6 +24,8 @@ The catalogue cache is keyed by tenant and user. The task reminder reads `manual
 
 `src/redux/academic-notifications/template-api.ts` reads templates by event, medium, name search, and page. It loads history and sample previews on demand. Queries key the school and account, and mutations recheck the request owner before sending.
 
+`src/redux/academic-notifications/whatsapp-approval-api.ts` loads the provider binding context by exact template revision. The editor uses the returned provider setting for linking and reloads that context after a successful submit or refresh. Queries and writes carry the same school and account ownership.
+
 Draft edits and publication send the saved revision stamp. Creating a subsequent draft or restoring default wording sends the template header stamp. Successful revisions refresh template lists, previews, history, and the published choices used by Rules for the same session.
 
 Test send submits just the saved revision ID and stamp. Its queued response provides the operation ID for the sender's Delivery History link.

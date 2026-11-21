@@ -94,6 +94,11 @@ export function NotificationRuleFields({ row, form, templates, isLoading, isErro
             .map((channel) => ({ value: channel, label: notificationChannelLabels[channel] }))}
           value={current.channels.filter((channel) => channel !== CommunicationChannelType.InApp)}
           onChange={(channels) => form.setFieldValue('channels', [CommunicationChannelType.InApp, ...channels as AcademicNotificationChannel[]])} />
+        {current.channels.includes(CommunicationChannelType.WhatsApp) && (
+          <Typography variant="body2" color="text.secondary">
+            WhatsApp delivery requires provider approval for the selected template version and language.
+          </Typography>
+        )}
         {isError && <Alert severity="error" action={<Button size="small" onClick={retry}>Retry</Button>}>
           Published templates could not be loaded.
         </Alert>}

@@ -4,6 +4,59 @@ import { login, prepare, snapshot, fixtureApi, expectHealthy } from './academic-
 
 const tag = ['@module-academic', '@submodule-notifications', '@regression', '@responsive', '@accessibility'];
 
+test('links a published WhatsApp revision and waits for provider approval before test send', { tag }, async ({ page, request }) => {
+  await request.post(`${fixtureApi}/fixture/reset`, {
+    data: { visited: true, notificationRules: true, whatsappApproval: true, notificationTemplateTest: true },
+  });
+  await prepare(page, request);
+  await login(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/academic/notification?view=templates');
+  await page.getByRole('button', { name: 'New template' }).click();
+  const drawer = page.getByRole('dialog', { name: 'New notification template' });
+  await drawer.getByRole('textbox', { name: 'Template name' }).fill('Homework WhatsApp');
+  await drawer.getByRole('combobox', { name: 'Delivery channel' }).click();
+  await page.getByRole('option', { name: 'WhatsApp', exact: true }).click();
+  await drawer.getByRole('textbox', { name: 'Message' }).fill('Homework for {{student_name}}. Open the school website.');
+  await drawer.getByRole('button', { name: 'Save draft' }).click();
+  const testSend = drawer.getByRole('button', { name: 'Send test' });
+  await expect(testSend).toBeDisabled();
+  await drawer.getByRole('button', { name: 'Publish draft' }).click();
+  await page.getByRole('dialog', { name: 'Publish draft' }).getByRole('button', { name: 'Publish draft' }).click();
+
+  await drawer.getByRole('button', { name: 'Link WhatsApp template' }).click();
+  const link = page.getByRole('dialog', { name: 'Link WhatsApp Template' });
+  await link.getByRole('textbox', { name: 'Meta template name' }).fill('homework_notice');
+  await link.getByRole('button', { name: 'Link template' }).click();
+  await expect(link).toBeHidden();
+  await drawer.getByRole('button', { name: 'Submit for approval' }).click();
+  const submit = page.getByRole('dialog', { name: 'Submit for WhatsApp Approval' });
+  await submit.getByRole('button', { name: 'Submit for approval' }).click();
+  await expect(drawer.getByText('Awaiting provider approval', { exact: true })).toBeVisible();
+  await expect(testSend).toBeDisabled();
+  await drawer.getByRole('button', { name: 'Refresh status' }).click();
+  const approval = drawer.getByText('Approved by provider', { exact: true });
+  await expect(approval).toBeVisible();
+  await expect(testSend).toBeEnabled();
+  await expectHealthy(page);
+  await page.setViewportSize({ width: 768, height: 1024 });
+  await approval.scrollIntoViewIfNeeded();
+  await expect(approval).toBeInViewport();
+  await expectHealthy(page);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await approval.scrollIntoViewIfNeeded();
+  await expect(approval).toBeInViewport();
+  await expectHealthy(page);
+  await testSend.click();
+  await page.getByRole('dialog', { name: 'Queue test send' }).getByRole('button', { name: 'Queue test send' }).click();
+  await expect(drawer.getByText('Template test queued.')).toBeVisible();
+  const writes = (await snapshot(request)).whatsappApprovalWrites;
+  expect(writes.map((write: { action: string }) => write.action)).toEqual(['link', 'submit', 'sync']);
+  expect(writes[0]).toMatchObject({
+    providerTemplateName: 'homework_notice', templateId: expect.any(String), revisionId: expect.any(String),
+  });
+});
+
 test('explains what an unavailable event needs in Rules and Configure Rule', { tag }, async ({ page, request }) => {
   await request.post(`${fixtureApi}/fixture/reset`, { data: { visited: true, notificationRules: true } });
   await prepare(page, request);

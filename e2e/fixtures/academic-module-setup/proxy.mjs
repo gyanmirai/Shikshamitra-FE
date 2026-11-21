@@ -7,6 +7,7 @@ import { insightsPermissions } from './insights.mjs';
 import { createNotificationRulesFixture } from './notification-rules.mjs';
 import { createNotificationDeliveriesFixture } from './notification-deliveries.mjs';
 import { createNotificationTemplateTestFixture } from './notification-template-test.mjs';
+import { createWhatsAppApprovalFixture } from './notification-whatsapp-approval.mjs';
 import { createManualNotificationFixture, manualNotificationPermissions } from './notification-manual.mjs';
 import { paged, year, board, medium, ids } from './data.mjs';
 
@@ -20,6 +21,7 @@ let notificationRules = null;
 let notificationDeliveries = createNotificationDeliveriesFixture();
 let manualNotification = null;
 let notificationTemplateTest = null;
+let whatsappApproval = null;
 export const server = http.createServer(async (request, response) => {
   response.setHeader(
     'Access-Control-Allow-Origin',
@@ -53,6 +55,7 @@ export const server = http.createServer(async (request, response) => {
   if (url.pathname === '/fixture/reset') {
     fixture = createAcademicFixture(body);
     notificationTemplateTest = body.notificationTemplateTest === true ? createNotificationTemplateTestFixture() : null;
+    whatsappApproval = body.whatsappApproval === true ? createWhatsAppApprovalFixture() : null;
     notificationRules = body.notificationRules === true ? createNotificationRulesFixture(notificationTemplateTest?.queue) : null;
     notificationDeliveries = createNotificationDeliveriesFixture(
       body.notificationDeliveries === true, body.notificationRetry, body.notificationApproval,
@@ -66,7 +69,8 @@ export const server = http.createServer(async (request, response) => {
     return;
   }
   if (url.pathname === '/fixture/snapshot') {
-    send(200, { ...fixture.snapshot(), notificationRuleWrites: notificationRules?.writes ?? [], manualNotificationWrites: manualNotification?.writes });
+    send(200, { ...fixture.snapshot(), notificationRuleWrites: notificationRules?.writes ?? [],
+      manualNotificationWrites: manualNotification?.writes, whatsappApprovalWrites: whatsappApproval?.writes });
     return;
   }
   if (url.pathname === '/fixture/mark-visited') {
@@ -85,6 +89,7 @@ export const server = http.createServer(async (request, response) => {
       groups: [
         {
           permissions: [...insightsPermissions(fixture.state.insights), ...(notificationRules ? ['Academics.Notification.Add'] : []),
+            ...(whatsappApproval ? ['Communication.Settings.ProviderSettings.View', 'Communication.Settings.ProviderSettings.Add'] : []),
             ...(manualNotification ? manualNotificationPermissions : [])].map((name) => ({
             name,
             isGranted: true,
@@ -121,6 +126,7 @@ export const server = http.createServer(async (request, response) => {
   if (notificationTemplateTest?.handle(url, request.method, claims.sub, send)) return;
   if (notificationDeliveries(url, request.method, claims.sub, send)) return;
   if (claims.sub && notificationRules?.handle(url, request.method, body, send)) return;
+  if (claims.sub && whatsappApproval?.handle(url, request.method, body, send)) return;
   if (url.pathname.startsWith(pushPath + '/')) {
     if (!claims.sub) { send(401, {}); return; }
     if (url.pathname === pushPath + '/public-key' && request.method === 'GET') {

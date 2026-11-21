@@ -134,6 +134,8 @@ Save the draft and load its preview with sample data. Publish it to make that ve
 
 **Send test** queues the saved version for the configured test destination using sample data. WhatsApp delivery requires provider approval for the exact version and language.
 
+For WhatsApp, publish the intended version and open **WhatsApp Approval**. Staff with both template write access and Provider Settings Add can choose **Link WhatsApp template**, enter the Meta template name, and select **Submit for approval**. Use **Refresh status** to check the provider outcome. Provider Settings View allows staff to inspect status within their Academic scope. The approval panel keeps **Send test** disabled until the displayed version is approved for the provider configured for delivery.
+
 ## Review and send a task reminder
 
 In **Evaluation & Feedback**, select a published homework or assignment, then use **Send reminder** on an unsubmitted student's row. The action is available when the school has the corresponding Academic event integration. The review applies the current recipient rule, which defaults family notices to the primary guardian.

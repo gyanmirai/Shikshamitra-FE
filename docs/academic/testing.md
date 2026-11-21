@@ -122,6 +122,8 @@ Run `npm test -- src/screens/academic/AcademicNotification src/components/notifi
 
 The unavailable-event case checks the source explanation in the Rules table and configuration drawer. It verifies the disabled Enabled switch and readable drawer content at phone, tablet and desktop widths.
 
+The WhatsApp approval case publishes a revision, links it to a synthetic provider, submits for approval and refreshes its status. It checks phone, tablet and desktop layouts and queues a sample test after approval. The approval panel unit cases cover a view-only staff account and a changed provider binding.
+
 Run `npm test -- src/components/academic-notification-action` for reviewed sends, repeated confirmation clicks, changed reviews, and interrupted confirmation retries. The focused Playwright config also verifies that a reminder from the Homework evaluation table supplies exactly the selected student and opens the queued operation. This scenario uses a synthetic source and sends only to the fixture API.
 
 `e2e/academic/academic-notifications.spec.ts` checks the saved template preview, the test-send confirmation, the linked operation's queued and delivered states, and the sample in the personal inbox at the three standard viewport sizes. It uses the same focused Playwright config and the synthetic delivery fixture.

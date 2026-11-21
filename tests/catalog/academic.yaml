@@ -1,6 +1,20 @@
 module: Academic
 generatedAt: 2026-07-29
 scenarios:
+  - id: ACM-NOTIFICATION-WHATSAPP-APPROVAL-001
+    module: Academic
+    submodule: Notification
+    title: Staff link a published WhatsApp template revision and follow provider approval
+    risk: high
+    priority: P1
+    type: [functional, regression, responsive, accessibility]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/academic/notification]
+    automated: true
+    automationFile: e2e/academic/academic-notification-rules.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-notifications', '@regression', '@responsive', '@accessibility']
   - id: ACM-NOTIFICATION-AVAILABILITY-001
     module: Academic
     submodule: Notification

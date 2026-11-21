@@ -260,11 +260,11 @@
         {
           "name": "Notification",
           "routes": ["/academic/notification"],
-          "apis": ["/api/academic/notifications/catalogue", "/api/academic/notifications/rules", "/api/academic/notifications/rules/{eventKey}", "/api/academic/notifications/templates/options", "/api/academic/notifications/templates/{id}/test-send", "/api/academic/notifications/history", "/api/academic/notifications/dispatches/{id}/retry", "/api/academic/notifications/operations/{id}", "/api/academic/notifications/operations/pending-approvals", "/api/academic/notifications/operations/{id}/approval-review", "/api/academic/notifications/operations/{id}/approve", "/api/academic/notifications/operations/{id}/reject"],
+          "apis": ["/api/academic/notifications/catalogue", "/api/academic/notifications/rules", "/api/academic/notifications/rules/{eventKey}", "/api/academic/notifications/templates/options", "/api/academic/notifications/templates/{id}/test-send", "/api/academic/notifications/history", "/api/academic/notifications/dispatches/{id}/retry", "/api/academic/notifications/operations/{id}", "/api/academic/notifications/operations/pending-approvals", "/api/academic/notifications/operations/{id}/approval-review", "/api/academic/notifications/operations/{id}/approve", "/api/academic/notifications/operations/{id}/reject", "/api/communication/notifications/providers/whatsapp/templates/context", "/api/communication/notifications/providers/whatsapp/templates", "/api/communication/notifications/providers/whatsapp/templates/{id}/submit", "/api/communication/notifications/providers/whatsapp/templates/{id}/sync"],
           "roles": ["academic-admin"],
           "permissions": ["Academics.Notification.View", "Academics.Notification.Add"],
           "forms": ["notification rule editor"],
-          "businessActions": ["view effective notification rules", "review an unavailable event's source requirement", "save a scoped notification rule", "request a retry for a definitively rejected channel attempt", "review and decide an assigned notification approval", "follow a template test from its confirmation to delivery history and the personal inbox"],
+          "businessActions": ["view effective notification rules", "review an unavailable event's source requirement", "save a scoped notification rule", "link a WhatsApp template and review provider approval", "request a retry for a definitively rejected channel attempt", "review and decide an assigned notification approval", "follow a template test from its confirmation to delivery history and the personal inbox"],
           "risk": "high",
           "status": "confirmed"
         },
