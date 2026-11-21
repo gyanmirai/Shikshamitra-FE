@@ -116,7 +116,7 @@ scenarios:
   - id: ACM-NOTIFICATION-DELIVERY-RETRY-001
     module: Academic
     submodule: Notification
-    title: Staff confirm a retry of one definitively rejected delivery attempt in Academic history
+    title: Staff can see the delivery status and confirm a retry of one rejected attempt on a phone
     risk: high
     priority: P1
     type: [functional, regression, responsive, accessibility]
@@ -158,7 +158,7 @@ scenarios:
   - id: ACM-NOTIFICATION-DELIVERY-HISTORY-001
     module: Academic
     submodule: Notification
-    title: Staff inspect scoped per-channel delivery evidence and filter attempts by acceptance status
+    title: Staff can see delivery status while scrolling on a phone and filter attempts by acceptance status
     risk: high
     priority: P1
     type: [functional, regression, responsive, accessibility]

@@ -13,16 +13,19 @@ const columns: IColumn[] = [
   { id: 'recorded', label: 'Recorded', minWidth: 180, rowHeader: true },
   { id: 'recipient', label: 'Recipient type', minWidth: 130 },
   { id: 'channelName', label: 'Channel', minWidth: 110 },
-  { id: 'status', label: 'Delivery status', minWidth: 150, render: (value: AcademicDispatchStatus) => (
-    <Label color={value === AcademicDispatchStatus.UnknownAcceptance ? 'warning' : 'default'}>
-      {dispatchStatusLabels[value] ?? 'Status unavailable'}
-    </Label>
-  ) },
   { id: 'attempt', label: 'Attempt', minWidth: 90 },
   { id: 'reason', label: 'Details', minWidth: 180 },
   { id: 'accepted', label: 'Accepted at', minWidth: 180, defaultHidden: true },
   { id: 'delivered', label: 'Delivered at', minWidth: 180, defaultHidden: true },
   { id: 'read', label: 'Read at', minWidth: 180, defaultHidden: true },
+  {
+    id: 'status', label: 'Delivery status', minWidth: 150, sticky: true, stickyPosition: 'right' as const,
+    render: (value: AcademicDispatchStatus) => (
+      <Label color={value === AcademicDispatchStatus.UnknownAcceptance ? 'warning' : 'default'}>
+        {dispatchStatusLabels[value] ?? 'Status unavailable'}
+      </Label>
+    ),
+  },
 ].map((column) => ({ ...column, isSort: false }));
 const columnsWithActions: IColumn[] = [...columns, {
   id: 'actions', label: 'Actions', minWidth: 125, isSort: false, sticky: true, stickyPosition: 'right',

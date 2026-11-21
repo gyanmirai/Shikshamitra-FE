@@ -375,8 +375,20 @@ test('shows scoped delivery evidence and filters unknown acceptance on a phone',
   await page.goto('/academic/notification?view=history&operation=5d643be1-59a9-4d91-a7b1-7dbd9b673011');
   const table = page.getByRole('table', { name: 'Academic notification delivery history table' });
   await expect(page.getByText('Partially failed', { exact: true })).toBeVisible();
-  await expect(table.getByText('Delivered', { exact: true })).toBeVisible();
-  await expect(table.getByText('Acceptance unknown', { exact: true })).toBeVisible();
+  const delivered = table.getByText('Delivered', { exact: true });
+  const unknown = table.getByText('Acceptance unknown', { exact: true });
+  await expect(delivered).toBeInViewport({ ratio: 1 });
+  await expect(unknown).toBeInViewport({ ratio: 1 });
+  const scrollLeft = await table.evaluate((element) => {
+    const scroll = element.closest<HTMLElement>('.simplebar-content-wrapper');
+    if (!scroll) throw new Error('Delivery history is missing its table scroll container.');
+    scroll.scrollLeft = scroll.scrollWidth;
+    return scroll.scrollLeft;
+  });
+  expect(scrollLeft).toBeGreaterThan(0);
+  await expect(table.getByRole('columnheader', { name: 'Delivery status' })).toBeInViewport({ ratio: 1 });
+  await expect(delivered).toBeInViewport({ ratio: 1 });
+  await expect(unknown).toBeInViewport({ ratio: 1 });
   await page.getByRole('combobox', { name: 'Delivery status' }).click();
   await page.getByRole('option', { name: 'Acceptance unknown', exact: true }).click();
   await expect(table.getByText('Delivered', { exact: true })).toHaveCount(0);
@@ -393,6 +405,8 @@ test('confirms a retry for the exact rejected email attempt and refreshes queued
   const table = page.getByRole('table', { name: 'Academic notification delivery history table' });
   const retry = table.getByRole('button', { name: 'Retry Email' });
   await expect(retry).toHaveCount(1);
+  await expect(retry).toBeInViewport({ ratio: 1 });
+  await expect(table.getByText('Failed', { exact: true })).toBeInViewport({ ratio: 1 });
   await expect(table.getByRole('row').filter({ hasText: 'Acceptance unknown' }).getByRole('button', { name: /Retry/ })).toHaveCount(0);
   await retry.click();
   const confirmation = page.getByRole('dialog', { name: 'Retry Delivery' });
