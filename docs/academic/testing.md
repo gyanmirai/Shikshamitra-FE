@@ -147,6 +147,7 @@ npx playwright test --config e2e/academic/academic-notification-push.config.mjs
 The synthetic school fixture verifies opt-in and opt-out in the authenticated desktop browser.
 It verifies that the same-origin notification launch URL opens the drawer at a mobile viewport.
 It also verifies iPad Home Screen guidance, retries after temporary status failures, and explicit opt-in after a subscription expires.
+The session-expiry fixture rejects enrollment with HTTP 401 and checks that local device enrollment is removed before the user returns to sign-in.
 The student message stays inside the authenticated application.
 Physical Android delivery and iPhone Home Screen permission and delivery need a configured test school and real devices.
 

@@ -61,6 +61,7 @@ Opening the bell checks the saved registration with the server when the device s
 A missing or disabled registration releases the stale browser subscription so the next explicit opt-in can enroll it again.
 If the status check fails temporarily, the bell offers a retry and preserves the browser subscription.
 Account changes and sign-out unsubscribe the browser locally so a previous account's endpoint can stop receiving pushes after its session expires.
+During enrollment, the API request leaves the browser available for session cleanup. The response confirms the registration only while the signed-in account and browser subscription still match the enrollment in progress.
 The root manifest and `public/notification-sw.js` use the school origin.
 The worker displays generic notices and opens or focuses the authenticated dashboard and Notifications drawer.
 The worker registers no fetch handler and keeps no authenticated cache.

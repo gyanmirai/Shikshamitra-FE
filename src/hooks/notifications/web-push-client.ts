@@ -20,36 +20,48 @@ export async function enableWebPush(
   // Subscribe immediately from the click so mobile browsers can show the permission prompt.
   const subscription = await worker.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
 
-  return withPushDevice(async () => {
+  const { draft, input } = await withPushDevice(async () => {
+    const live = await worker.pushManager.getSubscription();
     const current = readPushDevice();
     if (!isCurrentPushOwner(owner)) {
-      if (!current?.id) await subscription.unsubscribe();
+      if (!current && live?.endpoint === subscription.endpoint) await live.unsubscribe();
       throw new Error('The account changed.');
     }
-    const live = await worker.pushManager.getSubscription();
     const json = subscription.toJSON();
     if (live?.endpoint !== subscription.endpoint || !json.keys?.p256dh || !json.keys.auth)
       throw new Error('Browser registration expired.');
     const installationId = current?.owner === owner ? current.installationId : crypto.randomUUID();
-    const draft = { owner, id: null, installationId, version, revision: crypto.randomUUID() };
-    savePushDevice(draft);
-    try {
-      const { id } = await register({
+    const pendingDevice = { owner, id: null, installationId, version, revision: crypto.randomUUID() };
+    savePushDevice(pendingDevice);
+    return {
+      draft: pendingDevice,
+      input: {
         browserInstallationId: installationId,
         endpoint: subscription.endpoint,
         keys: { p256dh: json.keys.p256dh, auth: json.keys.auth },
         vapidKeyVersion: version,
-      });
-      if (!id) throw new Error('Registration was not confirmed.');
-      if (!isCurrentPushOwner(owner)) {
-        await subscription.unsubscribe();
-        throw new Error('The account changed.');
-      }
-      savePushDevice({ ...draft, id });
-      return id;
-    } catch (error) {
-      await subscription.unsubscribe().catch(() => undefined);
-      throw error;
-    }
+      },
+    };
   });
+
+  const ownsDraft = () => isCurrentPushOwner(owner) && readPushDevice()?.revision === draft.revision;
+  try {
+    // Session recovery can unsubscribe this device while the request is pending.
+    const { id } = await register(input);
+    if (!id) throw new Error('Registration was not confirmed.');
+    await withPushDevice(async () => {
+      const live = await worker.pushManager.getSubscription();
+      if (!ownsDraft()) throw new Error('Browser registration changed.');
+      if (live?.endpoint !== subscription.endpoint) throw new Error('Browser registration expired.');
+      savePushDevice({ ...draft, id });
+    });
+    return id;
+  } catch (error) {
+    await withPushDevice(async () => {
+      if (!ownsDraft()) return;
+      const live = await worker.pushManager.getSubscription();
+      if (ownsDraft() && live?.endpoint === subscription.endpoint) await live.unsubscribe();
+    }).catch(() => undefined);
+    throw error;
+  }
 }

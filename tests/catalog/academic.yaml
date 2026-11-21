@@ -253,6 +253,20 @@ scenarios:
     automationFile: e2e/academic/academic-notification-push.spec.ts
     status: automated
     tags: ['@module-academic', '@submodule-notifications', '@regression', '@responsive', '@accessibility']
+  - id: ACM-NOTIFICATIONS-WEB-PUSH-004
+    module: Academic
+    submodule: Browser Notifications
+    title: An expired session during enrollment revokes the browser subscription and returns to sign-in
+    risk: high
+    priority: P1
+    type: [functional, regression, responsive, accessibility]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/academic/dashboard, /login]
+    automated: true
+    automationFile: e2e/academic/academic-notification-push.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-notifications', '@regression', '@responsive', '@accessibility']
   - id: ACM-INSIGHTS-LOADING-CACHE-001
     module: Academic
     submodule: Dashboard

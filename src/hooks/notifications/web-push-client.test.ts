@@ -104,4 +104,45 @@ describe('browser notification registration', () => {
     expect(unsubscribe).toHaveBeenCalledOnce();
     expect(device.readPushDevice()).toBeNull();
   });
+
+  it('allows session expiry to detach the browser while enrollment is awaiting the server', async () => {
+    const { device, client, registration, unsubscribe } = await fixture();
+    const expired = new Error('The session expired.');
+
+    await expect(client.enableWebPush(registration, key, owner, 'v1', async () => {
+      await device.setWebPushOwner(null);
+      throw expired;
+    })).rejects.toThrow(expired);
+
+    expect(unsubscribe).toHaveBeenCalledOnce();
+    expect(device.readPushDevice()).toBeNull();
+  });
+
+  it.each([
+    { account: 'the same account', nextOwner: owner, previousUnsubscriptions: 0 },
+    { account: 'a new account', nextOwner: 'school-b:guardian-b', previousUnsubscriptions: 1 },
+  ])('preserves enrollment for $account when the previous request fails late', async ({
+    nextOwner,
+    previousUnsubscriptions,
+  }) => {
+    const { device, client, registration, unsubscribe } = await fixture();
+    let resolveStarted!: () => void;
+    let rejectFirst!: (error: Error) => void;
+    const started = new Promise<void>((resolve) => { resolveStarted = resolve; });
+    const pending = new Promise<{ id: string }>((_, reject) => { rejectFirst = reject; });
+    const first = client.enableWebPush(registration, key, owner, 'v1', () => {
+      resolveStarted();
+      return pending;
+    });
+    const firstResult = expect(first).rejects.toThrow('The old request failed.');
+    await started;
+
+    await device.setWebPushOwner(nextOwner);
+    await client.enableWebPush(registration, key, nextOwner, 'v1', async () => ({ id: 'replacement' }));
+    rejectFirst(new Error('The old request failed.'));
+    await firstResult;
+
+    expect(unsubscribe).toHaveBeenCalledTimes(previousUnsubscriptions);
+    expect(device.readPushDevice()).toMatchObject({ owner: nextOwner, id: 'replacement' });
+  });
 });

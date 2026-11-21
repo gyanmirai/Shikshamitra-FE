@@ -103,6 +103,31 @@ test.describe('Website push on a registered device', { tag }, () => {
     expect(actions[1]).toMatchObject({ action: 'register', user: registration.user });
     expect(actions[1].id).not.toBe(registration.id);
   });
+
+  test('session expiry during push enrollment cleans up and returns to sign-in', async ({ page, request }) => {
+    const enrollment = '**/api/communication/notifications/me/push/subscriptions';
+    await page.route(enrollment, async (route) => {
+      if (route.request().method() !== 'POST') {
+        await route.continue();
+        return;
+      }
+      await route.fulfill({ status: 401, json: { message: 'Fixture session expired' } });
+    });
+    await login(page);
+    await page.goto('/academic/dashboard');
+    await page.getByRole('button', { name: 'Open notifications' }).click();
+    const rejected = page.waitForResponse((response) =>
+      response.url().endsWith('/push/subscriptions') && response.status() === 401
+    );
+    await page.getByRole('button', { name: 'Enable browser notifications', exact: true }).click();
+    await rejected;
+    await expect(page).toHaveURL(/\/login(?:\?|$)/);
+    expect(await page.evaluate(() => ({
+      subscription: localStorage.getItem('fixture:browser-push-subscription'),
+      registration: localStorage.getItem('shikshamitra:website-push:device'),
+    }))).toEqual({ subscription: null, registration: null });
+    expect((await snapshot(request)).pushActions).toEqual([]);
+  });
 });
 
 test('an iPad browser tab explains how to enable notifications from the Home Screen', { tag }, async ({ page, request }) => {
