@@ -7,6 +7,7 @@ export type BrowserPushDevice = {
   id: string | null;
   installationId: string;
   version: string;
+  revision?: string;
 };
 
 let activeOwner: string | null | undefined;
@@ -19,6 +20,14 @@ export const isWebPushSupported = () =>
   'Notification' in window &&
   'PushManager' in window;
 
+export function needsPushHomeScreenInstallation() {
+  if (typeof window === 'undefined' || !window.isSecureContext) return false;
+  const appleMobile = navigator as Navigator & { standalone?: boolean };
+  const isAppleMobile = /iPad|iPhone|iPod/.test(appleMobile.userAgent) ||
+    (appleMobile.platform === 'MacIntel' && appleMobile.maxTouchPoints > 1);
+  return isAppleMobile && !appleMobile.standalone && !window.matchMedia('(display-mode: standalone)').matches;
+}
+
 export const webPushOwner = (tenant?: string | null, user?: string | null) =>
   tenant && user ? `${tenant}:${user}` : null;
 
@@ -30,6 +39,7 @@ export function readPushDevice(): BrowserPushDevice | null {
     return typeof value?.owner === 'string' &&
       typeof value.installationId === 'string' &&
       typeof value.version === 'string' &&
+      (value.revision === undefined || typeof value.revision === 'string') &&
       (typeof value.id === 'string' || value.id === null)
       ? (value as BrowserPushDevice)
       : null;

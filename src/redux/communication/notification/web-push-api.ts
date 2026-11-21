@@ -20,6 +20,14 @@ export const webPushApi = api.injectEndpoints({
     getWebPushKey: builder.query<WebPushPublicKey, string>({
       query: (owner) => ({ url: `${route}/public-key`, cache: 'no-store', expectedSessionOwner: owner, timeout: 5000 }),
     }),
+    getWebPushSubscriptionStatus: builder.query<{ isEnabled: boolean }, { owner: string; id: string }>({
+      query: ({ owner, id }) => ({
+        url: `${route}/subscriptions/${encodeURIComponent(id)}`,
+        cache: 'no-store',
+        expectedSessionOwner: owner,
+        timeout: 5000,
+      }),
+    }),
     registerWebPush: builder.mutation<{ id: string }, { owner: string; registration: WebPushRegistration }>({
       query: ({ owner, registration }) => ({
         url: `${route}/subscriptions`,
@@ -40,5 +48,9 @@ export const webPushApi = api.injectEndpoints({
   }),
 });
 
-export const { useGetWebPushKeyQuery, useRegisterWebPushMutation, useDisableWebPushMutation } =
-  webPushApi;
+export const {
+  useGetWebPushKeyQuery,
+  useRegisterWebPushMutation,
+  useDisableWebPushMutation,
+  useLazyGetWebPushSubscriptionStatusQuery,
+} = webPushApi;

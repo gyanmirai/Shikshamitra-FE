@@ -31,7 +31,7 @@ export async function enableWebPush(
     if (live?.endpoint !== subscription.endpoint || !json.keys?.p256dh || !json.keys.auth)
       throw new Error('Browser registration expired.');
     const installationId = current?.owner === owner ? current.installationId : crypto.randomUUID();
-    const draft = { owner, id: null, installationId, version };
+    const draft = { owner, id: null, installationId, version, revision: crypto.randomUUID() };
     savePushDevice(draft);
     try {
       const { id } = await register({

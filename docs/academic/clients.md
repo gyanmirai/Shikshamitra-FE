@@ -54,9 +54,12 @@ The submitted Teacher Diary drawer loads available follow-up recipients using th
 
 ## Browser notifications
 
-`src/redux/communication/notification/web-push-api.ts` injects the public-key, register and disable operations into the shared authenticated API.
+`src/redux/communication/notification/web-push-api.ts` injects the public-key, status, register and disable operations into the shared authenticated API.
 Each operation checks the expected school and account against the session that supplies the request token.
 `src/hooks/notifications/web-push-device.ts` stores the browser installation and subscription IDs for the signed-in account.
+Opening the bell checks the saved registration with the server when the device still has a browser subscription.
+A missing or disabled registration releases the stale browser subscription so the next explicit opt-in can enroll it again.
+If the status check fails temporarily, the bell offers a retry and preserves the browser subscription.
 Account changes and sign-out unsubscribe the browser locally so a previous account's endpoint can stop receiving pushes after its session expires.
 The root manifest and `public/notification-sw.js` use the school origin.
 The worker displays generic notices and opens or focuses the authenticated dashboard and Notifications drawer.

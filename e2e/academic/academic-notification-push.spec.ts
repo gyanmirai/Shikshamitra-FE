@@ -62,4 +62,62 @@ test.describe('Website push on a registered device', { tag }, () => {
     await expectHealthy(page);
     expect((await snapshot(request)).pushActions).toEqual([]);
   });
+
+  test('the bell checks saved enrollment and recovers an expired subscription', async ({ page, request }) => {
+    let status = 200;
+    let isEnabled = true;
+    await page.route('**/api/communication/notifications/me/push/subscriptions/*', async (route) => {
+      if (route.request().method() !== 'GET') { await route.continue(); return; }
+      await route.fulfill({ status, json: { isEnabled } });
+    });
+    await login(page);
+    await page.goto('/academic/dashboard');
+    const open = page.getByRole('button', { name: 'Open notifications' });
+    const close = page.getByRole('button', { name: 'Close notifications' });
+    const enabled = page.getByRole('status').filter({ hasText: 'Browser notifications are on' });
+    await open.click();
+    await page.getByRole('button', { name: 'Enable browser notifications', exact: true }).click();
+    await expect(enabled).toBeVisible();
+    const [registration] = (await snapshot(request)).pushActions;
+
+    await close.click();
+    await open.click();
+    await expect(enabled).toBeVisible();
+
+    status = 503;
+    await close.click();
+    await open.click();
+    await expect(page.getByText('Notification settings could not be loaded.')).toBeVisible();
+    expect(await page.evaluate(() => localStorage.getItem('fixture:browser-push-subscription'))).toBe('true');
+
+    status = 200;
+    isEnabled = false;
+    await page.getByRole('button', { name: 'Try again', exact: true }).click();
+    await expect(page.getByText('Browser notifications expired on this device.')).toBeVisible();
+    expect(await page.evaluate(() => localStorage.getItem('fixture:browser-push-subscription'))).toBeNull();
+
+    await page.getByRole('button', { name: 'Enable browser notifications again', exact: true }).click();
+    await expect(enabled).toBeVisible();
+    const actions = (await snapshot(request)).pushActions;
+    expect(actions).toHaveLength(2);
+    expect(actions[1]).toMatchObject({ action: 'register', user: registration.user });
+    expect(actions[1].id).not.toBe(registration.id);
+  });
+});
+
+test('an iPad browser tab explains how to enable notifications from the Home Screen', { tag }, async ({ page, request }) => {
+  await request.post(`${fixtureApi}/fixture/reset`, { data: { visited: true, pushEnabled: true } });
+  await prepare(page, request);
+  await page.setViewportSize({ width: 820, height: 1180 });
+  await page.addInitScript(() => {
+    Reflect.deleteProperty(window, 'PushManager');
+    Object.defineProperty(navigator, 'platform', { configurable: true, value: 'MacIntel' });
+    Object.defineProperty(navigator, 'maxTouchPoints', { configurable: true, value: 5 });
+  });
+  await login(page);
+  await page.goto('/academic/dashboard');
+  await page.getByRole('button', { name: 'Open notifications' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Add to Home Screen' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Enable browser notifications', exact: true })).toHaveCount(0);
+  expect((await snapshot(request)).pushActions).toEqual([]);
 });

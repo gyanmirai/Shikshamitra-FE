@@ -189,7 +189,8 @@ Open the notification bell and choose **Notification preferences**. Pick a categ
 Sign in to the school website on the device that should receive updates.
 Open the Notifications drawer and choose **Enable browser notifications**.
 Grant browser permission when prompted.
-On a supported iPhone or iPad, add the website to the Home Screen and open that installed site first.
+On a supported iPhone or iPad, open the website in Safari and use **Share → Add to Home Screen**. Turn on **Open as Web App** if shown, open the new icon, then enable notifications from the bell.
+If the bell reports an expired subscription, choose **Enable browser notifications again**.
 To remove the device, choose **Turn off browser notifications** in the same drawer.
 Signing out removes the device association for that browser session.
 
