@@ -106,6 +106,8 @@ For an unavailable event, **Delivery readiness** and **Configure Rule** show whi
 
 Staff with rule edit access can use **Configure** to submit a rule for the selected scope. The primary guardian is included for family events. The editor offers choices for additional guardians, the student account, and other recipients where the event supports them. Enabling requires published templates for the selected recipients and channels. Conflicts keep the current draft open.
 
+When you turn on an available rule, **Channels and Templates** lists the recipient and channel combinations that still need a selected published template in the fallback language. **Open templates** takes you to that event in the Templates workspace with the matching school or medium view. If the rule has unsaved changes, choose **Keep editing** to retain them or **Discard changes** to continue.
+
 For Homework Submitted and Assignment Submitted, **Daily digest time** closes the submission count in the school's time zone. Assigned teachers are selected by default for a new rule. Use published teacher templates to enable the digest.
 
 For **Weekly academic summary**, choose a **Day of the week** and **Weekly summary time**. New rules start with Friday at 17:00 in the school's time zone. Publish the recipient and channel templates before enabling. Families get summaries for their linked children, and chosen staff receive division totals. The school can also choose additional authorized family relationships or the eligible student account. [Weekly summary contract](../../../Shikshamitra-BE/docs/modules/academic/api.md#weekly-academic-summary)

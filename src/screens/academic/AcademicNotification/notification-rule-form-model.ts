@@ -80,6 +80,19 @@ export function ruleRecipientKinds(values: RuleFormValues, event: AcademicNotifi
   return kinds;
 }
 
+export function missingTemplateCoverage(values: RuleFormValues, kinds: string[], options: PublishedNotificationTemplateOption[]) {
+  const fallback = values.fallbackLanguage.trim().toLowerCase();
+  const selected = options.filter((template) =>
+    template.languageCode === fallback && values.templateIds.includes(template.templateId)
+  );
+  return kinds.map((recipientKind) => ({
+    recipientKind,
+    channels: values.channels.filter((channel) =>
+      !selected.some((template) => template.recipientKind === recipientKind && template.channel === channel)
+    ),
+  })).filter(({ channels }) => channels.length > 0);
+}
+
 export function templateCoverageError(values: RuleFormValues, kinds: string[], options: PublishedNotificationTemplateOption[]) {
   const selected = options.filter((template) => values.templateIds.includes(template.templateId));
   if (selected.length !== values.templateIds.length ||
@@ -89,8 +102,7 @@ export function templateCoverageError(values: RuleFormValues, kinds: string[], o
   if (!values.enabled) return undefined;
   const unique = new Set(selected.map(({ recipientKind, channel, languageCode }) => `${recipientKind}:${channel}:${languageCode}`));
   if (unique.size !== selected.length) return 'Select one template per recipient, channel, and language.';
-  const fallback = values.fallbackLanguage.trim().toLowerCase();
-  if (kinds.some((kind) => values.channels.some((channel) => !unique.has(`${kind}:${channel}:${fallback}`)))) {
+  if (missingTemplateCoverage(values, kinds, selected).length) {
     return 'Select a published template in the fallback language for every recipient and channel.';
   }
   return undefined;

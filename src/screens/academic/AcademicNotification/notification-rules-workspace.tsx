@@ -87,6 +87,8 @@ export function NotificationRulesWorkspace({ scope, filters }: {
           )}
           {openRule && selection && (
             <NotificationRuleDrawer row={openRule} identity={scope.identity}
+              templatesHref={filters.filtersHref({ view: 'templates', templateEvent: openRule.id,
+                templateScope: openRule.item.requestedScope.mediumId ? 'medium' : 'school' })}
               scopeLabel={selection.label} onClose={() => setEditor(undefined)} />
           )}
         </>

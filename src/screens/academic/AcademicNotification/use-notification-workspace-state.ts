@@ -18,6 +18,8 @@ const legacyCategories: Record<string, string> = {
   examination: 'examinations',
 };
 
+type WorkspaceFilterUpdates = Partial<Record<'category' | 'status' | 'scope' | 'search' | 'view' | 'templateEvent' | 'templateScope', string>>;
+
 export const notificationRuleStatuses = [
   { value: 'all', label: 'All statuses' },
   { value: 'enabled', label: 'Enabled' },
@@ -36,7 +38,7 @@ export function useNotificationWorkspaceState() {
   const requestedView = params.get('view');
   const view = requestedView === 'templates' || requestedView === 'history' ? requestedView : 'rules';
 
-  function setFilters(updates: Partial<Record<'category' | 'status' | 'scope' | 'search' | 'view' | 'templateEvent' | 'templateScope', string>>) {
+  function filtersHref(updates: WorkspaceFilterUpdates) {
     const next = new URLSearchParams(params.toString());
     if ('category' in updates) next.delete('tab');
     Object.entries(updates).forEach(([key, value]) => {
@@ -44,12 +46,16 @@ export function useNotificationWorkspaceState() {
       else next.delete(key);
     });
     const query = next.toString();
-    const proceed = () => router.push(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    return query ? `${pathname}?${query}` : pathname;
+  }
+
+  function setFilters(updates: WorkspaceFilterUpdates) {
+    const proceed = () => router.push(filtersHref(updates), { scroll: false });
     if (!guardAcademicContextChange(proceed)) proceed();
   }
 
   return {
-    category, status, search, scopeKey: params.get('scope'), setFilters, view,
+    category, status, search, scopeKey: params.get('scope'), setFilters, filtersHref, view,
     templateEvent: params.get('templateEvent'), templateScope: params.get('templateScope'),
   };
 }

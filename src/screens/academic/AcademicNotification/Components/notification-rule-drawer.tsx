@@ -20,10 +20,11 @@ interface Props {
   row: AcademicNotificationRuleRow;
   identity: AcademicNotificationCacheIdentity;
   scopeLabel: string;
+  templatesHref: string;
   onClose: () => void;
 }
 
-export function NotificationRuleDrawer({ row, identity, scopeLabel, onClose }: Props) {
+export function NotificationRuleDrawer({ row, identity, scopeLabel, templatesHref, onClose }: Props) {
   const titleId = useId();
   const router = useRouter();
   const templateQuery = useAcademicNotificationTemplateOptionsQuery({
@@ -32,8 +33,9 @@ export function NotificationRuleDrawer({ row, identity, scopeLabel, onClose }: P
     academicMediumId: row.item.requestedScope.mediumId,
   }, { refetchOnMountOrArgChange: true });
   const templates = templateQuery.currentData?.items ?? [];
+  const optionsAvailable = Boolean(templateQuery.currentData);
   const { form, busy } = useNotificationRuleForm({
-    row, identity, options: templates, optionsAvailable: Boolean(templateQuery.currentData),
+    row, identity, options: templates, optionsAvailable,
     onSaved: onClose,
   });
   const { requestNavigation, confirmation } = useUnsavedNavigation(form.dirty, {
@@ -71,8 +73,9 @@ export function NotificationRuleDrawer({ row, identity, scopeLabel, onClose }: P
               <Stack gap={2}>
                 {typeof form.status === 'string' && <Alert severity="error">{form.status}</Alert>}
                 <NotificationRuleFields row={row} form={form} templates={templates}
-                  isLoading={!templateQuery.currentData && templateQuery.isFetching} isError={templateQuery.isError}
-                  retry={templateQuery.refetch} />
+                  optionsAvailable={optionsAvailable} isLoading={!optionsAvailable && templateQuery.isFetching}
+                  isError={templateQuery.isError} retry={templateQuery.refetch}
+                  onOpenTemplates={() => requestNavigation(() => router.push(templatesHref, { scroll: false }))} />
                 <NotificationRuleTiming form={form} schedule={schedule} configuresMilestone={row.id === progressMilestoneEvent}
                   allowsQuietHoursBypass={row.event.definition.allowsQuietHoursBypass} />
               </Stack>

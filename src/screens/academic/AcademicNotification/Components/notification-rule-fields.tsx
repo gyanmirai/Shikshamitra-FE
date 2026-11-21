@@ -6,10 +6,15 @@ import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { CommunicationChannelType } from 'src/redux/communication/communicationTypes';
-import { Alert, Button, Switch, Checkbox, TextField, Typography, FormControlLabel } from '@mui/material';
+import { Box, Alert, Button, Switch, Checkbox, TextField, Typography, FormControlLabel } from '@mui/material';
 import { notificationLabel, notificationChannelLabels } from 'src/redux/academic-notifications/response-adapters';
 
-import { staffRuleSelectors, substitutionAcknowledgementEvent } from '../notification-rule-form-model';
+import {
+  staffRuleSelectors,
+  ruleRecipientKinds,
+  missingTemplateCoverage,
+  substitutionAcknowledgementEvent,
+} from '../notification-rule-form-model';
 
 import type { RuleFormValues } from '../notification-rule-form-model';
 
@@ -17,9 +22,11 @@ interface Props {
   row: AcademicNotificationRuleRow;
   form: FormikProps<RuleFormValues>;
   templates: PublishedNotificationTemplateOption[];
+  optionsAvailable: boolean;
   isLoading: boolean;
   isError: boolean;
   retry: () => void;
+  onOpenTemplates: () => void;
 }
 
 const guardians = [
@@ -28,7 +35,9 @@ const guardians = [
   { value: 'guardian', label: 'Other guardian' },
 ];
 
-export function NotificationRuleFields({ row, form, templates, isLoading, isError, retry }: Props) {
+export function NotificationRuleFields({
+  row, form, templates, optionsAvailable, isLoading, isError, retry, onOpenTemplates,
+}: Props) {
   const { definition, availability, availabilityDetail } = row.event;
   const staff = staffRuleSelectors(row.event);
   const current = form.values;
@@ -44,6 +53,10 @@ export function NotificationRuleFields({ row, form, templates, isLoading, isErro
   }));
   const missingSelected = current.templateIds.filter((id) => !templateOptions.some((option) => option.value === id));
   templateOptions.push(...missingSelected.map((value, index) => ({ value, label: `Unavailable template ${index + 1}` })));
+  const fallback = current.fallbackLanguage.trim().toLowerCase();
+  const missingCoverage = availability.isAvailable && current.enabled && optionsAvailable && !isError && fallback
+    ? missingTemplateCoverage(current, ruleRecipientKinds(current, row.event), templates)
+    : [];
 
   return (
     <>
@@ -87,7 +100,9 @@ export function NotificationRuleFields({ row, form, templates, isLoading, isErro
             error={Boolean(staffError)} helperText={staffError} onChange={(values) => form.setFieldValue('staffAudienceSelectors', values)} />
         </ShakingTextField>}
       </FormSectionCard>
-      <FormSectionCard title="Channels and Templates">
+      <FormSectionCard title="Channels and Templates" action={availability.isAvailable && (
+        <Button type="button" size="small" variant="text" onClick={onOpenTemplates}>Open templates</Button>
+      )}>
         <Typography variant="body2">In-app is included with every rule.</Typography>
         <CustomSelect multiple label="Additional channels" size="small"
           options={definition.supportedChannels.filter((channel) => channel !== CommunicationChannelType.InApp)
@@ -107,6 +122,18 @@ export function NotificationRuleFields({ row, form, templates, isLoading, isErro
             options={templateOptions} value={current.templateIds} error={Boolean(templateError)} helperText={templateError}
             onChange={(ids) => form.setFieldValue('templateIds', ids)} noOptionsMessage="No published templates for this event" />
         </ShakingTextField>
+        {missingCoverage.length > 0 && (
+          <Alert severity="info" role="status">
+            Select a published template in {fallback} for each recipient and channel listed below.
+            <Box component="ul" aria-label="Missing published templates" sx={{ m: 0, mt: 0.5, pl: 2 }}>
+              {missingCoverage.map(({ recipientKind, channels }) => (
+                <li key={recipientKind}>
+                  {notificationLabel(recipientKind)} · {channels.map((channel) => notificationChannelLabels[channel]).join(', ')}
+                </li>
+              ))}
+            </Box>
+          </Alert>
+        )}
       </FormSectionCard>
     </>
   );

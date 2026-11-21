@@ -4,6 +4,57 @@ import { login, prepare, snapshot, fixtureApi, expectHealthy } from './academic-
 
 const tag = ['@module-academic', '@submodule-notifications', '@regression', '@responsive', '@accessibility'];
 
+test('shows missing template coverage and opens Templates for the same event and scope', { tag }, async ({ page, request }) => {
+  await request.post(`${fixtureApi}/fixture/reset`, { data: { visited: true, notificationRules: true } });
+  await prepare(page, request);
+  await login(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/academic/notification?category=learning&templateEvent=Academic.Exam.Rescheduled&templateScope=school');
+  await page.getByRole('button', { name: 'Configure Homework published' }).click();
+  const drawer = page.getByRole('dialog', { name: 'Configure Rule' });
+  await drawer.getByRole('switch', { name: 'Enabled' }).check();
+  await drawer.getByRole('combobox', { name: 'Published templates' }).click();
+  await page.getByRole('option', { name: /Homework notice/ }).click();
+  await page.keyboard.press('Escape');
+  const missing = drawer.getByRole('list', { name: 'Missing published templates' });
+  await expect(missing).toHaveCount(0);
+  await drawer.getByRole('checkbox', { name: 'Include student account' }).check();
+  await drawer.getByRole('combobox', { name: 'Additional channels' }).click();
+  await page.getByRole('option', { name: 'Email', exact: true }).click();
+  await page.keyboard.press('Escape');
+
+  await expect(missing.getByRole('listitem')).toHaveText(['Guardian · Email', 'Student Account · In-app, Email']);
+  await drawer.getByRole('button', { name: 'Expand Timing and Language' }).click();
+  const language = drawer.getByRole('textbox', { name: 'Fallback language' });
+  await language.fill('hi');
+  await expect(missing.getByRole('listitem')).toHaveText(['Guardian · In-app, Email', 'Student Account · In-app, Email']);
+  await language.fill('en');
+  await expectHealthy(page);
+  const openTemplates = drawer.getByRole('button', { name: 'Open templates' });
+  const confirmation = page.getByRole('dialog', { name: 'Discard Unsaved Changes?' });
+  await openTemplates.click();
+  await confirmation.getByRole('button', { name: 'Keep editing' }).click();
+  await expect(drawer.getByRole('checkbox', { name: 'Include student account' })).toBeChecked();
+  await expect(missing.getByRole('listitem')).toHaveCount(2);
+
+  async function checkViewport(width: number) {
+    await page.setViewportSize({ width, height: 900 });
+    await openTemplates.scrollIntoViewIfNeeded();
+    await expect(openTemplates).toBeInViewport();
+    await expectHealthy(page);
+  }
+  await checkViewport(768);
+  await checkViewport(1440);
+
+  await openTemplates.click();
+  await confirmation.getByRole('button', { name: 'Discard changes' }).click();
+  await expect(drawer).toBeHidden();
+  await expect(page.getByRole('tab', { name: 'Templates' })).toHaveAttribute('aria-selected', 'true');
+  await expect(page.getByRole('combobox', { name: 'Academic event' })).toHaveText('Homework published');
+  await expect(page.getByRole('combobox', { name: 'Template list scope' })).toHaveText('Current medium and school');
+  expect((await snapshot(request)).notificationRuleWrites).toEqual([]);
+});
+
 test('adds starter drafts for the selected event and preserves saved templates', { tag }, async ({ page, request }) => {
   await request.post(`${fixtureApi}/fixture/reset`, { data: { visited: true, notificationRules: true } });
   await prepare(page, request);
