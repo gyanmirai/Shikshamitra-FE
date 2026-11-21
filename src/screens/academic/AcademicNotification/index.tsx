@@ -5,6 +5,7 @@ import { Box, Tab, Alert } from '@mui/material';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { academicPaths } from 'src/constants/academic-menu';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useAcademicNotificationCatalogueQuery } from 'src/redux/academic-notifications/api';
 
 import { NotificationRulesWorkspace } from './notification-rules-workspace';
 import { NotificationHistoryWorkspace } from './notification-history-workspace';
@@ -17,6 +18,11 @@ export default function AcademicNotificationScreen() {
   const scope = useNotificationWorkspaceScope();
   const filters = useNotificationWorkspaceState();
   const { view } = filters;
+  const catalogue = useAcademicNotificationCatalogueQuery(scope.identity, {
+    skip: !scope.canView,
+    refetchOnMountOrArgChange: true,
+    refetchOnFocus: true,
+  });
   const description = {
     rules: 'Review which events notify students, guardians, and staff for the selected scope.',
     templates: 'Manage message templates by event, recipient, channel, and language.',
@@ -32,6 +38,11 @@ export default function AcademicNotificationScreen() {
       )}
       {scope.canView && (
         <>
+          {!catalogue.isError && catalogue.currentData?.isQueueWorkerEnabled === false && (
+            <Alert severity="warning" variant="outlined" role="status" sx={{ mx: 1, mb: 1 }}>
+              Notification processing is paused on this server. You can prepare rules and templates, and confirmed sends can still queue.
+            </Alert>
+          )}
           <CustomTabs value={filters.view} aria-label="Academic notification workspace" variant="scrollable"
             onChange={(_, nextView: string) => filters.setFilters({ view: nextView === 'rules' ? '' : nextView })}>
             <Tab label="Rules" value="rules" id={`${tabId}-rules`} aria-controls={`${tabId}-panel`} />
@@ -40,8 +51,8 @@ export default function AcademicNotificationScreen() {
           </CustomTabs>
           <Box role="tabpanel" id={`${tabId}-panel`} aria-labelledby={`${tabId}-${filters.view}`}
             sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-            {view === 'rules' && <NotificationRulesWorkspace scope={scope} filters={filters} />}
-            {view === 'templates' && <NotificationTemplatesWorkspace scope={scope} filters={filters} />}
+            {view === 'rules' && <NotificationRulesWorkspace scope={scope} filters={filters} catalogue={catalogue} />}
+            {view === 'templates' && <NotificationTemplatesWorkspace scope={scope} filters={filters} catalogue={catalogue} />}
             {view === 'history' && <NotificationHistoryWorkspace key={JSON.stringify(scope.identity)}
               identity={scope.identity} canManage={scope.canManage} />}
           </Box>

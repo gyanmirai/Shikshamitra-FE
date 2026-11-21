@@ -211,6 +211,20 @@ scenarios:
     automationFile: e2e/academic/academic-notification-rules.spec.ts
     status: automated
     tags: ['@module-academic', '@submodule-notifications', '@regression', '@responsive', '@accessibility']
+  - id: ACM-NOTIFICATIONS-QUEUE-STATUS-001
+    module: Academic
+    submodule: Notifications
+    title: The notification workspace shows paused processing across Rules, Templates and Delivery History
+    risk: medium
+    priority: P1
+    type: [functional, regression, responsive, accessibility]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/academic/notification]
+    automated: true
+    automationFile: e2e/academic/academic-notification-rules.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-notifications', '@regression', '@responsive', '@accessibility']
   - id: ACM-NOTIFICATIONS-WEB-PUSH-001
     module: Academic
     submodule: Browser Notifications

@@ -1,12 +1,10 @@
 import type { AcademicNotificationRuleRow } from 'src/redux/academic-notifications/response-adapters';
+import type { AcademicNotificationCatalogueQueryState } from 'src/redux/academic-notifications/types';
 
 import { useState } from 'react';
 import { Box, Alert, Button } from '@mui/material';
+import { useAcademicNotificationRulesQuery } from 'src/redux/academic-notifications/api';
 import { notificationRuleRows } from 'src/redux/academic-notifications/response-adapters';
-import {
-  useAcademicNotificationRulesQuery,
-  useAcademicNotificationCatalogueQuery,
-} from 'src/redux/academic-notifications/api';
 
 import { NotificationRulesTable } from './Components/notification-rules-table';
 import { NotificationRuleDrawer } from './Components/notification-rule-drawer';
@@ -15,9 +13,10 @@ import { NotificationScopeFilter } from './Components/notification-scope-filter'
 import type { useNotificationWorkspaceScope } from './use-notification-workspace-scope';
 import type { useNotificationWorkspaceState } from './use-notification-workspace-state';
 
-export function NotificationRulesWorkspace({ scope, filters }: {
+export function NotificationRulesWorkspace({ scope, filters, catalogue }: {
   scope: ReturnType<typeof useNotificationWorkspaceScope>;
   filters: ReturnType<typeof useNotificationWorkspaceState>;
+  catalogue: AcademicNotificationCatalogueQueryState;
 }) {
   const selection = scope.options.find((option) => option.value === filters.scopeKey) ??
     scope.options.find((option) => option.value === 'medium') ??
@@ -25,9 +24,6 @@ export function NotificationRulesWorkspace({ scope, filters }: {
   const contextKey = JSON.stringify([scope.identity, selection?.scope]);
   const [editor, setEditor] = useState<{ contextKey: string; row: AcademicNotificationRuleRow }>();
   const openRule = scope.canManage && editor?.contextKey === contextKey ? editor.row : undefined;
-  const catalogue = useAcademicNotificationCatalogueQuery(scope.identity, {
-    skip: !scope.canView, refetchOnMountOrArgChange: true,
-  });
   const rules = useAcademicNotificationRulesQuery({
     ...scope.identity,
     scope: selection?.scope ?? {},

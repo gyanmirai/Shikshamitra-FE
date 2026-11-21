@@ -1,6 +1,10 @@
 import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { AcademicNotificationTemplate } from 'src/redux/academic-notifications/template-types';
-import type { AcademicNotificationEvent, AcademicNotificationCacheIdentity } from 'src/redux/academic-notifications/types';
+import type {
+  AcademicNotificationEvent,
+  AcademicNotificationCacheIdentity,
+  AcademicNotificationCatalogueQueryState,
+} from 'src/redux/academic-notifications/types';
 
 import { useState } from 'react';
 import { Label } from 'src/components/label';
@@ -10,7 +14,6 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { Box, Stack, Alert, Button, Skeleton, Typography } from '@mui/material';
-import { useAcademicNotificationCatalogueQuery } from 'src/redux/academic-notifications/api';
 import { notificationLabel, notificationEventLabel, notificationChannelLabels } from 'src/redux/academic-notifications/response-adapters';
 import {
   useAcademicNotificationTemplatesQuery,
@@ -26,8 +29,11 @@ import type { useNotificationWorkspaceState } from './use-notification-workspace
 type WorkspaceScope = ReturnType<typeof useNotificationWorkspaceScope>;
 type WorkspaceFilters = ReturnType<typeof useNotificationWorkspaceState>;
 
-export function NotificationTemplatesWorkspace({ scope, filters }: { scope: WorkspaceScope; filters: WorkspaceFilters }) {
-  const catalogue = useAcademicNotificationCatalogueQuery(scope.identity);
+export function NotificationTemplatesWorkspace({ scope, filters, catalogue }: {
+  scope: WorkspaceScope;
+  filters: WorkspaceFilters;
+  catalogue: AcademicNotificationCatalogueQueryState;
+}) {
   const events = catalogue.currentData?.events ?? [];
   const mediumId = scope.options.find((option) => option.scope.mediumId)?.scope.mediumId ?? undefined;
   const schoolAccess = scope.options.some((option) => option.value === 'school');

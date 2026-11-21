@@ -39,6 +39,15 @@ export interface AcademicNotificationEvent {
 export interface AcademicNotificationCatalogue {
   events: AcademicNotificationEvent[];
   channels: { channel: AcademicNotificationChannel; isConfigured: boolean }[];
+  isQueueWorkerEnabled?: boolean;
+}
+
+export interface AcademicNotificationCatalogueQueryState {
+  currentData?: AcademicNotificationCatalogue;
+  error?: unknown;
+  isError: boolean;
+  isFetching: boolean;
+  refetch: () => void;
 }
 
 export interface PublishedNotificationTemplateOption {

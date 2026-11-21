@@ -20,6 +20,8 @@ Use the [backend API reference](../../../Shikshamitra-BE/docs/modules/academic/a
 Weekly summary rules pass a weekday as `timing.weeklySummaryDay` alongside the school-local `timing.reminderLocalTime`.
 The catalogue cache is keyed by tenant and user. The task reminder reads `manualAvailability` when present. The Rules workspace uses `availability` to show which events can run automatically. The rule cache also includes the requested academic hierarchy, event filter and page. Each request verifies the identity of the session that supplies the token. The request sends the hierarchy and paging fields, and the save sends the current rule concurrency stamp. Successful saves refresh rule queries for the same user and tenant. Rejected saves retain the existing results.
 
+Rules, Templates, and Delivery History share the workspace catalogue request. An explicit false `isQueueWorkerEnabled` shows a pause notice for the current server. [Catalogue contract](../../../Shikshamitra-BE/docs/modules/academic/api.md#catalogue-availability)
+
 ## Notification template client
 
 `src/redux/academic-notifications/template-api.ts` reads templates by event, medium, name search, and page. It loads history and sample previews on demand. Queries key the school and account, and mutations recheck the request owner before sending.

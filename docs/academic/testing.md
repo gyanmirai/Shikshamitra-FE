@@ -123,6 +123,7 @@ Run `npm test -- src/screens/academic/AcademicNotification src/components/notifi
 The same Playwright config checks school-wide starter draft creation for the selected event, retry after a failed request, repeat setup, and preservation of saved template wording at phone and desktop widths.
 The rule-to-template scenario also verifies coverage for the current recipients, channels and fallback language. It checks both choices in the unsaved-changes confirmation and verifies that the Templates workspace opens for the same event and scope.
 The channel setup scenario distinguishes configured, pending and unavailable setup status before saving, and verifies that staff can save a disabled rule while setup is pending.
+The queue processing scenario checks the pause notice at phone width across all three tabs and verifies that it clears when the reloaded catalogue reports processing enabled.
 
 The unavailable-event case checks the source explanation in the Rules table and configuration drawer. It verifies the disabled Enabled switch and readable drawer content at phone, tablet and desktop widths.
 
