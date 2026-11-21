@@ -22,6 +22,7 @@ export interface AcademicNotificationSource {
 export interface AcademicNotificationOperation {
   operationId: string;
   status: CommunicationCampaignStatus;
+  isQueueWorkerEnabled?: boolean;
 }
 
 export interface AcademicNotificationOperationStatus extends AcademicNotificationSource, AcademicNotificationOperation {

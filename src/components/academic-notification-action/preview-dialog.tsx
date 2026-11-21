@@ -15,10 +15,10 @@ import { FormSectionCard } from 'src/components/form-section-card';
 import { useFormikErrorFocus } from 'src/hooks/use-formik-error-focus';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { CommunicationChannelType } from 'src/redux/communication/communicationTypes';
 import { notificationChannelLabels } from 'src/redux/academic-notifications/response-adapters';
 import { Alert, Stack, Button, Checkbox, Typography, DialogActions, FormControlLabel } from '@mui/material';
 import { notificationRecordId, operationStatusLabels } from 'src/redux/academic-notifications/delivery-adapters';
+import { CommunicationChannelType, CommunicationCampaignStatus } from 'src/redux/communication/communicationTypes';
 
 import { AcademicNotificationReviewDetails } from './review-details';
 import { useReviewedNotificationSend } from './use-reviewed-notification-send';
@@ -98,6 +98,12 @@ export function AcademicNotificationPreviewDialog({
   });
   const canConfirm = Boolean(review?.reviewToken && !stale && !busy);
   const canChoose = !busy && !uncertain;
+  const showQueuePause = operation
+    ? operation.isQueueWorkerEnabled === false && (
+      operation.status === CommunicationCampaignStatus.Queued ||
+      operation.status === CommunicationCampaignStatus.PendingApproval
+    )
+    : !stale && Boolean(review?.reviewToken) && review?.isQueueWorkerEnabled === false;
   const history = operation && `${academicPaths.notification}?view=history&${new URLSearchParams({ operation: operation.operationId })}`;
   const missingPrimaryGuardian = choices?.primaryGuardianNotConfigured || (
     review && !stale && (
@@ -203,6 +209,12 @@ export function AcademicNotificationPreviewDialog({
             )}
           </Stack>
         </DialogScrollContent>
+        {showQueuePause && (
+          <Alert severity="warning" variant="outlined" role="status" sx={{ mx: 2, mt: 1, flexShrink: 0 }}>
+            <Typography variant="body2">Notification processing is paused on this server.</Typography>
+            <Typography variant="body2">Messages can stay queued until processing resumes.</Typography>
+          </Alert>
+        )}
         <DialogActions sx={{ flexWrap: 'wrap' }}>
           <Button size="small" variant="outlined" color="inherit" disabled={busy} startIcon={<Iconify icon={GlobalIcons.cancel} />}
             onClick={() => requestNavigation(() => {})}>Close</Button>

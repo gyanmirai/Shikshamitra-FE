@@ -144,7 +144,7 @@ scenarios:
   - id: ACM-NOTIFICATION-REVIEWED-REMINDER-001
     module: Academic
     submodule: Notification
-    title: Staff can review a manual Homework reminder before scheduled reminders are available and open its queued operation
+    title: Staff can review a manual Homework reminder, see if queue processing pauses at confirmation, and open the queued operation
     risk: high
     priority: P1
     type: [functional, regression, responsive, accessibility]

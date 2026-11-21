@@ -153,6 +153,24 @@ describe('Reviewed Academic notification', () => {
     );
   });
 
+  it('shows paused processing in the preview and clears it when confirmation reports processing enabled', async () => {
+    const user = userEvent.setup();
+    mocked.preview.mockImplementationOnce(() => ({ unwrap: async () => ({
+      reviewToken: 'server-review', expiresAt: new Date(Date.now() + 600000).toISOString(),
+      eligibleRecipientCount: 1, requiresApproval: false, channels: [count], samples: [],
+      blockingIssues: [], isQueueWorkerEnabled: false,
+    }) }));
+    mocked.send.mockImplementationOnce(() => ({ unwrap: async () => ({ ...accepted, isQueueWorkerEnabled: true }) }));
+    renderAction();
+
+    await user.click(screen.getByRole('button', { name: 'Preview recipients' }));
+    const paused = await screen.findByText('Notification processing is paused on this server.');
+    expect(paused).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Confirm send' }));
+    expect(await screen.findByText('Queued', { exact: true })).toBeVisible();
+    expect(paused).not.toBeInTheDocument();
+  });
+
   it('defaults to the primary guardian and sends only explicitly selected family relationships', async () => {
     const user = userEvent.setup();
     const studentContext = {

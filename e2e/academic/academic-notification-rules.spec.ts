@@ -530,6 +530,17 @@ test('confirms a reviewed homework reminder for the selected student and opens d
   await request.post(`${fixtureApi}/fixture/reset`, { data: { visited: true, manualNotification: true } });
   await prepare(page, request);
   await login(page);
+  await page.route(/\/api\/academic\/notifications\/manual\/(preview|send)$/, async (route) => {
+    if (route.request().method() !== 'POST') {
+      await route.continue();
+      return;
+    }
+    const response = await route.fetch();
+    await route.fulfill({
+      response,
+      json: { ...(await response.json()), isQueueWorkerEnabled: route.request().url().endsWith('/preview') },
+    });
+  });
   await page.goto('/academic/gradingAndFeedback');
   await page.getByRole('combobox', { name: 'Subject', exact: true }).click();
   await page.getByRole('option', { name: 'Mathematics', exact: true }).click();
@@ -545,8 +556,11 @@ test('confirms a reviewed homework reminder for the selected student and opens d
   await dialog.getByRole('button', { name: 'Preview recipients' }).click();
   await expect(dialog.getByText('Email missing · 1 excluded')).toBeVisible();
   await expect(dialog.getByText('Homework due soon')).toBeVisible();
+  const paused = dialog.getByRole('status').filter({ hasText: 'Notification processing is paused on this server.' });
+  await expect(paused).toHaveCount(0);
   await dialog.getByRole('button', { name: 'Confirm send' }).click();
-  await expect(dialog.getByRole('status').filter({ hasText: 'Queued' })).toBeVisible();
+  await expect(dialog.getByRole('status').filter({ hasText: /^Queued$/ })).toBeVisible();
+  await expect(paused).toBeVisible();
   const writes = (await snapshot(request)).manualNotificationWrites;
   expect(writes.previews).toHaveLength(1);
   expect(writes.confirmations).toHaveLength(1);

@@ -150,6 +150,8 @@ In **Evaluation & Feedback**, select a published homework or assignment, then us
 
 Choose available channels and select **Preview recipients**. Review eligible counts, exclusions, and sample messages before selecting **Confirm send** or **Request approval**. A changed review needs a fresh preview. If the confirmation response is interrupted, **Retry confirmation** checks the same send. Open **Delivery History** to follow the accepted operation.
 
+The send dialog shows when the responding server's queue processing is paused. The notice is refreshed from the confirmation response. Confirmed messages can stay queued until processing resumes.
+
 If the review reports that the primary guardian is unconfigured, choose the main contact through **Parents & Contact** in Student Records. **Open student record** is available for a single identified student when you have the existing Records and contact-change permissions. The record still checks your access before it exposes contacts or allows changes. [Parents and contact selection](../student/workflows.md#parents-and-contact-selection)
 
 ## Send a Student Academic 360 notification

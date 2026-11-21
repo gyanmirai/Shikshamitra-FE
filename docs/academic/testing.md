@@ -131,6 +131,8 @@ The WhatsApp approval case publishes a revision, links it to a synthetic provide
 
 Run `npm test -- src/components/academic-notification-action` for reviewed sends, repeated confirmation clicks, changed reviews, and interrupted confirmation retries. The focused Playwright config also verifies that a reminder from the Homework evaluation table supplies exactly the selected student and opens the queued operation. This scenario uses a synthetic source and sends only to the fixture API.
 
+The reviewed-send checks exercise a queue pause that starts or ends between preview and confirmation. The dialog shows the latest pause status and retains the queued operation link.
+
 `e2e/academic/academic-notifications.spec.ts` checks the saved template preview, the test-send confirmation, the linked operation's queued and delivered states, and the sample in the personal inbox at the three standard viewport sizes. It uses the same focused Playwright config and the synthetic delivery fixture.
 
 Run `npm test -- src/components/academic-notification-action src/screens/academic/student-academic-360` to check Student Academic 360 recipient defaults, explicit relationship selection, published template selection and review invalidation when the audience changes. Browser acceptance should open each action from a saved student drawer and verify the child identity, meeting request wording, channel exclusions and return to the student after closing the composer.

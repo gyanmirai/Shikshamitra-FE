@@ -29,6 +29,7 @@ export interface AcademicNotificationReview {
   expiresAt: string | null;
   eligibleRecipientCount: number;
   requiresApproval: boolean;
+  isQueueWorkerEnabled?: boolean;
   channels: {
     channel: AcademicNotificationChannel;
     eligibleRecipientCount: number;
