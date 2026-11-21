@@ -128,7 +128,9 @@ In **Emergency Closure**, choose the scope and then the audiences under **Notify
 
 ## Create an Academic notification template
 
-Open **Academics → Notification → Templates**. Choose the event and scope, then create a template for one recipient, channel, and language. Use the variable pickers to insert fields from the event catalogue. Email supports rich text. In-app, browser push, and WhatsApp use plain text.
+Open **Academics → Notification → Templates** and choose the event. Staff with school-wide scope and template write access can select **Add starter drafts** to create English drafts for the event's recipient and channel combinations. The confirmation shows the event and scope. The result shows how many drafts were added. Existing templates keep their saved wording.
+
+Choose the scope and select **New template** to write a template for one recipient, channel, and language. Use the variable pickers to insert fields from the event catalogue. Email supports rich text. In-app, browser push, and WhatsApp use plain text.
 
 Save the draft and load its preview with sample data. Publish it to make that version available to Rules. Further edits create a new draft while the published version remains available. Version history can preview saved revisions. Restoring the default wording also creates a draft.
 

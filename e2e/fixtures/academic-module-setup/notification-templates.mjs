@@ -3,6 +3,15 @@ import { paged } from './data.mjs';
 
 const root = '/api/academic/notifications/templates';
 
+function makeDraft(content, templateId, revision) {
+  return {
+    ...content, templateId, revisionId: randomUUID(), revision,
+    schemaVersion: 1, contentHash: 'fixture', isCurrent: true, isPublished: false, isRetired: false,
+    isDeleted: false, concurrencyStamp: randomUUID(), headerConcurrencyStamp: randomUUID(),
+    publishedAt: null, publishedByUserId: null,
+  };
+}
+
 export function createNotificationTemplatesFixture(queueTemplateTest) {
   const templates = new Map();
   return (url, method, input, send) => {
@@ -25,14 +34,29 @@ export function createNotificationTemplatesFixture(queueTemplateTest) {
         return true;
       }
       if (current) current.isCurrent = false;
-      const draft = {
-        ...content, templateId, revisionId: randomUUID(), revision: (current?.revision ?? 0) + 1,
-        schemaVersion: 1, contentHash: 'fixture', isCurrent: true, isPublished: false, isRetired: false,
-        isDeleted: false, concurrencyStamp: randomUUID(), headerConcurrencyStamp: randomUUID(),
-        publishedAt: null, publishedByUserId: null,
-      };
+      const draft = makeDraft(content, templateId, (current?.revision ?? 0) + 1);
       templates.set(templateId, [draft, ...history]);
       send(200, draft);
+      return true;
+    }
+
+    if (url.pathname === `${root}/initialize-defaults` && method === 'POST') {
+      if (input.eventKey !== 'Academic.Homework.Published') {
+        send(400, { title: 'Unknown fixture event' });
+        return true;
+      }
+      let added = 0;
+      for (const [channel, suffix] of [[2, 'email'], [3, 'in-app']]) {
+        const id = `homework-starter-${channel}`;
+        if (templates.has(id)) continue;
+        templates.set(id, [makeDraft({
+          eventKey: input.eventKey, academicMediumId: null, recipientKind: 'Guardian',
+          channel, languageCode: 'en', templateName: `Homework starter (${suffix})`,
+          subject: 'Homework published', body: 'Homework for {{student_name}}',
+        }, id, 1)]);
+        added += 1;
+      }
+      send(200, added);
       return true;
     }
 

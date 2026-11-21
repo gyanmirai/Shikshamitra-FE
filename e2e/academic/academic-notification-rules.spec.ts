@@ -4,6 +4,71 @@ import { login, prepare, snapshot, fixtureApi, expectHealthy } from './academic-
 
 const tag = ['@module-academic', '@submodule-notifications', '@regression', '@responsive', '@accessibility'];
 
+test('adds starter drafts for the selected event and preserves saved templates', { tag }, async ({ page, request }) => {
+  await request.post(`${fixtureApi}/fixture/reset`, { data: { visited: true, notificationRules: true } });
+  await prepare(page, request);
+  await login(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/academic/notification?view=templates');
+  const add = page.getByRole('button', { name: 'Add starter drafts' });
+  await expect(add).toBeVisible();
+
+  await page.getByRole('button', { name: 'New template' }).click();
+  const editor = page.getByRole('dialog', { name: 'New notification template' });
+  await editor.getByRole('textbox', { name: 'Template name' }).fill('School homework wording');
+  await editor.getByRole('textbox', { name: 'Subject' }).fill('Homework update');
+  await editor.getByRole('textbox', { name: 'Message' }).fill('School message for {{student_name}}');
+  await editor.getByRole('button', { name: 'Save draft' }).click();
+  await expect(editor.getByText('Draft · Version 1')).toBeVisible();
+  await editor.getByRole('button', { name: 'Close template editor' }).click();
+
+  const confirmation = page.getByRole('dialog', { name: 'Add Starter Drafts' });
+  await add.click();
+  await expect(confirmation.getByText(/Homework published.*whole school/i)).toBeVisible();
+  await confirmation.getByRole('button', { name: 'Cancel' }).click();
+  await expect(confirmation).toBeHidden();
+
+  async function confirmDrafts() {
+    const response = page.waitForResponse((item) =>
+      item.url().endsWith('/api/academic/notifications/templates/initialize-defaults') && item.request().method() === 'POST'
+    );
+    await confirmation.getByRole('button', { name: 'Add starter drafts' }).click();
+    const saved = await response;
+    expect(saved.request().postDataJSON()).toEqual({ eventKey: 'Academic.Homework.Published' });
+    return saved;
+  }
+
+  await page.route('**/api/academic/notifications/templates/initialize-defaults', (route) => route.fulfill({
+    status: 503,
+    json: { detail: 'Starter draft setup is temporarily unavailable.' },
+  }), { times: 1 });
+  await add.click();
+  expect((await confirmDrafts()).status()).toBe(503);
+  await expect(confirmation.getByRole('alert')).toHaveText('Starter draft setup is temporarily unavailable.');
+  const added = await confirmDrafts();
+  expect(added.ok()).toBe(true);
+  expect(await added.json()).toBe(2);
+  await expect(confirmation).toBeHidden();
+  const draftRows = page.getByRole('row').filter({ hasText: 'Homework starter' });
+  await expect(draftRows).toHaveCount(2);
+  await expect(draftRows.getByText('V1 · Draft', { exact: true })).toHaveCount(2);
+  await expect(draftRows.getByText('Whole school', { exact: true })).toHaveCount(2);
+  await expect(draftRows.getByText('Email', { exact: true })).toBeVisible();
+  await expect(draftRows.getByText('In-app', { exact: true })).toBeVisible();
+  await expect(page.getByText('School homework wording', { exact: true })).toBeVisible();
+  await expectHealthy(page);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await add.click();
+  const repeated = await confirmDrafts();
+  expect(repeated.ok()).toBe(true);
+  expect(await repeated.json()).toBe(0);
+  await expect(confirmation).toBeHidden();
+  await expect(draftRows).toHaveCount(2);
+  await page.getByRole('button', { name: 'Open School homework wording' }).click();
+  await expect(page.getByRole('textbox', { name: 'Message' })).toHaveValue('School message for {{student_name}}');
+  await expectHealthy(page);
+});
+
 test('links a published WhatsApp revision and waits for provider approval before test send', { tag }, async ({ page, request }) => {
   await request.post(`${fixtureApi}/fixture/reset`, {
     data: { visited: true, notificationRules: true, whatsappApproval: true, notificationTemplateTest: true },

@@ -72,6 +72,15 @@ export const academicNotificationTemplateApi = api.enhanceEndpoints({ addTagType
       }),
       invalidatesTags: invalidateOnSuccess,
     }),
+    initializeAcademicNotificationDefaults: builder.mutation<
+      number, AcademicNotificationCacheIdentity & { eventKey: string }
+    >({
+      query: ({ eventKey, ...identity }) => ({
+        url: `${root}/initialize-defaults`, method: 'POST', body: { eventKey },
+        expectedSessionOwner: academicNotificationCacheOwner(identity),
+      }),
+      invalidatesTags: invalidateOnSuccess,
+    }),
     updateAcademicNotificationTemplateDraft: builder.mutation<
       AcademicNotificationTemplate, RevisionCommand & { command: { subject: string; body: string } }
     >({
@@ -118,6 +127,7 @@ export const {
   useAcademicNotificationTemplateHistoryQuery,
   useLazyAcademicNotificationTemplatePreviewQuery,
   useCreateAcademicNotificationTemplateMutation,
+  useInitializeAcademicNotificationDefaultsMutation,
   useUpdateAcademicNotificationTemplateDraftMutation,
   usePublishAcademicNotificationTemplateMutation,
   useRestoreAcademicNotificationTemplateDefaultMutation,

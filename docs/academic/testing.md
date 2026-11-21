@@ -120,6 +120,8 @@ Run `npm test -- notification-rule-drawer.test.tsx` to verify the **Daily digest
 
 Run `npm test -- src/screens/academic/AcademicNotification src/components/notification-inbox` for the workspace and inbox, including safe links, separate read and acknowledgement, and account switching. Run `npx playwright test --config e2e/academic/academic-notification-rules.config.mjs` for scoped Rules, template publication, Delivery History and the personal inbox at a phone viewport with the synthetic school. The retry cases verify the selected attempt ID, queued status, retained failure evidence and conflict recovery. Approval cases open an assigned request from the queue, review samples, confirm approval or rejection, and verify that a changed request loses its Approve action.
 
+The same Playwright config checks school-wide starter draft creation for the selected event, retry after a failed request, repeat setup, and preservation of saved template wording at phone and desktop widths.
+
 The unavailable-event case checks the source explanation in the Rules table and configuration drawer. It verifies the disabled Enabled switch and readable drawer content at phone, tablet and desktop widths.
 
 The WhatsApp approval case publishes a revision, links it to a synthetic provider, submits for approval and refreshes its status. It checks phone, tablet and desktop layouts and queues a sample test after approval. The approval panel unit cases cover a view-only staff account and a changed provider binding.
