@@ -36,7 +36,7 @@ export type PayrollReadiness = {
 };
 
 export type PayrollPreviewPage = {
-  previewRunId: string;
+  previewRunId: string | null;
   isCurrent: boolean;
   isGenerated: boolean;
   totalCount: number;
@@ -46,10 +46,26 @@ export type PayrollPreviewPage = {
   readiness: PayrollReadiness;
 };
 
+export type PayrollRegisterCriteria = {
+  sort?: string;
+  descending?: boolean;
+  reviewState?: string;
+  issueClass?: string;
+  issueCode?: string;
+};
+
 export const payrollPreviewRunApi = employeeApi.injectEndpoints({
   endpoints: (builder) => ({
-    startPayrollPreview: builder.mutation<PayrollPreviewStatus, { month: string; academicYearId: string; refresh: boolean }>({
+    payrollPreviewLookup: builder.query<
+      { currentRun: PayrollPreviewStatus | null },
+      { month: string; academicYearId: string }
+    >({
+      query: (params) => ({ url: '/payroll/run/previews/current', params }),
+      providesTags: [employeeType.runPayroll],
+    }),
+    startPayrollPreview: builder.mutation<PayrollPreviewStatus, { month: string; academicYearId: string; refresh: boolean; commandKey?: string }>({
       query: (body) => ({ url: '/payroll/run/previews', method: 'POST', body }),
+      invalidatesTags: (_result, error) => (error ? [] : [employeeType.runPayroll]),
     }),
     payrollPreviewStatus: builder.query<PayrollPreviewStatus, string>({
       query: (id) => `/payroll/run/previews/${id}`,
@@ -59,7 +75,20 @@ export const payrollPreviewRunApi = employeeApi.injectEndpoints({
       query: ({ id, ...params }) => ({ url: `/payroll/run/previews/${id}/employees`, params }),
       providesTags: [employeeType.runPayroll],
     }),
+    payrollRegister: builder.query<
+      PayrollPreviewPage,
+      PayrollRegisterCriteria & { month: string; academicYearId: string; completedId: string; page: number; pageSize: number; search: string }
+    >({
+      query: ({ completedId, ...params }) => ({ url: '/payroll/run/register', params }),
+      providesTags: [employeeType.runPayroll],
+    }),
   }),
 });
 
-export const { useStartPayrollPreviewMutation, usePayrollPreviewStatusQuery, usePayrollPreviewEmployeesQuery } = payrollPreviewRunApi;
+export const {
+  usePayrollPreviewLookupQuery,
+  useStartPayrollPreviewMutation,
+  usePayrollPreviewStatusQuery,
+  usePayrollPreviewEmployeesQuery,
+  usePayrollRegisterQuery,
+} = payrollPreviewRunApi;

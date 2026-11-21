@@ -6,6 +6,47 @@ test.beforeEach(async ({ request }) => {
   await request.post(fixture, { data: {} });
 });
 
+test('filters tenant status in the table across pages and combines it with search', async ({
+  page,
+}) => {
+  await login(page);
+  const statusFilter = page.getByRole('button', { name: 'Filter Status', exact: true });
+  await expect(statusFilter).toBeVisible({ timeout: 10000 });
+  await expect(page.getByRole('combobox', { name: /^Status/ })).toHaveCount(0);
+  await page.getByRole('button', { name: /next page/i }).click();
+  await expect(page.getByRole('cell', { name: 'SCHOOL_26', exact: true })).toBeVisible();
+
+  await statusFilter.click();
+  await page.getByRole('combobox', { name: /status/i }).click();
+  await page.getByRole('option', { name: 'Inactive', exact: true }).click();
+  const filteredRequest = page.waitForRequest((request) => {
+    const url = new URL(request.url());
+    return url.pathname === '/api/host/tenants' && url.searchParams.get('isActive') === 'false';
+  });
+  await page.getByRole('button', { name: 'Apply', exact: true }).click();
+  expect(new URL((await filteredRequest).url()).searchParams.get('skipCount')).toBe('0');
+  await expect(page.getByText('No results found', { exact: true })).toBeVisible();
+
+  const combinedRequest = page.waitForRequest((request) => {
+    const url = new URL(request.url());
+    return url.pathname === '/api/host/tenants' && url.searchParams.get('filter') === 'SCHOOL_26';
+  });
+  await page.getByRole('textbox', { name: 'Search tenants' }).fill('SCHOOL_26');
+  expect(new URL((await combinedRequest).url()).searchParams.get('isActive')).toBe('false');
+  await expect(page.getByText(/No results found for.*SCHOOL_26/)).toBeVisible();
+
+  await statusFilter.click();
+  await page.getByRole('combobox', { name: /status/i }).click();
+  await page.getByRole('option', { name: 'Active', exact: true }).click();
+  await page.getByRole('button', { name: 'Apply', exact: true }).click();
+  await expect(page.getByRole('cell', { name: 'SCHOOL_26', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Status → Equals → Inactive' })).toHaveCount(0);
+
+  await page.getByRole('button', { name: 'Clear (1)', exact: true }).click();
+  await expect(page.getByRole('cell', { name: 'SCHOOL_26', exact: true })).toBeVisible();
+  await expect(page.getByRole('cell', { name: 'SCHOOL_01', exact: true })).toHaveCount(0);
+});
+
 test('host logout stays local and a new login restores only the host workspace', async ({ page }) => {
   await login(page);
   await expect(page).toHaveURL(/\/host\/tenants\/?$/);

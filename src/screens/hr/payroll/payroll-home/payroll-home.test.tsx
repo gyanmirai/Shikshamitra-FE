@@ -199,9 +199,11 @@ describe('Payroll overview readiness', () => {
     expect(screen.queryByText('INTERNAL_CODE_A')).not.toBeInTheDocument();
   });
 
-  it('does not enable status refresh when there is no existing preview', () => {
+  it('can check for a saved run without starting generation', () => {
     mocks.requestedRunId = '';
     renderHome();
-    expect(screen.getByRole('button', { name: 'Refresh status' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh status' }));
+    expect(mocks.refreshStatus).toHaveBeenCalledOnce();
+    expect(mocks.loadPreview).not.toHaveBeenCalled();
   });
 });

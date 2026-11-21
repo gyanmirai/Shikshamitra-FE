@@ -30,6 +30,7 @@ The route map is frontend integration truth, not backend product truth:
 | Payslips                  | `/hr/payroll/payslip-generation`                                                                        | `HR.PayrollManagement.GenerateSalarySlip`                                  |
 | Staff salaries      | `/hr/payroll/structure/{employeeId}/edit`                                            | `HR.PayrollManagement.PayrollStructure` plus Compensation View or Manage   |
 | Payroll settings          | `/hr/payroll/setting`, `/hr/payroll/setting/*`                                                                                 | `HR.PayrollManagement.Settings.*`                                          |
+| Approval Workflow | `/hr/payroll/setting/approval-workflow` | Run Payroll `.View` and `.ManageWorkflow`; the server checks school-wide scope. |
 | Salary templates          | `/hr/payroll/setting/salary-templates`, `/hr/payroll/setting/salary-templates/new`, `/hr/payroll/setting/salary-templates/{templateId}` | `HR.PayrollManagement.Settings.SalaryTemplates.*`                          |
 | Professional tax          | `/hr/payroll/setting/professional-tax`                                                                  | `HR.PayrollManagement.Settings.ProfessionalTax.*`                          |
 | Statutory schemes         | `/hr/payroll/setting/statutory-schemes`                                                                 | `HR.PayrollManagement.Settings.StatutorySchemes.*`                         |

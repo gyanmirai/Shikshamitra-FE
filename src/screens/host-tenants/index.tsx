@@ -8,11 +8,11 @@ import Box from '@mui/material/Box';
 import Alert from '@mui/material/Alert';
 import { useSelector } from 'react-redux';
 import Button from '@mui/material/Button';
+import { Iconify } from 'src/components/iconify';
 import { hostTenantPath } from 'src/constants/host-tenant-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import TenantToolbar from './components/tenant-toolbar';
 import { useTenantTable } from './hooks/use-tenant-table';
 import { tenantColumns } from './components/tenant-columns';
 import TenantFormDialog from './components/tenant-form-dialog';
@@ -44,14 +44,17 @@ export default function HostTenantsScreen() {
         heading="Tenant"
         description="Manage schools, their basic details and access."
         links={[{ name: 'Platform', href: hostTenantPath }, { name: 'Tenant' }]}
+        action={
+          <Button
+            variant="contained"
+            disabled={!context?.canCreateTenants}
+            onClick={() => setForm({})}
+            startIcon={<Iconify icon="mdi:plus" />}
+          >
+            Add tenant
+          </Button>
+        }
         sx={{ flexShrink: 0, px: 1, py: 1 }}
-      />
-      <TenantToolbar
-        status={table.status}
-        onStatusChange={table.changeStatus}
-        canView={!!context?.canViewTenants}
-        canCreate={!!context?.canCreateTenants}
-        onCreate={() => setForm({})}
       />
       {!context?.canViewTenants ? (
         <Alert severity="warning">
@@ -67,14 +70,17 @@ export default function HostTenantsScreen() {
             isLoading={table.query.isFetching}
             isPagination
             isSearch
-            isFilter={false}
+            isFilter
             serverSidePagination
             serverSideSearch
             serverSideSort
+            serverSideFilter
             serverSideSortMode="single"
             onServerPagination={table.paginate}
             onServerSearch={table.search}
             onServerSort={table.sort}
+            onServerFilter={table.applyColumnFilters}
+            filters={table.columnFilters}
             totalCount={table.query.currentData?.totalCount ?? 0}
             page={table.page}
             rowsPerPage={table.rowsPerPage}
@@ -84,11 +90,7 @@ export default function HostTenantsScreen() {
               inputProps: { 'aria-label': 'Search tenants' },
             }}
             rowsPerPageOptions={[10, 25, 50, 100]}
-            noDataText={
-              table.filter || table.status !== 'all'
-                ? 'No tenants match these filters.'
-                : 'No tenants yet. Add your first school.'
-            }
+            noDataText="No tenants yet. Add your first school."
             errorContent={
               table.query.isError && (
                 <Alert

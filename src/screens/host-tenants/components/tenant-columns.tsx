@@ -52,7 +52,12 @@ export function tenantColumns(
     {
       id: 'isActive',
       label: 'Status',
-      isFilter: false,
+      isFilter: true,
+      filterType: 'enum',
+      enumOptions: [
+        { label: 'Active', value: 'true' },
+        { label: 'Inactive', value: 'false' },
+      ],
       isSort: true,
       sticky: true,
       stickyPosition: 'right',

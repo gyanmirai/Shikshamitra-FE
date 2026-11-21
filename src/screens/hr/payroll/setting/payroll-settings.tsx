@@ -13,7 +13,17 @@ import { Box, Stack, Button, Skeleton, Typography } from '@mui/material';
 
 const { settings } = hrPaths.payroll;
 const permissions = hrPermissions.payroll.settings;
-const tasks = [
+const tasks: {
+  title: string;
+  icon: string;
+  description: string;
+  links: {
+    label: string;
+    path: string;
+    permission: string;
+    requiredAllPermissions?: readonly string[];
+  }[];
+}[] = [
   {
     title: 'Salary Templates',
     icon: 'solar:documents-bold',
@@ -65,6 +75,20 @@ const tasks = [
     ],
   },
   {
+    title: 'Approval Workflow',
+    icon: 'mdi:clipboard-check-outline',
+    description:
+      'Choose who approves payroll and whether authorized staff can finalize their own batches.',
+    links: [
+      {
+        label: 'Open approval workflow',
+        path: settings.approvalWorkflow,
+        permission: hrPermissions.payroll.runPayrollManageWorkflow,
+        requiredAllPermissions: [`${hrPermissions.payroll.runPayroll}.View`],
+      },
+    ],
+  },
+  {
     title: 'Payslip & Statement Settings',
     icon: 'solar:document-text-bold',
     description:
@@ -85,7 +109,7 @@ export default function PayrollSettings() {
     .map((task) => ({
       ...task,
       links: task.links.filter((link) =>
-        hasNavigationPermission(auth.permissions, link.permission)
+        hasNavigationPermission(auth.permissions, link.permission, link.requiredAllPermissions)
       ),
     }))
     .filter((task) => task.links.length > 0);
@@ -94,7 +118,7 @@ export default function PayrollSettings() {
       <CustomBreadcrumbs
         heading="Payroll Settings"
         layout="inline"
-        description="Manage salary templates, statutory rules, components, and payroll documents."
+        description="Manage salary templates, statutory rules, approvals, components, and payroll documents."
         links={[{ name: 'Payroll Management', href: hrPaths.payroll.root }, { name: 'Settings' }]}
       />
       <HrNotice severity="info" sx={{ mb: 2 }}>
