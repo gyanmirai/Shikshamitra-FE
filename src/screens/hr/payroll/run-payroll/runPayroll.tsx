@@ -193,6 +193,11 @@ const statusColor = {
 
 const PAYROLL_ACTIVITY_PAGE_SIZE = 20;
 const EMPTY_PREVIEW_ITEMS: Record<string, unknown>[] = [];
+const attendanceReviewHint = 'Record attendance and recalculate payroll before reviewing.';
+
+function isAttendanceReviewBlocked(row: Pick<PayrollRow, 'status' | 'issueCodes'>) {
+  return row.status === 'PENDING' && row.issueCodes.includes('NO_ATTENDANCE');
+}
 
 const formatDelta = (value: number | null, percent: number | null) => {
   if (value === null || value === undefined) return '-';
@@ -556,8 +561,12 @@ const RunPayroll = () => {
     [sourceRows]
   );
 
-  const pendingRows = useMemo(
-    () => tableData.filter((row) => row.status !== 'LOCKED' && row.status !== 'SUBMITTED'),
+  const selectableRows = useMemo(
+    () =>
+      tableData.filter(
+        (row) =>
+          row.status !== 'LOCKED' && row.status !== 'SUBMITTED' && !isAttendanceReviewBlocked(row)
+      ),
     [tableData]
   );
   const selectedRows = useMemo(
@@ -565,7 +574,10 @@ const RunPayroll = () => {
     [selectedEmployeeIds, tableData]
   );
   const selectedPendingIds = useMemo(
-    () => selectedRows.filter((row) => row.status === 'PENDING').map((row) => row.id),
+    () =>
+      selectedRows
+        .filter((row) => row.status === 'PENDING' && !isAttendanceReviewBlocked(row))
+        .map((row) => row.id),
     [selectedRows]
   );
   const selectedReviewedIds = useMemo(
@@ -603,7 +615,7 @@ const RunPayroll = () => {
         return 'Payroll inputs changed. Refresh the preview, then review the updated rows before locking.';
       return 'Load a current payroll preview before reviewing or locking.';
     }
-    if (!pendingRows.length)
+    if (!selectableRows.length)
       return tableData.length
         ? 'These payroll rows are already locked.'
         : 'No staff rows are available on this page. Check the month and filters.';
@@ -644,10 +656,10 @@ const RunPayroll = () => {
   }, [selectedMonthKey, academicYearId]);
   useEffect(() => {
     setSelectedEmployeeIds((prev) => {
-      const next = prev.filter((id) => pendingRows.some((row) => row.id === id));
+      const next = prev.filter((id) => selectableRows.some((row) => row.id === id));
       return next.length === prev.length ? prev : next;
     });
-  }, [pendingRows]);
+  }, [selectableRows]);
 
   useEffect(() => {
     if (!activeRow) return;
@@ -924,26 +936,29 @@ const RunPayroll = () => {
         isSort: false,
         renderColumn() {
           const isAllSelected =
-            pendingRows.length > 0 &&
-            pendingRows.every((row) => selectedEmployeeIds.includes(row.id));
+            selectableRows.length > 0 &&
+            selectableRows.every((row) => selectedEmployeeIds.includes(row.id));
           return (
             <Checkbox
-              inputProps={{ 'aria-label': 'Select all unlocked payroll rows on this page' }}
+              inputProps={{ 'aria-label': 'Select all eligible payroll rows on this page' }}
+              disabled={!selectableRows.length}
               checked={isAllSelected}
               indeterminate={
                 selectedEmployeeIds.length > 0 &&
-                pendingRows.some((row) => selectedEmployeeIds.includes(row.id)) &&
+                selectableRows.some((row) => selectedEmployeeIds.includes(row.id)) &&
                 !isAllSelected
               }
               onChange={(event) =>
-                setSelectedEmployeeIds(event.target.checked ? pendingRows.map((row) => row.id) : [])
+                setSelectedEmployeeIds(event.target.checked ? selectableRows.map((row) => row.id) : [])
               }
             />
           );
         },
         render(_value, row) {
-          const disabled = row.status === 'LOCKED' || row.status === 'SUBMITTED';
-          return (
+          const attendanceBlocked = isAttendanceReviewBlocked(row as PayrollRow);
+          const disabled =
+            attendanceBlocked || row.status === 'LOCKED' || row.status === 'SUBMITTED';
+          const checkbox = (
             <Checkbox
               inputProps={{ 'aria-label': `Select payroll for ${row.employeeName}` }}
               disabled={disabled}
@@ -955,6 +970,11 @@ const RunPayroll = () => {
               }
             />
           );
+          return attendanceBlocked ? (
+            <Tooltip title={attendanceReviewHint} arrow>
+              <Box component="span" sx={{ display: 'inline-flex' }}>{checkbox}</Box>
+            </Tooltip>
+          ) : checkbox;
         },
       },
       {
@@ -1112,22 +1132,35 @@ const RunPayroll = () => {
           }
 
           const state = row.issueSeverity;
+          const attendanceMissing = issues.includes('NO_ATTENDANCE');
           const chipColor =
             state === 'CRITICAL' ? 'error' : state === 'WARNING' ? 'warning' : 'info';
-          const title = issues
+          const issueLabels = issues
+            .filter((code: string | number) => code !== 'NO_ATTENDANCE')
             .slice(0, 5)
             .map((code: string | number) => ISSUE_LABELS[code]?.label || 'Additional payroll issue')
             .join(', ');
 
           return (
-            <Tooltip title={title} arrow>
+            <Tooltip
+              title={
+                attendanceMissing
+                  ? [attendanceReviewHint, issueLabels].filter(Boolean).join(' ')
+                  : issueLabels
+              }
+              arrow
+              describeChild
+            >
               <Chip
                 size="small"
                 color={chipColor}
                 variant="outlined"
-                label={`${
-                  state === 'CRITICAL' ? 'Critical' : state === 'WARNING' ? 'Warning' : 'Info'
-                } • ${issues.length}`}
+                tabIndex={attendanceMissing ? 0 : undefined}
+                label={
+                  attendanceMissing
+                    ? ISSUE_LABELS.NO_ATTENDANCE.label
+                    : `${state === 'CRITICAL' ? 'Critical' : state === 'WARNING' ? 'Warning' : 'Info'} • ${issues.length}`
+                }
               />
             </Tooltip>
           );
@@ -1171,7 +1204,7 @@ const RunPayroll = () => {
         },
       },
     ],
-    [pendingRows, selectedEmployeeIds]
+    [selectableRows, selectedEmployeeIds]
   );
 
   // Enable the criteria that the register endpoint can apply before pagination.
@@ -1309,6 +1342,8 @@ const RunPayroll = () => {
     if (preview.isLookingUp) return 'Loading saved payroll for this month…';
     if (preview.isCalculating) return 'Calculating payroll for this month…';
     if (previewError || !isDataForSelectedMonth) return null;
+    if (!selectableRows.length && tableData.some(isAttendanceReviewBlocked))
+      return attendanceReviewHint;
     if (!usesApproval) return lockExplanation;
     if (!canReviewPayroll && !canSubmitPayroll)
       return canLockPayroll

@@ -237,7 +237,9 @@ Generate payroll starts the first calculation, and Recalculate payroll requests 
 Retry lookup and Reconnect repeat reads after a loading or polling error.
 The month selector and generation action are in the period controls above the register.
 Payroll checks opens a drawer with readiness checks and the PF and ESIC registration list.
-Select all applies to unlocked rows on the current page, and Mark Reviewed acts on the pending rows among them.
+Select all applies to eligible rows on the current page, and Mark Reviewed acts on the pending rows among them.
+Pending rows with missing attendance show Attendance missing in Issues and cannot be selected for review.
+Record attendance and recalculate payroll to make those rows reviewable.
 Review operations retain the visible rows while the server saves and the current result reloads.
 After a saved review with a failed reread, Reload rows retries the read.
 Payroll Activity shows recorded reviews, removed reviews, and locks for the selected month and academic year to authorized users with school-wide HR scope.
