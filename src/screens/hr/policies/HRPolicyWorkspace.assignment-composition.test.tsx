@@ -171,7 +171,7 @@ it('names real composite staff/group and date fields, and associates date valida
   expect(screen.getByRole('combobox', { name: 'Staff *' })).toHaveValue('Synthetic staff');
   expect(screen.getByRole('combobox', { name: 'Target Type' })).toBeInTheDocument();
   const from = screen.getByRole('group', { name: 'Effective From *' });
-  const to = screen.getByRole('group', { name: 'Effective To (optional)' });
+  const to = screen.getByRole('group', { name: 'Effective To' });
   expect(from).toHaveAccessibleDescription('End date must be on or after start date.');
   expect(to).toHaveAccessibleDescription('End date must be on or after start date.');
   expect(within(from).getAllByRole('spinbutton')).toHaveLength(3);

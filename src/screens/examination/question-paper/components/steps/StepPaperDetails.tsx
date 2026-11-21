@@ -144,7 +144,7 @@ export default function StepPaperDetails({
 
           <Box sx={{ flex: 1.3, minWidth: 160, width: { xs: '100%', md: 'auto' } }}>
             <CustomSelect
-              label="Exam (optional)"
+              label="Exam"
               options={examOptions}
               value={formik.values.examId}
               disabled={readOnly || isExamLoading}
@@ -210,7 +210,7 @@ export default function StepPaperDetails({
               <LanguageInputField
                 fullWidth
                 size="small"
-                label="General Instructions (Optional)"
+                label="General Instructions"
                 name="generalInstructions"
                 value={formik.values.generalInstructions}
                 onChange={formik.handleChange}

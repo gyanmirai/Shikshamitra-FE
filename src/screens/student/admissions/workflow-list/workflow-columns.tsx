@@ -5,6 +5,7 @@ import type {
 } from 'src/redux/student/admissions/admission-workflows-api';
 
 import { Label } from 'src/components/label';
+import { Box, Typography } from '@mui/material';
 import { fNumber } from 'src/utils/format-number';
 
 import { WorkflowRowActions } from './workflow-row-actions';
@@ -65,7 +66,17 @@ export function createWorkflowColumns(
       stickyPosition: 'left',
       stickyOnMobile: false,
       isFilter: true,
-      render: (value, row) => <AdmissionTableText text={String(value ?? '')} strong />,
+      render: (value, row) => {
+        const workflow = row as AdmissionWorkflow;
+        return (
+          <Box sx={{ minWidth: 0 }}>
+            <AdmissionTableText text={String(value ?? '')} strong />
+            <Typography component="div" variant="caption" color="text.secondary">
+              Version {workflow.version} · {STATUS_LABELS[workflow.status]}
+            </Typography>
+          </Box>
+        );
+      },
     },
     {
       id: 'version',

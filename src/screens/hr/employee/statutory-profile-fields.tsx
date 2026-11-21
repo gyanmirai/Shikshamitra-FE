@@ -73,6 +73,7 @@ export function StatutoryProfileFields({
   disabled = false,
   grossSalary,
   pfSettings,
+  pfHandledExternally = false,
   compact = false,
   pfChoiceRequired = false,
   pfChoice = null,
@@ -86,6 +87,7 @@ export function StatutoryProfileFields({
   disabled?: boolean;
   grossSalary?: number;
   pfSettings?: ReactNode;
+  pfHandledExternally?: boolean;
   compact?: boolean;
   pfChoiceRequired?: boolean;
   pfChoice?: boolean | null;
@@ -158,8 +160,11 @@ export function StatutoryProfileFields({
         alignItems: 'start',
       }}
     >
+      {pfHandledExternally && (
+        <Alert severity="info">PF is handled outside ShikshaMitra for this salary month.</Alert>
+      )}
       {schemes
-        .filter((scheme) => scheme.view)
+        .filter((scheme) => scheme.view && (scheme.code !== 'PF' || !pfHandledExternally))
         .map((scheme) => {
           const apply = form.values[scheme.apply];
           const registered = hasStatutoryNumber(form.values[scheme.number]);

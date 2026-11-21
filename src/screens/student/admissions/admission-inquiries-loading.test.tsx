@@ -1,10 +1,15 @@
+import type { ReactNode } from 'react';
+
+import dayjs from 'dayjs';
 import { useEffect } from 'react';
 import { it, vi, expect, beforeEach } from 'vitest';
-import { act, render, screen } from '@testing-library/react';
+import { act, render, screen, fireEvent } from '@testing-library/react';
 
 import AdmissionInquiriesScreen from './admission-inquiries';
 import { loadInquiryOverviewForm } from './inquiry-management/inquiry-overview-loader';
 import { preloadInquiryWorkspace } from './inquiry-management/preload-inquiry-workspace';
+
+import type { InquiryHandoffIssue } from './inquiry-management/inquiry-handoff-issue';
 
 const state = vi.hoisted(() => ({
   params: '',
@@ -18,6 +23,8 @@ const state = vi.hoisted(() => ({
   fetching: false,
   error: false,
   moving: false,
+  handoffIssue: null as InquiryHandoffIssue | null,
+  dismissIssue: vi.fn(),
   data: undefined as
     { items: { id: string; applicantName: string }[]; totalCount: number } | undefined,
   query: vi.fn(),
@@ -25,11 +32,12 @@ const state = vi.hoisted(() => ({
   academicFilterProps: {} as Record<string, unknown>,
   table: {} as Record<string, unknown>,
   push: vi.fn(),
+  replace: vi.fn(),
   academicYearId: 'year' as string | undefined,
   updateAcademic: vi.fn(),
 }));
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ replace: vi.fn(), push: state.push }),
+  useRouter: () => ({ replace: state.replace, push: state.push }),
   useSearchParams: () => new URLSearchParams(state.params),
 }));
 vi.mock('react-redux', () => ({
@@ -49,6 +57,13 @@ vi.mock('./inquiry-management/preload-inquiry-workspace', () => ({
   preloadInquiryWorkspace: vi.fn(),
 }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
+vi.mock('src/components/custom-date-range-picker', () => ({
+  CustomDateRangePicker: ({ onChange }: { onChange: (value: unknown) => void }) => (
+    <button type="button" onClick={() => onChange([dayjs('2026-11-17'), dayjs('2026-11-17')])}>
+      Apply inquiry dates
+    </button>
+  ),
+}));
 vi.mock('src/components/custom-breadcrumbs', () => ({
   CustomBreadcrumbs: () => <h1>Admission inquiries</h1>,
 }));
@@ -66,15 +81,40 @@ vi.mock('./admission-academic-filters', () => ({
     ...props
   }: {
     onLoadingChange: (value: boolean) => void;
+    filterAction?: ReactNode;
   }) {
     state.academicFilterProps = props;
     const loading = state.scopeLoading;
     useEffect(() => onLoadingChange(loading), [loading, onLoadingChange]);
-    return <div>Academic filters</div>;
+    return <div>Academic filters{props.filterAction}</div>;
   },
 }));
 vi.mock('./inquiry-management/use-inquiry-handoff', () => ({
-  useInquiryHandoff: () => ({ moving: state.moving, canMove: true, move: vi.fn() }),
+  useInquiryHandoff: () => ({
+    moving: state.moving,
+    canMove: true,
+    move: vi.fn(),
+    issue: state.handoffIssue,
+    dismissIssue: state.dismissIssue,
+    formAccess: { canView: true, canManage: true },
+  }),
+}));
+vi.mock('./inquiry-management/inquiry-handoff-issue-dialog', () => ({
+  InquiryHandoffIssueDialog: ({
+    issue,
+    onClose,
+  }: {
+    issue: InquiryHandoffIssue | null;
+    onClose: () => void;
+  }) =>
+    issue ? (
+      <section role="dialog" aria-label="Inquiry Form Archived">
+        {issue.inquiry.applicantName}
+        <button type="button" onClick={onClose}>
+          Back to inquiries
+        </button>
+      </section>
+    ) : null,
 }));
 vi.mock('./inquiry-management/inquiry-follow-up-dialog', () => ({
   InquiryFollowUpDialog: () => null,
@@ -152,8 +192,83 @@ beforeEach(() => {
     fetching: false,
     error: false,
     moving: false,
+    handoffIssue: null,
     data: undefined,
   });
+});
+
+it('keeps the worklist mounted while presenting the handoff recovery dialog', () => {
+  Object.assign(state, {
+    board: 'board',
+    medium: 'medium',
+    scopeLoading: false,
+    data: { items: [{ id: 'inquiry-1', applicantName: 'Ritika Sinha' }], totalCount: 1 },
+    handoffIssue: {
+      inquiry: { applicantName: 'Ritika Sinha', inquiryNumber: 'INQ-2026-000006' },
+      formName: 'DM 8th INQ FORM',
+    },
+  });
+  render(<AdmissionInquiriesScreen />);
+  expect(screen.getByRole('dialog', { name: 'Inquiry Form Archived' })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: 'Admission inquiries' })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Back to inquiries' }));
+  expect(state.dismissIssue).toHaveBeenCalledOnce();
+  expect(state.push).not.toHaveBeenCalled();
+});
+
+it('applies and clears a server date interval without dropping academic or table filters', () => {
+  Object.assign(state, {
+    board: 'board',
+    medium: 'medium',
+    standard: 'class-8',
+    params: 'board=board&medium=medium&class=class-8&search=ada&status=2',
+    scopeLoading: false,
+    data: { items: [], totalCount: 100 },
+  });
+  render(<AdmissionInquiriesScreen />);
+  act(() => (state.table.onServerPagination as (page: number, size: number) => void)(3, 25));
+  fireEvent.click(screen.getByRole('button', { name: 'Apply inquiry dates' }));
+  expect(state.queryInput).toHaveBeenLastCalledWith(
+    expect.objectContaining({
+      skipCount: 0,
+      creationTimeFrom: dayjs('2026-11-17').startOf('day').toISOString(),
+      creationTimeBefore: dayjs('2026-11-18').startOf('day').toISOString(),
+      standardId: 'class-8',
+      search: 'ada',
+      status: 2,
+    })
+  );
+  expect(state.replace.mock.lastCall?.[0]).toContain('dateFrom=2026-11-17');
+  fireEvent.click(screen.getByRole('button', { name: 'Clear inquiry dates' }));
+  expect(state.queryInput.mock.lastCall?.[0]).toMatchObject({
+    creationTimeFrom: undefined,
+    creationTimeBefore: undefined,
+    standardId: 'class-8',
+    search: 'ada',
+    status: 2,
+  });
+});
+
+it('restores inquiry date ranges from URL navigation', () => {
+  Object.assign(state, {
+    board: 'board',
+    medium: 'medium',
+    params: 'dateFrom=2026-11-01&dateTo=2026-11-02',
+    scopeLoading: false,
+  });
+  const view = render(<AdmissionInquiriesScreen />);
+  expect(state.queryInput.mock.lastCall?.[0].creationTimeFrom).toBe(
+    dayjs('2026-11-01').startOf('day').toISOString()
+  );
+  act(() => (state.table.onServerPagination as (page: number, size: number) => void)(3, 25));
+  state.params = 'dateFrom=2026-10-01&dateTo=2026-10-01';
+  state.replace.mockClear();
+  view.rerender(<AdmissionInquiriesScreen />);
+  expect(state.replace).not.toHaveBeenCalled();
+  expect(state.queryInput.mock.lastCall?.[0].skipCount).toBe(0);
+  expect(state.queryInput.mock.lastCall?.[0].creationTimeFrom).toBe(
+    dayjs('2026-10-01').startOf('day').toISOString()
+  );
 });
 
 it('resets server paging and omits class IDs when returning to All Classes', () => {
@@ -224,10 +339,10 @@ it('starts the list read on initial year restoration even when scope is already 
     scopeLoading: false,
   });
   const view = render(<AdmissionInquiriesScreen />);
-  expect(state.query).toHaveBeenLastCalledWith({ skip: true });
+  expect(state.query).toHaveBeenLastCalledWith({ skip: true, refetchOnMountOrArgChange: true });
   state.academicYearId = 'year';
   view.rerender(<AdmissionInquiriesScreen />);
-  expect(state.query).toHaveBeenLastCalledWith({ skip: false });
+  expect(state.query).toHaveBeenLastCalledWith({ skip: false, refetchOnMountOrArgChange: true });
   expect(state.updateAcademic).not.toHaveBeenCalled();
 });
 
@@ -268,7 +383,7 @@ it.each(['', '/school'])(
 
 it('never renders the empty result during scope restoration or before the first response', () => {
   const view = render(<AdmissionInquiriesScreen />);
-  expect(state.query).toHaveBeenLastCalledWith({ skip: true });
+  expect(state.query).toHaveBeenLastCalledWith({ skip: true, refetchOnMountOrArgChange: true });
   expect(screen.getByRole('status')).toHaveTextContent('Inquiry skeleton');
   expect(screen.queryByText('No Inquiries Awaiting Admission Handoff')).not.toBeInTheDocument();
   Object.assign(state, { board: 'board', medium: 'medium', scopeLoading: false, fetching: true });
@@ -280,7 +395,7 @@ it('never renders the empty result during scope restoration or before the first 
   expect(screen.getByText('QA Loading')).toBeInTheDocument();
 });
 
-it('keeps safe rows visible on refetch and handoff progress visible after the moved row disappears', () => {
+it('keeps table refresh independent of the handoff and omits a page-level handoff loader', () => {
   Object.assign(state, {
     board: 'board',
     medium: 'medium',
@@ -293,13 +408,12 @@ it('keeps safe rows visible on refetch and handoff progress visible after the mo
   expect(screen.getByText('QA Loading')).toBeInTheDocument();
   expect(state.table.isRefreshing).toBe(true);
   expect(state.table.refreshIndicator).toBe('skeleton');
-  state.data = { items: [], totalCount: 0 };
   state.moving = true;
-  state.fetching = false;
   view.rerender(<AdmissionInquiriesScreen />);
+  expect(screen.getByText('QA Loading')).toBeInTheDocument();
   expect(
-    screen.getByRole('status', { name: 'Moving Inquiry to the Next Stage' })
-  ).toBeInTheDocument();
+    screen.queryByRole('status', { name: 'Moving Inquiry to the Next Stage' })
+  ).not.toBeInTheDocument();
 });
 
 it('distinguishes successful empty, failed and unavailable-scope results from initial loading', () => {
@@ -319,6 +433,19 @@ it('distinguishes successful empty, failed and unavailable-scope results from in
   view.rerender(<AdmissionInquiriesScreen />);
   expect(screen.queryByRole('status')).not.toBeInTheDocument();
   expect(screen.getByText(/Select an Available Academic Year/)).toBeInTheDocument();
+});
+
+it('uses the existing skeleton while revalidating a cached empty result', () => {
+  Object.assign(state, {
+    board: 'board',
+    medium: 'medium',
+    scopeLoading: false,
+    fetching: true,
+    data: { items: [], totalCount: 0 },
+  });
+  render(<AdmissionInquiriesScreen />);
+  expect(screen.getByRole('status')).toHaveTextContent('Inquiry skeleton');
+  expect(screen.queryByText('No Inquiries Awaiting Admission Handoff')).not.toBeInTheDocument();
 });
 
 it('preserves same-scope rows and the table when a refresh fails', () => {

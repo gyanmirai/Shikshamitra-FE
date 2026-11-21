@@ -1,3 +1,4 @@
+import { useAccountSettingHistoryPage } from 'src/screens/finance/settings/components/useAccountSettingHistoryPage';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import { LoadingButton } from '@mui/lab';
@@ -38,6 +39,7 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
   totalCount,
   onServerPagination,
   onServerSearch,
+  searchTerm,
   filters,
   onServerFilter,
   page,
@@ -53,7 +55,8 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
   const [statusData, setStatusData] = useState<null | IBankAccount>(null);
   const [deactivationReason, setDeactivationReason] = useState('');
   const [historyItem, setHistoryItem] = useState<IBankAccount | null>(null);
-  const history = useGetBankAccountVersionsQuery(historyItem?.id || '', { skip: !historyItem });
+  const historyPage = useAccountSettingHistoryPage(historyItem?.id);
+  const history = useGetBankAccountVersionsQuery(historyPage.query, { skip: !historyItem || !access.canView });
 
   const handleOpenStatusConfirm = (row: IBankAccount) => {
     setStatusData(row);
@@ -347,6 +350,7 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
         totalCount={totalCount}
         onServerPagination={onServerPagination}
         onServerSearch={onServerSearch}
+        searchTerm={searchTerm}
       />
       <ConfirmDialog
         open={statusConfirm.value}
@@ -417,6 +421,9 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
         title={historyItem?.bankName || 'Bank account'}
         recordType="Bank account"
         data={history.currentData}
+        page={historyPage.page}
+        pageSize={historyPage.pageSize}
+        onPageChange={historyPage.onPageChange}
         isLoading={history.isFetching}
         isError={history.isError}
         onRetry={() => {

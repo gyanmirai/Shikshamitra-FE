@@ -1,17 +1,22 @@
+import type { ReactNode } from 'react';
 import type { RootState } from 'src/redux/store';
 import type { Board, Medium } from 'src/types/school';
 import type { StudentRecordProfile } from 'src/redux/student/student-profile-types';
 
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
-import { Box, Paper, Stack, Avatar, Divider, Typography } from '@mui/material';
+import { Box, Paper, Stack, Divider, Typography } from '@mui/material';
+
+import StudentPhotoAvatar from '../components/student-photo-avatar';
 
 export function StudentProfileHeader({
   student,
   compact = false,
+  grNumberAction,
 }: {
   student: StudentRecordProfile;
   compact?: boolean;
+  grNumberAction?: ReactNode;
 }) {
   const currentYear = useSelector((state: RootState) => state.globalState.currentYear);
   const board = currentYear?.boards?.find((item: Board) =>
@@ -54,7 +59,11 @@ export function StudentProfileHeader({
           alignItems="center"
           sx={{ minWidth: 0, gridColumn: { xs: '1 / -1', md: 'auto' } }}
         >
-          <Avatar
+          <StudentPhotoAvatar
+            studentId={student.studentId}
+            hasPhoto={
+              student.recordsAccess !== 'Summary' && !student.maskedFields?.includes('Identity')
+            }
             alt={name}
             sx={{
               width: compact ? 32 : 40,
@@ -65,7 +74,7 @@ export function StudentProfileHeader({
           >
             {student.firstName?.[0]}
             {student.lastName?.[0]}
-          </Avatar>
+          </StudentPhotoAvatar>
           <Stack
             direction="row"
             spacing={1}
@@ -81,7 +90,11 @@ export function StudentProfileHeader({
           </Stack>
         </Stack>
         {[
-          { label: 'GR number', value: student.grNumber ?? student.grNo },
+          {
+            label: 'GR number',
+            value: student.grNumber?.trim() || student.grNo,
+            action: grNumberAction,
+          },
           {
             label: 'Class / Division',
             value: [student.standardName, student.divisionName].filter(Boolean).join(' · '),
@@ -93,9 +106,11 @@ export function StudentProfileHeader({
             <Typography variant="caption" color="text.secondary">
               {field.label}
             </Typography>
-            <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
-              {field.value == null || field.value === '' ? '—' : field.value}
-            </Typography>
+            {field.action || (
+              <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
+                {field.value == null || field.value === '' ? '—' : field.value}
+              </Typography>
+            )}
           </Box>
         ))}
       </Box>

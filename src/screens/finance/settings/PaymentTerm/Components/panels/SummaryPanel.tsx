@@ -53,48 +53,26 @@ export function SummaryPanel({ values, boards, checks, demandLabel }: SummaryPan
       <Scrollbar sx={{ flex: 1 }}>
         <Box sx={{ p: 2 }}>
           {/* ── Live Summary ───────────────────────────────────────────────── */}
-          <Typography
-            variant="overline"
-            sx={{
-              fontSize: '0.6rem',
-              fontWeight: 800,
-              letterSpacing: '0.1em',
-              color: 'text.secondary',
-            }}
-          >
-            Live Summary
-          </Typography>
+          <Typography variant="subtitle1">Live Summary</Typography>
 
           <Stack spacing={0.75} mt={1} mb={2}>
             <SummaryRow
               label="Board"
               value={
                 <Typography
-                  variant="caption"
-                  fontWeight={600}
-                  sx={{
-                    maxWidth: 130,
-                    textAlign: 'right',
-                    wordBreak: 'break-word',
-                    fontSize: '0.7rem',
-                  }}
+                  variant="body2"
+                  sx={{ maxWidth: 130, textAlign: 'right', overflowWrap: 'anywhere' }}
                 >
                   {selectedBoardName}
                 </Typography>
               }
             />
             <SummaryRow
-              label="Term Name"
+              label="Term name"
               value={
                 <Typography
-                  variant="caption"
-                  fontWeight={600}
-                  sx={{
-                    maxWidth: 130,
-                    textAlign: 'right',
-                    wordBreak: 'break-word',
-                    fontSize: '0.7rem',
-                  }}
+                  variant="body2"
+                  sx={{ maxWidth: 130, textAlign: 'right', overflowWrap: 'anywhere' }}
                 >
                   {values.paymentTermName || '—'}
                 </Typography>
@@ -130,7 +108,7 @@ export function SummaryPanel({ values, boards, checks, demandLabel }: SummaryPan
               }
             />
             <SummaryRow
-              label="Default Term"
+              label="Default term"
               value={
                 <Chip
                   label={values.isDefaultTerm ? 'Yes' : 'No'}
@@ -142,19 +120,15 @@ export function SummaryPanel({ values, boards, checks, demandLabel }: SummaryPan
               }
             />
             <SummaryRow
-              label="Invoice Date Rule"
+              label="Invoice date rule"
               value={
-                <Typography
-                  variant="caption"
-                  fontWeight={600}
-                  sx={{ fontSize: '0.7rem', maxWidth: 120, textAlign: 'right' }}
-                >
+                <Typography variant="body2" sx={{ maxWidth: 120, textAlign: 'right' }}>
                   {demandLabel}
                 </Typography>
               }
             />
             <SummaryRow
-              label="Invoice Creation"
+              label="Invoice creation"
               value={
                 <Chip
                   label={values.invoiceCreationEnabled ? 'Enabled' : 'Disabled'}
@@ -170,17 +144,7 @@ export function SummaryPanel({ values, boards, checks, demandLabel }: SummaryPan
           <Divider sx={{ my: 1.5 }} />
 
           {/* ── Timeline Preview ───────────────────────────────────────────── */}
-          <Typography
-            variant="overline"
-            sx={{
-              fontSize: '0.6rem',
-              fontWeight: 800,
-              letterSpacing: '0.1em',
-              color: 'text.secondary',
-            }}
-          >
-            Timeline Preview
-          </Typography>
+          <Typography variant="subtitle1">Timeline Preview</Typography>
           <Box mt={1} mb={2}>
             {values.installments.length === 0 ? (
               <Box
@@ -214,17 +178,7 @@ export function SummaryPanel({ values, boards, checks, demandLabel }: SummaryPan
           <Divider sx={{ my: 1.5 }} />
 
           {/* ── Publish Checklist ──────────────────────────────────────────── */}
-          <Typography
-            variant="overline"
-            sx={{
-              fontSize: '0.6rem',
-              fontWeight: 800,
-              letterSpacing: '0.1em',
-              color: 'text.secondary',
-            }}
-          >
-            Validation Checklist
-          </Typography>
+          <Typography variant="subtitle1">Validation Checklist</Typography>
           <Stack spacing={0.4} mt={1}>
             <ValidationCheck label="Board selected" valid={checks.boardValid} />
             <ValidationCheck label="Term name (3+ characters)" valid={checks.nameValid} />

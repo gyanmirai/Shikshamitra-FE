@@ -220,7 +220,9 @@ export default function CertificateHistoryTable({ studentId }: { studentId: stri
         const actions = [
           {
             id: 'view',
-            label: `View ${certificate.certificateNumber}`,
+            label: 'View',
+            ariaLabel: `View ${certificate.certificateNumber}`,
+            tooltip: `View ${certificate.certificateNumber}`,
             icon: GlobalIcons.eye,
             disabled: blocked,
             onClick: () => read(certificate),
@@ -229,7 +231,9 @@ export default function CertificateHistoryTable({ studentId }: { studentId: stri
             ? [
                 {
                   id: 'download',
-                  label: `Download ${certificate.certificateNumber}`,
+                  label: 'Download',
+                  ariaLabel: `Download ${certificate.certificateNumber}`,
+                  tooltip: `Download ${certificate.certificateNumber}`,
                   icon: GlobalIcons.download,
                   disabled: blocked,
                   onClick: () => downloadSaved(certificate),
@@ -247,7 +251,9 @@ export default function CertificateHistoryTable({ studentId }: { studentId: stri
                 .filter(([key]) => supported.includes(key))
                 .map(([key, label, icon]) => ({
                   id: key,
-                  label: `${label} ${certificate.certificateNumber}`,
+                  label,
+                  ariaLabel: `${label} ${certificate.certificateNumber}`,
+                  tooltip: `${label} ${certificate.certificateNumber}`,
                   icon,
                   disabled: blocked,
                   onClick: () => openDecision(label, certificate),
@@ -260,6 +266,8 @@ export default function CertificateHistoryTable({ studentId }: { studentId: stri
             directActionLimit={2}
             collapseOnOverflow={false}
             moreLabel={`More actions for ${certificate.certificateNumber}`}
+            placement="right-top"
+            sx={{ justifyContent: 'flex-end' }}
           />
         );
       },

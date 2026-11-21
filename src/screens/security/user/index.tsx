@@ -64,7 +64,7 @@ const UserManagementScreen = () => {
       />
       <CustomDialog
         fullScreen
-        title="Set Visibility"
+        title={user?.userName ? `Set Visibility for ${user.userName}` : 'Set Visibility'}
         open={visibilityDialog.value}
         disableClose={permissionBusy}
         paperProps={{ sx: { '& [aria-label="close"]': { minWidth: 44, minHeight: 44 } } }}

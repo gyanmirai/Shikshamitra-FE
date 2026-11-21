@@ -2,16 +2,17 @@
 
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
+import dayjs from 'dayjs';
 import { useState, useContext } from 'react';
-import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CancelButton from 'src/components/cancel-button';
-import { formatDateOnly } from 'src/utils/date-only';
 import { formatNumber } from 'src/utils/formate_number';
+import { Label, labelClasses } from 'src/components/label';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { parseDateOnly, formatDateOnly } from 'src/utils/date-only';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { DetailGrid, DetailField, DetailSection } from 'src/components/detail-view';
+import { DetailGrid, DetailField, DetailSection } from 'src/screens/finance/components/detail-view';
 import {
   Box,
   Stack,
@@ -24,6 +25,7 @@ import {
 } from '@mui/material';
 import {
   FeeMonth,
+  FeeCollectionStatusType,
   feeInstallmentStatusLabel,
   chargeCollectionStatusLabel,
   FeeCollectionStatusTypeColors,
@@ -44,6 +46,7 @@ type LedgerRow = MonthWiseFeeItem & {
   id: string;
   period: string;
   periodLabel: string;
+  billingPeriod?: string;
   charge?: IFeeCharge;
   outstanding: number;
 };
@@ -64,6 +67,18 @@ const lateFeeAppliedDays = (charge: IFeeCharge) =>
     ? `${charge.lateFeeAppliedDays} ${charge.lateFeeAppliedDays === 1 ? 'overdue day' : 'overdue days'} considered; grace and exception days are excluded.`
     : 'Grace and policy exception days are excluded from the displayed range.';
 
+const getDaysOverdue = (row?: LedgerRow) => {
+  if (!row || row.charge || row.status !== FeeCollectionStatusType.Overdue) return null;
+  if (row.daysOverdue != null && Number.isInteger(row.daysOverdue) && row.daysOverdue > 0)
+    return row.daysOverdue;
+
+  // Older collect-form responses provide the due date without an overdue count.
+  const dueDate = parseDateOnly(row.dueDate);
+  if (!dueDate) return null;
+  const days = dayjs().startOf('day').diff(dueDate.startOf('day'), 'day');
+  return days > 0 ? days : null;
+};
+
 /** One embedded student ledger. Filtering is owned by the collect form; sorting never changes allocation order. */
 export default function CollectionLedgerTable({
   data,
@@ -73,14 +88,26 @@ export default function CollectionLedgerTable({
   chargesData = [],
   onSelectionChange,
   onChargesChange,
+  onLedgerSelectionChange,
+  deselectPartiallyFundedGroups = false,
   year = new Date().getFullYear(),
   hasActiveFilters,
   layout,
   groupByInstallment,
+  oneTimeFeeHeadIds,
+  getAllocatedAmount,
+  selectedFeeCandidates = selectedItems,
+  selectedChargeCandidates = charges,
 }: FeeLedgerListProps & {
   layout: CollectionLayout;
   onPeriodFocus?: (period: string) => void;
   groupByInstallment?: boolean;
+  oneTimeFeeHeadIds?: ReadonlySet<string>;
+  getAllocatedAmount?: (item: SelectedItem | IFeeCharge) => number;
+  selectedFeeCandidates?: SelectedItem[];
+  selectedChargeCandidates?: string[];
+  onLedgerSelectionChange?: (items: SelectedItem[], chargeIds: string[], removing: boolean) => void;
+  deselectPartiallyFundedGroups?: boolean;
 }) {
   const allowWaivers = useContext(FeeCollectionWaiverContext);
   const [detailId, setDetailId] = useState<string | null>(null);
@@ -88,18 +115,32 @@ export default function CollectionLedgerTable({
   const rows: LedgerRow[] = data.monthWise.flatMap((group) =>
     group.items.map((item) => {
       const period = toPeriod(group.month, group.year ?? year);
+      const periodLabel = `${FeeMonth[group.month]} ${group.year ?? year}`;
+      const start = parseDateOnly(item.coverageStartDate);
+      const end = parseDateOnly(item.coverageEndDate);
+      const billingPeriod =
+        start && end
+          ? start.isSame(end, 'month')
+            ? start.format('MMMM YYYY')
+            : `${start.format('MMM YYYY')} – ${end.format('MMM YYYY')}`
+          : periodLabel;
       return {
         ...item,
         id: `fee:${item.dueFeeId ?? `${item.feeHeadId}:${period}`}`,
         period,
-        periodLabel: `${FeeMonth[group.month]} ${group.year ?? year}`,
+        periodLabel,
+        billingPeriod,
         outstanding: roundUpToRupee(item.due) + (item.lateFeeAmount ?? 0),
       };
     })
   );
   if (activeTab === 'by-fee-head' && layout !== 'period')
     rows.sort(
-      (a, b) => a.feeHeadName.localeCompare(b.feeHeadName) || a.period.localeCompare(b.period)
+      (a, b) =>
+        Number(Boolean(oneTimeFeeHeadIds?.has(b.feeHeadId))) -
+          Number(Boolean(oneTimeFeeHeadIds?.has(a.feeHeadId))) ||
+        a.feeHeadName.localeCompare(b.feeHeadName) ||
+        a.period.localeCompare(b.period)
     );
   else rows.sort((a, b) => a.period.localeCompare(b.period));
   rows.push(
@@ -110,6 +151,7 @@ export default function CollectionLedgerTable({
       feeHeadName: charge.chargeName,
       period: '',
       periodLabel: charge.dueDate ?? '—',
+      dueDate: charge.dueDate,
       installmentLabel: charge.isSystemGenerated ? 'System generated' : 'Additional charge',
       total: charge.total ?? charge.amount,
       paid: charge.paid ?? 0,
@@ -139,24 +181,33 @@ export default function CollectionLedgerTable({
     lateFeeAmount: row.lateFeeAmount,
     installmentLabel: row.installmentLabel,
   });
-  const toggleRows = (candidates: LedgerRow[]) => {
+  const toggleRows = (candidates: LedgerRow[], isGroup = false) => {
     const eligible = candidates.filter(collectible);
     if (!eligible.length) return;
-    const remove = eligible.every(isSelected);
+    const remove =
+      eligible.every(isSelected) ||
+      (isGroup && deselectPartiallyFundedGroups && eligible.some(isSelected));
     const feeRows = eligible.filter((row) => !row.charge);
-    const keys = new Set(feeRows.map((row) => selectionItemKey(asSelection(row))));
-    if (feeRows.length)
-      onSelectionChange(
-        remove
-          ? selectedItems.filter((item) => !keys.has(selectionItemKey(item)))
-          : [...selectedItems, ...feeRows.filter((row) => !isSelected(row)).map(asSelection)]
-      );
+    const feeSelections = feeRows.map(asSelection);
+    const keys = new Set(feeSelections.map(selectionItemKey));
+    const candidateKeys = new Set(selectedItems.map(selectionItemKey));
+    const nextFees = remove
+      ? selectedItems.filter((item) => !keys.has(selectionItemKey(item)))
+      : [
+          ...selectedItems,
+          ...feeSelections.filter((item) => !candidateKeys.has(selectionItemKey(item))),
+        ];
     const chargeRows = eligible.filter((row) => row.charge);
     const ids = new Set(chargeRows.map((row) => row.charge!.chargeId));
-    if (chargeRows.length)
-      onChargesChange(
-        remove ? charges.filter((id) => !ids.has(id)) : [...new Set([...charges, ...ids])]
-      );
+    const nextCharges = remove
+      ? charges.filter((id) => !ids.has(id))
+      : [...new Set([...charges, ...ids])];
+    if (onLedgerSelectionChange) {
+      onLedgerSelectionChange(nextFees, nextCharges, remove);
+    } else {
+      if (feeRows.length) onSelectionChange(nextFees);
+      if (chargeRows.length) onChargesChange(nextCharges);
+    }
   };
   const groupCheckbox = (candidates: LedgerRow[], label: string) => {
     const eligible = candidates.filter(collectible);
@@ -169,7 +220,7 @@ export default function CollectionLedgerTable({
         indeterminate={count > 0 && count < eligible.length}
         disabled={!eligible.length}
         inputProps={{ 'aria-label': label }}
-        onChange={() => toggleRows(candidates)}
+        onChange={() => toggleRows(candidates, true)}
       />
     );
   };
@@ -234,43 +285,49 @@ export default function CollectionLedgerTable({
           <Typography variant="body2" fontWeight={600}>
             {row.feeHeadName}
           </Typography>
-          {row.charge && (
+          {row.charge && row.charge.sourceType !== 'LateFee' && !row.charge.isSystemGenerated && (
             <Typography variant="caption" color="text.secondary">
               Additional Charges
             </Typography>
           )}
+          {!row.charge && row.paymentTermName && (
+            <Typography variant="caption" color="text.secondary">
+              {row.paymentTermName}
+            </Typography>
+          )}
+          {oneTimeFeeHeadIds?.has(row.feeHeadId) && <Label sx={{ ml: 1 }}>One time</Label>}
         </Box>
       ),
     },
     {
       id: 'period',
-      label: 'Due Period',
+      label: 'Fee Period',
       minWidth: 150,
       isFilter: false,
-      render: (_value, row) => <Typography variant="body2">{row.periodLabel}</Typography>,
+      sortValue: (_value, row) => row.coverageStartDate ?? row.period,
+      render: (_value, row) => <Typography variant="body2">{row.billingPeriod}</Typography>,
     },
     {
-      id: 'installmentLabel',
-      label: 'Installment',
-      minWidth: 150,
+      id: 'dueDate',
+      label: 'Due Date',
+      minWidth: 125,
       isFilter: false,
-      render: (value, row) => (
-        <Typography variant="body2">{row.charge ? '—' : value || '—'}</Typography>
+      render: (_value, row) => (
+        <Typography variant="body2">{formatDateOnly(row.dueDate, 'D MMM YYYY')}</Typography>
       ),
     },
-    {
-      id: 'outstanding',
-      label: 'Amount',
-      align: 'left',
-      cellSx: { textAlign: 'right' },
-      minWidth: 135,
+    ...(['total', 'paid', 'due'] as const).map((id, index): IColumn => ({
+      id,
+      label: ['Total', 'Paid', 'Pending'][index],
+      align: 'right',
+      minWidth: 100,
       isFilter: false,
       render: (value) => (
         <Typography variant="body2" fontWeight={600} sx={{ fontVariantNumeric: 'tabular-nums' }}>
           {formatNumber(value, 'INR')}
         </Typography>
       ),
-    },
+    })),
     {
       id: 'status',
       label: 'Status',
@@ -292,17 +349,23 @@ export default function CollectionLedgerTable({
     },
   ];
   const detail = rows.find((row) => row.id === detailId);
+  const daysOverdue = getDaysOverdue(detail);
   const closeDetail = () => setDetailId(null);
-  const waiverApplied = (row = detail) => {
-    if (row?.charge && charges.includes(row.charge.chargeId)) {
-      onChargesChange(charges.filter((id) => id !== row.charge!.chargeId));
-    } else if (row && !row.charge && isSelected(row)) {
+  const waiverApplied = (remainingAmount = 0, row = detail) => {
+    if (
+      row?.charge &&
+      remainingAmount === 0 &&
+      selectedChargeCandidates.includes(row.charge.chargeId)
+    ) {
+      onChargesChange(selectedChargeCandidates.filter((id) => id !== row.charge!.chargeId));
+    } else if (row && !row.charge) {
       const key = selectionItemKey(asSelection(row));
-      onSelectionChange(
-        selectedItems.map((item) =>
-          selectionItemKey(item) === key ? { ...item, lateFeeAmount: 0 } : item
-        )
-      );
+      if (selectedFeeCandidates.some((item) => selectionItemKey(item) === key))
+        onSelectionChange(
+          selectedFeeCandidates.map((item) =>
+            selectionItemKey(item) === key ? { ...item, lateFeeAmount: remainingAmount } : item
+          )
+        );
     }
     closeDetail();
   };
@@ -316,8 +379,17 @@ export default function CollectionLedgerTable({
     >
       <Stack spacing={1.5} sx={{ flex: 1, minHeight: 0, overflowY: 'auto', pb: 1 }}>
         {groups.map((group, index) => {
+          const groupedByFeeHead =
+            activeTab === 'by-fee-head' && layout !== 'period' && group.id !== 'additional-charges';
+          const paymentTermNames = groupedByFeeHead
+            ? [...new Set(group.items.map((row) => row.paymentTermName).filter(Boolean))]
+            : [];
           const selected = group.items.filter(isSelected);
-          const selectedTotal = selected.reduce((sum, row) => sum + row.outstanding, 0);
+          const selectedTotal = selected.reduce(
+            (sum, row) =>
+              sum + (getAllocatedAmount?.(row.charge ?? asSelection(row)) ?? row.outstanding),
+            0
+          );
           const outstanding = group.items
             .filter(collectible)
             .reduce((sum, row) => sum + row.outstanding, 0);
@@ -325,12 +397,13 @@ export default function CollectionLedgerTable({
           const groupColumns: IColumn[] = columns
             .filter(
               (column) =>
-                column.id !== 'feeHeadName' ||
-                group.id === 'additional-charges' ||
-                activeTab === 'by-month'
+                (column.id !== 'feeHeadName' || !groupedByFeeHead) &&
+                (column.id !== 'period' || group.id !== 'additional-charges')
             )
             .map((column) => ({
               ...column,
+              ...(group.id === 'additional-charges' &&
+                column.id === 'paid' && { label: 'Collected' }),
               ...(column.id === 'selection' && {
                 label: groupCheckbox(group.items, `Select all ${group.title}`),
               }),
@@ -338,20 +411,7 @@ export default function CollectionLedgerTable({
               headerSx: { py: 1 },
             }));
           if (group.id === 'additional-charges') {
-            const amountColumn = groupColumns.findIndex((column) => column.id === 'outstanding');
             const chargeAmountColumns: IColumn[] = [
-              {
-                cellSx: { textAlign: 'right' as const },
-                id: 'total',
-                label: 'Original',
-                render: (_value, row) => formatNumber(row.total, 'INR'),
-              },
-              {
-                cellSx: { textAlign: 'right' as const },
-                id: 'paid',
-                label: 'Collected',
-                render: (_value, row) => formatNumber(row.paid, 'INR'),
-              },
               {
                 cellSx: { textAlign: 'right' as const },
                 id: 'waived',
@@ -360,7 +420,7 @@ export default function CollectionLedgerTable({
               },
             ];
             groupColumns.splice(
-              amountColumn,
+              groupColumns.findIndex((column) => column.id === 'due'),
               0,
               ...chargeAmountColumns.map((column) => ({
                 ...column,
@@ -392,7 +452,7 @@ export default function CollectionLedgerTable({
                       sourceName={row.feeHeadName}
                       remainingAmount={row.due}
                       canWaive={row.charge.canWaive}
-                      onApplied={() => waiverApplied(row)}
+                      onApplied={(result) => waiverApplied(result?.remainingAmount, row)}
                     />
                   ) : null;
                 },
@@ -445,11 +505,23 @@ export default function CollectionLedgerTable({
                     >
                       {group.title}
                     </Typography>
+                    {paymentTermNames.length > 0 && (
+                      <Typography variant="caption" color="text.secondary">
+                        {paymentTermNames.join(' · ')}
+                      </Typography>
+                    )}
+                    {groupedByFeeHead && oneTimeFeeHeadIds?.has(group.id) && (
+                      <Label sx={{ alignSelf: { xs: 'flex-start', sm: 'center' } }}>One time</Label>
+                    )}
                     {selected.length ? (
                       <Label
                         color="success"
                         sx={{
                           height: 'auto',
+                          typography: 'body2',
+                          fontWeight: 700,
+                          whiteSpace: 'normal',
+                          flexShrink: 0,
                           py: 0.5,
                           alignSelf: { xs: 'flex-start', sm: 'center' },
                         }}
@@ -489,8 +561,17 @@ export default function CollectionLedgerTable({
                   isSearch={false}
                   isFilter={false}
                   isShowedDense={false}
-                  rowProps={(row) => ({ selected: isSelected(row as LedgerRow) })}
-
+                  rowProps={(row) => ({
+                    selected: isSelected(row as LedgerRow),
+                    sx:
+                      !row.charge && row.status === FeeCollectionStatusType.Paid
+                        ? {
+                            [`& > td:not(:first-child), & .${labelClasses.root}`]: {
+                              textDecoration: 'line-through',
+                            },
+                          }
+                        : undefined,
+                  })}
                   wrapperProps={{
                     sx: {
                       minWidth: 0,
@@ -579,7 +660,16 @@ export default function CollectionLedgerTable({
                     <>
                       <DetailField label="Due period" value={detail.periodLabel} />
                       <DetailField label="Installment" value={detail.installmentLabel} />
+                      {detail.dueDate && (
+                        <DetailField
+                          label="Due date"
+                          value={formatDateOnly(detail.dueDate, 'D MMMM YYYY')}
+                        />
+                      )}
                     </>
+                  )}
+                  {daysOverdue != null && (
+                    <DetailField label="Days overdue" value={String(daysOverdue)} />
                   )}
                 </DetailGrid>
               </DetailSection>
@@ -692,7 +782,7 @@ export default function CollectionLedgerTable({
                         sourceName={detail.feeHeadName}
                         canWaive={detail.charge.canWaive}
                         remainingAmount={detail.due}
-                        onApplied={() => waiverApplied()}
+                        onApplied={(result) => waiverApplied(result?.remainingAmount)}
                       />
                     )
                   : detail.dueFeeId &&
@@ -703,7 +793,7 @@ export default function CollectionLedgerTable({
                         sourceId={detail.dueFeeId}
                         sourceName={`${detail.feeHeadName}, ${detail.periodLabel}`}
                         remainingAmount={detail.lateFeeAmount!}
-                        onApplied={() => waiverApplied()}
+                        onApplied={(result) => waiverApplied(result?.remainingAmount)}
                       />
                     ))}
             </Stack>

@@ -169,7 +169,7 @@ export function BulkPipelineCounsellor({ assignment, disabled }: Props) {
               <TextField
                 fullWidth
                 size="small"
-                label="Reason for Change (Optional)"
+                label="Reason for Change"
                 name="reason"
                 value={formik.values.reason}
                 onChange={formik.handleChange}

@@ -133,7 +133,7 @@ const RubricCriterionCard = ({
             fullWidth
             size="small"
             disabled={readOnly}
-            label={`${criterion.title} feedback (optional)`}
+            label={`${criterion.title} feedback`}
             value={value.comments}
             onChange={(event) => onCommentsChange(criterion.id, event.target.value)}
             placeholder="Add a concise note about this criterion"

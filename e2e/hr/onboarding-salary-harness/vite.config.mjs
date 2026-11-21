@@ -12,6 +12,7 @@ const mockedImports = [
   'src/redux/academicOrganizationOptions/academicOrganizationOptionsApi',
   'src/redux/hr/employeeOnboardingApi',
   'src/redux/PF/PFApi',
+  'src/redux/hr/pf-coverage-api',
   'src/redux/hr/esi-policy-api',
   'src/redux/hr/salary-template-api',
   'src/redux/hr/compensation-revision-api',

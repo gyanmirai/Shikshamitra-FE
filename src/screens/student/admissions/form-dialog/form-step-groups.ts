@@ -1,5 +1,7 @@
 import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
 
+import { isAdmissionRuleVisible } from '../admission-visibility-rules';
+
 type StepSection = {
   id: string;
   code: string;
@@ -69,6 +71,29 @@ export function nextSectionNumber(sections: CreateUpdateAdmissionForm['sections'
   let number = sections.length + 1;
   while (codes.has(`SECTION_${number}`)) number += 1;
   return number;
+}
+
+export function getVisibleAdmissionFormSteps<
+  TSection extends StepSection & { visibilityRuleJson?: string | null },
+>(sections: TSection[], values: Record<string, string>, usePublishedGroups: boolean) {
+  const groups = usePublishedGroups
+    ? getAdmissionFormStepGroups(sections)
+    : sections.map((section, sectionIndex) => ({
+        id: section.id,
+        name: section.name,
+        visibilityRuleJson: section.stepVisibilityRuleJson,
+        sections: [{ section, sectionIndex }],
+      }));
+
+  return groups
+    .filter((step) => isAdmissionRuleVisible(step.visibilityRuleJson, values))
+    .map((step) => ({
+      ...step,
+      sections: step.sections.filter(({ section }) =>
+        isAdmissionRuleVisible(section.visibilityRuleJson, values)
+      ),
+    }))
+    .filter((step) => step.sections.length > 0);
 }
 
 export function nextStepNumber(sections: CreateUpdateAdmissionForm['sections']) {

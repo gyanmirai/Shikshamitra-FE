@@ -29,6 +29,7 @@ const mocks = vi.hoisted(() => ({
   queryError: false,
   retry: vi.fn(),
   save: vi.fn(),
+  loadStudents: vi.fn(),
   halfDay: false,
 }));
 vi.mock('react-redux', () => ({
@@ -44,10 +45,14 @@ vi.mock('../setting/attendance-context', () => ({
   useAttendanceContext: () => ({ params: mocks.params, update: vi.fn() }),
 }));
 vi.mock('src/redux/customQueryAndMutation', () => ({
-  default: ({ type }: { type: string }) =>
+  default: ({ type, params }: { type: string; params?: { divisionId?: string } }) =>
     type === 'mutation'
-      ? [mocks.save, { isLoading: mocks.saving }]
+      ? [
+          params?.divisionId !== undefined ? mocks.loadStudents : mocks.save,
+          { isLoading: mocks.saving },
+        ]
       : {
+          data: { items: [{ id: 'leave-type', leaveTypeName: 'Sick leave' }] },
           currentData: {
             items: [
               {
@@ -80,6 +85,23 @@ vi.mock('src/redux/student/student-leave/student-leave-api', () => ({
   }),
 }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
+vi.mock('src/components/editor', () => ({
+  Editor: ({
+    value,
+    onChange,
+    editorProps,
+  }: {
+    value: string;
+    onChange: (value: string) => void;
+    editorProps: { attributes: { 'aria-labelledby': string; 'aria-required': 'true' } };
+  }) => (
+    <textarea
+      {...editorProps.attributes}
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+    />
+  ),
+}));
 vi.mock('src/components/customDialog', () => ({
   default: ({
     open,
@@ -165,6 +187,11 @@ beforeEach(() => {
   mocks.saving = false;
   mocks.halfDay = false;
   mocks.save.mockReset().mockReturnValue({ unwrap: async () => ({}) });
+  mocks.loadStudents.mockReset().mockReturnValue({
+    unwrap: async () => ({
+      items: [{ studentId: 'student', firstName: 'Test', lastName: 'Student' }],
+    }),
+  });
   mocks.queryError = false;
   mocks.retry.mockClear();
   mocks.params = new URLSearchParams('dashboard=pending');
@@ -264,7 +291,7 @@ it('enables form entry when the dashboard medium is selected and on ordinary rou
     'true'
   );
   const upload = screen.getByRole('button', { name: 'Choose supporting document' });
-  expect(screen.getByRole('group', { name: 'Supporting document (optional)' })).toContainElement(
+  expect(screen.getByRole('group', { name: 'Supporting document' })).toContainElement(
     upload
   );
   expect(upload).toHaveAttribute('aria-disabled', 'false');
@@ -318,5 +345,90 @@ it.each([false, true])(
         })
       )
     );
+    expect(mocks.save.mock.calls[0][0].data).not.toHaveProperty('attachment');
   }
 );
+
+it.each([
+  ['medical-note.png', 'image/png', 'image/png'],
+  ['medical-note.pdf', '', 'application/pdf'],
+])(
+  'sends attachment bytes and file metadata when editing with %s',
+  async (name, browserMime, expectedMime) => {
+    const medium = { id: 'medium', educationMediumStages: [] } as unknown as Medium;
+    render(
+      <LeaveRequests
+        scope={{ academicYearId: 'year', educationMediumId: 'medium' }}
+        selectedMedium={medium}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Edit request' }));
+    const input = screen
+      .getByRole('button', { name: 'Choose supporting document' })
+      .querySelector('input[type="file"]')!;
+    const file = new File([new Uint8Array([1, 2, 3])], name, { type: browserMime });
+    fireEvent.change(input, { target: { files: [file] } });
+    expect(screen.getByText(name)).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+    await waitFor(() =>
+      expect(mocks.save).toHaveBeenCalledWith({
+        id: 'leave',
+        data: expect.objectContaining({
+          attachment: 'AQID',
+          attachmentFileName: name,
+          attachmentContentType: expectedMime,
+        }),
+      })
+    );
+  }
+);
+
+it('creates a leave request with the selected PNG as a JSON attachment', async () => {
+  const medium = {
+    id: 'medium',
+    educationMediumStages: [
+      {
+        id: 'stage',
+        name: 'Primary',
+        standards: [{ id: 'class', name: 'Class 1', divisions: [{ id: 'division', name: 'A' }] }],
+      },
+    ],
+  } as unknown as Medium;
+  render(
+    <LeaveRequests
+      scope={{ academicYearId: 'year', educationMediumId: 'medium' }}
+      selectedMedium={medium}
+    />
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Add leave request' }));
+  fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Student' }));
+  fireEvent.click(await screen.findByRole('option', { name: 'Test Student' }));
+  fireEvent.mouseDown(screen.getByRole('combobox', { name: /Leave type/ }));
+  fireEvent.click(await screen.findByRole('option', { name: 'Sick leave' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Half day' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Choose date' }));
+  const today = screen.getByRole('grid').querySelector('[aria-current="date"]')!;
+  fireEvent.click(today);
+  const editor = screen.getByRole('textbox', { name: /^Leave description/ });
+  fireEvent.change(editor, { target: { value: 'Medical appointment' } });
+  const input = screen
+    .getByRole('button', { name: 'Choose supporting document' })
+    .querySelector('input[type="file"]')!;
+  fireEvent.change(input, {
+    target: { files: [new File([new Uint8Array([1, 2, 3])], 'note.png', { type: 'image/png' })] },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+  await waitFor(() =>
+    expect(mocks.save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        studentId: 'student',
+        studentLeaveTypeId: 'leave-type',
+        isHalfDay: true,
+        endDate: null,
+        attachment: 'AQID',
+        attachmentFileName: 'note.png',
+        attachmentContentType: 'image/png',
+      })
+    )
+  );
+}, 15000);

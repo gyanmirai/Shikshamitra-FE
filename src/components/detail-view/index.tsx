@@ -84,6 +84,7 @@ export function DetailField({
   secondary,
   fullWidth = false,
   labelTypographyProps,
+  labelAppearance = 'emphasized',
   layout = 'stacked',
 }: {
   label: string;
@@ -91,6 +92,7 @@ export function DetailField({
   secondary?: string;
   fullWidth?: boolean;
   labelTypographyProps?: Partial<TypographyProps>;
+  labelAppearance?: 'standard' | 'emphasized';
   layout?: 'stacked' | 'inline';
 }) {
   return (
@@ -109,16 +111,18 @@ export function DetailField({
       <Typography
         variant="caption"
         component="div"
-        color="text.primary"
+        color={labelAppearance === 'standard' ? 'text.secondary' : 'text.primary'}
         {...labelTypographyProps}
         sx={[
-          {
-            mb: layout === 'inline' ? 0 : 0.5,
-            fontWeight: 800,
-            letterSpacing: '0.75px',
-            lineHeight: 1.4,
-            textTransform: 'uppercase',
-          },
+          labelAppearance === 'standard'
+            ? { mb: layout === 'inline' ? 0 : 0.25 }
+            : {
+                mb: layout === 'inline' ? 0 : 0.5,
+                fontWeight: 800,
+                letterSpacing: '0.75px',
+                lineHeight: 1.4,
+                textTransform: 'uppercase',
+              },
           ...(Array.isArray(labelTypographyProps?.sx)
             ? labelTypographyProps.sx
             : [labelTypographyProps?.sx]),

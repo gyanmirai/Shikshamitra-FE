@@ -12,6 +12,8 @@ type Props = {
   showOverlay?: boolean;
   /** Continue the owning workspace's flex layout through the blocking region. */
   fillContent?: boolean;
+  /** Allow a full-height flex layout to pass through the fieldset's anonymous content box. */
+  flattenFieldset?: boolean;
 };
 
 /** Keeps a blocking form visible while disabling native and custom controls. */
@@ -21,6 +23,7 @@ export function FormBusyRegion({
   children,
   showOverlay = true,
   fillContent = false,
+  flattenFieldset = false,
 }: Props) {
   const contentLayout = fillContent
     ? ({
@@ -36,7 +39,14 @@ export function FormBusyRegion({
       <Box
         component="fieldset"
         disabled={busy}
-        sx={{ border: 0, p: 0, m: 0, minWidth: 0, ...contentLayout }}
+        sx={{
+          border: 0,
+          p: 0,
+          m: 0,
+          minWidth: 0,
+          ...contentLayout,
+          ...(flattenFieldset && { display: 'contents' }),
+        }}
       >
         <Box inert={busy || undefined} sx={contentLayout}>
           {children}

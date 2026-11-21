@@ -128,6 +128,7 @@ export type StudentDirectoryItem = {
   rollNo?: number | null;
   status: number | string;
   academicYearId?: string | null;
+  isCurrentAcademicYear?: boolean | null;
   standardId?: string | null;
   standardName?: string | null;
   divisionId?: string | null;

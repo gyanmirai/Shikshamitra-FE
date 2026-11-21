@@ -3,6 +3,7 @@
 import type {
   AdmissionWorkflowStage,
   AdmissionWorkflowTransition,
+  AdmissionWorkflowValidationIssue,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
 import { Label } from 'src/components/label';
@@ -17,6 +18,7 @@ import {
   ButtonBase,
   IconButton,
   Typography,
+  Alert,
 } from '@mui/material';
 
 import { getTransitionSummary } from '../../workflow-builder-utils';
@@ -28,6 +30,7 @@ type Props = {
   stepNumber: number;
   readOnly: boolean;
   issueCount: number;
+  issues: AdmissionWorkflowValidationIssue[];
   onEdit: () => void;
   onDuplicate: () => void;
   onDelete: () => void;
@@ -51,6 +54,7 @@ export function WorkflowStageCard({
   stepNumber,
   readOnly,
   issueCount,
+  issues,
   onEdit,
   onDuplicate,
   onDelete,
@@ -68,6 +72,45 @@ export function WorkflowStageCard({
     stages.find((item) => item.id === path.toStageId)?.name ?? 'Missing stage';
   const canChooseNextStep =
     !readOnly && !stage.isTerminalStage && !orderedTransitions.some((path) => path.isDefault);
+  const renderIssue = (issue: AdmissionWorkflowValidationIssue, index: number) => {
+    const deadEnd = issue.code === 'Admissions.WorkflowDeadEndStage';
+    const issueTransition = transitions.find((item) => item.id === issue.transitionId);
+    const action = deadEnd && !readOnly
+      ? onAddPath
+      : issueTransition
+        ? () => onEditPath(issueTransition)
+        : onEdit;
+    const actionLabel = deadEnd && !readOnly
+      ? 'Choose Next Step'
+      : issueTransition
+        ? readOnly ? 'View Route' : 'Edit Route'
+        : readOnly ? 'View Stage' : 'Edit Stage';
+    return (
+      <Alert
+        key={`${issue.code}-${issue.transitionId ?? issue.stageId ?? 'workflow'}-${index}`}
+        severity={issue.severity === 0 ? 'error' : 'warning'}
+        variant="outlined"
+        action={
+          <Button
+            size="small"
+            onClick={action}
+            aria-label={`${actionLabel} for ${stage.name}`}
+          >
+            {actionLabel}
+          </Button>
+        }
+        sx={{
+          mt: 1,
+          alignItems: 'center',
+          bgcolor: 'background.paper',
+          '& .MuiAlert-message': { overflowWrap: 'anywhere' },
+          '& .MuiAlert-action': { alignItems: 'center', pt: 0 },
+        }}
+      >
+        {issue.message}
+      </Alert>
+    );
+  };
 
   return (
     <Card
@@ -151,6 +194,7 @@ export function WorkflowStageCard({
               {stage.description}
             </Typography>
           )}
+          {issues.map(renderIssue)}
           <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mt: 0.25, minWidth: 0 }}>
             <Iconify
               icon={stage.isTerminalStage ? 'mdi:flag-checkered' : 'mdi:arrow-right'}

@@ -11,6 +11,7 @@ import { FormBuilderReview } from './form-builder-review';
 import { FormBuilderDetails } from './form-builder-details';
 import { FormBuilderSections } from '../form-builder-sections';
 import { useFormWizardFocus } from '../hooks/use-form-wizard-focus';
+import { FormBuilderPrintLayout } from './form-builder-print-layout';
 import { FormInheritanceProvider } from '../hooks/use-form-inheritance';
 
 type Props = {
@@ -19,6 +20,8 @@ type Props = {
   footer?: ReactNode;
   editing?: AdmissionForm | null;
   onInheritanceReadinessChange?: (ready: boolean) => void;
+  nameConflictMessage?: string | null;
+  checkingName?: boolean;
 };
 
 export function FormBuilderWizardContent({
@@ -27,6 +30,8 @@ export function FormBuilderWizardContent({
   footer,
   editing,
   onInheritanceReadinessChange,
+  nameConflictMessage,
+  checkingName,
 }: Props) {
   const contentRef = useFormWizardFocus(activeStep);
   return (
@@ -44,10 +49,17 @@ export function FormBuilderWizardContent({
           minWidth: 0,
           minHeight: 0,
           overflow: activeStep !== 0 ? 'hidden' : undefined,
-          height: activeStep === 2 ? 1 : activeStep === 1 ? { lg: 1 } : undefined,
+          height: activeStep >= 2 ? 1 : activeStep === 1 ? { lg: 1 } : undefined,
         }}
       >
-        {activeStep === 0 && <FormBuilderDetails formik={formik} editing={Boolean(editing)} />}
+        {activeStep === 0 && (
+          <FormBuilderDetails
+            formik={formik}
+            editing={Boolean(editing)}
+            nameConflictMessage={nameConflictMessage}
+            checkingName={checkingName}
+          />
+        )}
         {activeStep === 1 && (
           <Box
             sx={{
@@ -63,6 +75,9 @@ export function FormBuilderWizardContent({
           </Box>
         )}
         {activeStep === 2 && <FormBuilderReview formik={formik} />}
+        {activeStep === 3 && formik.values.purpose !== 0 && (
+          <FormBuilderPrintLayout formik={formik} />
+        )}
       </Stack>
     </FormInheritanceProvider>
   );

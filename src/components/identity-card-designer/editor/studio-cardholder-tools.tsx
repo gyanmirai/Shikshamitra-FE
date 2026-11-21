@@ -32,7 +32,7 @@ export function StudioCardholderTools({
         direction="row"
         spacing={1}
         alignItems="center"
-        sx={{ display: { xs: 'none', sm: 'flex' } }}
+        sx={{ display: { xs: 'none', xl: 'flex' } }}
       >
         <Box sx={{ width: 180 }}>{select('Preview person')}</Box>
         <Button
@@ -45,7 +45,7 @@ export function StudioCardholderTools({
           {photo.loading ? 'Loading photo…' : 'Edit photo'}
         </Button>
       </Stack>
-      <Box sx={{ display: { xs: 'block', sm: 'none' } }}>
+      <Box sx={{ display: { xs: 'block', xl: 'none' } }}>
         <Button
           size="small"
           variant="outlined"
@@ -55,7 +55,7 @@ export function StudioCardholderTools({
           loading={photo.loading}
           onClick={() => setOpen(true)}
           disabled={disabled || photo.loading}
-          sx={{ minHeight: 44 }}
+          sx={{ '@media (any-pointer: coarse)': { minHeight: 44 } }}
         >
           Photo
         </Button>

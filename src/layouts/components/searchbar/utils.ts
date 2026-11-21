@@ -1,6 +1,8 @@
+import type { GrantedPermission } from 'src/utils/permissions';
 import type { NavSectionProps, NavItemBaseProps } from 'src/components/nav-section';
 
 import { flattenArray } from 'src/utils/helper';
+import { hasNavigationPermission } from 'src/utils/permissions';
 
 // ----------------------------------------------------------------------
 
@@ -11,8 +13,16 @@ type ItemProps = {
   shortcutKeyName: string;
 };
 
-export function getAllItems({ data }: { data: NavSectionProps['data'] }) {
-  const reduceItems = data.map((list) => handleLoop(list.items, list.subheader)).flat();
+export function getAllItems({
+  data,
+  permissions,
+}: {
+  data: NavSectionProps['data'];
+  permissions?: GrantedPermission[];
+}) {
+  const reduceItems = data
+    .map((list) => handleLoop(list.items, list.subheader, permissions))
+    .flat();
 
   const items = flattenArray(reduceItems).map((option) => {
     const group = splitPath(reduceItems, option.path);
@@ -76,12 +86,18 @@ export function splitPath(array: NavItemBaseProps[], key: string) {
 
 // ----------------------------------------------------------------------
 
-export function handleLoop(array: any, subheader?: string) {
-  return array?.map((list: any) => ({
-    subheader,
-    ...list,
-    ...(list.children && { children: handleLoop(list.children, subheader) }),
-  }));
+export function handleLoop(array: any, subheader?: string, permissions?: GrantedPermission[]) {
+  return array
+    ?.filter(
+      (list: NavItemBaseProps) =>
+        !list.requiredAllPermissions?.length ||
+        hasNavigationPermission(permissions, list.permissionName, list.requiredAllPermissions)
+    )
+    .map((list: any) => ({
+      subheader,
+      ...list,
+      ...(list.children && { children: handleLoop(list.children, subheader, permissions) }),
+    }));
 }
 
 // ----------------------------------------------------------------------

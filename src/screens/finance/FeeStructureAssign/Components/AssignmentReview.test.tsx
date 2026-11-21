@@ -125,7 +125,7 @@ describe('assignment review evidence', () => {
 
   it('shows policy names and versions with read-only policy view fields', () => {
     mount();
-    expect(screen.getByText('collection policy')).toBeVisible();
+    expect(screen.getByText('Collection policy')).toBeVisible();
     expect(screen.getByText('School collection · v2')).toBeVisible();
     expect(screen.queryByRole('button', { name: /edit|service details/i })).not.toBeInTheDocument();
   });

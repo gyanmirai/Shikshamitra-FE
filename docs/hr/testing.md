@@ -3,7 +3,7 @@ module: hr
 domain: testing
 content_type: Reference
 status: canonical
-updated_on: 2026-11-16
+updated_on: 2026-11-17
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -45,7 +45,12 @@ Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/@play
 
 ## HR setup readiness wizard
 
-Run `npx playwright test --config e2e/hr/hr-setup-polish.config.ts` for the content-sized checklist, all five steps, readable status variants, optional deductions, read-only/year/error/completion states and embedded PF coverage draft protection. It uses actual production components with synthetic readiness and a loopback-only PF read; writes return an explicit error and no backend is connected. Desktop, tablet and phone layouts run in both themes. Finish with the in-app browser smoke test at `http://127.0.0.1:4197` using the same fixture. The real-backend `hr-setup.spec.ts` suite remains the save-contract coverage.
+Run `npx playwright test --config e2e/hr/hr-setup-polish.config.ts` for stable dialog dimensions across all five steps and embedded PF coverage, visible welcome guidance, saved-only completion progress, readable status variants, optional deductions, read-only/year/error/completion states and embedded PF coverage draft protection.
+It uses actual production components with synthetic readiness and a loopback-only PF read; writes return an explicit error and no backend is connected.
+Desktop, tablet and phone layouts run at 1440 by 900, 768 by 1024 and 390 by 844 in both themes.
+Desktop and tablet assertions measure connector alignment and equal step widths with single-line and wrapped labels.
+Finish with the in-app browser smoke test at `http://127.0.0.1:4197` using the same fixture.
+The real-backend `hr-setup.spec.ts` suite remains the save-contract coverage.
 
 Salary-preview recovery tests include `salary-preview-error.test.ts`, `hr-failure.test.ts`, `hr-recovery-provider.test.tsx`, `hr-recovery-middleware.test.ts`, `inline-salary-preview-recovery.test.ts` and `salary-preview-recovery.integration.test.ts`.
 Cover deficit/excess, numeric strings, exact-paise and subpaise boundaries, malformed or absent metadata, genuine field messages, request/route ownership, abort cleanup and unhandled/access/network fallback.

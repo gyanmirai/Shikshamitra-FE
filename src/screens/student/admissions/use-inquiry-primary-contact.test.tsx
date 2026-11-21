@@ -27,26 +27,29 @@ const fields = [
   field('ROLE', 'Inquiry.ParentRelationship'),
   field('NAME', 'Guardian.FirstName'),
   field('PHONE', 'Guardian.Mobile'),
+  field('EMAIL', 'Guardian.Email'),
 ];
+const contactAnswers = { NAME: 'QA Contact', PHONE: '9876543210', EMAIL: 'qa@example.invalid' };
 const submit = vi.fn();
 it('clears a legacy saved Father identity when a newly configured selector changes its role', () => {
   const next = changeInquiryPrimaryContact(
     {
       ...initialAdmissionInquiryValues,
       capturedParentRelationship: 'father' as const,
-      fields: { ROLE: '', NAME: 'Raj Shah', PHONE: '9876543210' },
+      fields: { ROLE: '', ...contactAnswers },
     },
     fields,
     'ROLE',
-    'mother'
+    'mother',
+    { isEditingSavedInquiry: true }
   );
-  expect(next.fields).toEqual({ ROLE: 'mother', NAME: '', PHONE: '' });
+  expect(next.fields).toEqual({ ROLE: 'mother', NAME: '', PHONE: '', EMAIL: '' });
 });
 function Harness({ contextKey = 'one' }: { contextKey?: string }) {
   const formik = useFormik({
     initialValues: {
       ...initialAdmissionInquiryValues,
-      fields: { ROLE: 'father', NAME: 'Raj Shah', PHONE: '9876543210' },
+      fields: { ROLE: 'father', ...contactAnswers },
     },
     onSubmit: submit,
   });
@@ -58,6 +61,9 @@ function Harness({ contextKey = 'one' }: { contextKey?: string }) {
       </button>
       <button type="button" onClick={() => contact.changeField(fields[0], 'mother')}>
         Mother
+      </button>
+      <button type="button" onClick={() => contact.changeField(fields[0], 'father')}>
+        Father
       </button>
       <output data-testid="values">{JSON.stringify(formik.values)}</output>
       {contact.confirmation}
@@ -72,31 +78,33 @@ it('stages Guardian, cancels with the previous identity intact, and confirms wit
   expect(screen.getByRole('dialog')).toBeVisible();
   expect(JSON.parse(screen.getByTestId('values').textContent!).fields).toEqual({
     ROLE: 'father',
-    NAME: 'Raj Shah',
-    PHONE: '9876543210',
+    ...contactAnswers,
   });
   await user.click(screen.getByRole('button', { name: 'Cancel' }));
   expect(JSON.parse(screen.getByTestId('values').textContent!).fields).toEqual({
     ROLE: 'father',
-    NAME: 'Raj Shah',
-    PHONE: '9876543210',
+    ...contactAnswers,
   });
   await user.click(screen.getByRole('button', { name: 'Guardian' }));
   await user.click(screen.getByRole('button', { name: 'Confirm Guardian' }));
   expect(JSON.parse(screen.getByTestId('values').textContent!)).toMatchObject({
     guardianResponsibilityConfirmed: true,
-    fields: { ROLE: 'guardian', NAME: '', PHONE: '' },
+    fields: { ROLE: 'guardian', ...contactAnswers },
   });
   expect(submit).not.toHaveBeenCalled();
+  await user.click(screen.getByRole('button', { name: 'Father' }));
+  expect(JSON.parse(screen.getByTestId('values').textContent!)).toMatchObject({
+    guardianResponsibilityConfirmed: false,
+    fields: { ROLE: 'father', ...contactAnswers },
+  });
 });
-it('clears the previous adult on an actual role change and dismisses pending confirmation on context change', async () => {
+it('keeps the draft contact when selecting Mother and dismisses pending confirmation on context change', async () => {
   const user = userEvent.setup();
   const view = render(<Harness />);
   await user.click(screen.getByRole('button', { name: 'Mother' }));
   expect(JSON.parse(screen.getByTestId('values').textContent!).fields).toEqual({
     ROLE: 'mother',
-    NAME: '',
-    PHONE: '',
+    ...contactAnswers,
   });
   await user.click(screen.getByRole('button', { name: 'Guardian' }));
   view.rerender(<Harness contextKey="two" />);

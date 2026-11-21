@@ -3,8 +3,10 @@ import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
 import { formatNumber } from 'src/utils/formate_number';
 import { Box, Grid, Stack, Divider, Typography } from '@mui/material';
+import { DetailField } from 'src/screens/finance/components/detail-view';
 
 import { collectionPaymentDetails } from '../collectionPaymentDetails';
+
 import type { FeeCollectionPayment } from '../../Components/type';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -55,31 +57,6 @@ const formatDetailValue = (
   return String(value);
 };
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
-
-const DetailRow = ({ label, value }: { label: string; value?: string | null }) =>
-  value ? (
-    <Box>
-      <Typography
-        variant="caption"
-        color="text.disabled"
-        fontWeight={500}
-        sx={{
-          textTransform: 'uppercase',
-          letterSpacing: '0.6px',
-          fontSize: '10px',
-          display: 'block',
-          mb: 0.25,
-        }}
-      >
-        {label}
-      </Typography>
-      <Typography variant="body2" fontWeight={600} color="text.primary">
-        {value}
-      </Typography>
-    </Box>
-  ) : null;
-
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const PaymentInfoPreview = ({ payment, remarks, bankAccounts }: Props) => {
@@ -104,19 +81,7 @@ const PaymentInfoPreview = ({ payment, remarks, bankAccounts }: Props) => {
         },
       }}
     >
-      {/* ── Section Label ── */}
-      <Typography
-        variant="caption"
-        color="text.disabled"
-        fontWeight={600}
-        sx={{
-          textTransform: 'uppercase',
-          letterSpacing: '0.8px',
-          fontSize: '10px',
-          display: 'block',
-          mb: 1.5,
-        }}
-      >
+      <Typography variant="subtitle1" sx={{ mb: 1.5 }}>
         Payment Method
       </Typography>
 
@@ -156,13 +121,8 @@ const PaymentInfoPreview = ({ payment, remarks, bankAccounts }: Props) => {
 
         {/* Amount badge */}
         <Box textAlign="right">
-          <Typography
-            variant="caption"
-            color="text.disabled"
-            fontWeight={500}
-            sx={{ fontSize: '10px', display: 'block' }}
-          >
-            AMOUNT
+          <Typography variant="caption" color="text.secondary" display="block" mb={0.25}>
+            Amount
           </Typography>
           <Typography variant="subtitle1" fontWeight={800} color="primary.main">
             {formatNumber(amount, 'INR')}
@@ -175,14 +135,19 @@ const PaymentInfoPreview = ({ payment, remarks, bankAccounts }: Props) => {
         <>
           <Divider sx={{ my: 2, opacity: 0.6 }} />
           <Grid container spacing={2}>
-            {detailEntries.map(([key, value]) => (
-              <Grid size={{ xs: 6, sm: 4 }} key={key}>
-                <DetailRow
-                  label={key.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase())}
-                  value={formatDetailValue(key, value, bankAccounts)}
-                />
-              </Grid>
-            ))}
+            {detailEntries.map(([key, value]) => {
+              const formattedValue = formatDetailValue(key, value, bankAccounts);
+              if (!formattedValue) return null;
+              const label = key
+                .replace(/([A-Z])/g, (letter) => ` ${letter.toLowerCase()}`)
+                .replace(/^./, (letter) => letter.toUpperCase());
+
+              return (
+                <Grid size={{ xs: 6, sm: 4 }} key={key}>
+                  <DetailField label={label} value={formattedValue} />
+                </Grid>
+              );
+            })}
           </Grid>
         </>
       )}
@@ -199,23 +164,7 @@ const PaymentInfoPreview = ({ payment, remarks, bankAccounts }: Props) => {
               border: `1px dashed ${alpha(theme.palette.text.secondary, 0.15)}`,
             }}
           >
-            <Typography
-              variant="caption"
-              color="text.disabled"
-              fontWeight={600}
-              sx={{
-                textTransform: 'uppercase',
-                letterSpacing: '0.6px',
-                fontSize: '10px',
-                display: 'block',
-                mb: 0.5,
-              }}
-            >
-              Remarks
-            </Typography>
-            <Typography variant="body2" color="text.primary" lineHeight={1.6}>
-              {remarks}
-            </Typography>
+            <DetailField label="Remarks" value={remarks} />
           </Box>
         </>
       )}

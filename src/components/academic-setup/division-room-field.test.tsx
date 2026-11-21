@@ -30,7 +30,7 @@ function renderPicker(roomNumber?: string) {
       <DivisionRoomField disabled={false} roomNumber={roomNumber} onChange={onChange} />
     </Provider>
   );
-  const input = screen.getByRole('combobox', { name: 'Room (optional)' });
+  const input = screen.getByRole('combobox', { name: 'Room' });
   fireEvent.focus(input);
   return { onChange, input };
 }

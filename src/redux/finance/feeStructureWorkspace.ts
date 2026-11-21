@@ -1,4 +1,4 @@
-import { financeModuleType } from 'src/redux/tagTypes';
+import { financeModuleType, financePolicyType, paymentTermType } from 'src/redux/tagTypes';
 
 import { financeModuleApi } from './financeModuleApi';
 import { financeFeeStructureApi } from './financeFeeStructure';
@@ -76,6 +76,9 @@ export interface StructureSettings extends StructureContext {
     versionNumber: number;
     isCurrent: boolean;
     isDefault?: boolean;
+    feeHeadScope?: 'AllFeeHeads' | 'SelectedFeeHeads' | null;
+    applicableFeeHeadIds?: string[] | null;
+    feeHeadNames?: Record<string, string> | null;
   }[];
   terms: {
     id: string;
@@ -148,15 +151,57 @@ export interface StructureCopyPolicy {
   error: string | null;
 }
 
-const classTags = (_r: unknown, error: unknown, arg: { standardId: string }) =>
+const classTags = (
+  _r: unknown,
+  error: unknown,
+  arg: { standardId: string; structureId?: string }
+) =>
   error
     ? []
     : [
         { type: financeModuleType.classWiseFeeStructure, id: arg.standardId },
+        ...(arg.structureId
+          ? [{ type: financeModuleType.classWiseFeeStructure, id: `structure:${arg.structureId}` }]
+          : []),
         financeModuleType.feeStructure,
       ];
 export const feeStructureWorkspaceApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
+    getStructureSummaries: builder.query<any[], { standardId: string }>({
+      query: (params) => ({ url: '/fee-structures/summaries', params }),
+      providesTags: (_r, _e, { standardId }) => [
+        { type: financeModuleType.classWiseFeeStructure, id: standardId },
+      ],
+    }),
+    getStructureDetail: builder.query<StructureRecord, string>({
+      query: (id) => ({ url: `/fee-structures/${id}` }),
+      providesTags: (_r, _e, id) => [
+        { type: financeModuleType.classWiseFeeStructure, id: `structure:${id}` },
+      ],
+    }),
+    getStructureCatalogue: builder.query<
+      Pick<StructureSettings, 'policies' | 'terms'>,
+      { feeStructureMetadataId: string; standardId: string; academicYearId: string }
+    >({
+      query: (params) => ({ url: '/fee-structures/catalogue', params }),
+      providesTags: (_result, _error, { academicYearId }) => [
+        paymentTermType.paymentTerm,
+        { type: financePolicyType.collectionPolicy, id: `year:${academicYearId}` },
+        { type: financePolicyType.refundPolicy, id: `year:${academicYearId}` },
+      ],
+    }),
+    getStructureTermSchedule: builder.query<
+      StructureSettings['terms'][number],
+      {
+        feeStructureMetadataId: string;
+        standardId: string;
+        paymentTermId: string;
+        versionId: string;
+      }
+    >({
+      query: (params) => ({ url: '/fee-structures/term-schedule', params }),
+      providesTags: [paymentTermType.paymentTerm],
+    }),
     getStructureCopyPolicies: builder.query<
       StructureCopyPolicy[],
       { sourceId: string; feeStructureMetadataId: string; standardId: string }
@@ -244,6 +289,25 @@ export const feeStructureWorkspaceApi = financeModuleApi.injectEndpoints({
         try {
           const { data } = await queryFulfilled;
           dispatch(
+            feeStructureWorkspaceApi.util.upsertQueryData('getStructureDetail', data.id, data)
+          );
+          dispatch(
+            feeStructureWorkspaceApi.util.updateQueryData(
+              'getStructureSummaries',
+              { standardId: arg.standardId },
+              (draft) => {
+                const summary = draft.find((item) => item.id === data.id);
+                if (summary)
+                  Object.assign(summary, {
+                    id: data.id,
+                    name: data.name,
+                    status: (data as any).status,
+                    concurrencyStamp: data.concurrencyStamp,
+                  });
+              }
+            )
+          );
+          dispatch(
             financeFeeStructureApi.util.updateQueryData(
               'getStandardFeeStructure',
               { standardId: arg.standardId },
@@ -285,6 +349,10 @@ export const feeStructureWorkspaceApi = financeModuleApi.injectEndpoints({
   }),
 });
 export const {
+  useGetStructureSummariesQuery,
+  useGetStructureDetailQuery,
+  useGetStructureCatalogueQuery,
+  useGetStructureTermScheduleQuery,
   useGetStructureCopyPoliciesQuery,
   useGetStructureCopySourcesQuery,
   useGetStructureContextQuery,

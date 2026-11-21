@@ -1,13 +1,10 @@
 import type { AdmissionDocumentEvidence } from 'src/redux/student/admissions/admission-document-types';
 
 import { useState } from 'react';
-import { Iconify } from 'src/components/iconify';
 import { StudentFeedback } from 'src/components/student-feedback';
-import { Box, Stack, Button, Skeleton, Typography } from '@mui/material';
+import { Box, Button, Skeleton, Typography } from '@mui/material';
 
 import { useDocumentPreview } from './use-document-preview';
-import { DocumentFileControl } from './document-file-control';
-import { DocumentDownloadButton } from './document-download-button';
 
 /** Authorized file viewer shared by read-only preview and document review. */
 export function DocumentPreviewContent({
@@ -20,13 +17,9 @@ export function DocumentPreviewContent({
   showFileName?: boolean;
 }) {
   const { preview, retry } = useDocumentPreview(evidence);
-  const [zoom, setZoom] = useState<number | null>(null);
-  const [imageWidth, setImageWidth] = useState(0);
   const [imageFailed, setImageFailed] = useState(false);
-  const imageReady = preview.status === 'ready' && preview.contentType !== 'application/pdf';
   const retryPreview = () => {
     setImageFailed(false);
-    setZoom(null);
     retry();
   };
   return (
@@ -40,46 +33,11 @@ export function DocumentPreviewContent({
         gap: 1.5,
       }}
     >
-      <Stack spacing={1} sx={{ pb: 1.5, borderBottom: 1, borderColor: 'divider' }}>
-        {showFileName && (
-          <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>
-            {evidence.fileName} · Copy Version {evidence.versionNumber}
-          </Typography>
-        )}
-        <Stack direction="row" alignItems="center" gap={1} useFlexGap flexWrap="wrap">
-          {imageReady && !imageFailed && (
-            <>
-              <DocumentFileControl
-                label="Zoom Out"
-                icon="mdi:magnify-minus-outline"
-                disabled={zoom !== null && zoom <= 0.25}
-                reason="Minimum zoom reached."
-                onClick={() => setZoom((value) => Math.max(0.25, (value ?? 1) - 0.25))}
-              />
-              <Typography variant="body2" aria-live="polite">
-                {zoom === null ? 'Fit' : `${Math.round(zoom * 100)}%`}
-              </Typography>
-              <DocumentFileControl
-                label="Zoom In"
-                icon="mdi:magnify-plus-outline"
-                disabled={zoom !== null && zoom >= 3}
-                reason="Maximum zoom reached."
-                onClick={() => setZoom((value) => Math.min(3, (value ?? 1) + 0.25))}
-              />
-              <Button
-                size="small"
-                startIcon={<Iconify icon="mdi:fit-to-screen-outline" />}
-                onClick={() => setZoom(null)}
-              >
-                Fit to Page
-              </Button>
-            </>
-          )}
-          <Box sx={{ ml: 'auto' }}>
-            <DocumentDownloadButton evidenceId={evidence.id} fileName={evidence.fileName!} />
-          </Box>
-        </Stack>
-      </Stack>
+      {showFileName && (
+        <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>
+          {evidence.fileName}
+        </Typography>
+      )}
       <Box sx={{ flex: 1, minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         {preview.status === 'loading' ? (
           <Skeleton
@@ -126,23 +84,27 @@ export function DocumentPreviewContent({
               bgcolor: 'background.neutral',
             }}
           >
-            <Box sx={{ position: 'absolute', inset: 0, overflow: 'auto', p: 2, display: 'flex' }}>
+            <Box
+              sx={{
+                position: 'absolute',
+                inset: 0,
+                overflow: 'auto',
+                p: { xs: 1, sm: 2 },
+                display: 'flex',
+              }}
+            >
               <Box
                 component="img"
                 src={preview.url}
                 alt={`${name} Document Preview`}
-                onLoad={(event) => {
-                  if (event.target instanceof HTMLImageElement)
-                    setImageWidth(event.target.naturalWidth);
-                }}
                 onError={() => setImageFailed(true)}
                 sx={{
                   display: 'block',
                   m: 'auto',
                   flexShrink: 0,
                   objectFit: 'contain',
-                  width: zoom === null || !imageWidth ? 1 : imageWidth * zoom,
-                  height: zoom === null ? 1 : 'auto',
+                  width: 1,
+                  height: 1,
                 }}
               />
             </Box>

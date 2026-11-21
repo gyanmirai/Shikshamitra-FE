@@ -297,7 +297,7 @@ export default function AdmissionFormPreviewScreen() {
           Unable to load the saved Inquiry questions. Retry the preview.
         </Alert>
       ) : form ? (
-        <FormPreviewContent form={form} formik={formik} resolvedOptions={resolvedOptions} />
+        <FormPreviewContent form={form} formik={formik} resolvedOptions={resolvedOptions} preview />
       ) : null}
     </Box>
   );

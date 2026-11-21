@@ -26,6 +26,7 @@ export interface FeeHeadGroupProps {
   showValidation: boolean;
   mode?: 'refund' | 'adjustment';
   selectedReceiptId?: string;
+  selectedPayerKey?: string;
   onToggleMonth: (month: string, dueFeeId: string) => void;
   onToggleAll: () => void;
   applyInAllState?: { amount: number | string };
@@ -40,6 +41,7 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
   showValidation,
   mode = 'refund',
   selectedReceiptId,
+  selectedPayerKey,
   onToggleMonth,
   onToggleAll,
   applyInAllState = { amount: '' },
@@ -120,14 +122,19 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
     const receiptLocked = Boolean(
       !isAdj && selectedReceiptId && item.sourceReceiptId !== selectedReceiptId
     );
+    const payerLocked = Boolean(
+      !isAdj && selectedPayerKey && item.sourcePayerKey !== selectedPayerKey
+    );
     return {
       ...item,
       id: item.sourceAllocationId || item.month,
       isSelected,
-      isDisabled: refundable === 0 || receiptLocked,
-      disabledReason: receiptLocked
-        ? 'Clear the selected installments to choose this receipt.'
-        : '',
+      isDisabled: refundable === 0 || receiptLocked || payerLocked,
+      disabledReason: payerLocked
+        ? 'Clear selected installments to choose a different payment account.'
+        : receiptLocked
+          ? 'Clear the selected installments to choose this receipt.'
+          : '',
       refundValue,
       inputError:
         showValidation &&
@@ -258,6 +265,7 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
             totalRefundInput={totalRefundInput}
             mode={mode}
             selectedReceiptId={selectedReceiptId}
+            selectedPayerKey={selectedPayerKey}
             isFullRefund={isFullRefund}
             onCheckboxToggle={onToggleAll}
             onExpandToggle={() => setOpen((value) => !value)}
@@ -318,7 +326,8 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
                 </Typography>
                 {totalRefundInput > 0 && (
                   <Typography variant="body2">
-                    {isAdj ? 'Adjustment' : 'Refund'}: {formatNumber(totalRefundInput, 'INR', { fractionDigits: isAdj ? 2 : 0 })}
+                    {isAdj ? 'Adjustment' : 'Refund'}:{' '}
+                    {formatNumber(totalRefundInput, 'INR', { fractionDigits: isAdj ? 2 : 0 })}
                   </Typography>
                 )}
               </Stack>

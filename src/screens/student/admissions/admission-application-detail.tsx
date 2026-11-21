@@ -101,6 +101,7 @@ export default function AdmissionApplicationDetailScreen({
   const activityDrawer = useBoolean();
   const correctionDrawer = useBoolean();
   const [finalizationOpen, setFinalizationOpen] = useState(false);
+  const [decisionFooter, setDecisionFooter] = useState<HTMLElement | null>(null);
   const [decisionDraftDirty, setDecisionDraftDirty] = useState(false);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canViewApplicantNotes = hasGrantedPermission(
@@ -165,9 +166,9 @@ export default function AdmissionApplicationDetailScreen({
   });
   const academicOffering = canReadOfferingContext ? offeringContext.currentData : undefined;
   const academicContext = [
-    application?.standardName || academicOffering?.standardName,
     academicOffering?.boardName,
     academicOffering?.mediumName,
+    application?.standardName || academicOffering?.standardName,
   ].filter((value): value is string => Boolean(value?.trim()));
   // Withdrawn cases belong to Applications history even when no decision stage was entered.
   const decisionWorkspace = application?.hasReachedDecision === true || application?.status === 2;
@@ -187,6 +188,13 @@ export default function AdmissionApplicationDetailScreen({
         [...(workflow?.stages ?? [])].reverse().find((stage) => stage.status >= 2))
       : undefined;
   const historical = Boolean(selectedStage && selectedStage.status >= 2);
+  const showDecisionReview =
+    workspace.view === 'journey' &&
+    ((!historical && selectedStage?.stageType === 7 && selectedStage.isTerminalStage === true) ||
+      (workflow?.status === 1 &&
+        (!selectedStage ||
+          isAdmissionDecisionStage(selectedStage) ||
+          (!workspace.stageId && [6, 11].includes(application?.status ?? -1)))));
   const selectedCurrentStage = selectedStage?.id === currentStage?.id;
   const stageDraftDirty = Boolean(
     stageReadiness?.stageId === selectedStage?.id && stageReadiness?.dirty
@@ -357,6 +365,11 @@ export default function AdmissionApplicationDetailScreen({
           onValidateStep={detail.validateStep}
           onValidationBusyChange={onValidationBusyChange}
           onSave={detail.save}
+          onRefresh={() => {
+            applicationQuery.refetch();
+            workflowQuery.refetch();
+            if (!formQuery.isUninitialized) formQuery.refetch();
+          }}
           onSubmit={detail.submitApplication}
           showSaveDraft={detail.formStageQuery.currentData?.policy?.allowSaveAndResume ?? true}
           canSubmitForm={
@@ -518,12 +531,12 @@ export default function AdmissionApplicationDetailScreen({
             : undefined
         }
       >
-        {selectedStage?.completedAt && (
+        {!showDecisionReview && selectedStage?.completedAt && (
           <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
             Handled By: {selectedStage.completedByName || 'Staff Name Not Recorded'}
           </Typography>
         )}
-        {historical && selectedStage && !isFormStage(selectedStage) && (
+        {!showDecisionReview && historical && selectedStage && !isFormStage(selectedStage) && (
           <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
             <Label color={getStageStatusColor(selectedStage.status)}>
               {getStageStatusLabel(selectedStage.status)}
@@ -540,14 +553,24 @@ export default function AdmissionApplicationDetailScreen({
             )}
           </Stack>
         )}
-        {isFormStage(selectedStage) && renderRuntimeForm(historical)}
-        {((!historical && isAdmissionDecisionStage(selectedStage)) ||
+        {!showDecisionReview && isFormStage(selectedStage) && renderRuntimeForm(historical)}
+        {(showDecisionReview ||
+          (!historical && isAdmissionDecisionStage(selectedStage)) ||
           (workflow?.status === 1 &&
             (!selectedStage || isAdmissionDecisionStage(selectedStage)))) && (
           <ApplicationDecisionCard
             compact
+            simplified={showDecisionReview}
             hideFinalizedActions
-            disabled={workspaceBusy || (!selectedCurrentStage && workflow?.status !== 1)}
+            footerElement={decisionFooter}
+            onCancel={closeDetail}
+            disabled={
+              workspaceBusy ||
+              detail.hasUnsavedAnswers ||
+              feeEditorState.dirty ||
+              stageDraftDirty ||
+              (!selectedCurrentStage && workflow?.status !== 1)
+            }
             navigationDisabled={navigationLocked}
             onBusyChange={onDecisionBusyChange}
             onDirtyChange={setDecisionDraftDirty}
@@ -557,6 +580,7 @@ export default function AdmissionApplicationDetailScreen({
             onSelectStage={(stageId) => requestNavigation({ view: 'journey', stageId })}
             onFinalizationOpenChange={setFinalizationOpen}
             onPrepareFinalization={
+              !showDecisionReview &&
               selectedCurrentStage &&
               currentStage &&
               isAdmissionDecisionStage(currentStage) &&
@@ -571,15 +595,19 @@ export default function AdmissionApplicationDetailScreen({
               if (
                 hasGrantedPermission(permissions, studentPermissions.onboarding.setup) &&
                 result.onboardingCaseId
-              )
+              ) {
                 router.push(
                   `${studentPaths.onboarding.setup}?case=${encodeURIComponent(result.onboardingCaseId)}`
                 );
+                return true;
+              }
+              return false;
             }}
           />
         )}
-        {!isFormStage(selectedStage) && renderManagedStages()}
-        {selectedStage &&
+        {!showDecisionReview && !isFormStage(selectedStage) && renderManagedStages()}
+        {!showDecisionReview &&
+          selectedStage &&
           !hasManagedStageWorkspace(selectedStage) &&
           !isFormStage(selectedStage) &&
           !isAdmissionDecisionStage(selectedStage) && (
@@ -601,7 +629,7 @@ export default function AdmissionApplicationDetailScreen({
             No current admission task is available.
           </StudentFeedback>
         )}
-        {!historical && workflow?.status === 1 && (
+        {!showDecisionReview && !historical && workflow?.status === 1 && (
           <StudentFeedback notificationKey="STU-0018" presentation="inline" severity="success">
             Admission workflow completed. The decision and full audit history remain available.
           </StudentFeedback>
@@ -655,7 +683,7 @@ export default function AdmissionApplicationDetailScreen({
             display: 'grid',
             gridTemplateColumns: {
               xs: 'minmax(0, 1fr)',
-              sm: 'minmax(0, 1fr) minmax(0, auto)',
+              md: 'minmax(0, 1fr) minmax(0, auto)',
             },
             alignItems: 'center',
             gap: 1,
@@ -666,9 +694,23 @@ export default function AdmissionApplicationDetailScreen({
             bgcolor: 'background.paper',
           }}
         >
-          <Box sx={{ minWidth: 0 }}>
+          <Box
+            sx={{
+              minWidth: 0,
+              ...(application && {
+                borderInlineStart: '3px solid',
+                borderColor: 'primary.main',
+                paddingInlineStart: (theme) => theme.spacing(1.25),
+              }),
+            }}
+          >
             <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
-              <Typography id={titleId} variant="h6">
+              <Typography
+                id={titleId}
+                component="h2"
+                variant="h4"
+                sx={{ lineHeight: 1.2, overflowWrap: 'anywhere' }}
+              >
                 {application?.applicantName ?? 'Application Details'}
               </Typography>
               {application &&
@@ -704,7 +746,9 @@ export default function AdmissionApplicationDetailScreen({
                       component="span"
                       sx={{
                         overflowWrap: 'anywhere',
-                        ...(index > 0 && { borderLeft: 1, borderColor: 'divider', pl: 1 }),
+                        ...(index === 0
+                          ? { fontWeight: 'fontWeightSemiBold' }
+                          : { borderLeft: 1, borderColor: 'divider', pl: 1 }),
                       }}
                     >
                       {value}
@@ -721,7 +765,7 @@ export default function AdmissionApplicationDetailScreen({
             justifyContent="flex-end"
             useFlexGap
             flexWrap="wrap"
-            sx={{ minWidth: 0, maxWidth: 1, justifySelf: { xs: 'stretch', sm: 'end' } }}
+            sx={{ minWidth: 0, maxWidth: 1, justifySelf: { xs: 'stretch', md: 'end' } }}
           >
             {!isLoading &&
               !isError &&
@@ -854,7 +898,21 @@ export default function AdmissionApplicationDetailScreen({
             </Box>
           </Scrollbar>
         </Box>
-        {!finalizationOpen && (
+        {showDecisionReview && (
+          <Box
+            ref={setDecisionFooter}
+            component="footer"
+            sx={{
+              p: 1.5,
+              borderTop: 1,
+              borderColor: 'divider',
+              bgcolor: 'background.paper',
+              flexShrink: 0,
+              minWidth: 0,
+            }}
+          />
+        )}
+        {!finalizationOpen && !showDecisionReview && (
           <Stack
             component="footer"
             direction="row"

@@ -148,7 +148,7 @@ describe('Fee Category parent and actual form lifecycle', () => {
     expect(screen.getAllByRole('textbox', { name: 'Fee head name *' })).toHaveLength(1);
     expect(screen.getByRole('textbox', { name: 'Fee head name *' })).toHaveValue('');
     screen
-      .getAllByRole('textbox', { name: 'Description (optional)' })
+      .getAllByRole('textbox', { name: 'Description' })
       .forEach((field) => expect(field).toHaveValue(''));
     fireEvent.click(screen.getByRole('button', { name: 'Close fee category editor' }));
     await waitFor(() =>

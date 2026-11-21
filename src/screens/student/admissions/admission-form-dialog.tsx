@@ -2,9 +2,10 @@ import type {
   AdmissionForm,
   CreateUpdateAdmissionForm,
 } from 'src/redux/student/admissions/admission-forms-api';
+import { useLazyCheckAdmissionFormNameQuery } from 'src/redux/student/admissions/admission-forms-api';
 
 import { useFormik } from 'formik';
-import { useRef, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { StudentFeedback } from 'src/components/student-feedback';
@@ -14,8 +15,8 @@ import { Box, Stack, Button, Typography, LinearProgress, CircularProgress } from
 
 import { AdmissionDialogTitle } from './admission-dialog-title';
 import { useAdmissionDraftGuard } from './use-admission-draft-guard';
-import { ADMISSION_FORM_STEPS } from './form-dialog/form-wizard-model';
 import { getFormWizardLayout } from './form-dialog/form-wizard-layout';
+import { getAdmissionWizardSteps } from './form-dialog/form-wizard-model';
 import { useAdmissionFormWizard } from './form-dialog/hooks/use-admission-form-wizard';
 import { FormBuilderWizardContent } from './form-dialog/components/form-builder-wizard-content';
 
@@ -106,6 +107,54 @@ function AdmissionFormEditor({
     validateOnChange: true,
     onSubmit: () => undefined,
   });
+  const [checkAdmissionFormName] = useLazyCheckAdmissionFormNameQuery();
+  const [nameAvailability, setNameAvailability] = useState<{
+    name: string;
+    checking: boolean;
+    message: string | null;
+  }>({ name: '', checking: false, message: null });
+  const nameCheckSequence = useRef(0);
+  const trimmedName = editorFormik.values.name.trim();
+  useEffect(() => {
+    const sequence = ++nameCheckSequence.current;
+    if (!trimmedName) {
+      setNameAvailability({ name: '', checking: false, message: null });
+      return undefined;
+    }
+
+    setNameAvailability({ name: trimmedName, checking: true, message: null });
+    const timeout = setTimeout(async () => {
+      try {
+        const result = await checkAdmissionFormName({
+          name: trimmedName,
+          ...(editing?.id ? { excludingFormId: editing.id } : {}),
+        }).unwrap();
+        if (nameCheckSequence.current === sequence) {
+          setNameAvailability({
+            name: trimmedName,
+            checking: false,
+            message: result.isAvailable
+              ? null
+              : result.message || 'This form name is already in use.',
+          });
+        }
+      } catch {
+        if (nameCheckSequence.current === sequence) {
+          setNameAvailability({ name: trimmedName, checking: false, message: null });
+        }
+      }
+    }, 300);
+
+    return () => {
+      clearTimeout(timeout);
+      if (nameCheckSequence.current === sequence) nameCheckSequence.current += 1;
+    };
+  }, [checkAdmissionFormName, editing?.id, trimmedName]);
+  const nameAvailabilityIsCurrent = nameAvailability.name === trimmedName;
+  const checkingName =
+    Boolean(trimmedName) && (!nameAvailabilityIsCurrent || nameAvailability.checking);
+  const nameConflictMessage = nameAvailabilityIsCurrent ? nameAvailability.message : null;
+  const nameIsBlocked = checkingName || Boolean(nameConflictMessage);
   const savedStamp = editing?.concurrencyStamp;
   const setEditorValues = editorFormik.setValues;
   useEffect(() => {
@@ -127,6 +176,7 @@ function AdmissionFormEditor({
     reset: editorFormik.resetForm,
   });
   const formType = editorFormik.values.purpose === 0 ? 'Inquiry' : 'Registration';
+  const steps = getAdmissionWizardSteps(editorFormik.values.purpose);
   return (
     <>
       <CustomDialog
@@ -149,8 +199,8 @@ function AdmissionFormEditor({
             </Stack>
             <LinearProgress
               variant="determinate"
-              value={((wizard.activeStep + 1) / ADMISSION_FORM_STEPS.length) * 100}
-              aria-label={`Step ${wizard.activeStep + 1} of ${ADMISSION_FORM_STEPS.length}`}
+              value={((wizard.activeStep + 1) / steps.length) * 100}
+              aria-label={`Step ${wizard.activeStep + 1} of ${steps.length}`}
               sx={{
                 mt: 1,
                 height: 4,
@@ -196,25 +246,28 @@ function AdmissionFormEditor({
             <CustomStepperWithFormik
               initialValues={wizard.initialValues}
               formikInstance={editorFormik}
-              steps={ADMISSION_FORM_STEPS}
+              steps={steps}
               activeStep={wizard.activeStep}
               footerPlacement={wizard.activeStep === 1 ? 'content' : 'outside'}
               validationSchema={wizard.validationSchema}
               validateOnChange
               scrollbarHeight="auto"
               showSaveButton
-              saveButtonLabel="Save Draft"
+              saveButtonLabel="Save draft"
               nextButtonLabel="Continue"
-              finalButtonLabel="Publish Now"
-              backButtonProps={{ size: 'small' }}
+              finalButtonLabel="Publish now"
+              validateFinalStep
+              disableSubmit={busy}
+              backButtonProps={{ size: 'small', disabled: busy }}
               saveAndNextButtonProps={{
                 loading: busy,
+                disabled: wizard.activeStep === 0 && nameIsBlocked,
                 startIcon:
-                  wizard.activeStep === ADMISSION_FORM_STEPS.length - 1 ? (
+                  wizard.activeStep === steps.length - 1 ? (
                     <Iconify icon="mdi:publish" width={18} />
                   ) : undefined,
                 endIcon:
-                  wizard.activeStep < ADMISSION_FORM_STEPS.length - 1 ? (
+                  wizard.activeStep < steps.length - 1 ? (
                     <Iconify icon="mdi:arrow-right" width={18} />
                   ) : undefined,
                 size: 'small',
@@ -227,15 +280,20 @@ function AdmissionFormEditor({
               }}
               saveButtonProps={{
                 loading: busy,
+                disabled: nameIsBlocked,
                 title: 'Save This Draft and Close the Form Builder',
                 startIcon: <Iconify icon="mdi:content-save-outline" width={18} />,
                 size: 'small',
               }}
-              handleBack={wizard.back}
+              handleBack={() => {
+                if (!busy) wizard.back();
+              }}
               handleNext={wizard.next}
               onSave={wizard.saveDraft}
-              onStepClick={wizard.goTo}
-              isStepClickable={(index) => index <= wizard.activeStep + 1}
+              onStepClick={(index) => {
+                if (!busy) wizard.goTo(index);
+              }}
+              isStepClickable={(index) => !busy && index <= wizard.activeStep + 1}
               validateForwardStepClick
               renderItem={({ formik, footer }) => (
                 <FormBuilderWizardContent
@@ -249,6 +307,8 @@ function AdmissionFormEditor({
                       ready,
                     };
                   }}
+                  nameConflictMessage={nameConflictMessage}
+                  checkingName={checkingName}
                 />
               )}
             />

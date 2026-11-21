@@ -15,6 +15,11 @@ export function assignmentEditRequest(
     studentId: context.studentId,
     academicYearId,
     standardFeeStructureId: candidate.id,
+    ...(candidate.boardStartDate && candidate.boardEndDate && {
+      chargePeriodSource: 'BoardAcademicYear',
+      chargeStartDate: candidate.boardStartDate,
+      chargeEndDate: candidate.boardEndDate,
+    }),
     editAssignmentId: context.assignmentId ?? undefined,
     assignmentConcurrencyStamp: context.assignmentConcurrencyStamp,
     editReason: '',
@@ -33,7 +38,12 @@ export function assignmentEditRequest(
     servicePeriods: sameStructure
       ? saved.heads.filter((h) => h.included && h.servicePeriod).map((h) => h.servicePeriod!)
       : [],
-    feeHeadDetails: [],
+    feeHeadDetails: sameStructure
+      ? saved.heads
+          .filter((head) => head.isOptional && !head.isVariable && head.included &&
+            head.effectiveAmount != null && head.effectiveAmount !== head.configuredAmount)
+          .map((head) => ({ feeHeadId: head.feeHeadId, amount: head.effectiveAmount }))
+      : [],
     ...(saved && {
       policies: ['concession', 'refund', 'collection'].map((family) => ({
         family: family as 'concession' | 'refund' | 'collection',

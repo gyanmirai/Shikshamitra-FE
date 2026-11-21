@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, render, screen, fireEvent } from '@testing-library/react';
 import { FeeCollectionStatusType, FeeMonth } from 'src/enums/fee-collection-type';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
 
@@ -189,6 +189,11 @@ describe('refund allocation policy limits', () => {
     };
     render(<FeeHeadRefundTable formik={formik()} mode="adjustment" compact />);
     expect(screen.getByText('adjustment-balance')).toBeInTheDocument();
+    act(() => {
+      window.dispatchEvent(new Event('blur'));
+      window.dispatchEvent(new Event('focus'));
+    });
+    expect(mocks.adjustment.refetch).toHaveBeenCalledOnce();
   });
 });
 
@@ -216,6 +221,43 @@ it('passes pending and overdue amounts and statuses to the existing adjustment s
     [50, FeeCollectionStatusType.Pending],
     [75, FeeCollectionStatusType.Overdue],
   ]);
+});
+
+it('does not restart eligibility on window focus when adjustment sources are already loaded', () => {
+  mocks.adjustment = {
+    currentData: {
+      totalAdjustable: 100,
+      feeHeads: [
+        {
+          feeHeadId: 'transport',
+          feeHeadName: 'Transport',
+          months: [
+            {
+              dueFeeId: 'due-1',
+              month: FeeMonth.August,
+              year: 2026,
+              total: 100,
+              paid: 100,
+              adjusted: 0,
+              adjustable: 100,
+            },
+          ],
+        },
+      ],
+    },
+    refetch: vi.fn(),
+  };
+  const values = formik();
+  values.values.refundType = undefined;
+  render(<FeeHeadRefundTable formik={values} mode="adjustment" compact />);
+
+  act(() => {
+    window.dispatchEvent(new Event('blur'));
+    window.dispatchEvent(new Event('focus'));
+  });
+
+  expect(mocks.adjustment.refetch).not.toHaveBeenCalled();
+  expect(screen.getByRole('textbox', { name: 'Total adjustment amount' })).toBeInTheDocument();
 });
 
 it('auto-distributes a total into an unchecked eligible fee head', () => {

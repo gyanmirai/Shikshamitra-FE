@@ -7,6 +7,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { PaymentMethodLabels } from 'src/enums/finance-payment-method';
+import { DetailField } from 'src/screens/finance/components/detail-view';
 import { useGetExpenseByIdQuery } from 'src/redux/finance/expenseApi/expenseDetailedApi';
 import {
   Box,
@@ -69,43 +70,29 @@ const ViewExpenseData = ({
 
           <Grid container spacing={3}>
             <Grid size={{ xs: 12, md: 4 }}>
-              <Stack spacing={0.5}>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  fontWeight="bold"
-                  sx={{ textTransform: 'uppercase' }}
-                >
-                  EXPENSE CATEGORY
-                </Typography>
-                <Typography variant="subtitle1" fontWeight="bold">
-                  {expenseByIdDataLoading ? (
+              <DetailField
+                label="Expense category"
+                value={
+                  expenseByIdDataLoading ? (
                     <Skeleton width={150} />
                   ) : (
                     expenseInfo?.expenseCategoryName || expenseData?.categoryName || '—'
-                  )}
-                </Typography>
-              </Stack>
+                  )
+                }
+              />
             </Grid>
 
             <Grid size={{ xs: 12, md: 4 }}>
-              <Stack spacing={0.5}>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  fontWeight="bold"
-                  sx={{ textTransform: 'uppercase' }}
-                >
-                  TOTAL AMOUNT SPENT
-                </Typography>
-                <Typography variant="h5" color="error.main" fontWeight="800">
-                  {expenseByIdDataLoading ? (
+              <DetailField
+                label="Total amount spent"
+                value={
+                  expenseByIdDataLoading ? (
                     <Skeleton width={100} />
                   ) : (
                     `₹ ${Math.ceil(Number(expenseInfo?.totalAmountSpent || 0)).toLocaleString('en-IN') || Math.ceil(Number(expenseDetailedData?.totalExpenseAmount || 0)).toLocaleString('en-IN') || '0'}`
-                  )}
-                </Typography>
-              </Stack>
+                  )
+                }
+              />
             </Grid>
           </Grid>
         </Card>

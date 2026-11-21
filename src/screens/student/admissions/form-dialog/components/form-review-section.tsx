@@ -51,6 +51,7 @@ export function FormReviewSection({
               field={field}
               value={answers[field.code] ?? ''}
               formValues={answers}
+              preview
               disabled={
                 formik.isSubmitting ||
                 field.readOnly ||

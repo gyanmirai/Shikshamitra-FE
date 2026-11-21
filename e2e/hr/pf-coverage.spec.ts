@@ -31,27 +31,46 @@ test('configured coverage stays compact until configuration is requested', async
   await expect(page.getByRole('button', { name: 'Configure coverage' })).toBeFocused();
 });
 
+['Not covered under PF', 'Handled outside ShikshaMitra'].forEach((choice) => {
+  test(`${choice} can submit with just the status and month`, async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Set up PF coverage' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Configure PF Coverage' });
+    await dialog.getByRole('combobox', { name: /School PF coverage/ }).click();
+    await page.getByRole('option', { name: choice, exact: true }).click();
+    await dialog.getByRole('button', { name: 'Submit', exact: true }).click();
+    await expect(dialog.getByRole('alert')).toBeVisible({ timeout: 2500 });
+    await expect(dialog.getByRole('textbox')).toHaveCount(0);
+  });
+});
+
 test('failed saves preserve entries and dirty close supports keep-editing and discard', async ({
   page,
 }) => {
+  await page.clock.setFixedTime(new Date('2026-10-15T12:00:00Z'));
   await page.goto('/');
   await page.getByRole('button', { name: 'Set up PF coverage' }).click();
   const dialog = page.getByRole('dialog', { name: 'Configure PF Coverage' });
   await dialog.getByRole('button', { name: 'Submit', exact: true }).click();
   await expect(dialog.getByText('Select school coverage.')).toBeVisible();
-  await dialog.getByRole('combobox', { name: /School establishment coverage/ }).click();
+  const monthField = dialog.getByRole('group', { name: 'PF coverage effective month' });
+  await monthField.getByRole('spinbutton', { name: 'Month' }).press('Delete');
+  await expect(dialog.getByText('Choose an effective month.')).toBeVisible();
+  await monthField.getByRole('button', { name: /Choose date/ }).click();
+  await page.getByRole('radio', { name: 'November' }).click();
+  await expect(monthField.getByRole('spinbutton', { name: 'Month' })).toHaveText('November');
+  await dialog.getByRole('combobox', { name: /School PF coverage/ }).click();
   await page.getByRole('option', { name: 'Covered under PF', exact: true }).click();
-  await dialog
-    .getByRole('textbox', { name: /PF coverage evidence reference/ })
-    .fill('Synthetic evidence');
+  await dialog.getByRole('textbox', { name: /PF establishment number/ }).fill('Synthetic evidence');
   await dialog.getByRole('button', { name: 'Submit', exact: true }).click();
   await expect(dialog.getByRole('alert')).toBeVisible();
-  await expect(dialog.getByRole('textbox', { name: /PF coverage evidence reference/ })).toHaveValue(
+  await expect(monthField.getByRole('spinbutton', { name: 'Month' })).toHaveText('November');
+  await expect(dialog.getByRole('textbox', { name: /PF establishment number/ })).toHaveValue(
     'Synthetic evidence'
   );
   await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
   await page.getByRole('button', { name: 'Keep editing' }).click();
-  await expect(dialog.getByRole('textbox', { name: /PF coverage evidence reference/ })).toHaveValue(
+  await expect(dialog.getByRole('textbox', { name: /PF establishment number/ })).toHaveValue(
     'Synthetic evidence'
   );
   await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
@@ -68,9 +87,11 @@ test('failed saves preserve entries and dirty close supports keep-editing and di
       const dialog = page.getByRole('dialog', { name: 'Configure PF Coverage' });
       await expect(dialog.getByRole('button', { name: 'Submit', exact: true })).toBeInViewport();
       await expect(dialog.getByRole('button', { name: 'Cancel', exact: true })).toBeInViewport();
-      const month = await dialog.getByLabel(/PF coverage effective month/).boundingBox();
+      const month = await dialog
+        .getByRole('group', { name: 'PF coverage effective month' })
+        .boundingBox();
       const select = await dialog
-        .getByRole('combobox', { name: /School establishment coverage/ })
+        .getByRole('combobox', { name: /School PF coverage/ })
         .boundingBox();
       expect(select!.y - (month!.y + month!.height)).toBeGreaterThanOrEqual(16);
       expect(

@@ -30,10 +30,15 @@ import { attendanceStatusLabel, buildAttendanceColumns } from './attendance-regi
 import {
   getAttendanceCounts,
   hasAttendanceChanges,
-  markRemainingPresent,
+  changeAttendanceMark,
+  canEditAttendanceRow,
   attendanceStudentName,
   normalizeAttendanceRows,
+  canBulkMarkAttendanceRow,
+  getAttendanceMarkRestriction,
 } from './attendance-draft';
+
+import type { AttendanceMarkChoice } from './attendance-draft';
 
 type Selection = {
   date: string;
@@ -121,6 +126,9 @@ export function useDailyAttendance(academicYearOverride?: AcademicYear) {
     );
   const validFilters =
     !!options &&
+    (!selection.medium || !!selection.board) &&
+    (!selection.standard || !!selection.medium) &&
+    (!selection.division || !!selection.standard) &&
     (!selection.board || options.boards.some((b) => b.id === selection.board)) &&
     (!selection.medium || mediums.some((m) => m.id === selection.medium)) &&
     (!selection.standard || classes.some((s) => s.id === selection.standard)) &&
@@ -221,6 +229,23 @@ export function useDailyAttendance(academicYearOverride?: AcademicYear) {
     if (!context || !year || initializedYear.current === year.id) return;
     initializedYear.current = year.id;
     let next = { ...selection, date: selection.date || schoolToday };
+    // Older register bookmarks contain only class/division. Restore their known ancestors
+    // without replacing an explicit (possibly invalid) parent choice.
+    const bookmarkedDivision = context.options.divisions.find(
+      (item) => item.id === selection.division
+    );
+    const bookmarkedStandard = context.options.standards.find(
+      (item) => item.id === (selection.standard || bookmarkedDivision?.parentId)
+    );
+    const bookmarkedMedium = context.options.mediums.find(
+      (item) => item.id === (selection.medium || bookmarkedStandard?.parentId)
+    );
+    next = {
+      ...next,
+      board: selection.board || bookmarkedMedium?.parentId || '',
+      medium: selection.medium || bookmarkedMedium?.id || '',
+      standard: selection.standard || bookmarkedStandard?.id || '',
+    };
     if (
       !context.isAdmin &&
       !selection.standard &&
@@ -379,31 +404,27 @@ export function useDailyAttendance(academicYearOverride?: AcademicYear) {
       setRetryPayload(null);
       setRows((previous) =>
         previous.map((row) =>
-          row.studentId === studentId &&
-          row.isExpected &&
-          !row.requiresCorrectionApproval &&
-          !row.needsCreditCorrection
-            ? change(row)
-            : row
+          row.studentId === studentId && canEditAttendanceRow(row) ? change(row) : row
         )
       );
     },
     [editable]
   );
-  const pendingForBulk = rows.some(
-    (row) =>
-      row.isExpected &&
-      row.status === AttendanceStatus.Pending &&
-      !row.approvedLeaveId &&
-      !row.requiresCorrectionApproval &&
-      !row.needsCreditCorrection
-  );
-  const bulkPresent = () => {
-    if (editable && pendingForBulk) {
+  const submitted = snapshot?.isSubmitted ?? false;
+  const allowHalfDay = snapshot?.policy.allowHalfDay;
+  const canBulkMark = editable && rows.some(canBulkMarkAttendanceRow);
+  const updateAllMarks = useCallback(
+    (choice: AttendanceMarkChoice) => {
+      if (!canBulkMark || getAttendanceMarkRestriction(choice, allowHalfDay, submitted)) return;
       setRetryPayload(null);
-      setRows(markRemainingPresent);
-    }
-  };
+      setRows((previous) =>
+        previous.map((row) =>
+          canBulkMarkAttendanceRow(row) ? changeAttendanceMark(row, choice) : row
+        )
+      );
+    },
+    [allowHalfDay, canBulkMark, submitted]
+  );
   const save = async (submit: boolean) => {
     if (!(submit ? canSubmit : canSave) || !snapshot || !year) return;
     const payload: AttendanceMark =
@@ -490,13 +511,25 @@ export function useDailyAttendance(academicYearOverride?: AcademicYear) {
   const columns = useMemo(
     () =>
       buildAttendanceColumns({
+        counts,
         editable,
+        canBulkMark,
         broad: !classRegister,
-        submitted: snapshot?.isSubmitted || false,
+        submitted,
         policy: snapshot?.policy,
         onChange: updateRow,
+        onBulkMark: updateAllMarks,
       }),
-    [editable, classRegister, snapshot?.isSubmitted, snapshot?.policy, updateRow]
+    [
+      counts,
+      editable,
+      canBulkMark,
+      classRegister,
+      submitted,
+      snapshot?.policy,
+      updateRow,
+      updateAllMarks,
+    ]
   );
   const className = options?.standards.find((s) => s.id === selection.standard)?.name;
   const divisionName = options?.divisions.find((d) => d.id === selection.division)?.name;
@@ -634,7 +667,6 @@ export function useDailyAttendance(academicYearOverride?: AcademicYear) {
     canSubmit,
     canLock,
     canManageLock,
-    pendingForBulk,
     columns,
     tableRows,
     classTable,
@@ -654,7 +686,6 @@ export function useDailyAttendance(academicYearOverride?: AcademicYear) {
     refresh,
     clearFilters,
     switchContext,
-    bulkPresent,
     confirmation,
     changeReason: (value: string) => {
       setCorrectionReason(value);

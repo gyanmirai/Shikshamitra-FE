@@ -2,23 +2,24 @@
 
 import type { IData, IColumn } from 'src/components/customizabaleTable/types';
 
-import { useRef, useState, useEffect } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { useRef, useState, useEffect } from 'react';
 import { formatNumber } from 'src/utils/formate_number';
-import { concessionBenefitBlockerMessage } from 'src/utils/concession-benefit-blocker';
 import { shikshaMitraToast } from 'src/components/toast';
-import { FormSectionCard } from 'src/components/form-section-card';
-import { DetailField } from 'src/components/detail-view';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { concessionErrorMessage } from '../Concession/Components/concessionValueValidation';
+import { FormSectionCard } from 'src/components/form-section-card';
+import { DetailField } from 'src/screens/finance/components/detail-view';
+import { concessionBenefitBlockerMessage } from 'src/utils/concession-benefit-blocker';
 import { Box, Alert, Stack, Button, Skeleton, TextField, Typography } from '@mui/material';
 import {
   useApproveConcessionRequestMutation,
   useGetConcessionApprovalContextQuery,
   usePreviewConcessionApprovalMutation,
 } from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
+
+import { concessionErrorMessage } from '../Concession/Components/concessionValueValidation';
 
 import type { IFeeHeadApprovalViewProps } from './type';
 
@@ -283,7 +284,7 @@ export default function ReadOnlyConcessionApprovalView({
               size="small"
               fullWidth
               disabled={isApproving}
-              label="Approval note (optional)"
+              label="Approval note"
               multiline
               minRows={1}
               maxRows={3}

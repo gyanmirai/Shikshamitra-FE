@@ -1,13 +1,11 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 import type { FeeRefundRequestDto } from 'src/redux/finance/RefundManagement/feeRefundManage';
 
 import React from 'react';
 import { useSelector } from 'react-redux';
-import type { RootState } from 'src/redux/store';
-import { hasGrantedPermission } from 'src/utils/permissions';
-import { financePermissions } from 'src/constants/finance-menu';
 import { Label } from 'src/components/label';
 import { alpha } from '@mui/material/styles';
 import { GlobalIcons } from 'src/utils/icons';
@@ -15,8 +13,10 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { formatNumber } from 'src/utils/formate_number';
-import { DetailGrid, DetailField, DetailSection } from 'src/components/detail-view';
+import { hasGrantedPermission } from 'src/utils/permissions';
+import { financePermissions } from 'src/constants/finance-menu';
 import { useGetFeeRefundByIdQuery } from 'src/redux/finance/RefundManagement/feeRefundManage';
+import { DetailGrid, DetailField, DetailSection } from 'src/screens/finance/components/detail-view';
 import {
   FeeRefundStatusType,
   FeeRefundStatusOptions,

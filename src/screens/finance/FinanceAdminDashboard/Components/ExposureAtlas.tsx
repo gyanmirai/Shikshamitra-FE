@@ -1,186 +1,262 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
-import type { BoardMediumOption } from 'src/components/boardMediumDropdown';
+import type { IColumn } from 'src/components/customizabaleTable/types';
+import type { FinanceDashboardClass } from 'src/redux/finance/financeDashboardApi';
 
-import { useSelector } from 'react-redux';
-import { useMemo, useState, useEffect } from 'react';
-import { formatNumber } from 'src/utils/formate_number';
-import BoardMediumDropdown from 'src/components/boardMediumDropdown';
-import {
-  Card,
-  Grid,
-  Stack,
-  Table,
-  Divider,
-  TableRow,
-  TableBody,
-  TableCell,
-  TableHead,
-  CardHeader,
-  Typography,
-  CardContent,
-  TableContainer,
-} from '@mui/material';
+import { useId, useState } from 'react';
+import { fNumber } from 'src/utils/format-number';
+import CustomSelect from 'src/components/custom-select';
+import CustomizableTable from 'src/components/customizabaleTable';
+import { FormSectionHeader } from 'src/components/form-section-card';
+import { Box, Stack, Paper, Button, Typography } from '@mui/material';
 
-import { financeExposurePreview } from '../finance-admin-dashboard-preview-data';
-import { financeDashboardCardSx, financeDashboardTileSx } from './finance-dashboard-card-styles';
+import { dashboardNumberSx, formatDashboardMoney } from '../finance-dashboard-format';
 
-function academicYearLabel(year: Record<string, any>) {
-  if (year.name || year.academicYearName || year.yearName) {
-    return year.name || year.academicYearName || year.yearName;
-  }
+const tableTitle = 'Outstanding Fees by Class';
+const optionOrder = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+const numericCellSx = { textAlign: 'right', whiteSpace: 'nowrap', ...dashboardNumberSx };
+const numericHeaderSx = { '& .customizable-table-header-content': { whiteSpace: 'normal' } };
 
-  const start = year.startDate ? new Date(year.startDate).getFullYear() : '';
-  const end = year.endDate ? new Date(year.endDate).getFullYear() : '';
-  return start && end ? `AY ${start}–${end}` : 'Selected academic year';
-}
+const amountColumns = [
+  { id: 'outstanding', label: 'Outstanding', minWidth: 164 },
+  { id: 'overdue', label: 'Overdue', minWidth: 128 },
+  { id: 'separateCharges', label: 'Separate charges', minWidth: 146 },
+].map((column): IColumn => ({
+  ...column,
+  align: 'left',
+  cellSx: numericCellSx,
+  headerSx: numericHeaderSx,
+  filterType: 'number',
+  valueType: 'money',
+  isFilter: true,
+  isSort: true,
+  render: (value: number | null) => (
+    <Typography
+      component="span"
+      variant="inherit"
+      color={column.id === 'overdue' && value && value > 0 ? 'error.main' : undefined}
+    >
+      {value === null ? '—' : formatDashboardMoney(value)}
+    </Typography>
+  ),
+}));
 
-export default function ExposureAtlas() {
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const options = useMemo<BoardMediumOption[]>(
-    () =>
-      (currentYear?.boards ?? []).flatMap((board: any) =>
-        (board.educationMediums ?? []).map((medium: any) => ({
-          label: `${board.name} / ${medium.name}`,
-          boardId: String(board.id),
-          mediumId: String(medium.id),
-        }))
-      ),
-    [currentYear?.boards]
-  );
-  const [selectedBoardMedium, setSelectedBoardMedium] = useState<BoardMediumOption | null>(null);
-  const activeBoardMedium =
-    options.find(
-      (option) =>
-        option.boardId === selectedBoardMedium?.boardId &&
-        option.mediumId === selectedBoardMedium?.mediumId
-    ) ??
-    options[0] ??
-    null;
+const studentsColumn: IColumn = {
+  id: 'studentsWithOverdueFees',
+  label: 'Students with overdue fees',
+  minWidth: 156,
+  align: 'left',
+  cellSx: numericCellSx,
+  headerSx: numericHeaderSx,
+  filterType: 'number',
+  filterStep: 1,
+  valueType: 'number',
+  isFilter: true,
+  isSort: true,
+  render: (value: number) => fNumber(value),
+};
 
-  useEffect(() => {
+const classColumn: IColumn = {
+  id: 'classLabel',
+  label: 'Class',
+  rowHeader: true,
+  minWidth: 152,
+  sticky: true,
+  stickyPosition: 'left',
+  stickyOnMobile: false,
+  filterType: 'string',
+  filterValue: (_value, row) => row.className,
+  isFilter: true,
+  isSort: true,
+  render: (value: string) => (
+    <Typography
+      component="span"
+      variant="inherit"
+      sx={{ fontWeight: 600, overflowWrap: 'anywhere' }}
+    >
+      {value}
+    </Typography>
+  ),
+};
+
+const boardKey = (row: FinanceDashboardClass) =>
+  row.boardId && row.mediumId ? `${row.boardId}:${row.mediumId}` : '';
+
+export default function ExposureAtlas({
+  classes,
+  yearLabel,
+  periodLabel,
+}: {
+  classes: FinanceDashboardClass[];
+  yearLabel: string;
+  periodLabel: string;
+}) {
+  const headingId = useId();
+  const [boardMedium, setBoardMedium] = useState('all');
+  const [selectedClass, setSelectedClass] = useState('all');
+  const [page, setPage] = useState(0);
+
+  const boardOptions = [
+    ...new Map(
+      classes
+        .filter((row) => row.boardMedium && boardKey(row))
+        .map((row) => [boardKey(row), row.boardMedium!])
+    ),
+  ]
+    .map(([value, label]) => ({ value, label }))
+    .sort((a, b) => optionOrder.compare(a.label, b.label));
+  const boardOption = boardOptions.find((option) => option.value === boardMedium);
+  const activeBoard = boardOption?.value ?? 'all';
+  const matching = classes.filter((row) => activeBoard === 'all' || boardKey(row) === activeBoard);
+  const names = new Set<string>();
+  const duplicates = new Set<string>();
+  matching.forEach((row) => {
+    if (names.has(row.className)) duplicates.add(row.className);
+    names.add(row.className);
+  });
+  const rows = matching.map((row) => ({
+    ...row,
+    id: row.classId ?? 'unassigned',
+    classLabel:
+      duplicates.has(row.className) && row.boardMedium
+        ? `${row.className} · ${row.boardMedium}`
+        : row.className,
+  }));
+  const classOption = rows.find((row) => row.id === selectedClass);
+  const activeClass = classOption?.id ?? 'all';
+  const filteredRows = activeClass === 'all' ? rows : rows.filter((row) => row.id === activeClass);
+  const canViewCharges = classes.some((row) => row.separateCharges !== null);
+  const columns = [
+    classColumn,
+    ...amountColumns.slice(0, 2),
+    studentsColumn,
+    ...(canViewCharges ? [amountColumns[2]] : []),
+  ];
+
+  const changeBoardMedium = (next: string) => {
+    setBoardMedium(next);
     if (
-      activeBoardMedium?.boardId !== selectedBoardMedium?.boardId ||
-      activeBoardMedium?.mediumId !== selectedBoardMedium?.mediumId
+      classOption &&
+      next !== 'all' &&
+      !classes.some((row) => row.classId === classOption.classId && boardKey(row) === next)
     ) {
-      setSelectedBoardMedium(activeBoardMedium);
+      setSelectedClass('all');
     }
-  }, [activeBoardMedium, selectedBoardMedium?.boardId, selectedBoardMedium?.mediumId]);
-
-  const yearLabel = currentYear?.id
-    ? academicYearLabel(currentYear as Record<string, any>)
-    : 'No academic year selected';
+    setPage(0);
+  };
 
   return (
-    <Card component="section" aria-labelledby="outstanding-fees-title" sx={financeDashboardCardSx}>
-      <CardHeader
-        title={
-          <Typography id="outstanding-fees-title" variant="h6">
-            Outstanding Fees by Class
-          </Typography>
-        }
-        subheader={`Current academic year · ${yearLabel}`}
-        action={
-          options.length ? (
-            <BoardMediumDropdown
-              value={activeBoardMedium}
-              onChange={setSelectedBoardMedium}
-              minWidth={240}
-            />
-          ) : null
-        }
-        sx={{
-          p: 0,
-          mb: 2,
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: 1,
-          '& .MuiCardHeader-content': { minWidth: 0 },
-          '& .MuiCardHeader-action': { m: 0, width: { xs: '100%', md: 'auto' } },
-        }}
-      />
-      {!options.length && (
-        <Typography role="status" variant="body2" color="text.secondary" sx={{ px: 2, pb: 2 }}>
-          No board and medium options are available for this year.
-        </Typography>
+    <Stack component="section" aria-labelledby={headingId} spacing={1} sx={{ minWidth: 0 }}>
+      <Box sx={{ px: 1 }}>
+        <FormSectionHeader
+          title={tableTitle}
+          titleTypographyProps={{ id: headingId }}
+          description={boardOptions.length === 1 ? boardOptions[0].label : undefined}
+          descriptionTooltip="Current unpaid fees and approved charges due in the selected period. Overdue amounts are determined as of today."
+        />
+      </Box>
+      {rows.length > 0 && (
+        <Paper
+          role="group"
+          aria-label="Class table scope"
+          variant="outlined"
+          sx={{ p: 1, borderRadius: 2 }}
+        >
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            spacing={1}
+            alignItems={{ xs: 'stretch', sm: 'center' }}
+            useFlexGap
+          >
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: {
+                  xs: 'minmax(0, 1fr)',
+                  sm: boardOptions.length > 1 ? 'repeat(2, minmax(0, 1fr))' : 'minmax(0, 1fr)',
+                },
+                gap: 1,
+                flex: 1,
+                maxWidth: { sm: boardOptions.length > 1 ? 480 : 236 },
+              }}
+            >
+              {boardOptions.length > 1 && (
+                <CustomSelect
+                  name="boardMedium"
+                  label="Board and medium"
+                  value={activeBoard}
+                  onChange={(value) => changeBoardMedium(String(value))}
+                  options={[{ label: 'All boards and mediums', value: 'all' }, ...boardOptions]}
+                  size="small"
+                  fullWidth
+                />
+              )}
+              <CustomSelect
+                name="class"
+                label="Class"
+                value={activeClass}
+                onChange={(value) => {
+                  setSelectedClass(String(value));
+                  setPage(0);
+                }}
+                options={[
+                  { label: 'All classes', value: 'all' },
+                  ...rows
+                    .map((row) => ({ label: row.classLabel, value: row.id }))
+                    .sort((a, b) => optionOrder.compare(a.label, b.label)),
+                ]}
+                size="small"
+                fullWidth
+                isSearch
+                searchPlaceholder="Find a class"
+              />
+            </Box>
+            {(boardOption || classOption) && (
+              <Button
+                type="button"
+                size="small"
+                color="inherit"
+                sx={{ alignSelf: { xs: 'flex-start', sm: 'center' }, flexShrink: 0 }}
+                onClick={() => {
+                  setBoardMedium('all');
+                  setSelectedClass('all');
+                  setPage(0);
+                }}
+              >
+                Reset scope
+              </Button>
+            )}
+          </Stack>
+        </Paper>
       )}
-      <CardContent sx={{ p: '0 !important', mb: 2 }}>
-        <Grid container spacing={1.5}>
-          <Grid size={{ xs: 6, sm: 4 }}>
-            <Stack sx={financeDashboardTileSx}>
-              <Typography variant="caption" color="text.secondary">
-                Total outstanding
-              </Typography>
-              <Typography component="p" variant="h6" sx={{ fontVariantNumeric: 'tabular-nums' }}>
-                {formatNumber(financeExposurePreview.outstanding, 'INR')}
-              </Typography>
-            </Stack>
-          </Grid>
-          <Grid size={{ xs: 6, sm: 4 }}>
-            <Stack sx={financeDashboardTileSx}>
-              <Typography variant="caption" color="text.secondary">
-                Overdue
-              </Typography>
-              <Typography component="p" variant="h6" sx={{ fontVariantNumeric: 'tabular-nums' }}>
-                {formatNumber(financeExposurePreview.overdue, 'INR')}
-              </Typography>
-            </Stack>
-          </Grid>
-          <Grid size={{ xs: 12, sm: 4 }}>
-            <Stack sx={financeDashboardTileSx}>
-              <Typography variant="caption" color="text.secondary">
-                Students with overdue fees
-              </Typography>
-              <Typography component="p" variant="h6">
-                {financeExposurePreview.overdueStudents}
-              </Typography>
-            </Stack>
-          </Grid>
-        </Grid>
-      </CardContent>
-      <Divider />
-      <TableContainer sx={{ maxWidth: '100%' }}>
-        <Table size="small" aria-label="Outstanding fees by class" sx={{ minWidth: 580 }}>
-          <TableHead>
-            <TableRow>
-              <TableCell>Class</TableCell>
-              <TableCell align="right">Outstanding</TableCell>
-              <TableCell align="right">Overdue</TableCell>
-              <TableCell align="right">Separate charges</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {financeExposurePreview.classes.map((item) => (
-              <TableRow key={item.className} hover>
-                <TableCell component="th" scope="row">
-                  <Typography variant="subtitle2">{item.className}</Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {item.students} students overdue
-                  </Typography>
-                </TableCell>
-                <TableCell align="right">{formatNumber(item.outstanding, 'INR')}</TableCell>
-                <TableCell align="right">{formatNumber(item.overdue, 'INR')}</TableCell>
-                <TableCell align="right">{formatNumber(item.charges, 'INR')}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-      <Divider />
-      <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        justifyContent="space-between"
-        spacing={0.5}
-        sx={{ pt: 2 }}
-      >
-        <Typography variant="caption" color="text.secondary">
-          Separate charges total: {formatNumber(financeExposurePreview.separateCharges, 'INR')}
-        </Typography>
-        <Typography variant="caption" color="text.secondary">
-          The activity date filter does not change these year totals.
-        </Typography>
-      </Stack>
-    </Card>
+      <CustomizableTable
+        tableId="finance-outstanding-fees-by-class"
+        tableTitle={tableTitle}
+        columns={columns}
+        data={filteredRows}
+        page={page}
+        onPaginationChange={setPage}
+        onSearchInputChange={() => setPage(0)}
+        onFiltersChange={() => setPage(0)}
+        onSortChange={() => setPage(0)}
+        variant="embedded"
+        exportScope="all"
+        exportDisabled={filteredRows.length === 0}
+        exportContext={[
+          `Academic year: ${yearLabel}`,
+          `Due dates: ${periodLabel}`,
+          ...(boardOption ? [`Board and medium: ${boardOption.label}`] : []),
+          ...(classOption ? [`Class: ${classOption.classLabel}`] : []),
+        ]}
+        searchableFields={['classLabel', 'boardMedium']}
+        searchFieldProps={{
+          placeholder: 'Search class, board, or medium…',
+          inputProps: { 'aria-label': 'Search outstanding fees by class' },
+        }}
+        noDataText="No balances to show for the selected period."
+        wrapperProps={{ sx: { minWidth: 0 } }}
+        tableContainerProps={{ sx: { maxHeight: 420 } }}
+      />
+    </Stack>
   );
 }

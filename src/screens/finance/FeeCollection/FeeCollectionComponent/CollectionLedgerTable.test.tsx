@@ -111,6 +111,117 @@ const ledgerProps = (): FeeLedgerListProps => ({
   onChargesChange: vi.fn(),
 });
 
+describe('collection ledger schedule display', () => {
+  it.each(['by-fee-head', 'by-month'] as const)(
+    'strikes through all paid fee text when grouped %s',
+    (activeTab) => {
+      const props = ledgerProps();
+      props.chargesData = [];
+      const [{ items }] = props.data.monthWise;
+      items.push(
+        {
+          ...items[0],
+          dueFeeId: 'paid-due',
+          paid: 500,
+          due: 0,
+          lateFeeAmount: 0,
+          status: FeeCollectionStatusType.Paid,
+        },
+        {
+          ...items[0],
+          dueFeeId: 'partial-due',
+          paid: 200,
+          due: 300,
+          status: FeeCollectionStatusType.Partial,
+        }
+      );
+      render(
+        <LedgerTestProviders>
+          <CollectionLedgerTable {...props} layout="ledger" activeTab={activeTab} />
+        </LedgerTestProviders>
+      );
+
+      const paid = screen
+        .getAllByText('Paid', { exact: true })
+        .find((element) => element.closest('tbody'))!;
+      const [selectionCell, ...paidCells] = within(paid.closest('tr')!).getAllByRole('cell');
+      expect(selectionCell).not.toHaveStyle({ textDecoration: 'line-through' });
+      paidCells.forEach((cell) => expect(cell).toHaveStyle({ textDecoration: 'line-through' }));
+      expect(paid).toHaveStyle({ textDecoration: 'line-through' });
+
+      ['Pending', 'Partial Pending'].forEach((status) => {
+        const row = screen
+          .getAllByText(status, { exact: true })
+          .find((element) => element.closest('tbody'))!
+          .closest('tr')!;
+        within(row)
+          .getAllByRole('cell')
+          .forEach((cell) => {
+            expect(cell).not.toHaveStyle({ textDecoration: 'line-through' });
+          });
+      });
+    }
+  );
+
+  it('shows a one-time head before recurring heads without tagging filtered recurring rows', () => {
+    const props = ledgerProps();
+    props.chargesData = [];
+    const tuition = props.data.monthWise[0].items[0];
+    props.data.monthWise[0].items.push({
+      ...tuition,
+      dueFeeId: 'school-due',
+      feeHeadId: 'school',
+      feeHeadName: 'Yearly School Fees',
+      paymentTermName: 'Yearly',
+    });
+    render(
+      <LedgerTestProviders>
+        <CollectionLedgerTable
+          {...props}
+          activeTab="by-fee-head"
+          layout="ledger"
+          oneTimeFeeHeadIds={new Set(['school'])}
+        />
+      </LedgerTestProviders>
+    );
+
+    expect(screen.getAllByRole('heading').map((heading) => heading.textContent)).toEqual([
+      'Yearly School Fees',
+      'Tuition',
+    ]);
+    expect(screen.getAllByText('One time', { exact: true })).toHaveLength(1);
+  });
+
+  it.each(['by-fee-head', 'by-month'] as const)(
+    'shows the payment term outside its own column and the recorded due date when grouped %s',
+    (activeTab) => {
+      const props = ledgerProps();
+      props.chargesData = [];
+      Object.assign(props.data.monthWise[0].items[0], {
+        paymentTermName: 'Yearly',
+        installmentLabel: 'First installment',
+        coverageStartDate: '2026-06-01',
+        coverageEndDate: '2027-05-31',
+        dueDate: '2026-07-05T00:00:00+05:30',
+      });
+
+      render(
+        <LedgerTestProviders>
+          <CollectionLedgerTable {...props} layout="ledger" activeTab={activeTab} />
+        </LedgerTestProviders>
+      );
+
+      expect(screen.getByText('Yearly')).toBeVisible();
+      expect(screen.getByRole('columnheader', { name: /Fee Period/ })).toBeVisible();
+      expect(screen.getByRole('columnheader', { name: 'Due Date' })).toBeVisible();
+      expect(screen.queryByRole('columnheader', { name: 'Installment' })).not.toBeInTheDocument();
+      const row = within(screen.getByRole('row', { name: 'Open Tuition, June 2026' }));
+      expect(row.getByText('Jun 2026 – May 2027')).toBeVisible();
+      expect(row.getByText('5 Jul 2026')).toBeVisible();
+    }
+  );
+});
+
 describe('collection ledger checkbox state', () => {
   it.each(['ledger', 'period', 'wide'] as const)(
     'checks both parent controls when every fee is paid in the %s layout',
@@ -147,12 +258,14 @@ describe('collection ledger checkbox state', () => {
   it('checks both parent controls when all additional charges are paid', () => {
     const props = ledgerProps();
     props.data.monthWise = [];
-    props.chargesData = [{
-      ...props.chargesData![0],
-      amount: 0,
-      paid: 100,
-      status: FeeCollectionStatusType.Paid,
-    }];
+    props.chargesData = [
+      {
+        ...props.chargesData![0],
+        amount: 0,
+        paid: 100,
+        status: FeeCollectionStatusType.Paid,
+      },
+    ];
     render(
       <LedgerTestProviders>
         <CollectionLedgerTable {...props} layout="ledger" />
@@ -235,7 +348,8 @@ describe('collection ledger waiver capabilities', () => {
         </LedgerTestProviders>
       );
       fireEvent.click(screen.getByRole('row', { name: 'Open Tuition, June 2026' }));
-      const field = (label: string) => within(screen.getByText(label).parentElement!);
+      const details = within(screen.getByRole('dialog', { name: 'Tuition' }));
+      const field = (label: string) => within(details.getByText(label).parentElement!);
       expect(field('Refunded to date').getByText(formatNumber(15000, 'INR'))).toBeVisible();
       expect(
         field('Refunded to date').getByText(
@@ -511,6 +625,54 @@ describe('collection ledger waiver capabilities', () => {
     expect(props.onChargesChange).not.toHaveBeenCalled();
   });
 
+  it('shows recorded days overdue in the installment details', () => {
+    const props = ledgerProps();
+    Object.assign(props.data.monthWise[0].items[0], {
+      status: FeeCollectionStatusType.Overdue,
+      daysOverdue: 17,
+      dueDate: '2026-06-01',
+    });
+    render(
+      <LedgerTestProviders>
+        <CollectionLedgerTable {...props} layout="ledger" />
+      </LedgerTestProviders>
+    );
+    fireEvent.click(screen.getByRole('row', { name: 'Open Tuition, June 2026' }));
+    const details = within(screen.getByRole('dialog', { name: 'Tuition' }));
+    expect(details.getByText('Days overdue')).toBeVisible();
+    expect(details.getByText('17', { exact: true })).toBeVisible();
+  });
+
+  it.each([FeeCollectionStatusType.Overdue, FeeCollectionStatusType.Paid])(
+    'derives days overdue from the due date when the server count is missing for status %s',
+    (status) => {
+      vi.setSystemTime(new Date(2026, 10, 20, 12));
+      try {
+        const props = ledgerProps();
+        Object.assign(props.data.monthWise[0].items[0], {
+          status,
+          daysOverdue: undefined,
+          dueDate: '2026-03-31T00:00:00Z',
+        });
+        render(
+          <LedgerTestProviders>
+            <CollectionLedgerTable {...props} layout="ledger" />
+          </LedgerTestProviders>
+        );
+        fireEvent.click(screen.getByRole('row', { name: 'Open Tuition, June 2026' }));
+        const details = within(screen.getByRole('dialog', { name: 'Tuition' }));
+        if (status === FeeCollectionStatusType.Overdue) {
+          expect(details.getByText('Days overdue')).toBeVisible();
+          expect(details.getByText('234', { exact: true })).toBeVisible();
+        } else {
+          expect(details.queryByText('Days overdue')).not.toBeInTheDocument();
+        }
+      } finally {
+        vi.useRealTimers();
+      }
+    }
+  );
+
   it('keeps charge explanations and waiver amounts in charge details', () => {
     const props = ledgerProps();
     Object.assign(props.chargesData![0], {
@@ -536,8 +698,12 @@ describe('collection ledger waiver capabilities', () => {
     expect(screen.getByText('Due date')).toBeVisible();
     expect(screen.getByText('1 June 2026')).toBeVisible();
     expect(screen.getByText('Late fee applied from/to')).toBeVisible();
-    expect(screen.getByText('2 June 2026 to 4 June 2026; 8 June 2026 to 11 June 2026')).toBeVisible();
-    expect(screen.getByText('5 overdue days considered; grace and exception days are excluded.')).toBeVisible();
+    expect(
+      screen.getByText('2 June 2026 to 4 June 2026; 8 June 2026 to 11 June 2026')
+    ).toBeVisible();
+    expect(
+      screen.getByText('5 overdue days considered; grace and exception days are excluded.')
+    ).toBeVisible();
     expect(screen.getByText('Per-day late fee; 5 chargeable days.')).toBeVisible();
     expect(screen.getByText('Charge waived')).toBeVisible();
     expect(screen.queryByText('Refund')).not.toBeInTheDocument();

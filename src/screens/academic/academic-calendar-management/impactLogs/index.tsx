@@ -656,7 +656,7 @@ const CalendarImpactLogs = () => {
               size="small"
               multiline
               rows={3}
-              label="Resolution Note (optional)"
+              label="Resolution Note"
               name="resolutionNote"
               value={resolveFormik.values.resolutionNote}
               onChange={resolveFormik.handleChange}
@@ -808,7 +808,7 @@ const CalendarImpactLogs = () => {
               size="small"
               multiline
               rows={2}
-              label="Note (optional)"
+              label="Note"
               name="note"
               value={rescheduleFormik.values.note}
               onChange={rescheduleFormik.handleChange}

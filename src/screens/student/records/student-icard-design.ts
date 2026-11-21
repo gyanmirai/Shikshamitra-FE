@@ -16,34 +16,50 @@ import { readStudentICardLayout, getStudentICardPrintSettings } from './student-
 
 export { readStudentICardLayout, getStudentICardPrintSettings } from './student-icard-json';
 
-export const STUDENT_ICARD_FIELDS: IdentityCardFieldOption[] = [
-  { key: 'StudentName', label: 'Student name' },
-  { key: 'GRNumber', label: 'GR number' },
-  { key: 'Class', label: 'Class' },
-  { key: 'Division', label: 'Division' },
-  { key: 'AcademicYear', label: 'Academic year' },
-  { key: 'DateOfBirth', label: 'Date of birth' },
-  { key: 'CardNumber', label: 'Card number' },
-  { key: 'schoolName', label: 'School name' },
-  { key: 'schoolAddress', label: 'School address' },
-  { key: 'headerText', label: 'Card heading' },
-  { key: 'footerText', label: 'Return instructions' },
+const studentDataFields: IdentityCardFieldOption[] = [
+  { key: 'StudentName', label: 'Student Name', group: 'Student Info' },
+  { key: 'GRNumber', label: 'GR Number', group: 'Student Info' },
+  { key: 'Class', label: 'Class', group: 'Student Info' },
+  { key: 'Division', label: 'Division', group: 'Student Info' },
+  { key: 'RollNo', label: 'Roll No', group: 'Student Info' },
+  { key: 'DateOfBirth', label: 'Date of birth (DOB)', group: 'Student Info' },
+  { key: 'AcademicYear', label: 'Academic Year', group: 'Contact/School' },
 ];
 
-const studentKeys = new Set(STUDENT_ICARD_FIELDS.slice(0, 6).map((field) => field.key));
+export const STUDENT_ICARD_FIELDS: IdentityCardFieldOption[] = [
+  ...studentDataFields,
+  { key: 'schoolName', label: 'School name', group: 'Contact/School' },
+  { key: 'schoolAddress', label: 'School address', group: 'Contact/School' },
+  { key: 'CardNumber', label: 'Card number', group: 'Card Details' },
+  { key: 'headerText', label: 'Card heading', group: 'Card Details' },
+  { key: 'footerText', label: 'Return instructions', group: 'Card Details' },
+];
+
+export const STUDENT_ICARD_TOKENS = Object.fromEntries(
+  studentDataFields.map(({ key, label }) => [key, label])
+);
+const studentKeys = new Set(studentDataFields.map((field) => field.key));
+
+function getCardDimensions(
+  orientation: IdCardTemplate['orientation'],
+  widthMm = 85.6,
+  heightMm = 53.98
+) {
+  const shortEdge = Math.min(widthMm, heightMm);
+  const longEdge = Math.max(widthMm, heightMm);
+  return orientation === 'Vertical'
+    ? { widthMm: shortEdge, heightMm: longEdge }
+    : { widthMm: longEdge, heightMm: shortEdge };
+}
 
 export function getStudentICardLayout(template: IdCardTemplate): IdentityCardLayout {
   const saved = readStudentICardLayout(template);
   if (saved) return saved;
-  const vertical = template.orientation === 'Vertical';
-  const layout =
-    saved ??
-    createIdentityCardPreset('classic-identity', {
-      widthMm: vertical ? 53.98 : 85.6,
-      heightMm: vertical ? 85.6 : 53.98,
-      themeColor: template.primaryColor,
-      backgroundColor: template.backgroundColor,
-    });
+  const layout = createIdentityCardPreset('classic-identity', {
+    ...getCardDimensions(template.orientation),
+    themeColor: template.primaryColor,
+    backgroundColor: template.backgroundColor,
+  });
   const map = (element: IdentityCardLayout['front']['elements'][number]) => ({
     ...element,
     visible:
@@ -92,11 +108,13 @@ export function applyStudentICardDesign(
   };
 }
 
-export function createStudentICardTemplate(): IdCardTemplate {
+export function createStudentICardTemplate(
+  orientation: IdCardTemplate['orientation'] = 'Horizontal'
+): IdCardTemplate {
   const template: IdCardTemplate = {
     name: '',
     presetKey: 'classic-identity',
-    orientation: 'Horizontal',
+    orientation,
     schoolName: '',
     schoolAddress: '',
     headerText: 'Student Identity Card',
@@ -109,9 +127,33 @@ export function createStudentICardTemplate(): IdCardTemplate {
     backSideEnabled: true,
     fields: ['StudentName', 'GRNumber', 'Class', 'Division', 'AcademicYear'],
   };
-  return applyStudentICardDesign(template, createIdentityCardPreset('classic-identity'), {
-    ...DEFAULT_IDENTITY_CARD_PRINT_SETTINGS,
-  });
+  return applyStudentICardDesign(
+    template,
+    createIdentityCardPreset('classic-identity', getCardDimensions(orientation)),
+    { ...DEFAULT_IDENTITY_CARD_PRINT_SETTINGS }
+  );
+}
+
+export function setStudentICardOrientation(
+  template: IdCardTemplate,
+  orientation: IdCardTemplate['orientation']
+): IdCardTemplate {
+  if (template.orientation === orientation) return template;
+  if (template.schemaVersion !== 2) return { ...template, orientation };
+
+  const layout = readStudentICardLayout(template);
+  if (!layout) return template;
+
+  const isStarterLayout =
+    template.layoutJson === createStudentICardTemplate(layout.orientation).layoutJson;
+  const dimensions =
+    layout.widthMm === layout.heightMm && orientation === 'Vertical'
+      ? getCardDimensions(orientation)
+      : getCardDimensions(orientation, layout.widthMm, layout.heightMm);
+  const layoutJson = isStarterLayout
+    ? createStudentICardTemplate(orientation).layoutJson
+    : JSON.stringify({ ...layout, ...dimensions, orientation });
+  return { ...template, orientation, layoutJson };
 }
 
 export function getStudentICardDesignErrors(template: IdCardTemplate): string[] {

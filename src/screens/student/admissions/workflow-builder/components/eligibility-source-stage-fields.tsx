@@ -91,7 +91,7 @@ export function EligibilitySourceStageFields({
           fullWidth
           size="small"
           type="number"
-          label="Minimum Score Percentage (Optional)"
+          label="Minimum Score Percentage"
           disabled={readOnly}
           value={value.minimumPercentage ?? ''}
           onChange={(event) =>

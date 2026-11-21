@@ -115,9 +115,7 @@ export function RefundSummaryPanel({ formik, checks, liveSimulation }: RefundSum
               alignItems="center"
               sx={{ mb: 1 }}
             >
-              <Typography variant="caption" color="text.secondary" fontWeight={600}>
-                POLICY IDENTITY
-              </Typography>
+              <Typography variant="subtitle1">Policy Identity</Typography>
               <Label color={values.status === 'Active' ? 'success' : 'warning'} sx={{ height: 20 }}>
                 {values.status}
               </Label>
@@ -193,9 +191,7 @@ export function RefundSummaryPanel({ formik, checks, liveSimulation }: RefundSum
                 width={18}
                 height={18}
               />
-              <Typography variant="caption" fontWeight={700} color="primary.main">
-                ESTIMATED WATERFALL (EXAMPLE ₹10,000)
-              </Typography>
+              <Typography variant="subtitle1">Estimated Waterfall (Example ₹10,000)</Typography>
             </Stack>
 
             <Stack spacing={0.75}>
@@ -258,13 +254,8 @@ export function RefundSummaryPanel({ formik, checks, liveSimulation }: RefundSum
               bgcolor: 'background.paper',
             }}
           >
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              fontWeight={700}
-              sx={{ mb: 1, display: 'block' }}
-            >
-              READINESS CHECKLIST
+            <Typography variant="subtitle1" mb={1}>
+              Readiness Checklist
             </Typography>
 
             <Stack spacing={1}>

@@ -158,7 +158,7 @@ describe('workflow creation first step', () => {
         .compareDocumentPosition(screen.getByRole('heading', { name: 'Journey Preview' }))
     ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
 
-    expect(screen.getByRole('textbox', { name: 'Description (optional)' })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Description' })).toBeInTheDocument();
     const preview = screen.getByRole('heading', { name: 'Journey Preview' }).closest('section')!;
     expect(within(preview).getByText('5 Stages')).toBeInTheDocument();
     expect(within(preview).getByText('4 Routes')).toBeInTheDocument();
@@ -511,7 +511,7 @@ describe('inline workflow details editing', () => {
     const user = userEvent.setup();
     // Older API records can return null even though this optional client field is typed as string.
     const { onSave } = renderEdit(undefined, undefined, null as unknown as string);
-    expect(screen.getByRole('textbox', { name: 'Description (optional)' })).toHaveValue('');
+    expect(screen.getByRole('textbox', { name: 'Description' })).toHaveValue('');
     await user.click(screen.getByRole('button', { name: 'Save & Continue' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(screen.queryByText('description cannot be null')).toBeNull();

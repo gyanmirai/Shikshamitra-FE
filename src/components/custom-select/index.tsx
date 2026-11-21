@@ -40,7 +40,7 @@ export type CustomSelectProps<T extends string, J extends boolean> = Omit<
   value: J extends true ? string[] | number[] : string | number;
   onChange: (value: J extends true ? string[] | number[] : string | number) => void;
   error?: boolean;
-  helperText?: string;
+  helperText?: React.ReactNode;
   helperTextProps?: FormHelperTextProps;
   isLoading?: boolean;
   disabled?: boolean;
@@ -59,6 +59,8 @@ export type CustomSelectProps<T extends string, J extends boolean> = Omit<
   disabledReasonKey?: T;
   /** Optional guidance for menu options and the selected value. */
   optionDescriptionKey?: T;
+  /** Compact metadata aligned to the right of the option label. */
+  optionEndLabelKey?: T;
   /** Group contiguous options under non-selectable headings (for example, class → structure). */
   groupKey?: T;
 };
@@ -88,6 +90,7 @@ const CustomSelect = <T extends string, J extends boolean>({
   disabledLabel = 'Already configured',
   disabledReasonKey,
   optionDescriptionKey,
+  optionEndLabelKey,
   groupKey,
   inputProps,
   ...props
@@ -100,6 +103,10 @@ const CustomSelect = <T extends string, J extends boolean>({
       !isSearch ||
       !normalizedSearch ||
       String(option[labelKey]).toLocaleLowerCase().includes(normalizedSearch) ||
+      (optionEndLabelKey &&
+        `${option[labelKey]} ${option[optionEndLabelKey]}`
+          .toLocaleLowerCase()
+          .includes(normalizedSearch)) ||
       (groupKey && String(option[groupKey]).toLocaleLowerCase().includes(normalizedSearch)) ||
       (Array.isArray(value)
         ? value.includes(option[valueKey] as never)
@@ -333,6 +340,11 @@ const CustomSelect = <T extends string, J extends boolean>({
                       />
                     )}
                     <ListItemText
+                      sx={
+                        optionEndLabelKey
+                          ? { whiteSpace: 'normal', overflowWrap: 'anywhere' }
+                          : undefined
+                      }
                       primary={option[labelKey]}
                       secondary={
                         isDisabled
@@ -348,6 +360,15 @@ const CustomSelect = <T extends string, J extends boolean>({
                           : undefined
                       }
                     />
+                    {optionEndLabelKey && option[optionEndLabelKey] && (
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ ml: 2, flexShrink: 0 }}
+                      >
+                        {option[optionEndLabelKey]}
+                      </Typography>
+                    )}
                     {optionDescriptionKey && option[optionDescriptionKey]
                       ? optionInfo(option[optionDescriptionKey], option[labelKey])
                       : null}

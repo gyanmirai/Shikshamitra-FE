@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { ManagedApplicationAssessment } from 'src/redux/student/admissions/admission-assessment-types';
 
 import { Stack, Button } from '@mui/material';
@@ -14,6 +15,7 @@ type Props = {
   onAction: (action: AssessmentAction) => void;
   onComplete: () => void;
   compact?: boolean;
+  emptyContent?: ReactNode;
 };
 
 export function AssessmentPanelActions({
@@ -23,6 +25,7 @@ export function AssessmentPanelActions({
   onAction,
   onComplete,
   compact = false,
+  emptyContent,
 }: Props) {
   const permissions = useAssessmentPermissions();
   const actions: { action: AssessmentAction; allowed: boolean }[] = [
@@ -33,6 +36,7 @@ export function AssessmentPanelActions({
     { action: 'cancel', allowed: assessment.canCancel && permissions.book },
     { action: 'waive', allowed: assessment.canWaive && permissions.waive },
   ];
+  const availableActions = actions.filter((item) => item.allowed);
   return (
     <Stack
       direction="row"
@@ -43,25 +47,23 @@ export function AssessmentPanelActions({
         justifyContent: compact && !assessment.attempts.length ? 'center' : 'flex-start',
       }}
     >
-      {actions
-        .filter((item) => item.allowed)
-        .map(({ action }) => (
-          <Button
-            key={action}
-            size="small"
-            variant={compact && action === 'book' ? 'contained' : 'outlined'}
-            disabled={disabled}
-            onClick={() => onAction(action)}
-          >
-            {compact && action === 'waive'
-              ? 'Waive Assessment'
-              : action === 'book' && assessment.policy.schedulingEnabled
-                ? compact
-                  ? 'Book Assessment Slot'
-                  : 'Book Session'
-                : assessmentActionLabels[action]}
-          </Button>
-        ))}
+      {availableActions.map(({ action }) => (
+        <Button
+          key={action}
+          size="small"
+          variant={compact && action === 'book' ? 'contained' : 'outlined'}
+          disabled={disabled}
+          onClick={() => onAction(action)}
+        >
+          {compact && action === 'waive'
+            ? 'Waive Assessment'
+            : action === 'book' && assessment.policy.schedulingEnabled
+              ? compact
+                ? 'Book Assessment Slot'
+                : 'Book Session'
+              : assessmentActionLabels[action]}
+        </Button>
+      ))}
       {canAdvance && (
         <Button
           size="small"
@@ -72,6 +74,7 @@ export function AssessmentPanelActions({
           Complete Assessment Step
         </Button>
       )}
+      {!availableActions.length && !canAdvance && emptyContent}
     </Stack>
   );
 }

@@ -99,7 +99,7 @@ export default function AttendanceDetailsDialog({
         )}
         <TextField
           name="remarks"
-          label="Note (optional)"
+          label="Note"
           value={formik.values.remarks}
           onChange={formik.handleChange}
           onBlur={formik.handleBlur}

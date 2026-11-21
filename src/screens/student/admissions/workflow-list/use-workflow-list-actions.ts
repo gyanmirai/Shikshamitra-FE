@@ -24,6 +24,7 @@ import {
 import { getAdmissionWorkflowAccess } from '../workflow-access';
 import { getAdmissionWorkflowTemplate } from '../workflow-template';
 import { useWorkflowListPublish } from './use-workflow-list-publish';
+import { workflowArchiveErrorMessage } from './workflow-archive-error';
 
 import type { WorkflowDetails } from '../admission-workflow-dialog';
 
@@ -31,6 +32,25 @@ export type PendingWorkflowConfirmation = {
   workflow: AdmissionWorkflow;
   action: 'archive' | 'delete' | 'reopen';
 } | null;
+
+type ExistingDraftNotice = { workflowName: string; draftId: string } | null;
+
+function getExistingWorkflowDraftId(error: unknown) {
+  if (!error || typeof error !== 'object') return null;
+  const payload = (error as { data?: unknown }).data;
+  if (!payload || typeof payload !== 'object') return null;
+  const body = payload as Record<string, unknown>;
+  const errorInfo = body.error && typeof body.error === 'object'
+    ? (body.error as Record<string, unknown>)
+    : null;
+  const businessData = errorInfo?.data && typeof errorInfo.data === 'object'
+    ? (errorInfo.data as Record<string, unknown>)
+    : body.data && typeof body.data === 'object'
+      ? (body.data as Record<string, unknown>)
+      : null;
+  const draftId = businessData?.DraftId ?? businessData?.draftId;
+  return typeof draftId === 'string' && draftId.trim() ? draftId : null;
+}
 
 export function useWorkflowListActions(returnTo?: string) {
   const router = useRouter();
@@ -43,6 +63,7 @@ export function useWorkflowListActions(returnTo?: string) {
   const [openingCreatedWorkflow, setOpeningCreatedWorkflow] = useState(false);
   const [pendingConfirmation, setPendingConfirmation] = useState<PendingWorkflowConfirmation>(null);
   const [confirmationNotice, setConfirmationNotice] = useState<string | null>(null);
+  const [existingDraftNotice, setExistingDraftNotice] = useState<ExistingDraftNotice>(null);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const workflowAccess = getAdmissionWorkflowAccess(permissions);
   const publication = useWorkflowListPublish(workflowAccess.canManage);
@@ -150,6 +171,7 @@ export function useWorkflowListActions(returnTo?: string) {
   const confirm = async () => {
     if (!pendingConfirmation || confirmingRef.current) return;
     confirmingRef.current = true;
+    setConfirmationNotice(null);
     const { workflow, action } = pendingConfirmation;
     try {
       const latest = await getLatestWorkflow(workflow.id, false).unwrap();
@@ -182,6 +204,10 @@ export function useWorkflowListActions(returnTo?: string) {
       closeConfirmation();
     } catch (error) {
       const problem = parseApiProblemDetail(error);
+      if (action === 'archive' && problem.errorCode === 'Admissions.WorkflowInUse') {
+        setConfirmationNotice(workflowArchiveErrorMessage(error));
+        return;
+      }
       if (problem.errorCode === 'Admissions.WorkflowConcurrencyConflict') {
         try {
           const latest = await getLatestWorkflow(workflow.id, false).unwrap();
@@ -210,6 +236,16 @@ export function useWorkflowListActions(returnTo?: string) {
     setCloneSource,
     pendingConfirmation,
     confirmationNotice,
+    existingDraftNotice,
+    dismissExistingDraftNotice: () => setExistingDraftNotice(null),
+    openExistingDraft: () => {
+      if (!existingDraftNotice) return;
+      navigation.navigate(
+        existingDraftNotice.draftId,
+        withReturn(`${studentPaths.enrollment.settings.workflows}/${existingDraftNotice.draftId}`)
+      );
+      setExistingDraftNotice(null);
+    },
     confirmationRefreshing: latestWorkflowState.isFetching,
     requestConfirmation,
     closeConfirmation,
@@ -229,13 +265,23 @@ export function useWorkflowListActions(returnTo?: string) {
     createVersion: async (workflow: AdmissionWorkflow) => {
       if (versionLock.current || !allowed.canCreateVersion) return;
       versionLock.current = true;
+      setExistingDraftNotice(null);
       setCreatingVersionId(workflow.id);
       try {
-        await runAction(
-          () => createVersion(workflow.id).unwrap(),
-          'New workflow version created',
-          true
-        );
+        const result = await createVersion(workflow.id).unwrap();
+        shikshaMitraToast.success({ message: 'New workflow version created' });
+        navigate(result);
+      } catch (error) {
+        const problem = parseApiProblemDetail(error);
+        const draftId = getExistingWorkflowDraftId(error);
+        if (problem.errorCode === 'Admissions.WorkflowDraftRequired' && draftId) {
+          setExistingDraftNotice({ workflowName: workflow.name, draftId });
+          return;
+        }
+        shikshaMitraToast.error({
+          message: problem.detail || 'Unable to create the workflow draft.',
+        });
+        throw error;
       } finally {
         versionLock.current = false;
         setCreatingVersionId(null);

@@ -26,7 +26,10 @@ const permissions = [
   'HR.PayrollManagement.Settings.StatutorySchemes.Activate',
   'HR.PayrollManagement.Settings.SalaryTemplates.Add',
 ].flatMap((name) => [name, `${name}.View`, `${name}.Add`, `${name}.Edit`]);
-permissions.push('HR.PayrollManagement.RunPayroll.Lock');
+permissions.push(
+  'HR.PayrollManagement.RunPayroll.Lock',
+  'HR.PayrollManagement.RunPayroll.ViewAudit'
+);
 permissions.push('HR.PayrollManagement.Settings.StatutorySchemes.ConfigureCalculation');
 const readiness = {
   month: '2026-10',
@@ -52,6 +55,7 @@ async function mockPayroll(
     delayDashboard?: boolean;
     zeroTaxRange?: boolean;
     missingPfBasis?: boolean;
+    pendingReview?: boolean;
     esiEnabled?: boolean;
     denyCalculation?: boolean;
   } = {}
@@ -69,6 +73,14 @@ async function mockPayroll(
       calculationBasis: 'CLASSIFIED_EARNINGS',
     },
   };
+  const reviewed = new Set<string>();
+  const activity: {
+    id: string;
+    actionLabel: string;
+    summary: string;
+    actorDisplayName: string;
+    occurredAt: string;
+  }[] = [];
   await page.clock.setFixedTime(new Date('2026-10-09T04:00:00Z'));
   await page.addInitScript((academicYear) => {
     localStorage.setItem(
@@ -118,8 +130,9 @@ async function mockPayroll(
         ],
       };
     else if (path.includes('academic-year')) body = { items: [year], totalCount: 1 };
+    else if (path.endsWith('/hr/setup-readiness')) body = { isReady: true, checks: [] };
     else if (path.includes('user-scope-hierarchy'))
-      body = { isAdmin: true, accessibleHierarchy: [] };
+      body = { userId: 'payroll-ui-reviewer', isAdmin: true, accessibleHierarchy: [] };
     else if (path.includes('/hr/dashboard/previews')) {
       if (options.delayDashboard) await new Promise((resolve) => setTimeout(resolve, 1500));
       body = {
@@ -129,11 +142,59 @@ async function mockPayroll(
         payloadJson: JSON.stringify({ ...readiness, pendingCount: 3 }),
         lastSuccessfulRefreshAt: '2026-10-09T04:00:00Z',
       };
-    } else if (path.includes('/payroll/run/previews')) {
+    } else if (path.endsWith('/payroll/run/reviews')) {
+      const selected = route.request().postDataJSON().employeeIds as string[];
+      const mark = route.request().method() === 'POST';
+      selected.forEach((id) => {
+        if (mark) reviewed.add(id);
+        else reviewed.delete(id);
+      });
+      const message = mark
+        ? `Marked ${selected.length} as reviewed.`
+        : `Removed review from ${selected.length} staff.`;
+      activity.unshift({
+        id: String(activity.length + 1),
+        actionLabel: mark ? 'Reviewed' : 'Review removed',
+        summary: message,
+        actorDisplayName: 'Payroll UI Reviewer',
+        occurredAt: '2026-10-09T04:00:00Z',
+      });
+      body = { message, employeesProcessed: selected.length };
+    } else if (path.endsWith('/hr/audit-events')) {
+      body = { items: activity, totalCount: activity.length };
+    } else if (path.endsWith('/payroll/statutory-profile/readiness')) {
+      body = {
+        items: [
+          {
+            employeeId: 'pf-staff',
+            employeeName: 'PF Test Staff',
+            applyPf: true,
+            applyEsic: true,
+            esicNumberPresent: true,
+          },
+        ],
+        totalCount: 1,
+      };
+    } else if (path.endsWith('/payroll/run/approval-settings')) {
+      body = { mode: 'Legacy', version: 0, approverId: null, allowSelfFinalization: false };
+    } else if (path.includes('/payroll/run/previews') || path.endsWith('/payroll/run/register')) {
       if (options.failReadiness) {
         status = 500;
         body = { error: { message: 'Readiness could not be loaded.' } };
-      } else if (path.endsWith('/employees'))
+      } else if (path.endsWith('/current')) {
+        const lookupMonth = new URL(route.request().url()).searchParams.get('month');
+        body = {
+          currentRun: lookupMonth === readiness.month ? {
+            id: 'ui-preview',
+            month: readiness.month,
+            academicYearId: year.id,
+            status: 'SUCCEEDED',
+            employeeCount: 3,
+            completedEmployees: 3,
+            isCurrent: true,
+          } : null,
+        };
+      } else if (path.endsWith('/employees') || path.endsWith('/register'))
         body = {
           previewRunId: 'ui-preview',
           isCurrent: true,
@@ -153,7 +214,8 @@ async function mockPayroll(
                   grossSalary: 10000,
                   totalEarnings: 10000,
                   netPay: 10000,
-                  reviewStatus: 'REVIEWED',
+                  reviewStatus:
+                    !options.pendingReview || reviewed.has('ready-staff') ? 'REVIEWED' : 'PENDING',
                   issueCodes: [],
                 },
                 {
@@ -166,7 +228,8 @@ async function mockPayroll(
                   grossSalary: 10000,
                   totalEarnings: 10000,
                   netPay: 10000,
-                  reviewStatus: 'REVIEWED',
+                  reviewStatus:
+                    !options.pendingReview || reviewed.has('pf-staff') ? 'REVIEWED' : 'PENDING',
                   issueCodes: ['PF_WAGE_BASIS_REQUIRED'],
                 },
               ]
@@ -458,12 +521,96 @@ test.describe('Payroll interface consistency', () => {
     );
   });
 
+  test('review enables locking for a clean row and keeps a blocked row ineligible', async ({
+    page,
+  }) => {
+    await mockPayroll(page, { missingPfBasis: true, pendingReview: true });
+    await page.goto('/hr/payroll/run-payroll?month=2026-10&previewRunId=ui-preview');
+    const lock = page.getByRole('button', { name: 'Lock Reviewed', exact: true });
+    const clean = page.getByRole('checkbox', { name: 'Select payroll for Ready Test Staff' });
+    const blocked = page.getByRole('checkbox', { name: 'Select payroll for PF Test Staff' });
+    const review = page.getByRole('button', { name: 'Mark Reviewed', exact: true });
+
+    const previewStarts: string[] = [];
+    page.on('request', (request) => {
+      if (request.method() === 'POST' && request.url().endsWith('/payroll/run/previews'))
+        previewStarts.push(request.url());
+    });
+    await blocked.check();
+    await review.click();
+    await expect(
+      page
+        .getByRole('row', { name: /PF Test Staff/ })
+        .getByRole('cell', { name: 'Reviewed', exact: true })
+    ).toBeVisible();
+    await expect(lock).toBeDisabled();
+    await blocked.uncheck();
+    await clean.check();
+    await expect(lock).toBeDisabled();
+    await review.click();
+    await expect(lock).toBeEnabled();
+    expect(previewStarts).toHaveLength(0);
+    await page.getByRole('button', { name: 'Unmark', exact: true }).click();
+    await expect(lock).toBeDisabled();
+    await page.getByRole('button', { name: 'Payroll activity' }).click();
+    const history = page.getByRole('dialog', { name: 'Payroll Activity' });
+    await expect(history.getByText('Removed review from 1 staff.')).toBeVisible();
+    await expect(history.getByText('Marked 1 as reviewed.')).toHaveCount(2);
+  });
+
+  for (const [width, height] of [
+    [390, 844],
+    [768, 1024],
+    [1440, 900],
+  ]) {
+    for (const scheme of ['light', 'dark']) {
+      test(`payroll drawer and registration layout at ${width}px in ${scheme}`, async ({
+        page,
+      }, testInfo) => {
+        await page.setViewportSize({ width, height });
+        await page.addInitScript((colorScheme) => {
+          localStorage.setItem('theme-mode', colorScheme);
+          localStorage.setItem('app-settings', JSON.stringify({ colorScheme }));
+        }, scheme);
+        await mockPayroll(page, { missingPfBasis: true });
+        await page.goto('/hr/payroll/run-payroll?month=2026-10&previewRunId=ui-preview');
+        const registrations = page.getByRole('button', { name: 'View registrations' });
+        await expect(registrations).toHaveCount(0);
+        await page.getByRole('button', { name: 'Payroll checks' }).click();
+        await registrations.click();
+        await expect(
+          page.getByRole('dialog', { name: 'PF and ESIC Registration' }).getByText('Number missing')
+        ).toBeVisible();
+        await page.keyboard.press('Escape');
+        await expect(registrations).toBeFocused();
+        await page.keyboard.press('Escape');
+        await expect(page.getByRole('dialog', { name: 'Payroll Checks' })).toHaveCount(0);
+        await page
+          .getByRole('row', { name: /PF Test Staff/ })
+          .getByRole('button', { name: 'View', exact: true })
+          .click();
+        const drawer = page.getByRole('dialog', { name: 'Staff Payroll Details' });
+        await expect(drawer.getByText('Blocks locking')).toBeVisible();
+        await expect(async () => {
+          const bounds = await drawer.boundingBox();
+          expect(bounds?.width).toBeCloseTo(width === 390 ? width : Math.min(760, width * 0.92), 0);
+          expect((bounds?.x ?? 0) + (bounds?.width ?? 0)).toBeCloseTo(width, 0);
+        }).toPass();
+        await expect(page.locator('html')).toHaveAttribute('data-mui-color-scheme', scheme);
+        expect(
+          await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)
+        ).toBe(true);
+        await page.screenshot({ path: testInfo.outputPath('staff-payroll.png') });
+      });
+    }
+  }
+
   test('missing PF basis stays critical and fully readable in a narrow staff drawer', async ({
     page,
   }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await mockPayroll(page, { missingPfBasis: true });
-    await page.goto('/hr/payroll/run-payroll');
+    await page.goto('/hr/payroll/run-payroll?month=2026-10&previewRunId=ui-preview');
     const lockReviewed = page.getByRole('button', { name: 'Lock Reviewed', exact: true });
     const readyStaff = page.getByRole('checkbox', { name: 'Select payroll for Ready Test Staff' });
     await readyStaff.check();
@@ -476,7 +623,7 @@ test.describe('Payroll interface consistency', () => {
       .getByRole('button', { name: 'View', exact: true })
       .click();
     const dialog = page.getByRole('dialog');
-    await expect(dialog.getByText('CRITICAL', { exact: true })).toBeVisible();
+    await expect(dialog.getByText('Blocks locking', { exact: true })).toBeVisible();
     const warning = dialog.getByText(
       'PF wage basis required. Update the salary structure to match the assigned PF rule.',
       { exact: true }
@@ -491,7 +638,7 @@ test.describe('Payroll interface consistency', () => {
     expect(dimensions.contentWidth).toBeLessThanOrEqual(dimensions.width + 1);
     expect(dimensions.contentHeight).toBeLessThanOrEqual(dimensions.height + 1);
     await page.getByRole('button', { name: 'close', exact: true }).click();
-    await page.getByRole('button', { name: 'View readiness', exact: true }).click();
+    await page.getByRole('button', { name: 'Payroll checks', exact: true }).click();
     await expect(
       page
         .getByRole('dialog')

@@ -5,7 +5,7 @@ test.beforeEach(async ({ request }) => {
   await request.get('/fixture/reset');
 });
 
-test('Role sorts and filters the entire directory and toggles through Columns', async ({
+test('pages the directory on demand, searches all users, and toggles Role through Columns', async ({
   page,
 }) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' });
@@ -19,19 +19,24 @@ test('Role sorts and filters the entire directory and toggles through Columns', 
     'Actions',
   ]);
   await expect(table.getByText('No role assigned')).toBeVisible();
-  await page.getByRole('button', { name: 'Sort by Role', exact: true }).click();
-  await expect(table.locator('tbody tr').first()).toContainText('Admin');
-  await page.getByRole('button', { name: 'Sort by Role', exact: true }).click();
-  await expect(table.locator('tbody tr').first()).toContainText('QA User 01');
-  await page.getByRole('button', { name: 'Filter Role', exact: true }).click();
-  await page.getByRole('combobox', { name: 'Filter Type *', exact: true }).click();
-  await page.getByRole('option', { name: 'Contains', exact: true }).click();
-  await page.getByRole('textbox', { name: 'Role *', exact: true }).fill('teacher');
-  await page.getByRole('button', { name: 'Apply', exact: true }).click();
+  await expect(table.getByText('QA User 12', { exact: true })).toHaveCount(0);
+  const nextRequest = page.waitForRequest(
+    (request) =>
+      request.url().includes('/user-directory?') &&
+      new URL(request.url()).searchParams.get('skipCount') === '10'
+  );
+  await page.getByRole('button', { name: 'Go to next page' }).click();
+  await nextRequest;
   await expect(table.getByText('QA User 12', { exact: true })).toBeVisible();
   await expect(table.getByText('HR Manager', { exact: true })).toBeVisible();
   await expect(table.getByText('QA User 01', { exact: true })).toHaveCount(0);
-  await page.getByRole('button', { name: 'Clear (1)', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Go to next page' })).toBeDisabled();
+  await page
+    .getByRole('textbox', { name: 'Search users by name, email, or mobile number' })
+    .fill('QA User 01');
+  await expect(table.getByText('QA User 01', { exact: true })).toBeVisible();
+  await expect(page.getByText('1–1 of 1', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Sort by Role', exact: true })).toHaveCount(0);
   await page.getByRole('button', { name: 'Columns', exact: true }).click();
   await page.getByRole('checkbox', { name: 'Role', exact: true }).uncheck();
   await expect(table.getByRole('columnheader', { name: /Role/ })).toHaveCount(0);

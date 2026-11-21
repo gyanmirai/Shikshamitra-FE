@@ -2,6 +2,9 @@ import dayjs from 'dayjs';
 import { LibraryBookStatus } from 'src/enums/library-book-status';
 import { LibraryChargeStatusType } from 'src/enums/library_charges_type';
 
+import { mapDashboardFinancePosition } from './dashboard-finance-types';
+import { mapOverdueEvidence, mapSchoolDateEvidence } from './read-date-types';
+
 export type LibraryPaginatedList<T> = T[] & {
   items: T[];
   totalCount: number;
@@ -58,6 +61,8 @@ export function mapBookCopyStatus(status: unknown): LibraryBookStatus {
       undermaintenance: LibraryBookStatus.UnderMaintenance,
       discarded: LibraryBookStatus.Removed,
       removed: LibraryBookStatus.Removed,
+      incustody: LibraryBookStatus.InCustody,
+      intransit: LibraryBookStatus.InTransit,
     };
     return byName[key] ?? LibraryBookStatus.Available;
   }
@@ -70,6 +75,8 @@ export function mapBookCopyStatus(status: unknown): LibraryBookStatus {
     4: LibraryBookStatus.Damaged,
     5: LibraryBookStatus.UnderMaintenance,
     6: LibraryBookStatus.Removed,
+    7: LibraryBookStatus.InCustody,
+    8: LibraryBookStatus.InTransit,
   };
 
   return byBackendValue[toNumberValue(status)] ?? LibraryBookStatus.Available;
@@ -202,6 +209,13 @@ export function mapLibraryMemberDto(dto: any) {
     joinDate: dto?.joinDate ?? '',
     currentIssue: toNumberValue(dto?.currentIssue ?? dto?.statistics?.currentIssue),
     overdueReturn: toNumberValue(dto?.overdueReturn ?? dto?.statistics?.overdueReturnBooks),
+    overdueClassificationAvailable:
+      dto?.overdueClassificationAvailable ?? dto?.statistics?.overdueClassificationAvailable,
+    unknownDueDateCount: dto?.unknownDueDateCount ?? dto?.statistics?.unknownDueDateCount,
+    overdueAsOfDate: dto?.overdueAsOfDate ?? dto?.statistics?.overdueAsOfDate,
+    overdueDateSource: dto?.overdueDateSource ?? dto?.statistics?.overdueDateSource,
+    overdueUnavailableReason:
+      dto?.overdueUnavailableReason ?? dto?.statistics?.overdueUnavailableReason,
     reservedBooks: toNumberValue(dto?.reservedBooks ?? dto?.statistics?.reservedBooks),
     memberStatus: dto?.memberStatus ?? 'Active',
   };
@@ -213,7 +227,7 @@ export function mapIssueReturnItemDto(dto: any) {
     id: toStringValue(dto?.transactionId ?? dto?.id),
     transactionId: toStringValue(dto?.transactionId ?? dto?.id),
     memberId: toStringValue(dto?.memberId),
-    role: typeof dto?.role === 'number' ? (dto.role === 0 ? 'Student' : 'Employee') : dto?.role,
+    role: typeof dto?.role === 'number' ? (dto.role === 0 ? 'Student' : 'Staff') : dto?.role,
     classNo: dto?.standardName ?? dto?.classNo ?? '',
     division: dto?.divisionName ?? dto?.division ?? '',
     requestedDate: dto?.issueDate ?? dto?.requestedDate,
@@ -264,6 +278,14 @@ export function mapChargeCategoryDto(dto: any) {
   };
 }
 
+const selectedChargeSchoolDate = (value: unknown): string | undefined => {
+  if (dayjs.isDayjs(value)) return value.isValid() ? value.format('YYYY-MM-DD') : undefined;
+  return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : undefined;
+};
+
+const confirmedChargeSchoolDate = (value: unknown, provenance: unknown) =>
+  provenance === 1 || provenance === 2 ? (selectedChargeSchoolDate(value) ?? null) : null;
+
 export function mapChargeListItemDto(dto: any) {
   return {
     ...dto,
@@ -276,8 +298,10 @@ export function mapChargeListItemDto(dto: any) {
     chargeCategory: dto?.chargeType ?? dto?.chargeCategory ?? '',
     fineAmount: toNumberValue(dto?.amount ?? dto?.fineAmount),
     amount: toNumberValue(dto?.amount ?? dto?.fineAmount),
-    dueDate: dto?.dueDate,
-    assignAt: dto?.chargeDate,
+    dueDate: confirmedChargeSchoolDate(dto?.schoolDueDate, dto?.dueDateProvenance),
+    assignAt: confirmedChargeSchoolDate(dto?.schoolChargeDate, dto?.chargeDateProvenance),
+    rawChargeDate: dto?.rawChargeDate ?? dto?.chargeDate ?? null,
+    rawDueDate: dto?.rawDueDate ?? dto?.dueDate ?? null,
     status: toNumberValue(dto?.paymentStatus, LibraryChargeStatusType.Pending),
     reason: dto?.remarks ?? dto?.reason ?? '',
     bookTitle: dto?.bookTitle ?? '',
@@ -314,9 +338,7 @@ export function buildReturnBookPayload(values: any, memberId: string) {
     chargeCategoryId: hasCharge ? values.chargeCategory : undefined,
     amount: hasCharge && values.amount !== '' ? Number(values.amount) : undefined,
     fineDueDate:
-      hasCharge && values.fineDueDate
-        ? dayjs(values.fineDueDate).format('YYYY-MM-DD')
-        : undefined,
+      hasCharge && values.fineDueDate ? dayjs(values.fineDueDate).format('YYYY-MM-DD') : undefined,
     copyStatus:
       values.copyStatus === '' || values.copyStatus === undefined
         ? undefined
@@ -336,20 +358,21 @@ export function buildReservationPayload(values: any, memberId?: string) {
 export function buildCreateChargePayload(values: any) {
   return {
     memberId: values.memberId,
+    ...(values.bookIssueId ? { bookIssueId: values.bookIssueId } : {}),
     chargeCategoryId: values.chargeCategory,
     amount: Number(values.amount),
-    chargeDate: values.chargeDate ? dayjs(values.chargeDate).toISOString() : dayjs().toISOString(),
-    dueDate: values.dueDate ? dayjs(values.dueDate).toISOString() : undefined,
+    academicYearId: values.academicYearId,
+    schoolChargeDate: selectedChargeSchoolDate(values.schoolChargeDate),
+    schoolDueDate: selectedChargeSchoolDate(values.schoolDueDate),
     remarks: values.reason || undefined,
   };
 }
 
 export function buildUpdateChargePayload(values: any) {
   return {
+    ...(values.sourceVersion ? { expectedSourceVersion: values.sourceVersion } : {}),
     amount: values.amount !== '' ? Number(values.amount) : undefined,
-    dueDate: values.dueDate ? dayjs(values.dueDate).toISOString() : undefined,
-    paymentStatus: values.paymentStatus,
-    paidDate: values.paidDate ? dayjs(values.paidDate).toISOString() : undefined,
+    schoolDueDate: selectedChargeSchoolDate(values.schoolDueDate),
     remarks: values.reason || undefined,
   };
 }
@@ -363,8 +386,10 @@ export function mapLibraryDashboardOverviewDto(dto: any = {}) {
 
   return {
     ...dto,
+    ...mapSchoolDateEvidence(dto),
     academicYearId: dto?.academicYearId ?? null,
     generatedAt: dto?.generatedAt ?? null,
+    financePosition: mapDashboardFinancePosition(dto?.financePosition),
     stockTotals: {
       totalBooks: toNumberValue(stockTotals.totalBooks),
       totalCopies: toNumberValue(stockTotals.totalCopies),
@@ -374,9 +399,14 @@ export function mapLibraryDashboardOverviewDto(dto: any = {}) {
       lostCopies: toNumberValue(stockTotals.lostCopies),
       damagedCopies: toNumberValue(stockTotals.damagedCopies),
       underRepairCopies: toNumberValue(stockTotals.underRepairCopies),
+      inCustodyCopies:
+        stockTotals.inCustodyCopies == null ? null : toNumberValue(stockTotals.inCustodyCopies),
+      inTransitCopies:
+        stockTotals.inTransitCopies == null ? null : toNumberValue(stockTotals.inTransitCopies),
       discardedCopies: toNumberValue(stockTotals.discardedCopies),
     },
     circulation: {
+      ...mapOverdueEvidence(circulation),
       activeIssues: toNumberValue(circulation.activeIssues),
       overdueIssues: toNumberValue(circulation.overdueIssues),
       issuesToday: toNumberValue(circulation.issuesToday),
@@ -496,6 +526,8 @@ export type LibraryReportOptions = ReturnType<typeof mapLibraryReportOptionsDto>
 
 export function mapLibraryReportPreviewDto(dto: any = {}) {
   return {
+    ...mapSchoolDateEvidence(dto),
+    ...mapOverdueEvidence(dto),
     reportType: dto?.reportType || '',
     totalCount: toNumberValue(dto?.totalCount),
     page: toNumberValue(dto?.page, 1),
@@ -541,6 +573,7 @@ export function buildLibraryReportRequestPayload(values: any) {
     search: values.search || undefined,
     fromDate: values.fromDate ? dayjs(values.fromDate).format('YYYY-MM-DD') : undefined,
     toDate: values.toDate ? dayjs(values.toDate).format('YYYY-MM-DD') : undefined,
+    asOfDate: values.asOfDate || undefined,
     top: values.top ? Number(values.top) : undefined,
   };
 
@@ -581,6 +614,8 @@ export function mapLibraryNotificationSettingDto(dto: any = {}) {
       dto?.reminderOffsetDays === null || dto?.reminderOffsetDays === undefined
         ? null
         : toNumberValue(dto?.reminderOffsetDays),
+    repeatIntervalDays:
+      dto?.repeatIntervalDays == null ? null : toNumberValue(dto.repeatIntervalDays),
     subjectTemplate: dto?.subjectTemplate || '',
     messageTemplate: dto?.messageTemplate || '',
     lastStatus: dto?.lastStatus || '',
@@ -593,6 +628,30 @@ export type LibraryNotificationSetting = ReturnType<typeof mapLibraryNotificatio
 
 export function mapLibraryNotificationSettingsDto(dto: any = {}) {
   return {
+    canManageSettings: dto?.canManageSettings === true,
+    setup: dto?.setup
+      ? {
+          timeZoneId: toStringValue(dto.setup.timeZoneId),
+          automaticReminderTimeLocal: toStringValue(dto.setup.automaticReminderTimeLocal),
+          studentInboxRouting: toStringValue(dto.setup.studentInboxRouting),
+          operationalRecipientUserIds: toArrayValue<string>(dto.setup.operationalRecipientUserIds),
+          configuredOperationalRecipients: toArrayValue(
+            dto.setup.configuredOperationalRecipients
+          ).map((recipient) => ({
+            userId: toStringValue(recipient?.userId),
+            userName: recipient?.userName == null ? null : toStringValue(recipient.userName),
+            displayName:
+              recipient?.displayName == null ? null : toStringValue(recipient.displayName),
+            isEligible: recipient?.isEligible === true,
+            unavailableReason:
+              recipient?.unavailableReason == null
+                ? null
+                : toStringValue(recipient.unavailableReason),
+          })),
+          needsConfiguration: dto.setup.needsConfiguration !== false,
+          configurationIssues: toArrayValue<string>(dto.setup.configurationIssues),
+        }
+      : undefined,
     items: toArrayValue(dto?.items).map(mapLibraryNotificationSettingDto),
     events: toArrayValue(dto?.events).map((event: any) => ({
       eventType: event?.eventType || '',
@@ -631,6 +690,12 @@ export function mapLibraryNotificationHistoryDto(dto: any = {}) {
     reminderDate: dto?.reminderDate || '',
     sentAt: dto?.sentAt || '',
     creationTime: dto?.creationTime || '',
+    attemptCount: dto?.attemptCount == null ? null : toNumberValue(dto.attemptCount),
+    nextAttemptAt: toStringValue(dto?.nextAttemptAt),
+    recipientKind: toStringValue(dto?.recipientKind),
+    recipientRelationship: toStringValue(dto?.recipientRelationship),
+    recipientUserId: toStringValue(dto?.recipientUserId),
+    readAt: toStringValue(dto?.readAt),
   };
 }
 

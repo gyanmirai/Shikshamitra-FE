@@ -33,6 +33,7 @@ export default function CertificateExitCaseSelect({
         (correction) => correction.correctionOfId === item.id && correction.status === 'Applied'
       )
   );
+  const noEligibleCases = !query.isFetching && !query.isError && !cases.length;
   useEffect(() => {
     if (!disabled && !value && cases.length === 1) onChange(cases[0].id);
   }, [disabled, value, cases, onChange]);
@@ -76,11 +77,12 @@ export default function CertificateExitCaseSelect({
           disabled={disabled || query.isFetching || query.isError}
           isLoading={query.isFetching}
           error={!!error}
+          helperTextProps={{ role: error ? 'alert' : undefined }}
           helperText={
-            error ||
-            (!query.isFetching && !query.isError && !cases.length
+            noEligibleCases
               ? 'No approved or completed exit case is available for this student.'
-              : 'The server checks this case against the school’s Leaving Certificate policy.')
+              : error ||
+                'The server checks this case against the school’s Leaving Certificate policy.'
           }
           formControlProps={{ fullWidth: true }}
         />

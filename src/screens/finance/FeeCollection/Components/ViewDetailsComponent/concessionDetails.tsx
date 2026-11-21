@@ -2,7 +2,7 @@ import type { ConcessionDetail } from 'src/redux/feeCollection/feeCollection';
 
 import { Typography } from '@mui/material';
 import { formatNumber } from 'src/utils/formate_number';
-import { DetailGrid, DetailField, DetailSection } from 'src/components/detail-view';
+import { DetailGrid, DetailField, DetailSection } from 'src/screens/finance/components/detail-view';
 
 export default function ConcessionsCard({ concessions }: { concessions?: ConcessionDetail[] }) {
   return (

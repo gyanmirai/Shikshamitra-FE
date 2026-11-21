@@ -8,9 +8,9 @@ import { useId, useState } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { formatNumber } from 'src/utils/formate_number';
-import { DetailField } from 'src/components/detail-view';
 import CustomAccordion from 'src/components/custom-accordian';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { DetailField } from 'src/screens/finance/components/detail-view';
 import { Box, Stack, Alert, Divider, Typography, AccordionSummary } from '@mui/material';
 import { ConcessionRequestStatusEnum } from 'src/redux/finance/ConcessionManagement/types';
 

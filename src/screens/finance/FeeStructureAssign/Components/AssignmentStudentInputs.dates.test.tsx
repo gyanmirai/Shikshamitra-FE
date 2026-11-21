@@ -9,7 +9,7 @@ import { it, vi, expect, describe } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 
 import AssignmentStudentInputs from './AssignmentStudentInputs';
-import { assignmentYearBounds } from './assignmentServiceDates';
+import { assignmentYearBounds, assignmentServiceDateError } from './assignmentServiceDates';
 
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 vi.mock('src/redux/finance/studentFeeAssignment', () => ({
@@ -26,21 +26,35 @@ vi.mock('src/components/custom-select', () => ({
     </select>
   ),
 }));
-vi.mock('@mui/x-date-pickers/DatePicker', () => ({
-  DatePicker: ({ label, value, minDate, maxDate, disabled, slotProps, onChange }: any) => (
-    <div>
-      {label}
+vi.mock('src/components/custom-date-range-picker', () => ({
+  CustomDateRangePicker: ({
+    label,
+    value,
+    minDate,
+    maxDate,
+    disabled,
+    readOnly,
+    helperText,
+    onChange,
+  }: any) => (
+    <>
       <input
-        id={`date-${label}`}
         aria-label={label}
         disabled={disabled}
-        value={value?.format('YYYY-MM-DD') ?? ''}
+        readOnly={readOnly}
+        value={value.map((date: any) => date?.format('YYYY-MM-DD') ?? '').join(' to ')}
         data-min={minDate?.format('YYYY-MM-DD')}
         data-max={maxDate?.format('YYYY-MM-DD')}
-        onChange={(e) => onChange(e.target.value ? dayjs(e.target.value) : null)}
+        onChange={(event) =>
+          onChange(
+            event.target.value === 'invalid' || !event.target.value
+              ? [null, null]
+              : event.target.value.split(' to ').map((date) => dayjs(date))
+          )
+        }
       />
-      {slotProps.textField.helperText && <span role="alert">{slotProps.textField.helperText}</span>}
-    </div>
+      {helperText && <span>{helperText}</span>}
+    </>
   ),
 }));
 
@@ -79,6 +93,7 @@ function Harness({
       request={request}
       disabled={false}
       canOverrideDates
+      flat
       allowTransportSource={allowTransportSource}
       yearBounds={available ? assignmentYearBounds(year, 'year') : undefined}
       onChange={(value) => {
@@ -88,14 +103,7 @@ function Harness({
     />
   );
 }
-const openDates = () => {
-  fireEvent.click(screen.getByRole('button', { name: 'Expand Tuition' }));
-  fireEvent.change(screen.getByRole('combobox', { name: 'Service period' }), {
-    target: { value: 'ManualOverride' },
-  });
-};
-
-describe('shared assignment date pickers', () => {
+describe('shared assignment date picker', () => {
   it('shows verified admission dates without allowing an academic-year bypass', () => {
     const period = {
       feeHeadId: 'tuition',
@@ -122,43 +130,74 @@ describe('shared assignment date pickers', () => {
         flat
       />
     );
-    expect(screen.getByText('From admission')).toBeInTheDocument();
-    expect(screen.getByText(/20 Aug 2026/)).toBeInTheDocument();
-    expect(screen.getByText(/14 May 2027/)).toBeInTheDocument();
-    expect(screen.queryByRole('option', { name: 'Academic year' })).not.toBeInTheDocument();
-    expect(screen.queryByLabelText('Start date')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Start – end date')).toHaveValue('2026-08-20 to 2027-05-14');
+    expect(screen.getByLabelText('Start – end date')).toHaveAttribute('readonly');
+    expect(screen.queryByRole('combobox', { name: 'Service period' })).not.toBeInTheDocument();
   });
-  it('keeps individual transport sources out of the common bulk editor', () => {
+
+  it('only offers a verified transport record for individual assignments', () => {
     const view = render(<Harness changed={vi.fn()} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Expand Tuition' }));
-    expect(screen.getByRole('option', { name: 'Transport service' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Use transport dates' }));
+    expect(screen.getByRole('combobox', { name: 'Transport record' })).toBeInTheDocument();
     view.rerender(<Harness changed={vi.fn()} allowTransportSource={false} />);
-    expect(screen.queryByRole('option', { name: 'Transport service' })).not.toBeInTheDocument();
-    expect(screen.getByRole('option', { name: 'Academic year' })).toBeInTheDocument();
-    expect(screen.getByRole('option', { name: 'Custom dates' })).toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Transport record' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Use transport dates' })).not.toBeInTheDocument();
   });
-  it('passes configured global bounds and preserves typed out-of-year values with an error', () => {
+
+  it('starts on the academic-year range and accepts a custom range without a reason', () => {
     const changed = vi.fn();
     render(<Harness changed={changed} />);
-    openDates();
-    expect(screen.getByLabelText('Start date')).toHaveAttribute('data-min', year.startDate);
-    expect(screen.getByLabelText('Start date')).toHaveAttribute('data-max', year.endDate);
-    fireEvent.change(screen.getByLabelText('Start date'), { target: { value: '2026-06-14' } });
-    expect(screen.getByRole('alert')).toHaveTextContent('within the selected academic year');
-    expect(changed.mock.lastCall?.[0].servicePeriods[0].startDate).toBe('2026-06-14T00:00:00Z');
-    fireEvent.change(screen.getByLabelText('Start date'), { target: { value: '2026-08-01' } });
-    expect(screen.getByLabelText('End date')).toHaveAttribute('data-min', '2026-08-01');
-    fireEvent.change(screen.getByLabelText('End date'), { target: { value: '2026-07-01' } });
-    expect(screen.getByRole('alert')).toHaveTextContent('on or after start date');
+    const dates = screen.getByLabelText('Start – end date');
+    expect(dates).toHaveValue('2026-06-15 to 2027-05-14');
+    expect(dates).toHaveAttribute('data-min', year.startDate);
+    expect(dates).toHaveAttribute('data-max', year.endDate);
+    expect(screen.queryByLabelText(/Reason for changing dates/)).not.toBeInTheDocument();
+
+    fireEvent.change(dates, { target: { value: '2026-08-01 to 2026-10-31' } });
+    expect(changed.mock.lastCall?.[0].servicePeriods).toEqual([
+      {
+        feeHeadId: 'tuition',
+        source: 'ManualOverride',
+        startDate: '2026-08-01T00:00:00Z',
+        endDate: '2026-10-31T00:00:00Z',
+      },
+    ]);
+    expect(screen.queryByLabelText(/Reason for changing dates/)).not.toBeInTheDocument();
+
+    fireEvent.change(dates, { target: { value: '2026-06-15 to 2027-05-14' } });
+    expect(changed.mock.lastCall?.[0].servicePeriods).toEqual([
+      { feeHeadId: 'tuition', source: 'AcademicYear' },
+    ]);
+    expect(screen.queryByLabelText(/Reason for changing dates/)).not.toBeInTheDocument();
   });
-  it('keeps date entry disabled when the selected year has no configured bounds', () => {
+
+  it('disables the picker when dates are unavailable', () => {
     render(<Harness changed={vi.fn()} available={false} />);
-    openDates();
-    expect(screen.getByLabelText('Start date')).toBeDisabled();
-    expect(screen.getByLabelText('End date')).toBeDisabled();
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      'Selected academic year dates are unavailable'
-    );
+    expect(screen.getByLabelText('Start – end date')).toBeDisabled();
+    expect(screen.getByText('Selected academic year dates are unavailable.')).toBeVisible();
+  });
+
+  it.each(['invalid', ''])('blocks preview for an invalid or cleared date draft (%s)', (draft) => {
+    const changed = vi.fn();
+    render(<Harness changed={changed} />);
+    const dates = screen.getByLabelText('Start – end date');
+    fireEvent.change(dates, { target: { value: '2026-08-01 to 2026-10-31' } });
+    fireEvent.change(dates, { target: { value: draft } });
+    expect(
+      assignmentServiceDateError(
+        candidate,
+        changed.mock.lastCall?.[0],
+        assignmentYearBounds(year, 'year')
+      )
+    ).toBe('Tuition: Enter a valid start date.');
+    fireEvent.change(dates, { target: { value: '2026-08-01 to 2026-10-31' } });
+    expect(
+      assignmentServiceDateError(
+        candidate,
+        changed.mock.lastCall?.[0],
+        assignmentYearBounds(year, 'year')
+      )
+    ).toBeUndefined();
   });
 });
 
@@ -190,7 +229,6 @@ it('shows saved transport dates in a bulk correction without sharing a student t
       flat
     />
   );
-  expect(screen.getByRole('combobox', { name: 'Service period' })).toHaveValue('TransportService');
+  expect(screen.getByLabelText('Start – end date')).toHaveValue('2026-08-01 to 2027-05-14');
   expect(screen.queryByRole('combobox', { name: 'Transport record' })).not.toBeInTheDocument();
-  expect(screen.getByText(/Each student keeps their saved transport dates/)).toBeVisible();
 });

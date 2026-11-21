@@ -14,11 +14,11 @@ import Drawer from '@mui/material/Drawer';
 import Divider from '@mui/material/Divider';
 import MenuItem from '@mui/material/MenuItem';
 import { useTheme } from '@mui/material/styles';
-import useMediaQuery from '@mui/material/useMediaQuery';
 import { Iconify } from 'src/components/iconify';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import { useRef, useState, useEffect } from 'react';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import { useResponsive } from 'src/hooks/use-responsive';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { StudentFeedback } from 'src/components/student-feedback';
@@ -26,10 +26,10 @@ import {
   useSensor,
   DndContext,
   useSensors,
+  DragOverlay,
   closestCenter,
   PointerSensor,
   KeyboardSensor,
-  DragOverlay,
   defaultDropAnimationSideEffects,
 } from '@dnd-kit/core';
 
@@ -40,8 +40,8 @@ import { FormValidationPanel } from './form-validation-panel';
 import { AdmissionDialogTitle } from '../admission-dialog-title';
 import { FormBuilderProperties } from './form-builder-properties';
 import { useFormInheritance } from './hooks/use-form-inheritance';
-import { FormBuilderCanvas } from './components/form-builder-canvas';
 import { FormBuilderFieldDragPreview } from './form-builder-field';
+import { FormBuilderCanvas } from './components/form-builder-canvas';
 import { FormBuilderWorkspace } from './components/form-builder-workspace';
 import { useFormBuilderCommands } from './hooks/use-form-builder-commands';
 import { useFormBuilderSelection } from './hooks/use-form-builder-selection';
@@ -321,6 +321,13 @@ export function FormBuilderSections({
         <FormBuilderWorkspace
           panel={mobilePanel}
           onPanelChange={setMobilePanel}
+          fieldsNeedAttention={Boolean(
+            commands.systemFieldsQuery.isError ||
+            inheritance?.failed ||
+            inheritance?.sourceFailed ||
+            inheritance?.connectionsFailed ||
+            (inheritance?.preview && !inheritance.preview.isValid)
+          )}
           fields={
             <Stack sx={{ flex: 1, minHeight: 0 }}>
               <FormInheritancePanel />
@@ -391,7 +398,7 @@ export function FormBuilderSections({
                   alignItems="center"
                   justifyContent="flex-end"
                 >
-                  {effectiveForm.layoutType === 0 && (
+                  {formik.values.layoutType === 1 && (
                     <Button
                       aria-label="Add Step"
                       size="small"
@@ -471,7 +478,6 @@ export function FormBuilderSections({
                     selectedFieldId={selection.selectedFieldId}
                     onSelect={selectCanvasField}
                     newStepId={newStepId}
-                    onAddStep={addStep}
                     onNewStepReady={setNewStepId}
                     footer={desktop ? footer : undefined}
                   />

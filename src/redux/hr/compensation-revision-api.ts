@@ -104,6 +104,7 @@ export type SalarySummary = {
 
 export type SaveEmployeeCompensation = {
   expectedEsiPolicyVersionId: string | null;
+  expectedPfHandledExternally?: boolean;
   statutoryProfileOverride?: StaffStatutoryProfile;
   statutoryProfileConcurrencyStamp?: string | null;
   statutoryProfileUpdatePf?: boolean;

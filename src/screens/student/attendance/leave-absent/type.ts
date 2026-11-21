@@ -15,7 +15,7 @@ export interface IFormValues {
   isHalfDay: boolean;
   rejectionReason: string;
   status: string | null;
-  docs: string;
+  docs: File | null;
 }
 
 export interface ILeaveAbsent {

@@ -88,7 +88,7 @@ const WORKFLOW_TEMPLATE_DEFINITIONS: readonly AdmissionWorkflowTemplateDefinitio
   {
     id: 'post-inquiry',
     name: 'Post-Inquiry Admission',
-    description: 'Continue an Interested inquiry after staff choose Move to next stage.',
+    description: 'Continue an Interested inquiry after staff choose Start Application.',
     bestFor:
       'Schools collecting registration and documents before assessment and admission decision',
     icon: 'mdi:form-select',

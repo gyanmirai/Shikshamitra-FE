@@ -8,6 +8,8 @@ export enum LibraryBookStatus {
   Lost,
   Damaged,
   Removed,
+  InCustody,
+  InTransit,
 }
 
 export const LibraryBookStatusOptions = [
@@ -47,6 +49,14 @@ export const LibraryBookStatusOptions = [
     label: 'Removed',
     value: LibraryBookStatus.Removed,
   },
+  {
+    label: 'Classroom custody',
+    value: LibraryBookStatus.InCustody,
+  },
+  {
+    label: 'In transit',
+    value: LibraryBookStatus.InTransit,
+  },
 ];
 
 export const LibraryBookStatusColors = {
@@ -59,4 +69,6 @@ export const LibraryBookStatusColors = {
   [LibraryBookStatus.Lost]: 'error',
   [LibraryBookStatus.Damaged]: 'error',
   [LibraryBookStatus.Removed]: 'default',
+  [LibraryBookStatus.InCustody]: 'info',
+  [LibraryBookStatus.InTransit]: 'info',
 };

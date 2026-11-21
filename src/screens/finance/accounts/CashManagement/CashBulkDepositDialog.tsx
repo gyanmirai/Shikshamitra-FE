@@ -299,7 +299,7 @@ export default function CashBulkDepositDialog({
                     multiline
                     minRows={2}
                     name="notes"
-                    label="Notes (optional)"
+                    label="Notes"
                     value={formik.values.notes}
                     disabled={fieldsBlocked}
                     onChange={formik.handleChange}
@@ -316,7 +316,7 @@ export default function CashBulkDepositDialog({
               >
                 <Stack spacing={1}>
                   <FormLabel id="cash-deposit-document-label">
-                    Supporting document (optional)
+                    Supporting document
                   </FormLabel>
                   <CustomUpload
                     multiple={false}

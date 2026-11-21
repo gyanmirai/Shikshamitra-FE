@@ -2,13 +2,19 @@ import { api } from 'src/redux/service';
 import { studentAcademicFilterParams } from 'src/utils/student-academic-filter-query';
 import {
   studentType,
+  financeModuleType,
   studentOnboardingType,
   studentRegistrationType,
   studentAdmissionsCrmType,
 } from 'src/redux/tagTypes';
 
 import type { ReviewDecisionCapabilities } from './admission-review-types';
-import type { AdmissionFormInheritance, AdmissionFormInheritedOrigin } from './admission-forms-api';
+import type { AdmissionPrintAcademicDetails } from './admission-form-print-settings';
+import type {
+  AdmissionFormInheritance,
+  AdmissionFormPrintSettings,
+  AdmissionFormInheritedOrigin,
+} from './admission-forms-api';
 import type {
   AdmissionFamilyParent,
   AdmissionFamilyContacts,
@@ -33,7 +39,13 @@ export type AdmissionJourneyResumePreview = {
   warnings: string[];
 };
 const applicationMutationTags = (_result: unknown, error: unknown) =>
-  error ? [] : [studentAdmissionsCrmType.admissionApplication, dashboardTag];
+  error
+    ? []
+    : [
+        financeModuleType.studentFeeAssignment,
+        studentAdmissionsCrmType.admissionApplication,
+        dashboardTag,
+      ];
 
 export type AdmissionApplicationStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11;
 export type AdmissionDirectFamilyMatch = {
@@ -131,6 +143,7 @@ export type AdmissionApplicationListInput = {
   currentStageSearch?: string;
 };
 export type AdmissionApplicationStage = {
+  isTerminalStage?: boolean;
   formStageEnabled?: boolean;
   documentCollectionAvailable?: boolean;
   paymentStageEnabled?: boolean;
@@ -244,6 +257,10 @@ export type CorrectAdmissionApplicationFormInput = {
   values: { fieldCode: string; valueJson?: string | null }[];
 };
 export type AdmissionApplicationForm = {
+  applicationNumber?: string;
+  printAcademicDetails?: AdmissionPrintAcademicDetails;
+  /** Stored answers only; excludes suggestions projected for the editor. */
+  persistedValues?: { fieldCode: string; valueJson?: string | null }[];
   /** Stamp captured by the same server read as these answers. */
   concurrencyStamp?: string | null;
   autoFilledFieldCodes?: string[];
@@ -265,6 +282,7 @@ export type AdmissionApplicationForm = {
   submittedAt?: string | null;
   academicYearId: string;
   definition: {
+    printSettings?: AdmissionFormPrintSettings | null;
     inheritance?: AdmissionFormInheritance | null;
     name: string;
     layoutType: number;
@@ -342,6 +360,13 @@ export type AdmissionFinalizationPreview = {
   canReviewProfileFields?: boolean;
   capturedStudentFields?: { key: string; label: string; value: string }[];
   profileReviewDescription?: string;
+  primaryContact?: {
+    name: string;
+    mobile?: string | null;
+    email?: string | null;
+    relationship?: string | null;
+  };
+  joiningDate?: string | null;
 };
 export type FinalizeAdmissionInput = {
   concurrencyStamp: string;
@@ -357,6 +382,10 @@ export type AdmissionFinalizationResult = {
   onboardingCaseId: string;
   reusedExistingStudent: boolean;
 };
+export type ApproveAndFinalizeAdmissionInput = Omit<
+  FinalizeAdmissionInput,
+  'confirmGuardianContactVerified'
+>;
 type Result<T> = { data?: T };
 const unwrap = <T>(response: Result<T> | T): T =>
   response && typeof response === 'object' && 'data' in response && response.data !== undefined
@@ -426,6 +455,7 @@ export const admissionApplicationsApi = api.injectEndpoints({
         error
           ? []
           : [
+              financeModuleType.studentFeeAssignment,
               dashboardTag,
               studentAdmissionsCrmType.admissionApplication,
               studentAdmissionsCrmType.admissionApplicant,
@@ -459,6 +489,7 @@ export const admissionApplicationsApi = api.injectEndpoints({
         error
           ? []
           : [
+              financeModuleType.studentFeeAssignment,
               dashboardTag,
               studentAdmissionsCrmType.admissionApplication,
               studentAdmissionsCrmType.admissionApplicant,
@@ -491,7 +522,11 @@ export const admissionApplicationsApi = api.injectEndpoints({
       invalidatesTags: (result, error) =>
         error
           ? []
-          : [...applicationMutationTags(result, error), studentAdmissionsCrmType.admissionInquiry],
+          : [
+              financeModuleType.studentFeeAssignment,
+              ...applicationMutationTags(result, error),
+              studentAdmissionsCrmType.admissionInquiry,
+            ],
     }),
     updateAdmissionApplicationFormValues: builder.mutation<
       AdmissionApplicationForm,
@@ -621,6 +656,7 @@ export const admissionApplicationsApi = api.injectEndpoints({
       invalidatesTags: (result) =>
         result
           ? [
+              financeModuleType.studentFeeAssignment,
               dashboardTag,
               studentAdmissionsCrmType.admissionApplication,
               studentAdmissionsCrmType.admissionApplicant,
@@ -645,6 +681,7 @@ export const admissionApplicationsApi = api.injectEndpoints({
       invalidatesTags: (result) =>
         result
           ? [
+              financeModuleType.studentFeeAssignment,
               dashboardTag,
               studentAdmissionsCrmType.admissionApplication,
               studentAdmissionsCrmType.admissionApplicant,
@@ -661,6 +698,60 @@ export const admissionApplicationsApi = api.injectEndpoints({
         response: Result<AdmissionFinalizationPreview> | AdmissionFinalizationPreview
       ) => unwrap(response),
       providesTags: [studentAdmissionsCrmType.admissionApplication],
+    }),
+    getAdmissionApprovalPreview: builder.query<AdmissionFinalizationPreview, string>({
+      query: (id) => ({
+        url: `/student/enrollment/admissions/applications/${id}/finalization-preview`,
+        params: { forApproval: true },
+      }),
+      transformResponse: (
+        response: Result<AdmissionFinalizationPreview> | AdmissionFinalizationPreview
+      ) => unwrap(response),
+      providesTags: [studentAdmissionsCrmType.admissionApplication],
+    }),
+    approveAndFinalizeAdmissionApplication: builder.mutation<
+      AdmissionFinalizationResult,
+      { id: string; input: ApproveAndFinalizeAdmissionInput }
+    >({
+      query: ({ id, input }) => ({
+        url: `/student/enrollment/admissions/applications/${id}/approve-and-finalize`,
+        method: 'POST',
+        body: input,
+      }),
+      transformResponse: (
+        response: Result<AdmissionFinalizationResult> | AdmissionFinalizationResult
+      ) => unwrap(response),
+      async onQueryStarted({ id }, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          dispatch(
+            admissionApplicationsApi.util.updateQueryData(
+              'getAdmissionApplication',
+              id,
+              () => data.application
+            )
+          );
+        } catch {
+          // Preserve the review and retry key when the server rejects the command.
+        }
+      },
+      invalidatesTags: (result, error, { input }) =>
+        error || !result
+          ? []
+          : [
+              dashboardTag,
+              studentAdmissionsCrmType.admissionApplication,
+              studentAdmissionsCrmType.admissionApplicant,
+              studentAdmissionsCrmType.admissionOffering,
+              { type: studentOnboardingType.onboardingCaseList, id: 'LIST' },
+              { type: studentOnboardingType.onboardingAnalytics, id: 'SUMMARY' },
+              studentRegistrationType.studentRegistration,
+              { type: studentType.student, id: 'RECORDS-DIRECTORY' },
+              { type: studentType.student, id: 'LIST' },
+              ...(input.applyStudentProfileFields
+                ? [{ type: studentType.student, id: 'RECORDS-CHANGES' }]
+                : []),
+            ],
     }),
     finalizeAdmissionApplication: builder.mutation<
       AdmissionFinalizationResult,
@@ -693,6 +784,7 @@ export const admissionApplicationsApi = api.injectEndpoints({
         error
           ? []
           : [
+              financeModuleType.studentFeeAssignment,
               dashboardTag,
               studentAdmissionsCrmType.admissionApplication,
               studentAdmissionsCrmType.admissionApplicant,
@@ -738,6 +830,9 @@ export const admissionApplicationsApi = api.injectEndpoints({
   }),
 });
 export const {
+  useLazyGetAdmissionApplicationWorkflowQuery,
+  useGetAdmissionApprovalPreviewQuery,
+  useApproveAndFinalizeAdmissionApplicationMutation,
   useGetAdmissionApplicationsQuery,
   useGetAdmissionApplicationQuery,
   useLazyGetAdmissionApplicationQuery,

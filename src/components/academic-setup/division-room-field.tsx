@@ -70,7 +70,7 @@ export function DivisionRoomField({
 
   return (
     <PaginatedSearchSelect<RoomOption>
-      label="Room (optional)"
+      label="Room"
       placeholder="Search by building, floor, or room"
       fullWidth
       fetchOptions={fetchOptions}

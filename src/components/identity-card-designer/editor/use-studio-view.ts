@@ -10,7 +10,8 @@ export function useStudioView(backSideEnabled: boolean, brandingContent: unknown
   const [zoom, setZoom] = useState(1);
   const fitZoom = useRef(1);
   const automaticFit = useRef(true);
-  const [layers, setLayers] = useState(true);
+  const [layers, setLayers] = useState(false);
+  const [configuration, setConfiguration] = useState(true);
   // ResizeObserver needs a stable callback; Fit follows resizing until the user chooses a zoom.
   const measureFit = useCallback((value: number) => {
     fitZoom.current = value;
@@ -40,6 +41,8 @@ export function useStudioView(backSideEnabled: boolean, brandingContent: unknown
     },
     layers,
     setLayers,
+    configuration,
+    setConfiguration,
     fitZoom,
     measureFit,
   };

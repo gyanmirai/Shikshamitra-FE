@@ -1,3 +1,22 @@
+const liveApi =
+  typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('liveApi');
+const liveApiRoot = 'http://127.0.0.1:4237';
+async function callLiveApi(path: string, body?: unknown) {
+  const response = await fetch(`${liveApiRoot}${path}`, {
+    method: body === undefined ? 'GET' : 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+  });
+  const result = await response.json();
+  if (!response.ok)
+    throw Object.assign(new Error('Local refund API request failed'), {
+      status: response.status,
+      data: result,
+    });
+  return result;
+}
+let liveContext: any;
+export const getLiveContext = () => liveContext;
 const eligibility = {
   totalPaid: 6000,
   totalRefundable: 6000,
@@ -22,6 +41,88 @@ const eligibility = {
     })),
   })),
 };
+// Exercise the production refund form's three source types independently of API tests.
+if (
+  typeof window !== 'undefined' &&
+  (new URLSearchParams(window.location.search).has('paidSources') ||
+    new URLSearchParams(window.location.search).has('waivedLateFee'))
+) {
+  const mixedPayers = new URLSearchParams(window.location.search).has('mixedPayers');
+  // A waiver is non-cash evidence: of 11,000 assessed and 9,500 waived, only
+  // the settled 1,500 payment is returned as a refundable late-fee source.
+  const lateFeePaid = new URLSearchParams(window.location.search).has('waivedLateFee')
+    ? 1500
+    : 250;
+  const paidSource = (source: Record<string, unknown>, amount: number) => ({
+    month: 6,
+    year: 2026,
+    dueFeeId: null,
+    sourceReceiptId: 'receipt-paid-sources',
+    receiptNumber: 'SYNTHETIC-PAID-SOURCES',
+    total: amount,
+    paid: amount,
+    refunded: 0,
+    refundable: amount,
+    ...source,
+  });
+  Object.assign(eligibility, {
+    totalPaid: 1500 + lateFeePaid,
+    totalRefundable: 1500 + lateFeePaid,
+    refundPolicyName: 'Paid source refund policy',
+    receipts: mixedPayers
+      ? [
+          { receiptId: 'receipt-legacy', financeFeeAccountId: null },
+          { receiptId: 'receipt-account-charge', financeFeeAccountId: 'student-account' },
+          { receiptId: 'receipt-account-late', financeFeeAccountId: 'student-account' },
+        ]
+      : [{ receiptId: 'receipt-paid-sources', financeFeeAccountId: 'student-account' }],
+    feeHeads: [
+      {
+        feeHeadId: 'tuition',
+        feeHeadName: 'Tuition',
+        months: [
+          paidSource(
+            {
+              dueFeeId: 'tuition-due',
+              sourceAllocationId: 'tuition-allocation',
+              ...(mixedPayers ? { sourceReceiptId: 'receipt-legacy' } : {}),
+            },
+            1000
+          ),
+        ],
+      },
+      {
+        feeHeadId: null,
+        feeHeadName: 'Paid charges',
+        months: [
+          paidSource(
+            {
+              chargeId: 'paid-charge',
+              chargeName: 'Activity charge',
+              sourceAllocationId: 'charge-allocation',
+              ...(mixedPayers ? { sourceReceiptId: 'receipt-account-charge' } : {}),
+            },
+            500
+          ),
+        ],
+      },
+      {
+        feeHeadId: null,
+        feeHeadName: 'Paid late fees',
+        months: [
+          paidSource(
+            {
+              lateFeeDueFeeId: 'late-fee-due',
+              sourceAllocationId: 'late-fee-allocation',
+              ...(mixedPayers ? { sourceReceiptId: 'receipt-account-late' } : {}),
+            },
+            lateFeePaid
+          ),
+        ],
+      },
+    ],
+  });
+}
 const query = {
   currentData: eligibility,
   isLoading: false,
@@ -32,7 +133,12 @@ const query = {
 export const useGetRefundEligibilityQuery = () => query;
 const routingQuery = {
   currentData: {
-    expenseCategories: [{ id: 'synthetic-expense', label: 'Synthetic refund expense' }],
+    expenseCategories: [
+      {
+        id: liveContext?.expenseCategoryId ?? 'synthetic-expense',
+        label: 'Synthetic refund expense',
+      },
+    ],
     bankAccounts: [{ id: 'synthetic-bank', label: 'Synthetic school cash routing account' }],
   },
   isLoading: false,
@@ -42,6 +148,19 @@ const routingQuery = {
   refetch: () => undefined,
 };
 export const useGetFinanceRoutingOptionsQuery = () => routingQuery;
+export async function initializeLiveContext() {
+  if (!liveApi) return;
+  liveContext = await callLiveApi('/seed', {});
+  Object.assign(eligibility, liveContext.eligibility, {
+    defaultExpenseCategoryId: liveContext.expenseCategoryId,
+  });
+  routingQuery.currentData.expenseCategories = [
+    {
+      id: liveContext.expenseCategoryId,
+      label: 'Synthetic refund expense',
+    },
+  ];
+}
 if (
   typeof window !== 'undefined' &&
   new URLSearchParams(window.location.search).has('missingRoutingDefaults')
@@ -168,17 +287,31 @@ const mutation = (body: any) => ({
 });
 const hook = () => [mutation, { isLoading: false }];
 let submittedRefund: unknown;
+let savedRefund: unknown;
 export const getSubmittedRefund = () => submittedRefund;
+export const getSavedRefund = () => savedRefund;
 export const useCreateFeeRefundMutation = () => [
   (body: unknown) => {
     submittedRefund = body;
+    if (liveApi)
+      return {
+        unwrap: async () => {
+          const created = await callLiveApi('/api/fee-refunds', body);
+          savedRefund = await callLiveApi(`/api/fee-refunds/${created.id}`);
+          return created;
+        },
+      };
     return mutation(body);
   },
   { isLoading: false },
 ];
 export const useSubmitFeeRefundMutation = hook;
 export const useUpdateFeeRefundMutation = hook;
-export const usePreviewFeeRefundMutation = hook;
+export const usePreviewFeeRefundMutation = () => [
+  (body: unknown) =>
+    liveApi ? { unwrap: () => callLiveApi('/api/fee-refunds/preview', body) } : mutation(body),
+  { isLoading: false },
+];
 export const useLazyGetRefundEligibilityQuery = hook;
 export const useDownloadRefundReceiptPdfMutation = () => [
   () => ({

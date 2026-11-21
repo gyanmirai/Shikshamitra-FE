@@ -1,6 +1,5 @@
-import React from 'react';
-import BorrowingReturnRules from 'src/screens/library/settings/BorrowingAndReturnRules';
+import BorrowingPoliciesWorkspace from 'src/screens/library/settings/policies/BorrowingPoliciesWorkspace';
 
-const page = () => <BorrowingReturnRules />;
+const page = () => <BorrowingPoliciesWorkspace />;
 
 export default page;

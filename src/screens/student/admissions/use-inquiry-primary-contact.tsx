@@ -14,20 +14,20 @@ import { getDependentAdmissionFieldCodes } from './admission-field-dependencies'
 import type { AdmissionInquiryFormValues } from './admission-inquiry-model';
 import { getAdmissionInquiryPrimaryContact } from './admission-inquiry-model';
 
-/** A role change must never silently re-label the previous adult's contact details. */
 export function changeInquiryPrimaryContact<T extends AdmissionInquiryFormValues>(
   values: T,
   fields: AdmissionFormField[],
   code: string,
   role: string,
-  confirmed = false
+  { isEditingSavedInquiry = false, confirmed = false } = {}
 ): T {
   const previous =
     values.fields[code]?.trim().toLowerCase() ||
     values.capturedParentRelationship ||
     values.parentRelationship;
   const resetCodes = previous !== role ? getDependentAdmissionFieldCodes(fields, code) : [];
-  if (previous && previous !== role)
+  // Saved contact answers belong to the previous adult. New draft answers can follow a role correction.
+  if (isEditingSavedInquiry && previous && previous !== role)
     resetCodes.push(
       ...fields
         .filter((field) =>
@@ -52,11 +52,13 @@ export function useInquiryPrimaryContact<T extends AdmissionInquiryFormValues>({
   formik,
   fields,
   contextKey,
+  isEditingSavedInquiry = false,
   busy = false,
 }: {
   formik: FormikProps<T>;
   fields: AdmissionFormField[];
   contextKey: string;
+  isEditingSavedInquiry?: boolean;
   busy?: boolean;
 }) {
   const [pending, setPending] = useState<{ code: string; contextKey: string } | null>(null);
@@ -73,6 +75,14 @@ export function useInquiryPrimaryContact<T extends AdmissionInquiryFormValues>({
     (field) => canonicalInquiryBinding(field) === 'Inquiry.ParentRelationship'
   );
   const role = selector ? formik.values.fields[selector.code]?.trim().toLowerCase() : '';
+  const applyRole = (code: string, nextRole: string, confirmed = false) => {
+    formik.setValues((current) =>
+      changeInquiryPrimaryContact(current, fields, code, nextRole, {
+        isEditingSavedInquiry,
+        confirmed,
+      })
+    );
+  };
   const requestConfirmation = () => {
     if (
       !selector ||
@@ -92,7 +102,7 @@ export function useInquiryPrimaryContact<T extends AdmissionInquiryFormValues>({
     if (next === 'guardian') setPending({ code: field.code, contextKey });
     else {
       setPending(null);
-      formik.setValues((current) => changeInquiryPrimaryContact(current, fields, field.code, next));
+      applyRole(field.code, next);
     }
     return true;
   };
@@ -108,9 +118,7 @@ export function useInquiryPrimaryContact<T extends AdmissionInquiryFormValues>({
         }}
         onConfirm={() => {
           if (busy || !pending || pending.contextKey !== contextKey) return;
-          formik.setValues((current) =>
-            changeInquiryPrimaryContact(current, fields, pending.code, 'guardian', true)
-          );
+          applyRole(pending.code, 'guardian', true);
           setPending(null);
         }}
       />

@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import type {
   AdmissionWorkflowStage,
   AdmissionWorkflowTransition,
+  AdmissionWorkflowValidationIssue,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
 import { Label } from 'src/components/label';
@@ -28,6 +29,7 @@ type Props = {
   readOnly: boolean;
   loadingStageTypes: boolean;
   issueCountByStage: Record<string, number>;
+  issuesByStage?: Record<string, AdmissionWorkflowValidationIssue[]>;
   onAdd: () => void;
   onEdit: (stage: AdmissionWorkflowStage) => void;
   onDuplicate: (stage: AdmissionWorkflowStage) => void;
@@ -49,6 +51,7 @@ export function WorkflowStageList({
   readOnly,
   loadingStageTypes,
   issueCountByStage,
+  issuesByStage = {},
   onAdd,
   onEdit,
   onDuplicate,
@@ -244,6 +247,7 @@ export function WorkflowStageList({
                   stepNumber={index + 1}
                   readOnly={readOnly}
                   issueCount={issueCountByStage[stage.id] ?? 0}
+                  issues={issuesByStage[stage.id] ?? []}
                   onEdit={() => onEdit(stage)}
                   onDuplicate={() => onDuplicate(stage)}
                   onDelete={() => onDelete(stage)}

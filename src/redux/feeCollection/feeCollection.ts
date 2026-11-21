@@ -110,11 +110,13 @@ export interface FeeSummary {
 }
 
 export interface FeeLedgerLine {
+  daysOverdue?: number | null;
   installmentId?: string | null;
   dueFeeId: string;
   feeHeadId: string;
   feeHeadName: string;
   installmentLabel?: string;
+  paymentTermName?: string | null;
   dueDate?: string;
   coverageStartDate?: string;
   coverageEndDate?: string;
@@ -392,6 +394,7 @@ export interface CollectFeeOutput {
 export type FeeWaiverSourceType = 'LateFee' | 'Charge';
 
 export interface ApplyFeeWaiverInput {
+  amount?: number;
   sourceType: FeeWaiverSourceType;
   sourceId: string;
   reason: string;
@@ -534,6 +537,7 @@ export const feeCollectionApi = financeModuleApi.injectEndpoints({
         const admissionAccountId =
           collection?.financeFeeAccountId ?? collection?.data?.financeFeeAccountId;
         return [
+          ...(!error ? [financeModuleType.studentFeeAssignment] : []),
           receiptType.receipt,
           financeModuleType.feeCollection,
           financeModuleType.feeDetails,
@@ -557,11 +561,12 @@ export const feeCollectionApi = financeModuleApi.injectEndpoints({
 
     applyFeeWaiver: builder.mutation<FeeWaiverResult, ApplyFeeWaiverInput>({
       query: (body) => ({
-        url: `${FEE_COLLECTION_V2_BASE_URL}/waivers`,
+        url: `${FEE_COLLECTION_V2_BASE_URL}/waivers${body.amount === undefined ? '' : '/with-amount'}`,
         method: 'POST',
         body,
       }),
       invalidatesTags: [
+        financeModuleType.studentFeeAssignment,
         financeModuleType.feeCollection,
         financeModuleType.feeDetails,
         financeModuleType.charges,

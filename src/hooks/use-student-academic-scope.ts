@@ -20,6 +20,8 @@ export function useStudentAcademicScope() {
     accessToken?: string;
   } | null;
   const profile = staffSession?.profile;
+  const userId = profile?.sub ?? '';
+  const tenantId = profile?.tenantId || profile?.tenantid || profile?.tenant;
   const enabled = Boolean(profile?.sub && staffSession?.accessToken && year?.id);
   const options = {
     skip: !enabled,
@@ -29,13 +31,22 @@ export function useStudentAcademicScope() {
   };
   const scope = useGetUserScopeHierarchyQuery(
     {
-      userId: profile?.sub ?? '',
+      userId,
       academicYearId: year?.id,
-      cacheTenantId: profile?.tenantId || profile?.tenantid || profile?.tenant,
+      cacheTenantId: tenantId,
     },
     options
   );
   const hierarchy = useGetBoardsQuery(undefined, options);
+  const scopeData = scope.currentData;
+  // The server generates a timestamp on every read, including focus refreshes.
+  const scopeRevision = useMemo(
+    () =>
+      enabled && scopeData?.userId === userId
+        ? JSON.stringify([tenantId, userId, scopeData.isAdmin, scopeData.accessibleHierarchy])
+        : undefined,
+    [enabled, scopeData, tenantId, userId]
+  );
   // Keep placement objects stable so filter consumers do not reset drafts on unrelated renders.
   const available = useMemo<Array<AcademicYear & { boards: Board[] }>>(
     () =>
@@ -82,6 +93,6 @@ export function useStudentAcademicScope() {
     mediums,
     isLoading: scope.isLoading || hierarchy.isLoading,
     isError: scope.isError || hierarchy.isError,
-    scopeRevision: scope.currentData?.generatedAt,
+    scopeRevision,
   };
 }

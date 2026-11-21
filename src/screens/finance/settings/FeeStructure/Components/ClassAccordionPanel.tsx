@@ -1,4 +1,6 @@
+import { useGetStructureDetailQuery } from 'src/redux/finance/feeStructureWorkspace';
 import { GlobalIcons } from 'src/utils/icons';
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -36,6 +38,7 @@ interface ClassAccordionPanelProps {
   canAdd?: boolean;
   onDirtyChange?: (dirty: boolean) => void;
   onBusyChange?: (busy: boolean) => void;
+  onPublished?: (name: string) => void;
   onRegisterAddNew?: (fn: () => void) => void;
 }
 
@@ -72,8 +75,31 @@ const mapToCardModel = (
   concessionApplicableFeeHeadIds: raw.concessionApplicableFeeHeadIds ?? [],
 });
 
-// Editors stay mounted while switching structures so unsaved candidates and
-// customized schedules survive local navigation. Only the selected one is visible.
+// Load a full record only after selection; keep visited editors mounted to preserve drafts.
+function ActivatedStructureEditor({
+  initialData: summary,
+  ...props
+}: React.ComponentProps<typeof FeeStructureWorkspaceCard>) {
+  const needsDetail = !!summary._id && !summary.record?.feeHeads;
+  const detail = useGetStructureDetailQuery(summary._id ?? '', { skip: !needsDetail });
+  if (needsDetail && detail.isError && !detail.currentData)
+    return (
+      <Alert severity="error" action={<Button onClick={() => detail.refetch()}>Retry</Button>}>
+        The fee structure could not be loaded.
+      </Alert>
+    );
+  if (needsDetail && !detail.currentData)
+    return (
+      <Stack spacing={2} sx={{ p: 2 }}>
+        <Skeleton height={50} />
+        <Skeleton height={200} />
+      </Stack>
+    );
+  const initialData = needsDetail
+    ? mapToCardModel(detail.currentData, summary.classId, summary.feeStructureMetaDataId)
+    : summary;
+  return <FeeStructureWorkspaceCard {...props} initialData={initialData} />;
+}
 export default function ClassAccordionPanel({
   classId,
   classes = [],
@@ -82,6 +108,7 @@ export default function ClassAccordionPanel({
   canAdd = false,
   onDirtyChange,
   onBusyChange,
+  onPublished,
   onRegisterAddNew,
 }: ClassAccordionPanelProps) {
   type DraftCard = IClassWiseFeeStructureCard & { __draftId: string };
@@ -89,6 +116,7 @@ export default function ClassAccordionPanel({
   const copyDialog = useBoolean();
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
   const [selectedKey, setSelectedKey] = useState('');
+  const visitedKeys = useRef(new Set<string>());
   const [busy, setBusy] = useState(false);
   const [listOpen, setListOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -138,7 +166,11 @@ export default function ClassAccordionPanel({
       sourceStamp: undefined,
     })),
   ];
+  const persistedStructures = cards.flatMap(({ card }) =>
+    card._id ? [{ id: card._id, name: card.name }] : []
+  );
   const activeKey = cards.some(({ key }) => key === selectedKey) ? selectedKey : cards[0]?.key;
+  if (activeKey) visitedKeys.current.add(activeKey);
   const addNew = useCallback(() => {
     draftCounter.current += 1;
     const key = `draft-${classId}-${draftCounter.current}`;
@@ -181,6 +213,10 @@ export default function ClassAccordionPanel({
   );
   const activeCard = cards.find(({ key }) => key === activeKey)?.card;
   const activeName = (names[activeKey ?? ''] ?? activeCard?.name) || 'New fee structure';
+  const initialLoading = (isLoading || (isFetching && data == null)) && !cards.length;
+  const visibleCards = cards.filter(({ card, key }) =>
+    ((names[key] ?? card.name) || 'New fee structure').toLowerCase().includes(search.toLowerCase())
+  );
   const structureList = (
     <Stack sx={{ height: 1, minHeight: 0, minWidth: 0 }}>
       <Stack
@@ -191,9 +227,11 @@ export default function ClassAccordionPanel({
       >
         <Typography component="h2" variant="subtitle2">
           Structures{' '}
-          <Typography component="span" variant="caption" color="text.secondary">
-            ({cards.length})
-          </Typography>
+          {!initialLoading && (
+            <Typography component="span" variant="caption" color="text.secondary">
+              ({cards.length})
+            </Typography>
+          )}
         </Typography>
         {!desktop && (
           <IconButton
@@ -254,111 +292,122 @@ export default function ClassAccordionPanel({
         </Stack>
       )}
       <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
+        {initialLoading && (
+          <Stack role="status" aria-label="Loading fee structures" spacing={1} sx={{ p: 1.5 }}>
+            {[0, 1, 2].map((row) => (
+              <Skeleton key={row} variant="rounded" height={56} />
+            ))}
+          </Stack>
+        )}
         <List aria-label="Fee structures" sx={{ p: 1.5, minWidth: 0 }}>
-          {cards
-            .filter(({ card, key }) =>
-              ((names[key] ?? card.name) || 'New fee structure')
-                .toLowerCase()
-                .includes(search.toLowerCase())
-            )
-            .map(({ card, key }) => {
-              const name = (names[key] ?? card.name) || 'New fee structure';
-              const selected = key === activeKey;
-              return (
-                <Box
-                  component="li"
-                  key={key}
+          {visibleCards.map(({ card, key }, index) => {
+            const name = (names[key] ?? card.name) || 'New fee structure';
+            const selected = key === activeKey;
+            const published = card.status === FeeStructureLockStatusType.Locked;
+            const draft = card.status === FeeStructureLockStatusType.Unlocked;
+            return (
+              <Box
+                component="li"
+                key={key}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  minWidth: 0,
+                  mb: 1,
+                  border: 1,
+                  borderColor: selected ? 'text.secondary' : 'divider',
+                  borderLeftWidth: 3,
+                  borderLeftColor: 'success.main',
+                  bgcolor: selected ? 'action.selected' : 'background.paper',
+                  borderRadius: 1,
+                  overflow: 'hidden',
+                  '&:hover': {
+                    backgroundImage: (theme) => {
+                      const hover = (theme.vars ?? theme).palette.action.hover;
+                      return `linear-gradient(${hover}, ${hover})`;
+                    },
+                  },
+                }}
+              >
+                <ListItemButton
+                  selected={selected}
+                  disabled={busy}
+                  aria-current={selected ? 'true' : undefined}
+                  onClick={() => {
+                    setSelectedKey(key);
+                    setListOpen(false);
+                  }}
                   sx={{
-                    display: 'flex',
-                    alignItems: 'center',
+                    minHeight: 56,
                     minWidth: 0,
-                    mb: 1,
-                    border: 1,
-                    borderColor: selected ? 'text.secondary' : 'divider',
-                    bgcolor: selected ? 'action.selected' : 'background.paper',
-                    borderRadius: 2,
-                    overflow: 'hidden',
+                    flex: 1,
+                    display: 'grid',
+                    gridTemplateColumns: '28px minmax(0, 1fr)',
+                    columnGap: 0.5,
+                    p: 1.25,
+                    '&.Mui-selected, &:hover': { bgcolor: 'transparent' },
+                    '&.Mui-selected:hover': {
+                      bgcolor: 'transparent',
+                    },
+                    '&.Mui-focusVisible': {
+                      outline: '2px solid',
+                      outlineColor: 'text.secondary',
+                      outlineOffset: -2,
+                    },
                   }}
                 >
-                  <ListItemButton
-                    selected={selected}
-                    disabled={busy}
-                    aria-current={selected ? 'true' : undefined}
-                    onClick={() => {
-                      setSelectedKey(key);
-                      setListOpen(false);
-                    }}
-                    sx={(theme) => ({
-                      borderRadius: 2,
-                      minHeight: 56,
-                      minWidth: 0,
-                      flex: 1,
+                  <Box
+                    component="span"
+                    aria-hidden="true"
+                    sx={{
+                      width: 28,
+                      height: 28,
                       display: 'grid',
-                      gridTemplateColumns: '24px minmax(0, 1fr)',
-                      columnGap: 1,
-                      p: 1.25,
-                      transition: theme.transitions.create(['background-color', 'border-color'], {
-                        duration: theme.transitions.duration.shorter,
-                      }),
-                      '&.Mui-selected': {
-                        bgcolor: 'transparent',
-                      },
-                      '&:hover': {
-                        bgcolor: 'action.hover',
-                      },
-                      '&.Mui-selected:hover': {
-                        bgcolor: 'action.hover',
-                      },
-                      '&.Mui-focusVisible': {
-                        outline: '2px solid',
-                        outlineColor: 'text.secondary',
-                        outlineOffset: -2,
-                      },
-                      '@media (prefers-reduced-motion: reduce)': {
-                        transition: 'none',
-                      },
-                    })}
+                      placeItems: 'center',
+                      borderRadius: '50%',
+                      bgcolor: 'background.neutral',
+                      color: 'text.secondary',
+                      typography: 'caption',
+                      fontWeight: 600,
+                    }}
                   >
-                    <Typography variant="caption" color="text.secondary" aria-hidden="true">
-                      {cards.findIndex((item) => item.key === key) + 1}.
-                    </Typography>
-                    <Typography
-                      variant="subtitle2"
-                      sx={{
-                        minWidth: 0,
-                        overflowWrap: 'anywhere',
-                        color: 'text.primary',
-                        fontWeight: selected ? 600 : 500,
-                      }}
-                    >
-                      {name}
-                    </Typography>
-                  </ListItemButton>
-                  <Box ref={actionRef(key)} sx={{ flexShrink: 0, pr: 1 }} />
-                </Box>
-              );
-            })}
+                    {index + 1}
+                  </Box>
+                  <Typography
+                    variant="subtitle2"
+                    sx={{
+                      minWidth: 0,
+                      overflowWrap: 'anywhere',
+                      color: 'text.primary',
+                      fontWeight: selected ? 600 : 500,
+                    }}
+                  >
+                    {name}
+                  </Typography>
+                </ListItemButton>
+                <Box ref={actionRef(key)} sx={{ flexShrink: 0 }} />
+                <Label color={published ? 'success' : draft ? 'warning' : 'default'} sx={{ mr: 1 }}>
+                  {published ? 'Published' : draft ? 'Draft' : 'Status unavailable'}
+                </Label>
+              </Box>
+            );
+          })}
         </List>
-        {search &&
-          !cards.some(({ card, key }) =>
-            ((names[key] ?? card.name) || 'New fee structure')
-              .toLowerCase()
-              .includes(search.toLowerCase())
-          ) && (
-            <Box sx={{ p: 2 }}>
-              <Typography variant="body2">No structures match your search.</Typography>
-              <Button size="small" onClick={() => setSearch('')}>
-                Clear Search
-              </Button>
-            </Box>
-          )}
+        {search && !initialLoading && !visibleCards.length && (
+          <Box sx={{ p: 2 }}>
+            <Typography variant="body2">No structures match your search.</Typography>
+            <Button size="small" onClick={() => setSearch('')}>
+              Clear Search
+            </Button>
+          </Box>
+        )}
       </Scrollbar>
     </Stack>
   );
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: 1, minHeight: 0, minWidth: 0 }}>
-      {isFetching && !isLoading && (
+      {isFetching && !initialLoading && (
         <LinearProgress aria-label="Refreshing fee structures" sx={{ flexShrink: 0 }} />
       )}
       {isError && (
@@ -453,13 +502,13 @@ export default function ClassAccordionPanel({
           </Box>
         )}
         <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, minWidth: 0 }}>
-          {isLoading && !cards.length && (
+          {initialLoading && (
             <Stack spacing={2} sx={{ p: 2 }}>
               <Skeleton height={50} />
               <Skeleton height={200} />
             </Stack>
           )}
-          {!isLoading && !isError && !cards.length && (
+          {!initialLoading && !isError && !cards.length && (
             <EmptyContent
               filled
               title="No fee structures"
@@ -471,57 +520,61 @@ export default function ClassAccordionPanel({
               sx={{ flex: 1 }}
             />
           )}
-          {cards.map(({ card, key, isLocal, sourceStamp }, index) => (
-            <Box
-              key={key}
-              sx={{
-                display: key === activeKey ? 'flex' : 'none',
-                flexDirection: 'column',
-                flex: 1,
-                minHeight: 0,
-                minWidth: 0,
-                overflow: 'hidden',
-              }}
-            >
-              <FeeStructureWorkspaceCard
-                initialData={card}
-                isActive={key === activeKey}
-                actionsContainer={actionContainers[key]}
-                actionsInList
-                index={index}
-                viewOnly={viewOnly}
-                onNameChange={(name) =>
-                  setNames((previous) =>
-                    previous[key] === name ? previous : { ...previous, [key]: name }
-                  )
-                }
-                onBusyChange={busyChange}
-                onDirtyChange={(dirty) => dirtyChange(key, dirty)}
-                onSaved={(saved) => {
-                  dirtyChange(key, false);
-                  if (isLocal)
-                    setLocalDrafts((previous) =>
-                      previous.map((draft) =>
-                        draft.__draftId === key ? { ...saved, __draftId: key } : draft
-                      )
-                    );
-                  else
-                    setSavedCards((previous) => ({
-                      ...previous,
-                      [key]: { card: saved, previousStamp: sourceStamp },
-                    }));
+          {cards
+            .filter(({ key }) => visitedKeys.current.has(key))
+            .map(({ card, key, isLocal, sourceStamp }, index) => (
+              <Box
+                key={key}
+                sx={{
+                  display: key === activeKey ? 'flex' : 'none',
+                  flexDirection: 'column',
+                  flex: 1,
+                  minHeight: 0,
+                  minWidth: 0,
+                  overflow: 'hidden',
                 }}
-                onDeleted={() => {
-                  dirtyChange(key, false);
-                  if (isLocal)
-                    setLocalDrafts((previous) =>
-                      previous.filter((draft) => draft.__draftId !== key)
-                    );
-                  if (card._id) setDeletedIds((previous) => new Set([...previous, card._id!]));
-                }}
-              />
-            </Box>
-          ))}
+              >
+                <ActivatedStructureEditor
+                  initialData={card}
+                  persistedStructures={persistedStructures}
+                  isActive={key === activeKey}
+                  actionsContainer={actionContainers[key]}
+                  actionsInList
+                  index={index}
+                  viewOnly={viewOnly}
+                  onNameChange={(name) =>
+                    setNames((previous) =>
+                      previous[key] === name ? previous : { ...previous, [key]: name }
+                    )
+                  }
+                  onBusyChange={busyChange}
+                  onPublished={onPublished}
+                  onDirtyChange={(dirty) => dirtyChange(key, dirty)}
+                  onSaved={(saved) => {
+                    dirtyChange(key, false);
+                    if (isLocal)
+                      setLocalDrafts((previous) =>
+                        previous.map((draft) =>
+                          draft.__draftId === key ? { ...saved, __draftId: key } : draft
+                        )
+                      );
+                    else
+                      setSavedCards((previous) => ({
+                        ...previous,
+                        [key]: { card: saved, previousStamp: sourceStamp },
+                      }));
+                  }}
+                  onDeleted={() => {
+                    dirtyChange(key, false);
+                    if (isLocal)
+                      setLocalDrafts((previous) =>
+                        previous.filter((draft) => draft.__draftId !== key)
+                      );
+                    if (card._id) setDeletedIds((previous) => new Set([...previous, card._id!]));
+                  }}
+                />
+              </Box>
+            ))}
         </Box>
       </Box>
       {canAdd && copyDialog.value && (

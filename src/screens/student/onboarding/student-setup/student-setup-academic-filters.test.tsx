@@ -34,6 +34,7 @@ function Filters() {
         divisions: [
           { id: 'division-1', name: 'A', parentId: 'class-1' },
           { id: 'division-10', name: 'A', parentId: 'class-10' },
+          { id: 'division-10-b', name: 'B', parentId: 'class-10' },
         ],
       }}
       selectedBoardId="board-1"
@@ -51,7 +52,7 @@ function Filters() {
   );
 }
 
-it('offers one Board and Medium without All and multiple classes and divisions with distinct paths', async () => {
+it('offers plain single-select Class and Division menus and resets Division when Class changes', async () => {
   const user = userEvent.setup();
   render(
     <ThemeProvider theme={createTheme(defaultSettings)}>
@@ -64,18 +65,39 @@ it('offers one Board and Medium without All and multiple classes and divisions w
   await user.click(screen.getByRole('combobox', { name: 'Medium' }));
   expect(screen.queryByRole('option', { name: 'All mediums' })).not.toBeInTheDocument();
   await user.keyboard('{Escape}');
+  expect(screen.getByRole('combobox', { name: 'Class' })).toHaveTextContent('All Classes');
+  expect(screen.getByRole('combobox', { name: 'Division' })).toHaveTextContent('All Divisions');
+  expect(screen.getByRole('combobox', { name: 'Division' })).toHaveAttribute('aria-disabled', 'true');
   await user.click(screen.getByRole('combobox', { name: 'Class' }));
+  expect(within(screen.getByRole('listbox')).queryByRole('checkbox')).not.toBeInTheDocument();
+  expect(within(screen.getByRole('listbox')).queryByRole('textbox')).not.toBeInTheDocument();
   await user.click(screen.getByRole('option', { name: 'Class 1' }));
-  await user.click(screen.getByRole('option', { name: 'Class 10' }));
-  await user.keyboard('{Escape}');
-  expect(screen.getByRole('combobox', { name: 'Class' })).toHaveTextContent('Class 1');
-  expect(screen.getByRole('combobox', { name: 'Class' })).toHaveTextContent('Class 10');
+  expect(screen.getByRole('combobox', { name: 'Class' })).toHaveAttribute('aria-expanded', 'false');
+  expect(screen.getByRole('combobox', { name: 'Class' })).toHaveTextContent(/^Class 1$/);
+
   await user.click(screen.getByRole('combobox', { name: 'Division' }));
-  await user.click(screen.getByRole('option', { name: 'Class 1 / A' }));
-  await user.click(screen.getByRole('option', { name: 'Class 10 / A' }));
-  await user.keyboard('{Escape}');
-  expect(screen.getByRole('combobox', { name: 'Division' })).toHaveTextContent('Class 1 / A');
-  expect(screen.getByRole('combobox', { name: 'Division' })).toHaveTextContent('Class 10 / A');
+  expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([
+    'All Divisions',
+    'A',
+  ]);
+  expect(within(screen.getByRole('listbox')).queryByRole('checkbox')).not.toBeInTheDocument();
+  expect(screen.queryByRole('option', { name: 'B' })).not.toBeInTheDocument();
+  await user.click(screen.getByRole('option', { name: 'A' }));
+  expect(screen.getByRole('combobox', { name: 'Division' })).toHaveAttribute('aria-expanded', 'false');
+  expect(screen.getByRole('combobox', { name: 'Division' })).toHaveTextContent(/^A$/);
+
+  await user.click(screen.getByRole('combobox', { name: 'Class' }));
+  await user.click(screen.getByRole('option', { name: 'Class 10' }));
+  expect(screen.getByRole('combobox', { name: 'Class' })).toHaveTextContent(/^Class 10$/);
+  expect(screen.getByRole('combobox', { name: 'Division' })).toHaveTextContent(/^All Divisions$/);
+  await user.click(screen.getByRole('combobox', { name: 'Division' }));
+  await user.click(screen.getByRole('option', { name: 'B' }));
+  expect(screen.getByRole('combobox', { name: 'Division' })).toHaveTextContent(/^B$/);
+
+  await user.click(screen.getByRole('combobox', { name: 'Class' }));
+  await user.click(screen.getByRole('option', { name: 'All Classes' }));
+  expect(screen.getByRole('combobox', { name: 'Division' })).toHaveTextContent(/^All Divisions$/);
+  expect(screen.getByRole('combobox', { name: 'Division' })).toHaveAttribute('aria-disabled', 'true');
 });
 
 it('keeps the Today switch inside the academic filter card and reports the controlled value', () => {

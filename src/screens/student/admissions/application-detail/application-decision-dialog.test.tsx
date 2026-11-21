@@ -40,7 +40,7 @@ it('shows the applicant and formatted application reference beside the optional 
   expect(section.getByRole('heading', { name: 'Decision Details' })).toBeVisible();
   expect(section.getByText('Mehul Shah')).toBeVisible();
   expect(section.getByText('Application APP-2026-000042')).toBeVisible();
-  expect(section.getByRole('textbox', { name: 'Reason (optional)' })).not.toBeRequired();
+  expect(section.getByRole('textbox', { name: 'Reason' })).not.toBeRequired();
   await userEvent.hover(section.getByRole('button', { name: 'Decision Details information' }));
   expect(await screen.findByRole('tooltip')).toHaveTextContent(
     'Confirm the applicant and application reference'

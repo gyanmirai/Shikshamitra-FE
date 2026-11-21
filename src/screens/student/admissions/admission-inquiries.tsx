@@ -5,15 +5,17 @@ import type { IParams } from 'src/components/customizabaleTable/types';
 
 import { Iconify } from 'src/components/iconify';
 import { useDispatch, useSelector } from 'react-redux';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { studentPaths } from 'src/constants/student-menu';
 import { useRouter, useSearchParams } from 'next/navigation';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { skeletonReducedMotionSx } from 'src/theme/styles/skeleton';
+import { useUrlFilterValue } from 'src/hooks/use-url-filter-value';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
-import { Box, Stack, Button, Skeleton, DialogActions } from '@mui/material';
+import { CustomDateRangePicker } from 'src/components/custom-date-range-picker';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { academicClassFilterInput } from 'src/utils/student-academic-filter-query';
+import { Box, Stack, Button, Skeleton, IconButton, DialogActions } from '@mui/material';
 import {
   type AdmissionInquiry,
   useGetAdmissionInquiryQuery,
@@ -24,10 +26,12 @@ import { getAdmissionInquiryAccess } from './inquiry-access';
 import { AdmissionQueryError } from './admission-query-error';
 import { formatAdmissionReference } from './admission-reference';
 import { InquiryTimeline } from './inquiry-management/inquiry-timeline';
+import { inquiryDateRange } from './inquiry-management/inquiry-date-range';
 import { useInquiryHandoff } from './inquiry-management/use-inquiry-handoff';
 import { InquiryFollowUpDialog } from './inquiry-management/inquiry-follow-up-dialog';
 import { loadInquiryOverviewForm } from './inquiry-management/inquiry-overview-loader';
 import { preloadInquiryWorkspace } from './inquiry-management/preload-inquiry-workspace';
+import { InquiryHandoffIssueDialog } from './inquiry-management/inquiry-handoff-issue-dialog';
 import { buildAdmissionInquiryColumns } from './inquiry-management/admission-inquiry-columns';
 import { buildAdmissionInquiryRowOptions } from './inquiry-management/admission-inquiry-list-options';
 import { AdmissionInquiryManagementPage } from './inquiry-management/admission-inquiry-management-page';
@@ -59,12 +63,22 @@ export default function AdmissionInquiriesScreen() {
   }, [academic, yearChanged, yearChanging]);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [dateFrom, setDateFrom] = useUrlFilterValue(searchParams.get('dateFrom') ?? '');
+  const [dateTo, setDateTo] = useUrlFilterValue(searchParams.get('dateTo') ?? '');
+  const dates = useMemo(() => inquiryDateRange(dateFrom, dateTo), [dateFrom, dateTo]);
+  const dateUrlKey = `${searchParams.get('dateFrom') ?? ''}|${searchParams.get('dateTo') ?? ''}`;
+  const previousDateUrl = useRef(dateUrlKey);
+  const restoringDateUrl = previousDateUrl.current !== dateUrlKey;
   const linkedInquiryId = searchParams.get('inquiryId') ?? '';
   const [search, setSearch] = useState(() => searchParams.get('search') ?? '');
   const [tableFilters, setTableFilters] = useState<IParams['filters']>(() =>
     createInitialAdmissionInquiryTableFilters(searchParams)
   );
   const [page, setPage] = useState(0);
+  useEffect(() => {
+    if (restoringDateUrl) setPage(0);
+    previousDateUrl.current = dateUrlKey;
+  }, [dateUrlKey, restoringDateUrl]);
   const [rowsPerPage, setRowsPerPage] = useState(25);
   const [selectedInquiry, setSelectedInquiry] = useState<AdmissionInquiry | null>(null);
   const [followUpInquiry, setFollowUpInquiry] = useState<AdmissionInquiry | null>(null);
@@ -84,11 +98,15 @@ export default function AdmissionInquiriesScreen() {
 
   useEffect(() => {
     const next = new URLSearchParams(searchParams.toString());
+    // Let URL-backed controls restore Back/Forward values before synchronizing filters.
+    if (restoringDateUrl) return;
     const setOrDelete = (key: string, value?: string) => {
       if (!value) next.delete(key);
       else next.set(key, value);
     };
     setOrDelete('search', search);
+    setOrDelete('dateFrom', dates ? dateFrom : undefined);
+    setOrDelete('dateTo', dates ? dateTo : undefined);
     Object.entries(ADMISSION_INQUIRY_FILTER_QUERY_PARAMS).forEach(([column, parameter]) => {
       const filter = tableFilters.find((item) => item.column === column);
       setOrDelete(parameter, filter ? String(filter.value) : undefined);
@@ -101,7 +119,7 @@ export default function AdmissionInquiriesScreen() {
       router.replace(
         query ? `${studentPaths.enrollment.inquiries}?${query}` : studentPaths.enrollment.inquiries
       );
-  }, [router, search, searchParams, tableFilters]);
+  }, [router, search, searchParams, tableFilters, dates, dateFrom, dateTo, restoringDateUrl]);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const currentUserId = useSelector(
     (state: RootState) => state.auth.user?.sub as string | undefined
@@ -125,6 +143,8 @@ export default function AdmissionInquiriesScreen() {
   } = useGetAdmissionInquiriesQuery(
     {
       ...listFilters,
+      creationTimeFrom: dates?.creationTimeFrom,
+      creationTimeBefore: dates?.creationTimeBefore,
       dashboardFollowUpsDue: searchParams.get('dashboard') === 'inquiry-followups' || undefined,
       divisionId: academic.dashboardScope ? searchParams.get('division') || undefined : undefined,
       isTransferred: dashboardFollowUps ? undefined : false,
@@ -138,6 +158,7 @@ export default function AdmissionInquiriesScreen() {
     },
     {
       skip: skipList,
+      refetchOnMountOrArgChange: true,
     }
   );
   const {
@@ -286,11 +307,75 @@ export default function AdmissionInquiriesScreen() {
         }
       />
       <AdmissionAcademicFilters
+        filterAction={
+          <Stack
+            direction="row"
+            alignItems="center"
+            spacing={1}
+            sx={{ width: { xs: 1, lg: 380 }, minWidth: 0 }}
+          >
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <CustomDateRangePicker
+                label="Inquiry dates"
+                value={dates?.value ?? [null, null]}
+                dateFormat="DD/MM/YYYY"
+                singleInput
+                slotProps={{ field: { size: 'small', fullWidth: true } }}
+                onChange={([from, to]) => {
+                  if (!from && !to) {
+                    setDateFrom('');
+                    setDateTo('');
+                    setPage(0);
+                    return;
+                  }
+                  if (!from?.isValid() || !to?.isValid() || from.isAfter(to, 'day')) return;
+                  setDateFrom(from.format('YYYY-MM-DD'));
+                  setDateTo(to.format('YYYY-MM-DD'));
+                  setPage(0);
+                }}
+              />
+            </Box>
+            {dates && (
+              <CustomTooltip title="Clear inquiry dates">
+                <IconButton
+                  size="small"
+                  aria-label="Clear inquiry dates"
+                  sx={{ minWidth: { xs: 44, sm: 30 }, minHeight: { xs: 44, sm: 30 } }}
+                  onClick={() => {
+                    setDateFrom('');
+                    setDateTo('');
+                    setPage(0);
+                  }}
+                >
+                  <Iconify icon="mdi:close" />
+                </IconButton>
+              </CustomTooltip>
+            )}
+            <CustomTooltip
+              title={academic.standardId ? 'Clear Class Selection' : 'All Classes Are Shown'}
+              describeChild
+            >
+              <Box component="span" sx={{ display: 'inline-flex', flexShrink: 0 }}>
+                <Button
+                  type="button"
+                  aria-label="Clear Academic Filters"
+                  size="small"
+                  variant="outlined"
+                  color="inherit"
+                  startIcon={<Iconify icon="mdi:filter-off-outline" width={18} />}
+                  disabled={!academic.standardId}
+                  onClick={academic.clear}
+                >
+                  Clear
+                </Button>
+              </Box>
+            </CustomTooltip>
+          </Stack>
+        }
         onLoadingChange={setScopeLoading}
         boardId={academic.boardId}
         mediumId={academic.mediumId}
         standardId={academic.standardId}
-        onClear={academic.clear}
         onChange={(key, value) => {
           setPage(0);
           academic.update(key, value);
@@ -313,20 +398,6 @@ export default function AdmissionInquiriesScreen() {
           flexDirection: 'column',
         }}
       >
-        {handoff.moving && (
-          <Stack
-            role="status"
-            aria-label="Moving Inquiry to the Next Stage"
-            aria-busy
-            direction="row"
-            spacing={2}
-            sx={{ px: 2, py: 1, ...skeletonReducedMotionSx }}
-          >
-            <Skeleton width="40%" height={24} />
-            <Skeleton width="25%" height={24} />
-            <Skeleton width="20%" height={24} />
-          </Stack>
-        )}
         <CustomizableTable
           tableId="admission-inquiries"
           tableTitle="Admission Inquiries"
@@ -334,9 +405,7 @@ export default function AdmissionInquiriesScreen() {
           tableContainerProps={{ sx: { height: 1 } }}
           columns={columns}
           data={skipList || scopeLoading ? [] : (data?.items ?? [])}
-          isRefreshing={
-            Boolean(data) && isFetching && !scopeLoading && !skipList && !handoff.moving
-          }
+          isRefreshing={Boolean(data) && isFetching && !scopeLoading && !skipList}
           refreshIndicator="skeleton"
           errorContent={
             isError && !skipList && !scopeLoading && !data?.items.length ? (
@@ -346,8 +415,7 @@ export default function AdmissionInquiriesScreen() {
           isLoading={
             yearChanging ||
             scopeLoading ||
-            (handoff.moving && !data?.items.length) ||
-            (!skipList && !isError && (isLoading || !data))
+            (!skipList && !isError && (isLoading || !data || (isFetching && !data.items.length)))
           }
           serverSidePagination
           serverSideSearch
@@ -417,6 +485,11 @@ export default function AdmissionInquiriesScreen() {
         />
       </Box>
       <InquiryFollowUpDialog inquiry={followUpInquiry} onClose={() => setFollowUpInquiry(null)} />
+      <InquiryHandoffIssueDialog
+        issue={handoff.issue}
+        access={handoff.formAccess}
+        onClose={handoff.dismissIssue}
+      />
       {historyInquiry && (
         <CustomDialog
           open

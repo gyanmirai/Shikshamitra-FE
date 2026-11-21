@@ -17,6 +17,7 @@ const props = (): ComponentProps<typeof StudentSetupAssignmentToolbar> => ({
   view: 'gr-number',
   title: 'GR Number',
   pendingCount: 2,
+  showAssignmentActions: true,
   busy: false,
   automaticCount: 2,
   manualCount: 3,

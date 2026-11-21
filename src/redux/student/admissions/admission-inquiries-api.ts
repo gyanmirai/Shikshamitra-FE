@@ -71,6 +71,7 @@ export type AdmissionInquirySource = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 
 export type AdmissionInquiryWorkQueue = 1 | 2 | 3 | 4;
 export type AdmissionInquiry = {
   siblingFamilyConfirmed?: boolean;
+  hasLinkedSiblings?: boolean;
   parentRelationship?: AdmissionParentRelationship | null;
   primaryContactRelationship?: 'father' | 'mother' | 'guardian' | null;
   guardianResponsibilityConfirmed?: boolean;
@@ -83,6 +84,7 @@ export type AdmissionInquiry = {
   } | null;
   id: string;
   concurrencyStamp: string;
+  familyId?: string | null;
   inquiryNumber: string;
   admissionCycleId: string;
   admissionOfferingId?: string | null;
@@ -136,6 +138,8 @@ export type AdmissionInquiry = {
   isOverdue: boolean;
 };
 export type AdmissionInquiryListInput = {
+  creationTimeFrom?: string;
+  creationTimeBefore?: string;
   divisionId?: string;
   dashboardFollowUpsDue?: boolean;
   academicYearId?: string;
@@ -197,6 +201,7 @@ export type AdmissionInquiryCommunicationResult = {
   deliveryErrorCode?: string | null;
 };
 export type CreateAdmissionInquiry = {
+  familyLinkOnly?: boolean;
   guardianResponsibilityConfirmed?: boolean;
   familyContacts?: AdmissionFamilyContacts;
   admissionCycleId: string;
@@ -230,6 +235,7 @@ export type DuplicateMatch = {
   existingInquiryId?: string | null;
   existingInquiryNumber?: string | null;
   existingInquiryAdmissionCycleId?: string | null;
+  existingInquiryMatchesMobile?: boolean | null;
   applicantName: string;
   guardianPhone?: string | null;
   guardianEmail?: string | null;
@@ -259,7 +265,8 @@ export type UpdateAdmissionInquiry = {
 export type ConfirmAdmissionInquiryFamily = {
   existingFamilyId: string;
   existingParentApplicantId: string;
-  parentRelationship: AdmissionParentRelationship;
+  familyLinkOnly?: boolean;
+  parentRelationship?: AdmissionParentRelationship;
   concurrencyStamp: string;
 };
 export type AdmissionInquiryDuplicateInput = {
@@ -330,8 +337,11 @@ export const admissionInquiriesApi = api.injectEndpoints({
       query: (id) => `/student/enrollment/admissions/inquiries/${id}`,
       transformResponse: (response: Result<AdmissionInquiry> | AdmissionInquiry) =>
         unwrap(response),
-      providesTags: (_result, _error, id) => [
+      providesTags: (result, _error, id) => [
         { type: studentAdmissionsCrmType.admissionInquiry, id },
+        ...(result?.familyId
+          ? [{ type: studentAdmissionsCrmType.admissionInquiry, id: `FAMILY:${result.familyId}` }]
+          : []),
       ],
     }),
     getAdmissionInquiries: builder.query<
@@ -362,7 +372,7 @@ export const admissionInquiriesApi = api.injectEndpoints({
       query: (body) => ({ url: '/student/enrollment/admissions/inquiries', method: 'POST', body }),
       transformResponse: (response: Result<AdmissionInquiry> | AdmissionInquiry) =>
         unwrap(response),
-      invalidatesTags: (_result, error) =>
+      invalidatesTags: (_result, error, body) =>
         error
           ? []
           : [
@@ -371,6 +381,14 @@ export const admissionInquiriesApi = api.injectEndpoints({
               { type: studentAdmissionsCrmType.admissionInquiry, id: 'ACTIVITY' },
               { type: studentAdmissionsCrmType.admissionInquiry, id: 'PIPELINE' },
               studentAdmissionsCrmType.admissionApplicant,
+              ...(body.existingFamilyId
+                ? [
+                    {
+                      type: studentAdmissionsCrmType.admissionInquiry,
+                      id: `FAMILY:${body.existingFamilyId}`,
+                    },
+                  ]
+                : []),
             ],
     }),
     updateAdmissionInquiry: builder.mutation<
@@ -410,7 +428,7 @@ export const admissionInquiriesApi = api.injectEndpoints({
       }),
       transformResponse: (response: Result<AdmissionInquiry> | AdmissionInquiry) =>
         unwrap(response),
-      invalidatesTags: (_result, error, { id }) =>
+      invalidatesTags: (_result, error, { id, body }) =>
         error
           ? []
           : [
@@ -418,6 +436,10 @@ export const admissionInquiriesApi = api.injectEndpoints({
               { type: studentAdmissionsCrmType.admissionInquiry, id: 'LIST' },
               { type: studentAdmissionsCrmType.admissionInquiry, id: 'ACTIVITY' },
               studentAdmissionsCrmType.admissionApplicant,
+              {
+                type: studentAdmissionsCrmType.admissionInquiry,
+                id: `FAMILY:${body.existingFamilyId}`,
+              },
             ],
     }),
     getAdmissionInquiryTimeline: builder.query<AdmissionInquiryTimelineItem[], string>({

@@ -8,7 +8,7 @@ import { Iconify } from 'src/components/iconify';
 import { LoadingButton } from 'src/components/loading-button';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { StudentFeedback } from 'src/components/student-feedback';
-import { Box, Stack, TextField, Typography, CircularProgress } from '@mui/material';
+import { Stack, TextField, Typography, CircularProgress } from '@mui/material';
 import {
   type AdmissionCycle,
   type AdmissionCycleAction,
@@ -84,7 +84,7 @@ export function AdmissionCycleActionDialog({
     !impactError;
   const impactPending = needsImpact && !impactReady && !impactError;
   const impact = impactReady ? impactQuery.data : null;
-  const needsReason = action === 'reopen' || action === 'archive';
+  const needsReason = action === 'reopen';
   const hasBlockingValidation = action === 'publish' && Boolean(validation?.errors.length);
   const publishPending = action === 'publish' && !validation;
   const cannotArchive = action === 'archive' && Boolean(impact?.activeOfferingCount);
@@ -111,7 +111,9 @@ export function AdmissionCycleActionDialog({
       reason:
         action === 'close'
           ? 'Admission cycle closed by staff confirmation.'
-          : reason.trim() || undefined,
+          : action === 'archive'
+            ? 'Admission cycle archived by staff confirmation.'
+            : reason.trim() || undefined,
       confirmActiveOfferings: action === 'close' && Boolean(impact?.activeOfferingCount),
       ...(action === 'reopen' ? { newEndDate } : {}),
     });
@@ -152,9 +154,13 @@ export function AdmissionCycleActionDialog({
               Closing <strong>&ldquo;{cycle.name}&rdquo;</strong> stops new applications. Existing
               applications remain available for review.
             </Typography>
+          ) : action === 'archive' ? (
+            <Typography variant="body2">
+              Archive the admission cycle <strong>&ldquo;{cycle.name}&rdquo;</strong>?
+            </Typography>
           ) : action !== 'publish' ? (
             <Typography variant="body2">
-              <strong>{cycle.name}</strong> ({cycle.code})
+              <strong>{cycle.name}</strong>
             </Typography>
           ) : null}
 
@@ -209,29 +215,6 @@ export function AdmissionCycleActionDialog({
                 </StudentFeedback>
               ))}
             </>
-          )}
-
-          {(action === 'reopen' || action === 'archive') && (
-            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1 }}>
-              <Box>
-                <Typography variant="caption" color="text.secondary">
-                  Offerings
-                </Typography>
-                <Typography fontWeight={600}>{impact?.linkedOfferingCount ?? '—'}</Typography>
-              </Box>
-              <Box>
-                <Typography variant="caption" color="text.secondary">
-                  Active
-                </Typography>
-                <Typography fontWeight={600}>{impact?.activeOfferingCount ?? '—'}</Typography>
-              </Box>
-              <Box>
-                <Typography variant="caption" color="text.secondary">
-                  Applications
-                </Typography>
-                <Typography fontWeight={600}>{impact?.applicationCount ?? '—'}</Typography>
-              </Box>
-            </Box>
           )}
 
           {cannotArchive && (

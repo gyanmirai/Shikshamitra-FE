@@ -189,7 +189,7 @@ export function ApplicationCounsellorCard({
             <TextField
               fullWidth
               size="small"
-              label="Reason for Change (Optional)"
+              label="Reason for Change"
               disabled={disabled || assignment.isLoading}
               name="reason"
               value={formik.values.reason}

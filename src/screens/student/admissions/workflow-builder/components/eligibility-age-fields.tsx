@@ -40,7 +40,7 @@ function AgeBound({
   };
   return (
     <Stack spacing={0.5}>
-      <Typography variant="subtitle2">{label} (Optional)</Typography>
+      <Typography variant="subtitle2">{label}</Typography>
       <Grid container spacing={1}>
         <Grid size={{ xs: 6 }}>
           <TextField

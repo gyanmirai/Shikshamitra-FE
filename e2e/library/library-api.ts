@@ -1,26 +1,41 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import { expect, type Page, type APIResponse } from '@playwright/test';
 
-const tenant = () => process.env.E2E_TENANT || 'DDVS';
+const tenant = () => {
+  const value = process.env.E2E_TENANT?.trim();
+  if (!value) throw new Error('Set E2E_TENANT to the seeded disposable Library tenant.');
+  return value;
+};
 
 export const libraryE2EEnabled = process.env.E2E_LIBRARY === '1';
 
 export const todayIso = () => new Date().toISOString().slice(0, 10);
 
-export const addDaysIso = (days: number) => {
-  const value = new Date();
-  value.setDate(value.getDate() + days);
+export const addDaysIso = (days: number, schoolDate = todayIso()) => {
+  const value = new Date(`${schoolDate}T00:00:00Z`);
+  value.setUTCDate(value.getUTCDate() + days);
   return value.toISOString().slice(0, 10);
 };
 
 export const uniqueLibraryText = (prefix: string) =>
   `${prefix} ${Date.now()} ${Math.random().toString(16).slice(2, 8)}`;
 
+export function requireLocalLibraryUrl(url: string, description: string) {
+  const parsed = new URL(url);
+  if (
+    !['http:', 'https:'].includes(parsed.protocol) ||
+    !['localhost', '127.0.0.1', '[::1]'].includes(parsed.hostname)
+  ) {
+    throw new Error(`Use a loopback ${description} for the disposable Library suite.`);
+  }
+}
+
 const apiBaseUrl = () => {
   const url = process.env.E2E_API_URL || process.env.NEXT_PUBLIC_API_URL;
   if (!url) {
     throw new Error('Set E2E_API_URL or NEXT_PUBLIC_API_URL to the backend host URL.');
   }
+  requireLocalLibraryUrl(url, 'API URL');
   return url.replace(/\/$/, '');
 };
 
@@ -28,6 +43,7 @@ export async function getAccessToken(page: Page) {
   if (page.url() === 'about:blank') {
     await page.goto('/library/dashboard', { waitUntil: 'domcontentloaded', timeout: 90_000 });
   }
+  requireLocalLibraryUrl(page.url(), 'frontend URL');
 
   const token = await page.evaluate(async () => {
     const response = await fetch('/api/auth/session');
@@ -48,6 +64,8 @@ export async function libraryApiRequest(
   path: string,
   init: RequestInit & { timeout?: number } = {}
 ): Promise<APIResponse> {
+  const url = `${apiBaseUrl()}/api${path}`;
+  const tenantName = tenant();
   const token = await getAccessToken(page);
   const { body, signal, ...requestInit } = init;
   const requestHeaders =
@@ -57,13 +75,14 @@ export async function libraryApiRequest(
         ? Object.fromEntries(init.headers)
         : init.headers || {};
 
-  return page.request.fetch(`${apiBaseUrl()}/api${path}`, {
+  return page.request.fetch(url, {
     ...requestInit,
+    maxRedirects: 0,
     ...(signal ? { signal } : {}),
     ...(body ? { data: body } : {}),
     headers: {
       accept: 'application/json',
-      __tenant: tenant(),
+      __tenant: tenantName,
       Authorization: `Bearer ${token}`,
       ...(body instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
       ...requestHeaders,
@@ -76,13 +95,17 @@ export async function expectLibraryOk(response: APIResponse, label: string) {
   expect(response.ok(), `${label}: ${response.status()} ${details}`).toBe(true);
 }
 
-export async function getLibraryJson(page: Page, path: string) {
+export async function getLibraryJson<T = any>(page: Page, path: string): Promise<T> {
   const response = await libraryApiRequest(page, path);
   await expectLibraryOk(response, `GET ${path}`);
   return response.json();
 }
 
-export async function postLibraryJson(page: Page, path: string, body: unknown) {
+export async function postLibraryJson<T = any>(
+  page: Page,
+  path: string,
+  body: unknown
+): Promise<T> {
   const response = await libraryApiRequest(page, path, {
     method: 'POST',
     body: JSON.stringify(body),
@@ -204,14 +227,15 @@ async function getOrCreateSection(page: Page, academicYearId: string) {
 }
 
 export async function ensureLibraryFixture(page: Page) {
+  const memberId = process.env.E2E_LIBRARY_MEMBER_ID?.trim();
+  if (!memberId) throw new Error('Set E2E_LIBRARY_MEMBER_ID to an eligible disposable borrower.');
   const academicYearId = await getAcademicYearId(page);
   const [bookCategory, chargeCategory, section] = await Promise.all([
     getOrCreateBookCategory(page, academicYearId),
     getOrCreateChargeCategory(page, academicYearId),
     getOrCreateSection(page, academicYearId),
   ]);
-  const members = listItems(await getLibraryJson(page, '/library/members?page=1&pageSize=20'));
-  const member = members[0];
+  const member = await getLibraryJson(page, `/library/members/${encodeURIComponent(memberId)}`);
   if (!member?.id) {
     throw new Error('Library E2E requires at least one seeded active library member.');
   }

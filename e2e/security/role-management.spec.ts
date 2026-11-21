@@ -58,14 +58,8 @@ test('table layout, filtering, sorting and utilities stay usable in both themes'
   await expect(page.getByText('No roles have been added yet.')).toHaveCount(0);
   await search.fill('');
   await page.getByRole('button', { name: 'Sort by Role', exact: true }).click();
-  await page.getByRole('button', { name: 'Filter Role', exact: true }).click();
-  await page.getByRole('combobox', { name: 'Filter Type *', exact: true }).click();
-  await page.getByRole('option', { name: 'Equals', exact: true }).click();
-  await page.getByRole('textbox', { name: 'Role *', exact: true }).fill('QA Role 18');
-  await page.getByRole('button', { name: 'Apply', exact: true }).click();
-  await expect(table.getByText('QA Role 18', { exact: true })).toBeVisible();
-  await expect(table.getByText('QA Role 01', { exact: true })).toHaveCount(0);
-  await page.getByRole('button', { name: 'Clear (1)', exact: true }).click();
+  await expect(table.getByText('QA Role 01', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Filter Role', exact: true })).toHaveCount(0);
   await page.getByRole('button', { name: 'Columns', exact: true }).click();
   await expect(page.getByRole('checkbox', { name: 'Role', exact: true })).toBeVisible();
   await page.keyboard.press('Escape');
@@ -85,6 +79,11 @@ test('table layout, filtering, sorting and utilities stay usable in both themes'
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)
     ).toBe(true);
+    await page.locator('thead').evaluate(async (element) => {
+      await Promise.all(
+        element.getAnimations({ subtree: true }).map((animation) => animation.finished)
+      );
+    });
     const violations = await new AxeBuilder({ page })
       .include('main')
       .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])

@@ -11,6 +11,12 @@ import type { useWorkflowListActions } from './use-workflow-list-actions';
 
 type Actions = ReturnType<typeof useWorkflowListActions>;
 
+const defaultWorkflowCopyName = (name: string | undefined) => {
+  if (!name) return '';
+  const suffix = ' Copy';
+  return `${name.trim().slice(0, 128 - suffix.length).trimEnd()}${suffix}`;
+};
+
 export function WorkflowListDialogs({ actions }: { actions: Actions }) {
   const { fetchRegistrationForms } = useAdmissionDefinitionOptions(actions.createDialog.value);
   const pending = actions.pendingConfirmation;
@@ -43,7 +49,7 @@ export function WorkflowListDialogs({ actions }: { actions: Actions }) {
         title="Clone Workflow"
         submitLabel="Clone Draft"
         initialValues={{
-          name: actions.cloneSource ? `${actions.cloneSource.name} Copy` : '',
+          name: defaultWorkflowCopyName(actions.cloneSource?.name),
           code: '',
           description: actions.cloneSource?.description ?? '',
         }}

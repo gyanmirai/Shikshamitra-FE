@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
   dispatch: vi.fn(),
   options: [] as GlobalAcademicSearchOption[],
   selectedOption: null as GlobalAcademicSearchOption | null,
+  currentYear: { id: 'year-a', name: '2026-2027' } as { id?: string; name?: string },
   years: {
     items: [
       { id: 'year-a', name: '2026-2027' },
@@ -43,7 +44,7 @@ vi.mock('react-redux', () => ({
   useDispatch: () => mocks.dispatch,
   useSelector: (select: (state: unknown) => unknown) =>
     select({
-      globalState: { currentYear: mocks.years.items[0], currentBoard: {}, currentMedium: {} },
+      globalState: { currentYear: mocks.currentYear, currentBoard: {}, currentMedium: {} },
     }),
 }));
 vi.mock('src/hooks/use-confirm-dialog', () => ({ useConfirmDialog: () => [mocks.confirm, null] }));
@@ -74,6 +75,28 @@ describe('Global academic context confirmation', () => {
     mocks.scope.accessibleHierarchy = [];
     mocks.options = [];
     mocks.selectedOption = null;
+    mocks.currentYear = mocks.years.items[0];
+  });
+
+  it('initializes an empty academic context while the Finance Dashboard selector is hidden', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-11-17T12:00:00Z'));
+    try {
+      mocks.pathname = '/finance/dashboard';
+      mocks.currentYear = {};
+      const view = render(<GlobalAcademicSearch hidden />);
+      expect(view.container).toBeEmptyDOMElement();
+      await waitFor(() =>
+        expect(mocks.dispatch).toHaveBeenCalledWith(
+          expect.objectContaining({
+            type: 'globalState/setCurrentYear',
+            payload: expect.objectContaining({ id: 'year-a' }),
+          })
+        )
+      );
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it.each(['/academic/curriculumSubjects', '/student/setup', '/student/setup/'])(

@@ -189,7 +189,7 @@ describe('Offering edit drawer experience', () => {
     expect(screen.getByRole('textbox', { name: 'Offering Name *' })).toBeVisible();
     expect(screen.queryByRole('textbox', { name: 'Offering Code *' })).not.toBeInTheDocument();
     expect(screen.queryByText(offering.code)).not.toBeInTheDocument();
-    expect(screen.queryByRole('combobox', { name: 'Campus (Optional)' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Campus' })).not.toBeInTheDocument();
     expect(
       screen.queryByRole('checkbox', { name: 'Use Admission Cycle dates' })
     ).not.toBeInTheDocument();

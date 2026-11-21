@@ -56,14 +56,14 @@ describe('document requirement validation', { timeout: 15000 }, () => {
         onSave={save}
       />
     );
-    await chooseDocumentOption(user, 'Student Document Category (Optional)', 'Word template');
+    await chooseDocumentOption(user, 'Student Document Category', 'Word template');
     expect(screen.getByText(/no format in common/)).toBeInTheDocument();
     expect(screen.queryByRole('combobox', { name: 'Evidence to collect' })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Submit' }));
     expect(save).not.toHaveBeenCalled();
     await chooseDocumentOption(
       user,
-      'Student Document Category (Optional)',
+      'Student Document Category',
       'Keep as Admission Evidence'
     );
     await user.click(screen.getByRole('combobox', { name: 'Allowed File Formats' }));

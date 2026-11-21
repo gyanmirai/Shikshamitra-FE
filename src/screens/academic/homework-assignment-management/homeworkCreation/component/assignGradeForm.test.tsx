@@ -202,7 +202,7 @@ describe('homework approved evaluation navigation', () => {
       screen.queryByRole('textbox', { name: 'Understanding Feedback' })
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole('textbox', { name: 'Overall rubric feedback (optional)' })
+      screen.queryByRole('textbox', { name: 'Overall rubric Feedback' })
     ).not.toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Feedback *' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Quick templates' })).toBeDisabled();

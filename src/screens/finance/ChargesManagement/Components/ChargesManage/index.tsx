@@ -54,9 +54,6 @@ const ChargesManagement = () => {
   // Lifted state for tab selection to persist across dialog open/close
   const [selectedTab, setSelectedTab] = useState<string | number>(0);
 
-  // Trigger refetch when charges are modified (create/edit/delete)
-  const [refetchTrigger, setRefetchTrigger] = useState<number>(0);
-
   const [deleteCharge] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteChargeMutation,
@@ -102,9 +99,6 @@ const ChargesManagement = () => {
       setSelectedMode('');
       setSelectedChargeData(null);
       addChargeDialog.onFalse();
-      if (isSubmit) {
-        setRefetchTrigger((prev) => prev + 1); // Trigger refetch of charges table
-      }
       resetState();
     } else if (!isChanges) {
       onConfirmDialg.onFalse();
@@ -135,9 +129,6 @@ const ChargesManagement = () => {
     // Close dialog if form was submitted or user confirms leaving with unsaved changes
     if (isSubmit || discardConfirmed) {
       editChargeDialog.onFalse();
-      if (isSubmit) {
-        setRefetchTrigger((prev) => prev + 1); // Trigger refetch of charges table
-      }
       resetState();
     } else if (!isChanges) {
       // Close dialog if there are no unsaved changes
@@ -343,7 +334,6 @@ const ChargesManagement = () => {
             }}
             selectedTab={selectedTab}
             setSelectedTab={setSelectedTab}
-            refetchTrigger={refetchTrigger}
           />
         )}
 
@@ -435,7 +425,6 @@ const ChargesManagement = () => {
               approvalReviewDialog.onFalse();
               setSelectedChargeData(null);
               setSelectedMode('');
-              setRefetchTrigger((prev) => prev + 1); // Trigger refetch of charges table
             }}
           />
         </Card>
@@ -505,7 +494,6 @@ const ChargesManagement = () => {
                 try {
                   await deleteCharge({ id: selectedChargeData.chargeId }).unwrap();
                   setSelectedChargeData(null);
-                  setRefetchTrigger((prev) => prev + 1);
                   shikshaMitraToast.success({ message: 'Charge deleted successfully.' });
                 } catch (error: any) {
                   shikshaMitraToast.error({
@@ -632,7 +620,6 @@ const ChargesManagement = () => {
                 voidChargeDialog.onFalse();
                 setSelectedChargeData(null);
                 setVoidReason('');
-                setRefetchTrigger((prev) => prev + 1);
               } catch (error: any) {
                 shikshaMitraToast.error({
                   message: error?.data?.error?.message || 'Charge could not be cancelled.',

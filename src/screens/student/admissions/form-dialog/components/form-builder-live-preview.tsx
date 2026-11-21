@@ -40,7 +40,13 @@ export function FormBuilderLivePreview({ form }: { form: CreateUpdateAdmissionFo
   });
   return (
     <Scrollbar sx={{ height: 1, minHeight: 0, p: { xs: 1, sm: 2 } }}>
-      <FormPreviewContent form={previewForm} formik={formik} resolvedOptions={{}} embedded />
+      <FormPreviewContent
+        form={previewForm}
+        formik={formik}
+        resolvedOptions={{}}
+        embedded
+        preview
+      />
     </Scrollbar>
   );
 }

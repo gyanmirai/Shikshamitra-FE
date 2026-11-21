@@ -6,12 +6,14 @@ import type {
   AdmissionApplicationWorkflow,
 } from 'src/redux/student/admissions/admission-applications-api';
 
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomTooltip from 'src/components/custom-tooltip';
 import CustomAccordion from 'src/components/custom-accordian';
-import { useRef, useState, useEffect, useCallback } from 'react';
 import { StudentFeedback } from 'src/components/student-feedback';
+import { FormSectionHeader } from 'src/components/form-section-card';
+import { useId, useRef, useState, useEffect, useCallback } from 'react';
 import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
 import { Box, Card, Chip, Paper, Stack, IconButton, Typography, CardContent } from '@mui/material';
 import { useLazyGetAdmissionApplicationQuery } from 'src/redux/student/admissions/admission-applications-api';
@@ -19,6 +21,7 @@ import { useLazyGetAdmissionApplicationQuery } from 'src/redux/student/admission
 import { ApplicationDecisionForm } from './application-decision-form';
 import { ApplicationDecisionDialog } from './application-decision-dialog';
 import { ApplicationDecisionStatus } from './application-decision-status';
+import { ApplicationAdmissionReview } from './application-admission-review';
 import { ApplicationDecisionActions } from './application-decision-actions';
 import { ApplicationDecisionHistory } from './application-decision-history';
 import { ApplicationFinalizedSummary } from './application-finalized-summary';
@@ -39,6 +42,7 @@ type Props = {
   application: AdmissionApplication;
   journeyCompleted: boolean;
   compact?: boolean;
+  simplified?: boolean;
   disabled?: boolean;
   navigationDisabled?: boolean;
   onBusyChange?: (busy: boolean) => void;
@@ -48,11 +52,19 @@ type Props = {
   onFinalizationOpenChange?: (open: boolean) => void;
   hideFinalizedActions?: boolean;
   onPrepareFinalization?: () => Promise<boolean>;
-  onFinalized?: (result: AdmissionFinalizationResult) => void;
+  onFinalized?: (result: AdmissionFinalizationResult) => boolean | void;
+  footerElement?: HTMLElement | null;
+  onCancel?: () => void;
 };
 const ACTIONS: AdmissionDecisionAction[] = ['approve', 'waitlist', 'reject'];
 
-export function ApplicationDecisionCard({
+export function ApplicationDecisionCard(props: Props) {
+  const { compact, simplified = true, application } = props;
+  if (compact && simplified) return <ApplicationAdmissionReview key={application.id} {...props} />;
+  return <LegacyApplicationDecisionCard {...props} />;
+}
+
+function LegacyApplicationDecisionCard({
   application,
   journeyCompleted,
   compact = false,
@@ -74,6 +86,7 @@ export function ApplicationDecisionCard({
   );
   const finalizationDialog = useBoolean();
   const history = useBoolean();
+  const historyId = useId();
   const [reloadApplication] = useLazyGetAdmissionApplicationQuery();
   const [action, setAction] = useState<AdmissionDecisionAction | null>(null);
   const [decisionApplication, setDecisionApplication] = useState(application);
@@ -180,20 +193,64 @@ export function ApplicationDecisionCard({
   if (compact && finalizationDialog.value) return finalization;
 
   const decisionHistory = compact ? (
-    <CustomAccordion
-      title="Decision History"
-      expanded={history.value}
-      onChange={history.onToggle}
-      content={
-        <ApplicationDecisionHistory
-          isLoading={decisions.historyQuery.isLoading}
-          isError={decisions.historyQuery.isError}
-          data={decisions.historyQuery.data}
-          onRetry={() => decisions.historyQuery.refetch()}
-          compact
-        />
-      }
-    />
+    <Paper
+      component="section"
+      aria-label="Decision History"
+      variant="outlined"
+      sx={{
+        mt: 1.5,
+        minWidth: 0,
+        borderRadius: 2,
+        overflow: 'hidden',
+        '& > .MuiAccordion-root, & > .MuiAccordion-root.Mui-expanded': {
+          m: 0,
+          borderRadius: 'inherit',
+          color: 'text.primary',
+        },
+        '& .MuiAccordionDetails-root': { p: 1.5 },
+      }}
+    >
+      <CustomAccordion
+        title="Decision History"
+        expanded={history.value}
+        onChange={history.onToggle}
+        summary={
+          <Box
+            id={`${historyId}-heading`}
+            aria-controls={`${historyId}-content`}
+            sx={{ p: 1, bgcolor: 'background.neutral' }}
+          >
+            <FormSectionHeader
+              title="Decision History"
+              icon={GlobalIcons.history}
+              titleTypographyProps={{ component: 'h3' }}
+              descriptionTooltip="Review the recorded admission decisions, including when they were saved, who recorded them, and any reason provided."
+              action={
+                <IconButton
+                  type="button"
+                  size="small"
+                  aria-label="Decision History"
+                  aria-expanded={history.value}
+                  aria-controls={`${historyId}-content`}
+                  onClick={history.onToggle}
+                >
+                  <Iconify icon={history.value ? 'mdi:chevron-up' : GlobalIcons.expandMore} />
+                </IconButton>
+              }
+            />
+          </Box>
+        }
+        content={
+          <ApplicationDecisionHistory
+            isLoading={decisions.historyQuery.isLoading}
+            isError={decisions.historyQuery.isError}
+            data={decisions.historyQuery.data}
+            onRetry={() => decisions.historyQuery.refetch()}
+            compact
+          />
+        }
+      />
+    </Paper>
   ) : (
     <ApplicationDecisionHistory
       isLoading={decisions.historyQuery.isLoading}

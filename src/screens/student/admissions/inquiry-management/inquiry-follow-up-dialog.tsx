@@ -16,29 +16,33 @@ import { useRef, useState, useEffect } from 'react';
 import { fDate, fTime } from 'src/utils/format-time';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import { EmptyContent } from 'src/components/empty-content';
 import { LoadingButton } from 'src/components/loading-button';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { useGetAdmissionInquiryQuery } from 'src/redux/student/admissions/admission-inquiries-api';
 import {
+  useGetAdmissionInquiryManagementQuery,
+  useRecordAdmissionInquiryFollowUpNoteMutation,
+} from 'src/redux/student/admissions/admission-inquiry-management-api';
+import {
   Box,
+  Menu,
   Stack,
   Paper,
   Button,
   Avatar,
   Skeleton,
+  MenuItem,
   TextField,
   Typography,
   DialogActions,
   CircularProgress,
 } from '@mui/material';
-import {
-  useGetAdmissionInquiryManagementQuery,
-  useRecordAdmissionInquiryFollowUpNoteMutation,
-} from 'src/redux/student/admissions/admission-inquiry-management-api';
 
 import { getAdmissionInquiryAccess } from '../inquiry-access';
 import { ADMISSION_DATE_FORMAT } from '../admission-date-formats';
@@ -52,6 +56,8 @@ import {
   inquiryReminderAt,
   inquiryFollowUpSchema,
   type InquiryFollowUpValues,
+  INQUIRY_FOLLOW_UP_TEMPLATES,
+  INQUIRY_FOLLOW_UP_NOTE_LIMIT,
   inquiryFollowUpReadOnlyReason,
 } from './inquiry-follow-up-model';
 
@@ -74,6 +80,7 @@ function InquiryFollowUpContent({
   inquiry: AdmissionInquiry;
   onClose: () => void;
 }) {
+  const [templateAnchor, setTemplateAnchor] = useState<HTMLButtonElement | null>(null);
   const [openedAt] = useState(() => Date.now());
   const management = useGetAdmissionInquiryManagementQuery(inquiry.id, {
     refetchOnMountOrArgChange: true,
@@ -195,6 +202,13 @@ function InquiryFollowUpContent({
 
   const saving = recording.isLoading || formik.isSubmitting;
   const locked = saving || !ready || !initialized.value || Boolean(readOnlyReason);
+  const templateDrafts = INQUIRY_FOLLOW_UP_TEMPLATES.map((template) => ({
+    ...template,
+    draft: [formik.values.note.trimEnd(), template.note].filter(Boolean).join('\n\n'),
+  }));
+  const templatesFit = templateDrafts.some(
+    ({ draft }) => draft.length <= INQUIRY_FOLLOW_UP_NOTE_LIMIT
+  );
   const guard = useAdmissionDraftGuard({
     dirty: formik.dirty,
     busy: saving,
@@ -225,179 +239,247 @@ function InquiryFollowUpContent({
         disableClose={saving}
         guardUnsavedChanges={false}
         hasUnsavedChanges={formik.dirty}
-        paperProps={{
-          sx: { height: { xs: 'calc(100dvh - 32px)', sm: 660 }, maxHeight: 'calc(100dvh - 32px)' },
-        }}
       >
         <Box component="form" noValidate onSubmit={formik.handleSubmit}>
-          <DialogScrollContent aria-label="Follow-Up Notes, Newest First">
-            <FormSectionCard
-              title="Follow-Up History"
-              icon={GlobalIcons.history}
-              descriptionTooltip="Saved notes appear newest first, with their recorded author, status and reminder."
-            >
-              <Stack spacing={1.5}>
-                {(fetching || !initialized.value) && !queryError && (
-                  <Stack spacing={1} aria-label="Loading Follow-Up Notes">
-                    <Skeleton variant="rounded" height={110} />
-                    <Skeleton variant="rounded" height={110} />
-                  </Stack>
-                )}
-                {queryError && (
-                  <StudentFeedback
-                    notificationKey="STU-0406"
-                    presentation="toast"
-                    severity="error"
-                    toastAction={
-                      <Button size="small" color="inherit" onClick={reload}>
-                        Retry
-                      </Button>
-                    }
-                  >
-                    Follow-up notes could not be loaded.
-                  </StudentFeedback>
-                )}
-                {readOnlyReason && (
-                  <StudentFeedback
-                    notificationKey="STU-0407"
-                    presentation="persistent"
-                    severity="info"
-                  >
-                    {readOnlyReason}
-                  </StudentFeedback>
-                )}
-                {!queryError && initialized.value && !notes.length && !fetching && (
-                  <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
-                    No follow-up notes yet.
-                  </Typography>
-                )}
-                {!queryError &&
-                  initialized.value &&
-                  notes.map((note) => <FollowUpNoteCard key={note.id} note={note} />)}
-              </Stack>
-            </FormSectionCard>
-          </DialogScrollContent>
-          <Box
-            sx={{ position: 'relative', p: 2, borderTop: 1, borderColor: 'divider', flexShrink: 0 }}
-          >
-            <FormSectionCard
-              title="Follow-Up Details"
-              icon={GlobalIcons.admissionDetails}
-              descriptionTooltip="Add a note and choose the inquiry status. Pending or Interested requires a future reminder; Not interested clears it."
-            >
-              <Stack spacing={1.5}>
-                {requestError && (
-                  <StudentFeedback
-                    notificationKey="STU-0408"
-                    presentation="inline"
-                    severity="error"
-                    action={
-                      <Button
-                        size="small"
-                        color="inherit"
-                        onClick={reload}
-                        disabled={saving || fetching}
-                      >
-                        Reload
-                      </Button>
-                    }
-                  >
-                    {requestError}
-                  </StudentFeedback>
-                )}
-                <ShakingTextField error={noteError}>
-                  <TextField
-                    required
-                    fullWidth
-                    multiline
-                    minRows={2}
-                    maxRows={4}
-                    size="small"
-                    label="Notes"
-                    name="note"
-                    disabled={locked}
-                    value={formik.values.note}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={noteError}
-                    helperText={
-                      <Box
-                        component="span"
-                        sx={{ display: 'flex', justifyContent: 'space-between', gap: 1 }}
-                      >
-                        <span>{noteError ? formik.errors.note : ''}</span>
-                        <span>{formik.values.note.length}/500</span>
-                      </Box>
-                    }
-                    slotProps={{ htmlInput: { maxLength: 500 } }}
-                  />
-                </ShakingTextField>
-                <Box
-                  sx={{
-                    display: 'grid',
-                    gridTemplateColumns: { xs: '1fr', sm: 'minmax(0, 1fr) minmax(0, 1fr)' },
-                    gap: 1.5,
-                  }}
-                >
-                  <ShakingTextField error={dateError}>
-                    <DatePicker
-                      label="Next reminder date"
-                      format={ADMISSION_DATE_FORMAT}
-                      value={formik.values.reminderDate}
-                      minDate={dayjs().add(1, 'day').startOf('day')}
-                      disabled={locked || formik.values.status === 6}
-                      onChange={(value) => formik.setFieldValue('reminderDate', value)}
-                      slotProps={{
-                        textField: {
-                          name: 'reminderDate',
-                          size: 'small',
-                          fullWidth: true,
-                          required: formik.values.status !== 6,
-                          onBlur: () => formik.setFieldTouched('reminderDate', true),
-                          error: dateError,
-                          helperText: dateError ? String(formik.errors.reminderDate) : undefined,
-                        },
-                      }}
-                    />
-                  </ShakingTextField>
-                  <CustomSelect
-                    required
-                    fullWidth
-                    size="small"
-                    label="Status"
-                    name="status"
-                    value={formik.values.status}
-                    options={INQUIRY_STATUS_OPTIONS}
-                    disabled={locked}
-                    onChange={(value) => {
-                      const status = Number(value) as InquiryFollowUpValues['status'];
-                      formik.setFieldValue('status', status);
-                      if (status === 6) formik.setFieldValue('reminderDate', null);
-                    }}
-                    onBlur={formik.handleBlur}
-                    error={Boolean(formik.touched.status && formik.errors.status)}
-                    helperText={formik.touched.status ? formik.errors.status : undefined}
-                  />
-                </Box>
-              </Stack>
-            </FormSectionCard>
-            {saving && (
-              <Box
-                role="status"
-                aria-label="Saving Follow-Up"
-                sx={{
-                  position: 'absolute',
-                  inset: 0,
-                  bgcolor: 'action.disabledBackground',
-                  display: 'grid',
-                  placeItems: 'center',
-                  zIndex: 1,
-                }}
+          <DialogScrollContent aria-label="Follow-Up Content">
+            <Stack spacing={2}>
+              <FormSectionCard
+                title="Follow-Up History"
+                icon={GlobalIcons.history}
+                descriptionTooltip="Saved notes appear newest first, with their recorded author, status and reminder."
               >
-                <CircularProgress size={24} />
+                <Stack spacing={1.5}>
+                  {(fetching || !initialized.value) && !queryError && (
+                    <Stack spacing={1} aria-label="Loading Follow-Up Notes">
+                      <Skeleton variant="rounded" height={110} />
+                      <Skeleton variant="rounded" height={110} />
+                    </Stack>
+                  )}
+                  {queryError && (
+                    <StudentFeedback
+                      notificationKey="STU-0406"
+                      presentation="toast"
+                      severity="error"
+                      toastAction={
+                        <Button size="small" color="inherit" onClick={reload}>
+                          Retry
+                        </Button>
+                      }
+                    >
+                      Follow-up notes could not be loaded.
+                    </StudentFeedback>
+                  )}
+                  {readOnlyReason && (
+                    <StudentFeedback
+                      notificationKey="STU-0407"
+                      presentation="persistent"
+                      severity="info"
+                    >
+                      {readOnlyReason}
+                    </StudentFeedback>
+                  )}
+                  {!queryError && initialized.value && !notes.length && !fetching && (
+                    <EmptyContent
+                      title="No follow-up notes yet."
+                      slotProps={{ img: { maxWidth: 112 }, title: { fontWeight: 500 } }}
+                      sx={{ height: 'auto', py: 1 }}
+                    />
+                  )}
+                  {!queryError && initialized.value && notes.length > 0 && (
+                    <Scrollbar
+                      role="region"
+                      aria-label="Follow-Up History Notes"
+                      tabIndex={0}
+                      sx={{
+                        maxHeight: 'min(390px, 42dvh)',
+                        flexGrow: 0,
+                        pr: 1,
+                      }}
+                    >
+                      <Stack spacing={1.5}>
+                        {notes.map((note) => (
+                          <FollowUpNoteCard key={note.id} note={note} />
+                        ))}
+                      </Stack>
+                    </Scrollbar>
+                  )}
+                </Stack>
+              </FormSectionCard>
+              <Box sx={{ position: 'relative' }}>
+                <FormSectionCard
+                  title="Follow-Up Details"
+                  icon={GlobalIcons.admissionDetails}
+                  descriptionTooltip="Add a note and choose the inquiry status. Pending or Interested requires a future reminder; Not interested clears it."
+                  actionFullWidthOnMobile
+                  action={
+                    !readOnlyReason && (
+                      <>
+                        <Button
+                          type="button"
+                          size="small"
+                          variant="outlined"
+                          color="inherit"
+                          startIcon={<Iconify icon={GlobalIcons.edit} />}
+                          disabled={locked || !templatesFit}
+                          aria-haspopup="menu"
+                          aria-expanded={Boolean(templateAnchor) && !locked}
+                          onClick={(event) => setTemplateAnchor(event.currentTarget)}
+                        >
+                          Quick templates
+                        </Button>
+                        <Menu
+                          anchorEl={templateAnchor}
+                          open={Boolean(templateAnchor) && !locked}
+                          onClose={() => setTemplateAnchor(null)}
+                          anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                          transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                          slotProps={{ list: { 'aria-label': 'Quick templates' } }}
+                        >
+                          {templateDrafts.map(({ status, label, draft }) => (
+                            <MenuItem
+                              key={status}
+                              disabled={draft.length > INQUIRY_FOLLOW_UP_NOTE_LIMIT}
+                              onClick={() => {
+                                if (locked) return;
+                                setTemplateAnchor(null);
+                                formik.setValues((values) => ({
+                                  ...values,
+                                  note: draft,
+                                  status,
+                                  reminderDate: status === 6 ? null : values.reminderDate,
+                                }));
+                              }}
+                            >
+                              {label}
+                            </MenuItem>
+                          ))}
+                        </Menu>
+                      </>
+                    )
+                  }
+                >
+                  <Stack spacing={1.5}>
+                    {requestError && (
+                      <StudentFeedback
+                        notificationKey="STU-0408"
+                        presentation="inline"
+                        severity="error"
+                        action={
+                          <Button
+                            size="small"
+                            color="inherit"
+                            onClick={reload}
+                            disabled={saving || fetching}
+                          >
+                            Reload
+                          </Button>
+                        }
+                      >
+                        {requestError}
+                      </StudentFeedback>
+                    )}
+                    <ShakingTextField error={noteError}>
+                      <TextField
+                        required
+                        fullWidth
+                        multiline
+                        minRows={2}
+                        maxRows={4}
+                        size="small"
+                        label="Notes"
+                        name="note"
+                        disabled={locked}
+                        value={formik.values.note}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={noteError}
+                        helperText={
+                          <Box
+                            component="span"
+                            sx={{ display: 'flex', justifyContent: 'space-between', gap: 1 }}
+                          >
+                            <span>{noteError ? formik.errors.note : ''}</span>
+                            <span>
+                              {formik.values.note.length}/{INQUIRY_FOLLOW_UP_NOTE_LIMIT}
+                            </span>
+                          </Box>
+                        }
+                        slotProps={{ htmlInput: { maxLength: INQUIRY_FOLLOW_UP_NOTE_LIMIT } }}
+                      />
+                    </ShakingTextField>
+                    <Box
+                      sx={{
+                        display: 'grid',
+                        gridTemplateColumns: { xs: '1fr', sm: 'minmax(0, 1fr) minmax(0, 1fr)' },
+                        gap: 1.5,
+                      }}
+                    >
+                      <ShakingTextField error={dateError}>
+                        <DatePicker
+                          label="Next reminder date"
+                          format={ADMISSION_DATE_FORMAT}
+                          value={formik.values.reminderDate}
+                          minDate={dayjs().add(1, 'day').startOf('day')}
+                          disabled={locked || formik.values.status === 6}
+                          onChange={(value) => formik.setFieldValue('reminderDate', value)}
+                          slotProps={{
+                            textField: {
+                              name: 'reminderDate',
+                              size: 'small',
+                              fullWidth: true,
+                              required: formik.values.status !== 6,
+                              onBlur: () => formik.setFieldTouched('reminderDate', true),
+                              error: dateError,
+                              helperText: dateError
+                                ? String(formik.errors.reminderDate)
+                                : undefined,
+                            },
+                          }}
+                        />
+                      </ShakingTextField>
+                      <CustomSelect
+                        required
+                        fullWidth
+                        size="small"
+                        label="Status"
+                        name="status"
+                        value={formik.values.status}
+                        options={INQUIRY_STATUS_OPTIONS}
+                        disabled={locked}
+                        onChange={(value) => {
+                          const status = Number(value) as InquiryFollowUpValues['status'];
+                          formik.setValues((values) => ({
+                            ...values,
+                            status,
+                            reminderDate: status === 6 ? null : values.reminderDate,
+                          }));
+                        }}
+                        onBlur={formik.handleBlur}
+                        error={Boolean(formik.touched.status && formik.errors.status)}
+                        helperText={formik.touched.status ? formik.errors.status : undefined}
+                      />
+                    </Box>
+                  </Stack>
+                </FormSectionCard>
+                {saving && (
+                  <Box
+                    role="status"
+                    aria-label="Saving Follow-Up"
+                    sx={{
+                      position: 'absolute',
+                      inset: 0,
+                      bgcolor: 'action.disabledBackground',
+                      display: 'grid',
+                      placeItems: 'center',
+                      zIndex: 1,
+                    }}
+                  >
+                    <CircularProgress size={24} />
+                  </Box>
+                )}
               </Box>
-            )}
-          </Box>
+            </Stack>
+          </DialogScrollContent>
           <DialogActions sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
             <Button
               size="small"

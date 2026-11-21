@@ -23,7 +23,7 @@ export function DocumentPreviewDialog({
       maxWidth="lg"
       hasForm={false}
       guardUnsavedChanges={false}
-      paperProps={{ sx: { height: '85dvh' } }}
+      paperProps={{ sx: { height: '85dvh', maxHeight: 'calc(100dvh - 64px)' } }}
     >
       <DialogScrollContent
         scrollBarProps={{
@@ -35,7 +35,7 @@ export function DocumentPreviewDialog({
       >
         <DocumentPreviewContent evidence={evidence} name={name} />
       </DialogScrollContent>
-      <DialogActions sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
+      <DialogActions sx={{ px: 2, py: 1, borderTop: 1, borderColor: 'divider' }}>
         <Button
           size="small"
           variant="outlined"

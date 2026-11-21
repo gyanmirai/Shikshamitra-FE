@@ -1,7 +1,9 @@
 import type { AdmissionCycle } from 'src/redux/student/admissions/admission-cycles-api';
 
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import userEvent from '@testing-library/user-event';
 import { act, render, screen, cleanup } from '@testing-library/react';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { vi, it, expect, describe, afterEach, beforeEach } from 'vitest';
 
 import { AdmissionCycleActionDialog } from './admission-cycle-action-dialog';
@@ -95,7 +97,9 @@ describe('admission cycle publish confirmation', () => {
     expect(screen.getByRole('button', { name: 'Publish' })).toHaveClass('MuiButton-colorInherit');
     expect(screen.queryByText('RTE')).not.toBeInTheDocument();
     expect(screen.queryByText(/CYCLE_INTERNAL_123/)).not.toBeInTheDocument();
-    expect(screen.getByText(/Applications are accepted only during/)).toHaveTextContent('01/10/2026–02/10/2026');
+    expect(screen.getByText(/Applications are accepted only during/)).toHaveTextContent(
+      '01/10/2026–02/10/2026'
+    );
     expect(screen.queryByText('This cycle is ready to Publish.')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Publish' })).toBeEnabled();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
@@ -347,5 +351,99 @@ describe('admission cycle close confirmation', () => {
 
     expect(screen.getByRole('button', { name: 'Close Cycle' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
+  });
+});
+
+describe('admission cycle archive and reopen confirmations', () => {
+  beforeEach(() => {
+    impactHook.trigger.mockReset();
+    impactHook.state.originalArgs = cycle.id;
+    impactHook.state.isFetching = false;
+    impactHook.state.isError = false;
+    impactHook.state.data = {
+      admissionCycleId: cycle.id,
+      linkedOfferingCount: 3,
+      activeOfferingCount: 1,
+      applicationCount: 7,
+    };
+  });
+
+  it('shows archive context and blocker without internal IDs or impact counts', () => {
+    render(
+      <AdmissionCycleActionDialog
+        action="archive"
+        cycle={cycle}
+        busy={false}
+        onClose={vi.fn()}
+        onConfirm={vi.fn()}
+      />
+    );
+
+    expect(
+      screen.getByText(
+        (_, element) =>
+          element?.tagName === 'P' && element.textContent === 'Archive the admission cycle “RTE”?'
+      )
+    ).toBeVisible();
+    expect(screen.queryByText(/CYCLE_INTERNAL_123/)).not.toBeInTheDocument();
+    expect(screen.queryByText('Offerings')).not.toBeInTheDocument();
+    expect(screen.queryByText('Active')).not.toBeInTheDocument();
+    expect(screen.queryByText('Applications')).not.toBeInTheDocument();
+    expect(
+      screen.getByText('Close or deactivate active offerings before archiving this cycle.')
+    ).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Archive' })).toBeDisabled();
+  });
+
+  it('uses a simple archive confirmation without asking staff for a reason', async () => {
+    impactHook.state.data!.activeOfferingCount = 0;
+    const onConfirm = vi.fn().mockResolvedValue(undefined);
+    render(
+      <AdmissionCycleActionDialog
+        action="archive"
+        cycle={cycle}
+        busy={false}
+        onClose={vi.fn()}
+        onConfirm={onConfirm}
+      />
+    );
+
+    expect(
+      screen.getByText(
+        (_, element) =>
+          element?.tagName === 'P' && element.textContent === 'Archive the admission cycle “RTE”?'
+      )
+    ).toBeVisible();
+    expect(screen.queryByRole('textbox', { name: 'Archive Reason' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Archive' })).toBeEnabled();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Archive' }));
+    expect(onConfirm).toHaveBeenCalledWith({
+      concurrencyStamp: cycle.concurrencyStamp,
+      reason: 'Admission cycle archived by staff confirmation.',
+      confirmActiveOfferings: false,
+    });
+  });
+
+  it('shows reopen context and inputs without internal IDs or impact counts', () => {
+    render(
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <AdmissionCycleActionDialog
+          action="reopen"
+          cycle={cycle}
+          busy={false}
+          onClose={vi.fn()}
+          onConfirm={vi.fn()}
+        />
+      </LocalizationProvider>
+    );
+
+    expect(screen.getByText('RTE')).toBeVisible();
+    expect(screen.queryByText(/CYCLE_INTERNAL_123/)).not.toBeInTheDocument();
+    expect(screen.queryByText('Offerings')).not.toBeInTheDocument();
+    expect(screen.queryByText('Active')).not.toBeInTheDocument();
+    expect(screen.queryByText('Applications')).not.toBeInTheDocument();
+    expect(screen.getByText('New Applications Close Date', { selector: 'label' })).toBeVisible();
+    expect(screen.getByRole('textbox', { name: 'Reopen Cycle Reason' })).toBeVisible();
   });
 });

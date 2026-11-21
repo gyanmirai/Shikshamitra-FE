@@ -68,6 +68,9 @@ beforeEach(() => {
   profileNavigation.query = '';
   profileNavigation.push.mockClear();
   mswServer.use(
+    http.get('*/api/students/records/:studentId/photo', () =>
+      new HttpResponse(null, { status: 404 })
+    ),
     http.get(profileDetailsPath, ({ params }) =>
       HttpResponse.json({
         data: {
@@ -83,8 +86,15 @@ beforeEach(() => {
   );
 });
 
-// Decorative icons are outside this data-contract regression; keep the real controls and table.
-vi.mock('src/components/iconify', () => ({ Iconify: () => <span aria-hidden="true" /> }));
+vi.mock('src/components/iconify', async () => {
+  const { isValidElement } = await import('react');
+  return {
+    Iconify: ({ icon }: { icon: unknown }) => {
+      if (isValidElement(icon)) throw new TypeError('Iconify requires an icon name or data.');
+      return <span aria-hidden="true" />;
+    },
+  };
+});
 vi.mock('@mui/icons-material', () => {
   const Icon = () => <svg aria-hidden="true" />;
   return Object.fromEntries(

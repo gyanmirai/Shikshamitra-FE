@@ -1,7 +1,11 @@
+import type { RootState } from 'src/redux/store';
 import type { LibraryDashboardOverview } from 'src/redux/library/library-adapters';
 
 import React from 'react';
+import { useSelector } from 'react-redux';
 import { Box, Grid } from '@mui/material';
+import { hasGrantedPermission } from 'src/utils/permissions';
+import { libraryPermissions } from 'src/constants/library-menus';
 
 import AdminAlerts from './admin-alerts';
 import AdminKPICards from './admin-kpi-cards';
@@ -19,47 +23,51 @@ interface AdminDashboardProps {
   overview?: LibraryDashboardOverview;
 }
 
-const AdminDashboard = ({ overview }: AdminDashboardProps) => (
-  <Box>
-    <Grid container spacing={1}>
-      {/* Section 1: KPI Cards */}
-      <Grid size={{ xs: 12 }}>
-        <AdminKPICards overview={overview} />
-      </Grid>
+const AdminDashboard = ({ overview }: AdminDashboardProps) => {
+  const { permissions } = useSelector((state: RootState) => state.auth);
+  const canViewCharges = hasGrantedPermission(permissions, libraryPermissions.charges);
+  return (
+    <Box>
+      <Grid container spacing={1}>
+        {/* Section 1: KPI Cards */}
+        <Grid size={{ xs: 12 }}>
+          <AdminKPICards overview={overview} canViewCharges={canViewCharges} />
+        </Grid>
 
-      {/* Section 3 & 8: Circulation & Quick Actions */}
-      <Grid size={{ xs: 12, md: 8 }}>
-        <WeeklyCirculationChart overview={overview} />
-      </Grid>
-      <Grid size={{ xs: 12, md: 4 }}>
-        <AdminQuickActions />
-      </Grid>
+        {/* Section 3 & 8: Circulation & Quick Actions */}
+        <Grid size={{ xs: 12, md: 8 }}>
+          <WeeklyCirculationChart overview={overview} />
+        </Grid>
+        <Grid size={{ xs: 12, md: 4 }}>
+          <AdminQuickActions />
+        </Grid>
 
-      {/* Section 2 & 4: Alerts & Inventory Intelligence */}
-      <Grid size={{ xs: 12, md: 4 }}>
-        <AdminAlerts overview={overview} />
-      </Grid>
-      <Grid size={{ xs: 12, md: 8 }}>
-        <InventoryIntelligence overview={overview} />
-      </Grid>
+        {/* Section 2 & 4: Alerts & Inventory Intelligence */}
+        <Grid size={{ xs: 12, md: 4 }}>
+          <AdminAlerts overview={overview} />
+        </Grid>
+        <Grid size={{ xs: 12, md: 8 }}>
+          <InventoryIntelligence overview={overview} />
+        </Grid>
 
-      {/* Section 7 & 4/Health: Financials, Category Distribution & Health Score */}
-      <Grid size={{ xs: 12, md: 7 }}>
-        <AdminFinancials overview={overview} />
-      </Grid>
-      <Grid size={{ xs: 12, sm: 6, md: 5 }}>
-        <CategoryDistributionChart overview={overview} />
-      </Grid>
+        {/* Section 7 & 4/Health: Financials, Category Distribution & Health Score */}
+        <Grid size={{ xs: 12, md: 7 }}>
+          <AdminFinancials overview={overview} />
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6, md: 5 }}>
+          <CategoryDistributionChart overview={overview} />
+        </Grid>
 
-      {/* Section 5 & 6: Member Activity & Shelf Health */}
-      <Grid size={{ xs: 12, md: 6 }} sx={{ mb: 1 }}>
-        <MemberActivityChart overview={overview} />
+        {/* Section 5 & 6: Member Activity & Shelf Health */}
+        <Grid size={{ xs: 12, md: 6 }} sx={{ mb: 1 }}>
+          <MemberActivityChart overview={overview} />
+        </Grid>
+        <Grid size={{ xs: 12, md: 6 }} sx={{ mb: 1 }}>
+          <SectionBooksChart overview={overview} />
+        </Grid>
       </Grid>
-      <Grid size={{ xs: 12, md: 6 }} sx={{ mb: 1 }}>
-        <SectionBooksChart overview={overview} />
-      </Grid>
-    </Grid>
-  </Box>
-);
+    </Box>
+  );
+};
 
 export default AdminDashboard;

@@ -25,6 +25,7 @@ type Props = {
   onIdentityChoice: (value: string) => void;
   onRetry: () => void;
   onRepairIdentity?: () => void;
+  compact?: boolean;
 };
 
 export function ApplicationFinalizationReadiness({
@@ -36,6 +37,7 @@ export function ApplicationFinalizationReadiness({
   onIdentityChoice,
   onRetry,
   onRepairIdentity,
+  compact = false,
 }: Props) {
   return (
     <>
@@ -87,91 +89,95 @@ export function ApplicationFinalizationReadiness({
       )}
       {!loading && !hasError && Boolean(preview?.items.length) && (
         <Stack spacing={1}>
-          <Typography variant="subtitle1" component="h3">
-            Finalization Checks
-          </Typography>
-          <Divider />
+          {!compact && (
+            <Typography variant="subtitle1" component="h3">
+              Finalization Checks
+            </Typography>
+          )}
+          {!compact && <Divider />}
           <Box component="ul" sx={{ m: 0, p: 0, listStyle: 'none', display: 'grid', gap: 1 }}>
-            {preview?.items.map((item) => (
-              <Box
-                component="li"
-                key={item.key}
-                sx={(theme) => ({
-                  p: 1,
-                  border: 1,
-                  borderColor: item.passed
-                    ? 'divider'
-                    : item.key === 'duplicate_resolution'
-                      ? 'warning.main'
-                      : 'error.main',
-                  borderRadius: 1,
-                  bgcolor: item.passed
-                    ? 'transparent'
-                    : alpha(
-                        theme.palette[item.key === 'duplicate_resolution' ? 'warning' : 'error']
-                          .main,
-                        0.08
-                      ),
-                })}
-              >
-                <Stack
-                  direction="row"
-                  alignItems="center"
-                  justifyContent="space-between"
-                  spacing={1}
+            {preview?.items
+              .filter((item) => !compact || !item.passed)
+              .map((item) => (
+                <Box
+                  component="li"
+                  key={item.key}
+                  sx={(theme) => ({
+                    p: 1,
+                    border: 1,
+                    borderColor: item.passed
+                      ? 'divider'
+                      : item.key === 'duplicate_resolution'
+                        ? 'warning.main'
+                        : 'error.main',
+                    borderRadius: 1,
+                    bgcolor: item.passed
+                      ? 'transparent'
+                      : alpha(
+                          theme.palette[item.key === 'duplicate_resolution' ? 'warning' : 'error']
+                            .main,
+                          0.08
+                        ),
+                  })}
                 >
-                  <Iconify
-                    icon={item.passed ? 'mdi:check-circle' : 'mdi:alert-circle-outline'}
-                    width={22}
-                    sx={{
-                      flexShrink: 0,
-                      color: item.passed
-                        ? 'success.main'
-                        : item.key === 'duplicate_resolution'
-                          ? 'warning.main'
-                          : 'error.main',
-                    }}
-                  />
-                  <Typography variant="body2" sx={{ fontWeight: 600, minWidth: 0, flex: 1 }}>
-                    {item.key === 'identity' && !item.passed ? 'Core Identity' : item.label}
-                  </Typography>
-                  <Label
-                    color={
-                      item.passed
-                        ? 'success'
-                        : item.key === 'duplicate_resolution'
-                          ? 'warning'
-                          : 'error'
-                    }
-                    sx={{ flexShrink: 0 }}
+                  <Stack
+                    direction="row"
+                    alignItems="center"
+                    justifyContent="space-between"
+                    spacing={1}
                   >
-                    {item.passed ? 'Ready' : 'Needs Attention'}
-                  </Label>
-                </Stack>
-                {(!item.passed || item.detail !== 'Ready') && (
-                  <Typography
-                    variant="caption"
-                    color={item.passed ? 'text.secondary' : 'text.primary'}
-                    sx={{ mt: 0.5, ml: 3.75, display: 'block', overflowWrap: 'anywhere' }}
-                  >
-                    {item.detail}
-                  </Typography>
-                )}
-                {!item.passed && item.key === 'identity' && onRepairIdentity && (
-                  <Button
-                    size="small"
-                    disabled={disabled}
-                    onClick={onRepairIdentity}
-                    startIcon={<Iconify icon="mdi:account-edit-outline" />}
-                    variant="outlined"
-                    color="inherit"
-                    sx={{ mt: 0.5, ml: 3.75 }}
-                  >
-                    Repair Applicant Identity
-                  </Button>
-                )}
-              </Box>
-            ))}
+                    <Iconify
+                      icon={item.passed ? 'mdi:check-circle' : 'mdi:alert-circle-outline'}
+                      width={22}
+                      sx={{
+                        flexShrink: 0,
+                        color: item.passed
+                          ? 'success.main'
+                          : item.key === 'duplicate_resolution'
+                            ? 'warning.main'
+                            : 'error.main',
+                      }}
+                    />
+                    <Typography variant="body2" sx={{ fontWeight: 600, minWidth: 0, flex: 1 }}>
+                      {item.key === 'identity' && !item.passed ? 'Core Identity' : item.label}
+                    </Typography>
+                    <Label
+                      color={
+                        item.passed
+                          ? 'success'
+                          : item.key === 'duplicate_resolution'
+                            ? 'warning'
+                            : 'error'
+                      }
+                      sx={{ flexShrink: 0 }}
+                    >
+                      {item.passed ? 'Ready' : 'Needs Attention'}
+                    </Label>
+                  </Stack>
+                  {(!item.passed || item.detail !== 'Ready') && (
+                    <Typography
+                      variant="caption"
+                      color={item.passed ? 'text.secondary' : 'text.primary'}
+                      sx={{ mt: 0.5, ml: 3.75, display: 'block', overflowWrap: 'anywhere' }}
+                    >
+                      {item.detail}
+                    </Typography>
+                  )}
+                  {!item.passed && item.key === 'identity' && onRepairIdentity && (
+                    <Button
+                      size="small"
+                      disabled={disabled}
+                      onClick={onRepairIdentity}
+                      startIcon={<Iconify icon="mdi:account-edit-outline" />}
+                      variant="outlined"
+                      color="inherit"
+                      sx={{ mt: 0.5, ml: 3.75 }}
+                    >
+                      Repair Applicant Identity
+                    </Button>
+                  )}
+                </Box>
+              ))}
           </Box>
         </Stack>
       )}

@@ -87,6 +87,20 @@ afterEach(() => {
   clearCachedAuthSession();
 });
 
+it('shows the proposed school register number and its verification reference in the audit', () => {
+  const change = pendingChange({
+    section: 'gr-number',
+    before: { grNumber: null, autoGrNumber: 'GR-1000' },
+    proposed: { mode: 'manual', grNumber: '00071', registerReference: 'Volume 2, page 7' },
+  });
+  expect(profileChangeDiff(change, [])).toEqual([
+    { label: 'GR number', before: '—', after: '00071' },
+    { label: 'Assignment method', before: '—', after: 'Manual from school register' },
+    { label: 'Register reference', before: '—', after: 'Volume 2, page 7' },
+  ]);
+  expect(profileChangeDiff({ ...change, payloadMasked: true }, [])).toEqual([]);
+});
+
 describe('captured form audit option labels', () => {
   it.each(['custom-details', 'registration-form'] as const)(
     'resolves %s references through the bound Records selected-only endpoint',

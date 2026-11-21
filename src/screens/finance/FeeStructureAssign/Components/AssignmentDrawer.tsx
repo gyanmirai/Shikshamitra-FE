@@ -32,6 +32,12 @@ export default function AssignmentDrawer({
   const [busy, setBusy] = useState(false);
   const [confirmClose, setConfirmClose] = useState(false);
   const selectionKey = `${academicYearId}-${students.map((student) => student.studentId).join(',')}-${editAssignedPolicies}`;
+  const [savedViewKey, setSavedViewKey] = useState<string>();
+  const showingSavedView = savedViewKey === selectionKey;
+  const closeDrawer = () => {
+    setSavedViewKey(undefined);
+    onClose();
+  };
   const [editMode, setEditMode] = useState<{ key: string; editing: boolean }>();
   const structureEditing =
     editMode?.key === selectionKey
@@ -68,7 +74,7 @@ export default function AssignmentDrawer({
     students.length === 1 && (students[0].isFeeStructureAssigned || status === 'Assigned');
   const prepared = students.length === 1 && status === 'Prepared';
   const taskTitle = viewing
-    ? editAssignedPolicies
+    ? editAssignedPolicies && !showingSavedView
       ? 'Edit Fee Assignment'
       : 'View Fee Assignment'
     : prepared
@@ -87,7 +93,7 @@ export default function AssignmentDrawer({
   const requestClose = () => {
     if (busy) return;
     if (isChanges) setConfirmClose(true);
-    else onClose();
+    else closeDrawer();
   };
 
   return (
@@ -103,7 +109,7 @@ export default function AssignmentDrawer({
             'aria-modal': true,
             sx: {
               width:
-                viewing && !structureEditing
+                viewing && (!structureEditing || showingSavedView)
                   ? { xs: '100%', sm: 'min(760px, 92vw)' }
                   : { xs: '100%', md: students.length > 1 ? 1200 : 960 },
               maxWidth: '100%',
@@ -140,8 +146,9 @@ export default function AssignmentDrawer({
               academicYearId={academicYearId}
               academicYearName={academicYearName}
               editAssignedPolicies={editAssignedPolicies}
+              onViewSavedAssignment={() => setSavedViewKey(selectionKey)}
               onClose={requestClose}
-              onCompleted={onClose}
+              onCompleted={closeDrawer}
               onBusyChange={setBusy}
               onContextResolved={resolveContext}
               onStructureEditResolved={resolveEditMode}
@@ -173,7 +180,7 @@ export default function AssignmentDrawer({
             startIcon={<Iconify icon="mdi:close" />}
             onClick={() => {
               setConfirmClose(false);
-              onClose();
+              closeDrawer();
             }}
           >
             Discard changes

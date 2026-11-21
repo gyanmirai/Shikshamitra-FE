@@ -207,7 +207,7 @@ export function CalendarPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext })
             />
           </DrawerField>
           <DrawerField
-            label="Effective To (optional)"
+            label="Effective To"
             help="Optional end date. Leave blank when this calendar should remain available until replaced."
           >
             <DatePicker

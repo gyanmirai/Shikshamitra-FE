@@ -209,14 +209,8 @@ const CounterModeLayout = ({
               animate={{ scale: 1, opacity: 1 }}
               sx={{ textAlign: 'center' }}
             >
-              <Typography
-                variant="caption"
-                color="text.disabled"
-                fontWeight={700}
-                textTransform="uppercase"
-                letterSpacing="0.1em"
-              >
-                Amount to Collect
+              <Typography variant="caption" color="text.secondary">
+                Amount to collect
               </Typography>
               <Typography
                 variant="h2"

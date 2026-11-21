@@ -1,10 +1,15 @@
 import { it, vi, expect } from 'vitest';
-import { waitFor, fireEvent, renderHook } from '@testing-library/react';
-import { useGetRefundPoliciesQuery } from 'src/redux/finance/refundPolicy';
-import { useGetCollectionPoliciesQuery } from 'src/redux/finance/collectionPolicy';
+import { waitFor, renderHook } from '@testing-library/react';
+import {
+  useGetRefundPolicyByIdQuery,
+  useGetRefundPolicyVersionsQuery,
+} from 'src/redux/finance/refundPolicy';
 import { useGetActiveFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
-import { useGetStructureContextQuery } from 'src/redux/finance/feeStructureWorkspace';
-import { useGetPaymentTermsQuery, useGetPaymentTermByIdQuery } from 'src/redux/finance/paymentTerm';
+import {
+  useGetStructureContextQuery,
+  useGetStructureCatalogueQuery,
+  useGetStructureTermScheduleQuery,
+} from 'src/redux/finance/feeStructureWorkspace';
 
 import { defaultPolicy } from '../feeStructureModel';
 import useFeeStructureLookups, { useCatalog } from './useFeeStructureLookups';
@@ -13,12 +18,21 @@ vi.mock('src/redux/customQueryAndMutation', () => ({
   default: ({ currentQueryAndMutation, params, options }: any) =>
     currentQueryAndMutation(params, options),
 }));
-vi.mock('src/redux/finance/refundPolicy', () => ({ useGetRefundPoliciesQuery: vi.fn() }));
+vi.mock('src/redux/finance/refundPolicy', () => ({
+  useGetRefundPoliciesQuery: vi.fn(),
+  useGetRefundPolicyByIdQuery: vi.fn(() => ({})),
+  useGetRefundPolicyVersionsQuery: vi.fn(() => ({})),
+}));
 vi.mock('src/redux/finance/concessionPolicy', () => ({ useGetConcessionPoliciesQuery: vi.fn() }));
-vi.mock('src/redux/finance/collectionPolicy', () => ({ useGetCollectionPoliciesQuery: vi.fn() }));
+vi.mock('src/redux/finance/collectionPolicy', () => ({
+  useGetCollectionPoliciesQuery: vi.fn(),
+  useGetCollectionPolicyByIdQuery: vi.fn(() => ({})),
+}));
 vi.mock('src/redux/feeHeadManage/feeHeadManageApi', () => ({ useGetActiveFeeHeadsQuery: vi.fn() }));
 vi.mock('src/redux/finance/feeStructureWorkspace', () => ({
   useGetStructureContextQuery: vi.fn(),
+  useGetStructureCatalogueQuery: vi.fn(),
+  useGetStructureTermScheduleQuery: vi.fn(),
 }));
 vi.mock('src/redux/finance/paymentTerm', () => ({
   useGetPaymentTermsQuery: vi.fn(),
@@ -85,152 +99,117 @@ it('keeps loaded options available after a failed refresh but does not initializ
   expect(result.current.items).toEqual(data.items);
 });
 
-it('loads both policy defaults for a new structure before opening its Policies tab', async () => {
-  const context = {
-    academicYearId: 'year',
-    boardId: 'board',
-    permissions: {
-      collectionRead: true,
-      refundRead: true,
-      termsRead: true,
-      headsRead: true,
-    },
-  };
-  vi.mocked(useGetStructureContextQuery).mockReturnValue({ currentData: context } as any);
-  vi.mocked(useGetActiveFeeHeadsQuery).mockReturnValue({ currentData: [] } as any);
-  vi.mocked(useGetPaymentTermByIdQuery).mockReturnValue({} as any);
-  const terms = { items: [], totalCount: 0 };
-  vi.mocked(useGetPaymentTermsQuery).mockReturnValue({
-    currentData: terms,
-    isFetching: false,
-  } as any);
-  const queries = {
-    collection: useGetCollectionPoliciesQuery,
-    refund: useGetRefundPoliciesQuery,
-  };
-  Object.entries(queries).forEach(([family, query]) => {
-    const data = {
-      totalCount: 2,
-      items: [false, true].map((isDefault) => ({
-        id: `${family}-${isDefault ? 'default' : 'alternate'}`,
-        policyName: `${family} policy`,
-        currentVersionId: `${family}-version`,
-        currentVersionNumber: 1,
-        isAttachable: true,
-        isDefault,
-      })),
-    };
-    vi.mocked(query).mockReturnValue({ currentData: data, isFetching: false } as any);
-  });
-  const { result } = renderHook(() =>
-    useFeeStructureLookups({ feeStructureMetadataId: 'metadata', standardId: 'class' }, true)
-  );
-  await waitFor(() => expect(result.current.catalogs.refund.ready).toBe(true));
-  (['collection', 'refund'] as const).forEach((family) => {
-    expect(defaultPolicy(result.current.settings!, family)).toMatchObject({
-      id: `${family}-default`,
-      versionId: `${family}-version`,
-      isDefault: true,
-    });
-    expect(queries[family]).toHaveBeenCalledWith(
-      expect.objectContaining({ academicYearId: 'year', status: 'Active' }),
-      expect.objectContaining({ skip: false })
-    );
-  });
-});
-
-it('suspends inactive editors financial lookups and refreshes while retaining action permissions', async () => {
-  const refreshContext = vi.fn();
-  const context = {
-    academicYearId: 'year',
-    boardId: 'board',
-    permissions: {
-      headsRead: true,
-      termsRead: true,
-      collectionRead: true,
-      refundRead: true,
-      delete: true,
-    },
-  };
-  const empty = { items: [], totalCount: 0 };
+const scope = { feeStructureMetadataId: 'metadata', standardId: 'class' };
+function mockLookups() {
+  const permissions = { collectionRead: true, refundRead: true, termsRead: true, headsRead: true };
   vi.mocked(useGetStructureContextQuery).mockReturnValue({
-    currentData: context,
-    refetch: refreshContext,
+    currentData: { academicYearId: 'year', boardId: 'board', permissions },
   } as any);
-  const headData = [{ id: 'head', name: 'Tuition' }];
-  const refetchHeads = vi.fn();
-  vi.mocked(useGetActiveFeeHeadsQuery).mockImplementation(
-    (_params, options) =>
-      ({
-        // Match RTK's currentData semantics when a query is skipped.
-        currentData: options?.skip ? undefined : headData,
-        refetch: refetchHeads,
-      }) as any
+  vi.mocked(useGetActiveFeeHeadsQuery).mockReturnValue({ currentData: [] } as any);
+  vi.mocked(useGetStructureTermScheduleQuery).mockReturnValue({} as any);
+  const policies = ['collection', 'refund'].flatMap((family) =>
+    Array.from({ length: 101 }, (_, index) => ({
+      family,
+      id: `${family}${index}`,
+      name: `${family}${index}`,
+      versionId: `${family}-version`,
+      versionNumber: 1,
+      isCurrent: true,
+      isDefault: index === 100,
+    }))
   );
-  vi.mocked(useGetPaymentTermByIdQuery).mockReturnValue({} as any);
-  [useGetPaymentTermsQuery, useGetCollectionPoliciesQuery, useGetRefundPoliciesQuery].forEach(
-    (query) => {
-      vi.mocked(query).mockReturnValue({
-        currentData: empty,
-        isFetching: false,
-        refetch: vi.fn(),
-      } as any);
-    }
-  );
-  const { result, rerender } = renderHook(
-    ({ active }) =>
-      useFeeStructureLookups(
-        { feeStructureMetadataId: 'metadata', standardId: 'class' },
-        true,
-        { feeHeadId: 'head', paymentTermId: 'term', paymentTermVersionId: 'version' } as any,
-        false,
-        active
-      ),
-    { initialProps: { active: false } }
-  );
-  expect(result.current.settings?.permissions.delete).toBe(true);
-  [
-    useGetPaymentTermByIdQuery,
-    useGetPaymentTermsQuery,
-    useGetCollectionPoliciesQuery,
-    useGetRefundPoliciesQuery,
-  ].forEach((query) => {
-    expect(query).toHaveBeenLastCalledWith(
-      expect.anything(),
-      expect.objectContaining({ skip: true })
-    );
-  });
-  expect(useGetActiveFeeHeadsQuery).toHaveBeenLastCalledWith(
-    'year',
+  vi.mocked(useGetStructureCatalogueQuery).mockReturnValue({
+    currentData: { policies, terms: [] },
+    isFetching: false,
+    isError: false,
+  } as any);
+}
+it('uses one complete lightweight catalogue including defaults after the hundredth choice', () => {
+  mockLookups();
+  const { result } = renderHook(() => useFeeStructureLookups(scope, true));
+  expect(result.current.catalogs.refund.ready).toBe(true);
+  expect(result.current.settings?.policies).toHaveLength(202);
+  expect(defaultPolicy(result.current.settings!, 'collection')?.id).toBe('collection100');
+  expect(defaultPolicy(result.current.settings!, 'refund')?.id).toBe('refund100');
+  expect(useGetStructureCatalogueQuery).toHaveBeenLastCalledWith(
+    { ...scope, academicYearId: 'year' },
     expect.objectContaining({ skip: false })
   );
-  fireEvent.blur(window);
-  fireEvent.focus(window);
-  expect(refreshContext).not.toHaveBeenCalled();
-  rerender({ active: true });
-  await waitFor(() => expect(result.current.terms.ready).toBe(true));
-  expect(useGetActiveFeeHeadsQuery).toHaveBeenLastCalledWith(
-    'year',
+});
+it('fetches only the requested pinned schedule when its dialog is active', () => {
+  mockLookups();
+  const line = {
+    paymentTermId: 'term',
+    paymentTermVersionId: 'historical-version',
+    paymentTermName: 'Saved term',
+  } as any;
+  vi.mocked(useGetStructureTermScheduleQuery).mockReturnValue({
+    currentData: { id: 'term', name: 'Renamed', versionId: 'historical-version', installments: [] },
+  } as any);
+  const { result } = renderHook(() => useFeeStructureLookups(scope, true, line, true));
+  expect(useGetStructureTermScheduleQuery).toHaveBeenLastCalledWith(
+    { ...scope, paymentTermId: 'term', versionId: 'historical-version' },
     expect.objectContaining({ skip: false })
   );
-  fireEvent.blur(window);
-  fireEvent.focus(window);
-  expect(refreshContext).toHaveBeenCalledOnce();
-  const activeSettings = result.current.settings;
-  rerender({ active: false });
-  expect(result.current.settings).toBe(activeSettings);
-  [useGetPaymentTermsQuery, useGetCollectionPoliciesQuery, useGetRefundPoliciesQuery].forEach(
-    (query) => {
-      expect(query).toHaveBeenLastCalledWith(
-        expect.anything(),
-        expect.objectContaining({ skip: false })
-      );
-    }
+  expect(result.current.scheduleTerm?.name).toBe('Saved term');
+});
+it('keeps failed catalogue options but blocks publication readiness until retry succeeds', () => {
+  mockLookups();
+  const { result, rerender } = renderHook(() => useFeeStructureLookups(scope, true));
+  const policies = result.current.settings!.policies;
+  vi.mocked(useGetStructureCatalogueQuery).mockReturnValue({
+    currentData: { policies, terms: [] },
+    isError: true,
+  } as any);
+  rerender();
+  expect(result.current.catalogs.collection.ready).toBe(false);
+  expect(result.current.catalogs.collection.error).toBe(true);
+  expect(result.current.settings?.policies).toHaveLength(202);
+});
+it('skips unactivated catalogue and schedule requests while retaining context actions', () => {
+  mockLookups();
+  const { result } = renderHook(() => useFeeStructureLookups(scope, true, undefined, false, false));
+  expect(useGetStructureCatalogueQuery).toHaveBeenLastCalledWith(
+    { ...scope, academicYearId: 'year' },
+    expect.objectContaining({ skip: true })
   );
-  expect(useGetPaymentTermByIdQuery).toHaveBeenLastCalledWith(
+  expect(useGetStructureTermScheduleQuery).toHaveBeenLastCalledWith(
     expect.anything(),
     expect.objectContaining({ skip: true })
   );
-  rerender({ active: true });
-  expect(result.current.settings).toBe(activeSettings);
+  expect(result.current.settings?.permissions.termsRead).toBe(true);
+});
+
+it('loads the retained refund scope from the attached version after the policy changes', () => {
+  mockLookups();
+  vi.mocked(useGetRefundPolicyByIdQuery).mockReturnValue({
+    currentData: { id: 'refund', currentVersionId: 'v2', feeHeadScope: 'AllFeeHeads' },
+  } as any);
+  vi.mocked(useGetRefundPolicyVersionsQuery).mockReturnValue({
+    currentData: {
+      items: [
+        {
+          id: 'v1',
+          policyId: 'refund',
+          snapshotJson: JSON.stringify({ FeeHeadScope: 1, ApplicableFeeHeadIds: ['tuition'] }),
+        },
+      ],
+    },
+  } as any);
+  const { result } = renderHook(() =>
+    useFeeStructureLookups(scope, true, undefined, false, true, {
+      refund: 'refund',
+      refundVersion: 'v1',
+    })
+  );
+  expect(useGetRefundPolicyVersionsQuery).toHaveBeenLastCalledWith(
+    { id: 'refund', versionId: 'v1', maxResultCount: 1 },
+    expect.objectContaining({ skip: false })
+  );
+  expect(result.current.catalogs.refund.items).toContainEqual({
+    id: 'refund',
+    currentVersionId: 'v1',
+    feeHeadScope: 'SelectedFeeHeads',
+    applicableFeeHeadIds: ['tuition'],
+  });
 });

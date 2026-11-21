@@ -190,7 +190,7 @@ export default function RefundDeductionSection({ formik }: RefundDeductionSectio
               display="block"
               sx={{ mb: 1 }}
             >
-              ALLOWED DISBURSEMENT METHODS *
+              Allowed disbursement methods *
             </Typography>
             <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
               {PAYOUT_METHODS.map((method) => {

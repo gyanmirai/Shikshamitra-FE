@@ -58,7 +58,8 @@ describe('applicant document checklist interactions', { timeout: 15000 }, () => 
         expect(onComplete).toHaveBeenCalledOnce();
       } else {
         expect(button).toBeDisabled();
-        expect(screen.getByText(blocker)).toBeVisible();
+        await userEvent.hover(screen.getByRole('button', { name: 'Document verification help' }));
+        expect(await screen.findByText(blocker)).toBeVisible();
         expect(onComplete).not.toHaveBeenCalled();
       }
       await waitFor(() =>

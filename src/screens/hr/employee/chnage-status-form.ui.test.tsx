@@ -281,6 +281,25 @@ describe('ChangeStatusForm manager deactivation warning', () => {
     });
   });
 
+  it('shows outstanding Library copies as advisory evidence for a staff departure', () => {
+    const statusCheck = {
+      canDeactivate: true,
+      activeDirectReportCount: 0,
+      libraryClearanceStatus: 'Pending',
+      libraryOutstandingLoanCount: 2,
+    };
+    mocks.getEmployeeStatusDeactivationCheck.mockReturnValue({
+      data: statusCheck,
+      currentData: statusCheck,
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+    });
+    renderForm(EmployeeStatusType.Left);
+    expect(screen.getByText('2 outstanding Library loans are recorded.')).toBeVisible();
+    expect(screen.getByTestId('hr-employee-status-update-button')).toBeEnabled();
+  });
+
   it('does not show the warning when a non-active manager has no active staff', () => {
     mocks.getEmployeeStatusDeactivationCheck.mockReturnValue({
       data: { canDeactivate: true, activeDirectReportCount: 0 },

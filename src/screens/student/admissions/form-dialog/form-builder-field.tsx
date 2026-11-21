@@ -16,11 +16,18 @@ import Typography from '@mui/material/Typography';
 import CustomTooltip from 'src/components/custom-tooltip';
 
 import { FIELD_TYPES } from './form-dialog-model';
+import { parseFieldConfiguration } from './form-field-presets';
 import { FormBuilderUnitActions } from './components/form-builder-unit-actions';
 import { isLockedInquiryField, INQUIRY_FIELD_LOCK_HELP } from './inquiry-default-fields';
 
-function fieldPrompt(fieldType: number, label: string, placeholder?: string | null) {
+function fieldPrompt(
+  fieldType: number,
+  label: string,
+  placeholder?: string | null,
+  locationSelector = false
+) {
   if (placeholder) return placeholder;
+  if (locationSelector) return `Select ${label.toLowerCase()}`;
   if (fieldType === 5) return 'DD / MM / YYYY';
   if ([6, 7].includes(fieldType)) return `Select ${label.toLowerCase()}`;
   if (fieldType === 8) return 'Choose one option';
@@ -51,6 +58,9 @@ export function FormBuilderField({
   reorderEnabled = true,
 }: Props) {
   const field = formik.values.sections[sectionIndex].fields[fieldIndex];
+  const locationSelector = ['country', 'state', 'city'].includes(
+    parseFieldConfiguration(field.validationJson).format ?? ''
+  );
   const locked = isLockedInquiryField(
     formik.values.purpose,
     field,
@@ -127,7 +137,7 @@ export function FormBuilderField({
             flex: 1,
             minWidth: 0,
             width: { lg: compactFourColumnCard ? 1 : 'auto' },
-            minHeight: 72,
+            minHeight: 64,
             textAlign: 'left',
             display: 'block',
             borderRadius: 1,
@@ -170,18 +180,20 @@ export function FormBuilderField({
               }}
             >
               <Typography variant="body2" color="inherit" noWrap>
-                {fieldPrompt(field.fieldType, name, field.placeholder)}
+                {fieldPrompt(field.fieldType, name, field.placeholder, locationSelector)}
               </Typography>
-              {[5, 6, 7, 8, 9].includes(field.fieldType) && (
+              {(locationSelector || [5, 6, 7, 8, 9].includes(field.fieldType)) && (
                 <Iconify
                   icon={
-                    field.fieldType === 5
-                      ? 'mdi:calendar-month-outline'
-                      : field.fieldType === 8
-                        ? 'mdi:radiobox-blank'
-                        : field.fieldType === 9
-                          ? 'mdi:checkbox-blank-outline'
-                          : 'mdi:chevron-down'
+                    locationSelector
+                      ? 'mdi:chevron-down'
+                      : field.fieldType === 5
+                        ? 'mdi:calendar-month-outline'
+                        : field.fieldType === 8
+                          ? 'mdi:radiobox-blank'
+                          : field.fieldType === 9
+                            ? 'mdi:checkbox-blank-outline'
+                            : 'mdi:chevron-down'
                   }
                   width={18}
                 />
@@ -234,6 +246,9 @@ export function FormBuilderField({
 }
 
 export function FormBuilderFieldDragPreview({ field }: { field: AdmissionFormField }) {
+  const locationSelector = ['country', 'state', 'city'].includes(
+    parseFieldConfiguration(field.validationJson).format ?? ''
+  );
   return (
     <Paper
       data-testid="admission-field-drag-overlay"
@@ -260,7 +275,12 @@ export function FormBuilderFieldDragPreview({ field }: { field: AdmissionFormFie
           {field.required ? ' *' : ''}
         </Typography>
         <Typography variant="body2" color="text.secondary" noWrap>
-          {fieldPrompt(field.fieldType, field.label || 'Field', field.placeholder)}
+          {fieldPrompt(
+            field.fieldType,
+            field.label || 'Field',
+            field.placeholder,
+            locationSelector
+          )}
         </Typography>
       </Box>
     </Paper>

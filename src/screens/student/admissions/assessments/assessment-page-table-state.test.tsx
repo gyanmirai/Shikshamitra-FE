@@ -310,7 +310,7 @@ it('retains safe rows after a roster refresh fails', () => {
   expect(screen.getByText('Safe applicant')).toBeInTheDocument();
 });
 
-it('puts Student first and allows booked selections to open booking guidance', () => {
+it('puts Student first and excludes already-booked selections from bulk booking', () => {
   mocks.book = true;
   const row = {
     applicationId: 'app',
@@ -329,9 +329,84 @@ it('puts Student first and allows booked selections to open booking guidance', (
   renderPage();
   expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual(['Student', 'Session']);
   act(() => mocks.select!([row], true));
-  expect(screen.getByRole('button', { name: 'Book Session (1)' })).toBeEnabled();
-  fireEvent.click(screen.getByRole('button', { name: 'Book Session (1)' }));
-  expect(screen.getByTestId('student-booking')).toHaveTextContent('Booked student');
+  expect(screen.getByRole('button', { name: 'Book Session (0)' })).toBeDisabled();
+  fireEvent.click(screen.getByRole('button', { name: 'Book Session (0)' }));
+  expect(screen.queryByTestId('student-booking')).not.toBeInTheDocument();
+});
+
+it('keeps non-session assessments selected but disables booking with an accessible explanation', async () => {
+  mocks.book = true;
+  const rows = ['Kavya', 'Rhea'].map((applicantName, index) => ({
+    applicationId: `app-${index}`,
+    stageInstanceId: `stage-${index}`,
+    applicantName,
+    isActive: true,
+    admissionOfferingId: 'offering',
+    workflowStageDefinitionId: 'definition',
+    assessment: {
+      ...assessmentResponse,
+      policy: { ...assessmentResponse.policy!, schedulingEnabled: false },
+    },
+  }));
+  mocks.workbench.applicants.currentData = { items: rows, totalCount: rows.length };
+  renderPage();
+  act(() => mocks.select!(rows, true));
+  expect(screen.getByText('2 Selected')).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Book Session (0)' })).toBeDisabled();
+  const explanation = screen.getByLabelText('Why Session Booking Is Unavailable');
+  expect(explanation).toHaveAttribute('tabindex', '0');
+  fireEvent.mouseOver(explanation);
+  expect(await screen.findByRole('tooltip')).toHaveTextContent(
+    'This assessment does not require a session.'
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Book Session (0)' }));
+  expect(screen.queryByTestId('student-booking')).not.toBeInTheDocument();
+});
+
+it('counts and opens only eligible students from a mixed selection without changing table selection', () => {
+  mocks.book = true;
+  const eligible = {
+    applicationId: 'eligible-app',
+    stageInstanceId: 'eligible-stage',
+    applicantName: 'Eligible',
+    admissionOfferingId: 'offering',
+    workflowStageDefinitionId: 'definition',
+    isActive: true,
+    assessment: {
+      ...assessmentResponse,
+      policy: { ...assessmentResponse.policy!, schedulingEnabled: true },
+    },
+  };
+  const noSession = {
+    ...eligible,
+    applicationId: 'no-session-app',
+    stageInstanceId: 'no-session-stage',
+    applicantName: 'No session',
+    assessment: {
+      ...eligible.assessment,
+      policy: { ...eligible.assessment.policy, schedulingEnabled: false },
+    },
+  };
+  const completed = {
+    ...eligible,
+    applicationId: 'completed-app',
+    stageInstanceId: 'completed-stage',
+    applicantName: 'Completed',
+    assessment: { ...eligible.assessment, canBook: false },
+  };
+  const rows = [eligible, noSession, completed];
+  mocks.workbench.applicants.currentData = { items: rows, totalCount: rows.length };
+  renderPage();
+  act(() => mocks.select!(rows, true));
+  expect(screen.getByText('3 Selected')).toBeVisible();
+  const book = screen.getByRole('button', { name: 'Book Session (1)' });
+  expect(book).toBeEnabled();
+  fireEvent.click(book);
+  const drawer = screen.getByTestId('student-booking');
+  expect(drawer).toHaveTextContent('Eligible');
+  expect(drawer).not.toHaveTextContent('No session');
+  expect(drawer).not.toHaveTextContent('Completed');
+  expect(screen.getByText('3 Selected')).toBeVisible();
 });
 
 it('uses fresh booking capability for an already-selected student after roster refresh', () => {
@@ -341,11 +416,18 @@ it('uses fresh booking capability for an already-selected student after roster r
     stageInstanceId: 'stage',
     applicantName: 'QA student',
     isActive: true,
-    assessment: { ...assessmentResponse, canBook: false },
+    admissionOfferingId: 'offering',
+    workflowStageDefinitionId: 'definition',
+    assessment: {
+      ...assessmentResponse,
+      policy: { ...assessmentResponse.policy!, schedulingEnabled: true },
+      canBook: false,
+    },
   };
   mocks.workbench.applicants.currentData = { items: [row], totalCount: 1 };
   const page = renderPage();
   act(() => mocks.select!([row], true));
+  expect(screen.getByRole('button', { name: 'Book Session (0)' })).toBeDisabled();
   const refreshed = { ...row, assessment: { ...row.assessment, canBook: true } };
   mocks.workbench.applicants.currentData = {
     items: [refreshed],
@@ -355,6 +437,42 @@ it('uses fresh booking capability for an already-selected student after roster r
   fireEvent.click(screen.getByRole('button', { name: 'Book Session (1)' }));
   expect(screen.getByTestId('booking-capability')).toHaveTextContent('true');
 });
+
+it.each(['cannot-book', 'not-scheduled', 'missing-scope'])(
+  'recounts eligible selection when refreshed booking eligibility changes: %s',
+  (condition) => {
+    mocks.book = true;
+    const row = {
+      applicationId: 'app',
+      stageInstanceId: 'stage',
+      applicantName: 'Selected student',
+      admissionOfferingId: 'offering',
+      workflowStageDefinitionId: 'definition',
+      isActive: true,
+      assessment: {
+        ...assessmentResponse,
+        policy: { ...assessmentResponse.policy!, schedulingEnabled: true },
+      },
+    };
+    mocks.workbench.applicants.currentData = { items: [row], totalCount: 1 };
+    const page = renderPage();
+    act(() => mocks.select!([row], true));
+    expect(screen.getByRole('button', { name: 'Book Session (1)' })).toBeEnabled();
+    const refreshed = {
+      ...row,
+      admissionOfferingId: condition === 'missing-scope' ? '' : row.admissionOfferingId,
+      assessment: {
+        ...row.assessment,
+        canBook: condition !== 'cannot-book',
+        policy: { ...row.assessment.policy, schedulingEnabled: condition !== 'not-scheduled' },
+      },
+    };
+    mocks.workbench.applicants.currentData = { items: [refreshed], totalCount: 1 };
+    page.rerenderPage();
+    expect(screen.getByText('1 Selected')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Book Session (0)' })).toBeDisabled();
+  }
+);
 
 it.each(['inactive', 'missing', 'other-application', 'missing-policy'])(
   'removes a selection that is no longer selectable after a successful refresh: %s',
@@ -397,7 +515,12 @@ it.each(['loading', 'error', 'paused'])(
       stageInstanceId: 'stage',
       applicantName: 'QA student',
       isActive: true,
-      assessment: assessmentResponse,
+      admissionOfferingId: 'offering',
+      workflowStageDefinitionId: 'definition',
+      assessment: {
+        ...assessmentResponse,
+        policy: { ...assessmentResponse.policy!, schedulingEnabled: true },
+      },
     };
     mocks.workbench.applicants.currentData = { items: [row], totalCount: 1 };
     const page = renderPage();

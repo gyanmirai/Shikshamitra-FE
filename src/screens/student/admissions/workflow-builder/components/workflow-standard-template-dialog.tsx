@@ -224,7 +224,7 @@ export function WorkflowStandardTemplateDialog({
             <FormSectionCard icon="mdi:form-select" title="Published Forms">
               <Stack spacing={2}>
                 <AdmissionDefinitionSelect
-                  label="Published Inquiry Form (Optional)"
+                  label="Published Inquiry Form"
                   valueId={formik.values.inquiryFormDefinitionId}
                   initialOption={initialInquiryForm}
                   fetchOptions={fetchInquiryForms}

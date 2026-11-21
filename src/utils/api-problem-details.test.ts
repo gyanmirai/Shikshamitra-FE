@@ -3,6 +3,19 @@ import { it, expect, describe } from 'vitest';
 import { parseApiProblemDetail } from './api-problem-details';
 
 describe('parseApiProblemDetail', () => {
+  it('explains an actual duplicate student without treating a shared parent mobile as a duplicate', () => {
+    expect(
+      parseApiProblemDetail({
+        status: 400,
+        data: {
+          errorCode: 'Admissions.InquiryDuplicateStudent',
+          detail: 'One or more business rules were violated.',
+        },
+      }).detail
+    ).toBe(
+      'An inquiry for this student already exists in this admission cycle. Review the student name and date of birth or open the existing inquiry. A shared parent mobile is allowed for a different child; use Confirm Siblings to link their family.'
+    );
+  });
   it('explains an admission form revision conflict instead of the generic business error', () => {
     expect(
       parseApiProblemDetail({

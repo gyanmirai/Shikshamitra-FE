@@ -22,12 +22,12 @@ import { Box, Grid, Checkbox, TextField, FormHelperText, FormControlLabel } from
 import { ADMISSION_DATE_FORMAT } from './admission-date-formats';
 import { isAdmissionEmailField } from './admission-email-values';
 import { isOptionalStudentNamePart } from './admission-student-name';
-import { parseRuntimeOptionsSource } from './application-detail/application-runtime-options';
 import { AdmissionBoardClassField } from './admission-board-class-field';
 import { parseFieldConfiguration } from './form-dialog/form-field-presets';
 import { AdmissionProfilePhotoField } from './admission-profile-photo-field';
 import { AdmissionMasterDataRuntimeField } from './admission-master-data-runtime-field';
 import { AdmissionSpecializedRuntimeField } from './admission-specialized-runtime-field';
+import { parseRuntimeOptionsSource } from './application-detail/application-runtime-options';
 import {
   isAdmissionSiblingField,
   AdmissionSiblingRuntimeField,
@@ -68,6 +68,7 @@ export type AdmissionRuntimeFieldProps = {
   academicYearId?: string;
   academicMediumId?: string;
   optionsResolved?: boolean;
+  preview?: boolean;
 };
 type ChoiceOption = { value: string; label: string };
 type RendererProps = AdmissionRuntimeFieldProps & { options: ChoiceOption[]; helperId: string };
@@ -100,6 +101,19 @@ export default function AdmissionRuntimeField(input: AdmissionRuntimeFieldProps)
     publicSource?.parentField && !formValues?.[publicSource.parentField]
   );
   const { format } = parseFieldConfiguration(field.validationJson);
+  if (props.preview && isAdmissionSiblingField(field)) {
+    return (
+      <TextField
+        fullWidth
+        size="small"
+        label={field.label}
+        required={field.required}
+        value=""
+        disabled
+        helperText="Available during staff data entry."
+      />
+    );
+  }
   if (isAdmissionSiblingField(field)) return <AdmissionSiblingRuntimeField {...props} />;
   const resolvedClasses =
     optionsResolved && hasBoardClassOptions(field) ? readBoardClassOptions(field.optionsJson) : [];

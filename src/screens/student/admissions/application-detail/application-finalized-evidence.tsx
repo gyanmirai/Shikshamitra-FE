@@ -151,18 +151,18 @@ export function ApplicationFinalizedEvidence({
         >
           <Stack direction="row" alignItems="center" spacing={0.75}>
             <Iconify icon="mdi:account-check-outline" width={20} />
-            <Typography variant="subtitle2">Guardian Contact</Typography>
+            <Typography variant="subtitle2">Primary Contact</Typography>
           </Stack>
           <Typography variant="body2" color="text.secondary">
             {finalizationRecorded
-              ? 'Verification Confirmed During Finalization.'
-              : 'Finalization Verification Record Unavailable.'}
+              ? 'Contact details retained from admission.'
+              : 'Admission contact record unavailable.'}
           </Typography>
           <Label
             color={finalizationRecorded ? 'success' : 'default'}
             sx={{ alignSelf: 'flex-start' }}
           >
-            {finalizationRecorded ? 'Verified' : 'Not Recorded'}
+            {finalizationRecorded ? 'Saved' : 'Not Recorded'}
           </Label>
         </Stack>
       </Box>

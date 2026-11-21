@@ -159,8 +159,20 @@ export function InquiryOverviewForm({
           setCurrent(result);
           shikshaMitraToast.success({ message: 'Inquiry details updated.' });
         } catch (error) {
-          const message =
-            parseApiProblemDetail(error).detail || 'Unable to update inquiry details.';
+          const problem = parseApiProblemDetail(error);
+          const message = problem.detail || 'Unable to update inquiry details.';
+          if (problem.errorCode === 'Admissions.InquiryDuplicateStudent') {
+            const nameField = fields.find((field) =>
+              ['Applicant.Name', 'Applicant.FirstName'].includes(
+                canonicalInquiryBinding(field) ?? ''
+              )
+            );
+            if (nameField) {
+              formik.setFieldTouched(`fields.${nameField.code}`, true, false);
+              formik.setFieldError(`fields.${nameField.code}`, message);
+              return;
+            }
+          }
           setRequestError(message);
           shikshaMitraToast.error({ message });
         }
@@ -203,6 +215,7 @@ export function InquiryOverviewForm({
     formik,
     fields,
     contextKey: `${current.id}:${formik.values.offeringId}:${form?.id ?? ''}`,
+    isEditingSavedInquiry: true,
     busy: readOnly || familyOpen || updateState.isLoading || readingPhoto,
   });
   const ageFeedback = useAdmissionInquiryAge({

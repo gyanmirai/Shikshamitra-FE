@@ -20,6 +20,7 @@ const student = {
 };
 
 function initialLedger(): FeeLedgerMonth[] {
+  const showSingleInstallment = new URLSearchParams(window.location.search).has('ledgerSchedule');
   return Array.from({ length: 12 }, (_, index) => {
     const month = (index + 5) % 12;
     const year = month >= 5 ? 2026 : 2027;
@@ -27,7 +28,8 @@ function initialLedger(): FeeLedgerMonth[] {
     const tuition = index === 11 ? 2008.8 : 1999.2;
     const items = [{
       dueFeeId: `tuition-${index}`, feeHeadId: 'tuition', feeHeadName: 'Class 3 Tuition Fee',
-      installmentLabel: label, dueDate: `${year}-${String(month + 1).padStart(2, '0')}-05`,
+      installmentLabel: label, paymentTermName: 'Monthly',
+      dueDate: `${year}-${String(month + 1).padStart(2, '0')}-05`,
       total: tuition, paid: 0, due: tuition, status: new Date(year, month, 5) < new Date(2026, 9, 1) ? 2 : 0, lateFeeAmount: 0,
     }];
     if ([2, 5, 8, 11].includes(index)) {
@@ -35,8 +37,16 @@ function initialLedger(): FeeLedgerMonth[] {
       const ranges = ['Jun to Aug', 'Sep to Nov', 'Dec to Feb', 'Mar to May'];
       items.push({
         dueFeeId: `transport-${quarter}`, feeHeadId: 'transport', feeHeadName: 'Class 3 Student Transport Fee',
-        installmentLabel: `Quarter ${quarter} — ${ranges[quarter - 1]}`, dueDate: `${year}-${String(month + 1).padStart(2, '0')}-05`,
+        installmentLabel: `Quarter ${quarter} — ${ranges[quarter - 1]}`, paymentTermName: 'Quarterly',
+        dueDate: `${year}-${String(month + 1).padStart(2, '0')}-05`,
         total: 2400, paid: 0, due: 2400, status: new Date(year, month, 5) < new Date(2026, 9, 1) ? 2 : 0, lateFeeAmount: 0,
+      });
+    }
+    if (showSingleInstallment && index === 0) {
+      items.push({
+        dueFeeId: 'school-fee', feeHeadId: 'school', feeHeadName: 'School Fees',
+        installmentLabel: 'Annual fees', paymentTermName: 'Yearly', dueDate: '2026-06-10',
+        total: 5000, paid: 0, due: 5000, status: 0, lateFeeAmount: 0,
       });
     }
     return { month, year, totalDue: items.reduce((sum, item) => sum + item.due, 0), items };
@@ -274,12 +284,14 @@ function collect(body: CollectFeeInput): CollectFeeOutput {
     amountPaid: money(paidDueFees.filter((item) => item.feeHeadId === feeHeadId).reduce((sum, item) => sum + item.amountPaid, 0)),
   })).filter((head) => head.amountPaid > 0);
   const id = `fixture-receipt-${receiptSequence++}`;
-  const receiptNumber = `REC-2026-${String(receiptSequence - 1).padStart(6, '0')}`;
+  const provisional = body.payments.some((payment) => payment.paymentMethod !== 0);
+  const sequence = String(receiptSequence - 1).padStart(6, '0');
+  const receiptNumber = `${provisional ? 'KFE' : 'REC'}-2026-${sequence}`;
   const totalAmount = paymentTotal;
   const result: CollectFeeOutput = {
     id, receiptNumber, feeReceiptId: id, feeReceiptNumber: receiptNumber,
     studentId: student.studentId, studentName: student.studentName, academicYearId: 'year-2026',
-    totalAmount, status: 1, collectedBy: 'Synthetic cashier',
+    totalAmount, status: provisional ? 5 : 1, collectedBy: 'Synthetic cashier',
     collectedAt: '2026-10-01T12:00:00+05:30', createdAt: '2026-10-01T12:00:00+05:30',
     paidFeeHeads, paidDueFees, paidLateFees, receivedAmount: totalAmount,
     paidCharges,
@@ -287,7 +299,7 @@ function collect(body: CollectFeeInput): CollectFeeOutput {
   };
   if (paidLateFees.length > 0 || paidCharges.length > 0) {
     result.chargeReceiptId = `${id}-charges`;
-    result.chargeReceiptNumber = `CHG-${receiptNumber}`;
+    result.chargeReceiptNumber = provisional ? `KCH-2026-${sequence}` : `CHG-${receiptNumber}`;
   }
   if (paidFeeHeads.length === 0) {
     result.feeReceiptId = undefined;
@@ -305,20 +317,11 @@ function collect(body: CollectFeeInput): CollectFeeOutput {
   result.chargeReceiptAmount = result.chargeReceiptId
     ? [...paidCharges, ...paidLateFees].reduce((sum, line) => sum + line.amountPaid, 0)
     : undefined;
-  // Exercise the real UI's pending-response branch without inventing a bank
-  // settlement model. Unverified payments have no generated receipt, and this
-  // isolated fixture leaves the underlying balances unchanged.
-  if (body.paymentConfirmed === false || body.payments.some((payment) => payment.paymentMethod === 1 || payment.paymentMethod === 2)) {
-    Object.assign(result, {
-      status: 5, receiptNumber: '', feeReceiptId: undefined, feeReceiptNumber: undefined,
-      chargeReceiptId: undefined, chargeReceiptNumber: undefined,
-      feeReceiptAmount: undefined, chargeReceiptAmount: undefined,
-    });
-    replay.set(body.idempotencyKey, result);
-    return result;
+  // The fixture issues provisional evidence without settling the payment.
+  if (!provisional) {
+    ledger = nextLedger;
+    charges = nextCharges;
   }
-  ledger = nextLedger;
-  charges = nextCharges;
   replay.set(body.idempotencyKey, result);
   return result;
 }
@@ -329,15 +332,17 @@ export const fixtureBaseQuery = async (args: string | FetchArgs) => {
     requests.push({ url, method, body });
     try {
       if (url === '/fee-collections' && method === 'POST') return { data: structuredClone(collect(body)) };
-      if (url === '/fee-collections/waivers') {
+      if (url === '/fee-collections/waivers' || url === '/fee-collections/waivers/with-amount') {
         const charge = charges.find((item) => item.sourceId === body.sourceId);
         if (!charge || !body.reason?.trim()) throw new Error('Missing charge or waiver reason');
-        const waivedAmount = charge.pendingAmount;
+        const waivedAmount = body.amount ?? charge.pendingAmount;
+        if (waivedAmount <= 0 || waivedAmount > charge.pendingAmount)
+          return { error: { status: 400, data: { detail: 'Waiver amount must be within the pending balance.' } } };
         charge.waivedAmount = money(charge.waivedAmount + waivedAmount);
-        charge.pendingAmount = 0;
-        charge.status = 6;
-        charge.canWaive = false;
-        return { data: { id: 'fixture-waiver', ...body, studentId: student.studentId, academicYearId: 'year-2026', waivedAmount, remainingAmount: 0, creationTime: '2026-10-01T12:00:00+05:30' } };
+        charge.pendingAmount = money(charge.pendingAmount - waivedAmount);
+        charge.status = charge.pendingAmount === 0 ? 6 : charge.status;
+        charge.canWaive = charge.pendingAmount > 0;
+        return { data: { id: 'fixture-waiver', ...body, studentId: student.studentId, academicYearId: 'year-2026', waivedAmount, remainingAmount: charge.pendingAmount, creationTime: '2026-10-01T12:00:00+05:30' } };
       }
       if (url === '/fee-collections') {
         return { data: { totalCount: 1, items: [{
@@ -373,8 +378,9 @@ export const fixtureBaseQuery = async (args: string | FetchArgs) => {
         const basis = new URLSearchParams(window.location.search).get('allocationBasis');
         const configured = basis === 'Installment' || basis === 'FeeHead';
         const lines = ledger.flatMap(month => month.items);
+        const feeStructureOrder = ['tuition', 'transport', 'school'];
         const order = basis === 'FeeHead'
-          ? [...lines].sort((a, b) => a.feeHeadName.toLowerCase() < b.feeHeadName.toLowerCase() ? -1 : a.feeHeadName.toLowerCase() > b.feeHeadName.toLowerCase() ? 1 : 0)
+          ? [...lines].sort((a, b) => feeStructureOrder.indexOf(a.feeHeadId) - feeStructureOrder.indexOf(b.feeHeadId))
           : lines;
         const form: FeeCollectFormDto = {
           student, summary: { totalFee: balance.totalFees, paidFee: balance.paidFees, pendingFee: balance.pendingFees },
@@ -404,14 +410,16 @@ export const fixtureBaseQuery = async (args: string | FetchArgs) => {
         // Intentionally reject the obsolete /v1/charge-receipts route. Both fee
         // and charge IDs are served by the canonical fee-receipts resource.
         const match = /^\/v1\/fee-receipts\/([^/]+)\/pdf$/.exec(url);
-        if (receiptGroupingScenario && match) {
+        if (!chargeReceiptScenario && match) {
           const result = [...replay.values()].find((item) => item.feeReceiptId === match[1] || item.chargeReceiptId === match[1]);
           if (result) {
             const isFee = result.feeReceiptId === match[1];
             const amount = result.receiptGrouping === 'Combined' ? result.receivedAmount : isFee
               ? result.paidFeeHeads.reduce((sum, head) => sum + head.amountPaid, 0)
               : [...(result.paidLateFees ?? []), ...(result.paidCharges ?? [])].reduce((sum, line) => sum + line.amountPaid, 0);
-            return { data: chargeReceiptPdf(isFee ? result.feeReceiptNumber! : result.chargeReceiptNumber!, result.receiptGrouping === 'Combined' ? 'Combined Fee And Charge Receipt' : isFee ? 'Fee Receipt' : 'Charge Receipt', amount) };
+            const scope = result.receiptGrouping === 'Combined' ? 'Combined Fee And Charge Receipt' : isFee ? 'Fee Receipt' : 'Charge Receipt';
+            const title = result.status === 5 ? `Provisional ${scope}` : scope;
+            return { data: chargeReceiptPdf(isFee ? result.feeReceiptNumber! : result.chargeReceiptNumber!, title, amount) };
           }
         }
         const collection = [...replay.values()].find((result) => result.chargeReceiptId === match?.[1]);

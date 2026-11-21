@@ -1,6 +1,7 @@
 import { financeModuleType } from 'src/redux/tagTypes';
 
 import { financeModuleApi } from '../financeModuleApi';
+import { buildEligibleChargeStudentsUrl } from './eligibleChargeStudentsUrl';
 
 import type {
   IChargeDetail,
@@ -13,6 +14,45 @@ import type {
   IChargeMutationResponse,
   IChargeLineListResponse,
 } from './chargeTypes';
+
+export interface IEligibleChargeStudentsParams {
+  academicYearId: string;
+  boardId: string;
+  educationMediumId: string;
+  classIds: string[];
+  divisionIds?: string[];
+  chargeCategoryId?: string;
+  search?: string;
+  gender?: number;
+  rollNoFrom?: number;
+  rollNoTo?: number;
+  charged?: boolean;
+  divisionFilterId?: string;
+  page: number;
+  pageSize: number;
+}
+
+export interface IEligibleChargeStudentsResponse {
+  items: Array<{
+    studentId: string;
+    studentName: string;
+    rollNo?: number;
+    grNo?: string | number;
+    standardName?: string;
+    divisionName?: string;
+    standardId?: string;
+    divisionId?: string;
+    gender?: number;
+    hasFeeStructureAssignment: boolean;
+    hasChargeInCategory?: boolean;
+  }>;
+  candidateStudentIds: string[];
+  matchingStudentIds: string[];
+  matchingStudentNames: Record<string, string>;
+  totalCount: number;
+  page: number;
+  pageSize: number;
+}
 
 const unwrapDetail = (response: unknown): IChargeDetail => {
   const wrapped = response as { data?: IChargeDetail };
@@ -29,6 +69,12 @@ const unwrapChargeLineList = (response: unknown): IChargeLineListResponse => {
 
 export const chargesApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
+    getEligibleChargeStudents: builder.query<
+      IEligibleChargeStudentsResponse,
+      IEligibleChargeStudentsParams
+    >({
+      query: (params) => ({ url: buildEligibleChargeStudentsUrl(params), method: 'GET' }),
+    }),
     getCharges: builder.query<IChargeListResponse, IGetChargesParams>({
       query: (params) => ({
         url: '/charges',
@@ -57,7 +103,7 @@ export const chargesApi = financeModuleApi.injectEndpoints({
         body,
         params: { academicYearId },
       }),
-      invalidatesTags: [financeModuleType.charges],
+      invalidatesTags: [financeModuleType.studentFeeAssignment, financeModuleType.charges],
     }),
     updateCharge: builder.mutation<
       IChargeMutationResponse,
@@ -68,14 +114,14 @@ export const chargesApi = financeModuleApi.injectEndpoints({
         method: 'PUT',
         body,
       }),
-      invalidatesTags: [financeModuleType.charges],
+      invalidatesTags: [financeModuleType.studentFeeAssignment, financeModuleType.charges],
     }),
     deleteCharge: builder.mutation<void, { id: string }>({
       query: ({ id }) => ({
         url: `/charges/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: [financeModuleType.charges],
+      invalidatesTags: [financeModuleType.studentFeeAssignment, financeModuleType.charges],
     }),
     approveCharge: builder.mutation<
       IChargeMutationResponse,
@@ -87,6 +133,7 @@ export const chargesApi = financeModuleApi.injectEndpoints({
         body,
       }),
       invalidatesTags: [
+        financeModuleType.studentFeeAssignment,
         financeModuleType.charges,
         financeModuleType.feeDetails,
         financeModuleType.feeCollection,
@@ -104,6 +151,7 @@ export const chargesApi = financeModuleApi.injectEndpoints({
         body,
       }),
       invalidatesTags: [
+        financeModuleType.studentFeeAssignment,
         financeModuleType.charges,
         financeModuleType.feeDetails,
         financeModuleType.feeCollection,
@@ -121,6 +169,7 @@ export const chargesApi = financeModuleApi.injectEndpoints({
         body,
       }),
       invalidatesTags: [
+        financeModuleType.studentFeeAssignment,
         financeModuleType.charges,
         financeModuleType.feeDetails,
         financeModuleType.feeCollection,
@@ -141,6 +190,7 @@ export const chargesApi = financeModuleApi.injectEndpoints({
 });
 
 export const {
+  useLazyGetEligibleChargeStudentsQuery,
   useGetChargesQuery,
   useGetChargeLinesQuery,
   usePostChargeMutation,

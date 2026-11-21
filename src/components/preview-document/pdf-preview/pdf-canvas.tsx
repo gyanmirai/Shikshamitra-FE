@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Iconify } from 'src/components/iconify';
-import { Box, Stack, Alert, Button, Skeleton, Typography } from '@mui/material';
+import CustomSelect from 'src/components/custom-select';
+import { Box, Stack, Alert, Button, Skeleton, IconButton, Typography } from '@mui/material';
 
 import { usePdfPage } from './use-pdf-page';
 
@@ -10,53 +11,92 @@ export default function PdfCanvas({
   showPageText = true,
   controlsPosition = 'top',
   hideControlsForSinglePage = false,
+  usePageSelector = false,
+  initialPage = 1,
+  onPageChange,
+  onPageCountChange,
+  preservePageOnUpdate = false,
 }: {
   url: string;
   title: string;
   showPageText?: boolean;
   controlsPosition?: 'top' | 'bottom';
   hideControlsForSinglePage?: boolean;
+  usePageSelector?: boolean;
+  initialPage?: number;
+  onPageChange?: (page: number) => void;
+  onPageCountChange?: (count: number) => void;
+  preservePageOnUpdate?: boolean;
 }) {
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(initialPage);
   const [retry, setRetry] = useState(0);
   const [zoom, setZoom] = useState(false);
-  const pdf = usePdfPage(url, page, retry);
+  const pdf = usePdfPage(url, page, retry, preservePageOnUpdate);
+  useEffect(() => {
+    if (pdf.hasRendered) onPageCountChange?.(pdf.pageCount);
+  }, [onPageCountChange, pdf.hasRendered, pdf.pageCount]);
+  const showRenderedPage = pdf.hasRendered && preservePageOnUpdate;
+  const currentPage = Math.min(page, pdf.pageCount);
+  const changePage = (next: number) => {
+    setPage(next);
+    onPageChange?.(next);
+  };
   const showControls = !hideControlsForSinglePage || pdf.pageCount > 1;
   const controls = (
     <Stack
       direction="row"
-      sx={{ gap: '1px' }}
+      spacing={1}
       alignItems="center"
       justifyContent="center"
       flexWrap="wrap"
       useFlexGap
     >
-      <Button
+      <IconButton
         size="small"
-        variant="outlined"
-        startIcon={<Iconify icon="solar:arrow-left-bold" width={18} />}
-        disabled={pdf.loading || pdf.error || page === 1}
-        onClick={() => setPage(page - 1)}
+        aria-label="Previous page"
+        sx={{ border: 1, borderColor: 'divider', borderRadius: 1, p: 0.75 }}
+        disabled={pdf.loading || pdf.error || currentPage === 1}
+        onClick={() => changePage(currentPage - 1)}
       >
-        Previous Page
-      </Button>
-      <Typography variant="body2" role="status">
-        Page {page} of {pdf.pageCount}
-      </Typography>
-      <Button
+        <Iconify icon="solar:arrow-left-bold" width={18} />
+      </IconButton>
+      {usePageSelector ? (
+        <CustomSelect
+          label="Page"
+          size="small"
+          disabled={pdf.loading || pdf.error || pdf.pageCount < 2}
+          value={currentPage}
+          options={Array.from({ length: pdf.pageCount }, (_, index) => ({
+            value: index + 1,
+            label: `Page ${index + 1} of ${pdf.pageCount}`,
+          }))}
+          formControlProps={{ sx: { width: 148 } }}
+          onChange={(value) => changePage(Number(value))}
+        />
+      ) : (
+        <Typography variant="body2" role="status">
+          Page {currentPage} of {pdf.pageCount}
+        </Typography>
+      )}
+      <IconButton
         size="small"
-        variant="outlined"
-        startIcon={<Iconify icon="solar:arrow-right-bold" width={18} />}
-        disabled={pdf.loading || pdf.error || page >= pdf.pageCount}
-        onClick={() => setPage(page + 1)}
+        aria-label="Next page"
+        sx={{ border: 1, borderColor: 'divider', borderRadius: 1, p: 0.75 }}
+        disabled={pdf.loading || pdf.error || currentPage >= pdf.pageCount}
+        onClick={() => changePage(currentPage + 1)}
       >
-        Next Page
-      </Button>
+        <Iconify icon="solar:arrow-right-bold" width={18} />
+      </IconButton>
       <Button
         size="small"
         variant="outlined"
-        startIcon={<Iconify icon={zoom ? 'solar:minimize-square-linear' : 'solar:magnifer-zoom-in-linear'} width={18} />}
-        disabled={pdf.loading || pdf.error}
+        startIcon={
+          <Iconify
+            icon={zoom ? 'solar:minimize-square-linear' : 'solar:magnifer-zoom-in-linear'}
+            width={18}
+          />
+        }
+        disabled={(pdf.loading || pdf.error) && !showRenderedPage}
         onClick={() => setZoom(!zoom)}
       >
         {zoom ? 'Fit Width' : 'Zoom In'}
@@ -66,7 +106,9 @@ export default function PdfCanvas({
   return (
     <Stack spacing={1}>
       {controlsPosition === 'top' && showControls && controls}
-      {pdf.loading && <Skeleton aria-label="Rendering PDF page" variant="rounded" height={400} />}
+      {pdf.loading && !showRenderedPage && (
+        <Skeleton aria-label="Rendering PDF page" variant="rounded" height={400} />
+      )}
       {pdf.error && (
         <Alert
           severity="error"
@@ -83,13 +125,18 @@ export default function PdfCanvas({
         role="region"
         aria-label={`${title} PDF pages`}
         tabIndex={0}
-        sx={{ minWidth: 0, overflow: 'auto', display: pdf.loading || pdf.error ? 'none' : 'block' }}
+        aria-busy={pdf.loading}
+        sx={{
+          minWidth: 0,
+          overflow: 'auto',
+          display: pdf.loading || pdf.error ? (showRenderedPage ? 'block' : 'none') : 'block',
+        }}
       >
         <Box
           component="canvas"
           ref={pdf.canvasRef}
           role="img"
-          aria-label={`${title}, page ${page}`}
+          aria-label={`${title}, page ${pdf.renderedPage ?? currentPage}`}
           sx={{
             display: 'block',
             width: zoom ? '150%' : '100%',

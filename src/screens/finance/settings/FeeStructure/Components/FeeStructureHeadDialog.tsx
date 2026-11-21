@@ -9,18 +9,19 @@ import SubmitButton from 'src/components/submit-button';
 import { useRef, useMemo, useState, useEffect } from 'react';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { createFilterOptions } from '@mui/material/Autocomplete';
 import { FormSectionCard } from 'src/components/form-section-card';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { createFilterOptions } from '@mui/material/Autocomplete';
+import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
 import {
   Box,
   Alert,
   Button,
   Switch,
-  Checkbox,
   TextField,
+  FormGroup,
   Autocomplete,
   DialogActions,
   FormControlLabel,
@@ -204,7 +205,8 @@ export default function FeeStructureHeadDialog({
   }, [settings.heads, lines, line]);
   const terms = settings.terms.map((term) => ({
     value: term.versionId,
-    label: `${term.name} · v${term.versionNumber}${term.isDefault ? ' · Default' : ''}`,
+    label: `${term.name}${term.isDefault ? ' · Default' : ''}`,
+    version: `v${term.versionNumber}`,
   }));
   if (
     line?.paymentTermId &&
@@ -213,7 +215,8 @@ export default function FeeStructureHeadDialog({
   )
     terms.push({
       value: line.paymentTermVersionId,
-      label: `${line.paymentTermName || 'Attached term'} · v${line.paymentTermVersionNumber ?? '?'} · retained`,
+      label: `${line.paymentTermName || 'Attached term'} · retained`,
+      version: `v${line.paymentTermVersionNumber ?? '?'}`,
     });
   const errorFor = (field: keyof typeof formik.values) =>
     revealErrors || formik.touched[field] || formik.submitCount > 0
@@ -240,7 +243,7 @@ export default function FeeStructureHeadDialog({
         >
           <DialogScrollContent>
             <FormSectionCard
-              descriptionTooltip="The selected payment frequency determines installment dates and amount allocations. Optional heads are charged only when selected during assignment."
+              descriptionTooltip="The payment frequency determines installment dates and allocations."
               icon="mdi:cash-multiple"
               title="Fee Head Details"
             >
@@ -285,20 +288,64 @@ export default function FeeStructureHeadDialog({
                   fullWidth
                 />
               </ShakingTextField>
-              <FormControlLabel
-                label="Set amount during student assignment"
-                control={
-                  <Switch
-                    size="small"
-                    checked={formik.values.isVariable}
-                    disabled={busy}
-                    onChange={(_event, checked) => {
-                      formik.setFieldValue('isVariable', checked);
-                      formik.setFieldValue('amount', '');
-                    }}
+              <FormGroup
+                role="group"
+                aria-label="Fee options"
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: 'minmax(0, 1.1fr) minmax(0, 1fr)',
+                  columnGap: { xs: 1, sm: 2 },
+                  '& > .MuiBox-root': { display: 'flex', alignItems: 'center' },
+                  '& .MuiFormControlLabel-root': { m: 0, minWidth: 0 },
+                  '& .MuiFormControlLabel-label': { overflowWrap: 'break-word' },
+                  '& .MuiSwitch-root': { flexShrink: 0 },
+                  '@media (max-width: 439px)': {
+                    '& > .MuiBox-root': { alignItems: 'flex-start' },
+                    '& .MuiFormControlLabel-root': { flexDirection: 'column', textAlign: 'center' },
+                    '& .MuiSwitch-root': { my: 1.25 },
+                  },
+                }}
+              >
+                <Box>
+                  <FormControlLabel
+                    label="Variable amount"
+                    control={
+                      <Switch
+                        size="small"
+                        checked={formik.values.isVariable}
+                        disabled={busy}
+                        onChange={(_event, checked) => {
+                          formik.setFieldValue('isVariable', checked);
+                          formik.setFieldValue('amount', '');
+                        }}
+                      />
+                    }
                   />
-                }
-              />
+                  <InfoTooltipIcon
+                    label="Variable amount information"
+                    title="Enter the amount when assigning the fee structure to a student."
+                    disabled={busy}
+                  />
+                </Box>
+                <Box>
+                  <FormControlLabel
+                    label="Optional fee"
+                    control={
+                      <Switch
+                        size="small"
+                        checked={formik.values.isOptional}
+                        disabled={busy}
+                        onChange={(_event, checked) => formik.setFieldValue('isOptional', checked)}
+                      />
+                    }
+                  />
+                  <InfoTooltipIcon
+                    label="Optional fee information"
+                    title="The fee is charged only if selected during student assignment."
+                    disabled={busy}
+                  />
+                </Box>
+              </FormGroup>
               {!formik.values.isVariable && (
                 <ShakingTextField error={!!errorFor('amount')}>
                   <NumericFormatCustom
@@ -336,6 +383,11 @@ export default function FeeStructureHeadDialog({
                   options={terms}
                   labelKey="label"
                   valueKey="value"
+                  optionEndLabelKey="version"
+                  renderValue={(value) => {
+                    const term = terms.find((option) => option.value === value);
+                    return term ? `${term.label} · ${term.version}` : '';
+                  }}
                   disabled={
                     busy || (termsLoading && !terms.length) || !settings.permissions.termsRead
                   }
@@ -365,17 +417,6 @@ export default function FeeStructureHeadDialog({
                   attachment is preserved.
                 </Alert>
               )}
-              <FormControlLabel
-                label="Optional fee head"
-                control={
-                  <Checkbox
-                    size="small"
-                    checked={formik.values.isOptional}
-                    disabled={busy}
-                    onChange={(_event, checked) => formik.setFieldValue('isOptional', checked)}
-                  />
-                }
-              />
             </FormSectionCard>
           </DialogScrollContent>
           <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>

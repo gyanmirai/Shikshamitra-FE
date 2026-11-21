@@ -1,7 +1,7 @@
 'use client';
 
 import { Box, Alert } from '@mui/material';
-import { useRef, useState, useEffect } from 'react';
+import { useId, useRef, useState, useEffect } from 'react';
 
 import './editor/studio-icons';
 import { PhotoEditorDialog } from './photo-editor';
@@ -20,8 +20,12 @@ export function IdentityCardDesigner(props: IdentityCardDesignerProps) {
   const { layout, onLayoutChange, backSideEnabled, disabled, brandingContent, values, photoUrl } =
     props;
   const view = useStudioView(backSideEnabled, brandingContent);
-  const { side, tab, setTab, guides, setGuides, snap, tool, setTool, zoom, layers, measureFit } =
-    view;
+  const {
+    side, tab, setTab, guides, setGuides, snap, tool, setTool, zoom, layers, configuration,
+    measureFit,
+  } = view;
+  const layersId = useId();
+  const configurationId = useId();
   const [imageError, setImageError] = useState('');
   const upload = useRef<HTMLInputElement>(null);
   const studio = useCardStudio({ layout, side, onLayoutChange, disabled });
@@ -83,7 +87,14 @@ export function IdentityCardDesigner(props: IdentityCardDesignerProps) {
         overflow: 'hidden',
       }}
     >
-      <StudioCommandBar view={view} studio={studio} photo={photo} props={props} />
+      <StudioCommandBar
+        view={view}
+        studio={studio}
+        photo={photo}
+        props={props}
+        layersId={layersId}
+        configurationId={configurationId}
+      />
       {(imageError || photo.error) && (
         <Alert
           severity="error"
@@ -103,6 +114,9 @@ export function IdentityCardDesigner(props: IdentityCardDesignerProps) {
           setTool,
           add,
           layers,
+          layersId,
+          configuration,
+          configurationId,
           layout,
           studio,
           previewProps,

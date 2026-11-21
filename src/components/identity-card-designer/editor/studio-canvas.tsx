@@ -1,13 +1,16 @@
+import { Box } from '@mui/material';
 import { useRef, useState, useEffect } from 'react';
-import { Box, useTheme, useMediaQuery } from '@mui/material';
 
-import { CanvasRulers } from './canvas-rulers';
 import { IdentityCardPreview } from '../preview';
 import { CanvasOverlay } from './canvas-overlay';
 import { useCanvasGesture } from './use-canvas-gesture';
+import { CanvasRulers, CANVAS_RULER_GUTTER } from './canvas-rulers';
 
 import type { IdentityCardPreviewProps } from '../types';
 import type { StudioController } from '../studio/use-card-studio';
+
+const canvasPadding = 16;
+const fitGutter = CANVAS_RULER_GUTTER + 2 * canvasPadding + 2;
 
 export function StudioCanvas({
   controller,
@@ -30,8 +33,6 @@ export function StudioCanvas({
   disabled?: boolean;
 }) {
   const { layout, side = 'front' } = props;
-  const theme = useTheme();
-  const roomy = useMediaQuery(theme.breakpoints.up('md'));
   const viewport = useRef<HTMLDivElement>(null);
   const pan = useRef<{ x: number; y: number; left: number; top: number } | null>(null);
   const [space, setSpace] = useState(false);
@@ -41,14 +42,13 @@ export function StudioCanvas({
     if (!node) return undefined;
     const observer = new ResizeObserver((entries) => {
       const { width, height } = entries[0].contentRect;
-      const gutter = roomy ? 104 : 36;
       onFitZoom(
-        Math.max(0.1, Math.min((width - gutter) / layout.width, (height - gutter) / layout.height))
+        Math.max(0.1, Math.min((width - fitGutter) / layout.width, (height - fitGutter) / layout.height))
       );
     });
     observer.observe(node);
     return () => observer.disconnect();
-  }, [layout.width, layout.height, onFitZoom, roomy]);
+  }, [layout.width, layout.height, onFitZoom]);
   const drawn = gesture.preview ?? layout;
   const elements = [...(drawn[side]?.elements ?? [])]
     .filter(
@@ -65,6 +65,10 @@ export function StudioCanvas({
       role="region"
       aria-label="Card preview"
       tabIndex={0}
+      onPointerDownCapture={(event) => {
+        // The SVG gesture cancels the pointer's default focus behavior.
+        if (!disabled && event.button === 0) event.currentTarget.focus({ preventScroll: true });
+      }}
       onKeyDown={(event) => {
         if (event.key === 'Escape') gesture.finish(true);
         if (event.key === ' ' && !(event.target as HTMLElement).closest('input,textarea')) {
@@ -120,7 +124,8 @@ export function StudioCanvas({
           width: 'max-content',
           display: 'grid',
           placeItems: 'center',
-          p: { xs: 0.5, md: 5 },
+          boxSizing: 'border-box',
+          p: `${canvasPadding}px`,
         }}
       >
         <CanvasRulers layout={layout}>

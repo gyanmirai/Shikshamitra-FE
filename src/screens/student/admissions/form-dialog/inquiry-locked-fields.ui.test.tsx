@@ -40,7 +40,6 @@ function renderLockedCanvas(stepper = false, settings = false, purpose: 0 | 1 = 
                   selectedFieldId={null}
                   onSelect={vi.fn()}
                   newStepId={null}
-                  onAddStep={vi.fn()}
                   onNewStepReady={vi.fn()}
                 />
               )}

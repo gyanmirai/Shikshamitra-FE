@@ -10,6 +10,8 @@ import { normalizeHrFailure } from 'src/screens/hr/recovery/hr-failure';
 import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import {
+  usePayrollRegisterQuery,
+  usePayrollPreviewLookupQuery,
   usePayrollPreviewStatusQuery,
   useStartPayrollPreviewMutation,
   usePayrollPreviewEmployeesQuery,
@@ -22,7 +24,7 @@ function normalizePreviewFailure(error: unknown): PreviewFailure {
   return { ...normalizeHrFailure(error), errorCode: parseApiProblemDetail(error).errorCode };
 }
 
-export function usePayrollPreviewRun(month: string, academicYearId: string) {
+export function usePayrollPreviewRun(month: string, academicYearId: string, useRegister = false) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -43,17 +45,24 @@ export function usePayrollPreviewRun(month: string, academicYearId: string) {
     ? Number(params.get('pageSize'))
     : 25;
   const search = params.get('search') || '';
+  const registerCriteria = {
+    sort: params.get('registerSort') || undefined,
+    descending: params.get('registerDirection') === 'desc',
+    reviewState: params.get('registerState') || undefined,
+    issueClass: params.get('registerIssue') || undefined,
+    issueCode: params.get('registerIssueCode') || undefined,
+  };
   const [searchInput, setSearchInput] = useState(search);
   const [display, setDisplay] = useState<{ key: string; data: PayrollPreviewPage } | null>(null);
   const [failure, setFailure] = useState<(PreviewFailure & { key: string }) | null>(null);
   const [request, setRequest] = useState<PreviewRequest | null>(null);
   const requestLock = useRef<{ key: string } | null>(null);
+  const pendingCommand = useRef<{ context: { key: string }; refresh: boolean; key: string } | null>(null);
   const [pollingInterval, setPollingInterval] = useState(2000);
   const [refreshingContext, setRefreshingContext] = useState<{ key: string } | null>(null);
   const statusRefreshRequest = useRef<{ key: string } | null>(null);
   const refreshingStatus = refreshingContext === context.current;
   const [start, startState] = useStartPayrollPreviewMutation();
-  const lastStarted = useRef('');
   const serializedParams = params.toString();
   const queryState = useRef({
     observed: serializedParams,
@@ -87,8 +96,21 @@ export function usePayrollPreviewRun(month: string, academicYearId: string) {
     [pathname, router]
   );
   const activeRequest = request?.context === context.current ? request : null;
+  const lookupQuery = usePayrollPreviewLookupQuery(
+    { month, academicYearId },
+    {
+      skip: !month || !academicYearId || Boolean(urlRunId),
+      refetchOnFocus: true,
+      refetchOnMountOrArgChange: true,
+    }
+  );
+  const lookupFailed = !urlRunId && Boolean(lookupQuery.isError);
+  const discoveredRun = lookupFailed ? null : lookupQuery.currentData?.currentRun;
   const requestedRunId =
-    activeRequest?.awaitingUrl && activeRequest.id ? activeRequest.id : urlRunId;
+    (activeRequest?.awaitingUrl && activeRequest.id) || urlRunId || discoveredRun?.id || '';
+  const isLookingUp = Boolean(
+    month && academicYearId && !requestedRunId && lookupQuery.isFetching && !lookupFailed
+  );
   const statusQuery = usePayrollPreviewStatusQuery(requestedRunId, {
     skip: !requestedRunId || !academicYearId,
     pollingInterval,
@@ -96,8 +118,20 @@ export function usePayrollPreviewRun(month: string, academicYearId: string) {
     refetchOnFocus: true,
     refetchOnMountOrArgChange: true,
   });
-  const status = statusQuery.currentData;
+  const status =
+    statusQuery.currentData ||
+    (discoveredRun?.id === requestedRunId ? discoveredRun ?? undefined : undefined);
   const matches = status?.month === month && status.academicYearId === academicYearId;
+  const obsoleteUrlRun = Boolean(
+    urlRunId &&
+    requestedRunId === urlRunId &&
+    ((status && !matches) ||
+      (statusQuery.isError &&
+        parseApiProblemDetail(statusQuery.error).errorCode === 'PAYROLL_PREVIEW_NOT_FOUND'))
+  );
+  useEffect(() => {
+    if (obsoleteUrlRun) updateQuery({ previewRunId: null });
+  }, [obsoleteUrlRun, updateQuery]);
   const busy =
     Boolean(activeRequest && !activeRequest.id) ||
     Boolean(activeRequest && startState.isLoading) ||
@@ -111,34 +145,50 @@ export function usePayrollPreviewRun(month: string, academicYearId: string) {
       ? requestedRunId
       : matches && status.lastCompletedRunId
         ? status.lastCompletedRunId
-        : display?.key === key
-          ? display.data.previewRunId
+    : display?.key === key
+          ? display.data.previewRunId || ''
           : '';
+  const registerQuery = usePayrollRegisterQuery(
+    { month, academicYearId, completedId, page, pageSize, search, ...registerCriteria },
+    { skip: !useRegister || !month || !academicYearId, refetchOnFocus: true, refetchOnMountOrArgChange: true }
+  );
+  const employeesQuery = usePayrollPreviewEmployeesQuery(
+    { id: completedId, page, pageSize, search },
+    { skip: useRegister || !completedId, refetchOnFocus: true, refetchOnMountOrArgChange: true }
+  );
   const pageQuery = useHrTableQuery(
     {
       table: 'payroll-monthly-workbench-table',
-      query: { runId: completedId, search },
+      query: useRegister ? { month, academicYearId, search } : { runId: completedId, search },
       page,
       size: pageSize,
       resetPage: () => updateQuery({ page: 0 }),
-      skip: !completedId,
+      skip: useRegister || !completedId,
     },
-    usePayrollPreviewEmployeesQuery(
-      { id: completedId, page, pageSize, search },
-      {
-        skip: !completedId,
-        refetchOnFocus: true,
-        refetchOnMountOrArgChange: true,
-      }
-    )
+    useRegister ? registerQuery : employeesQuery
   );
 
   const currentPage =
-    pageQuery.currentData?.previewRunId === completedId ? pageQuery.currentData : undefined;
-  const data = currentPage || (display?.key === key ? display.data : undefined);
+    useRegister || pageQuery.currentData?.previewRunId === completedId
+      ? pageQuery.currentData
+      : undefined;
+  useEffect(() => {
+    if (
+      useRegister && matches && status.status === 'SUCCEEDED' && !status.isCurrent &&
+      currentPage?.isCurrent && currentPage.previewRunId &&
+      currentPage.previewRunId !== requestedRunId
+    ) {
+      updateQuery({ month, previewRunId: currentPage.previewRunId });
+    }
+  }, [currentPage, matches, month, requestedRunId, status, updateQuery, useRegister]);
+  const previousPage = display?.key === key ? display.data : undefined;
+  const data = (useRegister ? pageQuery.isError : lookupFailed) ? undefined : currentPage || previousPage;
   const queryError =
+    (lookupFailed ? lookupQuery.error : undefined) ||
     (statusQuery.isError ? statusQuery.error : undefined) ||
-    (matches && status.status === 'SUCCEEDED' && pageQuery.isError ? pageQuery.error : undefined);
+    ((useRegister || (matches && status.status === 'SUCCEEDED')) && pageQuery.isError
+      ? pageQuery.error
+      : undefined);
   const isStarting = Boolean(activeRequest && !activeRequest.id);
   const isStale: boolean =
     !isStarting &&
@@ -173,6 +223,13 @@ export function usePayrollPreviewRun(month: string, academicYearId: string) {
     ((!hasPreparedRun && (!currentPage || pageQuery.isFetching)) ||
       (activeRequest?.id === requestedRunId && pageQuery.isFetching));
   const isPreparing: boolean = !error && !isStale && (busy || Boolean(awaitingResults));
+  const isCalculating =
+    isPreparing &&
+    Boolean(
+      isStarting ||
+      (activeRequest && startState.isLoading) ||
+      (matches && ['QUEUED', 'RUNNING'].includes(status.status))
+    );
   const isCurrent =
     !isPreparing &&
     !isStale &&
@@ -183,6 +240,10 @@ export function usePayrollPreviewRun(month: string, academicYearId: string) {
     currentPage?.previewRunId === requestedRunId &&
     currentPage.isCurrent;
   const hasError = Boolean(error);
+  const canRequestPreview =
+    !lookupFailed &&
+    !statusQuery.isError &&
+    (matches || (!requestedRunId && !isLookingUp && lookupQuery.currentData?.currentRun === null));
 
   const loadPreview = useCallback(
     async (refresh = false): Promise<PayrollPreviewStatus | null> => {
@@ -191,6 +252,7 @@ export function usePayrollPreviewRun(month: string, academicYearId: string) {
         context.current !== renderedContext ||
         !month ||
         !academicYearId ||
+        !canRequestPreview ||
         requestLock.current === context.current ||
         (!hasError && matches && ['QUEUED', 'RUNNING'].includes(status.status))
       )
@@ -201,8 +263,11 @@ export function usePayrollPreviewRun(month: string, academicYearId: string) {
       setRequest({ context: requestedContext, id: '', awaitingUrl: true });
       setFailure(null);
       try {
-        const result = await start({ month, academicYearId, refresh }).unwrap();
+        if (pendingCommand.current?.context !== requestedContext || pendingCommand.current.refresh !== refresh)
+          pendingCommand.current = { context: requestedContext, refresh, key: crypto.randomUUID() };
+        const result = await start({ month, academicYearId, refresh, commandKey: pendingCommand.current.key }).unwrap();
         if (!stillCurrent()) return null;
+        pendingCommand.current = null;
         setRequest({
           context: requestedContext,
           id: result.id,
@@ -225,6 +290,7 @@ export function usePayrollPreviewRun(month: string, academicYearId: string) {
     },
     [
       academicYearId,
+      canRequestPreview,
       completedId,
       hasError,
       key,
@@ -240,17 +306,6 @@ export function usePayrollPreviewRun(month: string, academicYearId: string) {
     ]
   );
 
-  useEffect(() => {
-    if (
-      !month ||
-      !academicYearId ||
-      (requestedRunId && (!status || matches)) ||
-      lastStarted.current === key
-    )
-      return;
-    lastStarted.current = key;
-    loadPreview();
-  }, [academicYearId, key, loadPreview, matches, month, requestedRunId, status]);
   useEffect(() => {
     if (currentPage && !pageQuery.isFetching) setDisplay({ key, data: currentPage });
   }, [currentPage, key, pageQuery.isFetching]);
@@ -281,28 +336,47 @@ export function usePayrollPreviewRun(month: string, academicYearId: string) {
 
   const refreshStatus = async () => {
     if (
-      !requestedRunId ||
+      !month ||
       !academicYearId ||
       busy ||
       statusRefreshRequest.current === context.current
     )
-      return;
+      return false;
     const requestedContext = context.current;
     statusRefreshRequest.current = requestedContext;
     setRefreshingContext(requestedContext);
     setFailure(null);
     try {
+      if (!requestedRunId) {
+        const lookup = await lookupQuery.refetch();
+        if (!mounted.current || context.current !== requestedContext || lookup.error) return false;
+        if (useRegister) {
+          const rows = await pageQuery.refetch();
+          return mounted.current && context.current === requestedContext && !rows.error;
+        }
+        return true;
+      }
       const result = await statusQuery.refetch();
-      if (
-        mounted.current &&
-        context.current === requestedContext &&
-        result.data?.status === 'SUCCEEDED' &&
-        completedId
-      )
-        await pageQuery.refetch();
+      if (!mounted.current || context.current !== requestedContext) return false;
+      if (result.error) {
+        setFailure({ key, ...normalizePreviewFailure(result.error) });
+        return false;
+      }
+      if (result.data?.status !== 'SUCCEEDED' || !completedId) return false;
+
+      const rows = await pageQuery.refetch();
+      if (!mounted.current || context.current !== requestedContext) return false;
+      if (rows.error) {
+        setFailure({ key, ...normalizePreviewFailure(rows.error) });
+        return false;
+      }
+      return Boolean(
+        result.data.isCurrent && rows.data?.previewRunId === completedId && rows.data.isCurrent
+      );
     } catch (caught) {
       if (mounted.current && context.current === requestedContext)
         setFailure({ key, ...normalizePreviewFailure(caught) });
+      return false;
     } finally {
       if (statusRefreshRequest.current === requestedContext) statusRefreshRequest.current = null;
       if (mounted.current)
@@ -312,10 +386,16 @@ export function usePayrollPreviewRun(month: string, academicYearId: string) {
 
   return {
     data,
-    tableProps: pageQuery.tableProps,
+    tableProps: useRegister ? { isFilter: false, serverSideSort: true } : pageQuery.tableProps,
+    registerCriteria,
     runId: completedId,
     requestedRunId,
     busy,
+    isLookingUp,
+    isCalculating,
+    lookupFailed,
+    readFailed: Boolean(queryError) && !isStarting,
+    canRequestPreview,
     fetching: pageQuery.isFetching,
     error,
     status,

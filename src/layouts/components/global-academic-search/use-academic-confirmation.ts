@@ -31,7 +31,7 @@ export function useAcademicConfirmation({
       applyAcademicOption(option);
       setDriverNextEnabled(true);
     };
-    if (isStudentModule && guardAcademicContextChange(applySelection)) return;
+    if (guardAcademicContextChange(applySelection)) return;
 
     const subject = isYearOnly ? 'academic year' : 'academic year, board and medium';
     const from = isYearOnly ? selectedOption?.academicYear.name : selectedOption?.label;
@@ -48,7 +48,7 @@ export function useAcademicConfirmation({
       icon: 'warning',
     });
     if (confirmed) {
-      if (isStudentModule && guardAcademicContextChange(applySelection)) return;
+      if (guardAcademicContextChange(applySelection)) return;
       applySelection();
     }
     if (selectedOption || confirmed) setDriverNextEnabled(true);

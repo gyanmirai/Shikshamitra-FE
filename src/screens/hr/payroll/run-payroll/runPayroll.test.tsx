@@ -23,6 +23,7 @@ const mocks = vi.hoisted(() => ({
     globalState: { currentYear: { id: 'year-1', name: '2026-27' } },
   },
   load: vi.fn(),
+  refresh: vi.fn(),
   replace: vi.fn(),
   success: vi.fn(),
   error: vi.fn(),
@@ -32,6 +33,8 @@ const mocks = vi.hoisted(() => ({
   confirmLock: null as null | (() => Promise<void>),
   reviewHandler: null as null | (() => Promise<void>),
   adjustment: vi.fn(),
+  approvalUnavailable: false,
+  retryApproval: vi.fn(),
 }));
 vi.mock('./payroll-registration-readiness', () => ({ PayrollRegistrationReadiness: () => null }));
 vi.mock('@mui/lab', async (importOriginal) => {
@@ -65,6 +68,13 @@ vi.mock('src/components/toast', () => ({
   shikshaMitraToast: { success: mocks.success, error: mocks.error },
 }));
 vi.mock('./use-payroll-preview-run', () => ({ usePayrollPreviewRun: () => mocks.preview }));
+vi.mock('src/redux/runPayroll/payroll-approval-api', () => ({
+  usePayrollApprovalSettingsQuery: () => ({
+    currentData: { mode: 'Legacy', version: 0 },
+    isError: mocks.approvalUnavailable,
+    refetch: mocks.retryApproval,
+  }),
+}));
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span /> }));
 vi.mock('src/routes/components', () => ({
   RouterLink: ({ children, ...props }: any) => <a {...props}>{children}</a>,
@@ -147,6 +157,7 @@ const view = () => (
 );
 
 beforeEach(() => {
+  mocks.approvalUnavailable = false;
   vi.clearAllMocks();
   mocks.query = 'month=2026-08';
   mocks.state.auth = {
@@ -170,8 +181,10 @@ beforeEach(() => {
   };
   mocks.state.globalState.currentYear = { id: 'year-1', name: '2026-27' };
   mocks.load.mockResolvedValue({ id: 'run-2', status: 'QUEUED' });
+  mocks.refresh.mockResolvedValue(true);
   mocks.preview = {
     data: {
+      previewRunId: 'run-1',
       isGenerated: false,
       items: [
         {
@@ -199,6 +212,7 @@ beforeEach(() => {
     },
     runId: 'run-1',
     requestedRunId: 'run-1',
+    canRequestPreview: true,
     isCurrent: true,
     isPreparing: false,
     isStale: false,
@@ -206,6 +220,7 @@ beforeEach(() => {
     fetching: false,
     error: null,
     loadPreview: mocks.load,
+    refreshStatus: mocks.refresh,
     page: 0,
     pageSize: 25,
     searchInput: '',
@@ -218,6 +233,16 @@ beforeEach(() => {
 });
 
 describe('Run Payroll preview feedback', () => {
+  it('offers an explicit first generation after the month lookup finds no saved payroll', async () => {
+    mocks.preview.data = undefined;
+    mocks.preview.requestedRunId = '';
+    mocks.preview.isCurrent = false;
+    render(view());
+    expect(mocks.load).not.toHaveBeenCalled();
+    await userEvent.click(screen.getByRole('button', { name: 'Generate payroll' }));
+    expect(mocks.load).toHaveBeenCalledExactlyOnceWith(false);
+  });
+
   it.each(['other employee', 'same employee reopened'])(
     'does not reset a later drawer session after an adjustment saves: %s',
     async (selection) => {
@@ -464,7 +489,8 @@ describe('Run Payroll preview feedback', () => {
     expect(mocks.mark).toHaveBeenCalledWith(
       expect.objectContaining({ previewRunId: 'run-1', employeeIds: ['employee-1'] })
     );
-    expect(mocks.load).toHaveBeenCalledWith();
+    expect(mocks.refresh).toHaveBeenCalledWith();
+    expect(mocks.load).not.toHaveBeenCalled();
     mocks.preview = {
       ...mocks.preview,
       data: {
@@ -475,6 +501,19 @@ describe('Run Payroll preview feedback', () => {
     ui.rerender(view());
     expect(screen.getByRole('button', { name: 'Lock Reviewed' })).toBeDisabled();
     expect(screen.getByText(/Marking reviewed does not resolve these issues/)).toBeVisible();
+  });
+
+  it('retries only the read if review saves and the row refresh fails', async () => {
+    mocks.preview.data.items[0].reviewStatus = 'PENDING';
+    mocks.refresh.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+    render(view());
+    await userEvent.click(screen.getByRole('checkbox'));
+    await userEvent.click(screen.getByRole('button', { name: 'Mark Reviewed' }));
+    expect(await screen.findByText(/Review changes were saved/)).toBeVisible();
+    await userEvent.click(screen.getByRole('button', { name: 'Reload rows' }));
+    expect(mocks.refresh).toHaveBeenCalledTimes(2);
+    expect(mocks.mark).toHaveBeenCalledTimes(1);
+    expect(mocks.load).not.toHaveBeenCalled();
   });
 
   it('keeps selection and durable partial-lock feedback without claiming full success', async () => {
@@ -527,7 +566,7 @@ describe('Run Payroll preview feedback', () => {
   it('explains selection and independent review and lock permissions', async () => {
     mocks.preview.data.items[0].reviewStatus = 'PENDING';
     const ui = render(view());
-    expect(screen.getByText(/Select staff rows to lock/)).toBeVisible();
+    expect(screen.getByText(/Check staff salaries and issues, then select/)).toBeVisible();
     await userEvent.click(screen.getByRole('checkbox'));
     expect(screen.getByText(/Mark the selected pending rows reviewed/)).toBeVisible();
     mocks.state.auth.permissions = mocks.state.auth.permissions.filter(
@@ -591,7 +630,7 @@ describe('Run Payroll preview feedback', () => {
 
   it('uses the safe failure reason for explicit feedback and a permission-gated setup action', async () => {
     const ui = render(view());
-    await userEvent.click(screen.getByRole('button', { name: 'Refresh preview' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Recalculate payroll' }));
     const reason = 'Complete the establishment registration.';
     mocks.preview = {
       ...mocks.preview,
@@ -614,7 +653,7 @@ describe('Run Payroll preview feedback', () => {
     ui.rerender(view());
     expect(screen.queryByRole('link', { name: /Review statutory setup/ })).not.toBeInTheDocument();
     expect(screen.getByText(/Ask your HR administrator/)).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Retry' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Try generating again' })).toBeEnabled();
     expect(mocks.load).toHaveBeenCalledTimes(1);
   });
 
@@ -705,44 +744,41 @@ describe('Run Payroll preview feedback', () => {
       },
     };
     ui.rerender(view());
-    expect(screen.getByText('Critical • 4')).toBeVisible();
+    expect(screen.getByText('Attendance missing')).toBeVisible();
     expect(screen.getByRole('button', { name: 'Lock Reviewed' })).toBeDisabled();
     expect(mocks.lock).not.toHaveBeenCalled();
   });
 
-  it('keeps refresh and readiness together in the register action row', async () => {
+  it('keeps period actions visible and reveals row actions after selection', async () => {
     render(view());
     expect(
-      within(screen.getByRole('region', { name: 'Payroll Register' })).getByRole('button', {
-        name: 'Refresh preview',
+      screen.getByRole('button', {
+        name: 'Recalculate payroll',
       })
     ).toBeVisible();
     expect(
-      within(screen.getByRole('banner')).queryByRole('button', { name: 'Refresh preview' })
+      within(screen.getByRole('banner')).queryByRole('button', { name: 'Recalculate payroll' })
     ).not.toBeInTheDocument();
     expect(
       within(screen.getByRole('group', { name: 'Payroll preview' })).getByRole('button', {
-        name: 'Refresh preview',
+        name: 'Recalculate payroll',
       })
     ).toBeVisible();
     const inspectionActions = within(
-      screen.getByRole('group', { name: 'Payroll readiness and audit' })
+      screen.getByRole('group', { name: 'Payroll readiness and activity' })
     );
-    expect(inspectionActions.getByRole('button', { name: 'View readiness' })).toBeVisible();
-    expect(inspectionActions.getByRole('button', { name: 'Audit' })).toBeVisible();
-    const reviewActions = within(
-      screen.getByRole('group', { name: 'Review and lock selected payroll rows' })
-    );
-    expect(reviewActions.getByRole('button', { name: 'Mark Reviewed' })).toBeDisabled();
-    expect(reviewActions.getByRole('button', { name: 'Unmark' })).toBeDisabled();
-    expect(reviewActions.getByRole('button', { name: 'Lock Reviewed' })).toBeDisabled();
+    expect(inspectionActions.getByRole('button', { name: 'Payroll checks' })).toBeVisible();
+    expect(inspectionActions.getByRole('button', { name: 'Payroll activity' })).toBeVisible();
+    expect(
+      screen.queryByRole('group', { name: 'Review and lock selected payroll rows' })
+    ).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Open attendance' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('dialog', { name: 'Payroll Readiness' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'Payroll Checks' })).not.toBeInTheDocument();
     expect(screen.queryByText('Academic year')).not.toBeInTheDocument();
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
     await userEvent.click(
-      within(screen.getByRole('region', { name: 'Payroll Register' })).getByRole('button', {
-        name: 'View readiness',
+      screen.getByRole('button', {
+        name: 'Payroll checks',
       })
     );
     expect(
@@ -757,14 +793,14 @@ describe('Run Payroll preview feedback', () => {
   it('starts closed, supports keyboard opening and Escape, and restores focus', async () => {
     render(view());
     fireEvent.scroll(window);
-    const toggle = screen.getByRole('button', { name: 'View readiness' });
+    const toggle = screen.getByRole('button', { name: 'Payroll checks' });
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
     act(() => toggle.focus());
     await userEvent.keyboard('{Enter}');
-    expect(screen.getByRole('dialog', { name: 'Payroll Readiness' })).toBeVisible();
+    expect(screen.getByRole('dialog', { name: 'Payroll Checks' })).toBeVisible();
     await userEvent.keyboard('{Escape}');
     await waitFor(() =>
-      expect(screen.queryByRole('dialog', { name: 'Payroll Readiness' })).not.toBeInTheDocument()
+      expect(screen.queryByRole('dialog', { name: 'Payroll Checks' })).not.toBeInTheDocument()
     );
     expect(toggle).toHaveFocus();
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
@@ -775,14 +811,14 @@ describe('Run Payroll preview feedback', () => {
     mocks.preview.page = 2;
     render(view());
     await userEvent.click(screen.getByRole('checkbox', { name: 'Select payroll for Test Staff' }));
-    await userEvent.click(screen.getByRole('button', { name: 'View readiness' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Payroll checks' }));
     await userEvent.click(
-      within(screen.getByRole('dialog', { name: 'Payroll Readiness' })).getByRole('button', {
+      within(screen.getByRole('dialog', { name: 'Payroll Checks' })).getByRole('button', {
         name: 'Close details',
       })
     );
     await waitFor(() =>
-      expect(screen.queryByRole('dialog', { name: 'Payroll Readiness' })).not.toBeInTheDocument()
+      expect(screen.queryByRole('dialog', { name: 'Payroll Checks' })).not.toBeInTheDocument()
     );
     expect(screen.getByRole('checkbox', { name: 'Select payroll for Test Staff' })).toBeChecked();
     expect(mocks.preview.searchInput).toBe('Test');
@@ -795,7 +831,7 @@ describe('Run Payroll preview feedback', () => {
     'closes readiness on a %s change and ignores previous-context aggregates',
     async (change) => {
       const ui = render(view());
-      await userEvent.click(screen.getByRole('button', { name: 'View readiness' }));
+      await userEvent.click(screen.getByRole('button', { name: 'Payroll checks' }));
       if (change === 'month') mocks.query = 'month=2026-09';
       else {
         mocks.state.globalState.currentYear = { id: 'year-2', name: '2027-28' };
@@ -804,13 +840,13 @@ describe('Run Payroll preview feedback', () => {
       }
       ui.rerender(view());
       await waitFor(() =>
-        expect(screen.queryByRole('dialog', { name: 'Payroll Readiness' })).not.toBeInTheDocument()
+        expect(screen.queryByRole('dialog', { name: 'Payroll Checks' })).not.toBeInTheDocument()
       );
-      expect(screen.getByRole('button', { name: 'View readiness' })).toHaveAttribute(
+      expect(screen.getByRole('button', { name: 'Payroll checks' })).toHaveAttribute(
         'aria-expanded',
         'false'
       );
-      await userEvent.click(screen.getByRole('button', { name: 'View readiness' }));
+      await userEvent.click(screen.getByRole('button', { name: 'Payroll checks' }));
       expect(screen.getByRole('status')).not.toHaveTextContent('Ready to review');
       const summary = screen.getByRole('region', { name: 'Preview summary' });
       expect(within(summary).getAllByText('Unavailable')).toHaveLength(5);
@@ -825,7 +861,7 @@ describe('Run Payroll preview feedback', () => {
     mocks.preview.fetching = true;
     mocks.preview.isCurrent = false;
     render(view());
-    await userEvent.click(screen.getByRole('button', { name: 'View readiness' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Payroll checks' }));
     expect(screen.getByRole('status')).toHaveTextContent('Ready to review');
     const summary = screen.getByRole('region', { name: 'Preview summary' });
     expect(within(summary).getByText('₹0')).toBeVisible();
@@ -857,7 +893,7 @@ describe('Run Payroll preview feedback', () => {
     Object.assign(mocks.preview.data.readiness, readiness);
     render(view());
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: 'View readiness' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Payroll checks' }));
     expect(screen.getByRole('status')).toHaveTextContent(status);
   });
 
@@ -869,7 +905,7 @@ describe('Run Payroll preview feedback', () => {
       'PF_WAGE_BASIS_REQUIRED',
     ];
     render(view());
-    await userEvent.click(screen.getByRole('button', { name: 'View readiness' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Payroll checks' }));
     expect(screen.getByRole('status')).toHaveTextContent('Needs attention');
     const additional = screen.getByRole('region', { name: 'Additional readiness checks' });
     expect(within(additional).getAllByText('Effective salary setup required')).toHaveLength(1);
@@ -886,7 +922,7 @@ describe('Run Payroll preview feedback', () => {
     delete mocks.preview.data.readiness.missingSalaryStructureCount;
     delete mocks.preview.data.readiness.netPayTotal;
     render(view());
-    await userEvent.click(screen.getByRole('button', { name: 'View readiness' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Payroll checks' }));
     expect(screen.getByRole('status')).toHaveTextContent('Readiness unavailable');
     expect(
       within(screen.getByRole('region', { name: 'Readiness checks' })).getByText('Unavailable')
@@ -906,7 +942,7 @@ describe('Run Payroll preview feedback', () => {
     });
     mocks.preview.data.items = [];
     render(view());
-    await userEvent.click(screen.getByRole('button', { name: 'View readiness' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Payroll checks' }));
     expect(screen.getByRole('status')).toHaveTextContent('No staff');
     expect(
       within(screen.getByRole('region', { name: 'Preview summary' })).getByText('₹0')
@@ -917,7 +953,7 @@ describe('Run Payroll preview feedback', () => {
     mocks.preview.isPreparing = true;
     mocks.preview.isCurrent = false;
     render(view());
-    await userEvent.click(screen.getByRole('button', { name: 'View readiness' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Payroll checks' }));
     expect(screen.getByRole('status')).toHaveTextContent('Preparing preview');
     expect(
       within(screen.getByRole('region', { name: 'Preview summary' })).getByText('₹10,000')
@@ -926,21 +962,22 @@ describe('Run Payroll preview feedback', () => {
       screen.getByText('Showing the last completed preview while preparing results.')
     ).toBeVisible();
     await userEvent.click(
-      within(screen.getByRole('dialog', { name: 'Payroll Readiness' })).getByRole('button', {
+      within(screen.getByRole('dialog', { name: 'Payroll Checks' })).getByRole('button', {
         name: 'Close details',
       })
     );
     await waitFor(() =>
-      expect(screen.queryByRole('dialog', { name: 'Payroll Readiness' })).not.toBeInTheDocument()
+      expect(screen.queryByRole('dialog', { name: 'Payroll Checks' })).not.toBeInTheDocument()
     );
-    expect(screen.getByRole('button', { name: 'Refreshing…' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Recalculate payroll' })).toBeDisabled();
   });
 
   it('shows localized refresh progress without background or outdated alerts', () => {
     mocks.preview.isPreparing = true;
+    mocks.preview.isCalculating = true;
     mocks.preview.isCurrent = false;
     render(view());
-    expect(screen.getByRole('button', { name: 'Refreshing…' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Generating payroll…' })).toBeDisabled();
     expect(screen.getByRole('progressbar', { name: 'Preparing payroll preview' })).toBeVisible();
     expect(screen.queryByText(/background|outdated/)).not.toBeInTheDocument();
   });
@@ -948,11 +985,12 @@ describe('Run Payroll preview feedback', () => {
   it('uses table skeletons for initial preparation', () => {
     mocks.preview.data = undefined;
     mocks.preview.isPreparing = true;
+    mocks.preview.isCalculating = true;
     mocks.preview.isCurrent = false;
     render(view());
     expect(
-      within(screen.getByRole('region', { name: 'Payroll Register' })).getByRole('button', {
-        name: 'Generating…',
+      screen.getByRole('button', {
+        name: 'Generating payroll…',
       })
     ).toBeDisabled();
     expect(screen.getByRole('region', { name: 'Payroll rows' })).toHaveAttribute(
@@ -965,7 +1003,7 @@ describe('Run Payroll preview feedback', () => {
     mocks.preview.fetching = true;
     mocks.preview.isCurrent = false;
     render(view());
-    expect(screen.getByRole('button', { name: 'Refresh preview' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Recalculate payroll' })).toBeEnabled();
     expect(screen.getByRole('progressbar', { name: 'Loading payroll rows' })).toBeVisible();
     expect(screen.queryByText('Preview needs refresh')).not.toBeInTheDocument();
     expect(mocks.success).not.toHaveBeenCalled();
@@ -976,14 +1014,14 @@ describe('Run Payroll preview feedback', () => {
     mocks.preview.isCurrent = false;
     render(view());
     expect(
-      within(screen.getByRole('region', { name: 'Payroll Register' })).getByRole('status')
+      within(screen.getByRole('group', { name: 'Payroll preview' })).getByRole('status')
     ).toHaveTextContent('Preview needs refresh');
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
   it('notifies once after the accepted run and its current rows are ready', async () => {
     const ui = render(view());
-    await userEvent.click(screen.getByRole('button', { name: 'Refresh preview' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Recalculate payroll' }));
     expect(mocks.success).not.toHaveBeenCalled();
     mocks.preview = {
       ...mocks.preview,
@@ -1002,7 +1040,7 @@ describe('Run Payroll preview feedback', () => {
 
   it('notifies after a successful zero-row result', async () => {
     const ui = render(view());
-    await userEvent.click(screen.getByRole('button', { name: 'Refresh preview' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Recalculate payroll' }));
     mocks.preview = {
       ...mocks.preview,
       requestedRunId: 'run-2',
@@ -1015,13 +1053,13 @@ describe('Run Payroll preview feedback', () => {
 
   it('blocks duplicate explicit requests while awaiting the accepted run', async () => {
     render(view());
-    await userEvent.dblClick(screen.getByRole('button', { name: 'Refresh preview' }));
+    await userEvent.dblClick(screen.getByRole('button', { name: 'Recalculate payroll' }));
     expect(mocks.load).toHaveBeenCalledExactlyOnceWith(true);
   });
 
   it('shows one failure notification and persistent retry feedback', async () => {
     const ui = render(view());
-    await userEvent.click(screen.getByRole('button', { name: 'Refresh preview' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Recalculate payroll' }));
     mocks.preview = {
       ...mocks.preview,
       requestedRunId: 'run-2',
@@ -1031,7 +1069,7 @@ describe('Run Payroll preview feedback', () => {
     ui.rerender(view());
     expect(mocks.error).toHaveBeenCalledTimes(1);
     expect(screen.getByRole('alert')).toHaveTextContent('Request failed');
-    expect(screen.getByRole('button', { name: 'Retry' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Try generating again' })).toBeEnabled();
     ui.rerender(view());
     expect(mocks.error).toHaveBeenCalledTimes(1);
   });
@@ -1040,7 +1078,7 @@ describe('Run Payroll preview feedback', () => {
     mocks.preview.error = { message: 'Request failed' };
     const ui = render(view());
     expect(mocks.error).not.toHaveBeenCalled();
-    await userEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Try generating again' }));
     mocks.preview = {
       ...mocks.preview,
       requestedRunId: 'run-2',
@@ -1055,7 +1093,7 @@ describe('Run Payroll preview feedback', () => {
 
   it('clears pending notifications when the month changes', async () => {
     const ui = render(view());
-    await userEvent.click(screen.getByRole('button', { name: 'Refresh preview' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Recalculate payroll' }));
     mocks.query = 'month=2026-09';
     mocks.preview = { ...mocks.preview, requestedRunId: 'run-2' };
     ui.rerender(view());
@@ -1070,7 +1108,7 @@ describe('Run Payroll preview feedback', () => {
       })
     );
     const ui = render(view());
-    await userEvent.click(screen.getByRole('button', { name: 'Refresh preview' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Recalculate payroll' }));
     ui.unmount();
     await act(async () => resolve({ id: 'run-2' }));
     expect(mocks.success).not.toHaveBeenCalled();
@@ -1105,6 +1143,24 @@ describe('Run Payroll preview feedback', () => {
     expect(mocks.adjustment).not.toHaveBeenCalled();
   });
 
+  it('keeps the register readable and closes lock confirmation when approval settings are unavailable', async () => {
+    const ui = render(view());
+    await userEvent.click(screen.getByRole('checkbox'));
+    await userEvent.click(screen.getByRole('button', { name: 'Lock Reviewed' }));
+    const confirm = mocks.confirmLock;
+    mocks.approvalUnavailable = true;
+    ui.rerender(view());
+    expect(screen.getByRole('region', { name: 'Payroll Register' })).toBeVisible();
+    expect(screen.queryByRole('dialog', { name: 'Lock reviewed payroll rows' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Lock Reviewed' })).not.toBeInTheDocument();
+    await act(async () => {
+      await confirm?.();
+    });
+    expect(mocks.lock).not.toHaveBeenCalled();
+    await userEvent.click(screen.getByRole('button', { name: /^Retry$/ }));
+    expect(mocks.retryApproval).toHaveBeenCalled();
+  });
+
   it('blocks a lock handler when the preview becomes stale with confirmation open', async () => {
     const ui = render(view());
     await userEvent.click(screen.getByRole('checkbox'));
@@ -1126,7 +1182,8 @@ describe('Run Payroll preview feedback', () => {
     await userEvent.click(screen.getByRole('checkbox'));
     await userEvent.click(screen.getByRole('button', { name: 'Unmark' }));
     expect(mocks.unmark).toHaveBeenCalled();
-    expect(mocks.load).toHaveBeenCalledWith();
+    expect(mocks.refresh).toHaveBeenCalledWith();
+    expect(mocks.load).not.toHaveBeenCalled();
     mocks.preview = { ...mocks.preview, requestedRunId: 'run-2', runId: 'run-2' };
     ui.rerender(view());
     expect(mocks.success).toHaveBeenCalledExactlyOnceWith({ message: 'Removed selected reviews.' });
@@ -1135,7 +1192,7 @@ describe('Run Payroll preview feedback', () => {
   it('notifies completion after retrying a transport failure for the same run', async () => {
     mocks.load.mockResolvedValue({ id: 'run-2', status: 'RUNNING' });
     const ui = render(view());
-    await userEvent.click(screen.getByRole('button', { name: 'Refresh preview' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Recalculate payroll' }));
     mocks.preview = {
       ...mocks.preview,
       requestedRunId: 'run-2',
@@ -1148,7 +1205,7 @@ describe('Run Payroll preview feedback', () => {
       mocks.preview = { ...mocks.preview, error: null, isPreparing: true };
       return { id: 'run-2', status: 'RUNNING' };
     });
-    await userEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Try generating again' }));
     mocks.preview = { ...mocks.preview, isCurrent: true, isPreparing: false, error: null };
     ui.rerender(view());
     expect(mocks.success).toHaveBeenCalledExactlyOnceWith({ message: 'Payroll preview updated.' });
@@ -1157,13 +1214,13 @@ describe('Run Payroll preview feedback', () => {
   it('reports an explicit failure even when the accepted run has already notified completion', async () => {
     mocks.load.mockResolvedValue({ id: 'run-1', status: 'SUCCEEDED' });
     render(view());
-    await userEvent.click(screen.getByRole('button', { name: 'Refresh preview' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Recalculate payroll' }));
     expect(mocks.success).toHaveBeenCalledTimes(1);
     mocks.load.mockImplementationOnce(async () => {
       mocks.preview = { ...mocks.preview, isCurrent: false, error: { message: 'Fetch failed' } };
       return { id: 'run-1', status: 'SUCCEEDED' };
     });
-    await userEvent.click(screen.getByRole('button', { name: 'Refresh preview' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Recalculate payroll' }));
     expect(mocks.error).toHaveBeenCalledTimes(1);
     expect(mocks.success).toHaveBeenCalledTimes(1);
   });
@@ -1171,11 +1228,11 @@ describe('Run Payroll preview feedback', () => {
   it('reports a failed start and allows another explicit retry', async () => {
     mocks.load.mockResolvedValue(null);
     const ui = render(view());
-    await userEvent.click(screen.getByRole('button', { name: 'Refresh preview' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Recalculate payroll' }));
     mocks.preview = { ...mocks.preview, isCurrent: false, error: { message: 'Start failed' } };
     ui.rerender(view());
     expect(mocks.error).toHaveBeenCalledTimes(1);
-    await userEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Try generating again' }));
     expect(mocks.load).toHaveBeenCalledTimes(2);
     expect(mocks.error).toHaveBeenCalledTimes(2);
   });

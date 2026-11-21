@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type {
   IdCard,
   IdCardTemplate,
@@ -23,9 +24,11 @@ export function StudentConfiguredCardPreview({
   side,
   interactive = true,
   photoUrl,
-}: StudentCardPreviewProps) {
+  legacyFront,
+}: StudentCardPreviewProps & { legacyFront?: ReactNode }) {
   const [selected, setSelected] = useState<'front' | 'back'>('front');
-  const activeSide = template.backSideEnabled ? (side ?? selected) : 'front';
+  const canPreviewBack = template.backSideEnabled || Boolean(legacyFront);
+  const activeSide = canPreviewBack ? (side ?? selected) : 'front';
   const values = {
     ...card?.studentSnapshot,
     schoolName: template.schoolName,
@@ -36,7 +39,7 @@ export function StudentConfiguredCardPreview({
   };
   return (
     <Stack spacing={1} sx={{ width: 1, minWidth: 0 }}>
-      {interactive && template.backSideEnabled && (
+      {interactive && canPreviewBack && (
         <ToggleButtonGroup
           size="small"
           exclusive
@@ -51,14 +54,18 @@ export function StudentConfiguredCardPreview({
         </ToggleButtonGroup>
       )}
       <Box sx={{ width: 1, minWidth: 0 }}>
-        <IdentityCardPreview
-          photoUrl={photoUrl}
-          layout={getStudentICardLayout(template)}
-          side={activeSide}
-          values={values}
-          qrCodeEnabled={template.showQrCode}
-          logoHidden={template.logo?.mode === 2}
-        />
+        {activeSide === 'front' && legacyFront ? (
+          legacyFront
+        ) : (
+          <IdentityCardPreview
+            photoUrl={photoUrl}
+            layout={getStudentICardLayout(template)}
+            side={activeSide}
+            values={values}
+            qrCodeEnabled={template.showQrCode}
+            logoHidden={template.logo?.mode === 2}
+          />
+        )}
       </Box>
     </Stack>
   );

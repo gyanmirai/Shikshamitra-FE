@@ -4,7 +4,7 @@ import { createTheme } from 'src/theme/create-theme';
 import { FeeMonth } from 'src/enums/fee-collection-type';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import FeeHeadRefundTable from './FeeHeadRefundTable';
 import { buildRefundInitialValues, buildFeeRefundApiPayload } from './initialValuesAndValidation';
@@ -97,6 +97,80 @@ describe('refund receipt selection', () => {
     fireEvent.click(savedReceipt);
     await waitFor(() => expect(savedReceipt).not.toBeChecked());
     expect(otherReceipt).toBeDisabled();
+  });
+
+  it('locks other payment accounts across rows and groups until selected installments are cleared', async () => {
+    const data = mocks.eligibility.currentData;
+    data.receipts = [
+      { receiptId: 'receipt-0', financeFeeAccountId: null },
+      { receiptId: 'receipt-1', financeFeeAccountId: 'account' },
+    ];
+    data.feeHeads.push({
+      feeHeadId: 'materials',
+      feeHeadName: 'Materials',
+      months: [{ ...data.feeHeads[0].months[1], sourceAllocationId: 'materials-payment' }],
+    });
+    render(<Request />);
+    const legacy = screen.getByRole('checkbox', { name: 'Select December 2026 · FIN-0' });
+    const accountGroup = screen.getByRole('checkbox', {
+      name: 'Select refundable installments for Materials',
+    });
+    await act(async () => {
+      fireEvent.click(legacy);
+    });
+    expect(accountGroup).toBeDisabled();
+    screen.getAllByRole('checkbox', { name: 'Select June 2026 · FIN-1' }).forEach((checkbox) => {
+      expect(checkbox).toBeDisabled();
+    });
+    await act(async () => {
+      fireEvent.click(legacy);
+    });
+    expect(accountGroup).toBeEnabled();
+    await act(async () => {
+      fireEvent.click(accountGroup);
+    });
+    expect(legacy).toBeDisabled();
+    expect(screen.getByLabelText('Selection total')).toHaveTextContent('1 installments · 200');
+    await act(async () => {
+      fireEvent.click(accountGroup);
+    });
+    expect(legacy).toBeEnabled();
+  });
+
+  it('bulk selects multiple receipts from one account without mixing a legacy payment in the same head', async () => {
+    const data = mocks.eligibility.currentData;
+    data.receipts = [
+      { receiptId: 'receipt-0', financeFeeAccountId: 'account' },
+      { receiptId: 'receipt-1', financeFeeAccountId: 'account' },
+      { receiptId: 'legacy', financeFeeAccountId: null },
+    ];
+    data.feeHeads[0].months.push({
+      ...data.feeHeads[0].months[0],
+      sourceReceiptId: 'legacy',
+      receiptNumber: 'FIN-LEGACY',
+      sourceAllocationId: 'legacy-allocation',
+    });
+    render(<Request />);
+    const group = screen.getByRole('checkbox', {
+      name: 'Select refundable installments for Examination fee',
+    });
+    const legacy = screen.getByRole('checkbox', { name: 'Select December 2026 · FIN-LEGACY' });
+    await act(async () => {
+      fireEvent.click(group);
+    });
+    expect(screen.getByLabelText('Selection total')).toHaveTextContent('2 installments · 400');
+    expect(group).toBeChecked();
+    expect(legacy).toBeDisabled();
+    const payload = JSON.parse(screen.getByLabelText('Request payload').textContent!);
+    expect(payload.lines.map((line: { sourceReceiptId: string }) => line.sourceReceiptId)).toEqual([
+      'receipt-0',
+      'receipt-1',
+    ]);
+    await act(async () => {
+      fireEvent.click(group);
+    });
+    expect(screen.getByLabelText('Selection total')).toHaveTextContent('0 installments · 0');
+    expect(legacy).toBeEnabled();
   });
 
   it('collapses a fee head independently of its selection and preserves entered amounts', async () => {
@@ -369,6 +443,71 @@ describe('refund receipt selection', () => {
         sourceAllocationId: 'late-payment',
         sourceReceiptId: 'receipt',
         amount: 250,
+      },
+    ]);
+  });
+
+  it.each([
+    { choice: 'full', partial: false },
+    { choice: 'partial', partial: true },
+  ])('limits a $choice late-fee refund to the collected portion after a waiver', async ({ partial }) => {
+    // Of an assessed 11,000, 9,500 was waived and only 1,500 was collected.
+    // Eligibility carries the immutable payment source, not the waived assessment.
+    mocks.eligibility.currentData = {
+      totalPaid: 1500,
+      totalRefundable: 1500,
+      receipts: [{ receiptId: 'late-receipt', financeFeeAccountId: 'account' }],
+      feeHeads: [
+        {
+          feeHeadId: null,
+          feeHeadName: 'Paid late fees',
+          months: [
+            {
+              month: FeeMonth.August,
+              year: 2026,
+              lateFeeDueFeeId: 'late-due',
+              chargeName: 'Late Fee - Tuition',
+              sourceAllocationId: 'late-payment',
+              sourceReceiptId: 'late-receipt',
+              receiptNumber: 'FIN-2026-000089',
+              total: 1500,
+              paid: 1500,
+              refunded: 0,
+              refundable: 1500,
+            },
+          ],
+        },
+      ],
+    };
+    render(<Request partial={partial} />);
+    expect(screen.getByRole('table', { name: 'Paid late fees table' })).toBeVisible();
+    const payment = screen.getByRole('checkbox', {
+      name: 'Select Late Fee - Tuition · FIN-2026-000089',
+    });
+    fireEvent.click(payment);
+    await waitFor(() => expect(payment).toBeChecked());
+    const amount = screen.getByRole('textbox', {
+      name: 'Refund amount for Late Fee - Tuition · FIN-2026-000089',
+    });
+    if (partial) {
+      fireEvent.change(amount, { target: { value: '1500' } });
+      await waitFor(() => expect(amount).toHaveValue('₹ 1,500'));
+      fireEvent.change(amount, { target: { value: '11000' } });
+      expect(amount).toHaveValue('₹ 1,500');
+    } else {
+      expect(amount).toBeDisabled();
+    }
+    await waitFor(() =>
+      expect(screen.getByLabelText('Selection total')).toHaveTextContent('1 installments · 1500')
+    );
+    const payload = JSON.parse(screen.getByLabelText('Request payload').textContent!);
+    expect(payload.originalReceiptId).toBe('late-receipt');
+    expect(payload.lines).toEqual([
+      {
+        lateFeeDueFeeId: 'late-due',
+        sourceAllocationId: 'late-payment',
+        sourceReceiptId: 'late-receipt',
+        amount: 1500,
       },
     ]);
   });

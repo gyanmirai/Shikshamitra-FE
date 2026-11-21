@@ -1,3 +1,4 @@
+import { useAccountSettingHistoryPage } from 'src/screens/finance/settings/components/useAccountSettingHistoryPage';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import { LoadingButton } from '@mui/lab';
@@ -30,6 +31,9 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
   onDelete,
   onEdit,
   isLoading,
+  isRefreshing,
+  error,
+  onRetry,
   totalCount,
   onServerPagination,
   onServerSearch,
@@ -50,7 +54,8 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
   const [deactivationReason, setDeactivationReason] = useState('');
   const [statusError, setStatusError] = useState('');
   const [historyItem, setHistoryItem] = useState<IIncomeCategory | null>(null);
-  const history = useGetIncomeCategoryVersionsQuery(historyItem?.id || '', { skip: !historyItem });
+  const historyPage = useAccountSettingHistoryPage(historyItem?.id);
+  const history = useGetIncomeCategoryVersionsQuery(historyPage.query, { skip: !historyItem || !access.canView });
 
   const handleOpenStatusConfirm = (row: IIncomeCategory) => {
     setStatusData(row);
@@ -233,6 +238,9 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
         columns={columns}
         data={data || []}
         isLoading={isLoading}
+        isRefreshing={isRefreshing}
+        error={error}
+        onRetry={onRetry}
         serverSideFilter
         filters={filters}
         onServerFilter={onServerFilter}
@@ -325,6 +333,9 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
         title={historyItem?.name || 'Income category'}
         recordType="Income category"
         data={history.currentData}
+        page={historyPage.page}
+        pageSize={historyPage.pageSize}
+        onPageChange={historyPage.onPageChange}
         isLoading={history.isFetching}
         isError={history.isError}
         onRetry={() => {

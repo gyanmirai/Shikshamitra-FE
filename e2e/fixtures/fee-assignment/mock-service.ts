@@ -64,6 +64,7 @@ const policyOptions: AssignmentPolicy[] = [
 const stamps = new Map<string, number>();
 const unpaidEdit = new URLSearchParams(window.location.search).has('unpaidEdit');
 const paidEdit = new URLSearchParams(window.location.search).has('paidEdit');
+const optionalService = new URLSearchParams(window.location.search).has('optionalService');
 const bulkSidebar = new URLSearchParams(window.location.search).has('bulkSidebar');
 const installmentStress = new URLSearchParams(window.location.search).has('installmentStress');
 
@@ -103,6 +104,13 @@ export const candidate: AssignmentCandidate = {
     },
   ],
 };
+if (optionalService) {
+  candidate.heads.push({
+    ...candidate.heads[1],
+    feeHeadId: 'activity',
+    feeHeadName: 'After-school activity',
+  });
+}
 if (bulkSidebar) {
   candidate.heads.push(
     ...Array.from({ length: 6 }, (_, index) => ({
@@ -343,7 +351,8 @@ if (unpaidEdit) {
       studentId,
       academicYearId: 'year',
       standardFeeStructureId: candidate.id,
-      selectedOptionalFeeHeadIds: [],
+      selectedOptionalFeeHeadIds:
+        optionalService && studentId === 'student-one' ? ['transport'] : [],
       servicePeriods: [],
       feeHeadDetails: [],
       variableFeeHeads: candidate.heads
@@ -365,6 +374,10 @@ export const api = createApi({
   ],
   baseQuery: async (args: { url: string; body?: any; params?: any }, queryApi, extraOptions) => {
     if (realApi) return realBaseQuery(args, queryApi, extraOptions);
+    (window as any).assignmentReadRequests = [
+      ...((window as any).assignmentReadRequests ?? []),
+      { url: args.url, body: args.body, params: args.params },
+    ];
     if (args.body?.editAssignmentId && paidEdit && args.body.studentId === 'student-one')
       return { error: { status: 409, data: { code: 'Finance:Assignment:StructureEditBlocked' } } };
     if (args.url.endsWith('/contexts')) {
@@ -372,9 +385,56 @@ export const api = createApi({
         return {
           error: { status: 503, data: { detail: 'Synthetic context service unavailable.' } },
         };
-      return { data: args.body.studentIds.map(assignmentContext) };
+      return {
+        data: args.body.studentIds.map((id: string) => {
+          const context = assignmentContext(id);
+          if (args.body.includeEditDetails !== false || context.status !== 'Assigned')
+            return context;
+          const {
+            assignedAssignment,
+            preparedAssignment,
+            canEditStructure,
+            structureEditBlocker,
+            prorationPolicy,
+            ...lightweight
+          } = context;
+          return lightweight;
+        }),
+      };
     }
     if (args.url.endsWith('/policy-options')) return { data: policyOptions };
+    if (optionalService && /\/optional-service-stop(?:\/preview)?$/.test(args.url)) {
+      const assignment = saved.get('student-one')?.assignment;
+      const line = assignment?.lines
+        .filter((item) => item.feeHeadId === args.body?.feeHeadId)
+        .at(-1);
+      if (!assignment || !line || line.optionalServiceCancellationAmount)
+        return {
+          error: {
+            status: 409,
+            data: { code: 'Finance:Assignment:OptionalServiceAlreadyStopped' },
+          },
+        };
+      const cancelledAmount = line.outstandingAmount;
+      if (args.url.endsWith('/preview'))
+        return { data: { installmentCount: 1, cancelledAmount, previewToken: 'stop-preview' } };
+      saved.set('student-one', {
+        ...saved.get('student-one')!,
+        assignment: {
+          ...assignment,
+          lines: assignment.lines.map((item) =>
+            item === line
+              ? {
+                  ...item,
+                  outstandingAmount: 0,
+                  optionalServiceCancellationAmount: cancelledAmount,
+                }
+              : item
+          ),
+        },
+      });
+      return { data: { installmentCount: 1, cancelledAmount } };
+    }
     if (args.url.endsWith('/policies')) {
       const id = args.url.split('/').at(-2)!;
       const assigned = saved.get(id);
@@ -401,8 +461,12 @@ export const api = createApi({
     }
     if (args.url.includes('/student/')) {
       const id = args.url.split('/').at(-1)!;
+      const context = assignmentContext(id);
       return {
         data: {
+          studentFeeStructureId: context.assignmentId,
+          canEditStructure: context.canEditStructure,
+          structureEditBlocker: context.structureEditBlocker,
           assignment: saved.get(id)?.assignment,
           warnings: [],
           concurrencyStamp: String(stamps.get(id) ?? 0),

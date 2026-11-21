@@ -2,151 +2,94 @@
 
 import type { RootState } from 'src/redux/store';
 
-import React, { useState } from 'react';
-// import { useGetIssuedBooksQuery } from 'src/redux/library/issueReturnBook';
+import { useSelector } from 'react-redux';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
-import { useDispatch, useSelector } from 'react-redux';
-import CustomDialog from 'src/components/customDialog';
-import { Box, Button, Typography } from '@mui/material';
-import CustomTooltip from 'src/components/custom-tooltip';
+import { Box, Stack, Button } from '@mui/material';
+import { libraryPaths } from 'src/constants/library-menus';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import BookIssueReturnTable from './Components/IssuedBookTable';
-import IssueBookModal from '../BookList/Components/BookView/BookIssueForm';
-import ReturnBookModal from '../BookList/Components/BookView/BookReturnForm';
+import { CirculationDialogs } from '../circulation/CirculationDialogs';
+import { useCirculationDialog } from '../circulation/useCirculationDialog';
 
-import type { ILibraryBookData } from './Components/type';
+import type { LibraryLoanRow } from '../circulation/loan-types';
+import type { CirculationDialogState } from '../circulation/return-target';
 
-const IssueReturnBook = () => {
-  // State for selected record
-  const [, setSelectedRecord] = useState<ILibraryBookData | null>(null);
-
-  // Dialog states
-  const issueDialog = useBoolean();
-  const returnDialog = useBoolean();
-
-  // Redux confirm state
-  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
-  const dispatch = useDispatch();
-
-  /**
-   * Handle closing dialog with unsaved changes check
-   */
-  const handleClose = (_e: any, isSubmit?: boolean) => {
-    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      issueDialog.onFalse();
-      setSelectedRecord(null);
-      returnDialog.onFalse();
-      dispatch(setIsChanges(false));
-    } else if (!isChanges) {
-      issueDialog.onFalse();
-      returnDialog.onFalse();
-      setSelectedRecord(null);
-    }
+function CirculationWorkspace() {
+  const { permissions } = useSelector((state: RootState) => state.auth);
+  const canIssue = hasGrantedPermission(permissions, 'Library.IssueReturn.Issue');
+  const canReturn = hasGrantedPermission(permissions, 'Library.IssueReturn.Return');
+  const canRenew = hasGrantedPermission(permissions, 'Library.IssueReturn.Renew');
+  const canReviewDates = hasGrantedPermission(permissions, 'Library.IssueReturn.ReviewDates');
+  const state = useCirculationDialog();
+  const openSaved = (kind: CirculationDialogState['kind'], row: LibraryLoanRow) => {
+    if (row.copyId && (row.transactionId || row.id))
+      state.open(kind, row.accessionNo, {
+        loanId: row.transactionId || row.id,
+        copyId: row.copyId,
+      });
   };
-
   return (
     <Box
       data-testid="library-issue-return-page"
-      sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+      sx={{ height: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}
     >
       <CustomBreadcrumbs
         heading="Issue & Return"
-        description={
-          issueDialog.value
-            ? 'Issue new books to members or update issued book details.'
-            : 'Manage book issue and return records for all library members.'
-        }
-        links={[
-          { name: 'Library', href: '/library/dashboard' },
-          { name: 'Issue & Return', href: '/library/issue-return-book' },
-        ]}
+        description="Manage borrowing and return records for Library members in your scope."
+        links={[{ name: 'Library', href: libraryPaths.dashboard }, { name: 'Issue & Return' }]}
         action={
-          <Box display="flex" gap={1}>
-            <Button
-              data-testid="library-issue-open-button"
-              onClick={() => issueDialog.onTrue()}
-              size="small"
-              startIcon={<Iconify icon="octicon:issue-closed-16" width={16} height={10} />}
-              variant="outlined"
-              sx={{ minWidth: 120, px: 3 }}
-            >
-              Issue
-            </Button>
-            <Button
-              data-testid="library-return-open-button"
-              onClick={() => returnDialog.onTrue()}
-              size="small"
-              startIcon={<Iconify icon="mdi:arrow-u-left-top" width={16} height={10} />}
-              variant="contained"
-              sx={{ minWidth: 120, px: 3 }}
-            >
-              Return
-            </Button>
-          </Box>
+          <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+            {canIssue && (
+              <Button
+                data-testid="library-issue-open-button"
+                size="small"
+                color="inherit"
+                variant="outlined"
+                disabled={state.busy}
+                startIcon={<Iconify icon={GlobalIcons.issueBook} />}
+                onClick={() => state.open('issue')}
+              >
+                Issue
+              </Button>
+            )}
+            {canReturn && (
+              <Button
+                data-testid="library-return-open-button"
+                size="small"
+                color="inherit"
+                variant="contained"
+                disabled={state.busy}
+                startIcon={<Iconify icon={GlobalIcons.retrunIcon} />}
+                onClick={() => state.open('return')}
+              >
+                Return
+              </Button>
+            )}
+          </Stack>
         }
-        sx={{ px: 1 }}
       />
-
-      <CustomDialog
-        open={issueDialog.value}
-        handleClose={() => {
-          issueDialog.onFalse();
-        }}
-        maxWidth="md"
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">Issue Book</Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title="Select a member and book to issue with issue date and due date."
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
-      >
-        <IssueBookModal onClose={handleClose} editData={null} />
-      </CustomDialog>
-
-      {/* Table */}
       <BookIssueReturnTable
-        addDialog={issueDialog}
-        onReturnBook={(data) => {
-          returnDialog.onTrue();
-          setSelectedRecord(data);
-        }}
+        onReturnBook={canReturn ? (row) => openSaved('return', row) : undefined}
+        onRenewBook={canRenew ? (row) => openSaved('renew', row) : undefined}
+        onReviewDates={canReviewDates ? (row) => openSaved('reviewDates', row) : undefined}
       />
-
-      <CustomDialog
-        open={returnDialog.value}
-        handleClose={() => {
-          returnDialog.onFalse();
-          // setSelectedCopy(null);
-        }}
-        maxWidth="md"
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">Return Book</Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title="Choose the issued book record you want to mark as returned, then enter the return date and any remarks if applicable."
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
-      >
-        <ReturnBookModal onClose={handleClose} accessionNo="" />
-      </CustomDialog>
+      <CirculationDialogs
+        dialog={state.dialog}
+        busy={state.busy}
+        onBusyChange={state.setBusy}
+        onClose={state.onClose}
+        onReload={state.reload}
+      />
+      {state.confirmation}
     </Box>
   );
-};
+}
 
-export default IssueReturnBook;
+export default function IssueReturnBook() {
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const academicYearId = (currentYear as { id?: string })?.id || '';
+  return <CirculationWorkspace key={academicYearId} />;
+}

@@ -5,6 +5,7 @@ import type {
   AdmissionWorkflowStage,
   AdmissionWorkflowTransition,
   AdmissionWorkflowValidationResult,
+  AdmissionWorkflowValidationIssue,
   AdmissionWorkflowStageTypeMetadata,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
@@ -83,12 +84,17 @@ export function useWorkflowBuilderDraft(
     setHistory({ past: [], future: [] });
   }, [loadedStamp, workflow]);
 
-  const issueCountByStage = (validation?.issues ?? []).reduce<Record<string, number>>(
-    (result, issue) => {
-      if (issue.stageId) result[issue.stageId] = (result[issue.stageId] ?? 0) + 1;
-      return result;
-    },
-    {}
+  const issuesByStage = (validation?.issues ?? []).reduce<
+    Record<string, AdmissionWorkflowValidationIssue[]>
+  >((result, issue) => {
+    const stageId =
+      issue.stageId ??
+      transitions.find((transition) => transition.id === issue.transitionId)?.fromStageId;
+    if (stageId) result[stageId] = [...(result[stageId] ?? []), issue];
+    return result;
+  }, {});
+  const issueCountByStage = Object.fromEntries(
+    Object.entries(issuesByStage).map(([stageId, issues]) => [stageId, issues.length])
   );
   const markDirty = () => {
     setValidation(null);
@@ -242,6 +248,7 @@ export function useWorkflowBuilderDraft(
     undo,
     redo,
     issueCountByStage,
+    issuesByStage,
     addStage,
     saveStage,
     deleteStage,

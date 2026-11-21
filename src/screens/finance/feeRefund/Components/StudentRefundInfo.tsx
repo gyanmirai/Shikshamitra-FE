@@ -3,6 +3,7 @@ import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { formatNumber } from 'src/utils/formate_number';
+import { DetailField } from 'src/screens/finance/components/detail-view';
 import { Box, Grid, Paper, Stack, Divider, Typography } from '@mui/material';
 import { FeeRefundStatusType, FeeRefundStatusTypeColors } from 'src/enums/feeRefund-status-type';
 
@@ -48,30 +49,7 @@ const InfoItem = ({ icon, label, value }: InfoItemProps) => (
         sx: { fontSize: 18 },
       })}
     </Box>
-    <Box sx={{ minWidth: 0 }}>
-      <Typography
-        variant="caption"
-        component="p"
-        sx={{
-          color: 'text.secondary',
-          display: 'block',
-          mb: 0.2,
-          fontWeight: 500,
-          textTransform: 'uppercase',
-          letterSpacing: 0.5,
-          fontSize: '0.65rem',
-        }}
-      >
-        {label}
-      </Typography>
-      <Typography
-        variant="subtitle2"
-        component="p"
-        sx={{ fontWeight: 700, color: 'text.primary', wordBreak: 'break-word' }}
-      >
-        {value || 'N/A'}
-      </Typography>
-    </Box>
+    <DetailField label={label} value={value || 'N/A'} />
   </Box>
 );
 
@@ -103,9 +81,7 @@ export default function StudentRefundInfo({
             sx={{ color: 'primary.main' }}
           />
           <Box>
-            <Typography variant="subtitle2" fontWeight={700}>
-              Student Information
-            </Typography>
+            <Typography variant="subtitle1">Student Information</Typography>
           </Box>
         </Stack>
         {status !== undefined && (
@@ -125,7 +101,7 @@ export default function StudentRefundInfo({
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <InfoItem
             icon={<Iconify icon="solar:user-bold" />}
-            label="Student Name"
+            label="Student name"
             value={`${student?.name}${student?.grNo ? ` (${student.grNo})` : ''}`}
           />
         </Grid>
@@ -134,7 +110,7 @@ export default function StudentRefundInfo({
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <InfoItem
             icon={<Iconify icon="solar:hashtag-bold" />}
-            label="Roll No."
+            label="Roll number"
             value={student?.rollNo}
           />
         </Grid>
@@ -143,7 +119,7 @@ export default function StudentRefundInfo({
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <InfoItem
             icon={<Iconify icon="solar:bookmark-opened-bold" />}
-            label="Class/Division"
+            label="Class / division"
             value={`${student?.class || 'N/A'} - ${student?.division || 'N/A'}`}
           />
         </Grid>
@@ -170,7 +146,7 @@ export default function StudentRefundInfo({
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <InfoItem
             icon={<Iconify icon="solar:hand-money-bold" />}
-            label="Total Paid Fees"
+            label="Total paid fees"
             value={student?.totalPaidFees ? formatNumber(student.totalPaidFees, 'INR') : '₹ 0'}
           />
         </Grid>
@@ -179,7 +155,7 @@ export default function StudentRefundInfo({
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <InfoItem
             icon={<Iconify icon="solar:wad-of-money-bold" />}
-            label="Total Pending Fees"
+            label="Total pending fees"
             value={
               student?.totalPendingFees ? formatNumber(student.totalPendingFees, 'INR') : '₹ 0'
             }

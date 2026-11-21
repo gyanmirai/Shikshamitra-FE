@@ -13,6 +13,7 @@ import VersionSidebar from './version/VersionSidebar';
 import VersionDiffTable from './version/VersionDiffTable';
 import FinancePolicySkeleton from './FinancePolicySkeleton';
 import FinancePolicyDrawerHeader from './FinancePolicyDrawerHeader';
+import PolicyHistoryPagination from './version/PolicyHistoryPagination';
 import { useFinancePolicyVersion } from '../hooks/useFinancePolicyVersion';
 
 import type { IFinancePolicyRow } from '../types/finance-policy.types';
@@ -36,6 +37,7 @@ export default function FinancePolicyVersionDrawer({
     isLoading,
     isError,
     refetch,
+    page, pageSize, totalCount, setPage,
   } = useFinancePolicyVersion({
     open,
     policyId: policy?.id,
@@ -187,10 +189,11 @@ export default function FinancePolicyVersionDrawer({
               }}
             >
               <VersionSidebar
-                key={policy.id}
+                key={`${policy.id}:${page}`}
                 versions={versions}
                 selectedVersionId={selectedVersionId}
                 onSelectVersion={handleSelectVersion}
+                isLatestPage={page === 0}
               />
             </Box>
 
@@ -220,9 +223,14 @@ export default function FinancePolicyVersionDrawer({
             borderColor: 'divider',
             display: 'flex',
             justifyContent: 'flex-end',
+            alignItems: 'center',
+            gap: 1,
+            flexWrap: 'wrap',
             flexShrink: 0,
           }}
         >
+          <PolicyHistoryPagination page={page} pageSize={pageSize} totalCount={totalCount}
+            isLoading={isLoading} onPageChange={setPage} />
           <Button
             variant="outlined"
             size="small"

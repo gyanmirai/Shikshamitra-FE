@@ -24,7 +24,8 @@ export type PipelineRowSelection = {
 export function buildAdmissionPipelineColumns(
   applicationUrl: (id: string) => string,
   onOpen?: (id: string) => void,
-  selection?: PipelineRowSelection
+  selection?: PipelineRowSelection,
+  onPrint?: (id: string, mode: 'blank' | 'filled') => void
 ): IColumn[] {
   const columns: IColumn[] = [
     {
@@ -116,8 +117,8 @@ export function buildAdmissionPipelineColumns(
     {
       id: 'actions',
       label: 'Actions',
-      minWidth: 64,
-      width: 64,
+      minWidth: onPrint ? 104 : 64,
+      width: onPrint ? 104 : 64,
       align: 'right',
       headerAlign: 'left',
       sticky: true,
@@ -130,6 +131,7 @@ export function buildAdmissionPipelineColumns(
           row={row as AdmissionPipelineItem}
           href={applicationUrl(row.id)}
           onOpen={onOpen}
+          onPrint={onPrint}
         />
       ),
     },

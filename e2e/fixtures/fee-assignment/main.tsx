@@ -51,6 +51,9 @@ async function renderFixture() {
             'Finance.Fees.StructureAssign.Add',
             'Finance.Fees.StructureAssign.OverrideAmount',
             'Finance.Fees.StructureAssign.OverridePolicies',
+            ...(new URLSearchParams(window.location.search).has('optionalService')
+              ? ['Finance.Fees.StructureAssign.StopOptionalService']
+              : []),
             'Finance.Policies.ProrationPolicy.OverrideChargePeriod',
           ]
             .filter(

@@ -83,7 +83,7 @@ it.each(['headerText', 'footerText'])(
         onDelete={vi.fn()}
       />
     );
-    expect(screen.queryByRole('textbox', { name: 'Static text' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: 'Text Value' })).not.toBeInTheDocument();
     expect(
       screen.getByText('This value comes from the card branding settings.')
     ).toBeInTheDocument();

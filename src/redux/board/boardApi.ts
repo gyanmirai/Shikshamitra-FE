@@ -4,9 +4,15 @@ import { boardType, organizationType, academicCalendarType } from 'src/redux/tag
 
 import { api } from '../service';
 
+// EducationBoardDto includes the board's own calendar in the scoped hierarchy response.
+export interface AcademicHierarchyBoard extends Board {
+  startDate: string;
+  endDate: string;
+}
+
 export const boardApi = api.injectEndpoints({
   endpoints: (builder) => ({
-    getAcademicHierarchy: builder.query<{ items: Board[] }, string>({
+    getAcademicHierarchy: builder.query<{ items: AcademicHierarchyBoard[] }, string>({
       query: (academicYearId) => ({
         url: '/app/education-board/hierarchy',
         params: { academicYearId },

@@ -61,13 +61,15 @@ import { useChargePermissions } from '../../useChargePermissions';
 import { StudentSelectionLayout } from './StudentSelectionLayout';
 import { useDirtyState, useChargeDetails } from './useChargeDetails';
 import { useChargeAcademicStructure } from './useChargeAcademicStructure';
-import { emptyStudentFilters, filterChargeStudents } from './studentFilters';
+import { emptyStudentFilters, keepValidDivisionFilter } from './studentFilters';
 import {
   getFirstValidationMessage,
   createUpdateChargeValidationSchema,
 } from './UpdateChargeValidation';
 
-import type { IStudentOption, IUpdateChargeFormProps, IUpdateChargeFormValues } from './types';
+import type { IUpdateChargeFormProps, IUpdateChargeFormValues } from './types';
+
+const MAX_CHARGE_STUDENTS = 500;
 
 /**
  * UpdateChargeForm Component
@@ -129,6 +131,7 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
   const [boards, setBoards] = useState<any[]>([]);
   const [mediums, setMediums] = useState<any[]>([]);
   const [studentSearch, setStudentSearch] = useState('');
+  const [studentPage, setStudentPage] = useState(0);
   const [showStudentFilters, setShowStudentFilters] = useState(false);
   const [pendingSelectionChange, setPendingSelectionChange] = useState<null | {
     type: 'class' | 'division';
@@ -374,6 +377,15 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
       ),
     [allDivision, scopeOptions, values.standardId]
   );
+  useEffect(() => {
+    setStudentFilters((previous) =>
+      keepValidDivisionFilter(
+        previous,
+        values.standardId,
+        visibleDivisions.map((division) => division.id)
+      )
+    );
+  }, [values.standardId, visibleDivisions]);
 
   const applySelectionChange = useCallback(
     (
@@ -425,34 +437,20 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
     hasFetched: studentsFetched,
     isError: studentsError,
     retry: retryStudents,
+    candidateStudentIds,
+    matchingStudentIds,
+    matchingStudentNames,
+    totalCount: studentTotalCount,
   } = useStudentsInScope(
     values.boardId,
     values.educationMediumId,
     values.standardId,
     values.divisionIds,
-    values.chargeCategoryId
+    values.chargeCategoryId,
+    { search: studentSearch, filters: studentFilters, page: studentPage }
   );
 
-  const scopeStudents = useMemo(
-    () =>
-      unfilteredScopeStudents.filter(
-        (student) =>
-          !scopeOptions ||
-          scopeOptions.some(
-            (option) =>
-              option.boardId === values.boardId &&
-              option.mediumId === values.educationMediumId &&
-              option.standardId === student.standardId &&
-              option.divisionId === student.divisionId
-          )
-      ),
-    [unfilteredScopeStudents, scopeOptions, values.boardId, values.educationMediumId]
-  );
-  const candidateStudentIds = useMemo(
-    () => scopeStudents.map((student) => student.id),
-    [scopeStudents]
-  );
-
+  const scopeStudents = unfilteredScopeStudents;
   candidateStudentIdsRef.current = candidateStudentIds;
   const audienceSnapshot = JSON.stringify({ values, studentIds: [...candidateStudentIds].sort() });
   useEffect(() => {
@@ -476,11 +474,19 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
     studentsError,
   ]);
 
-  const filteredStudents = useMemo(
-    () => filterChargeStudents(scopeStudents, studentSearch, studentFilters),
-    [scopeStudents, studentSearch, studentFilters]
-  );
   const activeStudentFilterCount = Object.values(studentFilters).filter(Boolean).length;
+  useEffect(
+    () => setStudentPage(0),
+    [
+      studentSearch,
+      studentFilters,
+      values.boardId,
+      values.educationMediumId,
+      values.standardId,
+      values.divisionIds,
+      values.chargeCategoryId,
+    ]
+  );
 
   // Handle dialog close with dirty state check
   const handleClose = useCallback(() => onClose(null, false), [onClose]);
@@ -571,7 +577,7 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
       if (values.standardId.length === 0 && values.studentIds.length > 0) {
         setSelectionNotice('Selected students were cleared because no class is selected.');
         setValues((previous) => ({ ...previous, studentIds: [], selectedStudents: [] }));
-      } else if (values.standardId.length > 0 && scopeStudents) {
+      } else if (values.standardId.length > 0) {
         const validIds = new Set(candidateStudentIdsRef.current);
         const needsCleanup = values.studentIds.some((id) => !validIds.has(id));
         if (needsCleanup) {
@@ -590,7 +596,7 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
   }, [
     studentsLoading,
     studentsFetched,
-    scopeStudents,
+    candidateStudentIds,
     values.standardId,
     values.studentIds,
     values.selectedStudents,
@@ -635,12 +641,17 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
               ? 'Wait for the student list to finish loading.'
               : studentsError
                 ? 'Reload the student list before saving.'
-                : !formik.isValid
-                  ? getFirstValidationMessage(errors) ||
-                    'Complete all required fields and select at least one student.'
-                  : values.selectionMode === 'all' && candidateStudentIds.length === 0
-                    ? 'No students are available in the selected scope.'
-                    : '';
+                : values.selectionMode === 'all' && candidateStudentIds.length > MAX_CHARGE_STUDENTS
+                  ? `A charge can include at most ${MAX_CHARGE_STUDENTS} students. Narrow the academic scope or select specific students.`
+                  : values.selectionMode === 'selected' &&
+                      values.studentIds.length > MAX_CHARGE_STUDENTS
+                    ? `A charge can include at most ${MAX_CHARGE_STUDENTS} students. Remove some selected students.`
+                    : !formik.isValid
+                      ? getFirstValidationMessage(errors) ||
+                        'Complete all required fields and select at least one student.'
+                      : values.selectionMode === 'all' && candidateStudentIds.length === 0
+                        ? 'No students are available in the selected scope.'
+                        : '';
 
   if (chargeLoading && !isSubmitLoading && !formik.isSubmitting) {
     return (
@@ -1190,26 +1201,11 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                             <CustomSelect
                               label="Division filter"
                               value={studentFilters.division}
-                              options={Array.from(
-                                new Map(
-                                  scopeStudents
-                                    .filter(
-                                      (
-                                        student
-                                      ): student is IStudentOption & { divisionId: string } =>
-                                        !!student.divisionId
-                                    )
-                                    .map((student) => [
-                                      student.divisionId,
-                                      {
-                                        id: student.divisionId,
-                                        name: [student.standardName, student.divisionName]
-                                          .filter(Boolean)
-                                          .join(' · '),
-                                      },
-                                    ])
-                                ).values()
-                              )}
+                              disabled={values.standardId.length !== 1}
+                              options={visibleDivisions.map((division) => ({
+                                id: division.id,
+                                name: division.name,
+                              }))}
                               labelKey="name"
                               valueKey="id"
                               onChange={(value) =>
@@ -1325,16 +1321,22 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                           sx={{ display: 'flex', minWidth: 0 }}
                         >
                           <StudentSelectionLayout
-                            students={filteredStudents}
-                            totalCount={scopeStudents.length}
+                            students={scopeStudents}
+                            totalCount={studentTotalCount}
+                            candidateCount={candidateStudentIds.length}
+                            matchingStudentIds={matchingStudentIds}
+                            page={studentPage}
+                            onPageChange={setStudentPage}
                             emptyMessage={
                               studentsError
                                 ? 'Student availability could not be checked. Use Retry to load this scope.'
-                                : values.standardId.length === 0
-                                  ? 'Select at least one class to see students.'
-                                  : studentSearch || activeStudentFilterCount > 0
-                                    ? 'No students match the current search or filters.'
-                                    : 'No students are available in this academic scope.'
+                                : studentFilters.assigned === 'no'
+                                  ? 'Charges require a fee structure assignment, so no unassigned students are eligible.'
+                                  : values.standardId.length === 0
+                                    ? 'Select at least one class to see students.'
+                                    : studentSearch || activeStudentFilterCount > 0
+                                      ? 'No students match the current search or filters.'
+                                      : 'No students are available in this academic scope.'
                             }
                             selectedStudentIds={
                               values.selectionMode === 'all'
@@ -1343,8 +1345,18 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                             }
                             isLoading={studentsLoading}
                             onSelectionChange={(selectedIds) => {
-                              const selected = scopeStudents.filter((s) =>
-                                selectedIds.includes(s.id)
+                              const known = new Map([
+                                ...values.selectedStudents.map(
+                                  (student) => [student.id, student] as const
+                                ),
+                                ...scopeStudents.map((student) => [student.id, student] as const),
+                              ]);
+                              const selected = selectedIds.map(
+                                (id) =>
+                                  known.get(id) ?? {
+                                    id,
+                                    label: matchingStudentNames[id] ?? 'Selected student',
+                                  }
                               );
                               setValues((previous) => ({
                                 ...previous,
@@ -1367,7 +1379,7 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                                 selectedStudents={values.selectedStudents}
                                 onRemove={(studentId) => {
                                   const newIds = values.studentIds.filter((id) => id !== studentId);
-                                  const selected = scopeStudents.filter((s) =>
+                                  const selected = values.selectedStudents.filter((s) =>
                                     newIds.includes(s.id)
                                   );
                                   setValues((previous) => ({

@@ -126,7 +126,7 @@ export function AssignmentPreviewPanel({ ctx }: { ctx: HRPolicyWorkspaceContext 
         <Typography variant="subtitle2">After this assignment (proposal)</Typography>
         {assignmentForm.targetType === 'group' && ctx.canPreviewImpact ? (
           <DrawerField
-            label="Sample staff (optional)"
+            label="Sample staff"
             inputId={sampleId}
             helperText="Select staff to include their other groups and staff override. Without a sample, this preview covers only the selected group."
           >
@@ -617,7 +617,7 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
                 />
               </DrawerField>
               <DrawerField
-                label="Effective To (optional)"
+                label="Effective To"
                 inputId={toId}
                 helperText={assignmentDateError || 'Leave blank for no end date.'}
               >

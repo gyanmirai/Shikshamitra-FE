@@ -56,7 +56,7 @@ describe('Pipeline bulk counsellor UI', () => {
     expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
     await user.click(screen.getByRole('combobox', { name: 'Counsellor' }));
     await user.click(screen.getByRole('option', { name: 'Jay Dalia' }));
-    fireEvent.change(screen.getByRole('textbox', { name: 'Reason for Change (Optional)' }), {
+    fireEvent.change(screen.getByRole('textbox', { name: 'Reason for Change' }), {
       target: { value: 'Coverage change' },
     });
     await user.click(screen.getByRole('button', { name: 'Submit' }));
@@ -143,7 +143,7 @@ describe('Pipeline bulk counsellor UI', () => {
     const user = userEvent.setup();
     renderDocumentUi(<BulkPipelineCounsellor assignment={assignment} disabled={false} />);
     await user.type(
-      screen.getByRole('textbox', { name: 'Reason for Change (Optional)' }),
+      screen.getByRole('textbox', { name: 'Reason for Change' }),
       'Pending reason'
     );
     await user.click(screen.getByRole('button', { name: 'Cancel' }));

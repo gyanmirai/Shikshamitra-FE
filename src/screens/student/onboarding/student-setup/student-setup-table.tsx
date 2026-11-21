@@ -11,8 +11,8 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import {
   Box,
+  Link,
   Stack,
-  Avatar,
   Button,
   Tooltip,
   Checkbox,
@@ -22,6 +22,7 @@ import {
 } from '@mui/material';
 
 import StudentPendingTasks from './student-pending-tasks';
+import StudentPhotoAvatar from '../../components/student-photo-avatar';
 import StudentSetupDivisionEditor from './student-setup-division-editor';
 import { hasAssignedDivision, type StudentSetupView } from './student-setup-view';
 import { studentSetupSortFields, studentSetupStatusOptions } from './student-setup-worklist-config';
@@ -243,12 +244,15 @@ export default function StudentSetupTable({
         stickyOnMobile: !['readiness', 'division', 'gr-number', 'roll-number'].includes(view),
         render: (value, row) => (
           <Stack direction="row" spacing={1.25} alignItems="center" sx={{ minWidth: 0, py: 0.25 }}>
-            <Avatar
+            <StudentPhotoAvatar
+              studentId={row.studentId}
+              alt={String(value)}
+              lazy
               sx={{
                 width: 36,
                 height: 36,
-                bgcolor: 'primary.lighter',
-                color: 'primary.dark',
+                bgcolor: 'background.neutral',
+                color: 'text.secondary',
                 fontSize: 12,
                 fontWeight: 700,
               }}
@@ -260,12 +264,14 @@ export default function StudentSetupTable({
                 .map((part) => part[0])
                 .join('')
                 .toUpperCase()}
-            </Avatar>
+            </StudentPhotoAvatar>
             <Stack spacing={0.25} sx={{ minWidth: 0 }}>
               {['readiness', 'division', 'gr-number', 'roll-number'].includes(view) ? (
-                <Button
-                  variant="text"
+                <Link
+                  component="button"
+                  type="button"
                   color="inherit"
+                  underline="hover"
                   aria-label={`Review ${String(value)}`}
                   disabled={assignmentBusy}
                   onClick={() => onOpen(String(row.id))}
@@ -277,10 +283,11 @@ export default function StudentSetupTable({
                     height: 'auto',
                     overflowWrap: 'anywhere',
                     typography: 'subtitle2',
+                    '&:disabled': { color: 'text.disabled', pointerEvents: 'none' },
                   }}
                 >
                   {value}
-                </Button>
+                </Link>
               ) : (
                 <Typography variant="subtitle2">{value}</Typography>
               )}

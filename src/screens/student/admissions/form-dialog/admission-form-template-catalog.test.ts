@@ -14,6 +14,78 @@ import {
 } from './admission-form-template-catalog';
 
 describe('admission form template catalogue', () => {
+  it('retains print settings when using a saved school form as a starter', () => {
+    const source = {
+      ...getAdmissionFormInitialValues(),
+      id: 'saved',
+      version: 1,
+      status: 0,
+      printSettings: {
+        template: 'structured-classic',
+        layout: 'spacious',
+        paperSize: 'A4',
+        showSchoolHeader: false,
+        showPhoto: false,
+        showSignature: true,
+      },
+    } as AdmissionForm;
+    const cloned = cloneSchoolFormAsStarter(source);
+    expect(cloned.printSettings).toEqual(source.printSettings);
+    expect(cloned.printSettings).not.toBe(source.printSettings);
+  });
+  it('orders new Home address selectors by their Country, State and City dependencies', () => {
+    const form = getSystemAdmissionFormTemplate('admission-application');
+    expect(form.printSettings?.template).toBe('boxed-grid');
+    const home = form.sections.find((section) => section.code === 'HOME_ADDRESS')!;
+    const locations = home.fields.filter((field) =>
+      ['Address.Country', 'Address.State', 'Address.City'].includes(field.bindingKey ?? '')
+    );
+    expect(locations.map((field) => field.bindingKey)).toEqual([
+      'Address.Country',
+      'Address.State',
+      'Address.City',
+    ]);
+    const [country, state, city] = locations;
+    expect(JSON.parse(country.validationJson!)).toMatchObject({ format: 'country' });
+    expect(JSON.parse(state.validationJson!)).toMatchObject({
+      format: 'state',
+      countryField: country.code,
+    });
+    expect(JSON.parse(city.validationJson!)).toMatchObject({
+      format: 'city',
+      countryField: country.code,
+      stateField: state.code,
+    });
+    const pack = materializeAdmissionFormSectionTemplate('home-address', {
+      ...form,
+      sections: [],
+    }).section;
+    expect(pack.fields.map((field) => field.bindingKey)).toEqual(
+      home.fields.map((field) => field.bindingKey)
+    );
+  });
+
+  it('retains authored address order when reopening an existing saved form', () => {
+    const form = getSystemAdmissionFormTemplate('admission-application');
+    const home = form.sections.find((section) => section.code === 'HOME_ADDRESS')!;
+    home.fields = [...home.fields]
+      .reverse()
+      .map((field, displayOrder) => ({ ...field, displayOrder }));
+    const saved: AdmissionForm = {
+      ...form,
+      id: 'saved-address',
+      version: 1,
+      status: 0,
+      sectionCount: form.sections.length,
+      concurrencyStamp: form.concurrencyStamp ?? undefined,
+    };
+    expect(
+      getAdmissionFormInitialValues(saved)
+        .sections.find((section) => section.code === 'HOME_ADDRESS')!
+        .fields.map((field) => field.code)
+    ).toEqual(home.fields.map((field) => field.code));
+  });
+
   it('collects required mapped identity in the application template without requiring a surname', () => {
     const fields = getSystemAdmissionFormTemplate('admission-application').sections.flatMap(
       (section) => section.fields

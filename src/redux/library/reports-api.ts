@@ -28,6 +28,7 @@ export type LibraryReportRequest = {
     memberRole?: number;
     fromDate?: string;
     toDate?: string;
+    asOfDate?: string;
     search?: string;
     top?: number;
   };

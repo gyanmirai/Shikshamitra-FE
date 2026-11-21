@@ -1,5 +1,7 @@
 'use client';
 
+import type { ReactNode } from 'react';
+
 import dayjs from 'dayjs';
 import { Label } from 'src/components/label';
 import { alpha } from '@mui/material/styles';
@@ -7,7 +9,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { formatNumber } from 'src/utils/formate_number';
-import { DetailField, DetailSection } from 'src/components/detail-view';
+import { DetailField, DetailSection } from 'src/screens/finance/components/detail-view';
 import {
   Box,
   Grid,
@@ -48,6 +50,9 @@ type FinancePolicyDetailsDrawerProps = {
   isLoading?: boolean;
   isError?: boolean;
   onRetry?: () => void;
+  aboveDialog?: boolean;
+  errorMessage?: string;
+  savedVersionDetails?: ReactNode;
 };
 
 const BooleanChip = ({ label, value }: { label: string; value?: boolean }) => (
@@ -74,6 +79,9 @@ export default function FinancePolicyDetailsDrawer({
   isLoading = false,
   isError = false,
   onRetry,
+  aboveDialog = false,
+  errorMessage = 'Unable to load this policy. Retry to view its saved configuration.',
+  savedVersionDetails,
 }: FinancePolicyDetailsDrawerProps) {
   if (!policy) return null;
 
@@ -84,6 +92,7 @@ export default function FinancePolicyDetailsDrawer({
       anchor="right"
       open={open}
       onClose={onClose}
+      sx={aboveDialog ? { zIndex: (theme) => theme.zIndex.modal + 1 } : undefined}
       slotProps={{
         backdrop: {
           sx: {
@@ -101,17 +110,6 @@ export default function FinancePolicyDetailsDrawer({
           display: 'flex',
           flexDirection: 'column',
           height: '100%',
-          '& [data-policy-detail-heading]': {
-            typography: 'subtitle1',
-            fontWeight: 700,
-          },
-          '& [data-policy-detail-label]': {
-            fontSize: '0.75rem',
-            fontWeight: 800,
-            letterSpacing: '0.75px',
-            lineHeight: 1.4,
-            textTransform: 'uppercase',
-          },
         },
       }}
     >
@@ -166,8 +164,10 @@ export default function FinancePolicyDetailsDrawer({
                   )
                 }
               >
-                Unable to load this policy. Retry to view its saved configuration.
+                {errorMessage}
               </Alert>
+            ) : savedVersionDetails != null ? (
+              savedVersionDetails
             ) : (
               <>
                 {/* ── 1. General Information ── */}
@@ -180,27 +180,25 @@ export default function FinancePolicyDetailsDrawer({
                 >
                   <Grid container spacing={1.5}>
                     <Grid size={{ xs: 12, sm: 6 }}>
-                      <DetailField label="Policy Name" value={policy.policyName} />
+                      <DetailField label="Policy name" value={policy.policyName} />
                     </Grid>
                     {type !== 'refund' && (
                       <Grid size={{ xs: 12, sm: 6 }}>
-                        <DetailField label="Policy Code" value={policy.policyCode || '—'} />
+                        <DetailField label="Policy code" value={policy.policyCode || '—'} />
                       </Grid>
                     )}
                     <Grid size={{ xs: 12, sm: 6 }}>
-                      <DetailField label="Academic Year" value={policy.academicYearName || '—'} />
+                      <DetailField label="Academic year" value={policy.academicYearName || '—'} />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6 }}>
                       <Box sx={{ mb: 0.5 }}>
                         <Typography
-                          data-policy-detail-label
                           variant="caption"
-                          fontWeight={800}
-                          color="text.primary"
+                          color="text.secondary"
                           display="block"
-                          sx={{ fontSize: '0.72rem', mb: 0.25 }}
+                          sx={{ mb: 0.25 }}
                         >
-                          Default Selection
+                          Default selection
                         </Typography>
                         <Label color={policy.isDefault ? 'primary' : 'default'} sx={{ height: 22 }}>
                           {policy.isDefault ? 'Default Policy' : 'Standard Policy'}
@@ -210,7 +208,7 @@ export default function FinancePolicyDetailsDrawer({
                     {policy.effectiveFrom && (
                       <Grid size={{ xs: 12, sm: 6 }}>
                         <DetailField
-                          label="Effective From"
+                          label="Effective from"
                           value={dayjs(policy.effectiveFrom).format('DD-MM-YYYY')}
                         />
                       </Grid>
@@ -218,7 +216,7 @@ export default function FinancePolicyDetailsDrawer({
                     {policy.effectiveTo && (
                       <Grid size={{ xs: 12, sm: 6 }}>
                         <DetailField
-                          label="Effective To"
+                          label="Effective to"
                           value={dayjs(policy.effectiveTo).format('DD-MM-YYYY')}
                         />
                       </Grid>
@@ -256,7 +254,7 @@ export default function FinancePolicyDetailsDrawer({
                             label="Prioritize automatic payments by"
                             value={
                               policyDetails.allocationBasis === 'FeeHead'
-                                ? 'Fee head first (A–Z)'
+                                ? 'Fee structure order'
                                 : policyDetails.allocationBasis === 'Installment'
                                   ? 'Installment first (earliest due)'
                                   : 'Existing selection order'
@@ -296,20 +294,20 @@ export default function FinancePolicyDetailsDrawer({
                           <Grid container spacing={1.5}>
                             <Grid size={{ xs: 12, sm: 6 }}>
                               <DetailField
-                                label="Grace Period"
+                                label="Grace period"
                                 value={`${policyDetails.gracePeriodDays ?? 0} calendar days`}
                               />
                             </Grid>
                             <Grid size={{ xs: 12, sm: 6 }}>
                               <BooleanChip
-                                label="Online Gateway Collection"
+                                label="Online gateway collection"
                                 value={policyDetails.allowOnlineCollection}
                               />
                             </Grid>
 
                             <Grid size={{ xs: 12, sm: 6 }}>
                               <BooleanChip
-                                label="Consider As Operational Income"
+                                label="Consider as operational income"
                                 value={policyDetails.considerAsIncome}
                               />
                             </Grid>
@@ -317,7 +315,7 @@ export default function FinancePolicyDetailsDrawer({
                               policyDetails.lateFeeIncomeCategoryName && (
                                 <Grid size={{ xs: 12, sm: 6 }}>
                                   <DetailField
-                                    label="Late Fee Income Category"
+                                    label="Late fee income category"
                                     value={policyDetails.lateFeeIncomeCategoryName}
                                   />
                                 </Grid>
@@ -335,13 +333,13 @@ export default function FinancePolicyDetailsDrawer({
                           <Grid container spacing={1.5}>
                             <Grid size={{ xs: 12, sm: 6 }}>
                               <BooleanChip
-                                label="Late Fee Accrual"
+                                label="Late fee accrual"
                                 value={policyDetails.enableLateFee}
                               />
                             </Grid>
                             <Grid size={{ xs: 12, sm: 6 }}>
                               <DetailField
-                                label="Late Fee Formula Type"
+                                label="Late fee formula type"
                                 value={formatEnumValue(policyDetails.lateFeeType || '—')}
                               />
                             </Grid>
@@ -349,7 +347,7 @@ export default function FinancePolicyDetailsDrawer({
                             {policyDetails.lateFeeType === 'Flat' && (
                               <Grid size={{ xs: 12, sm: 6 }}>
                                 <DetailField
-                                  label="Flat Late Fee Amount"
+                                  label="Flat late fee amount"
                                   value={
                                     policyDetails.flatAmount != null
                                       ? `₹${policyDetails.flatAmount}`
@@ -363,7 +361,7 @@ export default function FinancePolicyDetailsDrawer({
                               policyDetails.lateFeeType === 'Compound') && (
                               <Grid size={{ xs: 12, sm: 6 }}>
                                 <DetailField
-                                  label="Interest Rate"
+                                  label="Interest rate"
                                   value={
                                     policyDetails.percentage != null
                                       ? `${policyDetails.percentage}%`
@@ -381,7 +379,7 @@ export default function FinancePolicyDetailsDrawer({
                             {policyDetails.lateFeeType === 'PerDay' && (
                               <Grid size={{ xs: 12, sm: 6 }}>
                                 <DetailField
-                                  label="Daily Amount"
+                                  label="Daily amount"
                                   value={
                                     policyDetails.amountPerDay != null
                                       ? `₹${policyDetails.amountPerDay} / day`
@@ -393,7 +391,7 @@ export default function FinancePolicyDetailsDrawer({
                             {policyDetails.lateFeeType === 'PerWeek' && (
                               <Grid size={{ xs: 12, sm: 6 }}>
                                 <DetailField
-                                  label="Weekly Amount"
+                                  label="Weekly amount"
                                   value={
                                     policyDetails.amountPerWeek != null
                                       ? `₹${policyDetails.amountPerWeek} / week`
@@ -405,7 +403,7 @@ export default function FinancePolicyDetailsDrawer({
                             {policyDetails.lateFeeType === 'PerMonth' && (
                               <Grid size={{ xs: 12, sm: 6 }}>
                                 <DetailField
-                                  label="Monthly Amount"
+                                  label="Monthly amount"
                                   value={
                                     policyDetails.amountPerMonth != null
                                       ? `₹${policyDetails.amountPerMonth} / month`
@@ -417,7 +415,7 @@ export default function FinancePolicyDetailsDrawer({
 
                             <Grid size={{ xs: 12, sm: 6 }}>
                               <DetailField
-                                label="Maximum Late Fee Ceiling"
+                                label="Maximum late fee ceiling"
                                 value={
                                   policyDetails.maximumLateFeeAmount != null
                                     ? `₹${policyDetails.maximumLateFeeAmount}`
@@ -427,7 +425,7 @@ export default function FinancePolicyDetailsDrawer({
                             </Grid>
                             <Grid size={{ xs: 12, sm: 6 }}>
                               <DetailField
-                                label="Maximum Charging Days"
+                                label="Maximum charging days"
                                 value={
                                   policyDetails.maximumChargingDays != null
                                     ? `${policyDetails.maximumChargingDays} days cutoff`
@@ -439,12 +437,7 @@ export default function FinancePolicyDetailsDrawer({
 
                           {policyDetails.lateFeeType === 'Slab' && (
                             <Box sx={{ mt: 2.5 }}>
-                              <Typography
-                                data-policy-detail-heading
-                                variant="subtitle2"
-                                fontWeight={700}
-                                sx={{ mb: 1 }}
-                              >
+                              <Typography variant="subtitle1" sx={{ mb: 1 }}>
                                 Configured Escalation Slabs
                               </Typography>
                               {(policyDetails.escalationRules ?? []).length === 0 ? (
@@ -500,7 +493,8 @@ export default function FinancePolicyDetailsDrawer({
                                           <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
                                             {slab.calculationType}
                                           </TableCell>
-                                          <TableCell align="right"
+                                          <TableCell
+                                            align="right"
                                             sx={{ fontSize: '12px', fontWeight: 600, py: 0.75 }}
                                           >
                                             {slab.calculationType === 'Flat'
@@ -531,25 +525,25 @@ export default function FinancePolicyDetailsDrawer({
                         <Grid container spacing={1.5}>
                           <Grid size={{ xs: 12, sm: 6 }}>
                             <BooleanChip
-                              label="Allow Partial Payment"
+                              label="Allow partial payment"
                               value={policyDetails.allowPartialPayment}
                             />
                           </Grid>
                           <Grid size={{ xs: 12, sm: 6 }}>
                             <DetailField
-                              label="Allocation Method"
+                              label="Allocation method"
                               value={formatEnumValue(policyDetails.allocationMethod)}
                             />
                           </Grid>
                           <Grid size={{ xs: 12, sm: 6 }}>
                             <DetailField
-                              label="Minimum Payment Type"
+                              label="Minimum payment type"
                               value={formatEnumValue(policyDetails.minimumPaymentType)}
                             />
                           </Grid>
                           <Grid size={{ xs: 12, sm: 6 }}>
                             <DetailField
-                              label="Minimum Payment Value"
+                              label="Minimum payment value"
                               value={
                                 policyDetails.minimumPaymentValue != null
                                   ? `₹${policyDetails.minimumPaymentValue}`
@@ -575,7 +569,7 @@ export default function FinancePolicyDetailsDrawer({
                           <Grid container spacing={1.5}>
                             <Grid size={{ xs: 12, sm: 6 }}>
                               <DetailField
-                                label="Value Source"
+                                label="Value source"
                                 value={concessionOptionLabel(
                                   CONCESSION_VALUE_SOURCES,
                                   policyDetails.valueSource
@@ -584,7 +578,7 @@ export default function FinancePolicyDetailsDrawer({
                             </Grid>
                             <Grid size={{ xs: 12, sm: 6 }}>
                               <DetailField
-                                label="Calculation Method"
+                                label="Calculation method"
                                 value={concessionOptionLabel(
                                   CONCESSION_METHODS,
                                   policyDetails.calculationMethod
@@ -615,7 +609,7 @@ export default function FinancePolicyDetailsDrawer({
                           <Grid container spacing={1.5}>
                             <Grid size={{ xs: 12, sm: 6 }}>
                               <DetailField
-                                label="Apply Concession On"
+                                label="Apply concession on"
                                 value={concessionOptionLabel(
                                   CONCESSION_SCOPES,
                                   policyDetails.applyOn
@@ -624,7 +618,7 @@ export default function FinancePolicyDetailsDrawer({
                             </Grid>
                             <Grid size={{ xs: 12, sm: 6 }}>
                               <DetailField
-                                label="Fee Head Eligibility"
+                                label="Fee head eligibility"
                                 value="Configured per Fee Structure"
                                 secondary="Attached when fee structure is assigned to students"
                               />
@@ -671,7 +665,7 @@ export default function FinancePolicyDetailsDrawer({
                           <Grid container spacing={1.5}>
                             <Grid size={{ xs: 12, sm: 6 }}>
                               <DetailField
-                                label="Downstream Attachment"
+                                label="Downstream attachment"
                                 value={
                                   policy.isUsedInDownstream ? (
                                     <Label color="info">Attached to Structures</Label>
@@ -683,14 +677,14 @@ export default function FinancePolicyDetailsDrawer({
                             </Grid>
                             <Grid size={{ xs: 12, sm: 6 }}>
                               <DetailField
-                                label="Active Version"
+                                label="Active version"
                                 value={`Version ${policy.version || policyDetails.version || 1}`}
                               />
                             </Grid>
                             {(policy.updatedAt || policy.lastModificationTime) && (
                               <Grid size={{ xs: 12, sm: 6 }}>
                                 <DetailField
-                                  label="Last Modified"
+                                  label="Last modified"
                                   value={policyDateTimeLabel(
                                     policy.updatedAt || policy.lastModificationTime
                                   )}
@@ -703,7 +697,7 @@ export default function FinancePolicyDetailsDrawer({
                             {(policy.creationTime || (policyDetails as any)?.creationTime) && (
                               <Grid size={{ xs: 12, sm: 6 }}>
                                 <DetailField
-                                  label="Created Date"
+                                  label="Created date"
                                   value={policyDateTimeLabel(
                                     policy.creationTime || (policyDetails as any)?.creationTime
                                   )}
@@ -735,7 +729,7 @@ export default function FinancePolicyDetailsDrawer({
                           <Grid container spacing={1.5}>
                             <Grid size={{ xs: 12, sm: 6 }}>
                               <DetailField
-                                label="Fee Head Scope"
+                                label="Fee head scope"
                                 value={
                                   policyDetails.feeHeadScope === 'AllFeeHeads'
                                     ? 'All Fee Heads Included'
@@ -745,13 +739,13 @@ export default function FinancePolicyDetailsDrawer({
                             </Grid>
                             <Grid size={{ xs: 12, sm: 6 }}>
                               <BooleanChip
-                                label="Include Paid Incidental Charges"
+                                label="Include paid incidental charges"
                                 value={policyDetails.includePaidCharges}
                               />
                             </Grid>
                             <Grid size={{ xs: 12, sm: 6 }}>
                               <BooleanChip
-                                label="Include Paid Late Fees"
+                                label="Include paid late fees"
                                 value={policyDetails.includePaidLateFee}
                               />
                             </Grid>
@@ -769,14 +763,12 @@ export default function FinancePolicyDetailsDrawer({
                                 }}
                               >
                                 <Typography
-                                  data-policy-detail-label
                                   variant="caption"
-                                  fontWeight={800}
-                                  color="text.primary"
+                                  color="text.secondary"
                                   display="block"
                                   sx={{ mb: 1 }}
                                 >
-                                  APPLICABLE FEE HEADS ({policyDetails.applicableFeeHeadIds.length})
+                                  Applicable fee heads ({policyDetails.applicableFeeHeadIds.length})
                                 </Typography>
                                 <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
                                   {(policyDetails.applicableFeeHeadIds as string[]).map(
@@ -812,7 +804,7 @@ export default function FinancePolicyDetailsDrawer({
                           <Grid container spacing={1.5}>
                             <Grid size={{ xs: 12, sm: 6 }}>
                               <DetailField
-                                label="Amount Calculation Mode"
+                                label="Amount calculation mode"
                                 value={
                                   policyDetails.amountMode === 'RemainingPaidAmount'
                                     ? 'Entire Remaining Paid Amount (100%)'
@@ -826,7 +818,7 @@ export default function FinancePolicyDetailsDrawer({
                             </Grid>
                             <Grid size={{ xs: 12, sm: 6 }}>
                               <DetailField
-                                label="Configured Value / Rate"
+                                label="Configured value / rate"
                                 value={
                                   policyDetails.amountMode === 'Percentage'
                                     ? `${policyDetails.percentageValue ?? 0}%`
@@ -850,7 +842,7 @@ export default function FinancePolicyDetailsDrawer({
                           <Grid container spacing={1.5}>
                             <Grid size={{ xs: 12, sm: 6 }}>
                               <DetailField
-                                label="Administrative Deduction Rule"
+                                label="Administrative deduction rule"
                                 value={
                                   policyDetails.deductionType === 'None' ||
                                   !policyDetails.deductionType
@@ -866,7 +858,7 @@ export default function FinancePolicyDetailsDrawer({
                                 <>
                                   <Grid size={{ xs: 12, sm: 6 }}>
                                     <DetailField
-                                      label="Maximum Deduction Ceiling"
+                                      label="Maximum deduction ceiling"
                                       value={
                                         policyDetails.maximumDeduction != null
                                           ? `₹${policyDetails.maximumDeduction.toLocaleString('en-IN')}`
@@ -876,7 +868,7 @@ export default function FinancePolicyDetailsDrawer({
                                   </Grid>
                                   <Grid size={{ xs: 12 }}>
                                     <DetailField
-                                      label="Deduction Justification"
+                                      label="Deduction justification"
                                       value={
                                         policyDetails.deductionExplanation ||
                                         'Standard administrative fee'
@@ -887,7 +879,7 @@ export default function FinancePolicyDetailsDrawer({
                               )}
                             <Grid size={{ xs: 12, sm: 6 }}>
                               <DetailField
-                                label="Operational Processing SLA"
+                                label="Operational processing SLA"
                                 value={
                                   policyDetails.processingTargetDays != null
                                     ? `${policyDetails.processingTargetDays} days turnaround`
@@ -898,14 +890,12 @@ export default function FinancePolicyDetailsDrawer({
                             <Grid size={{ xs: 12 }}>
                               <Box sx={{ mb: 0.5 }}>
                                 <Typography
-                                  data-policy-detail-label
                                   variant="caption"
-                                  fontWeight={800}
-                                  color="text.primary"
+                                  color="text.secondary"
                                   display="block"
-                                  sx={{ fontSize: '0.72rem', mb: 0.5 }}
+                                  sx={{ mb: 0.5 }}
                                 >
-                                  Permitted Payout Channels
+                                  Permitted payout channels
                                 </Typography>
                                 <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
                                   {(policyDetails.allowedPayoutMethods ?? ['Cash']).map(
@@ -930,7 +920,7 @@ export default function FinancePolicyDetailsDrawer({
                                   {policyDetails.expenseCategoryId && (
                                     <Grid size={{ xs: 12, sm: 6 }}>
                                       <DetailField
-                                        label="Expense Category"
+                                        label="Expense category"
                                         value={
                                           policyDetails.expenseCategoryName || 'Name unavailable'
                                         }
@@ -940,7 +930,7 @@ export default function FinancePolicyDetailsDrawer({
                                   {policyDetails.defaultPayingBankAccountId && (
                                     <Grid size={{ xs: 12, sm: 6 }}>
                                       <DetailField
-                                        label="Default Paying Bank Account"
+                                        label="Default paying bank account"
                                         value={
                                           policyDetails.defaultPayingBankAccountName ||
                                           'Name unavailable'
@@ -1005,13 +995,13 @@ export default function FinancePolicyDetailsDrawer({
                           <Grid container spacing={1.5}>
                             <Grid size={{ xs: 12, sm: 6 }}>
                               <DetailField
-                                label="Active Policy Version"
+                                label="Active policy version"
                                 value={`Version ${policy.version || policyDetails.version || 1}`}
                               />
                             </Grid>
                             <Grid size={{ xs: 12, sm: 6 }}>
                               <DetailField
-                                label="Downstream Fee Structure Attachment"
+                                label="Downstream fee structure attachment"
                                 value={
                                   policy.isUsedInDownstream || policyDetails.isUsedInDownstream ? (
                                     <Label color="info" sx={{ height: 22 }}>
@@ -1030,7 +1020,7 @@ export default function FinancePolicyDetailsDrawer({
                               (policyDetails as any)?.lastModificationTime) && (
                               <Grid size={{ xs: 12, sm: 6 }}>
                                 <DetailField
-                                  label="Last Modified"
+                                  label="Last modified"
                                   value={dayjs(
                                     policy.updatedAt ||
                                       policy.lastModificationTime ||
@@ -1047,7 +1037,7 @@ export default function FinancePolicyDetailsDrawer({
                             {(policy.creationTime || (policyDetails as any)?.creationTime) && (
                               <Grid size={{ xs: 12, sm: 6 }}>
                                 <DetailField
-                                  label="Created Date"
+                                  label="Created date"
                                   value={dayjs(
                                     policy.creationTime || (policyDetails as any)?.creationTime
                                   ).format('DD-MM-YYYY hh:mm A')}
@@ -1079,7 +1069,7 @@ export default function FinancePolicyDetailsDrawer({
                           <Grid container spacing={1.5}>
                             <Grid size={{ xs: 12, sm: 6 }}>
                               <DetailField
-                                label="Default Academic Policy"
+                                label="Default academic policy"
                                 value={
                                   <Label
                                     color={
@@ -1099,7 +1089,7 @@ export default function FinancePolicyDetailsDrawer({
                             </Grid>
                             <Grid size={{ xs: 12, sm: 6 }}>
                               <DetailField
-                                label="Downstream Attachment"
+                                label="Downstream attachment"
                                 value={
                                   policy.isUsedInDownstream || policyDetails.isUsedInDownstream ? (
                                     <Label color="info" sx={{ height: 22 }}>
@@ -1120,13 +1110,13 @@ export default function FinancePolicyDetailsDrawer({
                             </Grid>
                             <Grid size={{ xs: 12, sm: 6 }}>
                               <DetailField
-                                label="Total Fee Heads"
+                                label="Total fee heads"
                                 value={`${(policyDetails.feeHeadRules ?? []).length} fee heads`}
                               />
                             </Grid>
                             <Grid size={{ xs: 12, sm: 6 }}>
                               <DetailField
-                                label="Active Proration Rules"
+                                label="Active proration rules"
                                 value={
                                   <Label color="primary" sx={{ height: 22 }}>
                                     {
@@ -1213,7 +1203,7 @@ export default function FinancePolicyDetailsDrawer({
                           <Grid container spacing={1.5}>
                             <Grid size={{ xs: 12, sm: 6 }}>
                               <DetailField
-                                label="Active Policy Version"
+                                label="Active policy version"
                                 value={`Version ${policy.version || policyDetails.version || 1}`}
                               />
                             </Grid>
@@ -1222,7 +1212,7 @@ export default function FinancePolicyDetailsDrawer({
                               (policyDetails as any)?.lastModificationTime) && (
                               <Grid size={{ xs: 12, sm: 6 }}>
                                 <DetailField
-                                  label="Last Modified"
+                                  label="Last modified"
                                   value={dayjs(
                                     policy.updatedAt ||
                                       policy.lastModificationTime ||
@@ -1239,7 +1229,7 @@ export default function FinancePolicyDetailsDrawer({
                             {(policy.creationTime || (policyDetails as any)?.creationTime) && (
                               <Grid size={{ xs: 12, sm: 6 }}>
                                 <DetailField
-                                  label="Created Date"
+                                  label="Created date"
                                   value={dayjs(
                                     policy.creationTime || (policyDetails as any)?.creationTime
                                   ).format('DD-MM-YYYY hh:mm A')}

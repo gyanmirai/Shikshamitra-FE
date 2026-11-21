@@ -4,7 +4,7 @@ import { Label } from 'src/components/label';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-
+import CustomTooltip from 'src/components/custom-tooltip';
 import {
   Box,
   Stack,
@@ -20,15 +20,15 @@ import {
 import { formatVersionTimestamp } from './finance-policy-version-formatters';
 
 import type { PolicyVersion } from '../../hooks/useFinancePolicyVersion';
-import CustomTooltip from 'src/components/custom-tooltip';
 
 interface VersionSidebarProps {
   versions: PolicyVersion[];
   selectedVersionId: string | null;
   onSelectVersion: (id: string) => void;
+  isLatestPage?: boolean;
 }
 
-function VersionSidebar({ versions, selectedVersionId, onSelectVersion }: VersionSidebarProps) {
+function VersionSidebar({ versions, selectedVersionId, onSelectVersion, isLatestPage = true }: VersionSidebarProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const filteredVersions = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -63,7 +63,7 @@ function VersionSidebar({ versions, selectedVersionId, onSelectVersion }: Versio
           <CustomTooltip
             arrow
             placement="right"
-            title="Versions are listed newest first. Latest marks the newest recorded snapshot, regardless of policy status. Search by version, author, date, or recorded reason."
+            title="Versions are listed newest first. Latest marks the newest recorded snapshot. Search the current page by version, author, date, or recorded reason. Use the page controls for older versions."
           >
             <IconButton size="small" aria-label="Versions information">
               <Iconify icon="lucide:info" width={16} sx={{ color: 'info.main' }} aria-hidden />
@@ -79,10 +79,10 @@ function VersionSidebar({ versions, selectedVersionId, onSelectVersion }: Versio
         fullWidth
         value={searchQuery}
         onChange={(event) => setSearchQuery(event.target.value)}
-        placeholder="Search versions…"
-        label="Search versions"
+        placeholder="Search this page…"
+        label="Search this page"
         slotProps={{
-          htmlInput: { 'aria-label': 'Search versions' },
+          htmlInput: { 'aria-label': 'Search this page' },
           input: {
             startAdornment: (
               <InputAdornment position="start">
@@ -138,7 +138,7 @@ function VersionSidebar({ versions, selectedVersionId, onSelectVersion }: Versio
                     <Typography variant="subtitle2" component="span">
                       Version {version.versionNumber}
                     </Typography>
-                    {version.eventId === versions[0]?.eventId && (
+                    {isLatestPage && version.eventId === versions[0]?.eventId && (
                       <Label color="default">Latest</Label>
                     )}
                   </Stack>

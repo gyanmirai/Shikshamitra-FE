@@ -1,5 +1,8 @@
 import type { AdmissionApplicationForm } from 'src/redux/student/admissions/admission-applications-api';
-import type { PublicParentRegistrationContext } from 'src/redux/student/admissions/admission-parent-registration-types';
+import type {
+  ParentRegistrationDocument,
+  PublicParentRegistrationContext,
+} from 'src/redux/student/admissions/admission-parent-registration-types';
 
 import { readAdmissionFormValue } from 'src/screens/student/admissions/admission-visibility-rules';
 import { isAdmissionSiblingField } from 'src/screens/student/admissions/admission-sibling-runtime-field';
@@ -90,4 +93,21 @@ export function readableRegistrationValue(value: string, optionsJson?: string | 
     /* Plain text. */
   }
   return value === 'true' ? 'Yes' : value === 'false' ? 'No' : label(value) || '—';
+}
+
+export function registrationDocumentStatus(document: ParentRegistrationDocument) {
+  switch (document.status) {
+    case 'accepted':
+      return { label: 'Accepted by school', color: 'success.main' };
+    case 'waived':
+      return { label: 'Waived by school', color: 'text.secondary' };
+    case 'pendingReview':
+      return { label: 'Uploaded · Awaiting school review', color: 'text.secondary' };
+    case 'rejected':
+      return { label: 'Rejected by school', color: 'error.main' };
+    default:
+      return document.isRequired
+        ? { label: 'Missing', color: 'warning.main' }
+        : { label: 'Not uploaded', color: 'text.secondary' };
+  }
 }

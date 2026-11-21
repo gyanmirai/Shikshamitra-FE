@@ -55,6 +55,31 @@ vi.mock('framer-motion', () => ({
 
 describe('Finance ledger filter context', () => {
   beforeEach(() => vi.clearAllMocks());
+
+  it('keeps the applied collection policy and version visible when filters are collapsed', () => {
+    render(
+      <FeeLedgerFilterBar
+        filters={FEE_LEDGER_INITIAL_FILTERS}
+        onFilterChange={vi.fn()}
+        collectionPolicyName="Standard policy"
+        collectionPolicyVersion={2}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Filters' }));
+
+    expect(screen.getByText('Collection policy', { exact: false })).toBeVisible();
+    expect(screen.getByText('Standard policy (v2)')).toBeVisible();
+  });
+
+  it('shows when no collection policy is applied', () => {
+    render(
+      <FeeLedgerFilterBar filters={FEE_LEDGER_INITIAL_FILTERS} onFilterChange={vi.fn()} />
+    );
+
+    expect(screen.getByText('None applied')).toBeVisible();
+  });
+
   it('allows either grouping when installment data is present', () => {
     const onFilterChange = vi.fn();
     render(

@@ -5,10 +5,20 @@ import dayjs from 'dayjs';
 import { Grid } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers';
 import ShakingTextField from 'src/components/shaking-text-field';
+import DatePickerCalendarHeader from 'src/components/date-picker-calendar-header';
 
 import { ADMISSION_DATE_FORMAT } from '../admission-date-formats';
 
-export function CycleDateFields({ formik }: { formik: FormikProps<CreateUpdateAdmissionCycle> }) {
+export function CycleDateFields({
+  formik,
+  minimumDate,
+  disabled = false,
+}: {
+  formik: FormikProps<CreateUpdateAdmissionCycle>;
+  minimumDate?: string;
+  disabled?: boolean;
+}) {
+  const minDate = minimumDate ? dayjs(minimumDate) : undefined;
   return (
     <>
       <Grid size={{ xs: 12, sm: 6 }}>
@@ -16,6 +26,11 @@ export function CycleDateFields({ formik }: { formik: FormikProps<CreateUpdateAd
           <DatePicker
             label="Applications open"
             format={ADMISSION_DATE_FORMAT}
+            views={['year', 'month', 'day']}
+            openTo="day"
+            slots={{ calendarHeader: DatePickerCalendarHeader }}
+            minDate={minDate}
+            disabled={disabled}
             value={formik.values.startDate ? dayjs(formik.values.startDate) : null}
             onChange={async (value) => {
               await formik.setFieldTouched('startDate', true, false);
@@ -43,6 +58,11 @@ export function CycleDateFields({ formik }: { formik: FormikProps<CreateUpdateAd
           <DatePicker
             label="Applications close"
             format={ADMISSION_DATE_FORMAT}
+            views={['year', 'month', 'day']}
+            openTo="day"
+            slots={{ calendarHeader: DatePickerCalendarHeader }}
+            minDate={minDate}
+            disabled={disabled}
             value={formik.values.endDate ? dayjs(formik.values.endDate) : null}
             onChange={async (value) => {
               await formik.setFieldTouched('endDate', true, false);

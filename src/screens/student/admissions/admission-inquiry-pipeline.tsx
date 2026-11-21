@@ -29,6 +29,7 @@ import { ADMISSION_APPLICATION_PERMISSIONS } from './admission-application-permi
 import { AdmissionPipelineMoreFilters } from './pipeline/admission-pipeline-more-filters';
 import { loadApplicationRuntimeForm } from './application-detail/application-workspace-panels';
 import { preloadAdmissionApplication } from './application-detail/preload-admission-application';
+import { AdmissionApplicationPrintDialog } from './form-print/admission-application-print-dialog';
 import {
   AdmissionAcademicFilters,
   useAdmissionAcademicFilters,
@@ -48,6 +49,9 @@ export default function AdmissionInquiryPipelineScreen() {
   const { pendingKey, isPending, navigate } = usePendingNavigation(router.push);
   const params = useSearchParams();
   const applicationId = params.get('application');
+  const [printRequest, setPrintRequest] = useState<{ id: string; mode: 'blank' | 'filled' } | null>(
+    null
+  );
   const worklistRef = useRef<HTMLDivElement>(null);
   const previousApplication = useRef(applicationId);
   const restoreApplicationFocus = useRef<string | null>(null);
@@ -162,8 +166,18 @@ export default function AdmissionInquiryPipelineScreen() {
     [canView, applicationUrl, data, dispatch, navigate]
   );
   const columns = useMemo(
-    () => buildAdmissionPipelineColumns(applicationUrl, openWorkspace),
-    [applicationUrl, openWorkspace]
+    () =>
+      buildAdmissionPipelineColumns(
+        applicationUrl,
+        openWorkspace,
+        undefined,
+        canView
+          ? (id, mode) => {
+              if (!interactionLocked.current) setPrintRequest({ id, mode });
+            }
+          : undefined
+      ),
+    [applicationUrl, openWorkspace, canView]
   );
   useEffect(() => {
     if (applicationId) return;
@@ -418,6 +432,14 @@ export default function AdmissionInquiryPipelineScreen() {
             />
           </Box>
         </>
+      )}
+      {canView && printRequest && (
+        <AdmissionApplicationPrintDialog
+          key={printRequest.id}
+          applicationId={printRequest.id}
+          initialMode={printRequest.mode}
+          onClose={() => setPrintRequest(null)}
+        />
       )}
       {canView && applicationId && (
         <AdmissionApplicationDetailScreen

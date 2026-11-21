@@ -303,6 +303,9 @@ export const financeModuleType = {
   feeAdjustment: 'FeeAdjustment',
   concession: 'Concession',
   concessionRequest: 'ConcessionRequest',
+  concessionApplications: 'ConcessionApplications',
+  concessionContext: 'ConcessionContext',
+  studentConcessions: 'StudentConcessions',
   incomeCategories: 'IncomeCategories',
   bankAccounts: 'BankAccounts',
   concessionType: 'Concession-Type',
@@ -312,6 +315,7 @@ export const financeModuleType = {
   feeCategory: 'FeeCategory',
   feeHead: 'FeeHead',
   feeHeadModule: 'FeeHeadModule',
+  studentFeeAssignment: 'StudentFeeAssignment',
   feeCollection: 'FeeCollection',
   feeDetails: 'FeeDetails',
   expenseDetails: 'ExpenseDetails',
@@ -396,6 +400,9 @@ export const libraryChargeType = {
 
 // ===== Library Module API (reducerPath: libraryModuleApi) =====
 export const libraryModuleType = {
+  campusTransfers: 'LibraryCampusTransfers',
+  receiving: 'LibraryReceiving',
+  stockVerification: 'LibraryStockVerification',
   books: 'Books',
   copies: 'Copies',
   copyLabels: 'CopyLabels',
@@ -522,7 +529,10 @@ export const roleOptionsType = {
 } as const;
 
 // ===== Shift Management API (reducerPath: shiftManagementApi) =====
-export const workShiftType = { workShift: 'EmployeeWorkShift', shiftAssignment: 'EmployeeShiftAssignment' } as const;
+export const workShiftType = {
+  workShift: 'EmployeeWorkShift',
+  shiftAssignment: 'EmployeeShiftAssignment',
+} as const;
 export const shiftManagementType = {
   shift: 'Shift',
 } as const;
@@ -530,6 +540,7 @@ export const shiftManagementType = {
 // ===== Student API (reducerPath: StudentApi) =====
 export const studentType = {
   student: 'Student',
+  photo: 'StudentPhoto',
 } as const;
 
 // ===== Student Admission API (reducerPath: StudentAdmissionApi) =====

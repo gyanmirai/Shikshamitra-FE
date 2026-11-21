@@ -1,13 +1,12 @@
 import type { StudentOnboardingFilterOptions } from 'src/redux/student/onboarding/student-onboarding-types';
 
 import CustomSelect from 'src/components/custom-select';
-import { Paper, Stack, Switch, FormControlLabel } from '@mui/material';
-import {
-  readAcademicFilterIds,
-  academicMultipleFilterValue,
-} from 'src/utils/student-academic-filter-query';
+import { Box, Paper, Switch, FormControlLabel } from '@mui/material';
+import { readAcademicFilterIds } from 'src/utils/student-academic-filter-query';
 
-const ALL_STANDARDS = '__all__';
+import { studentAcademicFilterRowSx } from '../../student-academic-filter-layout';
+
+const ALL_OPTION = '__all__';
 
 export function StudentSetupFilters({
   options,
@@ -48,11 +47,30 @@ export function StudentSetupFilters({
       ? item.parentId === selectedMediumId
       : mediums.some((medium) => medium.id === item.parentId)
   );
-  const divisions = (options?.divisions ?? []).filter((item) =>
-    !readAcademicFilterIds(selectedStandardId).length
-      ? standards.some((standard) => standard.id === item.parentId)
-      : readAcademicFilterIds(selectedStandardId).includes(String(item.parentId))
-  );
+  const classIds = readAcademicFilterIds(selectedStandardId);
+  const selectedClass =
+    classIds.length === 1 ? standards.find((standard) => standard.id === classIds[0]) : undefined;
+  const divisions = selectedClass
+    ? (options?.divisions ?? []).filter((division) => division.parentId === selectedClass.id)
+    : [];
+  const divisionIds = selectedClass
+    ? readAcademicFilterIds(selectedDivisionId).filter((id) =>
+        divisions.some((division) => division.id === id)
+      )
+    : [];
+  const classValue = classIds.join(',') || ALL_OPTION;
+  const divisionValue = divisionIds.join(',') || ALL_OPTION;
+  // Older worklist links can still carry multiple IDs. Keep their scope until staff replaces it.
+  const classOptions = [
+    { id: ALL_OPTION, name: 'All Classes' },
+    ...(classIds.length > 1 ? [{ id: classValue, name: 'Multiple Classes' }] : []),
+    ...standards,
+  ];
+  const divisionOptions = [
+    { id: ALL_OPTION, name: 'All Divisions' },
+    ...(divisionIds.length > 1 ? [{ id: divisionValue, name: 'Multiple Divisions' }] : []),
+    ...divisions,
+  ];
 
   return (
     <Paper
@@ -60,7 +78,7 @@ export function StudentSetupFilters({
       data-testid="student-setup-academic-filters"
       sx={{ p: 1, flexShrink: 0, borderRadius: 2 }}
     >
-      <Stack direction={{ xs: 'column', lg: 'row' }} spacing={1}>
+      <Box sx={studentAcademicFilterRowSx}>
         <CustomSelect
           fullWidth
           options={
@@ -89,48 +107,29 @@ export function StudentSetupFilters({
         />
         <CustomSelect
           fullWidth
-          multiple
-          options={[{ id: ALL_STANDARDS, name: 'All classes' }, ...standards]}
+          options={classOptions}
           label="Class"
-          value={
-            readAcademicFilterIds(selectedStandardId).length
-              ? readAcademicFilterIds(selectedStandardId)
-              : [ALL_STANDARDS]
-          }
-          onChange={(value) =>
-            onStandardChange(academicMultipleFilterValue(selectedStandardId, value))
-          }
+          value={classValue}
+          onChange={(value) => onStandardChange(value === ALL_OPTION ? '' : String(value))}
           labelKey="name"
           valueKey="id"
-          isSearch
+          isLoading={isLoading}
           disabled={disabled || (!allowAllScope && !selectedMediumId)}
         />
         <CustomSelect
           fullWidth
-          multiple
-          options={[
-            { id: ALL_STANDARDS, name: 'All divisions' },
-            ...divisions.map((division) => ({
-              ...division,
-              name: `${standards.find((standard) => standard.id === division.parentId)?.name} / ${division.name}`,
-            })),
-          ]}
+          options={divisionOptions}
           label="Division"
-          value={
-            readAcademicFilterIds(selectedDivisionId).length
-              ? readAcademicFilterIds(selectedDivisionId)
-              : [ALL_STANDARDS]
-          }
-          onChange={(value) =>
-            onDivisionChange(academicMultipleFilterValue(selectedDivisionId, value))
-          }
+          value={divisionValue}
+          onChange={(value) => onDivisionChange(value === ALL_OPTION ? '' : String(value))}
           labelKey="name"
           valueKey="id"
-          disabled={disabled || (!allowAllScope && !selectedMediumId)}
+          isLoading={isLoading}
+          disabled={disabled || !selectedClass}
         />
         {onTodayChange && (
           <FormControlLabel
-            sx={{ m: 0, flexShrink: 0, alignSelf: { lg: 'center' } }}
+            sx={{ m: 0, flexShrink: 0, alignSelf: { sm: 'center' } }}
             control={
               <Switch
                 size="small"
@@ -142,7 +141,7 @@ export function StudentSetupFilters({
             label="Added today"
           />
         )}
-      </Stack>
+      </Box>
     </Paper>
   );
 }

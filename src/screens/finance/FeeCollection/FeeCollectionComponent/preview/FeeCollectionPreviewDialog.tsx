@@ -4,18 +4,24 @@ import type { IData, IColumn } from 'src/components/customizabaleTable/types';
 
 import dayjs from 'dayjs';
 import { useMemo } from 'react';
+import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { formatNumber } from 'src/utils/formate_number';
 import { LoadingButton } from 'src/components/loading-button';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { FormSectionCard } from 'src/components/form-section-card';
-import { DetailField, DetailSection } from 'src/components/detail-view';
 import { Box, Stack, Button, Typography, DialogActions } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { DetailField, DetailSection } from 'src/screens/finance/components/detail-view';
 
 import { collectionPaymentDetails } from '../collectionPaymentDetails';
-import { allocatePayment, selectedChargesInOrder } from './paymentAllocationUtils';
+import { paymentMethodsConfig } from '../../Components/paymentConfigMethods';
+import {
+  allocatePayment,
+  selectedChargesInOrder,
+  summarizeFundedAllocations,
+} from './paymentAllocationUtils';
 
 import type { IFeeCharge, IStudentFee, FeeCollectionFormValues } from '../../Components/type';
 
@@ -30,7 +36,7 @@ export interface FeeCollectionPreviewDialogProps {
   student: IStudentFee | null;
   chargesData: IFeeCharge[];
   feeHeadMap: Record<string, string>;
-  preserveAllocationOrder?: boolean;
+  oneTimeFeeHeadIds?: ReadonlySet<string>;
   academicYear?: string;
   feeStructureName?: string;
   bankAccounts?: { id: string; name: string }[];
@@ -45,6 +51,7 @@ const FeeCollectionPreviewDialog = ({
   student,
   chargesData,
   feeHeadMap,
+  oneTimeFeeHeadIds,
   academicYear,
   feeStructureName,
   bankAccounts,
@@ -64,18 +71,7 @@ const FeeCollectionPreviewDialog = ({
       ),
     [formValues.selectedItems, formValues.charges, chargesData, feeHeadMap, paidAmount]
   );
-  // Retain collection order, including unfunded selections and additional charges.
-  const rows = allocatedRows.map((row) => ({
-    ...row,
-    id: `${row.type}:${row.key}`,
-    name: row.type === 'fee' ? row.feeHeadName : row.chargeName,
-    context:
-      row.type === 'fee'
-        ? [row.installmentLabel, row.period].filter(Boolean).join(' · ')
-        : row.sourceType === 'LateFee'
-          ? 'Late fee'
-          : 'Additional charge',
-  }));
+  const rows = summarizeFundedAllocations(allocatedRows, oneTimeFeeHeadIds);
   const columns: IColumn[] = [
     {
       id: 'name',
@@ -84,32 +80,38 @@ const FeeCollectionPreviewDialog = ({
       minWidth: 180,
       render: (value: string, row: IData) => (
         <Box sx={{ minWidth: 0, overflowWrap: 'anywhere' }}>
-          <Typography variant="body2">{value}</Typography>
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <Typography variant="body2">{value}</Typography>
+            {row.oneTime && <Label>One time</Label>}
+          </Stack>
           <Typography variant="caption" color="text.secondary">
-            {row.context}
+            {row.context ?? row.periods.join(' · ')}
           </Typography>
         </Box>
       ),
     },
-    ...(['originalAmount', 'paidAmount', 'remainingAmount'] as const).map((id, index) => ({
+    ...(['originalAmount', 'paidAmount'] as const).map((id, index) => ({
       id,
-      label: ['Original', 'To collect', 'Balance after'][index],
+      label: ['Original', 'To collect'][index],
       align: 'right' as const,
       minWidth: 100,
       render: (value: number) => formatNumber(value, 'INR'),
       cellSx: { fontVariantNumeric: 'tabular-nums' },
     })),
   ].map((column) => ({ ...column, isSort: false, isFilter: false }));
-  const periods = [...new Set(formValues.selectedItems.map((item) => item.period).filter(Boolean))];
+  const periods = [...new Set(rows.flatMap((row) => row.periods))];
   const periodLabel =
     periods.length === 1
-      ? dayjs(`${periods[0]}-01`).format('MMMM YYYY')
+      ? periods[0]
       : periods.length > 1
         ? `${periods.length} months`
         : 'Selected Charges';
+  const { paymentMethod, details: paymentDetails } = formValues.payment;
+  const isCash = paymentMethod === 'Cash';
   const details = Object.entries(
-    collectionPaymentDetails(formValues.payment.paymentMethod, formValues.payment.details ?? {})
+    collectionPaymentDetails(paymentMethod, paymentDetails ?? {})
   ).filter(([, value]) => Boolean(value));
+  const methodFields = paymentMethodsConfig[paymentMethod as keyof typeof paymentMethodsConfig];
   const formatDetail = (key: string, value: unknown) => {
     if (key === 'bankAccount') return bankAccounts?.find((bank) => bank.id === value)?.name || '—';
     if (dayjs.isDayjs(value)) return value.format('DD/MM/YYYY');
@@ -132,7 +134,7 @@ const FeeCollectionPreviewDialog = ({
       maxWidth="md"
       hasForm={false}
       title="Review Payment"
-      titleInfo="Review the student, payment evidence, and allocation before continuing to confirm collection."
+      titleInfo="Review the student, payment evidence, and allocation before recording collection."
     >
       <DialogScrollContent>
         <Stack spacing={2}>
@@ -168,7 +170,7 @@ const FeeCollectionPreviewDialog = ({
             icon={GlobalIcons.receiptIcon}
             iconSize={16}
             iconContainerSize={28}
-            descriptionTooltip="Amounts allocated to selected fee installments and charges in collection order. Balance after shows the amount still due after this allocation."
+            descriptionTooltip="Each funded fee head appears once. Original shows the amounts for the installments and charges included in this payment."
             titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
             sx={{ pt: { xs: 1, sm: 1 }, boxShadow: 'none' }}
             action={
@@ -196,10 +198,10 @@ const FeeCollectionPreviewDialog = ({
               tableContainerProps={{ sx: { height: 'auto' } }}
             />
           </FormSectionCard>
-          {(details.length > 0 || formValues.remarks) && (
+          {(!isCash || details.length > 0 || formValues.remarks) && (
             <DetailSection
-              title="Payment Details"
-              icon={GlobalIcons.documentIcon}
+              title={isCash ? 'Payment Details' : 'Reference Details'}
+              icon={isCash ? GlobalIcons.documentIcon : GlobalIcons.bankAccount}
               helpText="Payment evidence and remarks entered for this collection."
             >
               <Box
@@ -213,12 +215,18 @@ const FeeCollectionPreviewDialog = ({
                   gap: 2,
                 }}
               >
+                {!isCash && <DetailField label="Payment method" value={paymentMethod} />}
                 {details.map(([key, value]) => (
                   <DetailField
                     key={key}
-                    label={key
-                      .replace(/([A-Z])/g, ' $1')
-                      .replace(/^./, (letter) => letter.toUpperCase())}
+                    label={
+                      key === 'bankAccount'
+                        ? 'Receiving School Bank Account'
+                        : methodFields?.find((field) => field.name === key)?.label ??
+                          key
+                            .replace(/([A-Z])/g, ' $1')
+                            .replace(/^./, (letter) => letter.toUpperCase())
+                    }
                     value={formatDetail(key, value)}
                   />
                 ))}
@@ -227,6 +235,11 @@ const FeeCollectionPreviewDialog = ({
                 )}
               </Box>
             </DetailSection>
+          )}
+          {!isCash && (
+            <Typography variant="body2" color="text.secondary">
+              Finance will verify this payment in Reconciliation before issuing the official receipt.
+            </Typography>
           )}
         </Stack>
       </DialogScrollContent>
@@ -264,7 +277,9 @@ const FeeCollectionPreviewDialog = ({
           startIcon={<Iconify icon={GlobalIcons.receiptIcon} width={18} />}
           size="small"
         >
-          Collect {formatNumber(paidAmount, 'INR')}
+          {isCash
+            ? `Collect ${formatNumber(paidAmount, 'INR')}`
+            : 'Record & issue provisional receipt'}
         </LoadingButton>
       </DialogActions>
     </CustomDialog>

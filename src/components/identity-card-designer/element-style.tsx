@@ -14,6 +14,7 @@ export function ElementStyle({
   disabled?: boolean;
 }) {
   const style = element.style ?? {};
+  const dynamic = Boolean(element.fieldKey && element.fieldKey !== 'static');
   const update = (next: Partial<NonNullable<IdentityCardElement['style']>>) =>
     onChange({
       ...element,
@@ -73,21 +74,25 @@ export function ElementStyle({
               disabled={disabled}
             />
           </Box>
-          <DesignerSwitch
-            label="Show field label"
-            checked={Boolean(style.showLabel)}
-            onChange={(showLabel) => update({ showLabel })}
-            disabled={disabled}
-          />
-          {style.showLabel && (
-            <TextField
-              label="Label separator"
-              size="small"
-              fullWidth
-              value={style.separator ?? ': '}
-              onChange={(event) => update({ separator: event.target.value })}
-              disabled={disabled}
-            />
+          {!dynamic && (
+            <>
+              <DesignerSwitch
+                label="Show field label"
+                checked={Boolean(style.showLabel)}
+                onChange={(showLabel) => update({ showLabel })}
+                disabled={disabled}
+              />
+              {style.showLabel && (
+                <TextField
+                  label="Label separator"
+                  size="small"
+                  fullWidth
+                  value={style.separator ?? ': '}
+                  onChange={(event) => update({ separator: event.target.value })}
+                  disabled={disabled}
+                />
+              )}
+            </>
           )}
         </>
       )}

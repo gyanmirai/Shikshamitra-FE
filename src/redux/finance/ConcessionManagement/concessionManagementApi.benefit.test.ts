@@ -9,6 +9,8 @@ const transport = vi.hoisted(() => ({
   blocked: true,
   contextCalls: 0,
   lastContextParams: {} as any,
+  detailCalls: {} as Record<string, number>,
+  listCalls: 0,
 }));
 vi.mock('src/redux/service', async () => {
   const { createApi } = await import('@reduxjs/toolkit/query/react');
@@ -19,6 +21,20 @@ vi.mock('src/redux/service', async () => {
       tagTypes,
       endpoints: () => ({}),
       baseQuery: async (args: any) => {
+        if (args.url === '/concession-request/concession-applications') {
+          transport.listCalls += 1;
+          return { data: { items: [], totalCount: 0 } };
+        }
+        if (
+          args.url.startsWith('/concession-request/') &&
+          args.url !== '/concession-request/context' &&
+          args.method === 'GET' &&
+          !args.url.endsWith('/approval-context')
+        ) {
+          const id = args.url.split('/').at(-1) as string;
+          transport.detailCalls[id] = (transport.detailCalls[id] || 0) + 1;
+          return { data: { data: { id } } };
+        }
         if (args.url === '/concession-request/context') {
           transport.contextCalls += 1;
           transport.lastContextParams = args.params;
@@ -50,6 +66,46 @@ vi.mock('src/redux/service', async () => {
 beforeEach(() => {
   transport.blocked = true;
   transport.contextCalls = 0;
+  transport.detailCalls = {};
+  transport.listCalls = 0;
+});
+
+it('refreshes only the changed request detail after rejection', async () => {
+  const store = configureStore({
+    reducer: { [api.reducerPath]: api.reducer },
+    middleware: (getDefault) => getDefault().concat(api.middleware),
+  });
+  const changed = store.dispatch(
+    concessionManagementApi.endpoints.getConcessionRequestById.initiate({
+      concessionRequestId: 'changed',
+    })
+  );
+  const unrelated = store.dispatch(
+    concessionManagementApi.endpoints.getConcessionRequestById.initiate({
+      concessionRequestId: 'unrelated',
+    })
+  );
+  const list = store.dispatch(
+    concessionManagementApi.endpoints.getConcessionApplications.initiate({ academicYearId: 'year' })
+  );
+  try {
+    await Promise.all([changed.unwrap(), unrelated.unwrap(), list.unwrap()]);
+    await store
+      .dispatch(
+        concessionManagementApi.endpoints.rejectConcessionRequest.initiate({
+          studentConcessionTypeRequestId: 'changed',
+          body: {} as any,
+        })
+      )
+      .unwrap();
+    await waitFor(() => expect(transport.detailCalls.changed).toBe(2));
+    await waitFor(() => expect(transport.listCalls).toBe(2));
+    expect(transport.detailCalls.unrelated).toBe(1);
+  } finally {
+    changed.unsubscribe();
+    unrelated.unsubscribe();
+    list.unsubscribe();
+  }
 });
 
 it.each(['cancel', 'reject', 'approve'] as const)(
@@ -110,11 +166,11 @@ it.each(['cancel', 'reject', 'approve'] as const)(
           .unwrap();
       await waitFor(() =>
         expect(
-          concessionManagementApi.endpoints.getConcessionRequestContext.select(args)(
-            store.getState()
-          ).data?.concessionTypes[0].benefitBlocker
-            ? true
-            : false
+          Boolean(
+            concessionManagementApi.endpoints.getConcessionRequestContext.select(args)(
+              store.getState()
+            ).data?.concessionTypes[0].benefitBlocker
+          )
         ).toBe(action === 'approve')
       );
       expect(transport.contextCalls).toBe(2);

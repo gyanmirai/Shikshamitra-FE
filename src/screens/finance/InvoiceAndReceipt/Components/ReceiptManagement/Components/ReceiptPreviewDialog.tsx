@@ -1,16 +1,16 @@
 import type { LabelColor } from 'src/components/label';
 
+import dayjs from 'dayjs';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { fDateTime } from 'src/utils/format-time';
 import React, { useState, useEffect } from 'react';
 import { formatNumber } from 'src/utils/formate_number';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import PdfPreview from 'src/components/preview-document/pdf-preview';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { DetailGrid, DetailField, DetailSection } from 'src/components/detail-view';
 import { useDownloadReceiptPdfMutation } from 'src/redux/feeCollection/feeCollection';
+import { DetailGrid, DetailField, DetailSection } from 'src/screens/finance/components/detail-view';
 import {
   Box,
   Stack,
@@ -26,6 +26,9 @@ import {
   useGetFeeReceiptDetailQuery,
   FEE_RECEIPT_VERIFICATION_LABELS,
 } from 'src/redux/invoiceAndReceipt/feeReceiptApi';
+
+import { ReceiptPayerSection } from './ReceiptPayerSection';
+import { receiptSnapshotAmount, ReceiptSettlementSection } from './ReceiptSettlementSection';
 
 interface ReceiptPreviewDialogProps {
   receiptId: string;
@@ -169,11 +172,20 @@ const ReceiptPreviewDialog: React.FC<ReceiptPreviewDialogProps> = ({ receiptId, 
               <DetailGrid>
                 <DetailField
                   label="Receipt date"
-                  value={receipt.receiptDate ? fDateTime(receipt.receiptDate) : null}
+                  value={
+                    receipt.receiptDate ? dayjs(receipt.receiptDate).format('DD MMM YYYY') : null
+                  }
                 />
                 <DetailField
-                  label="Amount paid"
-                  value={formatNumber(receipt.totalPaidAmount, 'INR')}
+                  label={receipt.settlementSnapshot ? 'Submitted amount' : 'Amount paid'}
+                  value={
+                    receipt.settlementSnapshot
+                      ? receiptSnapshotAmount(
+                          receipt.settlementSnapshot.submittedAmount,
+                          receipt.currency
+                        )
+                      : formatNumber(receipt.totalPaidAmount, 'INR')
+                  }
                 />
                 {receipt.receiptScope === 3 && (
                   <>
@@ -222,23 +234,8 @@ const ReceiptPreviewDialog: React.FC<ReceiptPreviewDialogProps> = ({ receiptId, 
                 )}
               </DetailGrid>
             </DetailSection>
-            <DetailSection
-              title="Student Information"
-              icon="mdi:account-school-outline"
-              helpText="Student and academic context associated with this receipt."
-            >
-              <DetailGrid>
-                <DetailField label="Student name" value={receipt.studentName} />
-                <DetailField label="GR number" value={receipt.grNo} />
-                <DetailField
-                  label="Class / division"
-                  value={[receipt.className, receipt.division].filter(Boolean).join(' / ')}
-                />
-                <DetailField label="Roll number" value={receipt.rollNo} />
-                <DetailField label="Board" value={receipt.boardName} />
-                <DetailField label="Medium" value={receipt.mediumName} />
-              </DetailGrid>
-            </DetailSection>
+            <ReceiptSettlementSection receipt={receipt} />
+            <ReceiptPayerSection receipt={receipt} />
             <DetailSection
               title="Receipt Document"
               icon="mdi:file-document-outline"
@@ -270,7 +267,9 @@ const ReceiptPreviewDialog: React.FC<ReceiptPreviewDialogProps> = ({ receiptId, 
           </Stack>
         )}
       </DialogScrollContent>
-      <DialogActions sx={{ px: 2, py: 1.5, gap: 1, borderTop: '1px solid', borderColor: 'divider' }}>
+      <DialogActions
+        sx={{ px: 2, py: 1.5, gap: 1, borderTop: '1px solid', borderColor: 'divider' }}
+      >
         <Button
           component="a"
           href={receiptBlobUrl || undefined}

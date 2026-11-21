@@ -8,30 +8,32 @@ test.describe.serial('HR setup wizard with disposable SQLite and real backend AP
 
   test('lists missing PF coverage as required salary setup', async ({ page }) => {
     await page.goto('/');
-    const wizard = page.getByRole('dialog', { name: 'Complete HR Setup', exact: true });
+    const wizard = page.getByRole('dialog', { name: 'Let’s Complete Your HR Setup', exact: true });
     await wizard.getByRole('button', { name: 'Salary Template', exact: true }).click();
-    await expect(wizard.getByTestId('hr-setup-check-pf-coverage')).toContainText('Not configured');
+    await expect(wizard.getByTestId('hr-setup-check-pf-coverage')).toContainText('Needs setup');
     await wizard
       .getByTestId('hr-setup-check-pf-coverage')
-      .getByRole('button', { name: 'Set up', exact: true })
+      .getByRole('button', { name: /^Configure / })
       .click();
-    await expect(wizard.getByLabel(/PF coverage effective month/)).toBeVisible();
+    await expect(wizard.getByRole('group', { name: 'PF coverage effective month' })).toBeVisible();
     await expect(page.getByRole('dialog')).toHaveCount(1);
     await page.screenshot({ path: '.artifacts/hr-setup/pf-coverage-wizard.png' });
-    await wizard.getByLabel(/PF coverage evidence reference/).fill('Unsaved coverage evidence');
+    await wizard.getByRole('combobox', { name: /School PF coverage/ }).click();
+    await page.getByRole('option', { name: 'Covered under PF', exact: true }).click();
+    await wizard.getByLabel(/PF establishment number/).fill('Unsaved coverage evidence');
     await wizard.getByRole('button', { name: 'Back', exact: true }).click();
     const confirmation = page.getByRole('dialog', { name: 'Discard Unsaved Changes?' });
     await confirmation.getByRole('button', { name: 'Keep Editing', exact: true }).click();
-    await expect(wizard.getByLabel(/PF coverage evidence reference/)).toHaveValue(
+    await expect(wizard.getByLabel(/PF establishment number/)).toHaveValue(
       'Unsaved coverage evidence'
     );
     await wizard.getByRole('button', { name: 'Back', exact: true }).click();
     await confirmation.getByRole('button', { name: 'Discard Changes', exact: true }).click();
-    await expect(wizard.getByTestId('hr-setup-check-pf-coverage')).toContainText('Not configured');
+    await expect(wizard.getByTestId('hr-setup-check-pf-coverage')).toContainText('Needs setup');
   });
   test('dismissal survives HR navigation and resets on refresh', async ({ page }) => {
     await page.goto('/');
-    const wizard = page.getByRole('dialog', { name: 'Complete HR Setup', exact: true });
+    const wizard = page.getByRole('dialog', { name: 'Let’s Complete Your HR Setup', exact: true });
     await expect(wizard).toBeVisible();
     await wizard.getByRole('button', { name: 'Close for now' }).click();
     await page.getByRole('button', { name: 'Leave HR', exact: true }).click();
@@ -76,7 +78,10 @@ test.describe.serial('HR setup wizard with disposable SQLite and real backend AP
         await page.setViewportSize(viewport);
         await page.emulateMedia({ colorScheme: theme as 'light' | 'dark' });
         await page.goto(`/?theme=${theme}`);
-        const wizard = page.getByRole('dialog', { name: 'Complete HR Setup', exact: true });
+        const wizard = page.getByRole('dialog', {
+          name: 'Let’s Complete Your HR Setup',
+          exact: true,
+        });
         await expect(wizard).toBeVisible();
         await expect(page.locator('html')).toHaveAttribute('data-mui-color-scheme', theme);
         await expect(wizard.getByRole('button', { name: 'Close for now' })).toBeInViewport();
@@ -86,15 +91,17 @@ test.describe.serial('HR setup wizard with disposable SQLite and real backend AP
         await page.keyboard.press('Tab');
         await expect(wizard.locator(':focus')).toHaveCount(1);
         await page.screenshot({ path: `.artifacts/hr-setup/${theme}-${viewport.width}.png` });
-        await wizard.getByRole('button', { name: 'Next', exact: true }).click();
-        await wizard.getByRole('button', { name: 'Next', exact: true }).click();
-        await wizard.getByRole('button', { name: 'Next', exact: true }).click();
+        await wizard.getByTestId('hr-setup-next').click();
+        await wizard.getByTestId('hr-setup-next').click();
+        await wizard.getByTestId('hr-setup-next').click();
         await wizard
           .getByTestId('hr-setup-check-pf-coverage')
-          .getByRole('button', { name: 'Set up', exact: true })
+          .getByRole('button', { name: /^Configure / })
           .click();
-        await expect(wizard.getByLabel(/PF coverage effective month/)).toBeInViewport();
-        await expect(wizard.getByLabel(/PF coverage evidence reference/)).toBeInViewport();
+        await expect(
+          wizard.getByRole('group', { name: 'PF coverage effective month' })
+        ).toBeInViewport();
+        await expect(wizard.getByRole('combobox', { name: /School PF coverage/ })).toBeInViewport();
         await expect(
           wizard.getByRole('button', { name: 'Save and next', exact: true })
         ).toBeInViewport();
@@ -108,10 +115,10 @@ test.describe.serial('HR setup wizard with disposable SQLite and real backend AP
 
   test('protects an unsaved step and preserves saved setup when dismissed', async ({ page }) => {
     await page.goto('/');
-    const wizard = page.getByRole('dialog', { name: 'Complete HR Setup', exact: true });
+    const wizard = page.getByRole('dialog', { name: 'Let’s Complete Your HR Setup', exact: true });
     await wizard
       .getByTestId('hr-setup-check-shift')
-      .getByRole('button', { name: 'Set up' })
+      .getByRole('button', { name: /^Configure / })
       .click();
     await wizard.getByLabel('Shift Name *', { exact: true }).fill('Unsaved shift');
     await wizard.getByRole('button', { name: 'Close for now' }).click();
@@ -123,21 +130,21 @@ test.describe.serial('HR setup wizard with disposable SQLite and real backend AP
     await expect(wizard).toHaveCount(0);
     await page.reload();
     await expect(
-      wizard.getByTestId('hr-setup-check-shift').getByText('Not configured', { exact: true })
+      wizard.getByTestId('hr-setup-check-shift').getByText('Needs setup', { exact: true })
     ).toBeVisible();
   });
 
   test('protects an unsaved setup step during browser Back navigation', async ({ page }) => {
     await page.goto('/?entry=before-hr');
     await expect(
-      page.getByRole('dialog', { name: 'Complete HR Setup', exact: true })
+      page.getByRole('dialog', { name: 'Let’s Complete Your HR Setup', exact: true })
     ).toBeVisible();
     // Next.js route transitions create same-document history entries.
     await page.evaluate(() => window.history.pushState({}, '', '/'));
-    const wizard = page.getByRole('dialog', { name: 'Complete HR Setup', exact: true });
+    const wizard = page.getByRole('dialog', { name: 'Let’s Complete Your HR Setup', exact: true });
     await wizard
       .getByTestId('hr-setup-check-shift')
-      .getByRole('button', { name: 'Set up' })
+      .getByRole('button', { name: /^Configure / })
       .click();
     await wizard.getByLabel('Shift Name *', { exact: true }).fill('Navigation draft');
     await page.evaluate(() => window.history.back());
@@ -156,11 +163,12 @@ test.describe.serial('HR setup wizard with disposable SQLite and real backend AP
     page,
   }) => {
     await page.goto('/');
-    const wizard = page.getByRole('dialog', { name: 'Complete HR Setup', exact: true });
+    const wizard = page.getByRole('dialog', { name: 'Let’s Complete Your HR Setup', exact: true });
     await wizard.getByRole('button', { name: 'Policies and Calendar', exact: true }).click();
+    await wizard.getByText(/^View completed setup/).click();
     await wizard
       .getByTestId('hr-setup-check-calendar')
-      .getByRole('button', { name: 'Review setup' })
+      .getByRole('button', { name: 'Review Work Calendar' })
       .click();
     await wizard.getByRole('combobox', { name: /^Policy to configure/ }).click();
     await page
@@ -178,14 +186,14 @@ test.describe.serial('HR setup wizard with disposable SQLite and real backend AP
     page,
   }) => {
     await page.goto('/');
-    const wizard = page.getByRole('dialog', { name: 'Complete HR Setup', exact: true });
-    await wizard.getByRole('button', { name: 'Set up', exact: true }).click();
+    const wizard = page.getByRole('dialog', { name: 'Let’s Complete Your HR Setup', exact: true });
+    await wizard.getByRole('button', { name: /^Configure / }).click();
     await wizard.getByLabel('Shift Name *', { exact: true }).fill('Browser Morning Shift');
     await wizard.getByRole('button', { name: 'Save and next', exact: true }).click();
     await expect(
       wizard.getByRole('button', { name: 'Earning Components', exact: true })
     ).toHaveAttribute('aria-current', 'step');
-    await wizard.getByRole('button', { name: 'Set up', exact: true }).click();
+    await wizard.getByRole('button', { name: /^Configure / }).click();
     await wizard.getByLabel('Earning Name *', { exact: true }).fill('Browser Basic');
     await wizard.getByRole('combobox', { name: 'Calculation Type *', exact: true }).click();
     await page.getByRole('option', { name: 'Percentage Based', exact: true }).click();
@@ -198,7 +206,7 @@ test.describe.serial('HR setup wizard with disposable SQLite and real backend AP
     ).toHaveAttribute('aria-current', 'step');
     await wizard
       .getByTestId('hr-setup-check-salary-template')
-      .getByRole('button', { name: 'Set up', exact: true })
+      .getByRole('button', { name: /^Configure / })
       .click();
     await wizard.getByLabel(/^Template name/).fill('Browser Staff Salary');
     await wizard.getByRole('combobox', { name: /^ESIC management/ }).click();
@@ -245,32 +253,30 @@ test.describe.serial('HR setup wizard with disposable SQLite and real backend AP
     await wizard.getByRole('button', { name: 'Preview salary', exact: true }).click();
     await expect(wizard.getByText('Preview ready', { exact: true }).first()).toBeVisible();
     await wizard.getByRole('button', { name: 'Save and next', exact: true }).click();
-    await expect(wizard.getByTestId('hr-setup-check-pf-coverage')).toContainText('Not configured');
+    await expect(wizard.getByTestId('hr-setup-check-pf-coverage')).toContainText('Needs setup');
     await page
       .locator('[data-sonner-toast]')
       .filter({ hasText: 'Salary template is active for new salary setups.' })
       .getByLabel('Close')
       .click();
-    await wizard.getByRole('button', { name: 'Next', exact: true }).click();
+    await wizard.getByTestId('hr-setup-next').click();
     await expect(
       wizard.getByText(
         'Some setup still needs attention. Complete the unresolved steps, then check again.'
       )
     ).toBeVisible();
-    await wizard.getByRole('button', { name: 'Finish setup', exact: true }).click();
+    await wizard.getByRole('button', { name: 'Return to remaining setup', exact: true }).click();
     await wizard
       .getByTestId('hr-setup-check-pf-coverage')
-      .getByRole('button', { name: 'Set up', exact: true })
+      .getByRole('button', { name: /^Configure / })
       .click();
-    await wizard.getByRole('combobox', { name: /School establishment coverage/ }).click();
-    await page.getByRole('option', { name: 'Not covered under PF', exact: true }).click();
-    await wizard
-      .getByLabel(/PF coverage evidence reference/)
-      .fill('Synthetic school coverage review');
+    await wizard.getByRole('combobox', { name: /School PF coverage/ }).click();
+    await page.getByRole('option', { name: 'Handled outside ShikshaMitra', exact: true }).click();
+    await expect(wizard.getByLabel(/PF establishment number/)).toHaveCount(0);
     await wizard.getByRole('button', { name: 'Save and next', exact: true }).click();
     await expect(
       wizard.getByText(
-        'HR setup is complete. Individual staff still need salary setup before activation.'
+        'Your school’s HR setup is ready. Set up salary for each staff member before activation.'
       )
     ).toBeVisible();
     await page
@@ -278,7 +284,7 @@ test.describe.serial('HR setup wizard with disposable SQLite and real backend AP
       .filter({ hasText: 'School PF coverage saved.' })
       .getByLabel('Close')
       .click();
-    await wizard.getByRole('button', { name: 'Finish setup', exact: true }).click();
+    await wizard.getByRole('button', { name: 'Explore HR', exact: true }).click();
     await expect(wizard).toHaveCount(0);
     await page.reload();
     await expect(page.getByRole('heading', { name: 'HR Workspace' })).toBeVisible();

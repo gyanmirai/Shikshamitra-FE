@@ -119,7 +119,7 @@ describe('saved applicant URL recovery', () => {
   it('retains Inquiry recovery for applicants with no application and does not start direct admission', () => {
     state.search = 'inquiryId=inquiry-1';
     render(<AdmissionApplicant360Screen />);
-    expect(screen.getByText(/Move to next stage/)).toBeInTheDocument();
+    expect(screen.getByText(/Start Application/)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Manage Inquiry' })).toHaveAttribute(
       'href',
       '/student/admissions/inquiries?inquiryId=inquiry-1'

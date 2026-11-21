@@ -37,44 +37,49 @@ const CoverView = ({
           <Iconify icon={GlobalIcons.eye} sx={{ height: '16px', width: '16px', mr: 1 }} />
           View
         </MenuItem>
-        <MenuItem
-          onClick={() => {
-            const book = row as IBook;
-            onEdit?.(book);
-            pop.onClose();
-          }}
-        >
-          <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px', mr: 1 }} />
-          Edit
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            const book = row as IBook;
-            onDelete?.(book);
-            pop.onClose();
-          }}
-        >
-          <Iconify
-            icon="solar:trash-bin-trash-bold"
-            sx={{ height: '16px', width: '16px', mr: 1, color: 'error.main' }}
-          />
-          <Typography color="error.main" variant="body2">
-            Delete
-          </Typography>
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            const book = row as IBook;
-            onReserveBook?.(book);
-            pop.onClose();
-          }}
-        >
-          <Iconify
-            icon="game-icons:archive-register"
-            sx={{ height: '16px', width: '16px', mr: 1 }}
-          />
-          Reserve Book
-        </MenuItem>
+        {onEdit && (
+          <MenuItem
+            onClick={() => {
+              onEdit(row);
+              pop.onClose();
+            }}
+          >
+            <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px', mr: 1 }} />
+            Edit
+          </MenuItem>
+        )}
+        {onDelete && (
+          <MenuItem
+            onClick={() => {
+              const book = row as IBook;
+              onDelete(book);
+              pop.onClose();
+            }}
+          >
+            <Iconify
+              icon="solar:trash-bin-trash-bold"
+              sx={{ height: '16px', width: '16px', mr: 1, color: 'error.main' }}
+            />
+            <Typography color="error.main" variant="body2">
+              Delete
+            </Typography>
+          </MenuItem>
+        )}
+        {onReserveBook && (
+          <MenuItem
+            onClick={() => {
+              const book = row as IBook;
+              onReserveBook?.(book);
+              pop.onClose();
+            }}
+          >
+            <Iconify
+              icon="game-icons:archive-register"
+              sx={{ height: '16px', width: '16px', mr: 1 }}
+            />
+            Reserve Book
+          </MenuItem>
+        )}
         <MenuItem
           onClick={() => {
             const book = row as IBook;
@@ -112,10 +117,6 @@ const CoverView = ({
                 borderColor: 'transparent',
                 '& .book-cover': {
                   transform: 'scale(1.05)',
-                },
-                '& .action-btn': {
-                  opacity: 1,
-                  visibility: 'visible',
                 },
               },
             }}
@@ -158,19 +159,11 @@ const CoverView = ({
 
             {/* Action Button - Floating Top Right relative to CARD */}
             <Box
-              className="action-btn"
               sx={{
                 position: 'absolute',
                 top: 8,
                 right: 8,
                 zIndex: 9,
-                opacity: 0,
-                visibility: 'hidden',
-                transition: 'all 0.2s ease-in-out',
-                '@media (hover: none)': {
-                  opacity: 1,
-                  visibility: 'visible',
-                },
               }}
             >
               <Box

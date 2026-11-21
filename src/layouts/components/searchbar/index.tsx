@@ -1,11 +1,13 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
 import type { BoxProps } from '@mui/material/Box';
 import type { NavSectionProps, NavItemBaseProps } from 'src/components/nav-section';
 
 import Link from 'next/link';
 import nProgress from 'nprogress';
 import Box from '@mui/material/Box';
+import { useSelector } from 'react-redux';
 import { Typography } from '@mui/material';
 import SvgIcon from '@mui/material/SvgIcon';
 import { varAlpha } from 'src/theme/styles';
@@ -71,6 +73,7 @@ const useBindShortcutKey = (items: NavSectionProps['data']) => {
 
 export function Searchbar({ data: navItems = [], sx, ...other }: SearchbarProps) {
   const theme = useTheme();
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
 
   const router = useRouter();
 
@@ -107,7 +110,7 @@ export function Searchbar({ data: navItems = [], sx, ...other }: SearchbarProps)
   }, []);
 
   const dataFiltered = applyFilter({
-    inputData: getAllItems({ data: navItems }),
+    inputData: getAllItems({ data: navItems, permissions }),
     query: searchQuery,
   });
 

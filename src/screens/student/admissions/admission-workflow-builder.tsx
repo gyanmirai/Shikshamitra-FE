@@ -7,7 +7,7 @@ import type {
 } from 'src/redux/student/admissions/admission-workflows-api';
 
 import { Box } from '@mui/material';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -123,6 +123,27 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
   });
   const statusReadOnly = Boolean(workflow && ![0, 3].includes(workflow.status));
   const readOnly = !canEdit || !workflow || statusReadOnly;
+  const validatePreviewRef = useRef(commands.validateDraftPreview);
+  const cancelPreviewRef = useRef(commands.cancelDraftPreview);
+  const validationContextRef = useRef({ dirty: draft.dirty, readOnly });
+  validationContextRef.current = { dirty: draft.dirty, readOnly };
+  const draftGraphKey = JSON.stringify([
+    draft.defaultInquiryFormDefinitionId,
+    draft.stages,
+    draft.transitions,
+  ]);
+  validatePreviewRef.current = commands.validateDraftPreview;
+  cancelPreviewRef.current = commands.cancelDraftPreview;
+
+  useEffect(() => {
+    cancelPreviewRef.current();
+    if (!validationContextRef.current.dirty || validationContextRef.current.readOnly)
+      return undefined;
+    const timer = window.setTimeout(() => {
+      void validatePreviewRef.current();
+    }, 400);
+    return () => window.clearTimeout(timer);
+  }, [draftGraphKey, readOnly, workflowId]);
 
   if (workflowQuery.isLoading) {
     return <WorkflowBuilderPageState state="loading" />;
@@ -219,7 +240,7 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
                 dirty={draft.dirty}
                 readOnly={readOnly}
                 canPublish={canPublishCurrent}
-                saving={commands.updateState.isLoading}
+                saving={commands.updateState.isLoading && !commands.publishState.isLoading}
                 validating={commands.validateState.isLoading}
                 publishing={commands.publishState.isLoading}
                 onSave={commands.saveDraft}
@@ -231,6 +252,7 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
             readOnly={readOnly || commands.publishState.isLoading || commands.updateState.isLoading}
             loadingStageTypes={stageTypesQuery.isLoading}
             issueCountByStage={draft.issueCountByStage}
+            issuesByStage={draft.issuesByStage}
             onAddStage={() => {
               if (!draft.addStage(stageTypesQuery.data ?? [])) return;
               setPendingRouteSourceId(

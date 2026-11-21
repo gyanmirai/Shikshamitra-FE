@@ -2,7 +2,7 @@ import dayjs from 'dayjs';
 import { Label } from 'src/components/label';
 import { formatNumber } from 'src/utils/formate_number';
 import { ChargeWorkflowStatusOptions } from 'src/enums/fee-charges-status';
-import { DetailGrid, DetailField, DetailSection } from 'src/components/detail-view';
+import { DetailGrid, DetailField, DetailSection } from 'src/screens/finance/components/detail-view';
 
 import type { IChargeDetailData } from '../type';
 

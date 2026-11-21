@@ -170,7 +170,7 @@ export function FormFieldCoreFields({ formik, sectionIndex, fieldIndex }: FieldS
             <TextField
               fullWidth
               size="small"
-              label="Help Text (Optional)"
+              label="Help Text"
               value={field.helpText ?? ''}
               multiline
               minRows={2}

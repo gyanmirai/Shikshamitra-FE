@@ -15,6 +15,17 @@ export type FinanceReportFilter = {
   divisionIds?: string[];
   fromDate?: string;
   toDate?: string;
+  payerSearch?: string;
+  groupBy?: string;
+  installment?: string;
+  ageingBucket?: string;
+  status?: string;
+  paymentMethod?: string;
+  collector?: string;
+  bank?: string;
+  receiptNumber?: string;
+  receiptKind?: string;
+  dateBasis?: string;
 };
 
 export type FinanceReportRequest = {
@@ -30,9 +41,42 @@ export type FinanceReportPreview = {
   totalCount: number;
   page: number;
   pageSize: number;
-  columns: { id: string; label: string }[];
+  columns: { id: string; label: string; kind?: string | null }[];
   rows: Record<string, string | null>[];
   normalizedFilters: FinanceReportFilter;
+};
+
+export type FinanceReportOption = {
+  id: string;
+  label: string;
+  academicYearId?: string;
+  yearWideOnly?: boolean;
+};
+
+export type FinanceReportOptions = {
+  reportTypes: FinanceReportOption[];
+  academicYears: FinanceReportOption[];
+  feeHeads: FinanceReportOption[];
+  receiptBooks: FinanceReportOption[];
+  paymentMethods: FinanceReportOption[];
+  scope: {
+    academicYearId: string;
+    board: FinanceReportOption;
+    medium: FinanceReportOption;
+    stage: FinanceReportOption;
+    class: FinanceReportOption;
+    divisions: FinanceReportOption[];
+  }[];
+};
+
+export type FinanceReportExport = {
+  jobId: string;
+  reportType: string;
+  format: FinanceReportFormat;
+  status: string;
+  createdAt: string;
+  completedAt?: string;
+  expiresAt: string;
 };
 
 export type FinanceAiClarificationAnswer = { question: string; answer: string };
@@ -66,6 +110,21 @@ export const normalizeFinanceReportRequest = (
 
 export const financeReportsApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
+    getFinanceReportOptions: builder.query<FinanceReportOptions, void>({
+      query: () => '/app/finance-report/options',
+    }),
+    getFinanceReportExports: builder.query<FinanceReportExport[], void>({
+      query: () => '/app/finance-report/exports',
+    }),
+    downloadFinanceReport: builder.mutation<number[], string>({
+      query: (jobId) => ({
+        url: `/app/finance-report/exports/${jobId}/download`,
+        method: 'GET',
+        responseHandler: async (response) => response.ok
+          ? Array.from(new Uint8Array(await response.arrayBuffer()))
+          : response.json(),
+      }),
+    }),
     getPayableAgeing: builder.query<any[], string>({
       query: (academicYearId) => ({ url: '/reports/payable-ageing', params: { academicYearId } }),
     }),
@@ -79,7 +138,7 @@ export const financeReportsApi = financeModuleApi.injectEndpoints({
       query: (body) => ({
         url: '/app/finance-report/preview',
         method: 'POST',
-        body: normalizeFinanceReportRequest(body, 5),
+        body: { ...body, page: body.page ?? 1, pageSize: body.pageSize ?? 5 },
       }),
     }),
     createFinanceReportExport: builder.mutation<
@@ -97,6 +156,9 @@ export const financeReportsApi = financeModuleApi.injectEndpoints({
 });
 
 export const {
+  useGetFinanceReportOptionsQuery,
+  useGetFinanceReportExportsQuery,
+  useDownloadFinanceReportMutation,
   useGetPayableAgeingQuery,
   useCreateFinanceAiPlanMutation,
   usePreviewFinanceReportMutation,

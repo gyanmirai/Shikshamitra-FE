@@ -67,7 +67,7 @@ describe('compact document requirement editor', { timeout: 15000 }, () => {
     await user.click(dialog.getByRole('button', { name: 'Submit' }));
     await user.click(await screen.findByRole('button', { name: 'Edit Birth certificate' }));
     const editor = within(screen.getByRole('dialog', { name: 'Configure Document Requirement' }));
-    await user.type(editor.getByRole('textbox', { name: 'Instructions (Optional)' }), 'Clear scan');
+    await user.type(editor.getByRole('textbox', { name: 'Instructions' }), 'Clear scan');
     await user.click(editor.getByRole('button', { name: 'Submit' }));
     await user.click(await screen.findByRole('button', { name: 'Remove Birth certificate' }));
     const confirmation = within(
@@ -140,7 +140,7 @@ describe('compact document requirement editor', { timeout: 15000 }, () => {
         dialog.queryByRole('combobox', { name: 'Evidence to collect' })
       ).not.toBeInTheDocument();
       expect(
-        dialog.getByRole('combobox', { name: 'Student Document Category (Optional)' })
+        dialog.getByRole('combobox', { name: 'Student Document Category' })
       ).toBeInTheDocument();
       expect(
         dialog.getByRole('button', { name: 'Student Document Category Information' })
@@ -171,13 +171,13 @@ describe('compact document requirement editor', { timeout: 15000 }, () => {
     await user.click(screen.getByRole('button', { name: 'Edit Birth certificate' }));
     const dialog = screen.getByRole('dialog', { name: 'Configure Document Requirement' });
     await user.type(
-      within(dialog).getByRole('textbox', { name: 'Instructions (Optional)' }),
+      within(dialog).getByRole('textbox', { name: 'Instructions' }),
       'Bring a clear scan'
     );
     await user.click(within(dialog).getByRole('button', { name: 'Cancel' }));
     const discard = screen.getByRole('dialog', { name: 'Discard Unsaved Changes?' });
     await user.click(within(discard).getByRole('button', { name: 'Keep editing' }));
-    expect(within(dialog).getByRole('textbox', { name: 'Instructions (Optional)' })).toHaveValue(
+    expect(within(dialog).getByRole('textbox', { name: 'Instructions' })).toHaveValue(
       'Bring a clear scan'
     );
   });

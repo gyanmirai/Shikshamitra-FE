@@ -6,6 +6,17 @@ import { createIdentityCardPreset } from './presets';
 import { validateIdentityCardLayout } from './validation';
 
 describe('studio print-compatible preview', () => {
+  it('keeps design tokens out of a student card preview and ignores stale static text', () => {
+    const layout = createIdentityCardPreset('classic-identity');
+    const name = layout.front.elements.find((element) => element.fieldKey === 'StudentName')!;
+    name.prefix = 'Name: ';
+    name.value = 'Enter text';
+    const { rerender } = render(<IdentityCardPreview layout={layout} />);
+    expect(screen.queryByText(/Enter text/)).not.toBeInTheDocument();
+    rerender(<IdentityCardPreview layout={layout} values={{ StudentName: 'Aarav Shah' }} />);
+    expect(screen.getByText('Name: Aarav Shah')).toBeInTheDocument();
+    expect(screen.queryByText(/\[Student Name\]/)).not.toBeInTheDocument();
+  });
   it('renders rotation, opacity, ellipse and text formatting from saved schema', () => {
     const layout = createIdentityCardPreset('classic-identity');
     layout.front.elements = [

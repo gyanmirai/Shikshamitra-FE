@@ -1,6 +1,6 @@
-import React from 'react';
-import LibraryPermissionSettingScreen from 'src/screens/library/settings/permission-setting/library-permission-setting-screen';
+import { redirect } from 'next/navigation';
+import { securityPaths } from 'src/constants/security-menu';
 
-const LibraryPermissionSetting = () => <LibraryPermissionSettingScreen />;
-
-export default LibraryPermissionSetting;
+export default function LibraryPermissionSettingsRedirect() {
+  redirect(securityPaths.roleAndPermission.role);
+}

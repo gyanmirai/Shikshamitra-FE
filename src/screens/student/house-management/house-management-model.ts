@@ -28,11 +28,13 @@ export function selectionForContext(
 }
 export function assignmentInput(
   academicMediumId: string,
+  divisionId: string,
   houseId: string,
   ids: string[]
 ): HouseAssignment {
+  if (!divisionId) throw new Error('Select a division to change house membership.');
   const enrollmentIds = [...new Set(ids)];
   if (!enrollmentIds.length) throw new Error('Select at least one student.');
   if (enrollmentIds.length > 500) throw new Error('Select up to 500 students per change.');
-  return { academicMediumId, houseId: houseId || null, enrollmentIds };
+  return { academicMediumId, divisionId, houseId: houseId || null, enrollmentIds };
 }

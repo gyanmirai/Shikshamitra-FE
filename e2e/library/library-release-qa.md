@@ -1,30 +1,19 @@
-# Library Release Gate QA Sign-Off
+# Run the supplemental Library release suite
 
-## Scope
-- Active Library menu: dashboard, all books, issue & return, members, charges, reports, notification, and settings.
-- Local API is the release gate. Staging smoke is intentionally out of scope until deployment.
-- Finance settlement, acquisitions, RFID, ISBN enrichment, SMS/WhatsApp, and report scheduling are out of scope.
+Use the [Library testing guide](../../docs/library/testing.md) for required release checks, including the Codex in-app browser walkthrough. The checked-in Playwright suite supplements those checks when an alternate browser run is explicitly requested.
 
-## Automated Evidence
-- Backend build: `dotnet build --no-restore -m:1`
-- Backend app tests: `dotnet test .\test\ShikshaMitra.Application.Tests\ShikshaMitra.Application.Tests.csproj --no-restore --filter FullyQualifiedName~Library -m:1`
-- Backend API release-gate tests: `dotnet test .\test\ShikshaMitra.HttpApi.Tests\ShikshaMitra.HttpApi.Tests.csproj --no-restore --filter FullyQualifiedName~LibraryReleaseGateApi_Tests -m:1`
-- Frontend unit/contract tests: `npm test -- library`
-- Frontend typecheck: `npm run ts -- --pretty false --incremental false`
-- Browser E2E: `$env:E2E_LIBRARY='1'; npm run test:e2e -- e2e/library --project=chromium`
+## Local fixture
 
-## Browser Coverage
-- Route smoke checks every active Library route and settings page.
-- API-backed workflows cover reservation cancel, issue/return with damaged-charge flow, member tabs, charge create/update/delete, report preview/export, notification send/history, and settings write paths.
-- Prototype circulation/settings routes are guarded by unit tests as redirects away from the release surface.
+Use a disposable seeded school with a current academic year, default catalogue rules and an eligible dedicated Library borrower. The signed-in staff account needs the exact grants and school-wide stock scope for the routes and commands under test. The suite creates and retains circulation and reporting records and exercises settings writes in the disposable school.
 
-## Latest Status
-- Passed on 2026-06-17: backend build, focused Library application tests, Library release-gate API tests, frontend Library unit/contract tests, and frontend TypeScript.
-- Browser E2E specs and API fixtures are implemented, but the browser run was blocked because the local API was not listening on `localhost:44332` during this pass.
-- A broader HttpApi `FullyQualifiedName~Library` filter run exceeded the local timeout; the targeted release-gate API suite passed and the timed-out testhost was stopped.
+Set `E2E_LIBRARY=1`, `E2E_TENANT` to the disposable school and `E2E_LIBRARY_MEMBER_ID` to its eligible borrower. Configure the frontend base URL and `E2E_API_URL` for the local instances. Both URLs must use loopback. Set `E2E_LIBRARY_ACADEMIC_YEAR_ID` when needed to select the fixture year. The circulation scenario reads the school date from the copy lookup. If the manual-date fixture has no confirmed timezone, set `E2E_LIBRARY_SCHOOL_DATE` to its actual civil date in `YYYY-MM-DD` form.
 
-## Artifact Hygiene
-- Generated Playwright auth, report, and test result artifacts must stay ignored:
-  - `playwright/.auth/`
-  - `playwright-report/`
-  - `test-results/`
+Set the frontend process's `AUTH_URL` and `NEXTAUTH_URL` to the same loopback frontend origin. The sign-in callback and its session cookies follow the configured Auth.js origin.
+
+## Coverage
+
+- Staff routes include catalogue, receiving, imports, stock verification, classroom custody, campus transfers, circulation, members, charges, reports, notifications and settings.
+- The circulation scenario previews and cancels a reservation, reviews and records checkout by copy ID, receives the physical copy as damaged, and verifies the separate assessment. Exact checkout and return replays must keep the same loan and assessment.
+- Additional scenarios exercise member tabs, standalone assessments, report preview and export, notification history and Library settings.
+
+Use the signed-in walkthrough for linked student or guardian access, view-only scenarios, narrow layouts and keyboard navigation. Keep generated authentication and test artifacts in the ignored Playwright directories.

@@ -515,7 +515,7 @@ function CreateWorkflowDialog({
                             multiline
                             minRows={2}
                             size="small"
-                            label="Description (optional)"
+                            label="Description"
                             placeholder="Explain when the school should use this journey."
                             {...formik.getFieldProps('description')}
                             error={Boolean(formik.touched.description && formik.errors.description)}
@@ -776,7 +776,7 @@ function WorkflowCloneDrawer({
                   multiline
                   minRows={2}
                   size="small"
-                  label="Description (optional)"
+                  label="Description"
                   placeholder="Explain when the school should use this journey."
                   {...formik.getFieldProps('description')}
                   error={Boolean(formik.touched.description && formik.errors.description)}
@@ -831,7 +831,7 @@ function WorkflowCloneDrawer({
                       </Typography>
                     )}
                     <AdmissionDefinitionSelect
-                      label="Inquiry form (optional)"
+                      label="Inquiry form"
                       valueId={formik.values.defaultInquiryFormDefinitionId ?? null}
                       fetchOptions={fetchInquiryForms}
                       onChange={(id) => formik.setFieldValue('defaultInquiryFormDefinitionId', id)}

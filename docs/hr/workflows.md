@@ -3,7 +3,7 @@ module: hr
 domain: workflows
 content_type: Reference
 status: canonical
-updated_on: 2026-11-16
+updated_on: 2026-11-19
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -18,6 +18,8 @@ TL;DR: use this page to connect HR screens, clients, and browser tests.
 Backend workflow rules are canonical in `https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/workflows.md`.
 
 ## Core workflows
+
+The employee status dialog shows advisory Library clearance when Left or Retired is selected. It uses the current employee's deactivation check and distinguishes a school-wide total from a limited or restricted view. HR saves the status through its existing workflow. Library records actual returns.
 
 Professional Tax retains entered two-decimal amounts, displays failed save feedback inline, and closes only after a successful create/update. Fields and dismissal remain locked while saving; standalone dismissal/reload protects dirty drafts. The same editor reports dirty, busy, and save state to the HR setup wizard and uses the wizard's existing footer. Payroll day-calculation labels render as complete selectable cards using theme colors. Synthetic coverage: `tests/browser/payroll-policy-drawer.config.ts` and `professional-tax.test.tsx`.
 
@@ -97,9 +99,16 @@ Apply Leave reads the selected paid-type rule from the current staff/date policy
 
 ## HR setup wizard
 
-Authorized HR operators receive the **Complete HR Setup** wizard on any HR route when the readiness summary reports unresolved configuration.
+Authorized HR operators receive the **Let’s Complete Your HR Setup** wizard on any HR route when the readiness summary reports unresolved configuration.
 The wizard opens at the first unresolved step and marks usable existing configuration complete without requiring acknowledgement.
-Checklist steps use shared section cards with readable saved-state labels, step headings and completion counts. Desktop checklists fit their content; embedded editors retain a bounded scrolling body and fixed actions. Phones show the current step and a position indicator, which does not imply saved completion. Optional deductions remain separate from required checks.
+Checklist steps use shared section cards with readable saved-state labels, step headings and completion counts.
+A muted summary header explains the setup purpose and confirms that saved progress is available when the user returns.
+On tablet and desktop, the horizontal stepper centers the connectors on the step markers and labels completed and in-progress steps.
+Checklists, embedded editors and completion share the same viewport-bounded height, with a fixed header, navigation and footer and one scrolling body.
+Phones use the full viewport and show the current step and its position as text.
+The overall progress bar counts only server-reported ready checks; navigating between steps does not increase completion, and read failures do not display completion progress.
+Unfinished items appear first and completed items can be expanded for review.
+Optional deductions remain separate from required checks.
 Users can configure shifts, policies and calendars, earning components, and salary templates through embedded versions of the existing editors.
 The Earning Components step also exposes optional deduction setup to operators with exact Deduction Components View and Add access, including before a template exists. Deductions are not an additional readiness requirement.
 Salary Template's Add Earning and Add Deduction actions open the shared modal picker above the wizard. Empty catalogues and components already added have visible guidance. Authorized operators can create another component within setup and return to the mounted salary draft; reopening the picker shows refreshed choices. Cancelling the picker preserves the draft and returns focus to its launcher.
@@ -116,7 +125,7 @@ Saving refreshes server readiness; missing current-month coverage prevents compl
 Role repair remains an explicitly authorized Role Management task in another tab.
 Each step saves independently through existing APIs, and the final action rechecks server readiness.
 Failed background catalogue reads keep earning and salary-template editors mounted with their entries and an explicit retry action. The earning selector loads the complete paginated catalogue; embedded template loading uses only the wizard's navigation footer.
-Closing preserves saved configuration, protects unsaved entries with the existing discard confirmation, leaves the current route intact, and shows no banner.
+Closing preserves saved configuration, protects unsaved entries with the existing discard confirmation, leaves the current route intact, and offers **Continue HR setup** on the HR dashboard when configuration still needs attention or readiness could not be checked.
 Dismissal lasts for the document lifetime across HR navigation and resets on refresh or a user, tenant, or academic-year change.
 Self-service-only users receive no popup and make no readiness request.
 Read failures display a dismissible retry state rather than missing-setup claims.
@@ -223,13 +232,23 @@ Review, adjustment, lock and preview completions belong to the month/year and mo
 Navigating away and back does not authorize an earlier completion to reload payroll, clear a new selection or replace a later adjustment draft.
 Ignoring an obsolete UI completion does not cancel an already submitted server operation; reopening reads current server state.
 
-Generate preview and Refresh preview sit in the register action row alongside readiness, review, audit, and lock controls.
-Vertical dividers separate preview, readiness/audit, and review/lock action groups on desktop.
-On smaller screens, dividers are hidden and action groups wrap.
+Opening a payroll month checks for a saved run and resumes existing progress.
+Generate payroll starts the first calculation, and Recalculate payroll requests a replacement after a run exists.
+Retry lookup and Reconnect repeat reads after a loading or polling error.
+The month selector and generation action are in the period controls above the register.
+Payroll checks opens a drawer with readiness checks and the PF and ESIC registration list.
+Select all applies to eligible rows on the current page, and Mark Reviewed acts on the pending rows among them.
+Pending rows with missing attendance show Attendance missing in Issues and cannot be selected for review.
+Record attendance and recalculate payroll to make those rows reviewable.
+Review operations retain the visible rows while the server saves and the current result reloads.
+After a saved review with a failed reread, Reload rows retries the read.
+Payroll Activity shows recorded reviews, removed reviews, and locks for the selected month and academic year to authorized users with school-wide HR scope.
+Review and lock actions appear with the selected staff rows.
+On smaller screens, period and selection actions wrap above the register.
 Payroll month stays in the context row.
 Academic year comes from the global header selector without a duplicate page label.
-View readiness uses an outlined button beside the register review, audit, and lock actions.
-Readiness status and attention details appear inside the drawer instead of a page-level badge.
+Payroll activity is a secondary period action where permitted.
+For the approval workflow, the register header also shows month status and the finalized staff count.
 The read-only drawer starts closed, opens from the right on desktop, and fills the screen on mobile.
 Its checks cover attendance, salary setup, payroll policies, and additional server-reported blockers.
 The attendance check links to manual attendance.
@@ -243,6 +262,23 @@ Only server-confirmed stale or superseded results show Preview needs refresh.
 Review, adjustment mutations, and locking require a current loaded preview.
 An explicit generate, refresh, or retry shows one completion toast after the requested run and its rows are ready, including empty results.
 Failures retain a Retry action, and navigation or changing month/year clears pending notifications.
+
+### Run Payroll approval
+
+The register opens saved working rows and issued payroll for the selected month.
+Status and issue filters live in their table columns.
+The Staff, Payable days, Net pay and Variance columns support register sorting.
+Search, filters and sorting apply before pagination and carry through to the register export.
+HR selects reviewed staff who are ready and uses Send for approval to hand the selection to the school's designated principal or admin.
+Approval batches shows incoming and outgoing batches, exact staff, earnings, deductions and net pay.
+An authorized approver confirms the whole batch from its details.
+While blocked employees remain pending, the register header shows Partially finalized and the finalized staff count.
+If evidence changed, the full pending batch returns to HR for fresh review.
+A school-wide workflow manager can update the approver or activate, pause and resume approval in Payroll Settings → Approval Workflow.
+Run Payroll links to that page only when a configuration issue affects monthly work.
+The link retains the selected payroll month for the return to the register.
+Where the school enables it, eligible users can explicitly create a batch for themselves and confirm it separately.
+Review sheet Excel and Review sheet PDF use the exact ready selection or pending batch and include the Pending finalization label.
 
 ## Salary template preview recovery
 
@@ -383,7 +419,8 @@ After salary is ready, users with Employee Edit permission activate the employee
 Only effective revisions drive payroll, while one-time earning and deduction components remain a separate editable list.
 Salary-history lookup failures expose an explicit retry that retains salary/statutory drafts and loaded history. Retry shares the salary operation lock, keeps saving blocked on failure, and invalidates the preview before successful recovery so the user must calculate again.
 System-managed statutory lines stay visible in the calculation but are never persisted as editable employee components.
-Run Payroll shows compensation revision provenance and protected-target drift without silently changing salary or blocking lock.
+Run Payroll shows compensation revision provenance and preserves saved salary.
+A protected compensation target difference blocks locking when the server reports the corresponding issue code.
 Employee payslips omit employer cost and compensation protection details.
 Professional-tax settings also control whether tax is deducted in an employee's employment cessation month.
 Salary Template settings uses one full-height table for Active, Needs setup, and Archived templates.
@@ -444,9 +481,9 @@ Overview links into Run Payroll and Payslips, salary setup recovery and payroll 
 Changing month drops the previous preview generation and page while preserving unrelated query fields.
 Reload and browser navigation restore the URL month; invalid month values fall back to the current month.
 
-Refresh status reads the existing preview status and employee results without starting a calculation or replacing its review generation.
-The action remains unavailable until a preview exists and while that preview is being prepared.
-Initial preview preparation retains its established behavior; recalculation remains available explicitly in Run Payroll.
+Refresh status repeats the month lookup or reads the existing preview status and employee results without starting a calculation or replacing its review generation.
+The action remains unavailable while an initial lookup or generation is in progress.
+Open Run Payroll to generate or recalculate the selected month.
 Known overview blockers use the shared payroll issue labels and recovery guidance, and unknown codes use a safe readable message rather than internal identifiers.
 
 ## ESIC editing and stale payroll
@@ -639,7 +676,11 @@ Opting in reveals the PF rule and voluntary consent reference; opting out exclud
 CTC setup confirms the requirement from the backend-calculated Gross, while changing salary preserves the draft and requires a fresh calculation.
 Existing membership remains visibly Required, and the backend owns coverage and contribution rules described in [the payroll API contract](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md).
 The salary calculation returns the enrollment decision and blocks saving when required evidence or enrollment is missing.
-The PF settings page records school establishment coverage with an effective month and evidence reference.
+The PF settings page records school establishment coverage and its effective month.
+Selecting Covered under PF asks for a PF establishment number.
+Selecting Not covered under PF allows saving with just the coverage choice and month.
+Selecting Handled outside ShikshaMitra also needs only the effective month and turns off in-app PF for all staff from that month.
+Salary setup displays the school decision in place of PF enrollment controls, and payroll registration review uses the same decision for the selected month.
 Its write requires the exact PF Add capability and backend-confirmed school-wide scope.
 The page shows a compact coverage summary and opens a focused configuration dialog on request.
 Loading and failed reads never claim that coverage is missing; failed reads offer Retry.
@@ -840,7 +881,7 @@ Inactive definitions retain history but disappear from new-assignment options.
 
 ## Payroll settings tasks
 
-Payroll Settings opens `/hr/payroll/setting` with permission-filtered tasks for Salary Templates, Statutory Settings, Component Library, and Payslip & Statement Settings.
+Payroll Settings opens `/hr/payroll/setting` with permission-filtered tasks for Salary Templates, Statutory Settings, Component Library, Approval Workflow, and Payslip & Statement Settings.
 The component library links to the existing earning and deduction screens; statutory settings links to the existing PF, ESIC, and Professional Tax destinations.
 Template editing stays on one continuous page, with the default Monthly salary or Monthly cost to school (CTC) choice in Basic Information.
 The sample preview identifies its basis and does not assign an amount to staff.

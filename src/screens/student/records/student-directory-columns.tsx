@@ -2,10 +2,12 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { AdaptiveThreeDotsAction } from 'src/components/adaptive-three-dots-actions';
 import type { StudentDirectoryItem } from 'src/redux/student/records/student-records-types';
 
+import { Link, Stack } from '@mui/material';
 import { Label } from 'src/components/label';
 import { RouterLink } from 'src/routes/components';
-import { Link, Stack, Avatar } from '@mui/material';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
+
+import StudentPhotoAvatar from '../components/student-photo-avatar';
 
 export const directoryStudentName = (student: StudentDirectoryItem) =>
   [student.firstName, student.middleName, student.lastName].filter(Boolean).join(' ') ||
@@ -37,7 +39,11 @@ export const buildDirectoryColumns = ({
     filterType: 'string',
     render: (_value, row) => (
       <Stack direction="row" spacing={1} alignItems="center">
-        <Avatar
+        <StudentPhotoAvatar
+          studentId={row.studentId}
+          hasPhoto={!compact && row.hasPhoto && !row.maskedFields?.includes('Identity')}
+          alt={directoryStudentName(row as StudentDirectoryItem)}
+          lazy
           sx={{
             display: compact ? 'none' : 'flex',
             width: 32,
@@ -52,7 +58,7 @@ export const buildDirectoryColumns = ({
             .map((name) => String(name).charAt(0))
             .join('')
             .slice(0, 2) || '—'}
-        </Avatar>
+        </StudentPhotoAvatar>
         <Link
           component={RouterLink}
           href={profileHref(row.studentId)}
@@ -143,6 +149,7 @@ export const buildDirectoryColumns = ({
           moreLabel={`More actions for ${directoryStudentName(row as StudentDirectoryItem)}`}
           directActionLimit={2}
           collapseOnOverflow={false}
+          placement="right-top"
           sx={{ justifyContent: 'flex-end' }}
         />
       );

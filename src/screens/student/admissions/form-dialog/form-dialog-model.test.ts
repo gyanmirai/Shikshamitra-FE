@@ -8,10 +8,47 @@ import {
   nextFieldDisplayOrder,
   CREATABLE_FIELD_TYPES,
   getConfigurableFieldTypes,
+  getAdmissionFormInitialValues,
+  getAdmissionFormPrintSettings,
   getBlankAdmissionFormInitialValues,
 } from './form-dialog-model';
 
 describe('admission form field codes', () => {
+  it('defaults new forms to Boxed Grid while preserving legacy and saved templates', () => {
+    const legacy = getBlankAdmissionFormInitialValues(1);
+    expect(legacy.printSettings).toEqual({
+      template: 'boxed-grid',
+      layout: 'compact',
+      paperSize: 'A4',
+      showSchoolHeader: true,
+      showPhoto: true,
+      showSignature: true,
+    });
+    const settings = {
+      template: 'structured-classic' as const,
+      layout: 'spacious' as const,
+      paperSize: 'A4' as const,
+      showSchoolHeader: false,
+      showPhoto: false,
+      showSignature: false,
+    };
+    const editing = {
+      ...legacy,
+      id: 'form',
+      version: 1,
+      status: 0 as const,
+      sectionCount: 1,
+      printSettings: settings,
+      concurrencyStamp: undefined,
+    };
+    const reopened = getAdmissionFormInitialValues(editing);
+    expect(reopened.printSettings).toEqual(settings);
+    expect(reopened.printSettings).not.toBe(settings);
+    expect(getAdmissionFormPrintSettings().template).toBe('simple');
+    expect(
+      getAdmissionFormInitialValues({ ...editing, printSettings: null }).printSettings?.template
+    ).toBe('simple');
+  });
   it('starts an Inquiry with required identity fields and the primary contact selector', () => {
     const form = getBlankAdmissionFormInitialValues(0);
 
@@ -26,7 +63,35 @@ describe('admission form field codes', () => {
       'Guardian.Email',
       'Inquiry.ParentRelationship',
     ]);
-    expect(form.sections[0].fields.every((field) => field.required === (field.bindingKey !== 'Applicant.LastName') && !field.readOnly)).toBe(true);
+    expect(
+      form.sections[0].fields.every(
+        (field) => field.required === (field.bindingKey !== 'Applicant.LastName') && !field.readOnly
+      )
+    ).toBe(true);
+  });
+
+  it('retains the advanced print configuration when reopening a saved Registration', () => {
+    const settings = {
+      ...getAdmissionFormPrintSettings(),
+      paperSize: 'LETTER' as const,
+      advanced: {
+        paper: { orientation: 'landscape' as const },
+        branding: { logo: { x: 10, y: 5, width: 20, height: 65 } },
+        footer: { pageNumbers: false },
+        content: { translations: { gu: { instructions: 'ગુજરાતી' } } },
+        fields: { STUDENT_NAME: { width: 'full' as const } },
+      },
+    };
+    const saved = {
+      ...getBlankAdmissionFormInitialValues(1),
+      id: 'saved',
+      concurrencyStamp: undefined,
+      status: 0 as const,
+      version: 2,
+      sectionCount: 1,
+      printSettings: settings,
+    };
+    expect(getAdmissionFormInitialValues(saved).printSettings).toEqual(settings);
   });
 
   it('starts Registration with required identity/contact fields and DOB/gender', () => {

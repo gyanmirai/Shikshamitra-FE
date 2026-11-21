@@ -644,7 +644,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                             >
                               <CustomSelect
                                 name="divisionIds"
-                                label="Division (optional)"
+                                label="Division"
                                 labelKey="name"
                                 valueKey="id"
                                 disabled={isEdit}

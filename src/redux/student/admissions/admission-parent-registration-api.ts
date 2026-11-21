@@ -1,5 +1,6 @@
 import { api } from 'src/redux/service';
 import { studentAdmissionsCrmType } from 'src/redux/tagTypes';
+import { getAuthSessionCacheRevision } from 'src/redux/session-cache';
 
 import type {
   ParentRegistrationCommand,
@@ -7,6 +8,7 @@ import type {
   ParentRegistrationEmailInput,
   StaffParentRegistrationContext,
   ParentRegistrationEmailHistory,
+  ParentRegistrationCopyLinkInput,
   ParentRegistrationCorrectionInput,
 } from './admission-parent-registration-types';
 
@@ -55,6 +57,42 @@ export const admissionParentRegistrationApi = api.injectEndpoints({
       }),
       transformResponse: unwrap,
       invalidatesTags: invalidates,
+    }),
+    copyParentRegistrationLink: builder.mutation<
+      { copied: boolean },
+      Command<ParentRegistrationCopyLinkInput>
+    >({
+      async queryFn({ applicationId, input }, { signal }, _options, baseQuery) {
+        const revision = getAuthSessionCacheRevision();
+        const result = await baseQuery({
+          url: `${base(applicationId)}/copy-link`,
+          method: 'POST',
+          body: input,
+          cache: 'no-store',
+        });
+        if (result.error) return { error: result.error };
+        const response = result.data as { data?: unknown } | string | null;
+        const link = typeof response === 'string' ? response : response?.data;
+        if (
+          typeof link !== 'string' ||
+          !/^https?:\/\/[^\s]+\/admission-registration#token=[\da-f]{64}$/i.test(link)
+        ) {
+          return {
+            error: { status: 'CUSTOM_ERROR', error: 'The registration link is unavailable.' },
+          };
+        }
+        if (signal.aborted || revision !== getAuthSessionCacheRevision())
+          return { data: { copied: false } };
+        // Keep the private URL out of Redux and the staff status/history responses.
+        try {
+          await navigator.clipboard.writeText(link);
+          return { data: { copied: true } };
+        } catch {
+          return { data: { copied: false } };
+        }
+      },
+      invalidatesTags: (result, error, { input }) =>
+        result && input.recipientRelationship ? invalidates(result, error) : [],
     }),
     changeParentRegistrationEmail: builder.mutation<
       StaffParentRegistrationContext,
@@ -126,6 +164,7 @@ export const {
   useGetParentRegistrationQuery,
   useGetParentRegistrationEmailHistoryQuery,
   useSendParentRegistrationMutation,
+  useCopyParentRegistrationLinkMutation,
   useChangeParentRegistrationEmailMutation,
   useRevokeParentRegistrationMutation,
   useTakeoverParentRegistrationMutation,

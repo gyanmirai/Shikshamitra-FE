@@ -2,6 +2,8 @@ import { Box } from '@mui/material';
 
 import type { IdentityCardLayout } from '../types';
 
+export const CANVAS_RULER_GUTTER = 24;
+
 export function CanvasRulers({
   layout,
   children,
@@ -12,12 +14,12 @@ export function CanvasRulers({
   const ticks = (length: number) =>
     Array.from({ length: Math.floor(length / 10) + 1 }, (_, i) => i * 10);
   return (
-    <Box sx={{ position: 'relative', p: '24px 0 0 24px' }}>
+    <Box sx={{ position: 'relative', p: `${CANVAS_RULER_GUTTER}px 0 0 ${CANVAS_RULER_GUTTER}px` }}>
       <Box
         aria-hidden
         sx={{
           position: 'absolute',
-          left: 24,
+          left: CANVAS_RULER_GUTTER,
           right: 0,
           top: 0,
           height: 20,
@@ -47,7 +49,7 @@ export function CanvasRulers({
         aria-hidden
         sx={{
           position: 'absolute',
-          top: 24,
+          top: CANVAS_RULER_GUTTER,
           bottom: 0,
           left: 0,
           width: 20,

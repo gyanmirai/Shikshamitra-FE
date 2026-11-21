@@ -68,10 +68,10 @@ capture or introduce a second popover/menu implementation. Keep all actions visi
 at the table's right edge and near the viewport bottom. A menu must not be clipped by sticky
 columns or the table scroll container; select the supported placement that fits the actual layout.
 
-Labels on direct controls also supply their accessible names; include the record, such as
-`Edit English`. Set `moreLabel` to `More actions for English` so the menu has row context. The
-current API has no separate `ariaLabel`/`renderMenuItem` prop; do not invent one. If a future
-design needs short visible labels and separate accessible descriptions, extend the shared API.
+Labels also supply accessible names by default. Use the optional item `ariaLabel` when a short
+visible label needs more context for assistive technology. For example, show `Delete` and set
+`ariaLabel` to `Delete English`. Set `moreLabel` to `More actions for English` when the menu
+trigger needs row context.
 
 ## Current API and component relationships
 
@@ -90,6 +90,7 @@ Inspected on 16 October 2026. Recheck the source before implementation.
 | Prop / item field | Actual contract |
 | --- | --- |
 | `actions` | Required readonly `AdaptiveThreeDotsAction[]`; each item has unique stable `id`, `label`, Iconify `icon`, and `onClick: () => void` |
+| Item `ariaLabel` | Optional accessible name for direct or overflow actions. The tooltip and menu text use `label` by default. |
 | Item `disabled`, `tooltip`, `color` | Optional availability, explanatory help, semantic icon/menu color; disabled color is neutral |
 | `moreLabel` | Trigger tooltip/accessible name and menu accessible name; default is generic `More actions`, so supply record context |
 | `directActionLimit` | Supports 0/1/2; use 2 for this standard |

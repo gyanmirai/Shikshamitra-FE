@@ -13,16 +13,19 @@ const mocks = vi.hoisted(() => ({
   save: vi.fn(),
   close: vi.fn(),
   history: vi.fn(),
+  transitions: vi.fn(),
 }));
 vi.mock('react-redux', () => ({
   useSelector: (select: any) =>
     select({
       globalState: { currentYear: { id: mocks.year } },
       auth: {
-        permissions: ['View', 'Add'].map((action) => ({
-          name: `Students.Records.Certificates.${action}`,
-          isGranted: true,
-        })),
+        permissions: ['Certificates.View', 'Certificates.Add', 'Transitions.View'].map(
+          (action) => ({
+            name: `Students.Records.${action}`,
+            isGranted: true,
+          })
+        ),
       },
     }),
 }));
@@ -54,15 +57,10 @@ vi.mock('@mui/x-date-pickers/DatePicker', () => ({
   ),
 }));
 vi.mock('src/components/form-section-card', () => ({
-  FormSectionHeader: ({ title, action }: any) => (
-    <div>
-      <h3>{title}</h3>
-      {action}
-    </div>
-  ),
-  FormSectionCard: ({ title, children }: any) => (
+  FormSectionCard: ({ title, action, children }: any) => (
     <section aria-label={title}>
       <h3>{title}</h3>
+      {action}
       {children}
     </section>
   ),
@@ -94,7 +92,10 @@ vi.mock('src/components/student-feedback', () => ({
   ),
 }));
 vi.mock('src/redux/student/records/student-record-transitions-api', () => ({
-  useGetStudentRecordTransitionsQuery: () => ({ currentData: { items: [] }, isFetching: false }),
+  useGetStudentRecordTransitionsQuery: ({ studentId }: { studentId: string }) => ({
+    currentData: { items: mocks.transitions(studentId) },
+    isFetching: false,
+  }),
 }));
 vi.mock('src/redux/student/records/student-record-documents-api', () => {
   const preview = (input: any) => ({ unwrap: () => mocks.preview(input) });
@@ -147,6 +148,7 @@ const response = (id: string) => ({
 beforeEach(() => {
   vi.resetAllMocks();
   mocks.year = 'year-1';
+  mocks.transitions.mockReturnValue([]);
   mocks.preview.mockImplementation(async ({ studentId }) => ({
     ...response(studentId),
     certificateId: null,
@@ -168,13 +170,64 @@ it('opens for the selected student with type choices, without academic/student r
   renderDrawer();
   expect(screen.getByRole('dialog', { name: 'Generate Certificate' })).toBeInTheDocument();
   expect(screen.getByText('Ravi Shah')).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: /Bonafide/ })).toBeInTheDocument();
+  expect(screen.getByRole('radiogroup', { name: 'Certificate Type' })).toBeInTheDocument();
+  expect(screen.getAllByRole('radio')).toHaveLength(4);
+  expect(screen.getByText('Choose a certificate type to preview it.')).toBeInTheDocument();
+  expect(screen.queryByLabelText('Certificate preview for Ravi Shah')).not.toBeInTheDocument();
   expect(screen.queryByRole('combobox', { name: 'Class' })).not.toBeInTheDocument();
+  expect(mocks.preview).not.toHaveBeenCalled();
   expect(mocks.issue).not.toHaveBeenCalled();
+});
+
+it('uses the same school branding choice for the preview, issuance and retry', async () => {
+  const image = 'data:image/png;base64,banner';
+  mocks.preview.mockImplementation(async ({ studentId, includeBranding, omitSchoolBranding }) => ({
+    ...response(studentId),
+    certificateId: null,
+    template: {
+      ...response(studentId).template,
+      schoolIdentity: omitSchoolBranding ? {} : { bannerAssetId: 'banner-1' },
+    },
+    branding: includeBranding && !omitSchoolBranding ? { bannerDataUrl: image } : undefined,
+  }));
+  mocks.issue.mockRejectedValueOnce(new Error('Response lost after issuance'));
+  renderDrawer();
+  fireEvent.click(screen.getByRole('radio', { name: /Bonafide/ }));
+  const toggle = screen.getByRole('switch', { name: 'Include school logo / banner' });
+  expect(toggle).toBeChecked();
+  expect(screen.getAllByRole('radio')).toHaveLength(4);
+  await waitFor(() => expect(screen.getByRole('img', { name: 'School letterhead' })).toBeVisible());
+
+  fireEvent.click(toggle);
+  const submit = screen.getByRole('button', { name: 'Generate & download' });
+  expect(submit).toBeDisabled();
+  expect(screen.queryByRole('img', { name: 'School letterhead' })).not.toBeInTheDocument();
+  await waitFor(() => expect(submit).toBeEnabled());
+  expect(screen.queryByRole('img', { name: 'School letterhead' })).not.toBeInTheDocument();
+  expect(mocks.preview).toHaveBeenLastCalledWith(
+    expect.objectContaining({ omitSchoolBranding: true, includeBranding: false })
+  );
+
+  fireEvent.click(toggle);
+  await waitFor(() => expect(screen.getByRole('img', { name: 'School letterhead' })).toBeVisible());
+  fireEvent.click(toggle);
+  await waitFor(() => expect(submit).toBeEnabled());
+  fireEvent.click(submit);
+  const retry = await screen.findByRole('button', { name: 'Retry remaining certificates' });
+  expect(toggle).toBeDisabled();
+  expect(mocks.preview).toHaveBeenLastCalledWith(
+    expect.objectContaining({ omitSchoolBranding: true })
+  );
+  const attemptedRequest = mocks.issue.mock.calls[0][0];
+  expect(attemptedRequest.omitSchoolBranding).toBe(true);
+  fireEvent.click(retry);
+  await waitFor(() => expect(mocks.save).toHaveBeenCalled());
+  expect(mocks.issue).toHaveBeenLastCalledWith(attemptedRequest);
+  expect(mocks.download).toHaveBeenCalledWith({ kind: 'certificates', id: 'certificate-ravi' });
 });
 it('previews inline, issues only after confirmation and downloads without closing the generated result', async () => {
   renderDrawer();
-  fireEvent.click(screen.getByRole('button', { name: /Bonafide/ }));
+  fireEvent.click(screen.getByRole('radio', { name: /Bonafide/ }));
   await waitFor(() =>
     expect(screen.getByLabelText('Certificate preview for Ravi Shah')).toBeInTheDocument()
   );
@@ -190,7 +243,7 @@ it('previews inline, issues only after confirmation and downloads without closin
 it('retries an unchanged failed preview while preserving the entered purpose', async () => {
   mocks.preview.mockRejectedValueOnce(new Error('temporary preview failure'));
   renderDrawer();
-  fireEvent.click(screen.getByRole('button', { name: /Bonafide/ }));
+  fireEvent.click(screen.getByRole('radio', { name: /Bonafide/ }));
   fireEvent.change(screen.getByRole('textbox', { name: 'Purpose / reason' }), {
     target: { value: 'Scholarship application' },
   });
@@ -214,7 +267,7 @@ it('retries partial issuance with the original student keys and does not issue a
     .mockImplementationOnce(async () => response('ravi'))
     .mockRejectedValueOnce(new Error('temporary'));
   renderDrawer(students);
-  fireEvent.click(screen.getByRole('button', { name: /Bonafide/ }));
+  fireEvent.click(screen.getByRole('radio', { name: /Bonafide/ }));
   await waitFor(() =>
     expect(screen.getByRole('button', { name: 'Generate & download' })).toBeEnabled()
   );
@@ -231,7 +284,7 @@ it('retries partial issuance with the original student keys and does not issue a
 it('retains an issued certificate after a PDF failure and retries download without generating it again', async () => {
   mocks.download.mockRejectedValueOnce(new Error('PDF unavailable'));
   renderDrawer();
-  fireEvent.click(screen.getByRole('button', { name: /Bonafide/ }));
+  fireEvent.click(screen.getByRole('radio', { name: /Bonafide/ }));
   await waitFor(() =>
     expect(screen.getByRole('button', { name: 'Generate & download' })).toBeEnabled()
   );
@@ -245,7 +298,7 @@ it('retains an issued certificate after a PDF failure and retries download witho
 });
 it('blocks issuance when the global academic year changes', async () => {
   const view = renderDrawer();
-  fireEvent.click(screen.getByRole('button', { name: /Bonafide/ }));
+  fireEvent.click(screen.getByRole('radio', { name: /Bonafide/ }));
   mocks.year = 'year-2';
   view.rerender(
     <CertificateGenerationDrawer
@@ -259,10 +312,40 @@ it('blocks issuance when the global academic year changes', async () => {
   expect(mocks.issue).not.toHaveBeenCalled();
 });
 
+it('moves Leaving validation to the first student missing a linked exit case', async () => {
+  mocks.transitions.mockImplementation((studentId: string) =>
+    studentId === 'ravi'
+      ? [{ id: 'exit-ravi', outcome: 'Transfer', status: 'Approved' }]
+      : [
+          { id: 'exit-asha-transfer', outcome: 'Transfer', status: 'Approved' },
+          { id: 'exit-asha-withdraw', outcome: 'Withdraw', status: 'Approved' },
+        ]
+  );
+  renderDrawer(students);
+  fireEvent.click(screen.getByRole('radio', { name: /Leaving/ }));
+  const submit = screen.getByRole('button', { name: 'Generate & download' });
+  await waitFor(() => expect(submit).toBeEnabled());
+
+  fireEvent.click(submit);
+
+  expect(await screen.findByText('Choose an eligible exit case for Asha Patel.')).toHaveAttribute(
+    'role',
+    'alert'
+  );
+  expect(screen.getByRole('region', { name: 'Selected certificate student' })).toHaveTextContent(
+    'Asha Patel'
+  );
+  expect(screen.getByRole('combobox', { name: /Linked exit case/ })).toHaveAttribute(
+    'aria-invalid',
+    'true'
+  );
+  expect(mocks.issue).not.toHaveBeenCalled();
+});
+
 it('does not issue through form submission while the inline preview is still pending', async () => {
   mocks.preview.mockImplementationOnce(() => new Promise(() => {}));
   renderDrawer();
-  fireEvent.click(screen.getByRole('button', { name: /Bonafide/ }));
+  fireEvent.click(screen.getByRole('radio', { name: /Bonafide/ }));
   await waitFor(() => expect(mocks.preview).toHaveBeenCalledTimes(1));
   const button = screen.getByRole('button', { name: 'Generate & download' }) as HTMLButtonElement;
   expect(button).toBeDisabled();
@@ -282,7 +365,7 @@ it('does not issue further batch students after the drawer unmounts', async () =
       })
   );
   const view = renderDrawer(students);
-  fireEvent.click(screen.getByRole('button', { name: /Bonafide/ }));
+  fireEvent.click(screen.getByRole('radio', { name: /Bonafide/ }));
   await waitFor(() =>
     expect(screen.getByRole('button', { name: 'Generate & download' })).toBeEnabled()
   );
@@ -294,22 +377,25 @@ it('does not issue further batch students after the drawer unmounts', async () =
   expect(mocks.download).not.toHaveBeenCalled();
 });
 
-it('does not copy a conduct assessment into a different certificate type', async () => {
+it('keeps shared fields and clears type-specific fields when changing the certificate type', () => {
   renderDrawer();
-  fireEvent.click(screen.getByRole('button', { name: /Character/ }));
-  fireEvent.change(screen.getByRole('textbox', { name: 'Conduct assessment (optional)' }), {
+  fireEvent.click(screen.getByRole('radio', { name: /Character/ }));
+  fireEvent.change(screen.getByRole('textbox', { name: 'Conduct assessment' }), {
     target: { value: 'Verified conduct only' },
   });
-  fireEvent.click(screen.getByRole('button', { name: 'Back' }));
-  fireEvent.click(screen.getByRole('button', { name: /First Trial/ }));
-  expect(screen.getByRole('textbox', { name: 'First trial particulars (optional)' })).toHaveValue(
+  fireEvent.change(screen.getByRole('textbox', { name: 'Purpose / reason' }), {
+    target: { value: 'School records' },
+  });
+  fireEvent.click(screen.getByRole('radio', { name: /First Trial/ }));
+  expect(screen.getByRole('textbox', { name: 'First trial particulars' })).toHaveValue(
     ''
   );
+  expect(screen.getByRole('textbox', { name: 'Purpose / reason' })).toHaveValue('School records');
 });
 
 it('preserves the chosen local issue date with an explicit offset at a year boundary', async () => {
   renderDrawer();
-  fireEvent.click(screen.getByRole('button', { name: /Bonafide/ }));
+  fireEvent.click(screen.getByRole('radio', { name: /Bonafide/ }));
   fireEvent.change(screen.getByLabelText('Issue date'), { target: { value: '2027-01-01' } });
   await waitFor(() =>
     expect(screen.getByRole('button', { name: 'Generate & download' })).toBeEnabled()
@@ -322,7 +408,7 @@ it('preserves the chosen local issue date with an explicit offset at a year boun
 it('freezes an unconfirmed issuance request and retries its original key after a lost response', async () => {
   mocks.issue.mockRejectedValueOnce(new Error('Response lost after request was sent'));
   renderDrawer();
-  fireEvent.click(screen.getByRole('button', { name: /Bonafide/ }));
+  fireEvent.click(screen.getByRole('radio', { name: /Bonafide/ }));
   await waitFor(() =>
     expect(screen.getByRole('button', { name: 'Generate & download' })).toBeEnabled()
   );
@@ -340,7 +426,7 @@ it('freezes an unconfirmed issuance request and retries its original key after a
 
 it('preserves entered fields while expanding and restoring the paper preview', async () => {
   renderDrawer();
-  fireEvent.click(screen.getByRole('button', { name: /Bonafide/ }));
+  fireEvent.click(screen.getByRole('radio', { name: /Bonafide/ }));
   fireEvent.change(screen.getByRole('textbox', { name: 'Purpose / reason' }), {
     target: { value: 'Scholarship request' },
   });
@@ -365,7 +451,7 @@ it('reuses unchanged captured branding when editing purpose and keeps preflight 
     branding: includeBranding ? { logoDataUrl: image } : undefined,
   }));
   renderDrawer();
-  fireEvent.click(screen.getByRole('button', { name: /Bonafide/ }));
+  fireEvent.click(screen.getByRole('radio', { name: /Bonafide/ }));
   await waitFor(() =>
     expect(screen.getByRole('img', { name: 'School logo' })).toHaveAttribute('src', image)
   );
@@ -394,7 +480,7 @@ it('refreshes branding when a later preview captures a different asset', async (
     branding: includeBranding ? { logoDataUrl: `data:image/png;base64,${asset}` } : undefined,
   }));
   renderDrawer();
-  fireEvent.click(screen.getByRole('button', { name: /Bonafide/ }));
+  fireEvent.click(screen.getByRole('radio', { name: /Bonafide/ }));
   await waitFor(() =>
     expect(screen.getByRole('img', { name: 'School logo' })).toHaveAttribute(
       'src',

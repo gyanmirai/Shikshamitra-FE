@@ -2,12 +2,13 @@
 
 import type { Board } from 'src/types/school';
 
-import { Box, Paper, Stack } from '@mui/material';
+import { Box, Paper } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import LeaveRequests from './leave-requests';
 import { useAttendanceContext } from '../setting/attendance-context';
+import { studentAcademicFilterRowSx } from '../../student-academic-filter-layout';
 
 const ALL_ORGANIZATIONS = 'All Organizations';
 const ALL_CLASSES = 'All Classes';
@@ -47,7 +48,7 @@ export default function LeaveRequestsPage() {
         ]}
       />
       <Paper variant="outlined" sx={{ p: 1, borderRadius: 2 }}>
-        <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
+        <Box sx={studentAcademicFilterRowSx}>
           <CustomSelect
             fullWidth
             size="small"
@@ -150,7 +151,7 @@ export default function LeaveRequestsPage() {
               })
             }
           />
-        </Stack>
+        </Box>
       </Paper>
       <LeaveRequests
         scope={{

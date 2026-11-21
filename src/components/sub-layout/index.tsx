@@ -183,7 +183,12 @@ const SubLayout = ({ children }: any) => {
             }}
           >
             <Tooltip title={isPinned ? 'Unpin' : 'Pin'} placement="right">
-              <IconButton onClick={handleTogglePin} size="small">
+              <IconButton
+                aria-label={`Pin ${navigationLabel}`}
+                aria-pressed={isPinned}
+                onClick={handleTogglePin}
+                size="small"
+              >
                 <Iconify
                   icon={isPinned ? 'solar:pin-bold' : 'solar:pin-linear'}
                   sx={{

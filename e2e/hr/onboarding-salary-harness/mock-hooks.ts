@@ -17,6 +17,12 @@ export const useRouter = () => ({
   replace: (href: string) => window.history.replaceState({}, '', href),
 });
 const empty = () => ({ data: { items: [] }, isLoading: false });
+const internalPfManagement = { isHandledExternally: false };
+const refetchPfManagement = () => ({ unwrap: async () => internalPfManagement });
+export const useGetSchoolPfManagementQuery = () => ({
+  currentData: internalPfManagement,
+  refetch: refetchPfManagement,
+});
 export const useGetRolesQuery = () => ({
   isSuccess: true,
   isFetching: false,
@@ -141,7 +147,10 @@ export const useCalculateSalaryTemplateMutation = () => [
         employerContributions: [],
         statutorySummary: [],
         warnings: [],
-        pfEligibility: { canSave: true, status: input.pfApplicable ? 'MANDATORY' : 'NOT_APPLICABLE' },
+        pfEligibility: {
+          canSave: true,
+          status: input.pfApplicable ? 'MANDATORY' : 'NOT_APPLICABLE',
+        },
         targetResult: { isExact: true, difference: 0 },
         employeeStateInsurance: { canCalculate: true, issueCodes: [] },
       };

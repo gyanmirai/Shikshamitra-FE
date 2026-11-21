@@ -2,6 +2,7 @@ import { financePolicyType } from 'src/redux/tagTypes';
 
 import { api } from '../service';
 import { policyCacheTags } from './policyCacheTags';
+import { policyVersionRequest, type PolicyVersionQueryArgs } from './policyVersionQuery';
 
 const policyTags = policyCacheTags(financePolicyType.collectionPolicy);
 
@@ -131,13 +132,9 @@ export const CollectionPolicyApi = api.injectEndpoints({
 
     getCollectionPolicyVersions: builder.query<
       CollectionPolicyVersionListResponse,
-      { id: string; skipCount?: number; maxResultCount?: number }
+      PolicyVersionQueryArgs
     >({
-      query: ({ id, ...params }: { id: string; skipCount?: number; maxResultCount?: number }) => ({
-        url: `/finance/collection-policies/${id}/versions`,
-        method: 'GET',
-        params,
-      }),
+      query: (args) => policyVersionRequest('collection', args),
       providesTags: policyTags.detail,
     }),
 

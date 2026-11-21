@@ -6,6 +6,7 @@ import { ParentRegistrationPanel } from './parent-registration-panel';
 
 const state = vi.hoisted(() => ({
   send: vi.fn(),
+  copyLink: vi.fn(),
   corrections: vi.fn(),
   apply: vi.fn(),
   revoke: vi.fn(),
@@ -117,6 +118,7 @@ vi.mock('src/redux/student/admissions/admission-parent-registration-api', () => 
     };
   },
   useSendParentRegistrationMutation: () => [state.send, {}],
+  useCopyParentRegistrationLinkMutation: () => [state.copyLink, {}],
   useChangeParentRegistrationEmailMutation: () => [state.changeEmail, {}],
   useRevokeParentRegistrationMutation: () => [state.revoke, {}],
   useTakeoverParentRegistrationMutation: () => [vi.fn(), {}],
@@ -150,6 +152,8 @@ beforeEach(() => {
     recipients: [{ ...savedContact }],
     request: null,
     canSend: true,
+    canCopyLink: false,
+    canCreateLink: false,
     canApply: false,
     canRevoke: false,
     canTakeover: false,
@@ -175,6 +179,96 @@ function installInvitation(deliveryStatus = 'Sent') {
     },
   };
 }
+
+it('copies the active registration link without sending another email', async () => {
+  installInvitation();
+  state.context.canCopyLink = true;
+  state.copyLink.mockReturnValue({ unwrap: async () => ({ copied: true }) });
+  render(
+    <ParentRegistrationPanel
+      placement="header"
+      applicationId="app"
+      canView
+      canManage
+      currentValues={{}}
+    />
+  );
+  expect(screen.getByText('Email sent')).toBeVisible();
+  fireEvent.click(screen.getByRole('button', { name: 'Copy link' }));
+  await waitFor(() =>
+    expect(state.copyLink).toHaveBeenCalledExactlyOnceWith({
+      applicationId: 'app',
+      input: {
+        requestId: 'request',
+        concurrencyStamp: 'initial',
+        idempotencyKey: expect.any(String),
+      },
+    })
+  );
+  expect(state.send).not.toHaveBeenCalled();
+});
+
+it('shows the sent label while keeping Copy link disabled for a legacy invitation', () => {
+  installInvitation();
+  render(
+    <ParentRegistrationPanel
+      placement="header"
+      applicationId="app"
+      canView
+      canManage
+      currentValues={{}}
+    />
+  );
+
+  expect(screen.getByText('Email sent')).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Copy link' })).toBeDisabled();
+  expect(state.copyLink).not.toHaveBeenCalled();
+});
+
+it.each(['NotSent', 'Pending', 'Sending', 'Failed', 'Unknown'])(
+  'keeps the sent label hidden for %s',
+  (status) => {
+    installInvitation(status);
+    render(
+      <ParentRegistrationPanel
+        placement="header"
+        applicationId="app"
+        canView
+        canManage
+        currentValues={{}}
+      />
+    );
+    expect(screen.queryByText('Email sent')).toBeNull();
+  }
+);
+
+it('creates a copy-only link with a saved recipient even when email delivery is unavailable', async () => {
+  state.context.canCreateLink = true;
+  state.context.emailDeliveryBlockedReason = 'Email is unavailable.';
+  state.copyLink.mockReturnValue({ unwrap: async () => ({ copied: true }) });
+  render(
+    <ParentRegistrationPanel
+      placement="header"
+      applicationId="app"
+      canView
+      canManage
+      currentValues={{}}
+    />
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Copy link' }));
+  fireEvent.submit(screen.getByRole('dialog'));
+  await waitFor(() =>
+    expect(state.copyLink).toHaveBeenCalledExactlyOnceWith({
+      applicationId: 'app',
+      input: {
+        recipientRelationship: 'mother',
+        concurrencyStamp: 'initial',
+        idempotencyKey: expect.any(String),
+      },
+    })
+  );
+  expect(state.send).not.toHaveBeenCalled();
+});
 
 it('groups the invited contact once and keeps provider acceptance in optional help', () => {
   installInvitation();
@@ -213,6 +307,7 @@ it.each(['view', 'manage', 'disabled', 'dirty'] as const)(
   'keeps the header toolbar within its existing %s boundary',
   (blocker) => {
     installInvitation();
+    state.context.canCopyLink = true;
     render(
       <ParentRegistrationPanel
         placement="header"
@@ -226,14 +321,18 @@ it.each(['view', 'manage', 'disabled', 'dirty'] as const)(
     );
     if (blocker === 'view' || blocker === 'manage') {
       expect(screen.queryByRole('button', { name: 'Send email' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Copy link' })).not.toBeInTheDocument();
     } else {
       expect(screen.getByRole('button', { name: 'Send email' })).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Copy link' })).toBeDisabled();
       fireEvent.click(screen.getByRole('button', { name: 'Send email' }));
     }
+    expect(screen.queryByText(/save your current form edits/i)).not.toBeInTheDocument();
     if (blocker === 'view')
       expect(screen.queryByRole('button', { name: 'Email history' })).not.toBeInTheDocument();
     else expect(screen.getByRole('button', { name: 'Email history' })).toBeVisible();
     expect(state.send).not.toHaveBeenCalled();
+    expect(state.copyLink).not.toHaveBeenCalled();
     expect(state.changeEmail).not.toHaveBeenCalled();
   }
 );

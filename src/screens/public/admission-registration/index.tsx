@@ -10,30 +10,33 @@ import { useFormik } from 'formik';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { fDateTime } from 'src/utils/format-time';
+import { useResponsive } from 'src/hooks/use-responsive';
 import CustomStepper from 'src/components/custom-stepper';
 import { LoadingButton } from 'src/components/loading-button';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
-import { Box, Stack, Paper, Button, Skeleton, Typography } from '@mui/material';
+import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
+import { Box, Stack, Paper, Button, Skeleton, Typography, LinearProgress } from '@mui/material';
+import { getVisibleAdmissionFormSteps } from 'src/screens/student/admissions/form-dialog/form-step-groups';
 import { getAdmissionSubmissionValidationErrors } from 'src/screens/student/admissions/admission-form-validation';
 import { ApplicationRuntimeFormCore } from 'src/screens/student/admissions/application-detail/application-runtime-form';
 import { getCorrectionSections } from 'src/screens/student/admissions/application-detail/application-form-correction-visibility';
 
+import { ParentRegistrationReview } from './parent-registration-review';
 import { ParentRegistrationDocuments } from './parent-registration-documents';
 import { ParentRegistrationInstructions } from './parent-registration-instructions';
+import {
+  parentRegistrationForm,
+  parentRegistrationValues,
+  parentRegistrationDraftValues,
+} from './parent-registration-model';
 import {
   readRegistrationToken,
   ParentRegistrationError,
   createParentRegistrationTransport,
 } from './parent-registration-transport';
-import {
-  parentRegistrationForm,
-  parentRegistrationValues,
-  readableRegistrationValue,
-  parentRegistrationDraftValues,
-} from './parent-registration-model';
 
 export default function PublicAdmissionRegistrationScreen({
   token: suppliedToken,
@@ -68,11 +71,40 @@ export default function PublicAdmissionRegistrationScreen({
   );
 }
 
-function Unavailable({ error, onRetry }: { error?: string; onRetry?: () => void }) {
+function Unavailable({
+  error,
+  unavailableLink = false,
+  onRetry,
+}: {
+  error?: string;
+  unavailableLink?: boolean;
+  onRetry?: () => void;
+}) {
   return (
     <Paper variant="outlined" sx={{ p: 3 }}>
       <Stack spacing={2}>
-        <Typography variant="h5">Registration Link Unavailable</Typography>
+        <Stack direction="row" spacing={1.5} alignItems="center">
+          <Box
+            aria-hidden
+            sx={{
+              width: 40,
+              height: 40,
+              flexShrink: 0,
+              borderRadius: 1,
+              display: 'grid',
+              placeItems: 'center',
+              bgcolor: 'error.lighter',
+              color: 'error.main',
+            }}
+          >
+            <Iconify icon={GlobalIcons.warning} width={22} />
+          </Box>
+          <Typography variant="h5">
+            {unavailableLink
+              ? 'Registration link unavailable or expired'
+              : 'Registration link unavailable'}
+          </Typography>
+        </Stack>
         <Typography variant="body2" role="alert">
           {error ||
             'Open the private registration link sent by your school. Ask the school for a new link if this one has expired.'}
@@ -94,14 +126,21 @@ function Unavailable({ error, onRetry }: { error?: string; onRetry?: () => void 
 
 function ParentRegistration({ token }: { token: string }) {
   const transport = useMemo(() => createParentRegistrationTransport(token), [token]);
+  const mobile = useResponsive('down', 'sm');
   const [context, setContext] = useState<PublicParentRegistrationContext | null>(null);
   const [loading, setLoading] = useState(true);
   const [unavailable, setUnavailable] = useState(false);
   const [loadError, setLoadError] = useState('');
   const [error, setError] = useState('');
   const [conflict, setConflict] = useState(false);
+  const [unavailableLink, setUnavailableLink] = useState(false);
+  const [instructionsAccepted, setInstructionsAccepted] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [stage, setStage] = useState<'form' | 'documents' | 'review'>('form');
+  const [formStepId, setFormStepId] = useState<string | null>(null);
+  const [reviewSectionId, setReviewSectionId] = useState<string | null>(null);
+  const pageStart = useRef<HTMLElement>(null);
+  const fieldErrorsPresent = useRef(false);
   const [busy, setBusy] = useState<'save' | 'hand-in' | 'upload' | null>(null);
   const busyRef = useRef(false);
   const [readingPhoto, setReadingPhoto] = useState(false);
@@ -116,6 +155,11 @@ function ParentRegistration({ token }: { token: string }) {
   );
   const hasDocumentDraft = Object.values(documentDrafts).some(Boolean);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  fieldErrorsPresent.current = Object.values(fieldErrors).some(Boolean);
+  useEffect(() => {
+    if (mobile && !fieldErrorsPresent.current)
+      pageStart.current?.scrollIntoView?.({ block: 'start' });
+  }, [mobile, stage, formStepId, instructionsAccepted]);
   const retry = useRef<{ fingerprint: string; key: string } | null>(null);
   const handInRetry = useRef<{ snapshot: string; key: string } | null>(null);
   const formik = useFormik<Record<string, string>>({
@@ -141,15 +185,20 @@ function ParentRegistration({ token }: { token: string }) {
     setLoading(true);
     setLoadError('');
     setUnavailable(false);
+    setUnavailableLink(false);
     transport
       .context(controller.signal)
       .then((next) => {
         if (controller.signal.aborted) return;
         installContext(next);
         setStage(next.canEdit ? 'form' : 'review');
+        setFormStepId(null);
+        setReviewSectionId(null);
+        setInstructionsAccepted(!next.canEdit);
       })
       .catch((failure: unknown) => {
         if (controller.signal.aborted) return;
+        setUnavailableLink(failure instanceof ParentRegistrationError && failure.unavailableLink);
         setLoadError(
           failure instanceof Error ? failure.message : 'Unable to load registration. Try again.'
         );
@@ -165,6 +214,7 @@ function ParentRegistration({ token }: { token: string }) {
   const handleFailure = (failure: unknown) => {
     const detail = failure instanceof ParentRegistrationError ? failure : null;
     if (detail?.conflict) setConflict(true);
+    if (detail?.unavailableLink) setUnavailableLink(true);
     if (detail && !detail.conflict && [401, 403, 404, 410].includes(detail.status))
       setUnavailable(true);
     setFieldErrors(detail?.fieldErrors ?? {});
@@ -221,7 +271,10 @@ function ParentRegistration({ token }: { token: string }) {
   const continueFromForm = async () => {
     if (locked || !validate()) return;
     const saved = await save();
-    if (saved) setStage(saved.documents.length ? 'documents' : 'review');
+    if (saved) {
+      setStage(!reviewSectionId && saved.documents.length ? 'documents' : 'review');
+      setReviewSectionId(null);
+    }
   };
   const upload = async (document: ParentRegistrationDocument, file: File, key: string) => {
     if (!context || busyRef.current || conflict || !context.canEdit || formik.dirty) return false;
@@ -305,307 +358,510 @@ function ParentRegistration({ token }: { token: string }) {
     );
   if (!context || unavailable)
     return (
-      <Unavailable error={error || loadError} onRetry={() => setAttempt((value) => value + 1)} />
+      <Unavailable
+        error={error || loadError}
+        unavailableLink={unavailableLink}
+        onRetry={() => setAttempt((value) => value + 1)}
+      />
     );
   const steps = context.documents.length
     ? ['Application form', 'Documents', 'Review']
     : ['Application form', 'Review'];
   const activeStep = stage === 'form' ? 0 : stage === 'documents' ? 1 : steps.length - 1;
   const editable = context.canEdit && !conflict;
+  const showInstructionsGate = editable && !instructionsAccepted;
+  const formSteps =
+    mobile && form
+      ? getVisibleAdmissionFormSteps(
+          form.definition.sections,
+          formik.values,
+          form.definition.layoutType === 1
+        )
+      : [];
+  const formStepCount = Math.max(1, formSteps.length);
+  const totalSteps = formStepCount + steps.length - 1;
+  const currentStep =
+    stage === 'form'
+      ? Math.max(
+          0,
+          formSteps.findIndex(({ id }) => id === formStepId)
+        ) + 1
+      : stage === 'documents'
+        ? formStepCount + 1
+        : totalSteps;
+  const reviewSections =
+    stage === 'review' && form ? getCorrectionSections(form.definition, formik.values) : [];
+  const openReviewSection = (sectionId: string) => {
+    const step = formSteps.find(({ sections }) =>
+      sections.some(({ section }) => section.id === sectionId)
+    );
+    if (!step) return;
+    setError('');
+    setFormStepId(step.id);
+    setReviewSectionId(sectionId);
+    setStage('form');
+  };
   return (
-    <Stack spacing={2}>
-      <Box component="header">
-        <Typography variant="h6">{context.schoolName}</Typography>
-        <Typography variant="h4" sx={{ mt: 1 }}>
-          Complete Registration
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>
-          {context.applicantName} · {context.applicationNumber}
-        </Typography>
-        <Typography variant="caption" color="text.secondary">
-          Link expires {fDateTime(context.expiresAt)}
-        </Typography>
-      </Box>
-      {context.canEdit && (
-        <ParentRegistrationInstructions hasDocuments={context.documents.length > 0} />
-      )}
-      <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, minWidth: 0 }}>
-        <Stack spacing={2}>
-          <CustomStepper
-            steps={steps}
-            activeStep={activeStep}
-            ariaLabel="Registration steps"
-            disabled={locked || conflict}
-            onStepClick={(index) => {
-              if (index === activeStep) return;
-              if (!context.canEdit) {
-                setStage(
-                  index === 0
-                    ? 'form'
-                    : index === 1 && context.documents.length
-                      ? 'documents'
-                      : 'review'
-                );
-                return;
-              }
-              if (index === 0)
-                guard.requestNavigation(() => {
-                  setError('');
-                  setStage('form');
-                });
-              else if (stage === 'form') continueFromForm();
-              else if (index === 1 && context.documents.length) setStage('documents');
-              else continueFromDocuments();
-            }}
-          />
-          {context.notes && (
-            <FormSectionCard
-              title="School Correction Request"
-              icon={GlobalIcons.info}
-              descriptionTooltip="Only the requested answers and documents are available to change."
-            >
-              <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-                {context.notes}
+    <Stack
+      spacing={2}
+      sx={
+        mobile
+          ? {
+              minHeight: (theme) => `calc(100dvh - ${theme.spacing(2)})`,
+              p: 1,
+              bgcolor: 'background.paper',
+              borderRadius: 1,
+            }
+          : undefined
+      }
+    >
+      {mobile ? (
+        <Stack ref={pageStart} component="header" spacing={1} sx={{ minWidth: 0 }}>
+          <Typography variant="subtitle1" component="p" fontWeight={700}>
+            {context.schoolName}
+          </Typography>
+          {showInstructionsGate && (
+            <Stack direction="row" spacing={0.5} alignItems="center">
+              <Typography variant="h4" component="h1">
+                Complete Registration
               </Typography>
-            </FormSectionCard>
-          )}
-          {context.proposalOnly && context.canEdit && (
-            <Typography variant="body2" color="text.secondary">
-              The school will review these corrections before applying them to the submitted
-              application.
-            </Typography>
-          )}
-          {conflict && (
-            <Stack spacing={1}>
-              <Typography role="alert" color="error" variant="body2">
-                The application changed while you were editing. Your answers are retained. Review or
-                copy your answers before loading the latest form.
-              </Typography>
-              <Button
-                size="small"
-                variant="outlined"
-                onClick={() =>
-                  guard.requestNavigation(() => {
-                    formik.resetForm();
-                    setAttempt((value) => value + 1);
-                  })
-                }
-                sx={{ alignSelf: 'flex-start' }}
-              >
-                Reload latest form
-              </Button>
+              <InfoTooltipIcon
+                title="Register your child in a few simple steps."
+                label="Complete Registration information"
+              />
             </Stack>
           )}
-          {error && (
-            <Typography role="alert" variant="body2" color="error">
-              {error}
-            </Typography>
-          )}
-          <FormBusyRegion
-            busy={Boolean(busy)}
-            label={
-              busy === 'upload'
-                ? 'Uploading document…'
-                : busy === 'hand-in'
-                  ? 'Sending to school…'
-                  : 'Saving draft…'
-            }
+          <Paper
+            variant="outlined"
+            sx={{
+              p: 1.5,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1.5,
+              minWidth: 0,
+              bgcolor: 'background.neutral',
+            }}
           >
-            {stage === 'form' && form && (
-              <ApplicationRuntimeFormCore
-                application={{ status: 0 } as AdmissionApplication}
-                form={form}
-                values={formik.values}
-                errors={[]}
-                fieldErrors={fieldErrors}
-                saving={busy === 'save'}
-                submitting={false}
-                onChange={(code, value) => {
-                  if (editable && !locked && context.editableFieldCodes.includes(code)) {
-                    values.current = { ...values.current, [code]: value };
-                    formik.setFieldValue(code, value, false);
-                    setFieldErrors((previous) => ({ ...previous, [code]: '' }));
-                  }
-                }}
-                onBlur={() => undefined}
-                onSave={async () => Boolean(await save())}
-                onValidateStep={validate}
-                onSubmit={continueFromForm}
-                showSaveDraft
-                canSubmitForm={editable}
-                managedFormStage={false}
-                canReopen={false}
-                reopening={false}
-                onReopen={() => undefined}
-                publicMode
-                editableFieldCodes={context.editableFieldCodes}
-                canEditOverride={context.canEdit}
-                readOnly={!editable}
-                compact
-                saveLabel="Save draft"
-                submitLabel={
-                  context.documents.length ? 'Continue to documents' : 'Continue to review'
-                }
-                onPhotoReadingChange={setReadingPhoto}
-                onValidationBusyChange={setValidatingStep}
-              />
-            )}
-            {stage === 'documents' && (
-              <ParentRegistrationDocuments
-                documents={context.documents}
-                transport={transport}
-                disabled={!editable || formik.dirty}
-                uploading={Boolean(busy)}
-                onUpload={upload}
-                onDirtyChange={onDocumentDirtyChange}
-              />
-            )}
-            {stage === 'review' && (
-              <Stack spacing={2}>
-                {!context.canEdit && (
-                  <Typography role="status" variant="h6">
-                    {context.status === 'ReadyForReview'
-                      ? 'Sent to school'
-                      : 'Registration is read only'}
-                  </Typography>
-                )}
-                {context.status === 'ReadyForReview' && (
-                  <Typography variant="body2">
-                    The school will review your answers and documents. Contact the school if another
-                    correction is needed.
-                  </Typography>
-                )}
-                {form &&
-                  getCorrectionSections(form.definition, formik.values).map(
-                    ({ section, count, rows }) => (
-                      <FormSectionCard
-                        key={section.id}
-                        title={section.name}
-                        icon={GlobalIcons.admissionDetails}
-                        descriptionTooltip="Review the saved answers sent to your school."
-                      >
-                        <Stack spacing={1}>
-                          {section.isRepeatable && count === 0 ? (
-                            <Typography variant="body2" color="text.secondary">
-                              No entries added.
-                            </Typography>
-                          ) : (
-                            rows.map((row) => (
-                              <Stack key={row.index} spacing={1}>
-                                {section.isRepeatable && (
-                                  <Typography variant="subtitle2">
-                                    {section.entryLabel || 'Entry'} {row.index + 1}
-                                  </Typography>
-                                )}
-                                {row.fields
-                                  .filter((field) => field.fieldType !== 12)
-                                  .map((field) => (
-                                    <Box key={field.id} sx={{ minWidth: 0 }}>
-                                      <Typography variant="caption" color="text.secondary">
-                                        {field.label}
-                                      </Typography>
-                                      <Typography
-                                        variant="body2"
-                                        sx={{ overflowWrap: 'anywhere', whiteSpace: 'pre-wrap' }}
-                                      >
-                                        {readableRegistrationValue(
-                                          row.values[field.code] ?? '',
-                                          field.optionsJson
-                                        )}
-                                      </Typography>
-                                    </Box>
-                                  ))}
-                              </Stack>
-                            ))
-                          )}
-                        </Stack>
-                      </FormSectionCard>
-                    )
-                  )}
-                {context.documents.length > 0 && (
-                  <FormSectionCard
-                    title="Documents"
-                    icon={GlobalIcons.documentIcon}
-                    descriptionTooltip="Uploaded copies are reviewed by school staff."
-                  >
-                    <Stack spacing={1}>
-                      {context.documents.map((document) => (
-                        <Typography
-                          key={`${document.stageInstanceId}/${document.code}`}
-                          variant="body2"
-                        >
-                          {document.name} ·{' '}
-                          {document.status === 'accepted'
-                            ? 'Accepted by school'
-                            : document.status === 'waived'
-                              ? 'Waived by school'
-                              : ['missing', 'rejected'].includes(document.status)
-                                ? document.isRequired
-                                  ? 'Required upload missing'
-                                  : 'Not uploaded'
-                                : document.evidence.at(-1)?.fileName || 'Awaiting school review'}
-                        </Typography>
-                      ))}
-                    </Stack>
-                  </FormSectionCard>
-                )}
-              </Stack>
-            )}
-          </FormBusyRegion>
-          {stage !== 'form' && (
-            <Stack
-              direction="row"
-              spacing={1}
-              justifyContent="space-between"
+            <Box
+              aria-hidden
               sx={{
-                position: 'sticky',
-                bottom: 0,
-                py: 1,
-                bgcolor: 'background.paper',
-                borderTop: 1,
-                borderColor: 'divider',
-                zIndex: 1,
+                width: 40,
+                height: 40,
+                flexShrink: 0,
+                borderRadius: 1,
+                display: 'grid',
+                placeItems: 'center',
+                bgcolor: 'action.hover',
+                color: 'text.secondary',
               }}
             >
-              <Button
-                size="small"
-                variant="outlined"
-                disabled={locked}
-                onClick={() =>
-                  guard.requestNavigation(() => {
-                    setError('');
-                    setStage(stage === 'review' && context.documents.length ? 'documents' : 'form');
-                  })
-                }
+              <Iconify icon={GlobalIcons.studentProfile} width={22} />
+            </Box>
+            <Stack spacing={0.25} minWidth={0}>
+              <Typography variant="caption" color="text.secondary">
+                Student
+              </Typography>
+              <Typography
+                component="h2"
+                variant="subtitle1"
+                fontWeight={700}
+                sx={{ overflowWrap: 'anywhere' }}
               >
-                Back
-              </Button>
-              {editable && stage === 'documents' && (
-                <Button
-                  size="small"
-                  variant="contained"
-                  disabled={locked}
-                  onClick={continueFromDocuments}
-                >
-                  Continue to review
-                </Button>
-              )}
-              {editable && stage === 'review' && (
-                <LoadingButton
-                  size="small"
-                  variant="contained"
-                  startIcon={<Iconify icon={GlobalIcons.submit} />}
-                  loading={busy === 'hand-in'}
-                  disabled={locked || !context.canHandIn}
-                  onClick={handIn}
-                >
-                  Send to school
-                </LoadingButton>
-              )}
+                {context.applicantName || 'Student'}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>
+                {context.applicationNumber}
+              </Typography>
+            </Stack>
+          </Paper>
+          {showInstructionsGate && (
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Iconify icon={GlobalIcons.clock} width={18} aria-hidden />
+              <Typography variant="body2" color="text.secondary">
+                Link expires {fDateTime(context.expiresAt)}
+              </Typography>
             </Stack>
           )}
         </Stack>
-      </Paper>
+      ) : (
+        <Paper
+          component="header"
+          variant="outlined"
+          sx={{
+            p: { xs: 1.5, sm: 2 },
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: 'minmax(0, 1fr)',
+              md: 'minmax(0, 1fr) minmax(320px, 0.9fr)',
+            },
+            alignItems: 'center',
+            gap: { xs: 2, md: 3 },
+          }}
+        >
+          <Stack spacing={1.5} minWidth={0}>
+            <Typography variant="subtitle1" fontWeight={700}>
+              {context.schoolName}
+            </Typography>
+            <Box>
+              <Typography variant="h4">Complete Registration</Typography>
+              <Stack direction="row" spacing={1.25} alignItems="center" sx={{ mt: 1 }}>
+                <Box
+                  aria-hidden
+                  sx={{
+                    width: 40,
+                    height: 40,
+                    flexShrink: 0,
+                    borderRadius: 1,
+                    display: 'grid',
+                    placeItems: 'center',
+                    bgcolor: 'action.hover',
+                    color: 'text.secondary',
+                  }}
+                >
+                  <Iconify icon={GlobalIcons.studentProfile} width={22} />
+                </Box>
+                <Box minWidth={0}>
+                  <Typography
+                    variant="subtitle1"
+                    fontWeight={600}
+                    sx={{ overflowWrap: 'anywhere' }}
+                  >
+                    {context.applicantName}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {context.applicationNumber}
+                  </Typography>
+                </Box>
+              </Stack>
+            </Box>
+          </Stack>
+          <Paper
+            variant="outlined"
+            sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1.5, minWidth: 0 }}
+          >
+            <Box
+              aria-hidden
+              sx={{
+                width: 40,
+                height: 40,
+                flexShrink: 0,
+                borderRadius: 1,
+                display: 'grid',
+                placeItems: 'center',
+                bgcolor: 'action.hover',
+                color: 'text.secondary',
+              }}
+            >
+              <Iconify icon={GlobalIcons.clock} width={22} />
+            </Box>
+            <Stack spacing={0.25} minWidth={0}>
+              <Typography variant="caption" color="text.secondary">
+                Registration link
+              </Typography>
+              <Typography variant="body2" fontWeight={600} sx={{ overflowWrap: 'anywhere' }}>
+                Expires {fDateTime(context.expiresAt)}
+              </Typography>
+            </Stack>
+          </Paper>
+        </Paper>
+      )}
+      {mobile && !showInstructionsGate && context.canEdit && (
+        <Stack spacing={0.75}>
+          <Typography variant="subtitle2" component="p" aria-live="polite">
+            Step {currentStep} of {totalSteps}
+          </Typography>
+          <LinearProgress
+            variant="determinate"
+            value={(currentStep / totalSteps) * 100}
+            aria-label="Registration progress"
+            aria-valuetext={`Step ${currentStep} of ${totalSteps}`}
+            sx={{ borderRadius: 1 }}
+          />
+        </Stack>
+      )}
+      {!mobile && (
+        <CustomStepper
+          steps={steps}
+          activeStep={activeStep}
+          ariaLabel="Registration steps"
+          disabled={showInstructionsGate || locked || conflict}
+          onStepClick={(index) => {
+            if (index === activeStep) return;
+            if (!context.canEdit) {
+              setStage(
+                index === 0
+                  ? 'form'
+                  : index === 1 && context.documents.length
+                    ? 'documents'
+                    : 'review'
+              );
+              return;
+            }
+            if (index === 0)
+              guard.requestNavigation(() => {
+                setError('');
+                setStage('form');
+              });
+            else if (stage === 'form') continueFromForm();
+            else if (index === 1 && context.documents.length) setStage('documents');
+            else continueFromDocuments();
+          }}
+        />
+      )}
+      {showInstructionsGate ? (
+        <ParentRegistrationInstructions
+          mobile={mobile}
+          hasDocuments={context.documents.length > 0}
+          onContinue={() => setInstructionsAccepted(true)}
+        />
+      ) : (
+        <Paper
+          variant="outlined"
+          sx={
+            mobile
+              ? {
+                  minWidth: 0,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  flex: 1,
+                  border: 0,
+                  boxShadow: 'none',
+                }
+              : { p: { xs: 1.5, sm: 2 }, minWidth: 0 }
+          }
+        >
+          <Stack
+            spacing={2}
+            sx={
+              mobile
+                ? { flex: 1, minWidth: 0, borderTop: 1, borderColor: 'divider', pt: 2 }
+                : undefined
+            }
+          >
+            {context.notes && (
+              <FormSectionCard
+                title="School Correction Request"
+                icon={GlobalIcons.info}
+                descriptionTooltip="Only the requested answers and documents are available to change."
+              >
+                <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                  {context.notes}
+                </Typography>
+              </FormSectionCard>
+            )}
+            {context.proposalOnly && context.canEdit && (
+              <Typography variant="body2" color="text.secondary">
+                The school will review these corrections before applying them to the submitted
+                application.
+              </Typography>
+            )}
+            {conflict && (
+              <Stack spacing={1}>
+                <Typography role="alert" color="error" variant="body2">
+                  The application changed while you were editing. Your answers are retained. Review
+                  or copy your answers before loading the latest form.
+                </Typography>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() =>
+                    guard.requestNavigation(() => {
+                      formik.resetForm();
+                      setAttempt((value) => value + 1);
+                    })
+                  }
+                  sx={{ alignSelf: 'flex-start' }}
+                >
+                  Reload latest form
+                </Button>
+              </Stack>
+            )}
+            {error && (
+              <Typography role="alert" variant="body2" color="error">
+                {error}
+              </Typography>
+            )}
+            <FormBusyRegion
+              fillContent={mobile}
+              flattenFieldset={mobile}
+              busy={Boolean(busy)}
+              label={
+                busy === 'upload'
+                  ? 'Uploading document…'
+                  : busy === 'hand-in'
+                    ? 'Sending to school…'
+                    : 'Saving draft…'
+              }
+            >
+              {stage === 'form' && form && (
+                <ApplicationRuntimeFormCore
+                  application={{ status: 0 } as AdmissionApplication}
+                  form={form}
+                  values={formik.values}
+                  errors={[]}
+                  fieldErrors={fieldErrors}
+                  saving={busy === 'save'}
+                  submitting={false}
+                  onChange={(code, value) => {
+                    if (editable && !locked && context.editableFieldCodes.includes(code)) {
+                      values.current = { ...values.current, [code]: value };
+                      formik.setFieldValue(code, value, false);
+                      setFieldErrors((previous) => ({ ...previous, [code]: '' }));
+                    }
+                  }}
+                  onBlur={() => undefined}
+                  onSave={async () => Boolean(await save())}
+                  onValidateStep={validate}
+                  onSubmit={continueFromForm}
+                  showSaveDraft
+                  canSubmitForm={editable}
+                  managedFormStage={false}
+                  canReopen={false}
+                  reopening={false}
+                  onReopen={() => undefined}
+                  publicMode
+                  editableFieldCodes={context.editableFieldCodes}
+                  canEditOverride={context.canEdit}
+                  readOnly={!editable}
+                  compact
+                  guidedNavigation={
+                    mobile
+                      ? {
+                          stepId: formStepId,
+                          onStepChange: setFormStepId,
+                          reviewSectionId,
+                        }
+                      : undefined
+                  }
+                  footerActions={
+                    mobile &&
+                    !context.canEdit && (
+                      <Button size="small" variant="outlined" onClick={() => setStage('review')}>
+                        Return to Review
+                      </Button>
+                    )
+                  }
+                  saveLabel="Save draft"
+                  submitLabel={
+                    reviewSectionId
+                      ? 'Save & Return to Review'
+                      : context.documents.length
+                        ? 'Continue to documents'
+                        : 'Continue to review'
+                  }
+                  onPhotoReadingChange={setReadingPhoto}
+                  onValidationBusyChange={setValidatingStep}
+                />
+              )}
+              {stage === 'documents' && (
+                <Stack spacing={2}>
+                  {mobile && (
+                    <Typography variant="h5" component="h1">
+                      Documents
+                    </Typography>
+                  )}
+                  <ParentRegistrationDocuments
+                    mobile={mobile}
+                    documents={context.documents}
+                    transport={transport}
+                    disabled={!editable || formik.dirty}
+                    uploading={Boolean(busy)}
+                    onUpload={upload}
+                    onDirtyChange={onDocumentDirtyChange}
+                  />
+                  {mobile && editable && incompleteDocuments.length > 0 && (
+                    <Typography variant="body2" color="text.secondary">
+                      Upload the required documents to continue to review.
+                    </Typography>
+                  )}
+                </Stack>
+              )}
+              {stage === 'review' && (
+                <ParentRegistrationReview
+                  context={context}
+                  sections={reviewSections}
+                  mobile={mobile}
+                  onEditSection={mobile && editable && !locked ? openReviewSection : undefined}
+                  canEditSection={(sectionId) =>
+                    formSteps.some(({ sections }) =>
+                      sections.some(({ section }) => section.id === sectionId)
+                    )
+                  }
+                  onOpenDocuments={
+                    mobile && !locked && !conflict && context.documents.length > 0
+                      ? () => {
+                          setError('');
+                          setStage('documents');
+                        }
+                      : undefined
+                  }
+                />
+              )}
+            </FormBusyRegion>
+            {stage !== 'form' && (!mobile || context.canEdit || stage === 'documents') && (
+              <Stack
+                direction="row"
+                spacing={1}
+                useFlexGap
+                flexWrap="wrap"
+                justifyContent="space-between"
+                sx={{
+                  position: 'sticky',
+                  bottom: 0,
+                  py: 1,
+                  bgcolor: 'background.paper',
+                  borderTop: 1,
+                  borderColor: 'divider',
+                  zIndex: 1,
+                }}
+              >
+                <Button
+                  size="small"
+                  variant="outlined"
+                  disabled={locked}
+                  onClick={() =>
+                    guard.requestNavigation(() => {
+                      setError('');
+                      setStage(
+                        stage === 'review' && context.documents.length ? 'documents' : 'form'
+                      );
+                    })
+                  }
+                >
+                  Back
+                </Button>
+                {editable && stage === 'documents' && (
+                  <Button
+                    size="small"
+                    variant="contained"
+                    disabled={locked || (mobile && incompleteDocuments.length > 0)}
+                    onClick={continueFromDocuments}
+                  >
+                    Continue to review
+                  </Button>
+                )}
+                {mobile && !context.canEdit && stage === 'documents' && (
+                  <Button size="small" variant="outlined" onClick={() => setStage('review')}>
+                    Return to Review
+                  </Button>
+                )}
+                {editable && stage === 'review' && (
+                  <LoadingButton
+                    size="small"
+                    variant="contained"
+                    startIcon={<Iconify icon={GlobalIcons.submit} />}
+                    loading={busy === 'hand-in'}
+                    disabled={locked || !context.canHandIn}
+                    onClick={handIn}
+                  >
+                    Send to school
+                  </LoadingButton>
+                )}
+              </Stack>
+            )}
+          </Stack>
+        </Paper>
+      )}
       {guard.confirmation}
     </Stack>
   );

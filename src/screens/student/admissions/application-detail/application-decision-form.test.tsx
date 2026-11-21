@@ -44,7 +44,7 @@ it('starts without a selected outcome or reason and never submits on selection',
   expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Record Decision' })).toBeDisabled();
   await user.click(screen.getByRole('radio', { name: 'Approve' }));
-  expect(screen.getByRole('textbox', { name: 'Reason (Optional)' })).toBeVisible();
+  expect(screen.getByRole('textbox', { name: 'Reason' })).toBeVisible();
   expect(screen.getByRole('button', { name: 'Record Decision' })).toBeEnabled();
   expect(props.onSubmit).not.toHaveBeenCalled();
   expect(props.onDirtyChange).toHaveBeenLastCalledWith(true);
@@ -98,7 +98,7 @@ it('supports keyboard selection and retains the reason when changing outcomes', 
   expect(screen.getByRole('radio', { name: 'Waitlist' })).toBeChecked();
   await user.type(screen.getByRole('textbox', { name: 'Reason' }), 'Keep this draft');
   await user.click(screen.getByRole('radio', { name: 'Approve' }));
-  expect(screen.getByRole('textbox', { name: 'Reason (Optional)' })).toHaveValue('Keep this draft');
+  expect(screen.getByRole('textbox', { name: 'Reason' })).toHaveValue('Keep this draft');
   expect(props.onSubmit).not.toHaveBeenCalled();
 });
 

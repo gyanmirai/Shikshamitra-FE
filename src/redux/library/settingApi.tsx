@@ -1,4 +1,4 @@
-import { librarySettingsType } from 'src/redux/tagTypes';
+import { libraryModuleType, librarySettingsType } from 'src/redux/tagTypes';
 
 import { api } from '../service';
 
@@ -107,6 +107,26 @@ export const librarySettingsApi = api.injectEndpoints({
       }),
       providesTags: [librarySettingsType.librarySettings],
     }),
+    getLibrarySectionCampusOptions: builder.query<
+      { id: string; name: string; code: string }[],
+      { academicYearId: string }
+    >({
+      query: (params) => ({ url: '/library/sections/campus-options', params }),
+      providesTags: [librarySettingsType.librarySettings],
+    }),
+    bindLibrarySectionCampus: builder.mutation<
+      { campusId: string; campusName: string | null },
+      { sectionId: string; academicYearId: string; campusId: string }
+    >({
+      query: ({ sectionId, academicYearId, campusId }) => ({
+        url: `/library/sections/${encodeURIComponent(sectionId)}/campus`,
+        method: 'PUT',
+        params: { academicYearId },
+        body: { campusId },
+      }),
+      invalidatesTags: (_result, error) =>
+        error ? [] : [librarySettingsType.librarySettings, libraryModuleType.copies],
+    }),
     addSectionManagement: builder.mutation({
       query: ({ academicYearId, body }) => ({
         url: `/library/sections`,
@@ -148,6 +168,8 @@ export const {
   useGetBorrowingReturnRulesQuery,
   useGetSectionManagementQuery,
   useGetSectionManagementByIdQuery,
+  useGetLibrarySectionCampusOptionsQuery,
+  useBindLibrarySectionCampusMutation,
   useAddSectionManagementMutation,
   useUpdateSectionManagementMutation,
   useDeleteSectionManagementMutation,

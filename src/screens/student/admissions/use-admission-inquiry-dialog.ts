@@ -2,7 +2,6 @@
 
 import type { RootState } from 'src/redux/store';
 import type { AdmissionFormField } from 'src/redux/student/admissions/admission-forms-api';
-import type { AdmissionSiblingParentSelection } from 'src/redux/student/admissions/admission-parent-family-types';
 
 import { useSelector } from 'react-redux';
 import { useRef, useState, useEffect } from 'react';
@@ -22,9 +21,9 @@ import {
 } from 'src/redux/student/admissions/admission-inquiries-api';
 
 import { useAdmissionPhotoReads } from './use-admission-photo-reads';
+import { isPossibleDuplicateInquiry } from './admission-inquiry-match-review';
 import { useInquiryPrimaryContact } from './use-inquiry-primary-contact';
 import { useAdmissionUnsavedChanges } from './use-admission-unsaved-changes';
-import { getAdmissionSiblingParentReviewError } from './admission-family-contacts-model';
 import { getConfiguredInquiryParentRelationship } from './admission-inquiry-field-bindings';
 import { useAdmissionInquiryClassOfferings } from './use-admission-inquiry-class-offerings';
 import {
@@ -84,18 +83,23 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
         setRequestError(null);
         const identity = buildAdmissionInquiryPayload(values, fields, offering);
         if (!identity.applicantFirstName?.trim() && reportIdentityErrors(identity, values)) return;
-        const key = JSON.stringify([
-          offering.id,
-          buildAdmissionInquiryDuplicateInput(values, fields, offering),
-        ]);
+        const duplicateInputForSubmit = buildAdmissionInquiryDuplicateInput(values, fields, offering);
+        const key = JSON.stringify([offering.id, duplicateInputForSubmit]);
         try {
-          const result = await checkDuplicates(
-            buildAdmissionInquiryDuplicateInput(values, fields, offering)
-          ).unwrap();
+          const result = await checkDuplicates(duplicateInputForSubmit).unwrap();
           if (identityKeyRef.current !== key) return;
-          setMatches(result);
+          const reviewMatches = result.filter(
+            (match) =>
+              isPossibleDuplicateInquiry(match, duplicateInputForSubmit) ||
+              canLinkAdmissionInquiryFamily(
+                match,
+                duplicateInputForSubmit.guardianPhone,
+                duplicateInputForSubmit.guardianEmail
+              )
+          );
+          setMatches(reviewMatches);
           setMatchesKey(key);
-          if (!result.length) await submit(undefined, undefined, true);
+          if (!reviewMatches.length) await submit(undefined, undefined, true);
         } catch (error) {
           const message = parseApiProblemDetail(error).detail || 'Duplicate check failed';
           shikshaMitraToast.error({ message });
@@ -114,7 +118,8 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
     standardId: formik.values.standardId,
   });
   const offeringChoices = classOfferings.checkedOfferings;
-  const offeringsLoading = catalogue.isFetching || classOfferings.checking;
+  const academicLoading = catalogue.isFetching && !catalogue.currentData && !catalogue.isError;
+  const offeringsLoading = academicLoading || classOfferings.checking;
   const offeringsError = catalogue.isError || classOfferings.error;
   const runtime = useGetAdmissionInquiryCaptureContextQuery(formik.values.offeringId, {
     skip:
@@ -239,7 +244,7 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
 
   async function submit(
     existingFamilyId?: string | null,
-    parentSelection?: AdmissionSiblingParentSelection,
+    familySourceApplicantId?: string,
     ownsOperation = false
   ) {
     if (!ownsOperation && operation.current) return;
@@ -262,7 +267,8 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
           existingFamilyId,
           false,
           undefined,
-          parentSelection
+          undefined,
+          familySourceApplicantId
         );
         if (reportIdentityErrors(payload, formik.values)) return;
         await create(payload).unwrap();
@@ -336,7 +342,7 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
     noOfferingReason: classOfferings.reason,
     canCreateInquiry,
     unavailableReason: runtime.currentData?.availability.reasonMessage,
-    academicLoading: catalogue.isFetching,
+    academicLoading,
     academicError: catalogue.isError,
     retryAcademic: () => catalogue.refetch(),
     selectedOffering,
@@ -360,39 +366,19 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
       readingPhoto ||
       createState.isLoading ||
       duplicateState.isLoading,
-    useExistingFamily: async (familyId: string, parent: AdmissionSiblingParentSelection) => {
+    useExistingFamily: async (familyId: string, sourceApplicantId: string) => {
       if (
         !currentMatches.some(
           (match) =>
             match.familyId === familyId &&
             canLinkAdmissionInquiryFamily(match, currentGuardianPhone, currentGuardianEmail) &&
-            match.parents?.some(
-              (candidate) =>
-                candidate.sourceApplicantId === parent.sourceApplicantId &&
-                (!candidate.relationship || candidate.relationship === parent.relationship)
-            )
+            match.applicantId === sourceApplicantId
         )
       ) {
-        setRequestError('Check the parent details again before linking this family.');
+        setRequestError('Check the family matches again before confirming siblings.');
         return;
       }
-      const parentReviewError = getAdmissionSiblingParentReviewError(
-        formik.values.familyContacts,
-        (() => {
-          const relationship = getConfiguredInquiryParentRelationship(
-            fields,
-            formik.values.fields,
-            formik.values.parentRelationship
-          );
-          return relationship === 'guardian' ? undefined : relationship;
-        })(),
-        parent.relationship
-      );
-      if (parentReviewError) {
-        setRequestError(parentReviewError);
-        return;
-      }
-      await submit(familyId, parent);
+      await submit(familyId, sourceApplicantId);
     },
   };
 }

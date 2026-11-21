@@ -12,12 +12,14 @@ export function canvasShortcuts(
   setTool: (tool: 'select' | 'hand') => void,
   disabled?: boolean
 ) {
-  const target = event.target as HTMLElement;
+  const { target } = event;
   if (
     disabled ||
+    event.defaultPrevented ||
+    !(target instanceof Element) ||
     !event.currentTarget.contains(target) ||
     target.closest(
-      'input,textarea,select,[contenteditable="true"],[role="textbox"],[role="combobox"],[role="slider"],[role="menuitem"]'
+      'input,textarea,select,[contenteditable]:not([contenteditable="false" i]),[role="textbox"],[role="combobox"],[role="slider"],[role="menuitem"]'
     )
   )
     return;
@@ -34,8 +36,16 @@ export function canvasShortcuts(
       g: event.shiftKey ? studio.ungroupSelection : studio.groupSelection,
     };
     action = commands[key];
-  } else if (['delete', 'backspace'].includes(key)) action = studio.deleteSelection;
-  else if (key === 'escape') action = () => studio.setSelectedIds([]);
+  } else if (key === 'delete' || key === 'backspace') {
+    if (
+      !event.altKey &&
+      !event.shiftKey &&
+      !event.nativeEvent.isComposing &&
+      studio.selectedElements.some((element) => !element.locked)
+    ) {
+      action = studio.deleteSelection;
+    }
+  } else if (key === 'escape') action = () => studio.setSelectedIds([]);
   else if (key === 'v' || key === 'h') action = () => setTool(key === 'v' ? 'select' : 'hand');
   else if (key.startsWith('arrow') && !target.closest('button,[role="tab"]'))
     action = () => moveSelection(studio, layout, key, event.shiftKey ? 10 : 1);

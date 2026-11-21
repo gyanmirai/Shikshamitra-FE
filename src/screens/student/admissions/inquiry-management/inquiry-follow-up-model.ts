@@ -11,8 +11,26 @@ export type InquiryFollowUpValues = {
   status: 0 | 2 | 6;
 };
 
+export const INQUIRY_FOLLOW_UP_NOTE_LIMIT = 500;
+
+export const INQUIRY_FOLLOW_UP_TEMPLATES = [
+  {
+    status: 2,
+    label: 'Interested',
+    note: 'The parent expressed interest in admission. Follow up to discuss the next steps.',
+  },
+  {
+    status: 6,
+    label: 'Not interested',
+    note: 'The parent is not interested in pursuing admission at this time.',
+  },
+] as const;
+
 export const inquiryFollowUpSchema = Yup.object({
-  note: Yup.string().trim().required('Notes are required').max(500, 'Use 500 characters or fewer'),
+  note: Yup.string()
+    .trim()
+    .required('Notes are required')
+    .max(INQUIRY_FOLLOW_UP_NOTE_LIMIT, 'Use 500 characters or fewer'),
   status: Yup.number().oneOf([0, 2, 6], 'Select an inquiry status').required('Status is required'),
   reminderDate: Yup.mixed<Dayjs>()
     .nullable()

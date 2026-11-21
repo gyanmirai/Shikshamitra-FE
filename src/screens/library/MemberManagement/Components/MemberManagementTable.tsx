@@ -1,99 +1,52 @@
-import type { RootState } from 'src/redux/store';
-import type { IColumn } from 'src/components/customizabaleTable/types';
-
-import React, { useMemo } from 'react';
-import { useSelector } from 'react-redux';
-import { Box, Avatar } from '@mui/material';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+import { useMemo } from 'react';
+import { Box, Alert } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetLibraryMembersQuery } from 'src/redux/library/libraryMembers/memberManagementApi';
+
+import { useMemberRosterPage } from './useMemberRosterPage';
+import { memberRosterColumns } from './member-roster-columns';
 
 import type { IMemberTableProps } from './type';
 
-const MemberManagementTable: React.FC<IMemberTableProps> = ({ data, onView }) => {
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { data: membersData } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetLibraryMembersQuery,
-    params: { academicYearId: currentYear?.id },
-  });
-  const columns: IColumn[] = useMemo(
-    () => [
-      {
-        id: 'name',
-        label: 'Name',
-        align: 'left',
-        sticky: true,
-        minWidth: '150px',
-        render(value, row) {
-          return (
-            <Box display="flex" alignItems="center" gap={1}>
-              <Avatar src={row?.avatar} alt={value} sx={{ width: 32, height: 32 }} />
-              {value}
-            </Box>
-          );
-        },
-      },
-      { id: 'memberId', label: 'Member ID', align: 'left', minWidth: '120px' },
-      { id: 'role', label: 'Role', align: 'left' },
-      { id: 'rollNo', label: 'Roll No.', align: 'left', minWidth: 90 },
-      { id: 'grNo', label: 'GR No.', align: 'left', minWidth: 90 },
-      { id: 'class', label: 'Class', align: 'left', minWidth: '100px' },
-      { id: 'division', label: 'Division', align: 'left', minWidth: '100px' },
-      { id: 'currentIssue', label: 'Current Issue', align: 'left', minWidth: '130px' },
-      { id: 'overdueReturn', label: 'Overdue Return', align: 'left', minWidth: '150px' },
-      {
-        id: 'actions',
-        label: 'Actions',
-        isFilter: false,
-        isSort: false,
-        sticky: true,
-        render(value, row) {
-          return (
-            <ThreeDotsActions
-              placement="right-center"
-              showViewIcon
-              handleViewClick={() => onView?.(row as any)}
-              // actions={({ popover }) => (
-              //   <MenuList>
-              //     <MenuItem
-              //       onClick={() => {
-              //         onMakeReservation?.(row as any);
-              //         popover.onClose();
-              //       }}
-              //     >
-              //       {/* <Iconify icon="solar:calendar-bold" /> */}
-              //       {/* Make Reservation */}
-              //     </MenuItem>
-              //     <MenuItem
-              //       onClick={() => {
-              //         onChangeStatus?.(row as any);
-              //         popover.onClose();
-              //       }}
-              //     >
-              //       <Iconify icon="solar:refresh-bold" />
-              //       Change Status
-              //     </MenuItem>
-              //   </MenuList>
-              // )}
-              showThreeDots={false}
-            />
-          );
-        },
-      },
-    ],
-    [onView]
-  );
+export default function MemberManagementTable({ onView }: IMemberTableProps) {
+  const roster = useMemberRosterPage();
+  /**
+   * Memoization Justification: Stable definitions avoid restarting the shared
+   * table's column reconciliation and width measurements on request updates.
+   */
+  const columns = useMemo(() => memberRosterColumns(onView), [onView]);
+  if (!roster.canView)
+    return <Alert severity="info">Library member access is required to view this roster.</Alert>;
   return (
-    <CustomizableTable
-      tableId="member-table"
-      noDataText="No Members Data Found"
-      columns={columns}
-      data={membersData || []}
-    />
+    <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+      <CustomizableTable
+        tableId="member-table"
+        tableTitle="Library Members"
+        columns={columns}
+        data={roster.currentData?.items || []}
+        wrapperProps={{ sx: { height: 1 } }}
+        tableContainerProps={{ sx: { height: 1 } }}
+        noDataText="No Library members match this search."
+        isLoading={roster.loading}
+        isRefreshing={roster.refreshing}
+        error={roster.error}
+        onRetry={roster.retry}
+        serverSidePagination
+        page={roster.page - 1}
+        rowsPerPage={roster.pageSize}
+        rowsPerPageOptions={[10, 20, 50, 100]}
+        maxServerRowsPerPage={100}
+        totalCount={roster.currentData?.totalCount || 0}
+        onServerPagination={roster.onPage}
+        paginationDisabled={roster.paginationDisabled}
+        serverSideSearch
+        searchTerm={roster.search}
+        onSearchInputChange={roster.onSearch}
+        searchFieldProps={{ placeholder: 'First/last name or contact' }}
+        isFilter={false}
+        showColumns
+        showFullScreen
+        showExport={false}
+      />
+    </Box>
   );
-};
-
-export default MemberManagementTable;
+}
