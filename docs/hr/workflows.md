@@ -237,7 +237,7 @@ Ignoring an obsolete UI completion does not cancel an already submitted server o
 Opening a payroll month checks for a saved run and resumes existing progress.
 Generate payroll starts the first calculation, and Recalculate payroll requests a replacement after a run exists.
 Retry lookup and Reconnect repeat reads after a loading or polling error.
-The month selector sits on the left and Generate payroll or Recalculate payroll sits on the right of the period controls above the register.
+The month selector sits on the left, with Payroll checks, Payroll activity when permitted, and Generate payroll or Recalculate payroll grouped on the right.
 Payroll checks opens a drawer with readiness checks and the PF and ESIC registration list.
 Select all applies to eligible rows on the current page, and Mark Reviewed acts on the pending rows among them.
 Pending rows with missing attendance show Attendance missing in Issues and cannot be selected for review.

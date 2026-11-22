@@ -138,7 +138,7 @@ test('the register keeps payroll checks and server criteria in their standard co
 test('aligns review actions with the register heading and keeps recalculation on the right', async ({
   page,
 }) => {
-  await page.goto('/hr/payroll/run-payroll?month=2026-09&previewRunId=run-1');
+  await page.goto('/hr/payroll/run-payroll?month=2026-09&previewRunId=run-1&actor=auditor');
   const register = page.getByRole('region', { name: 'Payroll Register' });
   const reviewActions = register.getByRole('group', { name: 'Review and lock selected payroll rows' });
   await expect(reviewActions).toHaveCount(0);
@@ -150,11 +150,17 @@ test('aligns review actions with the register heading and keeps recalculation on
   expect(review.x).toBeGreaterThan(heading.x + heading.width);
   expect(review.y).toBeLessThan(heading.y + heading.height);
   const checks = (await page.getByRole('button', { name: 'Payroll checks' }).boundingBox())!;
+  const activity = (await page.getByRole('button', { name: 'Payroll activity' }).boundingBox())!;
   const recalculate = (await page.getByRole('button', { name: 'Recalculate payroll' }).boundingBox())!;
-  expect(recalculate.x).toBeGreaterThan(checks.x + checks.width);
+  expect(activity.x - (checks.x + checks.width)).toBeGreaterThanOrEqual(0);
+  expect(activity.x - (checks.x + checks.width)).toBeLessThanOrEqual(16);
+  expect(recalculate.x - (activity.x + activity.width)).toBeGreaterThanOrEqual(0);
+  expect(recalculate.x - (activity.x + activity.width)).toBeLessThanOrEqual(16);
 
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(reviewActions).toBeInViewport();
+  await expect(page.getByRole('button', { name: 'Payroll checks' })).toBeInViewport();
+  await expect(page.getByRole('button', { name: 'Payroll activity' })).toBeInViewport();
   await expect(page.getByRole('button', { name: 'Recalculate payroll' })).toBeInViewport();
 });
 
@@ -238,13 +244,16 @@ test('approval settings are separate and recovery returns to the selected month'
 });
 
 test('missing attendance blocks payroll review and is skipped by select all', async ({ page }) => {
+  let allAttendanceMissing = false;
   await page.route('**/api/payroll/run/register?*', async (route) => {
     const response = await route.fetch();
     const result = await response.json();
     result.items = result.items.map((row: { employeeName: string; issueCodes: string[] }) => ({
       ...row,
       reviewStatus: 'PENDING',
-      issueCodes: row.employeeName === 'Vikram Shah' ? ['NO_ATTENDANCE'] : row.issueCodes,
+      issueCodes: allAttendanceMissing || row.employeeName === 'Vikram Shah'
+        ? ['NO_ATTENDANCE']
+        : row.issueCodes,
     }));
     await route.fulfill({ response, json: result });
   });
@@ -257,8 +266,7 @@ test('missing attendance blocks payroll review and is skipped by select all', as
   await expect(blocked).toBeDisabled();
   const attendance = page.getByText('Attendance missing', { exact: true });
   await expect(attendance).toBeVisible();
-  await attendance.hover();
-  await expect(page.getByRole('tooltip')).toContainText(/Record attendance.*recalculate/i);
+  expect(await attendance.evaluate((element) => element.closest('[title]'))).toBeNull();
   await page.getByRole('checkbox', { name: /Select all .*payroll rows on this page/ }).check();
   await expect(blocked).not.toBeChecked();
   await expect(eligible).toBeChecked();
@@ -267,6 +275,14 @@ test('missing attendance blocks payroll review and is skipped by select all', as
   );
   await page.getByRole('button', { name: 'Mark Reviewed', exact: true }).click();
   expect((await review).postDataJSON().employeeIds).toEqual(['fixture-staff-1']);
+
+  allAttendanceMissing = true;
+  await page.reload();
+  await expect(attendance).toHaveCount(2);
+  await expect(page.getByRole('checkbox', { name: /Select all .*payroll rows on this page/ }))
+    .toBeDisabled();
+  await expect(page.getByText(/Record attendance and recalculate payroll before reviewing/))
+    .toHaveCount(0);
 });
 
 test('HR sends only ready rows and the principal confirms the exact batch', async ({ page }) => {
