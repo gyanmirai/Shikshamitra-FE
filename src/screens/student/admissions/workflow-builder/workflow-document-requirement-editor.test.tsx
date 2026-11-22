@@ -52,9 +52,56 @@ const json = (change = {}) =>
   });
 
 describe('compact document requirement editor', { timeout: 15000 }, () => {
+  it('shows file rules as individual facts for requirements that collect uploads', async () => {
+    await setupDocumentEditor(
+      json({
+        requirements: [
+          ...policy.requirements,
+          {
+            ...createDocumentRequirement('ORIGINAL', 'Original proof'),
+            collectionMode: 'original',
+            requirement: 'optional',
+            allowedExtensions: ['pdf'],
+            maxFileSizeMb: 5,
+            standardIds: ['10101010-1010-e010-b010-101010101010'],
+          },
+        ],
+      })
+    );
+
+    const [uploadCard, legacyCard] = within(
+      screen.getByRole('list', { name: 'Selected Documents' })
+    ).getAllByRole('listitem');
+    const upload = within(uploadCard);
+    expect(upload.getByText('Birth certificate')).toBeVisible();
+    expect(upload.getByText('Required')).toBeVisible();
+    expect(upload.getByText('File Upload')).toBeVisible();
+    expect(upload.getByText('All Classes')).toBeVisible();
+    expect(upload.getByText('PDF, JPG, JPEG, PNG')).toBeVisible();
+    expect(upload.getByText('Max 10 MB')).toBeVisible();
+
+    const legacy = within(legacyCard);
+    expect(legacy.getByText('Optional')).toBeVisible();
+    expect(legacy.getByText('File Upload')).toBeVisible();
+    expect(legacy.getByText('1 selected class')).toBeVisible();
+    expect(legacy.getByText('PDF')).toBeVisible();
+    expect(legacy.getByText('Max 5 MB')).toBeVisible();
+  });
+
   it('opens standard documents in the same popover and preserves preset references through editing', async () => {
     const { user, onSave } = await setupDocumentEditor();
-    await chooseDocumentOption(user, 'Add a Standard Document', 'Birth Certificate');
+    const addDocuments = within(screen.getByRole('group', { name: 'Add documents' }));
+    expect(addDocuments.getByRole('button', { name: 'Add Custom Document' })).toBeEnabled();
+    await user.click(addDocuments.getByRole('combobox', { name: 'Add a Standard Document' }));
+    await user.type(
+      screen.getByRole('textbox', { name: 'Search Add a Standard Document' }),
+      'birth'
+    );
+    expect(screen.queryByRole('option', { name: 'Address Proof' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('option', { name: 'Birth Certificate' }));
+    await waitFor(() =>
+      expect(screen.queryByRole('listbox', { hidden: true })).not.toBeInTheDocument()
+    );
     const requirementDialog = screen.getByRole('dialog', {
       name: 'Configure Document Requirement',
     });

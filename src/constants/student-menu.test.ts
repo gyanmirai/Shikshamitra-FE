@@ -68,9 +68,10 @@ describe('student navigation', () => {
     expect(records.children?.map((item) => item.title)).toEqual([
       'Student List',
       'House Management',
-      'I-Card',
+      'I-Card Assignment',
       'Certificates',
       'Reports',
+      'Settings',
     ]);
     expect(records.path).toBe('/student/profile');
     expect(records.children?.map((item) => item.path)).toEqual([
@@ -79,8 +80,11 @@ describe('student navigation', () => {
       '/student/student-i-card',
       '/student/certificates',
       '/student/reports',
+      '/student/records/settings/i-card-templates',
     ]);
-    expect(records.children?.some((item) => item.title === 'Settings')).toBe(false);
+    expect(records.children?.find((item) => item.title === 'Settings')?.permissionName).toBe(
+      studentPermissions.records.studentICard
+    );
     expect(
       records.permissionChildren?.find((item) => item.title === 'Policy Settings')
     ).toMatchObject({
@@ -189,15 +193,15 @@ describe('student navigation', () => {
       'Admission Periods',
       'Admission Form',
       'Admission Stage',
-      'Public Inquiry Links',
       'Admission Offering',
+      'Public Inquiry Links',
     ]);
     expect(settings?.children?.map((item) => item.path)).toEqual([
       '/student/admissions/settings/cycles',
       '/student/admissions/settings/forms',
       '/student/admissions/settings/workflows',
-      '/student/admissions/settings/public-inquiry-links',
       '/student/admissions/settings/offerings',
+      '/student/admissions/settings/public-inquiry-links',
     ]);
 
     const visibleTitles = admissions?.children?.flatMap((item) => [

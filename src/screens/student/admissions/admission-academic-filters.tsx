@@ -6,8 +6,8 @@ import type { Standards } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
 import { useEffect, useCallback } from 'react';
-import { Box, Paper, Button } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
+import { Box, Paper, Button, chipClasses } from '@mui/material';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { useUrlFilterValue } from 'src/hooks/use-url-filter-value';
 import { useGetClassByMediumQuery } from 'src/redux/class/classApi';
@@ -90,6 +90,8 @@ export function AdmissionAcademicFilters({
   standardId,
   onChange,
   onClear,
+  additionalFilters,
+  matchSelectHeights = false,
   filterAction,
   disabled = false,
   allowAllHierarchy = false,
@@ -100,6 +102,8 @@ export function AdmissionAcademicFilters({
   standardId: string;
   onChange: (key: 'board' | 'medium' | 'class', value: string) => void;
   onClear?: () => void;
+  additionalFilters?: ReactNode;
+  matchSelectHeights?: boolean;
   filterAction?: ReactNode;
   disabled?: boolean;
   allowAllHierarchy?: boolean;
@@ -210,7 +214,25 @@ export function AdmissionAcademicFilters({
         </StudentFeedback>
       )}
       <Paper variant="outlined" sx={{ p: 1, borderRadius: 2, flexShrink: 0 }}>
-        <Box sx={studentAcademicFilterRowSx}>
+        <Box
+          sx={{
+            ...studentAcademicFilterRowSx,
+            ...((matchSelectHeights || additionalFilters) && {
+              '& > .MuiFormControl-root .MuiSelect-select': {
+                display: 'flex',
+                alignItems: 'center',
+                height: '1lh',
+                '& > div': { minWidth: 0 },
+              },
+              '& .MuiSelect-multiple > div': {
+                flexWrap: 'nowrap !important',
+                overflowX: 'auto',
+                scrollbarWidth: 'none',
+                [`& .${chipClasses.root}`]: { flexShrink: 0 },
+              },
+            }),
+          }}
+        >
           <CustomSelect
             fullWidth
             label="Board"
@@ -245,6 +267,11 @@ export function AdmissionAcademicFilters({
             multiple
             fullWidth
             label="Class"
+            formControlProps={{
+              fullWidth: true,
+              // A single-line chip uses the same typography as the select's option label.
+              sx: { [`& .${chipClasses.root}`]: { typography: 'subtitle2', height: 'auto' } },
+            }}
             labelKey="name"
             valueKey="id"
             options={[{ id: ALL, name: 'All Classes' }, ...standards]}
@@ -255,6 +282,7 @@ export function AdmissionAcademicFilters({
             disabled={disabled || !mediumId || classes.isError}
             onChange={(value) => onChange('class', academicMultipleFilterValue(standardId, value))}
           />
+          {additionalFilters}
           {onClear && standardId && (
             <Button
               variant="text"

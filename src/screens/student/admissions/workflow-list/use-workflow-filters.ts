@@ -2,11 +2,11 @@
 
 import type { AdmissionWorkflowStatus } from 'src/redux/student/admissions/admission-workflows-api';
 
-import dayjs from 'dayjs';
 import { useState } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useStudentSetupEmbedding } from 'src/screens/student/setup/embedding';
 
+import { workflowCreatedRange } from './workflow-date-range';
 import { workflowColumnFilters, serializeWorkflowColumnFilters } from './workflow-column-filters';
 
 export type WorkflowFilters = {
@@ -21,6 +21,20 @@ export type WorkflowFilters = {
   columnFilters?: string;
   sorting?: string;
 };
+
+export const WORKFLOW_PAGE_SIZES = [10, 25, 50, 100];
+
+const EMPTY_FILTERS = {
+  status: 'all',
+  version: '',
+  usage: 'all',
+  createdFrom: '',
+  createdTo: '',
+  columnFilters: '',
+} as const;
+
+const readPageSize = (value: number) =>
+  WORKFLOW_PAGE_SIZES.includes(value) ? value : WORKFLOW_PAGE_SIZES[0];
 
 const readStatus = (value: string | null): WorkflowFilters['status'] => {
   const status = Number(value);
@@ -37,25 +51,28 @@ export function useWorkflowFilters() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [filters, setFilters] = useState<WorkflowFilters>(() => ({
-    search: searchParams.get('search') ?? '',
-    status: readStatus(searchParams.get('status')),
-    version: searchParams.get('version') ?? '',
-    usage:
-      searchParams.get('usage') === 'used' || searchParams.get('usage') === 'unused'
-        ? (searchParams.get('usage') as 'used' | 'unused')
-        : 'all',
-    createdFrom: searchParams.get('from') ?? '',
-    createdTo: searchParams.get('to') ?? '',
-    page: Math.max(Number(searchParams.get('page') ?? 1) - 1, 0),
-    rowsPerPage: Number(searchParams.get('size') ?? 10),
-    columnFilters: serializeWorkflowColumnFilters(
-      workflowColumnFilters(searchParams.get('columns') ?? '').filter(
-        (filter) => !searchParams.get('version') || filter.column !== 'version'
-      )
-    ),
-    sorting: searchParams.get('sort') ?? '',
-  }));
+  const [filters, setFilters] = useState<WorkflowFilters>(() => {
+    const createdFrom = searchParams.get('from') ?? '';
+    const createdTo = searchParams.get('to') ?? '';
+    const range = workflowCreatedRange(createdFrom, createdTo);
+    const usage = searchParams.get('usage');
+    return {
+      search: searchParams.get('search') ?? '',
+      status: readStatus(searchParams.get('status')),
+      version: searchParams.get('version') ?? '',
+      usage: usage === 'used' || usage === 'unused' ? usage : 'all',
+      createdFrom: range ? createdFrom : '',
+      createdTo: range ? createdTo : '',
+      page: Math.max(Number(searchParams.get('page') ?? 1) - 1, 0),
+      rowsPerPage: readPageSize(Number(searchParams.get('size'))),
+      columnFilters: serializeWorkflowColumnFilters(
+        workflowColumnFilters(searchParams.get('columns') ?? '').filter(
+          (filter) => !searchParams.get('version') || filter.column !== 'version'
+        )
+      ),
+      sorting: searchParams.get('sort') ?? '',
+    };
+  });
 
   const commit = (next: WorkflowFilters) => {
     if (areFiltersEqual(filters, next)) return;
@@ -71,18 +88,20 @@ export function useWorkflowFilters() {
       from: next.createdFrom,
       to: next.createdTo,
       page: next.page > 0 ? String(next.page + 1) : '',
-      size: next.rowsPerPage !== 10 ? String(next.rowsPerPage) : '',
+      size: next.rowsPerPage !== WORKFLOW_PAGE_SIZES[0] ? String(next.rowsPerPage) : '',
       columns: next.columnFilters ?? '',
       sort: next.sorting ?? '',
     };
     Object.entries(values).forEach(([key, value]) => value && params.set(key, value));
     router.replace(params.size ? `${pathname}?${params}` : pathname, { scroll: false });
   };
-  const update = (changes: Partial<WorkflowFilters>) =>
-    commit({
+  const update = (changes: Partial<WorkflowFilters>) => {
+    const next = {
       ...filters,
       ...changes,
-      ...(changes.version !== undefined && changes.columnFilters === undefined
+      ...(changes.version !== undefined &&
+      changes.version !== filters.version &&
+      changes.columnFilters === undefined
         ? {
             columnFilters: serializeWorkflowColumnFilters(
               workflowColumnFilters(filters.columnFilters ?? '').filter(
@@ -92,18 +111,15 @@ export function useWorkflowFilters() {
           }
         : {}),
       page: changes.page ?? 0,
-    });
+      rowsPerPage: readPageSize(changes.rowsPerPage ?? filters.rowsPerPage),
+    };
+    if (workflowCreatedRange(next.createdFrom, next.createdTo)) commit(next);
+  };
+  const clearFilters = () => update(EMPTY_FILTERS);
   const clear = () =>
-    commit({
+    update({
+      ...EMPTY_FILTERS,
       search: '',
-      status: 'all',
-      version: '',
-      usage: 'all',
-      createdFrom: '',
-      createdTo: '',
-      page: 0,
-      rowsPerPage: filters.rowsPerPage,
-      columnFilters: '',
       sorting: '',
     });
 
@@ -111,7 +127,6 @@ export function useWorkflowFilters() {
     filters,
     update,
     clear,
-    createdFrom: filters.createdFrom ? dayjs(filters.createdFrom) : null,
-    createdTo: filters.createdTo ? dayjs(filters.createdTo) : null,
+    clearFilters,
   };
 }

@@ -18,6 +18,7 @@ const mocks = vi.hoisted(() => ({
   download: vi.fn(),
   realTable: false,
   state: {
+    confirmPopup: { isChanges: false },
     globalState: { currentYear: { id: 'year-1' } as { id: string } | undefined },
     auth: {
       permissions: ['View', 'Add'].map((action) => ({
@@ -28,6 +29,7 @@ const mocks = vi.hoisted(() => ({
   },
 }));
 vi.mock('react-redux', () => ({
+  useDispatch: () => vi.fn(),
   useSelector: (select: (state: unknown) => unknown) => select(mocks.state),
 }));
 vi.mock('next/navigation', () => ({
@@ -165,23 +167,6 @@ vi.mock('src/components/customDialog', () => ({
     open ? <section role="dialog">{children}</section> : null,
   DialogScrollContent: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
-vi.mock('./student-icard-builder', () => ({
-  default: ({
-    academicYearId,
-    contextInvalid,
-  }: {
-    academicYearId?: string;
-    contextInvalid?: boolean;
-  }) => (
-    <div
-      data-testid="legacy-builder"
-      data-year={academicYearId}
-      data-invalid={String(Boolean(contextInvalid))}
-    >
-      <input aria-label="Retained builder draft" defaultValue="Draft" />
-    </div>
-  ),
-}));
 vi.mock('./record-document-templates', () => ({ default: () => null }));
 vi.mock('./components/record-document-filters', () => ({ default: () => null }));
 vi.mock('./student-certificate-workspace', () => ({ default: () => null }));
@@ -281,7 +266,7 @@ it('shows all issued cards with academic filters and ignores the legacy student 
   expect(screen.getByText(/Class One.*A/)).toBeVisible();
   expect(screen.getByRole('link', { name: 'View templates' })).toHaveAttribute(
     'href',
-    '/student/student-i-card'
+    '/student/records/settings/i-card-templates'
   );
   expect(screen.queryByRole('tab', { name: 'Certificates' })).not.toBeInTheDocument();
   expect(mocks.options).toHaveBeenCalledWith({ academicYearId: 'year-1' }, { skip: false });
@@ -474,7 +459,7 @@ it('keeps issued-card history available with View access without offering issuan
   mocks.state.auth.permissions = [{ name: 'Students.Records.StudentICard.View', isGranted: true }];
   history();
   expect(screen.getByRole('combobox', { name: 'Board' })).toBeVisible();
-  expect(screen.queryByRole('button', { name: 'Create I-Card' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('link', { name: 'Create I-Card' })).not.toBeInTheDocument();
 });
 
 it('does not load or show card history without the existing I-Card View grant', () => {
@@ -523,10 +508,10 @@ it('keeps download and reason-required Reprint/Void actions on the existing ID e
   mocks.issued.mockReturnValue({ currentData: { items: [card()], totalCount: 1 } });
   history();
   expect(screen.getByRole('button', { name: 'Reprint ID-0001' })).toBeEnabled();
-  expect(screen.getByRole('button', { name: 'Void ID-0001' })).toBeEnabled();
   fireEvent.click(screen.getByRole('button', { name: 'Download ID-0001' }));
   await waitFor(() => expect(mocks.download).toHaveBeenCalledWith({ kind: 'ids', id: 'card-1' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Reprint ID-0001' }));
+  fireEvent.click(screen.getByRole('button', { name: 'More actions for ID-0001' }));
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Void ID-0001' }));
   expect(screen.getByRole('dialog')).toBeVisible();
   expect(screen.getByRole('textbox', { name: 'Reason' })).toBeRequired();
 });
@@ -537,31 +522,25 @@ it('disables all actions for a voided card', () => {
     currentData: { items: [card({ status: 'Voided' })], totalCount: 1 },
   });
   history();
-  ['Download', 'Reprint', 'Void'].forEach((action) => {
+  ['Download', 'Reprint'].forEach((action) => {
     expect(screen.getByRole('button', { name: `${action} ID-0001` })).toBeDisabled();
   });
+  fireEvent.click(screen.getByRole('button', { name: 'More actions for ID-0001' }));
+  expect(screen.getByRole('menuitem', { name: 'Void ID-0001' })).toHaveAttribute('aria-disabled', 'true');
 });
 
-it('captures the global year for the retained history builder and keeps its draft on context changes', () => {
-  const view = render(
+it.each(['issued', 'generic'] as const)('links the %s I-Card creation action to the Assignment workspace', (source) => {
+  mocks.query = source === 'issued'
+    ? 'view=issued&board=board-2&medium=medium-3&page=2&search=Riya'
+    : 'view=ids';
+  render(
     <ThemeProvider theme={createTheme(defaultSettings)}>
-      <StudentRecordDocuments fixedKind="ids" />
+      <StudentRecordDocuments fixedKind={source === 'issued' ? 'ids' : undefined} />
     </ThemeProvider>
   );
-  fireEvent.click(screen.getByRole('button', { name: 'Create I-Card' }));
-  expect(screen.getByTestId('legacy-builder')).toHaveAttribute('data-year', 'year-1');
-  fireEvent.change(screen.getByRole('textbox', { name: 'Retained builder draft' }), {
-    target: { value: 'Still editing' },
-  });
-  mocks.state.globalState.currentYear = { id: 'year-2' };
-  view.rerender(
-    <ThemeProvider theme={createTheme(defaultSettings)}>
-      <StudentRecordDocuments fixedKind="ids" />
-    </ThemeProvider>
-  );
-  expect(screen.getByTestId('legacy-builder')).toHaveAttribute('data-year', 'year-1');
-  expect(screen.getByTestId('legacy-builder')).toHaveAttribute('data-invalid', 'true');
-  expect(screen.getByRole('textbox', { name: 'Retained builder draft' })).toHaveValue(
-    'Still editing'
+  expect(screen.getByRole('link', { name: 'Create I-Card' })).toHaveAttribute(
+    'href', source === 'issued'
+      ? '/student/student-i-card?board=board-2&medium=medium-3'
+      : '/student/student-i-card'
   );
 });

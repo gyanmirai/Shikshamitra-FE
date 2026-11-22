@@ -1,9 +1,17 @@
 import dayjs from 'dayjs';
 import { useState, useEffect } from 'react';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { shikshaMitraToast } from 'src/components/toast';
 
 import { suggestCloneName } from '../admission-cycle-model';
 import { useAdmissionCloseGuard } from '../use-admission-close-guard';
 import { cycleConfigurationPayload } from './cycle-configuration-payload';
+import { getCycleNameError } from './cycle-name-error';
+import {
+  getCycleDateError,
+  isAdmissionCycleDate,
+  getAdmissionCycleToday,
+} from './cycle-date-limits';
 
 import type {
   CycleConfigurationMode,
@@ -18,6 +26,7 @@ export function useCycleConfiguration({
   onConfirm,
 }: Pick<AdmissionCycleConfigurationProps, 'mode' | 'cycle' | 'busy' | 'onClose' | 'onConfirm'>) {
   const [name, setName] = useState('');
+  const [nameError, setNameError] = useState<string>();
   const [description, setDescription] = useState('');
   const [academicYearId, setAcademicYearId] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -30,6 +39,7 @@ export function useCycleConfiguration({
   useEffect(() => {
     if (!cycle || !mode) return;
     setName(mode === 'clone' ? suggestCloneName(cycle) : cycle.name);
+    setNameError(undefined);
     setDescription(cycle.description ?? '');
     setAcademicYearId(cycle.academicYearId);
     setStartDate(cycle.startDate.slice(0, 10));
@@ -55,7 +65,16 @@ export function useCycleConfiguration({
   const guard = useAdmissionCloseGuard(dirty, busy, Boolean(mode && cycle));
   const requestClose = () => guard.requestNavigation(onClose);
 
-  const datesInvalid = !startDate || !endDate || !dayjs(endDate).isAfter(dayjs(startDate), 'day');
+  const minimumDate = mode === 'window' ? getAdmissionCycleToday() : undefined;
+  const dateError = (value: string, existing?: string) =>
+    value ? getCycleDateError(value, minimumDate ?? '', existing) : undefined;
+  const startDateError = dateError(startDate, cycle?.startDate);
+  const endDateError =
+    dateError(endDate, cycle?.endDate) ??
+    (isAdmissionCycleDate(startDate) && isAdmissionCycleDate(endDate) && endDate < startDate
+      ? 'Applications close date must be on or after the open date.'
+      : undefined);
+  const datesInvalid = !startDate || !endDate || Boolean(startDateError || endDateError);
   const scheduleInvalid =
     (!publishAt && !closeAt) ||
     Boolean(publishAt && !dayjs(publishAt).isAfter(dayjs())) ||
@@ -63,12 +82,13 @@ export function useCycleConfiguration({
     Boolean(publishAt && closeAt && !dayjs(closeAt).isAfter(dayjs(publishAt)));
   const disabled =
     busy ||
-    (mode === 'clone' && (!name.trim() || !academicYearId || datesInvalid)) ||
+    (mode === 'clone' && (!name.trim() || nameError || !academicYearId || datesInvalid)) ||
     (mode === 'window' && (datesInvalid || !reason.trim())) ||
     (mode === 'schedule' && scheduleInvalid);
 
   const submit = async () => {
-    if (mode && cycle)
+    if (!mode || !cycle || disabled) return;
+    try {
       await onConfirm(
         cycleConfigurationPayload(mode, cycle, {
           name,
@@ -81,10 +101,23 @@ export function useCycleConfiguration({
           closeAt,
         })
       );
+    } catch (error) {
+      const problem = parseApiProblemDetail(error);
+      const duplicateName = mode === 'clone' ? getCycleNameError(problem.errorCode) : undefined;
+      if (duplicateName) setNameError(duplicateName);
+      else
+        shikshaMitraToast.error({
+          message: problem.detail || 'Unable to save the admission cycle.',
+        });
+    }
   };
   return {
     name,
-    setName,
+    setName: (value: string) => {
+      setNameError(undefined);
+      setName(value);
+    },
+    nameError,
     description,
     setDescription,
     academicYearId,
@@ -103,9 +136,11 @@ export function useCycleConfiguration({
     setDismissedNotice,
     guard,
     requestClose,
-    datesInvalid,
+    minimumDate,
+    startDateError,
+    endDateError,
     scheduleInvalid,
-    disabled,
+    disabled: Boolean(disabled),
     submit,
   };
 }

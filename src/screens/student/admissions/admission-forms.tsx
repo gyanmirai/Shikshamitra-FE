@@ -30,13 +30,14 @@ import { AdmissionFormHistoryDialog } from './admission-form-history-dialog';
 import { normalizeAdmissionFormFilters } from './form-list/form-column-filters';
 import { useFormLifecycleActions } from './form-list/use-form-lifecycle-actions';
 import {
-  buildAdmissionFormListQuery,
-  getAdmissionFormPurposeFilter,
-} from './form-list/form-list-query';
-import {
   getAdmissionFormListReturnUrl,
   readAdmissionFormListReturnState,
 } from './form-preview/form-preview-navigation';
+import {
+  admissionFormPageSizes,
+  buildAdmissionFormListQuery,
+  getAdmissionFormPurposeFilter,
+} from './form-list/form-list-query';
 
 export default function AdmissionFormsScreen() {
   const searchParams = useSearchParams();
@@ -213,29 +214,18 @@ export default function AdmissionFormsScreen() {
               <AdmissionQueryError onRetry={() => query.refetch()} />
             ) : undefined
           }
-          handleRowClick={(row) => preview((row as AdmissionForm).id)}
           getRowAction={(row) => ({
             label: `Preview ${(row as AdmissionForm).name}`,
             onClick: () => preview((row as AdmissionForm).id),
-            pending: actions.pendingNavigationId === row.id,
-            pendingLabel: 'Opening form…',
+            disabled: Boolean(actions.pendingNavigationId),
           })}
           rowProps={(row) => ({
-            tabIndex: 0,
-            sx: { cursor: 'pointer' },
-            onKeyDown: (event) => {
-              if (
-                event.target === event.currentTarget &&
-                (event.key === 'Enter' || event.key === ' ')
-              ) {
-                event.preventDefault();
-                preview((row as AdmissionForm).id);
-              }
-            },
+            'aria-busy': actions.pendingNavigationId === row.id || undefined,
           })}
           totalCount={currentData?.totalCount ?? 0}
           page={page}
           rowsPerPage={rowsPerPage}
+          rowsPerPageOptions={admissionFormPageSizes}
           searchTerm={search}
           filters={filters}
           isLoading={query.isLoading || (query.isFetching && !currentData)}
@@ -285,6 +275,7 @@ export default function AdmissionFormsScreen() {
         saving={actions.saving}
         onSave={actions.save}
         onPublishNow={actions.saveAndPublish}
+        checkUnchangedVersion={actions.checkUnchangedVersion}
       />
       <AdmissionFormCloneDialog
         source={actions.pendingClone}

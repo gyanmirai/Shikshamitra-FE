@@ -170,7 +170,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.params = new URLSearchParams();
   mocks.yearOnly = false;
-  mocks.permissions = ['Students.Records.Settings.Add'].map((name) => ({ name, isGranted: true }));
+  mocks.permissions = ['Students.Records.Settings.View', 'Students.Records.Settings.Add'].map((name) => ({ name, isGranted: true }));
   saved = {
     id: 'config-1',
     concurrencyStamp: 'stamp-1',
@@ -230,6 +230,17 @@ describe('Student Records settings', () => {
     expect(screen.getByLabelText('Certificate number prefix')).toHaveValue('GUIDE');
     expect(mocks.navigate).not.toHaveBeenCalled();
     expect(mocks.save).not.toHaveBeenCalled();
+  });
+  it('keeps its four policy tasks when staff have both policy and I-Card permissions', () => {
+    mocks.permissions.push({ name: 'Students.Records.StudentICard.View', isGranted: true });
+    mocks.params = new URLSearchParams('scope=year&year=year-1');
+    render(<RecordsSettings task="documents" />);
+    const tabs = screen.getByRole('tablist', { name: 'Student Records settings tasks' });
+    expect(within(tabs).getAllByRole('tab')).toHaveLength(4);
+    expect(within(tabs).queryByRole('tab', { name: 'I-Card Templates' })).not.toBeInTheDocument();
+    expect(within(tabs).getByRole('tab', { name: 'Change Rules & Approvals' })).toHaveAttribute(
+      'href', '/student/records/settings/changes?scope=year&year=year-1'
+    );
   });
   it('loads the selected year policy in the embedded guide before requesting school defaults', async () => {
     mocks.yearOnly = true;

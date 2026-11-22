@@ -202,7 +202,7 @@ it('shows the shared empty state and applies editable templates without saving a
   mocks.management = { ...mocks.management, currentData: { ...management, notes: [] } };
   render(<InquiryFollowUpDialog inquiry={inquiry} onClose={mocks.close} />);
   expect(screen.getByText('No follow-up notes yet.')).toBeVisible();
-  expect(document.querySelector('svg image')).toBeInTheDocument();
+  expect(document.querySelector('img[src$="shikshamitra-student-empty.webp"]')).toBeVisible();
   const note = screen.getByRole('textbox', { name: 'Notes' });
   await user.type(note, 'Called the parent.');
   changeReminder();
@@ -569,6 +569,11 @@ it('locks inputs, cancel and close while the atomic save is pending', async () =
   fireEvent.change(screen.getByRole('combobox', { name: 'Status' }), { target: { value: '6' } });
   await user.click(screen.getByRole('button', { name: 'Submit' }));
   await waitFor(() => expect(mocks.record).toHaveBeenCalledOnce());
+  const overlay = screen.getByRole('status', { name: 'Saving Follow-Up' });
+  const busyRegion = overlay.parentElement;
+  expect(busyRegion).toHaveAttribute('aria-busy', 'true');
+  expect(busyRegion).toContainElement(screen.getByRole('heading', { name: 'Follow-Up History' }));
+  expect(busyRegion).toContainElement(screen.getByRole('button', { name: 'Submit' }));
   expect(screen.getByRole('button', { name: /^Cancel$/ })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'close' })).toBeDisabled();
   expect(screen.getByRole('textbox', { name: 'Notes' })).toBeDisabled();
@@ -583,9 +588,11 @@ it('blocks submit during loading and query failure, then recovers without losing
   changeReminder();
   mocks.detail = { ...mocks.detail, isFetching: true };
   view.rerender(<InquiryFollowUpDialog inquiry={inquiry} onClose={mocks.close} />);
+  expect(screen.getByRole('status', { name: 'Loading Follow-Up' })).toBeVisible();
   expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
   mocks.detail = { ...mocks.detail, isFetching: false, isError: true };
   view.rerender(<InquiryFollowUpDialog inquiry={inquiry} onClose={mocks.close} />);
+  expect(screen.queryByRole('status', { name: 'Loading Follow-Up' })).not.toBeInTheDocument();
   await waitFor(() =>
     expect(mocks.error).toHaveBeenCalledExactlyOnceWith({
       message: 'Follow-up notes could not be loaded.',

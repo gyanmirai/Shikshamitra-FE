@@ -49,3 +49,9 @@ it('retains shareable School Level filtering on the standalone Offering page', (
   expect(params.get('search')).toBe('Class 1');
   expect(params.has('page')).toBe(false);
 });
+
+it('uses the default size for legacy All page sizes in bookmarked URLs', () => {
+  mocks.query = 'size=13';
+  const { result } = renderHook(() => useAdmissionOfferingFilters());
+  expect(result.current.filters.rowsPerPage).toBe(10);
+});

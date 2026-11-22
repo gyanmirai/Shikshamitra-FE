@@ -282,6 +282,23 @@ describe('admission academic filters', () => {
     ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
   });
 
+  it('fits the All Classes chip within the dropdown text line', () => {
+    render(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <AdmissionAcademicFilters
+          boardId="board-1"
+          mediumId="medium-1"
+          standardId=""
+          onChange={vi.fn()}
+        />
+      </ThemeProvider>
+    );
+
+    const field = screen.getByRole('combobox', { name: 'Class' });
+    expect(field).toHaveTextContent('All Classes');
+    expect(field.querySelector('.MuiChip-root')).toHaveStyle({ height: 'auto' });
+  });
+
   it('disables academic scope changes and Clear while a bulk command is running', () => {
     const onChange = vi.fn();
     render(

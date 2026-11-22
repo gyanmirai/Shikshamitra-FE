@@ -11,7 +11,13 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import { AdmissionFormDialog } from './admission-form-dialog';
 import { getBlankAdmissionFormInitialValues } from './form-dialog/form-dialog-model';
+import { UnchangedAdmissionFormError } from './form-list/form-validation-errors';
 
+const checkName = vi.hoisted(() => vi.fn(() => ({ unwrap: async () => ({ isAvailable: true }) })));
+
+vi.mock('src/redux/student/admissions/admission-forms-api', () => ({
+  useLazyCheckAdmissionFormNameQuery: () => [checkName],
+}));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 vi.mock('src/components/toast', () => ({ shikshaMitraToast: { error: vi.fn() } }));
 // Keep the real editor, Formik and wizard. Isolate presentation, already covered by the dialog UI suite.
@@ -26,8 +32,12 @@ vi.mock('src/components/custom-stepper', () => ({
     handleNext,
     onSave,
     renderItem,
+    saveAndNextButtonProps,
+    steps,
   }: {
     activeStep: number;
+    steps: unknown[];
+    saveAndNextButtonProps: { disabled?: boolean };
     formikInstance: FormikProps<CreateUpdateAdmissionForm>;
     handleNext: (
       last: boolean,
@@ -47,9 +57,12 @@ vi.mock('src/components/custom-stepper', () => ({
       {renderItem({ formik })}
       <button
         type="button"
-        onClick={() => handleNext(activeStep === 2, formik.values, formik, () => undefined)}
+        disabled={saveAndNextButtonProps.disabled}
+        onClick={() =>
+          handleNext(activeStep === steps.length - 1, formik.values, formik, () => undefined)
+        }
       >
-        {activeStep === 2 ? 'Publish now' : 'Continue'}
+        {activeStep === steps.length - 1 ? 'Publish now' : 'Continue'}
       </button>
       <button
         type="button"
@@ -64,9 +77,11 @@ vi.mock('./form-dialog/components/form-builder-wizard-content', () => ({
   FormBuilderWizardContent: ({
     formik,
     activeStep,
+    publishMessage,
   }: {
     formik: FormikProps<CreateUpdateAdmissionForm>;
     activeStep: number;
+    publishMessage?: string;
   }) => (
     <>
       <input
@@ -76,9 +91,97 @@ vi.mock('./form-dialog/components/form-builder-wizard-content', () => ({
       />
       <output aria-label="Revision">{formik.values.concurrencyStamp}</output>
       <output aria-label="Current step">{activeStep}</output>
+      {publishMessage && <div role="alert">{publishMessage}</div>}
     </>
   ),
 }));
+
+async function continueToStep(step: number) {
+  const next = screen.getByRole('button', { name: 'Continue' });
+  await waitFor(() => expect(next).toBeEnabled());
+  fireEvent.click(next);
+  await waitFor(() => expect(screen.getByLabelText('Current step')).toHaveTextContent(String(step)));
+}
+
+it.each([0, 1] as const)(
+  'blocks a reopened unchanged draft while allowing editing and draft saves (purpose=%s)',
+  async (purpose) => {
+    const draft = {
+      ...getBlankAdmissionFormInitialValues(purpose),
+      name: 'Version two',
+      id: 'draft',
+      version: 2,
+      status: 0,
+      concurrencyStamp: 'saved-stamp',
+    } as AdmissionForm;
+    const message =
+      'This draft matches published v1. Make a change before publishing, or keep using v1.';
+    const check = vi.fn().mockResolvedValue(message);
+    const save = vi.fn().mockResolvedValue(undefined);
+    render(
+      <AdmissionFormDialog
+        open
+        editing={draft}
+        checkUnchangedVersion={check}
+        onClose={vi.fn()}
+        saving={false}
+        onSave={save}
+        onPublishNow={vi.fn()}
+      />
+    );
+    await continueToStep(1);
+    await continueToStep(2);
+    if (purpose === 1) await continueToStep(3);
+    expect(await screen.findByRole('alert')).toHaveTextContent(message);
+    expect(check).toHaveBeenCalledExactlyOnceWith('draft');
+    expect(screen.getByRole('button', { name: 'Publish now' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Save draft' })).toBeEnabled();
+    fireEvent.change(screen.getByRole('textbox', { name: 'Form name' }), {
+      target: { value: 'Corrected version two' },
+    });
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Publish now' })).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+    await waitFor(() => expect(save).toHaveBeenCalledOnce());
+  }
+);
+
+it('keeps a server rejection visible and allows publication after a further edit', async () => {
+  const draft = {
+    ...getBlankAdmissionFormInitialValues(0),
+    name: 'Version two',
+    id: 'draft',
+    version: 2,
+    status: 0,
+    concurrencyStamp: 'saved-stamp',
+  } as AdmissionForm;
+  const message =
+    'This draft matches published v1. Make a change before publishing, or keep using v1.';
+  const publish = vi
+    .fn()
+    .mockRejectedValueOnce(new UnchangedAdmissionFormError(message))
+    .mockResolvedValueOnce(undefined);
+  render(
+    <AdmissionFormDialog
+      open
+      editing={draft}
+      onClose={vi.fn()}
+      saving={false}
+      onSave={vi.fn()}
+      onPublishNow={publish}
+    />
+  );
+  await continueToStep(1);
+  await continueToStep(2);
+  fireEvent.click(screen.getByRole('button', { name: 'Publish now' }));
+  expect(await screen.findByRole('alert')).toHaveTextContent(message);
+  expect(screen.getByRole('button', { name: 'Publish now' })).toBeDisabled();
+  fireEvent.change(screen.getByRole('textbox', { name: 'Form name' }), {
+    target: { value: 'Changed Inquiry' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Publish now' }));
+  await waitFor(() => expect(publish).toHaveBeenCalledTimes(2));
+});
 
 it.each([
   { existing: false, action: 'Save draft' },
@@ -129,10 +232,8 @@ it.each([
     fireEvent.change(screen.getByRole('textbox', { name: 'Form name' }), {
       target: { value: 'Preserved Inquiry' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
-    await waitFor(() => expect(screen.getByLabelText('Current step')).toHaveTextContent('1'));
-    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
-    await waitFor(() => expect(screen.getByLabelText('Current step')).toHaveTextContent('2'));
+    await continueToStep(1);
+    await continueToStep(2);
     fireEvent.click(screen.getByRole('button', { name: 'Publish now' }));
     await waitFor(() => expect(screen.getByLabelText('Revision')).toHaveTextContent('after-save'));
     expect(screen.getByRole('textbox', { name: 'Form name' })).toHaveValue('Preserved Inquiry');

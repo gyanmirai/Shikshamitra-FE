@@ -729,6 +729,14 @@ export function buildAdmissionInquiryDuplicateInput(
   };
 }
 
+export const admissionInterestTooltip = 'Select the admission details for this inquiry.';
+
+export function inquirySectionTooltip(sectionName: string) {
+  return sectionName.trim().toLowerCase() === 'student details'
+    ? 'Enter the student details required for this inquiry.'
+    : 'Complete the fields in this section.';
+}
+
 export function canLinkAdmissionInquiryFamily(
   match: DuplicateMatch,
   guardianPhone: string,

@@ -2,7 +2,7 @@
 
 import type { AdmissionCycle } from 'src/redux/student/admissions/admission-cycles-api';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { StudentFeedback } from 'src/components/student-feedback';
@@ -15,6 +15,7 @@ import { AdmissionCampusSelect } from './admission-campus-select';
 import { useAdmissionCampusOptions } from './use-admission-campus-options';
 import { getAdmissionHierarchyOptions } from './admission-hierarchy-options';
 
+import type { AdmissionCampusFetcher } from './use-admission-campus-options';
 import type { AdmissionOfferingFilters } from './use-admission-offering-filters';
 
 type AdvancedFilters = Pick<
@@ -29,6 +30,7 @@ type Props = {
 };
 
 const ALL_FILTER_VALUE = '__all__';
+const ALL_CAMPUSES = { id: ALL_FILTER_VALUE, name: 'All Campuses', code: '', isActive: true };
 
 const EMPTY_OPTIONAL_FILTERS = {
   campusId: '',
@@ -46,6 +48,33 @@ const pickAdvancedFilters = (values: AdmissionOfferingFilters): AdvancedFilters 
   configurationStatus: values.configurationStatus,
 });
 
+function CampusFilter({ value, onChange }: { value: string; onChange: (id: string) => void }) {
+  const [empty, setEmpty] = useState(false);
+  const selectedCampus = useGetAdmissionCampusQuery(value, { skip: !value });
+  const fetchCampuses = useAdmissionCampusOptions();
+  const fetchOptions = useCallback<AdmissionCampusFetcher>(
+    async (query, page) => {
+      const result = await fetchCampuses(query, page);
+      if (!query && page === 1) setEmpty(result.data.length === 0);
+      return result;
+    },
+    [fetchCampuses]
+  );
+
+  return (
+    <AdmissionCampusSelect
+      label="Campus"
+      valueId={value || ALL_CAMPUSES.id}
+      initialOption={value ? selectedCampus.currentData : ALL_CAMPUSES}
+      allOption={ALL_CAMPUSES}
+      fetchOptions={fetchOptions}
+      disabled={empty && !value}
+      helperText={empty ? 'No active campuses are configured.' : undefined}
+      onChange={(id) => onChange(!id || id === ALL_CAMPUSES.id ? '' : id)}
+    />
+  );
+}
+
 export function AdmissionOfferingMoreFilters({ cycle, values, onChange }: Props) {
   const popover = usePopover();
   const [draft, setDraft] = useState<AdvancedFilters>(() => pickAdvancedFilters(values));
@@ -60,10 +89,6 @@ export function AdmissionOfferingMoreFilters({ cycle, values, onChange }: Props)
     { academicYearId: cycle?.academicYearId ?? '' },
     { skip: !cycle }
   );
-  const selectedCampusQuery = useGetAdmissionCampusQuery(draft.campusId, {
-    skip: !draft.campusId,
-  });
-  const fetchCampuses = useAdmissionCampusOptions(popover.open);
   const { stages } = getAdmissionHierarchyOptions(
     hierarchyQuery.currentData?.items ?? [],
     values.boardId,
@@ -119,22 +144,12 @@ export function AdmissionOfferingMoreFilters({ cycle, values, onChange }: Props)
           <Divider />
 
           <Stack spacing={1.5} sx={{ p: 2, overflowY: 'auto', minHeight: 0 }}>
-            <AdmissionCampusSelect
-              label="Campus"
-              valueId={draft.campusId || ALL_FILTER_VALUE}
-              initialOption={
-                selectedCampusQuery.data ?? {
-                  id: ALL_FILTER_VALUE,
-                  name: 'All Campuses',
-                  code: '',
-                  isActive: true,
-                }
-              }
-              fetchOptions={fetchCampuses}
-              onChange={(id) =>
-                updateDraft({ campusId: !id || id === ALL_FILTER_VALUE ? '' : String(id) })
-              }
-            />
+            {popover.open && (
+              <CampusFilter
+                value={draft.campusId}
+                onChange={(campusId) => updateDraft({ campusId })}
+              />
+            )}
             <CustomSelect
               options={[
                 { value: ALL_FILTER_VALUE, label: 'All Availability Statuses' },

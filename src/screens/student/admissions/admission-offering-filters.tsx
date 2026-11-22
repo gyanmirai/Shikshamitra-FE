@@ -164,7 +164,13 @@ export function AdmissionOfferingFilters({
           }
         />
         <Box
-          sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', ml: { sm: 'auto' } }}
+          sx={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            alignItems: 'center',
+            gap: 1,
+            ml: { sm: 'auto' },
+          }}
         >
           {filterAction}
         </Box>

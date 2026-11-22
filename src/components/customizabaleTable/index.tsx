@@ -627,6 +627,8 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
               justifyContent: 'flex-start',
               flex: 1,
               minHeight: 0,
+              position: 'relative',
+              isolation: 'isolate',
             }}
           >
             {isRefreshing &&
@@ -648,7 +650,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
               ) : (
                 <LinearProgress
                   aria-label={`Refreshing ${typeof tableTitle === 'string' ? tableTitle : 'table'}`}
-                  sx={{ flexShrink: 0 }}
+                  sx={{ position: 'absolute', inset: '0 0 auto', zIndex: 'appBar' }}
                 />
               ))}
             <TableContainer

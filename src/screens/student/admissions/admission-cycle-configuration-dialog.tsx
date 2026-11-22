@@ -65,6 +65,7 @@ export function AdmissionCycleConfigurationDialog({
       guardUnsavedChanges={false}
       disableClose={busy}
       formProps={{
+        noValidate: true,
         onSubmit: (event) => {
           event.preventDefault();
           if (!disabled) submit();
@@ -87,7 +88,9 @@ export function AdmissionCycleConfigurationDialog({
         >
           <Grid container spacing={1.5}>
             {mode === 'clone' && <CycleCloneFields academicYears={academicYears} state={state} />}
-            {(mode === 'clone' || mode === 'window') && <CycleWindowFields state={state} />}
+            {(mode === 'clone' || mode === 'window') && (
+              <CycleWindowFields state={state} disabled={busy} />
+            )}
             {mode === 'window' && (
               <Grid size={{ xs: 12 }}>
                 <ShakingTextField error={!reason.trim()}>

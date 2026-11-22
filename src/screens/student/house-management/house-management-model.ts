@@ -1,13 +1,13 @@
 import type { HouseAssignment } from 'src/redux/student/house-management/house-management-types';
 
-export type HouseTab = 'houses' | 'students' | 'divisions';
+export type HouseTab = 'houses' | 'divisions';
 export function houseWorkspaceState(params: URLSearchParams) {
   const requested = params.get('tab');
   const tab: HouseTab =
-    requested === 'students' || requested === 'divisions' ? requested : 'houses';
+    requested === 'students' || requested === 'divisions' ? 'divisions' : 'houses';
   const page = Number(params.get('page') ?? 0);
   const pageSize = Number(params.get('pageSize') ?? 25);
-  const fields = tab === 'students' ? ['studentName', 'standardName', 'houseName'] : ['name'];
+  const fields = tab === 'divisions' ? ['studentName', 'standardName', 'houseName'] : ['name'];
   const [field, direction] = (params.get('sort') ?? '').split(' ');
   return {
     tab,

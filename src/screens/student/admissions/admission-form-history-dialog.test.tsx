@@ -8,7 +8,7 @@ import type {
 
 import userEvent from '@testing-library/user-event';
 import { vi, it, expect, describe, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, within, waitFor } from '@testing-library/react';
 
 import { AdmissionFormHistoryDialog } from './admission-form-history-dialog';
 
@@ -178,8 +178,11 @@ describe('Admission form history dialog', () => {
       },
     ];
     view.rerender(<AdmissionFormHistoryDialog {...props} />);
-    expect(screen.getByText('Admin Override Approved')).toBeVisible();
-    expect(screen.getByText(/version 1 · Approved by the school administrator/)).toBeVisible();
+    const entry = within(screen.getByRole('list', { name: 'Form activity, newest first' }))
+      .getByRole('listitem');
+    expect(within(entry).getByText('Admin Override Approved')).toBeVisible();
+    expect(within(entry).getByText('Version 1')).toBeVisible();
+    expect(within(entry).getByText('Approved by the school administrator')).toBeVisible();
   });
 
   it('shows loading instead of the previous form history while another form loads', () => {
@@ -201,6 +204,33 @@ describe('Admission form history dialog', () => {
     expect(screen.getByLabelText('Loading Form Versions')).toBeVisible();
     expect(screen.queryByText('Previous Form Published')).not.toBeInTheDocument();
     expect(screen.queryByRole('combobox', { name: 'Compare With' })).not.toBeInTheDocument();
+  });
+
+  it('groups each activity with its version, time, actor and comment when available', () => {
+    const published = {
+      id: 'published-event',
+      action: 'Published',
+      occurredAt: '2026-10-02T10:00:00Z',
+      version: 2,
+      actorId: 'recorded-staff',
+      actorName: 'Sam Patel',
+      comment: 'Ready for admissions',
+    };
+    hooks.audit.currentData = [
+      published,
+      { id: 'created-event', action: 'Created', occurredAt: '2026-10-01T09:00:00Z', version: 2 },
+    ];
+    render(<AdmissionFormHistoryDialog {...props} />);
+
+    const activity = screen.getByRole('list', { name: 'Form activity, newest first' });
+    const [publishedItem, createdItem] = within(activity).getAllByRole('listitem');
+    expect(within(publishedItem).getByText('Published')).toBeVisible();
+    expect(within(publishedItem).getByText('Version 2')).toBeVisible();
+    expect(publishedItem.querySelector('time')).toHaveAttribute('datetime', published.occurredAt);
+    expect(within(publishedItem).getByText('Sam Patel')).toBeVisible();
+    expect(within(publishedItem).getByText('Ready for admissions')).toBeVisible();
+    expect(within(createdItem).getByText('Created')).toBeVisible();
+    expect(createdItem).not.toHaveTextContent('Sam Patel');
   });
 
   it('compares the selected version and scopes results to the selected form', async () => {

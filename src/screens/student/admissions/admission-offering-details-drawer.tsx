@@ -262,18 +262,13 @@ export function AdmissionOfferingDetailsDrawer({
 
             <FormSectionCard
               aria-label="Configuration Readiness"
-              icon={offering.configuration?.isValid ? GlobalIcons.approvedIcon : GlobalIcons.warning}
+              icon={offering.configuration?.isValid ? undefined : GlobalIcons.warning}
               title="Configuration Readiness"
               descriptionTooltip="Whether the saved offering configuration is ready for its admission route."
             >
               {offering.configuration?.isValid ? (
                 <Stack spacing={1} alignItems="flex-start">
-                  <Label
-                    color="success"
-                    startIcon={<Iconify icon={GlobalIcons.approvedIcon} width={16} />}
-                  >
-                    Ready
-                  </Label>
+                  <Label color="success">Ready</Label>
                   <Typography variant="body2" color="text.secondary">
                     This configuration is ready to receive inquiries and applications during its
                     effective window.

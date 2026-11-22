@@ -31,6 +31,7 @@ type Props = {
   readOnly: boolean;
   issueCount: number;
   issues: AdmissionWorkflowValidationIssue[];
+  incomingRoute?: AdmissionWorkflowTransition;
   onEdit: () => void;
   onDuplicate: () => void;
   onDelete: () => void;
@@ -55,6 +56,7 @@ export function WorkflowStageCard({
   readOnly,
   issueCount,
   issues,
+  incomingRoute,
   onEdit,
   onDuplicate,
   onDelete,
@@ -72,32 +74,42 @@ export function WorkflowStageCard({
     stages.find((item) => item.id === path.toStageId)?.name ?? 'Missing stage';
   const canChooseNextStep =
     !readOnly && !stage.isTerminalStage && !orderedTransitions.some((path) => path.isDefault);
+  const hasMissingIncomingRoute = issues.some(
+    (issue) => issue.code === 'Admissions.WorkflowOrphanStage'
+  );
   const renderIssue = (issue: AdmissionWorkflowValidationIssue, index: number) => {
     const deadEnd = issue.code === 'Admissions.WorkflowDeadEndStage';
+    const orphan = issue.code === 'Admissions.WorkflowOrphanStage';
+    const unreachable = issue.code === 'Admissions.WorkflowUnreachableStage';
+    const secondaryConnectionIssue = unreachable && hasMissingIncomingRoute;
     const issueTransition = transitions.find((item) => item.id === issue.transitionId);
-    const action = deadEnd && !readOnly
-      ? onAddPath
-      : issueTransition
-        ? () => onEditPath(issueTransition)
-        : onEdit;
-    const actionLabel = deadEnd && !readOnly
-      ? 'Choose Next Step'
-      : issueTransition
-        ? readOnly ? 'View Route' : 'Edit Route'
-        : readOnly ? 'View Stage' : 'Edit Stage';
+    const connection = !readOnly && orphan ? incomingRoute : undefined;
+    const source = connection && stages.find((item) => item.id === connection.fromStageId);
+    let action = onEdit;
+    let actionLabel = readOnly ? 'View Stage' : 'Edit Stage';
+    if (connection) {
+      action = () => onEditPath(connection);
+      actionLabel = 'Connect Route';
+    } else if (deadEnd && canChooseNextStep) {
+      action = onAddPath;
+      actionLabel = 'Choose Next Step';
+    } else if (issueTransition) {
+      action = () => onEditPath(issueTransition);
+      actionLabel = readOnly ? 'View Route' : 'Edit Route';
+    } else if (stage.stageType === 5 && issue.code === 'Admissions:Documents:InvalidPolicy') {
+      actionLabel = readOnly ? 'View Document Setup' : 'Edit Document Setup';
+    }
     return (
       <Alert
         key={`${issue.code}-${issue.transitionId ?? issue.stageId ?? 'workflow'}-${index}`}
         severity={issue.severity === 0 ? 'error' : 'warning'}
         variant="outlined"
         action={
-          <Button
-            size="small"
-            onClick={action}
-            aria-label={`${actionLabel} for ${stage.name}`}
-          >
-            {actionLabel}
-          </Button>
+          secondaryConnectionIssue ? undefined : (
+            <Button size="small" onClick={action} aria-label={`${actionLabel} for ${stage.name}`}>
+              {actionLabel}
+            </Button>
+          )
         }
         sx={{
           mt: 1,
@@ -108,6 +120,13 @@ export function WorkflowStageCard({
         }}
       >
         {issue.message}
+        {orphan && !readOnly && (
+          <Typography variant="body2" sx={{ mt: 0.5 }}>
+            {source
+              ? `Connect ${source.name} to ${stage.name} so applicants can continue the journey.`
+              : 'Connect this stage to a stage the applicant can already reach, or remove it if it is no longer needed.'}
+          </Typography>
+        )}
       </Alert>
     );
   };
@@ -160,7 +179,12 @@ export function WorkflowStageCard({
                 <ButtonBase
                   onClick={onEdit}
                   aria-label={`View ${stage.name}`}
-                    sx={{ ...textActionFocusSx, typography: 'inherit', textAlign: 'left', borderRadius: 0.5 }}
+                  sx={{
+                    ...textActionFocusSx,
+                    typography: 'inherit',
+                    textAlign: 'left',
+                    borderRadius: 0.5,
+                  }}
                 >
                   {stage.name}
                 </ButtonBase>

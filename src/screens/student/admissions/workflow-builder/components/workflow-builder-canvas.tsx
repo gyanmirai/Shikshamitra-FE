@@ -22,6 +22,7 @@ type Props = {
   loadingStageTypes: boolean;
   issueCountByStage: Record<string, number>;
   issuesByStage?: Record<string, AdmissionWorkflowValidationIssue[]>;
+  hasBlockingIssues?: boolean;
   onAddStage: () => void;
   onEditStage: (stage: AdmissionWorkflowStage) => void;
   onDuplicateStage: (stage: AdmissionWorkflowStage) => void;
@@ -44,6 +45,7 @@ export function WorkflowBuilderCanvas({
   loadingStageTypes,
   issueCountByStage,
   issuesByStage = {},
+  hasBlockingIssues,
   onAddStage,
   onEditStage,
   onDuplicateStage,
@@ -76,6 +78,7 @@ export function WorkflowBuilderCanvas({
         loadingStageTypes={loadingStageTypes}
         issueCountByStage={issueCountByStage}
         issuesByStage={issuesByStage}
+        hasBlockingIssues={hasBlockingIssues}
         onAdd={onAddStage}
         onEdit={onEditStage}
         onDuplicate={onDuplicateStage}

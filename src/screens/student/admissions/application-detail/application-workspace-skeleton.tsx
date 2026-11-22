@@ -1,3 +1,5 @@
+'use client';
+
 import { Box, Stack, Skeleton } from '@mui/material';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { skeletonReducedMotionSx } from 'src/theme/styles/skeleton';

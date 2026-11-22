@@ -1,8 +1,7 @@
 import type { AdmissionFormStagePolicy } from 'src/redux/student/admissions/admission-form-stage-policy';
 
+import { Switch, FormControlLabel } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { Stack, Switch, Typography } from '@mui/material';
-import { FormSectionCard } from 'src/components/form-section-card';
 
 type Props = {
   policy: AdmissionFormStagePolicy;
@@ -10,47 +9,31 @@ type Props = {
   onChange: (change: Partial<AdmissionFormStagePolicy>) => void;
 };
 
-type SwitchRowProps = {
-  label: string;
-  description: string;
-  checked: boolean;
-  disabled: boolean;
-  onChange: (checked: boolean) => void;
-};
-
-function SwitchRow({ label, description, checked, disabled, onChange }: SwitchRowProps) {
-  return (
-    <CustomTooltip title={disabled ? description : ''} arrow>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
-        <Typography variant="body2" sx={{ minWidth: 0 }}>
-          {label}
-        </Typography>
-        <Switch
-          size="small"
-          slotProps={{ input: { 'aria-label': label, 'aria-description': description } }}
-          checked={checked}
-          disabled={disabled}
-          onChange={(_, value) => onChange(value)}
-        />
-      </Stack>
-    </CustomTooltip>
-  );
-}
+const label = 'Allow Corrections';
+const description = 'Let applicants make corrections after review.';
 
 export function FormStageBehaviorSettings({ policy, disabled, onChange }: Props) {
   return (
-    <Stack spacing={2}>
-      <FormSectionCard title="Advanced Submission Settings" icon="mdi:tune">
-        <Stack spacing={1.5}>
-          <SwitchRow
-            label="Allow Corrections"
-            description="Let applicants make corrections after review."
+    <CustomTooltip title={disabled ? description : ''} arrow>
+      <FormControlLabel
+        label={label}
+        control={
+          <Switch
+            size="small"
+            slotProps={{ input: { 'aria-label': label, 'aria-description': description } }}
             checked={policy.allowCorrectionRequests}
             disabled={disabled}
-            onChange={(checked) => onChange({ allowCorrectionRequests: checked })}
+            onChange={(_, checked) => onChange({ allowCorrectionRequests: checked })}
           />
-        </Stack>
-      </FormSectionCard>
-    </Stack>
+        }
+        sx={{
+          m: 0,
+          width: 1,
+          justifyContent: 'space-between',
+          flexDirection: 'row-reverse',
+          gap: 1,
+        }}
+      />
+    </CustomTooltip>
   );
 }

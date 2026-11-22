@@ -2,6 +2,7 @@
 
 import type { AssessmentScope } from 'src/redux/student/admissions/admission-assessment-types';
 
+import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
@@ -305,6 +306,7 @@ function SessionSetupContent({
                   identityLocked={Boolean(session)}
                   bookedCount={session?.bookedCount ?? 0}
                   separateDate
+                  minScheduleDate={mode === 'create' ? dayjs().startOf('day') : undefined}
                 />
                 {preview?.requiresRoomApproval && (
                   <StudentFeedback

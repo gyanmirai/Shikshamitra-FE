@@ -1,8 +1,9 @@
 import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { AdmissionPipelineItem } from 'src/redux/student/admissions/admission-pipeline-api';
 
+import { Checkbox } from '@mui/material';
 import { Label } from 'src/components/label';
-import { Checkbox, Typography } from '@mui/material';
+import { TableOverflowText } from 'src/components/customizabaleTable/components/TableOverflowText';
 
 import { PIPELINE_ACTIVE_STATUSES } from './admission-pipeline-state';
 import { AdmissionPipelineRowActions } from './admission-pipeline-row-actions';
@@ -37,9 +38,9 @@ export function buildAdmissionPipelineColumns(
       maxWidth: 240,
       isSort: true,
       render: (value) => (
-        <Typography variant="body2" fontWeight={600} noWrap title={String(value)}>
+        <TableOverflowText variant="body2" fontWeight={600}>
           {String(value)}
-        </Typography>
+        </TableOverflowText>
       ),
     },
     {
@@ -56,9 +57,9 @@ export function buildAdmissionPipelineColumns(
       minWidth: 90,
       maxWidth: 160,
       render: (_, row) => (
-        <Typography variant="body2" noWrap>
+        <TableOverflowText variant="body2">
           {row.standardName || 'Class Unavailable'}
-        </Typography>
+        </TableOverflowText>
       ),
     },
     {

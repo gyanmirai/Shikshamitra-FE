@@ -5,12 +5,9 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { IdCardTemplate } from 'src/redux/student/records/student-record-documents-api';
 
 import { useState } from 'react';
-import { LoadingButton } from '@mui/lab';
-import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'src/routes/hooks';
 import { Iconify } from 'src/components/iconify';
-import { RouterLink } from 'src/routes/components';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -18,18 +15,19 @@ import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { Box, Alert, Button, Typography } from '@mui/material';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
-import { useGetStudentRecordsDirectoryQuery } from 'src/redux/student/records/student-records-api';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import {
   useGetRecordIdTemplatesQuery,
   useDeleteRecordIdTemplateMutation,
 } from 'src/redux/student/records/student-record-documents-api';
 
-import StudentICardBuilder from './student-icard-builder';
 import { StudentCardPreview } from './components/student-card-preview';
+import StudentICardTemplateEditor from './student-icard-template-editor';
 
 export default function StudentICardTemplates() {
   const form = useBoolean();
@@ -42,35 +40,15 @@ export default function StudentICardTemplates() {
     blockNavigation: form.value && busy,
     push: router.push,
     title: 'Discard I-Card Changes?',
-    description: 'Your card design and student assignments have not been saved. Keep editing or discard these changes.',
+    description:
+      'Your template changes have not been saved. Keep editing or discard these changes.',
   });
   const [templateToDelete, setTemplateToDelete] = useState<IdCardTemplate | null>(null);
-  const yearId = useSelector((state: RootState) => state.globalState.currentYear?.id);
-  const [openerYearId, setOpenerYearId] = useState<string | undefined>();
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canView = hasGrantedPermission(permissions, 'Students.Records.StudentICard.View');
   const canEdit = hasGrantedPermission(permissions, 'Students.Records.StudentICard.Add');
   const canDelete = hasGrantedPermission(permissions, 'Students.Records.StudentICard.Delete');
   const templates = useGetRecordIdTemplatesQuery(undefined, { skip: !canView });
-  const students = useGetStudentRecordsDirectoryQuery(
-    {
-      population: 'Active',
-      academicYearId: yearId,
-      skipCount: 0,
-      maxResultCount: 1,
-    },
-    { skip: !canView || !yearId }
-  );
-  const tableRows = (templates.currentData ?? []).map((row) => ({
-    ...row,
-    assignedStudents: row.selectionRestricted
-      ? 'Restricted'
-      : !yearId || students.isError || !students.currentData
-        ? '—'
-        : row.selection?.academicYearId && row.selection.academicYearId !== yearId
-          ? 'Other academic year'
-          : `${row.selection?.studentIds?.length ?? 0} / ${students.currentData.totalCount}`,
-  }));
   const [deleteTemplate, deleting] = useDeleteRecordIdTemplateMutation();
   const deleteRestricted = Boolean(
     templateToDelete?.selectionRestricted ||
@@ -79,13 +57,11 @@ export default function StudentICardTemplates() {
 
   const openCreate = () => {
     setDirty(false);
-    setOpenerYearId(yearId);
     setSelected(null);
     form.onTrue();
   };
   const openEdit = (row: IdCardTemplate) => {
     setDirty(false);
-    setOpenerYearId(yearId);
     setSelected(row);
     form.onTrue();
   };
@@ -108,8 +84,16 @@ export default function StudentICardTemplates() {
       await deleteTemplate(templateToDelete.id).unwrap();
       setTemplateToDelete(null);
       shikshaMitraToast.success({ message: 'I-Card template deleted.' });
-    } catch {
-      shikshaMitraToast.error({ message: 'I-Card template could not be deleted.' });
+    } catch (failure: unknown) {
+      const { errorCode } = parseApiProblemDetail(failure);
+      if (errorCode === 'Students:Records:IdTemplateAssigned') {
+        setTemplateToDelete(null);
+        shikshaMitraToast.error({
+          message: 'Reassign or remove this template’s class assignments before deleting it.',
+        });
+      } else {
+        shikshaMitraToast.error({ message: 'I-Card template could not be deleted.' });
+      }
     }
   };
 
@@ -117,16 +101,6 @@ export default function StudentICardTemplates() {
     { id: 'name', label: 'Template', align: 'left', sticky: true, width: 260, minWidth: 220 },
     { id: 'schoolName', label: 'School', align: 'left', width: 220, minWidth: 180 },
     { id: 'orientation', label: 'Orientation', align: 'left', width: 132, minWidth: 120 },
-    {
-      id: 'assignedStudents',
-      label: 'Students assigned / total',
-      filterType: 'string' as const,
-      align: 'left',
-      width: 205,
-      minWidth: 190,
-      isSort: false,
-      isFilter: true,
-    },
     {
       id: 'cardsPerPage',
       label: 'Cards per page',
@@ -137,8 +111,8 @@ export default function StudentICardTemplates() {
     },
     {
       id: 'actions',
-      label: 'Action',
-      align: 'left',
+      label: 'Actions',
+      align: 'right',
       sticky: true,
       width: 108,
       minWidth: 96,
@@ -148,25 +122,50 @@ export default function StudentICardTemplates() {
       render: (_value, data) => {
         const row = data as IdCardTemplate;
         return (
-          <ThreeDotsActions
-            showViewIcon
-            showEditIcon={canEdit}
-            showDeleteIcon={canDelete}
-            disableDeleteIcon={row.selectionRestricted}
-            deleteDisabledReason={
-              row.selectionRestricted
-                ? 'Student assignments are restricted in your current academic scope.'
-                : undefined
-            }
-            showThreeDots={false}
-            viewLabel={`View ${row.name}`}
-            editLabel={`Edit ${row.name}`}
-            deleteLabel={`Delete ${row.name}`}
-            handleViewClick={() => openPreview(row)}
-            handleEditClick={() => openEdit(row)}
-            handleDeleteClick={() => {
-              if (canDelete && !row.selectionRestricted) setTemplateToDelete(row);
-            }}
+          <AdaptiveThreeDotsActions
+            actions={[
+              {
+                id: 'view',
+                label: 'View',
+                ariaLabel: `View ${row.name}`,
+                icon: 'mdi:eye-outline',
+                onClick: () => openPreview(row),
+              },
+              ...(canEdit
+                ? [
+                    {
+                      id: 'edit',
+                      label: 'Edit',
+                      ariaLabel: `Edit ${row.name}`,
+                      icon: 'mdi:pencil-outline',
+                      onClick: () => openEdit(row),
+                    },
+                  ]
+                : []),
+              ...(canDelete
+                ? [
+                    {
+                      id: 'delete',
+                      label: 'Delete',
+                      ariaLabel: `Delete ${row.name}`,
+                      icon: 'mdi:trash-can-outline',
+                      color: 'error.main',
+                      disabled: row.selectionRestricted,
+                      tooltip: row.selectionRestricted
+                        ? 'Student assignments are restricted in your current academic scope.'
+                        : `Delete ${row.name}`,
+                      onClick: () => {
+                        if (!row.selectionRestricted) setTemplateToDelete(row);
+                      },
+                    },
+                  ]
+                : []),
+            ]}
+            directActionLimit={2}
+            collapseOnOverflow={false}
+            placement="right-top"
+            moreLabel={`More actions for ${row.name}`}
+            sx={{ justifyContent: 'flex-end' }}
           />
         );
       },
@@ -174,78 +173,82 @@ export default function StudentICardTemplates() {
   ];
 
   return (
-    <Box sx={{ height: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: { xs: 'auto', sm: 1 },
+        minHeight: 0,
+        minWidth: 0,
+      }}
+    >
       <CustomBreadcrumbs
-        heading="I-Card"
-        description="Manage templates and export student identity cards."
+        heading="I-Card Templates"
+        description="Design reusable student identity cards."
         links={[
           { name: 'Student', href: studentPaths.dashboard },
           { name: 'Student Records', href: studentPaths.records.root },
-          { name: 'I-Card' },
+          { name: 'I-Card Templates' },
         ]}
+        sx={{ flexShrink: 0 }}
         action={
-          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-            {canView && (
-              <Button
-                component={RouterLink}
-                href={studentPaths.records.studentICardIssued}
-                variant="outlined"
-                size="small"
-              >
-                View issued cards
-              </Button>
-            )}
+          canView &&
+          canEdit && (
             <Button
               variant="contained"
               size="small"
-              startIcon={<Add />}
-              disabled={!canEdit}
+              startIcon={<Iconify icon="mdi:plus" />}
               onClick={openCreate}
             >
-              Create I-Card
+              Create I-Card template
             </Button>
-          </Box>
+          )
         }
       />
       {!canView ? (
-        <Alert severity="warning">
-          You do not have permission to view I-Card templates.
-        </Alert>
+        <Alert severity="warning">You do not have permission to view I-Card templates.</Alert>
       ) : (
-        <>
-          {templates.isError && (
-            <Alert
-              severity="error"
-              action={
-                <Button size="small" onClick={() => templates.refetch()}>
-                  Retry
-                </Button>
-              }
-            >
-              I-Card templates could not be loaded.
-            </Alert>
-          )}
-          <CustomizableTable
-            tableId="student-icard-templates"
-            columns={columns}
-            data={tableRows}
-            isLoading={templates.isLoading}
-            isPagination
-            isSearch
-            noDataText="No I-Card templates found."
-            wrapperProps={{
-              sx: { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' },
-            }}
-            tableContainerProps={{ sx: { height: 1 } }}
-          />
-        </>
+        <CustomizableTable
+          tableId="student-icard-templates"
+          columns={columns}
+          data={templates.isError ? [] : (templates.currentData ?? [])}
+          isLoading={templates.isLoading}
+          isRefreshing={
+            templates.isFetching && Boolean(templates.currentData) && !templates.isError
+          }
+          showExport={false}
+          isPagination
+          isSearch
+          noDataText="No I-Card templates found."
+          errorContent={
+            templates.isError ? (
+              <StudentFeedback
+                notificationKey="STUDENT-ICARD-TEMPLATES-LOAD"
+                presentation="toast"
+                severity="error"
+              >
+                I-Card templates could not be loaded.
+              </StudentFeedback>
+            ) : undefined
+          }
+          wrapperProps={{
+            sx: {
+              flex: 1,
+              minHeight: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: { sm: 'hidden' },
+            },
+          }}
+          tableContainerProps={{ sx: { height: 1 }, 'aria-label': 'I-Card templates' }}
+        />
       )}
       <CustomDialog
         fullScreen
         hasForm={false}
         open={form.value}
-        title={selected ? 'Update I-Card' : 'Create I-Card'}
-        titleInfo="Design and export student identity cards."
+        title={selected ? 'Edit I-Card Template' : 'Create I-Card Template'}
+        titleInfo="Configure the card layout, fields and school identity."
         handleClose={requestCloseForm}
         disableClose={busy}
         guardUnsavedChanges={false}
@@ -253,12 +256,12 @@ export default function StudentICardTemplates() {
       >
         <Box sx={{ flex: 1, minHeight: 0, p: 1, bgcolor: 'background.neutral' }}>
           {form.value && (
-            <StudentICardBuilder
+            <StudentICardTemplateEditor
               key={selected?.id ?? 'new'}
               initialTemplate={selected}
-              academicYearId={openerYearId}
-              contextInvalid={yearId !== openerYearId}
+              canEdit={canEdit}
               onClose={requestCloseForm}
+              onSaved={closeForm}
               onBusyChange={setBusy}
               onDirtyChange={setDirty}
             />
@@ -295,7 +298,7 @@ export default function StudentICardTemplates() {
         }
         aria-describedby="student-icard-delete-description"
         action={
-          <LoadingButton
+          <Button
             variant="contained"
             color="error"
             loading={deleting.isLoading}
@@ -304,7 +307,7 @@ export default function StudentICardTemplates() {
             startIcon={<Iconify icon="solar:trash-bin-trash-bold" />}
           >
             {deleting.isLoading ? 'Deleting...' : 'Delete'}
-          </LoadingButton>
+          </Button>
         }
       />
     </Box>

@@ -351,6 +351,14 @@ describe('New inquiry form', () => {
     render(<AdmissionInquiryFormPage />);
     const section = screen.getByRole('heading', { name: 'Admission Interest' }).closest('section');
     expect(section).toContainElement(screen.getByRole('combobox', { name: 'Form Language' }));
+    expect(
+      Array.from(section?.querySelectorAll('[role="combobox"]') ?? [], (field) =>
+        (field.getAttribute('aria-labelledby') ?? '')
+          .split(' ')
+          .map((id) => document.getElementById(id)?.textContent?.replace(/\s*\*$/, ''))
+          .filter(Boolean)[0] ?? field.getAttribute('aria-label')
+      )
+    ).toEqual(['Admission Period', 'Board', 'Medium', 'Class', 'Offering', 'Form Language']);
   });
 
   it('omits the language control for a single-language form', () => {

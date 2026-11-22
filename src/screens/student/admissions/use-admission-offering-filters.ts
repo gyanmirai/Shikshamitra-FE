@@ -5,6 +5,8 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useStudentSetupEmbedding } from 'src/screens/student/setup/embedding';
 import { readAcademicFilterIds } from 'src/utils/student-academic-filter-query';
 
+import { ADMISSION_OFFERING_PAGE_SIZES } from './admission-offering-model';
+
 export type AdmissionOfferingFilters = {
   admissionCycleId: string;
   campusId: string;
@@ -32,6 +34,7 @@ export function useAdmissionOfferingFilters() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const requestedPageSize = Number(searchParams.get('size'));
   const [filters, setFilters] = useState<AdmissionOfferingFilters>(() => ({
     admissionCycleId: searchParams.get('cycle') ?? '',
     campusId: searchParams.get('campus') ?? '',
@@ -46,7 +49,7 @@ export function useAdmissionOfferingFilters() {
     columnFilters: searchParams.get('filters') ?? '',
     sorting: searchParams.get('sort') ?? '',
     page: Math.max(Number(searchParams.get('page') ?? 1) - 1, 0),
-    rowsPerPage: Number(searchParams.get('size') ?? 10),
+    rowsPerPage: ADMISSION_OFFERING_PAGE_SIZES.includes(requestedPageSize) ? requestedPageSize : 10,
   }));
 
   const commit = (next: AdmissionOfferingFilters) => {

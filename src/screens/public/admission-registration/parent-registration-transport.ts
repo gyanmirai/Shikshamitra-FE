@@ -60,6 +60,7 @@ export function createParentRegistrationTransport(token: string) {
   return {
     context: (signal?: AbortSignal): Promise<PublicParentRegistrationContext> =>
       request('', { signal }),
+    logo: (signal: AbortSignal): Promise<Blob> => request('/branding/logo', { signal }, true),
     save: (
       input: ParentRegistrationWriteInput & { values: ParentRegistrationValue[] }
     ): Promise<PublicParentRegistrationContext> =>

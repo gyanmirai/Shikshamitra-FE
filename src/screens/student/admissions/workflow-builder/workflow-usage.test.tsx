@@ -3,8 +3,8 @@ import type {
   AdmissionWorkflowUsage,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
-import { render, screen } from '@testing-library/react';
 import { vi, it, expect, describe, beforeEach } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
 
 import { WorkflowPanelContent } from './components/workflow-panel-content';
 
@@ -122,5 +122,16 @@ describe('workflow usage read-only feedback', () => {
     render(<WorkflowPanelContent {...props} panel={null} usageError />);
     expect(notices.error).not.toHaveBeenCalled();
     expect(notices.warning).not.toHaveBeenCalled();
+  });
+
+  it('offers an inline Retry for listing-owned usage failures and withholds cached results', () => {
+    const onRetryUsage = vi.fn();
+    render(<WorkflowPanelContent {...props} usageError onRetryUsage={onRetryUsage} />);
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Workflow usage could not be loaded.');
+    expect(screen.queryByText('G6-GENERAL')).not.toBeInTheDocument();
+    expect(notices.error).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(onRetryUsage).toHaveBeenCalledOnce();
   });
 });

@@ -1,11 +1,11 @@
 import type { AdmissionCycle } from 'src/redux/student/admissions/admission-cycles-api';
 
 import { addIcon } from '@iconify/react';
-import { vi, it, expect, describe } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { render, screen } from '@testing-library/react';
+import { vi, it, expect, describe, beforeEach } from 'vitest';
 import { defaultSettings } from 'src/components/settings/config-settings';
 
 import { AdmissionOfferingMoreFilters } from './admission-offering-more-filters';
@@ -31,11 +31,12 @@ vi.mock('src/redux/class/classApi', () => ({
 }));
 
 vi.mock('src/redux/student/admissions/admission-campuses-api', () => ({
-  useGetAdmissionCampusQuery: () => ({ data: null }),
+  useGetAdmissionCampusQuery: () => ({ currentData: null }),
+  useLazyGetAdmissionCampusesQuery: () => [campusMocks.search],
 }));
 
-vi.mock('./use-admission-campus-options', () => ({
-  useAdmissionCampusOptions: () => async () => ({ data: [], hasMore: false }),
+const campusMocks = vi.hoisted(() => ({
+  search: vi.fn(),
 }));
 
 ['filter-variant', 'filter-off-outline', 'check', 'close'].forEach((name) => {
@@ -73,6 +74,96 @@ const renderFilters = (filters = values) => {
 };
 
 describe('AdmissionOfferingMoreFilters', () => {
+  const campus = { id: 'campus-1', name: 'North Campus', code: 'NORTH', isActive: true };
+
+  beforeEach(() => {
+    campusMocks.search.mockReset();
+    campusMocks.search.mockImplementation(({ search }) => ({
+      unwrap: async () =>
+        search && !campus.name.toLowerCase().includes(String(search).toLowerCase())
+          ? { items: [], totalCount: 0 }
+          : { items: [campus], totalCount: 1 },
+    }));
+  });
+
+  it('loads active campus choices with All Campuses selected and allows removing just that restriction', async () => {
+    const user = userEvent.setup();
+    const onChange = renderFilters();
+    await user.click(screen.getByRole('button', { name: 'Filters' }));
+    const campusField = screen.getByRole('combobox', { name: 'Campus' });
+    await user.click(screen.getByRole('button', { name: 'Open' }));
+    expect(await screen.findByRole('option', { name: 'North Campus · NORTH' })).toBeVisible();
+    expect(campusField).toHaveAttribute('aria-expanded', 'true');
+    await user.click(screen.getByRole('button', { name: 'Close' }));
+    expect(campusField).toHaveAttribute('aria-expanded', 'false');
+    await user.click(screen.getByRole('button', { name: 'Open' }));
+    await user.click(await screen.findByRole('option', { name: 'North Campus · NORTH' }));
+    await user.click(screen.getByRole('combobox', { name: 'Campus' }));
+    await user.click(await screen.findByRole('option', { name: 'All Campuses' }));
+    await user.click(screen.getByRole('button', { name: 'Apply Filters' }));
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ campusId: '' }));
+    expect(campusMocks.search).not.toHaveBeenCalledWith(
+      expect.objectContaining({ search: 'All Campuses' })
+    );
+    expect(campusMocks.search).toHaveBeenCalledWith(
+      expect.objectContaining({ isActive: true, skipCount: 0 })
+    );
+  });
+
+  it('applies a selected campus by its ID', async () => {
+    const user = userEvent.setup();
+    const onChange = renderFilters();
+    await user.click(screen.getByRole('button', { name: 'Filters' }));
+    await user.click(screen.getByRole('combobox', { name: 'Campus' }));
+    await user.click(await screen.findByRole('option', { name: 'North Campus · NORTH' }));
+    await user.click(screen.getByRole('button', { name: 'Apply Filters' }));
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ campusId: campus.id }));
+  });
+
+  it('disables campus selection after a confirmed empty result', async () => {
+    campusMocks.search.mockReturnValue({ unwrap: async () => ({ items: [], totalCount: 0 }) });
+    const user = userEvent.setup();
+    renderFilters();
+    await user.click(screen.getByRole('button', { name: 'Filters' }));
+    expect(await screen.findByText('No active campuses are configured.')).toBeVisible();
+    expect(screen.getByRole('combobox', { name: 'Campus' })).toBeDisabled();
+  });
+
+  it('can remove a saved campus restriction even when no active campuses remain', async () => {
+    campusMocks.search.mockReturnValue({ unwrap: async () => ({ items: [], totalCount: 0 }) });
+    const user = userEvent.setup();
+    const onChange = renderFilters({ ...values, campusId: campus.id });
+    await user.click(screen.getByRole('button', { name: 'Filters (1)' }));
+    expect(await screen.findByText('No active campuses are configured.')).toBeVisible();
+    expect(screen.getByRole('combobox', { name: 'Campus' })).toBeEnabled();
+    await user.click(screen.getByRole('combobox', { name: 'Campus' }));
+    await user.click(await screen.findByRole('option', { name: 'All Campuses' }));
+    await user.click(screen.getByRole('button', { name: 'Apply Filters' }));
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ campusId: '' }));
+  });
+
+  it('reports a search with no matches without disabling an available catalogue', async () => {
+    const user = userEvent.setup();
+    renderFilters();
+    await user.click(screen.getByRole('button', { name: 'Filters' }));
+    const field = screen.getByRole('combobox', { name: 'Campus' });
+    await user.clear(field);
+    await user.type(field, 'Unknown Campus');
+    expect(await screen.findByText('No matching active campuses')).toBeVisible();
+    expect(field).toBeEnabled();
+    expect(screen.queryByText('No active campuses are configured.')).not.toBeInTheDocument();
+  });
+
+  it('distinguishes a failed catalogue request from a confirmed empty result', async () => {
+    campusMocks.search.mockReturnValue({ unwrap: () => Promise.reject(new Error('403 Forbidden')) });
+    const user = userEvent.setup();
+    renderFilters();
+    await user.click(screen.getByRole('button', { name: 'Filters' }));
+    await user.click(screen.getByRole('combobox', { name: 'Campus' }));
+    expect((await screen.findAllByRole('button', { name: 'Retry results' }))[0]).toBeVisible();
+    expect(screen.queryByText('No active campuses are configured.')).not.toBeInTheDocument();
+  });
+
   it('stages advanced selections until Apply filters is clicked', async () => {
     const user = userEvent.setup();
     const onChange = renderFilters();

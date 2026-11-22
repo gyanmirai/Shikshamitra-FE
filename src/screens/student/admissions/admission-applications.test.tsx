@@ -204,7 +204,7 @@ beforeEach(() => {
 });
 
 describe('Applications decision workspace', () => {
-  it('shows opening feedback and suppresses repeated row and identity-link navigation', async () => {
+  it('keeps the row stable and accepts one navigation and preload while opening', async () => {
     let finish!: () => void;
     state.push.mockImplementationOnce(
       () =>
@@ -214,13 +214,19 @@ describe('Applications decision workspace', () => {
     );
     render(<AdmissionApplicationsScreen />);
     const row = screen.getByRole('row', { name: /Open APP-2026-000001/ });
+    const openLink = screen.getByRole('link', { name: 'Parth Patel' });
+    act(() => {
+      fireEvent.click(row);
+      fireEvent.click(openLink);
+    });
     fireEvent.click(row);
-    fireEvent.click(row);
-    fireEvent.click(screen.getByRole('link', { name: 'Parth Patel' }));
+    fireEvent.click(openLink);
     expect(state.push).toHaveBeenCalledTimes(1);
+    expect(preloadAdmissionApplication).toHaveBeenCalledTimes(1);
     expect(preloadAdmissionApplication).toHaveBeenCalledWith(expect.any(Function), 'application-1');
     expect(row).toHaveAttribute('aria-busy', 'true');
-    expect(screen.getByRole('status', { name: 'Opening Record' })).toBeVisible();
+    expect(screen.queryByRole('status', { name: 'Opening Record' })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'APP-2026-000001' })).toBeVisible();
     await act(async () => finish());
   });
 
@@ -373,6 +379,12 @@ describe('Applications decision workspace', () => {
     expect(state.tableProps?.isRefreshing).toBe(true);
     expect(screen.getByText('Parth Patel')).toBeInTheDocument();
     expect(state.tableProps?.isLoading).toBe(false);
+    expect(state.tableProps?.refreshIndicator).not.toBe('skeleton');
+  });
+  it('uses the table body loader for the first fetch in a scope', () => {
+    state.queryResult = { currentData: undefined, isLoading: true, isFetching: true };
+    render(<AdmissionApplicationsScreen />);
+    expect(state.tableProps).toMatchObject({ data: [], isLoading: true, isRefreshing: false });
   });
   it('shows an error and safe retry without presenting a successful empty result', () => {
     state.queryResult.isError = true;

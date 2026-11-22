@@ -1,3 +1,4 @@
+import { GlobalIcons } from 'src/utils/icons';
 import { it, vi, expect, afterEach } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
@@ -13,7 +14,9 @@ vi.mock('src/hooks/use-responsive', async (importOriginal) => ({
   useResponsive: () => responsive.mobile,
 }));
 
-vi.mock('src/components/iconify', () => ({ Iconify: () => <span /> }));
+vi.mock('src/components/iconify', () => ({
+  Iconify: ({ icon }: { icon: string }) => <span data-icon={icon} />,
+}));
 vi.mock('src/components/customDialog', () => ({
   default: ({ open, title, children }: any) =>
     open ? (
@@ -37,7 +40,7 @@ vi.mock('src/screens/student/admissions/application-detail/application-runtime-f
     onSubmit,
     onSave,
     readOnly,
-    guidedNavigation,
+    saveLabel,
     submitLabel,
   }: any) => (
     <>
@@ -48,10 +51,10 @@ vi.mock('src/screens/student/admissions/application-detail/application-runtime-f
         onChange={(event) => onChange('NAME', event.target.value)}
       />
       <button type="button" onClick={onSave}>
-        Save draft
+        {saveLabel ?? 'Save draft'}
       </button>
       <button type="button" onClick={onSubmit}>
-        {guidedNavigation ? submitLabel : 'Continue to review'}
+        {submitLabel ?? 'Continue'}
       </button>
     </>
   ),
@@ -150,7 +153,7 @@ it('gates the application behind the instructions and acknowledgment without los
   expect(await screen.findByRole('textbox', { name: 'Student name' })).toHaveValue('Riya');
   expect(screen.queryByRole('heading', { name: 'Before You Start' })).not.toBeInTheDocument();
   expect(document.querySelector('.MuiStepper-horizontal')).toBeTruthy();
-  fireEvent.click(screen.getByRole('button', { name: 'Continue to review' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
   expect(await screen.findByRole('heading', { name: 'Birth certificate' })).toBeVisible();
   expect(screen.getByText('Missing', { exact: true })).toBeVisible();
   expect(screen.getByRole('button', { name: 'Upload document' })).toBeVisible();
@@ -177,7 +180,7 @@ it('saves before review and hands in without a staff submit endpoint; hand-in lo
     })
   );
   await user.click(screen.getByRole('button', { name: 'Continue to application form' }));
-  const continueButton = await screen.findByRole('button', { name: 'Continue to review' });
+  const continueButton = await screen.findByRole('button', { name: 'Continue' });
   fireEvent.click(continueButton);
   fireEvent.click(await screen.findByRole('button', { name: 'Send to school' }));
   await screen.findByText('Sent to school');
@@ -190,6 +193,113 @@ it('saves before review and hands in without a staff submit endpoint; hand-in lo
   expect(JSON.parse(fetcher.mock.calls[2][1].body)).toMatchObject({
     snapshotToken: 'saved-snapshot',
   });
+});
+
+it('uses an inline mobile picker, keeps a failed upload retryable, and separates saved file actions', async () => {
+  responsive.mobile = true;
+  const birthCertificate = {
+    stageInstanceId: 'docs',
+    code: 'BIRTH',
+    name: 'Birth certificate',
+    isRequired: true,
+    status: 'missing',
+    allowedExtensions: ['pdf'],
+    maxFileSizeMb: 10,
+    canUpload: true,
+    evidence: [],
+  };
+  const fixture = { ...context, documents: [birthCertificate] };
+  const saved = {
+    ...fixture,
+    documents: [
+      {
+        ...birthCertificate,
+        status: 'pendingReview',
+        evidence: [
+          {
+            id: 'saved-file',
+            fileName: 'birth-certificate.pdf',
+            versionNumber: 1,
+            contentType: 'application/pdf',
+            canDownload: true,
+          },
+        ],
+      },
+    ],
+  };
+  const uploadKeys: FormDataEntryValue[] = [];
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (url: string, init?: RequestInit) => {
+      if (url.endsWith('/branding/logo')) return new Response(null, { status: 204 });
+      if (url.endsWith('/documents/docs/BIRTH')) {
+        const key = (init?.body as FormData).get('idempotencyKey');
+        if (key) uploadKeys.push(key);
+        if (uploadKeys.length === 1) {
+          return new Response(JSON.stringify({ detail: 'Could not upload. Try again.' }), {
+            status: 500,
+          });
+        }
+        return new Response(JSON.stringify(saved));
+      }
+      return new Response(JSON.stringify(fixture));
+    })
+  );
+  render(
+    <ThemeProvider theme={createTheme(defaultSettings)}>
+      <PublicAdmissionRegistrationScreen token="private" />
+    </ThemeProvider>
+  );
+  const user = userEvent.setup();
+  await user.click(await screen.findByRole('checkbox', { name: 'I have read the instructions' }));
+  await user.click(screen.getByRole('button', { name: 'Start Registration' }));
+  expect(screen.getByRole('button', { name: 'Draft' })).toBeVisible();
+  await user.click(screen.getByRole('button', { name: 'Continue' }));
+
+  expect(await screen.findByRole('button', { name: 'Choose a file' })).toBeVisible();
+  expect(screen.getByRole('heading', { name: 'Upload file' })).toBeVisible();
+  expect(screen.getByRole('heading', { name: 'View attachments' })).toBeVisible();
+  expect(screen.getByText('No files attached yet')).toBeVisible();
+  expect(screen.getByText('PDF · Up to 10 MB')).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Upload selected file' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled();
+  const fileInput = document.querySelector<HTMLInputElement>('input[type="file"]')!;
+  fireEvent.change(fileInput, {
+    target: { files: [new File(['txt'], 'invalid.txt', { type: 'text/plain' })] },
+  });
+  expect(await screen.findByText('Choose a JPG, PNG or PDF document.')).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Upload selected file' })).toBeDisabled();
+
+  fireEvent.change(fileInput, {
+    target: { files: [new File(['pdf'], 'birth-certificate.pdf', { type: 'application/pdf' })] },
+  });
+  const upload = screen.getByRole('button', { name: 'Upload selected file' });
+  await waitFor(() => expect(upload).toBeEnabled());
+  expect(uploadKeys).toHaveLength(0);
+  await user.click(upload);
+  expect(await screen.findByText('Could not upload. Try again.')).toBeVisible();
+  await user.click(upload);
+
+  expect(await screen.findByText('1 file attached')).toBeVisible();
+  expect(screen.getByRole('heading', { name: 'View attachments' })).toBeVisible();
+  expect(screen.getByRole('heading', { name: 'Upload file' })).toBeVisible();
+  expect(screen.getByText('Uploaded', { exact: true })).toBeVisible();
+  expect(screen.getByText(/Awaiting school review/)).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Preview birth-certificate.pdf' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: 'Download birth-certificate.pdf' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: 'Continue' })).toBeEnabled();
+  expect(uploadKeys).toEqual([uploadKeys[0], uploadKeys[0]]);
+
+  await user.click(screen.getByRole('button', { name: 'Replace document' }));
+  expect(screen.getByRole('button', { name: 'Choose a file' })).toBeVisible();
+  expect(screen.getByRole('heading', { name: 'View attachments' })).toBeVisible();
+  await user.click(screen.getByRole('button', { name: 'Cancel replacement' }));
+  expect(screen.queryByRole('button', { name: 'Choose a file' })).not.toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Continue' }));
+  expect(await screen.findByRole('heading', { name: 'Review and Send' })).toBeVisible();
+  const editDocuments = screen.getByRole('button', { name: 'Edit Documents' });
+  expect(editDocuments).not.toHaveTextContent('Edit');
+  expect(editDocuments.querySelector('[data-icon]')).toHaveAttribute('data-icon', GlobalIcons.edit);
 });
 
 it('retains local answers on conflict and requires an explicit reload', async () => {
@@ -219,7 +329,7 @@ it('retains local answers on conflict and requires an explicit reload', async ()
   fireEvent.change(await screen.findByRole('textbox', { name: 'Student name' }), {
     target: { value: 'My unsaved answer' },
   });
-  fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Draft' }));
   await waitFor(() =>
     expect(screen.getByRole('textbox', { name: 'Student name' })).toHaveValue('My unsaved answer')
   );
@@ -310,6 +420,33 @@ it('reviews repeated answers in each visible row and honors row conditions', asy
   expect(screen.getByText('School 2')).toBeVisible();
 });
 
+it.each([
+  [23, 'Link expires in less than a day'],
+  [-1, 'Registration link expired'],
+])('handles a link with %i hours left when no institute logo is configured', async (hours, label) => {
+  responsive.mobile = true;
+  const fixture = {
+    ...context,
+    expiresAt: new Date(Date.now() + hours * 3_600_000).toISOString(),
+    documents: [{ code: 'BIRTH' }],
+  };
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (url: string) =>
+      url.endsWith('/branding/logo')
+        ? new Response(null, { status: 204 })
+        : new Response(JSON.stringify(fixture))
+    )
+  );
+  render(<PublicAdmissionRegistrationScreen token="private" />);
+
+  expect(await screen.findByText('Test School')).toBeVisible();
+  expect(screen.queryByRole('img')).not.toBeInTheDocument();
+  expect(screen.getByText(label)).toBeVisible();
+  expect(screen.getAllByRole('listitem')).toHaveLength(4);
+  expect(screen.getByText('Keep your documents ready.')).toBeVisible();
+});
+
 it('uses one mobile progress indicator for a long conditional form and returns to review after editing', async () => {
   responsive.mobile = true;
   const visibleSections = Array.from({ length: 5 }, (_, index) => ({
@@ -330,6 +467,7 @@ it('uses one mobile progress indicator for a long conditional form and returns t
   const fixture = {
     ...context,
     applicantName: 'Riya Shah',
+    expiresAt: new Date(Date.now() + 6.5 * 86_400_000).toISOString(),
     definition: {
       ...context.definition,
       layoutType: 1,
@@ -350,37 +488,63 @@ it('uses one mobile progress indicator for a long conditional form and returns t
       ],
     },
   };
-  const fetcher = vi.fn().mockImplementation(async (_url, init) => {
+  const fetcher = vi.fn().mockImplementation(async (url: string, init) => {
+    if (url.endsWith('/branding/logo')) {
+      return new Response(new Uint8Array([1, 2, 3]), {
+        headers: { 'Content-Type': 'image/png' },
+      });
+    }
     const input = init?.body ? JSON.parse(init.body) : undefined;
     if (input?.values.length) fixture.values = input.values;
     return new Response(JSON.stringify(fixture));
   });
   vi.stubGlobal('fetch', fetcher);
+  vi.stubGlobal(
+    'URL',
+    Object.assign(class extends URL {}, {
+      createObjectURL: vi.fn(() => 'blob:institute-logo'),
+      revokeObjectURL: vi.fn(),
+    })
+  );
   const user = userEvent.setup();
   render(<PublicAdmissionRegistrationScreen token="private" />);
   const start = await screen.findByRole('button', { name: 'Start Registration' });
+  expect(screen.getByRole('heading', { name: 'Registration form' })).toBeVisible();
+  expect(await screen.findByRole('img', { name: 'Test School logo' })).toHaveAttribute(
+    'src',
+    'blob:institute-logo'
+  );
+  expect(screen.getByRole('heading', { name: 'Riya Shah' })).toBeVisible();
+  expect(screen.queryByText('Student', { exact: true })).not.toBeInTheDocument();
+  expect(screen.getByText('Link expires in 7 days')).toBeVisible();
+  expect(screen.getByRole('heading', { name: 'Instructions' })).toBeVisible();
+  expect(screen.getByRole('list').tagName).toBe('OL');
+  expect(screen.queryByText('Keep your documents ready.')).not.toBeInTheDocument();
+  const logoRequest = fetcher.mock.calls.find(([url]) => url.endsWith('/branding/logo'));
+  expect(logoRequest?.[1].headers.get('X-Admission-Registration-Token')).toBe('private');
+  expect(logoRequest?.[1].credentials).toBe('omit');
   expect(start).toBeDisabled();
   expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
   expect(
     screen.queryByText('Register your child at DDVS in a few simple steps.')
   ).not.toBeInTheDocument();
-  await user.hover(screen.getByRole('button', { name: 'Complete Registration information' }));
+  await user.hover(screen.getByRole('button', { name: 'Registration form information' }));
   expect(await screen.findByRole('tooltip')).toHaveTextContent(
     'Register your child in a few simple steps.'
   );
   expect(screen.getByRole('tooltip')).not.toHaveTextContent('DDVS');
-  await user.unhover(screen.getByRole('button', { name: 'Complete Registration information' }));
-  await user.hover(screen.getByRole('button', { name: 'Before You Start information' }));
+  await user.unhover(screen.getByRole('button', { name: 'Registration form information' }));
+  await user.hover(screen.getByRole('button', { name: 'Instructions information' }));
   expect(await screen.findByRole('tooltip')).toHaveTextContent(
     'Keep the following ready to complete the registration smoothly.'
   );
-  await user.unhover(screen.getByRole('button', { name: 'Before You Start information' }));
+  await user.unhover(screen.getByRole('button', { name: 'Instructions information' }));
   await user.click(screen.getByRole('checkbox', { name: 'I have read the instructions' }));
   await user.click(start);
   expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuetext', 'Step 1 of 7');
   expect(screen.queryByRole('list', { name: 'Registration steps' })).not.toBeInTheDocument();
 
-  await user.click(screen.getByRole('button', { name: 'Continue to review' }));
+  await user.click(screen.getByRole('button', { name: 'Continue' }));
   await screen.findByRole('heading', { name: 'Review and Send' });
   expect(screen.getByRole('heading', { name: 'Riya Shah' })).toBeVisible();
   expect(
@@ -401,7 +565,10 @@ it('uses one mobile progress indicator for a long conditional form and returns t
   expect(studentDetailsToggle).toHaveAttribute('aria-expanded', 'true');
   expect(screen.getByText('Student name', { exact: true })).toBeVisible();
   await user.click(screen.getByRole('button', { name: 'Collapse Student Details' }));
-  await user.click(screen.getByRole('button', { name: 'Edit Student Details' }));
+  const editStudentDetails = screen.getByRole('button', { name: 'Edit Student Details' });
+  expect(editStudentDetails).not.toHaveTextContent('Edit');
+  expect(editStudentDetails.querySelector('[data-icon]')).toHaveAttribute('data-icon', GlobalIcons.edit);
+  await user.click(editStudentDetails);
   expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuetext', 'Step 1 of 7');
   fireEvent.change(screen.getByRole('textbox', { name: 'Student name' }), {
     target: { value: 'Riya Shah' },
@@ -412,6 +579,7 @@ it('uses one mobile progress indicator for a long conditional form and returns t
   expect(screen.getByRole('button', { name: 'Send to school' })).toBeEnabled();
   expect(fetcher.mock.calls.map(([url]) => url.split('/').at(-1))).toEqual([
     'admission-registration',
+    'logo',
     'draft',
     'draft',
   ]);

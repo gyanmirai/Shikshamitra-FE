@@ -18,6 +18,8 @@ export interface IColumnFilterAnchor {
 export interface IColumn {
   id: string;
   label: React.ReactNode; // allow rich header content
+  /** Plain label for Columns when the table header is a control. */
+  visibilityLabel?: string;
   filterType?: 'string' | 'number' | 'date' | 'dateTime' | 'enum' | 'formattedNumber';
   /** Restrict operators to predicates supported by the owning server endpoint. */
   filterOperators?: string[];

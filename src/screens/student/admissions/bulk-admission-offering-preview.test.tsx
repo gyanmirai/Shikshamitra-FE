@@ -49,13 +49,47 @@ describe('Bulk offering preview', () => {
     expect(
       screen.getByRole('heading', { name: 'Preview Offerings' }).closest('section')
     ).not.toBeNull();
-    expect(screen.getByText('1 offering ready to create')).toBeVisible();
-    expect(screen.getByText('Class 1')).toBeVisible();
-    expect(screen.getByRole('columnheader', { name: 'Class / Offering Code' })).toBeVisible();
-    expect(screen.getByText('ADM-CLASS-1')).toBeVisible();
-    expect(screen.getByText(/Saved as Inactive/)).toBeVisible();
+    expect(screen.getByText('1 Class')).toBeVisible();
+    expect(screen.getByText('1 Offering')).toBeVisible();
+    expect(screen.getByText('General')).toBeVisible();
+    expect(screen.getByText('Inquiry First')).toBeVisible();
+    expect(screen.getByText(/Initial status:/)).toHaveTextContent(
+      'Initial status: Inactive. Activate from the Offering List when ready.'
+    );
+    const table = screen.getByRole('table', { name: 'Offerings to Create table' });
+    expect(
+      within(table)
+        .getAllByRole('columnheader')
+        .map((header) => header.textContent?.trim())
+    ).toEqual(['Class', 'Offering Code', 'Status']);
+    const row = within(table).getByRole('row', { name: /Class 1/ });
+    expect(within(row).getByRole('rowheader', { name: 'Class 1' })).toBeVisible();
+    expect(within(row).getByRole('cell', { name: 'ADM-CLASS-1' })).toBeVisible();
+    expect(within(row).getByRole('cell', { name: 'Ready to Create' })).toHaveClass(
+      'MuiTableCell-alignCenter'
+    );
+    expect(within(table).getByRole('columnheader', { name: 'Status' })).toHaveClass(
+      'MuiTableCell-alignCenter'
+    );
     expect(screen.queryByText('After Creation')).not.toBeInTheDocument();
     expect(screen.queryByRole('radio')).not.toBeInTheDocument();
+  });
+
+  it('shows the configured track and entry mode alongside the plural offering count', () => {
+    render(
+      <BulkAdmissionOfferingPreview
+        preview={preview([item, { ...item, standardId: 'class-2', code: 'ADM-CLASS-2' }])}
+        canCreate
+        standardNameById={{ 'class-1': 'Class 1', 'class-2': 'Class 2' }}
+        track={1}
+        entryMode={1}
+      />
+    );
+
+    expect(screen.getByText('2 Classes')).toBeVisible();
+    expect(screen.getByText('2 Offerings')).toBeVisible();
+    expect(screen.getByText('RTE')).toBeVisible();
+    expect(screen.getByText('Direct Registration')).toBeVisible();
   });
 
   it('shows each blocked class issue once in its own row instead of a repeated warning paragraph', () => {
@@ -74,10 +108,11 @@ describe('Bulk offering preview', () => {
       false
     );
     expect(screen.getByText('1 of 2 classes need changes')).toBeVisible();
+    expect(screen.queryByText(/Initial status:/)).not.toBeInTheDocument();
     const row = screen.getByText('Class 1').closest('tr')!;
     expect(within(row).getAllByText(duplicate.message)).toHaveLength(1);
     expect(within(row).getByText('Cannot Create')).toBeVisible();
-    expect(screen.getByText(/Nothing Will Be Created Until All Class Issues/)).toBeVisible();
+    expect(screen.getByText('Resolve the class issues before creating offerings.')).toBeVisible();
   });
 
   it('does not block inactive preparation for activation-only issues', () => {

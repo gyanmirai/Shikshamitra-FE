@@ -2,6 +2,7 @@ import type { AdmissionDocumentTypeOption } from 'src/redux/student/admissions/a
 import type { AdmissionDocumentRequirementPolicy } from 'src/redux/student/admissions/admission-document-policy';
 
 import { useRef, useState } from 'react';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -74,12 +75,21 @@ export function DocumentRequirementsList({ requirements, onChange, readOnly, ...
         ))}
       </Stack>
       {!readOnly && (
-        <>
-          <Box ref={standardDocumentAnchor}>
+        <Stack
+          role="group"
+          aria-label="Add documents"
+          direction="row"
+          alignItems="center"
+          flexWrap="wrap"
+          gap={1}
+        >
+          <Box ref={standardDocumentAnchor} sx={{ flex: '1 1 14rem', minWidth: 0 }}>
             <CustomSelect
               size="small"
               fullWidth
+              isSearch
               label="Add a Standard Document"
+              searchPlaceholder="Search standard documents"
               value=""
               options={presets}
               disabled={requirements.length >= 30}
@@ -100,14 +110,14 @@ export function DocumentRequirementsList({ requirements, onChange, readOnly, ...
             aria-label="Add Custom Document"
             size="small"
             variant="outlined"
-            startIcon={<Iconify icon="mdi:plus" />}
-            sx={{ alignSelf: 'flex-start' }}
+            color="inherit"
+            startIcon={<Iconify icon={GlobalIcons.addIcon} />}
             disabled={requirements.length >= 30}
             onClick={addCustom}
           >
             Custom Document
           </Button>
-        </>
+        </Stack>
       )}
       {editing && (
         <DocumentRequirementDialog

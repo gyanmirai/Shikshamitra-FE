@@ -52,7 +52,9 @@ type Props = { workflowId: string };
 export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const returnTo = getStudentSetupWorkflowReturnUrl(searchParams.get('returnTo')) ?? studentPaths.enrollment.settings.workflows;
+  const returnTo =
+    getStudentSetupWorkflowReturnUrl(searchParams.get('returnTo')) ??
+    studentPaths.enrollment.settings.workflows;
   const createSetup = searchParams.get('setup') === '1';
   const standardTemplateDialog = useBoolean();
   const detailsDialog = useBoolean();
@@ -123,10 +125,15 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
   });
   const statusReadOnly = Boolean(workflow && ![0, 3].includes(workflow.status));
   const readOnly = !canEdit || !workflow || statusReadOnly;
+  const lifecycleBusy =
+    commands.updateState.isLoading ||
+    commands.validateState.isLoading ||
+    commands.publishState.isLoading;
   const validatePreviewRef = useRef(commands.validateDraftPreview);
   const cancelPreviewRef = useRef(commands.cancelDraftPreview);
-  const validationContextRef = useRef({ dirty: draft.dirty, readOnly });
-  validationContextRef.current = { dirty: draft.dirty, readOnly };
+  const publishingRef = useRef(commands.publishState.isLoading);
+  publishingRef.current = commands.publishState.isLoading;
+  const canPreview = !readOnly && workflow?.id === workflowId && Boolean(draft.loadedStamp);
   const draftGraphKey = JSON.stringify([
     draft.defaultInquiryFormDefinitionId,
     draft.stages,
@@ -136,14 +143,15 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
   cancelPreviewRef.current = commands.cancelDraftPreview;
 
   useEffect(() => {
-    cancelPreviewRef.current();
-    if (!validationContextRef.current.dirty || validationContextRef.current.readOnly)
-      return undefined;
+    if (!canPreview) return undefined;
     const timer = window.setTimeout(() => {
-      void validatePreviewRef.current();
+      if (!publishingRef.current) void validatePreviewRef.current();
     }, 400);
-    return () => window.clearTimeout(timer);
-  }, [draftGraphKey, readOnly, workflowId]);
+    return () => {
+      window.clearTimeout(timer);
+      cancelPreviewRef.current();
+    };
+  }, [canPreview, draftGraphKey, workflowId]);
 
   if (workflowQuery.isLoading) {
     return <WorkflowBuilderPageState state="loading" />;
@@ -222,10 +230,7 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
             ? () => detailsCloseRef.current?.()
             : createSetup && !readOnly
               ? openDetails
-              : () =>
-                  leaveGuard.requestNavigation(() =>
-                    router.push(returnTo)
-                  )
+              : () => leaveGuard.requestNavigation(() => router.push(returnTo))
         }
       >
         {!detailsDialog.value && (
@@ -249,10 +254,11 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
             }
             stages={draft.stages}
             transitions={draft.transitions}
-            readOnly={readOnly || commands.publishState.isLoading || commands.updateState.isLoading}
+            readOnly={readOnly || lifecycleBusy}
             loadingStageTypes={stageTypesQuery.isLoading}
             issueCountByStage={draft.issueCountByStage}
             issuesByStage={draft.issuesByStage}
+            hasBlockingIssues={draft.validation?.isValid === false}
             onAddStage={() => {
               if (!draft.addStage(stageTypesQuery.data ?? [])) return;
               setPendingRouteSourceId(
@@ -335,7 +341,7 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
         transitions={draft.transitions}
         stageTypes={stageTypesQuery.data ?? []}
         forms={publishedFormsQuery.data?.items ?? []}
-        readOnly={readOnly}
+        readOnly={readOnly || lifecycleBusy}
         insertionSourceId={pendingRouteSourceId}
         insertionSourceLocked={insertionSourceLocked}
         onChangeInsertionSource={setPendingRouteSourceId}
@@ -367,6 +373,7 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
         workflow={workflow}
         stages={draft.stages}
         transitions={draft.transitions}
+        stageTypes={stageTypesQuery.data}
         versions={versionsQuery.data}
         versionsLoading={versionsQuery.isFetching}
         versionsError={versionsQuery.isError}

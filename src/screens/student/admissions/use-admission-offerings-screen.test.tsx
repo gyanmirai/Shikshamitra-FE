@@ -133,6 +133,22 @@ describe('Offering cycle context', () => {
     );
   });
 
+  it('only restricts the offerings query while a campus is selected', () => {
+    mocks.cycleId = 'open-cycle-1';
+    mocks.queryFilters = { campusId: 'campus-1' };
+    const hook = renderHook(() => useAdmissionOfferingsScreen());
+    expect(mocks.getOfferings).toHaveBeenLastCalledWith(
+      expect.objectContaining({ campusId: 'campus-1' }),
+      { skip: false }
+    );
+    mocks.queryFilters = { campusId: '' };
+    hook.rerender();
+    expect(mocks.getOfferings).toHaveBeenLastCalledWith(
+      expect.objectContaining({ campusId: undefined }),
+      { skip: false }
+    );
+  });
+
   it('does not show another cycle while the explicit cycle is loading or unavailable', () => {
     mocks.cycleId = 'older-published';
     mocks.getCycle.mockReturnValue({ isFetching: true });

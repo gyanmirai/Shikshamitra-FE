@@ -10,23 +10,29 @@ import CustomDialog from '.';
 describe('custom dialog close guard', () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  it('keeps the dialog title accessible when header guidance is available', async () => {
-    renderWithProviders(
-      <CustomDialog
-        open
-        title="Review Readiness Rule"
-        titleInfo="This preview shows your unsaved rule."
-        handleClose={vi.fn()}
-      >
-        <div>Rule summary</div>
-      </CustomDialog>
-    );
+  it.each([undefined, 'right'] as const)(
+    'keeps the dialog title accessible with %s header help placement',
+    async (placement) => {
+      renderWithProviders(
+        <CustomDialog
+          open
+          title="Review Readiness Rule"
+          titleInfo="This preview shows your unsaved rule."
+          titleInfoPlacement={placement}
+          handleClose={vi.fn()}
+        >
+          <div>Rule summary</div>
+        </CustomDialog>
+      );
 
-    expect(screen.getByRole('dialog', { name: 'Review Readiness Rule' })).toBeInTheDocument();
-    const info = screen.getByRole('button', { name: 'Review Readiness Rule information' });
-    fireEvent.mouseOver(info);
-    expect(await screen.findByRole('tooltip')).toHaveTextContent('This preview shows your unsaved rule.');
-  });
+      expect(screen.getByRole('dialog', { name: 'Review Readiness Rule' })).toBeInTheDocument();
+      const info = screen.getByRole('button', { name: 'Review Readiness Rule information' });
+      fireEvent.mouseOver(info);
+      expect(await screen.findByRole('tooltip')).toHaveTextContent(
+        'This preview shows your unsaved rule.'
+      );
+    }
+  );
 
   it('uses local dirty state for header close and keeps edits when discard is declined', () => {
     const handleClose = vi.fn();

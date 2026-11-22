@@ -77,7 +77,7 @@ it('uses sentence-case clone fields and submits the existing generated-code clon
     )
   );
 });
-it('retains the required window reason and native form submission contract', async () => {
+it('revises the closing date while retaining the original opening date and required reason', async () => {
   const user = userEvent.setup();
   const onConfirm = vi.fn().mockResolvedValue(undefined);
   renderDocumentUi(
@@ -92,13 +92,18 @@ it('retains the required window reason and native form submission contract', asy
   );
   expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
   const reason = screen.getByRole('textbox', { name: 'Reason for revising the window' });
+  expect(reason.closest('form')).toHaveAttribute('novalidate');
+  await user.click(
+    screen.getByRole('group', { name: 'Applications close' }).querySelector('button')!
+  );
+  await user.click(screen.getByRole('gridcell', { name: /^30$/ }));
   await user.type(reason, 'Extend the intake window');
   fireEvent.submit(reason.closest('form')!);
   await waitFor(() =>
     expect(onConfirm).toHaveBeenCalledWith({
       concurrencyStamp: 'saved-stamp',
       startDate: '2026-04-01',
-      endDate: '2027-03-31',
+      endDate: '2027-03-30',
       reason: 'Extend the intake window',
     })
   );

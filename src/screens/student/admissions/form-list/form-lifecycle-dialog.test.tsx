@@ -4,7 +4,7 @@ import type {
 } from 'src/redux/student/admissions/admission-forms-api';
 
 import { it, vi, expect, describe } from 'vitest';
-import { render, screen, cleanup, fireEvent } from '@testing-library/react';
+import { render, screen, within, cleanup, fireEvent } from '@testing-library/react';
 
 import { FormLifecycleDialog } from './form-lifecycle-dialog';
 
@@ -44,19 +44,64 @@ const props = {
 };
 
 describe('form lifecycle decision', () => {
-  it('shows linked dependencies and preserved historical data before archiving', () => {
-    render(<FormLifecycleDialog {...props} />);
-    expect(screen.getByRole('dialog', { name: 'Archive Inquiry Form?' })).toBeInTheDocument();
-    expect(screen.getByText(/Class 1 English/)).toBeInTheDocument();
-    expect(screen.getByText(/Standard admission/)).toBeInTheDocument();
-    expect(screen.getByText(/10 Existing Inquiries/)).toBeInTheDocument();
-    expect(screen.getByText(/saved answers and history/i)).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Archive' }));
-    expect(props.onConfirm).toHaveBeenCalledOnce();
+  it.each([
+    {
+      type: 'Inquiry',
+      purpose: 0,
+      name: 'Inquiry 2026',
+      offeringCount: 2,
+      workflowCount: 1,
+      counts: '2 offerings and 1 workflow',
+    },
+    {
+      type: 'Registration',
+      purpose: 1,
+      name: 'QA Advanced Print QAP66436004',
+      offeringCount: 1,
+      workflowCount: 4,
+      counts: '1 offering and 4 workflows',
+    },
+  ] as const)(
+    'shows the compact $type archive confirmation',
+    ({ type, purpose, name, offeringCount, workflowCount, counts }) => {
+      const onConfirm = vi.fn();
+      render(
+        <FormLifecycleDialog
+          {...props}
+          pending={{ action: 'archive', form: { ...form, name, purpose } }}
+          impact={{ ...impact, formName: name, purpose, offeringCount, workflowCount }}
+          onConfirm={onConfirm}
+        />
+      );
+      const dialog = screen.getByRole('dialog', { name: `Archive ${type} Form?` });
+      const message = within(dialog).getByText(name).closest('p');
+      expect(message).toHaveTextContent(
+        `Are you sure you want to archive ${name}? This form is linked to ${counts}.`
+      );
+      expect(dialog).not.toHaveTextContent(
+        /blocked|Linked Items|Public Inquiry Links|Class 1 English/
+      );
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Archive' }));
+      expect(onConfirm).toHaveBeenCalledOnce();
+      cleanup();
+    }
+  );
+  it('shows zero counts without implying that restricted links are visible', () => {
+    render(
+      <FormLifecycleDialog
+        {...props}
+        impact={{ ...impact, offeringCount: 0, workflowCount: 0, hasRestrictedDependencies: true }}
+      />
+    );
+    expect(screen.getByText(form.name).closest('p')).toHaveTextContent(
+      'This form is linked to 0 offerings and 0 workflows in your permitted scope.'
+    );
     cleanup();
   });
   it('does not offer archive before dependency verification finishes', () => {
     render(<FormLifecycleDialog {...props} impact={undefined} loading canConfirm={false} />);
+    expect(screen.getByRole('status')).toHaveTextContent('Checking Form Usage');
+    expect(screen.getByText(form.name).closest('p')).not.toHaveTextContent('linked to');
     expect(screen.getByRole('button', { name: 'Archive' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled();
     cleanup();
@@ -75,15 +120,21 @@ describe('form lifecycle decision', () => {
     expect(screen.getByText(/same form version/i)).toBeInTheDocument();
     cleanup();
   });
-  it('explains workflow consequences for a registration form', () => {
+  it('offers reload after a stale archive check and keeps archive disabled', () => {
+    const onReload = vi.fn();
     render(
       <FormLifecycleDialog
         {...props}
-        pending={{ action: 'archive', form: { ...form, purpose: 1 } }}
+        canConfirm={false}
+        error="This form has changed."
+        requiresReload
+        onReload={onReload}
       />
     );
-    expect(screen.getByRole('dialog', { name: 'Archive Registration Form?' })).toBeInTheDocument();
-    expect(screen.getByText(/registration submissions/i)).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent('This form has changed.');
+    expect(screen.getByRole('button', { name: 'Archive' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Reload Latest' }));
+    expect(onReload).toHaveBeenCalledOnce();
     cleanup();
   });
 });

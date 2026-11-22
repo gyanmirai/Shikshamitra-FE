@@ -39,6 +39,8 @@ import { AdmissionInquiryDuplicateMatches } from './admission-inquiry-duplicate-
 import { useAdmissionAddressSync, isAdmissionCopiedAddressField } from './admission-address-sync';
 import { localizeAdmissionSection, getAdmissionLanguageLabel } from './form-dialog/form-languages';
 import {
+  inquirySectionTooltip,
+  admissionInterestTooltip,
   isAdmissionInquiryBirthDateField,
   getAdmissionInquiryPreferredClassError,
 } from './admission-inquiry-model';
@@ -138,7 +140,7 @@ export default function AdmissionInquiryFormPage() {
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: 1, minHeight: 0 }}>
       <CustomBreadcrumbs
         heading="Inquiry"
-        description="Choose an Offering and Capture the Family's Details to Create an Inquiry."
+        description="Choose an offering and enter the family’s details to create an inquiry."
         isBack
         onBack={handleCancel}
         links={[
@@ -215,6 +217,8 @@ export default function AdmissionInquiryFormPage() {
               )}
               <InquiryFormSection
                 title="Admission Interest"
+                columns={3}
+                descriptionTooltip={admissionInterestTooltip}
                 icon={GlobalIcons.admissionInterest}
                 expanded={interestExpanded}
                 onExpandedChange={setInterestExpanded}
@@ -400,7 +404,7 @@ export default function AdmissionInquiryFormPage() {
                       }))}
                       onChange={(value) => setLanguage(String(value))}
                       disabled={controller.busy || controller.formLoading}
-                      formControlProps={{ sx: { width: 1, maxWidth: { sm: 220 } } }}
+                      fullWidth
                     />
                   )}
                 {hierarchySelected &&
@@ -478,7 +482,7 @@ export default function AdmissionInquiryFormPage() {
                     key={section.id}
                     title={section.name}
                     icon={GlobalIcons.admissionStudent}
-                    descriptionTooltip={`Enter The ${section.name.toLocaleLowerCase()} Requested by This Inquiry Form.`}
+                    descriptionTooltip={inquirySectionTooltip(section.name)}
                   >
                     <AdmissionSectionFields
                       columns={2}
@@ -623,6 +627,8 @@ function InquiryFormSection({
   title,
   icon = GlobalIcons.admissionDetails,
   description,
+  descriptionTooltip = description,
+  columns = 2,
   expanded,
   onExpandedChange,
   loadingLabel,
@@ -631,6 +637,8 @@ function InquiryFormSection({
   title: string;
   icon?: string;
   description?: string;
+  descriptionTooltip?: string;
+  columns?: 2 | 3;
   expanded?: boolean;
   onExpandedChange?: (expanded: boolean) => void;
   loadingLabel?: string;
@@ -640,7 +648,7 @@ function InquiryFormSection({
     <FormSectionCard
       title={title}
       icon={icon}
-      descriptionTooltip={description || `Enter the ${title.toLocaleLowerCase()} for this inquiry.`}
+      descriptionTooltip={descriptionTooltip}
       collapsible={!loadingLabel && Boolean(onExpandedChange)}
       expanded={loadingLabel ? true : expanded}
       onExpandedChange={loadingLabel ? undefined : onExpandedChange}
@@ -656,13 +664,17 @@ function InquiryFormSection({
         aria-busy={loadingLabel ? true : undefined}
         sx={{
           display: 'grid',
-          gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))' },
+          gridTemplateColumns: {
+            xs: 'minmax(0, 1fr)',
+            sm: 'repeat(2, minmax(0, 1fr))',
+            md: `repeat(${columns}, minmax(0, 1fr))`,
+          },
           gap: 2,
           alignItems: 'start',
         }}
       >
         {loadingLabel
-          ? Array.from({ length: 4 }, (_, index) => (
+          ? Array.from({ length: columns * 2 }, (_, index) => (
               <Skeleton
                 key={index}
                 sx={{ ...skeletonReducedMotionSx, mb: 1.5 }}

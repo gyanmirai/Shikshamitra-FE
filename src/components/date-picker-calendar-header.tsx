@@ -17,7 +17,9 @@ export default function DatePickerCalendarHeader({
   disableFuture,
 }: PickersCalendarHeaderProps) {
   const previous = currentMonth.subtract(1, 'month');
-  const next = currentMonth.add(1, 'month');
+  const upcomingMonth = currentMonth.add(1, 'month');
+  const next =
+    minDate && upcomingMonth.isBefore(minDate, 'month') ? minDate.startOf('month') : upcomingMonth;
   const today = dayjs();
   const previousDisabled =
     disabled ||

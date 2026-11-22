@@ -24,41 +24,31 @@ export function ParentRegistrationInstructions({
     ];
     return (
       <FormSectionCard
-        title="Before You Start"
+        title="Instructions"
         titleTypographyProps={{ variant: 'h5' }}
         descriptionTooltip="Keep the following ready to complete the registration smoothly."
         sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          flex: 1,
           border: 0,
-          borderTop: 1,
-          borderColor: 'divider',
           borderRadius: 0,
-          p: 0,
-          pt: 2,
+          p: { xs: 0 },
           boxShadow: 'none',
           overflow: 'visible',
         }}
-        contentSx={{ flex: 1 }}
+        contentSpacing={1.5}
       >
-        <Stack component="ul" spacing={1.5} sx={{ listStyle: 'none', m: 0, p: 0 }}>
+        <Stack
+          component="ol"
+          spacing={1.25}
+          sx={{
+            m: 0,
+            pl: 3,
+            '& li::marker': { color: 'text.secondary', fontWeight: 'fontWeightMedium' },
+          }}
+        >
           {instructions.map((instruction) => (
-            <Stack
-              key={instruction}
-              component="li"
-              direction="row"
-              spacing={1}
-              alignItems="flex-start"
-            >
-              <Iconify
-                icon="mdi:check-circle"
-                width={18}
-                sx={{ color: 'success.main', flexShrink: 0, mt: 0.25 }}
-                aria-hidden
-              />
-              <Typography variant="body2">{instruction}</Typography>
-            </Stack>
+            <Typography key={instruction} component="li" variant="body2" sx={{ pl: 0.5 }}>
+              {instruction}
+            </Typography>
           ))}
         </Stack>
         <FormControlLabel
@@ -68,7 +58,6 @@ export function ParentRegistrationInstructions({
           }
           label="I have read the instructions"
         />
-        <Box sx={{ flex: 1 }} />
         <Stack
           direction="row"
           justifyContent="flex-end"

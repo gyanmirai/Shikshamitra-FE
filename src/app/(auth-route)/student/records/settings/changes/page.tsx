@@ -1,3 +1,5 @@
-import RecordsSettings from 'src/screens/student/records/records-settings';
+import RecordsPolicySettingsRoute from 'src/screens/student/records/records-policy-settings-route';
 
-export default function Page() { return <RecordsSettings task='changes' />; }
+export default function Page() {
+  return <RecordsPolicySettingsRoute task="changes" />;
+}

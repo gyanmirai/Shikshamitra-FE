@@ -1,17 +1,20 @@
-import type { ReactNode, ComponentProps } from 'react';
+import type { DateTimePickerProps } from '@mui/x-date-pickers';
 import type CustomizableTable from 'src/components/customizabaleTable';
+import type { ReactNode, ComponentProps, FormEventHandler } from 'react';
 import type {
   AdmissionIntakeSetup,
   AdmissionPublicInquiryLink,
   AdmissionPublicInquiryLinkOption,
 } from 'src/redux/student/admissions/admission-intake-profiles-api';
 
+import dayjs from 'dayjs';
+import { GlobalIcons } from 'src/utils/icons';
 import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { vi, it, expect, describe, beforeEach } from 'vitest';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { render, screen, within, waitFor, fireEvent } from '@testing-library/react';
+import { act, render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 import { matchesTableRowFilters } from 'src/components/customizabaleTable/hooks/table-row-filter';
 
 import { AdmissionPublicInquiryLinks } from './admission-public-inquiry-links';
@@ -25,6 +28,8 @@ const hooks = vi.hoisted(() => ({
     refetch: vi.fn(),
   },
   create: vi.fn(),
+  rename: vi.fn(),
+  expiryPickerProps: vi.fn(),
   infoToast: vi.fn(),
   successToast: vi.fn(),
   errorToast: vi.fn(),
@@ -46,9 +51,7 @@ const hooks = vi.hoisted(() => ({
   linksFetching: false,
   linksRefetch: vi.fn(),
   revoke: vi.fn(),
-  setForm: vi.fn(),
   revokeLoading: false,
-  formLoading: false,
   forms: {
     data: { items: [{ id: 'form-1', name: 'Inquiry form', version: 1, status: 1, purpose: 0 }] },
     isLoading: false,
@@ -76,13 +79,10 @@ vi.mock('src/redux/student/admissions/admission-intake-profiles-api', () => ({
     return hooks.options;
   },
   useCreateAdmissionPublicInquiryLinkMutation: () => [hooks.create, { isLoading: false }],
+  useRenameAdmissionPublicInquiryLinkMutation: () => [hooks.rename, { isLoading: false }],
   useRevokeAdmissionPublicInquiryLinkMutation: () => [
     hooks.revoke,
     { isLoading: hooks.revokeLoading },
-  ],
-  useSetAdmissionPublicInquiryLinkFormMutation: () => [
-    hooks.setForm,
-    { isLoading: hooks.formLoading },
   ],
 }));
 vi.mock('src/redux/student/admissions/admission-cycles-api', () => ({
@@ -145,37 +145,28 @@ vi.mock('src/components/customDialog', () => ({
     title,
     children,
     handleClose,
+    formProps,
   }: {
     open: boolean;
     title: string;
     children: ReactNode;
     handleClose: () => void;
+    formProps?: { onSubmit?: FormEventHandler<HTMLFormElement>; noValidate?: boolean };
   }) =>
     open ? (
       <div role="dialog" aria-label={title}>
         <button type="button" aria-label="Close dialog" onClick={handleClose} />
-        {children}
+        {formProps ? <form {...formProps}>{children}</form> : children}
       </div>
     ) : null,
   DialogScrollContent: ({ children }: { children: React.ReactNode }) => children,
 }));
-vi.mock('src/screens/hr/employee/employee-form-fields/InformationFields', () => ({
-  SectionCard: ({
-    title,
-    children,
-    headerContent,
-  }: {
-    title: string;
-    children: React.ReactNode;
-    headerContent?: React.ReactNode;
-  }) => (
-    <section aria-label={title}>
-      {headerContent}
-      {children}
-    </section>
-  ),
+vi.mock('@mui/x-date-pickers', () => ({
+  DateTimePicker: (props: DateTimePickerProps) => {
+    hooks.expiryPickerProps(props);
+    return null;
+  },
 }));
-vi.mock('@mui/x-date-pickers', () => ({ DateTimePicker: () => null }));
 vi.mock('src/components/toast', () => ({
   shikshaMitraToast: {
     warning: vi.fn(),
@@ -237,7 +228,6 @@ describe('create public inquiry link', () => {
     hooks.options.isLoading = false;
     hooks.options.isFetching = false;
     hooks.options.isError = false;
-    hooks.formLoading = false;
     hooks.forms.data.items = [
       { id: 'form-1', name: 'Inquiry form', version: 1, status: 1, purpose: 0 },
     ];
@@ -273,6 +263,79 @@ describe('create public inquiry link', () => {
     );
   });
 
+  it('restricts the expiry date-time picker to future minutes', () => {
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(dayjs('2026-12-31T23:58:50').toDate());
+      const { unmount } = renderDrawer();
+      const props = () => hooks.expiryPickerProps.mock.lastCall?.[0];
+      expect(props().disablePast).toBe(true);
+      expect(props().views).toContain('month');
+      act(() => props().onOpen());
+      expect(props().minDateTime.format('YYYY-MM-DD HH:mm:ss')).toBe('2026-12-31 23:59:00');
+      act(() => {
+        vi.advanceTimersByTime(10_000);
+      });
+      expect(props().minDateTime.format('YYYY-MM-DD HH:mm:ss')).toBe('2027-01-01 00:00:00');
+      unmount();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('marks the invalid required selectors and clears the form error after a valid selection', async () => {
+    const user = userEvent.setup();
+    renderDrawer();
+    await user.type(screen.getByRole('textbox', { name: 'Link Name' }), 'School fair');
+    await user.click(screen.getByRole('button', { name: 'Create Link' }));
+    const period = screen.getByRole('combobox', { name: 'Admission Period' });
+    const form = screen.getByRole('combobox', { name: 'Published Inquiry Form' });
+    expect(await screen.findByText('Choose a published admission period.')).toBeVisible();
+    expect(await screen.findByText('Choose a published inquiry form.')).toBeVisible();
+    expect(period).toHaveAttribute('aria-invalid', 'true');
+    expect(form).toHaveAttribute('aria-invalid', 'true');
+    expect(form.closest('.MuiOutlinedInput-root')).toHaveClass('Mui-disabled', 'Mui-error');
+    await user.click(period);
+    await user.click(screen.getByRole('option', { name: 'Regular admission' }));
+    await user.click(form);
+    await user.click(screen.getByRole('option', { name: 'Inquiry form · v1' }));
+    expect(form).not.toHaveAttribute('aria-invalid', 'true');
+    expect(screen.queryByText('Choose a published inquiry form.')).not.toBeInTheDocument();
+  });
+
+  it('shows a duplicate link name error inline and retains the selected period and form', async () => {
+    hooks.create.mockReturnValue({
+      unwrap: () =>
+        Promise.reject(
+          Object.assign(new Error('Duplicate inquiry link name'), {
+            status: 409,
+            data: { errorCode: 'Admissions.PublicInquiryLinkNameExists' },
+          })
+        ),
+    });
+    renderDrawer();
+    const user = userEvent.setup();
+    await fillLink(user);
+    await user.click(screen.getByRole('button', { name: 'Create Link' }));
+    const name = screen.getByRole('textbox', { name: 'Link Name' });
+    expect(
+      await screen.findByText(
+        'An inquiry link with this name already exists. Enter a different name.'
+      )
+    ).toBeVisible();
+    expect(name).toHaveAttribute('aria-invalid', 'true');
+    expect(name).toHaveValue('School fair');
+    expect(screen.getByRole('combobox', { name: 'Admission Period' })).toHaveTextContent(
+      'Regular admission'
+    );
+    expect(screen.getByRole('combobox', { name: 'Published Inquiry Form' })).toHaveTextContent(
+      'Inquiry form'
+    );
+    expect(hooks.close).not.toHaveBeenCalled();
+    await user.type(name, ' 2027');
+    expect(name).not.toHaveAttribute('aria-invalid', 'true');
+  });
+
   it('clears the selected form when the admission period changes while keeping link details', async () => {
     renderDrawer();
     const user = userEvent.setup();
@@ -299,6 +362,9 @@ describe('create public inquiry link', () => {
     form.focus();
     await user.keyboard('{ArrowDown}');
     expect(hooks.infoToast).toHaveBeenCalledOnce();
+    expect(hooks.infoToast).toHaveBeenCalledWith({
+      message: expect.stringMatching(/Create an Admission Offering first.*activate the offering/),
+    });
     expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Refresh Offerings' }));
     expect(hooks.options.refetch).toHaveBeenCalledOnce();
@@ -707,7 +773,6 @@ describe('public inquiry link details and actions', () => {
     hooks.links = [activeLink];
     hooks.linksError = false;
     hooks.linksFetching = false;
-    hooks.formLoading = false;
     hooks.revokeLoading = false;
     hooks.forms.data.items = [
       { id: 'form-1', name: 'Inquiry form', version: 1, status: 1, purpose: 0 },
@@ -801,14 +866,73 @@ describe('public inquiry link details and actions', () => {
     expect(within(dialog).getByText('Inquiry form', { selector: 'dd' })).toBeVisible();
     expect(within(dialog).getByText('Active')).toBeVisible();
     expect(
-      within(dialog).getByRole('button', { name: 'Close' }).querySelector('[data-icon="mdi:close"]')
+      within(dialog)
+        .getByRole('button', { name: 'Close' })
+        .querySelector(`[data-icon="${GlobalIcons.cancel}"]`)
     ).not.toBeNull();
     const info = within(dialog).getByRole('button', { name: 'Link Details information' });
     expect(info).toHaveClass('MuiIconButton-colorInfo');
     await user.hover(info);
-    expect(await screen.findByRole('tooltip')).toHaveTextContent('Review This Link’s Source');
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('Review this link’s source');
     await user.click(within(dialog).getByRole('button', { name: 'Close' }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('uses only numeric page sizes', () => {
+    renderList();
+    expect(hooks.tableProps.mock.lastCall?.[0].rowsPerPageOptions).toEqual([10, 25, 50, 100]);
+  });
+
+  it('supports renaming revoked links and keeps a conflicting name in the editor for correction', async () => {
+    hooks.links = [{ ...activeLink, isActive: false }];
+    hooks.rename
+      .mockReturnValueOnce({
+        unwrap: () =>
+          Promise.reject(
+            Object.assign(new Error('Duplicate inquiry link name'), {
+              status: 409,
+              data: { error: { code: 'Admissions.PublicInquiryLinkNameExists' } },
+            })
+          ),
+      })
+      .mockReturnValueOnce({
+        unwrap: () => Promise.resolve({ ...activeLink, isActive: false, name: 'School Archive' }),
+      });
+    renderList();
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: `More Actions For ${activeLink.name}` }));
+    expect(screen.queryByRole('menuitem', { name: 'Set Inquiry Form' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: 'Revoke Link' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('menuitem', { name: 'Rename Link' }));
+    const dialog = within(screen.getByRole('dialog', { name: 'Rename Inquiry Link' }));
+    const name = dialog.getByRole('textbox', { name: 'Link Name' });
+    expect(name).toHaveValue(activeLink.name);
+    await user.clear(name);
+    await user.type(name, '  Existing Name  ');
+    await user.click(dialog.getByRole('button', { name: 'Submit' }));
+    expect(
+      await dialog.findByText(
+        'An inquiry link with this name already exists. Enter a different name.'
+      )
+    ).toBeVisible();
+    expect(name).toHaveValue('  Existing Name  ');
+    expect(hooks.rename).toHaveBeenNthCalledWith(1, {
+      id: activeLink.id,
+      concurrencyStamp: activeLink.concurrencyStamp,
+      name: 'Existing Name',
+    });
+    await user.clear(name);
+    await user.type(name, 'School Archive');
+    expect(name).not.toHaveAttribute('aria-invalid', 'true');
+    await user.click(dialog.getByRole('button', { name: 'Submit' }));
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: 'Rename Inquiry Link' })).not.toBeInTheDocument()
+    );
+    expect(hooks.rename).toHaveBeenNthCalledWith(2, {
+      id: activeLink.id,
+      concurrencyStamp: activeLink.concurrencyStamp,
+      name: 'School Archive',
+    });
   });
 
   it.each(['Enter', ' '])('retains keyboard details access using %s', (key) => {
@@ -817,115 +941,53 @@ describe('public inquiry link details and actions', () => {
     expect(screen.getByRole('dialog', { name: `Inquiry Link: ${activeLink.name}` })).toBeVisible();
   });
 
-  it('opens the existing form editor without triggering row details or submitting', async () => {
+  it('shows Copy and More Actions with only Rename Link and Revoke Link in the menu', async () => {
     const user = userEvent.setup();
     renderList();
-    await user.click(
-      screen.getByRole('button', { name: `Set Inquiry Form For ${activeLink.name}` })
-    );
-    expect(screen.getByRole('dialog', { name: 'Set Inquiry Form' })).toBeVisible();
-    expect(screen.getByRole('button', { name: 'About Set Inquiry Form' })).toBeVisible();
-    expect(screen.getByRole('heading', { name: 'Inquiry Form' })).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Inquiry Form information' })).toBeVisible();
+    const row = screen.getByRole('row', { name: /School website/ });
+    expect(within(row).getAllByRole('button')).toHaveLength(2);
     expect(
-      screen.queryByRole('dialog', { name: `Inquiry Link: ${activeLink.name}` })
-    ).not.toBeInTheDocument();
-    expect(hooks.setForm).not.toHaveBeenCalled();
+      within(row).getByRole('button', { name: `Copy Inquiry Link For ${activeLink.name}` })
+    ).toBeVisible();
+    await user.click(
+      within(row).getByRole('button', { name: `More Actions For ${activeLink.name}` })
+    );
+    const menu = within(screen.getByRole('menu', { name: `More Actions For ${activeLink.name}` }));
+    expect(menu.getAllByRole('menuitem')).toHaveLength(2);
+    expect(menu.getByRole('menuitem', { name: 'Rename Link' })).toBeVisible();
+    expect(menu.getByRole('menuitem', { name: 'Revoke Link' })).toBeVisible();
+    expect(menu.queryByRole('menuitem', { name: 'Set Inquiry Form' })).not.toBeInTheDocument();
     expect(hooks.revoke).not.toHaveBeenCalled();
   });
 
-  it('preserves action loading guards', async () => {
-    hooks.formLoading = true;
+  it('disables Revoke Link while revocation is in progress', async () => {
     hooks.revokeLoading = true;
     renderList();
-    expect(screen.getByTestId('table-action-form')).toBeDisabled();
     await userEvent.click(
       screen.getByRole('button', { name: `More Actions For ${activeLink.name}` })
     );
-    expect(screen.getByTestId('menu-action-revoke')).toHaveAttribute('aria-disabled', 'true');
-  });
-
-  it('restricts replacement forms to compatible offerings in the existing link period', async () => {
-    hooks.forms.data.items.push(
-      { id: 'form-2', name: 'Second inquiry', version: 2, status: 1, purpose: 0 },
-      { id: 'form-3', name: 'Unlinked inquiry', version: 1, status: 1, purpose: 0 }
-    );
-    hooks.options.currentData!.push({
-      counsellorAssignmentProfileId: null,
-      inquiryFormDefinitionId: 'form-2',
-    });
-    hooks.setForm.mockReturnValue({ unwrap: () => Promise.resolve(activeLink) });
-    renderList();
-    const user = userEvent.setup();
-    await user.click(
-      screen.getByRole('button', { name: `Set Inquiry Form For ${activeLink.name}` })
-    );
-    expect(hooks.optionsQuery).toHaveBeenCalledWith(
-      'cycle-1',
-      expect.objectContaining({ skip: false })
-    );
-    await user.click(screen.getByRole('combobox', { name: 'Published inquiry form' }));
-    expect(screen.getByRole('option', { name: 'Inquiry form · v1' })).toBeVisible();
-    expect(screen.getByRole('option', { name: 'Second inquiry · v2' })).toBeVisible();
-    expect(screen.queryByRole('option', { name: 'Unlinked inquiry · v1' })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('option', { name: 'Second inquiry · v2' }));
-    await user.click(screen.getByRole('button', { name: 'Submit' }));
-    await waitFor(() =>
-      expect(hooks.setForm).toHaveBeenCalledWith({
-        id: activeLink.id,
-        concurrencyStamp: 'stamp-1',
-        inquiryFormDefinitionId: 'form-2',
-      })
+    expect(screen.getByRole('menuitem', { name: 'Revoke Link' })).toHaveAttribute(
+      'aria-disabled',
+      'true'
     );
   });
-
-  it.each(['loading', 'error', 'empty'] as const)(
-    'blocks replacement on %s compatibility without changing the link',
-    async (state) => {
-      hooks.options.currentData = state === 'empty' ? [] : undefined;
-      hooks.options.isFetching = state === 'loading';
-      hooks.options.isError = state === 'error';
-      renderList();
-      const user = userEvent.setup();
-      await user.click(
-        screen.getByRole('button', { name: `Set Inquiry Form For ${activeLink.name}` })
-      );
-      expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
-      if (state === 'loading')
-        expect(
-          screen.getByRole('status', { name: 'Loading Published Inquiry Forms' })
-        ).toBeVisible();
-      if (state === 'empty') {
-        expect(
-          screen.getByText(
-            /Attach a published Inquiry form to an active inquiry offering in this admission period/
-          )
-        ).toBeVisible();
-        await user.click(screen.getByRole('button', { name: 'Refresh offerings' }));
-        expect(hooks.options.refetch).toHaveBeenCalledOnce();
-      }
-      if (state === 'error') {
-        await user.click(screen.getByRole('button', { name: 'Retry' }));
-        expect(hooks.options.refetch).toHaveBeenCalledOnce();
-      }
-      expect(hooks.setForm).not.toHaveBeenCalled();
-    }
-  );
 
   it('keeps revoked links viewable while hiding unavailable actions', async () => {
     hooks.links = [{ ...activeLink, isActive: false }];
     const user = userEvent.setup();
     renderList();
-    expect(screen.queryByTestId('table-action-form')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('table-action-revoke')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: `Copy Inquiry Link For ${activeLink.name}` })
+    ).not.toBeInTheDocument();
     await user.click(screen.getByRole('cell', { name: activeLink.name }));
     expect(within(screen.getByRole('dialog')).getByText('Revoked')).toBeVisible();
   });
 
   it('preserves read-only access without mutation actions', () => {
     renderList(false);
-    expect(screen.queryByTestId('table-action-form')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('table-action-revoke')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: `More Actions For ${activeLink.name}` })
+    ).not.toBeInTheDocument();
   });
 
   it('uses a row-labelled mobile menu with concise actions', async () => {
@@ -943,16 +1005,15 @@ describe('public inquiry link details and actions', () => {
     try {
       const user = userEvent.setup();
       renderList();
+      expect(
+        screen.getByRole('button', { name: `Copy Inquiry Link For ${activeLink.name}` })
+      ).toBeVisible();
       await user.click(screen.getByRole('button', { name: `More Actions For ${activeLink.name}` }));
       const menu = screen.getByRole('menu', { name: `More Actions For ${activeLink.name}` });
-      expect(
-        within(menu).queryByRole('menuitem', { name: 'Set Inquiry Form' })
-      ).not.toBeInTheDocument();
+      expect(within(menu).getByRole('menuitem', { name: 'Rename Link' })).toBeVisible();
       expect(within(menu).getByRole('menuitem', { name: 'Revoke Link' })).toBeVisible();
-      await user.keyboard('{Escape}');
-      await user.click(screen.getByRole('button', { name: 'Set Inquiry Form' }));
-      expect(screen.getByRole('dialog', { name: 'Set Inquiry Form' })).toBeVisible();
-      expect(hooks.setForm).not.toHaveBeenCalled();
+      expect(within(menu).queryByRole('menuitem', { name: 'Set Inquiry Form' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('dialog', { name: 'Set Inquiry Form' })).not.toBeInTheDocument();
     } finally {
       window.matchMedia = originalMatchMedia;
     }
@@ -961,7 +1022,7 @@ describe('public inquiry link details and actions', () => {
     hooks.links = [{ ...activeLink, expiresAtUtc: '2027-01-02T03:04:00Z' }];
     const user = userEvent.setup();
     renderList();
-    expect(screen.getByText('02/01/2027')).toBeVisible();
+    expect(screen.getByText('02/01/2027 08:34 AM')).toBeVisible();
     await user.click(screen.getByRole('cell', { name: activeLink.name }));
     expect(within(screen.getByRole('dialog')).getByText('02/01/2027 08:34 AM')).toBeVisible();
   });

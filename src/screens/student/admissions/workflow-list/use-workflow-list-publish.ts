@@ -1,9 +1,9 @@
 import type { AppDispatch } from 'src/redux/store';
 import type { AdmissionWorkflow } from 'src/redux/student/admissions/admission-workflows-api';
 
+import { api } from 'src/redux/service';
 import { useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { api } from 'src/redux/service';
 import { shikshaMitraToast } from 'src/components/toast';
 import { studentAdmissionsCrmType } from 'src/redux/tagTypes';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
@@ -27,8 +27,11 @@ export function useWorkflowListPublish(canPublish: boolean) {
   const [validateWorkflow] = useValidateAdmissionWorkflowMutation();
   const [publishWorkflow] = usePublishAdmissionWorkflowMutation();
 
-  const publish = async (row: AdmissionWorkflow) => {
-    if (!canPublish || active.current || !isAdmissionWorkflowPublishable(row.status)) return;
+  const publish = async (
+    row: AdmissionWorkflow,
+    keepForRetry: (workflow: AdmissionWorkflow) => void
+  ) => {
+    if (!canPublish || active.current || !isAdmissionWorkflowPublishable(row.status)) return false;
     active.current = true;
     setPublishingId(row.id);
     const loadLatest = async () => {
@@ -39,6 +42,7 @@ export function useWorkflowListPublish(canPublish: boolean) {
         request.unsubscribe();
       }
     };
+    let validatedWorkflow: AdmissionWorkflow | undefined;
     try {
       const latest = await loadLatest();
       if (
@@ -54,7 +58,7 @@ export function useWorkflowListPublish(canPublish: boolean) {
           message:
             'This workflow changed after the list was loaded. Review the latest version before publishing.',
         });
-        return;
+        return false;
       }
       // Only editable drafts may receive the builder's compatibility upgrade.
       // Approved and scheduled graphs remain immutable through validation/publication.
@@ -81,7 +85,7 @@ export function useWorkflowListPublish(canPublish: boolean) {
           message: `Fix before publishing:\n${validation.issues.map((issue) => issue.message).join('\n')}`,
           alertProps: { sx: { '& .MuiAlert-message': { whiteSpace: 'pre-line' } } },
         });
-        return;
+        return false;
       }
       // Validation updates the stamp. The server still enforces status and concurrent writes.
       const current = await loadLatest();
@@ -94,8 +98,9 @@ export function useWorkflowListPublish(canPublish: boolean) {
         shikshaMitraToast.warning({
           message: 'This workflow is no longer available to publish. Review the latest version.',
         });
-        return;
+        return false;
       }
+      validatedWorkflow = current;
       await publishWorkflow({
         id: current.id,
         concurrencyStamp: current.concurrencyStamp,
@@ -108,10 +113,14 @@ export function useWorkflowListPublish(canPublish: boolean) {
       } else {
         shikshaMitraToast.success({ message: 'Workflow published' });
       }
+      return true;
     } catch (error) {
+      // Retrying still checks for newer edits, but should start from the stamp our validation produced.
+      if (validatedWorkflow) keepForRetry(validatedWorkflow);
       shikshaMitraToast.error({
         message: parseApiProblemDetail(error).detail || 'Unable to publish the workflow.',
       });
+      return false;
     } finally {
       active.current = false;
       setPublishingId(null);

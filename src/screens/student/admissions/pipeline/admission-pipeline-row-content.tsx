@@ -4,6 +4,7 @@ import { Label } from 'src/components/label';
 import { Box, Stack, Typography } from '@mui/material';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { TableOverflowText } from 'src/components/customizabaleTable/components/TableOverflowText';
 
 export function renderPipelineStep(row: AdmissionPipelineItem) {
   const stages = row.stageProgress ?? [];
@@ -12,9 +13,7 @@ export function renderPipelineStep(row: AdmissionPipelineItem) {
   return (
     <Stack spacing={0.5} sx={{ minWidth: 0, maxWidth: 280 }}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
-        <Typography variant="body2" noWrap title={name} sx={{ minWidth: 0 }}>
-          {name}
-        </Typography>
+        <TableOverflowText variant="body2">{name}</TableOverflowText>
         {current >= 0 && (
           <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
             {formatNumber(current + 1)} Of {formatNumber(stages.length)}
@@ -43,7 +42,7 @@ export function renderPipelineStep(row: AdmissionPipelineItem) {
             }}
           />
           {stages.map((stage, index) => (
-            <CustomTooltip key={stage.id} title={stage.name} arrow describeChild>
+            <CustomTooltip key={stage.id} title={<span>{stage.name}</span>} arrow describeChild>
               <Box
                 component="span"
                 role="img"
@@ -93,9 +92,9 @@ export function renderPipelineStep(row: AdmissionPipelineItem) {
 export function renderPipelineFollowUps(row: AdmissionPipelineItem) {
   if (row.inquiryId === null || !row.openFollowUpCount) {
     return (
-      <Typography variant="body2" color="text.secondary" noWrap>
+      <TableOverflowText variant="body2" color="text.secondary">
         {row.inquiryId === null ? 'No Inquiry Follow-ups' : 'No Open Follow-ups'}
-      </Typography>
+      </TableOverflowText>
     );
   }
   // Older servers expose only a boolean; never label every open follow-up as overdue.
@@ -111,11 +110,9 @@ export function renderPipelineFollowUps(row: AdmissionPipelineItem) {
       <Label color={row.hasOverdueFollowUp ? 'warning' : 'default'} sx={{ flexShrink: 0 }}>
         {badge}
       </Label>
-      <CustomTooltip title={purpose}>
-        <Typography variant="body2" noWrap sx={{ minWidth: 0, maxWidth: 170 }}>
-          {purpose}
-        </Typography>
-      </CustomTooltip>
+      <TableOverflowText variant="body2" sx={{ maxWidth: 170 }}>
+        {purpose}
+      </TableOverflowText>
     </Stack>
   );
 }

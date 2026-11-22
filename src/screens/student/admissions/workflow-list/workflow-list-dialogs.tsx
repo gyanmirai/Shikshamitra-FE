@@ -1,4 +1,7 @@
+import type { AdmissionWorkflow } from 'src/redux/student/admissions/admission-workflows-api';
+
 import { LoadingButton } from '@mui/lab';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Stack, Typography } from '@mui/material';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -17,16 +20,50 @@ const defaultWorkflowCopyName = (name: string | undefined) => {
   return `${name.trim().slice(0, 128 - suffix.length).trimEnd()}${suffix}`;
 };
 
+const confirmationDetails = {
+  delete: {
+    title: 'Delete Workflow Draft?',
+    label: 'Delete',
+    icon: GlobalIcons.delete,
+    description: (workflow: AdmissionWorkflow) =>
+      `Are you sure you want to delete '${workflow.name}'? This permanently removes the unused draft and its stage configuration.`,
+  },
+  reopen: {
+    title: 'Re-Open Workflow?',
+    label: 'Re-open',
+    icon: 'mdi:archive-arrow-up-outline',
+    description: (workflow: AdmissionWorkflow) =>
+      `Re-open ${workflow.name} (version ${workflow.version}) with its published content kept read-only. It returns to Published unless it was already Superseded or another published version exists; in those cases it remains Superseded. Offerings stay unchanged.`,
+  },
+  archive: {
+    title: 'Archive Workflow?',
+    label: 'Archive',
+    icon: 'mdi:archive-outline',
+    description: () => 'Archived Workflows Cannot Be Selected for New Admission Offerings.',
+  },
+  createVersion: {
+    title: 'Create New Version?',
+    label: 'Create New Version',
+    icon: 'mdi:file-plus-outline',
+    description: (workflow: AdmissionWorkflow) =>
+      `Create a new draft version of '${workflow.name}'? Admissions already underway will continue on their current workflow version.`,
+  },
+  publish: {
+    title: 'Publish Workflow?',
+    label: 'Publish Workflow',
+    icon: GlobalIcons.publish,
+    description: (workflow: AdmissionWorkflow) =>
+      `Publish '${workflow.name}' (version ${workflow.version}) for use in admission offerings?`,
+  },
+};
+
 export function WorkflowListDialogs({ actions }: { actions: Actions }) {
   const { fetchRegistrationForms } = useAdmissionDefinitionOptions(actions.createDialog.value);
   const pending = actions.pendingConfirmation;
   const deleting = pending?.action === 'delete';
   const reopening = pending?.action === 'reopen';
-  const busy =
-    actions.archiveState.isLoading ||
-    actions.reopenState.isLoading ||
-    actions.deleteState.isLoading ||
-    actions.confirmationRefreshing;
+  const busy = actions.confirmationBusy;
+  const details = confirmationDetails[pending?.action ?? 'archive'];
   return (
     <>
       <AdmissionWorkflowDialog
@@ -57,27 +94,15 @@ export function WorkflowListDialogs({ actions }: { actions: Actions }) {
       />
       <ConfirmDialog
         open={Boolean(pending)}
-        onClose={() => {
-          if (!busy) actions.closeConfirmation();
-        }}
+        onClose={actions.closeConfirmation}
         disableCancel={busy}
         disableEscapeKeyDown={busy}
         icon={deleting ? 'error' : reopening ? 'info' : 'warning'}
-        title={
-          deleting
-            ? 'Delete Workflow Draft?'
-            : reopening
-              ? 'Re-Open Workflow?'
-              : 'Archive Workflow?'
-        }
+        title={details.title}
         content={
           <Stack spacing={1.5}>
             <Typography variant="body2">
-              {deleting
-                ? `Are you sure you want to delete '${pending?.workflow.name}'? This permanently removes the unused draft and its stage configuration.`
-                : reopening
-                  ? `Re-open ${pending?.workflow.name} (version ${pending?.workflow.version}) with its published content kept read-only. It returns to Published unless it was already Superseded or another published version exists; in those cases it remains Superseded. Offerings stay unchanged.`
-                  : 'Archived Workflows Cannot Be Selected for New Admission Offerings.'}
+              {pending && details.description(pending.workflow)}
             </Typography>
             {actions.confirmationNotice && (
               <StudentFeedback notificationKey="STU-0621" presentation="inline" severity="warning">
@@ -88,30 +113,16 @@ export function WorkflowListDialogs({ actions }: { actions: Actions }) {
         }
         action={
           <LoadingButton
+            type="button"
             size="small"
             variant="contained"
             color={deleting ? 'error' : 'inherit'}
             loading={busy}
-            startIcon={
-              <Iconify
-                icon={
-                  deleting
-                    ? 'mdi:delete-outline'
-                    : reopening
-                      ? 'mdi:archive-arrow-up-outline'
-                      : 'mdi:archive-outline'
-                }
-              />
-            }
+            loadingPosition="center"
+            startIcon={<Iconify icon={details.icon} />}
             onClick={actions.confirm}
           >
-            {actions.confirmationRefreshing
-              ? 'Checking Latest…'
-              : deleting
-                ? 'Delete'
-                : reopening
-                  ? 'Re-open'
-                  : 'Archive'}
+            {details.label}
           </LoadingButton>
         }
       />

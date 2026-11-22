@@ -18,7 +18,7 @@ describe('house workspace state', () => {
         new URLSearchParams('tab=students&page=2&pageSize=50&search=Riya&sort=studentName%20desc')
       )
     ).toEqual({
-      tab: 'students',
+      tab: 'divisions',
       page: 2,
       pageSize: 50,
       search: 'Riya',

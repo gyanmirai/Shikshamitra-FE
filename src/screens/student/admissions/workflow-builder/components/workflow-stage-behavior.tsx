@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { FormikProps } from 'formik';
 import type {
   AdmissionWorkflowStage,
@@ -12,9 +13,16 @@ type Props = {
   metadata?: AdmissionWorkflowStageTypeMetadata;
   stages?: AdmissionWorkflowStage[];
   readOnly: boolean;
+  children?: ReactNode;
 };
 
-export function WorkflowStageBehavior({ formik, metadata, stages = [], readOnly }: Props) {
+export function WorkflowStageBehavior({
+  formik,
+  metadata,
+  stages = [],
+  readOnly,
+  children,
+}: Props) {
   const managed = [1, 2, 4, 5].includes(formik.values.stageType);
   const showEntryStage =
     formik.values.isEntryStage ||
@@ -48,7 +56,7 @@ export function WorkflowStageBehavior({ formik, metadata, stages = [], readOnly 
   );
 
   return (
-    <FormSectionCard title="Stage Behavior" icon="mdi:cog-outline">
+    <FormSectionCard title="Stage Behavior" aria-label="Stage Behavior" icon="mdi:cog-outline">
       <Stack spacing={1}>
         {setting(
           'isRequired',
@@ -76,6 +84,7 @@ export function WorkflowStageBehavior({ formik, metadata, stages = [], readOnly 
           'End Of Journey',
           'Completing this stage ends the configured journey. Admission finalization and Student Onboarding remain separate actions.'
         )}
+        {children}
       </Stack>
     </FormSectionCard>
   );

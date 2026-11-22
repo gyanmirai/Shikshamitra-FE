@@ -208,7 +208,7 @@ describe('Bulk offering step navigation', () => {
     );
     await user.click(screen.getByRole('button', { name: 'Select Class 1' }));
     await user.click(screen.getByRole('button', { name: 'Preview Offerings' }));
-    await screen.findByRole('heading', { name: 'Preview Offerings' });
+    const previewHeading = await screen.findByRole('heading', { name: 'Preview Offerings' });
     expect(mocks.preview).toHaveBeenLastCalledWith(
       expect.objectContaining({
         admissionCycle: cycle,
@@ -219,7 +219,9 @@ describe('Bulk offering step navigation', () => {
         inquiryIntakeProfileId: '',
       })
     );
-    expect(screen.getByText('RTE · Direct Registration')).toBeVisible();
+    const preview = within(previewHeading.closest('section')!);
+    expect(preview.getByText('RTE')).toBeVisible();
+    expect(preview.getByText('Direct Registration')).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Back' }));
     expect(screen.getByRole('combobox', { name: /Admission Type/ })).toHaveTextContent('RTE');
     expect(screen.getByTestId('chosen-classes')).toHaveTextContent('["class-1"]');

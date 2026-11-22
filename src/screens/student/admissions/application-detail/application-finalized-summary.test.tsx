@@ -312,10 +312,9 @@ it('replaces both completed summary and footer navigation with the exact Student
   view.unmount();
   render(<ApplicationFinalizedActions application={application} />);
   expect(screen.getByText('Onboarding Completed')).toBeVisible();
-  expect(screen.getByRole('link', { name: 'View in Student Records' })).toHaveAttribute(
-    'href',
-    `${studentPaths.records.studentList}?student=student-1`
-  );
+  const recordsLink = screen.getByRole('link', { name: 'View in Student Records' });
+  expect(recordsLink).toHaveAttribute('href', `${studentPaths.records.studentList}?student=student-1`);
+  expect(recordsLink.querySelector('.MuiButton-startIcon')).toBeInTheDocument();
 });
 
 it('updates the action when the same case changes from in progress to completed', () => {

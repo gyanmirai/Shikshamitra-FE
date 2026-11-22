@@ -10,7 +10,7 @@ import type {
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { usePendingNavigation } from 'src/hooks/use-pending-navigation';
@@ -30,6 +30,9 @@ import { getAdmissionFormAccess } from '../form-access';
 import { getAdmissionFormPreviewUrl } from '../form-preview/form-preview-navigation';
 import { getInquiryFormConfigurationIssues } from '../admission-inquiry-field-bindings';
 import {
+  getUnchangedVersionMessage,
+  UnchangedAdmissionFormError,
+  getUnchangedVersionPublishError,
   formatAdmissionFormValidationError,
   formatAdmissionFormValidationErrors,
 } from './form-validation-errors';
@@ -67,6 +70,10 @@ export function useFormListActions() {
   const [publishIssues, setPublishIssues] = useState<string[] | null>(null);
   const [pendingClone, setPendingClone] = useState<AdmissionForm | null>(null);
   const [historyForm, setHistoryForm] = useState<AdmissionForm | null>(null);
+  const checkUnchangedVersion = useCallback(
+    async (id: string) => getUnchangedVersionMessage((await validate(id).unwrap()).errors),
+    [validate]
+  );
   const run = async (action: () => Promise<unknown>, message: string) => {
     try {
       await action();
@@ -99,6 +106,8 @@ export function useFormListActions() {
       }
       const readiness = await validate(draft.id).unwrap();
       if (!readiness.isValid) {
+        const message = getUnchangedVersionMessage(readiness.errors);
+        if (message) throw new UnchangedAdmissionFormError(message);
         throw new Error(formatAdmissionFormValidationErrors(readiness.errors));
       }
       await publish({ id: draft.id, concurrencyStamp: draft.concurrencyStamp }).unwrap();
@@ -107,6 +116,8 @@ export function useFormListActions() {
       // Save succeeded: keep editing the persisted draft so a retry cannot create a duplicate.
       setEditingId(draft.id);
       setEditingForm(draft);
+      const unchangedVersion = getUnchangedVersionPublishError(error);
+      if (unchangedVersion) throw unchangedVersion;
       throw new Error(`Draft saved, but not published. ${parseApiProblemDetail(error).detail}`);
     }
   };
@@ -134,6 +145,7 @@ export function useFormListActions() {
     saving: createState.isLoading || updateState.isLoading,
     save,
     saveAndPublish,
+    checkUnchangedVersion,
     close,
     edit,
     create: (purpose: AdmissionFormPurpose = 1) => {
@@ -191,23 +203,24 @@ export function useFormListActions() {
       setPublishIssues(null);
       edit(id);
     },
-    confirmPublish: () =>
-      pendingPublish && publishIssues?.length === 0
-        ? run(
-            () =>
-              publish({
-                id: pendingPublish.id,
-                concurrencyStamp: pendingPublish.concurrencyStamp ?? '',
-              }).unwrap(),
-            'Form published'
-          ).then((ok) => {
-            if (ok) {
-              setPendingPublish(null);
-              setPublishIssues(null);
-            }
-            return ok;
-          })
-        : Promise.resolve(false),
+    confirmPublish: async () => {
+      if (!pendingPublish || publishIssues?.length !== 0) return false;
+      try {
+        await publish({
+          id: pendingPublish.id,
+          concurrencyStamp: pendingPublish.concurrencyStamp ?? '',
+        }).unwrap();
+        setPendingPublish(null);
+        setPublishIssues(null);
+        shikshaMitraToast.success({ message: 'Form published' });
+        return true;
+      } catch (error) {
+        const unchangedVersion = getUnchangedVersionPublishError(error);
+        if (unchangedVersion) setPublishIssues([unchangedVersion.message]);
+        else shikshaMitraToast.error({ message: parseApiProblemDetail(error).detail });
+        return false;
+      }
+    },
     publishing: publishState.isLoading,
     historyForm,
     showHistory: (form: AdmissionForm) => setHistoryForm(form),

@@ -1,6 +1,7 @@
 import type {
   AdmissionWorkflowStage,
   AdmissionWorkflowTransition,
+  AdmissionWorkflowValidationIssue,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
 import { duplicateStage } from '../workflow-builder-utils';
@@ -45,6 +46,78 @@ function canReach(transitions: AdmissionWorkflowTransition[], from: string, to: 
     }
   }
   return false;
+}
+
+export function suggestIncomingWorkflowRoute(
+  graph: WorkflowGraph,
+  destination: AdmissionWorkflowStage
+): AdmissionWorkflowTransition | undefined {
+  const { stages, transitions } = graph;
+  const entry = stages.find((stage) => stage.isEntryStage);
+  if (!entry || destination.isEntryStage || !isApplicationStageType(destination.stageType))
+    return undefined;
+  const source = orderedStages(stages)
+    .reverse()
+    .find(
+      (stage) =>
+        stage.id !== destination.id &&
+        !stage.isTerminalStage &&
+        isApplicationStageType(stage.stageType) &&
+        canReach(transitions, entry.id, stage.id) &&
+        !canReach(transitions, destination.id, stage.id) &&
+        !transitions.some(
+          (route) =>
+            route.fromStageId === stage.id &&
+            (route.isDefault || route.toStageId === destination.id)
+        )
+    );
+  if (!source) return undefined;
+  const priority =
+    Math.max(
+      -1,
+      ...transitions
+        .filter((route) => route.fromStageId === source.id)
+        .map((route) => route.priority)
+    ) + 1;
+  // An empty ID opens the existing route editor as a new route. Saving remains explicit.
+  return { id: '', fromStageId: source.id, toStageId: destination.id, priority, isDefault: true };
+}
+
+export function summarizeWorkflowRouteGap(
+  graph: WorkflowGraph,
+  issuesByStage: Record<string, AdmissionWorkflowValidationIssue[]>
+) {
+  const { stages, transitions } = graph;
+  const entry = stages.filter((stage) => stage.isEntryStage);
+  const orphan = stages.filter((stage) =>
+    issuesByStage[stage.id]?.some((issue) => issue.code === 'Admissions.WorkflowOrphanStage')
+  );
+  const deadEnd = stages.filter((stage) =>
+    issuesByStage[stage.id]?.some((issue) => issue.code === 'Admissions.WorkflowDeadEndStage')
+  );
+  if (entry.length !== 1 || orphan.length !== 1 || deadEnd.length !== 1) return undefined;
+  const route = suggestIncomingWorkflowRoute(graph, orphan[0]);
+  if (!route || route.fromStageId !== deadEnd[0].id) return undefined;
+
+  // Group only errors that this particular connection would resolve. The server
+  // result remains authoritative and independent configuration errors stay visible.
+  const repaired = [...transitions, route];
+  const finals = stages.filter((stage) => stage.isTerminalStage);
+  const visibleIssues = Object.fromEntries(
+    Object.entries(issuesByStage).map(([stageId, issues]) => [
+      stageId,
+      issues.filter((issue) => {
+        if (issue.severity !== 0) return true;
+        if (issue.code === 'Admissions.WorkflowDeadEndStage') return stageId !== route.fromStageId;
+        if (issue.code === 'Admissions.WorkflowUnreachableStage')
+          return !canReach(repaired, entry[0].id, stageId);
+        if (issue.code === 'Admissions.WorkflowTerminalUnreachable')
+          return !finals.some((stage) => canReach(repaired, stageId, stage.id));
+        return true;
+      }),
+    ])
+  );
+  return { route, issuesByStage: visibleIssues };
 }
 
 export function insertWorkflowStage(

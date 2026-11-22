@@ -133,8 +133,10 @@ describe('admission inquiry columns', () => {
     expect(columns.find((column) => column.id === 'status')?.stickyOnMobile).toBe(false);
     expect(columns.find((column) => column.id === 'actions')?.stickyOnMobile).not.toBe(false);
     expect(columns.find((column) => column.id === 'actions')).toMatchObject({
-      width: 152,
-      maxWidth: 152,
+      width: 172,
+      maxWidth: 172,
+      align: 'left',
+      headerAlign: 'left',
     });
   });
 

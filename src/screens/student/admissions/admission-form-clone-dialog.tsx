@@ -84,6 +84,7 @@ function AdmissionFormCloneEditor({
         disableClose={busy}
         title="Clone Form as Draft"
         titleInfo="Copy the selected form version into an independent draft."
+        titleInfoPlacement="right"
         maxWidth="sm"
         formProps={{
           noValidate: true,

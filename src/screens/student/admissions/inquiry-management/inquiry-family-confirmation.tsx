@@ -63,7 +63,8 @@ function InquiryFamilyConfirmationContent(props: InquiryFamilyConfirmationProps)
           open
           title="Confirm Siblings"
           maxWidth="xs"
-          titleInfo="Link this inquiry with the children in the selected family."
+          titleInfo="Review the family before linking."
+          titleInfoPlacement="right"
           handleClose={state.requestClose}
           guardUnsavedChanges={false}
           disableClose={state.saving}
@@ -89,6 +90,8 @@ function InquiryFamilyConfirmationContent(props: InquiryFamilyConfirmationProps)
                   <AdmissionInquiryFamilyReview
                     families={state.families}
                     selectedFamily={state.selectedFamily}
+                    guardianPhone={state.reviewInput?.guardianPhone ?? ''}
+                    guardianEmail={state.reviewInput?.guardianEmail ?? undefined}
                     disabled={locked}
                     error={
                       formik.touched.family || formik.submitCount ? formik.errors.family : undefined

@@ -303,3 +303,45 @@ it('revalidates earlier stages before publishing from Print layout', async () =>
   expect(onPublishNow).not.toHaveBeenCalled();
   expect(screen.getByRole('heading', { name: 'Print layout preview' })).toBeVisible();
 });
+
+it('keeps the version blocker beside the Print layout actions until a print setting changes', async () => {
+  const user = userEvent.setup();
+  const message =
+    'This draft matches published v1. Make a change before publishing, or keep using v1.';
+  const checkUnchangedVersion = vi.fn().mockResolvedValue(message);
+  const onPublishNow = vi.fn().mockResolvedValue(undefined);
+  const editing = {
+    ...getBlankAdmissionFormInitialValues(1),
+    id: 'form',
+    name: 'Registration',
+    version: 2,
+    status: 0,
+  } as AdmissionForm;
+  render(
+    <ThemeProvider theme={createTheme(defaultSettings)}>
+      <AdmissionFormDialog
+        open
+        editing={editing}
+        saving={false}
+        onClose={vi.fn()}
+        onSave={vi.fn()}
+        onPublishNow={onPublishNow}
+        checkUnchangedVersion={checkUnchangedVersion}
+      />
+    </ThemeProvider>
+  );
+  await clickContinue(user);
+  await clickContinue(user);
+  await clickContinue(user);
+
+  expect(await screen.findByText(message)).toBeVisible();
+  const publish = screen.getByRole('button', { name: 'Publish now' });
+  expect(publish).toBeDisabled();
+  expect(publish).toHaveAccessibleDescription(message);
+  expect(screen.getByRole('button', { name: 'Save draft' })).toBeEnabled();
+
+  await user.click(screen.getByRole('checkbox', { name: 'Show student photo' }));
+  expect(screen.queryByText(message)).toBeNull();
+  await user.click(publish);
+  await waitFor(() => expect(onPublishNow).toHaveBeenCalledOnce());
+});

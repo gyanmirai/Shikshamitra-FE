@@ -144,11 +144,12 @@ describe('Admission Offerings add action', () => {
     render(<AdmissionOfferingsScreen />);
 
     expect(screen.queryByRole('button', { name: 'Bulk create' })).not.toBeInTheDocument();
-    expect(screen.getByRole('banner').querySelector('button')?.textContent).toBe('Offering');
-    expect(screen.getByRole('region', { name: 'Offering context filters' })).toHaveTextContent(
-      'Filters'
-    );
-    fireEvent.click(screen.getByRole('button', { name: 'Add Offering' }));
+    expect(
+      within(screen.getByRole('banner')).queryByRole('button', { name: 'Add Offering' })
+    ).not.toBeInTheDocument();
+    const filters = within(screen.getByRole('region', { name: 'Offering context filters' }));
+    expect(filters.getByRole('button', { name: 'Filters' })).toBeVisible();
+    fireEvent.click(filters.getByRole('button', { name: 'Add Offering' }));
     expect(openBulk).toHaveBeenCalledOnce();
   });
 

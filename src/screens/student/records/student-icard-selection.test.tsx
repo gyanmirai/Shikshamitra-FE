@@ -20,6 +20,7 @@ const mocks = vi.hoisted(() => ({
   export: vi.fn(),
   issue: vi.fn(),
   delete: vi.fn(),
+  toastError: vi.fn(),
   actions: vi.fn(),
   templates: [] as unknown[],
   legacy: {} as unknown,
@@ -41,7 +42,7 @@ vi.mock('react-redux', () => ({
 }));
 vi.mock('src/routes/hooks', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock('src/components/toast', () => ({
-  shikshaMitraToast: { success: vi.fn(), error: vi.fn() },
+  shikshaMitraToast: { success: vi.fn(), error: mocks.toastError },
 }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 vi.mock('src/components/custom-stepper', () => ({ default: () => null }));
@@ -60,25 +61,14 @@ vi.mock('src/components/confirm-dialog', () => ({
   ConfirmDialog: ({ open, action }: any) =>
     open ? <section role="dialog">{action}</section> : null,
 }));
-vi.mock('src/components/three-dots-actions', () => ({
+vi.mock('src/components/adaptive-three-dots-actions', () => ({
   default: (props: any) => {
     mocks.actions(props);
-    return (
-      <>
-        <button type="button" onClick={props.handleEditClick}>
-          {props.editLabel}
-        </button>
-        {props.showDeleteIcon && (
-          <button
-            type="button"
-            disabled={props.disableDeleteIcon}
-            onClick={props.handleDeleteClick}
-          >
-            {props.deleteLabel}
-          </button>
-        )}
-      </>
-    );
+    return props.actions.map((action: any) => (
+      <button key={action.id} type="button" disabled={action.disabled} onClick={action.onClick}>
+        {action.ariaLabel}
+      </button>
+    ));
   },
 }));
 vi.mock('src/screens/setting/school-identity/components/template-identity-asset', () => ({
@@ -245,14 +235,46 @@ beforeEach(() => {
   mocks.preview.mockResolvedValue([]);
 });
 
-it('opens the standalone template builder full-screen in the selected academic year', async () => {
+it('saves an edited template without replacing its existing assignments', async () => {
+  mocks.templates = [{
+    ...template,
+    selection: { ...scope, academicYearId: 'year-1', studentIds: ['student-1'] },
+  }];
   render(wrap(<StudentICardTemplates />));
-  fireEvent.click(screen.getByRole('button', { name: 'Create I-Card' }));
-  const dialog = await screen.findByRole('dialog', { name: 'Create I-Card' });
+  fireEvent.click(screen.getByRole('button', { name: 'Edit Saved design' }));
+  fireEvent.change(screen.getByRole('textbox', { name: /Template name/i }), {
+    target: { value: 'Updated design' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+  await waitFor(() => expect(mocks.update).toHaveBeenCalledTimes(1));
+  expect(mocks.update.mock.calls[0][0]).toMatchObject({
+    id: 'template-1',
+    body: { name: 'Updated design', concurrencyStamp: 'stamp-1' },
+  });
+  expect(mocks.update.mock.calls[0][0].body).not.toHaveProperty('selection');
+  expect(mocks.directory).not.toHaveBeenCalled();
+});
+
+it('shows only the template catalogue even for staff who can also manage Records policies', () => {
+  mocks.state.auth.permissions.push({ name: 'Students.Records.Settings.View', isGranted: true });
+  render(wrap(<StudentICardTemplates />));
+
+  expect(screen.getByRole('heading', { name: 'I-Card Templates' })).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Create I-Card template' })).toBeVisible();
+  expect(
+    screen.queryByRole('tablist', { name: 'Student Records settings tasks' })
+  ).not.toBeInTheDocument();
+});
+
+it('opens the template editor full-screen without reading students and guards unsaved changes', async () => {
+  render(wrap(<StudentICardTemplates />));
+  fireEvent.click(screen.getByRole('button', { name: 'Create I-Card template' }));
+  const dialog = await screen.findByRole('dialog', { name: 'Create I-Card Template' });
   expect(dialog).toHaveClass('MuiDialog-paperFullScreen');
   const name = within(dialog).getByRole('textbox', { name: /Template name/ });
   expect(name).toBeVisible();
-  expect(mocks.options).toHaveBeenLastCalledWith({ academicYearId: 'year-1' });
+  expect(mocks.options).not.toHaveBeenCalled();
+  expect(mocks.directory).not.toHaveBeenCalled();
 
   fireEvent.change(name, { target: { value: 'Unsaved design' } });
   fireEvent.click(within(dialog).getByRole('button', { name: 'close' }));
@@ -262,7 +284,7 @@ it('opens the standalone template builder full-screen in the selected academic y
   fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
   fireEvent.click(await screen.findByRole('button', { name: 'Discard changes' }));
   await waitFor(() => expect(dialog).not.toBeInTheDocument());
-  expect(await screen.findByRole('button', { name: 'Create I-Card' })).toBeVisible();
+  expect(await screen.findByRole('button', { name: 'Create I-Card template' })).toBeVisible();
 });
 
 it('uses single Board/Medium with All Classes and dependent plain Division choices', async () => {
@@ -404,7 +426,7 @@ it('uses the saved assignment year when editing from a different global academic
   expect(mocks.update.mock.calls.at(-1)?.[0].body.selection.academicYearId).toBe('year-2');
 });
 
-it('keeps the current draft and prevents saving after its opener academic year changes', async () => {
+it('keeps the template draft editable when the global academic year changes', async () => {
   const view = render(wrap(<StudentICardTemplates />));
   fireEvent.click(screen.getByRole('button', { name: 'Edit Saved design' }));
   fireEvent.change(await screen.findByRole('textbox', { name: /Template name/ }), {
@@ -413,13 +435,11 @@ it('keeps the current draft and prevents saving after its opener academic year c
   mocks.state.globalState.currentYear.id = 'year-2';
   view.rerender(wrap(<StudentICardTemplates />));
   expect(screen.getByRole('textbox', { name: /Template name/ })).toHaveValue('Unsaved design name');
-  expect(
-    screen.getByText('The academic year changed. Close this workspace and select students again.')
-  ).toBeVisible();
   const save = screen.getByRole('button', { name: 'Save' });
-  expect(save).toBeDisabled();
+  expect(save).toBeEnabled();
   fireEvent.click(save);
-  expect(mocks.update).not.toHaveBeenCalled();
+  await waitFor(() => expect(mocks.update).toHaveBeenCalledTimes(1));
+  expect(mocks.update.mock.calls[0][0].body).not.toHaveProperty('selection');
 });
 
 it('keeps every oversized legacy saved ID through bounded hydration and a rejected save', async () => {
@@ -613,10 +633,11 @@ it('keeps directory bulk printing independent of an opaque oldest-template assig
   expect(mocks.update).not.toHaveBeenCalled();
 });
 
-it('labels an opaque template assignment as restricted rather than reporting an empty cohort', () => {
+it('shows the template of a restricted assignment without looking up a cohort or displaying a count', () => {
   mocks.templates = [{ ...template, selection: null, selectionRestricted: true }];
   render(wrap(<StudentICardTemplates />));
-  expect(screen.getByText('Restricted')).toBeVisible();
+  expect(screen.getByText('Saved design')).toBeVisible();
+  expect(mocks.directory).not.toHaveBeenCalled();
   expect(screen.queryByText('0 / 26')).not.toBeInTheDocument();
 });
 
@@ -628,13 +649,30 @@ it('disables deleting an opaque cohort while retaining the existing Delete permi
   mocks.templates = [{ ...template, selection: null, selectionRestricted: true }];
   render(wrap(<StudentICardTemplates />));
   expect(screen.getByRole('button', { name: 'Delete Saved design' })).toBeDisabled();
-  const actions = mocks.actions.mock.calls.at(-1)![0];
-  expect(actions.deleteDisabledReason).toBe(
+  const deleteAction = mocks.actions.mock.calls.at(-1)![0].actions.find(({ id }: { id: string }) => id === 'delete');
+  expect(deleteAction.tooltip).toBe(
     'Student assignments are restricted in your current academic scope.'
   );
-  actions.handleDeleteClick();
+  fireEvent.click(screen.getByRole('button', { name: 'Delete Saved design' }));
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   expect(mocks.delete).not.toHaveBeenCalled();
+});
+
+it('explains how to clear a class assignment that blocks template deletion', async () => {
+  mocks.state.auth.permissions.push({ name: 'Students.Records.StudentICard.Delete', isGranted: true });
+  const conflict = Object.assign(new Error('Template assigned'), {
+    status: 409,
+    data: { errorCode: 'Students:Records:IdTemplateAssigned' },
+  });
+  mocks.delete.mockReturnValue({
+    unwrap: () => Promise.reject(conflict),
+  });
+  render(wrap(<StudentICardTemplates />));
+  fireEvent.click(screen.getByRole('button', { name: 'Delete Saved design' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+  await waitFor(() => expect(mocks.toastError).toHaveBeenCalledWith({
+    message: 'Reassign or remove this template’s class assignments before deleting it.',
+  }));
 });
 
 it('stops a pending card preview when its save response newly makes assignments opaque', async () => {
@@ -686,8 +724,13 @@ it.each(['preview', 'export', 'issue'] as const)(
     ]);
     mocks.export.mockResolvedValue(new Blob(['pdf'], { type: 'application/pdf' }));
     mocks.issue.mockResolvedValue([]);
-    const view = render(wrap(<StudentICardTemplates />));
-    fireEvent.click(screen.getByRole('button', { name: 'Edit Saved design' }));
+    const builder = (contextInvalid = false) => wrap(<StudentICardBuilder
+      onClose={() => {}}
+      initialTemplate={mocks.templates[0] as IdCardTemplate}
+      academicYearId="year-1"
+      contextInvalid={contextInvalid}
+    />);
+    const view = render(builder());
     fireEvent.change(await screen.findByRole('textbox', { name: /Template name/ }), {
       target: { value: 'Retained design draft' },
     });
@@ -726,16 +769,14 @@ it.each(['preview', 'export', 'issue'] as const)(
         })
       );
     await waitFor(() => expect(acceptSave).toBeTypeOf('function'));
-    mocks.state.globalState.currentYear.id = 'year-2';
-    view.rerender(wrap(<StudentICardTemplates />));
+    view.rerender(builder(true));
     await act(async () => {
       acceptSave({ ...pendingBody, concurrencyStamp: 'accepted-server-stamp' });
     });
     expect(mocks.preview).toHaveBeenCalledTimes(previousPreviewCalls);
     expect(mocks.export).not.toHaveBeenCalled();
     expect(mocks.issue).not.toHaveBeenCalled();
-    mocks.state.globalState.currentYear.id = 'year-1';
-    view.rerender(wrap(<StudentICardTemplates />));
+    view.rerender(builder());
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
     await waitFor(() =>
       expect(mocks.update.mock.calls.at(-1)?.[0].body.concurrencyStamp).toBe(
@@ -757,8 +798,13 @@ it('ignores a late preview response after the opener academic context changes', 
         finishPreview = resolve;
       })
   );
-  const view = render(wrap(<StudentICardTemplates />));
-  fireEvent.click(screen.getByRole('button', { name: 'Edit Saved design' }));
+  const builder = (contextInvalid = false) => wrap(<StudentICardBuilder
+    onClose={() => {}}
+    initialTemplate={mocks.templates[0] as IdCardTemplate}
+    academicYearId="year-1"
+    contextInvalid={contextInvalid}
+  />);
+  const view = render(builder());
   await openStudents();
   await waitFor(() => expect(screen.getByText('1/100 selected')).toBeVisible());
   fireEvent.click(
@@ -768,8 +814,7 @@ it('ignores a late preview response after the opener academic context changes', 
       .at(-1)!
   );
   await waitFor(() => expect(finishPreview).toBeTypeOf('function'));
-  mocks.state.globalState.currentYear.id = 'year-2';
-  view.rerender(wrap(<StudentICardTemplates />));
+  view.rerender(builder(true));
   await act(async () => {
     finishPreview([
       {
@@ -786,19 +831,15 @@ it('ignores a late preview response after the opener academic context changes', 
   ).not.toBeInTheDocument();
 });
 
-it.each([true, false])(
-  'keeps issued-card history discoverable only with the existing View grant (view=%s)',
-  (canView) => {
-    if (!canView)
-      mocks.state.auth.permissions = mocks.state.auth.permissions.filter(
-        (permission) => !permission.name.endsWith('.View')
-      );
-    render(wrap(<StudentICardTemplates />));
-    const history = screen.queryByRole('link', { name: 'View issued cards' });
-    if (canView) expect(history).toHaveAttribute('href', '/student/student-i-card?view=issued');
-    else expect(history).not.toBeInTheDocument();
-  }
-);
+it('does not let View-only staff create or edit templates', () => {
+  mocks.state.auth.permissions = mocks.state.auth.permissions.filter(
+    (permission) => permission.name.endsWith('.View')
+  );
+  render(wrap(<StudentICardTemplates />));
+  expect(screen.getByRole('button', { name: 'View Saved design' })).toBeVisible();
+  expect(screen.queryByRole('button', { name: 'Edit Saved design' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Create I-Card template' })).not.toBeInTheDocument();
+});
 
 it.each(['create', 'legacy'] as const)(
   'keeps metadata-only %s saves free of automatically attached academic assignment scope',
@@ -823,7 +864,7 @@ it.each(['create', 'legacy'] as const)(
 it('allows metadata-only Create to open without a global academic year', async () => {
   mocks.state.globalState.currentYear.id = undefined;
   render(wrap(<StudentICardTemplates />));
-  const create = screen.getByRole('button', { name: 'Create I-Card' });
+  const create = screen.getByRole('button', { name: 'Create I-Card template' });
   expect(create).toBeEnabled();
   fireEvent.click(create);
   expect(await screen.findByRole('textbox', { name: /Template name/ })).toBeVisible();

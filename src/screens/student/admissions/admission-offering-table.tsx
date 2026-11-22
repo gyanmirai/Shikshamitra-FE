@@ -10,6 +10,7 @@ import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import CustomizableTable from 'src/components/customizabaleTable';
 
+import { ADMISSION_OFFERING_PAGE_SIZES } from './admission-offering-model';
 import { buildAdmissionOfferingColumns } from './admission-offering-columns';
 
 import type { OfferingColumnOptions } from './admission-offering-columns';
@@ -177,6 +178,7 @@ export function AdmissionOfferingTable(props: Props) {
       onServerFilter={onFilters}
       onClearCriteria={onClearFilters}
       maxServerRowsPerPage={100}
+      rowsPerPageOptions={ADMISSION_OFFERING_PAGE_SIZES}
       totalCount={totalCount}
       page={page}
       rowsPerPage={rowsPerPage}

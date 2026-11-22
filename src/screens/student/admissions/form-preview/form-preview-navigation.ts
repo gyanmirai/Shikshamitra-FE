@@ -5,8 +5,7 @@ import { studentPaths } from 'src/constants/student-menu';
 import { getStudentSetupReturnUrl } from 'src/screens/student/setup/embedding/student-setup-return';
 
 import { normalizeAdmissionFormFilters } from '../form-list/form-column-filters';
-
-import type { AdmissionFormListState } from '../form-list/form-list-query';
+import { admissionFormPageSizes, type AdmissionFormListState } from '../form-list/form-list-query';
 
 const { forms } = studentPaths.enrollment.settings;
 
@@ -29,7 +28,8 @@ export function getAdmissionFormPreviewUrl(id: string, returnTo?: string) {
 export function getAdmissionFormListReturnUrl(state: AdmissionFormListState) {
   const params = new URLSearchParams();
   if (state.page) params.set('page', String(state.page + 1));
-  if (state.rowsPerPage !== 10) params.set('size', String(state.rowsPerPage));
+  if (state.rowsPerPage !== admissionFormPageSizes[0])
+    params.set('size', String(state.rowsPerPage));
   if (state.search) params.set('search', state.search);
   if (state.filters.length) params.set('columns', JSON.stringify(state.filters));
   return params.size ? `${forms}?${params}` : forms;
@@ -39,7 +39,8 @@ export function readAdmissionFormListReturnState(
   params: Pick<URLSearchParams, 'get'>
 ): AdmissionFormListState {
   const requestedPage = Number(params.get('page') ?? 1);
-  const requestedSize = Number(params.get('size') ?? 10);
+  const requestedSize = Number(params.get('size') ?? admissionFormPageSizes[0]);
+  const supportedSize = admissionFormPageSizes.includes(requestedSize);
   let filters: IParams['filters'] = [];
   try {
     const serialized = params.get('columns') ?? '[]';
@@ -96,11 +97,11 @@ export function readAdmissionFormListReturnState(
     // A copied or outdated URL must not prevent opening the Forms list.
   }
   return {
-    page: Number.isSafeInteger(requestedPage) && requestedPage > 0 ? requestedPage - 1 : 0,
-    rowsPerPage:
-      Number.isInteger(requestedSize) && requestedSize > 0 && requestedSize <= 100
-        ? requestedSize
-        : 10,
+    page:
+      supportedSize && Number.isSafeInteger(requestedPage) && requestedPage > 0
+        ? requestedPage - 1
+        : 0,
+    rowsPerPage: supportedSize ? requestedSize : admissionFormPageSizes[0],
     search: params.get('search') ?? '',
     filters,
   };

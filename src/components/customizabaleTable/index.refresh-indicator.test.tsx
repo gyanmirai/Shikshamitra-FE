@@ -29,9 +29,11 @@ function table(props: Partial<ICustomizableTableProps> = {}) {
   );
 }
 
-it('retains the default linear refresh behavior for existing table consumers', () => {
+it('overlays the default linear refresh indicator without taking space from the table', () => {
   renderWithProviders(table());
-  expect(screen.getByRole('progressbar', { name: 'Refreshing Admission Inquiries' })).toBeVisible();
+  const progress = screen.getByRole('progressbar', { name: 'Refreshing Admission Inquiries' });
+  expect(progress).toBeVisible();
+  expect(progress).toHaveStyle({ position: 'absolute' });
   expect(screen.getByText('Saved applicant')).toBeVisible();
 });
 

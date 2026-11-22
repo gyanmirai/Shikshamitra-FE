@@ -2,6 +2,7 @@ import type { AdmissionForm } from 'src/redux/student/admissions/admission-forms
 
 import { LoadingButton } from '@mui/lab';
 import { useState, useEffect } from 'react';
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { fDateTime } from 'src/utils/format-time';
 import CustomSelect from 'src/components/custom-select';
@@ -10,6 +11,7 @@ import { FormSectionCard } from 'src/components/form-section-card';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
+  Box,
   List,
   Stack,
   Button,
@@ -80,13 +82,14 @@ export function AdmissionFormHistoryDialog({ form, canRestore, onClose, onRestor
       handleClose={onClose}
       title={`History & Versions · ${form?.name ?? ''}`}
       titleInfo="Compare form versions and review their history. Restoring creates a new draft; saved inquiries and applications keep their original versions."
+      titleInfoPlacement="right"
       hasForm={false}
       guardUnsavedChanges={false}
       disableClose={restoring}
       maxWidth="md"
       paperProps={{ sx: { '& .MuiTypography-h6': { overflowWrap: 'anywhere' } } }}
     >
-      <DialogScrollContent sx={{ bgcolor: 'background.neutral' }}>
+      <DialogScrollContent scrollBarProps={{ sx: { bgcolor: 'background.neutral' } }}>
         <Stack spacing={2}>
           <FormSectionCard icon="mdi:compare" title="Compare Versions">
             <Typography variant="body2" color="text.secondary">
@@ -225,28 +228,51 @@ export function AdmissionFormHistoryDialog({ form, canRestore, onClose, onRestor
               </StudentFeedback>
             ) : auditEntries.length ? (
               <List
-                dense
+                component="ol"
+                aria-label="Form activity, newest first"
                 disablePadding
                 sx={{ maxHeight: 'none' }}
-                aria-label="Form Activity History"
               >
-                {auditEntries.map((entry, index) => (
+                {auditEntries.map((entry) => (
                   <ListItem
                     key={entry.id}
                     disableGutters
-                    divider={index < auditEntries.length - 1}
-                    sx={{ overflowWrap: 'anywhere', py: 1.25 }}
+                    sx={{
+                      alignItems: 'flex-start',
+                      gap: 1.5,
+                      py: 1.25,
+                      '&:first-of-type': { pt: 0 },
+                      '&:last-of-type': { pb: 0 },
+                      '& + &': { borderTop: 1, borderColor: 'divider' },
+                    }}
                   >
-                    <ListItemText
-                      primary={entry.action.replace(/([a-z])([A-Z])/g, '$1 $2')}
-                      primaryTypographyProps={{
-                        variant: 'body2',
-                        fontWeight: 600,
-                        color: 'text.primary',
-                      }}
-                      secondaryTypographyProps={{ variant: 'body2', color: 'text.secondary' }}
-                      secondary={`${fDateTime(entry.occurredAt, ADMISSION_DATE_TIME_FORMAT)} · version ${entry.version}${entry.comment ? ` · ${entry.comment}` : ''}`}
-                    />
+                    <Box sx={{ color: 'text.secondary', display: 'flex', mt: 0.25, flexShrink: 0 }}>
+                      <Iconify icon="mdi:history" width={16} aria-hidden />
+                    </Box>
+                    <Stack spacing={0.5} sx={{ minWidth: 0, overflowWrap: 'anywhere' }}>
+                      <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap">
+                        <Typography component="h3" variant="subtitle2">
+                          {entry.action.replace(/([a-z0-9])([A-Z])/g, '$1 $2')}
+                        </Typography>
+                        <Label>Version {entry.version}</Label>
+                      </Stack>
+                      <Stack direction="row" columnGap={1.5} rowGap={0.25} flexWrap="wrap">
+                        <Typography
+                          component="time"
+                          dateTime={entry.occurredAt}
+                          variant="caption"
+                          color="text.secondary"
+                        >
+                          {fDateTime(entry.occurredAt, ADMISSION_DATE_TIME_FORMAT)}
+                        </Typography>
+                        {entry.actorName && (
+                          <Typography variant="caption" color="text.secondary">
+                            {entry.actorName}
+                          </Typography>
+                        )}
+                      </Stack>
+                      {entry.comment && <Typography variant="body2">{entry.comment}</Typography>}
+                    </Stack>
                   </ListItem>
                 ))}
               </List>
@@ -258,7 +284,7 @@ export function AdmissionFormHistoryDialog({ form, canRestore, onClose, onRestor
           </FormSectionCard>
         </Stack>
       </DialogScrollContent>
-      <DialogActions>
+      <DialogActions sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
         <Button
           variant="outlined"
           size="small"

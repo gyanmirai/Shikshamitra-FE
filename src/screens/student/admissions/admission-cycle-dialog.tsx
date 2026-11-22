@@ -18,7 +18,11 @@ import { CycleDateFields } from './cycle-dialog/cycle-date-fields';
 import { useAdmissionCloseGuard } from './use-admission-close-guard';
 import { CycleDetailsFields } from './cycle-dialog/cycle-details-fields';
 import { useAdmissionCycleForm } from './cycle-dialog/use-admission-cycle-form';
-import { getAdmissionCycleMinimumDate } from './cycle-dialog/cycle-date-limits';
+import {
+  getAdmissionCycleToday,
+  getAdmissionCycleMinimumDate,
+} from './cycle-dialog/cycle-date-limits';
+import { useFormikErrorFocus } from 'src/hooks/use-formik-error-focus';
 
 export type AdmissionCycleDialogProps = {
   open: boolean;
@@ -52,10 +56,13 @@ export function AdmissionCycleDialog({
     onSave,
     onClose,
   });
-  const minimumDate =
+  useFormikErrorFocus(formik);
+  const yearMinimum =
     !editingCycle && !academicYearsLoading && !academicYearsError
       ? getAdmissionCycleMinimumDate(academicYears, formik.values.academicYearId)
       : undefined;
+  const today = getAdmissionCycleToday();
+  const minimumDate = yearMinimum && yearMinimum > today ? yearMinimum : today;
   const closeWithoutSaving = () => {
     formik.resetForm();
     onClose();
@@ -70,6 +77,7 @@ export function AdmissionCycleDialog({
       guardUnsavedChanges={false}
       disableClose={saving || formik.isSubmitting}
       formProps={{
+        noValidate: true,
         onSubmit: (event) => {
           event.preventDefault();
           formik.handleSubmit();
@@ -102,7 +110,7 @@ export function AdmissionCycleDialog({
             <CycleDateFields
               formik={formik}
               minimumDate={minimumDate}
-              disabled={!editingCycle && !minimumDate}
+              disabled={saving || (!editingCycle && !yearMinimum)}
             />
           </Grid>
         </FormSectionCard>

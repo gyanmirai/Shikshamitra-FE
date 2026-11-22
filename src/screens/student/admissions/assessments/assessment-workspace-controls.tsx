@@ -24,7 +24,7 @@ export function AssessmentWorkspaceControls({
   const {
     state,
     academic,
-    applicants,
+    statusCounts,
     sessions,
     sessionChoices,
     selectedSession,
@@ -36,6 +36,7 @@ export function AssessmentWorkspaceControls({
   return (
     <>
       <AdmissionAcademicFilters
+        matchSelectHeights
         boardId={academic.boardId}
         mediumId={academic.mediumId}
         standardId={academic.standardId}
@@ -130,14 +131,13 @@ export function AssessmentWorkspaceControls({
               }
             >
               {tab.label}
-              {!applicants.isError &&
-                !invalidScope &&
-                !invalidSession &&
-                applicants.currentData?.statusCounts && (
-                  <Label sx={{ ml: 1 }} color={tab.color}>
-                    {applicants.currentData.statusCounts[tab.value]}
-                  </Label>
-                )}
+              <Label
+                color={tab.color}
+                aria-hidden={statusCounts?.[tab.value] === undefined || undefined}
+                sx={{ ml: 1, minWidth: 28, fontVariantNumeric: 'tabular-nums' }}
+              >
+                {statusCounts?.[tab.value] ?? '—'}
+              </Label>
             </Button>
           ))}
         </Stack>

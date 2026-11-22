@@ -74,6 +74,13 @@ function setup(overrides: Partial<React.ComponentProps<typeof AdmissionNumbering
   return { ...props, user: userEvent.setup() };
 }
 describe('application numbering dialog', () => {
+  it('displays the scope label and value together', () => {
+    setup();
+    expect(screen.getByText('All Admission Offerings')).toHaveTextContent(
+      'Applies To: All Admission Offerings'
+    );
+  });
+
   it.each([
     ['Academic Year Wise', 2],
     ['Calendar Year Wise', 1],

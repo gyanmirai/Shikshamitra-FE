@@ -4,6 +4,8 @@ import { Box, Stack, Typography } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 
+import { inquiryContactMatches } from './admission-inquiry-parent-review-model';
+
 import type { InquiryFamilyReview } from './admission-inquiry-parent-review-model';
 
 type Props = {
@@ -12,6 +14,8 @@ type Props = {
   onSelect: (familyId: string) => void;
   disabled: boolean;
   error?: string;
+  guardianPhone: string;
+  guardianEmail?: string;
 };
 
 /** Family selection is explicit; children are read-only context for the link. */
@@ -21,7 +25,37 @@ export function AdmissionInquiryFamilyReview({
   onSelect,
   disabled,
   error,
+  guardianPhone,
+  guardianEmail = '',
 }: Props) {
+  const contactMatches = inquiryContactMatches(
+    selectedFamily?.children ?? families.flatMap((family) => family.children),
+    guardianPhone,
+    guardianEmail
+  );
+  const mobileMatches = contactMatches.some((contact) => contact.byPhone);
+  const emailMatches = contactMatches.some((contact) => contact.byEmail);
+  const matchingContacts =
+    mobileMatches && emailMatches
+      ? 'The parent mobile number and email address match'
+      : mobileMatches
+        ? 'The parent mobile number matches'
+        : emailMatches
+          ? 'The parent email address matches'
+          : '';
+  const contactMessage = matchingContacts
+    ? `${matchingContacts}${selectedFamily ? '' : ' existing records'}.`
+    : '';
+  const singleChild = selectedFamily?.children.length === 1;
+  const message = [
+    singleChild ? 'We found a possible sibling.' : 'We found possible siblings.',
+    contactMessage,
+    singleChild
+      ? 'Confirm both children belong to the same family.'
+      : 'Confirm the children belong to the same family.',
+  ]
+    .filter(Boolean)
+    .join(' ');
   const labels = families.map((family) =>
     family.children.map((child) => child.applicantName).join(', ')
   );
@@ -44,13 +78,7 @@ export function AdmissionInquiryFamilyReview({
   });
   return (
     <Stack spacing={2} sx={{ minWidth: 0 }}>
-      {families.length > 0 && (
-        <Typography variant="body2">
-          {selectedFamily?.children.length === 1
-            ? 'We found a possible sibling. Confirm both children belong to the same family.'
-            : 'We found possible siblings. Confirm the children belong to the same family.'}
-        </Typography>
-      )}
+      {families.length > 0 && <Typography variant="body2">{message}</Typography>}
       {families.length > 1 && (
         <ShakingTextField error={Boolean(error)}>
           <CustomSelect

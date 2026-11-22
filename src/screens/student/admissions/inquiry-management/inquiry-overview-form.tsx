@@ -36,6 +36,8 @@ import { getDependentAdmissionFieldCodes } from '../admission-field-dependencies
 import { useAdmissionAddressSync, isAdmissionCopiedAddressField } from '../admission-address-sync';
 import { localizeAdmissionSection, getAdmissionLanguageLabel } from '../form-dialog/form-languages';
 import {
+  inquirySectionTooltip,
+  admissionInterestTooltip,
   validateAdmissionInquiry,
   getAdmissionInquiryFields,
   getAdmissionInquirySections,
@@ -439,7 +441,7 @@ export function InquiryOverviewForm({
               <FormSectionCard
                 title={title === 'Admission interest' ? 'Admission Interest' : title}
                 icon={GlobalIcons.admissionInterest}
-                descriptionTooltip="Select the Academic Context and Admission Offering."
+                descriptionTooltip={admissionInterestTooltip}
                 action={
                   <InquiryFamilyConfirmation
                     inquiry={current}
@@ -703,7 +705,7 @@ export function InquiryOverviewForm({
                     key={section.id}
                     title={section.name}
                     icon={GlobalIcons.admissionStudent}
-                    descriptionTooltip={`Complete The ${section.name} Fields.`}
+                    descriptionTooltip={inquirySectionTooltip(section.name)}
                   >
                     <AdmissionSectionFields
                       columns={2}

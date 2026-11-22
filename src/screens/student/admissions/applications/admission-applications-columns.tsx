@@ -157,12 +157,12 @@ export function buildAdmissionApplicationsColumns({
           filterOperators: ['contains', 'equals', 'startsWith', 'endsWith'],
         }
       : {}),
-    ...(['decisionEnteredAt', 'lastSavedAt'].includes(column.id)
+    ...(column.id === 'lastSavedAt'
       ? {
           isFilter: true,
           filterType: 'date' as const,
           filterOperators: ['equals', 'before', 'after'],
-          align: 'right' as const,
+          align: 'left' as const,
           valueType: 'datetime' as const,
         }
       : {}),

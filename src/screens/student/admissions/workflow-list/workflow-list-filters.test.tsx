@@ -27,21 +27,23 @@ const filters: WorkflowFilters = {
   rowsPerPage: 10,
 };
 
-const renderFilters = (onUpdate = vi.fn()) => {
+const renderFilters = (values = filters) => {
+  const onUpdate = vi.fn();
+  const onClear = vi.fn();
   render(
     <ThemeProvider theme={createTheme(defaultSettings)}>
       <LocalizationProvider dateAdapter={AdapterDayjs}>
-        <WorkflowListFilters filters={filters} onUpdate={onUpdate} />
+        <WorkflowListFilters filters={values} onUpdate={onUpdate} onClear={onClear} />
       </LocalizationProvider>
     </ThemeProvider>
   );
-  return onUpdate;
+  return { onUpdate, onClear };
 };
 
 describe('WorkflowListFilters', () => {
   it('keeps advanced filters in an anchored popover and applies staged values', async () => {
     const user = userEvent.setup();
-    const onUpdate = renderFilters();
+    const { onUpdate } = renderFilters();
 
     expect(screen.queryByRole('dialog', { name: 'Workflow Filters' })).not.toBeInTheDocument();
 
@@ -59,19 +61,29 @@ describe('WorkflowListFilters', () => {
     );
   });
 
-  it('clears only the advanced filter values', async () => {
+  it('requests clearing all applied filters', async () => {
     const user = userEvent.setup();
-    const onUpdate = renderFilters();
+    const { onUpdate, onClear } = renderFilters({ ...filters, version: '2' });
 
     await user.click(screen.getByRole('button', { name: 'Filters' }));
     await user.click(screen.getByRole('button', { name: 'Clear' }));
 
-    expect(onUpdate).toHaveBeenCalledWith({
-      status: 'all',
-      version: '',
-      usage: 'all',
-      createdFrom: '',
-      createdTo: '',
+    expect(onClear).toHaveBeenCalledOnce();
+    expect(onUpdate).not.toHaveBeenCalled();
+  });
+
+  it('explains a reversed range and prevents applying it', async () => {
+    const user = userEvent.setup();
+    const { onUpdate } = renderFilters({
+      ...filters,
+      createdFrom: '2026-11-18',
+      createdTo: '2026-11-17',
     });
+
+    await user.click(screen.getByRole('button', { name: 'Filters' }));
+
+    expect(screen.getByText('End date must be on or after the start date.')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Apply Filters' })).toBeDisabled();
+    expect(onUpdate).not.toHaveBeenCalled();
   });
 });

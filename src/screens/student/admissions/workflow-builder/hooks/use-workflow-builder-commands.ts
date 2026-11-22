@@ -3,6 +3,7 @@
 import type { AdmissionWorkflow } from 'src/redux/student/admissions/admission-workflows-api';
 
 import { useRef, useState } from 'react';
+import { isEqual } from 'src/utils/helper';
 import { shikshaMitraToast } from 'src/components/toast';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import {
@@ -74,7 +75,14 @@ export function useWorkflowBuilderCommands(
     draft.setStages(result.stages);
     draft.setTransitions(result.transitions);
     draft.setDefaultInquiryFormDefinitionId(result.defaultInquiryFormDefinitionId ?? null);
-    draft.setValidation(null);
+    // Keep issues visible when saving the same graph. A changed graph needs a fresh preview.
+    if (
+      !isEqual(result.stages, draft.stages) ||
+      !isEqual(result.transitions, draft.transitions) ||
+      (result.defaultInquiryFormDefinitionId ?? null) !== draft.defaultInquiryFormDefinitionId
+    ) {
+      draft.setValidation(null);
+    }
     draft.setDirty(false);
     return result;
   };

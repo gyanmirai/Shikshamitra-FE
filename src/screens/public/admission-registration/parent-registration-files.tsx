@@ -3,14 +3,28 @@
 import type { ParentRegistrationFile } from 'src/redux/student/admissions/admission-parent-registration-types';
 
 import { useState, useEffect } from 'react';
-import { GlobalIcons } from 'src/utils/icons';
+import { fData } from 'src/utils/format-number';
 import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { FileThumbnail } from 'src/components/file-thumbnail';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Box, Stack, Button, Skeleton, Typography, DialogActions } from '@mui/material';
+import {
+  Box,
+  Card,
+  Stack,
+  Button,
+  Skeleton,
+  Typography,
+  IconButton,
+  DialogActions,
+  CircularProgress,
+} from '@mui/material';
 
 import type { ParentRegistrationTransport } from './parent-registration-transport';
 
-export function ParentRegistrationFileActions({
+const touchTarget = { '@media (pointer: coarse)': { minWidth: 44, minHeight: 44 } };
+
+export function ParentRegistrationAttachment({
   file,
   transport,
 }: {
@@ -40,27 +54,58 @@ export function ParentRegistrationFileActions({
     }
   };
   return (
-    <Stack spacing={0.5}>
-      <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
-        <Button
-          size="small"
-          startIcon={<Iconify icon={GlobalIcons.eye} />}
-          disabled={!file.canDownload}
-          onClick={() => setPreview(true)}
-          aria-label={`Preview ${file.fileName}`}
-        >
-          Preview
-        </Button>
-        <Button
-          size="small"
-          startIcon={<Iconify icon={GlobalIcons.download} />}
-          disabled={!file.canDownload || downloading}
-          onClick={download}
-          aria-label={`Download ${file.fileName}`}
-        >
-          {downloading ? 'Downloading…' : 'Download'}
-        </Button>
-      </Stack>
+    <Stack spacing={1}>
+      <Card variant="outlined" sx={{ p: 1, minWidth: 0 }}>
+        <Stack direction="row" spacing={1} alignItems="center">
+          <FileThumbnail file={file.fileName} sx={{ width: 25, height: 25 }} aria-hidden />
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
+              {file.fileName}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {[
+                Number.isFinite(file.size) ? fData(file.size) : null,
+                `Version ${file.versionNumber}`,
+              ]
+                .filter(Boolean)
+                .join(' · ')}
+            </Typography>
+          </Box>
+          <Stack direction="row" sx={{ flexShrink: 0 }}>
+            <CustomTooltip title="Preview">
+              <span>
+                <IconButton
+                  size="small"
+                  disabled={!file.canDownload}
+                  onClick={() => setPreview(true)}
+                  aria-label={`Preview ${file.fileName}`}
+                  sx={touchTarget}
+                >
+                  <Iconify icon="mdi:eye-outline" width={18} aria-hidden />
+                </IconButton>
+              </span>
+            </CustomTooltip>
+            <CustomTooltip title={downloading ? 'Downloading…' : 'Download'}>
+              <span>
+                <IconButton
+                  size="small"
+                  disabled={!file.canDownload || downloading}
+                  onClick={download}
+                  aria-label={`Download ${file.fileName}`}
+                  aria-busy={downloading || undefined}
+                  sx={touchTarget}
+                >
+                  {downloading ? (
+                    <CircularProgress size={16} aria-hidden />
+                  ) : (
+                    <Iconify icon="mdi:download" width={18} aria-hidden />
+                  )}
+                </IconButton>
+              </span>
+            </CustomTooltip>
+          </Stack>
+        </Stack>
+      </Card>
       {error && (
         <Typography role="alert" color="error" variant="body2">
           {error}

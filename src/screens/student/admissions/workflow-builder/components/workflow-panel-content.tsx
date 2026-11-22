@@ -3,15 +3,18 @@ import type {
   AdmissionWorkflowStage,
   AdmissionWorkflowUsage,
   AdmissionWorkflowTransition,
+  AdmissionWorkflowStageTypeMetadata,
   AdmissionWorkflowGovernanceHistory,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
 import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { StudentFeedback } from 'src/components/student-feedback';
-import { Box, Card, Stack, Skeleton, Typography } from '@mui/material';
+import { Box, Card, Stack, Avatar, Button, Divider, Skeleton, Typography } from '@mui/material';
 
 import { AdmissionQueryError } from '../../admission-query-error';
+import { getTransitionSummary } from '../../workflow-builder-utils';
 import { WorkflowVersionHistory } from './workflow-version-history';
 import { WorkflowSimulationPanel } from './workflow-simulation-panel';
 import { WorkflowRuntimeAnalytics } from './workflow-runtime-analytics';
@@ -24,6 +27,7 @@ type Props = {
   workflow: AdmissionWorkflow;
   stages: AdmissionWorkflowStage[];
   transitions: AdmissionWorkflowTransition[];
+  stageTypes?: AdmissionWorkflowStageTypeMetadata[];
   versions?: AdmissionWorkflow[];
   versionsLoading?: boolean;
   versionsError?: boolean;
@@ -31,6 +35,7 @@ type Props = {
   usage?: AdmissionWorkflowUsage;
   usageLoading: boolean;
   usageError?: boolean;
+  onRetryUsage?: () => void;
   canCreateVersion: boolean;
   governanceHistory?: AdmissionWorkflowGovernanceHistory[];
   governanceLoading: boolean;
@@ -41,6 +46,7 @@ export function WorkflowPanelContent({
   workflow,
   stages,
   transitions,
+  stageTypes,
   versions,
   versionsLoading,
   versionsError,
@@ -48,11 +54,13 @@ export function WorkflowPanelContent({
   usage,
   usageLoading,
   usageError = false,
+  onRetryUsage,
   canCreateVersion,
   governanceHistory,
   governanceLoading,
 }: Props) {
-  if (panel === 'preview') return <WorkflowPreview stages={stages} transitions={transitions} />;
+  if (panel === 'preview')
+    return <WorkflowPreview stages={stages} transitions={transitions} stageTypes={stageTypes} />;
   if (panel === 'simulation')
     return <WorkflowSimulationPanel stages={stages} transitions={transitions} />;
   if (panel === 'versions' && versionsLoading)
@@ -75,7 +83,14 @@ export function WorkflowPanelContent({
       />
     );
   if (panel === 'usage')
-    return <WorkflowUsage usage={usage} loading={usageLoading} error={usageError} />;
+    return (
+      <WorkflowUsage
+        usage={usage}
+        loading={usageLoading}
+        error={usageError}
+        onRetry={onRetryUsage}
+      />
+    );
   if (panel === 'governance')
     return (
       <WorkflowGovernanceHistory
@@ -90,87 +105,183 @@ export function WorkflowPanelContent({
 function WorkflowPreview({
   stages,
   transitions,
+  stageTypes = [],
 }: {
   stages: AdmissionWorkflowStage[];
   transitions: AdmissionWorkflowTransition[];
+  stageTypes?: AdmissionWorkflowStageTypeMetadata[];
 }) {
-  const stageById = new Map(stages.map((stage) => [stage.id, stage]));
   if (stages.length === 0)
     return (
       <StudentFeedback notificationKey="STU-0566" presentation="inline" severity="info">
         Add stages to preview the journey.
       </StudentFeedback>
     );
-  return stages.map((stage) => {
-    const outgoing = transitions
-      .filter((transition) => transition.fromStageId === stage.id)
-      .sort((left, right) => left.priority - right.priority);
-    return (
-      <Card key={stage.id} variant="outlined" sx={{ p: 1.5 }}>
-        <Stack spacing={1.25}>
-          <Stack direction="row" spacing={1} alignItems="center">
-            <Iconify
-              icon={stage.isTerminalStage ? 'mdi:flag-checkered' : 'mdi:circle-slice-8'}
-              color={
-                stage.isEntryStage
-                  ? 'info.main'
-                  : stage.isTerminalStage
-                    ? 'success.main'
-                    : 'text.secondary'
-              }
-            />
-            <Box sx={{ minWidth: 0 }}>
-              <Typography fontWeight={600}>{stage.name}</Typography>
-              <Typography variant="caption" color="text.secondary">
-                {stage.isEntryStage
-                  ? 'Journey Starts Here'
-                  : stage.isTerminalStage
-                    ? 'Journey Ends Here'
-                    : stage.code}
-              </Typography>
-            </Box>
-          </Stack>
-          {outgoing.length > 0 ? (
-            <Stack spacing={0.75} sx={{ pl: 3.5 }}>
-              {outgoing.map((transition) => (
-                <Stack key={transition.id} direction="row" spacing={1} alignItems="center">
-                  <Iconify icon="mdi:arrow-right" color="text.secondary" />
-                  <Typography variant="body2" sx={{ flex: 1 }}>
-                    {transition.isDefault ? 'Otherwise' : 'When the Route Condition Matches'}
-                  </Typography>
-                  <Typography variant="body2" fontWeight={600} textAlign="right">
-                    {stageById.get(transition.toStageId)?.name ?? 'Missing Stage'}
-                  </Typography>
+  const orderedStages = [...stages].sort((left, right) => left.displayOrder - right.displayOrder);
+  const destinations = new Map(
+    orderedStages.map(({ id, name }, index) => [id, { name, number: index + 1 }])
+  );
+  const metadataByType = new Map(stageTypes.map((metadata) => [metadata.type, metadata]));
+
+  return (
+    <Stack
+      component="ol"
+      role="list"
+      aria-label="Journey Stage Sequence"
+      spacing={1.5}
+      sx={{ listStyle: 'none', m: 0, p: 0 }}
+    >
+      {orderedStages.map((stage, index) => {
+        const metadata = metadataByType.get(stage.stageType);
+        const outgoing = transitions
+          .filter((transition) => transition.fromStageId === stage.id)
+          .sort((left, right) => left.priority - right.priority);
+
+        return (
+          <Card
+            key={stage.id}
+            component="li"
+            variant="outlined"
+            sx={{ p: { xs: 1.25, sm: 1.5 }, minWidth: 0 }}
+          >
+            <Stack spacing={1.25}>
+              <Stack direction="row" spacing={1.25} alignItems="flex-start">
+                <Avatar
+                  aria-hidden="true"
+                  sx={{
+                    width: 36,
+                    height: 36,
+                    flexShrink: 0,
+                    typography: 'subtitle2',
+                    bgcolor: 'background.neutral',
+                    color: 'text.primary',
+                    border: 1,
+                    borderColor: 'divider',
+                  }}
+                >
+                  {index + 1}
+                </Avatar>
+                <Stack spacing={0.5} sx={{ minWidth: 0 }}>
+                  <Stack direction="row" flexWrap="wrap" alignItems="center" gap={0.75}>
+                    <Typography
+                      component="h3"
+                      variant="subtitle1"
+                      sx={{ overflowWrap: 'anywhere' }}
+                    >
+                      {stage.name}
+                    </Typography>
+                    {stage.isEntryStage && <Label color="info">Entry</Label>}
+                    {stage.isTerminalStage && <Label>Final</Label>}
+                  </Stack>
+                  <Stack direction="row" spacing={0.5} alignItems="center" color="text.secondary">
+                    <Iconify
+                      icon={metadata?.icon || GlobalIcons.admissionDetails}
+                      width={16}
+                      aria-hidden="true"
+                      sx={{ flexShrink: 0 }}
+                    />
+                    <Typography variant="caption" sx={{ overflowWrap: 'anywhere' }}>
+                      {metadata?.displayName || `Saved type ${stage.stageType}`}
+                    </Typography>
+                  </Stack>
                 </Stack>
-              ))}
+              </Stack>
+              {outgoing.length > 0 ? (
+                <>
+                  <Divider />
+                  <Typography component="h4" variant="subtitle2">
+                    Next Stages
+                  </Typography>
+                  <Stack
+                    component="ul"
+                    role="list"
+                    aria-label="Next Stages"
+                    spacing={0.75}
+                    sx={{ listStyle: 'none', m: 0, p: 0 }}
+                  >
+                    {outgoing.map((transition) => {
+                      const destination = destinations.get(transition.toStageId);
+                      return (
+                        <Stack
+                          key={transition.id}
+                          component="li"
+                          direction="row"
+                          spacing={1}
+                          alignItems="flex-start"
+                        >
+                          <Iconify
+                            icon="mdi:arrow-right"
+                            color="text.secondary"
+                            width={16}
+                            aria-hidden="true"
+                            sx={{ flexShrink: 0, mt: 0.25 }}
+                          />
+                          <Box sx={{ minWidth: 0, overflowWrap: 'anywhere' }}>
+                            <Typography
+                              variant="body2"
+                              color={destination ? 'text.primary' : 'warning.main'}
+                              fontWeight={600}
+                            >
+                              {destination
+                                ? `To stage ${destination.number} · ${destination.name}`
+                                : 'Missing stage'}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {getTransitionSummary(transition)}
+                            </Typography>
+                          </Box>
+                        </Stack>
+                      );
+                    })}
+                  </Stack>
+                </>
+              ) : !stage.isTerminalStage ? (
+                <StudentFeedback
+                  notificationKey="STU-0567"
+                  presentation="persistent"
+                  severity="warning"
+                  icon={false}
+                  sx={{ py: 0.5 }}
+                >
+                  No onward route
+                </StudentFeedback>
+              ) : null}
             </Stack>
-          ) : !stage.isTerminalStage ? (
-            <StudentFeedback
-              notificationKey="STU-0567"
-              presentation="persistent"
-              severity="warning"
-              icon={false}
-              sx={{ py: 0.5 }}
-            >
-              No onward route
-            </StudentFeedback>
-          ) : null}
-        </Stack>
-      </Card>
-    );
-  });
+          </Card>
+        );
+      })}
+    </Stack>
+  );
 }
 
 function WorkflowUsage({
   usage,
   loading,
   error,
+  onRetry,
 }: {
   usage?: AdmissionWorkflowUsage;
   loading: boolean;
   error: boolean;
+  onRetry?: () => void;
 }) {
   if (loading) return <Skeleton variant="rounded" height={120} />;
+  if (error && onRetry)
+    return (
+      <StudentFeedback
+        notificationKey="STU-0568"
+        presentation="inline"
+        severity="error"
+        role="alert"
+        action={
+          <Button size="small" color="inherit" onClick={onRetry}>
+            Retry
+          </Button>
+        }
+      >
+        Workflow usage could not be loaded.
+      </StudentFeedback>
+    );
   if (error)
     return (
       <StudentFeedback notificationKey="STU-0568" presentation="toast" severity="error">

@@ -110,9 +110,8 @@ export default function AdmissionApplicationsScreen() {
   );
   const openApplication = useCallback(
     (id: string) => {
-      if (canView && !isPending) {
+      if (canView && !isPending && navigate(id, applicationUrl(id), { scroll: false })) {
         preloadAdmissionApplication(dispatch, id);
-        navigate(id, applicationUrl(id), { scroll: false });
       }
     },
     [applicationUrl, canView, dispatch, isPending, navigate]
@@ -244,9 +243,9 @@ export default function AdmissionApplicationsScreen() {
                 label: `Open ${formatAdmissionReference(row.applicationNumber)} for ${row.applicantName || 'applicant'}`,
                 onClick: () => openApplication(row.id),
                 disabled: isPending,
-                pending: pendingKey === row.id,
               })}
-              rowProps={() => ({
+              rowProps={(row) => ({
+                'aria-busy': pendingKey === row.id || undefined,
                 onClick: (event) => {
                   const selection = window.getSelection();
                   if (
@@ -266,7 +265,6 @@ export default function AdmissionApplicationsScreen() {
                   (listQuery.isLoading || (listQuery.isFetching && !data)))
               }
               isRefreshing={!skip && listQuery.isFetching && Boolean(data)}
-              refreshIndicator="skeleton"
               onClearCriteria={() =>
                 update({ search: undefined, filters: undefined, status: undefined })
               }

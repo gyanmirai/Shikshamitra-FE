@@ -24,7 +24,7 @@ type Props = {
 };
 
 export function WorkflowFormStageFields(props: Props) {
-  const { formik, metadata, forms, formDefinitionId, readOnly } = props;
+  const { formik, metadata, forms, formDefinitionId } = props;
 
   return (
     <Stack spacing={2} sx={{ p: 2 }}>
@@ -37,15 +37,12 @@ export function WorkflowFormStageFields(props: Props) {
           <WorkflowFormStageBasics {...props} />
         </FormSectionCard>
 
-        <FormSectionCard title="Form Completion" icon="mdi:file-check-outline">
-          <WorkflowFormSettings
-            formik={formik}
-            forms={forms}
-            formDefinitionId={formDefinitionId}
-            readOnly={readOnly}
-            available={metadata?.supportedConfiguration?.includes('form') === true}
-          />
-        </FormSectionCard>
+        <WorkflowFormSettings
+          configurationJson={formik.values.configurationJson}
+          forms={forms}
+          formDefinitionId={formDefinitionId}
+          available={metadata?.supportedConfiguration?.includes('form') === true}
+        />
         <WorkflowFormStageSettings {...props} />
       </>
     </Stack>

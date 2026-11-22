@@ -103,6 +103,18 @@ it('places Status before the final Action column and opens read-only details fro
   expect(onDetails).toHaveBeenCalledOnce();
 });
 
+it('names the column visibility toggle without duplicating the select-all checkbox', () => {
+  renderTable([row('Student')]);
+  expect(screen.getByRole('checkbox', { name: 'Select Applicants on This Page' })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Columns' }));
+  expect(screen.getByRole('checkbox', { name: 'Row Selection' })).toBeChecked();
+  expect(screen.queryByRole('checkbox', { name: 'Select Applicants on This Page' })).not.toBeInTheDocument();
+  fireEvent.change(screen.getByRole('textbox', { name: 'Search columns' }), {
+    target: { value: 'row selection' },
+  });
+  expect(screen.getAllByRole('checkbox')).toHaveLength(1);
+});
+
 it('exposes real scalar filters while leaving combined identity and next-action controls unfilterable', async () => {
   const onServerFilter = vi.fn();
   renderWithProviders(
@@ -207,7 +219,7 @@ it('keeps inactive and unmanaged assessment rows unavailable and explains why', 
   );
   const help = screen.getByLabelText('Why Selection Is Unavailable For History');
   expect(help).toHaveAttribute('tabindex', '0');
-  expect(help.getAttribute('title')).toContain('no longer active');
+  expect(help).not.toHaveAttribute('title');
   fireEvent.mouseOver(help);
   expect(await screen.findByRole('tooltip')).toHaveTextContent(
     'This assessment stage is no longer active.'

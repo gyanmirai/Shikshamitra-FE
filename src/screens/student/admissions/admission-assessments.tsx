@@ -90,24 +90,8 @@ export default function AdmissionAssessmentsScreen() {
   const openStudentBooking = (rows: AssessmentRosterItem[]) =>
     setBooking({ rows, scopes: scopes.currentData ?? [] });
   const tableFilters = useMemo<IParams['filters']>(
-    () => [
-      ...readAssessmentColumnFilters(state.columnFilters),
-      ...(state.status === 'all'
-        ? []
-        : [
-            {
-              column: 'assessmentProgress',
-              type: 'equals',
-              value: state.status,
-              valueType: 'enum',
-              label: 'Assessment Progress',
-              displayValue: { pending: 'Pending', ongoing: 'Ongoing', complete: 'Complete' }[
-                state.status
-              ],
-            },
-          ]),
-    ],
-    [state.columnFilters, state.status]
+    () => readAssessmentColumnFilters(state.columnFilters),
+    [state.columnFilters]
   );
   const hasSafeRows = Boolean(applicants.currentData?.items.length);
   const listError = scopes.isError || applicants.isError;
@@ -272,21 +256,17 @@ export default function AdmissionAssessmentsScreen() {
         : scopes.isError
           ? 'Refresh assessment settings before booking a session.'
           : 'Wait for assessment settings to finish loading.';
-  const filtered =
-    state.columnFilters ||
+  const hasIndependentFilters =
+    tableFilters.length > 0 ||
     state.search ||
-    state.status !== 'all' ||
     state.sessionId ||
     workbench.scopeKey ||
-    academic.boardId ||
-    academic.mediumId ||
     academic.standardId;
+  const filtered = hasIndependentFilters || state.status !== 'all';
   const clearFilters = () =>
     updateWorkbench({
       assessmentSearch: undefined,
       assessmentFilters: undefined,
-      assessmentQueue: undefined,
-      assessmentStatus: undefined,
       assessmentSession: undefined,
       assessmentScope: undefined,
       assessmentPage: 0,
@@ -433,6 +413,7 @@ export default function AdmissionAssessmentsScreen() {
               }}
             >
               <AdmissionAcademicFilters
+                matchSelectHeights
                 boardId={academic.boardId}
                 mediumId={academic.mediumId}
                 standardId={academic.standardId}
@@ -445,7 +426,9 @@ export default function AdmissionAssessmentsScreen() {
                 page={state.sessionPage}
                 pageSize={state.sessionSize}
                 search={state.sessionSearch}
-                isLoading={managedSessions.isFetching && !managedSessions.currentData}
+                isLoading={
+                  !managedSessions.currentData && (scopes.isLoading || managedSessions.isFetching)
+                }
                 isFetching={managedSessions.isFetching}
                 error={managedSessions.isError ? 'Unable to load assessment sessions.' : undefined}
                 canManage={permissions.view && permissions.manageSessions}
@@ -578,21 +561,17 @@ export default function AdmissionAssessmentsScreen() {
                     ) : undefined
                   }
                   isRefreshing={applicants.isFetching && !!applicants.currentData}
-                  refreshIndicator="skeleton"
+                  refreshIndicator="linear"
                   filters={tableFilters}
                   onServerFilter={(next) =>
                     updateWorkbench({
                       assessmentFilters: serializeAssessmentColumnFilters(next),
-                      assessmentStatus: next.findLast(
-                        (item) => item.column === 'assessmentProgress'
-                      )?.value,
                       assessmentPage: 0,
                     })
                   }
                   onClearCriteria={() =>
                     updateWorkbench({
                       assessmentSearch: undefined,
-                      assessmentStatus: undefined,
                       assessmentFilters: undefined,
                       assessmentPage: 0,
                     })
@@ -632,7 +611,7 @@ export default function AdmissionAssessmentsScreen() {
                                     ? 'No Applicants Match These Filters.'
                                     : 'No Applicants Have Reached an Assessment Stage Yet.'}
                       </Typography>
-                      {!!filtered && (
+                      {!!hasIndependentFilters && (
                         <Button size="small" variant="outlined" onClick={clearFilters}>
                           Clear Filters
                         </Button>
