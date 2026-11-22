@@ -24,7 +24,7 @@ self.addEventListener('notificationclick', (event) => {
     const client = clients.find((windowClient) => {
       const url = new URL(windowClient.url);
       return url.origin === self.location.origin &&
-        !url.pathname.startsWith('/login') && !url.pathname.startsWith('/account/');
+        (url.pathname === '/dashboard' || url.pathname === '/academic/dashboard');
     });
     if (client) {
       await client.focus();

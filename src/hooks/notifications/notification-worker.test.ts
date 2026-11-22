@@ -68,4 +68,15 @@ describe('the notification service worker', () => {
 
     expect(open).toHaveBeenCalledWith(`${origin}/dashboard?openNotifications=1`);
   });
+
+  it('opens the authenticated dashboard when only a public form is open', async () => {
+    const publicTab = { url: `${origin}/admission-registration`, focus: vi.fn(), postMessage: vi.fn() };
+    const { emit, open } = fixture([publicTab]);
+
+    await emit('notificationclick', { notification: { close: vi.fn() } });
+
+    expect(publicTab.focus).not.toHaveBeenCalled();
+    expect(publicTab.postMessage).not.toHaveBeenCalled();
+    expect(open).toHaveBeenCalledWith(`${origin}/dashboard?openNotifications=1`);
+  });
 });

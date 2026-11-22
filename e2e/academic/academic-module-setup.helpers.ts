@@ -33,6 +33,10 @@ export async function prepare(page: Page, request: APIRequestContext, theme = 'l
 
 export async function login(page: Page, user = 'admin') {
   await page.goto('/login', { waitUntil: 'domcontentloaded' });
+  await submitLogin(page, user);
+}
+
+export async function submitLogin(page: Page, user = 'admin') {
   await page.getByLabel(/^School code$/i).fill('SCHOOL_01');
   await page.getByLabel(/^Email (?:\/|or) username$/i).fill(user);
   await page.getByLabel('Password', { exact: true }).fill('Fixture-Password-29!');

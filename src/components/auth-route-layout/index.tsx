@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useSession } from 'next-auth/react';
 import { useRouter, usePathname } from 'next/navigation';
+import { preserveNotificationLaunch } from 'src/hooks/notifications/notification-launch';
 import { isWrongWorkspace, workspaceLanding } from 'src/redux/host-tenants/workspace-landing';
 
 import { SplashScreen } from '../loading-screen';
@@ -52,18 +53,22 @@ const AuthRouteLayout = ({ children }: { children: React.ReactNode }) => {
     : false;
 
   useEffect(() => {
-    if (verifiedIdentity && wrongWorkspace && sessionContext)
-      router.replace(workspaceLanding(sessionContext, permissions));
-  }, [verifiedIdentity, wrongWorkspace, router, sessionContext, permissions]);
+    if (verifiedIdentity && wrongWorkspace && sessionContext) {
+      const landing = workspaceLanding(sessionContext, permissions);
+      const notificationLanding = pathname === '/dashboard' &&
+        sessionContext.accountMode === 'tenant' && sessionContext.setupCompleted === true;
+      router.replace(notificationLanding ? preserveNotificationLaunch(landing, window.location.search) : landing);
+    }
+  }, [verifiedIdentity, wrongWorkspace, router, sessionContext, permissions, pathname]);
 
   useEffect(() => {
     const hasUsableSession =
       sessionData?.profile?.sub && sessionData?.accessToken && !sessionData?.error;
 
     if (status !== 'loading' && !hasUsableSession) {
-      router.push('/login');
+      router.push(pathname === '/dashboard' ? preserveNotificationLaunch('/login', window.location.search) : '/login');
     }
-  }, [status, sessionData, router]);
+  }, [status, sessionData, router, pathname]);
 
   const hasUsableSession =
     status === 'authenticated' &&
