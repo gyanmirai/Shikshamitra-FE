@@ -144,7 +144,7 @@ export const TableToolbar = memo(
                   <Box sx={{ maxHeight: 280, overflowY: 'auto' }}>
                     {columns
                       .filter((column) =>
-                        extractTextFromReactNode(column.label)
+                        (column.visibilityLabel ?? extractTextFromReactNode(column.label))
                           .toLowerCase()
                           .includes(columnSearch.toLowerCase())
                       )
@@ -152,7 +152,7 @@ export const TableToolbar = memo(
                         <FormControlLabel
                           key={column.id}
                           sx={{ display: 'flex', mx: 0 }}
-                          label={column.label}
+                          label={column.visibilityLabel ?? column.label}
                           control={
                             <Checkbox
                               size="small"

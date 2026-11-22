@@ -58,7 +58,6 @@ import {
 } from 'src/redux/student/records/student-record-documents-api';
 
 import { recordsQueryUrl } from './records-url-state';
-import StudentICardBuilder from './student-icard-builder';
 import { useIssuedCardHistory } from './use-issued-card-history';
 import RecordDocumentTemplates from './record-document-templates';
 import RecordDocumentFilters from './components/record-document-filters';
@@ -140,6 +139,12 @@ function RecordDocuments({ fixedKind }: { fixedKind?: 'ids' | 'certificates' }) 
     kind === 'ids' ? 'Students.Records.StudentICard.Add' : 'Students.Records.Certificates.Add'
   );
   const issued = useIssuedCardHistory(fixedKind === 'ids' && canView, currentYearId);
+  const assignmentHref = issued.ready
+    ? recordsQueryUrl(studentPaths.records.studentICard, '', {
+        board: issued.scope.board,
+        medium: issued.scope.medium,
+      })
+    : studentPaths.records.studentICard;
   const [selectedCertificateType, setSelectedCertificateType] = useState<CertificateType>(1);
   const certificateType =
     fixedKind === 'certificates'
@@ -157,8 +162,6 @@ function RecordDocuments({ fixedKind }: { fixedKind?: 'ids' | 'certificates' }) 
   const [bulkProgress, setBulkProgress] = useState('');
   const [idPreview, setIdPreview] = useState<IdCard[]>([]);
   const [templatesOpen, setTemplatesOpen] = useState(false);
-  const [builderOpen, setBuilderOpen] = useState(false);
-  const [builderYearId, setBuilderYearId] = useState<string | undefined>();
   const [failure, setFailure] = useState<string | null>(null);
   const [decision, setDecision] = useState<{
     action: 'Reprint' | 'Void' | 'Duplicate';
@@ -517,8 +520,8 @@ function RecordDocuments({ fixedKind }: { fixedKind?: 'ids' | 'certificates' }) 
           { name: 'Student', href: studentPaths.dashboard },
           { name: 'Student Records', href: studentPaths.records.root },
           {
-            name: pageTitle,
-            ...(fixedKind === 'ids' ? { href: studentPaths.records.studentICard } : {}),
+            name: fixedKind === 'ids' ? 'I-Card Assignment' : pageTitle,
+            ...(fixedKind === 'ids' ? { href: assignmentHref } : {}),
           },
           ...(fixedKind === 'ids' ? [{ name: 'Issued cards' }] : []),
         ]}
@@ -530,10 +533,10 @@ function RecordDocuments({ fixedKind }: { fixedKind?: 'ids' | 'certificates' }) 
             useFlexGap
             justifyContent={fixedKind === 'ids' ? 'flex-end' : undefined}
           >
-            {fixedKind === 'ids' && (
+            {fixedKind === 'ids' && canView && (
               <Button
                 component={RouterLink}
-                href={studentPaths.records.studentICard}
+                href={studentPaths.records.settingsSections.iCardTemplates}
                 size="small"
                 variant="outlined"
                 color="inherit"
@@ -542,21 +545,20 @@ function RecordDocuments({ fixedKind }: { fixedKind?: 'ids' | 'certificates' }) 
                 View templates
               </Button>
             )}
-            {canIssue ? (
+            {canIssue && kind === 'ids' && canView && (
               <Button
+                component={RouterLink}
+                href={assignmentHref}
                 size={fixedKind === 'ids' ? 'small' : undefined}
                 variant={fixedKind === 'ids' ? 'contained' : undefined}
                 startIcon={fixedKind === 'ids' ? <Iconify icon={GlobalIcons.addIcon} /> : undefined}
-                onClick={() => {
-                  if (kind === 'ids') {
-                    setBuilderYearId(currentYearId);
-                    setBuilderOpen(true);
-                  } else setTemplatesOpen(true);
-                }}
               >
-                {kind === 'ids' ? 'Create I-Card' : 'Configure template'}
+                Create I-Card
               </Button>
-            ) : undefined}
+            )}
+            {canIssue && kind === 'certificates' && (
+              <Button onClick={() => setTemplatesOpen(true)}>Configure template</Button>
+            )}
           </Stack>
         }
       />
@@ -952,17 +954,6 @@ function RecordDocuments({ fixedKind }: { fixedKind?: 'ids' | 'certificates' }) 
         certificateType={certificateType}
         onClose={() => setTemplatesOpen(false)}
       />
-      <CustomDialog
-        fullScreen
-        hasForm={false}
-        title="Create I-Card"
-        open={builderOpen}
-        handleClose={() => setBuilderOpen(false)}
-      >
-        <Box sx={{ flex: 1, minHeight: 0, p: 1, bgcolor: 'background.neutral' }}>
-          {builderOpen && <StudentICardBuilder onClose={() => setBuilderOpen(false)} academicYearId={builderYearId} contextInvalid={currentYearId !== builderYearId} />}
-        </Box>
-      </CustomDialog>
       <CustomDialog
         open={!!decision}
         handleClose={kind === 'certificates' ? requestCloseCertificateDecision : () => {

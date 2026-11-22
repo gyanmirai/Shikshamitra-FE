@@ -1,6 +1,8 @@
 import type { Dayjs } from 'dayjs';
 import type { AdmissionOfferingWriteInput } from 'src/redux/student/admissions/admission-offerings-api';
 
+export const ADMISSION_OFFERING_PAGE_SIZES = [10, 25, 50, 100];
+
 export type AdmissionOfferingFormValues = Omit<
   AdmissionOfferingWriteInput,
   'openDate' | 'closeDate'

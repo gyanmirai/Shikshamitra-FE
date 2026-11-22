@@ -65,15 +65,17 @@ function setup(overrides: Partial<ComponentProps<typeof AdmissionInquiryDuplicat
   );
   return { ...render(content()), props, content };
 }
-it('confirms a single saved family using a child witness without showing parent fields or contact explanations', async () => {
+it('reports both matching contacts in the message without exposing their values', async () => {
   const { props } = setup({
     matches: [
-      { ...match, dateOfBirth: '2016-04-05' },
-      { ...match, applicantId: 'child-2', applicantName: 'Anya Patel' },
+      { ...match, dateOfBirth: '2016-04-05', matchByEmail: false },
+      { ...match, applicantId: 'child-2', applicantName: 'Anya Patel', matchByEmail: false },
     ],
   });
   expect(
-    screen.getByText('We found possible siblings. Confirm the children belong to the same family.')
+    screen.getByText(
+      'We found possible siblings. The parent mobile number and email address match. Confirm the children belong to the same family.'
+    )
   ).toBeVisible();
   expect(screen.queryByText('Priya Patel')).toBeNull();
   expect(screen.queryByText('Link with')).toBeNull();
@@ -95,18 +97,42 @@ it('confirms a single saved family using a child witness without showing parent 
     expect(props.onUseExisting).toHaveBeenCalledExactlyOnceWith('family-1', 'child-1')
   );
 });
-it('requires explicit family selection for distinct saved family IDs despite identical contacts', async () => {
+it('shows contact matches when the dialog opens and filters the message after family selection', async () => {
   const { props } = setup({
+    presentation: 'dialog',
     matches: [
-      match,
-      { ...match, familyId: 'family-2', applicantId: 'child-2', applicantName: 'Riya Shah' },
+      {
+        ...match,
+        guardianEmail: 'different@example.com',
+        matchByEmail: false,
+      },
+      {
+        ...match,
+        familyId: 'family-2',
+        applicantId: 'child-2',
+        applicantName: 'Riya Shah',
+        guardianPhone: '9988776655',
+        matchByEmail: true,
+      },
     ],
   });
   const select = screen.getByLabelText('Family');
   expect(select).toHaveValue('');
   expect(screen.getByRole('button', { name: 'Confirm siblings' })).toBeDisabled();
   expect(screen.queryByRole('list')).not.toBeInTheDocument();
+  const dialog = screen.getByRole('dialog', { name: 'Confirm Siblings' });
+  expect(
+    within(dialog).getByText(
+      'We found possible siblings. The parent mobile number and email address match existing records. Confirm the children belong to the same family.'
+    )
+  ).toBeVisible();
+  expect(props.onUseExisting).not.toHaveBeenCalled();
+  fireEvent.change(select, { target: { value: 'family-1' } });
+  expect(screen.getByText(/The parent mobile number matches\./)).toBeVisible();
+  expect(screen.queryByText(/email address/)).not.toBeInTheDocument();
   fireEvent.change(select, { target: { value: 'family-2' } });
+  expect(screen.getByText(/The parent email address matches\./)).toBeVisible();
+  expect(screen.queryByText(/mobile number/)).not.toBeInTheDocument();
   const children = screen.getByRole('list', { name: 'Children in this family' });
   expect(within(children).getByText('Riya Shah')).toBeVisible();
   expect(within(children).queryByText('Asha Patel')).not.toBeInTheDocument();
@@ -207,7 +233,7 @@ it('cancels locally without changing the parent draft and reopens on a new submi
   const dialog = screen.getByRole('dialog', { name: 'Confirm Siblings' });
   expect(
     within(dialog).getByText(
-      'We found a possible sibling. Confirm both children belong to the same family.'
+      'We found a possible sibling. The parent mobile number and email address match. Confirm both children belong to the same family.'
     )
   ).toBeVisible();
   expect(within(dialog).getByText('Asha Patel')).toBeVisible();

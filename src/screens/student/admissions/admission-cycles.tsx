@@ -29,7 +29,6 @@ import { formatDateOnly } from 'src/utils/date-only';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { shikshaMitraToast } from 'src/components/toast';
 import { useGetYearQuery } from 'src/redux/year/yearApi';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -52,6 +51,8 @@ import {
 } from 'src/redux/student/admissions/admission-cycles-api';
 
 import { AdmissionTableText } from './admission-table-text';
+import { getCycleNameError } from './cycle-dialog/cycle-name-error';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { AdmissionQueryError } from './admission-query-error';
 import { AdmissionCycleDialog } from './admission-cycle-dialog';
 import { ADMISSION_DATE_FORMAT } from './admission-date-formats';
@@ -309,6 +310,12 @@ export default function AdmissionCyclesScreen() {
       setConfigurationMode(null);
       setActionCycle(null);
     } catch (error) {
+      if (
+        configurationMode === 'clone' &&
+        getCycleNameError(parseApiProblemDetail(error).errorCode)
+      ) {
+        throw error;
+      }
       shikshaMitraToast.error({ message: getErrorMessage(error) });
     }
   };
@@ -336,9 +343,7 @@ export default function AdmissionCyclesScreen() {
         const cycle = row as unknown as AdmissionCycle;
         const date = formatDateOnly(cycle.startDate, ADMISSION_DATE_FORMAT);
         const schedule = cycleScheduleSummary(cycle);
-        return (
-          <AdmissionTableText text={date} tooltip={schedule ? `${date} · ${schedule}` : date} />
-        );
+        return <AdmissionTableText text={date} secondary={schedule ?? undefined} />;
       },
     },
     {
@@ -353,7 +358,7 @@ export default function AdmissionCyclesScreen() {
       id: 'linkedOfferingCount',
       label: 'Offerings',
       minWidth: 120,
-      align: 'right',
+      align: 'left',
       isFilter: true,
       filterType: 'number',
       filterStep: 1,
@@ -363,7 +368,7 @@ export default function AdmissionCyclesScreen() {
       id: 'applicationCount',
       label: 'Applications',
       minWidth: 135,
-      align: 'right',
+      align: 'left',
       isFilter: true,
       filterType: 'number',
       filterStep: 1,
@@ -392,22 +397,19 @@ export default function AdmissionCyclesScreen() {
         );
         return (
           <>
-            <CustomTooltip
-              title={`Lifecycle: ${lifecycleLabels[lifecycle]} · Window: ${windowLabels[windowStatus]}`}
-              arrow
+            <Box
+              role="group"
+              aria-label="Lifecycle and admission window"
+              sx={{
+                display: { xs: 'flex', sm: 'none' },
+                flexDirection: 'column',
+                alignItems: 'flex-start',
+                gap: 0.5,
+              }}
             >
-              <Box
-                sx={{
-                  display: { xs: 'flex', sm: 'none' },
-                  flexDirection: 'column',
-                  alignItems: 'flex-start',
-                  gap: 0.5,
-                }}
-              >
-                <Label color={lifecycleColors[lifecycle]}>{lifecycleLabels[lifecycle]}</Label>
-                {windowLabel}
-              </Box>
-            </CustomTooltip>
+              <Label color={lifecycleColors[lifecycle]}>{lifecycleLabels[lifecycle]}</Label>
+              {windowLabel}
+            </Box>
             <Box sx={{ display: { xs: 'none', sm: 'block' } }}>{windowLabel}</Box>
           </>
         );
@@ -567,7 +569,13 @@ export default function AdmissionCyclesScreen() {
       }}
     >
       <CustomBreadcrumbs
-        editorOpen={editDialog.value || numberingDialog.value || Boolean(guardedAction) || Boolean(configurationMode)} busy={creating || updating || actionBusy || configurationBusy}
+        editorOpen={
+          editDialog.value ||
+          numberingDialog.value ||
+          Boolean(guardedAction) ||
+          Boolean(configurationMode)
+        }
+        busy={creating || updating || actionBusy || configurationBusy}
         heading="Admission Periods"
         description="Create, Publish, Monitor, Close and Retain Controlled Admission Periods."
         links={[
@@ -582,7 +590,101 @@ export default function AdmissionCyclesScreen() {
           moreLink: {},
           breadcrumbs: {},
         }}
-        action={
+      />
+
+      <Paper variant="outlined" sx={{ p: 1, borderRadius: 2, flexShrink: 0 }}>
+        <Stack
+          direction="row"
+          gap={1}
+          alignItems="center"
+          justifyContent="space-between"
+          flexWrap="wrap"
+        >
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            gap={1}
+            alignItems={{ sm: 'center' }}
+            flexWrap="wrap"
+            sx={{ flex: '1 1 auto', minWidth: 0, width: { xs: '100%', sm: 'auto' } }}
+          >
+            <TextField
+              select
+              fullWidth
+              size="small"
+              label="Academic Year"
+              value={filters.academicYearId}
+              disabled={academicYearsLoading}
+              onChange={(event) => updateFilters({ academicYearId: event.target.value })}
+              slotProps={{ inputLabel: { shrink: true }, select: { displayEmpty: true } }}
+              sx={{ width: { xs: '100%', sm: 170 } }}
+            >
+              <MenuItem value="">All Academic Years</MenuItem>
+              {academicYears.map((year) => (
+                <MenuItem key={year.id} value={year.id}>
+                  {year.name}
+                </MenuItem>
+              ))}
+            </TextField>
+            <TextField
+              select
+              fullWidth
+              size="small"
+              label="Lifecycle"
+              value={filters.status}
+              onChange={(event) =>
+                updateFilters({
+                  status:
+                    event.target.value === ''
+                      ? ''
+                      : (Number(event.target.value) as AdmissionCycleStatus),
+                })
+              }
+              slotProps={{ inputLabel: { shrink: true }, select: { displayEmpty: true } }}
+              sx={{ width: { xs: '100%', sm: 160 } }}
+            >
+              <MenuItem value="">All Lifecycles</MenuItem>
+              {Object.entries(lifecycleLabels).map(([value, label]) => (
+                <MenuItem key={value} value={Number(value)}>
+                  {label}
+                </MenuItem>
+              ))}
+            </TextField>
+            <TextField
+              select
+              fullWidth
+              size="small"
+              label="Application Window"
+              value={filters.windowStatus}
+              onChange={(event) =>
+                updateFilters({
+                  windowStatus:
+                    event.target.value === ''
+                      ? ''
+                      : (Number(event.target.value) as AdmissionCycleWindowStatus),
+                })
+              }
+              slotProps={{ inputLabel: { shrink: true }, select: { displayEmpty: true } }}
+              sx={{ width: { xs: '100%', sm: 220 } }}
+            >
+              <MenuItem value="">All Application Windows</MenuItem>
+              {Object.entries(windowLabels).map(([value, label]) => (
+                <MenuItem key={value} value={Number(value)}>
+                  {label}
+                </MenuItem>
+              ))}
+            </TextField>
+            {hasActiveFilters && (
+              <Button
+                size="small"
+                color="inherit"
+                startIcon={<Iconify icon="solar:restart-bold" />}
+                onClick={clearFilters}
+                sx={{ flexShrink: 0, alignSelf: { xs: 'flex-end', sm: 'center' } }}
+              >
+                Clear Filters
+              </Button>
+            )}
+          </Stack>
           <Stack
             direction="row"
             spacing={1}
@@ -590,6 +692,7 @@ export default function AdmissionCyclesScreen() {
             flexWrap="wrap"
             alignItems="center"
             justifyContent="flex-end"
+            sx={{ ml: 'auto' }}
           >
             <Button
               size="small"
@@ -613,88 +716,6 @@ export default function AdmissionCyclesScreen() {
               Cycle
             </Button>
           </Stack>
-        }
-      />
-
-      <Paper variant="outlined" sx={{ p: 1, borderRadius: 2, flexShrink: 0 }}>
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}>
-          <TextField
-            select
-            fullWidth
-            size="small"
-            label="Academic Year"
-            value={filters.academicYearId}
-            disabled={academicYearsLoading}
-            onChange={(event) => updateFilters({ academicYearId: event.target.value })}
-            slotProps={{ inputLabel: { shrink: true }, select: { displayEmpty: true } }}
-            sx={{ minWidth: 0, flex: { sm: 1 } }}
-          >
-            <MenuItem value="">All Academic Years</MenuItem>
-            {academicYears.map((year) => (
-              <MenuItem key={year.id} value={year.id}>
-                {year.name}
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            select
-            fullWidth
-            size="small"
-            label="Lifecycle"
-            value={filters.status}
-            onChange={(event) =>
-              updateFilters({
-                status:
-                  event.target.value === ''
-                    ? ''
-                    : (Number(event.target.value) as AdmissionCycleStatus),
-              })
-            }
-            slotProps={{ inputLabel: { shrink: true }, select: { displayEmpty: true } }}
-            sx={{ minWidth: 0, flex: { sm: 1 } }}
-          >
-            <MenuItem value="">All Lifecycles</MenuItem>
-            {Object.entries(lifecycleLabels).map(([value, label]) => (
-              <MenuItem key={value} value={Number(value)}>
-                {label}
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            select
-            fullWidth
-            size="small"
-            label="Application Window"
-            value={filters.windowStatus}
-            onChange={(event) =>
-              updateFilters({
-                windowStatus:
-                  event.target.value === ''
-                    ? ''
-                    : (Number(event.target.value) as AdmissionCycleWindowStatus),
-              })
-            }
-            slotProps={{ inputLabel: { shrink: true }, select: { displayEmpty: true } }}
-            sx={{ minWidth: 0, flex: { sm: 1 } }}
-          >
-            <MenuItem value="">All Application Windows</MenuItem>
-            {Object.entries(windowLabels).map(([value, label]) => (
-              <MenuItem key={value} value={Number(value)}>
-                {label}
-              </MenuItem>
-            ))}
-          </TextField>
-          {hasActiveFilters && (
-            <Button
-              size="small"
-              color="inherit"
-              startIcon={<Iconify icon="solar:restart-bold" />}
-              onClick={clearFilters}
-              sx={{ flexShrink: 0, alignSelf: { xs: 'flex-end', sm: 'center' } }}
-            >
-              Clear Filters
-            </Button>
-          )}
         </Stack>
       </Paper>
 
@@ -702,7 +723,19 @@ export default function AdmissionCyclesScreen() {
         <CustomizableTable
           tableId="admission-cycles"
           tableTitle="Admission Periods"
-          wrapperProps={{ sx: { flex: 1, height: 1, minHeight: 0, minWidth: 0 } }}
+          wrapperProps={{
+            sx: {
+              flex: 1,
+              height: 1,
+              minHeight: 0,
+              minWidth: 0,
+              '& .MuiLinearProgress-root': {
+                height: 2,
+                bgcolor: 'transparent',
+                '& .MuiLinearProgress-bar': { bgcolor: 'text.disabled' },
+              },
+            },
+          }}
           tableContainerProps={{ sx: { height: 1 } }}
           errorContent={isError ? <AdmissionQueryError onRetry={() => refetch()} /> : undefined}
           isLoading={isLoading || (isFetching && !data)}

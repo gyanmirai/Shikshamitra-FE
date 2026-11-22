@@ -48,12 +48,16 @@ it('keeps the move menu open during the request and on failure, then closes on s
   view.rerender(menu(true));
   expect(move()).toBeVisible();
   expect(move()).toHaveAttribute('aria-busy', 'true');
+  expect(
+    screen.getByLabelText('Starting Application for QA Student')
+  ).toBeVisible();
   fireEvent.keyDown(move(), { key: 'Escape' });
   expect(move()).toBeVisible();
   fireEvent.click(move());
   expect(onMove).toHaveBeenCalledTimes(1);
   await act(async () => finish(false));
   view.rerender(menu(false));
+  expect(screen.queryByLabelText('Starting Application for QA Student')).not.toBeInTheDocument();
   expect(move()).toBeVisible();
   expect(move()).not.toHaveAttribute('aria-disabled', 'true');
   fireEvent.click(move());

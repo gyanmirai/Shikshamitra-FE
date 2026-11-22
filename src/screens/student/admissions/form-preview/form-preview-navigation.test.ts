@@ -73,4 +73,10 @@ describe('admission form preview navigation', () => {
       });
     }
   );
+
+  it('normalizes a legacy All page size while restoring the search', () => {
+    expect(
+      readAdmissionFormListReturnState(new URLSearchParams('page=3&size=37&search=Inquiry'))
+    ).toEqual({ page: 0, rowsPerPage: 10, search: 'Inquiry', filters: [] });
+  });
 });

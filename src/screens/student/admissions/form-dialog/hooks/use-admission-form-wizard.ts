@@ -9,6 +9,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 
+import { UnchangedAdmissionFormError } from '../../form-list/form-validation-errors';
 import { getAdmissionWizardSteps, getAdmissionWizardSchema } from '../form-wizard-model';
 import { getInquiryFormConfigurationIssues } from '../../admission-inquiry-field-bindings';
 import {
@@ -35,6 +36,10 @@ export function useAdmissionFormWizard({
   canContinue,
 }: Props) {
   const [activeStep, setActiveStep] = useState(0);
+  const [publishBlock, setPublishBlock] = useState<{
+    message: string;
+    values: CreateUpdateAdmissionForm;
+  } | null>(null);
   const [initialValues] = useState(() =>
     editing
       ? getAdmissionFormInitialValues(editing, initialPurpose)
@@ -64,9 +69,13 @@ export function useAdmissionFormWizard({
       formik.resetForm();
       onClose();
     } catch (error) {
-      shikshaMitraToast.error({
-        message: parseApiProblemDetail(error).detail || 'Failed to save form',
-      });
+      if (error instanceof UnchangedAdmissionFormError) {
+        setPublishBlock({ values, message: error.message });
+      } else {
+        shikshaMitraToast.error({
+          message: parseApiProblemDetail(error).detail || 'Failed to save form',
+        });
+      }
     } finally {
       savingRef.current = false;
       setLoading(false);
@@ -124,6 +133,7 @@ export function useAdmissionFormWizard({
   };
   return {
     activeStep,
+    publishBlock,
     initialValues,
     validationSchema: getAdmissionWizardSchema(activeStep),
     submitting: submitting.value,

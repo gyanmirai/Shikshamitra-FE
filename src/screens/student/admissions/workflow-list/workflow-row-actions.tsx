@@ -1,8 +1,8 @@
 import type { AdaptiveThreeDotsAction } from 'src/components/adaptive-three-dots-actions';
 import type { AdmissionWorkflow } from 'src/redux/student/admissions/admission-workflows-api';
 
-import { useResponsive } from 'src/hooks/use-responsive';
 import { GlobalIcons } from 'src/utils/icons';
+import { useResponsive } from 'src/hooks/use-responsive';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 
 import { isAdmissionWorkflowPublishable } from '../workflow-access';
@@ -133,7 +133,7 @@ export function WorkflowRowActions({
       directActionLimit={directActionLimit}
       collapseOnOverflow={false}
       sx={{
-        justifyContent: 'flex-end',
+        justifyContent: 'flex-start',
         gap: 0,
         '& .MuiIconButton-root': { width: { xs: 44, sm: 30 }, height: { xs: 44, sm: 30 } },
       }}

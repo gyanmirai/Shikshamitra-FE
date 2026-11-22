@@ -6,7 +6,7 @@ import { Iconify } from 'src/components/iconify';
 import { useResponsive } from 'src/hooks/use-responsive';
 import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Box, Tooltip, Checkbox, Typography, IconButton } from '@mui/material';
+import { Box, Checkbox, Typography, IconButton } from '@mui/material';
 
 import { useAssessmentPermissions } from './use-assessment-permissions';
 import { getPrimaryAssessmentAction } from './assessment-workbench-model';
@@ -59,8 +59,9 @@ export function AssessmentApplicantTable({
       ? [
           {
             id: 'selection',
+            visibilityLabel: 'Row Selection',
             label: (
-              <Tooltip title={pageSelectionReason} describeChild>
+              <CustomTooltip title={pageSelectionReason ? <span>{pageSelectionReason}</span> : ''} describeChild>
                 <Box
                   component="span"
                   tabIndex={pageSelectionReason ? 0 : undefined}
@@ -86,7 +87,7 @@ export function AssessmentApplicantTable({
                     onChange={(_, checked) => onSelectionChange(selectable, checked)}
                   />
                 </Box>
-              </Tooltip>
+              </CustomTooltip>
             ),
             isSort: false,
             isFilter: false,
@@ -102,7 +103,7 @@ export function AssessmentApplicantTable({
                   ? 'Managed assessment is not configured for this stage.'
                   : '';
               return (
-                <Tooltip title={selectionReason} describeChild>
+                <CustomTooltip title={selectionReason ? <span>{selectionReason}</span> : ''} describeChild>
                   <Box
                     component="span"
                     tabIndex={selectionReason ? 0 : undefined}
@@ -127,7 +128,7 @@ export function AssessmentApplicantTable({
                       onChange={(_event, checked) => onSelectionChange([row], checked)}
                     />
                   </Box>
-                </Tooltip>
+                </CustomTooltip>
               );
             },
           },
@@ -228,14 +229,15 @@ export function AssessmentApplicantTable({
     {
       id: 'actions',
       label: 'Action',
+      align: 'left',
       isSort: false,
       isFilter: false,
       excludeFromExport: true,
       sticky: true,
       stickyPosition: 'right',
       stickyOnMobile: false,
-      width: 64,
-      minWidth: 64,
+      width: 76,
+      minWidth: 76,
       render: (_, data) => {
         const row = data as AssessmentRosterItem;
         const action = getPrimaryAssessmentAction(row, permissions, canAdvance);
@@ -266,7 +268,7 @@ export function AssessmentApplicantTable({
             <IconButton
               size="small"
               color="inherit"
-              sx={{ color: 'text.secondary', width: 40, height: 40 }}
+              sx={{ color: 'text.secondary', width: { xs: 44, sm: 30 }, height: { xs: 44, sm: 30 } }}
               onClick={(event) => {
                 event.stopPropagation();
                 if (action) onAction(row, action);

@@ -162,6 +162,7 @@ export function AdmissionNumberingFormDialog({
       maxWidth="sm"
       hasForm={false}
       title="Application Numbering"
+      titleInfoPlacement="right"
       titleInfo="Set School-Wide Automatic Application Numbers. New Formats Apply to Future Registrations; Existing Numbers Stay Unchanged."
       handleClose={close}
       disableClose={busy}
@@ -203,12 +204,12 @@ export function AdmissionNumberingFormDialog({
               </Stack>
             ) : (
               <>
-                <Stack direction="row" justifyContent="space-between" spacing={2}>
-                  <Typography variant="body2" color="text.secondary">
-                    Applies To
-                  </Typography>
-                  <Typography variant="body2">All Admission Offerings</Typography>
-                </Stack>
+                <Typography variant="body2">
+                  <Box component="span" sx={{ color: 'text.secondary', mr: 0.5 }}>
+                    Applies To:
+                  </Box>{' '}
+                  All Admission Offerings
+                </Typography>
                 <Box
                   component="fieldset"
                   disabled={busy || loading || !settings}

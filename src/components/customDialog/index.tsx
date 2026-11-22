@@ -13,6 +13,7 @@ import { Box, Dialog, IconButton, Typography, DialogContent } from '@mui/materia
 import { Scrollbar } from '../scrollbar';
 import CustomTooltip from '../custom-tooltip';
 import { shouldBlockCustomDialogClose } from './close-guard';
+import { InfoTooltipIcon } from '../custom-tooltip/info-tooltip-icon';
 
 import type { ScrollbarProps } from '../scrollbar';
 
@@ -20,6 +21,7 @@ type CustomDialogProps = Omit<DialogProps, 'title'> & {
   handleClose: (event?: {}, reason?: 'backdropClick' | 'escapeKeyDown') => void;
   title: React.ReactNode | string;
   titleInfo?: string;
+  titleInfoPlacement?: 'bottom' | 'right';
   headerContent?: React.ReactNode;
   children: React.ReactNode;
   paperProps?: PaperProps;
@@ -37,6 +39,7 @@ const CustomDialog = ({
   handleClose,
   title,
   titleInfo,
+  titleInfoPlacement = 'bottom',
   headerContent,
   children,
   paperProps,
@@ -51,6 +54,7 @@ const CustomDialog = ({
   const theme = useTheme();
   const generatedTitleId = React.useId();
   const titleId = props['aria-labelledby'] ?? generatedTitleId;
+  const infoLabel = typeof title === 'string' ? `${title} information` : 'Dialog information';
   const { sx, ...paper } = paperProps || {};
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
@@ -140,19 +144,20 @@ const CustomDialog = ({
               <Typography id={titleId} variant="h6" sx={{ fontWeight: 700 }}>
                 {title}
               </Typography>
-              {titleInfo && (
-                <CustomTooltip arrow placement="bottom" title={titleInfo}>
-                  <IconButton
-                    size="small"
-                    aria-label={
-                      typeof title === 'string' ? `${title} information` : 'Dialog information'
-                    }
-                    sx={{ color: 'info.main', flexShrink: 0 }}
-                  >
-                    <InfoOutlined sx={{ fontSize: 18 }} />
-                  </IconButton>
-                </CustomTooltip>
-              )}
+              {titleInfo &&
+                (titleInfoPlacement === 'right' ? (
+                  <InfoTooltipIcon title={titleInfo} label={infoLabel} />
+                ) : (
+                  <CustomTooltip arrow placement="bottom" title={titleInfo}>
+                    <IconButton
+                      size="small"
+                      aria-label={infoLabel}
+                      sx={{ color: 'info.main', flexShrink: 0 }}
+                    >
+                      <InfoOutlined sx={{ fontSize: 18 }} />
+                    </IconButton>
+                  </CustomTooltip>
+                ))}
             </Box>
             <IconButton
               aria-label="close"

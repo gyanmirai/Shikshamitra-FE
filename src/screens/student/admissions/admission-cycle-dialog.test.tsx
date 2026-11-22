@@ -7,7 +7,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, within, waitFor } from '@testing-library/react';
 import confirmPopup from 'src/redux/confirmPopup/confirmPopupSlice';
 import { defaultSettings } from 'src/components/settings/config-settings';
 
@@ -49,6 +49,35 @@ const editingCycle = {
 };
 
 describe('admission cycle dialog', () => {
+  it('keeps typed date sections and explains why a past date is unavailable', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-11-22T06:00:00Z'));
+    try {
+      const user = userEvent.setup();
+      renderDateDialog();
+      const opening = within(screen.getByRole('group', { name: 'Applications open' }));
+      await user.type(opening.getByRole('spinbutton', { name: 'Day' }), '21');
+      await user.type(opening.getByRole('spinbutton', { name: 'Month' }), '11');
+      await user.type(opening.getByRole('spinbutton', { name: 'Year' }), '2026');
+      expect(await screen.findByText('Choose a date on or after 22/11/2026.')).toBeVisible();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('uses inline required validation and focuses the first invalid field', async () => {
+    const user = userEvent.setup();
+    const onSave = vi.fn();
+    renderDateDialog({ onSave });
+    const name = screen.getByRole('textbox', { name: 'Cycle name' });
+
+    expect(name.closest('form')).toHaveAttribute('novalidate');
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+    expect(await screen.findByText('Cycle name is required')).toBeVisible();
+    await waitFor(() => expect(name).toHaveFocus());
+    expect(onSave).not.toHaveBeenCalled();
+  });
+
   it.each(['Applications open', 'Applications close'])(
     'excludes previous calendar years from the %s picker',
     async (label) => {

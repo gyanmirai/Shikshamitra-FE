@@ -16,6 +16,7 @@ import { Box, Stack, Button, IconButton, Typography } from '@mui/material';
 import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
 
 import { WorkflowStageCard } from './workflow-stage-card';
+import { summarizeWorkflowRouteGap, suggestIncomingWorkflowRoute } from '../workflow-stage-graph';
 
 type Props = {
   dirty?: boolean;
@@ -30,6 +31,7 @@ type Props = {
   loadingStageTypes: boolean;
   issueCountByStage: Record<string, number>;
   issuesByStage?: Record<string, AdmissionWorkflowValidationIssue[]>;
+  hasBlockingIssues?: boolean;
   onAdd: () => void;
   onEdit: (stage: AdmissionWorkflowStage) => void;
   onDuplicate: (stage: AdmissionWorkflowStage) => void;
@@ -52,6 +54,7 @@ export function WorkflowStageList({
   loadingStageTypes,
   issueCountByStage,
   issuesByStage = {},
+  hasBlockingIssues = false,
   onAdd,
   onEdit,
   onDuplicate,
@@ -61,12 +64,16 @@ export function WorkflowStageList({
   onDeletePath,
 }: Props) {
   const orderedStages = [...stages].sort((left, right) => left.displayOrder - right.displayOrder);
+  const graph = { stages, transitions };
+  const routeGap = summarizeWorkflowRouteGap(graph, issuesByStage);
+  const visibleIssuesByStage = routeGap?.issuesByStage ?? issuesByStage;
   const stageIds = new Set(stages.map((stage) => stage.id));
   const hasEntryStage = stages.filter((stage) => stage.isEntryStage).length === 1;
   const hasTerminalStage = stages.some((stage) => stage.isTerminalStage);
   const hasCompleteRoutes = stages.every(
     (stage) =>
-      stage.isTerminalStage || transitions.some((transition) => transition.fromStageId === stage.id)
+      (stage.isTerminalStage || transitions.some((route) => route.fromStageId === stage.id)) &&
+      (stage.isEntryStage || transitions.some((route) => route.toStageId === stage.id))
   );
   const hasValidDestinations = transitions.every(
     (transition) => stageIds.has(transition.fromStageId) && stageIds.has(transition.toStageId)
@@ -76,7 +83,8 @@ export function WorkflowStageList({
     hasEntryStage &&
     hasTerminalStage &&
     hasCompleteRoutes &&
-    hasValidDestinations;
+    hasValidDestinations &&
+    !hasBlockingIssues;
 
   return (
     <Stack
@@ -246,8 +254,20 @@ export function WorkflowStageList({
                   transitions={transitions.filter((item) => item.fromStageId === stage.id)}
                   stepNumber={index + 1}
                   readOnly={readOnly}
-                  issueCount={issueCountByStage[stage.id] ?? 0}
-                  issues={issuesByStage[stage.id] ?? []}
+                  issueCount={
+                    visibleIssuesByStage[stage.id]?.length ?? issueCountByStage[stage.id] ?? 0
+                  }
+                  issues={visibleIssuesByStage[stage.id] ?? []}
+                  incomingRoute={
+                    !readOnly &&
+                    issuesByStage[stage.id]?.some(
+                      (issue) => issue.code === 'Admissions.WorkflowOrphanStage'
+                    )
+                      ? routeGap?.route.toStageId === stage.id
+                        ? routeGap.route
+                        : suggestIncomingWorkflowRoute(graph, stage)
+                      : undefined
+                  }
                   onEdit={() => onEdit(stage)}
                   onDuplicate={() => onDuplicate(stage)}
                   onDelete={() => onDelete(stage)}

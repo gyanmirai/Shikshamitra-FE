@@ -1,3 +1,4 @@
+import type { Dayjs } from 'dayjs';
 import type { ReactNode } from 'react';
 import type { FormikProps } from 'formik';
 import type { AssessmentScope } from 'src/redux/student/admissions/admission-assessment-types';
@@ -40,6 +41,7 @@ type Props = {
   bookedCount: number;
   pipeline?: boolean;
   separateDate?: boolean;
+  minScheduleDate?: Dayjs;
   classSummary?: ReactNode;
 };
 
@@ -55,6 +57,7 @@ export function AssessmentSessionSetupFields({
   bookedCount,
   pipeline = false,
   separateDate = pipeline,
+  minScheduleDate,
   classSummary,
 }: Props) {
   const feedback = (key: keyof SessionSetupValues) => ({
@@ -216,6 +219,7 @@ export function AssessmentSessionSetupFields({
                   label="Date"
                   format={ADMISSION_DATE_FORMAT}
                   value={formik.values.startsAt}
+                  minDate={minScheduleDate}
                   disabled={
                     disabled ||
                     (bookedCount > 0 && formik.values.sessionType === 'individualInterview')
@@ -286,6 +290,7 @@ export function AssessmentSessionSetupFields({
                     label={key === 'startsAt' ? 'Starts at' : 'Ends at'}
                     format={ADMISSION_DATE_TIME_FORMAT}
                     value={formik.values[key]}
+                    minDate={minScheduleDate}
                     onChange={(value) => update(key, value)}
                     disabled={
                       disabled ||

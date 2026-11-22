@@ -1,16 +1,13 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { Theme } from '@mui/material/styles';
 import type { IData, IColumn } from 'src/components/customizabaleTable/types';
 import type {
   House,
   HouseStudent,
-  HouseDivision,
 } from 'src/redux/student/house-management/house-management-types';
 
 import { useSelector } from 'react-redux';
-import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
@@ -30,7 +27,6 @@ import { studentPaths, studentPermissions } from 'src/constants/student-menu';
 import { useStudentAcademicScope } from 'src/hooks/use-student-academic-scope';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
-import { useStudentSetupEmbedding, StudentSetupManagerHeader as CustomBreadcrumbs } from 'src/screens/student/setup/embedding';
 import {
   Box,
   Tab,
@@ -44,9 +40,12 @@ import {
   Typography,
 } from '@mui/material';
 import {
+  useStudentSetupEmbedding,
+  StudentSetupManagerHeader as CustomBreadcrumbs,
+} from 'src/screens/student/setup/embedding';
+import {
   useGetManagedHousesQuery,
   useGetHouseStudentsQuery,
-  useGetHouseDivisionsQuery,
   useSetHouseLeaderMutation,
   useSetDivisionLeaderMutation,
   useCreateManagedHouseMutation,
@@ -59,7 +58,8 @@ import {
 import { HousePicker } from './house-pickers';
 import HouseFormDialog from './house-form-dialog';
 import HouseLogoAvatar from './house-logo-avatar';
-import HouseLeaderDialog from './house-leader-dialog';
+import HouseMembersDrawer from './house-members-drawer';
+import DivisionLeaderDialog from './division-leader-dialog';
 import HouseAssignmentDrawer from './house-assignment-drawer';
 import { recordsQueryUrl } from '../records/records-url-state';
 import StudentPhotoAvatar from '../components/student-photo-avatar';
@@ -68,8 +68,8 @@ import { houseWorkspaceState, selectionForContext } from './house-management-mod
 
 type Session =
   | { kind: 'house'; house?: House }
-  | { kind: 'leader'; role: 'house'; record: House }
-  | { kind: 'leader'; role: 'division'; record: HouseDivision }
+  | { kind: 'members'; house: House }
+  | { kind: 'divisionLeader'; student: HouseStudent & { divisionId: string } }
   | { kind: 'assignment'; mode: 'assign' | 'remove'; ids: string[] }
   | { kind: 'delete'; house: House };
 
@@ -79,33 +79,6 @@ function classDivisionLabel(standardName: string, divisionName?: string | null) 
 
 const classDivisionValue = (value: unknown, row: IData) =>
   classDivisionLabel(String(value ?? '—'), row.divisionName);
-
-const divisionPlacementValue = (value: unknown, row: IData) =>
-  classDivisionLabel(row.standardName, String(value ?? '—'));
-
-const leaderTints = { house: 'success', division: 'info', both: 'error' } as const;
-
-function studentLeadershipRowProps(student: HouseStudent) {
-  const role = student.isHouseLeader
-    ? student.isDivisionLeader
-      ? 'both'
-      : 'house'
-    : student.isDivisionLeader
-      ? 'division'
-      : undefined;
-  if (!role) return {};
-
-  const tint = leaderTints[role];
-  return {
-    'data-leadership': role,
-    sx: {
-      bgcolor: (theme: Theme) => varAlpha(theme.vars.palette[tint].mainChannel, 0.12),
-      '&.MuiTableRow-hover:hover': {
-        bgcolor: (theme: Theme) => varAlpha(theme.vars.palette[tint].mainChannel, 0.18),
-      },
-    },
-  };
-}
 
 function StudentLeaderIcon({
   title,
@@ -201,18 +174,9 @@ export default function HouseManagement() {
       houseId: unassignedOnly ? undefined : houseId || undefined,
       unassignedOnly: unassignedOnly || undefined,
     },
-    { skip: !ready || state.tab !== 'students' }
-  );
-  const divisionQuery = useGetHouseDivisionsQuery(
-    {
-      ...input,
-      standardId: standardId || undefined,
-      divisionId: divisionId || undefined,
-    },
     { skip: !ready || state.tab !== 'divisions' }
   );
-  const query =
-    state.tab === 'houses' ? houses : state.tab === 'students' ? students : divisionQuery;
+  const query = state.tab === 'houses' ? houses : students;
   const rows = ready ? (query.currentData?.items ?? []) : [];
   const mediumCanManage = houses.currentData?.canManage === true;
   const [createHouse] = useCreateManagedHouseMutation();
@@ -277,7 +241,13 @@ export default function HouseManagement() {
     if (!ready || settledTotal === undefined) return;
     if (embedded) {
       const lastPage = Math.max(0, Math.ceil(settledTotal / state.pageSize) - 1);
-      if (state.page > lastPage) setEmbeddedQuery(new URL(recordsQueryUrl(pathname, currentQuery, { page: lastPage || undefined }), 'https://local.invalid').search.slice(1));
+      if (state.page > lastPage)
+        setEmbeddedQuery(
+          new URL(
+            recordsQueryUrl(pathname, currentQuery, { page: lastPage || undefined }),
+            'https://local.invalid'
+          ).search.slice(1)
+        );
       return;
     }
     const lastPage = Math.max(0, Math.ceil(settledTotal / state.pageSize) - 1);
@@ -288,7 +258,10 @@ export default function HouseManagement() {
   }, [ready, settledTotal, state.page, state.pageSize, router, pathname, currentQuery, embedded]);
   const update = (changes: Record<string, string | number | undefined>) => {
     const url = recordsQueryUrl(pathname, currentQuery, changes);
-    if (embedded) { setEmbeddedQuery(new URL(url, 'https://local.invalid').search.slice(1)); return; }
+    if (embedded) {
+      setEmbeddedQuery(new URL(url, 'https://local.invalid').search.slice(1));
+      return;
+    }
     if (url !== `${pathname}${currentQuery ? `?${currentQuery}` : ''}`)
       router.push(url, { scroll: false });
   };
@@ -332,7 +305,9 @@ export default function HouseManagement() {
       </Typography>
     );
   const leader = (student: HouseStudent | null | undefined, canManageRole: boolean) =>
-    student ? name(student) : canManageRole ? (
+    student ? (
+      name(student)
+    ) : canManageRole ? (
       <Label color="default" sx={{ typography: 'caption', height: 22 }}>
         Vacant
       </Label>
@@ -350,7 +325,7 @@ export default function HouseManagement() {
       isSort: true,
       isFilter: true,
       filterType: 'string',
-      minWidth: 180,
+      minWidth: 145,
       render: (_, row) => (
         <Stack direction="row" spacing={1} alignItems="center">
           <SubjectColorIndicator color={row.color} />
@@ -367,14 +342,19 @@ export default function HouseManagement() {
     {
       id: 'memberCount',
       label: 'Visible students',
-      align: 'right',
-      minWidth: 130,
+      minWidth: 120,
       isFilter: true,
       filterType: 'number',
-      render: (value) => (
-        <Typography variant="body2" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+      render: (value, data) => (
+        <Button
+          size="small"
+          color="primary"
+          aria-label={`View students in ${data.name}`}
+          onClick={() => open({ kind: 'members', house: data as House })}
+          sx={{ minWidth: 32, fontVariantNumeric: 'tabular-nums' }}
+        >
           {value ?? 0}
-        </Typography>
+        </Button>
       ),
     },
     {
@@ -393,84 +373,64 @@ export default function HouseManagement() {
       filterType: 'string',
       render: (value) => value || '—',
     },
-    {
-      id: 'actions',
-      label: 'Actions',
-      align: 'right',
-      minWidth: 125,
-      excludeFromExport: true,
-      sticky: true,
-      stickyPosition: 'right',
-      render: (_, data) => {
-        const row = data as House;
-        return (
-          <AdaptiveThreeDotsActions
-            directActionLimit={2}
-            collapseOnOverflow={false}
-            moreLabel={`More actions for ${row.name}`}
-            actions={[
-              {
-                id: 'members',
-                label: `View students in ${row.name}`,
-                icon: GlobalIcons.family,
-                onClick: () => {
-                  setSelectedHouseFilter(row);
-                  update({
-                    tab: 'students',
-                    house: row.id,
-                    houseName: row.name,
-                    assignment: undefined,
-                    search: undefined,
-                    sort: undefined,
-                    page: undefined,
-                  });
-                },
-              },
-              ...(canManage
-                ? [
-                    {
-                      id: 'edit',
-                      label: `Edit ${row.name}`,
-                      icon: GlobalIcons.edit,
-                      disabled: disabled || !row.canManage,
-                      tooltip: !row.canManage ? 'Full house scope is required.' : undefined,
-                      onClick: () => open({ kind: 'house', house: row }),
-                    },
-                    {
-                      id: 'leader',
-                      label: 'Manage leader',
-                      ariaLabel: `Manage leader for ${row.name}`,
-                      icon: 'mdi:account-switch-outline',
-                      disabled: disabled || !row.canManage,
-                      tooltip: !row.canManage ? 'Full house scope is required.' : undefined,
-                      onClick: () => open({ kind: 'leader', role: 'house', record: row }),
-                    },
-                  ]
-                : []),
-              ...(canDelete
-                ? [
-                    {
-                      id: 'delete',
-                      label: 'Delete',
-                      ariaLabel: `Delete ${row.name}`,
-                      icon: GlobalIcons.delete,
-                      color: 'error.main',
-                      disabled: disabled || !row.canManage || row.memberCount > 0,
-                      tooltip:
-                        row.memberCount > 0
-                          ? 'Remove all students before deleting this house.'
-                          : !row.canManage
-                            ? 'Full house scope is required.'
-                            : undefined,
-                      onClick: () => open({ kind: 'delete', house: row }),
-                    },
-                  ]
-                : []),
-            ]}
-          />
-        );
-      },
-    },
+    ...(canManage || canDelete
+      ? [
+          {
+            id: 'actions',
+            label: 'Actions',
+            align: 'right',
+            minWidth: 100,
+            excludeFromExport: true,
+            isSort: false,
+            isFilter: false,
+            sticky: true,
+            stickyPosition: 'right',
+            render: (_, data) => {
+              const row = data as House;
+              return (
+                <AdaptiveThreeDotsActions
+                  directActionLimit={2}
+                  collapseOnOverflow={false}
+                  moreLabel={`More actions for ${row.name}`}
+                  actions={[
+                    ...(canManage
+                      ? [
+                          {
+                            id: 'edit',
+                            label: `Edit ${row.name}`,
+                            icon: GlobalIcons.edit,
+                            disabled: disabled || !row.canManage,
+                            tooltip: !row.canManage ? 'Full house scope is required.' : undefined,
+                            onClick: () => open({ kind: 'house', house: row }),
+                          },
+                        ]
+                      : []),
+                    ...(canDelete
+                      ? [
+                          {
+                            id: 'delete',
+                            label: 'Delete',
+                            ariaLabel: `Delete ${row.name}`,
+                            icon: GlobalIcons.delete,
+                            color: 'error.main',
+                            disabled: disabled || !row.canManage || row.memberCount > 0,
+                            tooltip:
+                              row.memberCount > 0
+                                ? 'Remove all students before deleting this house.'
+                                : !row.canManage
+                                  ? 'Full house scope is required.'
+                                  : undefined,
+                            onClick: () => open({ kind: 'delete', house: row }),
+                          },
+                        ]
+                      : []),
+                  ]}
+                />
+              );
+            },
+          } as IColumn,
+        ]
+      : []),
   ];
   const visibleStudents = students.currentData?.items ?? [];
   const studentColumns: IColumn[] = [
@@ -625,58 +585,45 @@ export default function HouseManagement() {
         ),
     },
   ];
-  const divisionColumns: IColumn[] = [
-    {
-      id: 'name',
-      label: 'Class / Division',
-      isSort: true,
-      minWidth: 180,
-      isFilter: true,
-      filterType: 'string',
-      render: divisionPlacementValue,
-      filterValue: divisionPlacementValue,
-      exportValue: divisionPlacementValue,
+  const divisionLeaderActions: IColumn = {
+    id: 'actions',
+    label: 'Actions',
+    align: 'right',
+    width: 100,
+    sticky: true,
+    stickyPosition: 'right',
+    isSort: false,
+    isFilter: false,
+    excludeFromExport: true,
+    render: (_, data) => {
+      const row = data as HouseStudent;
+      if (!row.divisionId) return '—';
+      const student = { ...row, divisionId: row.divisionId };
+      return (
+        <AdaptiveThreeDotsActions
+          directActionLimit={1}
+          sx={{ justifyContent: 'flex-end' }}
+          actions={[
+            {
+              id: 'leader',
+              label: row.isDivisionLeader ? 'Remove division leader' : 'Assign division leader',
+              ariaLabel: row.isDivisionLeader
+                ? `Remove ${row.studentName} as division leader`
+                : `Assign ${row.studentName} as division leader`,
+              icon: 'mdi:account-tie-hat-outline',
+              disabled,
+              onClick: () => open({ kind: 'divisionLeader', student }),
+            },
+          ]}
+        />
+      );
     },
-    {
-      id: 'leader',
-      label: 'Division leader',
-      minWidth: 180,
-      isFilter: false,
-      render: (_, row) => leader(row.leader, row.canManage),
-      exportValue: (_, row) => row.leader?.studentName ?? null,
-    },
-    ...(canManage
-      ? [
-          {
-            id: 'actions',
-            label: 'Actions',
-            align: 'right',
-            width: 100,
-            sticky: true,
-            stickyPosition: 'right',
-            excludeFromExport: true,
-            render: (_: unknown, row: HouseDivision) => (
-              <AdaptiveThreeDotsActions
-                directActionLimit={2}
-                collapseOnOverflow={false}
-                sx={{ justifyContent: 'flex-end' }}
-                actions={[
-                  {
-                    id: 'leader',
-                    label: 'Manage division leader',
-                    ariaLabel: `Manage division leader for ${row.standardName} / ${row.name}`,
-                    icon: 'mdi:account-switch-outline',
-                    disabled: disabled || !row.canManage,
-                    tooltip: !row.canManage ? 'Full division scope is required.' : undefined,
-                    onClick: () => open({ kind: 'leader', role: 'division', record: row }),
-                  },
-                ]}
-              />
-            ),
-          } as IColumn,
-        ]
-      : []),
-  ];
+  };
+  const isHouseTab = state.tab === 'houses';
+  const tableTitle = isHouseTab ? 'Houses' : 'Assign Leaders';
+  const columns = isHouseTab
+    ? houseColumns
+    : [...studentColumns, ...(canManage ? [divisionLeaderActions] : [])];
   const mediumPrompt = mediums.length
     ? 'Select a medium to view records.'
     : 'No mediums are available for this board.';
@@ -700,7 +647,8 @@ export default function HouseManagement() {
       }}
     >
       <CustomBreadcrumbs
-        editorOpen={Boolean(currentSession)} busy={deleting.isLoading}
+        editorOpen={Boolean(currentSession)}
+        busy={deleting.isLoading}
         heading="House Management"
         description="Manage medium-wise houses, cross-class membership, and separate House and Division leaders. Counts and leaders reflect your academic scope."
         descriptionDisplay="tooltip"
@@ -738,7 +686,13 @@ export default function HouseManagement() {
           variant="scrollable"
           scrollButtons="auto"
           guardUnsavedChanges={false}
-          onChange={embedded ? (_, tab: string) => !currentSession && update({ tab, search: undefined, sort: undefined, page: undefined }) : undefined}
+          onChange={
+            embedded
+              ? (_, tab: string) =>
+                  !currentSession &&
+                  update({ tab, search: undefined, sort: undefined, page: undefined })
+              : undefined
+          }
           aria-label="House management sections"
           sx={{ bgcolor: 'transparent' }}
           slotProps={{ scroller: { px: 0.75, py: 0.5 }, tab: { px: 1.25 } }}
@@ -746,12 +700,16 @@ export default function HouseManagement() {
           <Tab
             value="houses"
             component={embedded ? 'button' : RouterLink}
-            href={embedded ? undefined : recordsQueryUrl(pathname, currentQuery, {
-              tab: 'houses',
-              search: undefined,
-              sort: undefined,
-              page: undefined,
-            })}
+            href={
+              embedded
+                ? undefined
+                : recordsQueryUrl(pathname, currentQuery, {
+                    tab: 'houses',
+                    search: undefined,
+                    sort: undefined,
+                    page: undefined,
+                  })
+            }
             id="house-management-tab-houses"
             aria-controls="house-management-panel"
             label="Houses"
@@ -759,29 +717,18 @@ export default function HouseManagement() {
             iconPosition="start"
           />
           <Tab
-            value="students"
-            component={embedded ? 'button' : RouterLink}
-            href={embedded ? undefined : recordsQueryUrl(pathname, currentQuery, {
-              tab: 'students',
-              search: undefined,
-              sort: undefined,
-              page: undefined,
-            })}
-            id="house-management-tab-students"
-            aria-controls="house-management-panel"
-            label="Students"
-            icon={<Iconify icon={GlobalIcons.family} />}
-            iconPosition="start"
-          />
-          <Tab
             value="divisions"
             component={embedded ? 'button' : RouterLink}
-            href={embedded ? undefined : recordsQueryUrl(pathname, currentQuery, {
-              tab: 'divisions',
-              search: undefined,
-              sort: undefined,
-              page: undefined,
-            })}
+            href={
+              embedded
+                ? undefined
+                : recordsQueryUrl(pathname, currentQuery, {
+                    tab: 'divisions',
+                    search: undefined,
+                    sort: undefined,
+                    page: undefined,
+                  })
+            }
             id="house-management-tab-divisions"
             aria-controls="house-management-panel"
             label="Assign Leaders"
@@ -880,7 +827,7 @@ export default function HouseManagement() {
               />
             )}
           </Box>
-          {state.tab === 'students' && (
+          {!isHouseTab && (
             <Box sx={{ flexShrink: 0, alignSelf: { xs: 'stretch', lg: 'center' } }}>
               <Button
                 variant="outlined"
@@ -911,7 +858,7 @@ export default function HouseManagement() {
             </Box>
           )}
         </Stack>
-        {state.tab === 'students' && (Boolean(houseId) || unassignedOnly) && (
+        {!isHouseTab && (Boolean(houseId) || unassignedOnly) && (
           <Stack
             direction="row"
             spacing={1}
@@ -977,7 +924,7 @@ export default function HouseManagement() {
           </Typography>
         )}
       </Card>
-      {state.tab === 'students' && (
+      {!isHouseTab && (
         <CustomPopover
           open={moreFiltersPopover.open}
           anchorEl={moreFiltersPopover.anchorEl}
@@ -1075,7 +1022,7 @@ export default function HouseManagement() {
           </Stack>
         </CustomPopover>
       )}
-      {canManage && state.tab === 'students' && (
+      {canManage && !isHouseTab && (
         <Card
           variant="outlined"
           sx={{
@@ -1147,37 +1094,16 @@ export default function HouseManagement() {
         }}
       >
         <CustomizableTable
-          tableId={`student-house-management-${state.tab}`}
-          tableTitle={
-            state.tab === 'houses'
-              ? 'Houses'
-              : state.tab === 'students'
-                ? 'House membership students'
-                : 'Assign Leaders'
-          }
+          tableId={`student-house-management-${isHouseTab ? 'houses' : 'students'}`}
+          tableTitle={tableTitle}
           showColumns
           showFullScreen
-          columns={(state.tab === 'houses'
-            ? houseColumns
-            : state.tab === 'students'
-              ? studentColumns
-              : divisionColumns
-          ).map((column) => ({ ...column, isSort: column.isSort === true }))}
+          columns={columns.map((column) => ({ ...column, isSort: column.isSort === true }))}
           data={rows}
-          rowProps={
-            state.tab === 'students'
-              ? (row) => studentLeadershipRowProps(row as HouseStudent)
-              : undefined
-          }
           wrapperProps={{ sx: { height: 1, minHeight: 0 } }}
           tableContainerProps={{
             sx: { height: 1 },
-            'aria-label':
-              state.tab === 'houses'
-                ? 'Houses'
-                : state.tab === 'students'
-                  ? 'House membership students'
-                  : 'Assign Leaders',
+            'aria-label': tableTitle,
           }}
           serverSidePagination
           serverSideSearch
@@ -1187,19 +1113,9 @@ export default function HouseManagement() {
           isFilter
           isSearch
           searchFieldProps={{
-            placeholder:
-              state.tab === 'students'
-                ? 'Search name or GR number'
-                : state.tab === 'houses'
-                  ? 'Search house name'
-                  : 'Search class or division',
+            placeholder: isHouseTab ? 'Search house name' : 'Search name or GR number',
             inputProps: {
-              'aria-label':
-                state.tab === 'students'
-                  ? 'Search students'
-                  : state.tab === 'houses'
-                    ? 'Search houses'
-                    : 'Search divisions',
+              'aria-label': isHouseTab ? 'Search houses' : 'Search students',
             },
           }}
           isLoading={
@@ -1278,15 +1194,13 @@ export default function HouseManagement() {
               : state.search ||
                   standardId ||
                   divisionId ||
-                  (state.tab === 'students' && (houseId || unassignedOnly))
+                  (!isHouseTab && (houseId || unassignedOnly))
                 ? 'No records match these filters.'
                 : state.tab === 'houses'
                   ? canManage && mediumCanManage
                     ? 'No houses in this medium. Create a house to get started.'
                     : 'No houses in this medium.'
-                  : state.tab === 'students'
-                    ? 'No enrolled students in this medium.'
-                    : 'No divisions in this medium.'
+                  : 'No enrolled students in this medium.'
           }
         />
       </Box>
@@ -1308,18 +1222,33 @@ export default function HouseManagement() {
           }}
         />
       )}
-      {currentSession?.kind === 'leader' && canManage && (
-        <HouseLeaderDialog
-          key={`${context}:${currentSession.record.id}`}
+      {currentSession?.kind === 'members' && ready && (
+        <HouseMembersDrawer
+          key={`${context}:${currentSession.house.id}`}
           academicMediumId={mediumId}
-          role={currentSession.role}
-          record={currentSession.record}
+          house={
+            houses.currentData?.items.find((house) => house.id === currentSession.house.id) ??
+            currentSession.house
+          }
+          leaderContent={leader}
+          columns={studentColumns.filter(({ id }) => !['selected', 'houseName'].includes(id))}
+          canManage={canManage && !houses.isError}
           onClose={() => setSession(null)}
           onSave={async (values) => {
-            await (currentSession.role === 'house'
-              ? setHouseLeader(values)
-              : setDivisionLeader(values)).unwrap();
-            success('Leader updated.');
+            await setHouseLeader(values).unwrap();
+            success('House leader updated.');
+          }}
+        />
+      )}
+      {currentSession?.kind === 'divisionLeader' && canManage && ready && (
+        <DivisionLeaderDialog
+          key={`${context}:${currentSession.student.enrollmentId}`}
+          academicMediumId={mediumId}
+          student={currentSession.student}
+          onClose={() => setSession(null)}
+          onSave={async (values) => {
+            await setDivisionLeader(values).unwrap();
+            success('Division leader updated.');
           }}
         />
       )}

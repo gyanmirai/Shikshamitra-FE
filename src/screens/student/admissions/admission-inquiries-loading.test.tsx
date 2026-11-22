@@ -81,12 +81,13 @@ vi.mock('./admission-academic-filters', () => ({
     ...props
   }: {
     onLoadingChange: (value: boolean) => void;
+    additionalFilters?: ReactNode;
     filterAction?: ReactNode;
   }) {
     state.academicFilterProps = props;
     const loading = state.scopeLoading;
     useEffect(() => onLoadingChange(loading), [loading, onLoadingChange]);
-    return <div>Academic filters{props.filterAction}</div>;
+    return <div>Academic filters{props.additionalFilters}{props.filterAction}</div>;
   },
 }));
 vi.mock('./inquiry-management/use-inquiry-handoff', () => ({
@@ -395,7 +396,7 @@ it('never renders the empty result during scope restoration or before the first 
   expect(screen.getByText('QA Loading')).toBeInTheDocument();
 });
 
-it('keeps table refresh independent of the handoff and omits a page-level handoff loader', () => {
+it('uses thin refresh progress and leaves handoff feedback to the affected row', () => {
   Object.assign(state, {
     board: 'board',
     medium: 'medium',
@@ -407,13 +408,47 @@ it('keeps table refresh independent of the handoff and omits a page-level handof
   expect(state.table.isLoading).toBe(false);
   expect(screen.getByText('QA Loading')).toBeInTheDocument();
   expect(state.table.isRefreshing).toBe(true);
-  expect(state.table.refreshIndicator).toBe('skeleton');
+  expect(state.table.refreshIndicator).toBe('linear');
   state.moving = true;
   view.rerender(<AdmissionInquiriesScreen />);
   expect(screen.getByText('QA Loading')).toBeInTheDocument();
+  expect(state.table.isRefreshing).toBe(false);
   expect(
     screen.queryByRole('status', { name: 'Moving Inquiry to the Next Stage' })
   ).not.toBeInTheDocument();
+});
+
+it('applies and clears Status alongside search, class, dates and column filters', () => {
+  Object.assign(state, {
+    params: 'search=alex&source=1&dateFrom=2026-11-17&dateTo=2026-11-17',
+    board: 'board',
+    medium: 'medium',
+    standard: 'class-8',
+    scopeLoading: false,
+    data: { items: [], totalCount: 0 },
+  });
+  render(<AdmissionInquiriesScreen />);
+  const status = screen.getByRole('combobox', { name: 'Status' });
+  expect(status).toHaveTextContent('All Statuses');
+  expect(screen.queryByRole('button', { name: 'Clear Academic Filters' })).not.toBeInTheDocument();
+  fireEvent.mouseDown(status);
+  fireEvent.click(screen.getByRole('option', { name: 'Pending' }));
+  expect(state.queryInput).toHaveBeenLastCalledWith(
+    expect.objectContaining({
+      status: 0,
+      search: 'alex',
+      source: 1,
+      standardId: 'class-8',
+      creationTimeFrom: expect.any(String),
+      skipCount: 0,
+    })
+  );
+  expect(state.replace.mock.lastCall?.[0]).toContain('status=0');
+  fireEvent.mouseDown(status);
+  fireEvent.click(screen.getByRole('option', { name: 'All Statuses' }));
+  expect(state.queryInput).toHaveBeenLastCalledWith(
+    expect.objectContaining({ status: undefined, search: 'alex', source: 1 })
+  );
 });
 
 it('distinguishes successful empty, failed and unavailable-scope results from initial loading', () => {

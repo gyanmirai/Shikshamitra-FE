@@ -66,7 +66,9 @@ export type IssuedIdCardQuery = {
 export type GuardianLink = { linkId: string; userId: string; relationship: string; email: string; emailConfirmed: boolean; isActive: boolean };
 export type GuardianReview = { id: string; studentId: string; changeRequestId: string; status: string; concurrencyStamp: string; onApprovedChangeMode: 'SuspendUntilReview' | 'KeepUntilReview'; previousLinks: GuardianLink[]; creationTime: string; reviewedByUserId?: string | null; reviewedAt?: string | null };
 export type ResolveGuardianReview = { reviewId: string; concurrencyStamp: string; reason: string; revokeLinkIds: string[]; keepLinkIds: string[]; confirmRetainedGuardiansVerified: boolean; newGuardian?: { relationship: 'father' | 'mother' | 'guardian'; email: string; existingUserId?: string; confirmIdentityVerified: boolean } };
-const documentTags = [{ type: studentType.student, id: 'RECORDS-DOCUMENTS' }];
+export const documentTags = [{ type: studentType.student, id: 'RECORDS-DOCUMENTS' }];
+export const iCardAssignmentTag = { type: studentType.student, id: 'RECORDS-ICARD-ASSIGNMENTS' };
+export const iCardRosterTag = { type: studentType.student, id: 'RECORDS-ICARD-ROSTER' };
 const guardianTags = [{ type: studentType.student, id: 'RECORDS-GUARDIAN-ACCESS' }];
 const unwrap = <T>(response: T | { data?: T }) => unwrapRecordsResult(response);
 const blobResponse = (response: Response) => response.ok ? response.blob() : response.json();
@@ -83,13 +85,13 @@ export const studentRecordDocumentsApi = api.injectEndpoints({
     getRecordCertificateHistory: builder.query<CertificateHistory[], string>({ query: studentId => `/students/records/certificates/students/${studentId}/history`, transformResponse: unwrap<CertificateHistory[]>, providesTags: documentTags }),
     getRecordIdTemplate: builder.query<IdCardTemplate, void>({ query: () => '/students/records/ids/templates', transformResponse: unwrap<IdCardTemplate>, providesTags: documentTags }),
     getRecordIdPhoto: builder.query<IdentityCardPhotoEdit, string>({ query: studentId => `/students/records/ids/photos/${encodeURIComponent(studentId)}`, transformResponse: unwrap<IdentityCardPhotoEdit>, keepUnusedDataFor: 0 }),
-    saveRecordIdTemplate: builder.mutation<IdCardTemplate, IdCardTemplate>({ query: body => ({ url: '/students/records/ids/templates', method: 'PUT', body }), transformResponse: unwrap<IdCardTemplate>, invalidatesTags: (_result, error) => error ? [] : documentTags }),
+    saveRecordIdTemplate: builder.mutation<IdCardTemplate, IdCardTemplate>({ query: body => ({ url: '/students/records/ids/templates', method: 'PUT', body }), transformResponse: unwrap<IdCardTemplate>, invalidatesTags: (_result, error) => error ? [] : [...documentTags, iCardAssignmentTag] }),
     getRecordIdTemplates: builder.query<IdCardTemplate[], void>({ query: () => '/students/records/ids/templates/list', transformResponse: unwrap<IdCardTemplate[]>, providesTags: documentTags }),
     createRecordIdTemplate: builder.mutation<IdCardTemplate, IdCardTemplate>({ query: body => ({ url: '/students/records/ids/templates', method: 'POST', body }), transformResponse: unwrap<IdCardTemplate>, invalidatesTags: (_result, error) => error ? [] : documentTags }),
-    updateRecordIdTemplate: builder.mutation<IdCardTemplate, { id: string; body: IdCardTemplate }>({ query: ({ id, body }) => ({ url: `/students/records/ids/templates/${id}`, method: 'PUT', body }), transformResponse: unwrap<IdCardTemplate>, invalidatesTags: (_result, error) => error ? [] : documentTags }),
+    updateRecordIdTemplate: builder.mutation<IdCardTemplate, { id: string; body: IdCardTemplate }>({ query: ({ id, body }) => ({ url: `/students/records/ids/templates/${id}`, method: 'PUT', body }), transformResponse: unwrap<IdCardTemplate>, invalidatesTags: (_result, error) => error ? [] : [...documentTags, iCardAssignmentTag] }),
     deleteRecordIdTemplate: builder.mutation<void, string>({ query: id => ({ url: `/students/records/ids/templates/${id}`, method: 'DELETE' }), invalidatesTags: (_result, error) => error ? [] : documentTags }),
     previewRecordIds: builder.mutation<IdCard[], { studentIds: string[]; templateId?: string }>({ query: body => ({ url: '/students/records/ids/preview', method: 'POST', body }), transformResponse: unwrap<IdCard[]> }),
-    issueRecordIds: builder.mutation<IdCard[], { studentIds: string[]; idempotencyKey: string; templateId?: string; photoEdits?: IdentityCardPhotoEdit[] }>({ query: body => ({ url: '/students/records/ids/issue', method: 'POST', body }), transformResponse: unwrap<IdCard[]>, invalidatesTags: (_result, error) => error ? [] : documentTags }),
+    issueRecordIds: builder.mutation<IdCard[], { studentIds: string[]; idempotencyKey: string; templateId?: string; photoEdits?: IdentityCardPhotoEdit[] }>({ query: body => ({ url: '/students/records/ids/issue', method: 'POST', body }), transformResponse: unwrap<IdCard[]>, invalidatesTags: (_result, error) => error ? [] : [...documentTags, iCardRosterTag] }),
     exportRecordIds: builder.mutation<Blob, { studentIds: string[]; cardsPerPage: number; templateId?: string; photoEdits?: IdentityCardPhotoEdit[] }>({ query: body => ({ url: '/students/records/ids/export', method: 'POST', body, responseHandler: blobResponse }) }),
     getRecordIdHistory: builder.query<IdCard[], string>({ query: studentId => `/students/records/ids/students/${studentId}/history`, transformResponse: unwrap<IdCard[]>, providesTags: documentTags }),
     getRecordIssuedIds: builder.query<{ items: IssuedIdCard[]; totalCount: number }, IssuedIdCardQuery>({
@@ -99,7 +101,7 @@ export const studentRecordDocumentsApi = api.injectEndpoints({
     }),
     downloadRecordDocument: builder.mutation<Blob, { kind: 'certificates' | 'ids'; id: string }>({ query: ({ kind, id }) => ({ url: `/students/records/${kind}/${id}/pdf`, responseHandler: blobResponse }) }),
     reprintRecordDocument: builder.mutation<Blob, { kind: 'certificates' | 'ids'; id: string; reason: string }>({ query: ({ kind, id, reason }) => ({ url: `/students/records/${kind}/${id}/reprint`, method: 'POST', body: { reason }, responseHandler: blobResponse }), invalidatesTags: (_result, error) => error ? [] : documentTags }),
-    voidRecordDocument: builder.mutation<CertificateResponse | IdCard, { kind: 'certificates' | 'ids'; id: string; reason: string }>({ query: ({ kind, id, reason }) => ({ url: `/students/records/${kind}/${id}/void`, method: 'POST', body: { reason } }), invalidatesTags: (_result, error) => error ? [] : documentTags }),
+    voidRecordDocument: builder.mutation<CertificateResponse | IdCard, { kind: 'certificates' | 'ids'; id: string; reason: string }>({ query: ({ kind, id, reason }) => ({ url: `/students/records/${kind}/${id}/void`, method: 'POST', body: { reason } }), invalidatesTags: (_result, error, { kind }) => error ? [] : kind === 'ids' ? [...documentTags, iCardRosterTag] : documentTags }),
     duplicateRecordCertificate: builder.mutation<CertificateResponse, { id: string; reason: string; idempotencyKey: string }>({ query: ({ id, reason, idempotencyKey }) => ({ url: `/students/records/certificates/${id}/duplicate`, method: 'POST', body: { reason, idempotencyKey } }), transformResponse: unwrap<CertificateResponse>, invalidatesTags: (_result, error) => error ? [] : documentTags }),
     getRecordGuardianLinks: builder.query<GuardianLink[], string>({ query: studentId => `/students/records/guardian-access/students/${studentId}/links`, transformResponse: unwrap<GuardianLink[]>, providesTags: guardianTags }),
     getRecordGuardianReviews: builder.query<GuardianReview[], string>({ query: studentId => `/students/records/guardian-access/students/${studentId}/reviews`, transformResponse: unwrap<GuardianReview[]>, providesTags: guardianTags }),
@@ -110,7 +112,7 @@ export const studentRecordDocumentsApi = api.injectEndpoints({
 export const { useGetRecordCertificateTemplateQuery, useSaveRecordCertificateTemplateMutation, usePreviewRecordCertificateMutation, useIssueRecordCertificateMutation, useExportRecordIdsMutation, useGetRecordCertificateHistoryQuery, useGetRecordIdTemplateQuery, useSaveRecordIdTemplateMutation, useGetRecordIdTemplatesQuery, useCreateRecordIdTemplateMutation, useUpdateRecordIdTemplateMutation, useDeleteRecordIdTemplateMutation, usePreviewRecordIdsMutation, useIssueRecordIdsMutation, useGetRecordIdHistoryQuery, useDownloadRecordDocumentMutation, useReprintRecordDocumentMutation, useVoidRecordDocumentMutation, useDuplicateRecordCertificateMutation, useGetRecordGuardianLinksQuery, useGetRecordGuardianReviewsQuery, useGetRecordGuardianCandidateQuery, useResolveRecordGuardianReviewMutation } = studentRecordDocumentsApi;
 
 export const { useGetRecordCertificateBatchesQuery, useGetRecordCertificateBatchQuery } = studentRecordDocumentsApi;
-export const { useLazyGetRecordIdPhotoQuery } = studentRecordDocumentsApi;
+export const { useGetRecordIdPhotoQuery, useLazyGetRecordIdPhotoQuery } = studentRecordDocumentsApi;
 export const { useLazyGetRecordCertificateQuery } = studentRecordDocumentsApi;
 
 export function downloadRecordPdf(blob: Blob, fileName: string) {

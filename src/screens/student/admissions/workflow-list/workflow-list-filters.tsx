@@ -17,6 +17,7 @@ import {
   IconButton,
 } from '@mui/material';
 
+import { workflowCreatedRange } from './workflow-date-range';
 import { ADMISSION_DATE_FORMAT } from '../admission-date-formats';
 
 import type { WorkflowFilters } from './use-workflow-filters';
@@ -29,14 +30,7 @@ type FilterValues = Pick<
 type Props = {
   filters: WorkflowFilters;
   onUpdate: (changes: Partial<WorkflowFilters>) => void;
-};
-
-const EMPTY_FILTERS: FilterValues = {
-  status: 'all',
-  version: '',
-  usage: 'all',
-  createdFrom: '',
-  createdTo: '',
+  onClear: () => void;
 };
 
 const pickFilterValues = (filters: WorkflowFilters): FilterValues => ({
@@ -49,11 +43,15 @@ const pickFilterValues = (filters: WorkflowFilters): FilterValues => ({
 
 const toDayjs = (value: string): Dayjs | null => (value ? dayjs(value) : null);
 
-export function WorkflowListFilters({ filters, onUpdate }: Props) {
+export function WorkflowListFilters({ filters, onUpdate, onClear }: Props) {
   const popover = usePopover();
   const [draft, setDraft] = useState<FilterValues>(() => pickFilterValues(filters));
   const createdFrom = toDayjs(draft.createdFrom);
   const createdTo = toDayjs(draft.createdTo);
+  const invalidRange = !workflowCreatedRange(draft.createdFrom, draft.createdTo);
+  const reversed = Boolean(
+    createdFrom?.isValid() && createdTo?.isValid() && createdFrom.isAfter(createdTo, 'day')
+  );
 
   const updateDraft = (changes: Partial<FilterValues>) => {
     setDraft((current) => ({ ...current, ...changes }));
@@ -173,16 +171,34 @@ export function WorkflowListFilters({ filters, onUpdate }: Props) {
                 onChange={(value) =>
                   updateDraft({ createdFrom: value?.format('YYYY-MM-DD') ?? '' })
                 }
-                maxDate={createdTo ?? undefined}
-                slotProps={{ textField: { fullWidth: true, size: 'small' } }}
+                maxDate={createdTo?.isValid() ? createdTo : undefined}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    size: 'small',
+                    ...(createdFrom &&
+                      !createdFrom.isValid() && { error: true, helperText: 'Enter a valid date.' }),
+                  },
+                }}
               />
               <DatePicker
                 label="Created To"
                 format={ADMISSION_DATE_FORMAT}
                 value={createdTo}
                 onChange={(value) => updateDraft({ createdTo: value?.format('YYYY-MM-DD') ?? '' })}
-                minDate={createdFrom ?? undefined}
-                slotProps={{ textField: { fullWidth: true, size: 'small' } }}
+                minDate={createdFrom?.isValid() ? createdFrom : undefined}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    size: 'small',
+                    ...(reversed && {
+                      error: true,
+                      helperText: 'End date must be on or after the start date.',
+                    }),
+                    ...(createdTo &&
+                      !createdTo.isValid() && { error: true, helperText: 'Enter a valid date.' }),
+                  },
+                }}
               />
             </Stack>
           </Stack>
@@ -196,8 +212,7 @@ export function WorkflowListFilters({ filters, onUpdate }: Props) {
               variant="outlined"
               startIcon={<Iconify icon="mdi:filter-off-outline" />}
               onClick={() => {
-                setDraft(EMPTY_FILTERS);
-                onUpdate(EMPTY_FILTERS);
+                onClear();
                 popover.onClose();
               }}
               sx={{ minHeight: { xs: 44, sm: 36 }, px: 1.25 }}
@@ -208,8 +223,10 @@ export function WorkflowListFilters({ filters, onUpdate }: Props) {
               fullWidth
               size="small"
               variant="contained"
+              disabled={invalidRange}
               startIcon={<Iconify icon="mdi:check" />}
               onClick={() => {
+                if (invalidRange) return;
                 onUpdate(draft);
                 popover.onClose();
               }}

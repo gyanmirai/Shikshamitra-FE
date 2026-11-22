@@ -10,7 +10,7 @@ import { fNumber } from 'src/utils/format-number';
 
 import { WorkflowRowActions } from './workflow-row-actions';
 import { AdmissionTableText } from '../admission-table-text';
-import { formatWorkflowDateTime, formatWorkflowListDate } from './workflow-list-format';
+import { formatWorkflowDateTime } from './workflow-list-format';
 
 import type { WorkflowActionPermissions } from './workflow-row-actions';
 
@@ -84,7 +84,7 @@ export function createWorkflowColumns(
       filterType: 'number' as const,
       filterStep: 1,
       minWidth: 90,
-      align: 'center',
+      align: 'left',
       isFilter: true,
       render: (value) => fNumber(Number(value)),
     },
@@ -94,9 +94,20 @@ export function createWorkflowColumns(
       filterType: 'number' as const,
       filterStep: 1,
       minWidth: 150,
-      align: 'center',
+      align: 'left',
       isFilter: true,
       render: (value) => fNumber(Number(value)),
+    },
+    {
+      id: 'creationTime',
+      label: 'Created At',
+      minWidth: 170,
+      defaultHidden: true,
+      isSort: false,
+      isFilter: false,
+      render: (value) => (
+        <AdmissionTableText text={formatWorkflowDateTime(value as string | null)} />
+      ),
     },
     {
       id: 'lastModificationTime',
@@ -106,12 +117,7 @@ export function createWorkflowColumns(
       isFilter: true,
       render: (value, row) => {
         const date = (value as string | null) || (row as AdmissionWorkflow).creationTime;
-        return (
-          <AdmissionTableText
-            text={formatWorkflowListDate(date)}
-            tooltip={formatWorkflowDateTime(date)}
-          />
-        );
+        return <AdmissionTableText text={formatWorkflowDateTime(date)} />;
       },
     },
     {
@@ -121,10 +127,7 @@ export function createWorkflowColumns(
       minWidth: 170,
       isFilter: true,
       render: (value) => (
-        <AdmissionTableText
-          text={formatWorkflowListDate(value as string | null)}
-          tooltip={formatWorkflowDateTime(value as string | null)}
-        />
+        <AdmissionTableText text={formatWorkflowDateTime(value as string | null)} />
       ),
     },
     {
@@ -153,7 +156,7 @@ export function createWorkflowColumns(
       minWidth: 150,
       headerSx: { width: { xs: 120, sm: 160 }, minWidth: { xs: 120, sm: 150 } },
       cellSx: { width: { xs: 120, sm: 160 }, minWidth: { xs: 120, sm: 150 } },
-      align: 'right',
+      align: 'left',
       sticky: true,
       stickyPosition: 'right',
       isSort: false,

@@ -68,6 +68,7 @@ export function BulkAdmissionOfferingPreview({
   const rows = items.map((item) => ({
     ...item,
     id: item.standardId,
+    className: standardNameById[item.standardId] || 'Selected Class',
     messages: [
       ...new Set(
         item.errors
@@ -82,21 +83,18 @@ export function BulkAdmissionOfferingPreview({
   }));
   const columns: IColumn[] = [
     {
-      id: 'code',
-      label: 'Class / Offering Code',
+      id: 'className',
+      label: 'Class',
+      minWidth: 96,
+      rowHeader: true,
       isSort: false,
       isFilter: false,
       cellSx: { verticalAlign: 'top' },
-      render: (_, raw) => {
+      render: (className: string, raw) => {
         const item = raw as (typeof rows)[number];
         return (
           <Stack spacing={0.5} sx={{ minWidth: 0, overflowWrap: 'anywhere' }}>
-            <Typography variant="subtitle2">
-              {standardNameById[item.standardId] || 'Selected Class'}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {item.code}
-            </Typography>
+            <Typography variant="subtitle2">{className}</Typography>
             {item.messages.length > 0 ? (
               <Box component="ul" sx={{ my: 0.5, pl: 2 }}>
                 {item.messages.map((message) => (
@@ -126,13 +124,34 @@ export function BulkAdmissionOfferingPreview({
       },
     },
     {
-      id: 'canSaveInactive',
-      label: 'Status',
-      width: 144,
-      minWidth: 144,
+      id: 'code',
+      label: 'Offering Code',
+      minWidth: 112,
       isSort: false,
       isFilter: false,
       cellSx: { verticalAlign: 'top' },
+      render: (code: string) => (
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{ fontFamily: 'monospace', overflowWrap: 'anywhere' }}
+        >
+          {code}
+        </Typography>
+      ),
+    },
+    {
+      id: 'canSaveInactive',
+      label: 'Status',
+      width: 128,
+      minWidth: 112,
+      isSort: false,
+      isFilter: false,
+      align: 'center',
+      headerAlign: 'center',
+      sticky: true,
+      stickyPosition: 'right',
+      cellSx: { verticalAlign: 'middle' },
       render: (canSaveInactive: boolean) => (
         <Label color={canSaveInactive ? 'success' : 'error'}>
           {canSaveInactive ? 'Ready to Create' : 'Cannot Create'}
@@ -145,7 +164,7 @@ export function BulkAdmissionOfferingPreview({
     <FormSectionCard
       icon="mdi:clipboard-check-outline"
       title="Preview Offerings"
-      descriptionTooltip="Review Each Class Before Creating the Batch. Offerings Are Saved as Inactive; Activation Remains a Separate Action."
+      descriptionTooltip="Check each class and offering code before creating the batch."
       action={
         items.length ? (
           <Label>
@@ -167,23 +186,32 @@ export function BulkAdmissionOfferingPreview({
             alignItems={{ sm: 'center' }}
             justifyContent="space-between"
           >
-            <Box sx={{ minWidth: 0 }}>
-              <Typography variant="subtitle2">
-                {canCreate
-                  ? `${items.length} offering${items.length === 1 ? '' : 's'} ready to create`
-                  : blockedCount
-                    ? `${blockedCount} of ${items.length} ${items.length === 1 ? 'class needs' : 'classes need'} changes`
-                    : 'This Batch Cannot Be Created Yet'}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {admissionTrackLabels[track]} · {admissionEntryModeLabels[entryMode]}
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                {canCreate
-                  ? 'One Offering Per Class Will Be Saved as Inactive. Activate It From the Offering List When Ready.'
-                  : 'Nothing Will Be Created Until All Class Issues Are Resolved.'}
-              </Typography>
-            </Box>
+            <Stack spacing={1} sx={{ minWidth: 0 }}>
+              <Stack direction="row" spacing={0.75} useFlexGap sx={{ flexWrap: 'wrap' }}>
+                <Label>
+                  {items.length} Offering{items.length === 1 ? '' : 's'}
+                </Label>
+                <Label>{admissionTrackLabels[track]}</Label>
+                <Label>{admissionEntryModeLabels[entryMode]}</Label>
+              </Stack>
+              {canCreate ? (
+                <Typography variant="body2" color="text.secondary">
+                  Initial status: <Box component="strong">Inactive</Box>. Activate from the Offering
+                  List when ready.
+                </Typography>
+              ) : (
+                <Box>
+                  <Typography variant="subtitle2">
+                    {blockedCount
+                      ? `${blockedCount} of ${items.length} ${items.length === 1 ? 'class needs' : 'classes need'} changes`
+                      : 'This batch cannot be created yet.'}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Resolve the class issues before creating offerings.
+                  </Typography>
+                </Box>
+              )}
+            </Stack>
             {onEdit && (
               <Button
                 size="small"
@@ -191,7 +219,7 @@ export function BulkAdmissionOfferingPreview({
                 disabled={busy}
                 startIcon={<Iconify icon={GlobalIcons.edit} width={18} />}
                 onClick={onEdit}
-                sx={{ flexShrink: 0, alignSelf: { xs: 'flex-start', sm: 'center' } }}
+                sx={{ flexShrink: 0, alignSelf: { xs: 'flex-end', sm: 'center' } }}
               >
                 Edit Selection
               </Button>
@@ -252,7 +280,13 @@ export function BulkAdmissionOfferingPreview({
             isPagination={false}
             isShowedDense={false}
             wrapperProps={{ sx: { height: 'auto', minWidth: 0, flex: 'none' } }}
-            tableContainerProps={{ sx: { height: 'auto', flex: 'none' } }}
+            tableContainerProps={{
+              sx: {
+                height: 'auto',
+                flex: 'none',
+                '& .MuiTableCell-root': { px: { xs: 1, sm: 2 } },
+              },
+            }}
           />
         </>
       )}

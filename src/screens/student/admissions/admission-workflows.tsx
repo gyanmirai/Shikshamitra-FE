@@ -1,35 +1,52 @@
 'use client';
 
-import type { IParams } from 'src/components/customizabaleTable/types';
 import type { AdmissionWorkflow } from 'src/redux/student/admissions/admission-workflows-api';
 
+import { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useSearchParams } from 'next/navigation';
 import { studentPaths } from 'src/constants/student-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { Box, Stack, Alert, Button, Typography } from '@mui/material';
 import { studentSetupReturnUrl } from 'src/screens/student/setup/embedding/student-setup-return';
-import { useGetAdmissionWorkflowsQuery } from 'src/redux/student/admissions/admission-workflows-api';
-import { useStudentSetupEmbedding , StudentSetupManagerHeader as CustomBreadcrumbs } from 'src/screens/student/setup/embedding';
+import {
+  useStudentSetupEmbedding,
+  StudentSetupManagerHeader as CustomBreadcrumbs,
+} from 'src/screens/student/setup/embedding';
+import {
+  useGetAdmissionWorkflowsQuery,
+  useGetAdmissionWorkflowUsageQuery,
+} from 'src/redux/student/admissions/admission-workflows-api';
 
 import { AdmissionQueryError } from './admission-query-error';
-import { useWorkflowFilters } from './workflow-list/use-workflow-filters';
+import { workflowCreatedRange } from './workflow-list/workflow-date-range';
 import { WorkflowListFilters } from './workflow-list/workflow-list-filters';
 import { WorkflowListDialogs } from './workflow-list/workflow-list-dialogs';
 import { useWorkflowListActions } from './workflow-list/use-workflow-list-actions';
+import { WorkflowSidePanel } from './workflow-builder/components/workflow-side-panel';
+import { workflowColumnFiltersRequest } from './workflow-list/workflow-column-filters';
 import { STATUS_LABELS, createWorkflowColumns } from './workflow-list/workflow-columns';
+import { useWorkflowFilters, WORKFLOW_PAGE_SIZES } from './workflow-list/use-workflow-filters';
 import {
-  workflowColumnFilters,
-  workflowColumnFiltersRequest,
-  serializeWorkflowColumnFilters,
-} from './workflow-list/workflow-column-filters';
+  activeWorkflowFilters,
+  workflowFiltersFromTable,
+} from './workflow-list/workflow-table-filters';
 
 export default function AdmissionWorkflowsScreen() {
   const filterState = useWorkflowFilters();
   const { embedded } = useStudentSetupEmbedding();
   const params = useSearchParams();
-  const actions = useWorkflowListActions(embedded ? studentSetupReturnUrl('admission-stages', params.get('guideYear'), params.get('returnTo')) : undefined);
+  const actions = useWorkflowListActions(
+    embedded
+      ? studentSetupReturnUrl('admission-stages', params.get('guideYear'), params.get('returnTo'))
+      : undefined
+  );
+  const [usageWorkflow, setUsageWorkflow] = useState<AdmissionWorkflow | null>(null);
+  const showUsage = Boolean(usageWorkflow && actions.allowed.canViewUsage);
+  const usageQuery = useGetAdmissionWorkflowUsageQuery(usageWorkflow?.id ?? '', {
+    skip: !showUsage,
+  });
+  const lifecycleLoading = Boolean(actions.creatingVersionId || actions.publishingId);
   const { filters } = filterState;
   const query = useGetAdmissionWorkflowsQuery({
     search: filters.search || undefined,
@@ -38,56 +55,18 @@ export default function AdmissionWorkflowsScreen() {
     isUsed: filters.usage === 'all' ? undefined : filters.usage === 'used',
     columnFilters: workflowColumnFiltersRequest(filters.columnFilters ?? '') || undefined,
     sorting: filters.sorting || undefined,
-    createdFrom: filterState.createdFrom
-      ? dateConvertor(filterState.createdFrom.startOf('day').format(dateFormat))
-      : undefined,
-    createdTo: filterState.createdTo
-      ? dateConvertor(filterState.createdTo.endOf('day').format(dateFormat))
-      : undefined,
+    ...workflowCreatedRange(filters.createdFrom, filters.createdTo),
     maxResultCount: filters.rowsPerPage,
     skipCount: filters.page * filters.rowsPerPage,
   });
   const data = query.currentData;
-  const tableFilters: IParams['filters'] = [
-    ...workflowColumnFilters(filters.columnFilters ?? ''),
-    ...(filters.version
-      ? [
-          {
-            column: 'version',
-            type: 'equals',
-            value: Number(filters.version),
-            valueType: 'number',
-            label: 'Version',
-          },
-        ]
-      : []),
-    ...(filters.status === 'all'
-      ? []
-      : [
-          {
-            column: 'status',
-            type: 'equals',
-            value: filters.status,
-            valueType: 'enum',
-            label: 'Status',
-            displayValue: STATUS_LABELS[filters.status],
-          },
-        ]),
-  ];
-  const hasActiveFilters = Boolean(
-    filters.search ||
-    filters.status !== 'all' ||
-    filters.version ||
-    filters.usage !== 'all' ||
-    filters.createdFrom ||
-    filters.createdTo ||
-    filters.columnFilters
-  );
+  const tableFilters = activeWorkflowFilters(filters, STATUS_LABELS);
+  const hasActiveFilters = Boolean(filters.search || tableFilters.length);
   const columns = createWorkflowColumns(actions.allowed, {
     onEdit: (workflow) => actions.navigate(workflow),
     onClone: actions.openClone,
     onCreateVersion: actions.createVersion,
-    onUsage: (workflow) => actions.navigate(workflow, 'usage'),
+    onUsage: setUsageWorkflow,
     onArchive: (workflow) => actions.requestConfirmation(workflow, 'archive'),
     onReopen: (workflow) => actions.requestConfirmation(workflow, 'reopen'),
     onDelete: (workflow) => actions.requestConfirmation(workflow, 'delete'),
@@ -107,7 +86,18 @@ export default function AdmissionWorkflowsScreen() {
       }}
     >
       <CustomBreadcrumbs
-        editorOpen={actions.createDialog.value || actions.cloneDialog.value || Boolean(actions.pendingConfirmation)} busy={actions.createState.isLoading || actions.cloneState.isLoading || actions.archiveState.isLoading || actions.reopenState.isLoading || actions.deleteState.isLoading || Boolean(actions.creatingVersionId) || Boolean(actions.publishingId)}
+        editorOpen={
+          actions.createDialog.value ||
+          actions.cloneDialog.value ||
+          Boolean(actions.pendingConfirmation) ||
+          showUsage
+        }
+        busy={
+          actions.createState.isLoading ||
+          actions.cloneState.isLoading ||
+          actions.confirmationBusy ||
+          lifecycleLoading
+        }
         heading="Admission Stage"
         isBack={actions.createDialog.value}
         onBack={() => actions.createCloseRef.current?.()}
@@ -134,7 +124,11 @@ export default function AdmissionWorkflowsScreen() {
               useFlexGap
               flexWrap="wrap"
             >
-              <WorkflowListFilters filters={filters} onUpdate={filterState.update} />
+              <WorkflowListFilters
+                filters={filters}
+                onUpdate={filterState.update}
+                onClear={filterState.clearFilters}
+              />
               <Button
                 aria-label="Add Workflow"
                 size="small"
@@ -164,7 +158,8 @@ export default function AdmissionWorkflowsScreen() {
             </Button>
           }
         >
-          A draft version already exists for this workflow. Open the existing draft to continue editing.
+          A draft version already exists for this workflow. Open the existing draft to continue
+          editing.
         </Alert>
       )}
       {!actions.createDialog.value && query.isError && Boolean(data?.items.length) && (
@@ -184,28 +179,17 @@ export default function AdmissionWorkflowsScreen() {
                 <AdmissionQueryError onRetry={() => query.refetch()} />
               ) : undefined
             }
-            handleRowClick={(row) => actions.navigate(row as AdmissionWorkflow, 'preview')}
             getRowAction={(row) => ({
               label: `Preview ${(row as AdmissionWorkflow).name}`,
               onClick: () => actions.navigate(row as AdmissionWorkflow, 'preview'),
-              pending: actions.pendingNavigationId === row.id,
-              pendingLabel: 'Opening workflow…',
+              disabled: Boolean(actions.pendingNavigationId),
             })}
             rowProps={(row) => ({
-              tabIndex: 0,
-              sx: { cursor: 'pointer' },
-              onKeyDown: (event) => {
-                if (
-                  event.target === event.currentTarget &&
-                  (event.key === 'Enter' || event.key === ' ')
-                ) {
-                  event.preventDefault();
-                  actions.navigate(row as AdmissionWorkflow, 'preview');
-                }
-              },
+              'aria-busy': actions.pendingNavigationId === row.id || undefined,
             })}
             isLoading={!data && (query.isLoading || query.isFetching)}
-            isRefreshing={Boolean(data && query.isFetching)}
+            isRefreshing={Boolean(data && query.isFetching && !lifecycleLoading)}
+            refreshIndicator="skeleton"
             isPagination
             isSearch
             serverSide
@@ -230,19 +214,7 @@ export default function AdmissionWorkflowsScreen() {
                   ]
                 : []
             }
-            onServerFilter={(next) => {
-              const status = next.findLast((filter) => filter.column === 'status')?.value;
-              const version = next.findLast((filter) => filter.column === 'version');
-              filterState.update({
-                status: status === undefined ? 'all' : (Number(status) as typeof filters.status),
-                version: version?.type === 'equals' ? String(version.value) : '',
-                columnFilters: serializeWorkflowColumnFilters(
-                  version?.type === 'equals'
-                    ? next.filter((filter) => filter.column !== 'version')
-                    : next
-                ),
-              });
-            }}
+            onServerFilter={(next) => filterState.update(workflowFiltersFromTable(next))}
             onServerSort={(_column, sorts) =>
               filterState.update({
                 sorting: sorts.length
@@ -250,11 +222,10 @@ export default function AdmissionWorkflowsScreen() {
                   : '',
               })
             }
-            onClearCriteria={() =>
-              filterState.update({ search: '', status: 'all', version: '', columnFilters: '' })
-            }
+            onClearCriteria={filterState.clear}
             page={filters.page}
             rowsPerPage={filters.rowsPerPage}
+            rowsPerPageOptions={WORKFLOW_PAGE_SIZES}
             searchTerm={filters.search}
             totalCount={data?.totalCount ?? 0}
             onServerSearch={(search) => filterState.update({ search })}
@@ -277,6 +248,21 @@ export default function AdmissionWorkflowsScreen() {
             }
           />
         </Box>
+      )}
+      {showUsage && usageWorkflow && (
+        <WorkflowSidePanel
+          panel="usage"
+          workflow={usageWorkflow}
+          stages={usageWorkflow.stages}
+          transitions={usageWorkflow.transitions}
+          usage={usageQuery.currentData}
+          usageLoading={usageQuery.isFetching && !usageQuery.currentData}
+          usageError={usageQuery.isError}
+          onRetryUsage={() => usageQuery.refetch()}
+          canCreateVersion={false}
+          governanceLoading={false}
+          onClose={() => setUsageWorkflow(null)}
+        />
       )}
       <WorkflowListDialogs actions={actions} />
     </Box>

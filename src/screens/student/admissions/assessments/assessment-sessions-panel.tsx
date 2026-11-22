@@ -8,7 +8,6 @@ import { useFormik } from 'formik';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { fIsSame, fDateTime } from 'src/utils/format-time';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -16,6 +15,7 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, Stack, Button, MenuItem, TextField, Typography } from '@mui/material';
+import { TableOverflowText } from 'src/components/customizabaleTable/components/TableOverflowText';
 
 import { assessmentErrorMessage } from './assessment-utils';
 import { ADMISSION_DATE_TIME_FORMAT } from '../admission-date-formats';
@@ -27,34 +27,6 @@ const formatSchedule = (startsAt: string, endsAt: string, compact = false) => {
     compact && fIsSame(startsAt, endsAt, 'day') ? 'hh:mm A' : ADMISSION_DATE_TIME_FORMAT;
   return `${fDateTime(startsAt, ADMISSION_DATE_TIME_FORMAT)} – ${fDateTime(endsAt, endFormat)}`;
 };
-
-function SessionTableText({
-  text,
-  variant = 'body2',
-}: {
-  text: string;
-  variant?: 'body2' | 'subtitle2';
-}) {
-  return (
-    <CustomTooltip title={text} describeChild>
-      <Typography
-        component="div"
-        variant={variant}
-        noWrap
-        tabIndex={0}
-        sx={{
-          '&:focus-visible': {
-            outline: '2px solid',
-            outlineColor: 'primary.main',
-            outlineOffset: -2,
-          },
-        }}
-      >
-        {text}
-      </Typography>
-    </CustomTooltip>
-  );
-}
 
 export type AssessmentSessionsPanelProps = {
   sessions: SharedSessionView[];
@@ -121,7 +93,7 @@ export function AssessmentSessionsPanel({
       maxWidth: 320,
       filterType: 'string',
       isSort: false,
-      render: (value) => <SessionTableText text={String(value)} variant="subtitle2" />,
+      render: (value) => <TableOverflowText variant="subtitle2">{String(value)}</TableOverflowText>,
     },
     {
       id: 'classes',
@@ -131,7 +103,7 @@ export function AssessmentSessionsPanel({
       maxWidth: 144,
       isSort: false,
       isFilter: false,
-      render: (_, row) => <SessionTableText text={classes(row as SharedSessionView)} />,
+      render: (_, row) => <TableOverflowText variant="body2">{classes(row as SharedSessionView)}</TableOverflowText>,
       exportValue: (_, row) => classes(row as SharedSessionView),
     },
     {
@@ -188,9 +160,10 @@ export function AssessmentSessionsPanel({
     {
       id: 'actions',
       label: 'Actions',
+      align: 'left',
       sticky: true,
       stickyPosition: 'right',
-      minWidth: 104,
+      minWidth: 128,
       isSort: false,
       isFilter: false,
       excludeFromExport: true,
@@ -199,8 +172,9 @@ export function AssessmentSessionsPanel({
         return (
           <ThreeDotsActions
             sx={{
-              justifyContent: 'flex-end',
-              '& .MuiIconButton-root': { width: 32, height: 32 },
+              justifyContent: 'flex-start',
+              gap: 0.5,
+              '& .MuiIconButton-root': { width: { xs: 44, sm: 30 }, height: { xs: 44, sm: 30 } },
             }}
             showEditIcon={canManage}
             editLabel={
@@ -287,7 +261,7 @@ export function AssessmentSessionsPanel({
           columns={columns}
           isLoading={isLoading}
           isRefreshing={isFetching && !isLoading}
-          refreshIndicator="skeleton"
+          refreshIndicator="linear"
           isSearch
           showColumns
           showExport

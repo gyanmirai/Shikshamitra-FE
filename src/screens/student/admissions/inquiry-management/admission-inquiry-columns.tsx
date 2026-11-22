@@ -6,7 +6,8 @@ import type { AdmissionInquiry } from 'src/redux/student/admissions/admission-in
 
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
-import { Stack, Typography } from '@mui/material';
+import { Stack, Typography, LinearProgress } from '@mui/material';
+import { TableOverflowText } from 'src/components/customizabaleTable/components/TableOverflowText';
 import { useRef, useState, useEffect } from 'react';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 
@@ -126,6 +127,7 @@ function InquiryRowActions({ inquiry, options }: { inquiry: AdmissionInquiry; op
   const popoverAction = useRef<PopoverActions>(null);
   const [paper, setPaper] = useState<HTMLDivElement | null>(null);
   const [opensAbove, setOpensAbove] = useState(false);
+  const moving = options.isMoving && options.movingInquiryId === inquiry.id;
 
   useEffect(() => {
     if (!paper) return undefined;
@@ -137,43 +139,52 @@ function InquiryRowActions({ inquiry, options }: { inquiry: AdmissionInquiry; op
   }, [paper]);
 
   return (
-    <AdaptiveThreeDotsActions
-      directActionLimit={2}
-      collapseOnOverflow={false}
-      disablePopoverClose={options.isMoving && options.movingInquiryId === inquiry.id}
-      moreLabel={`Actions For ${inquiry.applicantName}`}
-      placement={opensAbove ? 'bottom-right' : 'top-right'}
-      popoverAction={popoverAction}
-      onClickThreeDots={(event) => {
-        anchor.current = event.currentTarget;
-        setOpensAbove(false);
-      }}
-      popoverSlotProps={{
-        paper: { ref: setPaper, sx: { mt: opensAbove ? -1 : 1 } },
-        transition: {
-          onEntering: (node: HTMLElement) => {
-            const trigger = anchor.current;
-            const viewport = trigger?.ownerDocument.defaultView;
-            if (!trigger || !viewport) return;
-            const bounds = trigger.getBoundingClientRect();
-            const below = viewport.innerHeight - bounds.bottom;
-            const gap = Math.abs(Number.parseFloat(viewport.getComputedStyle(node).marginTop)) || 0;
-            // Include MUI Popover's standard 16px viewport gutter. Measure the real menu,
-            // so disabled entries and theme sizing do not leave the last row covered.
-            setOpensAbove(below < node.offsetHeight + gap + 16 && bounds.top > below);
+    <Stack sx={{ position: 'relative' }}>
+      <AdaptiveThreeDotsActions
+        directActionLimit={2}
+        collapseOnOverflow={false}
+        disablePopoverClose={moving}
+        moreLabel={`Actions For ${inquiry.applicantName}`}
+        placement={opensAbove ? 'bottom-right' : 'top-right'}
+        popoverAction={popoverAction}
+        onClickThreeDots={(event) => {
+          anchor.current = event.currentTarget;
+          setOpensAbove(false);
+        }}
+        popoverSlotProps={{
+          paper: { ref: setPaper, sx: { mt: opensAbove ? -1 : 1 } },
+          transition: {
+            onEntering: (node: HTMLElement) => {
+              const trigger = anchor.current;
+              const viewport = trigger?.ownerDocument.defaultView;
+              if (!trigger || !viewport) return;
+              const bounds = trigger.getBoundingClientRect();
+              const below = viewport.innerHeight - bounds.bottom;
+              const gap =
+                Math.abs(Number.parseFloat(viewport.getComputedStyle(node).marginTop)) || 0;
+              // Include MUI Popover's standard 16px viewport gutter. Measure the real menu,
+              // so disabled entries and theme sizing do not leave the last row covered.
+              setOpensAbove(below < node.offsetHeight + gap + 16 && bounds.top > below);
+            },
           },
-        },
-      }}
-      sx={{
-        gap: 0,
-        justifyContent: 'flex-end',
-        '& .MuiIconButton-root': {
-          width: { xs: 44, sm: 30 },
-          height: { xs: 44, sm: 30 },
-        },
-      }}
-      actions={getAdmissionInquiryActions(inquiry, options)}
-    />
+        }}
+        sx={{
+          gap: 0.5,
+          justifyContent: 'flex-start',
+          '& .MuiIconButton-root': {
+            width: { xs: 44, sm: 30 },
+            height: { xs: 44, sm: 30 },
+          },
+        }}
+        actions={getAdmissionInquiryActions(inquiry, options)}
+      />
+      {moving && (
+        <LinearProgress
+          aria-label={`Starting Application for ${inquiry.applicantName}`}
+          sx={{ position: 'absolute', inset: 'auto 0 0', height: 2, pointerEvents: 'none' }}
+        />
+      )}
+    </Stack>
   );
 }
 
@@ -225,9 +236,9 @@ export function buildAdmissionInquiryColumns(options: Options): IColumn[] {
           <Stack spacing={0.25}>
             <Typography variant="body2">{inquirySourceLabel(value)}</Typography>
             {inquiry.sourceDetail && (
-              <Typography variant="caption" color="text.secondary" noWrap>
+              <TableOverflowText variant="caption" color="text.secondary">
                 {inquiry.sourceDetail}
-              </Typography>
+              </TableOverflowText>
             )}
           </Stack>
         );
@@ -251,10 +262,10 @@ export function buildAdmissionInquiryColumns(options: Options): IColumn[] {
     {
       id: 'actions',
       label: 'Actions',
-      width: 152,
-      minWidth: 152,
-      maxWidth: 152,
-      align: 'right',
+      width: 172,
+      minWidth: 172,
+      maxWidth: 172,
+      align: 'left',
       headerAlign: 'left',
       sticky: true,
       stickyPosition: 'right',

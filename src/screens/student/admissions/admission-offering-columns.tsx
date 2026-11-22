@@ -108,11 +108,10 @@ export const buildAdmissionOfferingColumns = (
   {
     id: 'effectiveOpenDate',
     label: 'Open',
+    align: 'left',
     isFilter: true,
     filterType: 'date',
     filterOperators: ['equals', 'after', 'before'],
-    align: 'right',
-    headerAlign: 'left',
     minWidth: 120,
     render: (value) => <AdmissionTableText text={formatDateOnly(value, ADMISSION_DATE_FORMAT)} />,
   },
@@ -130,12 +129,11 @@ export const buildAdmissionOfferingColumns = (
   {
     id: 'applicationCount',
     label: 'Applications',
+    align: 'left',
     isFilter: true,
     filterType: 'number',
     filterOperators: ['equals', 'greaterThan', 'lessThan', 'between'],
     filterStep: 1,
-    align: 'right',
-    headerAlign: 'left',
     render: (value) => fNumber(value),
     minWidth: 120,
   },
@@ -173,19 +171,18 @@ export const buildAdmissionOfferingColumns = (
   {
     id: 'actions',
     label: 'Actions',
+    align: 'left',
     sticky: true,
     stickyPosition: 'right',
     width: 160,
     minWidth: 150,
     headerSx: { width: { xs: 76, sm: 160 }, minWidth: { xs: 76, sm: 150 } },
     cellSx: { width: { xs: 76, sm: 160 }, minWidth: { xs: 76, sm: 150 } },
-    align: 'right',
-    headerAlign: 'left',
     isSort: false,
     isFilter: false,
     excludeFromExport: true,
     render: (_, data) => (
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+      <Box sx={{ display: 'flex' }}>
         <AdmissionOfferingRowActions
           row={data as unknown as AdmissionOfferingListItem}
           {...actions}

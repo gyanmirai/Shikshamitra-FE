@@ -131,6 +131,8 @@ function InquiryMatchReview({
     <AdmissionInquiryFamilyReview
       families={families}
       selectedFamily={selectedFamily}
+      guardianPhone={guardianPhone}
+      guardianEmail={guardianEmail}
       disabled={locked}
       onSelect={(familyId) => formik.setFieldValue('family', familyId)}
       error={formik.submitCount ? formik.errors.family : undefined}
@@ -182,7 +184,8 @@ function InquiryMatchReview({
         <CustomDialog
           open
           title="Confirm Siblings"
-          titleInfo="Link this inquiry with the children in the selected family."
+          titleInfo="Review the family before linking."
+          titleInfoPlacement="right"
           handleClose={close}
           maxWidth="xs"
           hasForm={false}

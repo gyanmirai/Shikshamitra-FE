@@ -104,6 +104,26 @@ beforeEach(() => {
 });
 
 describe('single assessment workspace data scope', () => {
+  it('retains counts across status changes and accepts fresh counts without reusing them for another class', () => {
+    const earlier = { all: 30, pending: 20, complete: 6, ongoing: 4 };
+    mocks.applicants.mockReturnValue({ currentData: { totalCount: 30, statusCounts: earlier } });
+    const { result, rerender } = renderHook(() => useAssessmentWorkspaceData(true));
+    expect(result.current.statusCounts).toEqual(earlier);
+    mocks.state.status = 'complete';
+    mocks.applicants.mockReturnValue({ currentData: undefined, isFetching: true });
+    rerender();
+    expect(result.current.statusCounts).toEqual(earlier);
+    expect(mocks.applicants.mock.lastCall?.[0]).toMatchObject({ status: 'complete' });
+    const updated = { all: 30, pending: 19, complete: 7, ongoing: 4 };
+    mocks.applicants.mockReturnValue({ currentData: { totalCount: 7, statusCounts: updated } });
+    rerender();
+    expect(result.current.statusCounts).toEqual(updated);
+    mocks.academic.standardId = 'class-1';
+    mocks.applicants.mockReturnValue({ currentData: undefined, isFetching: true });
+    rerender();
+    expect(result.current.statusCounts).toBeUndefined();
+  });
+
   it('restores an authorized scope link without clearing its identity', () => {
     Object.assign(mocks.academic, { boardId: '', mediumId: '' });
     mocks.scopeKey = 'second:definition-second';

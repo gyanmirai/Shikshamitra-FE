@@ -208,6 +208,52 @@ describe('useFormListActions editor mode', () => {
     });
   });
 
+  it('blocks table publication and gives the latest published version when a draft matches it', async () => {
+    publication.validate.mockReturnValue({
+      unwrap: async () => ({ isValid: false, errors: ['Admissions.FormVersionUnchanged:3'] }),
+    });
+    const { result } = renderHook(() => useFormListActions());
+    await act(async () => {
+      await result.current.requestPublish({ id: 'draft', version: 4 } as AdmissionForm);
+    });
+    expect(result.current.publishIssues).toEqual([
+      'This draft matches published v3. Make a change before publishing, or keep using v3.',
+    ]);
+    expect(await result.current.confirmPublish()).toBe(false);
+    expect(publication.publish).not.toHaveBeenCalled();
+  });
+
+  it('shows the matching version if the publish endpoint rejects after a passing table check', async () => {
+    const message =
+      'This draft matches published v3. Make a change before publishing, or keep using v3.';
+    publication.validate.mockReturnValue({ unwrap: async () => ({ isValid: true, errors: [] }) });
+    publication.publish.mockReturnValue({
+      unwrap: () =>
+        Promise.reject(
+          Object.assign(new Error(message), {
+            status: 400,
+            data: {
+              errorCode: 'Admissions.FormVersionUnchanged',
+              data: { Version: 3, Reason: message },
+            },
+          })
+        ),
+    });
+    const { result } = renderHook(() => useFormListActions());
+    await act(async () => {
+      await result.current.requestPublish({
+        id: 'draft',
+        concurrencyStamp: 'saved',
+      } as AdmissionForm);
+    });
+    await act(async () => {
+      expect(await result.current.confirmPublish()).toBe(false);
+    });
+    expect(result.current.publishIssues).toEqual([message]);
+    expect(await result.current.confirmPublish()).toBe(false);
+    expect(publication.publish).toHaveBeenCalledOnce();
+  });
+
   it('passes the originating Forms list context to the shared preview route', () => {
     const { result } = renderHook(() => useFormListActions());
     const origin = '/student/admissions/settings/forms?view=registration&page=2';
@@ -217,6 +263,28 @@ describe('useFormListActions editor mode', () => {
       '/student/admissions/settings/forms/registration-form/preview'
     );
     expect(destination.searchParams.get('returnTo')).toBe(origin);
+  });
+
+  it('starts one preview navigation while another preview request is pending', async () => {
+    let finishNavigation!: () => void;
+    navigation.push.mockReturnValueOnce(
+      new Promise<void>((resolve) => {
+        finishNavigation = resolve;
+      })
+    );
+    const { result } = renderHook(() => useFormListActions());
+
+    act(() => {
+      result.current.preview('first-form');
+      result.current.preview('first-form');
+      result.current.preview('second-form');
+    });
+    expect(navigation.push).toHaveBeenCalledOnce();
+    expect(result.current.pendingNavigationId).toBe('first-form');
+
+    await act(async () => finishNavigation());
+    act(() => result.current.preview('second-form'));
+    expect(navigation.push).toHaveBeenCalledTimes(2);
   });
 
   it('checks Inquiry minimum questions before creating a draft for Publish now', async () => {

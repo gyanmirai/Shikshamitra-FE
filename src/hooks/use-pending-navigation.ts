@@ -21,7 +21,7 @@ export function usePendingNavigation(push: Push, onError?: (error: unknown) => v
 
   const navigate = useCallback(
     (key: string, href: string, options?: NavigationOptions) => {
-      if (pending.current) return;
+      if (pending.current) return false;
       pending.current = key;
       setPendingKey(key);
       startTransition(async () => {
@@ -32,6 +32,7 @@ export function usePendingNavigation(push: Push, onError?: (error: unknown) => v
           else shikshaMitraToast.error({ message: 'Unable to Open the Selected Page.' });
         }
       });
+      return true;
     },
     [push, onError]
   );

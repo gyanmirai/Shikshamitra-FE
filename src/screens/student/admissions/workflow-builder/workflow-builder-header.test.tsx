@@ -90,6 +90,28 @@ describe('WorkflowBuilderHeader', () => {
 });
 
 describe('WorkflowLifecycleActions', () => {
+  it.each([
+    { pending: { saving: true }, active: 'Save Draft', inactive: 'Publish' },
+    { pending: { publishing: true, validating: true }, active: 'Publish', inactive: 'Save Draft' },
+  ])(
+    'shows loading only on $active and restores both actions after processing',
+    ({ pending, active, inactive }) => {
+      const view = render(<WorkflowLifecycleActions {...actions} {...pending} />, {
+        wrapper: Wrapper,
+      });
+      const running = screen.getByRole('button', { name: active });
+      const waiting = screen.getByRole('button', { name: inactive });
+      expect(running).toBeDisabled();
+      expect(waiting).toBeDisabled();
+      expect(within(running).getByRole('progressbar')).toBeInTheDocument();
+      expect(within(waiting).queryByRole('progressbar')).not.toBeInTheDocument();
+      view.rerender(<WorkflowLifecycleActions {...actions} />);
+      expect(running).toBeEnabled();
+      expect(waiting).toBeEnabled();
+      expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+    }
+  );
+
   it('preserves save and publish callbacks and locks duplicate actions while busy', () => {
     const onSave = vi.fn();
     const onPublish = vi.fn();
@@ -122,8 +144,10 @@ describe('WorkflowLifecycleActions', () => {
   it('shows only the current save and publish actions for a managed draft', () => {
     render(<WorkflowLifecycleActions {...actions} />, { wrapper: Wrapper });
     expect(screen.getByRole('button', { name: 'Publish' })).toBeEnabled();
-    ['Approve', 'Request changes', 'Submit for approval', 'Create rollback draft'].forEach((name) => {
-      expect(screen.queryByRole('button', { name })).not.toBeInTheDocument();
-    });
+    ['Approve', 'Request changes', 'Submit for approval', 'Create rollback draft'].forEach(
+      (name) => {
+        expect(screen.queryByRole('button', { name })).not.toBeInTheDocument();
+      }
+    );
   });
 });

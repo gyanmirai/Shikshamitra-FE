@@ -6,6 +6,7 @@ import type {
 } from 'src/redux/student/admissions/admission-forms-api';
 
 import { Box, Stack } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
 
 import { FormBuilderReview } from './form-builder-review';
 import { FormBuilderDetails } from './form-builder-details';
@@ -22,6 +23,7 @@ type Props = {
   onInheritanceReadinessChange?: (ready: boolean) => void;
   nameConflictMessage?: string | null;
   checkingName?: boolean;
+  publishMessage?: string | null;
 };
 
 export function FormBuilderWizardContent({
@@ -32,6 +34,7 @@ export function FormBuilderWizardContent({
   onInheritanceReadinessChange,
   nameConflictMessage,
   checkingName,
+  publishMessage,
 }: Props) {
   const contentRef = useFormWizardFocus(activeStep);
   return (
@@ -77,6 +80,18 @@ export function FormBuilderWizardContent({
         {activeStep === 2 && <FormBuilderReview formik={formik} />}
         {activeStep === 3 && formik.values.purpose !== 0 && (
           <FormBuilderPrintLayout formik={formik} />
+        )}
+        {activeStep >= 2 && publishMessage && (
+          <StudentFeedback
+            notificationKey="STU-0068"
+            id="admission-publish-block"
+            presentation="inline"
+            severity="error"
+            role="alert"
+            sx={{ px: { xs: 1.5, sm: 3 }, py: 1, flexShrink: 0 }}
+          >
+            {publishMessage}
+          </StudentFeedback>
         )}
       </Stack>
     </FormInheritanceProvider>

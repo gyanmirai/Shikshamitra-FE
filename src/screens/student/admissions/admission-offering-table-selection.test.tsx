@@ -77,6 +77,21 @@ const props = () => ({
 });
 
 describe('Offering table selection', () => {
+  it('limits pagination to the four supported page sizes', () => {
+    render(<AdmissionOfferingTable {...props()} />);
+    expect(tableProps.current.rowsPerPageOptions).toEqual([10, 25, 50, 100]);
+  });
+
+  it('aligns the opening date, applications and actions with their left-aligned headings', async () => {
+    const { buildAdmissionOfferingColumns } = await vi.importActual<
+      typeof import('./admission-offering-columns')
+    >('./admission-offering-columns');
+    const columns = buildAdmissionOfferingColumns(props());
+    const leftAligned = ['effectiveOpenDate', 'applicationCount', 'actions'];
+    expect(columns.filter((column) => leftAligned.includes(column.id)).map((column) => column.align))
+      .toEqual(['left', 'left', 'left']);
+  });
+
   it('selects a ready offering without opening its details', () => {
     const input = props();
     render(<AdmissionOfferingTable {...input} />);

@@ -1,9 +1,9 @@
 'use client';
 
+import type { AdmissionCampus } from 'src/redux/student/admissions/admission-campuses-api';
+
 import { useCallback } from 'react';
 import { useLazyGetAdmissionCampusesQuery } from 'src/redux/student/admissions/admission-campuses-api';
-
-import type { AdmissionCampus } from 'src/redux/student/admissions/admission-campuses-api';
 
 export type AdmissionCampusFetcher = (
   query: string,
@@ -12,11 +12,10 @@ export type AdmissionCampusFetcher = (
 
 const PAGE_SIZE = 25;
 
-export function useAdmissionCampusOptions(open = true) {
+export function useAdmissionCampusOptions() {
   const [getCampuses] = useLazyGetAdmissionCampusesQuery();
   const fetchCampuses = useCallback<AdmissionCampusFetcher>(
     async (query, page) => {
-      if (!open) return { data: [], hasMore: false };
       const skipCount = (page - 1) * PAGE_SIZE;
       const result = await getCampuses({
         search: query || undefined,
@@ -29,7 +28,7 @@ export function useAdmissionCampusOptions(open = true) {
         hasMore: skipCount + result.items.length < result.totalCount,
       };
     },
-    [getCampuses, open]
+    [getCampuses]
   );
 
   return fetchCampuses;

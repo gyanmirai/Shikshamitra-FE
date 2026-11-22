@@ -5,6 +5,7 @@ import type { IParams } from 'src/components/customizabaleTable/types';
 
 import { Iconify } from 'src/components/iconify';
 import { useDispatch, useSelector } from 'react-redux';
+import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { studentPaths } from 'src/constants/student-menu';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -33,7 +34,10 @@ import { loadInquiryOverviewForm } from './inquiry-management/inquiry-overview-l
 import { preloadInquiryWorkspace } from './inquiry-management/preload-inquiry-workspace';
 import { InquiryHandoffIssueDialog } from './inquiry-management/inquiry-handoff-issue-dialog';
 import { buildAdmissionInquiryColumns } from './inquiry-management/admission-inquiry-columns';
-import { buildAdmissionInquiryRowOptions } from './inquiry-management/admission-inquiry-list-options';
+import {
+  INQUIRY_STATUS_OPTIONS,
+  buildAdmissionInquiryRowOptions,
+} from './inquiry-management/admission-inquiry-list-options';
 import { AdmissionInquiryManagementPage } from './inquiry-management/admission-inquiry-management-page';
 import {
   AdmissionAcademicFilters,
@@ -46,6 +50,12 @@ import {
   ADMISSION_INQUIRY_FILTER_QUERY_PARAMS,
   createInitialAdmissionInquiryTableFilters,
 } from './inquiry-management/admission-inquiry-table-filters';
+
+const ALL_STATUSES = 'all';
+const inquiryStatusFilters = [
+  { value: ALL_STATUSES, label: 'All Statuses' },
+  ...INQUIRY_STATUS_OPTIONS.map(({ value, label }) => ({ value: String(value), label })),
+];
 
 export default function AdmissionInquiriesScreen() {
   const dispatch = useDispatch<AppDispatch>();
@@ -74,6 +84,8 @@ export default function AdmissionInquiriesScreen() {
   const [tableFilters, setTableFilters] = useState<IParams['filters']>(() =>
     createInitialAdmissionInquiryTableFilters(searchParams)
   );
+  const statusValue = String(tableFilters.find((filter) => filter.column === 'status')?.value ?? '');
+  const statusFilter = inquiryStatusFilters.find(({ value }) => value === statusValue);
   const [page, setPage] = useState(0);
   useEffect(() => {
     if (restoringDateUrl) setPage(0);
@@ -307,12 +319,39 @@ export default function AdmissionInquiriesScreen() {
         }
       />
       <AdmissionAcademicFilters
+        additionalFilters={
+          <CustomSelect
+            fullWidth
+            size="small"
+            label="Status"
+            value={statusFilter?.value ?? ALL_STATUSES}
+            options={inquiryStatusFilters}
+            onChange={(value) => {
+              const selected = inquiryStatusFilters.find((option) => option.value === value);
+              setPage(0);
+              setTableFilters((current) => {
+                const next = current.filter((filter) => filter.column !== 'status');
+                if (selected && selected.value !== ALL_STATUSES) {
+                  next.push({
+                    column: 'status',
+                    type: 'equals',
+                    value: selected.value,
+                    valueType: 'enum',
+                    label: 'Status',
+                    displayValue: selected.label,
+                  });
+                }
+                return next;
+              });
+            }}
+          />
+        }
         filterAction={
           <Stack
             direction="row"
             alignItems="center"
             spacing={1}
-            sx={{ width: { xs: 1, lg: 380 }, minWidth: 0 }}
+            sx={{ width: { xs: 1, lg: 280 }, minWidth: 0 }}
           >
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <CustomDateRangePicker
@@ -351,25 +390,6 @@ export default function AdmissionInquiriesScreen() {
                 </IconButton>
               </CustomTooltip>
             )}
-            <CustomTooltip
-              title={academic.standardId ? 'Clear Class Selection' : 'All Classes Are Shown'}
-              describeChild
-            >
-              <Box component="span" sx={{ display: 'inline-flex', flexShrink: 0 }}>
-                <Button
-                  type="button"
-                  aria-label="Clear Academic Filters"
-                  size="small"
-                  variant="outlined"
-                  color="inherit"
-                  startIcon={<Iconify icon="mdi:filter-off-outline" width={18} />}
-                  disabled={!academic.standardId}
-                  onClick={academic.clear}
-                >
-                  Clear
-                </Button>
-              </Box>
-            </CustomTooltip>
           </Stack>
         }
         onLoadingChange={setScopeLoading}
@@ -405,8 +425,8 @@ export default function AdmissionInquiriesScreen() {
           tableContainerProps={{ sx: { height: 1 } }}
           columns={columns}
           data={skipList || scopeLoading ? [] : (data?.items ?? [])}
-          isRefreshing={Boolean(data) && isFetching && !scopeLoading && !skipList}
-          refreshIndicator="skeleton"
+          isRefreshing={Boolean(data) && isFetching && !scopeLoading && !skipList && !handoff.moving}
+          refreshIndicator="linear"
           errorContent={
             isError && !skipList && !scopeLoading && !data?.items.length ? (
               <AdmissionQueryError onRetry={() => refetch()} />

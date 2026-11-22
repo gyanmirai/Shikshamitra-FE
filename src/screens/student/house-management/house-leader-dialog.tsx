@@ -1,7 +1,6 @@
 import type {
   House,
   HouseStudent,
-  HouseDivision,
   HouseLeaderCommand,
 } from 'src/redux/student/house-management/house-management-types';
 
@@ -20,27 +19,16 @@ import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { LeaderStudentPicker } from './house-pickers';
 import { useHouseCloseGuard } from './use-house-close-guard';
 
-type LeaderRole = 'house' | 'division';
-
 type Props = {
   academicMediumId: string;
-  role: LeaderRole;
-  record: House | HouseDivision;
+  record: House;
   onSave: (command: HouseLeaderCommand) => Promise<void>;
   onClose: () => void;
 };
-export default function HouseLeaderDialog({
-  academicMediumId,
-  role,
-  record,
-  onSave,
-  onClose,
-}: Props) {
+export default function HouseLeaderDialog({ academicMediumId, record, onSave, onClose }: Props) {
   const [error, setError] = useState('');
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
-  const isHouse = role === 'house';
-  const title = isHouse ? 'House Leader' : 'Division Leader';
   const currentLeader = record.leader ?? null;
   const save = async (leader: HouseStudent | null) => {
     if (busy) return;
@@ -74,12 +62,8 @@ export default function HouseLeaderDialog({
     <>
       <CustomDialog
         open
-        title={`Manage ${title}`}
-        titleInfo={
-          isHouse
-            ? 'Each house has one leader. Choose a current house member or leave the role vacant.'
-            : 'Each division has one division leader. A student may also lead their house.'
-        }
+        title="Manage House Leader"
+        titleInfo="Each house has one leader. Choose a current house member or leave the role vacant."
         handleClose={close}
         guardUnsavedChanges={false}
         disableClose={busy}
@@ -99,27 +83,16 @@ export default function HouseLeaderDialog({
               <FormSectionCard
                 title="Leader Appointment"
                 icon={GlobalIcons.admissionStudent}
-                descriptionTooltip={
-                  isHouse
-                    ? 'Choose an active member of this house. Leaving the house clears this appointment.'
-                    : 'Choose an active student in this division. House membership is optional.'
-                }
+                descriptionTooltip="Choose an active member of this house. Leaving the house clears this appointment."
               >
-                <Typography variant="body2">
-                  {'standardName' in record ? `${record.standardName} / ` : ''}
-                  {record.name}
-                </Typography>
+                <Typography variant="body2">{record.name}</Typography>
                 {currentLeader && (
                   <Typography variant="body2" color="text.secondary">
                     Current leader: {currentLeader.studentName}
-                    {isHouse && currentLeader.houseName ? ` · ${currentLeader.houseName}` : ''}
                   </Typography>
                 )}
                 <LeaderStudentPicker
-                  input={{
-                    academicMediumId,
-                    ...(isHouse ? { houseId: record.id } : { divisionId: record.id }),
-                  }}
+                  input={{ academicMediumId, houseId: record.id }}
                   value={form.values.leader}
                   onChange={(student) => form.setFieldValue('leader', student)}
                   disabled={busy}
@@ -155,11 +128,11 @@ export default function HouseLeaderDialog({
       <ConfirmDialog
         open={confirming}
         onClose={() => setConfirming(false)}
-        title={`${form.values.leader ? 'Replace' : 'Remove'} ${title}?`}
+        title={form.values.leader ? 'Replace House Leader?' : 'Remove House Leader?'}
         icon="warning"
         disableCancel={busy}
         bodyBusy={busy}
-        content={`${currentLeader?.studentName ?? ''} will no longer be the ${role} leader. ${form.values.leader ? `${form.values.leader.studentName} will take this position.` : 'The position will be vacant.'}`}
+        content={`${currentLeader?.studentName ?? ''} will no longer be the house leader. ${form.values.leader ? `${form.values.leader.studentName} will take this position.` : 'The position will be vacant.'}`}
         action={
           <LoadingButton
             size="small"

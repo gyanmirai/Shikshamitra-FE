@@ -1,11 +1,14 @@
 import type { AdmissionOffering } from 'src/redux/student/admissions/admission-offerings-api';
 
+import { GlobalIcons } from 'src/utils/icons';
 import { vi, it, expect, describe } from 'vitest';
 import { render, screen, within, fireEvent } from '@testing-library/react';
 
 import { AdmissionOfferingDetailsDrawer } from './admission-offering-details-drawer';
 
-vi.mock('src/components/iconify', () => ({ Iconify: () => <span aria-hidden="true" /> }));
+vi.mock('src/components/iconify', () => ({
+  Iconify: ({ icon }: { icon: string }) => <span aria-hidden="true" data-icon={icon} />,
+}));
 const notices = vi.hoisted(() => ({
   warning: vi.fn(),
   info: vi.fn(),
@@ -184,9 +187,9 @@ describe('Admission offering details drawer', () => {
     ['Regular v1', 'Inquiry v1', 'Application v1'].forEach((value) => {
       expect(forms.getByText(value)).toBeVisible();
     });
-    expect(
-      within(screen.getByRole('region', { name: 'Configuration Readiness' })).getByText('Ready')
-    ).toBeVisible();
+    const readiness = screen.getByRole('region', { name: 'Configuration Readiness' });
+    expect(within(readiness).getByText('Ready')).toBeVisible();
+    expect(readiness.querySelector(`[data-icon="${GlobalIcons.approvedIcon}"]`)).toBeNull();
     expect(screen.queryByRole('button', { name: /^Edit|Submit|Activate/ })).not.toBeInTheDocument();
   });
 

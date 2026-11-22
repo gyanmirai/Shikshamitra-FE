@@ -1,5 +1,8 @@
 import type { IColumn, ICustomizableTableProps } from 'src/components/customizabaleTable/types';
-import type { HouseDivision, HouseCataloguePage } from 'src/redux/student/house-management/house-management-types';
+import type {
+  HouseDivision,
+  HouseCataloguePage,
+} from 'src/redux/student/house-management/house-management-types';
 
 import { Provider } from 'react-redux';
 import { api } from 'src/redux/service';
@@ -9,7 +12,7 @@ import { vi, it, expect, beforeEach } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { act, render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import HouseManagement from '.';
 
@@ -28,11 +31,13 @@ const fixture = vi.hoisted(() => ({
   academicError: false,
   scopeRevision: 'original-scope',
   studentTotal: 1,
+  studentIsDivisionLeader: true,
   studentsMissing: false,
   studentsFetching: false,
   studentsError: false,
   columns: vi.fn<(columns: IColumn[]) => void>(),
   updateHouse: vi.fn(),
+  setDivisionLeader: vi.fn(),
 }));
 vi.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(fixture.query),
@@ -101,7 +106,9 @@ vi.mock('src/components/customizabaleTable', () => ({
           <div key={index} data-leadership={rowProps?.(row, index)?.['data-leadership']}>
             {columns.map((column) => (
               <span key={column.id}>
-                {column.render ? column.render(row[column.id] ?? '-', row) : String(row[column.id] ?? '')}
+                {column.render
+                  ? column.render(row[column.id] ?? '-', row)
+                  : String(row[column.id] ?? '')}
               </span>
             ))}
           </div>
@@ -127,6 +134,7 @@ vi.mock('src/redux/student/house-management/house-management-api', () => {
         studentId: 's1',
         studentName: 'Riya',
         standardName: '6',
+        divisionId: 'd1',
         divisionName: 'A',
         houseName: 'Falcon',
         isHouseLeader: true,
@@ -136,7 +144,6 @@ vi.mock('src/redux/student/house-management/house-management-api', () => {
     totalCount: 1,
   };
   let studentPage = studentData;
-  let divisionPage = { items: fixture.divisions, totalCount: fixture.divisions.length };
   const houseData = [
     { items: [], totalCount: 0, canManage: false },
     { items: [], totalCount: 0, canManage: true },
@@ -150,17 +157,21 @@ vi.mock('src/redux/student/house-management/house-management-api', () => {
     }),
     useGetHouseLogoQuery: () => ({ currentData: undefined }),
     useUploadHouseLogoMutation: mutation,
-    useGetHouseDivisionsQuery: (input: unknown) => {
-      fixture.divisionInput(input);
-      // Match RTK Query's stable result identity between renders of an unchanged page.
-      if (divisionPage.items !== fixture.divisions)
-        divisionPage = { items: fixture.divisions, totalCount: fixture.divisions.length };
-      return { ...result, currentData: divisionPage };
-    },
+    useLazyGetHouseDivisionsQuery: () => [
+      fixture.divisionInput,
+      { ...result, data: { items: [], totalCount: 0 } },
+    ],
     useGetHouseStudentsQuery: (input: unknown) => {
       fixture.input(input);
-      if (studentPage.totalCount !== fixture.studentTotal)
-        studentPage = { ...studentData, totalCount: fixture.studentTotal };
+      if (
+        studentPage.totalCount !== fixture.studentTotal ||
+        studentPage.items[0].isDivisionLeader !== fixture.studentIsDivisionLeader
+      ) {
+        studentPage = {
+          totalCount: fixture.studentTotal,
+          items: [{ ...studentData.items[0], isDivisionLeader: fixture.studentIsDivisionLeader }],
+        };
+      }
       return {
         ...result,
         currentData: fixture.studentsMissing ? undefined : studentPage,
@@ -174,7 +185,7 @@ vi.mock('src/redux/student/house-management/house-management-api', () => {
     usePreviewHouseAssignmentMutation: mutation,
     useCommitHouseAssignmentMutation: mutation,
     useSetHouseLeaderMutation: mutation,
-    useSetDivisionLeaderMutation: mutation,
+    useSetDivisionLeaderMutation: () => [fixture.setDivisionLeader, { isLoading: false }],
   };
 });
 function workspace() {
@@ -211,16 +222,27 @@ beforeEach(() => {
   fixture.academicError = false;
   fixture.scopeRevision = 'original-scope';
   fixture.studentTotal = 1;
+  fixture.studentIsDivisionLeader = true;
   fixture.studentsMissing = false;
   fixture.studentsFetching = false;
   fixture.studentsError = false;
   vi.clearAllMocks();
   fixture.updateHouse.mockImplementation(() => ({ unwrap: () => Promise.resolve() }));
+  fixture.divisionInput.mockImplementation(() => ({
+    unwrap: () => Promise.resolve({ items: fixture.divisions, totalCount: fixture.divisions.length }),
+  }));
+  fixture.setDivisionLeader.mockImplementation(() => ({ unwrap: () => Promise.resolve() }));
 });
 it('lets House-only viewers read the scoped roster without exposing write actions', () => {
   mount();
+  expect(screen.getAllByRole('tab')).toHaveLength(2);
+  expect(screen.getByRole('tab', { name: 'Assign Leaders' })).toHaveAttribute(
+    'aria-selected',
+    'true'
+  );
   expect(screen.getByText('Riya')).toBeVisible();
   expect(screen.queryByRole('button', { name: 'Assign or move' })).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Remove Riya as division leader' })).toBeNull();
   expect(screen.queryByRole('checkbox', { name: 'Select Riya' })).toBeNull();
   expect(fixture.input).toHaveBeenCalledWith(expect.objectContaining({ academicMediumId: 'm1' }));
 });
@@ -253,10 +275,15 @@ it('ignores a Division URL value without its parent class', () => {
   fixture.permissions.push('Students.Records.HouseManagement.Add');
   fixture.query = 'tab=students&division=d1';
   mount();
-  expect(screen.getByRole('combobox', { name: 'Division' })).toHaveAttribute('aria-disabled', 'true');
+  expect(screen.getByRole('combobox', { name: 'Division' })).toHaveAttribute(
+    'aria-disabled',
+    'true'
+  );
   expect(screen.getByRole('combobox', { name: 'Division' })).toHaveTextContent('All divisions');
   expect(screen.queryByRole('checkbox', { name: 'Select Riya' })).not.toBeInTheDocument();
-  expect(fixture.input).toHaveBeenLastCalledWith(expect.objectContaining({ divisionId: undefined }));
+  expect(fixture.input).toHaveBeenLastCalledWith(
+    expect.objectContaining({ divisionId: undefined })
+  );
 });
 
 it('enables each academic filter only after its parent is selected', () => {
@@ -317,7 +344,7 @@ it('shows separate role icons beside a dual leader with hover and keyboard toolt
   const house = screen.getByRole('img', { name: 'House leader · Falcon' });
   const division = screen.getByRole('img', { name: 'Division leader · 6 / A' });
   const identity = screen.getByText('Riya').parentElement;
-  expect(identity?.closest('[data-leadership]')).toHaveAttribute('data-leadership', 'both');
+  expect(identity?.closest('[data-leadership]')).toBeNull();
   expect(identity).toContainElement(house);
   expect(identity).toContainElement(division);
 
@@ -332,44 +359,150 @@ it('shows separate role icons beside a dual leader with hover and keyboard toolt
   expect(await screen.findByRole('tooltip', { name: 'Division leader · 6 / A' })).toBeVisible();
 });
 
-it('shows the independent Division leader position when filtering divisions', () => {
+it('clears a division appointment from the student row using the reviewed division stamp', async () => {
   fixture.permissions.push('Students.Records.HouseManagement.Add');
   fixture.query = 'tab=divisions&class=c1&division=d1';
-  fixture.divisions = [{
-    id: 'd1', name: 'A', standardId: 'c1', standardName: '6', studentCount: 20,
-    leader: null,
-    concurrencyStamp: 'v1', canManage: true,
-  }];
+  fixture.divisions = [
+    {
+      id: 'd1',
+      name: 'A',
+      standardId: 'c1',
+      standardName: '6',
+      studentCount: 20,
+      leader: {
+        enrollmentId: 'e1',
+        studentId: 's1',
+        studentName: 'Riya',
+        standardId: 'c1',
+        standardName: '6',
+        divisionId: 'd1',
+        isHouseLeader: true,
+        isDivisionLeader: true,
+        concurrencyStamp: 'student-v1',
+      },
+      concurrencyStamp: 'v1',
+      canManage: true,
+    },
+  ];
   mount();
-  expect(screen.getByRole('tab', { name: 'Assign Leaders' })).toHaveAttribute('aria-selected', 'true');
-  expect(fixture.divisionInput).toHaveBeenCalledWith(expect.objectContaining({
-    standardId: 'c1', divisionId: 'd1',
-  }));
-  expect(screen.getByText('Vacant')).toBeVisible();
-  const manage = screen.getByRole('button', { name: 'Manage division leader for 6 / A' });
+  expect(screen.getByRole('tab', { name: 'Assign Leaders' })).toHaveAttribute(
+    'aria-selected',
+    'true'
+  );
+  expect(fixture.divisionInput).not.toHaveBeenCalled();
+  const manage = screen.getByRole('button', { name: 'Remove Riya as division leader' });
   fireEvent.click(manage);
-  expect(screen.getByRole('dialog', { name: 'Manage Division Leader' })).toBeVisible();
+  expect(fixture.divisionInput).toHaveBeenCalledWith(
+    expect.objectContaining({ divisionId: 'd1' }),
+    false
+  );
+  const dialog = screen.getByRole('dialog', { name: 'Remove Division Leader?' });
+  expect(within(dialog).getByRole('button', { name: 'Remove leader' })).toBeDisabled();
+  expect(await within(dialog).findByText('Current leader: Riya')).toBeVisible();
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Remove leader' }));
+  await waitFor(() =>
+    expect(fixture.setDivisionLeader).toHaveBeenCalledWith({
+      id: 'd1',
+      academicMediumId: 'm1',
+      enrollmentId: null,
+      concurrencyStamp: 'v1',
+    })
+  );
 });
 
-it('shows the house incumbent and opens Manage House Leader from the house row', () => {
-  fixture.permissions.push('Students.Records.HouseManagement.Add', 'Students.Records.HouseManagement.Delete');
-  fixture.query = 'tab=houses';
-  fixture.houses = { items: [{
-    id: 'h1', name: 'Falcon', color: '#123456', memberCount: 1, houseLeaderCount: 1,
-    leader: {
-      enrollmentId: 'e2', studentId: 's2', studentName: 'Mira',
-      standardId: 'c1', standardName: '6',
-      houseName: 'Falcon', isHouseLeader: true, isDivisionLeader: false, concurrencyStamp: 'v1',
+it('reviews a replacement from the roster before sending the candidate and reviewed stamp', async () => {
+  fixture.permissions.push('Students.Records.HouseManagement.Add');
+  fixture.studentIsDivisionLeader = false;
+  fixture.divisions = [
+    {
+      id: 'd1',
+      name: 'A',
+      standardId: 'c1',
+      standardName: '6',
+      studentCount: 20,
+      leader: {
+        enrollmentId: 'e2',
+        studentId: 's2',
+        studentName: 'Mira',
+        standardId: 'c1',
+        standardName: '6',
+        divisionId: 'd1',
+        isHouseLeader: false,
+        isDivisionLeader: true,
+        concurrencyStamp: 'student-v1',
+      },
+      concurrencyStamp: 'v1',
+      canManage: true,
     },
-    concurrencyStamp: 'v1', canManage: true,
-  }], totalCount: 1, canManage: true };
+  ];
+  const view = mount();
+  expect(screen.getByRole('button', { name: 'Assign or move' })).toBeDisabled();
+  fireEvent.click(screen.getByRole('button', { name: 'Assign Riya as division leader' }));
+  const dialog = await screen.findByRole('dialog', { name: 'Replace Division Leader?' });
+  expect(dialog).toHaveTextContent('Current leader: Mira');
+  expect(dialog).toHaveTextContent('New leader: Riya');
+  expect(fixture.setDivisionLeader).not.toHaveBeenCalled();
+
+  fixture.divisions = [{ ...fixture.divisions[0], concurrencyStamp: 'v2', leader: null }];
+  view.rerender(workspace());
+  expect(dialog).toHaveTextContent('Current leader: Mira');
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Confirm assignment' }));
+  await waitFor(() =>
+    expect(fixture.setDivisionLeader).toHaveBeenCalledWith({
+      id: 'd1',
+      academicMediumId: 'm1',
+      enrollmentId: 'e1',
+      concurrencyStamp: 'v1',
+    })
+  );
+});
+
+it('opens the house members drawer and manages the house incumbent from there', () => {
+  fixture.permissions.push(
+    'Students.Records.HouseManagement.Add',
+    'Students.Records.HouseManagement.Delete'
+  );
+  fixture.query = 'tab=houses';
+  fixture.houses = {
+    items: [
+      {
+        id: 'h1',
+        name: 'Falcon',
+        color: '#123456',
+        memberCount: 1,
+        houseLeaderCount: 1,
+        leader: {
+          enrollmentId: 'e2',
+          studentId: 's2',
+          studentName: 'Mira',
+          standardId: 'c1',
+          standardName: '6',
+          houseName: 'Falcon',
+          isHouseLeader: true,
+          isDivisionLeader: false,
+          concurrencyStamp: 'v1',
+        },
+        concurrencyStamp: 'v1',
+        canManage: true,
+      },
+    ],
+    totalCount: 1,
+    canManage: true,
+  };
   mount();
   expect(screen.getByText('Mira')).toBeVisible();
-  fireEvent.click(screen.getByRole('button', { name: 'More actions for Falcon' }));
-  expect(screen.getByRole('menuitem', { name: 'Delete Falcon' })).toHaveTextContent(/^Delete$/);
-  const manageLeader = screen.getByRole('menuitem', { name: 'Manage leader for Falcon' });
-  expect(manageLeader).toHaveTextContent(/^Manage leader$/);
-  fireEvent.click(manageLeader);
+  expect(screen.queryByRole('button', { name: 'Manage house leader' })).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'View students in Falcon' }));
+  const drawer = screen.getByRole('dialog', { name: 'Falcon' });
+  expect(within(drawer).getByText('Mira')).toBeVisible();
+  expect(within(drawer).getByText('Riya')).toBeVisible();
+  expect(fixture.input).toHaveBeenCalledWith(
+    expect.objectContaining({
+      academicMediumId: 'm1',
+      houseId: 'h1',
+    })
+  );
+  fireEvent.click(within(drawer).getByRole('button', { name: 'Manage house leader' }));
   expect(screen.getByRole('dialog', { name: 'Manage House Leader' })).toBeVisible();
   expect(screen.getByText(/Current leader: Mira/)).toBeVisible();
 });
@@ -396,7 +529,10 @@ it('clears checked students when the class filter is reset', () => {
   fixture.query = 'tab=students';
   view.rerender(workspace());
   expect(screen.queryByRole('checkbox', { name: 'Select Riya' })).not.toBeInTheDocument();
-  expect(screen.getByRole('combobox', { name: 'Division' })).toHaveAttribute('aria-disabled', 'true');
+  expect(screen.getByRole('combobox', { name: 'Division' })).toHaveAttribute(
+    'aria-disabled',
+    'true'
+  );
 });
 it('requires explicit medium capability before allowing house creation with Add', () => {
   fixture.permissions.push('Students.Records.HouseManagement.Add');

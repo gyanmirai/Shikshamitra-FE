@@ -123,6 +123,51 @@ it('exposes a failed options request without reporting routing data as ready', a
   expect(result.current.error).toMatchObject({ status: 500 });
 });
 
+it('renames an inquiry link with its concurrency stamp and refreshes the list', async () => {
+  const path = '*/api/student/enrollment/admissions/public-inquiry-links';
+  let link = {
+    id: 'link-1',
+    admissionCycleId: 'cycle-1',
+    counsellorAssignmentProfileId: null,
+    inquiryFormDefinitionId: 'form-1',
+    name: 'Original name',
+    source: 0,
+    isActive: false,
+    concurrencyStamp: 'original-stamp',
+  };
+  const capture = vi.fn();
+  mswServer.use(
+    http.get(path, () => HttpResponse.json({ data: [link] })),
+    http.patch(`${path}/link-1/name`, async ({ request }) => {
+      capture(await request.json());
+      link = { ...link, name: 'Renamed link', concurrencyStamp: 'updated-stamp' };
+      return HttpResponse.json({ data: link });
+    })
+  );
+  const { result } = renderHook(
+    () => admissionIntakeProfilesApi.endpoints.getAdmissionPublicInquiryLinks.useQuery(),
+    { wrapper }
+  );
+  await waitFor(() => expect(result.current.data?.[0].name).toBe('Original name'));
+  await act(async () => {
+    const updated = await store
+      .dispatch(
+        admissionIntakeProfilesApi.endpoints.renameAdmissionPublicInquiryLink.initiate({
+          id: 'link-1',
+          name: 'Renamed link',
+          concurrencyStamp: 'original-stamp',
+        })
+      )
+      .unwrap();
+    expect(updated).toEqual(link);
+  });
+  expect(capture).toHaveBeenCalledWith({
+    name: 'Renamed link',
+    concurrencyStamp: 'original-stamp',
+  });
+  await waitFor(() => expect(result.current.data?.[0].name).toBe('Renamed link'));
+});
+
 it('restores with a concurrency stamp and refreshes the archived setup list', async () => {
   let restored = false;
   let body: unknown;

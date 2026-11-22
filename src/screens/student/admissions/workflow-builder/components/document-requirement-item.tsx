@@ -1,9 +1,10 @@
 import type { AdmissionDocumentRequirementPolicy } from 'src/redux/student/admissions/admission-document-policy';
 
 import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { Box, Paper, Stack, IconButton, Typography } from '@mui/material';
+import { Box, Chip, Paper, Stack, IconButton, Typography, chipClasses } from '@mui/material';
 
 const collectionLabels = {
   upload: 'File Upload',
@@ -22,10 +23,15 @@ export function DocumentRequirementItem({
   onEdit: (event: React.MouseEvent<HTMLButtonElement>) => void;
   onRemove: () => void;
 }) {
+  const classScope = item.standardIds
+    ? `${item.standardIds.length} selected ${item.standardIds.length === 1 ? 'class' : 'classes'}`
+    : 'All Classes';
+  const formats = item.allowedExtensions.join(', ').toUpperCase();
+
   return (
     <Paper component="li" variant="outlined" sx={{ p: 1.5, borderRadius: 1, listStyle: 'none' }}>
       <Stack spacing={1}>
-        <Stack direction="row" alignItems="flex-start" spacing={1}>
+        <Stack direction="row" alignItems="center" spacing={1}>
           <Box
             sx={{
               p: 1,
@@ -36,27 +42,37 @@ export function DocumentRequirementItem({
               display: 'flex',
             }}
           >
-            <Iconify icon="mdi:file-document-outline" width={20} />
+            <Iconify icon={GlobalIcons.documentIcon} width={20} />
           </Box>
-          <Stack spacing={0.75} sx={{ flex: 1, minWidth: 0 }}>
+          <Stack
+            direction="row"
+            alignItems="center"
+            flexWrap="wrap"
+            gap={1}
+            sx={{ flex: 1, minWidth: 0 }}
+          >
             <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
               {item.name}
             </Typography>
-            <Stack direction="row" alignItems="center" flexWrap="wrap" gap={1}>
-              <Label color={item.requirement === 'conditional' ? 'warning' : 'default'}>
-                {item.requirement === 'conditional'
-                  ? 'Conditional'
-                  : item.requirement === 'required'
-                    ? 'Required'
-                    : 'Optional'}
-              </Label>
-            </Stack>
+            <Label color={item.requirement === 'conditional' ? 'warning' : 'default'}>
+              {item.requirement === 'conditional'
+                ? 'Conditional'
+                : item.requirement === 'required'
+                  ? 'Required'
+                  : 'Optional'}
+            </Label>
           </Stack>
           {!readOnly && (
-            <Stack direction="row" sx={{ flexShrink: 0 }}>
+            <Stack
+              direction="row"
+              sx={{
+                flexShrink: 0,
+                '& .MuiIconButton-root': { width: { xs: 44, sm: 30 }, height: { xs: 44, sm: 30 } },
+              }}
+            >
               <CustomTooltip title="Edit Requirement">
                 <IconButton size="small" aria-label={`Edit ${item.name}`} onClick={onEdit}>
-                  <Iconify icon="mdi:pencil-outline" width={20} />
+                  <Iconify icon={GlobalIcons.edit} width={20} />
                 </IconButton>
               </CustomTooltip>
               <CustomTooltip title="Remove Requirement">
@@ -66,10 +82,32 @@ export function DocumentRequirementItem({
                   aria-label={`Remove ${item.name}`}
                   onClick={onRemove}
                 >
-                  <Iconify icon="mdi:delete-outline" width={20} />
+                  <Iconify icon={GlobalIcons.delete} width={20} />
                 </IconButton>
               </CustomTooltip>
             </Stack>
+          )}
+        </Stack>
+        <Stack direction="row" flexWrap="wrap" gap={0.75}>
+          <Chip size="small" variant="outlined" label={collectionLabels[item.collectionMode]} />
+          <Chip size="small" variant="outlined" label={classScope} />
+          {item.collectionMode !== 'original' && (
+            <>
+              {formats && (
+                <Chip
+                  size="small"
+                  variant="outlined"
+                  label={formats}
+                  sx={{
+                    maxWidth: 1,
+                    height: 'auto',
+                    minHeight: 24,
+                    [`& .${chipClasses.label}`]: { whiteSpace: 'normal', overflowWrap: 'anywhere' },
+                  }}
+                />
+              )}
+              <Chip size="small" variant="outlined" label={`Max ${item.maxFileSizeMb} MB`} />
+            </>
           )}
         </Stack>
         {item.description && (
@@ -77,20 +115,6 @@ export function DocumentRequirementItem({
             {item.description}
           </Typography>
         )}
-        <Stack direction="row" flexWrap="wrap" useFlexGap gap={1} sx={{ color: 'text.secondary' }}>
-          <Typography variant="caption">{collectionLabels[item.collectionMode]}</Typography>
-          <Typography variant="caption">
-            ·{' '}
-            {item.standardIds
-              ? `${item.standardIds.length} selected ${item.standardIds.length === 1 ? 'class' : 'classes'}`
-              : 'All Classes'}
-          </Typography>
-          {item.collectionMode !== 'original' && (
-            <Typography variant="caption" sx={{ overflowWrap: 'anywhere' }}>
-              · {item.allowedExtensions.join(', ').toUpperCase()} · Up To {item.maxFileSizeMb} MB
-            </Typography>
-          )}
-        </Stack>
       </Stack>
     </Paper>
   );

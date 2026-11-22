@@ -1,4 +1,6 @@
-import { useMemo, useEffect } from 'react';
+import type { AssessmentRoster } from 'src/redux/student/admissions/admission-assessment-roster-api';
+
+import { useMemo, useState, useEffect } from 'react';
 import { readAcademicFilterIds } from 'src/utils/student-academic-filter-query';
 import { useGetAssessmentScopesQuery } from 'src/redux/student/admissions/admission-assessment-sessions-api';
 import { useGetAssessmentApplicantsQuery } from 'src/redux/student/admissions/admission-assessment-roster-api';
@@ -103,14 +105,17 @@ export function useAssessmentWorkspaceData(canView: boolean, pauseReads = false)
       skipPollingIfUnfocused: true,
     }
   );
+  // Counts describe the authorized cohort before status, sorting and paging.
+  const cohort = {
+    ...queryScope,
+    sessionId: state.sessionId || undefined,
+    search: state.search || undefined,
+    columnFilters: serializeAssessmentColumnFilters(readAssessmentColumnFilters(state.columnFilters)),
+  };
+  const cohortKey = JSON.stringify(cohort);
   const applicants = useGetAssessmentApplicantsQuery(
     {
-      ...queryScope,
-      sessionId: state.sessionId || undefined,
-      search: state.search || undefined,
-      columnFilters: serializeAssessmentColumnFilters(
-        readAssessmentColumnFilters(state.columnFilters)
-      ),
+      ...cohort,
       status: state.status === 'all' ? undefined : state.status,
       sorting: `${state.sort} ${state.direction}`,
       skipCount: state.page * state.size,
@@ -123,6 +128,23 @@ export function useAssessmentWorkspaceData(canView: boolean, pauseReads = false)
       skipPollingIfUnfocused: true,
     }
   );
+  const currentCounts =
+    ready && !invalidSession && !sessionLookupUnavailable
+      ? applicants.currentData?.statusCounts
+      : undefined;
+  const [previousCounts, setPreviousCounts] = useState<{
+    cohortKey: string;
+    counts: NonNullable<AssessmentRoster['statusCounts']>;
+  }>();
+  useEffect(() => {
+    if (currentCounts && !applicants.isError) {
+      setPreviousCounts({ cohortKey, counts: currentCounts });
+    }
+  }, [applicants.isError, cohortKey, currentCounts]);
+  const statusCounts =
+    ready && !invalidSession && !sessionLookupUnavailable && !applicants.isError
+      ? currentCounts ?? (previousCounts?.cohortKey === cohortKey ? previousCounts.counts : undefined)
+      : undefined;
   useEffect(() => {
     if (!studentPanel || applicants.isFetching || applicants.isError || !applicants.currentData)
       return;
@@ -190,6 +212,7 @@ export function useAssessmentWorkspaceData(canView: boolean, pauseReads = false)
     invalidSession,
     sessionLookupUnavailable,
     applicants,
+    statusCounts,
     ready,
   };
 }

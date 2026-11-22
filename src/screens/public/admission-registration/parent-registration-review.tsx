@@ -3,8 +3,9 @@ import type { CorrectionSection } from 'src/screens/student/admissions/applicati
 
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { Box, Stack, Button, Typography } from '@mui/material';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { FormSectionCard } from 'src/components/form-section-card';
+import { Box, Stack, Button, Typography, IconButton } from '@mui/material';
 import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
 
 import { readableRegistrationValue, registrationDocumentStatus } from './parent-registration-model';
@@ -78,14 +79,10 @@ export function ParentRegistrationReview({
               onEditSection &&
               canEditSection(section.id) &&
               rows.some(({ fields }) => fields.some((field) => !field.readOnly)) && (
-                <Button
-                  size="small"
-                  aria-label={`Edit ${section.name}`}
-                  startIcon={<Iconify icon={GlobalIcons.edit} width={16} />}
+                <ReviewEditButton
+                  label={`Edit ${section.name}`}
                   onClick={() => onEditSection(section.id)}
-                >
-                  Edit
-                </Button>
+                />
               )
             }
           >
@@ -144,21 +141,19 @@ export function ParentRegistrationReview({
             defaultExpanded={false}
             contentSpacing={1}
             action={
-              onOpenDocuments && (
+              onOpenDocuments &&
+              (canEditDocuments ? (
+                <ReviewEditButton label="Edit Documents" onClick={onOpenDocuments} />
+              ) : (
                 <Button
                   size="small"
-                  aria-label={canEditDocuments ? 'Edit Documents' : 'View Documents'}
+                  aria-label="View Documents"
                   onClick={onOpenDocuments}
-                  startIcon={
-                    <Iconify
-                      icon={canEditDocuments ? GlobalIcons.edit : GlobalIcons.eye}
-                      width={16}
-                    />
-                  }
+                  startIcon={<Iconify icon={GlobalIcons.eye} width={16} />}
                 >
-                  {canEditDocuments ? 'Edit' : 'View'}
+                  View
                 </Button>
-              )
+              ))
             }
           >
             {context.documents.map((document) => {
@@ -192,6 +187,21 @@ export function ParentRegistrationReview({
         )}
       </Stack>
     </Stack>
+  );
+}
+
+function ReviewEditButton({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <CustomTooltip title={label} placement="right">
+      <IconButton
+        size="small"
+        aria-label={label}
+        onClick={onClick}
+        sx={{ '@media (pointer: coarse)': { minWidth: 44, minHeight: 44 } }}
+      >
+        <Iconify icon={GlobalIcons.edit} width={16} aria-hidden />
+      </IconButton>
+    </CustomTooltip>
   );
 }
 

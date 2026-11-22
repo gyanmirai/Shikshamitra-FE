@@ -21,9 +21,7 @@ it('shows exactly four progress choices using server counts and resets paging wh
   const data: any = {
     state: { status: 'pending', sessionId: '' },
     academic: {},
-    applicants: {
-      currentData: { statusCounts: { all: 30, pending: 20, complete: 6, ongoing: 4 } },
-    },
+    statusCounts: { all: 30, pending: 20, complete: 6, ongoing: 4 },
     sessions: {},
     sessionChoices: [],
     selectedSession: {},
@@ -32,6 +30,7 @@ it('shows exactly four progress choices using server counts and resets paging wh
   };
   render(<AssessmentWorkspaceControls data={data} />);
   expect(academic.props.allowAllHierarchy).not.toBe(true);
+  expect(academic.props.matchSelectHeights).toBe(true);
   const group = screen.getByRole('group', { name: 'Assessment Status Filter' });
   expect([...group.querySelectorAll('button')].map((button) => button.textContent)).toEqual([
     'All30',
@@ -52,4 +51,19 @@ it('shows exactly four progress choices using server counts and resets paging wh
   expect(
     screen.queryByRole('button', { name: /More Filters|View All Insights/ })
   ).not.toBeInTheDocument();
+});
+
+it('reserves each count badge before the first response without displaying zero', () => {
+  render(<AssessmentWorkspaceControls data={{
+    state: { status: 'all', sessionId: '' },
+    academic: {},
+    sessions: {},
+    sessionChoices: [],
+    selectedSession: {},
+    updateWorkbench: vi.fn(),
+  } as any} />);
+  const group = screen.getByRole('group', { name: 'Assessment Status Filter' });
+  expect([...group.querySelectorAll('button')].map((button) => button.textContent)).toEqual([
+    'All—', 'Pending—', 'Complete—', 'Ongoing—',
+  ]);
 });

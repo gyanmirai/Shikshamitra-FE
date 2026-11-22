@@ -248,7 +248,6 @@ export function PaginatedSearchSelect<
               helperText
             )
           }
-          onMouseDown={() => setOpen(true)}
           InputProps={{
             ...params.InputProps,
             endAdornment: (

@@ -157,7 +157,15 @@ it('loads candidates only after explicit open and requires an explicit choice be
 
 it('auto-selects one saved family and confirms without parent details or a relationship choice', async () => {
   requests.lookup.mockReturnValue({
-    unwrap: async () => [{ ...match, applicantName: 'Riya Meera Shah', parents: [] }],
+    unwrap: async () => [
+      {
+        ...match,
+        applicantName: 'Riya Meera Shah',
+        guardianPhone: inquiry.normalizedPhone,
+        matchByEmail: true,
+        parents: [],
+      },
+    ],
   });
   open();
   fireEvent.click(screen.getByRole('button', { name: 'Confirm Siblings' }));
@@ -165,7 +173,7 @@ it('auto-selects one saved family and confirms without parent details or a relat
   expect(children).toHaveTextContent('Riya Meera Shah');
   expect(
     screen.getByText(
-      'We found a possible sibling. Confirm both children belong to the same family.'
+      'We found a possible sibling. The parent mobile number and email address match. Confirm both children belong to the same family.'
     )
   ).toBeVisible();
   expect(screen.queryByText('Priya', { exact: true })).toBeNull();

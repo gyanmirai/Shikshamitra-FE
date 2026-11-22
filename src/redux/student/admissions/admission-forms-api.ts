@@ -1,6 +1,7 @@
 import { api } from 'src/redux/service';
-import { financeModuleType, studentAdmissionsCrmType } from 'src/redux/tagTypes';
 import { academicReorderTags } from 'src/redux/academic-reorder-tags';
+import { financeModuleType, studentAdmissionsCrmType } from 'src/redux/tagTypes';
+
 import type { AdmissionFormPrintSettings } from './admission-form-print-settings';
 
 export type AdmissionFormStatus = 0 | 1 | 2;
@@ -190,6 +191,7 @@ export type AdmissionFormAuditEntry = {
   id: string;
   action: string;
   actorId?: string | null;
+  actorName?: string | null;
   occurredAt: string;
   comment?: string | null;
   version: number;

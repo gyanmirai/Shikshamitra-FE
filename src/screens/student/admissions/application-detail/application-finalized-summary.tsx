@@ -263,7 +263,8 @@ export function ApplicationFinalizedActions({
               color="inherit"
               variant="contained"
               disabled={disabled}
-              endIcon={<Iconify icon={completed ? GlobalIcons.eye : 'mdi:arrow-right'} />}
+              startIcon={completed ? <Iconify icon={GlobalIcons.eye} /> : undefined}
+              endIcon={completed ? undefined : <Iconify icon="mdi:arrow-right" />}
             >
               {completed ? 'View in Student Records' : 'Continue Onboarding'}
             </Button>

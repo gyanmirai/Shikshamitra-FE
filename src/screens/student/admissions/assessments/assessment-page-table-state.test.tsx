@@ -16,7 +16,7 @@ const mocks = vi.hoisted(() => ({
   book: false,
   setup: null as { scopes: any[] } | null,
   select: undefined as ((rows: any[], checked: boolean) => void) | undefined,
-  table: null as Pick<ICustomizableTableProps, 'filters' | 'onServerFilter'> | null,
+  table: null as Pick<ICustomizableTableProps, 'filters' | 'onServerFilter' | 'onClearCriteria'> | null,
   workbench: {
     academic: { academicYearId: 'year', boardId: 'board-1', mediumId: 'medium-1', standardId: '' },
     scopes: {
@@ -82,14 +82,15 @@ vi.mock('./assessment-applicant-table', () => ({
     noDataText,
     filters,
     onServerFilter,
+    onClearCriteria,
     onSelectionChange,
   }: {
     items: { applicantName: string }[];
     errorContent?: ReactNode;
     noDataText?: ReactNode;
     onSelectionChange?: (rows: any[], checked: boolean) => void;
-  } & Pick<ICustomizableTableProps, 'filters' | 'onServerFilter'>) => {
-    mocks.table = { filters, onServerFilter };
+  } & Pick<ICustomizableTableProps, 'filters' | 'onServerFilter' | 'onClearCriteria'>) => {
+    mocks.table = { filters, onServerFilter, onClearCriteria };
     mocks.select = onSelectionChange;
     return (
       <div>
@@ -254,7 +255,7 @@ it('opens a Session row in its own details without switching to Student', () => 
   ).not.toBeInTheDocument();
 });
 
-it('keeps precise Status filtering independent of the progress-tab chip and resets paging', () => {
+it('keeps status tabs out of the active table filters and preserves them when clearing criteria', () => {
   mocks.workbench.state.status = 'complete';
   renderPage();
   const status = {
@@ -264,19 +265,18 @@ it('keeps precise Status filtering independent of the progress-tab chip and rese
     valueType: 'enum',
     label: 'Status',
   };
-  expect(mocks.table!.filters).toContainEqual(
-    expect.objectContaining({ column: 'assessmentProgress', value: 'complete' })
-  );
-  mocks.table!.onServerFilter!([...(mocks.table!.filters ?? []), status]);
+  expect(mocks.table!.filters).toEqual([]);
+  mocks.table!.onServerFilter!([status]);
   expect(mocks.workbench.updateWorkbench).toHaveBeenLastCalledWith({
     assessmentFilters: '[{"column":"status","type":"equals","value":"waived","valueType":"enum"}]',
-    assessmentStatus: 'complete',
     assessmentPage: 0,
   });
-  mocks.table!.onServerFilter!([status]);
-  expect(mocks.workbench.updateWorkbench).toHaveBeenLastCalledWith(
-    expect.objectContaining({ assessmentStatus: undefined })
-  );
+  mocks.table!.onClearCriteria!();
+  expect(mocks.workbench.updateWorkbench).toHaveBeenLastCalledWith({
+    assessmentSearch: undefined,
+    assessmentFilters: undefined,
+    assessmentPage: 0,
+  });
 });
 const renderPage = () => {
   const store = configureStore({

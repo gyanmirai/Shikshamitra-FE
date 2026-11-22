@@ -65,8 +65,8 @@ export function buildInquiryFamilyReviews(
   return [...families.values()];
 }
 
-export function inquiryContactMatchText(matches: DuplicateMatch[], phone: string, email = '') {
-  const matching = matches.map((match) => ({
+export function inquiryContactMatches(matches: DuplicateMatch[], phone: string, email: string) {
+  return matches.map((match) => ({
     byPhone:
       match.matchByMobile === true ||
       Boolean(mobile(phone) && mobile(phone) === mobile(match.guardianPhone)),
@@ -74,6 +74,10 @@ export function inquiryContactMatchText(matches: DuplicateMatch[], phone: string
       match.matchByEmail === true ||
       Boolean(text(email) && text(email) === text(match.guardianEmail)),
   }));
+}
+
+export function inquiryContactMatchText(matches: DuplicateMatch[], phone: string, email = '') {
+  const matching = inquiryContactMatches(matches, phone, email);
   if (matching.some((match) => match.byPhone && match.byEmail))
     return 'This mobile number and email match a saved parent.';
   const byPhone = matching.some((match) => match.byPhone);

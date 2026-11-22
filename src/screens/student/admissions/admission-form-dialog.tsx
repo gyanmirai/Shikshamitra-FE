@@ -7,6 +7,7 @@ import { useLazyCheckAdmissionFormNameQuery } from 'src/redux/student/admissions
 import { useFormik } from 'formik';
 import { useRef, useState, useEffect } from 'react';
 import { Label } from 'src/components/label';
+import { isEqual } from 'src/utils/helper';
 import { Iconify } from 'src/components/iconify';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
@@ -31,6 +32,7 @@ type Props = {
   saving: boolean;
   onSave: (value: CreateUpdateAdmissionForm) => Promise<void>;
   onPublishNow: (value: CreateUpdateAdmissionForm) => Promise<void>;
+  checkUnchangedVersion?: (id: string) => Promise<string | null>;
 };
 
 export function AdmissionFormDialog({
@@ -87,6 +89,7 @@ function AdmissionFormEditor({
   saving,
   onSave,
   onPublishNow,
+  checkUnchangedVersion,
 }: Omit<Props, 'open'>) {
   const inheritanceReadiness = useRef({
     enabled: Boolean(editing?.inheritance?.enabled),
@@ -116,7 +119,8 @@ function AdmissionFormEditor({
   const nameCheckSequence = useRef(0);
   const trimmedName = editorFormik.values.name.trim();
   useEffect(() => {
-    const sequence = ++nameCheckSequence.current;
+    nameCheckSequence.current += 1;
+    const sequence = nameCheckSequence.current;
     if (!trimmedName) {
       setNameAvailability({ name: '', checking: false, message: null });
       return undefined;
@@ -169,6 +173,38 @@ function AdmissionFormEditor({
       false
     );
   }, [savedStamp, setEditorValues]);
+  const [unchangedVersion, setUnchangedVersion] = useState<string | null>(null);
+  const savedVersionToCheck =
+    wizard.activeStep >= 2 && !editorFormik.dirty && editing && editing.version > 1
+      ? editing.id
+      : undefined;
+  useEffect(() => {
+    setUnchangedVersion(null);
+    if (!savedVersionToCheck || !checkUnchangedVersion) return undefined;
+    let current = true;
+    checkUnchangedVersion(savedVersionToCheck)
+      .then((message) => {
+        if (current) setUnchangedVersion(message);
+      })
+      .catch(() => {
+        // The publish action still runs the authoritative check if preflight is unavailable.
+      });
+    return () => {
+      current = false;
+    };
+  }, [savedVersionToCheck, savedStamp, checkUnchangedVersion]);
+  const { publishBlock } = wizard;
+  const matchesRejectedDraft =
+    publishBlock &&
+    isEqual(
+      { ...publishBlock.values, concurrencyStamp: undefined },
+      { ...editorFormik.values, concurrencyStamp: undefined }
+    );
+  const publishMessage = matchesRejectedDraft
+    ? publishBlock.message
+    : savedVersionToCheck
+      ? unchangedVersion
+      : null;
   const busy = saving || wizard.submitting;
   const closeGuard = useAdmissionDraftGuard({
     dirty: editorFormik.dirty,
@@ -261,7 +297,11 @@ function AdmissionFormEditor({
               backButtonProps={{ size: 'small', disabled: busy }}
               saveAndNextButtonProps={{
                 loading: busy,
-                disabled: wizard.activeStep === 0 && nameIsBlocked,
+                disabled:
+                  (wizard.activeStep === 0 && nameIsBlocked) ||
+                  (wizard.activeStep === steps.length - 1 && Boolean(publishMessage)),
+                'aria-describedby':
+                  wizard.activeStep >= 2 && publishMessage ? 'admission-publish-block' : undefined,
                 startIcon:
                   wizard.activeStep === steps.length - 1 ? (
                     <Iconify icon="mdi:publish" width={18} />
@@ -309,6 +349,7 @@ function AdmissionFormEditor({
                   }}
                   nameConflictMessage={nameConflictMessage}
                   checkingName={checkingName}
+                  publishMessage={publishMessage}
                 />
               )}
             />

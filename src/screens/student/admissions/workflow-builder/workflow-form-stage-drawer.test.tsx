@@ -8,7 +8,7 @@ import { http, HttpResponse } from 'msw';
 import { mswServer } from 'src/test/mswServer';
 import { vi, it, expect, describe } from 'vitest';
 import userEvent from '@testing-library/user-event';
-import { screen, waitFor } from '@testing-library/react';
+import { screen, within, waitFor } from '@testing-library/react';
 import { DEFAULT_FORM_STAGE_POLICY } from 'src/redux/student/admissions/admission-form-stage-policy';
 
 import { AdmissionWorkflowStageDrawer } from '../admission-workflow-stage-drawer';
@@ -182,7 +182,7 @@ describe('single-page stage drawer', { timeout: 15000 }, () => {
     expect(screen.queryByRole('heading', { name: 'Next step' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Choose Next Step' })).not.toBeInTheDocument();
   });
-  it('shows Form details, completion and advanced controls together without the stepper or removed fields', async () => {
+  it('groups corrections with the stage behavior switches and preserves saved settings', async () => {
     const { user, onSave } = setup(
       JSON.stringify({
         formDefinitionId: form.id,
@@ -197,8 +197,14 @@ describe('single-page stage drawer', { timeout: 15000 }, () => {
         extension: 'keep',
       })
     );
-    ['Stage Details', 'Form Completion', 'Stage Behavior', 'Advanced Submission Settings'].forEach(
-      (name) => expect(screen.getByRole('heading', { name })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Stage Details' })).toBeVisible();
+    expect(screen.queryByRole('heading', { name: 'Form Completion' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: 'Advanced Submission Settings' })
+    ).not.toBeInTheDocument();
+    const behavior = within(screen.getByRole('region', { name: 'Stage Behavior' }));
+    ['Required Stage', 'Entry Stage', 'End Of Journey', 'Allow Corrections'].forEach((name) =>
+      expect(behavior.getByRole('switch', { name })).toBeInTheDocument()
     );
     expect(screen.queryByRole('heading', { name: 'Next step' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Choose Next Step' })).not.toBeInTheDocument();
@@ -219,8 +225,8 @@ describe('single-page stage drawer', { timeout: 15000 }, () => {
     expect(screen.getByRole('button', { name: 'Back' }).parentElement).toHaveStyle({
       justifyContent: 'flex-end',
     });
-    await user.click(screen.getByRole('switch', { name: 'Allow Corrections' }));
-    await user.click(screen.getByRole('switch', { name: 'End Of Journey' }));
+    await user.click(behavior.getByRole('switch', { name: 'Allow Corrections' }));
+    await user.click(behavior.getByRole('switch', { name: 'End Of Journey' }));
     await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     const saved = onSave.mock.calls[0][0];
@@ -242,7 +248,15 @@ describe('single-page stage drawer', { timeout: 15000 }, () => {
       },
     });
   });
-  it('shows completion settings directly and preserves submission settings when saved', async () => {
+  it('keeps the completion warning when no form is selected', () => {
+    setup();
+    const completion = within(screen.getByRole('region', { name: 'Form Completion' }));
+    expect(
+      completion.getByText('Choose a published form in Stage details to finish setup.')
+    ).toBeVisible();
+  });
+
+  it('preserves default submission settings when saved', async () => {
     const { user, onSave } = setup(JSON.stringify({ formDefinitionId: form.id }));
     expect(
       screen.queryByRole('button', { name: 'Submission and verification' })

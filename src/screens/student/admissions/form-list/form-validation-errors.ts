@@ -1,4 +1,31 @@
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+
 import { inquiryFormConfigurationMessages } from '../admission-inquiry-field-bindings';
+
+const VERSION_UNCHANGED = 'Admissions.FormVersionUnchanged';
+const VERSION_UNCHANGED_MESSAGE =
+  'This draft matches the latest published version. Make a change before publishing, or keep using the published version.';
+
+export class UnchangedAdmissionFormError extends Error {}
+
+export function getUnchangedVersionMessage(errors: string[]) {
+  const error = errors.find((issue) => issue.startsWith(`${VERSION_UNCHANGED}:`));
+  if (!error) return null;
+  const version = error.slice(VERSION_UNCHANGED.length + 1);
+  return /^[1-9]\d*$/.test(version)
+    ? `This draft matches published v${version}. Make a change before publishing, or keep using v${version}.`
+    : VERSION_UNCHANGED_MESSAGE;
+}
+
+export function getUnchangedVersionPublishError(error: unknown) {
+  if (error instanceof UnchangedAdmissionFormError) return error;
+  const problem = parseApiProblemDetail(error);
+  return problem.errorCode === VERSION_UNCHANGED
+    ? new UnchangedAdmissionFormError(
+        problem.detail.startsWith('This draft matches') ? problem.detail : VERSION_UNCHANGED_MESSAGE
+      )
+    : null;
+}
 
 const VALIDATION_MESSAGES: Record<string, string> = {
   'Admissions.FormNoSections': 'Add at least one section.',
@@ -27,6 +54,8 @@ const FIELD_MESSAGES: Record<string, string> = {
 };
 
 export function formatAdmissionFormValidationError(error: string) {
+  const unchangedVersionMessage = getUnchangedVersionMessage([error]);
+  if (unchangedVersionMessage) return unchangedVersionMessage;
   if (Object.values(inquiryFormConfigurationMessages).some((message) => message === error))
     return error;
   const [code, owner] = error.split(':', 2);

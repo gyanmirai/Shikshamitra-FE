@@ -21,9 +21,10 @@ describe('Applications record presentation', () => {
     expect(cell('applicantName').isFilter).toBe(false);
     expect(cell('contactPhone').isFilter).toBe(false);
   });
-  it('uses honest missing saved dates', () => {
+  it('left-aligns saved timestamps and uses a placeholder for missing dates', () => {
     expect(columns.some((column) => column.id === 'assignedCounsellorName')).toBe(false);
     expect(getCellValueForExport({ lastSavedAt: null }, cell('lastSavedAt'))).toBe('—');
+    expect(cell('lastSavedAt')).toMatchObject({ align: 'left', headerAlign: 'left' });
   });
   it('exports the combined identity and separate contact information without duplicate columns', () => {
     expect(

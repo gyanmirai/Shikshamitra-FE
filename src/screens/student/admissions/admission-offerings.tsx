@@ -60,26 +60,6 @@ export default function AdmissionOfferingsScreen() {
           { name: 'Settings', href: studentPaths.enrollment.settings.root },
           { name: 'Admission Offerings' },
         ]}
-        slotProps={{
-          action: { alignSelf: { xs: 'flex-end', md: 'center' }, maxWidth: '100%' },
-          heading: {},
-          moreLink: {},
-          breadcrumbs: {},
-        }}
-        action={
-          screen.permissions.bulkCreate ? (
-            <Button
-              aria-label="Add Offering"
-              variant="contained"
-              size="small"
-              startIcon={<Iconify icon={GlobalIcons.addIcon} />}
-              disabled={!screen.cycle || screen.bulkActivation.busy}
-              onClick={screen.openBulk}
-            >
-              Offering
-            </Button>
-          ) : null
-        }
       />
 
       {screen.cycles.length === 0 &&
@@ -106,11 +86,25 @@ export default function AdmissionOfferingsScreen() {
         values={screen.filters}
         onChange={screen.update}
         filterAction={
-          <AdmissionOfferingMoreFilters
-            cycle={screen.cycle}
-            values={screen.filters}
-            onChange={screen.update}
-          />
+          <>
+            <AdmissionOfferingMoreFilters
+              cycle={screen.cycle}
+              values={screen.filters}
+              onChange={screen.update}
+            />
+            {screen.permissions.bulkCreate && (
+              <Button
+                aria-label="Add Offering"
+                variant="contained"
+                size="small"
+                startIcon={<Iconify icon={GlobalIcons.addIcon} />}
+                disabled={!screen.cycle || screen.bulkActivation.busy}
+                onClick={screen.openBulk}
+              >
+                Offering
+              </Button>
+            )}
+          </>
         }
       />
       <Box

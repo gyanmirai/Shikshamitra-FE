@@ -21,16 +21,16 @@ import {
   useCreateAdmissionWorkflowVersionMutation,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
-import { getAdmissionWorkflowAccess } from '../workflow-access';
 import { getAdmissionWorkflowTemplate } from '../workflow-template';
 import { useWorkflowListPublish } from './use-workflow-list-publish';
 import { workflowArchiveErrorMessage } from './workflow-archive-error';
+import { getAdmissionWorkflowAccess, isAdmissionWorkflowPublishable } from '../workflow-access';
 
 import type { WorkflowDetails } from '../admission-workflow-dialog';
 
 export type PendingWorkflowConfirmation = {
   workflow: AdmissionWorkflow;
-  action: 'archive' | 'delete' | 'reopen';
+  action: 'archive' | 'delete' | 'reopen' | 'createVersion' | 'publish';
 } | null;
 
 type ExistingDraftNotice = { workflowName: string; draftId: string } | null;
@@ -63,6 +63,7 @@ export function useWorkflowListActions(returnTo?: string) {
   const [openingCreatedWorkflow, setOpeningCreatedWorkflow] = useState(false);
   const [pendingConfirmation, setPendingConfirmation] = useState<PendingWorkflowConfirmation>(null);
   const [confirmationNotice, setConfirmationNotice] = useState<string | null>(null);
+  const [confirmationBusy, setConfirmationBusy] = useState(false);
   const [existingDraftNotice, setExistingDraftNotice] = useState<ExistingDraftNotice>(null);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const workflowAccess = getAdmissionWorkflowAccess(permissions);
@@ -80,14 +81,13 @@ export function useWorkflowListActions(returnTo?: string) {
   };
   const [createWorkflow, createState] = useCreateAdmissionWorkflowMutation();
   const [cloneWorkflow, cloneState] = useCloneAdmissionWorkflowMutation();
-  const [createVersion] = useCreateAdmissionWorkflowVersionMutation();
-  const versionLock = useRef(false);
+  const [createWorkflowVersion] = useCreateAdmissionWorkflowVersionMutation();
   const [creatingVersionId, setCreatingVersionId] = useState<string | null>(null);
-  const [archiveWorkflow, archiveState] = useArchiveAdmissionWorkflowMutation();
-  const [reopenWorkflow, reopenState] = useReopenAdmissionWorkflowMutation();
+  const [archiveWorkflow] = useArchiveAdmissionWorkflowMutation();
+  const [reopenWorkflow] = useReopenAdmissionWorkflowMutation();
   const confirmingRef = useRef(false);
-  const [deleteWorkflow, deleteState] = useDeleteAdmissionWorkflowMutation();
-  const [getLatestWorkflow, latestWorkflowState] = useLazyGetAdmissionWorkflowQuery();
+  const [deleteWorkflow] = useDeleteAdmissionWorkflowMutation();
+  const [getLatestWorkflow] = useLazyGetAdmissionWorkflowQuery();
   const navigate = (workflow: AdmissionWorkflow, panel?: 'preview' | 'usage') =>
     navigation.navigate(
       workflow.id,
@@ -152,16 +152,17 @@ export function useWorkflowListActions(returnTo?: string) {
     workflow: AdmissionWorkflow,
     action: NonNullable<PendingWorkflowConfirmation>['action']
   ) => {
+    if (confirmingRef.current) return;
     setConfirmationNotice(null);
     setPendingConfirmation({ workflow, action });
   };
-  const closeConfirmation = () => {
+  const clearConfirmation = () => {
     setConfirmationNotice(null);
     setPendingConfirmation(null);
   };
   const showLatestWorkflow = (
     workflow: AdmissionWorkflow,
-    action: 'archive' | 'delete' | 'reopen'
+    action: NonNullable<PendingWorkflowConfirmation>['action']
   ) => {
     setPendingConfirmation({ workflow, action });
     setConfirmationNotice(
@@ -171,9 +172,27 @@ export function useWorkflowListActions(returnTo?: string) {
   const confirm = async () => {
     if (!pendingConfirmation || confirmingRef.current) return;
     confirmingRef.current = true;
+    setConfirmationBusy(true);
     setConfirmationNotice(null);
     const { workflow, action } = pendingConfirmation;
     try {
+      if (action === 'publish') {
+        const published = await publication.publish(workflow, (validated) =>
+          setPendingConfirmation({ workflow: validated, action })
+        );
+        if (published) clearConfirmation();
+        return;
+      }
+      if (action === 'createVersion') {
+        if (!allowed.canCreateVersion || ![1, 2, 7].includes(workflow.status)) return;
+        setExistingDraftNotice(null);
+        setCreatingVersionId(workflow.id);
+        const result = await createWorkflowVersion(workflow.id).unwrap();
+        shikshaMitraToast.success({ message: 'New workflow version created' });
+        clearConfirmation();
+        navigate(result);
+        return;
+      }
       const latest = await getLatestWorkflow(workflow.id, false).unwrap();
       if (latest.concurrencyStamp !== workflow.concurrencyStamp) {
         showLatestWorkflow(latest, action);
@@ -201,9 +220,21 @@ export function useWorkflowListActions(returnTo?: string) {
               ? 'Workflow reopened'
               : 'Workflow archived',
       });
-      closeConfirmation();
+      clearConfirmation();
     } catch (error) {
       const problem = parseApiProblemDetail(error);
+      if (action === 'createVersion') {
+        const draftId = getExistingWorkflowDraftId(error);
+        if (problem.errorCode === 'Admissions.WorkflowDraftRequired' && draftId) {
+          setExistingDraftNotice({ workflowName: workflow.name, draftId });
+          clearConfirmation();
+        } else {
+          shikshaMitraToast.error({
+            message: problem.detail || 'Unable to create the workflow draft.',
+          });
+        }
+        return;
+      }
       if (action === 'archive' && problem.errorCode === 'Admissions.WorkflowInUse') {
         setConfirmationNotice(workflowArchiveErrorMessage(error));
         return;
@@ -223,11 +254,13 @@ export function useWorkflowListActions(returnTo?: string) {
       });
     } finally {
       confirmingRef.current = false;
+      setConfirmationBusy(false);
+      if (action === 'createVersion') setCreatingVersionId(null);
     }
   };
 
   return {
-    ...publication,
+    publishingId: publication.publishingId,
     allowed,
     createDialog,
     createCloseRef,
@@ -246,15 +279,14 @@ export function useWorkflowListActions(returnTo?: string) {
       );
       setExistingDraftNotice(null);
     },
-    confirmationRefreshing: latestWorkflowState.isFetching,
+    confirmationBusy,
     requestConfirmation,
-    closeConfirmation,
+    closeConfirmation: () => {
+      if (!confirmingRef.current) clearConfirmation();
+    },
     createState,
     openingCreatedWorkflow,
     cloneState,
-    archiveState,
-    reopenState,
-    deleteState,
     navigate,
     pendingNavigationId: navigation.pendingKey,
     create,
@@ -262,30 +294,13 @@ export function useWorkflowListActions(returnTo?: string) {
     openClone,
     confirm,
     creatingVersionId,
-    createVersion: async (workflow: AdmissionWorkflow) => {
-      if (versionLock.current || !allowed.canCreateVersion) return;
-      versionLock.current = true;
-      setExistingDraftNotice(null);
-      setCreatingVersionId(workflow.id);
-      try {
-        const result = await createVersion(workflow.id).unwrap();
-        shikshaMitraToast.success({ message: 'New workflow version created' });
-        navigate(result);
-      } catch (error) {
-        const problem = parseApiProblemDetail(error);
-        const draftId = getExistingWorkflowDraftId(error);
-        if (problem.errorCode === 'Admissions.WorkflowDraftRequired' && draftId) {
-          setExistingDraftNotice({ workflowName: workflow.name, draftId });
-          return;
-        }
-        shikshaMitraToast.error({
-          message: problem.detail || 'Unable to create the workflow draft.',
-        });
-        throw error;
-      } finally {
-        versionLock.current = false;
-        setCreatingVersionId(null);
-      }
+    createVersion: (workflow: AdmissionWorkflow) => {
+      if (allowed.canCreateVersion && [1, 2, 7].includes(workflow.status))
+        requestConfirmation(workflow, 'createVersion');
+    },
+    publish: (workflow: AdmissionWorkflow) => {
+      if (allowed.canPublish && isAdmissionWorkflowPublishable(workflow.status))
+        requestConfirmation(workflow, 'publish');
     },
   };
 }

@@ -259,17 +259,17 @@ export const admissionIntakeProfilesApi = api.injectEndpoints({
         unwrap(response),
       invalidatesTags: [tag],
     }),
-    setAdmissionPublicInquiryLinkForm: builder.mutation<
+    renameAdmissionPublicInquiryLink: builder.mutation<
       AdmissionPublicInquiryLink,
-      { id: string; inquiryFormDefinitionId: string; concurrencyStamp: string }
+      { id: string; name: string; concurrencyStamp: string }
     >({
       query: ({ id, ...body }) => ({
-        url: `/student/enrollment/admissions/public-inquiry-links/${id}/form`,
-        method: 'PUT',
+        url: `/student/enrollment/admissions/public-inquiry-links/${id}/name`,
+        method: 'PATCH',
         body,
       }),
       transformResponse: (response: Envelope<AdmissionPublicInquiryLink>) => unwrap(response),
-      invalidatesTags: [tag],
+      invalidatesTags: (_result, error) => (error ? [] : [tag]),
     }),
     revokeAdmissionPublicInquiryLink: builder.mutation<
       void,
@@ -301,6 +301,6 @@ export const {
   useGetAdmissionPublicInquiryLinksQuery,
   useGetAdmissionPublicInquiryLinkOptionsQuery,
   useCreateAdmissionPublicInquiryLinkMutation,
-  useSetAdmissionPublicInquiryLinkFormMutation,
+  useRenameAdmissionPublicInquiryLinkMutation,
   useRevokeAdmissionPublicInquiryLinkMutation,
 } = admissionIntakeProfilesApi;

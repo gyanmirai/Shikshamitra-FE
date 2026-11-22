@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import type { ParentRegistrationDocument } from 'src/redux/student/admissions/admission-parent-registration-types';
 
 import { useFormik } from 'formik';
@@ -10,11 +11,11 @@ import { useId, useRef, useState, useEffect } from 'react';
 import { LoadingButton } from 'src/components/loading-button';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { FormSectionCard } from 'src/components/form-section-card';
-import { Box, Stack, Button, FormLabel, Typography, FormControl } from '@mui/material';
+import { Box, Stack, Button, Typography, FormControl } from '@mui/material';
 import { documentActionSchema } from 'src/screens/student/admissions/document-verification/document-action-model';
 
 import { registrationDocumentStatus } from './parent-registration-model';
-import { ParentRegistrationFileActions } from './parent-registration-files';
+import { ParentRegistrationAttachment } from './parent-registration-files';
 
 import type { ParentRegistrationTransport } from './parent-registration-transport';
 
@@ -98,129 +99,204 @@ function ParentDocument({
   }, [document.stageInstanceId, document.code, formik.dirty, onDirtyChange]);
   const latest = document.evidence.at(-1);
   const status = registrationDocumentStatus(document);
-  const showUpload = document.canUpload && !disabled && (uploadOpen || (!mobile && !latest));
+  const canUpload = document.canUpload && !disabled;
+  const showUpload = canUpload && (uploadOpen || !latest);
+  const extensions = document.allowedExtensions.map((extension) => extension.replace(/^\./, ''));
+  const uploadControls = (
+    <Stack spacing={1}>
+      {showUpload && (
+        <>
+          {latest && (
+            <Typography variant="caption" color="text.secondary">
+              Replacing the file creates a new version for school review.
+            </Typography>
+          )}
+          <ShakingTextField error={Boolean(fileError)}>
+            <FormControl fullWidth required={document.isRequired} error={Boolean(fileError)}>
+              <CustomUpload<false>
+                multiple={false}
+                value={formik.values.file ?? undefined}
+                onChange={(file) => {
+                  if (!file || file instanceof File) {
+                    const mime = file?.type;
+                    if (
+                      file &&
+                      !['image/jpeg', 'image/png', 'application/pdf'].includes(mime || '')
+                    ) {
+                      formik.setFieldTouched('file', true, false);
+                      formik.setFieldError('file', 'Choose a JPG, PNG or PDF document.');
+                      return;
+                    }
+                    formik.setFieldValue('file', file ?? null, true);
+                    formik.setFieldTouched('file', true, false);
+                  }
+                }}
+                onReject={(message) => {
+                  formik.setFieldTouched('file', true, false);
+                  formik.setFieldError('file', message);
+                }}
+                error={fileError}
+                primaryText={mobile ? 'Choose a file' : 'Drop a file here or browse'}
+                secondaryText="Select one document"
+                accept={extensions.map((extension) => `.${extension}`).join(',')}
+                maxFileSizeMb={document.maxFileSizeMb}
+                disabled={uploading || formik.isSubmitting}
+                loading={!mobile && formik.isSubmitting}
+                parentsProps={{
+                  role: 'group',
+                  'aria-labelledby': `${id}-title`,
+                }}
+                dragProps={{
+                  'aria-describedby': `${id}-help`,
+                  'aria-required': document.isRequired,
+                  'aria-invalid': Boolean(fileError) || undefined,
+                  sx: !formik.values.file
+                    ? {
+                        ...(!fileError && { bgcolor: 'action.hover' }),
+                        height: 'auto',
+                        minHeight: { xs: 112, md: 144 },
+                      }
+                    : undefined,
+                }}
+              />
+            </FormControl>
+          </ShakingTextField>
+          <Stack
+            direction="row"
+            justifyContent="flex-end"
+            spacing={1}
+            useFlexGap
+            flexWrap={mobile ? 'wrap' : 'nowrap'}
+          >
+            {uploadOpen && (
+              <Button
+                size="small"
+                disabled={uploading}
+                onClick={() => {
+                  formik.resetForm();
+                  retry.current = null;
+                  setUploadOpen(false);
+                }}
+              >
+                {latest ? 'Cancel replacement' : 'Cancel'}
+              </Button>
+            )}
+            <LoadingButton
+              size="small"
+              variant={mobile ? 'contained' : 'outlined'}
+              startIcon={mobile ? <Iconify icon="mdi:upload" width={16} /> : undefined}
+              loading={formik.isSubmitting}
+              disabled={
+                uploading ||
+                (mobile && (!formik.values.file || Boolean(fileError) || formik.isValidating))
+              }
+              onClick={() => formik.submitForm()}
+            >
+              {mobile ? 'Upload selected file' : 'Upload document'}
+            </LoadingButton>
+          </Stack>
+        </>
+      )}
+      {!showUpload && (
+        <Button
+          size="small"
+          variant="outlined"
+          startIcon={<Iconify icon="mdi:swap-horizontal" width={16} />}
+          disabled={uploading}
+          onClick={() => setUploadOpen(true)}
+          sx={{ alignSelf: 'flex-start' }}
+        >
+          Replace document
+        </Button>
+      )}
+    </Stack>
+  );
+
   return (
     <FormSectionCard
       title={document.name}
+      titleTypographyProps={{ id: `${id}-title` }}
       icon={GlobalIcons.documentIcon}
       descriptionTooltip={document.description || 'Upload a clear copy for school review.'}
     >
-      <Stack spacing={1}>
-        <Typography variant="body2" color="text.secondary">
+      <Stack spacing={1.5}>
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          aria-live={mobile ? 'polite' : undefined}
+        >
           {document.isRequired ? 'Required' : 'Optional'} ·{' '}
-          <Box component="span" sx={{ color: status.color }}>
-            {status.label}
-          </Box>
+          {mobile && document.status === 'pendingReview' ? (
+            <>
+              <Box component="span" sx={{ color: 'success.main', fontWeight: 'fontWeightMedium' }}>
+                Uploaded
+              </Box>
+              {' · Awaiting school review'}
+            </>
+          ) : (
+            <Box component="span" sx={{ color: status.color }}>
+              {status.label}
+            </Box>
+          )}
         </Typography>
-        {latest && (
-          <Box sx={{ minWidth: 0 }}>
-            <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
-              {latest.fileName} · Version {latest.versionNumber}
-            </Typography>
-            <ParentRegistrationFileActions file={latest} transport={transport} />
-          </Box>
-        )}
-        {document.canUpload && !disabled && (showUpload || !latest) && (
-          <Typography id={`${id}-help`} variant="caption" color="text.secondary">
-            {document.allowedExtensions
-              .map((extension) => extension.replace(/^\./, '').toUpperCase())
-              .join(', ')}{' '}
-            · Up to {document.maxFileSizeMb} MB
-          </Typography>
-        )}
-        {showUpload && (
-          <>
-            {latest && (
-              <Typography variant="caption" color="text.secondary">
-                Replacing the file creates a new version for school review.
-              </Typography>
-            )}
-            <ShakingTextField error={Boolean(fileError)}>
-              <FormControl fullWidth required={document.isRequired} error={Boolean(fileError)}>
-                <FormLabel id={`${id}-label`} sx={{ typography: 'body2', mb: 1 }}>
-                  Document
-                </FormLabel>
-                <CustomUpload<false>
-                  multiple={false}
-                  value={formik.values.file ?? undefined}
-                  onChange={(file) => {
-                    if (!file || file instanceof File) {
-                      const mime = file?.type;
-                      if (
-                        file &&
-                        !['image/jpeg', 'image/png', 'application/pdf'].includes(mime || '')
-                      ) {
-                        formik.setFieldTouched('file', true, false);
-                        formik.setFieldError('file', 'Choose a JPG, PNG or PDF document.');
-                        return;
-                      }
-                      formik.setFieldValue('file', file ?? null, true);
-                      formik.setFieldTouched('file', true, false);
-                    }
-                  }}
-                  onReject={(message) => {
-                    formik.setFieldTouched('file', true, false);
-                    formik.setFieldError('file', message);
-                  }}
-                  error={fileError}
-                  primaryText={mobile ? 'Choose a file' : 'Drop a file here or browse'}
-                  secondaryText="Select one document"
-                  accept={document.allowedExtensions
-                    .map((extension) => `.${extension.replace(/^\./, '')}`)
-                    .join(',')}
-                  maxFileSizeMb={document.maxFileSizeMb}
-                  disabled={uploading}
-                  loading={formik.isSubmitting}
-                  parentsProps={{
-                    role: 'group',
-                    'aria-labelledby': `${id}-label`,
-                  }}
-                  dragProps={{
-                    'aria-describedby': `${id}-help`,
-                    'aria-required': document.isRequired,
-                  }}
-                />
-              </FormControl>
-            </ShakingTextField>
-            <Stack direction="row" justifyContent="flex-end" spacing={1}>
-              {uploadOpen && (
-                <Button
-                  size="small"
-                  disabled={uploading}
-                  onClick={() => {
-                    formik.resetForm();
-                    setUploadOpen(false);
-                  }}
-                >
-                  {latest ? 'Cancel replacement' : 'Cancel'}
-                </Button>
-              )}
-              <LoadingButton
-                size="small"
-                variant="outlined"
-                loading={formik.isSubmitting}
-                disabled={uploading}
-                onClick={() => formik.submitForm()}
-              >
-                {mobile ? 'Upload selected file' : 'Upload document'}
-              </LoadingButton>
-            </Stack>
-          </>
-        )}
-        {document.canUpload && !disabled && !showUpload && (
-          <Button
-            size="small"
-            variant={latest ? 'text' : 'outlined'}
-            startIcon={
-              <Iconify icon={latest ? 'mdi:swap-horizontal' : GlobalIcons.upload} width={16} />
-            }
-            disabled={uploading}
-            onClick={() => setUploadOpen(true)}
-            sx={{ alignSelf: 'flex-start' }}
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: 'minmax(0, 1fr)',
+              md: canUpload ? 'minmax(260px, 0.85fr) minmax(0, 1.15fr)' : 'minmax(0, 1fr)',
+            },
+            gap: 2,
+          }}
+        >
+          {canUpload && (
+            <DocumentPanel
+              id={`${id}-upload`}
+              title="Upload file"
+              icon="mdi:upload-outline"
+              description={
+                <span id={`${id}-help`}>
+                  {extensions.map((extension) => extension.toUpperCase()).join(', ')} · Up to{' '}
+                  {document.maxFileSizeMb} MB
+                </span>
+              }
+            >
+              {uploadControls}
+            </DocumentPanel>
+          )}
+          <DocumentPanel
+            id={`${id}-attachments`}
+            title="View attachments"
+            icon="mdi:file-document-multiple-outline"
+            description={latest ? '1 file attached' : undefined}
           >
-            {latest ? 'Replace document' : 'Upload document'}
-          </Button>
-        )}
+            {latest ? (
+              <ParentRegistrationAttachment file={latest} transport={transport} />
+            ) : (
+              <Stack
+                alignItems="center"
+                justifyContent="center"
+                spacing={1}
+                sx={{
+                  minHeight: { xs: 88, md: 144 },
+                  borderRadius: 1.5,
+                  bgcolor: 'action.hover',
+                  px: 2,
+                }}
+              >
+                <Iconify
+                  icon="mdi:file-document-outline"
+                  width={28}
+                  sx={{ color: 'text.disabled' }}
+                  aria-hidden
+                />
+                <Typography variant="body2" color="text.secondary" textAlign="center">
+                  No files attached yet
+                </Typography>
+              </Stack>
+            )}
+          </DocumentPanel>
+        </Box>
         {document.evidence.length > 1 && (
           <Typography variant="caption" color="text.secondary">
             Previous versions are retained by the school.
@@ -228,5 +304,42 @@ function ParentDocument({
         )}
       </Stack>
     </FormSectionCard>
+  );
+}
+
+function DocumentPanel({
+  id,
+  title,
+  icon,
+  description,
+  children,
+}: {
+  id: string;
+  title: string;
+  icon: string;
+  description?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <Box
+      component="section"
+      aria-labelledby={id}
+      sx={{ p: 2, border: 1, borderColor: 'divider', borderRadius: 1.5, minWidth: 0 }}
+    >
+      <Stack direction="row" spacing={1} alignItems="flex-start" mb={1.5}>
+        <Iconify icon={icon} width={20} sx={{ color: 'text.secondary' }} aria-hidden />
+        <Box sx={{ minWidth: 0 }}>
+          <Typography id={id} variant="subtitle2" component="h3" fontWeight={700}>
+            {title}
+          </Typography>
+          {description && (
+            <Typography variant="caption" color="text.secondary">
+              {description}
+            </Typography>
+          )}
+        </Box>
+      </Stack>
+      {children}
+    </Box>
   );
 }

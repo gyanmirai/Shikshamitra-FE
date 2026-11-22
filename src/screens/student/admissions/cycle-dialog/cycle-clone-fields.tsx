@@ -16,6 +16,7 @@ export function CycleCloneFields({
 }) {
   const {
     name,
+    nameError,
     setName,
     description,
     setDescription,
@@ -56,13 +57,15 @@ export function CycleCloneFields({
         </Grid>
       )}
       <Grid size={{ xs: 12 }}>
-        <ShakingTextField error={!name.trim()}>
+        <ShakingTextField error={Boolean(nameError)}>
           <TextField
             fullWidth
             required
             size="small"
             label="Cycle name"
             value={name}
+            error={Boolean(nameError)}
+            helperText={nameError}
             onChange={(event) => setName(event.target.value.slice(0, 128))}
           />
         </ShakingTextField>

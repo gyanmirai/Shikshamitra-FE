@@ -3,11 +3,14 @@ import type {
   AdmissionWorkflowStage,
   AdmissionWorkflowUsage,
   AdmissionWorkflowTransition,
+  AdmissionWorkflowStageTypeMetadata,
   AdmissionWorkflowGovernanceHistory,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
 import { useId } from 'react';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
 import { Box, Stack, Drawer, Button, Divider, IconButton, Typography } from '@mui/material';
 
 import { WorkflowPanelContent } from './workflow-panel-content';
@@ -35,6 +38,7 @@ type Props = {
   panel: WorkflowSidePanel;
   workflow: AdmissionWorkflow;
   stages: AdmissionWorkflowStage[];
+  stageTypes?: AdmissionWorkflowStageTypeMetadata[];
   transitions: AdmissionWorkflowTransition[];
   versions?: AdmissionWorkflow[];
   versionsLoading?: boolean;
@@ -43,6 +47,7 @@ type Props = {
   usage?: AdmissionWorkflowUsage;
   usageLoading: boolean;
   usageError?: boolean;
+  onRetryUsage?: () => void;
   canCreateVersion: boolean;
   governanceHistory?: AdmissionWorkflowGovernanceHistory[];
   governanceLoading: boolean;
@@ -53,6 +58,7 @@ export function WorkflowSidePanel({
   panel,
   workflow,
   stages,
+  stageTypes,
   transitions,
   versions,
   versionsLoading,
@@ -61,6 +67,7 @@ export function WorkflowSidePanel({
   usage,
   usageLoading,
   usageError = false,
+  onRetryUsage,
   canCreateVersion,
   governanceHistory,
   governanceLoading,
@@ -102,39 +109,48 @@ export function WorkflowSidePanel({
               />
             )}
           </Typography>
+          {panel === 'usage' && (
+            <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>
+              {workflow.name} · Version {workflow.version}
+            </Typography>
+          )}
         </Box>
         <IconButton
           aria-label="Close Panel"
           onClick={onClose}
           sx={{ width: 44, height: 44, flexShrink: 0 }}
         >
-          <Iconify icon="mdi:close" />
+          <Iconify icon={GlobalIcons.cancel} />
         </IconButton>
       </Stack>
       <Divider />
       <Box
         component="section"
         aria-label={panel ? `${TITLES[panel]} Content` : 'Workflow Panel Content'}
-        sx={{ flex: 1, minHeight: 0, overflowY: 'auto', px: 2.5, py: 2 }}
+        sx={{ display: 'flex', flex: 1, minHeight: 0, minWidth: 0, overflow: 'hidden' }}
       >
-        <Stack spacing={1.5}>
-          <WorkflowPanelContent
-            panel={panel}
-            versionsLoading={versionsLoading}
-            versionsError={versionsError}
-            onRetryVersions={onRetryVersions}
-            workflow={workflow}
-            stages={stages}
-            transitions={transitions}
-            versions={versions}
-            usage={usage}
-            usageLoading={usageLoading}
-            usageError={usageError}
-            canCreateVersion={canCreateVersion}
-            governanceHistory={governanceHistory}
-            governanceLoading={governanceLoading}
-          />
-        </Stack>
+        <Scrollbar sx={{ flex: 1 }}>
+          <Stack spacing={1.5} sx={{ px: 2.5, py: 2 }}>
+            <WorkflowPanelContent
+              panel={panel}
+              versionsLoading={versionsLoading}
+              versionsError={versionsError}
+              onRetryVersions={onRetryVersions}
+              workflow={workflow}
+              stages={stages}
+              stageTypes={stageTypes}
+              transitions={transitions}
+              versions={versions}
+              usage={usage}
+              usageLoading={usageLoading}
+              usageError={usageError}
+              onRetryUsage={onRetryUsage}
+              canCreateVersion={canCreateVersion}
+              governanceHistory={governanceHistory}
+              governanceLoading={governanceLoading}
+            />
+          </Stack>
+        </Scrollbar>
       </Box>
       {readOnlyPanel && (
         <Stack
@@ -146,7 +162,7 @@ export function WorkflowSidePanel({
             size="small"
             variant="outlined"
             color="inherit"
-            startIcon={<Iconify icon="mdi:close" />}
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
             onClick={onClose}
           >
             Close

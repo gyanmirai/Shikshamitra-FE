@@ -18,7 +18,7 @@ import { FormSectionCard } from 'src/components/form-section-card';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
-import { Box, Stack, Paper, Button, Skeleton, Typography, LinearProgress } from '@mui/material';
+import { Box, Stack, Paper, Button, Divider, Skeleton, Typography, LinearProgress } from '@mui/material';
 import { getVisibleAdmissionFormSteps } from 'src/screens/student/admissions/form-dialog/form-step-groups';
 import { getAdmissionSubmissionValidationErrors } from 'src/screens/student/admissions/admission-form-validation';
 import { ApplicationRuntimeFormCore } from 'src/screens/student/admissions/application-detail/application-runtime-form';
@@ -27,6 +27,7 @@ import { getCorrectionSections } from 'src/screens/student/admissions/applicatio
 import { ParentRegistrationReview } from './parent-registration-review';
 import { ParentRegistrationDocuments } from './parent-registration-documents';
 import { ParentRegistrationInstructions } from './parent-registration-instructions';
+import { ParentRegistrationLogo, ParentRegistrationExpiry } from './parent-registration-start-details';
 import {
   parentRegistrationForm,
   parentRegistrationValues,
@@ -370,6 +371,7 @@ function ParentRegistration({ token }: { token: string }) {
   const activeStep = stage === 'form' ? 0 : stage === 'documents' ? 1 : steps.length - 1;
   const editable = context.canEdit && !conflict;
   const showInstructionsGate = editable && !instructionsAccepted;
+  const mobileDocuments = mobile && stage === 'documents';
   const formSteps =
     mobile && form
       ? getVisibleAdmissionFormSteps(
@@ -408,7 +410,7 @@ function ParentRegistration({ token }: { token: string }) {
         mobile
           ? {
               minHeight: (theme) => `calc(100dvh - ${theme.spacing(2)})`,
-              p: 1,
+              p: showInstructionsGate || mobileDocuments ? 2 : 1,
               bgcolor: 'background.paper',
               borderRadius: 1,
             }
@@ -416,72 +418,65 @@ function ParentRegistration({ token }: { token: string }) {
       }
     >
       {mobile ? (
-        <Stack ref={pageStart} component="header" spacing={1} sx={{ minWidth: 0 }}>
-          <Typography variant="subtitle1" component="p" fontWeight={700}>
-            {context.schoolName}
-          </Typography>
+        <Stack ref={pageStart} component="header" spacing={showInstructionsGate ? 1.5 : 1} sx={{ minWidth: 0 }}>
+          {showInstructionsGate || mobileDocuments ? (
+            <ParentRegistrationLogo schoolName={context.schoolName} loadLogo={transport.logo} />
+          ) : (
+            <Typography variant="subtitle1" component="p" fontWeight={700}>
+              {context.schoolName}
+            </Typography>
+          )}
           {showInstructionsGate && (
             <Stack direction="row" spacing={0.5} alignItems="center">
               <Typography variant="h4" component="h1">
-                Complete Registration
+                Registration form
               </Typography>
               <InfoTooltipIcon
                 title="Register your child in a few simple steps."
-                label="Complete Registration information"
+                label="Registration form information"
               />
             </Stack>
           )}
-          <Paper
-            variant="outlined"
-            sx={{
-              p: 1.5,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1.5,
-              minWidth: 0,
-              bgcolor: 'background.neutral',
-            }}
-          >
-            <Box
-              aria-hidden
-              sx={{
-                width: 40,
-                height: 40,
-                flexShrink: 0,
-                borderRadius: 1,
-                display: 'grid',
-                placeItems: 'center',
-                bgcolor: 'action.hover',
-                color: 'text.secondary',
-              }}
-            >
-              <Iconify icon={GlobalIcons.studentProfile} width={22} />
-            </Box>
-            <Stack spacing={0.25} minWidth={0}>
-              <Typography variant="caption" color="text.secondary">
-                Student
-              </Typography>
-              <Typography
-                component="h2"
-                variant="subtitle1"
-                fontWeight={700}
-                sx={{ overflowWrap: 'anywhere' }}
-              >
-                {context.applicantName || 'Student'}
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>
-                {context.applicationNumber}
-              </Typography>
+          <Paper variant="outlined" sx={{ p: 1.5, minWidth: 0, bgcolor: 'background.neutral' }}>
+            <Stack spacing={1.5}>
+              <Stack direction="row" spacing={1.5} alignItems="center">
+                <Box
+                  aria-hidden
+                  sx={{
+                    width: 40,
+                    height: 40,
+                    flexShrink: 0,
+                    borderRadius: 1,
+                    display: 'grid',
+                    placeItems: 'center',
+                    bgcolor: 'action.hover',
+                    color: 'text.secondary',
+                  }}
+                >
+                  <Iconify icon={GlobalIcons.studentProfile} width={22} />
+                </Box>
+                <Stack spacing={0.25} minWidth={0}>
+                  <Typography
+                    component="h2"
+                    variant={showInstructionsGate || mobileDocuments ? 'h5' : 'subtitle1'}
+                    fontWeight={700}
+                    sx={{ overflowWrap: 'anywhere' }}
+                  >
+                    {context.applicantName || 'Student'}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>
+                    {context.applicationNumber}
+                  </Typography>
+                </Stack>
+              </Stack>
+              {showInstructionsGate && (
+                <>
+                  <Divider />
+                  <ParentRegistrationExpiry expiresAt={context.expiresAt} />
+                </>
+              )}
             </Stack>
           </Paper>
-          {showInstructionsGate && (
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Iconify icon={GlobalIcons.clock} width={18} aria-hidden />
-              <Typography variant="body2" color="text.secondary">
-                Link expires {fDateTime(context.expiresAt)}
-              </Typography>
-            </Stack>
-          )}
         </Stack>
       ) : (
         <Paper
@@ -685,6 +680,7 @@ function ParentRegistration({ token }: { token: string }) {
               fillContent={mobile}
               flattenFieldset={mobile}
               busy={Boolean(busy)}
+              showOverlay={!(mobileDocuments && busy === 'upload')}
               label={
                 busy === 'upload'
                   ? 'Uploading document…'
@@ -741,14 +737,8 @@ function ParentRegistration({ token }: { token: string }) {
                       </Button>
                     )
                   }
-                  saveLabel="Save draft"
-                  submitLabel={
-                    reviewSectionId
-                      ? 'Save & Return to Review'
-                      : context.documents.length
-                        ? 'Continue to documents'
-                        : 'Continue to review'
-                  }
+                  saveLabel="Draft"
+                  submitLabel={reviewSectionId ? 'Save & Return to Review' : 'Continue'}
                   onPhotoReadingChange={setReadingPhoto}
                   onValidationBusyChange={setValidatingStep}
                 />
@@ -837,7 +827,7 @@ function ParentRegistration({ token }: { token: string }) {
                     disabled={locked || (mobile && incompleteDocuments.length > 0)}
                     onClick={continueFromDocuments}
                   >
-                    Continue to review
+                    Continue
                   </Button>
                 )}
                 {mobile && !context.canEdit && stage === 'documents' && (

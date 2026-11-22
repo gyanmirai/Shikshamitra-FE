@@ -15,14 +15,12 @@ import { createTheme } from 'src/theme/create-theme';
 import { vi, it, expect, describe, afterEach } from 'vitest';
 import confirmPopup from 'src/redux/confirmPopup/confirmPopupSlice';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { render, screen, within, waitFor, cleanup, fireEvent } from '@testing-library/react';
+import { act, render, screen, within, waitFor, cleanup, fireEvent } from '@testing-library/react';
 
 import AdmissionWorkflowBuilder from '../admission-workflow-builder';
+import { getAdmissionWorkflowTemplate } from '../workflow-template';
 
-import type {
-  WorkflowBuilderHeaderProps,
-  WorkflowLifecycleActionsProps,
-} from './components/workflow-builder-header';
+import type { WorkflowBuilderHeaderProps } from './components/workflow-builder-header';
 
 vi.hoisted(() => {
   process.env.NEXT_PUBLIC_API_URL = 'http://localhost:5000';
@@ -49,22 +47,16 @@ vi.mock('./components/workflow-stage-fields', () => ({
     </label>
   ),
 }));
-vi.mock('./components/workflow-builder-header', () => ({
+vi.mock('./components/workflow-builder-header', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('./components/workflow-builder-header')>()),
   WorkflowBuilderHeader: ({ children, onBack }: WorkflowBuilderHeaderProps) => (
     <>
-      <button type="button" onClick={onBack}>Back to workflows</button>
+      <button type="button" onClick={onBack}>
+        Back to workflows
+      </button>
       {children}
     </>
   ),
-  WorkflowLifecycleActions: ({ dirty, saving, onSave }: WorkflowLifecycleActionsProps) => (
-    <button type="button" disabled={!dirty || saving} onClick={onSave}>
-      Save draft
-    </button>
-  ),
-}));
-vi.mock('../admission-workflow-transition-drawer', () => ({
-  AdmissionWorkflowTransitionDrawer: ({ open }: { open: boolean }) =>
-    open ? <button type="button">Save path</button> : null,
 }));
 
 const metadata: AdmissionWorkflowStageTypeMetadata = {
@@ -140,12 +132,12 @@ afterEach(() => {
   stores.length = 0;
 });
 
-async function setup(openNextStage = true, initialWorkflow = workflow) {
+async function setup(openNextStage = true, initialWorkflow = workflow, types = [metadata]) {
   const saves: Array<Pick<AdmissionWorkflow, 'stages' | 'transitions'>> = [];
   let saved = initialWorkflow;
   mswServer.use(
     http.get('*/api/student/enrollment/admissions/workflows/stage-types', () =>
-      HttpResponse.json({ data: [metadata] })
+      HttpResponse.json({ data: types })
     ),
     http.get('*/api/student/enrollment/admissions/workflows/workflow-next', () =>
       HttpResponse.json({ data: saved })
@@ -190,6 +182,185 @@ async function setup(openNextStage = true, initialWorkflow = workflow) {
   return { saves };
 }
 
+it('keeps the server reason beside a disconnected document stage after Save Draft', async () => {
+  const journey = getAdmissionWorkflowTemplate('standard', 'registration-form');
+  const documents = journey.stages.find((stage) => stage.stageType === 5)!;
+  const form = journey.stages.find((stage) => stage.stageType === 1)!;
+  const payment = journey.stages.find((stage) => stage.stageType === 4)!;
+  const entry = journey.stages.find((stage) => stage.isEntryStage)!;
+  const message = `Stage '${documents.name}' has no incoming transition.`;
+  const issue = {
+    code: 'Admissions.WorkflowOrphanStage',
+    stageId: documents.id,
+    severity: 0,
+    message,
+  };
+  const unreachable = {
+    ...issue,
+    code: 'Admissions.WorkflowUnreachableStage',
+    message: `Stage '${documents.name}' cannot be reached from the entry stage.`,
+  };
+  const documentSetup = {
+    ...issue,
+    code: 'Admissions:Documents:InvalidPolicy',
+    message: 'Configure between 1 and 30 document requirements.',
+  };
+  const routeIssues = [
+    issue,
+    unreachable,
+    {
+      ...issue,
+      stageId: form.id,
+      code: 'Admissions.WorkflowDeadEndStage',
+      message: `Stage '${form.name}' has no outgoing transition.`,
+    },
+    {
+      ...unreachable,
+      stageId: payment.id,
+      message: `Stage '${payment.name}' cannot be reached from the entry stage.`,
+    },
+    {
+      ...issue,
+      stageId: entry.id,
+      code: 'Admissions.WorkflowTerminalUnreachable',
+      message: `Stage '${entry.name}' cannot reach a terminal stage.`,
+    },
+  ];
+  let finishValidation!: () => void;
+  const waitForValidationRelease = new Promise<void>((resolve) => {
+    finishValidation = resolve;
+  });
+  const publish = vi.fn();
+  const previewedConnection = vi.fn();
+  mswServer.use(
+    http.post(
+      '*/api/student/enrollment/admissions/workflows/workflow-next/validate-preview',
+      async ({ request }) => {
+        const graph = (await request.json()) as Pick<AdmissionWorkflow, 'transitions'>;
+        const connected = graph.transitions.some((route) => route.toStageId === documents.id);
+        previewedConnection(connected);
+        return HttpResponse.json({
+          data: {
+            isValid: false,
+            issues: connected ? [documentSetup] : [documentSetup, ...routeIssues],
+          },
+        });
+      }
+    ),
+    http.post('*/api/student/enrollment/admissions/workflows/workflow-next/validate', async () => {
+      await waitForValidationRelease;
+      return HttpResponse.json({
+        data: { isValid: false, issues: [documentSetup, ...routeIssues] },
+      });
+    }),
+    http.post('*/api/student/enrollment/admissions/workflows/workflow-next/publish', () => {
+      publish();
+      return HttpResponse.json({ data: workflow });
+    })
+  );
+  await setup(false, { ...workflow, ...journey });
+  fireEvent.click(screen.getByRole('button', { name: 'Remove Route To Document verification' }));
+  const card = () => within(document.getElementById(`workflow-stage-${documents.id}`)!);
+  expect(await card().findByText(message)).toBeVisible();
+  expect(card().getByText(/Connect Admission form to Document verification/)).toBeVisible();
+  expect(
+    screen.queryByText(`Stage '${payment.name}' cannot be reached from the entry stage.`)
+  ).not.toBeInTheDocument();
+  expect(
+    screen.queryByText(`Stage '${entry.name}' cannot reach a terminal stage.`)
+  ).not.toBeInTheDocument();
+  expect(card().getByText(documentSetup.message)).toBeVisible();
+  const save = screen.getByRole('button', { name: 'Save Draft' });
+  fireEvent.click(save);
+  await waitFor(() => expect(save).toBeDisabled());
+  expect(await card().findByText(message)).toBeVisible();
+  expect(screen.getByRole('status', { name: 'Journey Validation Summary' })).toHaveTextContent(
+    'Journey Needs Attention'
+  );
+  const publishButton = screen.getByRole('button', { name: 'Publish' });
+  await waitFor(() => expect(publishButton).toBeEnabled());
+  fireEvent.click(publishButton);
+  expect(await within(publishButton).findByRole('progressbar')).toBeVisible();
+  expect(save).toBeDisabled();
+  expect(within(save).queryByRole('progressbar')).not.toBeInTheDocument();
+  await act(async () => finishValidation());
+  await waitFor(() => expect(publishButton).toBeEnabled());
+  expect(publish).not.toHaveBeenCalled();
+  fireEvent.click(card().getByRole('button', { name: 'Connect Route for Document verification' }));
+  expect(await screen.findByRole('combobox', { name: 'Continue To *' })).toHaveTextContent(
+    documents.name
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Save Path' }));
+  await waitFor(() => expect(previewedConnection).toHaveBeenLastCalledWith(true));
+  expect(await card().findByText(documentSetup.message)).toBeVisible();
+  expect(card().queryByText(message)).not.toBeInTheDocument();
+  expect(screen.getByRole('status', { name: 'Journey Validation Summary' })).toHaveTextContent(
+    'Journey Needs Attention'
+  );
+});
+
+it('shows missing document requirements when opening a connected standard draft', async () => {
+  const journey = getAdmissionWorkflowTemplate('standard', 'registration-form');
+  const documents = journey.stages.find((stage) => stage.stageType === 5)!;
+  mswServer.use(
+    http.post('*/api/student/enrollment/admissions/workflows/workflow-next/validate-preview', () =>
+      HttpResponse.json({
+        data: {
+          isValid: false,
+          issues: [
+            {
+              code: 'Admissions:Documents:InvalidPolicy',
+              severity: 0,
+              stageId: documents.id,
+              message: 'Configure between 1 and 30 document requirements.',
+            },
+          ],
+        },
+      })
+    )
+  );
+  await setup(false, { ...workflow, ...journey });
+  const card = within(document.getElementById(`workflow-stage-${documents.id}`)!);
+  expect(await card.findByText('Configure between 1 and 30 document requirements.')).toBeVisible();
+  expect(
+    card.getByRole('button', { name: 'Edit Document Setup for Document verification' })
+  ).toBeEnabled();
+});
+
+it('reconnects the standard document stage when Payment is inserted after Admission Form', async () => {
+  const journey = getAdmissionWorkflowTemplate('standard', 'registration-form');
+  const form = journey.stages.find((stage) => stage.stageType === 1)!;
+  const documents = journey.stages.find((stage) => stage.stageType === 5)!;
+  const { saves } = await setup(false, { ...workflow, ...journey }, [
+    {
+      ...metadata,
+      type: 4,
+      displayName: 'Payment',
+      supportedConfiguration: ['payment'],
+    },
+  ]);
+  fireEvent.click(screen.getByRole('button', { name: 'Remove Route To Document verification' }));
+  const source = within(document.getElementById(`workflow-stage-${form.id}`)!);
+  fireEvent.click(source.getByRole('button', { name: 'Choose Next Step' }));
+  fireEvent.change(await screen.findByRole('textbox', { name: 'Stage name *' }), {
+    target: { value: 'Inserted payment' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Apply Changes' }));
+  await waitFor(() =>
+    expect(screen.queryByRole('button', { name: 'Apply Changes' })).not.toBeInTheDocument()
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Save Draft' }));
+  await waitFor(() => expect(saves).toHaveLength(1));
+  const inserted = saves[0].stages.find((stage) => stage.name === 'Inserted payment')!;
+  expect(inserted.stageType).toBe(4);
+  expect(saves[0].transitions).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ fromStageId: form.id, toStageId: inserted.id }),
+      expect.objectContaining({ fromStageId: inserted.id, toStageId: documents.id }),
+    ])
+  );
+});
+
 describe('Choose next step creates and configures a connected stage', { timeout: 20000 }, () => {
   it('applies one new stage and its default route even when other saved stages exist', async () => {
     const { saves } = await setup();
@@ -211,7 +382,7 @@ describe('Choose next step creates and configures a connected stage', { timeout:
     expect(within(sequence).getByText('Existing finalization')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Save path' })).not.toBeInTheDocument();
     expect(saves).toHaveLength(0);
-    fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save Draft' }));
     await waitFor(() => expect(saves).toHaveLength(1), { timeout: 10000 });
     const added = saves[0].stages.find((stage) => stage.name === 'Additional assessment');
     expect(added).toMatchObject({ stageType: 2, isEntryStage: false });
@@ -237,7 +408,7 @@ describe('Choose next step creates and configures a connected stage', { timeout:
     await waitFor(() =>
       expect(screen.queryByRole('button', { name: 'Apply Changes' })).not.toBeInTheDocument()
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save Draft' }));
     await waitFor(() => expect(saves).toHaveLength(1));
     const inserted = saves[0].stages.find((stage) => stage.name === 'Inserted assessment')!;
     expect(saves[0].stages.map((stage) => stage.id)).toEqual(['source', inserted.id, 'decision']);
@@ -284,7 +455,7 @@ describe('Choose next step creates and configures a connected stage', { timeout:
     expect(within(sequence).getAllByRole('listitem')).toHaveLength(2);
     expect(within(sequence).queryByText('Unsaved Assessment')).not.toBeInTheDocument();
     expect(within(sequence).getByRole('button', { name: 'Choose Next Step' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Save draft' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Save Draft' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
     expect(saves).toHaveLength(0);
   });
@@ -317,7 +488,7 @@ describe('Choose next step creates and configures a connected stage', { timeout:
     await waitFor(() =>
       expect(screen.queryByRole('button', { name: 'Apply Changes' })).not.toBeInTheDocument()
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save Draft' }));
     await waitFor(() => expect(saves).toHaveLength(1));
     const inserted = saves[0].stages.find((stage) => stage.name === 'Chosen position assessment')!;
     expect(saves[0].stages.map((stage) => stage.id)).toEqual([

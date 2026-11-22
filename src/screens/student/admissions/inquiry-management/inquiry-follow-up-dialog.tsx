@@ -17,13 +17,14 @@ import { fDate, fTime } from 'src/utils/format-time';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { EmptyContent } from 'src/components/empty-content';
-import { LoadingButton } from 'src/components/loading-button';
+import { FormBusyRegion } from 'src/components/form-busy-region';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { STUDENT_EMPTY_STATE_SRC } from 'src/assets/illustrations/student-character-asset';
 import { useGetAdmissionInquiryQuery } from 'src/redux/student/admissions/admission-inquiries-api';
 import {
   useGetAdmissionInquiryManagementQuery,
@@ -36,12 +37,10 @@ import {
   Paper,
   Button,
   Avatar,
-  Skeleton,
   MenuItem,
   TextField,
   Typography,
   DialogActions,
-  CircularProgress,
 } from '@mui/material';
 
 import { getAdmissionInquiryAccess } from '../inquiry-access';
@@ -201,6 +200,8 @@ function InquiryFollowUpContent({
   }, [current, formik, freshForOpening, initialized, ready, state]);
 
   const saving = recording.isLoading || formik.isSubmitting;
+  const loading = !queryError && (fetching || !initialized.value);
+  const busy = saving || loading;
   const locked = saving || !ready || !initialized.value || Boolean(readOnlyReason);
   const templateDrafts = INQUIRY_FOLLOW_UP_TEMPLATES.map((template) => ({
     ...template,
@@ -211,7 +212,7 @@ function InquiryFollowUpContent({
   );
   const guard = useAdmissionDraftGuard({
     dirty: formik.dirty,
-    busy: saving,
+    busy,
     reset: formik.resetForm,
   });
   const close = () => guard.requestNavigation(onClose);
@@ -236,80 +237,82 @@ function InquiryFollowUpContent({
         maxWidth="sm"
         hasForm={false}
         handleClose={close}
-        disableClose={saving}
+        disableClose={busy}
         guardUnsavedChanges={false}
         hasUnsavedChanges={formik.dirty}
       >
         <Box component="form" noValidate onSubmit={formik.handleSubmit}>
-          <DialogScrollContent aria-label="Follow-Up Content">
-            <Stack spacing={2}>
-              <FormSectionCard
-                title="Follow-Up History"
-                icon={GlobalIcons.history}
-                descriptionTooltip="Saved notes appear newest first, with their recorded author, status and reminder."
-              >
-                <Stack spacing={1.5}>
-                  {(fetching || !initialized.value) && !queryError && (
-                    <Stack spacing={1} aria-label="Loading Follow-Up Notes">
-                      <Skeleton variant="rounded" height={110} />
-                      <Skeleton variant="rounded" height={110} />
-                    </Stack>
-                  )}
-                  {queryError && (
-                    <StudentFeedback
-                      notificationKey="STU-0406"
-                      presentation="toast"
-                      severity="error"
-                      toastAction={
-                        <Button size="small" color="inherit" onClick={reload}>
-                          Retry
-                        </Button>
-                      }
-                    >
-                      Follow-up notes could not be loaded.
-                    </StudentFeedback>
-                  )}
-                  {readOnlyReason && (
-                    <StudentFeedback
-                      notificationKey="STU-0407"
-                      presentation="persistent"
-                      severity="info"
-                    >
-                      {readOnlyReason}
-                    </StudentFeedback>
-                  )}
-                  {!queryError && initialized.value && !notes.length && !fetching && (
-                    <EmptyContent
-                      title="No follow-up notes yet."
-                      slotProps={{ img: { maxWidth: 112 }, title: { fontWeight: 500 } }}
-                      sx={{ height: 'auto', py: 1 }}
-                    />
-                  )}
-                  {!queryError && initialized.value && notes.length > 0 && (
-                    <Scrollbar
-                      role="region"
-                      aria-label="Follow-Up History Notes"
-                      tabIndex={0}
-                      sx={{
-                        maxHeight: 'min(390px, 42dvh)',
-                        flexGrow: 0,
-                        pr: 1,
-                      }}
-                    >
-                      <Stack spacing={1.5}>
-                        {notes.map((note) => (
-                          <FollowUpNoteCard key={note.id} note={note} />
-                        ))}
-                      </Stack>
-                    </Scrollbar>
-                  )}
-                </Stack>
-              </FormSectionCard>
-              <Box sx={{ position: 'relative' }}>
+          <FormBusyRegion
+            busy={busy}
+            label={saving ? 'Saving Follow-Up' : 'Loading Follow-Up'}
+            fillContent
+            flattenFieldset
+          >
+            <DialogScrollContent aria-label="Follow-Up Content">
+              <Stack spacing={1}>
+                <FormSectionCard
+                  title="Follow-Up History"
+                  icon={GlobalIcons.history}
+                  descriptionTooltip="Saved notes appear newest first, with their recorded author, status and reminder."
+                  contentSpacing={1}
+                >
+                  <Stack spacing={1.5}>
+                    {queryError && (
+                      <StudentFeedback
+                        notificationKey="STU-0406"
+                        presentation="toast"
+                        severity="error"
+                        toastAction={
+                          <Button size="small" color="inherit" onClick={reload}>
+                            Retry
+                          </Button>
+                        }
+                      >
+                        Follow-up notes could not be loaded.
+                      </StudentFeedback>
+                    )}
+                    {readOnlyReason && (
+                      <StudentFeedback
+                        notificationKey="STU-0407"
+                        presentation="persistent"
+                        severity="info"
+                      >
+                        {readOnlyReason}
+                      </StudentFeedback>
+                    )}
+                    {!queryError && initialized.value && !notes.length && !fetching && (
+                      <EmptyContent
+                        title="No follow-up notes yet."
+                        imgUrl={STUDENT_EMPTY_STATE_SRC}
+                        slotProps={{ img: { maxWidth: 112 }, title: { fontWeight: 500 } }}
+                        sx={{ height: 'auto', px: 0, py: 2 }}
+                      />
+                    )}
+                    {!queryError && initialized.value && notes.length > 0 && (
+                      <Scrollbar
+                        role="region"
+                        aria-label="Follow-Up History Notes"
+                        tabIndex={0}
+                        sx={{
+                          maxHeight: 'min(390px, 42dvh)',
+                          flexGrow: 0,
+                          pr: 1,
+                        }}
+                      >
+                        <Stack spacing={1.5}>
+                          {notes.map((note) => (
+                            <FollowUpNoteCard key={note.id} note={note} />
+                          ))}
+                        </Stack>
+                      </Scrollbar>
+                    )}
+                  </Stack>
+                </FormSectionCard>
                 <FormSectionCard
                   title="Follow-Up Details"
                   icon={GlobalIcons.admissionDetails}
                   descriptionTooltip="Add a note and choose the inquiry status. Pending or Interested requires a future reminder; Not interested clears it."
+                  contentSpacing={1}
                   actionFullWidthOnMobile
                   action={
                     !readOnlyReason && (
@@ -461,47 +464,30 @@ function InquiryFollowUpContent({
                     </Box>
                   </Stack>
                 </FormSectionCard>
-                {saving && (
-                  <Box
-                    role="status"
-                    aria-label="Saving Follow-Up"
-                    sx={{
-                      position: 'absolute',
-                      inset: 0,
-                      bgcolor: 'action.disabledBackground',
-                      display: 'grid',
-                      placeItems: 'center',
-                      zIndex: 1,
-                    }}
-                  >
-                    <CircularProgress size={24} />
-                  </Box>
-                )}
-              </Box>
-            </Stack>
-          </DialogScrollContent>
-          <DialogActions sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
-            <Button
-              size="small"
-              variant="outlined"
-              color="inherit"
-              disabled={saving}
-              onClick={close}
-              startIcon={<Iconify icon={GlobalIcons.cancel} />}
-            >
-              Cancel
-            </Button>
-            <LoadingButton
-              size="small"
-              variant="contained"
-              type="submit"
-              loading={saving}
-              disabled={locked}
-              startIcon={<Iconify icon={GlobalIcons.submit} />}
-            >
-              Submit
-            </LoadingButton>
-          </DialogActions>
+              </Stack>
+            </DialogScrollContent>
+            <DialogActions sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
+              <Button
+                size="small"
+                variant="outlined"
+                color="inherit"
+                disabled={busy}
+                onClick={close}
+                startIcon={<Iconify icon={GlobalIcons.cancel} />}
+              >
+                Cancel
+              </Button>
+              <Button
+                size="small"
+                variant="contained"
+                type="submit"
+                disabled={locked}
+                startIcon={<Iconify icon={GlobalIcons.submit} />}
+              >
+                Submit
+              </Button>
+            </DialogActions>
+          </FormBusyRegion>
         </Box>
       </CustomDialog>
       {guard.confirmation}
