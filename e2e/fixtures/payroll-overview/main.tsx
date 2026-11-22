@@ -21,7 +21,8 @@ const actor = params.get('actor') ?? sessionStorage.getItem('payroll-fixture-act
 if (actor) sessionStorage.setItem('payroll-fixture-actor', actor);
 const roles = actor === 'hr' ? [payroll.runPayrollSubmit, payroll.runPayrollExportReview, `${payroll.runPayroll}.Add`]
   : actor === 'principal' ? [payroll.runPayrollLock, payroll.runPayrollExportReview]
-    : actor === 'manager' ? [payroll.runPayrollManageWorkflow, payroll.runPayrollSubmit] : [];
+    : actor === 'manager' ? [payroll.runPayrollManageWorkflow, payroll.runPayrollSubmit]
+      : actor === 'auditor' ? [payroll.runPayrollViewAudit] : [];
 const pathname = window.location.pathname;
 const workbench = window.location.pathname.endsWith('/run-payroll');
 const store = configureStore({

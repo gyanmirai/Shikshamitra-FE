@@ -765,7 +765,7 @@ describe('Run Payroll preview feedback', () => {
       })
     ).toBeVisible();
     const inspectionActions = within(
-      screen.getByRole('group', { name: 'Payroll readiness and activity' })
+      screen.getByRole('group', { name: 'Payroll actions' })
     );
     expect(inspectionActions.getByRole('button', { name: 'Payroll checks' })).toBeVisible();
     expect(inspectionActions.getByRole('button', { name: 'Payroll activity' })).toBeVisible();

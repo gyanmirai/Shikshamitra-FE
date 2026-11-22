@@ -193,7 +193,6 @@ const statusColor = {
 
 const PAYROLL_ACTIVITY_PAGE_SIZE = 20;
 const EMPTY_PREVIEW_ITEMS: Record<string, unknown>[] = [];
-const attendanceReviewHint = 'Record attendance and recalculate payroll before reviewing.';
 
 function isAttendanceReviewBlocked(row: Pick<PayrollRow, 'status' | 'issueCodes'>) {
   return row.status === 'PENDING' && row.issueCodes.includes('NO_ATTENDANCE');
@@ -956,7 +955,7 @@ const RunPayroll = () => {
           const attendanceBlocked = isAttendanceReviewBlocked(row as PayrollRow);
           const disabled =
             attendanceBlocked || row.status === 'LOCKED' || row.status === 'SUBMITTED';
-          const checkbox = (
+          return (
             <Checkbox
               inputProps={{ 'aria-label': `Select payroll for ${row.employeeName}` }}
               disabled={disabled}
@@ -968,11 +967,6 @@ const RunPayroll = () => {
               }
             />
           );
-          return attendanceBlocked ? (
-            <Tooltip title={attendanceReviewHint} arrow>
-              <Box component="span" sx={{ display: 'inline-flex' }}>{checkbox}</Box>
-            </Tooltip>
-          ) : checkbox;
         },
       },
       {
@@ -1139,29 +1133,24 @@ const RunPayroll = () => {
             .map((code: string | number) => ISSUE_LABELS[code]?.label || 'Additional payroll issue')
             .join(', ');
 
-          return (
-            <Tooltip
-              title={
+          const chip = (
+            <Chip
+              size="small"
+              color={chipColor}
+              variant="outlined"
+              tabIndex={attendanceMissing && issueLabels ? 0 : undefined}
+              label={
                 attendanceMissing
-                  ? [attendanceReviewHint, issueLabels].filter(Boolean).join(' ')
-                  : issueLabels
+                  ? ISSUE_LABELS.NO_ATTENDANCE.label
+                  : `${state === 'CRITICAL' ? 'Critical' : state === 'WARNING' ? 'Warning' : 'Info'} • ${issues.length}`
               }
-              arrow
-              describeChild
-            >
-              <Chip
-                size="small"
-                color={chipColor}
-                variant="outlined"
-                tabIndex={attendanceMissing ? 0 : undefined}
-                label={
-                  attendanceMissing
-                    ? ISSUE_LABELS.NO_ATTENDANCE.label
-                    : `${state === 'CRITICAL' ? 'Critical' : state === 'WARNING' ? 'Warning' : 'Info'} • ${issues.length}`
-                }
-              />
-            </Tooltip>
+            />
           );
+          return issueLabels ? (
+            <Tooltip title={issueLabels} arrow describeChild>
+              {chip}
+            </Tooltip>
+          ) : chip;
         },
       },
       {
@@ -1341,8 +1330,7 @@ const RunPayroll = () => {
     if (preview.isCalculating) return 'Calculating payroll for this month…';
     if (previewError || !isDataForSelectedMonth) return null;
     if (preview.isStale) return 'Payroll inputs changed. Recalculate payroll before continuing.';
-    if (!selectableRows.length && tableData.some(isAttendanceReviewBlocked))
-      return attendanceReviewHint;
+    if (!selectableRows.length && tableData.some(isAttendanceReviewBlocked)) return null;
     if (!usesApproval) return lockExplanation;
     if (!canReviewPayroll && !canSubmitPayroll)
       return canLockPayroll
@@ -1425,8 +1413,11 @@ const RunPayroll = () => {
           spacing={1}
           flexWrap="wrap"
           useFlexGap
+          alignItems="center"
+          justifyContent="flex-end"
           role="group"
-          aria-label="Payroll readiness and activity"
+          aria-label="Payroll actions"
+          sx={{ ml: 'auto' }}
         >
           <Button
             size="small"
@@ -1452,27 +1443,27 @@ const RunPayroll = () => {
               Payroll activity
             </LoadingButton>
           ) : null}
+          <Box role="group" aria-label="Payroll preview">
+            <LoadingButton
+              variant={preview.isCurrent ? 'outlined' : 'contained'}
+              loading={preview.isCalculating}
+              size="small"
+              disabled={
+                preview.isLookingUp ||
+                previewBusy ||
+                !preview.canRequestPreview ||
+                Boolean(previewError) ||
+                payrollActionBusy ||
+                !month.isValid() ||
+                !academicYearId
+              }
+              startIcon={<Iconify icon={isDataForSelectedMonth ? 'mdi:refresh' : 'mdi:calculator'} />}
+              onClick={requestPreview}
+            >
+              {previewButtonLabel}
+            </LoadingButton>
+          </Box>
         </Stack>
-        <Box role="group" aria-label="Payroll preview" sx={{ ml: 'auto' }}>
-          <LoadingButton
-            variant={preview.isCurrent ? 'outlined' : 'contained'}
-            loading={preview.isCalculating}
-            size="small"
-            disabled={
-              preview.isLookingUp ||
-              previewBusy ||
-              !preview.canRequestPreview ||
-              Boolean(previewError) ||
-              payrollActionBusy ||
-              !month.isValid() ||
-              !academicYearId
-            }
-            startIcon={<Iconify icon={isDataForSelectedMonth ? 'mdi:refresh' : 'mdi:calculator'} />}
-            onClick={requestPreview}
-          >
-            {previewButtonLabel}
-          </LoadingButton>
-        </Box>
       </Stack>
 
       <Box
