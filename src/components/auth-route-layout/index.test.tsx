@@ -66,6 +66,7 @@ describe('AuthRouteLayout workspace boundary', () => {
     useSession.mockReset();
     signOut.mockReset();
     pathname = '/dashboard';
+    window.history.replaceState(null, '', '/dashboard');
     useSession.mockReturnValue({
       status: 'authenticated',
       data: { profile: { sub: 'user-1' }, accessToken: 'token' },
@@ -79,6 +80,13 @@ describe('AuthRouteLayout workspace boundary', () => {
   it('renders school content with a verified school context', () => {
     renderProtected(school);
     expect(screen.getByText('Protected content')).toBeInTheDocument();
+  });
+  it('carries the notification launch flag to sign-in while dropping unrelated parameters', () => {
+    window.history.replaceState(null, '', '/dashboard?openNotifications=1&returnTo=https://example.test');
+    useSession.mockReturnValue({ status: 'unauthenticated', data: null });
+    renderProtected(null, false);
+    expect(push).toHaveBeenCalledWith('/login?openNotifications=1');
+    expect(screen.queryByText('Protected content')).not.toBeInTheDocument();
   });
   it('redirects incomplete schools to setup before dashboard content renders', async () => {
     renderProtected({ ...school, setupCompleted: false });

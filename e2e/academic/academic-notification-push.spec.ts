@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-import { login, prepare, snapshot, fixtureApi, expectHealthy } from './academic-module-setup.helpers';
+import { login, prepare, snapshot, fixtureApi, submitLogin, expectHealthy } from './academic-module-setup.helpers';
 
 const tag = ['@module-academic', '@submodule-notifications', '@regression', '@responsive', '@accessibility'];
 
@@ -60,6 +60,17 @@ test.describe('Website push on a registered device', { tag }, () => {
     await expect(page.getByRole('button', { name: 'Enable browser notifications' })).toBeEnabled();
     await expect(page).not.toHaveURL(/openNotifications/);
     await expectHealthy(page);
+    expect((await snapshot(request)).pushActions).toEqual([]);
+  });
+
+  test('a signed-out notification launch opens the drawer after school sign-in', async ({ page, request }) => {
+    await page.setViewportSize({ width: 393, height: 852 });
+    await page.goto('/dashboard?openNotifications=1');
+    await expect(page).toHaveURL(/\/login\?openNotifications=1$/);
+    await submitLogin(page);
+
+    await expect(page.getByRole('dialog', { name: 'Notifications' })).toBeVisible();
+    await expect(page).toHaveURL(/\/dashboard$/);
     expect((await snapshot(request)).pushActions).toEqual([]);
   });
 

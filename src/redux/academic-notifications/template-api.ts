@@ -10,6 +10,7 @@ import type { PagedResultDto } from '../communication/communicationTypes';
 import type {
   AcademicNotificationTemplate,
   AcademicNotificationTemplateTest,
+  PreviewAcademicNotificationDraft,
   CreateAcademicNotificationTemplate,
   AcademicNotificationTemplatePreview,
   AcademicNotificationTemplateRevisionCommand,
@@ -63,6 +64,15 @@ export const academicNotificationTemplateApi = api.enhanceEndpoints({ addTagType
         expectedSessionOwner: academicNotificationCacheOwner(identity),
       }),
       providesTags: (_, __, identity) => [ownerTag(identity)],
+    }),
+    previewAcademicNotificationDraft: builder.mutation<
+      AcademicNotificationTemplatePreview,
+      AcademicNotificationCacheIdentity & { command: PreviewAcademicNotificationDraft }
+    >({
+      query: ({ command, ...identity }) => ({
+        url: `${root}/preview`, method: 'POST', body: command,
+        expectedSessionOwner: academicNotificationCacheOwner(identity),
+      }),
     }),
     createAcademicNotificationTemplate: builder.mutation<
       AcademicNotificationTemplate, AcademicNotificationCacheIdentity & { command: CreateAcademicNotificationTemplate }
@@ -126,6 +136,7 @@ export const {
   useAcademicNotificationTemplatesQuery,
   useAcademicNotificationTemplateHistoryQuery,
   useLazyAcademicNotificationTemplatePreviewQuery,
+  usePreviewAcademicNotificationDraftMutation,
   useCreateAcademicNotificationTemplateMutation,
   useInitializeAcademicNotificationDefaultsMutation,
   useUpdateAcademicNotificationTemplateDraftMutation,

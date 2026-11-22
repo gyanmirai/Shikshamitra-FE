@@ -13,6 +13,7 @@ import type {
   AcademicNotificationApprovalReview,
   AcademicNotificationOperationStatus,
   AcademicNotificationPendingApprovals,
+  AcademicNotificationRecentDeliveries,
 } from './delivery-types';
 
 type OperationRequest = AcademicNotificationCacheIdentity & { operationId: string };
@@ -76,6 +77,16 @@ export const academicNotificationDeliveryApi = api.enhanceEndpoints({ addTagType
       providesTags: (_, __, identity) => [deliveryTag(identity)],
       keepUnusedDataFor: 0,
     }),
+    academicNotificationRecentDeliveries: builder.query<
+      AcademicNotificationRecentDeliveries, AcademicNotificationCacheIdentity & { eventKey?: string; cursor?: string }
+    >({
+      query: ({ eventKey, cursor, ...identity }) => ({
+        url: `${academicNotificationsRoot}/history/recent`, params: { eventKey, cursor }, cache: 'no-store',
+        expectedSessionOwner: academicNotificationCacheOwner(identity),
+      }),
+      providesTags: (_, __, identity) => [deliveryTag(identity)],
+      keepUnusedDataFor: 0,
+    }),
     cancelAcademicNotificationOperation: builder.mutation<AcademicNotificationCancellation, OperationRequest>({
       query: ({ operationId, ...identity }) => ({
         url: `${operationUrl(operationId)}/cancel`, method: 'POST', expectedSessionOwner: academicNotificationCacheOwner(identity),
@@ -99,6 +110,7 @@ export const {
   useAcademicNotificationApprovalReviewQuery,
   useDecideAcademicNotificationApprovalMutation,
   useAcademicNotificationHistoryQuery,
+  useAcademicNotificationRecentDeliveriesQuery,
   useCancelAcademicNotificationOperationMutation,
   useRetryAcademicNotificationDispatchMutation,
 } = academicNotificationDeliveryApi;

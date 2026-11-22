@@ -140,9 +140,9 @@ Open **Academics → Notification → Templates** and choose the event. Staff wi
 
 Choose the scope and select **New template** to write a template for one recipient, channel, and language. Use the variable pickers to insert fields from the event catalogue. Email supports rich text. In-app, browser push, and WhatsApp use plain text.
 
-Save the draft and load its preview with sample data. Publish it to make that version available to Rules. Further edits create a new draft while the published version remains available. Version history can preview saved revisions. Restoring the default wording also creates a draft.
+The draft preview updates with sample data as you edit. Save the draft and publish it to make that version available to Rules. Further edits create a new draft while the published version remains available. Version history can preview saved revisions. Restoring the default wording also creates a draft.
 
-Browser push displays a generic alert on the device. Its preview shows the saved template with sample data. Edit the **In-app** template to change what recipients read in the website inbox.
+Browser push displays a generic alert on the device. The editor can preview the template with sample data. Edit the **In-app** template to change what recipients read in the website inbox.
 
 **Send test** queues the saved version for the configured test destination using sample data. WhatsApp delivery requires provider approval for the exact version and language.
 
@@ -180,7 +180,7 @@ In **Templates**, open a saved template, load the sample preview, and select **S
 
 Assigned approvers open **Academics → Notifications → Delivery History** and select a request in **Pending Approvals**. Review the recipient counts, exclusions and sample messages, then confirm **Approve send** to queue it or **Reject send** to close the request. A changed request requires the sender to review and submit it again. The sender can follow the approval status from the Delivery History link on their send confirmation.
 
-Open Delivery History with a link to a notification operation or Academic source. Filter the attempt table by delivery status. Provider acceptance, delivery and read receipts each have their own status, and the Columns menu exposes the available timestamps. When the current attempt shows **Retry delivery**, confirm **Queue retry** to retry that recipient and channel. History retains the rejected attempt and records the queued status separately. When acceptance is unknown, review the provider outcome before sending again. Staff with cancel access can stop pending work and see how much work is already in progress. [Delivery API](../../../Shikshamitra-BE/docs/modules/academic/api.md#staff-notification-configuration)
+Open **Delivery History** to find recent automatic and reviewed sends, then select a notification to see the attempts you can access. Choose a **Notification event** to narrow the list, and use **Older Deliveries** when available. Links from an operation or Academic source also open its history directly. Filter the attempt table by delivery status. Provider acceptance, delivery and read receipts each have their own status, and the Columns menu exposes the available timestamps. When the current attempt shows **Retry delivery**, confirm **Queue retry** to retry that recipient and channel. History retains the rejected attempt and records the queued status separately. When acceptance is unknown, review the provider outcome before sending again. Staff with cancel access can stop pending work and see how much work is already in progress. [Delivery API](../../../Shikshamitra-BE/docs/modules/academic/api.md#staff-notification-configuration)
 
 ## Read or acknowledge a notification
 

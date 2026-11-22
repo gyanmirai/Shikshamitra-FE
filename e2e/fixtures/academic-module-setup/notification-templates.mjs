@@ -12,6 +12,17 @@ function makeDraft(content, templateId, revision) {
   };
 }
 
+function samplePreview(message) {
+  const substitute = (value) => value.replaceAll('{{student_name}}', 'Sample Student');
+  return {
+    isSynthetic: true,
+    rendered: {
+      isSuccess: true, subject: substitute(message.subject), body: substitute(message.body),
+      contentHash: message.contentHash ?? 'fixture', linkUrl: null, errorCode: null,
+    },
+  };
+}
+
 export function createNotificationTemplatesFixture(queueTemplateTest) {
   const templates = new Map();
   return (url, method, input, send) => {
@@ -60,6 +71,11 @@ export function createNotificationTemplatesFixture(queueTemplateTest) {
       return true;
     }
 
+    if (url.pathname === `${root}/preview` && method === 'POST') {
+      send(200, samplePreview(input));
+      return true;
+    }
+
     if (!url.pathname.startsWith(`${root}/`)) return false;
     const [id, action, revisionId] = url.pathname.slice(root.length + 1).split('/');
     const history = templates.get(id);
@@ -71,13 +87,7 @@ export function createNotificationTemplatesFixture(queueTemplateTest) {
     if (action === 'preview' && method === 'GET') {
       const revision = history.find((item) => item.revisionId === revisionId);
       if (!revision) send(404, {});
-      else send(200, {
-        isSynthetic: true,
-        rendered: {
-          isSuccess: true, subject: revision.subject, body: revision.body.replaceAll('{{student_name}}', 'Sample Student'),
-          contentHash: revision.contentHash, linkUrl: null, errorCode: null,
-        },
-      });
+      else send(200, samplePreview(revision));
       return true;
     }
     if (action === 'test-send' && method === 'POST' && queueTemplateTest) {

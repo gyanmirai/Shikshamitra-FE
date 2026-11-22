@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 import { it, vi, expect, describe } from 'vitest';
+import { MessageChannel, type MessagePort } from 'node:worker_threads';
 
 const source = readFileSync('public/notification-sw.js', 'utf8');
 const origin = 'https://school.example.test';
@@ -10,12 +11,15 @@ type WorkerEvent = {
   waitUntil: (promise: Promise<unknown>) => void;
 };
 
-function fixture(windows: { url: string; focus: () => Promise<void>; postMessage: (value: unknown) => void }[] = []) {
+function fixture(windows: { url: string; focus: () => Promise<void>; postMessage: (value: unknown, ports?: MessagePort[]) => void }[] = []) {
   const listeners = new Map<string, (event: WorkerEvent) => void>();
   const show = vi.fn(async () => undefined);
   const open = vi.fn(async () => undefined);
   runInNewContext(source, {
     URL,
+    MessageChannel,
+    setTimeout,
+    clearTimeout,
     self: {
       location: { origin },
       registration: { showNotification: show },
@@ -49,7 +53,8 @@ describe('the notification service worker', () => {
 
   it('focuses a matching origin and signals the notification drawer', async () => {
     const offsite = { url: 'https://outside.example/', focus: vi.fn(), postMessage: vi.fn() };
-    const sameSite = { url: `${origin}/academic/dashboard`, focus: vi.fn(), postMessage: vi.fn() };
+    const sameSite = { url: `${origin}/academic/dashboard`, focus: vi.fn(),
+      postMessage: vi.fn((_value: unknown, ports?: MessagePort[]) => ports?.[0].postMessage('NOTIFICATIONS_OPENED')) };
     const { emit, open } = fixture([offsite, sameSite]);
     const close = vi.fn();
 
@@ -58,7 +63,9 @@ describe('the notification service worker', () => {
     expect(close).toHaveBeenCalledOnce();
     expect(offsite.focus).not.toHaveBeenCalled();
     expect(sameSite.focus).toHaveBeenCalledOnce();
-    expect(sameSite.postMessage).toHaveBeenCalledWith({ type: 'OPEN_SCHOOL_NOTIFICATIONS' });
+    const [[message, ports]] = sameSite.postMessage.mock.calls;
+    expect(message).toEqual({ type: 'OPEN_SCHOOL_NOTIFICATIONS' });
+    expect(ports).toHaveLength(1);
     expect(open).not.toHaveBeenCalled();
   });
 
@@ -66,6 +73,27 @@ describe('the notification service worker', () => {
     const { emit, open } = fixture();
     await emit('notificationclick', { notification: { close: vi.fn(), data: { url: 'https://outside.example/' } } });
 
+    expect(open).toHaveBeenCalledWith(`${origin}/dashboard?openNotifications=1`);
+  });
+
+  it('opens the authenticated dashboard when only a public form is open', async () => {
+    const publicTab = { url: `${origin}/admission-registration`, focus: vi.fn(), postMessage: vi.fn() };
+    const { emit, open } = fixture([publicTab]);
+
+    await emit('notificationclick', { notification: { close: vi.fn() } });
+
+    expect(publicTab.focus).not.toHaveBeenCalled();
+    expect(publicTab.postMessage).not.toHaveBeenCalled();
+    expect(open).toHaveBeenCalledWith(`${origin}/dashboard?openNotifications=1`);
+  });
+
+  it('opens the durable launch URL if a dashboard tab has not mounted its inbox', async () => {
+    const loading = { url: `${origin}/dashboard`, focus: vi.fn(), postMessage: vi.fn() };
+    const { emit, open } = fixture([loading]);
+
+    await emit('notificationclick', { notification: { close: vi.fn() } });
+
+    expect(loading.focus).not.toHaveBeenCalled();
     expect(open).toHaveBeenCalledWith(`${origin}/dashboard?openNotifications=1`);
   });
 });

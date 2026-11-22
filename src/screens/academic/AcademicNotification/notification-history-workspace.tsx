@@ -1,4 +1,4 @@
-import type { AcademicNotificationCacheIdentity } from 'src/redux/academic-notifications/types';
+import type { AcademicNotificationEvent, AcademicNotificationCacheIdentity } from 'src/redux/academic-notifications/types';
 import type { AcademicNotificationSource, AcademicNotificationHistoryItem } from 'src/redux/academic-notifications/delivery-types';
 
 import { useRef, useState } from 'react';
@@ -20,6 +20,7 @@ import {
 import { NotificationHistoryTable } from './Components/notification-history-table';
 import { NotificationDeliveryDetails } from './Components/notification-delivery-details';
 import { NotificationPendingApprovals } from './Components/notification-pending-approvals';
+import { NotificationRecentDeliveries } from './Components/notification-recent-deliveries';
 
 const options = [
   { value: 'all', label: 'All statuses' },
@@ -35,13 +36,18 @@ function historySource(params: URLSearchParams): AcademicNotificationSource | un
   return { eventKey, sourceType, sourceId };
 }
 
-export function NotificationHistoryWorkspace({ identity, canManage }: {
+export function NotificationHistoryWorkspace({ identity, canManage, events }: {
   identity: AcademicNotificationCacheIdentity;
   canManage: boolean;
+  events: AcademicNotificationEvent[];
 }) {
   const params = useSearchParams();
   const operationId = notificationRecordId(params.get('operation'));
   const source = historySource(params);
+  const historyOperationId = notificationRecordId(params.get('deliveryOperation')) ?? undefined;
+  const pendingApprovals = canManage && params.get('historyMode') === 'approvals';
+  const recentPath = `${academicPaths.notification}?view=history`;
+  const approvalsPath = `${recentPath}&historyMode=approvals`;
   const operation = useAcademicNotificationOperationQuery({
     ...identity, operationId: operationId ?? '',
   }, { ...refresh, skip: !operationId });
@@ -54,13 +60,12 @@ export function NotificationHistoryWorkspace({ identity, canManage }: {
     );
     if (!operation.currentData) return <Skeleton variant="rounded" height={80} sx={{ m: 1 }} aria-label="Loading delivery status" />;
     const canManageOperation = canManage && !operation.currentData.isSynthetic;
+    const approvalHistory = canManageOperation && operation.currentData.approvalRequired;
     const reviewing = canManageOperation && operation.currentData.canReviewApproval === true;
     return (
       <>
-        {canManageOperation && (
-          <Button size="small" component={RouterLink} href={`${academicPaths.notification}?view=history`}
-            sx={{ alignSelf: 'flex-start', mx: 1 }}>Pending approvals</Button>
-        )}
+        <Button size="small" component={RouterLink} href={approvalHistory ? approvalsPath : recentPath}
+          sx={{ alignSelf: 'flex-start', mx: 1 }}>{approvalHistory ? 'Pending Approvals' : 'Recent Deliveries'}</Button>
         <Box sx={reviewing ? { flex: 1, minHeight: 0, overflowY: 'auto' } : { flexShrink: 0 }}>
           <NotificationDeliveryDetails key={`summary-${operationId}`}
             operation={operation.currentData} identity={identity} canManage={canManageOperation} />
@@ -74,12 +79,26 @@ export function NotificationHistoryWorkspace({ identity, canManage }: {
   }
   return source ? (
     <>
+      <Button size="small" component={RouterLink} href={recentPath}
+        sx={{ alignSelf: 'flex-start', mx: 1 }}>Recent Deliveries</Button>
       <Typography variant="subtitle2" sx={{ p: 1 }}>{notificationEventKeyLabel(source.eventKey)}</Typography>
-      <NotificationHistoryList key={`${source.eventKey}/${source.sourceType}/${source.sourceId}`}
-        identity={identity} source={source} canManage={canManage} />
+      <NotificationHistoryList key={`${source.eventKey}/${source.sourceType}/${source.sourceId}/${historyOperationId ?? ''}`}
+        identity={identity} source={source} operationId={historyOperationId} canManage={canManage} />
     </>
-  ) : canManage ? <NotificationPendingApprovals identity={identity} />
-    : <Alert severity="info" sx={{ m: 1 }}>Open delivery history from an Academic record or a notification send confirmation.</Alert>;
+  ) : (
+    <>
+      {canManage && (
+        <Button size="small" component={RouterLink} href={pendingApprovals ? recentPath : approvalsPath}
+          sx={{ alignSelf: 'flex-start', mx: 1 }}>
+          {pendingApprovals ? 'Recent Deliveries' : 'Pending Approvals'}
+        </Button>
+      )}
+      {pendingApprovals
+        ? <NotificationPendingApprovals identity={identity} />
+        : <NotificationRecentDeliveries identity={identity} events={events}
+          eventKey={params.get('historyEvent') ?? undefined} cursor={params.get('historyCursor') ?? undefined} />}
+    </>
+  );
 }
 
 function NotificationHistoryList({ identity, source, operationId, canManage }: {

@@ -56,7 +56,7 @@ export default function AcademicNotificationScreen() {
             {view === 'rules' && <NotificationRulesWorkspace scope={scope} filters={filters} catalogue={catalogue} />}
             {view === 'templates' && <NotificationTemplatesWorkspace scope={scope} filters={filters} catalogue={catalogue} />}
             {view === 'history' && <NotificationHistoryWorkspace key={JSON.stringify(scope.identity)}
-              identity={scope.identity} canManage={scope.canManage} />}
+              identity={scope.identity} canManage={scope.canManage} events={catalogue.currentData?.events ?? []} />}
           </Box>
         </>
       )}

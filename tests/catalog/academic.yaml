@@ -85,6 +85,20 @@ scenarios:
     automationFile: e2e/academic/academic-notification-rules.spec.ts
     status: automated
     tags: ['@module-academic', '@submodule-notifications', '@regression', '@responsive', '@accessibility']
+  - id: ACM-NOTIFICATION-DRAFT-PREVIEW-001
+    module: Academic
+    submodule: Notifications
+    title: Staff preview unsaved message content with sample values and preserve the published revision
+    risk: high
+    priority: P1
+    type: [functional, regression, responsive, accessibility]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/academic/notification]
+    automated: true
+    automationFile: e2e/academic/academic-notification-rules.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-notifications', '@regression', '@responsive', '@accessibility']
   - id: ACM-NOTIFICATION-TEMPLATE-TEST-001
     module: Academic
     submodule: Notification
@@ -158,7 +172,7 @@ scenarios:
   - id: ACM-NOTIFICATION-DELIVERY-HISTORY-001
     module: Academic
     submodule: Notification
-    title: Staff can see delivery status while scrolling on a phone and filter attempts by acceptance status
+    title: Staff can find an automatic notification in Delivery History, open its attempts and filter by acceptance status on a phone
     risk: high
     priority: P1
     type: [functional, regression, responsive, accessibility]
@@ -277,6 +291,20 @@ scenarios:
     roles: [academic-admin]
     tenants: [synthetic-school]
     routes: [/academic/dashboard, /login]
+    automated: true
+    automationFile: e2e/academic/academic-notification-push.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-notifications', '@regression', '@responsive', '@accessibility']
+  - id: ACM-NOTIFICATIONS-WEB-PUSH-005
+    module: Academic
+    submodule: Browser Notifications
+    title: A signed-out notification launch carries the inbox opening through school sign-in
+    risk: high
+    priority: P1
+    type: [functional, regression, responsive, accessibility]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/dashboard, /login]
     automated: true
     automationFile: e2e/academic/academic-notification-push.spec.ts
     status: automated

@@ -1,3 +1,4 @@
+import type { AcademicNotificationTemplatePreview } from 'src/redux/academic-notifications/template-types';
 import type { AcademicNotificationChannel, AcademicNotificationCacheIdentity } from 'src/redux/academic-notifications/types';
 
 import { useState } from 'react';
@@ -37,12 +38,23 @@ export function NotificationTemplatePreview({ identity, templateId, revisionId, 
       <Typography variant="caption" color="text.secondary">
         {channel === CommunicationChannelType.WebPush ? 'Saved browser push template with sample data' : 'Preview with sample data'}
       </Typography>
-      <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>{result.rendered.subject}</Typography>
-      {channel === CommunicationChannelType.Email ? (
-        <Box sx={{ overflowWrap: 'anywhere' }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(result.rendered.body) }} />
-      ) : (
-        <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{result.rendered.body}</Typography>
-      )}
+      <NotificationSampleMessage rendered={result.rendered} channel={channel} />
     </Stack>
+  );
+}
+
+export function NotificationSampleMessage({ rendered, channel }: {
+  rendered: AcademicNotificationTemplatePreview['rendered'];
+  channel: AcademicNotificationChannel;
+}) {
+  return (
+    <>
+      <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>{rendered.subject}</Typography>
+      {channel === CommunicationChannelType.Email ? (
+        <Box sx={{ overflowWrap: 'anywhere' }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(rendered.body) }} />
+      ) : (
+        <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{rendered.body}</Typography>
+      )}
+    </>
   );
 }
