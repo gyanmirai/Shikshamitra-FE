@@ -135,6 +135,29 @@ test('the register keeps payroll checks and server criteria in their standard co
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
+test('aligns review actions with the register heading and keeps recalculation on the right', async ({
+  page,
+}) => {
+  await page.goto('/hr/payroll/run-payroll?month=2026-09&previewRunId=run-1');
+  const register = page.getByRole('region', { name: 'Payroll Register' });
+  const reviewActions = register.getByRole('group', { name: 'Review and lock selected payroll rows' });
+  await expect(reviewActions).toHaveCount(0);
+  await register.getByRole('checkbox', { name: 'Select payroll for Asha Rao' }).check();
+  await expect(reviewActions.getByRole('button', { name: 'Lock Reviewed' })).toBeVisible();
+
+  const heading = (await register.getByText('Payroll Register', { exact: true }).boundingBox())!;
+  const review = (await reviewActions.boundingBox())!;
+  expect(review.x).toBeGreaterThan(heading.x + heading.width);
+  expect(review.y).toBeLessThan(heading.y + heading.height);
+  const checks = (await page.getByRole('button', { name: 'Payroll checks' }).boundingBox())!;
+  const recalculate = (await page.getByRole('button', { name: 'Recalculate payroll' }).boundingBox())!;
+  expect(recalculate.x).toBeGreaterThan(checks.x + checks.width);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(reviewActions).toBeInViewport();
+  await expect(page.getByRole('button', { name: 'Recalculate payroll' })).toBeInViewport();
+});
+
 test('approval settings are separate and recovery returns to the selected month', async ({ page }) => {
   let settings = {
     mode: 'Paused',

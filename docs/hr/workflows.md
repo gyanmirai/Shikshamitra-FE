@@ -235,7 +235,7 @@ Ignoring an obsolete UI completion does not cancel an already submitted server o
 Opening a payroll month checks for a saved run and resumes existing progress.
 Generate payroll starts the first calculation, and Recalculate payroll requests a replacement after a run exists.
 Retry lookup and Reconnect repeat reads after a loading or polling error.
-The month selector and generation action are in the period controls above the register.
+The month selector sits on the left and Generate payroll or Recalculate payroll sits on the right of the period controls above the register.
 Payroll checks opens a drawer with readiness checks and the PF and ESIC registration list.
 Select all applies to eligible rows on the current page, and Mark Reviewed acts on the pending rows among them.
 Pending rows with missing attendance show Attendance missing in Issues and cannot be selected for review.
@@ -243,7 +243,7 @@ Record attendance and recalculate payroll to make those rows reviewable.
 Review operations retain the visible rows while the server saves and the current result reloads.
 After a saved review with a failed reread, Reload rows retries the read.
 Payroll Activity shows recorded reviews, removed reviews, and locks for the selected month and academic year to authorized users with school-wide HR scope.
-Review and lock actions appear with the selected staff rows.
+Review and lock actions appear on the right of the Payroll Register heading when staff rows are selected.
 On smaller screens, period and selection actions wrap above the register.
 Payroll month stays in the context row.
 Academic year comes from the global header selector without a duplicate page label.
@@ -258,7 +258,7 @@ Closing the drawer restores focus without changing table selection, search, or p
 Changing month or academic year closes the drawer and discards the previous context.
 Initial preparation uses table skeletons, while recalculation retains completed rows with localized progress.
 Search and pagination show table progress without labelling payroll outdated.
-Only server-confirmed stale or superseded results show Preview needs refresh.
+Server-confirmed stale or superseded results show a single instruction above the table to recalculate payroll before continuing.
 Review, adjustment mutations, and locking require a current loaded preview.
 An explicit generate, refresh, or retry shows one completion toast after the requested run and its rows are ready, including empty results.
 Failures retain a Retry action, and navigation or changing month/year clears pending notifications.

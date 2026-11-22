@@ -1005,18 +1005,22 @@ describe('Run Payroll preview feedback', () => {
     render(view());
     expect(screen.getByRole('button', { name: 'Recalculate payroll' })).toBeEnabled();
     expect(screen.getByRole('progressbar', { name: 'Loading payroll rows' })).toBeVisible();
-    expect(screen.queryByText('Preview needs refresh')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Payroll inputs changed/)).not.toBeInTheDocument();
     expect(mocks.success).not.toHaveBeenCalled();
   });
 
-  it('shows genuine stale state as a compact status', () => {
+  it('shows one actionable instruction for stale payroll and clears it when current', () => {
     mocks.preview.isStale = true;
     mocks.preview.isCurrent = false;
-    render(view());
-    expect(
-      within(screen.getByRole('group', { name: 'Payroll preview' })).getByRole('status')
-    ).toHaveTextContent('Preview needs refresh');
+    const ui = render(view());
+    expect(screen.getByText('Payroll inputs changed. Recalculate payroll before continuing.'))
+      .toBeVisible();
+    expect(screen.queryByText('Preview needs refresh')).not.toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    mocks.preview.isStale = false;
+    mocks.preview.isCurrent = true;
+    ui.rerender(view());
+    expect(screen.queryByText(/Payroll inputs changed/)).not.toBeInTheDocument();
   });
 
   it('notifies once after the accepted run and its current rows are ready', async () => {
