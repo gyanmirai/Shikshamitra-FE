@@ -8,22 +8,27 @@ import { hrPermissions } from 'src/constants/hr-menus';
 import { Box, Alert, CssBaseline } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import RunPayroll from 'src/screens/hr/payroll/run-payroll/runPayroll';
 import { defaultSettings } from 'src/components/settings/config-settings';
 import PayrollHome from 'src/screens/hr/payroll/payroll-home/payroll-home';
-import RunPayroll from 'src/screens/hr/payroll/run-payroll/runPayroll';
 import PayrollSettings from 'src/screens/hr/payroll/setting/payroll-settings';
-import PayrollApprovalWorkflow from 'src/screens/hr/payroll/setting/payroll-approval-workflow';
 import MonthlyPayslips from 'src/screens/hr/payroll/salarySlip-generate/salarySlipGenerate';
+import PayrollApprovalWorkflow from 'src/screens/hr/payroll/setting/payroll-approval-workflow';
 
 const params = new URLSearchParams(window.location.search);
-const payroll = hrPermissions.payroll;
+const {payroll} = hrPermissions;
 const actor = params.get('actor') ?? sessionStorage.getItem('payroll-fixture-actor');
-if (actor) sessionStorage.setItem('payroll-fixture-actor', actor);
+if (actor) {
+  sessionStorage.setItem('payroll-fixture-actor', actor);
+  document.cookie = `payrollFixtureActor=${encodeURIComponent(actor)}; path=/; SameSite=Strict`;
+}
 const roles = actor === 'hr' ? [payroll.runPayrollSubmit, payroll.runPayrollExportReview, `${payroll.runPayroll}.Add`]
   : actor === 'principal' ? [payroll.runPayrollLock, payroll.runPayrollExportReview]
-    : actor === 'manager' ? [payroll.runPayrollManageWorkflow, payroll.runPayrollSubmit]
+    : actor === 'section-reviewer' ? [`${payroll.runPayroll}.Add`]
+      : actor === 'section-hr' ? [payroll.runPayrollSubmit, payroll.runPayrollLock, `${payroll.runPayroll}.Add`]
+        : actor === 'manager' ? [payroll.runPayrollManageWorkflow, payroll.runPayrollSubmit]
       : actor === 'auditor' ? [payroll.runPayrollViewAudit] : [];
-const pathname = window.location.pathname;
+const {pathname} = window.location;
 const workbench = window.location.pathname.endsWith('/run-payroll');
 const store = configureStore({
   reducer: {

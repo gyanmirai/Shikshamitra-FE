@@ -282,6 +282,19 @@ The link retains the selected payroll month for the return to the register.
 Where the school enables it, eligible users can explicitly create a batch for themselves and confirm it separately.
 Review sheet Excel and Review sheet PDF use the exact ready selection or pending batch and include the Pending finalization label.
 
+### Run Payroll section review
+
+In Payroll Settings → Approval Workflow, a school-wide workflow manager can assign one review role per school section and see the currently eligible reviewers.
+HR marks payable rows reviewed in the register and uses Send for section review to hand off the selected staff.
+Section review batches shows each available section, its role, the payroll and payable-day evidence, and any recorded decision.
+An eligible reviewer can mark the batch reviewed or return it to HR with a reason.
+HR uses Lock Reviewed to issue payroll after the ordinary payroll checks pass.
+Locking rows with outstanding or returned section reviews requires an override reason in the lock confirmation.
+Rows awaiting section review stay selectable for locking and cannot be unmarked or sent again while the review is open.
+Recalculating payroll does not clear a returned review for that employee and payroll month.
+HR can mark replacement payroll rows reviewed while an older section review remains open.
+The school’s paper signature remains an administrative step outside the application.
+
 ## Salary template preview recovery
 
 Salary-preview failures use one concise summary, optional validated server amount evidence and a short correction hint.
