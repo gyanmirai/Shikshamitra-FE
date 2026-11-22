@@ -27,7 +27,9 @@ The route map is frontend integration truth, not backend product truth:
 | Payroll overview          | `/hr/payroll`                                                                                           | `HR.PayrollManagement.Overview`                                            |
 | Run payroll               | `/hr/payroll/run-payroll`                                                                               | `HR.PayrollManagement.RunPayroll` plus lock, audit, and adjustment actions |
 | Payslip & statement settings | `/hr/payroll/setting/payslip-statement-settings` | Payroll Settings visibility plus `HR.PayrollManagement.GenerateSalarySlip.View`; editing uses `.Add` and server HR-wide scope. |
-| Payslips                  | `/hr/payroll/payslip-generation`                                                                        | `HR.PayrollManagement.GenerateSalarySlip`                                  |
+| Monthly Payslips          | `/hr/payroll/payslip-generation`      | `HR.PayrollManagement.GenerateSalarySlip.View` |
+| Employee Statements       | `/hr/payroll/employee-statements`     | `HR.PayrollManagement.GenerateSalarySlip.View` and `HR.Reports.View` |
+| School Payroll Register   | `/hr/payroll/school-payroll-register` | `HR.PayrollManagement.GenerateSalarySlip.View` and `HR.Reports.View` |
 | Staff salaries      | `/hr/payroll/structure/{employeeId}/edit`                                            | `HR.PayrollManagement.PayrollStructure` plus Compensation View or Manage   |
 | Payroll settings          | `/hr/payroll/setting`, `/hr/payroll/setting/*`                                                                                 | `HR.PayrollManagement.Settings.*`                                          |
 | Approval Workflow | `/hr/payroll/setting/approval-workflow` | Run Payroll `.View` and `.ManageWorkflow`; the server checks school-wide scope. |

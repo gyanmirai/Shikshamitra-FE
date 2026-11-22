@@ -36,6 +36,8 @@ export const hrPaths = {
     dashboard: '/hr/payroll/dashboard',
     runPayroll: '/hr/payroll/run-payroll',
     payslipGeneration: '/hr/payroll/payslip-generation',
+    employeeStatements: '/hr/payroll/employee-statements',
+    schoolPayrollRegister: '/hr/payroll/school-payroll-register',
     structure: '/hr/payroll/structure',
     salaryEditor: (employeeId: string) =>
       `/hr/payroll/structure/${encodeURIComponent(employeeId)}/edit`,
@@ -215,6 +217,14 @@ export const hrPermissions = {
   notification: `${defaultModulePermissionName}${defaultHrPermissionName}Notification`,
 };
 
+export const payrollDocumentPages = {
+  monthly: { title: 'Monthly Payslips', path: hrPaths.payroll.payslipGeneration },
+  statement: { title: 'Employee Statements', path: hrPaths.payroll.employeeStatements },
+  register: { title: 'School Payroll Register', path: hrPaths.payroll.schoolPayrollRegister },
+} as const;
+
+export const payslipViewPermission = `${hrPermissions.payroll.generateSalarySlip}.View`;
+
 const payrollSettingsMenuItems = [
   {
     title: 'Salary Templates',
@@ -376,11 +386,35 @@ const hrModule = () => ({
               icon: menuIconView('mdi:play-circle-outline'),
             },
             {
-              title: 'Payslips',
-              path: hrPaths.payroll.payslipGeneration,
-              _action: 'payroll-payslip-generation',
+              title: 'Payslips & Reports',
+              _action: 'payroll-payslips-reports',
               permissionName: hrPermissions.payroll.generateSalarySlip,
+              requiredAllPermissions: [payslipViewPermission],
               icon: menuIconView('mdi:file-document-multiple-outline'),
+              // The sidebar destinations share one existing permission editor entry.
+              permissionChildren: [],
+              children: [
+                {
+                  ...payrollDocumentPages.monthly,
+                  _action: 'payroll-payslip-generation',
+                  permissionName: payslipViewPermission,
+                  preserveQueryParams: ['month'],
+                },
+                {
+                  ...payrollDocumentPages.statement,
+                  _action: 'payroll-employee-statements',
+                  permissionName: payslipViewPermission,
+                  requiredAllPermissions: [hrPermissions.reportActions.view],
+                  preserveQueryParams: ['month'],
+                },
+                {
+                  ...payrollDocumentPages.register,
+                  _action: 'payroll-school-payroll-register',
+                  permissionName: payslipViewPermission,
+                  requiredAllPermissions: [hrPermissions.reportActions.view],
+                  preserveQueryParams: ['month'],
+                },
+              ],
             },
             {
               title: 'Staff Salaries',

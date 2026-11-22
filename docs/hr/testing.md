@@ -134,6 +134,7 @@ Finish with an in-app browser smoke test; the local fixture does not certify aut
 For HR keyboard coverage, the route/component inventory, synthetic browser procedure, and remaining authenticated acceptance limits, see [Keyboard usability](references/keyboard-usability.md).
 
 `e2e/hr/payroll-document-settings.guest.spec.ts` verifies the settings link, removal of the embedded form, save/reload, view-only controls and contained widths at 390, 768 and 1440 pixels.
+It also verifies the three Payslips & Reports routes, desktop and phone sidebar navigation, payroll month carryover, and direct report denial for users with payslip-only access.
 The settings component suites cover draft preservation, optimistic concurrency, interrupted responses, request ordering and deliberate navigation discard.
 The navigation component suite verifies exact Overview selection while retaining payroll ancestry.
 The shared ProgressBar currently adds a same-URL history guard entry; browser traversal coverage accounts for that existing behavior.

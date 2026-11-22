@@ -466,7 +466,7 @@ test.describe('Payroll interface consistency', () => {
     ['/hr/payroll', 'Overview'],
     ['/hr/payroll/dashboard', 'Payroll Dashboard'],
     ['/hr/payroll/run-payroll', 'Run Payroll'],
-    ['/hr/payroll/payslip-generation', 'Payslips'],
+    ['/hr/payroll/payslip-generation', 'Monthly Payslips'],
     ['/hr/payroll/structure', 'Payroll Structure'],
     ['/hr/payroll/setting/earning-component', 'Earning Component'],
     ['/hr/payroll/setting/deduction-component', 'Deduction Component'],

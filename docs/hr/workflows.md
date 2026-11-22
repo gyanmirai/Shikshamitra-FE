@@ -51,7 +51,9 @@ Use this map to find the first screen and client:
 | Compensation revisions     | `/hr/payroll/structure`                                                     | `compensation-revision-api.ts`                |
 | One-time salary components | `/hr/payroll/structure`                                                     | `employee-salary-structure-api.ts`            |
 | Payroll run                | `/hr/payroll/run-payroll`                                                   | `runPayrollApi.ts`                           |
-| Payslips                   | `/hr/payroll/payslip-generation`                                            | `runPayrollApi.ts`                           |
+| Monthly Payslips           | `/hr/payroll/payslip-generation`     | `runPayrollApi.ts` |
+| Employee Statements        | `/hr/payroll/employee-statements`    | `hrReportsApi.ts` |
+| School Payroll Register    | `/hr/payroll/school-payroll-register` | `hrReportsApi.ts` |
 | Manual attendance          | `/hr/manual-attendance`                                                     | `attendanceApi.ts`                           |
 | Attendance tracking        | `/hr/attendance-tracking`                                                   | `attendanceApi.ts`                           |
 | Attendance import          | Device or file import screens                                               | `attendanceApi.ts`, `attendanceImportApi.ts` |
@@ -717,11 +719,15 @@ Run Payroll offers a registration review list before preparation and staff-edito
 Mark Reviewed acknowledges the displayed warning evidence before locking.
 ESIC eligibility and contributions use classified earnings automatically; salary components own the statutory treatment.
 
-The existing payslip-generation route now presents Monthly payslips, Employee statements and School register tabs.
-Monthly payslips keep staff and pay-period selectors above one wrapping, stationary document-action group. The centered PDF starts at Fit width in a bounded keyboard-scrollable viewport; zoom controls stay outside the PDF scroll area. The surrounding workspace scrolls independently to delivery history and document versions. Settings samples retain their Fit page default.
+Payroll Management > Payslips & Reports opens a sidebar group with separate pages for Monthly Payslips, Employee Statements and School Payroll Register.
+Monthly payslips keep staff and pay-period selectors above one wrapping, stationary document-action group.
+The centered PDF starts at Fit width in a bounded keyboard-scrollable viewport, with zoom controls outside the PDF scroll area.
+The surrounding workspace scrolls independently to delivery history and document versions.
+Settings samples retain their Fit page default.
 Monthly issuance retains its existing immutable PDF workflow.
-Statements choose one staff member and an inclusive range; registers choose one month.
-Filters survive tab changes; inactive panels stop previews and export polling.
+Statements choose one staff member and an inclusive range.
+The register uses one month.
+Sidebar links carry the selected payroll month to the destination, and leaving a report page stops its preview requests and export polling.
 Previews debounce, cancel obsolete requests and reject stale responses.
 PDF/Excel use existing export jobs, ownership checks, status, download and expiry.
 Salary documents use the shared soft status chips and download actions in the compact toolbar, with one standard success toast when an active export completes.

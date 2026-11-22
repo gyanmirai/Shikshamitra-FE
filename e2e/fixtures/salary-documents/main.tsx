@@ -9,7 +9,7 @@ import { hrPermissions } from 'src/constants/hr-menus';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import SalaryDocumentCenter from 'src/screens/hr/payroll/payslip-generation';
+import PayrollDocumentPage from 'src/screens/hr/payroll/payslip-generation';
 
 const permissions = [
   `${hrPermissions.payroll.generateSalarySlip}.View`,
@@ -49,7 +49,7 @@ createRoot(document.getElementById('root')!).render(
             overflow: 'hidden',
           }}
         >
-          <SalaryDocumentCenter />
+          <PayrollDocumentPage kind="monthly" />
         </Box>
       </LocalizationProvider>
     </ThemeProvider>

@@ -24,7 +24,6 @@ import {
   Alert,
   Stack,
   Button,
-  Tooltip,
   MenuItem,
   TextField,
   IconButton,
@@ -192,15 +191,9 @@ export default function SalaryDocumentsWorkspace({
     );
   return (
     <Stack spacing={2} sx={{ minWidth: 0 }}>
-      <Stack direction="row" alignItems="center" spacing={1} useFlexGap flexWrap="wrap">
-        <Typography variant="h6">{title}</Typography>
-        <Tooltip title="Saved payroll records for the selected period. Missing months and historical fields appear as unavailable.">
-          <IconButton size="small" aria-label="About salary documents">
-            <Iconify icon="mdi:information-outline" width={16} sx={{ color: 'info.main' }} />
-          </IconButton>
-        </Tooltip>
+      <Box sx={{ px: 1 }}>
         <Chip size="small" variant="soft" label="Issued payroll" color="default" />
-      </Stack>
+      </Box>
       <Card sx={{ p: 1.5 }}>
         <Stack spacing={1.5}>
           <Box
