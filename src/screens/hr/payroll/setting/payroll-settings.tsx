@@ -78,7 +78,7 @@ const tasks: {
     title: 'Approval Workflow',
     icon: 'mdi:clipboard-check-outline',
     description:
-      'Choose who approves payroll and whether authorized staff can finalize their own batches.',
+      'Manage section review roles and how payroll is reviewed before finalization.',
     links: [
       {
         label: 'Open approval workflow',

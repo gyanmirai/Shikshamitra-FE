@@ -371,3 +371,82 @@ test('HR sends only ready rows and the principal confirms the exact batch', asyn
     });
   });
 });
+
+test('routes section payroll for review and requires an HR override after return', async ({ page }) => {
+  const workbench = '/hr/payroll/run-payroll?month=2026-09&previewRunId=run-1';
+  await page.goto('/hr/payroll/setting/approval-workflow?actor=manager');
+  await page.getByRole('button', { name: 'Add section' }).click();
+  await page.getByRole('combobox', { name: /School section/ }).click();
+  await page.getByRole('option', { name: 'Primary', exact: true }).click();
+  await page.getByRole('combobox', { name: /Review role/ }).click();
+  await page.getByRole('option', { name: 'Primary principal', exact: true }).click();
+  await expect(page.getByText('Eligible reviewers: Test Section Principal')).toBeVisible();
+  await page.getByRole('textbox', { name: /Reason for change/ }).fill('Enable the synthetic workflow');
+  await page.getByRole('button', { name: 'Save section review' }).click();
+  await expect(page.getByText('Section review active', { exact: true })).toBeVisible();
+
+  await page.goto(`${workbench}&actor=section-hr`);
+  await page.getByRole('checkbox', { name: 'Select payroll for Asha Rao' }).check();
+  await page.getByRole('button', { name: 'Send for section review' }).click();
+  await page.getByRole('button', { name: 'Confirm and send' }).click();
+  await expect(page.getByText('Sent 1 batch for section review.')).toBeVisible();
+  await page.reload();
+  await page.getByRole('checkbox', { name: 'Select payroll for Asha Rao' }).check();
+  await expect(page.getByRole('button', { name: 'Lock Reviewed', exact: true })).toBeEnabled();
+  await expect(page.getByRole('button', { name: 'Unmark', exact: true })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Send for section review' })).toHaveCount(0);
+  await expect(page.getByText('Awaiting section review', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Lock Reviewed', exact: true }).click();
+  const pendingLock = page.getByRole('dialog', { name: 'Lock Reviewed Payroll Rows' });
+  await expect(pendingLock.getByRole('textbox', { name: /Section review override reason/ })).toHaveAttribute('required');
+  await expect(pendingLock.getByRole('button', { name: 'Lock reviewed payroll', exact: true })).toBeDisabled();
+
+  // A replacement preview still has the old section claim, but needs a fresh HR review.
+  const registerUrl = '**/api/payroll/run/register?*';
+  await page.route(registerUrl, async (route) => {
+    const response = await route.fetch();
+    const result = await response.json();
+    result.items = result.items.map((item: { employeeId: string }) =>
+      item.employeeId === 'fixture-staff-1' ? { ...item, reviewStatus: 'PENDING' } : item
+    );
+    await route.fulfill({ response, json: result });
+  });
+  await page.reload();
+  await page.getByRole('checkbox', { name: 'Select payroll for Asha Rao' }).check();
+  await expect(page.getByRole('button', { name: 'Mark Reviewed', exact: true })).toBeEnabled();
+  await expect(page.getByRole('button', { name: 'Lock Reviewed', exact: true })).toBeDisabled();
+  await page.unroute(registerUrl);
+
+  await page.goto(`${workbench}&actor=section-reviewer`);
+  await page.getByRole('button', { name: /Section review batches/ }).click();
+  const reviewerBatch = page.getByRole('dialog', { name: 'Section Review Batches' });
+  await expect(reviewerBatch.getByText('Asha Rao (PAY-001)')).toBeVisible();
+  await expect(reviewerBatch.getByRole('button', { name: 'Mark section reviewed' })).toBeVisible();
+  await expect(reviewerBatch.getByRole('button', { name: 'Finalize batch' })).toHaveCount(0);
+  await reviewerBatch.getByRole('button', { name: 'Return to HR' }).click();
+  const returnBatch = page.getByRole('dialog', { name: 'Return to HR' });
+  await expect(returnBatch.getByRole('button', { name: 'Return to HR' })).toBeDisabled();
+  await returnBatch.getByRole('textbox', { name: /Reason/ }).fill('Confirm payable days.');
+  await returnBatch.getByRole('button', { name: 'Return to HR' }).click();
+  await expect(reviewerBatch.getByText('Confirm payable days.')).toBeVisible();
+
+  await page.goto(`${workbench}&actor=section-hr`);
+  await page.getByRole('checkbox', { name: 'Select payroll for Asha Rao' }).check();
+  await page.getByRole('button', { name: 'Lock Reviewed', exact: true }).click();
+  const lock = page.getByRole('dialog', { name: 'Lock Reviewed Payroll Rows' });
+  const confirmLock = lock.getByRole('button', { name: 'Lock reviewed payroll', exact: true });
+  await confirmLock.click();
+  await expect(lock.getByRole('textbox', { name: /Section review override reason/ })).toHaveAttribute('required');
+  await expect(confirmLock).toBeDisabled();
+  await lock.getByRole('textbox', { name: /Section review override reason/ }).fill('Approved exception');
+  const recorded = page.waitForRequest((request) =>
+    request.method() === 'POST' && new URL(request.url()).pathname === '/api/payroll/run'
+  );
+  await confirmLock.click();
+  expect((await recorded).postDataJSON()).toMatchObject({
+    employeeIds: ['fixture-staff-1'],
+    sectionReviewOverrideReason: 'Approved exception',
+  });
+  await expect(lock).toHaveCount(0);
+  await expect(page.getByRole('row', { name: /Asha Rao/ })).toContainText('Finalized');
+});

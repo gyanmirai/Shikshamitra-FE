@@ -24,6 +24,7 @@ import { formatPayrollCurrency } from 'src/utils/payroll-currency';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetHrAuditEventsQuery } from 'src/redux/hr/hr-policy-api';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { HrSetupLink } from 'src/screens/hr/recovery/hr-setup-controls';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
@@ -76,16 +77,16 @@ import { DrawerHeader } from '../../policies/components/HRPolicySharedUI';
 import { getPayrollMutationErrorMessage } from './run-payroll-error-utils';
 import { PayrollRegistrationReadiness } from './payroll-registration-readiness';
 import {
+  getPayrollAdjustmentSourceLabel,
+  isSystemGeneratedPayrollAdjustment,
+} from './run-payroll-adjustment-utils';
+import {
   payrollIssueOptions,
   payrollStatusOptions,
   getPayrollRegisterQuery,
   getPayrollRegisterFilters,
   payrollRegisterSortFields,
 } from './register-table-criteria';
-import {
-  getPayrollAdjustmentSourceLabel,
-  isSystemGeneratedPayrollAdjustment,
-} from './run-payroll-adjustment-utils';
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
@@ -131,6 +132,7 @@ type PayrollRow = {
   netPayDelta: number | null;
   netPayDeltaPercent: number | null;
   status: 'PENDING' | 'REVIEWED' | 'SUBMITTED' | 'LOCKED';
+  hasPendingSectionReview: boolean;
   issuedWithoutRegisterDetails: boolean;
   reviewedAt?: string | null;
   issueCodes: string[];
@@ -257,6 +259,8 @@ const RunPayroll = () => {
   const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<string[]>([]);
   const [activeRow, setActiveRow] = useState<PayrollRow | null>(null);
   const [lockConfirmOpen, setLockConfirmOpen] = useState(false);
+  const [sectionOverrideReason, setSectionOverrideReason] = useState('');
+  const [sectionOverrideRequired, setSectionOverrideRequired] = useState(false);
   const mutationPending = useRef(false);
   const [lockFeedback, setLockFeedback] = useState<{
     context: string;
@@ -288,10 +292,11 @@ const RunPayroll = () => {
   });
   const approvalSettings = approval.isError ? undefined : approval.currentData;
   const usesApproval = approvalSettings?.mode === 'Active' || approvalSettings?.mode === 'Paused';
-  const legacyLockAvailable = approvalSettings?.mode === 'Legacy';
+  const sectionReview = approvalSettings?.mode === 'SectionReview';
+  const directLockAvailable = approvalSettings?.mode === 'Legacy' || sectionReview;
   useEffect(() => {
-    if (!legacyLockAvailable) setLockConfirmOpen(false);
-  }, [legacyLockAvailable]);
+    setLockConfirmOpen(false);
+  }, [approvalSettings?.mode]);
   const isDesktop = useResponsive('up', 'md');
   const academicYearStart = currentYear?.startDate ? dayjs(currentYear.startDate) : null;
   const academicYearEnd = currentYear?.endDate ? dayjs(currentYear.endDate) : null;
@@ -324,8 +329,8 @@ const RunPayroll = () => {
   const { refreshStatus } = preview;
   const reviewPreviewRunId = useRef(preview.requestedRunId);
   reviewPreviewRunId.current = preview.requestedRunId;
-  const actionAccess = useRef({ canReviewPayroll, canLockPayroll, canAdjustPayroll, legacyLockAvailable });
-  actionAccess.current = { canReviewPayroll, canLockPayroll, canAdjustPayroll, legacyLockAvailable };
+  const actionAccess = useRef({ canReviewPayroll, canLockPayroll, canAdjustPayroll, directLockAvailable });
+  actionAccess.current = { canReviewPayroll, canLockPayroll, canAdjustPayroll, directLockAvailable };
   const previewMounted = useRef(true);
   const explicitRequest = useRef(false);
   const notifiedRuns = useRef(new Set<string>());
@@ -507,6 +512,7 @@ const RunPayroll = () => {
               ? null
               : Number(item.netPayDeltaPercent),
           status: reviewStatus,
+          hasPendingSectionReview: Boolean(item.hasPendingSectionReview),
           issuedWithoutRegisterDetails: Boolean(item.isIssuedWithoutRegisterDetails),
           reviewedAt: item.reviewedAt,
           issueCodes,
@@ -583,13 +589,17 @@ const RunPayroll = () => {
     () => selectedRows.filter((row) => row.status === 'REVIEWED').map((row) => row.id),
     [selectedRows]
   );
-  const lockableIds = useMemo(
-    () =>
-      selectedRows
-        .filter((row) => row.status === 'REVIEWED' && row.issueSeverity !== 'CRITICAL')
-        .map((row) => row.id),
-    [selectedRows]
+  const lockableRows = selectedRows.filter(
+    (row) => row.status === 'REVIEWED' && row.issueSeverity !== 'CRITICAL'
   );
+  const lockableIds = lockableRows.map((row) => row.id);
+  const unmarkableIds = selectedRows
+    .filter((row) => row.status === 'REVIEWED' && !row.hasPendingSectionReview)
+    .map((row) => row.id);
+  const sendableRows = lockableRows.filter((row) => !row.hasPendingSectionReview);
+  const requiresSectionOverride =
+    sectionReview &&
+    (sectionOverrideRequired || lockableRows.some((row) => row.hasPendingSectionReview));
   const payrollActionBusy =
     Boolean(reviewAction) ||
     markLoading ||
@@ -1162,7 +1172,9 @@ const RunPayroll = () => {
         sticky: true,
         stickyPosition: 'right' as const,
         enumOptions: payrollStatusOptions,
-        render(value) {
+        render(value, row) {
+          if (row.hasPendingSectionReview)
+            return <Label color="info">Awaiting section review</Label>;
           return (
             <Label variant="soft" color={statusColor[value as keyof typeof statusColor] as any}>
               {payrollStatusOptions.find((option) => option.value === value)?.label ?? value}
@@ -1331,6 +1343,9 @@ const RunPayroll = () => {
     if (previewError || !isDataForSelectedMonth) return null;
     if (preview.isStale) return 'Payroll inputs changed. Recalculate payroll before continuing.';
     if (!selectableRows.length && tableData.some(isAttendanceReviewBlocked)) return null;
+    if (sectionReview && canSubmitPayroll && sendableRows.length && preview.isCurrent && !payrollActionBusy) {
+      return 'Send reviewed staff for section review. Check the section batches before locking payroll.';
+    }
     if (!usesApproval) return lockExplanation;
     if (!canReviewPayroll && !canSubmitPayroll)
       return canLockPayroll
@@ -1368,7 +1383,9 @@ const RunPayroll = () => {
           { name: 'Run Payroll' },
         ]}
         description={
-          usesApproval
+          sectionReview
+            ? 'Generate payroll, send ready rows for section review, and lock payroll.'
+            : usesApproval
             ? 'Generate payroll, review staff, then send ready rows for finalization.'
             : 'Generate, review, and lock monthly payroll from one workbench.'
         }
@@ -1624,13 +1641,13 @@ const RunPayroll = () => {
                       payrollActionBusy ||
                       !canReviewPayroll ||
                       !preview.isCurrent ||
-                      !selectedReviewedIds.length
+                      !unmarkableIds.length
                     }
-                    onClick={() => runReviewMutation('unmark', selectedReviewedIds)}
+                    onClick={() => runReviewMutation('unmark', unmarkableIds)}
                   >
                     Unmark
                   </LoadingButton>
-                  {legacyLockAvailable && (
+                  {directLockAvailable && (
                     <LoadingButton
                       size="small"
                       variant="contained"
@@ -1644,7 +1661,11 @@ const RunPayroll = () => {
                       aria-describedby="payroll-lock-explanation"
                       startIcon={<Iconify icon="solar:lock-bold" />}
                       onClick={() => {
-                        if (preview.isCurrent) setLockConfirmOpen(true);
+                        if (!preview.isCurrent) return;
+                        setSectionOverrideRequired(false);
+                        setSectionOverrideReason('');
+                        setLockFeedback(null);
+                        setLockConfirmOpen(true);
                       }}
                     >
                       Lock Reviewed
@@ -1653,10 +1674,10 @@ const RunPayroll = () => {
                 </Stack>
               )}
             </Stack>
-            {usesApproval && approvalSettings && selectedMonthKey && academicYearId && (
+            {approvalSettings && selectedMonthKey && academicYearId && (
               <Box sx={{ px: 1, pb: 0.5 }}>
                 <PayrollApprovalPanel
-                  key={previewContextKey}
+                  key={`${previewContextKey}:${approvalSettings.mode}`}
                   period={{ month: selectedMonthKey, academicYearId }}
                   settings={approvalSettings}
                   canSubmit={canSubmitPayroll}
@@ -1668,13 +1689,11 @@ const RunPayroll = () => {
                       : undefined
                   }
                   selection={
-                    preview.isCurrent && !payrollActionBusy && preview.runId && lockableIds.length
+                    preview.isCurrent && !payrollActionBusy && preview.runId && sendableRows.length
                       ? {
                           previewRunId: preview.runId,
-                          employeeIds: lockableIds,
-                          netPay: selectedRows
-                            .filter((row) => lockableIds.includes(row.id))
-                            .reduce((total, row) => total + row.netSalary, 0),
+                          employeeIds: sendableRows.map((row) => row.id),
+                          netPay: sendableRows.reduce((total, row) => total + row.netSalary, 0),
                         }
                       : null
                   }
@@ -1700,7 +1719,7 @@ const RunPayroll = () => {
                 your access.
               </Typography>
             )}
-            {lockFeedback?.context === previewContextKey && (
+            {!lockConfirmOpen && lockFeedback?.context === previewContextKey && (
               <HrNotice severity={lockFeedback.failed ? 'warning' : 'error'}>
                 {lockFeedback.message}
               </HrNotice>
@@ -2741,14 +2760,35 @@ const RunPayroll = () => {
             disableCancel={lockLoading}
             disableBackdropClick={lockLoading}
             disableEscapeKeyDown={lockLoading}
-            title="Lock reviewed payroll rows"
+            title="Lock Reviewed Payroll Rows"
             icon="warning"
             content={
-              <Typography variant="body2">
-                This will finalize salary slips for <strong>{lockableIds.length}</strong> reviewed
-                row(s) in <strong>{month?.format('MMMM YYYY')}</strong>. Unreviewed rows will remain
-                pending.
-              </Typography>
+              <Stack spacing={2}>
+                <Typography variant="body2">
+                  This will finalize salary slips for <strong>{lockableIds.length}</strong> reviewed
+                  row(s) in <strong>{month?.format('MMMM YYYY')}</strong>. Unreviewed rows will remain
+                  pending.
+                </Typography>
+                {sectionReview && (
+                  <TextField
+                    label="Section review override reason"
+                    value={sectionOverrideReason}
+                    onChange={(event) => setSectionOverrideReason(event.target.value)}
+                    fullWidth
+                    multiline
+                    minRows={2}
+                    required={requiresSectionOverride}
+                    error={requiresSectionOverride && !sectionOverrideReason.trim()}
+                    helperText={requiresSectionOverride
+                      ? 'Enter a reason to lock payroll with an outstanding or returned section review.'
+                      : 'Required when overriding an outstanding or returned section review.'}
+                    slotProps={{ htmlInput: { maxLength: 500 } }}
+                  />
+                )}
+                {lockFeedback?.context === previewContextKey && (
+                  <HrNotice severity="error">{lockFeedback.message}</HrNotice>
+                )}
+              </Stack>
             }
             action={
               <LoadingButton
@@ -2758,9 +2798,10 @@ const RunPayroll = () => {
                 loading={lockLoading}
                 disabled={
                   payrollActionBusy ||
-                  !legacyLockAvailable ||
+                  !directLockAvailable ||
                   !lockableIds.length ||
                   !canLockPayroll ||
+                  (requiresSectionOverride && !sectionOverrideReason.trim()) ||
                   !preview.isCurrent
                 }
                 onClick={async () => {
@@ -2768,17 +2809,19 @@ const RunPayroll = () => {
                     !previewMounted.current ||
                     previewContext.current !== renderedPreviewContext ||
                     !actionAccess.current.canLockPayroll ||
-                    !actionAccess.current.legacyLockAvailable ||
+                    !actionAccess.current.directLockAvailable ||
                     !selectedMonthKey ||
                     payrollActionBusy ||
                     mutationPending.current ||
                     !academicYearId ||
                     !lockableIds.length ||
                     !canLockPayroll ||
+                    (requiresSectionOverride && !sectionOverrideReason.trim()) ||
                     !preview.isCurrent
                   )
                     return;
                   mutationPending.current = true;
+                  setLockFeedback(null);
                   const requestedContext = previewContext.current;
                   try {
                     const res = await generateAndLockPayroll({
@@ -2786,6 +2829,7 @@ const RunPayroll = () => {
                       academicYearId,
                       employeeIds: lockableIds,
                       previewRunId: preview.runId,
+                      sectionReviewOverrideReason: sectionReview ? sectionOverrideReason.trim() || undefined : undefined,
                     }).unwrap();
                     if (!previewMounted.current || previewContext.current !== requestedContext)
                       return;
@@ -2810,6 +2854,10 @@ const RunPayroll = () => {
                   } catch (error: unknown) {
                     if (!previewMounted.current || previewContext.current !== requestedContext)
                       return;
+                    if (sectionReview && parseApiProblemDetail(error).errorCode === 'PAYROLL_SECTION_REVIEW_OVERRIDE_REQUIRED') {
+                      setSectionOverrideRequired(true);
+                      return;
+                    }
                     setLockFeedback({
                       context: previewContextKey,
                       failed: false,
@@ -2820,7 +2868,7 @@ const RunPayroll = () => {
                   }
                 }}
               >
-                Yes, lock reviewed
+                {sectionReview ? 'Lock reviewed payroll' : 'Yes, lock reviewed'}
               </LoadingButton>
             }
           />

@@ -34,8 +34,10 @@ const mocks = vi.hoisted(() => ({
   reviewHandler: null as null | (() => Promise<void>),
   adjustment: vi.fn(),
   approvalUnavailable: false,
+  approvalMode: 'Legacy',
   retryApproval: vi.fn(),
 }));
+vi.mock('./payroll-approval-panel', () => ({ PayrollApprovalPanel: () => null }));
 vi.mock('./payroll-registration-readiness', () => ({ PayrollRegistrationReadiness: () => null }));
 vi.mock('@mui/lab', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@mui/lab')>();
@@ -70,7 +72,7 @@ vi.mock('src/components/toast', () => ({
 vi.mock('./use-payroll-preview-run', () => ({ usePayrollPreviewRun: () => mocks.preview }));
 vi.mock('src/redux/runPayroll/payroll-approval-api', () => ({
   usePayrollApprovalSettingsQuery: () => ({
-    currentData: { mode: 'Legacy', version: 0 },
+    currentData: { mode: mocks.approvalMode, version: 0 },
     isError: mocks.approvalUnavailable,
     refetch: mocks.retryApproval,
   }),
@@ -113,10 +115,11 @@ vi.mock('src/components/customizabaleTable', () => ({
   ),
 }));
 vi.mock('src/components/confirm-dialog', () => ({
-  ConfirmDialog: ({ open, action }: any) => {
+  ConfirmDialog: ({ open, action, content }: any) => {
     mocks.confirmLock = action.props.onClick;
     return open ? (
       <div role="dialog" aria-label="Lock reviewed payroll rows">
+        {content}
         {action}
       </div>
     ) : null;
@@ -158,6 +161,7 @@ const view = () => (
 
 beforeEach(() => {
   mocks.approvalUnavailable = false;
+  mocks.approvalMode = 'Legacy';
   vi.clearAllMocks();
   mocks.query = 'month=2026-08';
   mocks.state.auth = {
@@ -626,6 +630,37 @@ describe('Run Payroll preview feedback', () => {
     expect(mocks.lock).toHaveBeenCalledWith(
       expect.objectContaining({ employeeIds: ['employee-1'], previewRunId: 'run-1' })
     );
+  });
+
+  it('keeps the lock confirmation open and requires an override reason after a section review conflict', async () => {
+    mocks.approvalMode = 'SectionReview';
+    mocks.lock.mockReturnValueOnce({
+      unwrap: async () => {
+        const message = 'An override reason is required.';
+        throw Object.assign(new Error(message), {
+          status: 400,
+          data: { error: { code: 'PAYROLL_SECTION_REVIEW_OVERRIDE_REQUIRED', message } },
+        });
+      },
+    });
+    render(view());
+    await userEvent.click(screen.getByRole('checkbox'));
+    await userEvent.click(screen.getByRole('button', { name: 'Lock Reviewed' }));
+    const dialog = within(screen.getByRole('dialog'));
+    const confirm = dialog.getByRole('button', { name: 'Lock reviewed payroll' });
+    await userEvent.click(confirm);
+
+    const reason = dialog.getByLabelText(/Section review override reason/);
+    expect(reason).toBeRequired();
+    expect(confirm).toBeDisabled();
+    expect(mocks.load).not.toHaveBeenCalled();
+
+    fireEvent.change(reason, { target: { value: '  Approved emergency exception.  ' } });
+    await userEvent.click(confirm);
+    expect(mocks.lock).toHaveBeenLastCalledWith(expect.objectContaining({
+      employeeIds: ['employee-1'],
+      sectionReviewOverrideReason: 'Approved emergency exception.',
+    }));
   });
 
   it('uses the safe failure reason for explicit feedback and a permission-gated setup action', async () => {

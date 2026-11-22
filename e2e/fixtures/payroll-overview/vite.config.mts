@@ -6,6 +6,45 @@ const repo = fileURLToPath(new URL('../../../', import.meta.url));
 const auth = fileURLToPath(new URL('../staff-policy-access/auth.ts', import.meta.url));
 const navigation = `${here}/navigation.tsx`;
 let started = 0;
+const defaultSettings = () => ({
+  mode: 'Legacy',
+  version: 0,
+  approverId: null,
+  allowSelfFinalization: false,
+  sectionRoutes: [] as { stageId: string; roleId: string }[],
+});
+let approvalSettings = defaultSettings();
+let sectionBatch: {
+  state: 'Pending' | 'Reviewed' | 'Returned';
+  version: number;
+  resolutionReason?: string;
+} | null = null;
+let locked = false;
+const section = { id: 'stage-primary', name: 'Primary' };
+const reviewerRole = { id: 'role-primary', name: 'Primary principal' };
+const reviewer = { id: 'section-reviewer', name: 'Test Section Principal' };
+const staffEvidence = {
+  employeeId: 'fixture-staff-1',
+  employeeName: 'Asha Rao',
+  employeeIdentifier: 'PAY-001',
+  payableDays: 22,
+  totalEarnings: 42000,
+  totalDeduction: 3600,
+  netPay: 38400,
+};
+const sectionBatchDto = (actor: string) => sectionBatch && ({
+  id: 'section-batch-1',
+  ...sectionBatch,
+  stageId: section.id,
+  stageName: section.name,
+  reviewerRoleId: reviewerRole.id,
+  reviewerRoleName: reviewerRole.name,
+  staffCount: 1,
+  netPay: staffEvidence.netPay,
+  isStale: false,
+  resolvedByName: sectionBatch.state === 'Pending' ? null : reviewer.name,
+  allowedActions: actor === reviewer.id && sectionBatch.state === 'Pending' ? ['review', 'return'] : [],
+});
 const months = new Map([['run-1', '2026-09']]);
 const status = (id = 'run-1') => ({
   id,
@@ -37,7 +76,7 @@ export default defineConfig({
   define: {
     'process.env': JSON.stringify({ NEXT_PUBLIC_API_URL: '', BUILD_STATIC_EXPORT: 'false' }),
   },
-  esbuild: { jsx: 'automatic' },
+  oxc: { jsx: { runtime: 'automatic' } },
   server: { host: '127.0.0.1', port: 4596, strictPort: true, fs: { allow: [repo] } },
   plugins: [
     {
@@ -48,14 +87,64 @@ export default defineConfig({
           if (path !== '/fixture/state' && !path?.startsWith('/api/')) return next();
           res.setHeader('Content-Type', 'application/json');
           if (path === '/fixture/state') {
-            if (req.method === 'POST') started = 0;
+            if (req.method === 'POST') {
+              started = 0;
+              approvalSettings = defaultSettings();
+              sectionBatch = null;
+              locked = false;
+            }
             return res.end(JSON.stringify({ started }));
           }
           let body = '';
           for await (const chunk of req) body += chunk;
           const input = body ? JSON.parse(body) : {};
-          if (path === '/api/payroll/run/approval-settings')
-            return res.end(JSON.stringify({ mode: 'Legacy', version: 0, approverId: null, allowSelfFinalization: false }));
+          const actor = req.headers.cookie?.match(/(?:^|; )payrollFixtureActor=([^;]+)/)?.[1] ?? '';
+          const json = (value: unknown) => res.end(JSON.stringify(value));
+          if (path === '/api/payroll/run/approval-settings') return json(approvalSettings);
+          if (path === '/api/payroll/run/approval-settings/section-options')
+            return json({ stages: [section], roles: [reviewerRole] });
+          if (path === '/api/payroll/run/approval-settings/section-reviewers') return json([reviewer]);
+          if (path === '/api/payroll/run/approval-settings/sections' && req.method === 'PUT') {
+            approvalSettings = {
+              ...approvalSettings,
+              mode: input.sectionRoutes.length ? 'SectionReview' : 'Legacy',
+              version: approvalSettings.version + 1,
+              sectionRoutes: input.sectionRoutes,
+            };
+            return json(approvalSettings);
+          }
+          if (path === '/api/payroll/run/section-reviews' && req.method === 'POST') {
+            sectionBatch = { state: 'Pending', version: 1 };
+            return json([sectionBatchDto(actor)]);
+          }
+          if (path === '/api/payroll/run/submissions') return json(sectionBatch ? [sectionBatchDto(actor)] : []);
+          if (path === '/api/payroll/run/submissions/section-batch-1')
+            return json({ submission: sectionBatchDto(actor), items: [staffEvidence] });
+          if (sectionBatch && actor === reviewer.id && req.method === 'POST') {
+            if (path === '/api/payroll/run/submissions/section-batch-1/review') {
+              sectionBatch = { state: 'Reviewed', version: sectionBatch.version + 1 };
+              return json(sectionBatchDto(actor));
+            }
+            if (path === '/api/payroll/run/submissions/section-batch-1/return') {
+              sectionBatch = {
+                state: 'Returned',
+                version: sectionBatch.version + 1,
+                resolutionReason: input.reason,
+              };
+              return json(sectionBatchDto(actor));
+            }
+          }
+          if (path === '/api/payroll/run' && req.method === 'POST') {
+            if (sectionBatch && sectionBatch.state !== 'Reviewed' && !input.sectionReviewOverrideReason?.trim()) {
+              res.statusCode = 400;
+              return json({ error: {
+                code: 'PAYROLL_SECTION_REVIEW_OVERRIDE_REQUIRED',
+                message: 'An override reason is required.',
+              } });
+            }
+            locked = true;
+            return json({ employeesProcessed: 1, employeesFailed: 0, message: 'Payroll locked.' });
+          }
           if (path === '/api/payroll/run/approval-settings/approvers')
             return res.end(JSON.stringify([{ id: 'principal', name: 'Test Principal' }]));
           if (path === '/api/payroll/run/previews/current') {
@@ -86,7 +175,8 @@ export default defineConfig({
                     employeeIdentifier: 'PAY-001', payableDays: 22, totalWorkingDays: 22,
                     grossSalary: 39500, totalEarnings: 42000, totalDeduction: 3600, netPay: 38400,
                     previousMonthNetPay: 37800, netPayDelta: 600, netPayDeltaPercent: 1.59,
-                    reviewStatus: 'REVIEWED', issueCodes: [],
+                    reviewStatus: locked ? 'LOCKED' : 'REVIEWED', isLocked: locked, issueCodes: [],
+                    hasPendingSectionReview: !locked && sectionBatch?.state === 'Pending',
                   },
                   {
                     employeeId: 'fixture-staff-2', employeeName: 'Vikram Shah',
@@ -104,7 +194,7 @@ export default defineConfig({
             const matchingRows = registerRows.filter((row) =>
               (!search || `${row.employeeName} ${row.employeeIdentifier}`.toLowerCase().includes(search)) &&
               (!reviewState || row.reviewStatus === reviewState) &&
-              (!issueCode || row.issueCodes.includes(issueCode)) &&
+              (!issueCode || row.issueCodes.some((code) => code === issueCode)) &&
               (!issueClass || (issueClass === 'CLEAN' ? !row.issueCodes.length : row.issueCodes.length > 0))
             );
             const sort = criteria.get('sort');
@@ -127,7 +217,7 @@ export default defineConfig({
                   month: requestedMonth ?? months.get(id!) ?? '2026-09',
                   employeeCount: registerRows.length || 1,
                   snapshotCount: registerRows.length || 1,
-                  lockedCount: 0,
+                  lockedCount: locked ? 1 : 0,
                   reviewedCount: id === 'run-1' ? 1 : 0,
                   missingAttendanceCount: 0,
                   missingSalaryStructureCount: 0,

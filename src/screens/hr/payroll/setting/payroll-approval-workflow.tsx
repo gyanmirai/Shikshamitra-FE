@@ -11,18 +11,12 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { HrNotice } from 'src/screens/hr/components/hr-notice';
 import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
-import { FormSectionCard } from 'src/components/form-section-card';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { FormSectionCard } from 'src/components/form-section-card';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { normalizeHrFailure } from 'src/screens/hr/recovery/hr-failure';
-import { parseApiProblemDetail } from 'src/utils/api-problem-details';
-import {
-  usePayrollApproversQuery,
-  usePayrollApprovalSettingsQuery,
-  useConfigurePayrollApprovalMutation,
-  useChangePayrollApprovalModeMutation,
-} from 'src/redux/runPayroll/payroll-approval-api';
 import {
   Alert,
   Stack,
@@ -34,6 +28,14 @@ import {
   Autocomplete,
   FormControlLabel,
 } from '@mui/material';
+import {
+  usePayrollApproversQuery,
+  usePayrollApprovalSettingsQuery,
+  useConfigurePayrollApprovalMutation,
+  useChangePayrollApprovalModeMutation,
+} from 'src/redux/runPayroll/payroll-approval-api';
+
+import { PayrollSectionReviewSettings } from './payroll-section-review-settings';
 
 const modeDetails = {
   Legacy: {
@@ -96,7 +98,7 @@ function WorkflowForm({
   const conflict = Boolean(draft && draft.version !== saved.version);
   const busy = configureState.isLoading || modeState.isLoading;
   const unavailable = settingsUnavailable || approvers.isError || approvers.isLoading;
-  const status = modeDetails[saved.mode];
+  const status = saved.mode === 'SectionReview' ? undefined : modeDetails[saved.mode];
   const options = approvers.currentData ?? [];
   const selected =
     options.find((option) => option.id === current.approverId) ??
@@ -112,7 +114,7 @@ function WorkflowForm({
   };
   const save = async (modeChange: boolean) => {
     const reason = current.reason.trim();
-    if (busy || unavailable || conflict || !reason || !current.approverId) return;
+    if (!status || busy || unavailable || conflict || !reason || !current.approverId) return;
     if (modeChange ? changed : !changed) return;
     const command = { expectedVersion: current.version, reason };
     try {
@@ -133,6 +135,8 @@ function WorkflowForm({
       setFeedback({ error: true, text: normalizeHrFailure(error).message });
     }
   };
+
+  if (!status) return null;
 
   return (
     <FormSectionCard
@@ -294,7 +298,7 @@ export default function PayrollApprovalWorkflow() {
     <Stack spacing={2} sx={{ minWidth: 0, pb: 2, overflowY: 'auto' }}>
       <CustomBreadcrumbs
         heading="Approval Workflow"
-        description="Choose who approves payroll and manage when approval is required."
+        description="Manage how payroll is reviewed before it is finalized."
         links={[
           { name: 'Payroll Management', href: hrPaths.payroll.root },
           { name: 'Settings', href: hrPaths.payroll.settings.root },
@@ -330,11 +334,19 @@ export default function PayrollApprovalWorkflow() {
               The latest approval settings could not be loaded. Retry to check the saved settings.
             </Alert>
           )}
-          <WorkflowForm
+          <PayrollSectionReviewSettings
             settings={query.currentData}
             reload={() => query.refetch()}
             settingsUnavailable={query.isError}
           />
+          {(query.currentData.mode === 'Active' || query.currentData.mode === 'Paused' ||
+            (query.currentData.mode === 'Legacy' && query.currentData.approverId)) && (
+            <WorkflowForm
+              settings={query.currentData}
+              reload={() => query.refetch()}
+              settingsUnavailable={query.isError}
+            />
+          )}
         </>
       ) : (
         <Skeleton variant="rounded" height={220} aria-label="Loading approval workflow" />

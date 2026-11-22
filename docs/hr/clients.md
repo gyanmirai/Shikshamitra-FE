@@ -135,7 +135,10 @@ Download retains the original stored bytes.
 The durable payroll preview client is a pending coordinated release and requires the additive backend schema.
 `src/screens/hr/payroll/run-payroll/use-payroll-preview-run.ts` owns month/run URL state, bounded polling, debounced search, and late-response protection.
 The Run Payroll register reads the selected month through `/payroll/run/register` and passes the same criteria to the generic export.
-`src/redux/runPayroll/payroll-approval-api.ts` reads workflow settings and submissions, sends versioned commands and invalidates the payroll register after a successful mutation.
+`src/redux/runPayroll/payroll-approval-api.ts` reads workflow settings and submissions, reads section, role and eligible reviewer options, sends versioned commands and invalidates the payroll register after a successful mutation.
+Section review handoff reuses the selected generation and staff IDs.
+The same client reads scoped batch details and uses the server’s allowed actions.
+The existing lock client accepts a section review override reason when an authorized payroll issuer provides it.
 Pending review sheets reuse the HR table export client with an exact selection or submission version.
 The monthly workbench and Payroll Overview consume the same background-run contract instead of invoking synchronous readiness calculations.
 Only the requested employee page is fetched, and the backend summary remains unfiltered.

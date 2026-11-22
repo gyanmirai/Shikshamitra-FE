@@ -10,15 +10,22 @@ type PayrollReviewRequest = {
   operationId: string;
 };
 
+type PayrollLockRequest = Omit<PayrollReviewRequest, 'operationId' | 'previewRunId'> & {
+  previewRunId?: string;
+  sectionReviewOverrideReason?: string;
+};
+
+type PayrollLockResponse = { message: string; employeesProcessed: number; employeesFailed: number };
+
 type PayrollReviewResponse = { message: string; employeesProcessed: number };
 
 export const runPayrollApi = employeeApi.injectEndpoints({
   endpoints: (builder) => ({
-    generateAndLockPayroll: builder.mutation({
-      query: ({ month, academicYearId, employeeIds, previewRunId }) => ({
+    generateAndLockPayroll: builder.mutation<PayrollLockResponse, PayrollLockRequest>({
+      query: (body) => ({
         url: `/payroll/run`,
         method: 'POST',
-        body: { month, academicYearId, employeeIds, previewRunId },
+        body,
       }),
       invalidatesTags: [employeeType.runPayroll, employeeType.salarySlip],
     }),
