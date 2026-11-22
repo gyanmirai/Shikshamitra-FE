@@ -281,6 +281,20 @@ scenarios:
     automationFile: e2e/academic/academic-notification-push.spec.ts
     status: automated
     tags: ['@module-academic', '@submodule-notifications', '@regression', '@responsive', '@accessibility']
+  - id: ACM-NOTIFICATIONS-WEB-PUSH-005
+    module: Academic
+    submodule: Browser Notifications
+    title: A signed-out notification launch carries the inbox opening through school sign-in
+    risk: high
+    priority: P1
+    type: [functional, regression, responsive, accessibility]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/dashboard, /login]
+    automated: true
+    automationFile: e2e/academic/academic-notification-push.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-notifications', '@regression', '@responsive', '@accessibility']
   - id: ACM-INSIGHTS-LOADING-CACHE-001
     module: Academic
     submodule: Dashboard

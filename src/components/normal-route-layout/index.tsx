@@ -7,6 +7,7 @@ import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { workspaceLanding } from 'src/redux/host-tenants/workspace-landing';
+import { preserveNotificationLaunch } from 'src/hooks/notifications/notification-launch';
 
 import { SplashScreen } from '../loading-screen';
 import SessionInitializationError from '../auth-route-layout/session-initialization-error';
@@ -35,7 +36,10 @@ const NormalRouteLayout = ({ children }: { children: React.ReactNode }) => {
       permissionsInitialized &&
       sessionContext
     ) {
-      router.replace(workspaceLanding(sessionContext, permissions));
+      const landing = workspaceLanding(sessionContext, permissions);
+      const notificationLanding = window.location.pathname === '/login' &&
+        sessionContext.accountMode === 'tenant' && sessionContext.setupCompleted === true;
+      router.replace(notificationLanding ? preserveNotificationLaunch(landing, window.location.search) : landing);
     }
   }, [
     status,

@@ -48,6 +48,7 @@ describe('verified login landing', () => {
   beforeEach(() => {
     replace.mockReset();
     useSession.mockReset();
+    window.history.replaceState(null, '', '/login');
     useSession.mockReturnValue({
       status: 'authenticated',
       data: { profile: { sub: 'user-1' }, accessToken: 'token' },
@@ -61,6 +62,11 @@ describe('verified login landing', () => {
   it('keeps the school dashboard landing', () => {
     renderLogin({ ...host, accountMode: 'tenant', tenantId: 'school-id', setupCompleted: true });
     expect(replace).toHaveBeenCalledWith('/dashboard');
+  });
+  it('reopens notifications after the school identity is verified', () => {
+    window.history.replaceState(null, '', '/login?openNotifications=1&returnTo=https://example.test');
+    renderLogin({ ...host, accountMode: 'tenant', tenantId: 'school-id', setupCompleted: true });
+    expect(replace).toHaveBeenCalledWith('/dashboard?openNotifications=1');
   });
   it('sends an incomplete school to its setup route', () => {
     renderLogin({ ...host, accountMode: 'tenant', tenantId: 'school-id', setupCompleted: false });

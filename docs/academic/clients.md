@@ -65,7 +65,7 @@ If the status check fails temporarily, the bell offers a retry and preserves the
 Account changes and sign-out unsubscribe the browser locally so a previous account's endpoint can stop receiving pushes after its session expires.
 During enrollment, the API request leaves the browser available for session cleanup. The response confirms the registration only while the signed-in account and browser subscription still match the enrollment in progress.
 The root manifest and `public/notification-sw.js` use the school origin.
-The worker displays generic notices and opens or focuses the authenticated dashboard and Notifications drawer.
+The worker displays generic notices and focuses an open school or Academic dashboard. When neither is open, it opens the school dashboard. The fixed inbox-opening flag survives sign-in for an eligible school account and is cleared when the drawer opens.
 The worker registers no fetch handler and keeps no authenticated cache.
 
 ## Student submission attachments
