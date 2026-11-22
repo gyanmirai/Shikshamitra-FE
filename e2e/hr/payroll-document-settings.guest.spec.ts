@@ -3,9 +3,11 @@ import { test, expect, type Page } from '@playwright/test';
 
 const settingsPath = '/hr/payroll/setting/payslip-statement-settings';
 const payslipsPath = '/hr/payroll/payslip-generation';
+const statementsPath = '/hr/payroll/employee-statements';
+const registerPath = '/hr/payroll/school-payroll-register';
 const emailLabel = 'Email each employee after payroll finalization';
 
-async function mockPayrollDocuments(page: Page, canEdit = true) {
+async function mockPayrollDocuments(page: Page, { canEdit = true, canViewReports = false } = {}) {
   const year = { id: '11111111-1111-1111-1111-111111111111', name: '2026-2027' };
   let settings = {
     schoolName: 'Institute Setup School',
@@ -61,7 +63,10 @@ async function mockPayrollDocuments(page: Page, canEdit = true) {
               'ShikshaMitra.Module.HR.Payroll.Settings',
               'HR.PayrollManagement.Overview.View',
               'HR.PayrollManagement.GenerateSalarySlip.View',
+              'ShikshaMitra.Module.InstituteSetup',
+              'InstituteSetup.SchoolIdentity.View',
               ...(canEdit ? ['HR.PayrollManagement.GenerateSalarySlip.Add'] : []),
+              ...(canViewReports ? ['HR.Reports.View'] : []),
             ].map((name) => ({ name, isGranted: true })),
           },
         ],
@@ -69,6 +74,20 @@ async function mockPayrollDocuments(page: Page, canEdit = true) {
     else if (url.pathname.includes('academic-year')) body = { items: [year], totalCount: 1 };
     else if (url.pathname.includes('user-scope-hierarchy'))
       body = { isAdmin: true, accessibleHierarchy: [] };
+    else if (url.pathname.endsWith('/hr/setup-readiness')) body = { isReady: true, checks: [] };
+    else if (url.pathname.endsWith('/hr/reports/preview')) {
+      const { dataSource, reportType, page: reportPage, pageSize, filters } = request.postDataJSON();
+      body = {
+        dataSource,
+        reportType,
+        page: reportPage,
+        pageSize,
+        normalizedFilters: filters,
+        totalCount: 0,
+        columns: [],
+        rows: [],
+      };
+    }
     else if (url.pathname.endsWith('/payroll/payslip-settings')) {
       if (request.method() === 'PUT') {
         const submitted = request.postDataJSON();
@@ -107,7 +126,7 @@ for (const viewport of [
       await expect(page.getByRole('link', { name: 'Overview', exact: true })).not.toHaveClass(
         /state--active/
       );
-      await expect(page.getByRole('link', { name: 'Payslips', exact: true })).toHaveClass(
+      await expect(page.getByRole('link', { name: 'Monthly Payslips', exact: true })).toHaveClass(
         /state--active/
       );
     }
@@ -117,7 +136,7 @@ for (const viewport of [
     ).toBeVisible();
     await expect(page.getByText('Institute Setup School', { exact: true })).toBeVisible();
     await expect(page.getByLabel('School name', { exact: true })).toHaveCount(0);
-    await expect(page.getByRole('link', { name: 'Open Institute Setup' })).toHaveAttribute(
+    await expect(page.getByRole('link', { name: 'Open School Identity' })).toHaveAttribute(
       'href',
       '/setting/school-identity'
     );
@@ -181,9 +200,63 @@ for (const viewport of [
 }
 
 test('view-only payroll document access cannot change settings', async ({ page }) => {
-  const writes = await mockPayrollDocuments(page, false);
+  const writes = await mockPayrollDocuments(page, { canEdit: false });
   await page.goto(settingsPath);
   await expect(page.getByRole('switch', { name: emailLabel })).toBeDisabled();
   await expect(page.getByRole('button', { name: 'Save', exact: true })).toBeDisabled();
   expect(writes).toHaveLength(0);
+});
+
+test('opens each payroll document from the sidebar and retains the payroll month', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await mockPayrollDocuments(page, { canViewReports: true });
+  const month = '?month=2026-09';
+  await page.goto(`${payslipsPath}${month}`);
+
+  const documentGroup = page.getByRole('button', { name: 'Payslips & Reports', exact: true });
+  await expect(documentGroup).toHaveAttribute('aria-expanded', 'true');
+  await expect(page.getByRole('heading', { name: 'Monthly Payslips', exact: true })).toBeVisible();
+  await expect(page.getByRole('tablist', { name: 'Salary document type' })).toHaveCount(0);
+
+  const statements = page.getByRole('link', { name: 'Employee Statements', exact: true });
+  await expect(statements).toHaveAttribute('href', `${statementsPath}${month}`);
+  await statements.click();
+  await expect(page).toHaveURL(`${statementsPath}${month}`);
+  await expect(page.getByRole('heading', { name: 'Employee Statements', exact: true })).toBeVisible();
+  await expect(page.getByLabel('From month', { exact: true })).toHaveValue('2026-04');
+  await expect(statements).toHaveClass(/state--active/);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole('button', { name: 'Open HR navigation' }).click();
+  const register = page.getByRole('link', { name: 'School Payroll Register', exact: true });
+  await expect(register).toHaveAttribute('href', `${registerPath}${month}`);
+  await register.click();
+  await expect(page).toHaveURL(`${registerPath}${month}`);
+  await expect(
+    page.getByRole('heading', { name: 'School Payroll Register', exact: true })
+  ).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Close HR navigation' })).toHaveCount(0);
+  await expect(page.getByLabel('Payroll month', { exact: true })).toHaveValue('2026-09');
+  await expect(page.getByRole('combobox', { name: 'Staff member', exact: true })).toHaveCount(0);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.reload();
+  await expect(register).toHaveClass(/state--active/);
+  await expect(page.getByRole('tablist', { name: 'Salary document type' })).toHaveCount(0);
+});
+
+test('payslip-only access hides report links and denies direct report routes', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await mockPayrollDocuments(page);
+  await page.goto(payslipsPath);
+  await expect(page.getByRole('link', { name: 'Monthly Payslips', exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Employee Statements', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'School Payroll Register', exact: true })).toHaveCount(0);
+
+  const forbidden = page.getByRole('heading', { name: 'No permission' });
+  await page.goto(statementsPath);
+  await expect(forbidden).toBeVisible();
+  await page.goto(registerPath);
+  await expect(forbidden).toBeVisible();
 });

@@ -1,6 +1,5 @@
-import React from 'react';
-import PaySlipGenerationScreen from 'src/screens/hr/payroll/payslip-generation';
+import PayrollDocumentPage from 'src/screens/hr/payroll/payslip-generation';
 
-const PaySlipGeneration = () => <PaySlipGenerationScreen />;
-
-export default PaySlipGeneration;
+export default function MonthlyPayslipsPage() {
+  return <PayrollDocumentPage kind="monthly" />;
+}

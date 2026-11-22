@@ -3,101 +3,70 @@
 import type { RootState } from 'src/redux/store';
 
 import { useSelector } from 'react-redux';
-import { useTabs } from 'src/hooks/use-tabs';
+import { View403 } from 'src/sections/error';
+import { Stack, Button } from '@mui/material';
 import { RouterLink } from 'src/routes/components';
-import { Box, Tab, Stack, Button } from '@mui/material';
-import { CustomTabs } from 'src/components/custom-tabs';
-import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { hasGrantedPermission, hasNavigationPermission } from 'src/utils/permissions';
+import {
+  hrPaths,
+  hrPermissions,
+  payrollDocumentPages,
+  payslipViewPermission,
+} from 'src/constants/hr-menus';
 
 import { usePayrollMonth } from '../payroll-cycle/use-payroll-month';
 import MonthlyPayslips from '../salarySlip-generate/salarySlipGenerate';
 import SalaryDocumentsWorkspace from '../salarySlip-generate/salary-documents-workspace';
 
-const DOCUMENT_TABS = [
-  { value: 'monthly', label: 'Monthly payslips' },
-  { value: 'statement', label: 'Employee statements' },
-  { value: 'register', label: 'School register' },
-];
-
-export default function SalaryDocumentCenter() {
+export default function PayrollDocumentPage({ kind }: { kind: keyof typeof payrollDocumentPages }) {
   const [month] = usePayrollMonth();
-  const tabs = useTabs(DOCUMENT_TABS[0].value);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const { title } = payrollDocumentPages[kind];
+  const isMonthly = kind === 'monthly';
+  const canView =
+    hasGrantedPermission(permissions, payslipViewPermission) &&
+    (isMonthly || hasGrantedPermission(permissions, hrPermissions.reportActions.view));
   const canOpenSettings =
     hasNavigationPermission(permissions, hrPermissions.payroll.settings.root) &&
     hasGrantedPermission(permissions, hrPermissions.payroll.settings.payrollDocuments);
+
+  if (!canView) return <View403 />;
+
   return (
     <Stack
       spacing={1}
       sx={{ minWidth: 0, minHeight: 0, height: 1, overflowY: 'auto', '& > *': { flexShrink: 0 } }}
     >
       <CustomBreadcrumbs
-        heading="Salary documents"
-        description="Review monthly payslips, employee salary statements and the school payroll register."
+        heading={title}
+        description={
+          isMonthly
+            ? undefined
+            : 'Saved payroll records for the selected period. Missing months and historical fields appear as unavailable.'
+        }
         sx={{ minHeight: 40 }}
         links={[
           {
             name: 'Payroll Management',
             href: `${hrPaths.payroll.root}?month=${month.format('YYYY-MM')}`,
           },
-          { name: 'Salary documents' },
+          { name: 'Payslips & Reports' },
+          { name: title },
         ]}
+        action={
+          canOpenSettings && (
+            <Button
+              component={RouterLink}
+              href={hrPaths.payroll.settings.payrollDocuments}
+              size="small"
+            >
+              Payslip &amp; statement settings
+            </Button>
+          )
+        }
       />
-      {canOpenSettings && (
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <Button
-            component={RouterLink}
-            href={hrPaths.payroll.settings.payrollDocuments}
-            size="small"
-          >
-            Payslip &amp; statement settings
-          </Button>
-        </Box>
-      )}
-      <CustomTabs
-        value={tabs.value}
-        onChange={tabs.onChange}
-        variant="scrollable"
-        scrollButtons="auto"
-        aria-label="Salary document type"
-        sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1 }}
-      >
-        {DOCUMENT_TABS.map((tab) => (
-          <Tab
-            key={tab.value}
-            id={`salary-document-${tab.value}-tab`}
-            aria-controls={`salary-document-${tab.value}`}
-            value={tab.value}
-            label={tab.label}
-          />
-        ))}
-      </CustomTabs>
-      <Box
-        id="salary-document-monthly"
-        role="tabpanel"
-        aria-labelledby="salary-document-monthly-tab"
-        hidden={tabs.value !== 'monthly'}
-      >
-        <MonthlyPayslips hideHeading />
-      </Box>
-      <Box
-        id="salary-document-statement"
-        role="tabpanel"
-        aria-labelledby="salary-document-statement-tab"
-        hidden={tabs.value !== 'statement'}
-      >
-        <SalaryDocumentsWorkspace kind="statement" active={tabs.value === 'statement'} />
-      </Box>
-      <Box
-        id="salary-document-register"
-        role="tabpanel"
-        aria-labelledby="salary-document-register-tab"
-        hidden={tabs.value !== 'register'}
-      >
-        <SalaryDocumentsWorkspace kind="register" active={tabs.value === 'register'} />
-      </Box>
+      {isMonthly ? <MonthlyPayslips hideHeading /> : <SalaryDocumentsWorkspace kind={kind} />}
     </Stack>
   );
 }
