@@ -19,6 +19,17 @@ export interface AcademicNotificationSource {
   sourceId: string;
 }
 
+export interface AcademicNotificationRecentDelivery extends AcademicNotificationSource {
+  operationId: string;
+  createdAt: string;
+  canViewSummary: boolean;
+}
+
+export interface AcademicNotificationRecentDeliveries {
+  items: AcademicNotificationRecentDelivery[];
+  nextCursor: string | null;
+}
+
 export interface AcademicNotificationOperation extends AcademicNotificationQueueStatus {
   operationId: string;
   status: CommunicationCampaignStatus;

@@ -1,6 +1,27 @@
 const notificationIdPattern = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 const dashboardUrl = new URL('/dashboard?openNotifications=1', self.location.origin).href;
 
+function openExistingInbox(client) {
+  return new Promise((resolve) => {
+    const { port1, port2 } = new MessageChannel();
+    const timer = setTimeout(() => finish(false), 500);
+    function finish(opened) {
+      clearTimeout(timer);
+      port1.close();
+      port2.close();
+      resolve(opened);
+    }
+    port1.onmessage = ({ data }) => {
+      if (data === 'NOTIFICATIONS_OPENED') finish(true);
+    };
+    try {
+      client.postMessage({ type: 'OPEN_SCHOOL_NOTIFICATIONS' }, [port2]);
+    } catch {
+      finish(false);
+    }
+  });
+}
+
 self.addEventListener('push', (event) => {
   let notificationId;
   try {
@@ -26,10 +47,8 @@ self.addEventListener('notificationclick', (event) => {
       return url.origin === self.location.origin &&
         (url.pathname === '/dashboard' || url.pathname === '/academic/dashboard');
     });
-    if (client) {
-      await client.focus();
-      client.postMessage({ type: 'OPEN_SCHOOL_NOTIFICATIONS' });
-      return;
+    if (client && await openExistingInbox(client)) {
+      try { await client.focus(); return; } catch { /* The tab closed while handling the click. */ }
     }
     await self.clients.openWindow(dashboardUrl);
   })());

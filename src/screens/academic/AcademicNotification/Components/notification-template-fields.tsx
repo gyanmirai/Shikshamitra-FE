@@ -6,6 +6,7 @@ import { useId, useRef } from 'react';
 import { Editor } from 'src/components/editor';
 import CustomSelect from 'src/components/custom-select';
 import { Stack, TextField, Typography } from '@mui/material';
+import ShakingTextField from 'src/components/shaking-text-field';
 import { CommunicationChannelType } from 'src/redux/communication/communicationTypes';
 import { notificationLabel, notificationChannelLabels } from 'src/redux/academic-notifications/response-adapters';
 
@@ -51,10 +52,12 @@ export function NotificationTemplateFields({ event, form, locked, disabled, read
   return (
     <Stack gap={2}>
       <Typography variant="body2" color="text.secondary">{scopeLabel}</Typography>
-      <TextField label="Template name" size="small" required
-        {...form.getFieldProps('templateName')} disabled={disabled || locked}
-        error={Boolean(touched.templateName && errors.templateName)}
-        helperText={touched.templateName && errors.templateName} />
+      <ShakingTextField error={Boolean(touched.templateName && errors.templateName)}>
+        <TextField label="Template name" size="small" required fullWidth
+          {...form.getFieldProps('templateName')} disabled={disabled || locked}
+          error={Boolean(touched.templateName && errors.templateName)}
+          helperText={touched.templateName && errors.templateName} />
+      </ShakingTextField>
       <Stack gap={1.5} direction={{ xs: 'column', sm: 'row' }}>
         <CustomSelect label="Recipient" name="recipientKind" size="small" value={values.recipientKind} disabled={disabled || locked}
           options={templateRecipientKinds(event.definition.recipientSelectors).map((kind) => ({ label: notificationLabel(kind), value: kind }))}
@@ -80,19 +83,22 @@ export function NotificationTemplateFields({ event, form, locked, disabled, read
           }}
           error={Boolean(touched.channel && errors.channel)}
           helperText={touched.channel ? errors.channel : undefined} />
-        <TextField label="Language code" size="small" required
-          {...form.getFieldProps('languageCode')} disabled={disabled || locked}
-          error={Boolean(touched.languageCode && errors.languageCode)}
-          helperText={(touched.languageCode && errors.languageCode) || 'For example, en or hi.'}
-          sx={{ flex: 1 }} />
+        <ShakingTextField error={Boolean(touched.languageCode && errors.languageCode)} sx={{ flex: 1 }}>
+          <TextField label="Language code" size="small" required fullWidth
+            {...form.getFieldProps('languageCode')} disabled={disabled || locked}
+            error={Boolean(touched.languageCode && errors.languageCode)}
+            helperText={(touched.languageCode && errors.languageCode) || 'For example, en or hi.'} />
+        </ShakingTextField>
       </Stack>
       {values.channel === CommunicationChannelType.WebPush && (
         <Typography variant="body2" color="text.secondary">
           Browser push shows a generic school alert on the device. Use the in-app template for the message recipients read in the website inbox.
         </Typography>
       )}
-      <TextField label="Subject" size="small" inputRef={subjectRef}
-        {...form.getFieldProps('subject')} disabled={contentDisabled} error={Boolean(subjectError)} helperText={subjectError} />
+      <ShakingTextField error={Boolean(subjectError)}>
+        <TextField label="Subject" size="small" fullWidth inputRef={subjectRef}
+          {...form.getFieldProps('subject')} disabled={contentDisabled} error={Boolean(subjectError)} helperText={subjectError} />
+      </ShakingTextField>
       {!readOnly && <NotificationVariablePicker variables={event.definition.variables}
         field="subject" disabled={disabled} onInsert={(key) => insert('subject', key)} />}
       {email ? (
@@ -111,8 +117,10 @@ export function NotificationTemplateFields({ event, form, locked, disabled, read
             error={Boolean(bodyError)} helperText={bodyError} />
         </Stack>
       ) : (
-        <TextField label="Message" size="small" required multiline minRows={4} inputRef={bodyRef}
-          {...form.getFieldProps('body')} disabled={contentDisabled} error={Boolean(bodyError)} helperText={bodyError} />
+        <ShakingTextField error={Boolean(bodyError)}>
+          <TextField label="Message" size="small" required fullWidth multiline minRows={4} inputRef={bodyRef}
+            {...form.getFieldProps('body')} disabled={contentDisabled} error={Boolean(bodyError)} helperText={bodyError} />
+        </ShakingTextField>
       )}
       {!readOnly && <NotificationVariablePicker variables={event.definition.variables}
         field="message" disabled={disabled} onInsert={(key) => insert('body', key)} />}

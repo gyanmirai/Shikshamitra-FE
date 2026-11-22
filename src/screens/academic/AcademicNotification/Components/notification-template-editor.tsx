@@ -14,11 +14,13 @@ import { FormBusyRegion } from 'src/components/form-busy-region';
 import { useFormikErrorFocus } from 'src/hooks/use-formik-error-focus';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { communicationPermissions } from 'src/constants/comminication-menu';
+import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
 import { CommunicationChannelType } from 'src/redux/communication/communicationTypes';
 import { notificationEventLabel } from 'src/redux/academic-notifications/response-adapters';
 import { Box, Stack, Alert, Button, Drawer, Divider, IconButton, Typography } from '@mui/material';
 import { WhatsAppApprovalStatus, useAcademicWhatsAppApprovalQuery } from 'src/redux/academic-notifications/whatsapp-approval-api';
 
+import { NotificationDraftPreview } from './notification-draft-preview';
 import { NotificationTemplateFields } from './notification-template-fields';
 import { NotificationTemplatePreview } from './notification-template-preview';
 import { NotificationTemplateActions } from './notification-template-actions';
@@ -77,8 +79,10 @@ export function NotificationTemplateEditor({
             sx={{ px: 2, py: 1.5, borderBottom: 1, borderColor: 'divider' }}>
             <Stack gap={0.5}>
               <Stack direction="row" gap={1} flexWrap="wrap" alignItems="center">
-                <Typography variant="h6" id={titleId}>{initialTemplate ? 'Notification template' : 'New notification template'}</Typography>
+                <Typography variant="h6" id={titleId}>{initialTemplate ? 'Notification Template' : 'New Notification Template'}</Typography>
                 {template && <Label>{templateRevisionStatus(template)} · Version {template.revision}</Label>}
+                <InfoTooltipIcon label="Notification template information"
+                  title="Preview edits with sample data. Publish a saved draft to make that version available to notification rules." />
               </Stack>
               <Typography variant="body2">{notificationEventLabel(event)}</Typography>
             </Stack>
@@ -101,11 +105,13 @@ export function NotificationTemplateEditor({
                     canManage={canManageProvider} disabled={form.dirty} busy={busy} onBusy={setActionBusy} />
                 )}
                 <Divider />
-                {template ? (
+                {canEdit && (!template || form.dirty) && (
+                  <NotificationDraftPreview event={event} values={form.values} academicMediumId={academicMediumId} identity={identity} />
+                )}
+                {template && (
                   <>
-                    <NotificationTemplatePreview key={template.concurrencyStamp} identity={identity}
-                      templateId={template.templateId} revisionId={template.revisionId} channel={template.channel} />
-                    {form.dirty && <Typography variant="caption">Save your changes to preview the updated message.</Typography>}
+                    {!form.dirty && <NotificationTemplatePreview key={template.concurrencyStamp} identity={identity}
+                      templateId={template.templateId} revisionId={template.revisionId} channel={template.channel} />}
                     <NotificationTemplateActions identity={identity} template={template} canManage={canEdit} canDelete={canDelete}
                       disabled={form.dirty} testDisabled={testDisabled} busy={busy} onBusy={setActionBusy} onSaved={applySavedTemplate}
                       onDeleted={onClose} onError={(error, fallback) => form.setStatus(templateActionError(error, fallback))} />
@@ -115,8 +121,6 @@ export function NotificationTemplateEditor({
                     </Button>
                     {showVersions && <NotificationTemplateVersions identity={identity} templateId={template.templateId} />}
                   </>
-                ) : (
-                  <Typography variant="caption">Save the draft to load a sample preview.</Typography>
                 )}
               </Stack>
             </FormBusyRegion>

@@ -143,13 +143,13 @@ Run `npm test -- LessonDiaryDetailsDrawer.presentation.test.tsx` to verify that 
 
 ```powershell
 npm test -- src/hooks/notifications src/redux/auth/load-session.test.tsx src/redux/auth/load-session-recovery.test.tsx
-npx eslint --no-config-lookup --global self --global URL --rule "no-undef:error" --rule "no-unused-vars:error" public/notification-sw.js --max-warnings 0
+npx eslint --no-config-lookup --global self --global URL --global MessageChannel --global setTimeout --global clearTimeout --rule "no-undef:error" --rule "no-unused-vars:error" public/notification-sw.js --max-warnings 0
 npx playwright test --config e2e/academic/academic-notification-push.config.mjs
 ```
 
 The synthetic school fixture verifies opt-in and opt-out in the authenticated desktop browser.
 It verifies that the same-origin notification launch URL opens the drawer at a mobile viewport.
-The signed-out launch fixture verifies that the inbox opens after school sign-in and clears the launch flag. The service-worker test covers the dashboard fallback while a public admission form is open.
+The signed-out launch fixture verifies that the inbox opens after school sign-in and clears the launch flag. The service-worker test covers the dashboard fallback while a public admission form is open and while an open dashboard is still loading its inbox.
 It also verifies iPad Home Screen guidance, retries after temporary status failures, and explicit opt-in after a subscription expires.
 The session-expiry fixture rejects enrollment with HTTP 401 and checks that local device enrollment is removed before the user returns to sign-in.
 The student message stays inside the authenticated application.

@@ -40,7 +40,11 @@ Test send submits just the saved revision ID and stamp. Its queued response prov
 
 `src/redux/academic-notifications/manual-api.ts` submits the source, selected recipient references and channel choices for review. Confirmation submits only the review token and its stable idempotency key. A successful confirmation returns the operation for Delivery History. The same session guard applies to both requests.
 
+`src/redux/academic-notifications/template-api.ts` submits current draft fields to the sample preview endpoint after typing pauses. The editor cancels replaced requests and displays only the result for the current fields, school and account. The saved-revision route supplies preview in version history.
+
 `src/redux/academic-notifications/delivery-api.ts` displays the history retry action from its server-provided eligibility flag. Confirmation sends the dispatch ID and the attempt ID from the selected row, then refreshes the operation and history for the same account.
+
+The same client loads recent operations with the school and user cache keys. The list retains its cursor in the URL and links each entry to the full summary or scoped attempts according to the response.
 
 The same client loads assigned approvals by cursor and reads the review for the selected operation when its status exposes `canReviewApproval`. Approval and rejection refresh the queue, review and delivery history for the current account. [Approval API](../../../Shikshamitra-BE/docs/modules/academic/api.md#staff-notification-configuration)
 The Student Academic 360 drawer loads its audience only after a staff member chooses an action. The query includes the saved student, event and session owner. The shared composer uses published template options for the returned medium and includes the chosen relationships in the review request.
@@ -65,7 +69,7 @@ If the status check fails temporarily, the bell offers a retry and preserves the
 Account changes and sign-out unsubscribe the browser locally so a previous account's endpoint can stop receiving pushes after its session expires.
 During enrollment, the API request leaves the browser available for session cleanup. The response confirms the registration only while the signed-in account and browser subscription still match the enrollment in progress.
 The root manifest and `public/notification-sw.js` use the school origin.
-The worker displays generic notices and focuses an open school or Academic dashboard. When neither is open, it opens the school dashboard. The fixed inbox-opening flag survives sign-in for an eligible school account and is cleared when the drawer opens.
+The worker displays generic notices and focuses an open school or Academic dashboard when its inbox acknowledges the click. Otherwise it opens the school dashboard. The fixed inbox-opening flag survives sign-in for an eligible school account and is cleared when the drawer opens.
 The worker registers no fetch handler and keeps no authenticated cache.
 
 ## Student submission attachments

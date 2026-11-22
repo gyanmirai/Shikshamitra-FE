@@ -52,7 +52,10 @@ function OwnedNotificationsDrawer({ owner }: { owner: string }) {
     const openFromWorker = (event: MessageEvent) => {
       if (typeof ServiceWorker !== 'undefined' && event.source instanceof ServiceWorker &&
         event.source.scriptURL === new URL('/notification-sw.js', window.location.origin).href &&
-        event.data?.type === 'OPEN_SCHOOL_NOTIFICATIONS') openDrawer();
+        event.data?.type === 'OPEN_SCHOOL_NOTIFICATIONS') {
+        openDrawer();
+        event.ports[0]?.postMessage('NOTIFICATIONS_OPENED');
+      }
     };
     navigator.serviceWorker.addEventListener('message', openFromWorker);
     return () => navigator.serviceWorker.removeEventListener('message', openFromWorker);

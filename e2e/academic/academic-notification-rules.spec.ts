@@ -348,6 +348,9 @@ test('creates and previews a template, then preserves its published version duri
   await page.getByRole('option', { name: /student name/ }).click();
   await expect(message).toHaveValue('Homework for {{student_name}}');
   await expect(message).toBeFocused();
+  await expect(drawer.getByText('Draft preview with sample data')).toBeVisible();
+  await expect(drawer.getByText('Homework for Sample Student', { exact: true })).toBeVisible();
+  await expect(drawer.getByText('Draft · Version 1')).toHaveCount(0);
   await drawer.getByRole('button', { name: 'Save draft' }).click();
   await expect(drawer.getByText('Draft · Version 1')).toBeVisible();
   await drawer.getByRole('button', { name: 'Load sample preview' }).click();
@@ -357,6 +360,7 @@ test('creates and previews a template, then preserves its published version duri
   await page.getByRole('dialog', { name: 'Publish draft' }).getByRole('button', { name: 'Publish draft' }).click();
   await expect(drawer.getByText('Published · Version 1')).toBeVisible();
   await message.fill('Updated homework for {{student_name}}');
+  await expect(drawer.getByText('Updated homework for Sample Student', { exact: true })).toBeVisible();
   await drawer.getByRole('button', { name: 'Close template editor' }).click();
   await page.getByRole('button', { name: 'Keep editing' }).click();
   await expect(message).toHaveValue('Updated homework for {{student_name}}');
@@ -368,11 +372,15 @@ test('creates and previews a template, then preserves its published version duri
 });
 
 test('shows scoped delivery evidence and filters unknown acceptance on a phone', { tag }, async ({ page, request }) => {
-  await request.post(`${fixtureApi}/fixture/reset`, { data: { visited: true, notificationDeliveries: true } });
+  await request.post(`${fixtureApi}/fixture/reset`, { data: { visited: true, notificationDeliveries: true, notificationRules: true } });
   await prepare(page, request);
   await login(page);
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('/academic/notification?view=history&operation=5d643be1-59a9-4d91-a7b1-7dbd9b673011');
+  await page.goto('/academic/notification?view=history');
+  await page.getByRole('combobox', { name: 'Notification event' }).click();
+  await page.getByRole('option', { name: 'Homework published', exact: true }).click();
+  await expect(page).toHaveURL(/historyEvent=Academic\.Homework\.Published/);
+  await page.getByRole('link', { name: 'Homework published', exact: true }).click();
   const table = page.getByRole('table', { name: 'Academic notification delivery history table' });
   await expect(page.getByText('Partially failed', { exact: true })).toBeVisible();
   const delivered = table.getByText('Delivered', { exact: true });
@@ -446,6 +454,7 @@ test('refreshes history and explains when a retry needs review', { tag }, async 
     await login(page);
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/academic/notification?view=history');
+    await page.getByRole('link', { name: /^Pending Approvals$/i }).click();
     await page.getByRole('link', { name: 'Homework published' }).click();
     await expect(page.getByText('101 eligible recipients', { exact: true })).toBeVisible();
     await expect(page.getByText('Sample homework notice', { exact: true })).toBeVisible();
@@ -476,7 +485,7 @@ test('refreshes history and explains when a retry needs review', { tag }, async 
       await expect(page.getByText('Notification approved and queued.', { exact: true })).toBeVisible();
     }
     await expect(page.getByRole('button', { name: 'Approve send', exact: true })).toHaveCount(0);
-    await page.getByRole('link', { name: 'Pending approvals', exact: true }).click();
+    await page.getByRole('link', { name: /^Pending Approvals$/i }).click();
     await expect(page.getByText('No pending approvals are assigned to you.', { exact: true })).toBeVisible();
     await expectHealthy(page);
   });

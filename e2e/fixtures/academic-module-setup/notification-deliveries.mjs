@@ -87,6 +87,11 @@ export function createNotificationDeliveriesFixture(enabled = false, retry = und
         operationStatus = path.endsWith('/approve') ? 4 : 9;
         send(200, { operationId: notificationOperationId, status: operationStatus });
       }
+    } else if (owner && path === `${academic}/history/recent` && method === 'GET') {
+      const eventKey = url.searchParams.get('eventKey');
+      send(200, { items: enabled && !approval && (!eventKey || eventKey === source.eventKey) ? [{
+        ...source, operationId: notificationOperationId, createdAt: deliveredAt, canViewSummary: true,
+      }] : [], nextCursor: null });
     } else if (enabled && owner && path === operationPath && method === 'GET') {
       send(200, {
         ...source, operationId: notificationOperationId, status: operationStatus, approvalRequired: Boolean(approval),

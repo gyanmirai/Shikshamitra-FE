@@ -42,6 +42,9 @@ export interface AcademicNotificationTemplatePreview {
   };
 }
 
+export type PreviewAcademicNotificationDraft = Pick<CreateAcademicNotificationTemplate,
+  'eventKey' | 'recipientKind' | 'channel' | 'languageCode' | 'subject' | 'body' | 'academicMediumId'>;
+
 export interface AcademicNotificationTemplateTest {
   operationId: string;
   status: number;
