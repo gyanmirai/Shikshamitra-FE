@@ -1,3 +1,5 @@
+import type { ICustomizableTableProps } from 'src/components/customizabaleTable/types';
+
 import { vi, it, expect, afterEach } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
@@ -17,7 +19,7 @@ vi.mock('react-redux', () => ({
 vi.mock('src/utils/permissions', () => ({ hasGrantedPermission: () => mocks.canWrite }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span /> }));
 vi.mock('src/components/customizabaleTable', () => ({
-  default: () => <div>Policy catalogue</div>,
+  default: ({ headerContent }: ICustomizableTableProps) => <div>{headerContent}</div>,
 }));
 vi.mock('src/redux/hr/esi-policy-api', () => ({
   useGetEsiPoliciesQuery: () => ({ data: [], isLoading: false }),

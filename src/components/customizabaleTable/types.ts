@@ -88,6 +88,8 @@ export interface ICustomizableTableProps {
   /** Display-only totals supplied by the owner; excluded from record actions and pagination. */
   summaryRow?: { label: ReactNode; values: Record<string, ReactNode> };
   tableTitle?: ReactNode;
+  /** Content above the toolbar in the workspace card. */
+  headerContent?: ReactNode;
   exportLabel?: string;
   exportContext?: string[];
   exportScope?: 'all' | 'loaded';

@@ -45,7 +45,8 @@ export default function StatutorySchemesPage() {
             value={view}
             guardUnsavedChanges={false}
             aria-label="ESIC settings areas"
-            sx={{ mb: 2 }}
+            sx={{ mb: 2, borderRadius: 2 }}
+            slotProps={{ tab: { borderRadius: 2 }, indicator: { borderRadius: 2 } }}
           >
             <Tab
               value="configuration"
@@ -76,8 +77,7 @@ export default function StatutorySchemesPage() {
               minWidth: 0,
               display: 'flex',
               flexDirection: 'column',
-              overflowY: view === 'policies' ? 'auto' : 'hidden',
-              overflowX: 'hidden',
+              overflow: 'hidden',
             }}
           >
             {view === 'policies' ? (

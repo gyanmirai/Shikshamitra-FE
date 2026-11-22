@@ -31,6 +31,13 @@ import {
   useAddEsiPolicyVersionMutation,
 } from 'src/redux/hr/esi-policy-api';
 import {
+  SetupEditorBody,
+  SetupInlineDrawer,
+  SetupEditorActions,
+  useHrSetupEmbedded,
+  useHrSetupEditorState,
+} from 'src/screens/hr/setup/hr-setup-editor-context';
+import {
   Box,
   Grid,
   Chip,
@@ -45,13 +52,6 @@ import {
   Typography,
   DialogActions,
 } from '@mui/material';
-import {
-  SetupEditorBody,
-  SetupInlineDrawer,
-  SetupEditorActions,
-  useHrSetupEmbedded,
-  useHrSetupEditorState,
-} from 'src/screens/hr/setup/hr-setup-editor-context';
 
 import { EsiPolicyArchiveDialog } from './esi-policy-archive-dialog';
 
@@ -170,49 +170,77 @@ export default function EsiPolicies({ hasSchoolWideScope }: { hasSchoolWideScope
     },
   ];
   return (
-    <Stack spacing={2} sx={{ minWidth: 0, minHeight: 0, height: 1 }}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
-        <Box>
-          <Typography variant="h6">ESIC Policies</Typography>
-          <Typography variant="body2" color="text.secondary">
-            Choose a policy in salary templates. Payroll uses its effective version for each month.
-          </Typography>
-        </Box>
-        {canWrite && (
-          <Button
-            size="small"
-            variant="contained"
-            startIcon={<Iconify icon={GlobalIcons.addIcon} />}
-            onClick={() => setTarget('new')}
+    <>
+      <CustomizableTable
+        tableId="esi-policy-table"
+        tableTitle="ESIC policies"
+        headerContent={
+          <Stack
+            spacing={1.5}
+            sx={{ p: 2, flexShrink: 0, borderBottom: 1, borderColor: 'divider' }}
           >
-            Create policy
-          </Button>
-        )}
-      </Stack>
-      {!hasSchoolWideScope && (
-        <HrNotice role="alert" severity="info">
-          School-wide HR scope is required to manage ESIC policies.
-        </HrNotice>
-      )}
-      {query.isError ? (
-        <Alert severity="error" action={<Button onClick={() => query.refetch()}>Retry</Button>}>
-          ESIC policies could not be loaded.
-        </Alert>
-      ) : (
-        <CustomizableTable
-          tableId="esi-policy-table"
-          tableTitle="ESIC policies"
-          columns={columns}
-          data={rows}
-          isLoading={query.isLoading}
-          showColumns
-          showExport
-          exportScope="all"
-          noDataText="No ESIC policies. Create a policy to use in salary templates."
-          wrapperProps={{ sx: { minWidth: 0, flex: 1, minHeight: 0, overflow: 'hidden' } }}
-          tableContainerProps={{ sx: { height: 1 } }}
-        />
-      )}
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              alignItems={{ xs: 'flex-start', sm: 'center' }}
+              justifyContent="space-between"
+              spacing={1}
+            >
+              <Box sx={{ minWidth: 0 }}>
+                <Typography component="h2" variant="h6">
+                  ESIC Policies
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Choose a policy in salary templates. Payroll uses its effective version for each
+                  month.
+                </Typography>
+              </Box>
+              {canWrite && (
+                <Button
+                  size="small"
+                  variant="contained"
+                  startIcon={<Iconify icon={GlobalIcons.addIcon} />}
+                  onClick={() => setTarget('new')}
+                  sx={{ flexShrink: 0 }}
+                >
+                  Create policy
+                </Button>
+              )}
+            </Stack>
+            {!hasSchoolWideScope && (
+              <HrNotice role="alert" severity="info">
+                School-wide HR scope is required to manage ESIC policies.
+              </HrNotice>
+            )}
+          </Stack>
+        }
+        columns={columns}
+        data={rows}
+        isLoading={query.isLoading}
+        isRefreshing={query.isFetching}
+        showColumns
+        showExport
+        exportScope="all"
+        errorContent={
+          query.isError && (
+            <Alert severity="error" action={<Button onClick={() => query.refetch()}>Retry</Button>}>
+              ESIC policies could not be loaded.
+            </Alert>
+          )
+        }
+        noDataText="No ESIC policies. Create a policy to use in salary templates."
+        wrapperProps={{ sx: { minWidth: 0, overflow: 'hidden' } }}
+        tableContainerProps={{
+          sx: {
+            height: 1,
+            '& .simplebar-content-wrapper:focus-visible': {
+              outline: 'none',
+              '& .MuiTableCell-head': {
+                boxShadow: (theme) => `inset 0 -2px ${theme.vars.palette.text.secondary}`,
+              },
+            },
+          },
+        }}
+      />
       {target && (
         <EsiPolicyEditor
           key={typeof target === 'string' ? target : target.id}
@@ -311,7 +339,7 @@ export default function EsiPolicies({ hasSchoolWideScope }: { hasSchoolWideScope
           onClose={() => setArchiveTarget(null)}
         />
       )}
-    </Stack>
+    </>
   );
 }
 
