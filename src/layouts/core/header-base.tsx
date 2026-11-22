@@ -21,12 +21,9 @@ import { SignInButton } from '../components/sign-in-button';
 import { AccountDrawer } from '../components/account-drawer';
 import { SettingsButton } from '../components/settings-button';
 import { SchoolBrandingLogo } from '../components/school-branding-logo';
+import { NotificationsDrawer } from '../components/notifications-drawer';
 import { type WorkspacesPopoverProps } from '../components/workspaces-popover';
 import GlobalAcademicSearch from '../components/global-academic-search/route-aware-search';
-import {
-  NotificationsDrawer,
-  type NotificationsDrawerProps,
-} from '../components/notifications-drawer';
 
 import type { HeaderSectionProps } from './header-section';
 import type { AccountDrawerProps } from '../components/account-drawer';
@@ -70,7 +67,6 @@ export type HeaderBaseProps = HeaderSectionProps & {
     langs?: LanguagePopoverProps['data'];
     contacts?: ContactsPopoverProps['data'];
     workspaces?: WorkspacesPopoverProps['data'];
-    notifications?: NotificationsDrawerProps['data'];
   };
   slots?: {
     navMobile?: {
@@ -230,7 +226,7 @@ export function HeaderBase({
 
               {/* -- Notifications popover -- */}
               {notifications && (
-                <NotificationsDrawer data-slot="notifications" data={data?.notifications} />
+                <NotificationsDrawer />
               )}
 
               {/* -- Contacts popover -- */}

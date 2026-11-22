@@ -5,6 +5,7 @@ import type { FetchArgs } from '@reduxjs/toolkit/query/react';
 import { toast } from 'sonner';
 import { signOut } from 'next-auth/react';
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { setWebPushOwner } from 'src/hooks/notifications/web-push-device';
 
 import { tagTypes } from './tagTypes';
 import { normalizePermissionResponse } from './normalize-permission-response';
@@ -38,10 +39,15 @@ const baseQueryWithAuth: typeof rawBaseQuery = async (args, api, extraOptions) =
     if (typeof window !== 'undefined') {
       const session: any = await getCachedAuthSession();
       const token = session?.accessToken;
+      const expectedOwner = (args as FetchArgs & { expectedSessionOwner?: string })?.expectedSessionOwner;
+      const profile = session?.profile;
 
       // An account change can invalidate an in-flight session lookup. Do not
       // continue that request anonymously or attach the replacement account.
-      if (!isAuthSessionCacheCurrent(sessionRevision, token)) {
+      if (
+        !isAuthSessionCacheCurrent(sessionRevision, token) ||
+        (expectedOwner && (!token || expectedOwner !== `${profile?.tenantid}:${profile?.sub}`))
+      ) {
         return {
           error: {
             status: 'CUSTOM_ERROR',
@@ -98,12 +104,14 @@ const baseQueryWithAuth: typeof rawBaseQuery = async (args, api, extraOptions) =
         api.dispatch({ type: 'globalState/setCurrentBoard', payload: {} });
         api.dispatch({ type: 'globalState/setCurrentMedium', payload: {} });
         toast.error('This school is inactive. Contact the platform administrator.');
+        await setWebPushOwner(null).catch(() => undefined);
         await signOut({ callbackUrl: '/login?reason=tenant-inactive' });
       }
 
       if (isCurrentSession && status === 401) {
         clearCachedAuthSession();
         toast.error('Unauthorized access');
+        await setWebPushOwner(null).catch(() => undefined);
         await signOut({ callbackUrl: '/login' });
       }
 

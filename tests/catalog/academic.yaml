@@ -1,6 +1,286 @@
 module: Academic
 generatedAt: 2026-07-29
 scenarios:
+  - id: ACM-NOTIFICATION-PRIMARY-GUARDIAN-001
+    module: Academic
+    submodule: Notification
+    title: A homework reminder with no primary guardian explains the next step without granting Student Records access
+    risk: high
+    priority: P1
+    type: [functional, regression, responsive, accessibility]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/academic/gradingAndFeedback]
+    automated: true
+    automationFile: e2e/academic/academic-notification-rules.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-notifications', '@regression', '@responsive', '@accessibility']
+  - id: ACM-NOTIFICATION-CHANNEL-SETUP-001
+    module: Academic
+    submodule: Notification
+    title: Staff see the school setup status of channels and can still save a prepared Academic rule
+    risk: medium
+    priority: P2
+    type: [functional, regression, responsive, accessibility]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/academic/notification]
+    automated: true
+    automationFile: e2e/academic/academic-notification-rules.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-notifications', '@regression', '@responsive', '@accessibility']
+  - id: ACM-NOTIFICATION-TEMPLATE-COVERAGE-001
+    module: Academic
+    submodule: Notification
+    title: Staff identify missing template coverage and open Templates for the same event and scope
+    risk: medium
+    priority: P2
+    type: [functional, regression, responsive, accessibility]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/academic/notification]
+    automated: true
+    automationFile: e2e/academic/academic-notification-rules.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-notifications', '@regression', '@responsive', '@accessibility']
+  - id: ACM-NOTIFICATION-STARTER-DRAFTS-001
+    module: Academic
+    submodule: Notification
+    title: A school-wide notification admin adds starter drafts for the selected event without duplicating or changing saved templates
+    risk: medium
+    priority: P2
+    type: [functional, regression, responsive, accessibility]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/academic/notification]
+    automated: true
+    automationFile: e2e/academic/academic-notification-rules.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-notifications', '@regression', '@responsive', '@accessibility']
+  - id: ACM-NOTIFICATION-WHATSAPP-APPROVAL-001
+    module: Academic
+    submodule: Notification
+    title: Staff link a published WhatsApp template revision and follow provider approval
+    risk: high
+    priority: P1
+    type: [functional, regression, responsive, accessibility]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/academic/notification]
+    automated: true
+    automationFile: e2e/academic/academic-notification-rules.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-notifications', '@regression', '@responsive', '@accessibility']
+  - id: ACM-NOTIFICATION-AVAILABILITY-001
+    module: Academic
+    submodule: Notification
+    title: Staff see the source requirement for an unavailable event in Rules and Configure Rule
+    risk: medium
+    priority: P2
+    type: [functional, regression, responsive, accessibility]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/academic/notification]
+    automated: true
+    automationFile: e2e/academic/academic-notification-rules.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-notifications', '@regression', '@responsive', '@accessibility']
+  - id: ACM-NOTIFICATION-TEMPLATE-TEST-001
+    module: Academic
+    submodule: Notification
+    title: Staff preview a synthetic template test and follow its queued delivery to their own inbox
+    risk: high
+    priority: P1
+    type: [functional, regression, responsive, accessibility]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/academic/notification, /dashboard]
+    automated: true
+    automationFile: e2e/academic/academic-notifications.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-notifications', '@regression', '@responsive', '@accessibility']
+  - id: ACM-NOTIFICATION-APPROVAL-001
+    module: Academic
+    submodule: Notification
+    title: Assigned staff review and decide pending Academic sends from Delivery History
+    risk: high
+    priority: P1
+    type: [functional, regression, responsive, accessibility]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/academic/notification]
+    automated: true
+    automationFile: e2e/academic/academic-notification-rules.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-notifications', '@regression', '@responsive', '@accessibility']
+  - id: ACM-NOTIFICATION-DELIVERY-RETRY-001
+    module: Academic
+    submodule: Notification
+    title: Staff can see the delivery status and confirm a retry of one rejected attempt on a phone
+    risk: high
+    priority: P1
+    type: [functional, regression, responsive, accessibility]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/academic/notification]
+    automated: true
+    automationFile: e2e/academic/academic-notification-rules.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-notifications', '@regression', '@responsive', '@accessibility']
+  - id: ACM-PERSONAL-NOTIFICATION-PREFERENCES-001
+    module: Academic
+    submodule: Notification
+    title: A signed-in user saves and reloads a linked student's delivery preferences from the notification bell
+    risk: high
+    priority: P1
+    type: [functional, regression, responsive, accessibility]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/dashboard]
+    automated: true
+    automationFile: e2e/academic/academic-notification-rules.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-notifications', '@regression', '@responsive', '@accessibility']
+  - id: ACM-NOTIFICATION-REVIEWED-REMINDER-001
+    module: Academic
+    submodule: Notification
+    title: Staff can review a manual Homework reminder, see if queue processing pauses at confirmation, and open the queued operation
+    risk: high
+    priority: P1
+    type: [functional, regression, responsive, accessibility]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/academic/gradingAndFeedback, /academic/notification]
+    automated: true
+    automationFile: e2e/academic/academic-notification-rules.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-notifications', '@regression', '@responsive', '@accessibility']
+  - id: ACM-NOTIFICATION-DELIVERY-HISTORY-001
+    module: Academic
+    submodule: Notification
+    title: Staff can see delivery status while scrolling on a phone and filter attempts by acceptance status
+    risk: high
+    priority: P1
+    type: [functional, regression, responsive, accessibility]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/academic/notification]
+    automated: true
+    automationFile: e2e/academic/academic-notification-rules.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-notifications', '@regression', '@responsive', '@accessibility']
+  - id: ACM-NOTIFICATION-INBOX-001
+    module: Academic
+    submodule: Notification
+    title: Signed-in users view their own unread count and independently read and acknowledge a notification
+    risk: high
+    priority: P1
+    type: [functional, regression, responsive, accessibility]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/dashboard]
+    automated: true
+    automationFile: e2e/academic/academic-notification-rules.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-notifications', '@regression', '@responsive', '@accessibility']
+  - id: ACM-NOTIFICATION-TEMPLATE-WORKSPACE-001
+    module: Academic
+    submodule: Notification
+    title: Staff save an event template, preview sample data, publish, and create a new draft without overwriting the published copy
+    risk: high
+    priority: P1
+    type: [functional, regression, responsive, accessibility]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/academic/notification]
+    automated: true
+    automationFile: e2e/academic/academic-notification-rules.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-notifications', '@regression', '@responsive', '@accessibility']
+  - id: ACM-NOTIFICATION-RULES-WORKSPACE-001
+    module: Academic
+    submodule: Notification
+    title: Staff read an inherited rule from a legacy category link and save an override for the selected scope
+    risk: high
+    priority: P1
+    type: [functional, regression, responsive, accessibility]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/academic/notification]
+    automated: true
+    automationFile: e2e/academic/academic-notification-rules.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-notifications', '@regression', '@responsive', '@accessibility']
+  - id: ACM-NOTIFICATIONS-QUEUE-STATUS-001
+    module: Academic
+    submodule: Notifications
+    title: The notification workspace shows paused processing across Rules, Templates and Delivery History
+    risk: medium
+    priority: P1
+    type: [functional, regression, responsive, accessibility]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/academic/notification]
+    automated: true
+    automationFile: e2e/academic/academic-notification-rules.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-notifications', '@regression', '@responsive', '@accessibility']
+  - id: ACM-NOTIFICATIONS-WEB-PUSH-001
+    module: Academic
+    submodule: Browser Notifications
+    title: Browser notifications require an explicit device opt-in and detach when turned off
+    risk: high
+    priority: P1
+    type: [functional, regression, responsive, accessibility]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/academic/dashboard, /dashboard]
+    automated: true
+    automationFile: e2e/academic/academic-notification-push.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-notifications', '@regression', '@responsive', '@accessibility']
+  - id: ACM-NOTIFICATIONS-WEB-PUSH-002
+    module: Academic
+    submodule: Browser Notifications
+    title: The bell checks enrollment and allows recovery after a subscription expires
+    risk: high
+    priority: P1
+    type: [functional, regression, responsive, accessibility]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/academic/dashboard]
+    automated: true
+    automationFile: e2e/academic/academic-notification-push.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-notifications', '@regression', '@responsive', '@accessibility']
+  - id: ACM-NOTIFICATIONS-WEB-PUSH-003
+    module: Academic
+    submodule: Browser Notifications
+    title: An iPad browser tab explains how to enable notifications from the Home Screen
+    risk: medium
+    priority: P1
+    type: [functional, regression, responsive, accessibility]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/academic/dashboard]
+    automated: true
+    automationFile: e2e/academic/academic-notification-push.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-notifications', '@regression', '@responsive', '@accessibility']
+  - id: ACM-NOTIFICATIONS-WEB-PUSH-004
+    module: Academic
+    submodule: Browser Notifications
+    title: An expired session during enrollment revokes the browser subscription and returns to sign-in
+    risk: high
+    priority: P1
+    type: [functional, regression, responsive, accessibility]
+    roles: [academic-admin]
+    tenants: [synthetic-school]
+    routes: [/academic/dashboard, /login]
+    automated: true
+    automationFile: e2e/academic/academic-notification-push.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-notifications', '@regression', '@responsive', '@accessibility']
   - id: ACM-INSIGHTS-LOADING-CACHE-001
     module: Academic
     submodule: Dashboard

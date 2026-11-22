@@ -163,6 +163,20 @@ export interface AcademicReportExportJobResponse {
   module?: string | null;
 }
 
+export interface AcademicReportRecovery {
+  id: string;
+  reportType: string;
+  format: string;
+  status: string;
+  expiresAt: string;
+  canRegenerate: boolean;
+}
+
+interface OwnedAcademicReportRequest {
+  jobId: string;
+  owner: string;
+}
+
 export interface AcademicReportDownloadResponse {
   blob: Blob;
   bytes?: string;
@@ -273,6 +287,22 @@ export const academicReportApi = api.injectEndpoints({
       }),
     }),
 
+    getAcademicReportRecovery: builder.query<AcademicReportRecovery, OwnedAcademicReportRequest>({
+      query: ({ jobId, owner }) => ({
+        url: `/app/academic-report/exports/${encodeURIComponent(jobId)}/recovery`,
+        expectedSessionOwner: owner,
+      }),
+    }),
+
+    regenerateAcademicReportExport: builder.mutation<{ jobId: string; status: string }, OwnedAcademicReportRequest>({
+      query: ({ jobId, owner }) => ({
+        url: `/app/academic-report/exports/${encodeURIComponent(jobId)}/regenerate`,
+        method: 'POST',
+        expectedSessionOwner: owner,
+      }),
+      invalidatesTags: [academicType.academicReportExport],
+    }),
+
     // GET /api/app/academic-report/exports/{jobId}/download
     downloadAcademicReport: builder.query<AcademicReportDownloadResponse, { jobId: string }>({
       query: ({ jobId }: { jobId: string }) => ({
@@ -303,6 +333,7 @@ export const {
   useCreateAcademicReportAiExportMutation,
   useGetAcademicReportExportsQuery,
   useGetAcademicReportExportJobQuery,
+  useRegenerateAcademicReportExportMutation,
   useLazyGetAcademicReportExportJobQuery,
   useDownloadAcademicReportQuery,
   useLazyDownloadAcademicReportQuery,

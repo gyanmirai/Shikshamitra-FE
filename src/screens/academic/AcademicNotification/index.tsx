@@ -1,166 +1,65 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
-import { useBoolean } from 'src/hooks/use-boolean';
-import { Box, Tab, Paper, Alert } from '@mui/material';
+import { useId } from 'react';
+import { Box, Tab, Alert } from '@mui/material';
 import { CustomTabs } from 'src/components/custom-tabs';
-import { FormSlider } from 'src/components/form-slider';
-import { Iconify } from 'src/components/iconify/iconify';
-import { useCustomSearchParams } from 'src/hooks/use-search-param';
+import { academicPaths } from 'src/constants/academic-menu';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useAcademicNotificationCatalogueQuery } from 'src/redux/academic-notifications/api';
+import { notificationQueuePauseMessage } from 'src/redux/academic-notifications/response-adapters';
 
-import TimetableNotificationManagement from './Components/TimetableNotificationManagement';
-import CurriculumNotificationManagement from './Components/CurriculumNotificationManagement';
-import ExaminationNotificationManagement from './Components/ExaminationNotificationManagement';
-import HomeworkAssignmentNotificationManagement from './Components/HomeworkAssignmentNotificationManagement';
+import { NotificationRulesWorkspace } from './notification-rules-workspace';
+import { NotificationHistoryWorkspace } from './notification-history-workspace';
+import { useNotificationWorkspaceScope } from './use-notification-workspace-scope';
+import { useNotificationWorkspaceState } from './use-notification-workspace-state';
+import { NotificationTemplatesWorkspace } from './notification-templates-workspace';
 
-const TABS = [
-  {
-    value: 'curriculumManagement',
-    label: 'Curriculum',
-    icon: <Iconify icon="ph:books-light" width={20} />,
-    component: (props: any) => <CurriculumNotificationManagement {...props} />,
-  },
-  {
-    value: 'timetable',
-    label: 'Timetable',
-    icon: <Iconify icon="solar:calendar-outline" width={20} />,
-    component: (props: any) => <TimetableNotificationManagement {...props} />,
-  },
-  {
-    value: 'homeworkAssignment',
-    label: 'Homework & Assignment',
-    icon: <Iconify icon="mdi:book-edit-outline" width={20} />,
-    component: (props: any) => <HomeworkAssignmentNotificationManagement {...props} />,
-  },
-  {
-    value: 'examination',
-    label: 'Examination',
-    icon: <Iconify icon="mdi:clipboard-text-outline" width={20} />,
-    component: (props: any) => <ExaminationNotificationManagement {...props} />,
-  },
-];
-
-const AcademicNotificationScreen = () => {
-  // const [searchParams, setSearchParams] = useSearchParam({ tab: 'curriculumManagement' });
-
-  const { getAllParams, setParam: setSearchParams } = useCustomSearchParams({
-    tab: 'curriculumManagement',
+export default function AcademicNotificationScreen() {
+  const tabId = useId();
+  const scope = useNotificationWorkspaceScope();
+  const filters = useNotificationWorkspaceState();
+  const { view } = filters;
+  const catalogue = useAcademicNotificationCatalogueQuery(scope.identity, {
+    skip: !scope.canView,
+    refetchOnMountOrArgChange: true,
+    refetchOnFocus: true,
   });
-  const searchParams = getAllParams();
-  const dialog = useBoolean(false);
-  const currentActiveComponent = useMemo(
-    () => TABS.find((tab) => tab.value === searchParams?.tab),
-    [searchParams?.tab]
-  );
-  const currentIndex = useMemo(
-    () => TABS.findIndex((tab) => tab.value === searchParams?.tab),
-    [searchParams.tab]
-  );
-  const [isViewMode, setIsViewMode] = useState(false);
-
-  const [isBackClick, setIsBackClick] = useState(false);
+  const description = {
+    rules: 'Review which events notify students, guardians, and staff for the selected scope.',
+    templates: 'Manage message templates by event, recipient, channel, and language.',
+    history: 'Review assigned approvals and delivery attempts for Academic notifications.',
+  }[view];
+  const queuePause = catalogue.isError ? undefined : notificationQueuePauseMessage(catalogue.currentData);
   return (
-    <Box
-      sx={{
-        height: '100%',
-        minHeight: 0,
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-      }}
-    >
-      {dialog?.value ? (
-        <CustomBreadcrumbs
-          sx={{ mb: 1, px: 1 }}
-          heading={isViewMode ? 'View Notification' : 'Edit Notification'}
-          description="Review notification templates for curriculum, timetable, homework, and examinations."
-          links={[
-            { name: 'Academics', href: '/academic/dashboard' },
-            {
-              name: 'Notification',
-              href: '/academic/notification',
-              onClick(e) {
-                dialog.onFalse();
-              },
-            },
-            isViewMode ? { name: 'View Notification' } : { name: 'Edit Notification' },
-          ]}
-          isBack
-          onBack={() => {
-            dialog.onFalse();
-          }}
-        />
-      ) : (
-        <CustomBreadcrumbs
-          heading="Notification"
-          description="Review notification templates for curriculum, timetable, homework, and examinations."
-          links={[
-            { name: 'Academics', href: '/academic/dashboard' },
-            { name: 'Notification', href: '/academic/notification' },
-          ]}
-          sx={{ px: 1 }}
-        />
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: 1, minHeight: 0 }}>
+      <CustomBreadcrumbs heading="Academic Notifications"
+        description={description}
+        links={[{ name: 'Academics', href: academicPaths.dashboard }, { name: 'Notifications' }]} sx={{ px: 1 }} />
+      {!scope.canView && scope.permissionsInitialized && (
+        <Alert severity="warning" sx={{ mx: 1 }}>You do not have access to Academic notification rules.</Alert>
       )}
-      {!dialog.value && (
-        <Alert severity="info" sx={{ mx: 1, mb: 1 }}>
-          Notification templates are read-only. Saving templates and enabling automatic
-          notifications are not available yet.
-        </Alert>
-      )}
-      <Paper
-        sx={{
-          '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
-        }}
-      >
-        {!dialog?.value && (
-          <CustomTabs
-            value={searchParams.tab}
-            onChange={(e, value) => {
-              const newIndex = TABS.findIndex((tab) => tab.value === value);
-              if (currentIndex > newIndex) {
-                setIsBackClick(true);
-              } else {
-                setIsBackClick(false);
-              }
-              setSearchParams('tab', value);
-            }}
-            sx={{ '& .MuiTabs-flexContainer': { gap: 1 } }}
-            role="tablist"
-          >
-            {TABS.map((tab) => (
-              <Tab key={tab.value} value={tab.value} label={tab.label} icon={tab.icon} />
-            ))}
+      {scope.canView && (
+        <>
+          {queuePause && (
+            <Alert severity="warning" variant="outlined" role="status" sx={{ mx: 1, mb: 1 }}>
+              {queuePause} You can prepare rules and templates, and confirmed sends can still queue.
+            </Alert>
+          )}
+          <CustomTabs value={filters.view} aria-label="Academic notification workspace" variant="scrollable"
+            onChange={(_, nextView: string) => filters.setFilters({ view: nextView === 'rules' ? '' : nextView })}>
+            <Tab label="Rules" value="rules" id={`${tabId}-rules`} aria-controls={`${tabId}-panel`} />
+            <Tab label="Templates" value="templates" id={`${tabId}-templates`} aria-controls={`${tabId}-panel`} />
+            <Tab label="Delivery History" value="history" id={`${tabId}-history`} aria-controls={`${tabId}-panel`} />
           </CustomTabs>
-        )}
-      </Paper>
-      <FormSlider
-        steps={TABS}
-        isBackClick={isBackClick}
-        step={currentIndex}
-        containerProps={{
-          sx: {
-            p: 0,
-            minHeight: 0,
-            height: 'auto',
-            flex: 1,
-            overflow: 'hidden',
-          },
-        }}
-      >
-        <Paper sx={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-          {currentActiveComponent?.component && (
-            <currentActiveComponent.component
-              dialog={dialog}
-              setIsViewMode={setIsViewMode}
-              // searchParams={searchParams}
-              // setSearchParams={setSearchParams}
-            />
-          )}{' '}
-        </Paper>
-      </FormSlider>
+          <Box role="tabpanel" id={`${tabId}-panel`} aria-labelledby={`${tabId}-${filters.view}`}
+            sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+            {view === 'rules' && <NotificationRulesWorkspace scope={scope} filters={filters} catalogue={catalogue} />}
+            {view === 'templates' && <NotificationTemplatesWorkspace scope={scope} filters={filters} catalogue={catalogue} />}
+            {view === 'history' && <NotificationHistoryWorkspace key={JSON.stringify(scope.identity)}
+              identity={scope.identity} canManage={scope.canManage} />}
+          </Box>
+        </>
+      )}
     </Box>
   );
-};
-
-export default AcademicNotificationScreen;
+}

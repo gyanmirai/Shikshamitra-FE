@@ -15,6 +15,7 @@ import {
   useResetExaminationSeatingDraftMutation,
 } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/guided-seat-allocationApi';
 
+import { buildPublicationPayload } from './guided-payloads';
 import { getWorkflowErrorMessage } from './workflow-errors';
 import { useGuidedSeatingAllocation } from './hooks/use-guided-seating-allocation';
 
@@ -87,7 +88,7 @@ export function useGuidedSeatingOperations(examId: string) {
     if (!readiness.isReadyToPublish) return false;
     const published = await publishExamination({
       examId,
-      body: { notifyStudents: values.notifyStudents, notifyParents: values.notifyParents },
+      body: buildPublicationPayload(values),
     }).unwrap();
     setExaminationReadiness(published.readiness);
     setPublication(published);

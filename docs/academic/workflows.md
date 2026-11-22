@@ -3,7 +3,7 @@ module: academic
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-11-04
+updated_on: 2026-11-21
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -22,10 +22,12 @@ Student and parent dashboards use verified personal context and a linked-student
 The absence of a child selection never defaults to a school-wide view.
 
 The section catalogue covers class assignments, Student Academic 360, calendar, syllabus, lesson plans and diary, timetable/rooms/substitutions, learning tasks, evaluation, examinations, reports, notifications, audits and the nine active settings.
+
+On the Substitution workspace, Send reminder is available while an open duty still requires acknowledgement. After the request, the workspace reports the returned delivery state, including queued work, provider acceptance, and an unconfirmed response.
 Each visible staff section links to its permitted existing workflows.
 Graphs use actual samples: mappings, scatter comparisons, timelines, progress bars, status columns, period occupancy, task stacks, review distributions, exam stages and report counts.
 Where the source cannot safely provide the selected scope, the section explains its limitation and retains permitted navigation.
-Notification templates remain read-only, and settings existence is not a readiness score.
+The Rules workspace shows saved configuration separately from event and channel readiness.
 
 The shared header stays visible during loading and failures.
 Each insight uses the shared outlined `FormSectionCard`, a neutral semantic icon, a `subtitle1`/600 heading and an adjacent accessible information tooltip.
@@ -95,6 +97,110 @@ Homework publish and due pickers use Asia/Kolkata (IST), including initial value
 On `/academic/assign-elective-subject`, newly admitted students remain editable beside previously locked students. Locked rows disable their subject controls and selection checkboxes. Individual edits, bulk assignment and clearing preserve locked rows, and saving excludes them from the update payload. Save new selections before using Review & Lock; refreshing after the final lock makes those students read-only too. The [backend product rules](../../../Shikshamitra-BE/docs/modules/academic/product.md#data-integrity) own lock enforcement.
 
 When the roster's server capability permits locked corrections, an edit action appears on locked rows. Save or discard other draft assignments before opening it. Select a new subject, a preference correction, or both, then choose Review changes. The review shows old/new values and backend-reported effects. Confirm changes submits that exact reviewed input and token. A failed or stale confirmation retains the draft and requires a new review; success refreshes the roster while keeping the row locked. Other roles retain the existing read-only locked rows. See [backend correction contracts](../../../Shikshamitra-BE/docs/modules/academic/api.md#locked-elective-corrections).
+
+## Configure Academic notification rules
+
+Open **Academics → Notification** and select a category and rule scope. The table shows the effective saved rule, including rules inherited from a broader scope. Older category links open the matching category.
+
+If this server's queue processing is paused, the workspace shows a notice across Rules, Templates, and Delivery History. You can prepare rules and templates and review confirmed sends in Delivery History while processing is paused.
+
+The same notice identifies a pause for the current school or individual delivery channels. A source-based send preview and its confirmation show the pause for the selected channels. Paused channels can keep queued work while other channels continue processing.
+
+For an unavailable event, **Delivery readiness** and **Configure Rule** show which Academic workflow the event needs or which existing notice covers it. The rule stays unavailable until its source workflow supports sending.
+
+Staff with rule edit access can use **Configure** to submit a rule for the selected scope. The primary guardian is included for family events. The editor offers choices for additional guardians, the student account, and other recipients where the event supports them. Enabling requires published templates for the selected recipients and channels. Conflicts keep the current draft open.
+
+When you turn on an available rule, **Channels and Templates** lists the recipient and channel combinations that still need a selected published template in the fallback language. **Open templates** takes you to that event in the Templates workspace with the matching school or medium view. If the rule has unsaved changes, choose **Keep editing** to retain them or **Discard changes** to continue.
+
+**Additional channels** shows the school's setup status for email, WhatsApp, and browser push where the event supports them. You can prepare and save a rule while school setup is pending. WhatsApp delivery also requires approval for the published template version, and browser push requires a subscription on the recipient's device.
+
+For Homework Submitted and Assignment Submitted, **Daily digest time** closes the submission count in the school's time zone. Assigned teachers are selected by default for a new rule. Use published teacher templates to enable the digest.
+
+For **Weekly academic summary**, choose a **Day of the week** and **Weekly summary time**. New rules start with Friday at 17:00 in the school's time zone. Publish the recipient and channel templates before enabling. Families get summaries for their linked children, and chosen staff receive division totals. The school can also choose additional authorized family relationships or the eligible student account. [Weekly summary contract](../../../Shikshamitra-BE/docs/modules/academic/api.md#weekly-academic-summary)
+
+Enable the operational impact rule in **Settings** to notify eligible scheduled teachers or the configured reviewer when a Weekly Lectures edit makes a published timetable need review. Publish an inbox or browser push template for each selected audience. Staff can open Timetable Management from the notice. [Weekly lecture requirements impact contract](../../../Shikshamitra-BE/docs/modules/academic/api.md#weekly-lecture-requirements-impact)
+
+For **Progress behind schedule** in Curriculum, **Daily digest time** closes the window for published chapters with saved end dates. Choose the staff recipients and their published templates, then enable the rule. The digest opens Chapter Management. See the [chapter progress digest contract](../../../Shikshamitra-BE/docs/modules/academic/api.md#chapter-progress-digest).
+
+For **Progress milestone reached**, enter the **Milestone percentage** and **Daily digest time** before enabling the rule. Choose the assigned teacher or class teacher audience and its published templates. Each chapter qualifies the first time its saved division progress reaches that percentage.
+
+For Substitution Acknowledgement Due, the assigned substitute receives the first reminder. In **Recipients**, select **Notify the configured reviewer** and set **Escalate after (minutes)** to follow up if the substitute has not responded. Select published templates for both recipients before enabling the rule.
+
+## Notify recipients about exam seating
+
+In the guided Seating Plan **Publish** step, choose guardians, student accounts, or assigned teachers under **Notifications**. Select **Allow email** to permit email for those audiences when the school's Seating Published rule includes it. The rule controls guardian and student account eligibility and channels. Publication locks the plans. Delivery can queue after both seating and the exam are published. See the [seating notification contract](../../../Shikshamitra-BE/docs/modules/academic/api.md#exam-seating-notifications).
+
+## Choose who receives an emergency closure notice
+
+In **Emergency Closure**, choose the scope and then the audiences under **Notify**. New declarations select assigned teachers and guardians. Select **Student accounts** to include them when the school's rule allows it. The edit form restores the saved choices. The details view shows those selections, and Delivery History shows what was sent. See the [emergency closure notification contract](../../../Shikshamitra-BE/docs/modules/academic/api.md#emergency-closure-notifications).
+
+## Create an Academic notification template
+
+Open **Academics → Notification → Templates** and choose the event. Staff with school-wide scope and template write access can select **Add starter drafts** to create English drafts for the event's recipient and channel combinations. The confirmation shows the event and scope. The result shows how many drafts were added. Existing templates keep their saved wording.
+
+Choose the scope and select **New template** to write a template for one recipient, channel, and language. Use the variable pickers to insert fields from the event catalogue. Email supports rich text. In-app, browser push, and WhatsApp use plain text.
+
+Save the draft and load its preview with sample data. Publish it to make that version available to Rules. Further edits create a new draft while the published version remains available. Version history can preview saved revisions. Restoring the default wording also creates a draft.
+
+Browser push displays a generic alert on the device. Its preview shows the saved template with sample data. Edit the **In-app** template to change what recipients read in the website inbox.
+
+**Send test** queues the saved version for the configured test destination using sample data. WhatsApp delivery requires provider approval for the exact version and language.
+
+For WhatsApp, publish the intended version and open **WhatsApp Approval**. Staff with both template write access and Provider Settings Add can choose **Link WhatsApp template**, enter the Meta template name, and select **Submit for approval**. Use **Refresh status** to check the provider outcome. Provider Settings View allows staff to inspect status within their Academic scope. The approval panel keeps **Send test** disabled until the displayed version is approved for the provider configured for delivery.
+
+## Review and send a task reminder
+
+In **Evaluation & Feedback**, select a published homework or assignment, then use **Send reminder** on an unsubmitted student's row. The action is available when the school has the corresponding Academic event integration. The review applies the current recipient rule, which defaults family notices to the primary guardian.
+
+Choose available channels and select **Preview recipients**. Review eligible counts, exclusions, and sample messages before selecting **Confirm send** or **Request approval**. A changed review needs a fresh preview. If the confirmation response is interrupted, **Retry confirmation** checks the same send. Open **Delivery History** to follow the accepted operation.
+
+The send dialog shows when the responding server's queue processing is paused. The notice is refreshed from the confirmation response. Confirmed messages can stay queued until processing resumes.
+
+If the review reports that the primary guardian is unconfigured, choose the main contact through **Parents & Contact** in Student Records. **Open student record** is available for a single identified student when you have the existing Records and contact-change permissions. The record still checks your access before it exposes contacts or allows changes. [Parents and contact selection](../student/workflows.md#parents-and-contact-selection)
+
+## Send a Student Academic 360 notification
+
+Open a student's detail drawer from **Academics → Student Academic 360**. Select **Send academic message** or **Request a meeting**. The primary guardian is selected when eligible. Choose among the student's eligible guardians and student account. A meeting request can also include the assigned class teacher when available.
+
+When the student has no main contact configured, the dialog shows the Student Records guidance before preview. Other eligible recipients can still be selected explicitly.
+
+Choose delivery channels and optionally choose a **Preferred template**. Review the recipient counts, channel exclusions and sample wording before confirming. The meeting request asks recipients to arrange a time with the school. Use **Delivery History** to check the queued operation.
+
+[Student Academic 360 notification contract](../../../Shikshamitra-BE/docs/modules/academic/api.md#staff-notification-configuration)
+
+## Send a teacher diary follow-up
+
+Open **Academics → Lesson Plan / Teacher Diary**, select **Teacher Diary**, then open a submitted entry. Choose **Notify teacher** or **Notify reviewer**, when the reviewer option is available. Choose your channels, select **Preview recipients**, and review the recipient and message before selecting **Confirm send**. Open **Delivery History** from the confirmation result.
+
+Saving and submitting a diary leave notifications silent. The follow-up uses the published template for the selected staff role. Diary notes stay in the diary.
+
+## Review delivery history
+
+In **Templates**, open a saved template, load the sample preview, and select **Send test**. Confirm the test destination and open **Delivery History** from the queued confirmation to follow that test. Once an in-app test is delivered, its sample appears in the test account's notification bell.
+
+Assigned approvers open **Academics → Notifications → Delivery History** and select a request in **Pending Approvals**. Review the recipient counts, exclusions and sample messages, then confirm **Approve send** to queue it or **Reject send** to close the request. A changed request requires the sender to review and submit it again. The sender can follow the approval status from the Delivery History link on their send confirmation.
+
+Open Delivery History with a link to a notification operation or Academic source. Filter the attempt table by delivery status. Provider acceptance, delivery and read receipts each have their own status, and the Columns menu exposes the available timestamps. When the current attempt shows **Retry delivery**, confirm **Queue retry** to retry that recipient and channel. History retains the rejected attempt and records the queued status separately. When acceptance is unknown, review the provider outcome before sending again. Staff with cancel access can stop pending work and see how much work is already in progress. [Delivery API](../../../Shikshamitra-BE/docs/modules/academic/api.md#staff-notification-configuration)
+
+## Read or acknowledge a notification
+
+Open the notification bell. **All** shows notifications for the signed-in account, and **Unread** shows messages without a read timestamp. **Mark as read** clears the unread indicator. **Acknowledge** records a separate acknowledgement. Open record follows the school's internal link when one is available.
+
+Academic report ready notices offer **Download report** in the inbox. This opens the same authenticated download used by the report workspace. Export ownership and expiry are checked for every download. If the file expired or is unavailable, the link opens the report status page. Select **Generate again** when available to rerun the saved export with your current access. Download from the status page or the same inbox link when the replacement is ready. [Academic report notification contract](../../../Shikshamitra-BE/docs/modules/academic/api.md#report-export-notifications)
+
+## Set personal notification preferences
+
+Open the notification bell and choose **Notification preferences**. Pick a category and apply it to all your notifications or one linked student. Choose the delivery channels, preferred language, and optional quiet hours in school time. Account-wide channel restrictions also apply to linked students. After a conflicting save, keep editing or reload the saved settings before retrying. [Personal notification contract](../../../Shikshamitra-BE/docs/modules/academic/api.md#personal-notification-preferences)
+
+## Enable notifications on a device
+
+Sign in to the school website on the device that should receive updates.
+Open the Notifications drawer and choose **Enable browser notifications**.
+Grant browser permission when prompted.
+On a supported iPhone or iPad, open the website in Safari and use **Share → Add to Home Screen**. Turn on **Open as Web App** if shown, open the new icon, then enable notifications from the bell.
+If the bell reports an expired subscription, choose **Enable browser notifications again**.
+To remove the device, choose **Turn off browser notifications** in the same drawer.
+Signing out removes the device association for that browser session.
 
 ## Review the current scope
 

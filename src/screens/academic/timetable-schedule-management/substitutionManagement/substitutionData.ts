@@ -45,7 +45,7 @@ export type SubstitutionRow = {
   status: SubstitutionStatus;
   priority: SubstitutionPriority;
   acknowledgementStatus: AcknowledgementStatus;
-  notificationStatus: 'Not Sent' | 'Queued' | 'Sent' | 'Reminder Sent' | 'Escalated';
+  notificationStatus: 'Not Sent' | 'Queued' | 'Sent' | 'Reminder Sent' | 'Escalated' | 'Unknown' | 'Failed';
   source: 'Manual' | 'AI Suggested' | 'Auto Created' | 'HR Leave' | 'Calendar' | 'Attendance';
   conflictStatus: ConflictStatus;
   conflictReason?: string;

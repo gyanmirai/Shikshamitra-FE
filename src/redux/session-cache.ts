@@ -4,6 +4,8 @@ type AuthSession = {
   accessToken?: string;
   profile?: {
     exp?: number | string;
+    sub?: string;
+    tenantid?: string;
   } | null;
 };
 

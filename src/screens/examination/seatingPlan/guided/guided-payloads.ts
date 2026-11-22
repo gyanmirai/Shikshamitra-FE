@@ -1,4 +1,7 @@
-import type { GuidedAllocationPreviewDto } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/seat-allocation-v2.types';
+import type {
+  GuidedAllocationPreviewDto,
+  PublishSeatingNotificationOptionsDto,
+} from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/seat-allocation-v2.types';
 
 import { buildRules } from './workflow-utils';
 
@@ -66,5 +69,17 @@ export function buildManualApplyPayload(
           isRoomAssign: true,
         })),
     })),
+  };
+}
+
+export function buildPublicationPayload(
+  values: GuidedSeatingValues
+): PublishSeatingNotificationOptionsDto {
+  const { notifyStudents, notifyParents, notifyTeachers, sendEmail } = values;
+  return {
+    notifyStudents,
+    notifyParents,
+    notifyTeachers,
+    sendEmail: sendEmail && (notifyStudents || notifyParents || notifyTeachers),
   };
 }

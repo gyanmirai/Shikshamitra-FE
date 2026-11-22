@@ -1,5 +1,7 @@
 import type { AcademicReportDownloadResponse } from 'src/redux/academicAPI/AcademicReportApi';
 
+import { academicReportPaths } from 'src/constants/academic-report-paths';
+
 function legacyReportBlob(bytes: string, contentType: string): Blob {
   const characters = window.atob(bytes);
   const values = new Uint8Array(characters.length);
@@ -48,8 +50,8 @@ export function startAcademicReportDownload(jobId: string): void {
   }
 
   const link = document.createElement('a');
-  link.href = `/api/academic-reports/${encodeURIComponent(normalizedJobId)}/download`;
-  link.download = '';
+  link.href = academicReportPaths.download(normalizedJobId);
+  // The authenticated endpoint supplies an attachment or opens report recovery.
   link.style.display = 'none';
   document.body.appendChild(link);
   link.click();

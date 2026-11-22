@@ -5,6 +5,7 @@ import Stack from '@mui/material/Stack';
 import Checkbox from '@mui/material/Checkbox';
 import { Iconify } from 'src/components/iconify';
 import Typography from '@mui/material/Typography';
+import FormHelperText from '@mui/material/FormHelperText';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import { FormSectionCard } from 'src/components/form-section-card';
 
@@ -14,11 +15,18 @@ import { ExaminationReadinessCard } from './examination-readiness-card';
 
 import type { GuidedStepProps } from '../types';
 
+const NOTIFICATION_AUDIENCES = [
+  ['notifyParents', 'Notify guardians'],
+  ['notifyStudents', 'Notify student accounts'],
+  ['notifyTeachers', 'Notify assigned teachers'],
+] as const;
+
 export function PublishStep({ workspace, workflow }: GuidedStepProps) {
   if (workflow.isPublished) {
     return <PublishedReceipt workspace={workspace} workflow={workflow} />;
   }
-  const { readiness } = workflow;
+  const { readiness, formik, isBusy } = workflow;
+  const hasAudience = NOTIFICATION_AUDIENCES.some(([field]) => formik.values[field]);
 
   return (
     <Stack spacing={1.5} sx={{ p: 2 }}>
@@ -79,6 +87,49 @@ export function PublishStep({ workspace, workflow }: GuidedStepProps) {
           )}
         </Stack>
       </FormSectionCard>
+
+      {workflow.permissions.canPublish && (
+        <FormSectionCard
+          icon="mdi:bell-outline"
+          title="Notifications"
+          descriptionTooltip="Choose who may receive a notice after the exam and seating are published."
+        >
+          <Stack
+            role="group"
+            aria-label="Seating notification options"
+            aria-describedby="seating-notification-channel-help"
+          >
+            {NOTIFICATION_AUDIENCES.map(([field, label]) => (
+              <FormControlLabel
+                key={field}
+                control={
+                  <Checkbox
+                    size="small"
+                    checked={formik.values[field]}
+                    disabled={isBusy}
+                    onChange={(_, checked) => formik.setFieldValue(field, checked)}
+                  />
+                }
+                label={label}
+              />
+            ))}
+            <FormControlLabel
+              control={
+                <Checkbox
+                  size="small"
+                  checked={hasAudience && formik.values.sendEmail}
+                  disabled={isBusy || !hasAudience}
+                  onChange={(_, checked) => formik.setFieldValue('sendEmail', checked)}
+                />
+              }
+              label="Allow email"
+            />
+            <FormHelperText id="seating-notification-channel-help">
+              Email, browser push and WhatsApp depend on the school rule and recipient settings.
+            </FormHelperText>
+          </Stack>
+        </FormSectionCard>
+      )}
     </Stack>
   );
 }

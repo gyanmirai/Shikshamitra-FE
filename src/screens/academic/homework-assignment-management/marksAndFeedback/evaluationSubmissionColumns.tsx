@@ -12,6 +12,7 @@ type Options = {
   taskSubmissionType?: number | string | null;
   onView: (row: IData) => void;
   onEdit: (row: IData) => void;
+  onNotify?: (row: IData) => void;
 };
 
 const submissionTypes = ['Online Text', 'File Upload', 'In-Person', 'No Submission Required'];

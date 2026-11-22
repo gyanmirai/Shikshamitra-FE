@@ -3,7 +3,7 @@ module: academic
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-11-08
+updated_on: 2026-11-20
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -12,6 +12,61 @@ audience: humans-and-agents
 
 TL;DR: `src/redux/academic-setup/api.ts` persists guide position and reads configuration status; existing module clients continue to save the actual settings.
 Use the [backend API reference](../../../Shikshamitra-BE/docs/modules/academic/api.md) for endpoint semantics and authorization.
+
+## Notification rules client
+
+`src/redux/academic-notifications/api.ts` supplies the Rules workspace with the event catalogue, paged effective rules, published template choices, and scoped rule saves. The Rules table and drawer read the optional `availabilityDetail` from the catalogue. Template choices use a metadata endpoint that also finds published versions when a newer draft exists.
+
+Weekly summary rules pass a weekday as `timing.weeklySummaryDay` alongside the school-local `timing.reminderLocalTime`.
+The catalogue cache is keyed by tenant and user. The task reminder reads `manualAvailability` when present. The Rules workspace uses `availability` to show which events can run automatically. The rule cache also includes the requested academic hierarchy, event filter and page. Each request verifies the identity of the session that supplies the token. The request sends the hierarchy and paging fields, and the save sends the current rule concurrency stamp. Successful saves refresh rule queries for the same user and tenant. Rejected saves retain the existing results.
+
+Rules, Templates, and Delivery History share the workspace catalogue request. An explicit false `isQueueWorkerEnabled` shows a pause notice for the current server. [Catalogue contract](../../../Shikshamitra-BE/docs/modules/academic/api.md#catalogue-availability)
+
+## Notification template client
+
+`src/redux/academic-notifications/template-api.ts` reads templates by event, medium, name search, and page. It loads history and sample previews on demand. Queries key the school and account, and mutations recheck the request owner before sending.
+
+**Add starter drafts** posts the selected event key and refreshes the current account's template cache on success. The API returns the number of drafts created. [Starter draft contract](../../../Shikshamitra-BE/docs/modules/academic/api.md#staff-notification-configuration)
+
+`src/redux/academic-notifications/whatsapp-approval-api.ts` loads the provider binding context by exact template revision. The editor uses the returned provider setting for linking and reloads that context after a successful submit or refresh. Queries and writes carry the same school and account ownership.
+
+Draft edits and publication send the saved revision stamp. Creating a subsequent draft or restoring default wording sends the template header stamp. Successful revisions refresh template lists, previews, history, and the published choices used by Rules for the same session.
+
+Test send submits just the saved revision ID and stamp. Its queued response provides the operation ID for the sender's Delivery History link.
+
+## Notification delivery and inbox clients
+
+`src/redux/academic-notifications/delivery-api.ts` reads the operation status and paged delivery attempts for an authorized source. A link with an operation ID reads its authorized source before requesting its attempt rows. Staff cancellation refreshes both reads for the same school and user.
+
+`src/redux/academic-notifications/manual-api.ts` submits the source, selected recipient references and channel choices for review. Confirmation submits only the review token and its stable idempotency key. A successful confirmation returns the operation for Delivery History. The same session guard applies to both requests.
+
+`src/redux/academic-notifications/delivery-api.ts` displays the history retry action from its server-provided eligibility flag. Confirmation sends the dispatch ID and the attempt ID from the selected row, then refreshes the operation and history for the same account.
+
+The same client loads assigned approvals by cursor and reads the review for the selected operation when its status exposes `canReviewApproval`. Approval and rejection refresh the queue, review and delivery history for the current account. [Approval API](../../../Shikshamitra-BE/docs/modules/academic/api.md#staff-notification-configuration)
+The Student Academic 360 drawer loads its audience only after a staff member chooses an action. The query includes the saved student, event and session owner. The shared composer uses published template options for the returned medium and includes the chosen relationships in the review request.
+The audience response's `primaryGuardianNotConfigured` flag drives the main-contact guidance before preview. It remains distinct from an existing primary guardian who is ineligible on a delivery channel.
+
+The submitted Teacher Diary drawer loads available follow-up recipients using the diary ID and the current school and account. Its action sends the selected staff reference through the same preview and confirmation client. See the [diary follow-up contract](../../../Shikshamitra-BE/docs/modules/academic/api.md#teacher-diary-follow-up).
+
+`src/redux/communication/notification-self-api.ts` supplies the dashboard bell's unread count and the drawer's All and Unread pages. Separate requests record reading and acknowledgement. Queries use the current school and account, and changes invalidate only that account's inbox reads. Polling pauses while the page is unfocused.
+
+## Personal notification preferences
+
+`src/redux/communication/notification-self-api.ts` loads category options, linked students and saved preferences when the bell's preferences dialog opens. Each query and save uses the current school and user owner. A save includes the selected category, student context and saved concurrency stamp. The dialog retains drafts on conflict and refreshes the accessible student options if a save is denied.
+
+## Browser notifications
+
+`src/redux/communication/notification/web-push-api.ts` injects the public-key, status, register and disable operations into the shared authenticated API.
+Each operation checks the expected school and account against the session that supplies the request token.
+`src/hooks/notifications/web-push-device.ts` stores the browser installation and subscription IDs for the signed-in account.
+Opening the bell checks the saved registration with the server when the device still has a browser subscription.
+A missing or disabled registration releases the stale browser subscription so the next explicit opt-in can enroll it again.
+If the status check fails temporarily, the bell offers a retry and preserves the browser subscription.
+Account changes and sign-out unsubscribe the browser locally so a previous account's endpoint can stop receiving pushes after its session expires.
+During enrollment, the API request leaves the browser available for session cleanup. The response confirms the registration only while the signed-in account and browser subscription still match the enrollment in progress.
+The root manifest and `public/notification-sw.js` use the school origin.
+The worker displays generic notices and opens or focuses the authenticated dashboard and Notifications drawer.
+The worker registers no fetch handler and keeps no authenticated cache.
 
 ## Student submission attachments
 
@@ -120,6 +175,8 @@ Existing server refresh choices remain explicit; a warm cache does not replace r
 
 `src/redux/academicAPI/AcademicReportApi.ts` consumes completed exports as native Blobs, retaining content type and filename headers.
 `src/screens/academic/components/reports/useAcademicReportDownload.ts` owns job creation, serialized status polling and download coordination for the active preview drawers as well as report-list downloads. It aborts pending work and stops timers on unmount/account changes, ignores stale completions and backs off transient failures. A creation response arriving after close cannot install a new polling loop. Creating, generating and downloading states remain visible in the owning drawer.
+
+The report recovery screen uses owner-keyed status and regenerate endpoints in `AcademicReportApi.ts`. It polls only while the replacement is queued or running and uses the same authenticated download path when the file is ready.
 Completed jobs download directly without creating another export.
 Curriculum previews, including the active timetable and homework consumers of that shared drawer, retain the protected native download route. Generated Examination previews retain their Blob download behavior.
 

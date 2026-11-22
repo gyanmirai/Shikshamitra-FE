@@ -15,7 +15,6 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import { getEvaluationSubmissionColumns } from 'src/screens/academic/homework-assignment-management/marksAndFeedback/evaluationSubmissionColumns';
 import {
   AssignmentStatus,
@@ -37,6 +36,7 @@ import {
 import AssignGrade from './assignMarksForm';
 import AssignmentRubricEvaluationContent from './assignmentRubricEvaluationContent';
 import EvaluationSubmissionDetail from '../../marksAndFeedback/evaluationSubmissionDetail';
+import { useLearningTaskReminder } from '../../marksAndFeedback/use-learning-task-reminder';
 import {
   saveAssignmentRubricAndFeedback,
   submitAssignmentRubricEvaluation,
@@ -84,7 +84,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
     `${academicPermissions.homework.assessment}.Add`
   );
 
-  const [selectedStudents] = useState<any[]>([]);
+  const reminder = useLearningTaskReminder('Assignment', selectedAssignment?.id, selectedAssignment?.title ?? 'Assignment', selectedDivision);
   const {
     currentData: assignmentSubmissions,
     error: submissionsError,
@@ -116,8 +116,6 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   const [isFeedbackSaving, setIsFeedbackSaving] = useState(false);
   const [rubricFeedback, setRubricFeedback] = useState('');
 
-  // Dialog control for sending instant notifications
-  const sendInstantNotificationDialogValue = useBoolean();
   // Dialog control for single student grade assignment
   // Redux state for tracking unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
@@ -257,16 +255,6 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
     }
   };
 
-  /**
-   * Handler for sending notifications
-   * Opens the instant notification dialog if it's not already open
-   */
-  const handlerSendNotification = () => {
-    if (!sendInstantNotificationDialogValue.value) {
-      sendInstantNotificationDialogValue.onTrue();
-    }
-  };
-
   const openStudentForEdit = React.useCallback(
     (row: any) => {
       setIsEditMode(true);
@@ -371,8 +359,6 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         }}
       >
         <CustomizableTable
-          onSendNotification={handlerSendNotification}
-          showCheckbox={selectedStudents?.length > 0}
           tableId="assignment-evaluation-submissions"
           tableTitle="Assignment Submissions"
           noDataText="No student submissions match the selected task."
@@ -387,6 +373,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             taskSubmissionType: selectedAssignment?.submissionType,
             onView: openStudentForView,
             onEdit: openStudentForEdit,
+            onNotify: reminder.onNotify,
           })}
           isLoading={isSubmissionsLoading || (isFetching && !assignmentSubmissions)}
           isRefreshing={isFetching && Boolean(assignmentSubmissions)}
@@ -394,14 +381,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         />
       </Box>
 
-      {sendInstantNotificationDialogValue.value && (
-        <SendInstantNotificationDialog
-          open={sendInstantNotificationDialogValue.value}
-          onClose={sendInstantNotificationDialogValue.onFalse}
-          data={[]}
-          userList={selectedStudents}
-        />
-      )}
+      {reminder.dialog}
       <CustomDialog
         open={viewSubmissionDialog.value}
         disableClose={isFeedbackSaving || (usesRubric && isRubricSaving)}

@@ -3,6 +3,7 @@ export enum CommunicationChannelType {
   Sms = 1,
   Email = 2,
   InApp = 3,
+  WebPush = 4,
 }
 
 export enum CommunicationProviderStatus {

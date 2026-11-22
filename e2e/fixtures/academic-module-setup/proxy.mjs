@@ -1,12 +1,27 @@
 import http from 'node:http';
+import { createECDH, randomUUID } from 'node:crypto';
 import { createAcademicFixture } from './state.mjs';
 import { handleManagers } from './managers.mjs';
 import { handleDashboard } from './dashboard.mjs';
 import { insightsPermissions } from './insights.mjs';
+import { createNotificationRulesFixture } from './notification-rules.mjs';
+import { createNotificationDeliveriesFixture } from './notification-deliveries.mjs';
+import { createNotificationTemplateTestFixture } from './notification-template-test.mjs';
+import { createWhatsAppApprovalFixture } from './notification-whatsapp-approval.mjs';
+import { createManualNotificationFixture, manualNotificationPermissions } from './notification-manual.mjs';
 import { paged, year, board, medium, ids } from './data.mjs';
 
 const upstream = 'http://127.0.0.1:4469';
+const pushPath = '/api/communication/notifications/me/push';
+const preferencePath = '/api/communication/notifications/me/preferences';
+const preferenceChild = { studentId: 'b0000000-0000-4000-8000-000000000001', displayName: 'Sample Learner' };
+const fixtureVapid = createECDH('prime256v1').generateKeys().toString('base64url');
 let fixture = createAcademicFixture();
+let notificationRules = null;
+let notificationDeliveries = createNotificationDeliveriesFixture();
+let manualNotification = null;
+let notificationTemplateTest = null;
+let whatsappApproval = null;
 export const server = http.createServer(async (request, response) => {
   response.setHeader(
     'Access-Control-Allow-Origin',
@@ -39,11 +54,23 @@ export const server = http.createServer(async (request, response) => {
   }
   if (url.pathname === '/fixture/reset') {
     fixture = createAcademicFixture(body);
+    notificationTemplateTest = body.notificationTemplateTest === true ? createNotificationTemplateTestFixture() : null;
+    whatsappApproval = body.whatsappApproval === true ? createWhatsAppApprovalFixture() : null;
+    notificationRules = body.notificationRules === true ? createNotificationRulesFixture(notificationTemplateTest?.queue) : null;
+    notificationDeliveries = createNotificationDeliveriesFixture(
+      body.notificationDeliveries === true, body.notificationRetry, body.notificationApproval,
+    );
+    manualNotification = body.manualNotification === true ? createManualNotificationFixture() : null;
     send(200, fixture.snapshot());
     return;
   }
+  if (url.pathname === '/fixture/complete-template-test' && request.method === 'POST') {
+    send(notificationTemplateTest?.deliver() ? 200 : 409, {});
+    return;
+  }
   if (url.pathname === '/fixture/snapshot') {
-    send(200, fixture.snapshot());
+    send(200, { ...fixture.snapshot(), notificationRuleWrites: notificationRules?.writes ?? [],
+      manualNotificationWrites: manualNotification?.writes, whatsappApprovalWrites: whatsappApproval?.writes });
     return;
   }
   if (url.pathname === '/fixture/mark-visited') {
@@ -61,7 +88,9 @@ export const server = http.createServer(async (request, response) => {
     send(200, {
       groups: [
         {
-          permissions: insightsPermissions(fixture.state.insights).map((name) => ({
+          permissions: [...insightsPermissions(fixture.state.insights), ...(notificationRules ? ['Academics.Notification.Add'] : []),
+            ...(whatsappApproval ? ['Communication.Settings.ProviderSettings.View', 'Communication.Settings.ProviderSettings.Add'] : []),
+            ...(manualNotification ? manualNotificationPermissions : [])].map((name) => ({
             name,
             isGranted: true,
           })),
@@ -72,6 +101,53 @@ export const server = http.createServer(async (request, response) => {
   }
   const token = request.headers.authorization?.split('.')[1];
   const claims = token ? JSON.parse(Buffer.from(token, 'base64url').toString()) : {};
+  if (url.pathname === preferencePath || url.pathname === preferencePath + '/options') {
+    if (!claims.sub) { send(401, {}); return; }
+    const rows = fixture.state.preferenceWrites.filter(({ user }) => user === claims.sub);
+    if (url.pathname.endsWith('/options')) {
+      send(200, { categories: [{ category: 'Academic.Homework', channels: [0, 2, 3, 4] }], students: [preferenceChild] });
+    } else if (request.method === 'GET') {
+      send(200, rows.map(({ preferences }) => preferences));
+    } else if (request.method === 'PUT') {
+      const writes = fixture.state.preferenceWrites;
+      const index = writes.findIndex(({ user, preferences }) => user === claims.sub &&
+        preferences.category === body.category && preferences.studentId === body.studentId);
+      const preferences = { ...body, concurrencyStamp: randomUUID() };
+      const row = { user: claims.sub, preferences };
+      if (index < 0) writes.push(row);
+      else writes[index] = row;
+      send(200, preferences);
+    } else {
+      send(405, {});
+    }
+    return;
+  }
+  if (manualNotification?.handle(url, request.method, body, claims.sub, send)) return;
+  if (notificationTemplateTest?.handle(url, request.method, claims.sub, send)) return;
+  if (notificationDeliveries(url, request.method, claims.sub, send)) return;
+  if (claims.sub && notificationRules?.handle(url, request.method, body, send)) return;
+  if (claims.sub && whatsappApproval?.handle(url, request.method, body, send)) return;
+  if (url.pathname.startsWith(pushPath + '/')) {
+    if (!claims.sub) { send(401, {}); return; }
+    if (url.pathname === pushPath + '/public-key' && request.method === 'GET') {
+      send(200, fixture.state.pushEnabled
+        ? { isConfigured: true, publicKey: fixtureVapid, vapidKeyVersion: 'fixture-v1' }
+        : { isConfigured: false });
+      return;
+    }
+    if (fixture.state.pushEnabled && url.pathname === pushPath + '/subscriptions' && request.method === 'POST') {
+      const id = randomUUID();
+      fixture.state.pushActions.push({ action: 'register', id, user: claims.sub, version: body.vapidKeyVersion });
+      send(200, { id });
+      return;
+    }
+    if (fixture.state.pushEnabled && url.pathname.startsWith(pushPath + '/subscriptions/') && request.method === 'DELETE') {
+      fixture.state.pushActions.push({ action: 'disable', id: url.pathname.split('/').at(-1), user: claims.sub });
+      response.writeHead(204);
+      response.end();
+      return;
+    }
+  }
   if (await fixture.handle(url, request.method, body, send)) return;
   if (handleDashboard(url, request.method, send, fixture)) return;
   if (await handleManagers(url, request.method, body, send, fixture, claims)) return;

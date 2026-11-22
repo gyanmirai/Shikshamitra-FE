@@ -4,6 +4,7 @@ import {
   buildApplyPayload,
   buildDraftPayload,
   buildManualApplyPayload,
+  buildPublicationPayload,
 } from './guided-payloads';
 
 import type { GuidedSeatingValues } from './types';
@@ -22,9 +23,38 @@ const values: GuidedSeatingValues = {
   acknowledgeWarnings: false,
   notifyStudents: true,
   notifyParents: true,
+  notifyTeachers: false,
+  sendEmail: false,
 };
 
 describe('guided seating payloads', () => {
+  it('keeps the selected publication audiences and email choice', () => {
+    expect(
+      buildPublicationPayload({
+        ...values,
+        notifyStudents: false,
+        notifyTeachers: true,
+        sendEmail: true,
+      })
+    ).toEqual({
+      notifyStudents: false,
+      notifyParents: true,
+      notifyTeachers: true,
+      sendEmail: true,
+    });
+  });
+
+  it('disables email when the publisher selects no audience', () => {
+    expect(
+      buildPublicationPayload({
+        ...values,
+        notifyStudents: false,
+        notifyParents: false,
+        sendEmail: true,
+      }).sendEmail
+    ).toBe(false);
+  });
+
   it('saves the selected rooms and concurrency version together', () => {
     expect(buildDraftPayload('plan-1', values, 'opaque-version')).toMatchObject({
       seatingPlanId: 'plan-1',

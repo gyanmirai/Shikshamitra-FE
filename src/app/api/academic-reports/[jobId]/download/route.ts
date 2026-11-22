@@ -1,8 +1,9 @@
 import { auth } from 'src/auth';
+import { academicReportPaths, academicReportIdPattern } from 'src/constants/academic-report-paths';
 
 export const dynamic = 'force-dynamic';
 
-const JOB_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const recoveryCodes = new Set(['Academic:Reports:050001', 'Academic:Reports:050002', 'Academic:Reports:050004']);
 
 interface DownloadRouteContext {
   params: Promise<{ jobId: string }>;
@@ -10,7 +11,7 @@ interface DownloadRouteContext {
 
 export async function GET(_request: Request, context: DownloadRouteContext): Promise<Response> {
   const { jobId } = await context.params;
-  if (!JOB_ID_PATTERN.test(jobId)) {
+  if (!academicReportIdPattern.test(jobId)) {
     return new Response('Invalid report identifier.', { status: 400 });
   }
 
@@ -33,9 +34,19 @@ export async function GET(_request: Request, context: DownloadRouteContext): Pro
     cache: 'no-store',
   });
 
-  if (!upstream.ok || !upstream.body) {
+  if (!upstream.ok) {
+    const content = upstream.headers.get('content-type') ?? '';
+    const problem = content.includes('application/problem+json') || content.includes('application/json')
+      ? await upstream.json().catch(() => null) : null;
+    if (recoveryCodes.has(problem?.errorCode ?? problem?.error?.code)) {
+      return new Response(null, {
+        status: 303,
+        headers: { Location: academicReportPaths.recovery(jobId), 'Cache-Control': 'private, no-store' },
+      });
+    }
     return new Response('The report could not be downloaded.', { status: upstream.status });
   }
+  if (!upstream.body) return new Response('The report file could not be opened.', { status: 502 });
 
   const headers = new Headers({
     'Cache-Control': 'private, no-store',

@@ -3,6 +3,7 @@ import type { AdaptiveThreeDotsAction } from 'src/components/adaptive-three-dots
 
 import { GlobalIcons } from 'src/utils/icons';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
+import { notificationRecordId } from 'src/redux/academic-notifications/delivery-adapters';
 
 import { isRowEvaluationDisabled } from './evaluationWorkspaceUi';
 
@@ -12,6 +13,7 @@ type Props = {
   taskSubmissionType?: number | string | null;
   onView: (row: IData) => void;
   onEdit: (row: IData) => void;
+  onNotify?: (row: IData) => void;
 };
 
 export default function EvaluationRowActions({
@@ -20,6 +22,7 @@ export default function EvaluationRowActions({
   taskSubmissionType,
   onView,
   onEdit,
+  onNotify,
 }: Props) {
   const name = String(row.studentName || 'student');
   const disabled = isRowEvaluationDisabled(row, taskSubmissionType);
@@ -43,6 +46,14 @@ export default function EvaluationRowActions({
       onClick: () => {
         if (!disabled) onEdit(row);
       },
+    });
+  }
+  if (onNotify && (row.status === 0 || row.status === '0') && notificationRecordId(String(row.studentId ?? ''))) {
+    actions.push({
+      id: 'notify',
+      label: `Send reminder for ${name}`,
+      icon: GlobalIcons.bell,
+      onClick: () => onNotify(row),
     });
   }
   return (

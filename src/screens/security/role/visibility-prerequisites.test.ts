@@ -63,7 +63,7 @@ describe('visibility prerequisites', () => {
     ]);
   });
 
-  it('maps House Management actions through the existing Student and Records visibility flags', () => {
+  it('maps House Management visibility through Student Records and the Student Setup guide', () => {
     const items = Object.values(studentModule()).flatMap((sections) =>
       sections.flatMap((section) => section.items)
     );
@@ -72,6 +72,7 @@ describe('visibility prerequisites', () => {
     ]);
     expect(prerequisites['Students.Records.HouseManagement']).toEqual([
       [studentPermissions.root, studentVisibilityPermissions.records],
+      [studentPermissions.root],
     ]);
   });
   const index = () => buildVisibilityPrerequisites(navigation);

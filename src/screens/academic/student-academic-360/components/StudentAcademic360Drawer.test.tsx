@@ -33,7 +33,10 @@ describe('Student Academic 360 drawer history', () => {
     );
     const api = studentAcademic360Api;
     const store = configureStore({
-      reducer: { [api.reducerPath]: api.reducer, globalState: () => ({}), confirmPopup: () => ({ isChanges: false }) },
+      reducer: {
+        [api.reducerPath]: api.reducer, globalState: () => ({}), confirmPopup: () => ({ isChanges: false }),
+        auth: () => ({ permissionsInitialized: false }),
+      },
       middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(api.middleware),
     });
     const student = { studentId: 'student-1', studentName: 'Academic Student' };

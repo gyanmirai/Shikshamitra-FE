@@ -8,6 +8,7 @@ import type {
   SeatingPlanWorkspaceDto,
   GuidedAllocationPreviewDto,
   ExaminationSeatingReadinessDto,
+  PublishSeatingNotificationOptionsDto,
 } from './seat-allocation-v2.types';
 
 export const guidedSeatAllocationApi = academicApi.injectEndpoints({
@@ -125,7 +126,7 @@ export const guidedSeatAllocationApi = academicApi.injectEndpoints({
     }),
     publishExaminationSeating: builder.mutation<
       SeatingPlanWorkspaceDto,
-      { examId: string; body: Record<string, unknown> }
+      { examId: string; body: PublishSeatingNotificationOptionsDto }
     >({
       query: ({ examId, body }) => ({
         url: `/academics/exams/${examId}/seating-plan/v2/publish`,

@@ -40,6 +40,7 @@ export const communicationPermissions = {
     root: `${defaultModulePermissionName}${defaultCommunicationPermissionName}Settings`,
     announcementType: `${defaultCommunicationPermissionName}Settings.AnnouncementType`,
     providerSettings: `${defaultCommunicationPermissionName}Settings.ProviderSettings.View`,
+    manageProviderSettings: `${defaultCommunicationPermissionName}Settings.ProviderSettings.Add`,
   },
 };
 

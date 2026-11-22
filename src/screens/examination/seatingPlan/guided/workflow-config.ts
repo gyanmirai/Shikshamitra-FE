@@ -83,6 +83,8 @@ export function getInitialValues(plan?: SeatingPlanGroupDto): GuidedSeatingValue
     acknowledgeWarnings: false,
     notifyStudents: false,
     notifyParents: false,
+    notifyTeachers: false,
+    sendEmail: false,
   };
 }
 

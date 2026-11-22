@@ -18,14 +18,16 @@ import {
   LinearProgress,
 } from '@mui/material';
 
-import { getStudentId } from '../types';
 import { SuccessOverview } from './SuccessOverview';
+import { getStudentId, getStudentName } from '../types';
 import { SuccessDetailTabs } from './SuccessDetailTabs';
 import { StudentSuccessHeader } from './StudentSuccessHeader';
 import { Academic360EmptyState } from './Academic360EmptyState';
+import { Student360NotificationActions } from './NotifyParentDialog';
 import { Academic360DetailPagination } from './Academic360DetailPagination';
 import { useStudentAcademic360Detail } from '../hooks/useStudentAcademic360Detail';
 
+import type { Student360NotificationEvent } from './NotifyParentDialog';
 import type { Academic360Response, Academic360StudentRow } from '../types';
 
 type StudentAcademic360DrawerProps = {
@@ -67,6 +69,8 @@ export function StudentAcademic360Drawer({
   const [activeTab, setActiveTab] = useState('overview');
   const [isExpanded, setIsExpanded] = useState(false);
   const studentId = student ? getStudentId(student) : '';
+  const [notification, setNotification] = useState<{ studentId: string; event: Student360NotificationEvent }>();
+  const notificationEvent = notification?.studentId === studentId ? notification.event : undefined;
   const currentIndex = students.findIndex((item) => getStudentId(item) === studentId);
   const canGoPrevious = !isPageLoading && currentIndex >= 0 && pageStartIndex + currentIndex > 0;
   const canGoNext =
@@ -98,7 +102,7 @@ export function StudentAcademic360Drawer({
   const pendingHomeworkCount = academic360?.learningTasks?.pending ?? 0;
 
   useEffect(() => {
-    if (!open) return undefined;
+    if (!open || notificationEvent) return undefined;
 
     const handleKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
@@ -118,7 +122,7 @@ export function StudentAcademic360Drawer({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [canGoNext, canGoPrevious, moveStudent, onClose, open]);
+  }, [canGoNext, canGoPrevious, moveStudent, notificationEvent, onClose, open]);
 
   const handlePrevious = () => {
     if (canGoPrevious) moveStudent('previous');
@@ -163,6 +167,11 @@ export function StudentAcademic360Drawer({
           />
         ) : (
           <Skeleton variant="rectangular" height={100} />
+        )}
+
+        {open && academic360?.student && !isError && (
+          <Student360NotificationActions studentId={studentId} studentName={getStudentName(academic360.student)}
+            event={notificationEvent} onEventChange={(event) => setNotification(event ? { studentId, event } : undefined)} />
         )}
 
         <Stack

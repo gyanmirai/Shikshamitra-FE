@@ -3,7 +3,7 @@ module: academic
 domain: validation
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-11-04
+updated_on: 2026-11-20
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -103,6 +103,56 @@ The synthetic browser regression runs with
 It uses the production division form, RTK Query clients and timetable board to check
 `B101` to `B2222`, drag-and-drop, reopening the builder and preservation of saved lecture overrides.
 Its local API does not establish deployed staging acceptance.
+
+## Report recovery checks
+
+Run `npm test -- src/screens/academic/components/reports/AcademicReportRecoveryScreen.test.tsx src/app/api/academic-reports` for explicit generation, duplicate click protection, owner-keyed requests, and the authenticated attachment and recovery responses. In the browser, open an expired notice, confirm the queued status, and download the replacement after it is ready.
+
+## Personal notification preference checks
+
+Run the focused `notification-preferences.test.tsx` Vitest file for linked-student writes, draft retention and conflict recovery. The Rules browser fixture saves and reloads the channel and quiet-hour choices from the notification bell and checks the dialog at phone, tablet and desktop widths.
+
+## Browser notification checks
+
+The rule client tests cover academic scope and paging parameters, owner-isolated cache keys, stale rule saves, and commands blocked after an account change. Run `npm test -- src/redux/academic-notifications/api.test.ts src/redux/service.auth-session.test.ts`.
+
+Run `npm test -- notification-rule-drawer.test.tsx` to verify the **Daily digest time** field and saved cutoff for submission and chapter progress digests, along with validation and saving of the explicit milestone percentage. The same tests check the weekly summary’s default weekday and the saved school-local weekday and cutoff.
+
+Run `npm test -- src/screens/academic/AcademicNotification src/components/notification-inbox` for the workspace and inbox, including safe links, separate read and acknowledgement, and account switching. Run `npx playwright test --config e2e/academic/academic-notification-rules.config.mjs` for scoped Rules, template publication, Delivery History and the personal inbox at a phone viewport with the synthetic school. The retry cases verify the selected attempt ID, queued status, retained failure evidence and conflict recovery. Approval cases open an assigned request from the queue, review samples, confirm approval or rejection, and verify that a changed request loses its Approve action.
+
+The same Playwright config checks school-wide starter draft creation for the selected event, retry after a failed request, repeat setup, and preservation of saved template wording at phone and desktop widths.
+The rule-to-template scenario also verifies coverage for the current recipients, channels and fallback language. It checks both choices in the unsaved-changes confirmation and verifies that the Templates workspace opens for the same event and scope.
+The channel setup scenario distinguishes configured, pending and unavailable setup status before saving, and verifies that staff can save a disabled rule while setup is pending.
+The queue processing scenario checks the pause notice at phone width across all three tabs and verifies that it clears when the reloaded catalogue reports processing enabled.
+
+The unavailable-event case checks the source explanation in the Rules table and configuration drawer. It verifies the disabled Enabled switch and readable drawer content at phone, tablet and desktop widths.
+
+The WhatsApp approval case publishes a revision, links it to a synthetic provider, submits for approval and refreshes its status. It checks phone, tablet and desktop layouts and queues a sample test after approval. The approval panel unit cases cover a view-only staff account and a changed provider binding.
+
+Run `npm test -- src/components/academic-notification-action` for reviewed sends, repeated confirmation clicks, changed reviews, and interrupted confirmation retries. The focused Playwright config also verifies that a reminder from the Homework evaluation table supplies exactly the selected student and opens the queued operation. This scenario uses a synthetic source and sends only to the fixture API.
+
+The reviewed-send checks exercise a queue pause that starts or ends between preview and confirmation. The dialog shows the latest pause status and retains the queued operation link.
+
+`e2e/academic/academic-notifications.spec.ts` checks the saved template preview, the test-send confirmation, the linked operation's queued and delivered states, and the sample in the personal inbox at the three standard viewport sizes. It uses the same focused Playwright config and the synthetic delivery fixture.
+
+Run `npm test -- src/components/academic-notification-action src/screens/academic/student-academic-360` to check Student Academic 360 recipient defaults, explicit relationship selection, published template selection and review invalidation when the audience changes. Browser acceptance should open each action from a saved student drawer and verify the child identity, meeting request wording, channel exclusions and return to the student after closing the composer.
+
+The main-contact checks cover the single-student Records link, the unsaved-review guard and guidance without Records permissions. The homework browser fixture verifies that a missing primary guardian produces no confirmation or Records link for the scoped send-only account.
+
+Run `npm test -- LessonDiaryDetailsDrawer.presentation.test.tsx` to verify that a submitted diary opens the shared preview with the exact selected teacher or reviewer and a draft hides both actions.
+
+```powershell
+npm test -- src/hooks/notifications src/redux/auth/load-session.test.tsx src/redux/auth/load-session-recovery.test.tsx
+npx eslint --no-config-lookup --global self --global URL --rule "no-undef:error" --rule "no-unused-vars:error" public/notification-sw.js --max-warnings 0
+npx playwright test --config e2e/academic/academic-notification-push.config.mjs
+```
+
+The synthetic school fixture verifies opt-in and opt-out in the authenticated desktop browser.
+It verifies that the same-origin notification launch URL opens the drawer at a mobile viewport.
+It also verifies iPad Home Screen guidance, retries after temporary status failures, and explicit opt-in after a subscription expires.
+The session-expiry fixture rejects enrollment with HTTP 401 and checks that local device enrollment is removed before the user returns to sign-in.
+The student message stays inside the authenticated application.
+Physical Android delivery and iPhone Home Screen permission and delivery need a configured test school and real devices.
 
 ## Operational read regressions
 

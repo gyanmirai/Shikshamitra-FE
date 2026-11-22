@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-30",
+  "generatedAt": "2026-11-19",
   "scope": "Academic module",
   "sources": [
     "src/constants/academic-menu.ts",
@@ -12,6 +12,35 @@
     {
       "module": "Academic",
       "submodules": [
+        {
+          "name": "Personal Notification Preferences",
+          "routes": ["/dashboard"],
+          "apis": [
+            "/api/communication/notifications/me/preferences",
+            "/api/communication/notifications/me/preferences/options"
+          ],
+          "roles": ["signed-in school account"],
+          "permissions": [],
+          "forms": ["notification preferences dialog"],
+          "businessActions": ["save account or linked student notification preferences"],
+          "risk": "high",
+          "status": "confirmed"
+        },
+        {
+          "name": "Browser Notifications",
+          "routes": ["/academic/dashboard", "/dashboard"],
+          "apis": [
+            "/api/communication/notifications/me/push/public-key",
+            "/api/communication/notifications/me/push/subscriptions",
+            "/api/communication/notifications/me/push/subscriptions/{id}"
+          ],
+          "roles": ["academic-admin"],
+          "permissions": [],
+          "forms": ["browser notification device control"],
+          "businessActions": ["enable browser notifications", "turn off browser notifications"],
+          "risk": "high",
+          "status": "confirmed"
+        },
         {
           "name": "Setup Guide",
           "routes": ["/academic/setup"],
@@ -231,13 +260,13 @@
         {
           "name": "Notification",
           "routes": ["/academic/notification"],
-          "apis": [],
+          "apis": ["/api/academic/notifications/catalogue", "/api/academic/notifications/rules", "/api/academic/notifications/rules/{eventKey}", "/api/academic/notifications/templates/options", "/api/academic/notifications/templates/initialize-defaults", "/api/academic/notifications/templates/{id}/test-send", "/api/academic/notifications/history", "/api/academic/notifications/dispatches/{id}/retry", "/api/academic/notifications/operations/{id}", "/api/academic/notifications/operations/pending-approvals", "/api/academic/notifications/operations/{id}/approval-review", "/api/academic/notifications/operations/{id}/approve", "/api/academic/notifications/operations/{id}/reject", "/api/communication/notifications/providers/whatsapp/templates/context", "/api/communication/notifications/providers/whatsapp/templates", "/api/communication/notifications/providers/whatsapp/templates/{id}/submit", "/api/communication/notifications/providers/whatsapp/templates/{id}/sync"],
           "roles": ["academic-admin"],
-          "permissions": ["ShikshaMitra.Academics.Notification"],
-          "forms": ["notification composer"],
-          "businessActions": ["send academic notifications"],
-          "risk": "medium",
-          "status": "confirmed-route-only"
+          "permissions": ["Academics.Notification.View", "Academics.Notification.Add"],
+          "forms": ["notification rule editor"],
+          "businessActions": ["view effective notification rules", "review an unavailable event's source requirement", "review channel setup before saving a rule", "save a scoped notification rule", "identify missing template coverage and open the event's templates", "add school-wide starter drafts for a selected event", "link a WhatsApp template and review provider approval", "request a retry for a definitively rejected channel attempt", "review and decide an assigned notification approval", "follow a template test from its confirmation to delivery history and the personal inbox"],
+          "risk": "high",
+          "status": "confirmed"
         },
         {
           "name": "Group Management",
