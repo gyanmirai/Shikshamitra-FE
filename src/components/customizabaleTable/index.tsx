@@ -57,6 +57,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   data,
   summaryRow,
   tableTitle = 'Table View',
+  headerContent,
   exportLabel = 'Export',
   exportContext: tableExportContext = [],
   exportScope = 'loaded',
@@ -512,6 +513,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
             border: `1px solid ${theme.palette.divider}`,
           }}
         >
+          {!fullScreenDialog.value && headerContent}
           {showToolbar && (
             <TableToolbar
               exportLabel={exportLabel}
@@ -937,6 +939,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
       handleRowsPerPageChange,
       handleChangeParams,
       tableTitle,
+      headerContent,
       tableId,
       sortedData,
       data.length,
