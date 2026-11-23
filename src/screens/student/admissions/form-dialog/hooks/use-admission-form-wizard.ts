@@ -64,7 +64,7 @@ export function useAdmissionFormWizard({
         name: values.name.trim(),
         code: editing?.code ?? '',
         inheritance: values.purpose === 1 ? values.inheritance : undefined,
-        printSettings: getAdmissionFormPrintSettings(values.printSettings),
+        printSettings: getAdmissionFormPrintSettings(values.printSettings, values.purpose),
       });
       formik.resetForm();
       onClose();

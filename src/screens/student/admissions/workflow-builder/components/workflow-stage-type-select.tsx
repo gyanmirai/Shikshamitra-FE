@@ -35,6 +35,11 @@ export function WorkflowStageTypeSelect({
   const [pending, setPending] = useState<AdmissionWorkflowStageTypeMetadata | null>(null);
   const applyType = (next: AdmissionWorkflowStageTypeMetadata) => {
     if (readOnly) return;
+    formik.setFieldTouched('stageType', false, false);
+    formik.setFieldTouched('configurationJson', false, false);
+    formik.setFieldError('stageType', undefined);
+    formik.setFieldError('configurationJson', undefined);
+    formik.setFormikState((state) => ({ ...state, submitCount: 0 }));
     formik.setValues(
       normalizeStageConfiguration({
         ...formik.values,
@@ -49,6 +54,7 @@ export function WorkflowStageTypeSelect({
             : formik.values.description,
         configurationJson: undefined,
         isEntryStage: next.canBeEntryStage && formik.values.isEntryStage,
+        isTerminalStage: false,
       })
     );
     setPending(null);

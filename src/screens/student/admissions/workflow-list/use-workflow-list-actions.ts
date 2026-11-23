@@ -23,6 +23,7 @@ import {
 
 import { getAdmissionWorkflowTemplate } from '../workflow-template';
 import { useWorkflowListPublish } from './use-workflow-list-publish';
+import { DUPLICATE_WORKFLOW_NAME_CODE } from '../workflow-name-error';
 import { workflowArchiveErrorMessage } from './workflow-archive-error';
 import { getAdmissionWorkflowAccess, isAdmissionWorkflowPublishable } from '../workflow-access';
 
@@ -103,9 +104,12 @@ export function useWorkflowListActions(returnTo?: string) {
       shikshaMitraToast.success({ message });
       if (goToResult && result && 'id' in result) navigate(result);
     } catch (error) {
-      shikshaMitraToast.error({
-        message: parseApiProblemDetail(error).detail || 'Unable to complete the workflow action.',
-      });
+      const problem = parseApiProblemDetail(error);
+      if (problem.errorCode !== DUPLICATE_WORKFLOW_NAME_CODE) {
+        shikshaMitraToast.error({
+          message: problem.detail || 'Unable to complete the workflow action.',
+        });
+      }
       throw error;
     }
   };
@@ -130,9 +134,10 @@ export function useWorkflowListActions(returnTo?: string) {
       router.push(withReturn(`${studentPaths.enrollment.settings.workflows}/${result.id}?setup=1`));
     } catch (error) {
       setOpeningCreatedWorkflow(false);
-      shikshaMitraToast.error({
-        message: parseApiProblemDetail(error).detail || 'Unable to create the workflow draft.',
-      });
+      const problem = parseApiProblemDetail(error);
+      if (problem.errorCode !== DUPLICATE_WORKFLOW_NAME_CODE) {
+        shikshaMitraToast.error({ message: problem.detail || 'Unable to create the workflow draft.' });
+      }
       throw error;
     }
   };

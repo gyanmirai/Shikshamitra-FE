@@ -33,6 +33,29 @@ describe('admission form template catalogue', () => {
     expect(cloned.printSettings).toEqual(source.printSettings);
     expect(cloned.printSettings).not.toBe(source.printSettings);
   });
+  it('uses Boxed Grid when creating an editable draft from a legacy Registration starter', () => {
+    const legacySettings = {
+      ...getAdmissionFormInitialValues().printSettings!,
+      template: 'simple' as const,
+      layout: 'spacious' as const,
+    };
+    const source = {
+      ...getAdmissionFormInitialValues(),
+      id: 'legacy',
+      version: 1,
+      status: 1,
+      printSettings: legacySettings,
+    } as AdmissionForm;
+
+    expect(cloneSchoolFormAsStarter(source).printSettings).toEqual({
+      ...legacySettings,
+      template: 'boxed-grid',
+    });
+    expect(cloneSchoolFormAsStarter({ ...source, purpose: 0 }).printSettings).toEqual(
+      legacySettings
+    );
+    expect(source.printSettings).toEqual(legacySettings);
+  });
   it('orders new Home address selectors by their Country, State and City dependencies', () => {
     const form = getSystemAdmissionFormTemplate('admission-application');
     expect(form.printSettings?.template).toBe('boxed-grid');

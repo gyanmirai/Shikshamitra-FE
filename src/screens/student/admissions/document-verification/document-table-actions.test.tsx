@@ -36,6 +36,22 @@ describe('DocumentTableActions', () => {
     expect(screen.getByRole('dialog', { name: /Birth certificate.*History/ })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Download' })).not.toBeInTheDocument();
   });
+
+  it('prefers right-side heading help for Student photograph history', async () => {
+    renderDocumentUi(
+      <DocumentTableActions
+        requirement={{ ...documentSummary.requirements[0], name: 'Student photograph', evidence: [documentEvidence] }}
+        permissions={permissions}
+        readOnly
+      />
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'More Actions For Student photograph' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'History' }));
+    await userEvent.hover(screen.getByRole('button', { name: 'Student photograph · History information' }));
+    const tooltip = await screen.findByRole('tooltip');
+    expect(tooltip).toHaveTextContent('Review uploaded versions, decisions and rejection reasons.');
+    expect(tooltip.querySelector('.MuiTooltip-tooltipPlacementRight')).toBeInTheDocument();
+  });
   it('opens upload directly and leaves missing evidence View unavailable', async () => {
     const onAction = vi.fn();
     const onView = vi.fn();

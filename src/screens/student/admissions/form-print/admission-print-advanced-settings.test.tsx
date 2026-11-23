@@ -3,7 +3,8 @@ import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { Tabs } from '@mui/material';
 import { it, vi, expect, describe } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { act, render, screen, within, fireEvent } from '@testing-library/react';
 
 import { DEFAULT_ADMISSION_PRINT_SETTINGS } from './form-print-model';
 import { AdmissionPrintSettingsPanel } from './admission-print-settings';
@@ -71,6 +72,32 @@ const form: AdmissionPrintDefinition = {
   ],
 };
 
+const formWithPhoto: AdmissionPrintDefinition = {
+  ...form,
+  sections: form.sections.map((section, index) =>
+    index === 0
+      ? {
+          ...section,
+          fields: [
+            ...section.fields,
+            {
+              id: 'photo',
+              code: 'STUDENT_PHOTO',
+              label: 'Student photograph',
+              fieldType: 0,
+              bindingType: 0,
+              bindingKey: 'Applicant.ProfilePhoto',
+              validationJson: '{"format":"photo"}',
+              displayOrder: 1,
+              required: false,
+              readOnly: false,
+            },
+          ],
+        }
+      : section
+  ),
+};
+
 function Harness({
   initial = DEFAULT_ADMISSION_PRINT_SETTINGS,
   definition = form,
@@ -108,9 +135,63 @@ function choose(label: string, option: string) {
   fireEvent.click(screen.getByRole('option', { name: option }));
 }
 
+function expandSettingsCards() {
+  act(() => {
+    screen
+      .queryAllByRole('button', { name: /^Expand / })
+      .forEach((button) => fireEvent.click(button));
+  });
+}
+
+function renderSettings(ui: ReactNode) {
+  render(ui);
+  expandSettingsCards();
+}
+
+function selectSettingsTab(name: string) {
+  fireEvent.click(screen.getByRole('tab', { name }));
+  expandSettingsCards();
+}
+
 describe('Advanced registration print settings', () => {
+  it.each([
+    ['Paper & style', 'Page Border'],
+    ['Header & footer', 'Photo Space'],
+    ['Sections & fields', 'Section Layout'],
+    ['Content & copies', 'Document Checklist'],
+  ])('provides keyboard-accessible disclosure controls on %s', async (tab, title) => {
+    const user = userEvent.setup();
+    render(<Harness definition={formWithPhoto} />);
+    fireEvent.click(screen.getByRole('tab', { name: tab }));
+    const panel = screen.getByRole('tabpanel', { name: tab });
+    const collapsed = within(panel).getByRole('button', {
+      name: `Expand ${title}`,
+    });
+    expect(collapsed).toHaveAttribute('aria-expanded', 'false');
+    act(() => collapsed.focus());
+    await user.keyboard('{Enter}');
+    expect(within(panel).getByRole('button', { name: `Collapse ${title}` })).toHaveAttribute(
+      'aria-expanded',
+      'true'
+    );
+  });
+
+  it('enables position and size only for a configured photo field', () => {
+    render(<Harness definition={formWithPhoto} />);
+    fireEvent.click(screen.getByRole('tab', { name: 'Header & footer' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Expand Photo Space' }));
+    choose('Photo placement', 'Top right of first-page header');
+    expect(payload().advanced.photo.placement).toBe('header-top-right');
+    expect(screen.getByLabelText('Photo width')).toBeEnabled();
+    expect(screen.getByLabelText('Photo height')).toBeEnabled();
+    expect(screen.getByRole('combobox', { name: 'Photo alignment' })).toHaveAttribute(
+      'aria-disabled',
+      'true'
+    );
+  });
+
   it('edits writing instructions as list items while preserving the saved newline format', () => {
-    render(
+    renderSettings(
       <Harness
         initial={{
           ...DEFAULT_ADMISSION_PRINT_SETTINGS,
@@ -123,7 +204,7 @@ describe('Advanced registration print settings', () => {
         }}
       />
     );
-    fireEvent.click(screen.getByRole('tab', { name: 'Content & copies' }));
+    selectSettingsTab('Content & copies');
 
     expect(screen.getByLabelText('Instruction 1')).toHaveValue('Use black ink.');
     expect(screen.getByLabelText('Instruction 2')).toHaveValue('Write clearly.');
@@ -137,21 +218,27 @@ describe('Advanced registration print settings', () => {
   });
 
   it('places content guidance beside the related setting labels', () => {
-    render(<Harness />);
-    fireEvent.click(screen.getByRole('tab', { name: 'Content & copies' }));
+    renderSettings(<Harness />);
+    selectSettingsTab('Content & copies');
 
     expect(screen.getByRole('button', { name: 'Include instructions help' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Include declaration help' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Parent signature help' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Office signature help' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Instructions text help' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Instructions text help' })
+    ).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Declaration text help' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Parent signature label help' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Office signature label help' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Parent signature label help' })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Office signature label help' })
+    ).not.toBeInTheDocument();
   });
 
   it('shows independent parent and office signature uploads and persists their images', () => {
-    render(
+    renderSettings(
       <Harness
         initial={{
           ...DEFAULT_ADMISSION_PRINT_SETTINGS,
@@ -164,7 +251,7 @@ describe('Advanced registration print settings', () => {
         }}
       />
     );
-    fireEvent.click(screen.getByRole('tab', { name: 'Content & copies' }));
+    selectSettingsTab('Content & copies');
 
     expect(screen.getByRole('group', { name: /Parent signature image/ })).toBeInTheDocument();
     expect(screen.getByRole('group', { name: /Office signature image/ })).toBeInTheDocument();
@@ -174,8 +261,8 @@ describe('Advanced registration print settings', () => {
     });
   });
 
-  it('keeps photo placement hidden while preserving existing saved placement settings', () => {
-    render(
+  it('shows photo guidance without changing saved settings when there is no photo question', () => {
+    renderSettings(
       <Harness
         initial={{
           ...DEFAULT_ADMISSION_PRINT_SETTINGS,
@@ -183,9 +270,11 @@ describe('Advanced registration print settings', () => {
         }}
       />
     );
-    fireEvent.click(screen.getByRole('tab', { name: 'Header & footer' }));
+    selectSettingsTab('Header & footer');
     expect(screen.queryByRole('combobox', { name: 'Photo placement' })).not.toBeInTheDocument();
     expect(screen.queryByRole('combobox', { name: 'Photo alignment' })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Show photo space')).not.toBeInTheDocument();
+    expect(screen.getByText(/Add a photo question in Build form/)).toBeVisible();
     expect(payload().advanced.photo).toMatchObject({
       placement: 'header-top-right',
       alignment: 'center',
@@ -193,7 +282,7 @@ describe('Advanced registration print settings', () => {
   });
 
   it('keeps specific banner pages independent of the header choice', () => {
-    render(<Harness basic />);
+    renderSettings(<Harness basic />);
     choose('Banner pages', 'Selected pages');
     choose('Pages with banner', 'Page 3');
     fireEvent.keyDown(screen.getByRole('listbox'), { key: 'Escape' });
@@ -205,7 +294,7 @@ describe('Advanced registration print settings', () => {
   });
 
   it('edits Basic writing instructions as separate list items', () => {
-    render(<Harness basic />);
+    renderSettings(<Harness basic />);
     fireEvent.click(screen.getByLabelText('Print writing instructions'));
     fireEvent.change(screen.getByLabelText('Instruction 1'), {
       target: { value: 'Use black ink.' },
@@ -220,15 +309,16 @@ describe('Advanced registration print settings', () => {
   });
 
   it('saves photo visibility while retaining the saved placement values', () => {
-    render(
+    renderSettings(
       <Harness
+        definition={formWithPhoto}
         initial={{
           ...DEFAULT_ADMISSION_PRINT_SETTINGS,
           advanced: { photo: { placement: 'last', alignment: 'center' } },
         }}
       />
     );
-    fireEvent.click(screen.getByRole('tab', { name: 'Header & footer' }));
+    selectSettingsTab('Header & footer');
     fireEvent.click(screen.getByLabelText('Show photo space'));
     expect(payload()).toMatchObject({
       showPhoto: false,
@@ -247,7 +337,7 @@ describe('Advanced registration print settings', () => {
         content: { translations: { gu: { instructions: 'Existing translation' } } },
       },
     };
-    render(<Harness initial={initial} />);
+    renderSettings(<Harness initial={initial} />);
     expect(screen.getAllByRole('tab')).toHaveLength(4);
     choose('Paper size', 'A5');
     choose('Orientation', 'Landscape');
@@ -268,7 +358,7 @@ describe('Advanced registration print settings', () => {
   });
 
   it('offers four print colour presets and font families', () => {
-    render(<Harness />);
+    renderSettings(<Harness />);
     expect(screen.getByRole('radio', { name: /School blue/ })).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: /Neutral/ })).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: /Forest green/ })).toBeInTheDocument();
@@ -292,7 +382,7 @@ describe('Advanced registration print settings', () => {
   });
 
   it('resets each paper and style card independently', () => {
-    render(
+    renderSettings(
       <Harness
         initial={{
           ...DEFAULT_ADMISSION_PRINT_SETTINGS,
@@ -351,9 +441,10 @@ describe('Advanced registration print settings', () => {
     });
   });
 
-  it('resets header and footer cards independently and removes photo placement controls', () => {
-    render(
+  it('resets header, photo and footer cards independently', () => {
+    renderSettings(
       <Harness
+        definition={formWithPhoto}
         initial={{
           ...DEFAULT_ADMISSION_PRINT_SETTINGS,
           showPhoto: false,
@@ -379,10 +470,16 @@ describe('Advanced registration print settings', () => {
         }}
       />
     );
-    fireEvent.click(screen.getByRole('tab', { name: 'Header & footer' }));
+    selectSettingsTab('Header & footer');
 
-    expect(screen.queryByLabelText('Photo placement')).not.toBeInTheDocument();
-    expect(screen.queryByLabelText('Photo alignment')).not.toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'Photo placement' })).toHaveAttribute(
+      'aria-disabled',
+      'true'
+    );
+    expect(screen.getByRole('combobox', { name: 'Photo alignment' })).toHaveAttribute(
+      'aria-disabled',
+      'true'
+    );
     expect(screen.queryByText(/Add a photo question in Build form/)).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Reset School Details to defaults' }));
@@ -434,7 +531,7 @@ describe('Advanced registration print settings', () => {
   });
 
   it('resets form flow and the selected section and field without clearing other overrides', () => {
-    render(
+    renderSettings(
       <Harness
         initial={{
           ...DEFAULT_ADMISSION_PRINT_SETTINGS,
@@ -449,14 +546,16 @@ describe('Advanced registration print settings', () => {
         }}
       />
     );
-    fireEvent.click(screen.getByRole('tab', { name: 'Sections & fields' }));
+    selectSettingsTab('Sections & fields');
 
     fireEvent.click(screen.getByRole('button', { name: 'Reset Form Flow to defaults' }));
     expect(payload().advanced.flow).toEqual({ stepTitles: true, sectionNumbers: true });
 
     fireEvent.click(screen.getByRole('button', { name: 'Reset Section Layout to defaults' }));
     expect(payload().advanced.sections).toEqual({ SIBLINGS: { columns: 3 } });
-    expect(screen.getByRole('combobox', { name: 'Section columns' })).toHaveTextContent('2 columns');
+    expect(screen.getByRole('combobox', { name: 'Section columns' })).toHaveTextContent(
+      '2 columns'
+    );
     expect(screen.getByRole('combobox', { name: 'Section spacing' })).toHaveTextContent('Compact');
 
     fireEvent.click(screen.getByRole('button', { name: 'Reset Field Appearance to defaults' }));
@@ -467,7 +566,7 @@ describe('Advanced registration print settings', () => {
   });
 
   it('resets content and copy cards and exposes field guidance through custom tooltips', () => {
-    render(
+    renderSettings(
       <Harness
         initial={{
           ...DEFAULT_ADMISSION_PRINT_SETTINGS,
@@ -505,7 +604,7 @@ describe('Advanced registration print settings', () => {
         }}
       />
     );
-    fireEvent.click(screen.getByRole('tab', { name: 'Content & copies' }));
+    selectSettingsTab('Content & copies');
 
     expect(screen.getByRole('button', { name: 'Include instructions help' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Include declaration help' })).toBeInTheDocument();
@@ -567,12 +666,12 @@ describe('Advanced registration print settings', () => {
   });
 
   it('keeps saved contact flags while disabling unavailable school contact options', () => {
-    render(
+    renderSettings(
       <Harness
         initial={{ ...DEFAULT_ADMISSION_PRINT_SETTINGS, advanced: { header: { phone: true } } }}
       />
     );
-    fireEvent.click(screen.getByRole('tab', { name: 'Header & footer' }));
+    selectSettingsTab('Header & footer');
     expect(screen.getByRole('switch', { name: 'School phone' })).toBeDisabled();
     expect(screen.getByRole('switch', { name: 'School phone' })).toBeChecked();
     expect(screen.getByRole('switch', { name: 'School phone' })).toHaveAccessibleDescription(
@@ -590,8 +689,8 @@ describe('Advanced registration print settings', () => {
   });
 
   it('stores section and field overrides by uppercase authored code without changing questions', () => {
-    render(<Harness />);
-    fireEvent.click(screen.getByRole('tab', { name: 'Sections & fields' }));
+    renderSettings(<Harness />);
+    selectSettingsTab('Sections & fields');
     choose('Section columns', '3 columns');
     fireEvent.click(screen.getByRole('switch', { name: 'Start section on a new page' }));
     choose('Field width', 'Full width');
@@ -603,13 +702,13 @@ describe('Advanced registration print settings', () => {
       fields: { FIRST_NAME: { width: 'full' } },
     });
     expect(form.sections[0].fields[0].required).toBe(true);
-    fireEvent.click(screen.getByRole('tab', { name: 'Paper & style' }));
-    fireEvent.click(screen.getByRole('tab', { name: 'Sections & fields' }));
+    selectSettingsTab('Paper & style');
+    selectSettingsTab('Sections & fields');
     expect(payload().advanced.fields.FIRST_NAME.width).toBe('full');
   });
 
   it('preserves content translations, checklist rows and print-only flags after changing tabs', () => {
-    render(
+    renderSettings(
       <Harness
         initial={{
           ...DEFAULT_ADMISSION_PRINT_SETTINGS,
@@ -624,7 +723,7 @@ describe('Advanced registration print settings', () => {
         }}
       />
     );
-    fireEvent.click(screen.getByRole('tab', { name: 'Content & copies' }));
+    selectSettingsTab('Content & copies');
     fireEvent.click(screen.getByRole('switch', { name: 'Include instructions' }));
     choose('Content language', 'Gujarati');
     fireEvent.change(screen.getByLabelText('Instruction 1'), {
@@ -661,15 +760,15 @@ describe('Advanced registration print settings', () => {
   });
 
   it('shows useful empty states when no sections or fields are available', () => {
-    render(<Harness definition={{ ...form, sections: [] }} />);
-    fireEvent.click(screen.getByRole('tab', { name: 'Sections & fields' }));
+    renderSettings(<Harness definition={{ ...form, sections: [] }} />);
+    selectSettingsTab('Sections & fields');
     expect(screen.getByText(/Add sections in Build form/)).toBeVisible();
     expect(screen.getByText(/Add fields to this section/)).toBeVisible();
     expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
   });
 
   it('supports numeric typing with bounds and keeps each margin independent', () => {
-    render(<Harness />);
+    renderSettings(<Harness />);
     const top = screen.getByLabelText('Top margin');
     fireEvent.change(top, { target: { value: '2' } });
     expect(screen.getByText('Enter a value from 5 to 30 mm.')).toBeVisible();
@@ -692,13 +791,13 @@ describe('Advanced registration print settings', () => {
         },
       ],
     };
-    render(
+    renderSettings(
       <Harness
         definition={definition}
         initial={{ ...DEFAULT_ADMISSION_PRINT_SETTINGS, layout: 'spacious' }}
       />
     );
-    fireEvent.click(screen.getByRole('tab', { name: 'Sections & fields' }));
+    selectSettingsTab('Sections & fields');
     expect(screen.getByLabelText('Writing lines')).toHaveValue('3');
     fireEvent.change(screen.getByLabelText('Writing lines'), { target: { value: '1' } });
     expect(payload().advanced.fields.FIRST_NAME.writingLines).toBe(1);
@@ -706,7 +805,7 @@ describe('Advanced registration print settings', () => {
 
   it('limits checklist creation while keeping authored content when printing is disabled', () => {
     const checklist = Array.from({ length: 20 }, (_, index) => `Document ${index + 1}`);
-    render(
+    renderSettings(
       <Harness
         initial={{
           ...DEFAULT_ADMISSION_PRINT_SETTINGS,
@@ -714,27 +813,30 @@ describe('Advanced registration print settings', () => {
         }}
       />
     );
-    fireEvent.click(screen.getByRole('tab', { name: 'Content & copies' }));
+    selectSettingsTab('Content & copies');
     expect(screen.getByRole('button', { name: 'Add document' })).toBeDisabled();
     fireEvent.click(screen.getByRole('switch', { name: 'Include document checklist' }));
     expect(payload().advanced.content.translations.en.checklist).toEqual(checklist);
     expect(screen.getByLabelText('Document 1')).toBeDisabled();
   });
 
-  it('retains a saved photo-question placement without exposing the removed controls', () => {
-    render(
+  it('reopens the saved photo-question placement when the photo question is present', () => {
+    renderSettings(
       <Harness
+        definition={formWithPhoto}
         initial={{
           ...DEFAULT_ADMISSION_PRINT_SETTINGS,
           advanced: { photo: { placement: 'field' } },
         }}
       />
     );
-    fireEvent.click(screen.getByRole('tab', { name: 'Header & footer' }));
+    selectSettingsTab('Header & footer');
     expect(
       screen.queryByText(/Add a photo question in Build form to place/)
     ).not.toBeInTheDocument();
-    expect(screen.queryByRole('combobox', { name: 'Photo placement' })).not.toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'Photo placement' })).toHaveTextContent(
+      'At the photo question'
+    );
     expect(payload().advanced.photo.placement).toBe('field');
   });
 });

@@ -17,7 +17,10 @@ import {
   useGetAdmissionFormQuery,
   useGetAdmissionFormsQuery,
 } from 'src/redux/student/admissions/admission-forms-api';
-import { useStudentSetupEmbedding , StudentSetupManagerHeader as CustomBreadcrumbs } from 'src/screens/student/setup/embedding';
+import {
+  useStudentSetupEmbedding,
+  StudentSetupManagerHeader as CustomBreadcrumbs,
+} from 'src/screens/student/setup/embedding';
 
 import { createFormColumns } from './form-list/form-columns';
 import { AdmissionFormDialog } from './admission-form-dialog';
@@ -45,6 +48,7 @@ export default function AdmissionFormsScreen() {
   const router = useRouter();
   const actions = useFormListActions();
   const lifecycle = useFormLifecycleActions(actions.canManage);
+  const [pendingVersion, setPendingVersion] = useState<AdmissionForm | null>(null);
   const requestedRestoreId = searchParams.get('restoreForm');
   const restoreEntryHandled = useRef<string | null>(null);
   const restoreEntry = useGetAdmissionFormQuery(requestedRestoreId ?? '', {
@@ -92,12 +96,18 @@ export default function AdmissionFormsScreen() {
   const preview = (id: string) =>
     actions.preview(
       id,
-      embedded ? studentSetupReturnUrl('admission-forms', searchParams.get('guideYear'), searchParams.get('returnTo')) : getAdmissionFormListReturnUrl({
-        page,
-        rowsPerPage,
-        search,
-        filters,
-      })
+      embedded
+        ? studentSetupReturnUrl(
+            'admission-forms',
+            searchParams.get('guideYear'),
+            searchParams.get('returnTo')
+          )
+        : getAdmissionFormListReturnUrl({
+            page,
+            rowsPerPage,
+            search,
+            filters,
+          })
     );
   const listQuery = useMemo(
     () => buildAdmissionFormListQuery({ page, rowsPerPage, search, filters }),
@@ -112,12 +122,12 @@ export default function AdmissionFormsScreen() {
     canPublish: actions.canPublish,
     canDelete: actions.canDelete,
     creatingVersionId: actions.creatingVersionId,
-    onEdit: (form) => actions.edit(form.id),
+    onEdit: (form) => actions.edit(form.id, form.purpose),
     onClone: actions.requestClone,
     onValidate: (form) => actions.validate(form.id),
     onPublish: actions.requestPublish,
     onHistory: actions.showHistory,
-    onCreateVersion: (form) => actions.createVersion(form.id),
+    onCreateVersion: setPendingVersion,
     onArchive: (form) => lifecycle.request('archive', form),
     onRestore: (form) => lifecycle.request('restore', form),
     onDelete: actions.requestDelete,
@@ -135,7 +145,24 @@ export default function AdmissionFormsScreen() {
       }}
     >
       <CustomBreadcrumbs
-        editorOpen={actions.dialog.value || Boolean(actions.pendingClone) || Boolean(actions.pendingPublish) || Boolean(actions.pendingDelete) || Boolean(lifecycle.pending)} busy={actions.saving || actions.cloning || actions.publishing || actions.deleting || Boolean(actions.creatingVersionId) || lifecycle.busy}
+        editorOpen={
+          actions.dialog.value ||
+          Boolean(
+            actions.pendingClone ||
+            actions.pendingPublish ||
+            actions.pendingDelete ||
+            lifecycle.pending ||
+            pendingVersion
+          )
+        }
+        busy={
+          actions.saving ||
+          actions.cloning ||
+          actions.publishing ||
+          actions.deleting ||
+          Boolean(actions.creatingVersionId) ||
+          lifecycle.busy
+        }
         heading="Admission Forms"
         description="Create and Publish the Inquiry and Registration Forms Used Across Admissions."
         links={[
@@ -144,30 +171,19 @@ export default function AdmissionFormsScreen() {
           { name: 'Settings', href: studentPaths.enrollment.settings.root },
           { name: 'Admission Forms' },
         ]}
-        slotProps={{
-          action: { alignSelf: { xs: 'flex-end', md: 'center' }, maxWidth: '100%' },
-          heading: {},
-          moreLink: {},
-          breadcrumbs: {},
-        }}
-        action={
-          <Button
-            aria-label="Add Form"
-            size="small"
-            variant="contained"
-            disabled={!actions.canManage}
-            startIcon={<Iconify icon="mdi:plus" />}
-            onClick={() => actions.create(0)}
-          >
-            Form
-          </Button>
-        }
       />
       <Paper
         component="section"
         aria-label="Admission Form Filters"
         variant="outlined"
-        sx={{ p: 1, borderRadius: 2 }}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 1,
+          p: 1,
+          borderRadius: 2,
+        }}
       >
         <CustomSelect
           name="formType"
@@ -179,7 +195,7 @@ export default function AdmissionFormsScreen() {
             { value: 0, label: 'Inquiry' },
             { value: 1, label: 'Registration' },
           ]}
-          formControlProps={{ sx: { width: { xs: '100%', sm: 180 } } }}
+          formControlProps={{ sx: { width: { xs: '100%', sm: 180 }, minWidth: 0 } }}
           onChange={(value) => {
             setFilters([
               ...filters.filter((filter) => filter.column !== 'purpose'),
@@ -199,6 +215,17 @@ export default function AdmissionFormsScreen() {
             setPage(0);
           }}
         />
+        <Button
+          aria-label="Add Form"
+          size="small"
+          variant="contained"
+          disabled={!actions.canManage}
+          startIcon={<Iconify icon="mdi:plus" />}
+          onClick={() => actions.create(0)}
+          sx={{ flexShrink: 0, whiteSpace: 'nowrap' }}
+        >
+          Form
+        </Button>
       </Paper>
       {listError && hasSafeRows && <AdmissionQueryError onRetry={() => query.refetch()} />}
       <Box sx={{ flex: 1, minHeight: 0, minWidth: 0, overflow: 'hidden' }}>
@@ -230,6 +257,7 @@ export default function AdmissionFormsScreen() {
           filters={filters}
           isLoading={query.isLoading || (query.isFetching && !currentData)}
           isRefreshing={query.isFetching && Boolean(currentData)}
+          refreshIndicator="skeleton"
           isPagination
           isSearch
           isFilter
@@ -269,8 +297,8 @@ export default function AdmissionFormsScreen() {
           actions.editingId
             ? (actions.editing?.purpose ??
               currentData?.items.find((form) => form.id === actions.editingId)?.purpose ??
-              0)
-            : actions.creatingPurpose
+              actions.initialPurpose)
+            : actions.initialPurpose
         }
         saving={actions.saving}
         onSave={actions.save}
@@ -296,9 +324,13 @@ export default function AdmissionFormsScreen() {
         form={actions.historyForm}
         canRestore={actions.canPublish}
         onClose={actions.closeHistory}
+        onOpenExistingDraft={(id) => {
+          actions.closeHistory();
+          actions.edit(id, actions.historyForm?.purpose);
+        }}
         onRestoreVersion={async (id) => {
           if (!actions.canPublish) return false;
-          const restored = await actions.createVersion(id);
+          const restored = await actions.restoreVersion(id);
           if (restored) actions.closeHistory();
           return restored;
         }}
@@ -313,6 +345,34 @@ export default function AdmissionFormsScreen() {
       {requestedRestoreId && restoreEntry.isError && (
         <AdmissionQueryError onRetry={restoreEntry.refetch} />
       )}
+      <ConfirmDialog
+        open={Boolean(pendingVersion)}
+        onClose={() => setPendingVersion(null)}
+        icon="info"
+        title="Create new version?"
+        content={
+          <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
+            Create a new editable draft of <strong>{pendingVersion?.name}</strong> from Version{' '}
+            {pendingVersion?.version}.
+          </Typography>
+        }
+        action={
+          <Button
+            variant="contained"
+            size="small"
+            loading={Boolean(actions.creatingVersionId)}
+            disabled={!actions.canPublish}
+            startIcon={<Iconify icon="mdi:source-branch-plus" />}
+            onClick={async () => {
+              if (pendingVersion && (await actions.createVersion(pendingVersion.id))) {
+                setPendingVersion(null);
+              }
+            }}
+          >
+            Create Version
+          </Button>
+        }
+      />
       <ConfirmDialog
         open={Boolean(actions.pendingDelete)}
         onClose={actions.clearPendingDelete}

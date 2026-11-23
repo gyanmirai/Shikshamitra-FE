@@ -26,12 +26,13 @@ const props = () => ({
 });
 
 describe('Admission form publish confirmation', () => {
-  it('shows the publish badge and version consequence without a warning icon', () => {
+  it('uses the shared information icon and shows the publish consequence', () => {
     const callbacks = props();
     render(<AdmissionFormPublishDialog {...callbacks} />);
 
     expect(screen.getByRole('dialog', { name: 'Publish Admission inquiry?' })).toBeVisible();
-    expect(screen.getAllByTestId('mdi:publish')).toHaveLength(2);
+    expect(screen.getByTestId('InfoIcon')).toBeVisible();
+    expect(screen.getAllByTestId('mdi:publish')).toHaveLength(1);
     expect(screen.queryByTestId('WarningAmberIcon')).not.toBeInTheDocument();
     expect(
       screen.getByText(/Version 1 will become available for new admission offerings/)
@@ -46,7 +47,12 @@ describe('Admission form publish confirmation', () => {
     render(<AdmissionFormPublishDialog {...callbacks} />);
 
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Publish Form' })).toBeDisabled();
+    const publish = screen.getByRole('button', { name: 'Publish Form' });
+    expect(publish).toBeDisabled();
+    expect(screen.getAllByRole('progressbar')).toHaveLength(1);
+    expect(publish).toContainElement(screen.getByRole('progressbar'));
+    expect(screen.queryByText(/Checking every field/)).not.toBeInTheDocument();
+    expect(screen.getByText(/Version 1 will become available/)).toBeVisible();
     fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape', code: 'Escape' });
     expect(callbacks.onClose).not.toHaveBeenCalled();
   });

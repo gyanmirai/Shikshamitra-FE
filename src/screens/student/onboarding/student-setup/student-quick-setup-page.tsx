@@ -1,16 +1,18 @@
 'use client';
 
+import type { Theme } from '@mui/material/styles';
 import type { StudentOnboardingCase } from 'src/redux/student/onboarding/student-onboarding-types';
 
 import { ValidationError } from 'yup';
-import { LoadingButton } from '@mui/lab';
+import { visuallyHidden } from '@mui/utils';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { useRef, useState, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
+import { LoadingButton } from 'src/components/loading-button';
 import { StudentFeedback } from 'src/components/student-feedback';
-import { Box, Stack, Button, Skeleton, Typography } from '@mui/material';
+import { Box, Stack, Button, Skeleton, Typography, buttonClasses } from '@mui/material';
 import {
   useActivateStudentOnboardingMutation,
   useLazyGetStudentOnboardingCaseQuery,
@@ -21,10 +23,10 @@ import {
 } from 'src/redux/student/onboarding/student-onboarding-api';
 
 import StudentOnboardingFees from './student-onboarding-fees';
-import StudentPhotoAvatar from '../../components/student-photo-avatar';
 import { mapOnboardingCaseToItem } from './student-onboarding-model';
 import StudentQuickSetupSection from './student-quick-setup-section';
 import { runStudentQuickSetupSave } from './student-quick-setup-save';
+import StudentPhotoAvatar from '../../components/student-photo-avatar';
 import StudentQuickSetupAcademic from './student-quick-setup-academic';
 import StudentQuickSetupFeesSection from './student-quick-setup-fees-section';
 import { useStudentQuickSetupAcademic } from './use-student-quick-setup-academic';
@@ -65,6 +67,23 @@ const sectionId = (view?: StudentSetupView | null) =>
     : view === 'credentials'
       ? 'quick-setup-login'
       : 'quick-setup-academic';
+
+const setupActionStatus = {
+  later: 'Saving student setup',
+  activate: 'Saving and activating student',
+  send: 'Sending login details',
+  refresh: 'Checking setup completion',
+};
+
+const setupActionLoadingProps = {
+  loadingIndicator: <Skeleton aria-hidden variant="rounded" sx={{ width: 1, height: 1 }} />,
+  sx: (theme: Theme) => ({
+    [`& .${buttonClasses.loadingIndicator}`]: {
+      inset: theme.spacing(0.5, 1),
+      transform: 'none',
+    },
+  }),
+};
 
 export default function StudentQuickSetupPage({
   student,
@@ -530,6 +549,7 @@ export default function StudentQuickSetupPage({
             )}
             {enrolled && !cancelled && current?.status !== 4 && canManage && (
               <LoadingButton
+                {...setupActionLoadingProps}
                 size="small"
                 variant="outlined"
                 loading={saving === 'refresh'}
@@ -585,24 +605,6 @@ export default function StudentQuickSetupPage({
                 >
                   {failure}
                 </StudentFeedback>
-              )}
-              {saving && (
-                <Stack
-                  direction="row"
-                  spacing={2}
-                  role="status"
-                  aria-busy
-                  aria-label={
-                    saving === 'activate'
-                      ? 'Saving and activating student'
-                      : saving === 'send'
-                        ? 'Sending login details'
-                        : 'Saving student setup'
-                  }
-                >
-                  <Skeleton width={160} height={24} sx={{ maxWidth: '50%' }} />
-                  <Skeleton width={120} height={24} sx={{ maxWidth: '35%' }} />
-                </Stack>
               )}
               <>
                 <Box
@@ -842,24 +844,29 @@ export default function StudentQuickSetupPage({
         >
           {enrolled || cancelled || !canManage || editor.permissionDenied ? (
             <>
-              {enrolled && credentialSelection.selectedCount > 0 && (
-                <LoadingButton
-                  size="small"
-                  variant="contained"
-                  loading={saving === 'send'}
-                  disabled={
-                    busy ||
-                    editor.loading ||
-                    editor.readError ||
-                    scopeChanged ||
-                    !credentialSelection.canSend
-                  }
-                  startIcon={<Iconify icon="mdi:email-send-outline" width={18} />}
-                  onClick={sendSelectedNow}
-                >
-                  Send Login Details
-                </LoadingButton>
-              )}
+              {enrolled &&
+                canManage &&
+                !cancelled &&
+                !editor.permissionDenied &&
+                (loginOpen || credentialSelection.selectedCount > 0) && (
+                  <LoadingButton
+                    {...setupActionLoadingProps}
+                    size="small"
+                    variant="contained"
+                    loading={saving === 'send'}
+                    disabled={
+                      busy ||
+                      editor.loading ||
+                      editor.readError ||
+                      scopeChanged ||
+                      !credentialSelection.canSend
+                    }
+                    startIcon={<Iconify icon="mdi:email-send-outline" width={18} />}
+                    onClick={sendSelectedNow}
+                  >
+                    Send Login Details
+                  </LoadingButton>
+                )}
               {onNext && (
                 <Button
                   size="small"
@@ -875,6 +882,7 @@ export default function StudentQuickSetupPage({
           ) : (
             <>
               <LoadingButton
+                {...setupActionLoadingProps}
                 size="small"
                 variant="outlined"
                 loading={saving === 'later'}
@@ -884,6 +892,7 @@ export default function StudentQuickSetupPage({
                 Save for Later
               </LoadingButton>
               <LoadingButton
+                {...setupActionLoadingProps}
                 size="small"
                 variant="contained"
                 loading={saving === 'activate'}
@@ -907,6 +916,14 @@ export default function StudentQuickSetupPage({
             </>
           )}
         </Stack>
+        <Box
+          component="span"
+          role="status"
+          aria-label={saving ? setupActionStatus[saving] : undefined}
+          sx={visuallyHidden}
+        >
+          {saving ? setupActionStatus[saving] : null}
+        </Box>
       </Stack>
     </Box>
   );

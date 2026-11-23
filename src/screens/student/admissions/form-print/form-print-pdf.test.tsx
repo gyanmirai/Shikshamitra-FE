@@ -401,6 +401,7 @@ describe('Registration printable PDF artifacts', () => {
         expect(text).toContain('Date');
         expect(text).toContain('Student details');
         expect(text).toContain('Residential address');
+        expect(text).not.toContain('Photograph');
         expect(text.includes('REG-2026-00017')).toBe(mode === 'filled');
         expect(text.includes('Aanya')).toBe(mode === 'filled');
         expect(text.includes('parent@example.test')).toBe(mode === 'filled');
@@ -499,6 +500,7 @@ describe('Registration printable PDF artifacts', () => {
         expect(text).toContain('Child 2');
         expect(text).not.toContain('base64');
         if (mode === 'blank') expect(text.match(/Photograph/g)).toHaveLength(4);
+        expect(text.includes('×')).toBe(mode === 'blank');
         const operations = await Promise.all(pages.map((page) => page.getOperatorList()));
         const images = operations.flatMap((page) =>
           page.fnArray.filter((operation) =>

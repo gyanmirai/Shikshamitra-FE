@@ -58,6 +58,25 @@ describe('admission form wizard identity', () => {
     );
     expect(values.inheritance.enabled).toBe(true);
   });
+  it.each([
+    { purpose: 1 as const, template: 'boxed-grid' },
+    { purpose: 0 as const, template: 'simple' },
+  ])('saves legacy print settings for form purpose $purpose', async ({ purpose, template }) => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    const values = { ...getBlankAdmissionFormInitialValues(purpose), name: 'School form' };
+    const legacySettings = { ...values.printSettings!, template: 'simple' as const };
+    values.printSettings = legacySettings;
+    const { result } = renderHook(() =>
+      useAdmissionFormWizard({ onSave, onPublishNow: vi.fn(), onClose: vi.fn() })
+    );
+    const formik = { resetForm: vi.fn() } as unknown as FormikProps<CreateUpdateAdmissionForm>;
+    expect(onSave).not.toHaveBeenCalled();
+    await act(async () => result.current.saveDraft(true, values, formik, vi.fn()));
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({ printSettings: { ...legacySettings, template } })
+    );
+    expect(legacySettings.template).toBe('simple');
+  });
   it('allows entering the builder but blocks Continue and Publish until inherited compatibility is current', async () => {
     const canContinue = vi.fn(() => false);
     const onPublishNow = vi.fn();

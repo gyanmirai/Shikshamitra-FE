@@ -107,10 +107,12 @@ export function AdmissionRuntimePrintActions({
   return (
     <>
       <Button
+        type="button"
         size="small"
         variant="outlined"
+        color="inherit"
         disabled={busy || saving}
-        startIcon={<Iconify icon={GlobalIcons.printer} />}
+        startIcon={<Iconify icon={GlobalIcons.printer} width={18} />}
         onClick={() => {
           setSaveFailed(false);
           if (hasUnsavedAdmissionPrintValues(form, values)) setConfirm(true);

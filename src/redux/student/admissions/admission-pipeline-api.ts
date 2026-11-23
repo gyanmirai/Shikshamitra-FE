@@ -19,6 +19,7 @@ export type AdmissionPipelineItem = {
   currentStageName?: string | null;
   currentStageCode?: string | null;
   stageType?: number | null;
+  assessmentAction?: 'book' | 'view' | null;
   stageProgress?: { id: string; name: string; status: number }[];
   nextRequiredAction?: string | null;
   enteredAt?: string | null;

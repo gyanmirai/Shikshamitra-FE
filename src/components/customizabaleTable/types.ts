@@ -38,6 +38,8 @@ export interface IColumn {
   headerAlign?: 'right' | 'left' | 'center';
   /** Identify each record with a semantic body-row header, without changing cell styling. */
   rowHeader?: boolean;
+  /** Exclude this cell from pointer-based row actions. */
+  disableRowAction?: boolean;
   headerSx?: SxProps<Theme>;
   cellSx?: SxProps<Theme>;
   render?: (value: any, row: IData) => React.ReactNode;

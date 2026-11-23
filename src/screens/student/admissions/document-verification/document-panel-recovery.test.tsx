@@ -48,6 +48,7 @@ it('keeps a selected file and notes when both upload and background checklist re
   ).toBeInTheDocument();
   await waitFor(() => expect(reads).toBe(2));
   expect(dialog.getByRole('button', { name: 'Upload Document' })).toBeEnabled();
+  expect(within(dialog.getByRole('button', { name: 'Upload Document' })).queryByRole('progressbar')).not.toBeInTheDocument();
   expect(dialog.getByLabelText('Notes')).toHaveValue('Keep this replacement');
   expect(dialog.getByText('birth.pdf')).toBeVisible();
   expect(screen.getByRole('dialog')).toBeInTheDocument();

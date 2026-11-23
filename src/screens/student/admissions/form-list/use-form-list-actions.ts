@@ -10,12 +10,11 @@ import type {
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useCallback } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { usePendingNavigation } from 'src/hooks/use-pending-navigation';
 import {
-  useGetAdmissionFormQuery,
   useLazyGetAdmissionFormQuery,
   useCloneAdmissionFormMutation,
   useCreateAdmissionFormMutation,
@@ -43,14 +42,9 @@ export function useFormListActions() {
   const dialog = useBoolean();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingForm, setEditingForm] = useState<AdmissionForm | null>(null);
-  const [creatingPurpose, setCreatingPurpose] = useState<AdmissionFormPurpose>(1);
-  const editingQuery = useGetAdmissionFormQuery(editingId ?? '', { skip: !editingId });
-  useEffect(() => {
-    const form = editingQuery.data;
-    if (editingId && form?.id === editingId) {
-      setEditingForm((current) => (current?.id === editingId ? current : form));
-    }
-  }, [editingId, editingQuery.data]);
+  const [editingError, setEditingError] = useState(false);
+  const editRequest = useRef(0);
+  const [initialPurpose, setInitialPurpose] = useState<AdmissionFormPurpose>(1);
   const { permissions } = useSelector((state: RootState) => state.auth);
   const { canManage, canPublish, canDelete } = getAdmissionFormAccess(permissions);
   const [create, createState] = useCreateAdmissionFormMutation();
@@ -59,10 +53,10 @@ export function useFormListActions() {
   const [validate, validateState] = useValidateAdmissionFormMutation();
   const [publish, publishState] = usePublishAdmissionFormMutation();
   const [createVersion] = useCreateAdmissionFormVersionMutation();
+  const [loadLatestForm] = useLazyGetAdmissionFormQuery();
   const versionLock = useRef(false);
   const [creatingVersionId, setCreatingVersionId] = useState<string | null>(null);
   const [deleteForm, deleteState] = useDeleteAdmissionFormMutation();
-  const [loadDeleteForm] = useLazyGetAdmissionFormQuery();
   const [pendingDelete, setPendingDelete] = useState<AdmissionForm | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [checkingDelete, setCheckingDelete] = useState(false);
@@ -86,13 +80,44 @@ export function useFormListActions() {
       return false;
     }
   };
+  const clearEditor = () => {
+    editRequest.current += 1;
+    setEditingId(null);
+    setEditingForm(null);
+    setEditingError(false);
+  };
+  const close = () => {
+    dialog.onFalse();
+    clearEditor();
+  };
+  const edit = async (id: string, purpose = initialPurpose) => {
+    editRequest.current += 1;
+    const currentRequest = editRequest.current;
+    setEditingId(id);
+    setEditingForm(null);
+    setEditingError(false);
+    setInitialPurpose(purpose);
+    dialog.onTrue();
+
+    try {
+      const request = loadLatestForm(id, false);
+      const form = await request.unwrap().finally(() => request.unsubscribe());
+      if (editRequest.current !== currentRequest) return;
+      if (form.id !== id || !form.concurrencyStamp) {
+        setEditingError(true);
+        return;
+      }
+      // Keep the fresh opening snapshot for this session so a later refresh cannot overwrite edits.
+      setEditingForm(form);
+    } catch {
+      if (editRequest.current === currentRequest) setEditingError(true);
+    }
+  };
   const save = async (values: CreateUpdateAdmissionForm) => {
     // Let the form dialog handle failures so it keeps the user's draft available for retry.
     await (editingId ? update({ id: editingId, body: values }).unwrap() : create(values).unwrap());
     shikshaMitraToast.success({ message: 'Form draft saved' });
-    dialog.onFalse();
-    setEditingId(null);
-    setEditingForm(null);
+    close();
   };
   const saveAndPublish = async (values: CreateUpdateAdmissionForm) => {
     const issues = getInquiryFormConfigurationIssues(values);
@@ -121,24 +146,27 @@ export function useFormListActions() {
       throw new Error(`Draft saved, but not published. ${parseApiProblemDetail(error).detail}`);
     }
   };
-  const close = () => {
-    dialog.onFalse();
-    setEditingId(null);
-    setEditingForm(null);
-  };
-  const edit = (id: string) => {
-    setEditingForm(null);
-    setEditingId(id);
-    dialog.onTrue();
+  const requestVersion = async (id: string) => {
+    if (versionLock.current) return false;
+    versionLock.current = true;
+    setCreatingVersionId(id);
+    try {
+      await createVersion(id).unwrap();
+      shikshaMitraToast.success({ message: 'New form version created' });
+      return true;
+    } finally {
+      versionLock.current = false;
+      setCreatingVersionId(null);
+    }
   };
 
   return {
     dialog,
     editingId,
     editing: editingId === editingForm?.id ? editingForm : null,
-    editingError: Boolean(editingId && editingQuery.isError && !editingForm),
-    retryEditing: () => editingQuery.refetch(),
-    creatingPurpose,
+    editingError,
+    retryEditing: () => editingId && edit(editingId),
+    initialPurpose,
     canManage,
     canPublish,
     canDelete,
@@ -149,9 +177,8 @@ export function useFormListActions() {
     close,
     edit,
     create: (purpose: AdmissionFormPurpose = 1) => {
-      setEditingId(null);
-      setEditingForm(null);
-      setCreatingPurpose(purpose);
+      clearEditor();
+      setInitialPurpose(purpose);
       dialog.onTrue();
     },
     pendingNavigationId: navigation.pendingKey,
@@ -198,10 +225,10 @@ export function useFormListActions() {
     },
     editPendingPublish: () => {
       if (!pendingPublish) return;
-      const { id } = pendingPublish;
+      const { id, purpose } = pendingPublish;
       setPendingPublish(null);
       setPublishIssues(null);
-      edit(id);
+      edit(id, purpose);
     },
     confirmPublish: async () => {
       if (!pendingPublish || publishIssues?.length !== 0) return false;
@@ -225,16 +252,16 @@ export function useFormListActions() {
     historyForm,
     showHistory: (form: AdmissionForm) => setHistoryForm(form),
     closeHistory: () => setHistoryForm(null),
+    restoreVersion: requestVersion,
     creatingVersionId,
     createVersion: async (id: string) => {
-      if (versionLock.current) return false;
-      versionLock.current = true;
-      setCreatingVersionId(id);
       try {
-        return await run(() => createVersion(id).unwrap(), 'New form version created');
-      } finally {
-        versionLock.current = false;
-        setCreatingVersionId(null);
+        return await requestVersion(id);
+      } catch (error) {
+        shikshaMitraToast.error({
+          message: parseApiProblemDetail(error).detail || 'Unable to create the form draft.',
+        });
+        return false;
       }
     },
     requestDelete: (form: AdmissionForm) => {
@@ -254,7 +281,7 @@ export function useFormListActions() {
       setCheckingDelete(true);
       try {
         // The list row can be stale; confirm against a fresh version before deleting.
-        const latestRequest = loadDeleteForm(pendingDelete.id, false);
+        const latestRequest = loadLatestForm(pendingDelete.id, false);
         const current = await latestRequest.unwrap().finally(() => latestRequest.unsubscribe());
         if (current.status !== 0) {
           throw new Error('Only a draft admission form can be deleted. Refresh the list.');

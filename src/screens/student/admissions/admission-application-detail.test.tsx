@@ -199,10 +199,15 @@ vi.mock('./application-detail/application-runtime-form', () => ({
     readOnly,
     canSubmitForm,
     documents,
+    renderToolbarActions,
   }: {
     readOnly: boolean;
     canSubmitForm: boolean;
     documents?: React.ReactNode;
+    renderToolbarActions?: (actions: {
+      print: React.ReactNode;
+      refresh: React.ReactNode;
+    }) => React.ReactNode;
   }) => (
     <div
       data-testid="runtime-form"
@@ -210,13 +215,17 @@ vi.mock('./application-detail/application-runtime-form', () => ({
       data-can-submit={String(canSubmitForm)}
       data-has-documents={String(Boolean(documents))}
     >
+      {renderToolbarActions?.({
+        print: <button type="button">Print</button>,
+        refresh: <button type="button">Refresh</button>,
+      })}
       Runtime application form
     </div>
   ),
 }));
 
 vi.mock('./application-detail/parent-registration/parent-registration-panel', () => ({
-  ParentRegistrationPanel: ({ applicationId, canView, canManage, placement }: any) => (
+  ParentRegistrationPanel: ({ applicationId, canView, canManage, placement, formActions }: any) => (
     <div
       data-testid="parent-registration-panel"
       data-application-id={applicationId}
@@ -225,6 +234,8 @@ vi.mock('./application-detail/parent-registration/parent-registration-panel', ()
       data-placement={placement}
     >
       Parent registration controls
+      {formActions?.print}
+      {formActions?.refresh}
     </div>
   ),
 }));
@@ -560,7 +571,7 @@ describe('finalized application footer onboarding status', () => {
 });
 
 describe('AdmissionApplicationDetailScreen', () => {
-  it('mounts one parent registration controller in the current Form header before record actions', () => {
+  it('mounts one parent registration controller with Print and Refresh in the application header', () => {
     loadPaymentDetail();
     permissions.push({ name: 'Students.Admissions.Applications.View', isGranted: true });
     detailState.workflowQuery.data.stages[0].stageType = 1;
@@ -570,13 +581,12 @@ describe('AdmissionApplicationDetailScreen', () => {
     const panel = screen.getByTestId('parent-registration-panel');
     expect(screen.getAllByTestId('parent-registration-panel')).toHaveLength(1);
     expect(panel.closest('header')).not.toBeNull();
+    expect(screen.getByTestId('runtime-form')).not.toContainElement(panel);
+    expect(panel).toContainElement(screen.getByRole('button', { name: 'Print' }));
+    expect(panel).toContainElement(screen.getByRole('button', { name: 'Refresh' }));
     expect(panel).toHaveAttribute('data-placement', 'header');
     expect(panel).toHaveAttribute('data-can-view', 'true');
     expect(panel).toHaveAttribute('data-application-id', 'application-1');
-    expect(panel.compareDocumentPosition(screen.getByLabelText('Applicant Actions'))).toBe(
-      Node.DOCUMENT_POSITION_FOLLOWING
-    );
-    expect(screen.getByTestId('runtime-form')).not.toContainElement(panel);
 
     fireEvent.click(screen.getByRole('button', { name: 'Collapse Admission Journey' }));
     expect(screen.getAllByTestId('parent-registration-panel')).toHaveLength(1);
@@ -584,7 +594,7 @@ describe('AdmissionApplicationDetailScreen', () => {
     expect(detailState.advance).not.toHaveBeenCalled();
   });
 
-  it('keeps historical Form review and corrections separate from current parent header actions', () => {
+  it('keeps historical Form review and corrections separate from current parent registration actions', () => {
     loadPaymentDetail();
     permissions.push({ name: 'Students.Admissions.Applications.View', isGranted: true });
     detailState.workflowQuery.data.stages[0].stageType = 1;
@@ -1025,7 +1035,7 @@ describe('AdmissionApplicationDetailScreen', () => {
       Array.from(
         screen.getByLabelText('Application Academic Context').children,
         (item) => item.textContent
-      ).slice(1)
+      )
     ).toEqual(['CBSE', 'English', 'Class 1']);
   });
 

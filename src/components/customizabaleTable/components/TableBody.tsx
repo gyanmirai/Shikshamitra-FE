@@ -203,19 +203,17 @@ export const TableBody = ({
                   </IconButton>
                 </TableCell>
               )}
-              {columns.map(
-                (column, ind) =>
+              {columns.map((column) => {
+                const disableRowAction =
+                  column.disableRowAction || column.id === 'action' || column.id === 'actions';
+                return (
                   columnVisibility[column.id] && (
                     <TableCell
                       key={column.id}
                       component={column.rowHeader ? 'th' : 'td'}
                       scope={column.rowHeader ? 'row' : undefined}
                       align={column.align}
-                      onClick={
-                        column.id === 'action' || column.id === 'actions'
-                          ? (event) => event.stopPropagation()
-                          : undefined
-                      }
+                      onClick={disableRowAction ? (event) => event.stopPropagation() : undefined}
                       sx={{
                         verticalAlign: 'middle',
                         // fontSize: '14px',
@@ -229,6 +227,7 @@ export const TableBody = ({
                         boxShadow: column.sticky ? '0px 0 4px rgba(0,0,0,0.08)' : 'none',
                         ...getColumnSizeSx(column),
                         ...getStickyStyle(column),
+                        ...(disableRowAction && clickable && { cursor: 'default' }),
                         ...column.cellSx,
                       }}
                     >
@@ -255,7 +254,8 @@ export const TableBody = ({
                       )}
                     </TableCell>
                   )
-              )}
+                );
+              })}
             </TableRow>
             {renderExpandedRow && (
               <ExpandedRow

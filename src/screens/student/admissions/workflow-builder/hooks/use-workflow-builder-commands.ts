@@ -10,11 +10,13 @@ import {
   useLazyGetAdmissionWorkflowQuery,
   useUpdateAdmissionWorkflowMutation,
   usePublishAdmissionWorkflowMutation,
-  useValidateAdmissionWorkflowPreviewMutation,
   useValidateAdmissionWorkflowMutation,
+  useValidateAdmissionWorkflowPreviewMutation,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
+import { getWorkflowFinalStageError } from '../workflow-final-stage';
 import { getWorkflowDetailsJourney } from '../workflow-details-journey';
+import { DUPLICATE_WORKFLOW_NAME_CODE } from '../../workflow-name-error';
 import { normalizeAdmissionWorkflowStages } from '../../workflow-builder-utils';
 
 import type { WorkflowDetails } from '../../admission-workflow-dialog';
@@ -36,36 +38,35 @@ export function useWorkflowBuilderCommands(
   const [publishing, setPublishing] = useState(false);
   const previewRequestRef = useRef<{ abort: () => void } | null>(null);
   const previewVersionRef = useRef(0);
-  const savedDetails = useRef<(WorkflowDetails & { workflowId: string }) | null>(null);
+  const currentDetails = useRef<(WorkflowDetails & { workflowId: string }) | null>(null);
   const getCurrentDetails = (): WorkflowDetails | null => {
     if (!workflow) return null;
-    return savedDetails.current?.workflowId === workflow.id ? savedDetails.current : workflow;
+    return currentDetails.current?.workflowId === workflow.id ? currentDetails.current : workflow;
   };
 
   const showError = (error: unknown, fallback: string) => {
     shikshaMitraToast.error({ message: parseApiProblemDetail(error).detail || fallback });
   };
-  const saveCurrentGraph = async (details?: WorkflowDetails) => {
-    if (!workflow) throw new Error('Workflow is not loaded.');
-    const currentDetails =
-      details ??
-      (savedDetails.current?.workflowId === workflow.id ? savedDetails.current : workflow);
-    const journey = details
-      ? getWorkflowDetailsJourney(details, draft.stages, draft.transitions)
-      : { stages: draft.stages, transitions: draft.transitions };
+  const saveCurrentGraph = async (
+    details = getCurrentDetails(),
+    journey = { stages: draft.stages, transitions: draft.transitions }
+  ) => {
+    if (!workflow || !details) throw new Error('Workflow is not loaded.');
+    const finalStageError = getWorkflowFinalStageError(journey.stages, journey.transitions);
+    if (finalStageError) throw new Error(finalStageError);
     const result = await updateWorkflow({
       id: workflow.id,
       body: {
-        name: currentDetails.name,
-        code: currentDetails.code,
-        description: currentDetails.description,
+        name: details.name,
+        code: details.code,
+        description: details.description,
         defaultInquiryFormDefinitionId: draft.defaultInquiryFormDefinitionId,
         concurrencyStamp: draft.loadedStamp || workflow.concurrencyStamp,
         stages: normalizeAdmissionWorkflowStages(journey.stages),
         transitions: journey.transitions,
       },
     }).unwrap();
-    savedDetails.current = {
+    currentDetails.current = {
       workflowId: workflow.id,
       name: result.name,
       code: result.code,
@@ -99,11 +100,36 @@ export function useWorkflowBuilderCommands(
   };
   const saveDetails = async (details: WorkflowDetails) => {
     try {
-      const result = await saveCurrentGraph(details);
+      if (!workflow) throw new Error('Workflow is not loaded.');
+      const journey = getWorkflowDetailsJourney(details, draft.stages, draft.transitions);
+      if (getWorkflowFinalStageError(journey.stages, journey.transitions)) {
+        const previous = getCurrentDetails();
+        currentDetails.current = {
+          workflowId: workflow.id,
+          name: details.name,
+          code: details.code,
+          description: details.description,
+        };
+        if (
+          details.name !== previous?.name ||
+          details.code !== previous?.code ||
+          details.description !== previous?.description ||
+          journey.stages !== draft.stages ||
+          journey.transitions !== draft.transitions
+        ) {
+          draft.setStages(journey.stages);
+          draft.setTransitions(journey.transitions);
+          draft.markDirty();
+        }
+        return details;
+      }
+      const result = await saveCurrentGraph(details, journey);
       shikshaMitraToast.success({ message: 'Workflow details and journey saved' });
       return result;
     } catch (error) {
-      showError(error, 'Unable to save the workflow details.');
+      if (parseApiProblemDetail(error).errorCode !== DUPLICATE_WORKFLOW_NAME_CODE) {
+        showError(error, 'Unable to save the workflow details.');
+      }
       throw error;
     }
   };
@@ -113,6 +139,8 @@ export function useWorkflowBuilderCommands(
       (stage, index) => stage !== draft.stages[index]
     );
     try {
+      const finalStageError = getWorkflowFinalStageError(normalizedStages, draft.transitions);
+      if (finalStageError) throw new Error(finalStageError);
       if (draft.dirty || requiresFormStageUpgrade) await saveCurrentGraph();
       const result = await validateWorkflow(workflowId).unwrap();
       draft.setValidation(result);

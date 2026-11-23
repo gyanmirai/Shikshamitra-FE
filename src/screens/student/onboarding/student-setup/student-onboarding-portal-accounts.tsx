@@ -15,7 +15,6 @@ import { RouterLink } from 'src/routes/components';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { studentPaths } from 'src/constants/student-menu';
 import { fDateTime, formatStr } from 'src/utils/format-time';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { LoadingButton } from 'src/components/loading-button';
@@ -23,6 +22,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
+import { studentPaths, studentPermissions } from 'src/constants/student-menu';
 import { useRef, useMemo, useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import {
   Box,
@@ -49,7 +49,11 @@ import GuardianProfileEmailDialog from './guardian-profile-email-dialog';
 import { requiresCredentialResendConfirmation } from './student-credential-delivery';
 import { getStudentParentSiblingActivationState } from './student-parent-sibling-state';
 import StudentCredentialProfileEmailDialog from './student-credential-profile-email-dialog';
-import { getOnboardingMessage, getOnboardingErrorMessage } from './student-onboarding-messages';
+import {
+  getOnboardingMessage,
+  requiresParentLoginReview,
+  getOnboardingErrorMessage,
+} from './student-onboarding-messages';
 
 import type { StudentOnboardingItem } from './student-onboarding-model';
 import type { StudentParentSiblingActivationState } from './student-parent-sibling-state';
@@ -97,6 +101,7 @@ const relationshipLabel = (recipient: StudentCredentialsRecipient) =>
 const emailSchema = Yup.string().trim().email().max(256).required();
 const queued = (recipient?: StudentCredentialsRecipient) =>
   ['Pending', 'Processing'].includes(recipient?.delivery?.status ?? '');
+const compactRecipientColumns = 'minmax(0, 1fr) minmax(0, 1fr) 11.5rem 64px';
 const recipientKey = (recipient: StudentCredentialsRecipient) =>
   `${recipient.accountType}:${recipient.relationship}`;
 // The stamp changes after each command. Identity changes, unlike stamps, invalidate reviewed access.
@@ -142,6 +147,7 @@ const StudentOnboardingPortalAccounts = forwardRef<StudentOnboardingPortalAccoun
     const credentials = useGetStudentOnboardingCredentialsQuery(student.id, {
       pollingInterval: pollDelivery ? 15_000 : 0,
       skipPollingIfUnfocused: true,
+      refetchOnMountOrArgChange: true,
     });
     const [sendCredentials, mutation] = useSendStudentOnboardingCredentialsMutation();
     const [retryParentSetup, retryMutation] = useRetryStudentOnboardingParentSetupMutation();
@@ -195,6 +201,8 @@ const StudentOnboardingPortalAccounts = forwardRef<StudentOnboardingPortalAccoun
       student: boolean;
       guardian: boolean;
     }>({ caseId: student.id, student: false, guardian: false });
+    const studentRestricted = studentRecipient?.appAccessOff === true;
+    const adultRestricted = adult?.appAccessOff === true;
     const [confirmation, setConfirmation] = useState('');
     const adultIdentity = ownerIdentity(workspace, relationship);
     const confirmed = confirmation === adultIdentity;
@@ -208,6 +216,7 @@ const StudentOnboardingPortalAccounts = forwardRef<StudentOnboardingPortalAccoun
         resendTarget?.caseId === student.id &&
         recipientKey(recipient) === recipientKey(resendTarget.recipient) &&
         recipient.email === resendTarget.recipient.email &&
+        !recipient.appAccessOff &&
         requiresCredentialResendConfirmation(recipient.delivery) &&
         !queued(recipient) &&
         (recipient.accountType === 'student' || resendTarget.adultIdentity === adultIdentity)
@@ -262,7 +271,10 @@ const StudentOnboardingPortalAccounts = forwardRef<StudentOnboardingPortalAccoun
     const unavailable =
       credentials.isFetching || credentials.isError || mustRefresh || !workspace?.concurrencyStamp;
     const canEnableStudentAccess = Boolean(
-      canManage && workspace?.canEnableStudentAccess && workspace.studentAccessEnabled === false
+      canManage &&
+      !studentRestricted &&
+      workspace?.canEnableStudentAccess &&
+      workspace.studentAccessEnabled === false
     );
     useEffect(() => {
       if (!canEnableStudentAccess || accessEditorCase !== student.id) setAccessEditorCase(null);
@@ -362,6 +374,7 @@ const StudentOnboardingPortalAccounts = forwardRef<StudentOnboardingPortalAccoun
     const eligible = (recipient: StudentCredentialsRecipient | undefined, current = workspace) =>
       Boolean(
         recipient &&
+        !recipient.appAccessOff &&
         emailSchema.isValidSync(recipient.email?.trim() || '') &&
         !queued(recipient) &&
         (recipient.canSend || recipient.canSendExistingParentHelp) &&
@@ -382,17 +395,56 @@ const StudentOnboardingPortalAccounts = forwardRef<StudentOnboardingPortalAccoun
           !current.parentSibling.isLinked
         )
       );
+    const enrollmentActive = Boolean(student.studentEnrollmentId);
+    const parentNeedsReview =
+      compact &&
+      (requiresParentLoginReview(adult?.blockedReason) ||
+        requiresParentLoginReview(sibling?.blockedReason));
+    const parentReviewMessage = hasGrantedPermission(
+      permissions,
+      studentPermissions.records.guardianAccess
+    )
+      ? 'Check the existing login and its linked students.'
+      : 'Ask a school administrator to review this parent login.';
+    const canChooseForSend = (recipient?: StudentCredentialsRecipient) =>
+      !compact ||
+      (emailSchema.isValidSync(recipient?.email?.trim() || '') &&
+        (!enrollmentActive || eligible(recipient)));
+    const studentSelectionBlocked = studentRestricted || !canChooseForSend(studentRecipient);
+    const parentSelectionBlocked = adultRestricted || parentNeedsReview || !canChooseForSend(adult);
+    const selectionBlocked = { student: studentSelectionBlocked, guardian: parentSelectionBlocked };
+    useEffect(() => {
+      // A blocked recipient must be selected again if they become eligible later.
+      if (!workspace || credentials.isFetching || credentials.isError) return;
+      setSelected((current) =>
+        (studentSelectionBlocked && current.student) || (parentSelectionBlocked && current.guardian)
+          ? {
+              ...current,
+              student: current.student && !studentSelectionBlocked,
+              guardian: current.guardian && !parentSelectionBlocked,
+            }
+          : current
+      );
+    }, [
+      workspace,
+      credentials.isFetching,
+      credentials.isError,
+      studentSelectionBlocked,
+      parentSelectionBlocked,
+    ]);
     // canSend includes deliberate resends after the server cooldown. Successful or
     // queued recipients never belong to the ordinary first-send batch.
     const activeSelected = {
       student:
         selected.caseId === student.id &&
         selected.student &&
+        !studentSelectionBlocked &&
         !queued(studentRecipient) &&
         !requiresCredentialResendConfirmation(studentRecipient?.delivery),
       guardian:
         selected.caseId === student.id &&
         selected.guardian &&
+        !parentSelectionBlocked &&
         !queued(adult) &&
         !requiresCredentialResendConfirmation(adult?.delivery),
     };
@@ -843,6 +895,15 @@ const StudentOnboardingPortalAccounts = forwardRef<StudentOnboardingPortalAccoun
       const isAdult = accountType === 'guardian';
       const email = recipient?.email?.trim() || '';
       const validEmail = emailSchema.isValidSync(email);
+      const needsParentReview = isAdult && parentNeedsReview;
+      const existingLoginFound =
+        compact &&
+        isAdult &&
+        existingParent &&
+        !sibling?.isLinked &&
+        parentCandidate?.email === email;
+      const existingLoginLinked =
+        compact && isAdult && existingParent && sibling?.isLinked && sibling.status === 'Linked';
       const key = recipient ? recipientKey(recipient) : accountType;
       const delivery = recipient?.delivery;
       const needsResend = requiresCredentialResendConfirmation(delivery);
@@ -894,18 +955,60 @@ const StudentOnboardingPortalAccounts = forwardRef<StudentOnboardingPortalAccoun
         !busy &&
         (!isAdult || confirmed);
       const showEmailError = Boolean(emailError && activeSelected[accountType]);
+      const recordsAccessOff = recipient?.appAccessOff === true;
+      const recordsAccessLink =
+        recordsAccessOff &&
+        recipient.relationship !== 'guardian' &&
+        student.studentId &&
+        hasGrantedPermission(permissions, studentPermissions.records.studentList) &&
+        hasGrantedPermission(permissions, studentPermissions.records.appAccess)
+          ? `${studentPaths.records.studentList}?student=${encodeURIComponent(student.studentId)}&view=overview#student-app-access-${recipient.relationship}`
+          : null;
       const accessOff =
-        compact &&
-        (isAdult
-          ? workspace?.guardianAccessEnabled === false
-          : workspace?.studentAccessEnabled === false);
+        recordsAccessOff ||
+        (compact &&
+          (isAdult
+            ? workspace?.guardianAccessEnabled === false
+            : workspace?.studentAccessEnabled === false));
       const showConsent =
-        !compact ||
-        needsResend ||
-        activeSelected.guardian ||
-        confirmed ||
-        parentValidationAttempt ||
-        (existingParent && !sibling?.isLinked);
+        !needsParentReview &&
+        (!compact ||
+          needsResend ||
+          activeSelected.guardian ||
+          confirmed ||
+          parentValidationAttempt ||
+          (existingParent && !sibling?.isLinked));
+      let status: { text: string; color: 'default' | 'warning' | 'info' | 'error' | 'success' };
+      if (recordsAccessOff) status = { text: 'Access Off', color: 'default' };
+      else if (accessOff) status = { text: 'Off', color: 'default' };
+      else if (!validEmail) status = { text: 'Email needed', color: 'warning' };
+      else if (queued(recipient)) status = { text: 'Queued', color: 'info' };
+      else if (delivery?.status === 'Sent')
+        status = { text: 'Login details sent', color: 'success' };
+      else if (failed) status = { text: 'Failed', color: 'error' };
+      else if (needsParentReview) status = { text: 'Parent login needs review', color: 'warning' };
+      else if (existingLoginLinked)
+        status = { text: 'Existing parent login linked', color: 'success' };
+      else if (existingLoginFound) status = { text: 'Existing parent login found', color: 'info' };
+      else if (compact && eligible(recipient) && !(isAdult && existingParent))
+        status = { text: 'Ready to send', color: 'success' };
+      else status = { text: 'Email saved', color: compact ? 'default' : 'success' };
+      const visibleReason = needsParentReview
+        ? parentReviewMessage
+        : existingLoginLinked && !accessOff
+          ? 'The parent can sign in with their current password.'
+          : reason &&
+              !activationReason &&
+              (!compact ||
+                activeSelected[accountType] ||
+                (enrollmentActive &&
+                  selectionBlocked[accountType] &&
+                  validEmail &&
+                  !accepted &&
+                  !recordsAccessOff &&
+                  !(existingLoginFound && canLink)))
+            ? getOnboardingMessage(reason, 'Review the login requirements before sending.')
+            : undefined;
       const emailActionLabel = `${email ? 'Update' : 'Add'} ${isAdult && recipient ? relationshipLabel(recipient) : 'Student'} email`;
       return (
         <Stack
@@ -920,8 +1023,8 @@ const StudentOnboardingPortalAccounts = forwardRef<StudentOnboardingPortalAccoun
                 ? {
                     display: 'grid',
                     gridTemplateColumns: {
-                      xs: 'minmax(0, 1fr) auto',
-                      md: 'minmax(180px, 1fr) minmax(180px, 1fr) 108px 64px',
+                      xs: 'minmax(0, 1fr) minmax(0, 1fr)',
+                      md: compactRecipientColumns,
                     },
                     alignItems: 'center',
                     gap: 1,
@@ -942,7 +1045,14 @@ const StudentOnboardingPortalAccounts = forwardRef<StudentOnboardingPortalAccoun
                   <Checkbox
                     size="small"
                     checked={Boolean(activeSelected[accountType])}
-                    disabled={busy || !canManage || !recipient || accepted || needsResend}
+                    disabled={
+                      busy ||
+                      !canManage ||
+                      !recipient ||
+                      accepted ||
+                      needsResend ||
+                      selectionBlocked[accountType]
+                    }
                     slotProps={{
                       input: {
                         'aria-label': isAdult ? 'Send to parent / guardian' : 'Send to student',
@@ -988,43 +1098,38 @@ const StudentOnboardingPortalAccounts = forwardRef<StudentOnboardingPortalAccoun
               />
               <CustomTooltip
                 title={
-                  reason
-                    ? getOnboardingMessage(reason, 'Review the login requirements before sending.')
-                    : delivery?.status === 'Sent'
-                      ? `Accepted by the email sender; inbox delivery is not confirmed${delivery.sentAt ? ` · ${fDateTime(delivery.sentAt, formatStr.split.dateTime)}` : ''}`
-                      : 'Saved app login email'
+                  needsParentReview
+                    ? parentReviewMessage
+                    : reason
+                      ? getOnboardingMessage(
+                          reason,
+                          'Review the login requirements before sending.'
+                        )
+                      : delivery?.status === 'Sent'
+                        ? `Accepted by the email sender; inbox delivery is not confirmed${delivery.sentAt ? ` · ${fDateTime(delivery.sentAt, formatStr.split.dateTime)}` : ''}`
+                        : 'Saved app login email'
                 }
               >
                 <Label
                   role="status"
                   sx={
                     compact
-                      ? { gridColumn: { xs: 2, md: 3 }, gridRow: 1, justifySelf: 'start' }
+                      ? {
+                          gridColumn: { xs: 2, md: 3 },
+                          gridRow: 1,
+                          justifySelf: 'start',
+                          maxWidth: '100%',
+                          height: 'auto',
+                          minHeight: 24,
+                          whiteSpace: 'normal',
+                          lineHeight: 1.3,
+                          overflowWrap: 'anywhere',
+                        }
                       : undefined
                   }
-                  color={
-                    accessOff
-                      ? 'default'
-                      : !validEmail
-                        ? 'warning'
-                        : queued(recipient)
-                          ? 'info'
-                          : failed
-                            ? 'error'
-                            : 'success'
-                  }
+                  color={status.color}
                 >
-                  {accessOff
-                    ? 'Off'
-                    : !validEmail
-                      ? 'Email needed'
-                      : queued(recipient)
-                        ? 'Queued'
-                        : delivery?.status === 'Sent'
-                          ? 'Login details sent'
-                          : failed
-                            ? 'Failed'
-                            : 'Email saved'}
+                  {status.text}
                 </Label>
               </CustomTooltip>
             </Stack>
@@ -1174,6 +1279,22 @@ const StudentOnboardingPortalAccounts = forwardRef<StudentOnboardingPortalAccoun
                 ))}
             </Stack>
           </Box>
+          {recordsAccessOff &&
+            (recordsAccessLink ? (
+              <Button
+                component={RouterLink}
+                href={recordsAccessLink}
+                size="small"
+                color="inherit"
+                sx={{ alignSelf: 'flex-start' }}
+              >
+                Manage in Student Records
+              </Button>
+            ) : (
+              <Typography variant="caption" color="text.secondary">
+                Ask authorized staff to manage access in Student Records.
+              </Typography>
+            ))}
           {isAdult && adults.length === 1 && !compact && (
             <Typography
               variant="caption"
@@ -1204,26 +1325,46 @@ const StudentOnboardingPortalAccounts = forwardRef<StudentOnboardingPortalAccoun
           )}
           {isAdult && recipient && showConsent && (
             <Box sx={{ pl: { sm: 3.5 } }}>
-              <FormControlLabel
-                sx={{ m: 0 }}
-                control={
-                  <Checkbox
+              <Stack
+                direction={compact ? { xs: 'column', sm: 'row' } : 'column'}
+                alignItems={compact ? { xs: 'flex-start', sm: 'center' } : 'flex-start'}
+                justifyContent="space-between"
+              >
+                <FormControlLabel
+                  sx={{ m: 0 }}
+                  control={
+                    <Checkbox
+                      size="small"
+                      checked={confirmed}
+                      disabled={busy || !canManage}
+                      onChange={(_, checked) => setConfirmation(checked ? adultIdentity : '')}
+                    />
+                  }
+                  label={`I confirm ${recipient.name?.trim() || 'this person'} may access ${student.studentName} in the app.`}
+                />
+                {canLink && (
+                  <LoadingButton
+                    type="button"
                     size="small"
-                    checked={confirmed}
-                    disabled={busy || !canManage}
-                    onChange={(_, checked) => setConfirmation(checked ? adultIdentity : '')}
-                  />
-                }
-                label={`I confirm ${recipient.name?.trim() || 'this person'} may access ${student.studentName} in the app.`}
-              />
-              {existingParent && (
+                    variant="outlined"
+                    startIcon={<Iconify icon="mdi:account-link-outline" width={18} />}
+                    loading={working && linkMutation.isLoading}
+                    disabled={busy || unavailable || !confirmed}
+                    onClick={() => runParentCommand()}
+                    sx={{ flexShrink: 0 }}
+                  >
+                    Confirm &amp; link parent
+                  </LoadingButton>
+                )}
+              </Stack>
+              {existingParent && !compact && (
                 <Typography variant="caption" color="text.secondary" display="block">
                   {sibling?.isLinked
                     ? 'Linked existing parent. Sign-in help uses the existing login; no new password is created.'
                     : 'Confirm access to link the existing parent login. Their password stays unchanged.'}
                 </Typography>
               )}
-              {existingParent && !sibling?.isLinked && !student.studentEnrollmentId && (
+              {!compact && existingParent && !sibling?.isLinked && !student.studentEnrollmentId && (
                 <Typography variant="caption" color="text.secondary" display="block">
                   {sibling?.requiresOnboardingConfirmation
                     ? 'Activate the student, then confirm and link this parent here.'
@@ -1237,25 +1378,13 @@ const StudentOnboardingPortalAccounts = forwardRef<StudentOnboardingPortalAccoun
                     : 'Original parent setup failed. Ask authorized staff to review it.'}
                 </Typography>
               )}
-              {(sibling?.status === 'SetupPending' ||
-                parentCandidate?.setupStatus === 'Pending') && (
-                <Typography variant="body2" color="text.secondary">
-                  Original parent account setup is pending.
-                </Typography>
-              )}
-              {canLink && (
-                <LoadingButton
-                  type="button"
-                  size="small"
-                  variant="outlined"
-                  startIcon={<Iconify icon="mdi:account-link-outline" width={18} />}
-                  loading={working && linkMutation.isLoading}
-                  disabled={busy || unavailable || !confirmed}
-                  onClick={() => runParentCommand()}
-                >
-                  Confirm &amp; link parent
-                </LoadingButton>
-              )}
+              {!compact &&
+                (sibling?.status === 'SetupPending' ||
+                  parentCandidate?.setupStatus === 'Pending') && (
+                  <Typography variant="body2" color="text.secondary">
+                    Original parent account setup is pending.
+                  </Typography>
+                )}
               {existingParent && sibling?.canRetrySetup && canManage && (
                 <LoadingButton
                   type="button"
@@ -1270,15 +1399,13 @@ const StudentOnboardingPortalAccounts = forwardRef<StudentOnboardingPortalAccoun
               )}
             </Box>
           )}
-          {(error ||
-            (reason && !activationReason && (!compact || activeSelected[accountType]))) && (
+          {(error || visibleReason) && (
             <Typography
               variant="body2"
               color={error ? 'error.main' : 'text.secondary'}
               sx={{ pl: { sm: 3.5 }, overflowWrap: 'anywhere' }}
             >
-              {error ||
-                getOnboardingMessage(reason, 'Review the login requirements before sending.')}
+              {error || visibleReason}
             </Typography>
           )}
           {delivery &&
@@ -1412,7 +1539,7 @@ const StudentOnboardingPortalAccounts = forwardRef<StudentOnboardingPortalAccoun
                     aria-hidden
                     sx={{
                       display: { xs: 'none', md: 'grid' },
-                      gridTemplateColumns: 'minmax(180px, 1fr) minmax(180px, 1fr) 108px 64px',
+                      gridTemplateColumns: compactRecipientColumns,
                       gap: 1,
                       pb: 1,
                       borderBottom: 1,

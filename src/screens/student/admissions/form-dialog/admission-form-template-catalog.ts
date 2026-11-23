@@ -987,6 +987,9 @@ export function cloneSchoolFormAsStarter(source: AdmissionForm): CreateUpdateAdm
   const stepIds = new Map<string, string>();
   const suffix = crypto.randomUUID().replaceAll('-', '').slice(0, 6).toUpperCase();
   const copyCode = `${source.code.slice(0, Math.max(1, 57))}_COPY_${suffix}`.slice(0, 64);
+  const purpose =
+    source.purpose ??
+    (source.code.includes('INQUIRY') || source.name.toLowerCase().includes('inquiry') ? 0 : 1);
   const sections = source.sections.map((section, sectionIndex) => {
     const oldStepId = section.stepId ?? `step-${sectionIndex}`;
     if (!stepIds.has(oldStepId)) stepIds.set(oldStepId, crypto.randomUUID());
@@ -1010,11 +1013,9 @@ export function cloneSchoolFormAsStarter(source: AdmissionForm): CreateUpdateAdm
       name: `${source.name} copy`,
       code: copyCode,
       description: source.description,
-      printSettings: getAdmissionFormPrintSettings(source.printSettings),
+      printSettings: getAdmissionFormPrintSettings(source.printSettings, purpose),
       layoutType: source.layoutType,
-      purpose:
-        source.purpose ??
-        (source.code.includes('INQUIRY') || source.name.toLowerCase().includes('inquiry') ? 0 : 1),
+      purpose,
       fieldsPerRow: source.fieldsPerRow ?? 1,
       defaultLanguage: source.defaultLanguage ?? 'en',
       supportedLanguages: source.supportedLanguages?.length ? source.supportedLanguages : ['en'],

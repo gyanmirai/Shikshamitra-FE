@@ -154,6 +154,12 @@ export type AdmissionFormPrintSettings = {
   advanced?: AdmissionPrintAdvancedSettings | null;
 };
 
+export function resolveEditableRegistrationPrintTemplate(
+  template: AdmissionFormPrintSettings['template']
+) {
+  return template && template !== 'simple' ? template : 'boxed-grid';
+}
+
 export const ADMISSION_PRINT_DEFAULT_ASSETS = {
   logo: { x: 0, y: 8, width: 14, height: 84, lockAspectRatio: true },
   banner: { x: 20, y: 10, width: 60, height: 80, lockAspectRatio: true },

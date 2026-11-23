@@ -67,6 +67,7 @@ export function CollectLaterDialog({ busy, onClose, onSubmit }: Props) {
       open
       title="Collect Later in Onboarding"
       titleInfo="Record why fee collection will be handled after admission finalization."
+      titleInfoPlacement="right"
       maxWidth="sm"
       handleClose={close}
       disableClose={loading}

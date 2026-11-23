@@ -25,11 +25,12 @@ type Props = {
   stages: AdmissionWorkflowStage[];
   formDefinitionId: string;
   readOnly: boolean;
+  isLastStage: boolean;
   isNewStage?: boolean;
 };
 
 export function WorkflowStageFields(props: Props) {
-  const { formik, metadata, readOnly, stages } = props;
+  const { formik, metadata, readOnly, stages, isLastStage } = props;
   if (formik.values.stageType === 1) return <WorkflowFormStageFields {...props} />;
   const available = (key: string) => metadata?.supportedConfiguration?.includes(key) === true;
   const policy = () => {
@@ -78,6 +79,7 @@ export function WorkflowStageFields(props: Props) {
           metadata={metadata}
           stages={stages}
           readOnly={readOnly}
+          isLastStage={isLastStage}
         />
       </>
     </Stack>

@@ -4,6 +4,8 @@ import type {
   AssessmentRosterItem,
 } from 'src/redux/student/admissions/admission-assessment-roster-api';
 
+import { canWaiveAssessment } from './assessment-action-model';
+
 import type { AssessmentAction } from './assessment-action-model';
 import type { getAssessmentPermissions } from './use-assessment-permissions';
 
@@ -65,7 +67,7 @@ export function getAssessmentRowActions(
       ['result', assessment.canRecordResult && permissions.results],
       ['retake', assessment.canRetake && permissions.book],
       ['cancel', assessment.canCancel && permissions.book],
-      ['waive', assessment.canWaive && permissions.waive],
+      ['waive', permissions.waive && canWaiveAssessment(assessment)],
     ] as [AssessmentAction, boolean][]
   )
     .filter(([, allowed]) => allowed)

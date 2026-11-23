@@ -156,6 +156,7 @@ describe('WorkflowBuilderCanvas', () => {
     render(<Canvas />, { wrapper: Wrapper });
     expect(screen.queryByRole('tabpanel')).not.toBeInTheDocument();
     const journey = screen.getByRole('region', { name: 'Admission Journey' });
+    expect(within(journey).getByText('Starts after inquiry')).toBeVisible();
     fireEvent.click(within(journey).getByRole('button', { name: 'Add Stage' }));
     expect(handlers.onAddStage).toHaveBeenCalledOnce();
     expect(within(journey).getByRole('button', { name: 'Save draft' })).toBeInTheDocument();

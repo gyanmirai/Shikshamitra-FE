@@ -3,16 +3,11 @@ import type { AdmissionPrintAdvancedSettings } from 'src/redux/student/admission
 import { useId } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { FormSectionCard } from 'src/components/form-section-card';
-import { resolveAdmissionPrintAdvancedSettings } from 'src/redux/student/admissions/admission-form-print-settings';
+import { Box, Stack, Radio, Switch, RadioGroup, Typography, FormControlLabel } from '@mui/material';
 import {
-  Box,
-  Stack,
-  Radio,
-  Switch,
-  RadioGroup,
-  Typography,
-  FormControlLabel,
-} from '@mui/material';
+  resolveAdmissionPrintAdvancedSettings,
+  resolveEditableRegistrationPrintTemplate,
+} from 'src/redux/student/admissions/admission-form-print-settings';
 
 import { PrintSettingSelect } from './admission-print-setting-controls';
 import { PrintInstructionsListEditor } from './print-instructions-list-editor';
@@ -33,6 +28,7 @@ export function AdmissionPrintSettingsPanel({
   pageCount?: number;
 }) {
   const bannerPagesId = useId();
+  const selectedTemplate = resolveEditableRegistrationPrintTemplate(settings.template);
   const advanced = resolveAdmissionPrintAdvancedSettings(settings.advanced);
   const { bannerPlacement, bannerPages, showBanner } = advanced.branding;
   const pageNumbers = [
@@ -58,7 +54,7 @@ export function AdmissionPrintSettingsPanel({
       >
         <RadioGroup
           aria-label="Print template"
-          value={settings.template ?? 'simple'}
+          value={selectedTemplate}
           onChange={(_, template) =>
             onChange({ ...settings, template: template as AdmissionPrintSettings['template'] })
           }
@@ -86,18 +82,12 @@ export function AdmissionPrintSettingsPanel({
                 alignItems: 'flex-start',
                 border: 1,
                 borderRadius: 1,
-                borderColor: settings.template === template ? 'primary.main' : 'divider',
-                bgcolor: settings.template === template ? 'action.selected' : undefined,
+                borderColor: selectedTemplate === template ? 'primary.main' : 'divider',
+                bgcolor: selectedTemplate === template ? 'action.selected' : undefined,
                 '& .MuiFormControlLabel-label': { minWidth: 0, flex: 1 },
               }}
             />
           ))}
-          <FormControlLabel
-            value="simple"
-            control={<Radio size="small" />}
-            label="Simple (previous layout)"
-            sx={{ m: 0 }}
-          />
         </RadioGroup>
       </FormSectionCard>
       <FormSectionCard

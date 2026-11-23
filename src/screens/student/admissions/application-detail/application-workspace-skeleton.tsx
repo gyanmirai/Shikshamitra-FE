@@ -4,6 +4,28 @@ import { Box, Stack, Skeleton } from '@mui/material';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { skeletonReducedMotionSx } from 'src/theme/styles/skeleton';
 
+export function ApplicationAssessmentSkeleton({ showHeading = true }: { showHeading?: boolean }) {
+  return (
+    <Stack
+      role="status"
+      aria-label="Loading Assessment"
+      aria-busy
+      spacing={1.5}
+      sx={{ minWidth: 0, ...skeletonReducedMotionSx }}
+    >
+      {showHeading && <Skeleton variant="text" width={160} height={44} />}
+      <Stack direction="row" spacing={2}>
+        <Skeleton variant="text" width={90} />
+        <Skeleton variant="text" width={76} />
+      </Stack>
+      <FormSectionCard title={<Skeleton width={128} />}>
+        <Skeleton variant="text" width="45%" />
+        <Skeleton variant="rounded" height={32} />
+      </FormSectionCard>
+    </Stack>
+  );
+}
+
 /** Stage-shaped placeholders used only while an admission workspace chunk is loading. */
 export function ApplicationWorkspaceSkeleton({
   layout = 'cards',

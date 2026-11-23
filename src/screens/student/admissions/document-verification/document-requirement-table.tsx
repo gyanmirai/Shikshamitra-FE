@@ -1,5 +1,6 @@
 import type { IColumn } from 'src/components/customizabaleTable/types';
 import type {
+  DocumentStageKey,
   AdmissionDocumentRequirement,
   ApplicationDocumentVerification,
 } from 'src/redux/student/admissions/admission-document-types';
@@ -16,28 +17,34 @@ import { getDocumentTableFile, getDocumentTableFormat } from './document-table-m
 import type { DocumentAction } from './document-action-model';
 import type { useDocumentPermissions } from './use-document-permissions';
 
+const noRequirements: AdmissionDocumentRequirement[] = [];
+
 export function DocumentRequirementTable({
-  summary,
-  requirements,
+  applicationId,
+  stageInstanceId,
+  policy = null,
+  requirements = noRequirements,
   permissions,
   onView,
   onAction,
   disabled = false,
   readOnly = false,
-}: {
-  summary: ApplicationDocumentVerification;
-  requirements: AdmissionDocumentRequirement[];
+  isLoading = false,
+}: DocumentStageKey & {
+  policy?: ApplicationDocumentVerification['policy'];
+  requirements?: AdmissionDocumentRequirement[];
   permissions: ReturnType<typeof useDocumentPermissions>;
   onView?: (requirement: AdmissionDocumentRequirement) => void;
   onAction?: (action: DocumentAction, requirement: AdmissionDocumentRequirement) => void;
   disabled?: boolean;
   readOnly?: boolean;
+  isLoading?: boolean;
 }) {
   const compact = useResponsive('down', 'sm');
   const data = useMemo(
     () =>
       requirements.map((requirement) => {
-        const format = getDocumentTableFormat(requirement, summary.policy);
+        const format = getDocumentTableFormat(requirement, policy);
         return {
           id: requirement.code,
           name: requirement.name,
@@ -48,7 +55,7 @@ export function DocumentRequirementTable({
           file: getDocumentTableFile(requirement),
         };
       }),
-    [requirements, summary.policy]
+    [requirements, policy]
   );
   const columns = useMemo<IColumn[]>(
     () => [
@@ -111,24 +118,25 @@ export function DocumentRequirementTable({
             permissions={permissions}
             disabled={disabled}
             readOnly={readOnly}
-            allowWaivers={summary.policy?.allowWaivers === true}
+            allowWaivers={policy?.allowWaivers === true}
             onView={onView ? () => onView(row.requirement) : undefined}
             onAction={onAction ? (action) => onAction(action, row.requirement) : undefined}
           />
         ),
       },
     ],
-    [permissions, onView, onAction, disabled, readOnly, summary.policy?.allowWaivers, compact]
+    [permissions, onView, onAction, disabled, readOnly, policy?.allowWaivers, compact]
   );
   return (
     <CustomizableTable
       // A changed visible checklist must not retain an out-of-range page or stale criteria.
       key={requirements.map((item) => item.code).join('|')}
-      tableId={`admission-document-requirements-${summary.applicationId}-${summary.stageInstanceId}`}
+      tableId={`admission-document-requirements-${applicationId}-${stageInstanceId}`}
       tableTitle="Document Requirements"
       exportLabel="Export"
       columns={columns}
       data={data}
+      isLoading={isLoading}
       isPagination
       defaultRowsPerPage={25}
       rowsPerPageOptions={[10, 25, 100]}

@@ -124,6 +124,7 @@ export function DocumentTableActions({
           open
           title={`${requirement.name} · History`}
           titleInfo="Review uploaded versions, decisions and rejection reasons."
+          titleInfoPlacement="right"
           handleClose={() => setHistoryOpen(false)}
           hasForm={false}
           guardUnsavedChanges={false}

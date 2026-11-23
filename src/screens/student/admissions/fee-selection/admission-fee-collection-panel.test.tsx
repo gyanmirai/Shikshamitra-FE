@@ -569,7 +569,7 @@ it('explains full fees and hides policy choices before the school start date', a
   ).not.toBeInTheDocument();
 });
 
-it('places joining-date information inside the date field', () => {
+it('places joining-date information beside the label and leaves only the calendar in the input', () => {
   editableDate();
   renderPanel();
 
@@ -580,9 +580,19 @@ it('places joining-date information inside the date field', () => {
   const calendarButton = screen.getByRole('button', { name: /choose date/i });
 
   expect(dateField).not.toBeNull();
-  expect(dateField).toContainElement(infoButton);
-  expect(calendarButton.closest('.MuiInputAdornment-positionEnd')).toContainElement(infoButton);
+  expect(screen.getByText('Actual Joining Date').parentElement).toContainElement(infoButton);
+  expect(dateField).not.toContainElement(infoButton);
+  expect(dateField).toContainElement(calendarButton);
 });
+
+it.each([false, true])(
+  'opens Fee Collection heading help in either layout (%s)',
+  async (stretch) => {
+    renderPanel({ stretch });
+    fireEvent.click(screen.getByRole('button', { name: 'Fee Collection Information' }));
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('Partial payments are allowed.');
+  }
+);
 
 it('previews a chosen policy and prepares fees without a reason field', async () => {
   enablePolicySelection();

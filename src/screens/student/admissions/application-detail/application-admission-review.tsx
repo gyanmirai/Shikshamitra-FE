@@ -11,10 +11,10 @@ import { createPortal } from 'react-dom';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { fDate } from 'src/utils/format-time';
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { useRef, useState, useEffect } from 'react';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import { LoadingButton } from 'src/components/loading-button';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
 import {
@@ -202,17 +202,16 @@ export function ApplicationAdmissionReview({
           >
             Reject
           </Button>
-          <LoadingButton
+          <Button
             size="small"
             variant="contained"
             color="inherit"
-            loading={submitting}
             disabled={!canSubmit}
             startIcon={<Iconify icon="mdi:check-decagram-outline" />}
             onClick={submit}
           >
             Approve &amp; Finalize
-          </LoadingButton>
+          </Button>
         </>
       )}
     </>
@@ -257,7 +256,7 @@ export function ApplicationAdmissionReview({
           alignItems="center"
           justifyContent="center"
           spacing={2}
-          sx={{ flex: 1, py: 4 }}
+          sx={{ flex: 1, minHeight: 0, py: 2, textAlign: 'center' }}
         >
           <CircularProgress size={28} />
           <Typography variant="subtitle1">
@@ -290,16 +289,9 @@ export function ApplicationAdmissionReview({
         Admission Decision
       </Typography>
       {!loading && !hasError && !decisions.error && !blocked && selectedIdentity && (
-        <Stack
-          direction="row"
-          spacing={1}
-          alignItems="center"
-          role="status"
-          sx={{ color: 'success.main' }}
-        >
-          <Iconify icon="mdi:check-circle" width={20} />
-          <Typography variant="body2">Ready to approve &amp; finalize</Typography>
-        </Stack>
+        <Label role="status" sx={{ alignSelf: 'flex-start' }}>
+          Status: Ready for Review
+        </Label>
       )}
       {decisions.error && (
         <StudentFeedback
@@ -375,34 +367,52 @@ export function ApplicationAdmissionReview({
         }
       >
         <Box
-          component="dl"
           sx={{
-            m: 0,
             display: 'grid',
-            gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))' },
-            gap: 2,
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 14rem), 1fr))',
+            columnGap: 3,
+            rowGap: 2,
+            maxWidth: '34rem',
           }}
         >
           {[
-            ['Student', application.applicantName],
-            ['Class', application.standardName],
-            ...(preview?.joiningDate ? [['Joining date', fDate(preview.joiningDate)]] : []),
+            {
+              label: 'Student and class',
+              fields: [
+                ['Student', application.applicantName],
+                ['Class', application.standardName],
+                ...(preview?.joiningDate ? [['Joining date', fDate(preview.joiningDate)]] : []),
+              ],
+            },
             ...(preview?.primaryContact
               ? [
-                  ['Primary contact', preview.primaryContact.name],
-                  ['Mobile', preview.primaryContact.mobile],
-                  ['Email', preview.primaryContact.email],
+                  {
+                    label: 'Primary contact details',
+                    fields: [
+                      ['Primary contact', preview.primaryContact.name],
+                      ['Mobile', preview.primaryContact.mobile],
+                      ['Email', preview.primaryContact.email],
+                    ],
+                  },
                 ]
               : []),
-          ].map(([label, value]) => (
-            <Box key={label} sx={{ minWidth: 0 }}>
-              <Typography component="dt" variant="caption" color="text.secondary">
-                {label}
-              </Typography>
-              <Typography component="dd" variant="body2" sx={{ m: 0, overflowWrap: 'anywhere' }}>
-                {value || '—'}
-              </Typography>
-            </Box>
+          ].map(({ label, fields }) => (
+            <Stack key={label} component="dl" aria-label={label} spacing={0.75} sx={{ m: 0 }}>
+              {fields.map(([field, value]) => (
+                <Box key={field} sx={{ minWidth: 0 }}>
+                  <Typography component="dt" variant="caption" color="text.secondary">
+                    {field}
+                  </Typography>
+                  <Typography
+                    component="dd"
+                    variant="body2"
+                    sx={{ m: 0, overflowWrap: 'anywhere' }}
+                  >
+                    {value || '—'}
+                  </Typography>
+                </Box>
+              ))}
+            </Stack>
           ))}
         </Box>
         {existing && Boolean(preview?.capturedStudentFields?.length) && (

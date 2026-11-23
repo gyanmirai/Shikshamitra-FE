@@ -14,11 +14,11 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Stack, Button, MenuItem, Typography } from '@mui/material';
 
-import { assessmentActionLabels } from './assessment-action-model';
 import { ADMISSION_DATE_TIME_FORMAT } from '../admission-date-formats';
 import { useAssessmentPermissions } from './use-assessment-permissions';
 import { AssessmentResultEntry as ResultEntry } from './assessment-result-entry';
 import { AssessmentSubjectScoreHistory } from './assessment-subject-score-history';
+import { canWaiveAssessment, assessmentActionLabels } from './assessment-action-model';
 
 import type { AssessmentAction } from './assessment-action-model';
 import type { useAssessmentQuickActions } from './use-assessment-quick-actions';
@@ -258,7 +258,7 @@ export function AssessmentAttemptTable({
           if (latest && assessment.canRecordResult && permissions.results) actions.push('result');
           if (latest && assessment.canRetake && permissions.book) actions.push('retake');
           if (latest && assessment.canCancel && permissions.book) actions.push('cancel');
-          if (row.attemptNumber === lastNumber && assessment.canWaive && permissions.waive)
+          if (row.attemptNumber === lastNumber && permissions.waive && canWaiveAssessment(assessment))
             actions.push('waive');
         }
         const showSave =

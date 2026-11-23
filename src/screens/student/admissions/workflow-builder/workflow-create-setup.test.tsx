@@ -62,8 +62,21 @@ const workflow: AdmissionWorkflow = {
       isEntryStage: true,
       isTerminalStage: false,
     },
+    {
+      id: 'stage-2',
+      code: 'DECISION',
+      name: 'Admission decision',
+      stageType: 7,
+      displayOrder: 1,
+      isRequired: true,
+      allowManualSkip: false,
+      isEntryStage: false,
+      isTerminalStage: true,
+    },
   ],
-  transitions: [],
+  transitions: [
+    { id: 'route-1', fromStageId: 'stage-1', toStageId: 'stage-2', priority: 0, isDefault: true },
+  ],
 };
 
 const makeStore = () =>
@@ -116,14 +129,14 @@ it('returns to saved workflow details through its completed step and locks it wh
       <WorkflowSetupProgress onBackToDetails={onBackToDetails} />
     </ThemeProvider>
   );
-  fireEvent.click(screen.getByRole('button', { name: 'Back to Workflow Details' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Step 1: Workflow details' }));
   expect(onBackToDetails).toHaveBeenCalledOnce();
   rerender(
     <ThemeProvider theme={createTheme(defaultSettings)}>
       <WorkflowSetupProgress onBackToDetails={onBackToDetails} disabled />
     </ThemeProvider>
   );
-  expect(screen.getByRole('button', { name: 'Back to Workflow Details' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Step 1: Workflow details' })).toBeDisabled();
 });
 
 it.each([
@@ -266,7 +279,10 @@ it('updates the same draft with edited details and its unsaved journey', async (
   );
 
   act(() => {
-    result.current.draft.setStages([{ ...workflow.stages[0], name: 'Edited form stage' }]);
+    result.current.draft.setStages([
+      { ...workflow.stages[0], name: 'Edited form stage' },
+      workflow.stages[1],
+    ]);
     result.current.draft.markDirty();
   });
   await act(async () => {
@@ -283,8 +299,11 @@ it('updates the same draft with edited details and its unsaved journey', async (
     name: 'Updated admission',
     description: 'Updated details',
     concurrencyStamp: 'stamp-1',
-    stages: [{ id: 'stage-1', name: 'Edited form stage' }],
-    transitions: [],
+    stages: [
+      { id: 'stage-1', name: 'Edited form stage' },
+      { id: 'stage-2', isTerminalStage: true },
+    ],
+    transitions: workflow.transitions,
   });
   await waitFor(() => expect(result.current.draft.loadedStamp).toBe('stamp-2'));
   expect(result.current.draft.stages[0].name).toBe('Edited form stage');
@@ -295,7 +314,10 @@ it('updates the same draft with edited details and its unsaved journey', async (
   });
 
   act(() => {
-    result.current.draft.setStages([{ ...workflow.stages[0], name: 'Final form stage' }]);
+    result.current.draft.setStages([
+      { ...workflow.stages[0], name: 'Updated form stage' },
+      workflow.stages[1],
+    ]);
     result.current.draft.markDirty();
   });
   await act(async () => {
@@ -307,9 +329,51 @@ it('updates the same draft with edited details and its unsaved journey', async (
     name: 'Updated admission',
     description: 'Updated details',
     concurrencyStamp: 'stamp-2',
-    stages: [{ id: 'stage-1', name: 'Final form stage' }],
+    stages: [
+      { id: 'stage-1', name: 'Updated form stage' },
+      { id: 'stage-2', isTerminalStage: true },
+    ],
   });
 
+  store.dispatch(api.util.resetApiState());
+});
+
+it('keeps incomplete details local and only sends the save after adding a final decision', async () => {
+  const store = makeStore();
+  const incomplete = { ...workflow, stages: [workflow.stages[0]], transitions: [] };
+  const requests: Array<Partial<AdmissionWorkflow>> = [];
+  mswServer.use(
+    http.put('*/api/student/enrollment/admissions/workflows/workflow-1', async ({ request }) => {
+      const body = (await request.json()) as Partial<AdmissionWorkflow>;
+      requests.push(body);
+      return HttpResponse.json({ data: { ...workflow, ...body, concurrencyStamp: 'stamp-2' } });
+    })
+  );
+  const wrapper = ({ children }: { children: ReactNode }) => (
+    <Provider store={store}>{children}</Provider>
+  );
+  const { result } = renderHook(
+    () => {
+      const draft = useWorkflowBuilderDraft(incomplete, null);
+      return { draft, commands: useWorkflowBuilderCommands(incomplete.id, incomplete, draft) };
+    },
+    { wrapper }
+  );
+
+  await act(async () => {
+    await result.current.commands.saveDetails({ name: 'Changed name', code: incomplete.code });
+    expect(await result.current.commands.saveDraft()).toBeNull();
+    expect(await result.current.commands.publish()).toBeNull();
+  });
+  expect(requests).toHaveLength(0);
+  expect(result.current.draft.dirty).toBe(true);
+
+  act(() => result.current.draft.saveStage(workflow.stages[1], false, 'stage-1'));
+  await act(async () => {
+    await result.current.commands.saveDraft();
+  });
+  expect(requests).toHaveLength(1);
+  expect(requests[0]).toMatchObject({ name: 'Changed name', stages: workflow.stages });
   store.dispatch(api.util.resetApiState());
 });
 
@@ -361,55 +425,65 @@ it('saves a selected template to the same draft while retaining inquiry configur
   store.dispatch(api.util.resetApiState());
 });
 
-it('retains the original graph and stamp when saving a replacement fails', async () => {
-  const store = makeStore();
-  mswServer.use(
-    http.put('*/api/student/enrollment/admissions/workflows/workflow-1', () =>
-      HttpResponse.json({ error: { message: 'Conflict' } }, { status: 409 })
-    )
-  );
-  const wrapper = ({ children }: { children: ReactNode }) => (
-    <Provider store={store}>{children}</Provider>
-  );
-  const { result } = renderHook(
-    () => {
-      const draft = useWorkflowBuilderDraft(workflow, null);
-      return { draft, commands: useWorkflowBuilderCommands(workflow.id, workflow, draft) };
-    },
-    { wrapper }
-  );
-  const previousStages = result.current.draft.stages;
-  await act(async () => {
-    await expect(
-      result.current.commands.saveDetails({
-        name: 'Replacement',
-        code: 'FRESH_ADMISSION',
-        starterJourney: 'simple',
-        registrationFormDefinitionId: 'form-2',
-      })
-    ).rejects.toBeDefined();
-  });
-  expect(result.current.draft.stages).toBe(previousStages);
-  expect(result.current.draft.loadedStamp).toBe('stamp-1');
-  expect(result.current.commands.getCurrentDetails()?.name).toBe('Fresh admission');
-  store.dispatch(api.util.resetApiState());
-});
+it.each([
+  { problem: { error: { message: 'Conflict' } }, showToast: true },
+  { problem: { errorCode: 'Admissions.WorkflowNameAlreadyExists' }, showToast: false },
+])(
+  'retains the graph and stamp when saving a replacement fails with $problem',
+  async ({ problem, showToast }) => {
+    const store = makeStore();
+    mswServer.use(
+      http.put('*/api/student/enrollment/admissions/workflows/workflow-1', () =>
+        HttpResponse.json(problem, { status: 409 })
+      )
+    );
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <Provider store={store}>{children}</Provider>
+    );
+    const { result } = renderHook(
+      () => {
+        const draft = useWorkflowBuilderDraft(workflow, null);
+        return { draft, commands: useWorkflowBuilderCommands(workflow.id, workflow, draft) };
+      },
+      { wrapper }
+    );
+    const previousStages = result.current.draft.stages;
+    await act(async () => {
+      await expect(
+        result.current.commands.saveDetails({
+          name: 'Replacement',
+          code: 'FRESH_ADMISSION',
+          starterJourney: 'simple',
+          registrationFormDefinitionId: 'form-2',
+        })
+      ).rejects.toBeDefined();
+    });
+    expect(result.current.draft.stages).toBe(previousStages);
+    expect(result.current.draft.loadedStamp).toBe('stamp-1');
+    expect(result.current.commands.getCurrentDetails()?.name).toBe('Fresh admission');
+    expect(shikshaMitraToast.error).toHaveBeenCalledTimes(showToast ? 1 : 0);
+    store.dispatch(api.util.resetApiState());
+  }
+);
 
 it('reports all publishing validation issues in one toast without opening a panel or publishing', async () => {
   const store = makeStore();
   const publishRequest = vi.fn();
   mswServer.use(
+    http.put('*/api/student/enrollment/admissions/workflows/workflow-1', async ({ request }) =>
+      HttpResponse.json({ data: { ...workflow, ...((await request.json()) as object) } })
+    ),
     http.post('*/api/student/enrollment/admissions/workflows/workflow-1/validate', () =>
       HttpResponse.json({
         data: {
           isValid: false,
           issues: [
             {
-              code: 'stage-required',
-              message: 'Add at least one stage before publishing.',
+              code: 'form-required',
+              message: 'Select a published registration form.',
               severity: 0,
             },
-            { code: 'final-required', message: 'Choose a final stage.', severity: 0 },
+            { code: 'missing-route', message: 'Connect every stage to the journey.', severity: 0 },
           ],
         },
       })
@@ -424,7 +498,7 @@ it('reports all publishing validation issues in one toast without opening a pane
   );
   const { result } = renderHook(
     () => {
-      const draft = useWorkflowBuilderDraft({ ...workflow, stages: [] }, null);
+      const draft = useWorkflowBuilderDraft(workflow, null);
       return { draft, commands: useWorkflowBuilderCommands(workflow.id, workflow, draft) };
     },
     { wrapper }
@@ -438,7 +512,7 @@ it('reports all publishing validation issues in one toast without opening a pane
   expect(shikshaMitraToast.warning).toHaveBeenCalledWith(
     expect.objectContaining({
       message:
-        'Fix before publishing:\nAdd at least one stage before publishing.\nChoose a final stage.',
+        'Fix before publishing:\nSelect a published registration form.\nConnect every stage to the journey.',
     })
   );
   expect(shikshaMitraToast.success).not.toHaveBeenCalled();

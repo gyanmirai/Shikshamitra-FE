@@ -121,13 +121,13 @@ it('shows duplicate-name guidance on Form details and blocks continuing or savin
   await user.clear(name);
   await user.paste('MAIN REG form Stage 8th');
 
-  expect(
-    await screen.findByText(
-      "A form named 'MAIN REG form Stage 8th' already exists in Current forms. Use a different name or create a new version of the existing form."
-    )
-  ).toBeVisible();
+  expect(await screen.findByText('This form name is already in use.')).toBeVisible();
   expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Save draft' })).toBeDisabled();
+  await user.clear(name);
+  await user.paste('New registration form');
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Continue' })).toBeEnabled());
+  expect(screen.queryByText('This form name is already in use.')).not.toBeInTheDocument();
 });
 
 it.each([
@@ -266,7 +266,7 @@ it('restores print choices on reopen, retains them across Back and saves the cha
   await waitFor(() =>
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
-        printSettings: { ...editing.printSettings, template: 'simple', showPhoto: true },
+        printSettings: { ...editing.printSettings, template: 'boxed-grid', showPhoto: true },
       })
     )
   );

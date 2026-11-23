@@ -32,6 +32,16 @@ const metadata: AdmissionWorkflowStageTypeMetadata = {
   isRuntimeReady: true,
 };
 
+const paymentType: AdmissionWorkflowStageTypeMetadata = {
+  ...metadata,
+  type: 4,
+  displayName: 'Payment',
+  description: 'Collect payment',
+  supportedConfiguration: [],
+  runtimeHandler: 'Payment',
+  supportsFormAttachment: false,
+};
+
 const stage: AdmissionWorkflowStage = {
   id: 'stage-form',
   code: 'STAGE_1',
@@ -80,7 +90,7 @@ function setup(
     <AdmissionWorkflowStageDrawer
       open
       stage={editorStage}
-      stageTypes={[metadata]}
+      stageTypes={[metadata, paymentType]}
       forms={availableForms}
       stages={stages}
       readOnly={false}
@@ -179,6 +189,9 @@ describe('single-page stage drawer', { timeout: 15000 }, () => {
       />
     );
     expect(screen.getByRole('heading', { name: 'Stage Details' })).toBeInTheDocument();
+    const ending = screen.getByRole('switch', { name: 'End Of Journey' });
+    expect(ending).toBeDisabled();
+    expect((ending as HTMLInputElement).checked).toBe(type === 7);
     expect(screen.queryByRole('heading', { name: 'Next step' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Choose Next Step' })).not.toBeInTheDocument();
   });
@@ -195,7 +208,8 @@ describe('single-page stage drawer', { timeout: 15000 }, () => {
           allowLateSubmission: true,
         },
         extension: 'keep',
-      })
+      }),
+      { isTerminalStage: true }
     );
     expect(screen.getByRole('heading', { name: 'Stage Details' })).toBeVisible();
     expect(screen.queryByRole('heading', { name: 'Form Completion' })).not.toBeInTheDocument();
@@ -206,6 +220,11 @@ describe('single-page stage drawer', { timeout: 15000 }, () => {
     ['Required Stage', 'Entry Stage', 'End Of Journey', 'Allow Corrections'].forEach((name) =>
       expect(behavior.getByRole('switch', { name })).toBeInTheDocument()
     );
+    const ending = behavior.getByRole('switch', { name: 'End Of Journey' });
+    expect(ending).toBeDisabled();
+    expect(ending).not.toBeChecked();
+    expect(ending).toHaveAccessibleDescription('Available only for Admission decision stages.');
+    expect(behavior.getByText('Available only for Admission decision stages.')).toBeVisible();
     expect(screen.queryByRole('heading', { name: 'Next step' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Choose Next Step' })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Advanced Settings' })).not.toBeInTheDocument();
@@ -226,12 +245,11 @@ describe('single-page stage drawer', { timeout: 15000 }, () => {
       justifyContent: 'flex-end',
     });
     await user.click(behavior.getByRole('switch', { name: 'Allow Corrections' }));
-    await user.click(behavior.getByRole('switch', { name: 'End Of Journey' }));
     await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     const saved = onSave.mock.calls[0][0];
     expect(saved).toMatchObject({
-      isTerminalStage: true,
+      isTerminalStage: false,
       code: stage.code,
       description: stage.description,
     });
@@ -307,9 +325,41 @@ describe('single-page stage drawer', { timeout: 15000 }, () => {
   it('blocks an unattached form and exposes the published-form validation', async () => {
     const { user, onSave } = setup();
     await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
-    expect(await screen.findByText('Select a published form version.')).toBeInTheDocument();
+    expect(await screen.findByText('Select a published registration form.')).toBeInTheDocument();
     expect(onSave).not.toHaveBeenCalled();
   });
+  it.each(['field blur', 'Apply Changes'])(
+    'resets the required form selector after a type change following %s',
+    async (interaction) => {
+      const { user, onSave } = setup();
+      const getFormSelector = () =>
+        screen.getByRole('combobox', { name: 'Published Form Version *' });
+      const changeType = async (name: string) => {
+        await user.click(screen.getByRole('combobox', { name: 'Stage Type *' }));
+        await user.click(screen.getByRole('option', { name }));
+      };
+      const apply = () => user.click(screen.getByRole('button', { name: 'Apply Changes' }));
+      expect(getFormSelector()).not.toHaveAttribute('aria-invalid', 'true');
+
+      if (interaction === 'field blur') {
+        await user.click(getFormSelector());
+        await user.keyboard('{Escape}');
+        await user.tab();
+      } else {
+        await apply();
+      }
+      await waitFor(() => expect(getFormSelector()).toHaveAttribute('aria-invalid', 'true'));
+
+      await changeType('Payment');
+      await changeType('Form');
+      expect(getFormSelector()).not.toHaveAttribute('aria-invalid', 'true');
+      expect(screen.getByRole('region', { name: 'Form Completion' })).toBeVisible();
+
+      await apply();
+      await waitFor(() => expect(getFormSelector()).toHaveAttribute('aria-invalid', 'true'));
+      expect(onSave).not.toHaveBeenCalled();
+    }
+  );
   it('preserves field validation and entered values when applying invalid stage details', async () => {
     const { user, onSave } = setup(JSON.stringify({ formDefinitionId: form.id }));
     await user.clear(screen.getByRole('textbox', { name: 'Stage Name *' }));

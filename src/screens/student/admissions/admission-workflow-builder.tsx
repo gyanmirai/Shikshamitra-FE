@@ -7,9 +7,9 @@ import type {
 } from 'src/redux/student/admissions/admission-workflows-api';
 
 import { Box } from '@mui/material';
-import { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { useRef, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { studentPaths } from 'src/constants/student-menu';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -30,6 +30,7 @@ import { findMatchingWorkflowTemplate } from './workflow-template';
 import { useAdmissionDraftGuard } from './use-admission-draft-guard';
 import { AdmissionWorkflowDialog } from './admission-workflow-dialog';
 import { useAdmissionDefinitionOptions } from './use-admission-definition-options';
+import { getWorkflowFinalStageError } from './workflow-builder/workflow-final-stage';
 import { WorkflowSidePanel } from './workflow-builder/components/workflow-side-panel';
 import { useWorkflowBuilderDraft } from './workflow-builder/hooks/use-workflow-builder-draft';
 import { WorkflowBuilderCanvas } from './workflow-builder/components/workflow-builder-canvas';
@@ -45,7 +46,7 @@ import {
   WorkflowLifecycleActions,
 } from './workflow-builder/components/workflow-builder-header';
 
-import type { WorkflowDetails } from './admission-workflow-dialog';
+import type { WorkflowDetails, WorkflowDetailsFormState } from './admission-workflow-dialog';
 
 type Props = { workflowId: string };
 
@@ -55,10 +56,13 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
   const returnTo =
     getStudentSetupWorkflowReturnUrl(searchParams.get('returnTo')) ??
     studentPaths.enrollment.settings.workflows;
-  const createSetup = searchParams.get('setup') === '1';
   const standardTemplateDialog = useBoolean();
   const detailsDialog = useBoolean();
-  const detailsCloseRef = useRef<(() => void) | null>(null);
+  const detailsResetRef = useRef<(() => void) | null>(null);
+  const [detailsFormState, setDetailsFormState] = useState<WorkflowDetailsFormState>({
+    dirty: false,
+    busy: false,
+  });
   const [detailsInitialValues, setDetailsInitialValues] = useState<WorkflowDetails | null>(null);
   const { fetchInquiryForms, fetchRegistrationForms } = useAdmissionDefinitionOptions(
     standardTemplateDialog.value || detailsDialog.value
@@ -114,21 +118,26 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
     }
   );
   const commands = useWorkflowBuilderCommands(workflowId, workflow, draft);
-  const leaveGuard = useAdmissionDraftGuard({
-    dirty: draft.dirty,
-    push: router.push,
-    reset: draft.resetDraft,
-    busy:
-      commands.updateState.isLoading ||
-      commands.validateState.isLoading ||
-      commands.publishState.isLoading,
-  });
   const statusReadOnly = Boolean(workflow && ![0, 3].includes(workflow.status));
   const readOnly = !canEdit || !workflow || statusReadOnly;
   const lifecycleBusy =
     commands.updateState.isLoading ||
     commands.validateState.isLoading ||
     commands.publishState.isLoading;
+  const navigationBusy = lifecycleBusy || (detailsDialog.value && detailsFormState.busy);
+  const closeDetails = () => {
+    setDetailsFormState({ dirty: false, busy: false });
+    detailsDialog.onFalse();
+  };
+  const leaveGuard = useAdmissionDraftGuard({
+    dirty: draft.dirty || (detailsDialog.value && detailsFormState.dirty),
+    push: router.push,
+    reset: () => {
+      draft.resetDraft();
+      detailsResetRef.current?.();
+    },
+    busy: navigationBusy,
+  });
   const validatePreviewRef = useRef(commands.validateDraftPreview);
   const cancelPreviewRef = useRef(commands.cancelDraftPreview);
   const publishingRef = useRef(commands.publishState.isLoading);
@@ -145,7 +154,7 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
   useEffect(() => {
     if (!canPreview) return undefined;
     const timer = window.setTimeout(() => {
-      if (!publishingRef.current) void validatePreviewRef.current();
+      if (!publishingRef.current) validatePreviewRef.current();
     }, 400);
     return () => {
       window.clearTimeout(timer);
@@ -160,6 +169,7 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
     return <WorkflowBuilderPageState state="error" onRetry={() => workflowQuery.refetch()} />;
   }
   const canPublishCurrent = canPublish && isAdmissionWorkflowPublishable(workflow.status);
+  const finalStageError = getWorkflowFinalStageError(draft.stages, draft.transitions);
   const requestPublish = async () => {
     if (!canPublishCurrent) return;
     const published = await commands.publish();
@@ -189,7 +199,7 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
     draft.setTransitionDrawerOpen(true);
   };
   const openDetails = () => {
-    if (readOnly || commands.updateState.isLoading || commands.publishState.isLoading) return;
+    if (readOnly || lifecycleBusy) return;
     const details = commands.getCurrentDetails();
     if (!details) return;
     setDetailsInitialValues({
@@ -218,19 +228,15 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
         detailsOpen={detailsDialog.value}
         afterBreadcrumb={
           !readOnly && !detailsDialog.value ? (
-            <WorkflowSetupProgress
-              onBackToDetails={openDetails}
-              disabled={commands.updateState.isLoading || commands.publishState.isLoading}
-            />
+            <WorkflowSetupProgress onBackToDetails={openDetails} disabled={lifecycleBusy} />
           ) : undefined
         }
         readOnlyReason={statusReadOnly ? 'status' : !canEdit ? 'permission' : undefined}
+        backDisabled={navigationBusy}
         onBack={
-          detailsDialog.value
-            ? () => detailsCloseRef.current?.()
-            : createSetup && !readOnly
-              ? openDetails
-              : () => leaveGuard.requestNavigation(() => router.push(returnTo))
+          !detailsDialog.value && !readOnly
+            ? openDetails
+            : () => leaveGuard.requestNavigation(() => router.push(returnTo))
         }
       >
         {!detailsDialog.value && (
@@ -248,6 +254,7 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
                 saving={commands.updateState.isLoading && !commands.publishState.isLoading}
                 validating={commands.validateState.isLoading}
                 publishing={commands.publishState.isLoading}
+                finalStageError={finalStageError}
                 onSave={commands.saveDraft}
                 onPublish={requestPublish}
               />
@@ -287,14 +294,15 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
       <AdmissionWorkflowDialog
         inline
         open={detailsDialog.value && !readOnly}
-        onClose={detailsDialog.onFalse}
+        onClose={closeDetails}
         saving={commands.updateState.isLoading}
-        closeRequestRef={detailsCloseRef}
+        resetFormRef={detailsResetRef}
+        onFormStateChange={setDetailsFormState}
         currentJourney={{ stages: draft.stages, transitions: draft.transitions }}
         initialRegistrationForm={registrationFormQuery.data}
         fetchRegistrationForms={fetchRegistrationForms}
         title="Edit Workflow Name and Description"
-        submitLabel="Save & Continue"
+        continueLabel={finalStageError ? 'Continue' : undefined}
         initialValues={
           detailsInitialValues ?? {
             name: workflow.name,

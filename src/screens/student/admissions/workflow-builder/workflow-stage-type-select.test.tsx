@@ -38,6 +38,13 @@ const types: AdmissionWorkflowStageTypeMetadata[] = [
     canBeEntryStage: false,
     canBeTerminalStage: false,
   },
+  {
+    ...formType,
+    type: 7,
+    displayName: 'Admission Decision',
+    supportedConfiguration: [],
+    supportsFormAttachment: false,
+  },
 ];
 const initial: AdmissionWorkflowStage = {
   id: 'form',
@@ -99,13 +106,13 @@ describe('safe stage type changes', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(draft()).toMatchObject({ stageType: 2, code: stage.code, id: stage.id });
   });
-  it('preserves the chosen ending when changing to another stage type', async () => {
+  it('clears End of Journey when changing an Admission decision to another stage type', async () => {
     const user = userEvent.setup();
-    render(<Fixture stage={{ ...initial, isTerminalStage: true }} />);
+    render(<Fixture stage={{ ...initial, stageType: 7, isTerminalStage: true }} />);
     await user.click(screen.getByRole('combobox', { name: 'Stage Type *' }));
     await user.click(screen.getByRole('option', { name: 'Assessment' }));
     await user.click(screen.getByRole('button', { name: 'Change Type' }));
-    expect(draft()).toMatchObject({ stageType: 2, isTerminalStage: true });
+    expect(draft()).toMatchObject({ stageType: 2, isTerminalStage: false });
   });
 
   it('keeps configured form on cancel and clears it only after confirmation', async () => {

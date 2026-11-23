@@ -40,8 +40,6 @@ import {
   admissionPipelineApplicationUrl,
 } from './pipeline/admission-pipeline-state';
 
-const EMPTY_PIPELINE_ROWS: AdmissionPipelineItem[] = [];
-
 export default function AdmissionInquiryPipelineScreen() {
   const academic = useAdmissionAcademicFilters();
   const router = useRouter();
@@ -49,6 +47,7 @@ export default function AdmissionInquiryPipelineScreen() {
   const { pendingKey, isPending, navigate } = usePendingNavigation(router.push);
   const params = useSearchParams();
   const applicationId = params.get('application');
+  const openAssessmentBooking = params.get('assessment') === 'book';
   const [printRequest, setPrintRequest] = useState<{ id: string; mode: 'blank' | 'filled' } | null>(
     null
   );
@@ -91,22 +90,51 @@ export default function AdmissionInquiryPipelineScreen() {
     skip,
     refetchOnMountOrArgChange: true,
   });
+  const listFilters = {
+    ...academicInput,
+    myCases: false,
+    currentStageCode: state.currentStageCode,
+    status: state.status,
+    columnFilters: serializeQueueColumnFilters(state.filters, 'pipeline') || undefined,
+    search: state.search || undefined,
+    maxResultCount: state.rowsPerPage,
+  };
+  const sorting = state.sorts[0]
+    ? `${state.sorts[0].column} ${state.sorts[0].direction}`
+    : undefined;
   const listQuery = useGetAdmissionPipelineQuery(
     {
-      ...academicInput,
-      myCases: false,
-
-      currentStageCode: state.currentStageCode,
-      status: state.status,
-      columnFilters: serializeQueueColumnFilters(state.filters, 'pipeline') || undefined,
-      search: state.search || undefined,
+      ...listFilters,
       skipCount: state.page * state.rowsPerPage,
-      maxResultCount: state.rowsPerPage,
-      sorting: state.sorts[0] ? `${state.sorts[0].column} ${state.sorts[0].direction}` : undefined,
+      sorting,
     },
     { skip, refetchOnMountOrArgChange: true }
   );
   const data = listQuery.currentData;
+  const listScope = JSON.stringify([tenantId, userId, listFilters]);
+  const lastList = useRef<
+    | {
+        scope: string;
+        sorting: string | undefined;
+        page: number;
+        data: NonNullable<typeof data>;
+      }
+    | undefined
+  >(undefined);
+  useEffect(() => {
+    if (skip) lastList.current = undefined;
+    else if (data) lastList.current = { scope: listScope, sorting, page: state.page, data };
+  }, [data, listScope, skip, sorting, state.page]);
+  const previousList = lastList.current;
+  // A sort can reset the page. Retain the prior rows only within the same authorized filter scope.
+  const displayData =
+    data ??
+    (!skip &&
+    previousList?.scope === listScope &&
+    previousList.sorting !== sorting &&
+    (previousList.page === state.page || state.page === 0)
+      ? previousList.data
+      : undefined);
   useEffect(() => {
     if (previousApplication.current && !applicationId)
       restoreApplicationFocus.current = previousApplication.current;
@@ -128,14 +156,6 @@ export default function AdmissionInquiryPipelineScreen() {
   }, [applicationId, listQuery.isFetching, scopeLoading, data]);
   const options = optionsQuery.currentData;
   const myCases = false;
-  const queryBusy =
-    skip ||
-    listQuery.isFetching ||
-    listQuery.isError ||
-    optionsQuery.isFetching ||
-    optionsQuery.isError ||
-    !data ||
-    !options;
   const updateInteractive = useCallback(
     (changes: Record<string, string | undefined>, resetPage = true) => {
       if (!interactionLocked.current) update(changes, resetPage);
@@ -150,20 +170,21 @@ export default function AdmissionInquiryPipelineScreen() {
     [changeAcademic]
   );
   const applicationUrl = useCallback(
-    (id: string) => admissionPipelineApplicationUrl(id, new URLSearchParams(params.toString())),
+    (id: string, assessmentAction?: 'book') =>
+      admissionPipelineApplicationUrl(id, new URLSearchParams(params.toString()), assessmentAction),
     [params]
   );
   const openWorkspace = useCallback(
-    (id: string) => {
+    (id: string, assessmentAction?: 'book') => {
       if (canView && !interactionLocked.current) {
         preloadAdmissionApplication(dispatch, id);
         // The list is only a code-loading hint; the server workflow still owns routing/access.
-        if (data?.items.find((row) => row.id === id)?.stageType === 1)
+        if (displayData?.items.find((row) => row.id === id)?.stageType === 1)
           loadApplicationRuntimeForm().catch(() => undefined);
-        navigate(id, applicationUrl(id), { scroll: false });
+        navigate(id, applicationUrl(id, assessmentAction), { scroll: false });
       }
     },
-    [canView, applicationUrl, data, dispatch, navigate]
+    [canView, applicationUrl, displayData, dispatch, navigate]
   );
   const columns = useMemo(
     () =>
@@ -269,6 +290,7 @@ export default function AdmissionInquiryPipelineScreen() {
       ) : (
         <>
           <AdmissionAcademicFilters
+            matchSelectHeights
             onLoadingChange={setScopeLoading}
             boardId={academic.boardId}
             mediumId={academic.mediumId}
@@ -290,7 +312,7 @@ export default function AdmissionInquiryPipelineScreen() {
               />
             }
           />
-          {((listQuery.isError && Boolean(data?.items.length)) || optionsQuery.isError) &&
+          {((listQuery.isError && Boolean(displayData?.items.length)) || optionsQuery.isError) &&
             !skip &&
             !scopeLoading && (
               <AdmissionQueryError
@@ -316,21 +338,32 @@ export default function AdmissionInquiryPipelineScreen() {
               tableId="admission-application-pipeline"
               tableTitle="Active Admissions"
               exportLabel="Export"
-              wrapperProps={{ sx: { height: 1, flex: 1, minHeight: 0, minWidth: 0 } }}
+              wrapperProps={{
+                sx: {
+                  height: 1,
+                  flex: 1,
+                  minHeight: 0,
+                  minWidth: 0,
+                  '& .MuiLinearProgress-root': {
+                    height: 2,
+                    bgcolor: 'transparent',
+                    '& .MuiLinearProgress-bar': { bgcolor: 'text.disabled' },
+                  },
+                },
+              }}
               tableContainerProps={{ sx: { height: 1 } }}
               columns={columns}
-              data={skip || scopeLoading ? [] : (data?.items ?? [])}
+              data={skip ? [] : (displayData?.items ?? [])}
               isLoading={
                 yearChanging ||
                 scopeLoading ||
-                (!skip && !listQuery.isError && (listQuery.isLoading || !data))
+                (!skip && !listQuery.isError && !displayData)
               }
               isRefreshing={
-                Boolean(data) && listQuery.isFetching && !scopeLoading && !skip && !applicationId
+                Boolean(displayData) && listQuery.isFetching && !skip && !applicationId
               }
-              refreshIndicator="skeleton"
               errorContent={
-                listQuery.isError && !skip && !scopeLoading && !data?.items.length ? (
+                listQuery.isError && !skip && !displayData?.items.length ? (
                   <AdmissionQueryError
                     onRetry={() => {
                       listQuery.refetch();
@@ -371,7 +404,7 @@ export default function AdmissionInquiryPipelineScreen() {
               isFilter
               searchTerm={state.search}
               sorts={state.sorts}
-              totalCount={skip || scopeLoading ? 0 : (data?.totalCount ?? 0)}
+              totalCount={skip ? 0 : (displayData?.totalCount ?? 0)}
               onServerSearch={(search) => updateInteractive({ search: search || undefined })}
               onServerSort={(_, sorts) =>
                 updateInteractive({ sort: sorts[0]?.column, direction: sorts[0]?.direction })
@@ -415,7 +448,7 @@ export default function AdmissionInquiryPipelineScreen() {
                 },
               })}
               searchFieldProps={{
-                placeholder: 'Search Applicant, Application, Inquiry or Phone',
+                placeholder: 'Search name, number or phone',
                 inputProps: { 'aria-label': 'Search Pipeline' },
               }}
               noDataText={
@@ -446,7 +479,9 @@ export default function AdmissionInquiryPipelineScreen() {
           key={applicationId}
           applicationId={applicationId}
           presentation="drawer"
-          onClose={() => update({ application: undefined }, false)}
+          openAssessmentBooking={openAssessmentBooking}
+          onAssessmentBookingOpened={() => update({ assessment: undefined }, false)}
+          onClose={() => update({ application: undefined, assessment: undefined }, false)}
         />
       )}
     </Box>

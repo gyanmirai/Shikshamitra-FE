@@ -1,10 +1,10 @@
 import { GlobalIcons } from 'src/utils/icons';
-import { FormSectionCard } from 'src/components/form-section-card';
 import { Box, Radio, Stack, RadioGroup, Typography, FormControlLabel } from '@mui/material';
 import { ADMISSION_PRINT_PALETTES } from 'src/redux/student/admissions/admission-form-print-settings';
 
 import {
   PrintSettingsGrid,
+  PrintSettingsCard,
   PrintSettingsCards,
   PrintSettingSelect,
   PrintSettingNumber,
@@ -23,7 +23,8 @@ export function AdmissionPrintPaperStyleSettings({
   const { paper, border, style } = advanced;
   return (
     <PrintSettingsCards>
-      <FormSectionCard
+      <PrintSettingsCard
+        defaultExpanded
         title="Paper Setup"
         icon={GlobalIcons.documentIcon}
         action={
@@ -81,8 +82,8 @@ export function AdmissionPrintPaperStyleSettings({
             />
           ))}
         </PrintSettingsGrid>
-      </FormSectionCard>
-      <FormSectionCard
+      </PrintSettingsCard>
+      <PrintSettingsCard
         title="Page Border"
         icon={GlobalIcons.stationaryIcon}
         action={
@@ -177,8 +178,8 @@ export function AdmissionPrintPaperStyleSettings({
           checked={border.dividers}
           onChange={(dividers) => update('border', { dividers })}
         />
-      </FormSectionCard>
-      <FormSectionCard
+      </PrintSettingsCard>
+      <PrintSettingsCard
         title="Print Colours"
         icon={GlobalIcons.academicTextCase}
         action={
@@ -253,8 +254,8 @@ export function AdmissionPrintPaperStyleSettings({
             />
           ))}
         </RadioGroup>
-      </FormSectionCard>
-      <FormSectionCard
+      </PrintSettingsCard>
+      <PrintSettingsCard
         title="Typography"
         icon={GlobalIcons.academicTextCase}
         action={
@@ -352,7 +353,7 @@ export function AdmissionPrintPaperStyleSettings({
             onChange={(labelWeight) => update('style', { labelWeight })}
           />
         </PrintSettingsGrid>
-      </FormSectionCard>
+      </PrintSettingsCard>
     </PrintSettingsCards>
   );
 }

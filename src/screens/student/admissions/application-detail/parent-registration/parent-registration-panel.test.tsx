@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { it, vi, expect, afterEach, beforeEach } from 'vitest';
-import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { act, render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import { ParentRegistrationPanel } from './parent-registration-panel';
 
@@ -449,16 +449,49 @@ it.each(['inline', 'header'] as const)(
         currentValues={{}}
       />
     );
-    fireEvent.click(screen.getByRole('button', { name: 'More parent registration actions' }));
-    expect(screen.getByRole('menuitem', { name: 'Update link' })).toBeVisible();
+    expect(screen.getAllByRole('button', { name: 'Update link' })).toHaveLength(1);
+    expect(
+      screen.queryByRole('button', { name: 'More parent registration actions' })
+    ).not.toBeInTheDocument();
     expect(screen.queryByText('saved@example.test')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Update link' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Update link' }));
     fireEvent.change(screen.getByRole('combobox', { name: 'Parent contact' }), {
       target: { value: 'father' },
     });
     expect(screen.getByRole('textbox', { name: 'Email' })).toHaveValue('father@example.test');
   }
 );
+
+it('keeps Print and Refresh outside link actions even when parent status is unavailable', () => {
+  installInvitation();
+  const panel = () => (
+    <ParentRegistrationPanel
+      placement="header"
+      applicationId="app"
+      canView
+      canManage
+      currentValues={{}}
+      formActions={{
+        print: <button type="button">Print</button>,
+        refresh: <button type="button">Refresh</button>,
+      }}
+    />
+  );
+  const { rerender } = render(panel());
+  const links = within(screen.getByRole('group', { name: 'Registration link actions' }));
+  const utilities = within(screen.getByRole('group', { name: 'Registration utilities' }));
+  expect(links.getByRole('button', { name: 'Send email' })).toBeVisible();
+  expect(links.getByRole('button', { name: 'Update link' })).toBeVisible();
+  expect(links.queryByRole('button', { name: 'Refresh' })).not.toBeInTheDocument();
+  const print = utilities.getByRole('button', { name: 'Print' });
+  const refresh = utilities.getByRole('button', { name: 'Refresh' });
+
+  state.failed = true;
+  rerender(panel());
+  expect(screen.queryByRole('button', { name: 'Update link' })).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Print' })).toBe(print);
+  expect(screen.getByRole('button', { name: 'Refresh' })).toBe(refresh);
+});
 
 it('keeps failed delivery guidance visible and preserves the single retry action', () => {
   installInvitation('Failed');
@@ -521,10 +554,9 @@ it.each(['email', 'documents'] as const)('guards browser Back while editing pare
   );
   fireEvent.click(
     screen.getByRole('button', {
-      name: mode === 'email' ? 'More parent registration actions' : 'Request parent documents',
+      name: mode === 'email' ? 'Update link' : 'Request parent documents',
     })
   );
-  if (mode === 'email') fireEvent.click(screen.getByRole('menuitem', { name: 'Update link' }));
   const input = screen.getByRole('textbox', {
     name: mode === 'email' ? 'Email' : /Instructions for the parent/,
   });
@@ -558,8 +590,7 @@ it('keeps email setup failure visible and blocks sending or retry without lockin
   render(<ParentRegistrationPanel applicationId="app" canView canManage currentValues={{}} />);
   expect(screen.getByText('Enable an Email provider in Communication settings.')).toBeVisible();
   expect(screen.getByRole('button', { name: 'Send email' })).toBeDisabled();
-  fireEvent.click(screen.getByRole('button', { name: 'More parent registration actions' }));
-  expect(screen.getByRole('menuitem', { name: 'Update link' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: 'Update link' })).toBeEnabled();
 });
 it('prioritizes retry and keeps resend and access maintenance in the shared overflow menu', () => {
   state.context.canRetryDelivery = true;
@@ -629,8 +660,7 @@ it('saves an authorized parent email explicitly without sending an invitation', 
   state.context.recipients = [{ ...state.context.recipients[0], canChangeEmail: true }];
   state.changeEmail.mockReturnValue({ unwrap: async () => state.context });
   render(<ParentRegistrationPanel applicationId="app" canView canManage currentValues={{}} />);
-  fireEvent.click(screen.getByRole('button', { name: 'More parent registration actions' }));
-  fireEvent.click(screen.getByRole('menuitem', { name: 'Update link' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Update link' }));
   fireEvent.change(screen.getByRole('textbox', { name: 'Email' }), {
     target: { value: 'changed@example.test' },
   });
@@ -648,8 +678,7 @@ it('ignores unchanged email in the submit control and native form submission', a
   state.context.recipients = [{ ...state.context.recipients[0], canChangeEmail: true }];
   state.changeEmail.mockReturnValue({ unwrap: async () => state.context });
   render(<ParentRegistrationPanel applicationId="app" canView canManage currentValues={{}} />);
-  fireEvent.click(screen.getByRole('button', { name: 'More parent registration actions' }));
-  fireEvent.click(screen.getByRole('menuitem', { name: 'Update link' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Update link' }));
   const email = screen.getByRole('textbox', { name: 'Email' });
   const submit = screen.getByRole('button', { name: 'Submit' });
   expect(submit).toBeDisabled();
@@ -677,9 +706,7 @@ it.each(['inline', 'header'] as const)(
         currentValues={{}}
       />
     );
-    expect(
-      screen.queryByRole('button', { name: 'More parent registration actions' })
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Update link' })).not.toBeInTheDocument();
     state.context.recipients = [{ ...state.context.recipients[0], canChangeEmail: true }];
     rerender(
       <ParentRegistrationPanel
@@ -691,11 +718,7 @@ it.each(['inline', 'header'] as const)(
         currentValues={{}}
       />
     );
-    fireEvent.click(screen.getByRole('button', { name: 'More parent registration actions' }));
-    expect(screen.getByRole('menuitem', { name: 'Update link' })).toHaveAttribute(
-      'aria-disabled',
-      'true'
-    );
+    expect(screen.getByRole('button', { name: 'Update link' })).toBeDisabled();
   }
 );
 
@@ -707,8 +730,7 @@ it('retains changed email and locks a conflicting save without sending', async (
     },
   });
   render(<ParentRegistrationPanel applicationId="app" canView canManage currentValues={{}} />);
-  fireEvent.click(screen.getByRole('button', { name: 'More parent registration actions' }));
-  fireEvent.click(screen.getByRole('menuitem', { name: 'Update link' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Update link' }));
   fireEvent.change(screen.getByRole('textbox', { name: 'Email' }), {
     target: { value: 'kept@example.test' },
   });

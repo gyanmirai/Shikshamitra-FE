@@ -473,6 +473,7 @@ export default function AdmissionFeeSelectionPanel({
               onOpenChange={collectionOpenChanged}
               stretch={workspaceLayout}
               defaultJoiningDateToToday
+              showJoiningDateSave
               footerAction={workspaceLayout ? deferralAction : undefined}
             />
           )}

@@ -1,57 +1,50 @@
+import { Paper } from '@mui/material';
 import CustomStepper from 'src/components/custom-stepper';
-import { Step, Paper, Stepper, StepLabel, StepButton } from '@mui/material';
+
+const steps = ['Workflow details', 'Build journey'];
 
 type Props = {
   activeStep?: 0 | 1;
   onBackToDetails?: () => void;
+  onContinueToJourney?: () => void;
   disabled?: boolean;
 };
 
 export function WorkflowSetupProgress({
   activeStep = 1,
   onBackToDetails,
+  onContinueToJourney,
   disabled = false,
 }: Props) {
+  const onStepClick = (index: number) => {
+    if (activeStep === 1 && index === 0) onBackToDetails?.();
+    if (activeStep === 0 && index === 1) onContinueToJourney?.();
+  };
+
   return (
     <Paper
       component="section"
       elevation={0}
       aria-label="Workflow Setup Progress"
-      sx={{ px: { xs: 1, sm: 2 }, py: 0, flexShrink: 0 }}
+      sx={{
+        px: { xs: 1, sm: 2 },
+        py: 0,
+        flexShrink: 0,
+        '& .MuiStepIcon-root.Mui-completed': { color: 'success.main' },
+      }}
     >
-      {onBackToDetails && activeStep === 1 ? (
-        <Stepper
-          role="list"
-          aria-label="Workflow Setup Steps"
-          activeStep={activeStep}
-          alternativeLabel
-          sx={{ m: 0, p: 0 }}
-        >
-          <Step role="listitem" completed sx={{ '& svg': { width: 28, height: 28 } }}>
-            <StepButton
-              onClick={onBackToDetails}
-              disabled={disabled}
-              aria-label="Back to Workflow Details"
-            >
-              <StepLabel sx={{ '& .MuiStepLabel-label': { typography: 'subtitle2' } }}>
-                Workflow details
-              </StepLabel>
-            </StepButton>
-          </Step>
-          <Step role="listitem" aria-current="step" sx={{ '& svg': { width: 28, height: 28 } }}>
-            <StepLabel sx={{ '& .MuiStepLabel-label': { typography: 'subtitle2' } }}>
-              Build journey
-            </StepLabel>
-          </Step>
-        </Stepper>
-      ) : (
-        <CustomStepper
-          steps={['Workflow details', 'Build journey']}
-          activeStep={activeStep}
-          stepStates={activeStep === 1 ? ['completed', 'active'] : ['active', 'pending']}
-          ariaLabel="Workflow setup steps"
-        />
-      )}
+      <CustomStepper
+        steps={steps}
+        activeStep={activeStep}
+        stepStates={activeStep === 1 ? ['completed', 'active'] : ['active', 'pending']}
+        ariaLabel="Workflow setup steps"
+        onStepClick={activeStep === 0 || onBackToDetails ? onStepClick : undefined}
+        isStepClickable={(index) =>
+          activeStep === 0 ? index === 0 || Boolean(onContinueToJourney) : index === 0
+        }
+        getStepAriaLabel={(label, index) => `Step ${index + 1}: ${label}`}
+        disabled={disabled}
+      />
     </Paper>
   );
 }

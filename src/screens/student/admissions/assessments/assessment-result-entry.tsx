@@ -124,7 +124,9 @@ export function AssessmentResultEntry({
               value={formik.values.marks}
               disabled={disabled || !quick.canRecordResult}
               onBlur={formik.handleBlur}
-              onValueChange={({ floatValue }) => quick.changeResult('marks', floatValue ?? '')}
+              onValueChange={({ floatValue }, source) => {
+                if (source.source === 'event') quick.changeResult('marks', floatValue ?? '');
+              }}
               error={Boolean(formik.touched.marks && formik.errors.marks)}
               helperText={formik.touched.marks ? formik.errors.marks : undefined}
             />

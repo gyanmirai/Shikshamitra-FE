@@ -110,6 +110,7 @@ describe('document review commands', { timeout: 15000 }, () => {
     expect(dialog.getByRole('textbox', { name: 'Rejection Reason' })).toHaveValue(
       ' Replace blurred scan '
     );
+    expect(within(dialog.getByRole('button', { name: 'Reject Document' })).queryByRole('progressbar')).not.toBeInTheDocument();
     expect(submitted).toEqual({
       decision: 'rejected',
       concurrencyStamp: 'application-stamp',
@@ -138,6 +139,7 @@ describe('document review commands', { timeout: 15000 }, () => {
       await userEvent.dblClick(approve);
       await waitFor(() => expect(reviews).toBe(1));
       expect(approve).toBeDisabled();
+      expect(within(approve).getByRole('progressbar')).toBeInTheDocument();
       expect(dialog.queryByRole('textbox', { name: 'Notes' })).not.toBeInTheDocument();
       expect(dialog.getByRole('button', { name: 'close' })).toBeDisabled();
       expect(dialog.getByRole('button', { name: 'Reject' })).toBeDisabled();

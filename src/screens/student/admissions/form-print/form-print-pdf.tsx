@@ -8,6 +8,7 @@ import { AdmissionAdvancedPaperTemplate } from './form-print-advanced-template';
 import {
   AdmissionPrintLayoutError,
   getAdmissionPrintLayoutError,
+  formatAdmissionPrintPhotoSize,
 } from './form-print-advanced-layout';
 
 import type {
@@ -146,11 +147,8 @@ export async function createAdmissionFormPdfBlob(
     schoolHeader && branding.bannerUrl ? 113 : schoolHeader ? 78 : 42,
     brandingHeight + (schoolHeader && branding.bannerUrl ? 57 : 0) + 18
   );
-  const hasConfiguredPhotos = model.steps.some((step) =>
-    step.sections.some((section) =>
-      section.entries.some((entry) => entry.fields.some((field) => field.kind === 'photo'))
-    )
-  );
+  const photoWidth = 70;
+  const photoHeight = 84;
   const renderField = (field: AdmissionPrintField, width: string) => (
     <View key={field.key} style={{ width, padding: fieldPadding, paddingTop: spacious ? 8 : 5 }}>
       <Text
@@ -163,8 +161,8 @@ export async function createAdmissionFormPdfBlob(
         <View
           wrap={false}
           style={{
-            width: 70,
-            height: 84,
+            width: photoWidth,
+            height: photoHeight,
             maxWidth: '100%',
             borderWidth: 0.6,
             borderColor: COLORS.grey[500],
@@ -176,10 +174,20 @@ export async function createAdmissionFormPdfBlob(
           {model.mode === 'filled' && field.imageUrl ? (
             <Image
               src={field.imageUrl}
-              style={{ width: 60, height: 74, maxWidth: '100%', objectFit: 'contain' }}
+              style={{
+                width: photoWidth - 10,
+                height: photoHeight - 10,
+                maxWidth: '100%',
+                objectFit: 'contain',
+              }}
             />
           ) : (
-            <Text style={{ fontSize: 8, textAlign: 'center' }}>{textRuns(model.labels.photo)}</Text>
+            <>
+              <Text style={{ fontSize: 8, textAlign: 'center' }}>{textRuns(model.labels.photo)}</Text>
+              <Text style={{ fontSize: 7, textAlign: 'center', marginTop: 2 }}>
+                {textRuns(formatAdmissionPrintPhotoSize(photoWidth, photoHeight))}
+              </Text>
+            </>
           )}
         </View>
       ) : null}
@@ -320,25 +328,6 @@ export async function createAdmissionFormPdfBlob(
             </View>
           </View>
         </View>
-        {model.settings.showPhoto && !hasConfiguredPhotos ? (
-          <View
-            wrap={false}
-            style={{
-              alignSelf: 'flex-end',
-              width: 70,
-              height: 84,
-              borderWidth: 0.6,
-              borderColor: COLORS.grey[500],
-              padding: 4,
-              marginTop: 3,
-              marginBottom: 10,
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}
-          >
-            <Text style={{ fontSize: 8, textAlign: 'center' }}>{textRuns(model.labels.photo)}</Text>
-          </View>
-        ) : null}
         {model.steps.map((step) => (
           <View key={step.key}>
             {model.steps.length > 1 || step.sections.length > 1 ? (

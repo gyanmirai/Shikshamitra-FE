@@ -7,10 +7,13 @@ import type {
 
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
+import { GlobalIcons } from 'src/utils/icons';
+import { visuallyHidden } from '@mui/utils';
+import { Iconify } from 'src/components/iconify';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { skeletonReducedMotionSx } from 'src/theme/styles/skeleton';
-import { Card, Stack, Button, Skeleton, Typography } from '@mui/material';
+import { Box, Card, Stack, Button, Skeleton, Typography } from '@mui/material';
 import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
 import { useGetApplicationDocumentsQuery } from 'src/redux/student/admissions/admission-document-verification-api';
 
@@ -20,6 +23,7 @@ import { DocumentReviewDialog } from './document-review-dialog';
 import { getDocumentReviewActions } from './document-review-model';
 import { useDocumentPermissions } from './use-document-permissions';
 import { DocumentChecklistContent } from './document-checklist-content';
+import { DocumentRequirementTable } from './document-requirement-table';
 import { useApplicationStageReadiness } from '../application-detail/application-stage-readiness';
 import { ParentRegistrationPanel } from '../application-detail/parent-registration/parent-registration-panel';
 
@@ -51,6 +55,7 @@ export function ApplicationDocumentsPanel({
 }) {
   const permissions = useDocumentPermissions();
   const [parentMutationBusy, setParentMutationBusy] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const grants = useSelector((state: RootState) => state.auth.permissions);
   const canManageParentRegistration =
     hasGrantedPermission(grants, 'Students.Admissions.Applications.View') &&
@@ -66,6 +71,16 @@ export function ApplicationDocumentsPanel({
     readOnly?: boolean;
   } | null>(null);
   const summary = query.currentData;
+  const initialLoading = !summary && (query.isLoading || query.isFetching);
+  const refreshChecklist = async () => {
+    if (refreshing || query.isFetching || advancing) return;
+    setRefreshing(true);
+    try {
+      await query.refetch();
+    } finally {
+      setRefreshing(false);
+    }
+  };
   const readOnly =
     historical ||
     !(
@@ -140,7 +155,14 @@ export function ApplicationDocumentsPanel({
             />
           </Stack>
           {permissions.view && (
-            <Button size="small" disabled={query.isFetching || advancing} onClick={query.refetch}>
+            <Button
+              size="small"
+              disabled={query.isFetching || advancing}
+              loading={refreshing}
+              loadingPosition="start"
+              startIcon={<Iconify icon={GlobalIcons.refresh} />}
+              onClick={refreshChecklist}
+            >
               Refresh
             </Button>
           )}
@@ -149,13 +171,27 @@ export function ApplicationDocumentsPanel({
           <StudentFeedback notificationKey="STU-0303" presentation="inline" severity="info">
             Document access is required to view this checklist. Contact an admissions administrator.
           </StudentFeedback>
-        ) : query.isLoading ? (
-          <Stack role="status" aria-label="Loading Document Checklist" spacing={1}>
-            <Skeleton variant="text" width="40%" />
-            <Skeleton variant="rounded" height={140} />
-          </Stack>
+        ) : initialLoading ? (
+          layout === 'table' ? (
+            <>
+              <Box role="status" aria-label="Loading Document Checklist" sx={visuallyHidden}>
+                Loading document checklist…
+              </Box>
+              <DocumentRequirementTable
+                applicationId={applicationId}
+                stageInstanceId={stage.id}
+                permissions={permissions}
+                isLoading
+              />
+            </>
+          ) : (
+            <Stack role="status" aria-label="Loading Document Checklist" spacing={1}>
+              <Skeleton variant="text" width="40%" />
+              <Skeleton variant="rounded" height={140} />
+            </Stack>
+          )
         ) : query.isError || !summary ? (
-          <AdmissionQueryError onRetry={query.refetch} />
+          <AdmissionQueryError onRetry={refreshChecklist} />
         ) : !summary.documentVerificationEnabled || !summary.policy ? (
           <StudentFeedback notificationKey="STU-0304" presentation="inline" severity="info">
             Document management is not enabled for this step. Refresh the application to load its
@@ -163,18 +199,6 @@ export function ApplicationDocumentsPanel({
           </StudentFeedback>
         ) : (
           <>
-            {query.isFetching && (
-              <Stack
-                direction="row"
-                spacing={1}
-                role="status"
-                aria-label="Refreshing Document Checklist"
-              >
-                <Skeleton variant="text" width="32%" />
-                <Skeleton variant="text" width="24%" />
-                <Skeleton variant="text" width="20%" />
-              </Stack>
-            )}
             {!historical && canManageParentRegistration && (
               <ParentRegistrationPanel
                 applicationId={applicationId}

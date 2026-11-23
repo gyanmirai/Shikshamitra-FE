@@ -14,7 +14,7 @@ import {
 } from './form-dialog-model';
 
 describe('admission form field codes', () => {
-  it('defaults new forms to Boxed Grid while preserving legacy and saved templates', () => {
+  it('uses Boxed Grid for editable legacy Registrations and retains saved Structured Classic', () => {
     const legacy = getBlankAdmissionFormInitialValues(1);
     expect(legacy.printSettings).toEqual({
       template: 'boxed-grid',
@@ -47,7 +47,15 @@ describe('admission form field codes', () => {
     expect(getAdmissionFormPrintSettings().template).toBe('simple');
     expect(
       getAdmissionFormInitialValues({ ...editing, printSettings: null }).printSettings?.template
-    ).toBe('simple');
+    ).toBe('boxed-grid');
+    const legacySettings = { ...settings, template: 'simple' as const };
+    expect(
+      getAdmissionFormInitialValues({ ...editing, printSettings: legacySettings }).printSettings
+    ).toEqual({ ...legacySettings, template: 'boxed-grid' });
+    expect(
+      getAdmissionFormInitialValues({ ...editing, purpose: 0, printSettings: legacySettings })
+        .printSettings
+    ).toEqual(legacySettings);
   });
   it('starts an Inquiry with required identity fields and the primary contact selector', () => {
     const form = getBlankAdmissionFormInitialValues(0);
@@ -73,6 +81,7 @@ describe('admission form field codes', () => {
   it('retains the advanced print configuration when reopening a saved Registration', () => {
     const settings = {
       ...getAdmissionFormPrintSettings(),
+      template: 'structured-classic' as const,
       paperSize: 'LETTER' as const,
       advanced: {
         paper: { orientation: 'landscape' as const },

@@ -65,6 +65,10 @@ export function admissionPipelineUrl(
   return query ? `${studentPaths.enrollment.pipeline}?${query}` : studentPaths.enrollment.pipeline;
 }
 
-export function admissionPipelineApplicationUrl(id: string, params: URLSearchParams) {
-  return admissionPipelineUrl(params, { application: id }, false);
+export function admissionPipelineApplicationUrl(
+  id: string,
+  params: URLSearchParams,
+  assessmentAction?: 'book'
+) {
+  return admissionPipelineUrl(params, { application: id, assessment: assessmentAction }, false);
 }

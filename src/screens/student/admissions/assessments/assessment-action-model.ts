@@ -43,6 +43,13 @@ export function latestAssessmentAttempt(assessment: ApplicationAssessment) {
     );
 }
 
+export function canWaiveAssessment(assessment: ApplicationAssessment) {
+  return (
+    assessment.canWaive &&
+    !assessment.attempts.some(({ status, outcome }) => status === 'completed' && outcome === 'passed')
+  );
+}
+
 export function validateAssessmentAction(
   action: AssessmentAction,
   values: AssessmentActionValues,

@@ -121,6 +121,7 @@ export function AssessmentActionDialog({
       open
       title={title}
       titleInfo={titleInfo[action]}
+      titleInfoPlacement="right"
       maxWidth="sm"
       onClose={onClose}
       dirty={formik.dirty}

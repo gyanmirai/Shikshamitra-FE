@@ -16,6 +16,7 @@ import { Box, Stack, Button, IconButton, Typography } from '@mui/material';
 import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
 
 import { WorkflowStageCard } from './workflow-stage-card';
+import { getWorkflowFinalStageError } from '../workflow-final-stage';
 import { summarizeWorkflowRouteGap, suggestIncomingWorkflowRoute } from '../workflow-stage-graph';
 
 type Props = {
@@ -69,7 +70,9 @@ export function WorkflowStageList({
   const visibleIssuesByStage = routeGap?.issuesByStage ?? issuesByStage;
   const stageIds = new Set(stages.map((stage) => stage.id));
   const hasEntryStage = stages.filter((stage) => stage.isEntryStage).length === 1;
-  const hasTerminalStage = stages.some((stage) => stage.isTerminalStage);
+  const hasTerminalStage = readOnly
+    ? stages.some((stage) => stage.isTerminalStage)
+    : !getWorkflowFinalStageError(stages, transitions);
   const hasCompleteRoutes = stages.every(
     (stage) =>
       (stage.isTerminalStage || transitions.some((route) => route.fromStageId === stage.id)) &&
@@ -117,12 +120,10 @@ export function WorkflowStageList({
               Admission Journey
             </Typography>
             <Stack direction="row" alignItems="center">
-              <Label color="info" variant="outlined">
-                After Inquiry
-              </Label>
+              <Label>Starts after inquiry</Label>
               <InfoTooltipIcon
                 label="About the Admission Journey After Inquiry"
-                title="Configure the Stages Applicants Follow After Inquiry, Through to Admission Finalization. These Stages Appear in Applicant 360."
+                title="Configure the stages applicants follow after inquiry through admission finalization. These stages appear in Applicant 360."
               />
             </Stack>
           </Stack>

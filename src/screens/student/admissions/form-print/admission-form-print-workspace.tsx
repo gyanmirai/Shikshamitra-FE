@@ -1,11 +1,13 @@
 import type { AdmissionFormPrintSettings } from 'src/redux/student/admissions/admission-forms-api';
+import type { PdfPreviewReveal } from 'src/components/preview-document/pdf-preview/find-pdf-preview-target';
 import type { AdmissionPrintAcademicDetails } from 'src/redux/student/admissions/admission-form-print-settings';
 
-import { useId, useState, useCallback } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
+import { useId, useRef, useState, useCallback } from 'react';
+import { FormBusyRegion } from 'src/components/form-busy-region';
 import PdfPreview from 'src/components/preview-document/pdf-preview';
 import { resolveAdmissionPrintAdvancedSettings } from 'src/redux/student/admissions/admission-form-print-settings';
 import {
@@ -15,7 +17,6 @@ import {
   Button,
   Typography,
   ToggleButton,
-  CircularProgress,
   ToggleButtonGroup,
 } from '@mui/material';
 
@@ -25,9 +26,10 @@ import { AdmissionPrintSettingsPanel } from './admission-print-settings';
 import { useAdmissionPrintOptions } from './use-admission-print-options';
 import { getAdmissionLanguageLabel } from '../form-dialog/form-languages';
 import { getAdmissionFormStepGroups } from '../form-dialog/form-step-groups';
-import { buildAdmissionPrintDocument, DEFAULT_ADMISSION_PRINT_SETTINGS } from './form-print-model';
 import { AdmissionPrintBrandingEditor } from './admission-print-branding-editor';
+import { getAdmissionPrintPreviewTarget } from './admission-print-preview-target';
 import { AdmissionPrintAdvancedSettings } from './admission-print-advanced-settings';
+import { buildAdmissionPrintDocument, DEFAULT_ADMISSION_PRINT_SETTINGS } from './form-print-model';
 import {
   printAdmissionForm,
   downloadAdmissionForm,
@@ -75,6 +77,12 @@ export function AdmissionFormPrintWorkspace({
   const [settingsView, setSettingsView] = useState<'basic' | 'advanced'>('basic');
   const [editingBranding, setEditingBranding] = useState(false);
   const [previewPages, setPreviewPages] = useState<{ context: string; count: number }>();
+  const [previewChange, setPreviewChange] = useState<
+    (PdfPreviewReveal & { context: string; settingsKey: string }) | undefined
+  >();
+  const [shownChange, setShownChange] = useState<{ id: number; page?: number }>();
+  const changeId = useRef(0);
+  const previewScroller = useRef<HTMLDivElement>(null);
   const brandingEditorId = useId();
   const revealBrandingEditor = useCallback((node: HTMLDivElement | null) => {
     node?.scrollIntoView?.({ block: 'nearest' });
@@ -147,6 +155,44 @@ export function AdmissionFormPrintWorkspace({
   );
   const busy = brand.loading || choices.loading || preview.loading;
   const error = brand.error || choices.error || preview.error;
+  const currentChange =
+    previewChange?.context === previewContext &&
+    previewChange.settingsKey === JSON.stringify(effectiveSettings) &&
+    hasFields
+      ? previewChange
+      : undefined;
+  const revealResult = shownChange?.id === currentChange?.id ? shownChange : undefined;
+  const revealedPage = revealResult?.page;
+  const handleSettingsChange = (next: AdmissionFormPrintSettings) => {
+    const change = getAdmissionPrintPreviewTarget(model, effectiveSettings, next);
+    setPreviewChange(
+      change
+        ? {
+            ...change,
+            id: (changeId.current += 1),
+            context: previewContext,
+            settingsKey: JSON.stringify(next),
+          }
+        : undefined
+    );
+    onSettingsChange?.(next);
+  };
+  const clearPreviewChange = useCallback(() => {
+    changeId.current += 1;
+    setPreviewChange(undefined);
+  }, []);
+  const onReveal = useCallback((id: number, page?: number, marker?: HTMLDivElement | null) => {
+    if (id !== changeId.current) return;
+    setShownChange({ id, page });
+    const scroller = previewScroller.current;
+    if (!marker || !scroller) return;
+    const viewport = scroller.getBoundingClientRect();
+    const target = marker.getBoundingClientRect();
+    scroller.scrollTo({
+      top: Math.max(0, scroller.scrollTop + target.top - viewport.top - viewport.height * 0.25),
+      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+    });
+  }, []);
   const steps = getAdmissionFormStepGroups(definition.sections);
   const brandingSettings = advanced.branding;
   const canEditBranding =
@@ -157,7 +203,10 @@ export function AdmissionFormPrintWorkspace({
       (brandingSettings.showBanner && brand.branding.bannerUrl)
     );
   const showBrandingEditor = canEditBranding && editingBranding;
-  const previewUrl = hasFields ? preview.previewUrl ?? (!busy && !error ? preview.url : undefined) : undefined;
+  const previewUrl = hasFields
+    ? (preview.previewUrl ?? (!busy && !error ? preview.url : undefined))
+    : undefined;
+  const updatingPreview = hasFields && !error && (busy || Boolean(currentChange && !revealResult));
   return (
     <Stack
       direction={{ xs: 'column', md: 'row' }}
@@ -200,17 +249,19 @@ export function AdmissionFormPrintWorkspace({
             {settingsView === 'advanced' ? (
               <AdmissionPrintAdvancedSettings
                 settings={effectiveSettings}
-                onChange={onSettingsChange}
+                onChange={handleSettingsChange}
                 form={definition}
                 branding={brand.branding}
               />
             ) : (
               <AdmissionPrintSettingsPanel
                 settings={effectiveSettings}
-                onChange={onSettingsChange}
+                onChange={handleSettingsChange}
                 branding={brand.branding}
                 defaultLanguage={form.defaultLanguage}
-                pageCount={previewPages?.context === previewContext ? previewPages.count : undefined}
+                pageCount={
+                  previewPages?.context === previewContext ? previewPages.count : undefined
+                }
               />
             )}
           </Scrollbar>
@@ -226,7 +277,10 @@ export function AdmissionFormPrintWorkspace({
             exclusive
             value={mode}
             onChange={(_, value) => {
-              if (value) setMode(value);
+              if (value) {
+                clearPreviewChange();
+                setMode(value);
+              }
             }}
             aria-label="Print content"
           >
@@ -238,7 +292,10 @@ export function AdmissionFormPrintWorkspace({
             label="Form language"
             value={language}
             options={languages.map((value) => ({ value, label: getAdmissionLanguageLabel(value) }))}
-            onChange={(value) => setLanguage(String(value))}
+            onChange={(value) => {
+              clearPreviewChange();
+              setLanguage(String(value));
+            }}
             formControlProps={{ sx: { width: { xs: 1, sm: 160 }, flexShrink: 0 } }}
           />
           {steps.length > 1 && (
@@ -253,7 +310,10 @@ export function AdmissionFormPrintWorkspace({
                   label: item.id === currentStepId ? `Current step: ${item.name}` : item.name,
                 })),
               ]}
-              onChange={(value) => setStep(String(value))}
+              onChange={(value) => {
+                clearPreviewChange();
+                setStep(String(value));
+              }}
               formControlProps={{ sx: { width: { xs: 1, sm: 200 }, flexShrink: 0 } }}
             />
           )}
@@ -296,6 +356,22 @@ export function AdmissionFormPrintWorkspace({
             Sample answers are used for this preview and its printout.
           </Typography>
         )}
+        {canEdit && (
+          <Box sx={{ minHeight: 20 }}>
+            {currentChange && !updatingPreview && !error && revealedPage && (
+              <Stack direction="row" gap={0.75} alignItems="center" role="status">
+                <Iconify
+                  icon="mdi:check-circle-outline"
+                  width={16}
+                  sx={{ color: 'success.main' }}
+                />
+                <Typography variant="caption" color="text.secondary">
+                  {`Preview updated · ${currentChange.label} · Page ${revealedPage}`}
+                </Typography>
+              </Stack>
+            )}
+          </Box>
+        )}
         {error && (
           <Alert
             severity="error"
@@ -312,7 +388,8 @@ export function AdmissionFormPrintWorkspace({
               </Button>
             }
           >
-            {preview.errorMessage ?? 'Unable to prepare the print preview. Your form has not changed.'}
+            {preview.errorMessage ??
+              'Unable to prepare the print preview. Your form has not changed.'}
           </Alert>
         )}
         {choices.unavailable && (
@@ -324,37 +401,47 @@ export function AdmissionFormPrintWorkspace({
         {!hasFields && (
           <Alert severity="info">There are no printable questions in this selection.</Alert>
         )}
-        {busy && !previewUrl && (
-          <Stack direction="row" spacing={1} alignItems="center" role="status">
-            <CircularProgress size={20} />
-            <Typography variant="body2">Preparing printable form…</Typography>
-          </Stack>
-        )}
-        <Scrollbar
-          sx={{ flex: 1, minHeight: 180, bgcolor: 'background.neutral', borderRadius: 1.5 }}
+        <FormBusyRegion
+          busy={updatingPreview}
+          label={
+            previewUrl
+              ? `Updating print preview…${currentChange ? ` ${currentChange.label}` : ''}`
+              : 'Preparing printable form…'
+          }
+          blockInteraction={false}
+          fillContent
+          flattenFieldset
         >
-          <Box sx={{ p: { xs: 1, sm: 2 }, maxWidth: 850, mx: 'auto' }}>
-            {showBrandingEditor && onSettingsChange && (
-              <Box id={brandingEditorId} ref={revealBrandingEditor} sx={{ mb: 2 }}>
-                <AdmissionPrintBrandingEditor
-                  settings={effectiveSettings}
-                  branding={brand.branding}
-                  onChange={onSettingsChange}
+          <Scrollbar
+            ref={previewScroller}
+            sx={{ flex: 1, minHeight: 180, bgcolor: 'background.neutral', borderRadius: 1.5 }}
+          >
+            <Box sx={{ p: { xs: 1, sm: 2 }, maxWidth: 850, mx: 'auto' }}>
+              {showBrandingEditor && onSettingsChange && (
+                <Box id={brandingEditorId} ref={revealBrandingEditor} sx={{ mb: 2 }}>
+                  <AdmissionPrintBrandingEditor
+                    settings={effectiveSettings}
+                    branding={brand.branding}
+                    onChange={handleSettingsChange}
+                  />
+                </Box>
+              )}
+              {previewUrl && (
+                <PdfPreview
+                  key={previewContext}
+                  url={previewUrl}
+                  title={form.name}
+                  usePageSelector
+                  preservePageOnUpdate={canEdit}
+                  onPageCountChange={canEdit ? updatePreviewPageCount : undefined}
+                  reveal={!busy && !error && preview.url === previewUrl ? currentChange : undefined}
+                  onReveal={canEdit ? onReveal : undefined}
+                  onPageChange={canEdit ? clearPreviewChange : undefined}
                 />
-              </Box>
-            )}
-            {previewUrl && (
-              <PdfPreview
-                key={previewContext}
-                url={previewUrl}
-                title={form.name}
-                usePageSelector
-                preservePageOnUpdate={canEdit}
-                onPageCountChange={canEdit ? updatePreviewPageCount : undefined}
-              />
-            )}
-          </Box>
-        </Scrollbar>
+              )}
+            </Box>
+          </Scrollbar>
+        </FormBusyRegion>
       </Stack>
     </Stack>
   );

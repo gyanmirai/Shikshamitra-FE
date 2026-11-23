@@ -17,6 +17,7 @@ import type { AssessmentActionValues } from './assessment-action-model';
 
 function initialValues(assessment: ApplicationAssessment): AssessmentActionValues {
   const attempt = latestAssessmentAttempt(assessment);
+  const profile = assessmentResultProfile(assessment, attempt);
   return {
     sessionId: '',
     attendance: 'present',
@@ -24,7 +25,10 @@ function initialValues(assessment: ApplicationAssessment): AssessmentActionValue
     approved: true,
     marks: '',
     notes: attempt?.effectiveProfile ? (attempt.notes ?? '') : '',
-    subjectScores: assessmentSubjectValues(attempt),
+    subjectScores: {
+      ...Object.fromEntries(profile?.subjects.map(({ code }) => [code, '']) ?? []),
+      ...assessmentSubjectValues(attempt),
+    },
   };
 }
 

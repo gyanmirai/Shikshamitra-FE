@@ -1,6 +1,7 @@
 import type { AdmissionApplicationStage } from 'src/redux/student/admissions/admission-applications-api';
 import type { ManagedApplicationAssessment } from 'src/redux/student/admissions/admission-assessment-types';
 
+import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { useId, useRef, useState } from 'react';
@@ -9,6 +10,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import { StudentFeedback } from 'src/components/student-feedback';
+import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
 import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 import { useGetAdmissionApplicationQuery } from 'src/redux/student/admissions/admission-applications-api';
 import {
@@ -34,7 +36,6 @@ import {
 
 import { assessmentErrorMessage } from './assessment-utils';
 import { useAssessmentActions } from './use-assessment-actions';
-import { AdmissionDialogTitle } from '../admission-dialog-title';
 import { AssessmentBookingField } from './assessment-booking-field';
 import { validateAssessmentAction } from './assessment-action-model';
 import { useAssessmentPermissions } from './use-assessment-permissions';
@@ -237,12 +238,15 @@ export function AssessmentPipelineBookingDrawer({
                 <Iconify icon="mdi:arrow-left" />
               </IconButton>
             )}
-            <Typography id={titleId} variant="h6" sx={{ flex: 1 }}>
-              <AdmissionDialogTitle
-                title={title}
-                helpText="Book an Available Session or Create a Slot for This Student. Room Availability and Assessment Eligibility Are Checked Before Booking."
+            <Stack direction="row" alignItems="center" spacing={0.5} sx={{ flex: 1, minWidth: 0 }}>
+              <Typography id={titleId} variant="h6">
+                {title}
+              </Typography>
+              <InfoTooltipIcon
+                label={`About ${title}`}
+                title="Room availability and assessment eligibility are checked before booking."
               />
-            </Typography>
+            </Stack>
             <IconButton
               size="small"
               disabled={locked}
@@ -342,6 +346,7 @@ export function AssessmentPipelineBookingDrawer({
                     onSearchInterviewers={(search) => searchInterviewers(search).unwrap()}
                     disabled={busy || !canBook || !permissions.manageSessions}
                     bookedCount={0}
+                    minScheduleDate={dayjs().startOf('day')}
                   />
                 )}
                 {mode === 'create' && application.isError && (

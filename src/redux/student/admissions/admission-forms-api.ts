@@ -208,6 +208,14 @@ export type AdmissionFormVersionComparison = {
   fromId: string;
   toId: string;
   changes: string[];
+  fieldChanges?: AdmissionFormFieldChange[];
+};
+export type AdmissionFormFieldChange = {
+  changeIndex: number;
+  sectionCode: string;
+  sectionName: string;
+  fieldName: string;
+  kind: 'added' | 'removed' | 'changed';
 };
 export type AdmissionFormArchiveImpact = {
   formDefinitionId: string;

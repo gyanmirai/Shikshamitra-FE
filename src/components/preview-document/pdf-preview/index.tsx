@@ -1,6 +1,8 @@
 import { lazy, Suspense } from 'react';
 import Skeleton from '@mui/material/Skeleton';
 
+import type { PdfPreviewReveal } from './find-pdf-preview-target';
+
 const PdfCanvas = lazy(() => import('./pdf-canvas'));
 
 export default function PdfPreview({
@@ -14,6 +16,8 @@ export default function PdfPreview({
   onPageChange,
   onPageCountChange,
   preservePageOnUpdate = false,
+  reveal,
+  onReveal,
 }: {
   url: string;
   title: string;
@@ -25,6 +29,8 @@ export default function PdfPreview({
   onPageChange?: (page: number) => void;
   onPageCountChange?: (count: number) => void;
   preservePageOnUpdate?: boolean;
+  reveal?: PdfPreviewReveal;
+  onReveal?: (id: number, page?: number, marker?: HTMLDivElement | null) => void;
 }) {
   return (
     <Suspense fallback={<Skeleton aria-label="Loading PDF viewer" height={400} />}>
@@ -40,6 +46,8 @@ export default function PdfPreview({
         onPageChange={onPageChange}
         onPageCountChange={onPageCountChange}
         preservePageOnUpdate={preservePageOnUpdate}
+        reveal={reveal}
+        onReveal={onReveal}
       />
     </Suspense>
   );

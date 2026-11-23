@@ -3,7 +3,10 @@
 import { lazy } from 'react';
 import dynamic from 'next/dynamic';
 
-import { ApplicationWorkspaceSkeleton } from './application-workspace-skeleton';
+import {
+  ApplicationWorkspaceSkeleton,
+  ApplicationAssessmentSkeleton,
+} from './application-workspace-skeleton';
 
 // Keep heavy form, Finance, assessment and preview code outside the opening shell.
 // The existing stage/dialog conditions remain responsible for mounting each panel.
@@ -38,7 +41,7 @@ export const ApplicationAssessmentPanel = dynamic(
     import('../assessments/application-assessment-panel').then(
       (module) => module.ApplicationAssessmentPanel
     ),
-  { loading: tableLoading }
+  { loading: () => <ApplicationAssessmentSkeleton /> }
 );
 export const AssessmentHistoryDetails = dynamic(
   () =>

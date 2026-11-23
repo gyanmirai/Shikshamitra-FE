@@ -154,6 +154,8 @@ export const studentPermissions = {
     transitions: `${defaultStudentPermissionName}Records.Transitions.View`,
     overrides: `${defaultStudentPermissionName}Records.Overrides.View`,
     guardianAccess: `${defaultStudentPermissionName}Records.GuardianAccess.View`,
+    appAccess: `${defaultStudentPermissionName}Records.AppAccess.View`,
+    manageAppAccess: `${defaultStudentPermissionName}Records.AppAccess.Add`,
     identityCompliance: `${defaultStudentPermissionName}IdentityCompliance.View`,
   },
   attendance: {
@@ -198,6 +200,7 @@ export const studentProfilePermissionViews = [
   studentPermissions.records.transitions,
   studentPermissions.records.overrides,
   studentPermissions.records.guardianAccess,
+  studentPermissions.records.appAccess,
   studentPermissions.records.identityCompliance,
 ];
 

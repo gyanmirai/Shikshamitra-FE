@@ -79,7 +79,7 @@ export default function AdmissionWorkflowsScreen() {
       sx={{
         display: 'flex',
         flexDirection: 'column',
-        gap: 1,
+        gap: actions.createDialog.value ? 1.5 : 1,
         height: 1,
         minHeight: 0,
         minWidth: 0,
@@ -100,6 +100,7 @@ export default function AdmissionWorkflowsScreen() {
         }
         heading="Admission Stage"
         isBack={actions.createDialog.value}
+        backDisabled={actions.createState.isLoading || actions.openingCreatedWorkflow}
         onBack={() => actions.createCloseRef.current?.()}
         description="Design, Validate, Version, and Publish the Admission Journey Used by Offerings."
         links={[
@@ -110,9 +111,11 @@ export default function AdmissionWorkflowsScreen() {
         ]}
         slotProps={{
           action: { alignSelf: { xs: 'flex-end', md: 'center' }, maxWidth: '100%' },
-          heading: {},
+          heading: actions.createDialog.value
+            ? { whiteSpace: 'nowrap', overflowWrap: 'normal', textWrap: 'nowrap' }
+            : {},
           moreLink: {},
-          breadcrumbs: {},
+          breadcrumbs: actions.createDialog.value ? { display: { xs: 'none', sm: 'flex' } } : {},
         }}
         action={
           !actions.createDialog.value ? (

@@ -105,6 +105,7 @@ export function DocumentActionDialog({
         )}
         <FormBusyRegion
           busy={formik.isSubmitting}
+          showOverlay={false}
           label={action === 'upload' ? 'Uploading document…' : 'Saving document decision…'}
         >
           <FormSectionCard

@@ -26,6 +26,21 @@ const renderDialog = (onSubmit = vi.fn().mockResolvedValue(true), onClose = vi.f
   return { onSubmit, onClose };
 };
 
+it.each([
+  [
+    'Collect Later in Onboarding information',
+    'Record why fee collection will be handled after admission finalization.',
+  ],
+  [
+    'Collection Deferral information',
+    'Explain why collection should remain pending in Onboarding after admission is finalized.',
+  ],
+])('opens anchored help for %s', async (label, description) => {
+  renderDialog();
+  fireEvent.click(screen.getByRole('button', { name: label }));
+  expect(await screen.findByRole('tooltip')).toHaveTextContent(description);
+});
+
 it('rejects an empty or whitespace-only reason', async () => {
   const { onSubmit, onClose } = renderDialog();
   fireEvent.change(screen.getByRole('textbox', { name: /Reason/ }), { target: { value: '   ' } });

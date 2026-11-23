@@ -1,10 +1,10 @@
 import type { AdmissionCycle } from 'src/redux/student/admissions/admission-cycles-api';
 
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import userEvent from '@testing-library/user-event';
-import { act, render, screen, cleanup } from '@testing-library/react';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { vi, it, expect, describe, afterEach, beforeEach } from 'vitest';
+import { act, render, screen, within, cleanup } from '@testing-library/react';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 
 import { AdmissionCycleActionDialog } from './admission-cycle-action-dialog';
 
@@ -69,7 +69,7 @@ const renderDelete = (onConfirm = vi.fn(), onClose = vi.fn()) =>
   );
 
 describe('admission cycle publish confirmation', () => {
-  it('blocks publication and announces readiness checking until fresh validation arrives', () => {
+  it('shows readiness checking in the unavailable Publish button and allows cancellation', () => {
     render(
       <AdmissionCycleActionDialog
         action="publish"
@@ -79,8 +79,11 @@ describe('admission cycle publish confirmation', () => {
         onConfirm={vi.fn()}
       />
     );
-    expect(screen.getByRole('button', { name: 'Publish' })).toBeDisabled();
-    expect(screen.getByText('Checking Admission Cycle Readiness…')).toBeVisible();
+    const publish = screen.getByRole('button', { name: 'Publish' });
+    expect(publish).toBeDisabled();
+    expect(within(publish).getByRole('progressbar')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled();
+    expect(screen.queryByText('Checking Admission Cycle Readiness…')).not.toBeInTheDocument();
   });
   it('uses the neutral primary action and omits the cycle identity line', () => {
     render(
@@ -97,12 +100,33 @@ describe('admission cycle publish confirmation', () => {
     expect(screen.getByRole('button', { name: 'Publish' })).toHaveClass('MuiButton-colorInherit');
     expect(screen.queryByText('RTE')).not.toBeInTheDocument();
     expect(screen.queryByText(/CYCLE_INTERNAL_123/)).not.toBeInTheDocument();
-    expect(screen.getByText(/Applications are accepted only during/)).toHaveTextContent(
-      '01/10/2026–02/10/2026'
+    expect(screen.getByText(/Applications are accepted from/)).toHaveTextContent(
+      '01/10/2026 to 02/10/2026 (2 days)'
     );
     expect(screen.queryByText('This cycle is ready to Publish.')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Publish' })).toBeEnabled();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('counts the same opening and closing date as one day using the stored civil dates', () => {
+    render(
+      <AdmissionCycleActionDialog
+        action="publish"
+        cycle={{
+          ...cycle,
+          startDate: '2026-10-01T00:00:00+05:30',
+          endDate: '2026-10-01T23:59:59+05:30',
+        }}
+        validation={{ isValid: true, errors: [], warnings: [] }}
+        busy={false}
+        onClose={vi.fn()}
+        onConfirm={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText(/Applications are accepted from/)).toHaveTextContent(
+      '01/10/2026 to 01/10/2026 (1 day)'
+    );
   });
 
   it('keeps the publish payload unchanged', async () => {
@@ -145,6 +169,34 @@ describe('admission cycle publish confirmation', () => {
     expect(screen.getByRole('button', { name: 'Publish' })).toBeDisabled();
     expect(screen.getByText('Correct the application window.')).toBeVisible();
     expect(notices.error).not.toHaveBeenCalled();
+  });
+
+  it('reports a failed readiness request and makes retry reachable in the dialog footer', async () => {
+    const onRetryValidation = vi.fn();
+    render(
+      <AdmissionCycleActionDialog
+        action="publish"
+        cycle={cycle}
+        validationError="Could not check publication readiness."
+        onRetryValidation={onRetryValidation}
+        busy={false}
+        onClose={vi.fn()}
+        onConfirm={vi.fn()}
+      />
+    );
+
+    expect(screen.queryByRole('button', { name: 'Publish' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled();
+    expect(notices.error).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'Could not check publication readiness.' })
+    );
+    const retry = screen.getByRole('button', { name: 'Retry check' });
+    expect(retry).toBeEnabled();
+    expect(within(retry).queryByRole('progressbar')).not.toBeInTheDocument();
+    await userEvent.tab();
+    expect(retry).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
+    expect(onRetryValidation).toHaveBeenCalledOnce();
   });
 
   it('keeps publication warnings visible without blocking an otherwise valid publication', () => {
@@ -197,8 +249,11 @@ describe('admission cycle delete confirmation', () => {
   it('shows loading and the cycle name without its internal code', () => {
     renderDelete();
 
-    expect(screen.getByRole('status')).toHaveTextContent('Checking Linked Offerings');
-    expect(screen.getByRole('button', { name: 'Delete' })).toBeDisabled();
+    const deleteButton = screen.getByRole('button', { name: 'Delete' });
+    expect(deleteButton).toBeDisabled();
+    expect(within(deleteButton).getByRole('progressbar')).toBeVisible();
+    expect(screen.queryByText(/Checking Linked Offerings/)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled();
     expect(screen.getByText(/RTE/)).toBeInTheDocument();
     expect(screen.queryByText(/CYCLE_INTERNAL_123/)).not.toBeInTheDocument();
     expect(impactHook.trigger).toHaveBeenCalledWith(cycle.id);
@@ -300,7 +355,9 @@ describe('admission cycle close confirmation', () => {
     expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
     expect(screen.queryByText(/CYCLE_INTERNAL_123/)).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Close Cycle' })).toBeEnabled();
+    const close = screen.getByRole('button', { name: 'Close Cycle' });
+    expect(close).toBeEnabled();
+    expect(close).toHaveClass('MuiButton-colorInherit');
   });
 
   it('sends the staff confirmation and audit reason with the current concurrency stamp', async () => {
@@ -330,8 +387,9 @@ describe('admission cycle close confirmation', () => {
     impactHook.state.isFetching = true;
     renderClose();
 
-    expect(screen.getByRole('status')).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Close Cycle' })).toBeDisabled();
+    const close = screen.getByRole('button', { name: 'Close Cycle' });
+    expect(close).toBeDisabled();
+    expect(within(close).getByRole('progressbar')).toBeVisible();
   });
 
   it('keeps Close cycle disabled for an error or a response for a different cycle', () => {
@@ -423,6 +481,29 @@ describe('admission cycle archive and reopen confirmations', () => {
       reason: 'Admission cycle archived by staff confirmation.',
       confirmActiveOfferings: false,
     });
+  });
+
+  it('keeps Reopen unavailable with one progress indicator in its button during checks', () => {
+    impactHook.state.isFetching = true;
+    render(
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <AdmissionCycleActionDialog
+          action="reopen"
+          cycle={cycle}
+          busy={false}
+          onClose={vi.fn()}
+          onConfirm={vi.fn()}
+        />
+      </LocalizationProvider>
+    );
+
+    const reopen = screen.getByRole('button', { name: 'Reopen Cycle' });
+    expect(reopen).toBeDisabled();
+    expect(within(reopen).getByRole('progressbar')).toBeVisible();
+    expect(screen.getAllByRole('progressbar')).toHaveLength(1);
+    expect(screen.queryByText(/Checking Linked Offerings/)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled();
+    expect(screen.getByRole('textbox', { name: 'Reopen Cycle Reason' })).toBeEnabled();
   });
 
   it('shows reopen context and inputs without internal IDs or impact counts', () => {

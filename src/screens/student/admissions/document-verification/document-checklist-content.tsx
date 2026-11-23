@@ -86,7 +86,9 @@ export function DocumentChecklistContent({
         </StudentFeedback>
       ) : layout === 'table' ? (
         <DocumentRequirementTable
-          summary={summary}
+          applicationId={summary.applicationId}
+          stageInstanceId={summary.stageInstanceId}
+          policy={summary.policy}
           requirements={visible}
           permissions={permissions}
           disabled={disabled}

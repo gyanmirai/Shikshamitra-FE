@@ -50,28 +50,30 @@ export function AdmissionPrintAdvancedSettings({
   const Panel = PANELS[tab];
   return (
     <Stack spacing={2} sx={{ minWidth: 0 }}>
-      <CustomTabs
-        density="compact"
-        guardUnsavedChanges={false}
-        value={tabs.value}
-        onChange={tabs.onChange}
-        variant="scrollable"
-        scrollButtons="auto"
-        allowScrollButtonsMobile
-        aria-label="Advanced print settings"
-      >
-        {TABS.map((item) => (
-          <Tab
-            key={item.value}
-            value={item.value}
-            id={`${id}-tab-${item.value}`}
-            aria-controls={`${id}-panel-${item.value}`}
-            label={item.label}
-            icon={<Iconify icon={TAB_ICONS[item.value]} width={20} />}
-            iconPosition="start"
-          />
-        ))}
-      </CustomTabs>
+      <Box sx={{ position: 'sticky', top: 0, zIndex: 1, bgcolor: 'background.paper', py: 0.5 }}>
+        <CustomTabs
+          density="compact"
+          guardUnsavedChanges={false}
+          value={tabs.value}
+          onChange={tabs.onChange}
+          variant="scrollable"
+          scrollButtons="auto"
+          allowScrollButtonsMobile
+          aria-label="Advanced print settings"
+        >
+          {TABS.map((item) => (
+            <Tab
+              key={item.value}
+              value={item.value}
+              id={`${id}-tab-${item.value}`}
+              aria-controls={`${id}-panel-${item.value}`}
+              label={item.label}
+              icon={<Iconify icon={TAB_ICONS[item.value]} width={20} />}
+              iconPosition="start"
+            />
+          ))}
+        </CustomTabs>
+      </Box>
       <Box role="tabpanel" id={`${id}-panel-${tab}`} aria-labelledby={`${id}-tab-${tab}`}>
         <Panel
           settings={settings}

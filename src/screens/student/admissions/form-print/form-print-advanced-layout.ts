@@ -3,15 +3,21 @@ import {
   resolveAdmissionPrintAdvancedSettings,
 } from 'src/redux/student/admissions/admission-form-print-settings';
 
+import { estimatePrintTextLines } from './form-print-text-layout';
+
 import type {
   AdmissionPrintField,
   AdmissionPrintSection,
   AdmissionPrintDocument,
   AdmissionPrintBranding,
 } from './form-print-model';
-import { estimatePrintTextLines } from './form-print-text-layout';
 
 export const PRINT_MM = 72 / 25.4;
+export const formatAdmissionPrintPhotoSize = (width: number, height: number) => {
+  const toMillimeters = (points: number) => Math.round((points * 10) / PRINT_MM) / 10;
+  return `${toMillimeters(width)} × ${toMillimeters(height)} mm`;
+};
+
 export const PRINT_PAPER_POINTS = {
   A4: [595.28, 841.89],
   A5: [419.53, 595.28],
@@ -98,13 +104,14 @@ export function advancedHeaderGeometry(
         .flatMap((entry) => entry.fields)
         .filter((field) => field.kind === 'photo')
     : [];
-  const headerPhoto = showHeaderPhoto
+  const selectedPhoto =
+    photoFields.find((field) => /^Applicant\.ProfilePhoto$/i.test(field.bindingKey ?? '')) ??
+    photoFields[0];
+  const headerPhoto = selectedPhoto
     ? {
         width: Math.min(options.photo.width * PRINT_MM, contentWidth * 0.38),
         gap: 12,
-        field:
-          photoFields.find((field) => /^Applicant\.ProfilePhoto$/i.test(field.bindingKey ?? '')) ??
-          photoFields[0],
+        field: selectedPhoto,
       }
     : undefined;
   const textHeight = (width: number) =>
@@ -134,7 +141,7 @@ export function advancedHeaderGeometry(
           textHeight(contentWidth - headerPhoto.width - headerPhoto.gap),
           (options.photo.height * headerPhoto.width) / options.photo.width +
             estimatePrintTextLines(
-              options.photo.caption || headerPhoto.field?.label || model.labels.photo,
+              options.photo.caption || headerPhoto.field.label || model.labels.photo,
               headerPhoto.width,
               (fontSize - 2) * 0.6
             ) *
@@ -220,7 +227,13 @@ export function getAdmissionPrintLayoutError(
   const geometry = advancedPrintGeometry(model, options);
   const header = advancedHeaderGeometry(model, branding, options, geometry);
   const firstPhotoSpace =
-    model.settings.showPhoto && options.photo.placement === 'first'
+    model.settings.showPhoto &&
+    options.photo.placement === 'first' &&
+    model.steps.some((step) =>
+      step.sections.some((section) =>
+        section.entries.some((entry) => entry.fields.some((field) => field.kind === 'photo'))
+      )
+    )
       ? options.photo.height * PRINT_MM + 25
       : 0;
   if (geometry.contentWidth < 100 || header.bodyCapacity < Math.max(60, firstPhotoSpace)) {

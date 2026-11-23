@@ -12,6 +12,7 @@ import {
   advancedPrintGeometry,
   advancedHeaderGeometry,
   collectAdvancedPrintPhotos,
+  formatAdmissionPrintPhotoSize,
 } from './form-print-advanced-layout';
 
 import type { AdvancedPrintCell } from './form-print-advanced-layout';
@@ -99,10 +100,11 @@ export function AdmissionAdvancedPaperTemplate({
     footerHeight,
     bodyCapacity,
   } = advancedHeaderGeometry(model, branding, options, geometry);
-  const movedPhotos =
-    model.settings.showPhoto && options.photo.placement !== 'field' && !headerPhoto;
-  const photoFields = movedPhotos ? collectAdvancedPrintPhotos(model) : [];
-  const photos = photoFields.length ? photoFields : [undefined];
+  const photos =
+    model.settings.showPhoto && ['first', 'last'].includes(options.photo.placement)
+      ? collectAdvancedPrintPhotos(model)
+      : [];
+  const movedPhotos = photos.length > 0;
   const visibleFields = (fields: AdmissionPrintField[]) =>
     fields.filter(
       (field) =>
@@ -113,14 +115,15 @@ export function AdmissionAdvancedPaperTemplate({
   const photoAlignment = { left: 'flex-start', center: 'center', right: 'flex-end' } as const;
   const photoPosition = photoAlignment[options.photo.alignment];
   const renderPhoto = (
-    field?: AdmissionPrintField,
+    field: AdmissionPrintField,
     maximumWidth = contentWidth,
     inHeader = false
   ) => {
     const width = Math.min(options.photo.width * PRINT_MM, maximumWidth);
+    const height = (options.photo.height * width) / options.photo.width;
     return (
       <View
-        key={field?.key ?? 'placeholder'}
+        key={field.key}
         wrap={false}
         style={{
           margin: inHeader ? 0 : 5,
@@ -132,7 +135,7 @@ export function AdmissionAdvancedPaperTemplate({
         <View
           style={{
             width,
-            height: (options.photo.height * width) / options.photo.width,
+            height,
             borderWidth: 0.6,
             borderColor,
             padding: 4,
@@ -140,21 +143,26 @@ export function AdmissionAdvancedPaperTemplate({
             alignItems: 'center',
           }}
         >
-          {model.mode === 'filled' && options.photo.useSaved && field?.imageUrl ? (
+          {model.mode === 'filled' && options.photo.useSaved && field.imageUrl ? (
             <Image
               src={field.imageUrl}
               style={{ width: '100%', height: '100%', objectFit: 'contain' }}
             />
           ) : (
-            <Text style={{ fontSize: fontSize - 2, textAlign: 'center' }}>
-              {runs(model.labels.photo)}
-            </Text>
+            <>
+              <Text style={{ fontSize: fontSize - 2, textAlign: 'center' }}>
+                {runs(model.labels.photo)}
+              </Text>
+              <Text style={{ fontSize: fontSize - 3, textAlign: 'center', marginTop: 2 }}>
+                {runs(formatAdmissionPrintPhotoSize(width, height))}
+              </Text>
+            </>
           )}
         </View>
         <Text
           style={{ maxWidth: width, fontSize: fontSize - 2, marginTop: 3, textAlign: 'center' }}
         >
-          {runs(options.photo.caption || field?.label || model.labels.photo)}
+          {runs(options.photo.caption || field.label || model.labels.photo)}
         </Text>
       </View>
     );
@@ -573,7 +581,12 @@ export function AdmissionAdvancedPaperTemplate({
       </View>
     );
   };
-  const renderField = (field: AdmissionPrintField, width: number, padding: number) => {
+  const renderField = (
+    field: AdmissionPrintField,
+    width: number,
+    padding: number,
+    destination?: string
+  ) => {
     const settings = options.fields[field.code.toUpperCase()] ?? {};
     const label = `${field.label}${field.required && settings.showRequired !== false ? ' *' : ''}`;
     const inline =
@@ -590,6 +603,7 @@ export function AdmissionAdvancedPaperTemplate({
       >
         <View style={{ flexDirection: inline ? 'row' : 'column' }}>
           <Text
+            id={destination}
             minPresenceAhead={fontSize * 2}
             style={{
               width: inline ? '35%' : '100%',
@@ -616,7 +630,7 @@ export function AdmissionAdvancedPaperTemplate({
       </View>
     );
   };
-  const sectionHeading = (section: AdmissionPrintSection) => (
+  const sectionHeading = (section: AdmissionPrintSection, link = true) => (
     <View
       wrap={false}
       minPresenceAhead={
@@ -635,7 +649,9 @@ export function AdmissionAdvancedPaperTemplate({
           {String(sectionNumbers.get(section.key)).padStart(2, '0')}
         </Text>
       ) : null}
-      <Text style={{ flex: 1, fontWeight: 700 }}>{runs(section.title)}</Text>
+      <Text id={link ? `section:${section.key}` : undefined} style={{ flex: 1, fontWeight: 700 }}>
+        {runs(section.title)}
+      </Text>
     </View>
   );
   const renderRegularSection = (
@@ -663,7 +679,7 @@ export function AdmissionAdvancedPaperTemplate({
       row.some(
         ({ field }) => field.value.length + field.label.length + (field.helpText?.length ?? 0) > 700
       );
-    const renderRow = (row: AdvancedPrintCell[], key: string, marginBottom = 0) => (
+    const renderRow = (row: AdvancedPrintCell[], key: string, link: boolean, marginBottom = 0) => (
       <View
         key={key}
         wrap={rowCanWrap(row)}
@@ -677,7 +693,9 @@ export function AdmissionAdvancedPaperTemplate({
           borderColor,
         }}
       >
-        {row.map(({ field, width }) => renderField(field, width, padding))}
+        {row.map(({ field, width }) =>
+          renderField(field, width, padding, link ? `field:${section.key}:${field.key}` : undefined)
+        )}
       </View>
     );
     const nodes: ReactNode[] = keepHeading
@@ -709,12 +727,14 @@ export function AdmissionAdvancedPaperTemplate({
               {runs(entry.label)}
             </Text>
           )}
-          {renderRow(firstRow, `${key}-0`)}
+          {renderRow(firstRow, `${key}-0`, index === 0)}
         </View>
       );
       remainingRows.forEach((row, rowIndex) => {
         const lastRow = lastEntry && rowIndex === remainingRows.length - 1;
-        nodes.push(renderRow(row, `${key}-${rowIndex + 1}`, lastRow ? sectionSpacing : 0));
+        nodes.push(
+          renderRow(row, `${key}-${rowIndex + 1}`, index === 0, lastRow ? sectionSpacing : 0)
+        );
       });
     });
     return nodes;
@@ -753,14 +773,14 @@ export function AdmissionAdvancedPaperTemplate({
       )
     );
   };
-  const renderTableHeading = (section: AdmissionPrintSection) => (
+  const renderTableHeading = (section: AdmissionPrintSection, link = true) => (
     <View wrap={false}>
       {tableStepTitle(section) ? (
         <Text style={{ fontSize: fontSize + 1, fontWeight: 700, paddingBottom: 7 }}>
           {runs(tableStepTitle(section)!)}
         </Text>
       ) : null}
-      {sectionHeading(section)}
+      {sectionHeading(section, link)}
       <View
         style={{
           flexDirection: 'row',
@@ -772,6 +792,7 @@ export function AdmissionAdvancedPaperTemplate({
         {tableFields(section).map((field) => (
           <Text
             key={field.key}
+            id={link ? `field:${section.key}:${field.key}` : undefined}
             style={{
               width: `${100 / Math.max(tableFields(section).length, 1)}%`,
               fontWeight: labelWeight,
@@ -919,10 +940,7 @@ export function AdmissionAdvancedPaperTemplate({
                 }}
               >
                 {image ? (
-                  <Image
-                    src={image}
-                    style={{ width: '100%', height: 28, objectFit: 'contain' }}
-                  />
+                  <Image src={image} style={{ width: '100%', height: 28, objectFit: 'contain' }} />
                 ) : (
                   <View
                     style={{
@@ -1152,7 +1170,7 @@ export function AdmissionAdvancedPaperTemplate({
                     left: margins.left,
                     right: margins.right,
                   }}
-                  render={({ pageNumber }) =>
+                  render={({ pageNumber, subPageNumber }) =>
                     flowingPhotoHeader && pageNumber === 1 ? null : (
                       <View
                         style={{
@@ -1162,7 +1180,7 @@ export function AdmissionAdvancedPaperTemplate({
                               : 0,
                         }}
                       >
-                        {renderTableHeading(part.table!)}
+                        {renderTableHeading(part.table!, subPageNumber === 1)}
                       </View>
                     )
                   }

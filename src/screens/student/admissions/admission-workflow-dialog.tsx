@@ -1,7 +1,7 @@
 'use client';
 
 import type { Ref } from 'react';
-import type { FormikProps } from 'formik';
+import type { FormikProps, FormikHelpers } from 'formik';
 import type {
   AdmissionWorkflowStage,
   AdmissionWorkflowTransition,
@@ -21,9 +21,9 @@ import { LoadingButton } from 'src/components/loading-button';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
-import { useRef, useMemo, useState, useImperativeHandle } from 'react';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
+import { useRef, useMemo, useState, useEffect, useImperativeHandle } from 'react';
 import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 import {
   Box,
@@ -42,6 +42,7 @@ import {
 } from '@mui/material';
 
 import { getWorkflowStarterDefinition } from './workflow-template';
+import { DUPLICATE_WORKFLOW_NAME_CODE } from './workflow-name-error';
 import { AdmissionDefinitionSelect } from './admission-definition-select';
 import { WorkflowSetupProgress } from './workflow-builder/components/workflow-setup-progress';
 import { WorkflowInquiryContext } from './workflow-builder/components/workflow-inquiry-context';
@@ -62,6 +63,8 @@ export type WorkflowDetails = Pick<
   registrationFormDefinitionId?: string | null;
 };
 
+export type WorkflowDetailsFormState = { dirty: boolean; busy: boolean };
+
 type Props = {
   open: boolean;
   onClose: () => void;
@@ -69,6 +72,7 @@ type Props = {
   title?: string;
   initialValues?: WorkflowDetails;
   submitLabel?: string;
+  continueLabel?: string;
   showStarterJourney?: boolean;
   inline?: boolean;
   closeOnSave?: boolean;
@@ -77,6 +81,8 @@ type Props = {
   initialRegistrationForm?: AdmissionDefinitionOption | null;
   currentJourney?: { stages: AdmissionWorkflowStage[]; transitions: AdmissionWorkflowTransition[] };
   closeRequestRef?: Ref<() => void>;
+  resetFormRef?: Ref<() => void>;
+  onFormStateChange?: (state: WorkflowDetailsFormState) => void;
   onSave: (value: WorkflowDetails) => Promise<void>;
 };
 
@@ -107,16 +113,51 @@ const EMPTY_VALUES: WorkflowDetails = {
 
 const noFormOptions: AdmissionDefinitionFetcher = async () => ({ data: [], hasMore: false });
 
-const duplicateNameMessage =
-  'A workflow with this name already exists. Please enter a different name.';
+const duplicateNameMessage = 'A workflow with this name already exists. Enter a different name.';
 
-function showWorkflowNameError(error: unknown, formik: FormikProps<WorkflowDetails> | null) {
-  if (parseApiProblemDetail(error).errorCode !== 'Admissions.WorkflowNameAlreadyExists') return;
-  formik?.setFieldTouched('name', true, false);
-  formik?.setFieldError('name', duplicateNameMessage);
+function showWorkflowNameError(
+  error: unknown,
+  formik: Pick<FormikHelpers<WorkflowDetails>, 'setStatus'> | null
+) {
+  if (parseApiProblemDetail(error).errorCode === DUPLICATE_WORKFLOW_NAME_CODE) {
+    formik?.setStatus(duplicateNameMessage);
+  }
 }
 
-function WorkflowDetailsDirtyState({ dirty, busy }: { dirty: boolean; busy: boolean }) {
+function WorkflowNameField({
+  formik,
+  autoFocus,
+}: {
+  formik: FormikProps<WorkflowDetails>;
+  autoFocus: boolean;
+}) {
+  const hasNameConflict = formik.status === duplicateNameMessage;
+  const message = hasNameConflict
+    ? duplicateNameMessage
+    : formik.touched.name && formik.errors.name;
+
+  return (
+    <ShakingTextField error={Boolean(message)}>
+      <TextField
+        fullWidth
+        autoFocus={autoFocus}
+        size="small"
+        label="Workflow name *"
+        placeholder="For example, fresh admission"
+        {...formik.getFieldProps('name')}
+        onChange={(event) => {
+          if (hasNameConflict) formik.setStatus(undefined);
+          formik.handleChange(event);
+        }}
+        error={Boolean(message)}
+        helperText={message}
+        slotProps={{ formHelperText: { role: hasNameConflict ? 'alert' : undefined } }}
+      />
+    </ShakingTextField>
+  );
+}
+
+function WorkflowDetailsDirtyState({ dirty, busy }: WorkflowDetailsFormState) {
   const router = useRouter();
   const { confirmation } = useUnsavedNavigation(dirty, {
     push: router.push,
@@ -124,6 +165,18 @@ function WorkflowDetailsDirtyState({ dirty, busy }: { dirty: boolean; busy: bool
     blockNavigation: busy,
   });
   return confirmation;
+}
+
+function WorkflowDetailsFormStatus({
+  dirty,
+  busy,
+  onChange,
+}: WorkflowDetailsFormState & { onChange?: (state: WorkflowDetailsFormState) => void }) {
+  useEffect(() => {
+    onChange?.({ dirty, busy });
+  }, [busy, dirty, onChange]);
+
+  return onChange ? null : <WorkflowDetailsDirtyState dirty={dirty} busy={busy} />;
 }
 
 const CREATE_STARTER_IDS: readonly WorkflowStarterId[] = ['standard', 'empty'];
@@ -249,12 +302,15 @@ function CreateWorkflowDialog({
   onClose,
   saving,
   title = 'Create workflow',
+  continueLabel = 'Save & Continue',
   initialValues = EMPTY_VALUES,
   closeOnSave = false,
   fetchRegistrationForms = noFormOptions,
   initialRegistrationForm,
   currentJourney,
   closeRequestRef,
+  resetFormRef,
+  onFormStateChange,
   onSave,
 }: Props) {
   const discard = useBoolean();
@@ -285,6 +341,7 @@ function CreateWorkflowDialog({
     else close();
   };
   useImperativeHandle(closeRequestRef, () => requestClose);
+  useImperativeHandle(resetFormRef, () => () => formikRef.current?.resetForm(), []);
   const persistDetails = async (
     values: WorkflowDetails,
     setIsLoading: (loading: boolean) => void
@@ -303,7 +360,6 @@ function CreateWorkflowDialog({
       if (closeOnSave || inline) close();
     } catch (error) {
       showWorkflowNameError(error, formikRef.current);
-      // The owning screen reports API errors; keep entered details for retry.
     } finally {
       // A successful create navigates to the builder. Keep Continue locked until unmount.
       if (!saved || closeOnSave || inline) {
@@ -360,17 +416,6 @@ function CreateWorkflowDialog({
           overflow: 'hidden',
         }}
       >
-        {inline && (
-          <IconButton
-            aria-label="Close Workflow Editor"
-            size="small"
-            disabled={busy || Boolean(replacement)}
-            onClick={requestClose}
-            sx={{ position: 'absolute', top: 8, right: 8, zIndex: 2, width: 44, height: 44 }}
-          >
-            <Iconify icon="mdi:close" />
-          </IconButton>
-        )}
         <Box
           sx={{
             flex: 1,
@@ -382,12 +427,6 @@ function CreateWorkflowDialog({
               minWidth: 0,
               minHeight: 0,
               overflow: 'hidden',
-            },
-            '& > div > .MuiStepper-root': {
-              width: 1,
-              px: { xs: 1, sm: 2 },
-              py: 0,
-              flexShrink: 0,
             },
             '& > div > form > div:last-child': {
               borderTop: 1,
@@ -404,17 +443,17 @@ function CreateWorkflowDialog({
             validationSchema={detailsSchema}
             scrollbarHeight="auto"
             showSaveButton={false}
-            nextButtonLabel={inline ? 'Save & Continue' : 'Continue'}
+            nextButtonLabel={inline ? continueLabel : 'Continue'}
             onCancel={requestClose}
             handleBack={() => undefined}
             handleNext={continueToJourney}
-            isStepClickable={(index) => index === 0 || inline}
-            validateForwardStepClick
-            onStepClick={(index, _label, formik) => {
-              if (index === 1 && inline) {
-                continueToJourney(false, formik.values, formik, () => undefined);
-              }
-            }}
+            renderProgress={({ busy: stepperBusy, submitCurrentStep }) => (
+              <WorkflowSetupProgress
+                activeStep={0}
+                disabled={stepperBusy || Boolean(replacement)}
+                onContinueToJourney={inline ? submitCurrentStep : undefined}
+              />
+            )}
             saveAndNextButtonProps={{ loading: busy, size: 'small' }}
             backButtonProps={{ size: 'small' }}
             renderItem={({ formik }) => {
@@ -456,7 +495,11 @@ function CreateWorkflowDialog({
                       alignItems: 'stretch',
                     }}
                   >
-                    <WorkflowDetailsDirtyState dirty={formik.dirty} busy={busy} />
+                    <WorkflowDetailsFormStatus
+                      dirty={formik.dirty}
+                      busy={busy || Boolean(replacement)}
+                      onChange={onFormStateChange}
+                    />
                     <FormSectionCard
                       icon="mdi:clipboard-text-outline"
                       title="Workflow Details"
@@ -493,20 +536,7 @@ function CreateWorkflowDialog({
                       <Divider />
                       <Stack spacing={1.5}>
                         <Typography variant="subtitle2">Form Details</Typography>
-                        <ShakingTextField
-                          error={Boolean(formik.touched.name && formik.errors.name)}
-                        >
-                          <TextField
-                            fullWidth
-                            autoFocus={!isMobile}
-                            size="small"
-                            label="Workflow name *"
-                            placeholder="For example, fresh admission"
-                            {...formik.getFieldProps('name')}
-                            error={Boolean(formik.touched.name && formik.errors.name)}
-                            helperText={formik.touched.name && formik.errors.name}
-                          />
-                        </ShakingTextField>
+                        <WorkflowNameField formik={formik} autoFocus={!isMobile} />
                         <ShakingTextField
                           error={Boolean(formik.touched.description && formik.errors.description)}
                         >
@@ -550,8 +580,9 @@ function CreateWorkflowDialog({
                           </ShakingTextField>
                         ) : (
                           <Typography variant="body2" color="text.secondary">
-                            Add a Form stage and attach a published registration form in Build
-                            journey.
+                            In Step 2: Build Journey, add a stage with Stage Type set to Form, then
+                            select a published registration form. This adds the registration form to
+                            your admission journey.
                           </Typography>
                         )}
                       </Stack>
@@ -588,7 +619,11 @@ function CreateWorkflowDialog({
         disableEscapeKeyDown={busy}
         disableCancel={busy}
         title="Replace Current Journey?"
-        content="Saving this template replaces all current stages and routes, including custom settings and unsaved journey changes. Your inquiry form stays unchanged."
+        content={
+          replacement?.values.starterJourney === 'empty'
+            ? 'Start a blank journey in the builder. The replacement can be saved after you add a final Admission decision.'
+            : 'Saving this template replaces all current stages and routes, including custom settings and unsaved journey changes. Your inquiry form stays unchanged.'
+        }
         action={
           <LoadingButton
             variant="contained"
@@ -601,7 +636,9 @@ function CreateWorkflowDialog({
               setReplacement(null);
             }}
           >
-            Replace & Save
+            {replacement?.values.starterJourney === 'empty'
+              ? 'Replace & Continue'
+              : 'Replace & Save'}
           </LoadingButton>
         }
       />
@@ -648,8 +685,7 @@ function WorkflowCloneDrawer({
           onClose();
         }
       } catch (error) {
-        showWorkflowNameError(error, formik);
-        // The screen owns API problem-detail messaging so the form remains reusable.
+        showWorkflowNameError(error, helpers);
       }
     },
   });
@@ -754,18 +790,7 @@ function WorkflowCloneDrawer({
                 gridTemplateColumns: 'minmax(0, 1fr)',
               }}
             >
-              <ShakingTextField error={Boolean(formik.touched.name && formik.errors.name)}>
-                <TextField
-                  fullWidth
-                  autoFocus={!isMobile}
-                  size="small"
-                  label="Workflow name *"
-                  placeholder="For example, fresh admission"
-                  {...formik.getFieldProps('name')}
-                  error={Boolean(formik.touched.name && formik.errors.name)}
-                  helperText={formik.touched.name && formik.errors.name}
-                />
-              </ShakingTextField>
+              <WorkflowNameField formik={formik} autoFocus={!isMobile} />
             </Box>
             {(!showStarterJourney || descriptionOpen.value || formik.values.description) && (
               <ShakingTextField

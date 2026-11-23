@@ -76,14 +76,17 @@ export function useAdmissionJoiningDate(
     needsPreview && !validation && !stale && !query.isFetching
   );
   const { result: preview, pending: previewPending, query: previewQuery } = feePreview;
-  const blocked =
+  const unavailable =
     !enabled ||
     !state ||
     query.isFetching ||
     query.isError ||
     saving.isLoading ||
-    stale ||
-    (!state.isLocked && (Boolean(validation) || (needsPreview && !preview)));
+    stale;
+  const blocked = unavailable || (!state?.isLocked && (Boolean(validation) || (needsPreview && !preview)));
+  const canSaveDate = Boolean(
+    !unavailable && state?.canEdit && !state.isLocked && !validation && date !== toDateOnly(state.joiningDate)
+  );
   const change = (next: Dayjs | null) => {
     setDraft({
       applicationId,
@@ -94,11 +97,15 @@ export function useAdmissionJoiningDate(
   const changePolicy = (versionId: string | null) => {
     setSelection({ applicationId, versionId });
   };
-  const confirm = async () => {
+  const persistDate = async (intent: 'save' | 'collect') => {
+    const saveOnly = intent === 'save';
     setTouched(true);
-    if (blocked)
+    if (!state || (saveOnly ? !canSaveDate : blocked))
       throw new Error(
-        validation || 'Refresh the joining date and fee preview before collecting fees.'
+        validation ||
+          (saveOnly
+            ? 'Refresh the joining date before saving.'
+            : 'Refresh the joining date and fee preview before collecting fees.')
       );
     if (state.isLocked || !state.canEdit) return;
     try {
@@ -139,7 +146,9 @@ export function useAdmissionJoiningDate(
     selectedPolicyVersionId,
     prorationPolicyEligible,
     changePolicy,
-    confirm,
+    confirm: () => persistDate('collect'),
+    canSaveDate,
+    saveDate: () => persistDate('save'),
     retry,
     stale,
     blur: () => setTouched(true),

@@ -27,6 +27,8 @@ type Props = {
   showCompletionAction?: boolean;
   onReadinessChange?: ApplicationStageReadinessHandler;
   onOpenAssessments?: (url: string) => void;
+  openAssessmentBooking?: boolean;
+  onAssessmentBookingOpened?: () => void;
 };
 
 export function ApplicationAssessments({ stages, currentStage, selectedStageId, ...props }: Props) {
@@ -42,6 +44,7 @@ export function ApplicationAssessments({ stages, currentStage, selectedStageId, 
           key={selectedStage.id}
           {...props}
           canAdvance={props.canAdvance && selectedStage.id === currentStage?.id}
+          openAssessmentBooking={props.openAssessmentBooking && selectedStage.id === currentStage?.id}
           stage={selectedStage}
         />
       );

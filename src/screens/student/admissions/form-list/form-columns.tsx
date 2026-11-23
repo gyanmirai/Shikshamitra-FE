@@ -73,6 +73,7 @@ export function createFormColumns(handlers: Handlers): IColumn[] {
     {
       id: 'status',
       label: 'Status',
+      disableRowAction: true,
       minWidth: 130,
       isFilter: true,
       filterType: 'enum' as const,

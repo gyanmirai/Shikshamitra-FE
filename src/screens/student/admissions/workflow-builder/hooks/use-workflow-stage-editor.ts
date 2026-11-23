@@ -13,6 +13,7 @@ import {
   getAssessmentConfigurationError,
 } from 'src/redux/student/admissions/admission-assessment-policy';
 
+import { isLastWorkflowStage } from '../workflow-final-stage';
 import { useAdmissionDraftGuard } from '../../use-admission-draft-guard';
 import {
   isApplicationStageType,
@@ -24,6 +25,7 @@ type Props = {
   stage: AdmissionWorkflowStage | null;
   stageTypes: AdmissionWorkflowStageTypeMetadata[];
   stages: AdmissionWorkflowStage[];
+  insertionSourceId?: string | null;
   forms: AdmissionForm[];
   readOnly: boolean;
   onClose: () => void;
@@ -58,11 +60,13 @@ export function useWorkflowStageEditor({
   stage,
   stageTypes,
   stages,
+  insertionSourceId,
   forms,
   readOnly,
   onClose,
   onSave,
 }: Props) {
+  const isLastStage = isLastWorkflowStage(stages, stage?.id ?? '', insertionSourceId);
   const formik = useFormik<AdmissionWorkflowStage>({
     enableReinitialize: true,
     initialValues: normalizeStageConfiguration(stage ?? emptyStage),
@@ -72,6 +76,7 @@ export function useWorkflowStageEditor({
       if (readOnly || !isApplicationStageType(values.stageType)) return;
       const applied = onSave({
         ...normalizeStageConfiguration(values),
+        isTerminalStage: values.stageType === 7 && isLastStage,
         name: values.name.trim(),
         code: values.code.trim().toUpperCase(),
         description: values.description?.trim() || undefined,
@@ -113,6 +118,7 @@ export function useWorkflowStageEditor({
     close,
     formDefinitionId,
     forms,
+    isLastStage,
     requestClose: () => guard.requestNavigation(close),
   };
 }

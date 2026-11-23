@@ -47,6 +47,9 @@ const mocks = vi.hoisted(() => ({
 vi.mock('src/components/iconify', () => ({
   Iconify: () => <span />,
 }));
+vi.mock('../../components/student-photo-avatar', () => ({
+  default: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
+}));
 vi.mock('src/components/scrollbar', async () => {
   const { forwardRef } = await import('react');
   return {
@@ -255,6 +258,16 @@ const renderPage = (overrides = {}) => {
 };
 
 describe('single-student setup page', () => {
+  it('shows a disabled send action in open App Login when no eligible recipient is selected', () => {
+    mocks.current = makeCase({ studentEnrollmentId: 'enrollment-1', status: 4 });
+    renderPage();
+    fireEvent.click(screen.getByRole('button', { name: 'Expand App Login' }));
+    const send = screen.getByRole('button', { name: 'Send Login Details' });
+    expect(send).toBeDisabled();
+    fireEvent.click(send);
+    expect(mocks.sendCredentials).not.toHaveBeenCalled();
+  });
+
   it('reopens App Login when a selected login request fails from the footer', async () => {
     mocks.current = makeCase({ studentEnrollmentId: 'enrollment-1', status: 4 });
     mocks.credentialSelection = { selectedCount: 1, canSend: true };

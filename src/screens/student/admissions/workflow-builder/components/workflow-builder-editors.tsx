@@ -9,6 +9,7 @@ import { Button } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 
+import { removeWorkflowStage } from '../workflow-stage-graph';
 import { WorkflowStagePosition } from './workflow-stage-position';
 import { AdmissionWorkflowStageDrawer } from '../../admission-workflow-stage-drawer';
 import { AdmissionWorkflowTransitionDrawer } from '../../admission-workflow-transition-drawer';
@@ -62,6 +63,9 @@ export function WorkflowBuilderEditors({
           transition.fromStageId === stageToDelete?.id || transition.toStageId === stageToDelete?.id
       ).length
     : 0;
+  const removalError = stageToDelete
+    ? removeWorkflowStage({ stages, transitions }, stageToDelete.id).error
+    : undefined;
 
   return (
     <>
@@ -71,6 +75,7 @@ export function WorkflowBuilderEditors({
         stageTypes={stageTypes}
         forms={forms}
         stages={stages}
+        insertionSourceId={insertionSourceId}
         readOnly={readOnly}
         onClose={onCloseStage}
         onSave={onSaveStage}
@@ -105,15 +110,17 @@ export function WorkflowBuilderEditors({
         icon="warning"
         title="Remove Workflow Stage?"
         content={
-          stageToDelete
-            ? `Removing ${stageToDelete.name} updates ${connectedTransitions} connected path(s) and reconnects its usual sequence where safe. Stages with special paths or ambiguous connections must be repaired before removal. This change is saved only when you save the draft.`
-            : ''
+          removalError ??
+          (stageToDelete
+            ? `Removing ${stageToDelete.name} updates ${connectedTransitions} connected path(s) and reconnects its usual sequence where safe. This change is saved only when you save the draft.`
+            : '')
         }
         action={
           <Button
             size="small"
             variant="contained"
             color="error"
+            disabled={Boolean(removalError)}
             startIcon={<Iconify icon="mdi:delete-outline" />}
             onClick={() => {
               if (!stageToDelete) return;

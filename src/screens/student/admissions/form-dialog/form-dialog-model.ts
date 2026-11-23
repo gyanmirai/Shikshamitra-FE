@@ -6,7 +6,10 @@ import type {
 } from 'src/redux/student/admissions/admission-forms-api';
 
 import * as Yup from 'yup';
-import { ADMISSION_PRINT_PAPER_SIZES } from 'src/redux/student/admissions/admission-form-print-settings';
+import {
+  ADMISSION_PRINT_PAPER_SIZES,
+  resolveEditableRegistrationPrintTemplate,
+} from 'src/redux/student/admissions/admission-form-print-settings';
 
 import { ensureNewInquiryDefaults, withInquiryDefaultTranslations } from './inquiry-default-fields';
 import {
@@ -262,9 +265,10 @@ export function getAdmissionFormInitialValues(
 ): CreateUpdateAdmissionForm {
   const sectionId = editing?.sections[0]?.id ?? crypto.randomUUID();
   const stepId = editing?.sections[0]?.stepId ?? crypto.randomUUID();
+  const formPurpose = editing?.purpose ?? purpose;
   const initialValues = ensureAdmissionCustomFieldIdentities({
     printSettings: {
-      ...getAdmissionFormPrintSettings(editing?.printSettings),
+      ...getAdmissionFormPrintSettings(editing?.printSettings, formPurpose),
       ...(!editing ? { template: 'boxed-grid' as const } : {}),
     },
     coreFieldPolicyVersion: editing?.coreFieldPolicyVersion,
@@ -274,7 +278,7 @@ export function getAdmissionFormInitialValues(
     concurrencyStamp: editing?.concurrencyStamp,
     inheritance: editing?.inheritance,
     layoutType: editing?.layoutType ?? 0,
-    purpose: editing?.purpose ?? purpose,
+    purpose: formPurpose,
     fieldsPerRow: editing?.fieldsPerRow ?? 1,
     defaultLanguage: editing?.defaultLanguage ?? 'en',
     supportedLanguages: editing?.supportedLanguages?.length ? editing.supportedLanguages : ['en'],
@@ -299,10 +303,14 @@ export function getAdmissionFormInitialValues(
 }
 
 export function getAdmissionFormPrintSettings(
-  settings?: AdmissionFormPrintSettings | null
+  settings?: AdmissionFormPrintSettings | null,
+  purpose?: CreateUpdateAdmissionForm['purpose']
 ): AdmissionFormPrintSettings {
   return {
-    template: settings?.template ?? 'simple',
+    template:
+      purpose === 1
+        ? resolveEditableRegistrationPrintTemplate(settings?.template)
+        : (settings?.template ?? 'simple'),
     layout: settings?.layout ?? 'compact',
     paperSize: settings?.paperSize ?? 'A4',
     showSchoolHeader: settings?.showSchoolHeader ?? true,

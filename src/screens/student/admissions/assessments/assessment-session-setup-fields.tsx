@@ -106,7 +106,7 @@ export function AssessmentSessionSetupFields({
         title={pipeline ? 'Session Details' : 'Assessment Details'}
         descriptionTooltip={
           pipeline
-            ? "Create a Slot for This Student's Current Assessment."
+            ? "Set up a slot for this student's current assessment."
             : 'Choose the Classes Attending This Session. Assessment Choices Appear Only When a Class Has Multiple Eligible Assessments.'
         }
       >
@@ -209,7 +209,7 @@ export function AssessmentSessionSetupFields({
       <FormSectionCard
         icon="mdi:calendar-clock-outline"
         title="Schedule And Room"
-        descriptionTooltip="Rooms Come From Institute Setup. Availability and Capacity Are Checked Again Before Confirmation."
+        descriptionTooltip="Rooms come from Institute Setup. Availability and capacity are checked before confirmation."
       >
         <Grid container spacing={1}>
           {separateDate && (
@@ -399,20 +399,13 @@ export function AssessmentSessionSetupFields({
           </Grid>
           {room && (
             <Grid size={{ xs: 12, sm: 6 }}>
-              <Stack
-                direction="row"
-                alignItems="center"
-                justifyContent="space-between"
-                spacing={1}
-                sx={{ p: 1, borderRadius: 1, bgcolor: 'background.neutral' }}
-              >
-                <Typography variant="body2" color="text.primary">
-                  Room capacity
-                </Typography>
-                <Label color="default" sx={{ color: 'text.primary' }}>
-                  {room.capacity} seats
-                </Label>
-              </Stack>
+              <TextField
+                size="small"
+                fullWidth
+                label="Room Capacity"
+                value={`${room.capacity} seats`}
+                slotProps={{ input: { readOnly: true } }}
+              />
             </Grid>
           )}
         </Grid>

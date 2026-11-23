@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import type {
   ParentRecipientRelationship,
   StaffParentRegistrationContext,
@@ -8,6 +9,7 @@ import type {
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'src/routes/hooks';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
@@ -89,6 +91,8 @@ export function ParentRegistrationPanel({
   onBusyChange,
   onProgressChange,
   placement = 'inline',
+  formActions,
+  statusElement,
 }: {
   applicationId: string;
   canView: boolean;
@@ -100,8 +104,10 @@ export function ParentRegistrationPanel({
   documentStageId?: string;
   onBusyChange?: (busy: boolean) => void;
   onProgressChange?: () => void;
-  /** Reuse these actions in the applicant header without a second controller or query. */
+  /** Registration form header presentation, including link status and copying. */
   placement?: 'inline' | 'header';
+  formActions?: { print: ReactNode; refresh: ReactNode };
+  statusElement?: HTMLElement | null;
 }) {
   const [pollingInterval, setPollingInterval] = useState(0);
   const [emailHistoryOpen, setEmailHistoryOpen] = useState(false);
@@ -119,7 +125,8 @@ export function ParentRegistrationPanel({
         'Parent registration status is unavailable. Staff can continue editing the application.',
     },
   });
-  const context: StaffParentRegistrationContext | undefined = query.currentData;
+  const context: StaffParentRegistrationContext | undefined =
+    canView && !query.isError ? query.currentData : undefined;
   const emailHistoryQuery = useGetParentRegistrationEmailHistoryQuery(applicationId, {
     skip: !canView || !emailHistoryOpen,
     refetchOnMountOrArgChange: true,
@@ -382,13 +389,24 @@ export function ParentRegistrationPanel({
       setBusy(false);
     }
   };
-  if (!canView || query.isError || (!context && !query.isLoading)) return null;
+  const loadingContext = canView && !query.isError && query.isLoading;
+  if (!context && !loadingContext && !formActions) return null;
   const request = context?.request;
   const inHeader = placement === 'header';
   const copyAvailable = Boolean(context?.canCopyLink || context?.canCreateLink);
   const showCopyLink = inHeader && canManage && Boolean(context?.canSend || copyAvailable);
   const emailSent = Boolean(inHeader && request?.deliveryStatus === 'Sent');
+  const emailStatus = emailSent && (
+    <Label color="success" role="status" startIcon={<Iconify icon="mdi:check" width={14} />}>
+      Email sent
+    </Label>
+  );
   const editableRecipients = context?.recipients.filter((contact) => contact.canChangeEmail) ?? [];
+  const emailChangeBlockedReason = context?.recipients.find(
+    (contact) => contact.emailChangeBlockedReason
+  )?.emailChangeBlockedReason;
+  const showUpdateLink =
+    canManage && Boolean(editableRecipients.length || emailChangeBlockedReason);
   const primaryDeliveryAction = context?.canRetryDelivery
     ? 'retry-delivery'
     : context?.canSend
@@ -403,13 +421,7 @@ export function ParentRegistrationPanel({
     (context.canApply ||
       context.canRevoke ||
       context.canTakeover ||
-      (primaryDeliveryAction === 'retry-delivery' && context.canSend) ||
-      context.recipients.some(
-        (contact) => contact.canChangeEmail || contact.emailChangeBlockedReason
-      ))
-  );
-  const hasActions = Boolean(
-    showCopyLink || (canManage && primaryDeliveryAction) || request || hasMoreActions
+      (primaryDeliveryAction === 'retry-delivery' && context.canSend))
   );
   const headerIconSx = {
     width: { xs: 44, sm: 36 },
@@ -420,47 +432,54 @@ export function ParentRegistrationPanel({
   };
   return (
     <>
-      {!documentStageId &&
-        (query.isLoading ? (
-          <Skeleton
-            width={168}
-            height={40}
-            sx={{ alignSelf: 'center', ...(placement === 'inline' && { ml: 'auto' }) }}
-            aria-label="Loading parent registration actions"
-          />
-        ) : (
-          context && (
+      {!documentStageId && (
+        <Stack spacing={1} alignItems="flex-end" sx={{ minWidth: 0, width: 1, textAlign: 'end' }}>
+          <Stack
+            role="group"
+            aria-label={formActions ? 'Registration form actions' : 'Parent registration actions'}
+            direction="row"
+            spacing={1}
+            alignItems="center"
+            justifyContent={formActions ? 'space-between' : 'flex-end'}
+            useFlexGap
+            sx={{ width: 1, minWidth: 0 }}
+          >
+            {formActions && (
+              <Typography
+                variant="subtitle2"
+                component="h3"
+                sx={{ display: { xs: 'none', md: 'block' }, mr: 'auto' }}
+              >
+                Registration
+              </Typography>
+            )}
             <Stack
-              role="group"
-              aria-label="Parent registration actions"
+              direction="row"
               spacing={1}
-              alignItems="flex-end"
+              alignItems="center"
+              justifyContent="flex-end"
               useFlexGap
-              sx={
-                placement === 'header'
-                  ? {
-                      display: { xs: 'contents', sm: 'flex' },
-                      minWidth: 0,
-                      maxWidth: 1,
-                      '& > .MuiTypography-root': { flexBasis: '100%', textAlign: 'end' },
-                      ...(hasActions && {
-                        borderRight: { xs: 0, md: 1 },
-                        borderColor: 'divider',
-                        pr: { xs: 0, md: 1 },
-                      }),
-                    }
-                  : { width: 1 }
-              }
+              flexWrap="wrap"
+              sx={{ minWidth: 0 }}
             >
               <Stack
+                role={formActions ? 'group' : undefined}
+                aria-label={formActions ? 'Registration link actions' : undefined}
                 direction="row"
                 spacing={1}
                 alignItems="center"
                 justifyContent="flex-end"
                 useFlexGap
                 flexWrap="wrap"
-                sx={inHeader ? { display: { xs: 'contents', sm: 'flex' } } : undefined}
+                sx={{ minWidth: 0, '&:empty': { display: 'none' } }}
               >
+                {loadingContext && (
+                  <Skeleton
+                    width={168}
+                    height={30}
+                    aria-label="Loading parent registration actions"
+                  />
+                )}
                 {showCopyLink && (
                   <CustomTooltip
                     title={
@@ -473,7 +492,7 @@ export function ParentRegistrationPanel({
                         size="small"
                         variant="outlined"
                         color="inherit"
-                        startIcon={<Iconify icon="mdi:link-variant" />}
+                        startIcon={<Iconify icon="mdi:link-variant" width={18} />}
                         disabled={disabled || dirty || busy || !copyAvailable}
                         onClick={handleCopyLink}
                       >
@@ -486,25 +505,57 @@ export function ParentRegistrationPanel({
                   <Button
                     size="small"
                     variant="outlined"
-                    color={placement === 'header' ? 'inherit' : 'primary'}
-                    startIcon={<Iconify icon={GlobalIcons.email} />}
+                    color="inherit"
+                    startIcon={<Iconify icon={GlobalIcons.email} width={18} />}
                     disabled={
-                      disabled || dirty || busy || Boolean(context.emailDeliveryBlockedReason)
+                      disabled || dirty || busy || Boolean(context?.emailDeliveryBlockedReason)
                     }
                     onClick={() => open(primaryDeliveryAction)}
                   >
                     Send email
                   </Button>
                 )}
-                {emailSent && (
-                  <Label
-                    color="success"
-                    role="status"
-                    startIcon={<Iconify icon="mdi:check" width={14} />}
+                {showUpdateLink && (
+                  <CustomTooltip
+                    title={
+                      editableRecipients.length
+                        ? 'Update the saved parent email. Send a new link separately after saving.'
+                        : emailChangeBlockedReason
+                    }
+                    describeChild
+                    placement="right"
                   >
-                    Email sent
-                  </Label>
+                    <Box component="span" sx={{ display: 'inline-flex' }}>
+                      <Button
+                        type="button"
+                        size="small"
+                        variant="outlined"
+                        color="inherit"
+                        startIcon={<Iconify icon={GlobalIcons.edit} width={18} />}
+                        disabled={!editableRecipients.length || disabled || dirty || busy}
+                        onClick={() => open('email')}
+                      >
+                        Update link
+                      </Button>
+                    </Box>
+                  </CustomTooltip>
                 )}
+              </Stack>
+              <Stack
+                role={formActions ? 'group' : undefined}
+                aria-label={formActions ? 'Registration utilities' : undefined}
+                direction="row"
+                alignItems="center"
+                spacing={1}
+                useFlexGap
+                flexWrap="wrap"
+                justifyContent="flex-end"
+                sx={{ minWidth: 0, '&:empty': { display: 'none' } }}
+              >
+                {formActions?.print}
+                {formActions?.refresh}
+                {emailStatus &&
+                  (statusElement ? createPortal(emailStatus, statusElement) : emailStatus)}
                 {request && (
                   <CustomTooltip title="Email history" arrow>
                     <span>
@@ -519,7 +570,7 @@ export function ParentRegistrationPanel({
                     </span>
                   </CustomTooltip>
                 )}
-                {hasMoreActions && (
+                {context && hasMoreActions && (
                   <ThreeDotsActions
                     moreLabel="More parent registration actions"
                     sx={
@@ -540,33 +591,6 @@ export function ParentRegistrationPanel({
                             <Iconify icon={GlobalIcons.admissionDetails} />
                             Review parent corrections
                           </MenuItem>
-                        )}
-                        {context.recipients.some(
-                          (contact) => contact.canChangeEmail || contact.emailChangeBlockedReason
-                        ) && (
-                          <CustomTooltip
-                            title={
-                              editableRecipients.length
-                                ? 'Update the saved parent email. Send a new link separately after saving.'
-                                : context.recipients.find(
-                                    (contact) => contact.emailChangeBlockedReason
-                                  )?.emailChangeBlockedReason
-                            }
-                            placement="left"
-                          >
-                            <span>
-                              <MenuItem
-                                disabled={!editableRecipients.length || disabled || dirty || busy}
-                                onClick={() => {
-                                  popover.onClose();
-                                  open('email');
-                                }}
-                              >
-                                <Iconify icon={GlobalIcons.edit} />
-                                Update link
-                              </MenuItem>
-                            </span>
-                          </CustomTooltip>
                         )}
                         {primaryDeliveryAction === 'retry-delivery' && context.canSend && (
                           <MenuItem
@@ -614,40 +638,41 @@ export function ParentRegistrationPanel({
                   />
                 )}
               </Stack>
-              {context.emailDeliveryBlockedReason && primaryDeliveryAction && (
-                <Typography variant="caption" color="text.secondary" role="status">
-                  {context.emailDeliveryBlockedReason}
-                </Typography>
-              )}
-              {!context.recipients.some((contact) => contact.canSend) && !request && (
-                <Typography variant="caption" color="text.secondary" role="status">
-                  Save a parent contact with an email address before sending a link.
-                </Typography>
-              )}
-              {request?.deliveryError && (
-                <Typography variant="body2" color="error" role="alert">
-                  {request.deliveryError}
-                </Typography>
-              )}
-              {request?.deliveryStatus === 'Unknown' && (
-                <Typography variant="body2" role="status">
-                  Delivery could not be confirmed. Review email history before sending another link.
-                </Typography>
-              )}
-              {dirty && !inHeader && (
-                <Typography variant="caption" color="text.secondary" role="status">
-                  Save your current form edits before sending email or changing parent access.
-                </Typography>
-              )}
-              {context.blockedReason && !primaryDeliveryAction && (
-                <Typography variant="caption" color="text.secondary" role="status">
-                  {context.blockedReason}
-                </Typography>
-              )}
             </Stack>
-          )
-        ))}
-      {!documentStageId && (
+          </Stack>
+          {context?.emailDeliveryBlockedReason && primaryDeliveryAction && (
+            <Typography variant="caption" color="text.secondary" role="status">
+              {context.emailDeliveryBlockedReason}
+            </Typography>
+          )}
+          {context && !context.recipients.some((contact) => contact.canSend) && !request && (
+            <Typography variant="caption" color="text.secondary" role="status">
+              Save a parent contact with an email address before sending a link.
+            </Typography>
+          )}
+          {request?.deliveryError && (
+            <Typography variant="body2" color="error" role="alert">
+              {request.deliveryError}
+            </Typography>
+          )}
+          {request?.deliveryStatus === 'Unknown' && (
+            <Typography variant="body2" role="status">
+              Delivery could not be confirmed. Review email history before sending another link.
+            </Typography>
+          )}
+          {context && dirty && !inHeader && (
+            <Typography variant="caption" color="text.secondary" role="status">
+              Save your current form edits before sending email or changing parent access.
+            </Typography>
+          )}
+          {context?.blockedReason && !primaryDeliveryAction && (
+            <Typography variant="caption" color="text.secondary" role="status">
+              {context.blockedReason}
+            </Typography>
+          )}
+        </Stack>
+      )}
+      {!documentStageId && context && (
         <ParentRegistrationEmailHistoryDrawer
           open={emailHistoryOpen}
           onClose={() => setEmailHistoryOpen(false)}
@@ -683,7 +708,7 @@ export function ParentRegistrationPanel({
             </Button>
           </Stack>
         )}
-      {action && snapshot && (
+      {action && snapshot && context && (
         <CustomDialog
           open
           formProps={{
@@ -695,11 +720,14 @@ export function ParentRegistrationPanel({
           }}
           title={labels[action]}
           titleInfo="The private link is valid for seven days. The school retains admission decisions and formal submission."
+          titleInfoPlacement={action === 'email' ? 'right' : undefined}
           handleClose={close}
           disableClose={busy}
           hasUnsavedChanges={formik.dirty}
           guardUnsavedChanges={false}
-          maxWidth={action === 'corrections' || action === 'apply' ? 'sm' : 'xs'}
+          maxWidth={
+            action === 'email' || action === 'corrections' || action === 'apply' ? 'sm' : 'xs'
+          }
         >
           <DialogScrollContent>
             <Stack spacing={2}>

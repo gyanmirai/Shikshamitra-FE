@@ -44,6 +44,13 @@ export type AdmissionPrintDefinition = {
   printSettings?: Partial<AdmissionPrintSettings> | null;
 };
 
+const isAdmissionPrintPhotoField = (field: PrintFieldDefinition) =>
+  parseFieldConfiguration(field.validationJson).format === 'photo';
+
+export function hasAdmissionPrintPhotoField(sections: AdmissionPrintDefinition['sections']) {
+  return sections.some((section) => section.fields.some(isAdmissionPrintPhotoField));
+}
+
 export type AdmissionPrintBranding = {
   schoolName?: string;
   addressLines?: string[];
@@ -444,11 +451,7 @@ export function buildAdmissionPrintDocument({
         const uniqueFields = [...section.fields]
           .sort((left, right) => left.displayOrder - right.displayOrder)
           .filter((field) => {
-            if (
-              !effectiveSettings.showPhoto &&
-              parseFieldConfiguration(field.validationJson).format === 'photo'
-            )
-              return false;
+            if (!effectiveSettings.showPhoto && isAdmissionPrintPhotoField(field)) return false;
             const identity = fieldIdentity(field);
             if (seen.has(identity)) return false;
             seen.add(identity);

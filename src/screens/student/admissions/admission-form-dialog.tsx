@@ -137,9 +137,7 @@ function AdmissionFormEditor({
           setNameAvailability({
             name: trimmedName,
             checking: false,
-            message: result.isAvailable
-              ? null
-              : result.message || 'This form name is already in use.',
+            message: result.isAvailable ? null : 'This form name is already in use.',
           });
         }
       } catch {
