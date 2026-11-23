@@ -3,7 +3,7 @@ module: academic
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-11-21
+updated_on: 2026-11-23
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -146,7 +146,9 @@ Browser push displays a generic alert on the device. The editor can preview the 
 
 **Send test** queues the saved version for the configured test destination using sample data. WhatsApp delivery requires provider approval for the exact version and language.
 
-For WhatsApp, publish the intended version and open **WhatsApp Approval**. Staff with both template write access and Provider Settings Add can choose **Link WhatsApp template**, enter the Meta template name, and select **Submit for approval**. Use **Refresh status** to check the provider outcome. Provider Settings View allows staff to inspect status within their Academic scope. The approval panel keeps **Send test** disabled until the displayed version is approved for the provider configured for delivery.
+Before linking a WhatsApp template, open Communication → Settings → Provider Settings and choose WhatsApp with the provider name `Meta WhatsApp Cloud API`. Enter the Meta business account ID, phone number ID, and the Azure access token's secret reference. Each ID uses digits. The backend still needs the matching token in its server configuration.
+
+Publish the intended template version and open **WhatsApp Approval**. Staff with both template write access and Provider Settings Add can choose **Link WhatsApp template**, enter the Meta template name, and select **Submit for approval**. Use **Refresh status** to check the provider outcome. Provider Settings View allows staff to inspect status within their Academic scope. The approval panel keeps **Send test** disabled until the displayed version is approved for the provider configured for delivery.
 
 ## Review and send a task reminder
 

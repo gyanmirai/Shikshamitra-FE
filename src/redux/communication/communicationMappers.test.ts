@@ -3,17 +3,60 @@ import { it, expect, describe } from 'vitest';
 import {
   CommunicationChannelType,
   CommunicationDeliveryStatus,
+  CommunicationProviderStatus,
   CommunicationTemplateApprovalStatus,
 } from './communicationTypes';
 import {
   channelLabel,
   toChannelValue,
   mapTemplateFormToPayload,
+  getProviderInitialValues,
+  mapProviderFormToPayload,
   mapNotificationDraftPayload,
   mapDeliveryAttemptToHistoryRow,
 } from './communicationMappers';
 
 describe('communication mappers', () => {
+  it('loads and saves Meta WhatsApp IDs as strings with the existing backend schema', () => {
+    const provider = {
+      id: 'provider-1',
+      channel: CommunicationChannelType.WhatsApp,
+      providerName: 'Meta WhatsApp Cloud API',
+      isEnabled: true,
+      isDefault: true,
+      consentRequired: true,
+      templateApprovalRequired: true,
+      fallbackOrder: [CommunicationChannelType.InApp],
+      status: CommunicationProviderStatus.Enabled,
+      secretReference: 'academic-pilot',
+      configurationJson: '{"schemaVersion":1,"businessAccountId":"12345678901234567890","phoneNumberId":"0123456789"}',
+    };
+    const values = getProviderInitialValues(provider);
+    expect(values).toMatchObject({
+      businessAccountId: '12345678901234567890',
+      phoneNumberId: '0123456789',
+    });
+    const saved = mapProviderFormToPayload({ ...values, phoneNumberId: '9876543210' }, provider);
+    expect(saved.configurationJson).toBe(
+      '{"schemaVersion":1,"businessAccountId":"12345678901234567890","phoneNumberId":"9876543210"}'
+    );
+    expect(saved.secretReference).toBe('academic-pilot');
+  });
+
+  it('preserves provider-specific settings on ordinary updates', () => {
+    const provider = {
+      id: 'provider-2',
+      ...getProviderInitialValues(),
+      channel: CommunicationChannelType.Email,
+      providerName: 'SMTP',
+      configurationJson: '{"relay":"shared-staging"}',
+      dailyQuota: null,
+      monthlyQuota: null,
+    };
+    const mapped = mapProviderFormToPayload({ ...getProviderInitialValues(provider), isEnabled: false }, provider);
+    expect(mapped.configurationJson).toBe(provider.configurationJson);
+  });
+
   it('keeps persisted channel values stable and distinguishes website push from the inbox', () => {
     expect(CommunicationChannelType.WhatsApp).toBe(0);
     expect(CommunicationChannelType.Sms).toBe(1);

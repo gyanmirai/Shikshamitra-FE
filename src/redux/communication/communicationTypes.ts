@@ -221,6 +221,8 @@ export interface ProviderSettingFormValues {
   dailyQuota: string;
   monthlyQuota: string;
   secretReference: string;
+  businessAccountId: string;
+  phoneNumberId: string;
   status: CommunicationProviderStatus;
 }
 

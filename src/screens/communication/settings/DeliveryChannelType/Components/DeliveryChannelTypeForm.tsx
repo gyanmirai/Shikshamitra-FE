@@ -11,6 +11,10 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
+  CommunicationChannelType,
+  CommunicationProviderStatus,
+} from 'src/redux/communication/communicationTypes';
+import {
   useCreateProviderSettingMutation,
   useUpdateProviderSettingMutation,
 } from 'src/redux/communication/setting/deliveryChannelApi';
@@ -28,12 +32,19 @@ import {
 import {
   channelLabel,
   providerStatusOptions,
+  isMetaWhatsAppProvider,
+  isMetaWhatsAppAccountId,
   mapProviderFormToPayload,
   getProviderInitialValues,
   communicationChannelOptions,
 } from 'src/redux/communication/communicationMappers';
 
+import { MetaWhatsAppAccountFields } from './MetaWhatsAppAccountFields';
+
 import type { IProviderSettingFormProps, IProviderSettingFormValues } from '../type';
+
+const enabledProvider = (values: IProviderSettingFormValues) =>
+  values.isEnabled && values.status === CommunicationProviderStatus.Enabled;
 
 const validateProviderForm = (values: IProviderSettingFormValues) => {
   const errors: Partial<Record<keyof IProviderSettingFormValues, string>> = {};
@@ -52,6 +63,25 @@ const validateProviderForm = (values: IProviderSettingFormValues) => {
 
   if (!values.fallbackOrder.length) {
     errors.fallbackOrder = 'At least one fallback channel is required';
+  }
+
+  if (isMetaWhatsAppProvider(values)) {
+    const businessAccountId = values.businessAccountId.trim();
+    const phoneNumberId = values.phoneNumberId.trim();
+    const secretReference = values.secretReference.trim();
+
+    if (enabledProvider(values) || businessAccountId || phoneNumberId) {
+      if (!isMetaWhatsAppAccountId(businessAccountId)) {
+        errors.businessAccountId = 'Enter the business account ID using 1 to 32 digits.';
+      }
+      if (!isMetaWhatsAppAccountId(phoneNumberId)) {
+        errors.phoneNumberId = 'Enter the phone number ID using 1 to 32 digits.';
+      }
+    }
+    if (enabledProvider(values) &&
+      !/^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/.test(secretReference)) {
+      errors.secretReference = 'Enter the Azure token reference using letters, digits, hyphens, or underscores.';
+    }
   }
 
   return errors;
@@ -74,7 +104,7 @@ const DeliveryChannelForm: React.FC<IProviderSettingFormProps> = ({ onClose, edi
     enableReinitialize: true,
     onSubmit: async (values) => {
       try {
-        const data = mapProviderFormToPayload(values);
+        const data = mapProviderFormToPayload(values, editData);
 
         if (editData) {
           await updateProviderSetting({ id: editData.id, data }).unwrap();
@@ -98,6 +128,9 @@ const DeliveryChannelForm: React.FC<IProviderSettingFormProps> = ({ onClose, edi
   });
 
   const isSubmitting = isCreating || isUpdating;
+  const metaWhatsApp = isMetaWhatsAppProvider(formik.values);
+  const metaCredentialsRequired = metaWhatsApp && enabledProvider(formik.values);
+  const secretReferenceError = formik.touched.secretReference && formik.errors.secretReference;
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -131,10 +164,19 @@ const DeliveryChannelForm: React.FC<IProviderSettingFormProps> = ({ onClose, edi
                 value={formik.values.providerName}
                 onChange={formik.handleChange}
                 error={formik.touched.providerName && Boolean(formik.errors.providerName)}
-                helperText={(formik.touched.providerName && formik.errors.providerName) as string}
+                helperText={(formik.touched.providerName && formik.errors.providerName) ||
+                  (formik.values.channel === CommunicationChannelType.WhatsApp && !metaWhatsApp
+                    ? 'Use Meta WhatsApp Cloud API for Academic notifications.'
+                    : undefined)}
               />
             </ShakingTextField>
           </Grid>
+
+          {metaWhatsApp && (
+            <Grid size={{ xs: 12 }}>
+              <MetaWhatsAppAccountFields formik={formik} required={metaCredentialsRequired} />
+            </Grid>
+          )}
 
           <Grid size={{ xs: 12, md: 6 }}>
             <TextField
@@ -274,14 +316,19 @@ const DeliveryChannelForm: React.FC<IProviderSettingFormProps> = ({ onClose, edi
           </Grid>
 
           <Grid size={{ xs: 12 }}>
-            <TextField
-              fullWidth
-              label="Secret Reference"
-              name="secretReference"
-              size="small"
-              value={formik.values.secretReference}
-              onChange={formik.handleChange}
-            />
+            <ShakingTextField error={Boolean(secretReferenceError)}>
+              <TextField
+                {...formik.getFieldProps('secretReference')}
+                fullWidth
+                label="Secret reference"
+                size="small"
+                required={metaCredentialsRequired}
+                error={Boolean(secretReferenceError)}
+                helperText={secretReferenceError ||
+                  (metaWhatsApp ? 'Use the reference from the Azure WhatsApp access token setting.' : undefined)}
+                slotProps={{ formHelperText: { 'aria-live': 'polite' } }}
+              />
+            </ShakingTextField>
           </Grid>
         </Grid>
       </DialogScrollContent>
