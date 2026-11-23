@@ -3,43 +3,47 @@
 import type { RootState } from 'src/redux/store';
 
 import { motion } from 'framer-motion';
+import { useId, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useSession } from 'next-auth/react';
-import { Iconify } from 'src/components/iconify';
 import { varHover } from 'src/components/animate';
-import { useId, useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { CustomTabs } from 'src/components/custom-tabs';
+import { Badge, SvgIcon, IconButton } from '@mui/material';
 import { webPushOwner } from 'src/hooks/notifications/web-push-device';
-import EnableNotifications from 'src/components/notification-inbox/enable-notifications';
-import { NotificationInbox } from 'src/components/notification-inbox/notification-inbox';
 import { NotificationPreferences } from 'src/components/notification-inbox/notification-preferences';
 import { usePersonalNotificationUnreadCountQuery } from 'src/redux/communication/notification-self-api';
-import { Box, Tab, Badge, Stack, Drawer, SvgIcon, Tooltip, IconButton, Typography } from '@mui/material';
 
-type InboxTab = 'all' | 'unread';
+import { NotificationsPanel } from './notifications-panel';
 
 export function NotificationsDrawer() {
   const { data, status } = useSession();
   const profile = (data as { profile?: { sub?: string; tenantid?: string } } | null)?.profile;
   const { user, sessionContext } = useSelector((state: RootState) => state.auth);
-  const owner = status === 'authenticated' && sessionContext?.tenantId === profile?.tenantid && user?.sub === profile?.sub
-    ? webPushOwner(profile?.tenantid, profile?.sub) : null;
+  const owner =
+    status === 'authenticated' &&
+    sessionContext?.tenantId === profile?.tenantid &&
+    user?.sub === profile?.sub
+      ? webPushOwner(profile?.tenantid, profile?.sub)
+      : null;
   return owner ? <OwnedNotificationsDrawer key={owner} owner={owner} /> : null;
 }
 
 function OwnedNotificationsDrawer({ owner }: { owner: string }) {
   const descriptionId = useId();
-  const drawerId = useId();
   const drawer = useBoolean();
   const preferences = useBoolean();
   const openDrawer = drawer.onTrue;
-  const [tab, setTab] = useState<InboxTab>('all');
   const unread = usePersonalNotificationUnreadCountQuery(owner, {
-    refetchOnFocus: true, refetchOnMountOrArgChange: true, pollingInterval: 60000, skipPollingIfUnfocused: true,
+    refetchOnFocus: true,
+    refetchOnMountOrArgChange: true,
+    pollingInterval: 60000,
+    skipPollingIfUnfocused: true,
   });
   const unreadCount = unread.isError ? undefined : unread.currentData?.unreadCount;
-  const unreadDescription = unreadCount === undefined ? '' : `${unreadCount} unread notification${unreadCount === 1 ? '' : 's'}`;
+  const unreadDescription =
+    unreadCount === undefined
+      ? ''
+      : `${unreadCount} unread notification${unreadCount === 1 ? '' : 's'}`;
 
   useEffect(() => {
     const url = new URL(window.location.href);
@@ -50,9 +54,12 @@ function OwnedNotificationsDrawer({ owner }: { owner: string }) {
     }
     if (!('serviceWorker' in navigator)) return undefined;
     const openFromWorker = (event: MessageEvent) => {
-      if (typeof ServiceWorker !== 'undefined' && event.source instanceof ServiceWorker &&
+      if (
+        typeof ServiceWorker !== 'undefined' &&
+        event.source instanceof ServiceWorker &&
         event.source.scriptURL === new URL('/notification-sw.js', window.location.origin).href &&
-        event.data?.type === 'OPEN_SCHOOL_NOTIFICATIONS') {
+        event.data?.type === 'OPEN_SCHOOL_NOTIFICATIONS'
+      ) {
         openDrawer();
         event.ports[0]?.postMessage('NOTIFICATIONS_OPENED');
       }
@@ -63,10 +70,20 @@ function OwnedNotificationsDrawer({ owner }: { owner: string }) {
 
   return (
     <>
-      <span id={descriptionId} hidden>{unreadDescription}</span>
-      <IconButton data-slot="notifications" aria-label="Open notifications" aria-describedby={descriptionId} aria-haspopup="dialog"
-        component={motion.button} whileTap="tap" whileHover="hover" variants={varHover(1.05)}
-        onClick={drawer.onTrue}>
+      <span id={descriptionId} hidden>
+        {unreadDescription}
+      </span>
+      <IconButton
+        data-slot="notifications"
+        aria-label="Open notifications"
+        aria-describedby={descriptionId}
+        aria-haspopup="dialog"
+        component={motion.button}
+        whileTap="tap"
+        whileHover="hover"
+        variants={varHover(1.05)}
+        onClick={drawer.onTrue}
+      >
         <Badge badgeContent={unreadCount} color="error" aria-hidden="true">
           <SvgIcon>
             {/* https://icon-sets.iconify.design/solar/bell-bing-bold-duotone/ */}
@@ -83,29 +100,13 @@ function OwnedNotificationsDrawer({ owner }: { owner: string }) {
         </Badge>
       </IconButton>
 
-      <Drawer open={drawer.value} onClose={drawer.onFalse} anchor="right"
-        slotProps={{ paper: { role: 'dialog', 'aria-modal': true, 'aria-labelledby': drawerId, sx: { width: 1, maxWidth: 420 } } }}>
-        <Stack direction="row" alignItems="center" gap={1} sx={{ py: 1.5, pl: 2, pr: 1.5 }}>
-          <Typography id={drawerId} variant="h6" sx={{ flexGrow: 1 }}>Notifications</Typography>
-          <Tooltip title="Notification preferences">
-            <IconButton aria-label="Notification preferences" onClick={preferences.onTrue}>
-              <Iconify icon="solar:settings-bold-duotone" />
-            </IconButton>
-          </Tooltip>
-          <IconButton aria-label="Close notifications" onClick={drawer.onFalse}><Iconify icon="mingcute:close-line" /></IconButton>
-        </Stack>
-        {drawer.value && <EnableNotifications />}
-        <CustomTabs variant="fullWidth" aria-label="Notification inbox filters" value={tab} guardUnsavedChanges={false}
-          onChange={(_, value: InboxTab) => setTab(value)}>
-          <Tab value="all" label="All" id={`${drawerId}-all`} aria-controls={`${drawerId}-inbox`} />
-          <Tab value="unread" label={unreadCount ? `Unread (${unreadCount})` : 'Unread'}
-            id={`${drawerId}-unread`} aria-controls={`${drawerId}-inbox`} />
-        </CustomTabs>
-        <Box id={`${drawerId}-inbox`} role="tabpanel" aria-labelledby={`${drawerId}-${tab}`}
-          sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-          {drawer.value && <NotificationInbox key={tab} owner={owner} unreadOnly={tab === 'unread'} onOpen={drawer.onFalse} />}
-        </Box>
-      </Drawer>
+      <NotificationsPanel
+        open={drawer.value}
+        owner={owner}
+        unreadCount={unreadCount}
+        onClose={drawer.onFalse}
+        onOpenPreferences={preferences.onTrue}
+      />
       {preferences.value && <NotificationPreferences owner={owner} onClose={preferences.onFalse} />}
     </>
   );
