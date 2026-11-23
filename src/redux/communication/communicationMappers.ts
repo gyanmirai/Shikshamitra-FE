@@ -210,9 +210,35 @@ export function mapTemplateFormToPayload(
   };
 }
 
+export function isMetaWhatsAppProvider(
+  provider: Pick<ProviderSettingFormValues, 'channel' | 'providerName'>
+) {
+  return provider.channel === CommunicationChannelType.WhatsApp &&
+    provider.providerName.trim().toLowerCase() === 'meta whatsapp cloud api';
+}
+
+export function isMetaWhatsAppAccountId(value: unknown): value is string {
+  return typeof value === 'string' && /^[0-9]{1,32}$/.test(value);
+}
+
+function readMetaWhatsAppAccount(setting?: ChannelProviderSettingDto | null) {
+  if (!setting?.configurationJson || !isMetaWhatsAppProvider(setting)) return undefined;
+
+  try {
+    const account = JSON.parse(setting.configurationJson);
+    if (account?.schemaVersion !== 1 ||
+      !isMetaWhatsAppAccountId(account.businessAccountId) ||
+      !isMetaWhatsAppAccountId(account.phoneNumberId)) return undefined;
+    return { businessAccountId: account.businessAccountId, phoneNumberId: account.phoneNumberId };
+  } catch {
+    return undefined;
+  }
+}
+
 export function getProviderInitialValues(
   setting?: ChannelProviderSettingDto | null
 ): ProviderSettingFormValues {
+  const metaAccount = readMetaWhatsAppAccount(setting);
   return {
     channel: setting?.channel ?? CommunicationChannelType.InApp,
     providerName: setting?.providerName ?? '',
@@ -225,14 +251,31 @@ export function getProviderInitialValues(
     dailyQuota: setting?.dailyQuota?.toString() ?? '',
     monthlyQuota: setting?.monthlyQuota?.toString() ?? '',
     secretReference: setting?.secretReference ?? '',
+    businessAccountId: metaAccount?.businessAccountId ?? '',
+    phoneNumberId: metaAccount?.phoneNumberId ?? '',
     status: setting?.status ?? CommunicationProviderStatus.Enabled,
   };
 }
 
-export function mapProviderFormToPayload(values: ProviderSettingFormValues) {
+export function mapProviderFormToPayload(
+  values: ProviderSettingFormValues,
+  saved?: ChannelProviderSettingDto | null
+) {
+  const metaProvider = isMetaWhatsAppProvider(values);
+  const providerName = values.providerName.trim();
+  const sameProvider = saved?.channel === values.channel &&
+    saved.providerName.trim().toLowerCase() === providerName.toLowerCase();
+  const businessAccountId = values.businessAccountId.trim();
+  const phoneNumberId = values.phoneNumberId.trim();
+  let configurationJson = sameProvider ? saved.configurationJson ?? null : null;
+
+  if (metaProvider && isMetaWhatsAppAccountId(businessAccountId) && isMetaWhatsAppAccountId(phoneNumberId)) {
+    configurationJson = JSON.stringify({ schemaVersion: 1, businessAccountId, phoneNumberId });
+  }
+
   return {
     channel: values.channel,
-    providerName: values.providerName,
+    providerName: metaProvider ? providerName : values.providerName,
     senderId: values.senderId || null,
     isEnabled: values.isEnabled,
     isDefault: values.isDefault,
@@ -241,7 +284,8 @@ export function mapProviderFormToPayload(values: ProviderSettingFormValues) {
     fallbackOrder: values.fallbackOrder,
     dailyQuota: values.dailyQuota ? Number(values.dailyQuota) : null,
     monthlyQuota: values.monthlyQuota ? Number(values.monthlyQuota) : null,
-    secretReference: values.secretReference || null,
+    configurationJson,
+    secretReference: (metaProvider ? values.secretReference.trim() : values.secretReference) || null,
     status: values.status,
   };
 }
